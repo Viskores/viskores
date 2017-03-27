@@ -27,7 +27,7 @@ template<typename DeviceAdapter>
 class DeduceCellSet 
 {
   mutable vtkm::worklet::Tetrahedralize Worklet;
-  mutable vtkm::cont::CellSetSingleType<> OutCellSet;
+  vtkm::cont::CellSetSingleType<> &OutCellSet;
 
 public:
   DeduceCellSet(vtkm::worklet::Tetrahedralize worklet,
@@ -74,30 +74,6 @@ vtkm::filter::ResultDataSet Tetrahedralize::DoExecute(
   vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy),
                           tetrahedralize);
 
-
-
-
-/*
-  typedef vtkm::cont::CellSetStructured<3> CellSetStructuredType;
-  typedef vtkm::cont::CellSetExplicit<> CellSetExplicitType;
-
-  const vtkm::cont::DynamicCellSet& cells =
-                  input.GetCellSet(this->GetActiveCellSetIndex());
-
-  vtkm::cont::CellSetSingleType<> outCellSet;
-
-  if (cells.IsType<CellSetStructuredType>())
-  {
-    outCellSet = this->Worklet.Run(cells.Cast<CellSetStructuredType>(),
-                                   device);
-  }
-  else
-  {
-    outCellSet = this->Worklet.Run(cells.Cast<CellSetExplicitType>(),
-                                   device);
-  }
-
-*/
   // create the output dataset
   vtkm::cont::DataSet output;
   output.AddCellSet(outCellSet);

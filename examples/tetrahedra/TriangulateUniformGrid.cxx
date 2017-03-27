@@ -22,7 +22,7 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/worklet/TetrahedralizeUniformGrid.h>
+#include <vtkm/filter/Triangulate.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
@@ -49,7 +49,7 @@ static vtkm::Id cellsToDisplay = 16;
 static vtkm::Id numberOfInPoints;
 
 // Takes input uniform grid and outputs unstructured grid of triangles
-static vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> *tetrahedralizeFilter;
+//static vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> *tetrahedralizeFilter;
 static vtkm::cont::DataSet tetDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
@@ -68,7 +68,7 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dim)
   const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(
                                               1.0f/static_cast<vtkm::Float32>(dim[0]),
                                               1.0f/static_cast<vtkm::Float32>(dim[1]),
-                                              1.0f/static_cast<vtkm::Float32>(dim[2]));
+                                              0.0f);
 
   // Generate coordinate system
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
@@ -206,9 +206,11 @@ int main(int argc, char* argv[])
   tetDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
 
   // Convert uniform hexahedra to tetrahedra
-  tetrahedralizeFilter = new vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
-                                              (inDataSet, tetDataSet);
-  tetrahedralizeFilter->Run();
+//  tetrahedralizeFilter = new vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
+//                                              (inDataSet, tetDataSet);
+//  tetrahedralizeFilter->Run();
+  vtkm::filter::Triangulate triangulate;
+  vtkm::filter::ResultDataSet result = triangulate.Execute(inDataSet);
 
   // Render the output dataset of tets
   glutInit(&argc, argv);
@@ -223,7 +225,7 @@ int main(int argc, char* argv[])
   glutDisplayFunc(displayCall);
   glutMainLoop();
 
-  delete tetrahedralizeFilter;
+  //delete tetrahedralizeFilter;
   tetDataSet.Clear();
   vertexArray.ReleaseResources();
   return 0;
