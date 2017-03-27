@@ -44,8 +44,10 @@ set(headers
   ResultBase.h
   ResultDataSet.h
   ResultField.h
+  Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h
+  Triangulate.h
   VectorMagnitude.h
   VertexClustering.h
 )
@@ -69,8 +71,10 @@ set(header_template_sources
   MaskPoints.hxx
   PointAverage.hxx
   PointElevation.hxx
+  Tetrahedralize.hxx
   Threshold.hxx
   ThresholdPoints.hxx
+  Triangulate.hxx
   VectorMagnitude.hxx
   VertexClustering.hxx
 )

@@ -41,10 +41,10 @@ set(unit_tests
   UnitTestSplatKernels.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
-  UnitTestTetrahedralizeExplicitGrid.cxx
-  UnitTestTetrahedralizeUniformGrid.cxx
+  UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
   UnitTestThresholdPoints.cxx
+  UnitTestTriangulate.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldWholeArray.cxx

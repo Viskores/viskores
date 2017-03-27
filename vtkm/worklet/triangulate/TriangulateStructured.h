@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_TriangulateUniformGrid_h
-#define vtk_m_worklet_TriangulateUniformGrid_h
+#ifndef vtk_m_worklet_TriangulateStructured_h
+#define vtk_m_worklet_TriangulateStructured_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
@@ -50,9 +50,10 @@ const static vtkm::IdComponent StructuredTriangleIndices[2][3] = {
 
 /// \brief Compute the triangulate cells for a uniform grid data set
 template <typename DeviceAdapter>
-class TriangulateFilterUniformGrid
+class TriangulateStructured
 {
 public:
+  TriangulateStructured() {}
 
   //
   // Worklet to turn quads into triangles
@@ -90,46 +91,36 @@ public:
     }
   };
 
-  //
-  // Construct the filter to triangulate uniform grid
-  //
-  TriangulateFilterUniformGrid(const vtkm::cont::DataSet &inDataSet,
-                                  vtkm::cont::DataSet &outDataSet) :
-    InDataSet(inDataSet),
-    OutDataSet(outDataSet)
+  template <typename CellSetType>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
+
   {
-  }
+    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
-  vtkm::cont::DataSet InDataSet;  // input dataset with structured cell set
-  vtkm::cont::DataSet OutDataSet; // output dataset with explicit cell set
-
-  //
-  // Populate the output dataset with triangles based on input uniform dataset
-  //
-  void Run()
-  {
-    // Get the cell set from the output data set
-    vtkm::cont::CellSetSingleType<> &cellSet =
-        this->OutDataSet.GetCellSet(0).template Cast<vtkm::cont::CellSetSingleType<> >();
-
+    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    vtkm::cont::CellSetStructured<2> inCellSet;
-    InDataSet.GetCellSet(0).CopyTo(inCellSet);
     vtkm::worklet::DispatcherMapTopology<TriangulateCell,DeviceAdapter> dispatcher;
-    dispatcher.Invoke(inCellSet,
+    dispatcher.Invoke(cellSet,
                       vtkm::cont::make_ArrayHandleGroupVec<3>(connectivity));
 
+    // Fill in array of output cells per input cell
+    DeviceAlgorithm::Copy(
+        vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, cellSet.GetNumberOfCells()),
+        outCellsPerCell);
+
     // Add cells to output cellset
-    cellSet.Fill(
-          this->OutDataSet.GetCoordinateSystem().GetData().GetNumberOfValues(),
+    outCellSet.Fill(
+          cellSet.GetNumberOfPoints(),
           vtkm::CellShapeTagTriangle::Id,
           3,
           connectivity);
+    return outCellSet;
   }
 };
 
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_TriangulateUniformGrid_h
+#endif // vtk_m_worklet_TriangulateStructured_h
