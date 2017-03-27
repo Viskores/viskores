@@ -6,9 +6,9 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 Sandia Corporation.
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
+##  Copyright 2016 Sandia Corporation.
+##  Copyright 2016 UT-Battelle, LLC.
+##  Copyright 2016 Los Alamos National Security.
 ##
 ##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 ##  the U.S. Government retains certain rights in this software.
@@ -18,23 +18,10 @@
 ##  this software.
 ##============================================================================
 
-set(unit_tests
-  UnitTestCellAverageFilter.cxx
-  UnitTestCleanGrid.cxx
-  UnitTestClipFilter.cxx
-  UnitTestContourTreeUniformFilter.cxx
-  UnitTestExternalFacesFilter.cxx
-  UnitTestFieldMetadata.cxx
-  UnitTestGradient.cxx
-  UnitTestHistogramFilter.cxx
-  UnitTestMarchingCubesFilter.cxx
-  UnitTestPointAverageFilter.cxx
-  UnitTestPointElevationFilter.cxx
-  UnitTestTetrahedralizeFilter.cxx
-  UnitTestThresholdFilter.cxx
-  UnitTestTriangulateFilter.cxx
-  UnitTestVectorMagnitudeFilter.cxx
-  UnitTestVertexClusteringFilter.cxx
- )
+set(headers
+  TetrahedralizeExplicit.h
+  TetrahedralizeStructured.h
+  )
 
-vtkm_unit_tests(SOURCES ${unit_tests})
+#-----------------------------------------------------------------------------
+vtkm_declare_headers(${headers})
