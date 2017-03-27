@@ -127,10 +127,12 @@ public:
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
     // Input topology
-    vtkm::cont::ArrayHandle<vtkm::UInt8> inShapes = 
+    //vtkm::cont::ArrayHandle<vtkm::UInt8> inShapes =
+    auto inShapes =
         cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), 
                                vtkm::TopologyElementTagCell());
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> inNumIndices = 
+    //vtkm::cont::ArrayHandle<vtkm::IdComponent> inNumIndices =
+    auto inNumIndices =
         cellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), 
                                    vtkm::TopologyElementTagCell());
 

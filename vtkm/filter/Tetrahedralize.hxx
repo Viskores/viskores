@@ -26,8 +26,8 @@ namespace
 template<typename DeviceAdapter>
 class DeduceCellSet 
 {
-  vtkm::worklet::Tetrahedralize Worklet;
-  vtkm::cont::CellSetSingleType<> OutCellSet;
+  mutable vtkm::worklet::Tetrahedralize Worklet;
+  mutable vtkm::cont::CellSetSingleType<> OutCellSet;
 
 public:
   DeduceCellSet(vtkm::worklet::Tetrahedralize worklet,
