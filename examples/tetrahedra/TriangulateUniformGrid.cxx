@@ -46,11 +46,9 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 // Default size of the example
 static vtkm::Id2 dims(4,4);
 static vtkm::Id cellsToDisplay = 16;
-static vtkm::Id numberOfInPoints;
 
 // Takes input uniform grid and outputs unstructured grid of triangles
-//static vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> *tetrahedralizeFilter;
-static vtkm::cont::DataSet tetDataSet;
+static vtkm::cont::DataSet triDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
@@ -131,12 +129,12 @@ void displayCall()
 
   // Get the cellset, coordinate system and coordinate data
   vtkm::cont::CellSetSingleType<> cellSet;
-  tetDataSet.GetCellSet(0).CopyTo(cellSet);
+  triDataSet.GetCellSet(0).CopyTo(cellSet);
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(numberOfInPoints);
-  vtkm::cont::CastAndCall(tetDataSet.GetCoordinateSystem(), GetVertexArray());
+  vertexArray.Allocate(cellSet.GetNumberOfPoints());
+  vtkm::cont::CastAndCall(triDataSet.GetCoordinateSystem(), GetVertexArray());
 
   // Draw the two triangles belonging to each quad
   vtkm::Id triangle = 0;
@@ -178,7 +176,7 @@ void displayCall()
   glFlush();
 }
 
-// Tetrahedralize and render uniform grid example
+// Triangulate and render uniform grid example
 int main(int argc, char* argv[])
 {
   std::cout << "TrianguleUniformGrid Example" << std::endl;
@@ -195,22 +193,15 @@ int main(int argc, char* argv[])
   {
     cellsToDisplay = atoi(argv[3]);
   }
-  numberOfInPoints = (dims[0] + 1) * (dims[1] + 1);
 
   // Create the input uniform cell set
   vtkm::cont::DataSet inDataSet = MakeTriangulateTestDataSet(dims);
 
-  // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetSingleType<> cellSet("cells");
-  tetDataSet.AddCellSet(cellSet);
-  tetDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
-
-  // Convert uniform hexahedra to tetrahedra
-//  tetrahedralizeFilter = new vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
-//                                              (inDataSet, tetDataSet);
-//  tetrahedralizeFilter->Run();
+  // Convert uniform quad to triangle
   vtkm::filter::Triangulate triangulate;
   vtkm::filter::ResultDataSet result = triangulate.Execute(inDataSet);
+
+  triDataSet = result.GetDataSet();
 
   // Render the output dataset of tets
   glutInit(&argc, argv);
@@ -225,8 +216,7 @@ int main(int argc, char* argv[])
   glutDisplayFunc(displayCall);
   glutMainLoop();
 
-  //delete tetrahedralizeFilter;
-  tetDataSet.Clear();
+  triDataSet.Clear();
   vertexArray.ReleaseResources();
   return 0;
 }
