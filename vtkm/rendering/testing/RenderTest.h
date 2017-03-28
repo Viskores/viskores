@@ -76,7 +76,7 @@ SetCamera<vtkm::rendering::View1D>(vtkm::rendering::Camera &camera,
 {
   vtkm::Bounds bounds;
   bounds.X = coordBounds.X;
-  field.GetRange(&bounds.Y, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  field.GetRange(&bounds.Y);
     
   camera = vtkm::rendering::Camera(vtkm::rendering::Camera::MODE_2D);
   camera.ResetToBounds(bounds);
@@ -112,7 +112,7 @@ Render(const vtkm::cont::DataSet &ds,
                                           colorTable));
     vtkm::rendering::Camera camera;
     SetCamera<ViewType>(camera,
-                        ds.GetCoordinateSystem().GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG()));
+                        ds.GetCoordinateSystem().GetBounds());
     ViewType view(scene, mapper, canvas, camera,
                   vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
 
@@ -135,7 +135,7 @@ Render(const vtkm::cont::DataSet &ds,
                                           ds.GetField(fieldNm)));
     vtkm::rendering::Camera camera;
     SetCamera<ViewType>(camera,
-                        ds.GetCoordinateSystem().GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG()),
+                        ds.GetCoordinateSystem().GetBounds(),
                         ds.GetField(fieldNm));
     ViewType view(scene, mapper, canvas, camera,
                   vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));

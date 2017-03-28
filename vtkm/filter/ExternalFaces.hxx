@@ -21,49 +21,31 @@
 namespace vtkm {
 namespace filter {
 
-namespace
-{
-
-template< typename DeviceAdapter >
-class ExternalFacesWorkletWrapper
-{
-  vtkm::cont::DataSet* Output;
-    bool* Valid;
-public:
-
-
-  ExternalFacesWorkletWrapper(vtkm::cont::DataSet& data, bool& v):
-    Output(&data),
-    Valid(&v)
-  { }
-
-  template<typename T, typename U, typename V, typename W>
-  void operator()(const vtkm::cont::CellSetExplicit<T,U,V,W>& cellset ) const
-  {
-    vtkm::cont::CellSetExplicit<> output_cs(cellset.GetName());
-    vtkm::worklet::ExternalFaces exfaces;
-    exfaces.Run(cellset, output_cs, DeviceAdapter());
-
-    this->Output->AddCellSet(output_cs);
-    *this->Valid = true;
-  }
-
-  void operator()(const vtkm::cont::CellSet& ) const
-  {
-    //don't support this cell type
-    *this->Valid = false;
-  }
-};
-
-}
-
 //-----------------------------------------------------------------------------
 inline VTKM_CONT
 ExternalFaces::ExternalFaces():
-  vtkm::filter::FilterDataSet<ExternalFaces>()
+  vtkm::filter::FilterDataSet<ExternalFaces>(),
+  CompactPoints(false)
 {
-
 }
+
+namespace {
+
+template <typename BasePolicy>
+struct CellSetExplicitPolicy : public BasePolicy
+{
+  using AllCellSetList = vtkm::cont::CellSetListTagExplicitDefault;
+};
+
+template <typename DerivedPolicy>
+inline vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>>
+GetCellSetExplicitPolicy(const vtkm::filter::PolicyBase<DerivedPolicy>&)
+{
+  return vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>>();
+}
+
+} // anonymous namespace
+
 
 //-----------------------------------------------------------------------------
 template<typename DerivedPolicy,
@@ -77,25 +59,29 @@ vtkm::filter::ResultDataSet ExternalFaces::DoExecute(const vtkm::cont::DataSet& 
   const vtkm::cont::DynamicCellSet& cells =
                   input.GetCellSet(this->GetActiveCellSetIndex());
 
-  //2. using the policy convert the dynamic cell set, and verify
-  // that we have an explicit cell set. Once that is found run the
+  //2. using the policy convert the dynamic cell set, and run the
   // external faces worklet
+  vtkm::cont::CellSetExplicit<> outCellSet(cells.GetName());
+  vtkm::worklet::ExternalFaces exfaces;
+  exfaces.Run(vtkm::filter::ApplyPolicyUnstructured(cells, policy),
+              outCellSet, DeviceAdapter());
+
+  //3. create the output dataset
   vtkm::cont::DataSet output;
-  bool workletRan = false;
-  ExternalFacesWorkletWrapper<DeviceAdapter> wrapper(output, workletRan);
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicyUnstructured(cells,policy),
-                          wrapper);
-
-  if(!workletRan)
-    {
-    return vtkm::filter::ResultDataSet();
-    }
-
-  //3. add coordinates, etc to the
+  output.AddCellSet(outCellSet);
   output.AddCoordinateSystem(
           input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()) );
-  return vtkm::filter::ResultDataSet(output);
 
+  if (this->CompactPoints)
+  {
+    this->Compactor.SetCompactPointFields(true);
+    return this->Compactor.DoExecute(output, GetCellSetExplicitPolicy(policy),
+                                     DeviceAdapter());
+  }
+  else
+  {
+    return vtkm::filter::ResultDataSet(output);
+  }
 }
 
 //-----------------------------------------------------------------------------
@@ -104,12 +90,25 @@ template<typename T,
          typename DerivedPolicy,
          typename DeviceAdapter>
 inline VTKM_CONT
-bool ExternalFaces::DoMapField(vtkm::filter::ResultDataSet&,
-                               const vtkm::cont::ArrayHandle<T, StorageType>&,
-                               const vtkm::filter::FieldMetadata&,
-                               const vtkm::filter::PolicyBase<DerivedPolicy>&,
+bool ExternalFaces::DoMapField(vtkm::filter::ResultDataSet &result,
+                               const vtkm::cont::ArrayHandle<T, StorageType> &input,
+                               const vtkm::filter::FieldMetadata &fieldMeta,
+                               const vtkm::filter::PolicyBase<DerivedPolicy> &policy,
                                const DeviceAdapter&)
 {
+  if (fieldMeta.IsPointField())
+  {
+    if (this->CompactPoints)
+    {
+      return this->Compactor.DoMapField(result, input, fieldMeta, policy, DeviceAdapter());
+    }
+    else
+    {
+      result.GetDataSet().AddField(fieldMeta.AsField(input));
+      return true;
+    }
+  }
+
   return false;
 }
 

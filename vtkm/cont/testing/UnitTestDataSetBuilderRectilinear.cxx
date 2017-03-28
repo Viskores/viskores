@@ -22,7 +22,6 @@
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -34,9 +33,6 @@
 namespace DataSetBuilderRectilinearNamespace {
 
 std::mt19937 g_RandomGenerator;
-
-typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 void ValidateDataSet(const vtkm::cont::DataSet &ds,
                      int dim,
@@ -75,7 +71,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
   }
 
   //Make sure the bounds are correct.
-  vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds(DeviceAdapter());
+  vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds();
   VTKM_TEST_ASSERT(test_equal(bounds, res),
                    "Bounds of coordinates do not match");
   if (dim == 2)

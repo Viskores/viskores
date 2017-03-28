@@ -45,17 +45,15 @@ private:
     //at the top of a VTK file
     std::string tag;
     this->DataFile->Stream >> tag;
-    internal::parseAssert(tag == "POINTS" || tag == "FIELD");
-
     if(tag == "FIELD")
     {
       std::string name;
       this->ReadFields(name);
       this->DataFile->Stream >> tag;
-      internal::parseAssert(tag == "POINTS");
     }
 
     // Read the points
+    internal::parseAssert(tag == "POINTS");
     this->ReadPoints();
 
     vtkm::Id numPoints =

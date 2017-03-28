@@ -38,10 +38,11 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #pragma push_macro("__TBB_NO_IMPLICITLINKAGE")
 #define __TBB_NO_IMPLICIT_LINKAGE 1
 
-// TBB includes windows.h, so instead we want include windows.h with the
+#endif // defined(VTKM_MSVC)
+
+// TBB includes windows.h, so instead we want to include windows.h with the
 // correct settings so that we don't clobber any existing function
 #include <vtkm/internal/Windows.h>
-#endif
 
 #include <tbb/tbb_stddef.h>
 #if (TBB_VERSION_MAJOR == 4) && (TBB_VERSION_MINOR == 2)
@@ -170,9 +171,22 @@ T ReducePortals(InputPortalType inputPortal,
                                                       wrappedBinaryOp);
   vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
 
-  ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
-  ::tbb::parallel_reduce( range, body );
-  return body.Sum;
+  if (arrayLength > 1)
+  {
+    ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
+    ::tbb::parallel_reduce( range, body );
+    return body.Sum;
+  }
+  else if (arrayLength == 1)
+  {
+    //ReduceBody does not work with an array of size 1.
+    return binaryOperation(initialValue, inputPortal.Get(0));
+  }
+  else // arrayLength == 0
+  {
+    // ReduceBody does not work with an array of size 0.
+    return initialValue;
+  }
 }
 
 template<class InputPortalType, class OutputPortalType,

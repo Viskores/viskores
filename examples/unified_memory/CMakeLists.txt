@@ -19,29 +19,18 @@
 ##  this software.
 ##
 ##=============================================================================
-#add the directory that contains the VTK-m config file to the cmake
-#path so that our examples can find VTK-m
-set(CMAKE_PREFIX_PATH ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR})
 
-#add_subdirectory(clipping)
-#add_subdirectory(contour_tree)
-#add_subdirectory(demo)
-#add_subdirectory(dynamic_dispatcher)
-#add_subdirectory(hello_world)
-#add_subdirectory(isosurface)
-#add_subdirectory(multi_backend)
-add_subdirectory(streamline)
-<<<<<<< HEAD
-#add_subdirectory(tetrahedra)
-add_subdirectory(tau_timing)
-#if(VTKm_ENABLE_RENDERING)
-#  add_subdirectory(rendering)
-#endif()
-=======
-add_subdirectory(tetrahedra)
-if(VTKm_ENABLE_RENDERING)
-  add_subdirectory(rendering)
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET
+  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
+  )
+
+if(VTKm_CUDA_FOUND)
+  vtkm_disable_troublesome_thrust_warnings()
+  # Cuda compiles do not respect target_include_directories
+  cuda_include_directories(${VTKm_INCLUDE_DIRS})
+  cuda_add_executable(UnifiedMemory_CUDA UnifiedMemory.cu)
+  target_link_libraries(UnifiedMemory_CUDA PRIVATE ${VTKm_LIBRARIES})
+  target_compile_options(UnifiedMemory_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
 endif()
-add_subdirectory(unified_memory)
->>>>>>> 2481dd62487217228bde311ed335acc32917cfc6
 

@@ -18,12 +18,10 @@
 //  this software.
 //============================================================================
 
-//We first check if VTKM_DEVICE_ADAPTER is defined, so that when TBB and CUDA
-//includes this file we use the device adapter that they have set.
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
 
+#include <vtkm/cont/ArrayHandleStreaming.h>
+#include <vtkm/worklet/DispatcherStreamingMapField.h>
 #include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
@@ -31,29 +29,8 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/Timer.h>
 
-//Suppress warnings about glut being deprecated on OSX
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
-#if defined (__APPLE__)
-# include <GLUT/glut.h>
-#else
-# include <GL/glut.h>
-#endif
-
-#include "quaternion.h"
-
-#include <vector>
-
-static vtkm::Id3 dims(256, 256, 256);
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
-static vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-static Quaternion qrot;
-static int lastx, lasty;
-static int mouse_state = 1;
 
 namespace {
 
@@ -132,110 +109,88 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 }
 
 
-// Initialize the OpenGL state
-void initializeGL()
+namespace vtkm
 {
-  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-  glEnable(GL_DEPTH_TEST);
-  glShadeModel(GL_SMOOTH);
-
-  vtkm::Float32 white[] = { 0.8f, 0.8f, 0.8f, 1.0f };
-  vtkm::Float32 black[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-  vtkm::Float32 lightPos[] = { 10.0f, 10.0f, 10.5f, 1.0f };
-
-  glLightfv(GL_LIGHT0, GL_AMBIENT, white);
-  glLightfv(GL_LIGHT0, GL_DIFFUSE, white);
-  glLightfv(GL_LIGHT0, GL_SPECULAR, black);
-  glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-
-  glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
-
-  glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);
-  glEnable(GL_NORMALIZE);
-  glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-  glEnable(GL_COLOR_MATERIAL);
-}
-
-
-// Render the output using simple OpenGL
-void displayCall()
+namespace worklet
 {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_DEPTH_TEST);
+class SineWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef _2 ExecutionSignature(_1, WorkIndex);
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective( 45.0f, 1.0f, 1.0f, 20.0f);
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-  gluLookAt(0.0f, 0.0f, 3.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
-
-  glPushMatrix();
-  float rotationMatrix[16];
-  qrot.getRotMat(rotationMatrix);
-  glMultMatrixf(rotationMatrix);
-  glTranslatef(-0.5f, -0.5f, -0.5f);
-
-  glColor3f(0.1f, 0.1f, 0.6f);
-
-  glBegin(GL_TRIANGLES);
-  for (vtkm::IdComponent i=0; i<verticesArray.GetNumberOfValues(); i++)
-  {
-    vtkm::Vec<vtkm::Float32, 3> curNormal = normalsArray.GetPortalConstControl().Get(i);
-    vtkm::Vec<vtkm::Float32, 3> curVertex = verticesArray.GetPortalConstControl().Get(i);
-    glNormal3f(curNormal[0], curNormal[1], curNormal[2]);
-    glVertex3f(curVertex[0], curVertex[1], curVertex[2]);
+  VTKM_EXEC
+  vtkm::Float32 operator()(vtkm::Int64 x, vtkm::Id& index) const {
+    return (vtkm::Sin(1.0*x)); 
   }
-  glEnd();
-
-  glPopMatrix();
-  glutSwapBuffers();
+};
+}
 }
 
 
-// Allow rotations of the view
-void mouseMove(int x, int y)
-{
-  vtkm::Float32 dx = static_cast<vtkm::Float32>(x - lastx);
-  vtkm::Float32 dy = static_cast<vtkm::Float32>(y - lasty);
-
-  if (mouse_state == 0)
-  {
-    vtkm::Float32 pideg = static_cast<vtkm::Float32>(vtkm::Pi_2());
-    Quaternion newRotX;
-    newRotX.setEulerAngles(-0.2f*dx*pideg/180.0f, 0.0f, 0.0f);
-    qrot.mul(newRotX);
-
-    Quaternion newRotY;
-    newRotY.setEulerAngles(0.0f, 0.0f, -0.2f*dy*pideg/180.0f);
-    qrot.mul(newRotY);
-  }
-  lastx = x;
-  lasty = y;
-
-  glutPostRedisplay();
-}
-
-
-// Respond to mouse button
-void mouseCall(int button, int state, int x, int y)
-{
-  if (button == 0) mouse_state = state;
-  if ((button == 0) && (state == 0)) { lastx = x;  lasty = y; }
-}
-
-
-// Compute and render an isosurface for a uniform grid example
+// Run a simple worklet, and compute an isosurface
 int main(int argc, char* argv[])
 {
+  vtkm::Int64 N = 1024*1024*1024;
+  if (argc > 1) N = N*atoi(argv[1]);
+  else N = N*4;
+  std::cout << "Testing streaming worklet with size " << N << std::endl;
+
+  vtkm::cont::ArrayHandle<vtkm::Int64> input;
+  vtkm::cont::ArrayHandle<vtkm::Float32> output;
+  std::vector<vtkm::Int64> data(N); 
+  for (vtkm::Int64 i=0; i<N; i++) data[i] = i; 
+  input = vtkm::cont::make_ArrayHandle(data);
+
+  typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAlgorithms;
+  vtkm::worklet::SineWorklet sineWorklet;
+
+#ifdef VTKM_USE_UNIFIED_MEMORY
+  std::cout << "Testing with unified memory" << std::endl;
+
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::SineWorklet>
+      dispatcher(sineWorklet);
+
+  vtkm::cont::Timer<> timer;
+
+  dispatcher.Invoke(input, output);
+  std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues()-1) << std::endl;
+
+  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+  std::cout << "Time: " << elapsedTime << std::endl;
+
+#else
+
+  vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet>
+      dispatcher(sineWorklet);
+  vtkm::Id NBlocks = N/(1024*1024*1024);
+  NBlocks *= 2;
+  dispatcher.SetNumberOfBlocks(NBlocks);
+  std::cout << "Testing with streaming (without unified memory) with " << NBlocks << " blocks" << std::endl;
+
+  vtkm::cont::Timer<> timer;
+
+  dispatcher.Invoke(input, output);
+  std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues()-1) << std::endl;
+
+  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+  std::cout << "Time: " << elapsedTime << std::endl;
+
+#endif
+
+  int dim = 128;
+  if (argc > 2) dim = atoi(argv[2]);
+  std::cout << "Testing Marching Cubes with size " << dim << "x" << dim << "x" << dim << std::endl;
+
+  vtkm::Id3 dims(dim, dim, dim);
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
   vtkm::filter::MarchingCubes filter;
   filter.SetGenerateNormals(true);
-  filter.SetMergeDuplicatePoints(false);
-  filter.SetIsoValue(0, 0.5);
+  filter.SetMergeDuplicatePoints( false );
+  filter.SetIsoValue( 0.5 );
   vtkm::filter::ResultDataSet result =
       filter.Execute( dataSet, dataSet.GetField("nodevar") );
 
@@ -243,7 +198,6 @@ int main(int argc, char* argv[])
 
   //need to extract vertices, normals, and scalars
   vtkm::cont::DataSet& outputData = result.GetDataSet();
-
 
   typedef vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > VertType;
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
@@ -264,23 +218,6 @@ int main(int argc, char* argv[])
   vtkm::cont::printSummary_ArrayHandle(scalarsArray, std::cout);
   std::cout << std::endl;
 
-  lastx = lasty = 0;
-  glutInit(&argc, argv);
-  glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-  glutInitWindowSize(1000, 1000);
-  glutCreateWindow("VTK-m Isosurface");
-  initializeGL();
-  glutDisplayFunc(displayCall);
-  glutMotionFunc(mouseMove);
-  glutMouseFunc(mouseCall);
-  glutMainLoop();
-
-  verticesArray.ReleaseResources();
-  normalsArray.ReleaseResources();
-  scalarsArray.ReleaseResources();
   return 0;
 }
 
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic pop
-#endif

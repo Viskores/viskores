@@ -221,6 +221,7 @@ private:
       dispatcher.Invoke( this->InputHandle,
                          cellSet,
                          result);
+      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -257,6 +258,7 @@ private:
       dispatcher.Invoke( dinput,
                          cellSet,
                          result);
+      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -301,6 +303,7 @@ private:
       dispatcher.Invoke( this->InputHandle,
                          cellSet,
                          result);
+      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -336,6 +339,7 @@ private:
       dispatcher.Invoke( dinput,
                          cellSet,
                          result);
+      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -385,6 +389,7 @@ private:
       dispatcher.Invoke( dinput,
                          cellSet,
                          result);
+      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
@@ -418,6 +423,7 @@ private:
       dispatcher.Invoke( this->InputHandle,
                          cellSet,
                          result);
+      //result.SyncControlArray();
 
       return timer.GetElapsedTime();
     }
