@@ -82,7 +82,7 @@ public:
   }
 
   template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3> &cellSet,
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<3>&,
                                       const DeviceAdapter&)
   {
     throw vtkm::cont::ErrorBadType("CellSetStructured<3> can't be triangulated");

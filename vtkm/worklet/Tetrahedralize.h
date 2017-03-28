@@ -82,7 +82,7 @@ public:
   }
 
   template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2> &cellSet,
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&,
                                       const DeviceAdapter&)
   {
     throw vtkm::cont::ErrorBadType("CellSetStructured<2> can't be tetrahedralized");

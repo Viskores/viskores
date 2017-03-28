@@ -63,7 +63,7 @@ inline VTKM_CONT
 vtkm::filter::ResultDataSet Tetrahedralize::DoExecute(
                                                  const vtkm::cont::DataSet& input,
                                                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                                 const DeviceAdapter& device)
+                                                 const DeviceAdapter&)
 {
   const vtkm::cont::DynamicCellSet& cells =
                   input.GetCellSet(this->GetActiveCellSetIndex());
