@@ -20,7 +20,6 @@
 #ifndef vtkm_m_worklet_ThresholdPoints_h
 #define vtkm_m_worklet_ThresholdPoints_h
 
-#include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -37,12 +36,14 @@ namespace worklet {
 class ThresholdPoints : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
+  struct BoolType : vtkm::ListTagBase<bool> { };
+
   template <typename UnaryPredicate>
   class ThresholdPointField : public vtkm::worklet::WorkletMapField
   {
   public:
     typedef void ControlSignature(FieldIn<> scalars,
-                                  FieldOut<IdComponentType> mask);
+                                  FieldOut<BoolType> passFlags);
     typedef _2 ExecutionSignature(_1);
 
     VTKM_CONT
@@ -55,13 +56,9 @@ public:
 
     template<typename ScalarType>
     VTKM_EXEC
-    vtkm::IdComponent operator()(const ScalarType &scalar) const
+    bool operator()(const ScalarType &scalar) const
     {
-      bool pass = this->Predicate(scalar);
-      vtkm::IdComponent mask = 0;
-      if (pass == true)
-        mask = 1;
-      return mask;
+      return this->Predicate(scalar);
     }
 
   private:
@@ -80,19 +77,20 @@ public:
                           DeviceAdapter device)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> maskArray;
+
+    vtkm::cont::ArrayHandle<bool> passFlags;
     vtkm::Id numberOfInputPoints = cellSet.GetNumberOfPoints();
-    DeviceAlgorithm::Copy(vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(0, numberOfInputPoints),
-                          maskArray);
     
     // Worklet output will be a boolean passFlag array
     typedef ThresholdPointField<UnaryPredicate> ThresholdWorklet;
     ThresholdWorklet worklet(predicate);
     DispatcherMapField<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-    dispatcher.Invoke(fieldArray, maskArray);
+    dispatcher.Invoke(fieldArray, passFlags);
 
-    vtkm::worklet::ScatterCounting PointScatter(maskArray, DeviceAdapter(), true);
-    vtkm::cont::ArrayHandle<vtkm::Id> pointIds = PointScatter.GetOutputToInputMap();
+    vtkm::cont::ArrayHandle<vtkm::Id> pointIds;
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
+      vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
+    DeviceAlgorithm::CopyIf(indices, passFlags, pointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
     vtkm::cont::CellSetSingleType< > outCellSet(cellSet.GetName());

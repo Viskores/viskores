@@ -24,8 +24,6 @@ set(unit_tests
   UnitTestClipFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestExternalFacesFilter.cxx
-  UnitTestExtractGeometryFilter.cxx
-  UnitTestExtractPointsFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx

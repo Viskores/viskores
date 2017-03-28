@@ -24,7 +24,6 @@
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/CleanGrid.h>
 #include <vtkm/worklet/Mask.h>
-#include <vtkm/ImplicitFunctions.h>
 
 namespace vtkm {
 namespace filter {

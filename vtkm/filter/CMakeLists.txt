@@ -24,8 +24,6 @@ set(headers
   Clip.h
   ContourTreeUniform.h
   ExternalFaces.h
-  ExtractGeometry.h
-  ExtractPoints.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -58,8 +56,6 @@ set(header_template_sources
   Clip.hxx
   ContourTreeUniform.hxx
   ExternalFaces.hxx
-  ExtractGeometry.hxx
-  ExtractPoints.hxx
   FilterCell.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx

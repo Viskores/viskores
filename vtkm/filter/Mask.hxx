@@ -62,7 +62,7 @@ template<typename DerivedPolicy,
 inline VTKM_CONT
 vtkm::filter::ResultDataSet Mask::DoExecute(const vtkm::cont::DataSet& input,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                            const DeviceAdapter& device)
+                                            const DeviceAdapter&)
 {
   const vtkm::cont::DynamicCellSet& cells =
                   input.GetCellSet(this->GetActiveCellSetIndex());
@@ -95,7 +95,7 @@ inline VTKM_CONT
 bool Mask::DoMapField(vtkm::filter::ResultDataSet& result,
                       const vtkm::cont::ArrayHandle<T, StorageType>& input,
                       const vtkm::filter::FieldMetadata& fieldMeta,
-                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                      const vtkm::filter::PolicyBase<DerivedPolicy>&,
                       const DeviceAdapter&)
 {
   // point data is copied as is because it was not collapsed
