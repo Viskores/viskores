@@ -364,7 +364,7 @@ void TestMarchingCubesCustomPolicy()
 
 
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 414,
+  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == (414*4),
                    "Should have some coordinates");
 }
 
