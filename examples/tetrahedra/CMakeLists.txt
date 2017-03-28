@@ -47,11 +47,6 @@ if(VTKm_OpenGL_FOUND AND VTKm_GLUT_FOUND)
   target_link_libraries(TriangulateUniformGrid_SERIAL PRIVATE ${VTKm_LIBRARIES})
   target_compile_options(TriangulateUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-  #add_executable(TriangulateStructured_SERIAL TriangulateStructured.cxx)
-  #target_include_directories(TriangulateStructured_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  #target_link_libraries(TriangulateStructured_SERIAL PRIVATE ${VTKm_LIBRARIES})
-  #target_compile_options(TriangulateStructured_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
-
   if(VTKm_CUDA_FOUND)
     # Cuda compiles do not respect target_include_directories
     cuda_include_directories(${VTKm_INCLUDE_DIRS})
