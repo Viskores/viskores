@@ -87,11 +87,12 @@ SetCamera<vtkm::rendering::View1D>(vtkm::rendering::Camera &camera,
 template <typename MapperType,typename CanvasType, typename ViewType>
 void
 Render(ViewType &view,
-       const std::string &outputFile)
+       const std::string &outputFile="")
 {
     view.Initialize();
     view.Paint();
-    view.SaveAs(outputFile);
+    if (outputFile.size() > 0)
+        view.SaveAs(outputFile);
 }
 
 template <typename MapperType,typename CanvasType, typename ViewType>
@@ -99,7 +100,7 @@ void
 Render(const vtkm::cont::DataSet &ds,
        const std::string &fieldNm,
        const vtkm::rendering::ColorTable &colorTable,
-       const std::string &outputFile)
+       const std::string &outputFile="")
 {
     MapperType mapper;
     CanvasType canvas(512,512);
@@ -122,7 +123,7 @@ template <typename MapperType,typename CanvasType, typename ViewType>
 void
 Render(const vtkm::cont::DataSet &ds,
        const std::string &fieldNm,
-       const std::string &outputFile)
+       const std::string &outputFile="")
 {
     MapperType mapper;
     CanvasType canvas(512,512);

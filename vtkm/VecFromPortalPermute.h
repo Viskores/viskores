@@ -59,7 +59,8 @@ public:
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<vtkm::IdComponent DestSize>
   VTKM_EXEC_CONT
-  void CopyInto(vtkm::Vec<ComponentType,DestSize> &dest) const
+  //DRP
+  /*inline*/ void CopyInto(vtkm::Vec<ComponentType,DestSize> &dest) const
   {
     vtkm::IdComponent numComponents =
         vtkm::Min(DestSize, this->GetNumberOfComponents());
@@ -69,9 +70,40 @@ public:
     }
   }
 
+  //DRP
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<vtkm::IdComponent DestSize>
+  VTKM_EXEC_CONT
+  inline void CopyRangeInto(vtkm::Vec<ComponentType,DestSize> &dest) const
+  {
+    this->Portal.CopyRangeInto((*this->Indices), dest);
+  }    
+
+  //DRP
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ComponentType operator[](vtkm::IdComponent index) const
+  inline void Copy8(vtkm::Vec<ComponentType,8> &dest) const
+  {
+      this->Portal.Get8((*this->Indices), dest);
+      
+      //dest[0] = this->Portal.Get_1((*this->Indices)); //(*this->Indices));
+      /*
+      dest[0] = this->Portal.Get((*this->Indices)[0]);      
+      dest[1] = this->Portal.Get((*this->Indices)[1]);
+      dest[2] = this->Portal.Get((*this->Indices)[2]);
+      dest[3] = this->Portal.Get((*this->Indices)[3]);
+      dest[4] = this->Portal.Get((*this->Indices)[4]);
+      dest[5] = this->Portal.Get((*this->Indices)[5]);
+      dest[6] = this->Portal.Get((*this->Indices)[6]);
+      dest[7] = this->Portal.Get((*this->Indices)[7]);
+      */
+
+  }    
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  //DRP
+  /*  inline*/ ComponentType operator[](vtkm::IdComponent index) const
   {
     return this->Portal.Get((*this->Indices)[index]);
   }

@@ -383,7 +383,8 @@ public:
   typedef vtkm::CellShapeTagHexahedron CellShapeTag;
 
   VTKM_EXEC_CONT
-  vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL>
+  //DRP
+  /*  inline */ vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL>
   GetPointsOfCell(const SchedulingRangeType &ijk) const
   {
     vtkm::Vec<vtkm::Id,NUM_POINTS_IN_CELL> pointIds;

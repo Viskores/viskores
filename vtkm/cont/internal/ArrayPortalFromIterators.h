@@ -174,12 +174,120 @@ public:
     return this->NumberOfValues;
   }
 
+  //DRP
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename T1, typename T2>
+  VTKM_EXEC_CONT
+  inline void CopyRangeInto(const T1 &indices, T2 &vals) const
+  {
+      std::cout<<" WRONG CopyRangeInto()"<<std::endl;
+  }
+
+  //DRP
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ValueType Get(vtkm::Id index) const
+  inline void CopyRangeInto(const vtkm::Vec<vtkm::Id,8> &indices, vtkm::Vec<ValueType,8> &vals) const
+  {
+      //std::cout<<"Inside RIGHT CopyRangeInto()"<<std::endl;
+      vals[0] = *(this->BeginIterator + indices[0]);
+      vals[1] = *(this->BeginIterator + indices[1]);
+      vals[2] = *(this->BeginIterator + indices[2]);
+      vals[3] = *(this->BeginIterator + indices[3]);
+      vals[4] = *(this->BeginIterator + indices[4]);
+      vals[5] = *(this->BeginIterator + indices[5]);
+      vals[6] = *(this->BeginIterator + indices[6]);
+      vals[7] = *(this->BeginIterator + indices[7]);
+  }
+    
+#if 0
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  //  template<vtkm::IdComponent N, vtkm::IdComponent M>  
+  VTKM_EXEC_CONT
+  //  inline void CopyRangeInto(const vtkm::Vec<vtkm::Id, N> &indices, vtkm::Vec<ValueType, M> &vals) const
+  inline void CopyRangeInto(const vtkm::Vec<vtkm::Id,8> &indices, vtkm::Vec<ValueType,8> &vals) const
+  {
+      std::cout<<"Inside CopyRangeInto()"<<std::endl;
+      /*
+      for (int i = 0; i < N; i++)
+          vals[i] = *(this->BeginIterator + indices[i]);
+      */
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  inline void CopyRangeInto(const vtkm::Vec<vtkm::Id,4> &indices, vtkm::Vec<ValueType,8> &vals) const
+  {
+      std::cout<<"Inside CopyRangeInto()"<<std::endl;
+      /*
+      for (int i = 0; i < N; i++)
+          vals[i] = *(this->BeginIterator + indices[i]);
+      */
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  inline void CopyRangeInto(const vtkm::Vec<vtkm::Id,4> &indices, vtkm::Vec<double,8> &vals) const
+  {
+      std::cout<<"Inside CopyRangeInto()"<<std::endl;
+      /*
+      for (int i = 0; i < N; i++)
+          vals[i] = *(this->BeginIterator + indices[i]);
+      */
+  }
+#endif
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  //DRP
+  /*  inline*/ ValueType Get(vtkm::Id index) const
   {
     return *this->IteratorAt(index);
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  inline ValueType Get_1(const vtkm::Vec<vtkm::Id,8> &indices) const
+  {
+      std::cout<<"In Get_1()"<<std::endl;
+      //return this->BeginIterator + 0; //indices[0];
+      return *this->IteratorAt(indices[0]);
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  inline void Get8(const vtkm::Vec<vtkm::Id,8> &indices, vtkm::Vec<ValueType,8> &vals) const
+  {
+  }
+
+  //DRP
+#if 0
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <>
+  VTKM_EXEC_CONT
+  inline void Get8(const vtkm::Vec<vtkm::Id,8> &indices, vtkm::Vec<ValueType,8> &vals) const
+  {
+      //std::cout<<"HI THERE"<<std::endl;
+      vals[0] = *(this->BeginIterator + indices[0]);
+      vals[1] = *(this->BeginIterator + indices[1]);
+      vals[2] = *(this->BeginIterator + indices[2]);
+      vals[3] = *(this->BeginIterator + indices[3]);
+      vals[4] = *(this->BeginIterator + indices[4]);
+      vals[5] = *(this->BeginIterator + indices[5]);
+      vals[6] = *(this->BeginIterator + indices[6]);
+      vals[7] = *(this->BeginIterator + indices[7]);
+      
+      /*
+      vals[0] = this->BeginIterator + index;
+      vals[1] = this->BeginIterator + index + 1;
+      vals[2] = this->BeginIterator + index + 2;
+      vals[3] = this->BeginIterator + index + 3;
+      vals[4] = this->BeginIterator + index + 4;
+      vals[5] = this->BeginIterator + index + 5;
+      vals[6] = this->BeginIterator + index + 6;
+      vals[7] = this->BeginIterator + index + 7;
+      */
+  }
+#endif
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -202,7 +310,8 @@ private:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  IteratorT IteratorAt(vtkm::Id index) const
+  //DRP
+  /*  inline*/ IteratorT IteratorAt(vtkm::Id index) const
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->GetNumberOfValues());

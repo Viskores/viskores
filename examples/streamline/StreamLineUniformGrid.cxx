@@ -262,7 +262,6 @@ int main(int argc, char* argv[])
     return 0;
     }
 
-
   //We are done with the file now, so release the file descriptor
   fclose(pFile);
 
@@ -282,7 +281,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet inDataSet;
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
   inDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
-  inDataSet.AddField(vtkm::cont::Field("vecData", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  inDataSet.AddField(vtkm::cont::Field("vec", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
   vtkm::cont::CellSetStructured<3> inCellSet("cells");
   inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));
@@ -291,11 +290,11 @@ int main(int argc, char* argv[])
   // Create and run the filter
   streamLineFilter = new vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>();
   outDataSet = streamLineFilter->Run(inDataSet,
+                                     //vtkm::worklet::internal::FORWARD,
                                      direction,
                                      nSeeds,
                                      nSteps,
                                      tStep);
-
 
   // Render the output dataset of polylines
   lastx = lasty = 0;

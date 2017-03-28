@@ -43,6 +43,10 @@
 
 #include <vtkm/worklet/MarchingCubesDataTables.h>
 
+//#define WHICH0
+//#define WHICH1
+#define WHICH2
+
 namespace vtkm {
 namespace worklet {
 
@@ -70,7 +74,8 @@ make_ScalarField(const vtkm::cont::ArrayHandle<vtkm::Int8,S>& ah)
 // -----------------------------------------------------------------------------
 template<typename T, typename U>
 VTKM_EXEC
-int GetHexahedronClassification(const T& values, const U isoValue)
+//DRP
+inline int GetHexahedronClassification(const T& values, const U isoValue)
 {
   return ((values[0] > isoValue)      |
           (values[1] > isoValue) << 1 |
@@ -81,6 +86,48 @@ int GetHexahedronClassification(const T& values, const U isoValue)
           (values[6] > isoValue) << 6 |
           (values[7] > isoValue) << 7);
 }
+    
+#if 1
+template<>
+VTKM_EXEC
+inline int
+GetHexahedronClassification<vtkm::VecFromPortalPermute<vtkm::Vec<long long, 8>,
+                                                       vtkm::cont::internal::ArrayPortalFromIterators<float const*, void> >,
+                            float>
+(
+  vtkm::VecFromPortalPermute<vtkm::Vec<long long, 8>,
+                          vtkm::cont::internal::ArrayPortalFromIterators<float const*, void> > const& values,
+  float isoValue
+)
+{
+    //Original
+#if 1
+    return ((values[0] > isoValue)      |
+            (values[1] > isoValue) << 1 |
+            (values[2] > isoValue) << 2 |
+            (values[3] > isoValue) << 3 |
+            (values[4] > isoValue) << 4 |
+            (values[5] > isoValue) << 5 |
+            (values[6] > isoValue) << 6 |
+            (values[7] > isoValue) << 7);    
+#else
+    vtkm::Vec<vtkm::Float32, 8> vals;
+    values.Copy8(vals);
+    
+    return ((vals[0] > isoValue)      |
+            (vals[1] > isoValue) << 1 |
+            (vals[2] > isoValue) << 2 |
+            (vals[3] > isoValue) << 3 |
+            (vals[4] > isoValue) << 4 |
+            (vals[5] > isoValue) << 5 |
+            (vals[6] > isoValue) << 6 |
+            (vals[7] > isoValue) << 7);
+#endif
+    
+//    std::cout<<"GetHexClassification: val= "<<isoValue<<" ["<<vals[0]<<" "<<vals[1]<<" "<<vals[2]<<" "<<vals[3]<<" "<<vals[4]<<" "<<vals[5]<<" "<<vals[6]<<" "<<vals[7]<<"]"<<std::endl;
+//    return 0;
+}
+#endif
 
 // ---------------------------------------------------------------------------
 template<typename T>
@@ -114,9 +161,34 @@ public:
   {
     typedef typename vtkm::VecTraits<FieldInType>::ComponentType FieldType;
     const FieldType iso = static_cast<FieldType>(this->Isovalue);
-
-    const vtkm::IdComponent caseNumber =
-                            GetHexahedronClassification(fieldIn, iso);
+#ifdef WHICH0
+    const vtkm::IdComponent caseNumber = GetHexahedronClassification(fieldIn, iso);
+#endif
+#ifdef WHICH1
+    const vtkm::IdComponent caseNumber = ((fieldIn[0] > iso) |
+                                          (fieldIn[1] > iso) << 1 |
+                                          (fieldIn[2] > iso) << 2 |
+                                          (fieldIn[3] > iso) << 3 |
+                                          (fieldIn[4] > iso) << 4 |
+                                          (fieldIn[5] > iso) << 5 |
+                                          (fieldIn[6] > iso) << 6 |
+                                          (fieldIn[7] > iso) << 7);
+#endif
+#ifdef WHICH2
+    vtkm::Vec<FieldType, 8> vals;
+    fieldIn.CopyRangeInto(vals);
+    //fieldIn.CopyInto(vals);
+    //fieldIn.Copy8(vals);
+    const vtkm::IdComponent caseNumber = ((vals[0] > iso)      |
+                                          (vals[1] > iso) << 1 |
+                                          (vals[2] > iso) << 2 |
+                                          (vals[3] > iso) << 3 |
+                                          (vals[4] > iso) << 4 |
+                                          (vals[5] > iso) << 5 |
+                                          (vals[6] > iso) << 6 |
+                                          (vals[7] > iso) << 7);
+#endif
+    
     numTriangles = numTrianglesTable.Get(caseNumber);
   }
 };
@@ -267,8 +339,32 @@ public:
     const FieldType iso = static_cast<FieldType>(this->Isovalue);
 
     // Compute the Marching Cubes case number for this cell
-    const vtkm::IdComponent caseNumber =
-                            GetHexahedronClassification(fieldIn, iso);
+#ifdef WHICH0
+    const vtkm::IdComponent caseNumber = GetHexahedronClassification(fieldIn, iso);
+#endif
+#ifdef WHICH1
+    const vtkm::IdComponent caseNumber = ((fieldIn[0] > iso) |
+                                          (fieldIn[1] > iso) << 1 |
+                                          (fieldIn[2] > iso) << 2 |
+                                          (fieldIn[3] > iso) << 3 |
+                                          (fieldIn[4] > iso) << 4 |
+                                          (fieldIn[5] > iso) << 5 |
+                                          (fieldIn[6] > iso) << 6 |
+                                          (fieldIn[7] > iso) << 7);
+#endif
+#ifdef WHICH2
+    vtkm::Vec<FieldType, 8> vals;
+    fieldIn.CopyRangeInto(vals);
+    //fieldIn.Copy8(vals);
+    const vtkm::IdComponent caseNumber = ((vals[0] > iso)      |
+                                          (vals[1] > iso) << 1 |
+                                          (vals[2] > iso) << 2 |
+                                          (vals[3] > iso) << 3 |
+                                          (vals[4] > iso) << 4 |
+                                          (vals[5] > iso) << 5 |
+                                          (vals[6] > iso) << 6 |
+                                          (vals[7] > iso) << 7);
+#endif
 
     // Interpolate for vertex positions and associated scalar values
     const vtkm::Id triTableOffset =
