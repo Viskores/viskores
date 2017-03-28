@@ -40,9 +40,10 @@ public:
   vtkm::cont::CellSetSingleType<> Run(
                           const CellSetType &cellSet,
                           const vtkm::Id stride,
-                          DeviceAdapter device)
+                          DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+
     vtkm::Id numberOfInputPoints = cellSet.GetNumberOfPoints();
     vtkm::Id numberOfSampledPoints = numberOfInputPoints / stride;
     vtkm::cont::ArrayHandleCounting<vtkm::Id> strideArray(0, stride, numberOfSampledPoints);

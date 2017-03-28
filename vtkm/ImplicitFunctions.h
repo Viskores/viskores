@@ -160,8 +160,8 @@ class Box
 {
 public:
   VTKM_CONT
-  Box() : MinPoint(vtkm::Vec<FloatDefault,3>(0.0, 0.0, 0.0)), 
-          MaxPoint(vtkm::Vec<FloatDefault,3>(1.0, 1.0, 1.0))
+  Box() : MinPoint(vtkm::Vec<FloatDefault,3>(FloatDefault(0), FloatDefault(0), FloatDefault(0))), 
+          MaxPoint(vtkm::Vec<FloatDefault,3>(FloatDefault(1), FloatDefault(1), FloatDefault(1)))
   { }
 
   VTKM_CONT
@@ -195,7 +195,7 @@ public:
   FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const
   {
     vtkm::Vec<vtkm::IdComponent,3> inside(1, 1, 1);
-    vtkm::Vec<FloatDefault,3> dist(0.0, 0.0, 0.0);
+    vtkm::Vec<FloatDefault,3> dist(FloatDefault(0), FloatDefault(0), FloatDefault(0));
     FloatDefault insideDistance = vtkm::NegativeInfinity32();
 
     for (vtkm::IdComponent d = 0; d < 3; d++)
@@ -221,7 +221,7 @@ public:
           inside[d] = 0;
           dist[d] = x[d] - this->MaxPoint[d];
         }
-        else if (x[d] <= ((this->MaxPoint[d] - this->MinPoint[d]) / 2.0))
+        else if (x[d] <= ((this->MaxPoint[d] - this->MinPoint[d]) / FloatDefault(2)))
         {
           // Point inside box closer to minimum (negative dist)
           dist[d] = this->MinPoint[d] - x[d];
@@ -244,7 +244,7 @@ public:
     }
     else
     {
-      FloatDefault distance = 0.0;
+      FloatDefault distance = 0.f;
       for (vtkm::IdComponent d = 0; d < 3; d++)
       {
         if (dist[d] > 0.0)
@@ -268,11 +268,11 @@ public:
     FloatDefault minDist = vtkm::Infinity32();
     vtkm::Vec<vtkm::IdComponent,3> location;
     vtkm::Vec<FloatDefault,3> normal;
-    vtkm::Vec<FloatDefault,3> inside(0.0, 0.0, 0.0);
-    vtkm::Vec<FloatDefault,3> outside(0.0, 0.0, 0.0);
-    vtkm::Vec<FloatDefault,3> center((this->MaxPoint[0] - this->MinPoint[0]) / 2.0,
-                                     (this->MaxPoint[1] - this->MinPoint[1]) / 2.0,
-                                     (this->MaxPoint[2] - this->MinPoint[2]) / 2.0);
+    vtkm::Vec<FloatDefault,3> inside(FloatDefault(0), FloatDefault(0), FloatDefault(0));
+    vtkm::Vec<FloatDefault,3> outside(FloatDefault(0), FloatDefault(0), FloatDefault(0));
+    vtkm::Vec<FloatDefault,3> center((this->MaxPoint[0] - this->MinPoint[0]) / FloatDefault(2),
+                                     (this->MaxPoint[1] - this->MinPoint[1]) / FloatDefault(2),
+                                     (this->MaxPoint[2] - this->MinPoint[2]) / FloatDefault(2));
 
     // Compute the location of the point with respect to the box
     // Point will lie in one of 27 separate regions around or within the box

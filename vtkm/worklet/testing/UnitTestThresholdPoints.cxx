@@ -37,7 +37,7 @@ class ValuesBelow
 {
 public:
   VTKM_CONT
-  ValuesBelow(const vtkm::Float32& thresholdValue) :
+  ValuesBelow(const vtkm::FloatDefault& thresholdValue) :
     ThresholdValue(thresholdValue)
   { }
 
@@ -49,7 +49,7 @@ public:
   }
 
 private:
-  vtkm::Float32 ThresholdValue;
+  vtkm::FloatDefault ThresholdValue;
 };
 
 // Predicate for values greater than maximum
@@ -57,7 +57,7 @@ class ValuesAbove
 {
 public:
   VTKM_CONT
-  ValuesAbove(const vtkm::Float32& thresholdValue) :
+  ValuesAbove(const vtkm::FloatDefault& thresholdValue) :
     ThresholdValue(thresholdValue)
   { }
 
@@ -69,7 +69,7 @@ public:
   }
 
 private:
-  vtkm::Float32 ThresholdValue;
+  vtkm::FloatDefault ThresholdValue;
 };
 
 
@@ -78,8 +78,8 @@ class ValuesBetween
 {
 public:
   VTKM_CONT
-  ValuesBetween(const vtkm::Float64& lower,
-                const vtkm::Float64& upper) :
+  ValuesBetween(const vtkm::FloatDefault& lower,
+                const vtkm::FloatDefault& upper) :
     Lower(lower),
     Upper(upper)
   { }
@@ -93,8 +93,8 @@ public:
   }
 
 private:
-  vtkm::Float64 Lower;
-  vtkm::Float64 Upper;
+  vtkm::FloatDefault Lower;
+  vtkm::FloatDefault Upper;
 };
 
 using vtkm::cont::testing::MakeTestDataSet;
@@ -111,7 +111,7 @@ public:
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
 
-    vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> fieldArray;
     dataset.GetField("pointvar").GetData().CopyTo(fieldArray);
 
     // Output dataset contains input coordinate system and point data
@@ -138,7 +138,7 @@ public:
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
-    vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> fieldArray;
     dataset.GetField("pointvar").GetData().CopyTo(fieldArray);
 
     // Output dataset contains input coordinate system and point data
@@ -165,7 +165,7 @@ public:
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
-    vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> fieldArray;
     dataset.GetField("pointvar").GetData().CopyTo(fieldArray);
 
     // Output dataset contains input coordinate system and point data

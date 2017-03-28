@@ -65,7 +65,7 @@ public:
       bool pass = true;
       for (vtkm::Id indx = 0; indx < numIndices; indx++)
       {
-        vtkm::Id ptId = connectivityIn[indx];
+        vtkm::IdComponent ptId = connectivityIn[indx];
         vtkm::Vec<FloatDefault,3> coordinate = coordinates.Get(ptId);
         vtkm::FloatDefault value = this->Function.Value(coordinate);
         if (value > 0)
@@ -85,7 +85,7 @@ public:
   vtkm::cont::CellSetPermutation<CellSetType> Run(
                                     CellSetType &cellSet,
                                     const vtkm::cont::ArrayHandle<vtkm::Id> &cellIds,
-                                    DeviceAdapter device)
+                                    DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;

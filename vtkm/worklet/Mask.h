@@ -44,7 +44,7 @@ public:
   vtkm::cont::CellSetPermutation<CellSetType> Run(
                           const CellSetType &cellSet,
                           const vtkm::Id stride,
-                          DeviceAdapter device)
+                          DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;

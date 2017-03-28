@@ -40,7 +40,7 @@ class ValuesBelow
 {
 public:
   VTKM_CONT
-  ValuesBelow(const vtkm::Float32& thresholdValue) : ThresholdValue(thresholdValue) {}
+  ValuesBelow(const vtkm::Float64& thresholdValue) : ThresholdValue(thresholdValue) {}
 
   template<typename T>
   VTKM_EXEC
@@ -50,7 +50,7 @@ public:
   }
 
 private:
-  vtkm::Float32 ThresholdValue;
+  vtkm::Float64 ThresholdValue;
 };
 
 // Predicate for values greater than maximum
@@ -58,7 +58,7 @@ class ValuesAbove
 {
 public:
   VTKM_CONT
-  ValuesAbove(const vtkm::Float32& thresholdValue) : ThresholdValue(thresholdValue) {}
+  ValuesAbove(const vtkm::Float64& thresholdValue) : ThresholdValue(thresholdValue) {}
 
   template<typename T>
   VTKM_EXEC
@@ -68,7 +68,7 @@ public:
   }
 
 private:
-  vtkm::Float32 ThresholdValue;
+  vtkm::Float64 ThresholdValue;
 };
 
 // Predicate for values between minimum and maximum

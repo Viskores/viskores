@@ -74,7 +74,7 @@ public:
                           const CellSetType &cellSet,
                           const vtkm::cont::ArrayHandle<ValueType, StorageType>& fieldArray,
                           const UnaryPredicate &predicate,
-                          DeviceAdapter device)
+                          DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
