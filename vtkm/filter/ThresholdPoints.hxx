@@ -40,17 +40,17 @@ class ValuesBelow
 {
 public:
   VTKM_CONT
-  ValuesBelow(const vtkm::Float64& thresholdValue) : ThresholdValue(thresholdValue) {}
+  ValuesBelow(const vtkm::Float64& value) : Value(value) {}
 
-  template<typename T>
+  template<typename ScalarType>
   VTKM_EXEC
-  bool operator()(const T& value) const
+  bool operator()(const ScalarType& value) const
   {
-    return value <= static_cast<T>(this->ThresholdValue);
+    return value <= static_cast<ScalarType>(this->Value);
   }
 
 private:
-  vtkm::Float64 ThresholdValue;
+  vtkm::Float64 Value;
 };
 
 // Predicate for values greater than maximum
@@ -58,17 +58,17 @@ class ValuesAbove
 {
 public:
   VTKM_CONT
-  ValuesAbove(const vtkm::Float64& thresholdValue) : ThresholdValue(thresholdValue) {}
+  ValuesAbove(const vtkm::Float64& value) : Value(value) {}
 
-  template<typename T>
+  template<typename ScalarType>
   VTKM_EXEC
-  bool operator()(const T& value) const
+  bool operator()(const ScalarType& value) const
   {
-    return value >= static_cast<T>(this->ThresholdValue);
+    return value >= static_cast<ScalarType>(this->Value);
   }
 
 private:
-  vtkm::Float64 ThresholdValue;
+  vtkm::Float64 Value;
 };
 
 // Predicate for values between minimum and maximum
@@ -81,12 +81,12 @@ public:
                 const vtkm::Float64& upper) : Lower(lower), Upper(upper)
   { }
 
-  template<typename T>
+  template<typename ScalarType>
   VTKM_EXEC
-  bool operator()(const T& value) const
+  bool operator()(const ScalarType& value) const
   {
-    return value >= static_cast<T>(this->Lower) &&
-           value <= static_cast<T>(this->Upper);
+    return value >= static_cast<ScalarType>(this->Lower) &&
+           value <= static_cast<ScalarType>(this->Upper);
   }
 
 private:

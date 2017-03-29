@@ -20,9 +20,6 @@
 #ifndef vtkm_m_worklet_MaskPoints_h
 #define vtkm_m_worklet_MaskPoints_h
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
-
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -32,7 +29,7 @@ namespace vtkm {
 namespace worklet {
 
 // Subselect points using stride for now, creating new cellset of vertices
-class MaskPoints : public vtkm::worklet::WorkletMapPointToCell
+class MaskPoints
 {
 public:
   template <typename CellSetType, 

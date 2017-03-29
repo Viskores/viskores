@@ -20,9 +20,7 @@
 #ifndef vtkm_m_worklet_ExtractGeometry_h
 #define vtkm_m_worklet_ExtractGeometry_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
 #include <vtkm/cont/DataSet.h>
@@ -65,7 +63,7 @@ public:
       bool pass = true;
       for (vtkm::Id indx = 0; indx < numIndices; indx++)
       {
-        vtkm::IdComponent ptId = connectivityIn[indx];
+        vtkm::Id ptId = connectivityIn[indx];
         vtkm::Vec<FloatDefault,3> coordinate = coordinates.Get(ptId);
         vtkm::FloatDefault value = this->Function.Value(coordinate);
         if (value > 0)
@@ -104,7 +102,7 @@ public:
                                     CellSetType &cellSet,
                                     const ImplicitFunction &implicitFunction,
                                     const vtkm::cont::CoordinateSystem &coordinates,
-                                    DeviceAdapter device)
+                                    DeviceAdapter)
   {
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
 

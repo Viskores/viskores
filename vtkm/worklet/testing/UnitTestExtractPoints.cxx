@@ -76,8 +76,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
   
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0, 1.0, 1.0);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0, 3.0, 3.0);
+    vtkm::Vec<vtkm::Float64, 3> minPoint(1.0, 1.0, 1.0);
+    vtkm::Vec<vtkm::Float64, 3> maxPoint(3.0, 3.0, 3.0);
     vtkm::Box box(minPoint, maxPoint);
   
     // Output dataset contains input coordinate system and point data
@@ -106,8 +106,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
   
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> center(2, 2, 2);
-    vtkm::FloatDefault radius(1.8);
+    vtkm::Vec<vtkm::Float64, 3> center(2, 2, 2);
+    vtkm::Float64 radius(1.8);
     vtkm::Sphere sphere(center, radius);
   
     // Output dataset contains input coordinate system and point data
@@ -136,8 +136,8 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
   
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.0, 0.0, 0.0);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(1.0, 1.0, 1.0);
+    vtkm::Vec<vtkm::Float64, 3> minPoint(0.0, 0.0, 0.0);
+    vtkm::Vec<vtkm::Float64, 3> maxPoint(1.0, 1.0, 1.0);
     vtkm::Box box(minPoint, maxPoint);
   
     // Output dataset contains input coordinate system and point data

@@ -45,7 +45,7 @@ public:
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
     typedef vtkm::cont::ArrayHandlePermutation<
       vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::FloatDefault> > OutCellFieldArrayHandleType;
+      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -85,7 +85,7 @@ public:
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
     typedef vtkm::cont::ArrayHandlePermutation<
       vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::FloatDefault> > OutCellFieldArrayHandleType;
+      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -125,7 +125,7 @@ public:
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
     typedef vtkm::cont::ArrayHandlePermutation<
       vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::FloatDefault> > OutCellFieldArrayHandleType;
+      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
@@ -165,7 +165,7 @@ public:
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
     typedef vtkm::cont::ArrayHandlePermutation<
       vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::FloatDefault> > OutCellFieldArrayHandleType;
+      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -205,7 +205,7 @@ public:
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
     typedef vtkm::cont::ArrayHandlePermutation<
       vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::FloatDefault> > OutCellFieldArrayHandleType;
+      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -245,7 +245,7 @@ public:
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
     typedef vtkm::cont::ArrayHandlePermutation<
       vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::FloatDefault> > OutCellFieldArrayHandleType;
+      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();

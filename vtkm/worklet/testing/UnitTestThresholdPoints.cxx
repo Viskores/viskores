@@ -37,19 +37,18 @@ class ValuesBelow
 {
 public:
   VTKM_CONT
-  ValuesBelow(const vtkm::FloatDefault& thresholdValue) :
-    ThresholdValue(thresholdValue)
+  ValuesBelow(const vtkm::FloatDefault& value) : Value(value)
   { }
 
-  template<typename T>
+  template<typename ScalarType>
   VTKM_EXEC
-  bool operator()(const T& value) const
+  bool operator()(const ScalarType& value) const
   {
-    return value <= static_cast<T>(this->ThresholdValue);
+    return static_cast<vtkm::FloatDefault>(value) <= this->Value;
   }
 
 private:
-  vtkm::FloatDefault ThresholdValue;
+  vtkm::FloatDefault Value;
 };
 
 // Predicate for values greater than maximum
@@ -57,19 +56,18 @@ class ValuesAbove
 {
 public:
   VTKM_CONT
-  ValuesAbove(const vtkm::FloatDefault& thresholdValue) :
-    ThresholdValue(thresholdValue)
+  ValuesAbove(const vtkm::FloatDefault& value) : Value(value)
   { }
 
-  template<typename T>
+  template<typename ScalarType>
   VTKM_EXEC
-  bool operator()(const T& value) const
+  bool operator()(const ScalarType& value) const
   {
-    return value >= static_cast<T>(this->ThresholdValue);
+    return static_cast<vtkm::FloatDefault>(value) >= this->Value;
   }
 
 private:
-  vtkm::FloatDefault ThresholdValue;
+  vtkm::FloatDefault Value;
 };
 
 
@@ -84,12 +82,12 @@ public:
     Upper(upper)
   { }
 
-  template<typename T>
+  template<typename ScalarType>
   VTKM_EXEC
-  bool operator()(const T& value) const
+  bool operator()(const ScalarType& value) const
   {
-    return value >= static_cast<T>(this->Lower) &&
-           value <= static_cast<T>(this->Upper);
+    return static_cast<vtkm::FloatDefault>(value) >= this->Lower &&
+           static_cast<vtkm::FloatDefault>(value) <= this->Upper;
   }
 
 private:
@@ -111,23 +109,27 @@ public:
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
 
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> fieldArray;
-    dataset.GetField("pointvar").GetData().CopyTo(fieldArray);
-
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
+    outDataSet.AddField(dataset.GetField("pointvar"));
 
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
     outCellSet = threshold.Run(dataset.GetCellSet(0),
-                               fieldArray,
+                               dataset.GetField("pointvar").GetData(),
                                ValuesBetween(40.0f, 71.0f),
                                DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11), "Wrong result for ThresholdPoints");
+
+    vtkm::cont::Field pointField = outDataSet.GetField("pointvar");
+    vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
+    pointField.GetData().CopyTo(pointFieldArray);
+    VTKM_TEST_ASSERT(pointFieldArray.GetPortalConstControl().Get(12) == 50.0f,
+                     "Wrong point field data");
   }
 
   void TestUniform3D() const
@@ -138,23 +140,22 @@ public:
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> fieldArray;
-    dataset.GetField("pointvar").GetData().CopyTo(fieldArray);
-
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
+    outDataSet.AddField(dataset.GetField("pointvar"));
 
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
     outCellSet = threshold.Run(dataset.GetCellSet(0),
-                               fieldArray,
+                               dataset.GetField("pointvar").GetData(),
                                ValuesAbove(1.0f),
                                DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ThresholdPoints");
+
   }
 
   void TestExplicit3D() const
@@ -165,9 +166,6 @@ public:
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> fieldArray;
-    dataset.GetField("pointvar").GetData().CopyTo(fieldArray);
-
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
@@ -176,7 +174,7 @@ public:
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
     outCellSet = threshold.Run(dataset.GetCellSet(0),
-                               fieldArray,
+                               dataset.GetField("pointvar").GetData(),
                                ValuesBelow(50.0f),
                                DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);

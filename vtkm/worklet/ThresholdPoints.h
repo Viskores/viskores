@@ -22,7 +22,6 @@
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -31,20 +30,19 @@
 namespace vtkm {
 namespace worklet {
 
-// Threshold points on predicate producing CellSetSingleType<VERTEX> with
-// resulting subset of points
-class ThresholdPoints : public vtkm::worklet::WorkletMapPointToCell
+class ThresholdPoints
 {
 public:
   struct BoolType : vtkm::ListTagBase<bool> { };
 
   template <typename UnaryPredicate>
-  class ThresholdPointField : public vtkm::worklet::WorkletMapField
+  class ThresholdPointField : public vtkm::worklet::WorkletMapCellToPoint
   {
   public:
-    typedef void ControlSignature(FieldIn<> scalars,
-                                  FieldOut<BoolType> passFlags);
-    typedef _2 ExecutionSignature(_1);
+    typedef void ControlSignature(CellSetIn cellset,
+                                  FieldInPoint<ScalarAll> scalars,
+                                  FieldOutPoint<BoolType> passFlags);
+    typedef _3 ExecutionSignature(_2);
 
     VTKM_CONT
     ThresholdPointField() : Predicate() { }
@@ -66,26 +64,24 @@ public:
   };
 
   template <typename CellSetType, 
+            typename ScalarsArrayHandle,
             typename UnaryPredicate, 
-            typename ValueType, 
-            typename StorageType, 
             typename DeviceAdapter>
   vtkm::cont::CellSetSingleType<> Run(
                           const CellSetType &cellSet,
-                          const vtkm::cont::ArrayHandle<ValueType, StorageType>& fieldArray,
+                          const ScalarsArrayHandle &scalars,
                           const UnaryPredicate &predicate,
                           DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
     vtkm::cont::ArrayHandle<bool> passFlags;
-    vtkm::Id numberOfInputPoints = cellSet.GetNumberOfPoints();
-    
-    // Worklet output will be a boolean passFlag array
+
     typedef ThresholdPointField<UnaryPredicate> ThresholdWorklet;
+
     ThresholdWorklet worklet(predicate);
-    DispatcherMapField<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-    dispatcher.Invoke(fieldArray, passFlags);
+    DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
+    dispatcher.Invoke(cellSet, scalars, passFlags);
 
     vtkm::cont::ArrayHandle<vtkm::Id> pointIds;
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
@@ -94,7 +90,7 @@ public:
 
     // Make CellSetSingleType with VERTEX at each point id
     vtkm::cont::CellSetSingleType< > outCellSet(cellSet.GetName());
-    outCellSet.Fill(numberOfInputPoints,
+    outCellSet.Fill(cellSet.GetNumberOfPoints(),
                     vtkm::CellShapeTagVertex::Id,
                     1,
                     pointIds);
