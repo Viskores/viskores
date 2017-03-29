@@ -26,6 +26,7 @@ set(headers
   DeviceAdapterTagCuda.h
   MakeThrustIterator.h
   ThrustExceptionHandler.h
+  VirtualObjectTransferCuda.h
   )
 
 vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})

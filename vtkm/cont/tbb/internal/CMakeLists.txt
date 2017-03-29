@@ -23,6 +23,7 @@ set(headers
   DeviceAdapterAlgorithmTBB.h
   DeviceAdapterTagTBB.h
   FunctorsTBB.h
+  VirtualObjectTransferTBB.h
   )
 
 if (VTKm_ENABLE_TBB)

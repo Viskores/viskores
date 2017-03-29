@@ -25,5 +25,6 @@ set(unit_tests
   UnitTestSerialDataSetExplicit.cxx
   UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx
+  UnitTestSerialVirtualObjectCache.cxx
   )
 vtkm_unit_tests(TBB SOURCES ${unit_tests})

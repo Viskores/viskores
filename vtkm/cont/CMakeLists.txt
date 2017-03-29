@@ -72,6 +72,7 @@ set(headers
   StorageListTag.h
   Timer.h
   TryExecute.h
+  VirtualObjectCache.h
   )
 
 set(header_impls

@@ -30,6 +30,7 @@
 
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
+#include <vtkm/cont/cuda/internal/VirtualObjectTransferCuda.h>
 #endif
 
 #endif //vtk_m_cont_cuda_DeviceAdapterCuda_h

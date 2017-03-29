@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2017 Sandia Corporation.
+//  Copyright 2017 UT-Battelle, LLC.
+//  Copyright 2017 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -17,12 +17,23 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_serial_DeviceAdapterSerial_h
-#define vtk_m_cont_serial_DeviceAdapterSerial_h
+#include <vtkm/cont/testing/TestingVirtualObjectCache.h>
 
-#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
-#include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
-#include <vtkm/cont/serial/internal/VirtualObjectTransferSerial.h>
+namespace {
 
-#endif //vtk_m_cont_serial_DeviceAdapterSerial_h
+void TestVirtualObjectCache()
+{
+  using DeviceAdapterList =
+    vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial,
+                      vtkm::cont::DeviceAdapterTagCuda>;
+
+  vtkm::cont::testing::TestingVirtualObjectCache<DeviceAdapterList>::Run();
+}
+
+} // anonymous namespace
+
+
+int UnitTestCudaVirtualObjectCache(int, char *[])
+{
+  return vtkm::cont::testing::Testing::Run(TestVirtualObjectCache);
+}

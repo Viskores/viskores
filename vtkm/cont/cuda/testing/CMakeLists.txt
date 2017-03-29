@@ -26,5 +26,6 @@ set(unit_tests
   UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu
   UnitTestCudaMath.cu
+  UnitTestCudaVirtualObjectCache.cu
   )
 vtkm_unit_tests(CUDA SOURCES ${unit_tests})

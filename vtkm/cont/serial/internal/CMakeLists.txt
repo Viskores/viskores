@@ -22,6 +22,7 @@ set(headers
   ArrayManagerExecutionSerial.h
   DeviceAdapterAlgorithmSerial.h
   DeviceAdapterTagSerial.h
+  VirtualObjectTransferSerial.h
   )
 
 vtkm_declare_headers(${headers})
