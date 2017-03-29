@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestCudaDataSetExplicit.cu
   UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu
+  UnitTestCudaImplicitFunction.cu
   UnitTestCudaMath.cu
   UnitTestCudaVirtualObjectCache.cu
   )

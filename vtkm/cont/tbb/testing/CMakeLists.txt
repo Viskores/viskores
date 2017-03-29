@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestTBBDataSetExplicit.cxx
   UnitTestTBBDataSetSingleType.cxx
   UnitTestTBBDeviceAdapter.cxx
+  UnitTestTBBImplicitFunction.cxx
   UnitTestTBBVirtualObjectCache.cxx
   )
 vtkm_unit_tests(TBB SOURCES ${unit_tests})

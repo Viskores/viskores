@@ -64,6 +64,7 @@ set(headers
   ErrorExecution.h
   ErrorInternal.h
   Field.h
+  ImplicitFunction.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Storage.h
@@ -78,6 +79,7 @@ set(headers
 set(header_impls
   ArrayHandle.hxx
   CellSetStructured.hxx
+  ImplicitFunction.hxx
   StorageBasic.hxx
   )
 
@@ -88,6 +90,7 @@ set(sources
   CoordinateSystem.cxx
   DynamicArrayHandle.cxx
   Field.cxx
+  ImplicitFunction.cxx
   internal/SimplePolymorphicContainer.cxx
   StorageBasic.cxx
   )

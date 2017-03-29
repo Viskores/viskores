@@ -78,7 +78,7 @@ public:
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.f, 3.f, 3.f);
-    vtkm::Box box(minPoint, maxPoint);
+    vtkm::cont::Box box(minPoint, maxPoint);
   
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
@@ -108,7 +108,7 @@ public:
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
     vtkm::FloatDefault radius(1.8f);
-    vtkm::Sphere sphere(center, radius);
+    vtkm::cont::Sphere sphere(center, radius);
   
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
@@ -138,7 +138,7 @@ public:
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.f, 0.f, 0.f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(1.f, 1.f, 1.f);
-    vtkm::Box box(minPoint, maxPoint);
+    vtkm::cont::Box box(minPoint, maxPoint);
   
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;

@@ -28,6 +28,7 @@ set(headers
   TestingDataSetExplicit.h
   TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
+  TestingImplicitFunction.h
   TestingVirtualObjectCache.h
   )
 

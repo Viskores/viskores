@@ -26,7 +26,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/ImplicitFunctions.h>
+#include <vtkm/cont/ImplicitFunction.h>
 
 namespace vtkm {
 namespace worklet {
@@ -38,7 +38,6 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Worklet to identify points within volume of interest
-  template<typename ImplicitFunction>
   class ExtractPointsByVOI : public vtkm::worklet::WorkletMapCellToPoint
   {
   public:
@@ -48,7 +47,7 @@ public:
     typedef   _3 ExecutionSignature(_2);
 
     VTKM_CONT
-    ExtractPointsByVOI(const ImplicitFunction &function) :
+    ExtractPointsByVOI(const vtkm::exec::ImplicitFunction &function) :
                                      Function(function) {}
 
     VTKM_EXEC
@@ -62,7 +61,7 @@ public:
     }
 
   private:
-    ImplicitFunction Function;
+    vtkm::exec::ImplicitFunction Function;
   };
 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -90,23 +89,20 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract points by implicit function
   template <typename CellSetType,
-            typename ImplicitFunction,
             typename DeviceAdapter>
   vtkm::cont::CellSetSingleType<> Run(
                                     const CellSetType &cellSet,
                                     const vtkm::cont::CoordinateSystem &coordinates,
-                                    const ImplicitFunction &implicitFunction,
-                                    DeviceAdapter)
+                                    const vtkm::cont::ImplicitFunction &implicitFunction,
+                                    DeviceAdapter device)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
+    // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;
 
-    // Worklet output will be a boolean passFlag array
-    typedef ExtractPointsByVOI<ImplicitFunction> ExtractPointsWorklet;
-
-    ExtractPointsWorklet worklet(implicitFunction);
-    DispatcherMapTopology<ExtractPointsWorklet, DeviceAdapter> dispatcher(worklet);
+    ExtractPointsByVOI worklet(implicitFunction.PrepareForExecution(device));
+    DispatcherMapTopology<ExtractPointsByVOI, DeviceAdapter> dispatcher(worklet);
     dispatcher.Invoke(cellSet, coordinates, passFlags);
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =

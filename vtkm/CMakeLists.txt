@@ -34,7 +34,6 @@ set(headers
   Bounds.h
   CellShape.h
   CellTraits.h
-  ImplicitFunctions.h
   ListTag.h
   Math.h
   Matrix.h
