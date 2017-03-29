@@ -61,7 +61,7 @@ public:
     {
       // If any point is outside volume of interest, cell is also
       bool pass = true;
-      for (vtkm::Id indx = 0; indx < numIndices; indx++)
+      for (vtkm::IdComponent indx = 0; indx < numIndices; indx++)
       {
         vtkm::Id ptId = connectivityIn[indx];
         vtkm::Vec<FloatDefault,3> coordinate = coordinates.Get(ptId);
