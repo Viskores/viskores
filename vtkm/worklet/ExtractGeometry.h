@@ -81,7 +81,7 @@ public:
   template <typename CellSetType,
             typename DeviceAdapter>
   vtkm::cont::CellSetPermutation<CellSetType> Run(
-                                    CellSetType &cellSet,
+                                    const CellSetType &cellSet,
                                     const vtkm::cont::ArrayHandle<vtkm::Id> &cellIds,
                                     DeviceAdapter)
   {
@@ -99,7 +99,7 @@ public:
             typename ImplicitFunction,
             typename DeviceAdapter>
   vtkm::cont::CellSetPermutation<CellSetType> Run(
-                                    CellSetType &cellSet,
+                                    const CellSetType &cellSet,
                                     const ImplicitFunction &implicitFunction,
                                     const vtkm::cont::CoordinateSystem &coordinates,
                                     DeviceAdapter)
@@ -110,6 +110,7 @@ public:
 
     // Worklet output will be a boolean passFlag array
     typedef ExtractCellsByVOI<ImplicitFunction> ExtractCellsWorklet;
+
     ExtractCellsWorklet worklet(implicitFunction);
     DispatcherMapTopology<ExtractCellsWorklet, DeviceAdapter> dispatcher(worklet);
     dispatcher.Invoke(cellSet,

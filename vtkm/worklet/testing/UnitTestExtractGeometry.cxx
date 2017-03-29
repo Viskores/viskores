@@ -93,8 +93,8 @@ public:
     dataset.GetCellSet(0).CopyTo(cellSet);
 
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5, 0.0, 0.0);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(2.0, 2.0, 2.0);
+    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.0f, 0.0f);
+    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(2.0f, 2.0f, 2.0f);
     vtkm::Box box(minPoint, maxPoint);
   
     // Output data set with cell set containing extracted cells and all points
@@ -213,8 +213,8 @@ public:
     dataset.GetCellSet(0).CopyTo(cellSet);
   
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0, 1.0, 1.0);
-    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0, 3.0, 3.0);
+    vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0f, 1.0f, 1.0f);
+    vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0f, 3.0f, 3.0f);
     vtkm::Box box(minPoint, maxPoint);
   
     // Output data set with cell set containing extracted points
@@ -253,8 +253,8 @@ public:
     dataset.GetCellSet(0).CopyTo(cellSet);
   
     // Implicit function
-    vtkm::Vec<vtkm::FloatDefault, 3> center(2, 2, 2);
-    vtkm::FloatDefault radius(FloatDefault(1.8));
+    vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
+    vtkm::FloatDefault radius(1.8f);
     vtkm::Sphere sphere(center, radius);
   
     // Output data set with cell set containing extracted cells
@@ -278,12 +278,12 @@ public:
 
   void operator()() const
   {
-    this->TestExplicitById();
-    //this->TestExplicitByBox();
     this->TestUniformById2D();
     this->TestUniformById3D();
-    //this->TestUniformByBox();
     this->TestUniformBySphere();
+    this->TestUniformByBox();
+    this->TestExplicitById();
+    this->TestExplicitByBox();
   }
 };
 
