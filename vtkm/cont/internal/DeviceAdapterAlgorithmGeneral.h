@@ -653,6 +653,85 @@ public:
     return GetExecutionValue(output, numValues-1);
   }
 
+  template<typename T, typename U, class KIn, class VIn, class VOut>
+  VTKM_CONT static void ScanInclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn> &keys,
+    const vtkm::cont::ArrayHandle<U, VIn> &values,
+    vtkm::cont::ArrayHandle<U, VOut> &values_output)
+  {
+    return DerivedAlgorithm::ScanInclusiveByKey(keys,
+                                                values,
+                                                values_output,
+                                                vtkm::Add());
+  }
+
+  template<typename T, typename U, class KIn, class VIn, class VOut,
+    class BinaryFunctor>
+  VTKM_CONT static void ScanInclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn> &keys,
+    const vtkm::cont::ArrayHandle<U, VIn> &values,
+    vtkm::cont::ArrayHandle<U, VOut> &values_output,
+    BinaryFunctor binary_functor)
+  {
+    VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
+    const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+
+    if(numberOfKeys <= 1)
+    { //we only have a single key/value so that is our output
+      DerivedAlgorithm::Copy(values, values_output);
+      return;
+    }
+
+    //we need to determine based on the keys what is the keystate for
+    //each key. The states are start, middle, end of a series and the special
+    //state start and end of a series
+    vtkm::cont::ArrayHandle< ReduceKeySeriesStates > keystate;
+
+    {
+      typedef typename vtkm::cont::ArrayHandle<T,KIn>::template ExecutionTypes<DeviceAdapterTag>
+      ::PortalConst InputPortalType;
+
+      typedef typename vtkm::cont::ArrayHandle< ReduceKeySeriesStates >::template ExecutionTypes<DeviceAdapterTag>
+      ::Portal KeyStatePortalType;
+
+      InputPortalType inputPortal = keys.PrepareForInput(DeviceAdapterTag());
+      KeyStatePortalType keyStatePortal = keystate.PrepareForOutput(numberOfKeys,
+                                                                    DeviceAdapterTag());
+      ReduceStencilGeneration<InputPortalType, KeyStatePortalType> kernel(inputPortal, keyStatePortal);
+      DerivedAlgorithm::Schedule(kernel, numberOfKeys);
+    }
+
+    //next step is we need to reduce the values for each key. This is done
+    //by running an inclusive scan over the values array using the stencil.
+    //
+    // this inclusive scan will write out two values, the first being
+    // the value summed currently, the second being 0 or 1, with 1 being used
+    // when this is a value of a key we need to write ( END or START_AND_END)
+    {
+      typedef vtkm::cont::ArrayHandle<U, VIn> ValueInHandleType;
+      typedef vtkm::cont::ArrayHandle<U, VOut> ValueOutHandleType;
+      typedef vtkm::cont::ArrayHandle<ReduceKeySeriesStates> StencilHandleType;
+      typedef vtkm::cont::ArrayHandleZip<ValueInHandleType,
+        StencilHandleType> ZipInHandleType;
+      typedef vtkm::cont::ArrayHandleZip<ValueOutHandleType,
+        StencilHandleType> ZipOutHandleType;
+
+      StencilHandleType stencil;
+      ValueOutHandleType reducedValues;
+
+      ZipInHandleType scanInput(values, keystate);
+      ZipOutHandleType scanOutput(reducedValues, stencil);
+
+      DerivedAlgorithm::ScanInclusive(scanInput,
+                                      scanOutput,
+                                      ReduceByKeyAdd<BinaryFunctor>(
+                                        binary_functor));
+      std::cout << scanOutput.GetNumberOfValues() << std::endl;
+      //at this point we are done with keystate, so free the memory
+      keystate.ReleaseResources();
+      DerivedAlgorithm::Copy(reducedValues, values_output);
+    }
+  }
   //--------------------------------------------------------------------------
   // Sort
   template<typename T, class Storage, class BinaryCompare>

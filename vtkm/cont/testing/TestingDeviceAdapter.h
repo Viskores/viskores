@@ -1306,6 +1306,33 @@ private:
     }
   }
 
+  static VTKM_CONT void TestScanInclusiveByKey()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Scan Inclusive By Key" << std::endl;
+
+    const vtkm::Id inputLength = 10;
+    vtkm::Id inputKeys[inputLength] = {0, 0, 0, 1, 1, 2, 3, 3, 3, 3};
+    vtkm::Id inputValues[inputLength] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+
+    const vtkm::Id expectedLength = 10;
+    vtkm::Id expectedValues[expectedLength] = {1, 2, 3, 1, 2, 1, 1, 2, 3, 4};
+
+    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+
+    IdArrayHandle valuesOut;
+
+    Algorithm::ScanInclusiveByKey(keys, values, valuesOut);
+    std::cout << valuesOut.GetNumberOfValues() << std::endl;
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                     "Got wrong number of output values");
+    for (auto i= 0; i < valuesOut.GetNumberOfValues(); i++) {
+      std::cout << valuesOut.GetPortalConstControl().Get(i) << " ";
+    }
+    std::cout << std::endl;
+
+  }
   static VTKM_CONT void TestScanInclusive()
   {
     std::cout << "-------------------------------------------" << std::endl;
@@ -1907,6 +1934,8 @@ private:
 
       TestScanInclusive();
       TestScanInclusiveWithComparisonObject();
+
+      TestScanInclusiveByKey();
 
       TestSort();
       TestSortWithComparisonObject();
