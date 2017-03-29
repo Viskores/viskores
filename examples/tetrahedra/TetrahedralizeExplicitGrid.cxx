@@ -22,7 +22,7 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/worklet/TetrahedralizeExplicitGrid.h>
+#include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
@@ -50,7 +50,6 @@ namespace {
 
 // Takes input uniform grid and outputs unstructured grid of tets
 static vtkm::cont::DataSet outDataSet;
-vtkm::Id numberOfInPoints;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
 static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
@@ -206,7 +205,7 @@ void displayCall()
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(numberOfInPoints);
+  vertexArray.Allocate(cellSet.GetNumberOfPoints());
   vtkm::cont::CastAndCall(outDataSet.GetCoordinateSystem(), GetVertexArray());
 
   // Draw the five tetrahedra belonging to each hexadron
@@ -302,17 +301,11 @@ int main(int argc, char* argv[])
   vtkm::cont::CellSetExplicit<> inCellSet;
   inDataSet.GetCellSet(0).CopyTo(inCellSet);
 
-  numberOfInPoints = inCellSet.GetNumberOfPoints();
-
-  // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetSingleType<> cellSet("cells");
-  outDataSet.AddCellSet(cellSet);
-  outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
-
   // Convert cells to tetrahedra
-  vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter>
-                 tetrahedralizeFilter(inDataSet, outDataSet);
-  tetrahedralizeFilter.Run();
+  vtkm::filter::Tetrahedralize tetrahedralize;
+  vtkm::filter::ResultDataSet result = tetrahedralize.Execute(inDataSet);
+
+  outDataSet = result.GetDataSet();
 
   // Render the output dataset of tets
   lastx = lasty = 0;
