@@ -63,8 +63,9 @@ public:
   Tetrahedralize() : OutCellsPerCell() {}
 
   // Tetrahedralize explicit data set, save number of tetra cells per input
-  template <typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetExplicit<> &cellSet,
+  template <typename CellSetType,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
                                       const DeviceAdapter&)
   {
     TetrahedralizeExplicit<DeviceAdapter> worklet;
@@ -78,6 +79,14 @@ public:
   {
     TetrahedralizeStructured<DeviceAdapter> worklet;
     return worklet.Run(cellSet, this->OutCellsPerCell); 
+  }
+
+  template <typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> Run(const vtkm::cont::CellSetStructured<2>&,
+                                      const DeviceAdapter&)
+  {
+    throw vtkm::cont::ErrorBadType("CellSetStructured<2> can't be tetrahedralized");
+    return vtkm::cont::CellSetSingleType<>();
   }
 
   // Using the saved input to output cells, expand cell data

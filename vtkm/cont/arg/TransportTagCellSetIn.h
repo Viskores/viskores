@@ -55,6 +55,7 @@ struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology,ToTopology>
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object,
                             const InputDomainType &,
+                            vtkm::Id,
                             vtkm::Id) const
   {
     return object.PrepareForInput(Device(),

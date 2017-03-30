@@ -131,7 +131,7 @@ struct TryWholeArrayType
 
     std::cout << "Check Transport WholeArrayOut" << std::endl;
     TestOutKernel<typename OutTransportType::ExecObjectType> outKernel;
-    outKernel.Portal = OutTransportType()(array, nullptr, -1);
+    outKernel.Portal = OutTransportType()(array, nullptr, -1, -1);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(outKernel, ARRAY_SIZE);
 
@@ -139,13 +139,13 @@ struct TryWholeArrayType
 
     std::cout << "Check Transport WholeArrayIn" << std::endl;
     TestInKernel<typename InTransportType::ExecObjectType> inKernel;
-    inKernel.Portal = InTransportType()(array, nullptr, -1);
+    inKernel.Portal = InTransportType()(array, nullptr, -1, -1);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(inKernel, ARRAY_SIZE);
 
     std::cout << "Check Transport WholeArrayInOut" << std::endl;
     TestInOutKernel<typename InOutTransportType::ExecObjectType> inOutKernel;
-    inOutKernel.Portal = InOutTransportType()(array, nullptr, -1);
+    inOutKernel.Portal = InOutTransportType()(array, nullptr, -1, -1);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(inOutKernel, ARRAY_SIZE);
 
@@ -180,7 +180,7 @@ struct TryAtomicArrayType
 
     std::cout << "Check Transport AtomicArray" << std::endl;
     TestAtomicKernel<typename TransportType::ExecObjectType>
-        kernel(TransportType()(array, nullptr, -1));
+        kernel(TransportType()(array, nullptr, -1, -1));
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
 

@@ -56,6 +56,7 @@ struct Transport<
   ExecObjectType operator()(
       vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> array,
       const InputDomainType &,
+      vtkm::Id,
       vtkm::Id) const
   {
     // Note: we ignore the size of the domain because the randomly accessed

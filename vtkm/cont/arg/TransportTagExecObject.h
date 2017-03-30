@@ -54,6 +54,7 @@ struct Transport<vtkm::cont::arg::TransportTagExecObject,ContObjectType,Device>
   VTKM_CONT
   ExecObjectType operator()(const ContObjectType &object,
                             const InputDomainType &,
+                            vtkm::Id,
                             vtkm::Id) const
   {
     return object;

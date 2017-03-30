@@ -274,6 +274,7 @@ private:
     ExecObjectParameters execObjectParameters =
         parameters.StaticTransformCont(TransportFunctorType(
                                          invocation.GetInputDomain(),
+                                         inputRange,
                                          outputRange));
 
     // Get the arrays used for scattering input to output.
