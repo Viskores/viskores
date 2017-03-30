@@ -51,7 +51,7 @@ public:
     ExtractPointsByVOI(const ImplicitFunction &function) :
                                      Function(function) {}
 
-    VTKM_CONT
+    VTKM_EXEC
     bool operator()(const vtkm::Vec<vtkm::Float64,3> &coordinate) const
     {
       bool pass = true;

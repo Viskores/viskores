@@ -46,16 +46,18 @@ public:
   public:
     typedef void ControlSignature(CellSetIn cellset,
                                   WholeArrayIn<Vec3> coordinates,
-                                  FieldOut<BoolType> passFlags);
+                                  FieldOutCell<BoolType> passFlags);
     typedef   _3 ExecutionSignature(PointCount, PointIndices, _2);
 
+    VTKM_CONT
+    ExtractCellsByVOI() : ImplicitFunction() {}
     VTKM_CONT
     explicit ExtractCellsByVOI(const ImplicitFunction &function)
                                            : Function(function) {}
 
     template <typename ConnectivityInVec, typename InVecFieldPortalType>
-    VTKM_CONT
-    bool operator()(const vtkm::IdComponent &numIndices,
+    VTKM_EXEC
+    bool operator()(       vtkm::Id numIndices,
                     const ConnectivityInVec &connectivityIn,
                     const InVecFieldPortalType &coordinates) const
     {
@@ -100,16 +102,15 @@ public:
             typename DeviceAdapter>
   vtkm::cont::CellSetPermutation<CellSetType> Run(
                                     const CellSetType &cellSet,
-                                    const ImplicitFunction &implicitFunction,
                                     const vtkm::cont::CoordinateSystem &coordinates,
+                                    const ImplicitFunction &implicitFunction,
                                     DeviceAdapter)
   {
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
 
-    vtkm::cont::ArrayHandle<bool> passFlags;
-
     // Worklet output will be a boolean passFlag array
     typedef ExtractCellsByVOI<ImplicitFunction> ExtractCellsWorklet;
+    vtkm::cont::ArrayHandle<bool> passFlags;
 
     ExtractCellsWorklet worklet(implicitFunction);
     DispatcherMapTopology<ExtractCellsWorklet, DeviceAdapter> dispatcher(worklet);

@@ -101,8 +101,8 @@ public:
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
         extractGeometry.Run(cellSet,
-                            box,
                             dataset.GetCoordinateSystem("coordinates"),
+                            box,
                             DeviceAdapter());
 
     vtkm::cont::Field cellField =
@@ -221,8 +221,8 @@ public:
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
         extractGeometry.Run(cellSet,
-                            box,
                             dataset.GetCoordinateSystem("coords"),
+                            box,
                             DeviceAdapter());
 
     vtkm::cont::Field cellField =
@@ -261,8 +261,8 @@ public:
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
         extractGeometry.Run(cellSet,
-                            sphere,
                             dataset.GetCoordinateSystem("coords"),
+                            sphere,
                             DeviceAdapter());
 
     vtkm::cont::Field cellField =
