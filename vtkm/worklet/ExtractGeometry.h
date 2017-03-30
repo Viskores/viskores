@@ -50,7 +50,8 @@ public:
     typedef   _3 ExecutionSignature(PointCount, PointIndices, _2);
 
     VTKM_CONT
-    ExtractCellsByVOI() : ImplicitFunction() {}
+    ExtractCellsByVOI() : Function() {}
+
     VTKM_CONT
     explicit ExtractCellsByVOI(const ImplicitFunction &function)
                                            : Function(function) {}
