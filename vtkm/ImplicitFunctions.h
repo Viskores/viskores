@@ -194,63 +194,69 @@ public:
   VTKM_EXEC_CONT
   FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const
   {
-    vtkm::Vec<vtkm::IdComponent,3> inside(1, 1, 1);
-    vtkm::Vec<FloatDefault,3> dist(FloatDefault(0), FloatDefault(0), FloatDefault(0));
-    FloatDefault insideDistance = vtkm::NegativeInfinity32();
+    FloatDefault minDistance = vtkm::NegativeInfinity32();
+    FloatDefault diff, t, dist;
+    FloatDefault distance = FloatDefault(0.0);
+    vtkm::IdComponent inside = 1;
 
     for (vtkm::IdComponent d = 0; d < 3; d++)
     {
-      if (this->MinPoint[d] == this->MaxPoint[d])
+      diff = this->MaxPoint[d] - this->MinPoint[d];
+      if (diff != FloatDefault(0.0))
       {
-        dist[d] = vtkm::Abs(x[d] - MinPoint[d]);
-        if (dist[d] > 0.0)
-          inside[d] = 0;
-      }
-      else
-      {
-        // Calculate the distance of point to box boundary
-        if (x[d] < this->MinPoint[d])
+        t = (x[d] - this->MinPoint[d]) / diff;
+        // Outside before the box
+        if (t < FloatDefault(0.0))
         {
-          // Point less than bounding box minimum (positive dist)
-          inside[d] = 0;
-          dist[d] = this->MinPoint[d] - x[d];
+          inside = 0;
+          dist = this->MinPoint[d] - x[d];
         }
-        else if (x[d] > this->MaxPoint[d])
+        // Outside after the box
+        else if (t > FloatDefault(1.0))
         {
-          // Point greater than bounding box maximum (positive dist)
-          inside[d] = 0;
-          dist[d] = x[d] - this->MaxPoint[d];
-        }
-        else if (x[d] <= ((this->MaxPoint[d] - this->MinPoint[d]) / FloatDefault(2)))
-        {
-          // Point inside box closer to minimum (negative dist)
-          dist[d] = this->MinPoint[d] - x[d];
-          if (dist[d] > insideDistance)
-            insideDistance = dist[d];
+          inside = 0;
+          dist = x[d] - this->MaxPoint[d];
         }
         else
         {
-          // Point inside box closer to maximum (negative dist)
-          dist[d] = x[d] - this->MaxPoint[d];
-          if (dist[d] > insideDistance)
-            insideDistance = dist[d];
+          // Inside the box in lower half
+          if (t <= FloatDefault(0.5))
+          {
+          dist = MinPoint[d] - x[d];
+          }
+          // Inside the box in upper half
+          else
+          {
+             dist = x[d] - MaxPoint[d];
+          }
+          if (dist > minDistance)
+          {
+            minDistance = dist;
+          }
         }
+      }
+      else
+      {
+        dist = vtkm::Abs(x[d] - MinPoint[d]);
+        if (dist > FloatDefault(0.0))
+        {
+          inside = 0;
+        }
+      }
+      if (dist > FloatDefault(0.0))
+      {
+        distance += dist*dist;
       }
     }
 
-    if (inside[0] && inside[1] && inside[2])
+    distance = vtkm::Sqrt(distance);
+    if (inside)
     {
-      return(insideDistance);
+      return minDistance;
     }
     else
     {
-      FloatDefault distance = 0.f;
-      for (vtkm::IdComponent d = 0; d < 3; d++)
-      {
-        if (dist[d] > 0.0)
-          distance += dist[d] * dist[d];
-      }
-      return vtkm::Sqrt(distance);
+      return distance;
     }
   }
 
@@ -270,9 +276,9 @@ public:
     vtkm::Vec<FloatDefault,3> normal;
     vtkm::Vec<FloatDefault,3> inside(FloatDefault(0), FloatDefault(0), FloatDefault(0));
     vtkm::Vec<FloatDefault,3> outside(FloatDefault(0), FloatDefault(0), FloatDefault(0));
-    vtkm::Vec<FloatDefault,3> center((this->MaxPoint[0] - this->MinPoint[0]) / FloatDefault(2),
-                                     (this->MaxPoint[1] - this->MinPoint[1]) / FloatDefault(2),
-                                     (this->MaxPoint[2] - this->MinPoint[2]) / FloatDefault(2));
+    vtkm::Vec<FloatDefault,3> center((this->MaxPoint[0] + this->MinPoint[0]) * FloatDefault(0.5),
+                                     (this->MaxPoint[1] + this->MinPoint[1]) * FloatDefault(0.5),
+                                     (this->MaxPoint[2] + this->MinPoint[2]) * FloatDefault(0.5));
 
     // Compute the location of the point with respect to the box
     // Point will lie in one of 27 separate regions around or within the box
@@ -293,19 +299,18 @@ public:
       }
       else
       {
+        location[d] = 1;
         if (x[d] <= center[d])
         {
           // Inside the box low end
-          location[d] = 1;
-          inside[d] = -1.0;
           dist = x[d] - this->MinPoint[d];
+          inside[d] = -1.0;
         }
         else
         {
           // Inside the box high end
-          location[d] = 1;
-          inside[d] = 1.0;
           dist = this->MaxPoint[d] - x[d];
+          inside[d] = 1.0;
         }
         if (dist < minDist) // dist is negative
         {
@@ -315,7 +320,7 @@ public:
       }
     }
 
-    int indx = location[0] + 3*location[1] + 9*location[2];
+    vtkm::Id indx = location[0] + 3*location[1] + 9*location[2];
     switch (indx)
     { 
       // verts - gradient points away from center point
@@ -359,7 +364,7 @@ public:
         normal[minAxis] = inside[minAxis];
         break;
       default:
-        assert("check: impossible case." && 0); // reaching this line is a bug.
+        VTKM_ASSERT(false);
         break;
     }
     return normal;
