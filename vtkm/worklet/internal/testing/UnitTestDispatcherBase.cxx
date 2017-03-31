@@ -78,9 +78,14 @@ struct Transport<TestTransportTag, vtkm::Id *, Device>
   typedef TestExecObject ExecObjectType;
 
   VTKM_CONT
-  ExecObjectType operator()(vtkm::Id *contData, vtkm::Id *, vtkm::Id size) const
+  ExecObjectType operator()(vtkm::Id *contData,
+                            vtkm::Id *,
+                            vtkm::Id inputRange,
+                            vtkm::Id outputRange) const
   {
-    VTKM_TEST_ASSERT(size == ARRAY_SIZE,
+    VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE,
+                     "Got unexpected size in test transport.");
+    VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE,
                      "Got unexpected size in test transport.");
     return ExecObjectType(contData);
   }
