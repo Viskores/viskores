@@ -29,6 +29,8 @@ set(headers
   DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
   ExternalFaces.h
+  ExtractGeometry.h
+  ExtractPoints.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
@@ -37,6 +39,8 @@ set(headers
   Magnitude.h
   MarchingCubes.h
   MarchingCubesDataTables.h
+  Mask.h
+  MaskPoints.h
   PointAverage.h
   PointElevation.h
   RemoveUnusedPoints.h
@@ -46,6 +50,7 @@ set(headers
   StreamLineUniformGrid.h
   Tetrahedralize.h
   Threshold.h
+  ThresholdPoints.h
   Triangulate.h
   VertexClustering.h
   WaveletCompressor.h

@@ -33,6 +33,8 @@ set(headers
   Gradient.h
   Histogram.h
   MarchingCubes.h
+  Mask.h
+  MaskPoints.h
   PointAverage.h
   PointElevation.h
   PolicyBase.h
@@ -42,6 +44,7 @@ set(headers
   ResultField.h
   Tetrahedralize.h
   Threshold.h
+  ThresholdPoints.h
   Triangulate.h
   VectorMagnitude.h
   VertexClustering.h
@@ -60,10 +63,13 @@ set(header_template_sources
   Gradient.hxx
   Histogram.hxx
   MarchingCubes.hxx
+  Mask.hxx
+  MaskPoints.hxx
   PointAverage.hxx
   PointElevation.hxx
   Tetrahedralize.hxx
   Threshold.hxx
+  ThresholdPoints.hxx
   Triangulate.hxx
   VectorMagnitude.hxx
   VertexClustering.hxx

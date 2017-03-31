@@ -25,11 +25,15 @@ set(unit_tests
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestExternalFaces.cxx
+  UnitTestExtractGeometry.cxx
+  UnitTestExtractPoints.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
+  UnitTestMask.cxx
+  UnitTestMaskPoints.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx
   UnitTestRemoveUnusedPoints.cxx
@@ -39,6 +43,7 @@ set(unit_tests
   UnitTestStreamLineUniformGrid.cxx
   UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
+  UnitTestThresholdPoints.cxx
   UnitTestTriangulate.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx

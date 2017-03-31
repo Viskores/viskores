@@ -74,6 +74,48 @@ struct TestingImplicitFunctions
   };
 
 
+  static void TestBoxValue()
+  {
+    typedef EvaluateImplicitFunction<vtkm::Box> EvalWorklet;
+    typedef vtkm::worklet::DispatcherMapField<EvalWorklet, DeviceAdapter>
+        EvalDispatcher;
+
+    FVec3 half(vtkm::Abs(GetRandomValue()), vtkm::Abs(GetRandomValue()), vtkm::Abs(GetRandomValue()));
+    FVec3 minPoint(GetRandomValue(), GetRandomValue(), GetRandomValue());
+    FVec3 maxPoint(minPoint[0] + 2.f * half[0], minPoint[1] + 2.f * half[1], minPoint[2] + 2.f * half[2]);
+
+    vtkm::Box box(minPoint, maxPoint);
+
+    FVec3 data[8] = { minPoint,
+                      maxPoint,
+                      minPoint + FVec3(FloatDefault(0), half[1], half[2]),
+                      minPoint + FVec3(half[0], FloatDefault(0), half[2]),
+                      minPoint + FVec3(half[0], half[1], FloatDefault(0)),
+                      minPoint + half,
+                      minPoint - half,
+                      maxPoint + half
+                    };
+    vtkm::cont::ArrayHandle<FVec3> points = vtkm::cont::make_ArrayHandle(data, 8);
+
+    EvalWorklet eval(box);
+    vtkm::cont::ArrayHandle<FloatDefault> values;
+    EvalDispatcher(eval).Invoke(points, values);
+
+    vtkm::cont::ArrayHandle<FloatDefault>::PortalConstControl portal =
+        values.GetPortalConstControl();
+
+    bool success = test_equal(portal.Get(0), FloatDefault(0.0) ) &&
+                   test_equal(portal.Get(1), FloatDefault(0.0) ) &&
+                   test_equal(portal.Get(2), FloatDefault(0.0) ) &&
+                   test_equal(portal.Get(3), FloatDefault(0.0) ) &&
+                   test_equal(portal.Get(4), FloatDefault(0.0) ) &&
+                   (portal.Get(5) < 0.0) &&
+                   (portal.Get(6) > 0.0) &&
+                   (portal.Get(7) > 0.0);
+
+    VTKM_TEST_ASSERT(success, "Box: did not get expected results.");
+  }
+
   static void TestSphereValue()
   {
     typedef EvaluateImplicitFunction<vtkm::Sphere> EvalWorklet;
@@ -157,6 +199,10 @@ struct TestingImplicitFunctions
     for (int i = 0; i < 50; ++i)
     {
       TestPlaneValue();
+    }
+    for (int i = 0; i < 50; ++i)
+    {
+      TestBoxValue();
     }
   }
 };
