@@ -27,6 +27,7 @@ set(unit_tests
   UnitTestExternalFaces.cxx
   UnitTestExtractGeometry.cxx
   UnitTestExtractPoints.cxx
+  UnitTestExtractStructured.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestKeys.cxx
