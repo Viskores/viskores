@@ -28,6 +28,8 @@
 #include <vector>
 #include <math.h>
 
+#include <chrono>
+
 int numSeeds = 1000;
 
 template <typename T>
@@ -149,5 +151,12 @@ int UnitTestPICS(int argc, char **argv)
     if (argc > 1)
         numSeeds = atoi(argv[1]);
     std::cout<<"Num seeds= "<<numSeeds<<std::endl;
-  return vtkm::cont::testing::Testing::Run(TestPICSUniformGrid);
+
+    auto start = std::chrono::high_resolution_clock::now();
+    auto test_result = vtkm::cont::testing::Testing::Run(TestPICSUniformGrid);
+    auto duration_taken = std::chrono::high_resolution_clock::now() - start;
+    std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(duration_taken).count();
+    std::cout << "Runtime = " << runtime << " ms" << std::endl;
+
+    return test_result;
 }
