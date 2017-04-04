@@ -22,10 +22,13 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/io/writer/VTKDataSetWriter.h>
 
 #include <fstream>
 #include <vector>
 #include <math.h>
+
+int numSeeds = 1000;
 
 template <typename T>
 VTKM_EXEC_CONT
@@ -43,11 +46,14 @@ vtkm::Vec<T,3> Normalize(vtkm::Vec<T,3> v)
 vtkm::cont::DataSet
 createDataSet()
 {
-  FILE * pFile = fopen("/disk2TB/proj/vtkm/pics/vtk-m/data/tornado.vec", "rb");
+  //const char *tfile = "/disk2TB/proj/vtkm/pics/vtk-m/data/tornado.vec";
+  const char *tfile = "/Users/dpn/proj/vtkm/pics/data/tornado.vec";
+  FILE * pFile = fopen(tfile, "rb");
   size_t ret_code = 0;
   int dims[3];
   ret_code = fread(dims, sizeof(int), 3, pFile);
   const vtkm::Id3 vdims(dims[0], dims[1], dims[2]);
+  std::cout<<vdims<<std::endl;
 
   // Read vector data at each point of the uniform grid and store
   vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
@@ -62,6 +68,7 @@ createDataSet()
       vtkm::Float32 y = data[++i];
       vtkm::Float32 z = data[++i];
       vtkm::Vec<vtkm::Float32, 3> vecData(-x, -y, -z);
+      //vtkm::Vec<vtkm::Float32, 3> vecData(x, y, z);
       field->push_back(Normalize(vecData));
   }
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
@@ -76,6 +83,9 @@ createDataSet()
   vtkm::cont::CellSetStructured<3> cells("cells");
   cells.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));
   ds.AddCellSet(cells);
+//  vtkm::io::writer::VTKDataSetWriter writer("out.vtk");
+//  writer.WriteDataSet(ds);
+                          
   return ds;
 }
 
@@ -111,7 +121,7 @@ void TestPICSUniformGrid()
 
   std::vector<vtkm::Vec<FieldType,3> > seeds;
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
-  for (int i = 0; i < 100; i++)
+  for (int i = 0; i < numSeeds; i++)
   {
       vtkm::Vec<FieldType, 3> p;
       vtkm::Float32 rx = (vtkm::Float32)rand()/(vtkm::Float32)RAND_MAX;
@@ -127,14 +137,17 @@ void TestPICSUniformGrid()
 */
       seeds.push_back(p);
   }
-  
+
   vtkm::Id nSteps = 1000;
   vtkm::worklet::PICSFilter<RK4RGType,FieldType,DeviceAdapter> pic(rk4,seeds,nSteps);
   
   pic.run();
 }
 
-int UnitTestPICS(int, char *[])
+int UnitTestPICS(int argc, char **argv)
 {
+    if (argc > 1)
+        numSeeds = atoi(argv[1]);
+    std::cout<<"Num seeds= "<<numSeeds<<std::endl;
   return vtkm::cont::testing::Testing::Run(TestPICSUniformGrid);
 }

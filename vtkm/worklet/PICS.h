@@ -362,6 +362,8 @@ public:
                 else
                     break;
             }
+//            if (idx % 1000 == 0)
+//                std::cout<<idx<<": DONE"<<std::endl;
 
             p2 = ic.GetPos(idx);
             //std::cout<<"PIC: "<<idx<<" "<<p0<<" --> "<<p2<<" #steps= "<<ic.GetStep(idx)<<std::endl;
@@ -385,12 +387,20 @@ public:
         typedef typename vtkm::worklet::DispatcherMapField<GoPIC> goPICDispatcher;
         goPICDispatcher goPICD(go);
 
-        vtkm::Id maxSteps = 1000;
         //IntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, maxSteps);
         StateRecordingIntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, maxSteps);
         goPICD.Invoke(idxArray, ic);
 
-        if (true)
+
+        int stepCnt = 0;
+        for (int i = 0; i < numSeeds; i++)
+        {
+            int ns = ic.GetStep(i);
+            stepCnt += ns;
+        }
+        std::cout<<"Total num steps: "<<stepCnt<<std::endl;
+
+        if (false)
         {
             for (int i = 0; i < numSeeds; i++)
             {
