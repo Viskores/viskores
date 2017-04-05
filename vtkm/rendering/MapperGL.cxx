@@ -176,7 +176,7 @@ void RenderStructuredLineSegments(vtkm::Id numVerts,
   glDisable(GL_LIGHTING);
   glLineWidth(1);
   glColor3f(1.0, 1.0, 1.0);
-  
+
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
@@ -197,7 +197,7 @@ void RenderExplicitLineSegments(vtkm::Id numVerts,
   glDisable(GL_LIGHTING);
   glLineWidth(1);
   glColor3f(1.0, 1.0, 1.0);
-  
+
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
@@ -220,6 +220,13 @@ void RenderTriangles(MapperGL &mapper,
 {
   if (!mapper.loaded)
   {
+    // The glewExperimental global switch can be  turned on by setting it to
+    // GL_TRUE before calling glewInit(), which  ensures that all extensions
+    // with valid entry points will be exposed. This is needed as the glut
+    // context that is being created is not a valid 'core' context but
+    // instead a 'compatibility' context
+    //
+    glewExperimental = GL_TRUE;
     GLenum GlewInitResult = glewInit();
     if (GlewInitResult)
         std::cerr << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
@@ -248,7 +255,7 @@ void RenderTriangles(MapperGL &mapper,
 
     vtkm::Id floatSz = static_cast<vtkm::Id>(sizeof(vtkm::Float32));
     GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*floatSz);
-    
+
     GLuint points_vbo = 0;
     glGenBuffers(1, &points_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
@@ -258,7 +265,7 @@ void RenderTriangles(MapperGL &mapper,
     glGenBuffers(1, &colours_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
     glBufferData(GL_ARRAY_BUFFER, sz, c_ptr, GL_STATIC_DRAW);
-    
+
     mapper.vao = 0;
     glGenVertexArrays(1, &mapper.vao);
     glBindVertexArray(mapper.vao);
@@ -266,10 +273,10 @@ void RenderTriangles(MapperGL &mapper,
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-    
+
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    
+
     const char *vertex_shader =
         "#version 120\n"
         "attribute vec3 vertex_position;"
@@ -277,7 +284,7 @@ void RenderTriangles(MapperGL &mapper,
         "varying vec3 ourColor;"
         "uniform mat4 mv_matrix;"
         "uniform mat4 p_matrix;"
-        
+
         "void main() {"
         "  gl_Position = p_matrix*mv_matrix * vec4(vertex_position, 1.0);"
         "  ourColor = vertex_color;"
@@ -288,7 +295,7 @@ void RenderTriangles(MapperGL &mapper,
         "void main() {"
         "  gl_FragColor = vec4 (ourColor, 1.0);"
         "}";
-    
+
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs, 1, &vertex_shader, NULL);
     glCompileShader(vs);
@@ -322,7 +329,7 @@ void RenderTriangles(MapperGL &mapper,
       GLint maxLength = 0;
       glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
 
-      std::string msg;      
+      std::string msg;
       if (maxLength <= 0)
           msg = "No error message";
       else
@@ -330,7 +337,7 @@ void RenderTriangles(MapperGL &mapper,
         // The maxLength includes the NULL character
         GLchar *strInfoLog = new GLchar[maxLength + 1];
         glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-        msg = std::string(strInfoLog);          
+        msg = std::string(strInfoLog);
         delete [] strInfoLog;
       }
       throw vtkm::cont::ErrorBadValue("Shader compile error:"+msg);
@@ -343,7 +350,7 @@ void RenderTriangles(MapperGL &mapper,
       glAttachShader(mapper.shader_programme, vs);
       glBindAttribLocation (mapper.shader_programme, 0, "vertex_position");
       glBindAttribLocation (mapper.shader_programme, 1, "vertex_color");
-      
+
       glLinkProgram (mapper.shader_programme);
       GLint linkStatus;
       glGetProgramiv(mapper.shader_programme, GL_LINK_STATUS, &linkStatus);
@@ -361,7 +368,7 @@ void RenderTriangles(MapperGL &mapper,
   if (mapper.shader_programme > 0)
   {
     vtkm::Id width = mapper.GetCanvas()->GetWidth();
-    vtkm::Id height = mapper.GetCanvas()->GetWidth();      
+    vtkm::Id height = mapper.GetCanvas()->GetWidth();
     vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
     vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(width,height);
 
@@ -378,7 +385,7 @@ void RenderTriangles(MapperGL &mapper,
     glUseProgram(0);
   }
 }
-    
+
 } // anonymous namespace
 
 MapperGL::MapperGL() : Canvas(NULL), loaded(false)
@@ -397,9 +404,9 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::Range &scalarRange)
 {
   vtkm::cont::ArrayHandle<vtkm::Float32> sf;
-  sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();      
+  sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();
   vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
-  vtkm::Id numVerts = coords.GetData().GetNumberOfValues();        
+  vtkm::Id numVerts = coords.GetData().GetNumberOfValues();
 
   //Handle 1D cases.
   if (cellset.IsSameType(vtkm::cont::CellSetStructured<1>()))
@@ -475,7 +482,7 @@ void MapperGL::SetCanvas(vtkm::rendering::Canvas *c)
   }
 }
 
-vtkm::rendering::Canvas *    
+vtkm::rendering::Canvas *
 MapperGL::GetCanvas() const
 {
   return this->Canvas;
