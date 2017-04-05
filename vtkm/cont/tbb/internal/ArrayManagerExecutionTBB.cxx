@@ -18,20 +18,14 @@
 //  this software.
 //============================================================================
 
+#define vtk_m_cont_tbb_internal_ArrayManagerExecutionTBB_cxx
+
 #include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 
 namespace vtkm {
 namespace cont {
 
-#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagTBB)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagTBB)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagTBB)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagTBB)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagTBB)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagTBB)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagTBB)
-#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
+VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagTBB)
 
 }
 } // end vtkm::cont

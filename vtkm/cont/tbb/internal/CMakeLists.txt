@@ -41,6 +41,7 @@ if (VTKm_ENABLE_TBB)
   add_library(vtkm_cont_tbb OBJECT ArrayManagerExecutionTBB.cxx)
   set_property(TARGET vtkm_cont_tbb PROPERTY POSITION_INDEPENDENT_CODE ON)
   target_compile_features(vtkm_cont_tbb PRIVATE cxx_auto_type)
+  target_compile_definitions(vtkm_cont_tbb PRIVATE vtkm_cont_EXPORTS)
   target_include_directories(vtkm_cont_tbb PRIVATE
       "${VTKm_SOURCE_DIR}"
       "${VTKm_BINARY_DIR}/include"

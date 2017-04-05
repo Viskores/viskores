@@ -71,16 +71,9 @@ public:
 };
 
 } // namespace internal
-
-#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagTBB)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagTBB)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagTBB)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagTBB)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagTBB)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagTBB)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagTBB)
-#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
+#ifndef vtk_m_cont_tbb_internal_ArrayManagerExecutionTBB_cxx
+VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagTBB)
+#endif // !vtk_m_cont_tbb_internal_ArrayManagerExecutionTBB_cxx
 
 }
 } // namespace vtkm::cont

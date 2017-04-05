@@ -18,20 +18,14 @@
 //  this software.
 //============================================================================
 
+#define vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_cxx
+
 #include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 
 namespace vtkm {
 namespace cont {
 
-#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagSerial)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagSerial)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagSerial)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagSerial)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagSerial)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagSerial)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagSerial)
-#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
+VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagSerial)
 
 }
 } // end vtkm::cont

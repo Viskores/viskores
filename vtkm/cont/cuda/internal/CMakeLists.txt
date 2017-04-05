@@ -41,7 +41,7 @@ if (VTKm_ENABLE_CUDA)
                            ${VTKm_BACKEND_INCLUDE_DIRS}
                            )
 
-  set(compile_options )
+  set(compile_options -Dvtkm_cont_EXPORTS)
   if(BUILD_SHARED_LIBS AND NOT WIN32)
     list(APPEND compile_options -Xcompiler=${CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY}hidden)
     list(APPEND compile_options -Xcompiler=-fPIC)

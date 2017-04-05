@@ -48,15 +48,9 @@ public:
 
 } // namespace internal
 
-#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagSerial)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagSerial)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagSerial)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagSerial)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagSerial)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagSerial)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagSerial)
-#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
+#ifndef vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_cxx
+VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagSerial)
+#endif // !vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_cxx
 
 }
 } // namespace vtkm::cont

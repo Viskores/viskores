@@ -18,20 +18,14 @@
 //  this software.
 //============================================================================
 
+#define vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
+
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 
 namespace vtkm {
 namespace cont {
 
-#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagCuda)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagCuda)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagCuda)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagCuda)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagCuda)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagCuda)
-IMPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagCuda)
-#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
+VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagCuda)
 
 }
 } // end vtkm::cont

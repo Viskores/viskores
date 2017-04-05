@@ -117,16 +117,9 @@ public:
 
 } // namespace internal
 
-
-#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagCuda)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagCuda)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagCuda)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagCuda)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagCuda)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagCuda)
-EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagCuda)
-#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
+#ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
+VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagCuda)
+#endif // !vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
 
 }
 } // namespace vtkm::cont
