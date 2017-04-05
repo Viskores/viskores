@@ -47,6 +47,7 @@ public:
   template <typename CellSetType,
             typename DeviceAdapter>
   vtkm::cont::DataSet ExtractUniform(
+                          const vtkm::IdComponent dimension,
                           const CellSetType &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
                           const vtkm::cont::ArrayHandle<vtkm::IdComponent> &bounds,
@@ -77,18 +78,6 @@ public:
     std::cout << "UNIFORM ORIGIN " << Origin << std::endl;
     std::cout << "UNIFORM SPACING " << Spacing << std::endl;
 
-    // Must know whether 1D, 2D, 3D
-    vtkm::IdComponent Dimension = 3;
-    if (Dimensions[2] == 1)
-    {
-      Dimension = 2;
-      if (Dimensions[1] == 1)
-      {
-        Dimension = 1;
-      }
-    }
-    std::cout << "DIMENSION " << Dimension << std::endl;
-
     // Sizes and values of output Uniform Structured
     vtkm::Id nx = (bounds.GetPortalConstControl().Get(1) - bounds.GetPortalConstControl().Get(0));
     vtkm::Id ny = (bounds.GetPortalConstControl().Get(3) - bounds.GetPortalConstControl().Get(2));
@@ -99,16 +88,9 @@ public:
     std::cout << "UNIFORM OUT ORIGIN " << OutOrigin << std::endl;
     std::cout << "UNIFORM OUT SPACING " << OutSpacing << std::endl;
 
-/*
-    VTKM_ASSERT((Dimension == 1 && nx>1 && ny==1 && nz==1) ||
-                (Dimension == 2 && nx>1 && ny>1 && nz==1) ||
-                (Dimension == 3 && nx>1 && ny>1 && nz>1));
-    VTKM_ASSERT(OutSpacing[0]>0 && OutSpacing[1]>0 && OutSpacing[2]>0);
-*/
-
     vtkm::cont::DataSet output;
 
-    // Set the output CoordinateSystem for Uniform
+    // Set the output CoordinateSystem information
     UniformArrayHandle outCoordinateData(vtkm::Id3(nx, ny, nz), OutOrigin, OutSpacing);
     vtkm::cont::CoordinateSystem outCoordinates(coordinates.GetName(), outCoordinateData);
     output.AddCoordinateSystem(outCoordinates);
@@ -117,25 +99,23 @@ public:
     outCoordinates.PrintSummary(std::cout);
 
     // Set the size of the cell set for Uniform
-    if (Dimension == 1) {
+    if (dimension == 1) {
       vtkm::cont::CellSetStructured<1> outCellSet(cellSet.GetName());
       outCellSet.SetPointDimensions(nx);
       output.AddCellSet(outCellSet);
     }
-    else if (Dimension == 2)
+    else if (dimension == 2)
     {
       vtkm::cont::CellSetStructured<2> outCellSet(cellSet.GetName());
       outCellSet.SetPointDimensions(vtkm::make_Vec(nx, ny));
       output.AddCellSet(outCellSet);
     }
-    else if (Dimension == 3)
+    else if (dimension == 3)
     {
       vtkm::cont::CellSetStructured<3> outCellSet(cellSet.GetName());
       outCellSet.SetPointDimensions(vtkm::make_Vec(nx, ny, nz));
       output.AddCellSet(outCellSet);
     }
-    else
-      throw vtkm::cont::ErrorBadValue("Invalid cell set dimension");
 
     // At this point I should have a complete Uniform Structured dataset with only geometry
     // Need to calculate the ArrayPermutation for mapping point data
@@ -152,6 +132,7 @@ public:
   template <typename CellSetType,
             typename DeviceAdapter>
   vtkm::cont::DataSet ExtractRectilinear(
+                          const vtkm::IdComponent dimension,
                           const CellSetType &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
                           const vtkm::cont::ArrayHandle<vtkm::IdComponent> &bounds,
@@ -190,18 +171,6 @@ public:
     std::cout << "Number of y coordinates " << dimy << std::endl;
     std::cout << "Number of z coordinates " << dimz << std::endl;
 
-    // Must know whether 1D, 2D, 3D
-    vtkm::IdComponent Dimension = 3;
-    if (dimz == 1)
-    {
-      Dimension = 2;
-      if (dimy == 1)
-      {
-        Dimension = 1;
-      }
-    }
-    std::cout << "DIMENSION " << Dimension << std::endl;
-
     for (vtkm::Id x = 0; x < dimx; x++)
       std::cout << "X " << x << " = " << X.Get(x) << std::endl;
     for (vtkm::Id y = 0; y < dimy; y++)
@@ -212,14 +181,10 @@ public:
     vtkm::cont::DataSet output;
 
     // Sizes and values of output Rectilinear Structured
-    vtkm::Id nx = (bounds.GetPortalConstControl().Get(1) - bounds.GetPortalConstControl().Get(0));
-    vtkm::Id ny = (bounds.GetPortalConstControl().Get(3) - bounds.GetPortalConstControl().Get(2));
-    vtkm::Id nz = (bounds.GetPortalConstControl().Get(5) - bounds.GetPortalConstControl().Get(4));
+    vtkm::Id nx = (bounds.GetPortalConstControl().Get(1) - bounds.GetPortalConstControl().Get(0)) + 1;
+    vtkm::Id ny = (bounds.GetPortalConstControl().Get(3) - bounds.GetPortalConstControl().Get(2)) + 1;
+    vtkm::Id nz = (bounds.GetPortalConstControl().Get(5) - bounds.GetPortalConstControl().Get(4)) + 1;
     std::cout << "RECTILINEAR OUT DIMENSIONS " << vtkm::Id3(nx, ny, nz) << std::endl;
-
-    VTKM_ASSERT((Dimension == 1 && nx>1 && ny==1 && nz==1) ||
-                (Dimension == 2 && nx>1 && ny>1 && nz==1) ||
-                (Dimension == 3 && nx>1 && ny>1 && nz>1));
 
     // Set output coordinate system
     DefaultHandle Xc, Yc, Zc;
@@ -230,30 +195,25 @@ public:
     vtkm::Id indx = 0;
     for (vtkm::Id x = bounds.GetPortalConstControl().Get(0); x <= bounds.GetPortalConstControl().Get(1); x++)
     {
-      std::cout << "Copy x from " << x << " to " << indx << std::endl;
       Xc.GetPortalControl().Set(indx++, X.Get(x));
     }
     indx = 0;
     for (vtkm::Id y = bounds.GetPortalConstControl().Get(2); y <= bounds.GetPortalConstControl().Get(3) ; y++)
     {
-      std::cout << "Copy y from " << y << " to " << indx << std::endl;
       Yc.GetPortalControl().Set(indx++, Y.Get(y));
     }
     indx = 0;
     for (vtkm::Id z = bounds.GetPortalConstControl().Get(4); z <= bounds.GetPortalConstControl().Get(5); z++)
     {
-      std::cout << "Copy z from " << z << " to " << indx << std::endl;
       Zc.GetPortalControl().Set(indx++, Z.Get(z));
     }
 
-/*
     for (vtkm::Id x = 0; x < nx; x++)
       std::cout << "Xc " << x << " = " << Xc.GetPortalControl().Get(x) << std::endl;
     for (vtkm::Id y = 0; y < ny; y++)
       std::cout << "Yc " << y << " = " << Yc.GetPortalControl().Get(y) << std::endl;
     for (vtkm::Id z = 0; z < nz; z++)
       std::cout << "Zc " << z << " = " << Zc.GetPortalControl().Get(z) << std::endl;
-*/
 
     CartesianArrayHandle outCoordinateData(Xc, Yc, Zc);
     vtkm::cont::CoordinateSystem outCoordinates(coordinates.GetName(), outCoordinateData);
@@ -263,41 +223,57 @@ public:
     outCoordinates.PrintSummary(std::cout);
 
     // Set the size of the cell set for Rectilinear
-    if (Dimension == 1) {
+    if (dimension == 1) {
       vtkm::cont::CellSetStructured<1> outCellSet(cellSet.GetName());
       outCellSet.SetPointDimensions(nx);
       output.AddCellSet(outCellSet);
     }
-    else if (Dimension == 2)
+    else if (dimension == 2)
     {
       vtkm::cont::CellSetStructured<2> outCellSet(cellSet.GetName());
       outCellSet.SetPointDimensions(vtkm::make_Vec(nx, ny));
       output.AddCellSet(outCellSet);
     }
-    else if (Dimension == 3)
+    else if (dimension == 3)
     {
       vtkm::cont::CellSetStructured<3> outCellSet(cellSet.GetName());
       outCellSet.SetPointDimensions(vtkm::make_Vec(nx, ny, nz));
       output.AddCellSet(outCellSet);
     }
-    else
-      throw vtkm::cont::ErrorBadValue("Invalid cell set dimension");
- 
     return output;
   }
 
   // Run extract structured on uniform or rectilinear, subset and subsample
-  template <typename CellSetType,
-            typename DeviceAdapter>
-  vtkm::cont::DataSet Run(const CellSetType &cellSet,
+  template <typename DeviceAdapter>
+  vtkm::cont::DataSet Run(const vtkm::cont::DynamicCellSet &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
                           const vtkm::cont::ArrayHandle<vtkm::IdComponent> &bounds,
                           const vtkm::cont::ArrayHandle<vtkm::IdComponent> &sample,
                           DeviceAdapter)
   {
+    vtkm::IdComponent dimension;
+    if (cellSet.IsSameType(vtkm::cont::CellSetStructured<1>()))
+    {
+      dimension = 1;
+    }
+    else if (cellSet.IsSameType(vtkm::cont::CellSetStructured<2>()))
+    {
+      dimension = 2;
+    }
+    else if (cellSet.IsSameType(vtkm::cont::CellSetStructured<3>()))
+    {
+      dimension = 3;
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadType("Only Structured cell sets allowed");
+      return vtkm::cont::DataSet();
+    }
+    std::cout << "DIMENSION " << dimension << std::endl;
+
     // Uniform Structured
     typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;
-    bool IsUniformDataSet;
+    bool IsUniformDataSet = 0;
     if (coordinates.GetData().IsSameType(UniformArrayHandle()))
     {
       IsUniformDataSet = true;
@@ -314,7 +290,8 @@ public:
 
     if (IsUniformDataSet)
     {
-      return ExtractUniform(cellSet,
+      return ExtractUniform(dimension,
+                            cellSet,
                             coordinates,
                             bounds,
                             sample,
@@ -322,23 +299,13 @@ public:
     }
     else
     {
-      return ExtractRectilinear(cellSet,
+      return ExtractRectilinear(dimension,
+                                cellSet,
                                 coordinates,
                                 bounds,
                                 sample,
                                 DeviceAdapter());
     }
-  }
-
-  template <typename DeviceAdapter>
-  vtkm::cont::DataSet Run(const vtkm::cont::CellSetExplicit<>& cellSet,
-                          const vtkm::cont::CoordinateSystem &coordinates,
-                          const vtkm::cont::ArrayHandle<vtkm::IdComponent> &bounds,
-                          const vtkm::cont::ArrayHandle<vtkm::IdComponent> &sample,
-                          DeviceAdapter)
-  {
-    throw vtkm::cont::ErrorBadType("CellSetExplicit can't extract grid");
-    return vtkm::cont::DataSet();
   }
 };
 

@@ -110,7 +110,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
    // Bounds and subsample
-   vtkm::IdComponent bounds[6] = {0, 2, 0, 2, 0, 1};
+   vtkm::IdComponent bounds[6] = {0, 2, 0, 1, 0, 0};
    vtkm::IdComponent sample[3] = {1, 1, 1};
    vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
                            vtkm::cont::make_ArrayHandle(bounds, 6);
@@ -144,7 +144,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
    // Bounds and subsample
-   vtkm::IdComponent bounds[6] = {0, 2, 0, 2, 0, 2};
+   vtkm::IdComponent bounds[6] = {0, 2, 0, 1, 0, 2};
    vtkm::IdComponent sample[3] = {1, 1, 1};
    vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
                            vtkm::cont::make_ArrayHandle(bounds, 6);
