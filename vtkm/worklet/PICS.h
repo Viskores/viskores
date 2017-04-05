@@ -256,6 +256,14 @@ private:
         ::template ExecutionTypes<DeviceAdapterTag>::Portal PosPortal;
 public:
     VTKM_CONT
+    StateRecordingIntegralCurve(const StateRecordingIntegralCurve &s)
+    {
+        pos=s.pos;
+        steps=s.steps;
+        maxSteps = s.maxSteps;
+        history = s.history;
+    }
+    VTKM_CONT
     StateRecordingIntegralCurve() : pos(), steps(), maxSteps(0)
     {
     }
@@ -281,8 +289,6 @@ public:
         steps = sa.PrepareForInPlace(DeviceAdapterTag());
 
         vtkm::Id nHist = numPos * maxSteps;
-        h.resize(nHist);
-        ha = vtkm::cont::make_ArrayHandle(&h[0], nHist);
         history = ha.PrepareForOutput(nHist, DeviceAdapterTag());
     }
 
@@ -299,7 +305,7 @@ public:
     VTKM_EXEC
     bool Done(const vtkm::Id &idx)
     {
-        vtkm::Id s = steps.Get(idx);
+        //vtkm::Id s = steps.Get(idx);
         //std::cout<<idx<<" steps= "<<s<<std::endl;
         return steps.Get(idx) >= maxSteps;
     }
@@ -321,7 +327,6 @@ private:
 
     std::vector<vtkm::Id> s;
     vtkm::cont::ArrayHandle<vtkm::Id> sa;    
-    std::vector<vtkm::Vec<T,3> > h;
     vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > ha;
 };
     
@@ -392,15 +397,19 @@ public:
         goPICD.Invoke(idxArray, ic);
 
 
-        int stepCnt = 0;
-        for (int i = 0; i < numSeeds; i++)
+#if 0
+        if (true)
         {
-            int ns = ic.GetStep(i);
-            stepCnt += ns;
+            int stepCnt = 0;
+            for (int i = 0; i < numSeeds; i++)
+            {
+                int ns = ic.GetStep(i);
+                stepCnt += ns;
+            }
+            std::cout<<"Total num steps: "<<stepCnt<<std::endl;
         }
-        std::cout<<"Total num steps: "<<stepCnt<<std::endl;
 
-        if (false)
+        if (true)
         {
             for (int i = 0; i < numSeeds; i++)
             {
@@ -413,6 +422,7 @@ public:
                 }
             }
         }
+#endif
     }
 
 private:
