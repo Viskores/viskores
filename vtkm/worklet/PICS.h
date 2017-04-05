@@ -196,6 +196,11 @@ public:
     IntegralCurve() : pos(), steps(), maxSteps(0)
     {
     }
+    VTKM_CONT
+    IntegralCurve(const IntegralCurve &ic) :
+        pos(ic.pos), steps(ic.steps), maxSteps(ic.maxSteps)
+    {
+    }
 
     VTKM_CONT
     IntegralCurve(const PosPortal &_pos,
@@ -367,8 +372,6 @@ public:
                 else
                     break;
             }
-//            if (idx % 1000 == 0)
-//                std::cout<<idx<<": DONE"<<std::endl;
 
             p2 = ic.GetPos(idx);
             //std::cout<<"PIC: "<<idx<<" "<<p0<<" --> "<<p2<<" #steps= "<<ic.GetStep(idx)<<std::endl;
