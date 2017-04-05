@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 
+#include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
 
@@ -69,9 +70,19 @@ public:
   }
 };
 
-}
-}
-} // namespace vtkm::cont::internal
+} // namespace internal
 
+#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagTBB)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagTBB)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagTBB)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagTBB)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagTBB)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagTBB)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagTBB)
+#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
+
+}
+} // namespace vtkm::cont
 
 #endif //vtk_m_cont_tbb_internal_ArrayManagerExecutionTBB_h

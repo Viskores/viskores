@@ -20,6 +20,7 @@
 #ifndef vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_h
 #define vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_h
 
+#include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
@@ -45,8 +46,19 @@ public:
     : Superclass(storage) {  }
 };
 
+} // namespace internal
+
+#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(char, DeviceAdapterTagSerial)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int8, DeviceAdapterTagSerial)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::UInt8, DeviceAdapterTagSerial)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int32, DeviceAdapterTagSerial)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Int64, DeviceAdapterTagSerial)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float32, DeviceAdapterTagSerial)
+EXPORT_ARRAYHANDLE_DEVICE_ADAPTER(vtkm::Float64, DeviceAdapterTagSerial)
+#endif // VTKM_BUILD_PREPARE_FOR_DEVICE
+
 }
-}
-} // namespace vtkm::cont::internal
+} // namespace vtkm::cont
 
 #endif //vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_h

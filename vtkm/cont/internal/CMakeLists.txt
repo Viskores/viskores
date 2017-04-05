@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  ArrayExportMacros.h
   ArrayHandleExecutionManager.h
   ArrayManagerExecution.h
   ArrayManagerExecutionShareWithControl.h

@@ -98,12 +98,6 @@ set(device_sources
   RuntimeDeviceTracker.cxx
   )
 
-vtkm_library(
-  SOURCES ${sources}
-  WRAP_FOR_CUDA ${device_sources}
-  HEADERS ${header_impls})
-target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
-
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(arg)
@@ -111,8 +105,26 @@ add_subdirectory(arg)
 vtkm_declare_headers(${headers})
 
 add_subdirectory(serial)
+set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_serial>)
+
 add_subdirectory(cuda)
+if (VTKm_ENABLE_CUDA)
+  # Need to come back to this at some point, but can't make OBJECT libraries
+  # with cuda_add_library:
+  #
+  # set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_cuda>)
+endif()
+
 add_subdirectory(tbb)
+if (VTKm_ENABLE_TBB)
+  set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_tbb>)
+endif()
+
+vtkm_library(
+  SOURCES ${sources}
+  WRAP_FOR_CUDA ${device_sources}
+  HEADERS ${header_impls})
+target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

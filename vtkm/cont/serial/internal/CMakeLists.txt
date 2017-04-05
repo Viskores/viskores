@@ -25,3 +25,18 @@ set(headers
   )
 
 vtkm_declare_headers(${headers})
+
+add_library(vtkm_cont_serial OBJECT ArrayManagerExecutionSerial.cxx)
+
+target_compile_features(vtkm_cont_serial PRIVATE cxx_auto_type)
+
+target_include_directories(vtkm_cont_serial PRIVATE
+    ${VTKm_BACKEND_INCLUDE_DIRS}
+    ${VTKm_SOURCE_DIR}
+    ${VTKm_BINARY_DIR}/include
+  )
+
+set_property(TARGET vtkm_cont_serial
+  PROPERTY POSITION_INDEPENDENT_CODE ON
+)
+

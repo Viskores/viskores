@@ -31,12 +31,13 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
 
-#include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
-
 #include <memory>
 #include <vector>
 #include <iterator>
+
+#include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
+#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
+
 
 namespace vtkm {
 namespace cont {
@@ -622,6 +623,10 @@ printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
 }
 } //namespace vtkm::cont
 
+#include <vtkm/cont/ArrayHandle.hxx>
+#include <vtkm/cont/internal/ArrayExportMacros.h>
+
+#ifdef VTKM_BUILD_PREPARE_FOR_DEVICE
 #ifndef vtkm_cont_ArrayHandle_cxx
 
 #ifdef VTKM_MSVC
@@ -684,10 +689,69 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int
 extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::UInt8,4>, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float32,4>, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float64,4>, StorageTagBasic>;
-}
-}
-#endif
 
-#include <vtkm/cont/ArrayHandle.hxx>
+namespace internal {
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<char, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::Int8, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::UInt8, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::Int16, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::UInt16, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::Int32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::UInt32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::Int64, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::UInt64, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::Float32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase<vtkm::Float64, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Int64,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Int32,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Float32,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Float64,2>, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Int64,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Int32,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Float32,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Float64,3>, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<char,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Int8,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::UInt8,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Float32,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandleExecutionManagerBase< vtkm::Vec<vtkm::Float64,4>, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<char*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::Int8*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::UInt8*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::Int16*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::UInt16*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::Int32*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::UInt32*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::Int64*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::UInt64*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::Float32*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::Float64*>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Int64,2>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Int32,2>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Float32,2>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Float64,2>*>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Int64,3>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Int32,3>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Float32,3>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Float64,3>*>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<char,4>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Int8,4>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::UInt8,4>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Float32,4>*>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators< vtkm::Vec<vtkm::Float64,4>*>;
+}
+}
+} // end vtkm::cont::internal
+
+#endif //VTKM_BUILD_PREPARE_FOR_DEVICE
+
+#endif
 
 #endif //vtk_m_cont_ArrayHandle_h
