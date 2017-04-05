@@ -261,12 +261,9 @@ private:
         ::template ExecutionTypes<DeviceAdapterTag>::Portal PosPortal;
 public:
     VTKM_CONT
-    StateRecordingIntegralCurve(const StateRecordingIntegralCurve &s)
+    StateRecordingIntegralCurve(const StateRecordingIntegralCurve &s) :
+        pos(s.pos), steps(s.steps), maxSteps(s.maxSteps), history(s.history)
     {
-        pos=s.pos;
-        steps=s.steps;
-        maxSteps = s.maxSteps;
-        history = s.history;
     }
     VTKM_CONT
     StateRecordingIntegralCurve() : pos(), steps(), maxSteps(0)
