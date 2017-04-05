@@ -30,8 +30,43 @@ template <typename DeviceAdapter>
 class TestingExtractStructured
 {
 public:
+  void TestUniform2D() const
+  {
+    std::cout << std::endl << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
+    typedef vtkm::cont::CellSetStructured<2> CellSetType;
+  
+    // Create the input uniform cell set
+    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
+    CellSetType cellSet;
+    dataSet.GetCellSet(0).CopyTo(cellSet);
+
+   // Bounds and subsample
+   vtkm::IdComponent bounds[6] = {1, 3, 1, 3, 0, 1};
+   vtkm::IdComponent sample[3] = {1, 1, 1};
+   vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
+                           vtkm::cont::make_ArrayHandle(bounds, 6);
+   vtkm::cont::ArrayHandle<vtkm::IdComponent> sampleArray =
+                           vtkm::cont::make_ArrayHandle(sample, 6);
+  
+    // Extract subset
+    vtkm::worklet::ExtractStructured worklet;
+    vtkm::cont::DataSet outDataSet = worklet.Run(
+                                         cellSet,
+                                         dataSet.GetCoordinateSystem(0),
+                                         boundsArray,
+                                         sampleArray,
+                                         DeviceAdapter());
+  
+/*
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 5),
+                     "Wrong result for Tetrahedralize filter");
+*/
+  }
+
   void TestUniform3D() const
   {
+    std::cout << std::endl << std::endl;
     std::cout << "Testing extract structured uniform" << std::endl;
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
   
@@ -51,7 +86,41 @@ public:
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
     vtkm::cont::DataSet outDataSet = worklet.Run(
-                                         cellSet, //dataSet.GetCellSet(0),
+                                         cellSet,
+                                         dataSet.GetCoordinateSystem(0),
+                                         boundsArray,
+                                         sampleArray,
+                                         DeviceAdapter());
+  
+/*
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 5),
+                     "Wrong result for Tetrahedralize filter");
+*/
+  }
+
+  void TestRectilinear2D() const
+  {
+    std::cout << std::endl << std::endl;
+    std::cout << "Testing extract structured rectilinear" << std::endl;
+    typedef vtkm::cont::CellSetStructured<2> CellSetType;
+  
+    // Create the input uniform cell set
+    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DRectilinearDataSet0();
+    CellSetType cellSet;
+    dataSet.GetCellSet(0).CopyTo(cellSet);
+
+   // Bounds and subsample
+   vtkm::IdComponent bounds[6] = {0, 2, 0, 2, 0, 1};
+   vtkm::IdComponent sample[3] = {1, 1, 1};
+   vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
+                           vtkm::cont::make_ArrayHandle(bounds, 6);
+   vtkm::cont::ArrayHandle<vtkm::IdComponent> sampleArray =
+                           vtkm::cont::make_ArrayHandle(sample, 6);
+  
+    // Extract subset
+    vtkm::worklet::ExtractStructured worklet;
+    vtkm::cont::DataSet outDataSet = worklet.Run(
+                                         cellSet,
                                          dataSet.GetCoordinateSystem(0),
                                          boundsArray,
                                          sampleArray,
@@ -65,6 +134,7 @@ public:
 
   void TestRectilinear3D() const
   {
+    std::cout << std::endl << std::endl;
     std::cout << "Testing extract structured rectilinear" << std::endl;
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
   
@@ -74,7 +144,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
    // Bounds and subsample
-   vtkm::IdComponent bounds[6] = {1, 2, 0, 1, 1, 2};
+   vtkm::IdComponent bounds[6] = {0, 2, 0, 2, 0, 2};
    vtkm::IdComponent sample[3] = {1, 1, 1};
    vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
                            vtkm::cont::make_ArrayHandle(bounds, 6);
@@ -98,9 +168,10 @@ public:
 
   void operator()() const
   {
-    //TestUniform2D();
+    TestUniform2D();
     TestUniform3D();
     TestRectilinear3D();
+    TestRectilinear2D();
   }
 };
 
