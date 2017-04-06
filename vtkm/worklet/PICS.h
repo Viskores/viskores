@@ -57,7 +57,7 @@ public:
         OK=0,
         OUTSIDE_SPATIAL,
         OUTSIDE_TEMPORAL,
-        ERROR
+        FAIL
     };
 };
 
