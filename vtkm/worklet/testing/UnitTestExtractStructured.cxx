@@ -58,10 +58,10 @@ public:
                                          sampleArray,
                                          DeviceAdapter());
   
-/*
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 5),
-                     "Wrong result for Tetrahedralize filter");
-*/
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 9),
+                     "Wrong result for ExtractStructured worklet");
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 4),
+                     "Wrong result for ExtractStructured worklet");
   }
 
   void TestUniform3D() const
@@ -77,7 +77,7 @@ public:
 
    // Bounds and subsample
    vtkm::IdComponent bounds[6] = {0, 4, 0, 4, 1, 3};
-   vtkm::IdComponent sample[3] = {2, 2, 1};
+   vtkm::IdComponent sample[3] = {1, 1, 1};
    vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
                            vtkm::cont::make_ArrayHandle(bounds, 6);
    vtkm::cont::ArrayHandle<vtkm::IdComponent> sampleArray =
@@ -92,10 +92,10 @@ public:
                                          sampleArray,
                                          DeviceAdapter());
   
-/*
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 5),
-                     "Wrong result for Tetrahedralize filter");
-*/
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 75),
+                     "Wrong result for ExtractStructured worklet");
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 32),
+                     "Wrong result for ExtractStructured worklet");
   }
 
   void TestRectilinear2D() const
@@ -110,7 +110,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
    // Bounds and subsample
-   vtkm::IdComponent bounds[6] = {0, 2, 0, 1, 0, 0};
+   vtkm::IdComponent bounds[6] = {0, 1, 0, 1, 0, 0};
    vtkm::IdComponent sample[3] = {1, 1, 1};
    vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
                            vtkm::cont::make_ArrayHandle(bounds, 6);
@@ -126,10 +126,10 @@ public:
                                          sampleArray,
                                          DeviceAdapter());
   
-/*
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 5),
-                     "Wrong result for Tetrahedralize filter");
-*/
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 4),
+                     "Wrong result for ExtractStructured worklet");
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 1),
+                     "Wrong result for ExtractStructured worklet");
   }
 
   void TestRectilinear3D() const
@@ -144,7 +144,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
    // Bounds and subsample
-   vtkm::IdComponent bounds[6] = {0, 2, 0, 1, 0, 2};
+   vtkm::IdComponent bounds[6] = {0, 1, 0, 1, 0, 1};
    vtkm::IdComponent sample[3] = {1, 1, 1};
    vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
                            vtkm::cont::make_ArrayHandle(bounds, 6);
@@ -160,18 +160,18 @@ public:
                                          sampleArray,
                                          DeviceAdapter());
   
-/*
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 5),
-                     "Wrong result for Tetrahedralize filter");
-*/
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 8),
+                     "Wrong result for ExtractStructured worklet");
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 1),
+                     "Wrong result for ExtractStructured worklet");
   }
 
   void operator()() const
   {
     TestUniform2D();
     TestUniform3D();
-    TestRectilinear3D();
     TestRectilinear2D();
+    TestRectilinear3D();
   }
 };
 

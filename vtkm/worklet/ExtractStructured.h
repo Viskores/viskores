@@ -193,9 +193,9 @@ std::cout << "Cell " << i << " passed " << OutCellMap.GetPortalControl().Get(i) 
     std::cout << "UNIFORM SPACING " << Spacing << std::endl;
 
     // Sizes and values of output Uniform Structured
-    vtkm::Id nx = (bounds.GetPortalConstControl().Get(1) - bounds.GetPortalConstControl().Get(0));
-    vtkm::Id ny = (bounds.GetPortalConstControl().Get(3) - bounds.GetPortalConstControl().Get(2));
-    vtkm::Id nz = (bounds.GetPortalConstControl().Get(5) - bounds.GetPortalConstControl().Get(4));
+    vtkm::Id nx = (bounds.GetPortalConstControl().Get(1) - bounds.GetPortalConstControl().Get(0) + 1);
+    vtkm::Id ny = (bounds.GetPortalConstControl().Get(3) - bounds.GetPortalConstControl().Get(2) + 1);
+    vtkm::Id nz = (bounds.GetPortalConstControl().Get(5) - bounds.GetPortalConstControl().Get(4) + 1);
     vtkm::Vec<vtkm::FloatDefault,3> OutOrigin = Origin;
     vtkm::Vec<vtkm::FloatDefault,3> OutSpacing = Spacing;
     std::cout << "UNIFORM OUT DIMENSIONS " << vtkm::Id3(nx, ny, nz) << std::endl;
@@ -230,6 +230,9 @@ std::cout << "Cell " << i << " passed " << OutCellMap.GetPortalControl().Get(i) 
       outCellSet.SetPointDimensions(vtkm::make_Vec(nx, ny, nz));
       output.AddCellSet(outCellSet);
     }
+
+std::cout << "Number of Cells " << output.GetCellSet(0).GetNumberOfCells() << std::endl;
+std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << std::endl;
 
     // Calculate and save the maps of point and cell data to subset
     CreatePointCellMaps(Dimensions, 
@@ -280,6 +283,7 @@ std::cout << "Cell " << i << " passed " << OutCellMap.GetPortalControl().Get(i) 
     vtkm::Id dimx = X.GetNumberOfValues();
     vtkm::Id dimy = Y.GetNumberOfValues();
     vtkm::Id dimz = Z.GetNumberOfValues();
+    vtkm::Id3 Dimensions(dimx, dimy, dimz);
 
     std::cout << "Number of x coordinates " << dimx << std::endl;
     std::cout << "Number of y coordinates " << dimy << std::endl;
@@ -354,6 +358,18 @@ std::cout << "Cell " << i << " passed " << OutCellMap.GetPortalControl().Get(i) 
       outCellSet.SetPointDimensions(vtkm::make_Vec(nx, ny, nz));
       output.AddCellSet(outCellSet);
     }
+
+std::cout << "Number of Cells " << output.GetCellSet(0).GetNumberOfCells() << std::endl;
+std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << std::endl;
+
+    // Calculate and save the maps of point and cell data to subset
+    CreatePointCellMaps(Dimensions, 
+                        cellSet.GetNumberOfPoints(),
+                        cellSet.GetNumberOfCells(),
+                        bounds,
+                        sample,
+                        DeviceAdapter());
+
     return output;
   }
 
