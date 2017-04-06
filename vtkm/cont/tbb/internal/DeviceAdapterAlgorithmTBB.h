@@ -137,6 +137,8 @@ public:
   static void Schedule(FunctorType functor,
                        vtkm::Id3 rangeMax)
   {
+    static const vtkm::UInt32 TBB_GRAIN_SIZE_3D[3] = {1, 4, 256};
+
     //we need to extract from the functor that uniform grid information
     const vtkm::Id MESSAGE_SIZE = 1024;
     char errorString[MESSAGE_SIZE];
@@ -146,9 +148,9 @@ public:
 
     //memory is generally setup in a way that iterating the first range
     //in the tightest loop has the best cache coherence.
-    ::tbb::blocked_range3d<vtkm::Id> range(0, rangeMax[2],
-                                           0, rangeMax[1],
-                                           0, rangeMax[0]);
+    ::tbb::blocked_range3d<vtkm::Id> range(0, rangeMax[2], TBB_GRAIN_SIZE_3D[0],
+                                           0, rangeMax[1], TBB_GRAIN_SIZE_3D[1],
+                                           0, rangeMax[0], TBB_GRAIN_SIZE_3D[2]);
 
     tbb::ScheduleKernelId3<FunctorType> kernel(functor,rangeMax);
     kernel.SetErrorMessageBuffer(errorMessage);

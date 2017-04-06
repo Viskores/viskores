@@ -75,7 +75,7 @@ namespace tbb {
 
 // The "grain size" of scheduling with TBB.  Not a lot of thought has gone
 // into picking this size.
-static const vtkm::Id TBB_GRAIN_SIZE = 4096;
+static const vtkm::Id TBB_GRAIN_SIZE = 1024;
 
 
 template<class InputPortalType, class T, class BinaryOperationType>
