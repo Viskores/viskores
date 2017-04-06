@@ -30,18 +30,132 @@
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Field.h>
 
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/ScatterUniform.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/ScatterCounting.h>
 
 namespace vtkm {
 namespace worklet {
 
-/// \brief Extract subset of structured grid and/or resample
+//
+// Distribute input point/cell data to subset output point/cell data
+//
+struct DistributeData : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<> inIndices,
+                                FieldOut<> outIndices);
+  typedef void ExecutionSignature(_1, _2);
+
+  typedef vtkm::worklet::ScatterCounting ScatterType;
+
+  VTKM_CONT
+  ScatterType GetScatter() const { return this->Scatter; }
+
+  template <typename CountArrayType, typename DeviceAdapter>
+  VTKM_CONT
+  DistributeData(const CountArrayType &countArray,
+                 DeviceAdapter device) :
+                         Scatter(countArray, device) {  }
+
+  template <typename T>
+  VTKM_EXEC
+  void operator()(T inputIndex,
+                  T &outputIndex) const
+  {
+    outputIndex = inputIndex;
+  }
+private:
+  ScatterType Scatter;
+};
+
+//
+// Extract subset of structured grid and/or resample
+//
 class ExtractStructured
 {
 public:
   ExtractStructured() {}
+
+  struct BoolType : vtkm::ListTagBase<bool> {};
+
+  // Determine if index is within range of the subset
+  class CreateDataMap : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    typedef void ControlSignature(FieldIn<IdType> index,
+                                  WholeArrayIn<IdType> bounds,
+                                  WholeArrayIn<IdType> sample,
+                                  FieldOut<IdComponentType> passValue);
+    typedef   _4 ExecutionSignature(_1, _2, _3);
+
+    vtkm::Id RowSize;
+    vtkm::Id PlaneSize;
+
+    VTKM_CONT
+    CreateDataMap(const vtkm::Id3 dimensions) :
+                         RowSize(dimensions[1]),
+                         PlaneSize(dimensions[1] * dimensions[0]) {}
+
+    template <typename InFieldPortalType>
+    VTKM_EXEC
+    vtkm::IdComponent operator()(const vtkm::Id index,
+                                 const InFieldPortalType bounds,
+                                 const InFieldPortalType sample) const
+    {
+      vtkm::IdComponent passValue = 0;
+      vtkm::IdComponent z = index / PlaneSize;
+      vtkm::IdComponent y = (index % PlaneSize) / RowSize; 
+      vtkm::IdComponent x = index % RowSize;
+      if (bounds.Get(0) <= x && x <= bounds.Get(1) &&
+          bounds.Get(2) <= y && y <= bounds.Get(3) &&
+          bounds.Get(4) <= z && z <= bounds.Get(5))
+            passValue = 1;
+      return passValue;
+    }
+  };
+
+  // Create maps for mapping point and cell data to subset
+  template <typename DeviceAdapter>
+  void CreatePointCellMaps(
+                      const vtkm::Id3 &Dimensions,
+                      const vtkm::Id &numberOfPoints,
+                      const vtkm::Id &numberOfCells,
+                      const vtkm::cont::ArrayHandle<vtkm::IdComponent> &bounds,
+                      const vtkm::cont::ArrayHandle<vtkm::IdComponent> &sample,
+                      const DeviceAdapter)
+  {
+    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+
+    vtkm::cont::ArrayHandleIndex pointIndices(numberOfPoints);
+    vtkm::cont::ArrayHandleIndex cellIndices(numberOfCells);
+
+    // Create the map for the point data
+    CreateDataMap pointWorklet(Dimensions);
+    vtkm::worklet::DispatcherMapField<CreateDataMap> pointDispatcher(pointWorklet);
+    pointDispatcher.Invoke(pointIndices,
+                           bounds,
+                           sample,
+                           this->OutPointMap);
+for (vtkm::Id i = 0; i < numberOfPoints; i++)
+std::cout << "Point " << i << " passed " << OutPointMap.GetPortalControl().Get(i) << std::endl;
+
+    // Create the map for the cell data
+    vtkm::Id3 CellDimensions(Dimensions[0] - 1, Dimensions[1] - 1, Dimensions[2] - 1);
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> cellBounds;
+    DeviceAlgorithm::Copy(bounds, cellBounds);
+    cellBounds.GetPortalControl().Set(1, bounds.GetPortalConstControl().Get(1) - 1);
+    cellBounds.GetPortalControl().Set(3, bounds.GetPortalConstControl().Get(3) - 1);
+    cellBounds.GetPortalControl().Set(5, bounds.GetPortalConstControl().Get(5) - 1);
+
+    CreateDataMap cellWorklet(CellDimensions);
+    vtkm::worklet::DispatcherMapField<CreateDataMap> cellDispatcher(cellWorklet);
+    cellDispatcher.Invoke(cellIndices,
+                          cellBounds,
+                          sample,
+                          this->OutCellMap);
+for (vtkm::Id i = 0; i < numberOfCells; i++)
+std::cout << "Cell " << i << " passed " << OutCellMap.GetPortalControl().Get(i) << std::endl;
+  }
 
   // Uniform Structured
   template <typename CellSetType,
@@ -117,13 +231,13 @@ public:
       output.AddCellSet(outCellSet);
     }
 
-    // At this point I should have a complete Uniform Structured dataset with only geometry
-    // Need to calculate the ArrayPermutation for mapping point data
-    // Need to calculate the ArrayPermutation for mapping cell data
-    // This has to be kept in the worklet so that the calling filter can apply it repeatedly
-
-    // After that need to do subsampling as well as subsetting which changes the geometry
-    // and the maps
+    // Calculate and save the maps of point and cell data to subset
+    CreatePointCellMaps(Dimensions, 
+                        cellSet.GetNumberOfPoints(),
+                        cellSet.GetNumberOfCells(),
+                        bounds,
+                        sample,
+                        DeviceAdapter());
 
     return output;
   }
@@ -307,6 +421,44 @@ public:
                                 DeviceAdapter());
     }
   }
+
+  // Subset of Point Data
+  template <typename T,
+            typename StorageType,
+            typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<T, StorageType> ProcessPointField(
+                                            const vtkm::cont::ArrayHandle<T, StorageType> &input,
+                                            const DeviceAdapter& device)
+  {
+    vtkm::cont::ArrayHandle<T, StorageType> output;
+
+    DistributeData distribute(this->OutPointMap, device);
+    vtkm::worklet::DispatcherMapField<DistributeData, DeviceAdapter> dispatcher(distribute);
+    dispatcher.Invoke(input, output);
+
+    return output;
+  }
+
+  // Subset of Cell Data
+  template <typename T,
+            typename StorageType,
+            typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<T, StorageType> ProcessCellField(
+                                            const vtkm::cont::ArrayHandle<T, StorageType> &input,
+                                            const DeviceAdapter& device)
+  {
+    vtkm::cont::ArrayHandle<T, StorageType> output;
+
+    DistributeData distribute(this->OutCellMap, device);
+    vtkm::worklet::DispatcherMapField<DistributeData, DeviceAdapter> dispatcher(distribute);
+    dispatcher.Invoke(input, output);
+
+    return output;
+  }
+
+private:
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> OutPointMap;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> OutCellMap;
 };
 
 }
