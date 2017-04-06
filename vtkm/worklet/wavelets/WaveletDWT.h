@@ -58,7 +58,7 @@ public:
     {
       printf("y = %lld:    ", y );
       for( vtkm::Id z = 0; z < dimZ; z++ )
-        printf("%f, ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
+        printf("%.8f ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
       printf("\n");
     }
     printf("\n");
@@ -90,7 +90,7 @@ public:
     {
       printf("y = %lld:    ", y );
       for( vtkm::Id x = 0; x < dimX; x++ )
-        printf("%10f, ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
+        printf("%.8f, ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
       printf("\n");
     }
     printf("\n");
@@ -566,6 +566,8 @@ public:
 
     vtkm::cont::Timer<DeviceTag> timer;
     vtkm::Float64 computationTime = 0.0;
+
+this->printPlaneZ( sigIn, sigDimX, sigDimY, sigDimZ, 9, "" );
 
     // First transform in X direction
     ArrayType           afterX;

@@ -40,7 +40,7 @@ enum WaveletName {
   BIOR4_4,  // the same as CDF9_7
   BIOR3_3,  // the same as CDF8_4
   BIOR2_2,  // the same as CDF5_3
-  BIOR1_1   // the same as HAAE
+  BIOR1_1   // the same as HAAR
 };
 
 // Wavelet filter class;
