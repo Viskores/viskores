@@ -91,6 +91,41 @@ createDataSet()
   return ds;
 }
 
+void TestPICSAnalyticalOrbit()
+{
+  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+  typedef vtkm::Float32 FieldType;
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > FieldHandle;
+  typedef typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
+  typedef vtkm::worklet::AnalyticalOrbitEvaluate<FieldPortalConstType, DeviceAdapter> OrbitEvalType;
+
+  vtkm::Bounds bounds{ -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f };
+  OrbitEvalType orbit_eval{ bounds };
+
+  typedef vtkm::worklet::RK4Integrator<OrbitEvalType, FieldType> IntegratorType;
+  vtkm::Float32 step_size = 0.01f;
+  IntegratorType rk4(orbit_eval, step_size);
+
+  std::vector<vtkm::Vec<FieldType, 3> > seeds;
+  vtkm::Float32 expected_radius = 0.4f;
+  seeds.push_back({expected_radius, 0.0f, 0.0f});
+  vtkm::Id num_steps_expected = 20;
+  typedef vtkm::worklet::PICSFilter<IntegratorType, FieldType, DeviceAdapter> TracerType;
+  TracerType tracer(rk4, seeds, num_steps_expected);
+  tracer.run();
+
+  auto result_traces = tracer.GetRecorder();
+  VTKM_TEST_ASSERT(result_traces != nullptr, "PICS did not generate traces");
+
+  vtkm::Id num_steps_taken = result_traces->GetStep(0);
+  VTKM_TEST_ASSERT(test_equal(num_steps_expected, num_steps_taken), "PICS calculated wrong number of steps");
+
+  auto last_point = result_traces->GetHistory(0, num_steps_taken-1);
+  vtkm::Float32 last_point_radius = vtkm::Magnitude(last_point);
+  VTKM_TEST_ASSERT(test_equal(expected_radius, last_point_radius), "PICS integrated point off orbit");
+}
+
+
 void TestPICSUniformGrid()
 {
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
@@ -146,7 +181,7 @@ void TestPICSUniformGrid()
   pic.run();
 }
 
-int UnitTestPICS(int argc, char **argv)
+int UnitTestPICS(int argc, char *argv[])
 {
     if (argc > 1)
         numSeeds = atoi(argv[1]);
@@ -157,6 +192,8 @@ int UnitTestPICS(int argc, char **argv)
     auto duration_taken = std::chrono::high_resolution_clock::now() - start;
     std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(duration_taken).count();
     std::cout << "Runtime = " << runtime << " ms" << std::endl;
+
+    test_result = vtkm::cont::testing::Testing::Run(TestPICSAnalyticalOrbit);
 
     return test_result;
 }

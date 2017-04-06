@@ -35,6 +35,8 @@
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 
+#include <vtkm\VectorAnalysis.h>
+
 namespace vtkm {
 namespace worklet {
 
@@ -174,6 +176,34 @@ private:
     vtkm::Id planeSize;
     vtkm::Id rowSize;    
     PortalType vecData;
+};
+
+template <typename PortalType, typename DeviceAdapter>
+class AnalyticalOrbitEvaluate : public GridEvaluate
+{
+public:
+  AnalyticalOrbitEvaluate(const vtkm::Bounds &bb) : bounds{ bb }
+  {
+  }
+
+  template<typename FieldType>
+  bool Evaluate(const vtkm::Vec<FieldType, 3> &pos,
+                vtkm::Vec<FieldType, 3> &out) const
+  {
+    if (!bounds.Contains(pos))
+      return false;
+    
+    //statically return a value which is orthogonal to the input pos in the xy plane.
+    FieldType oneDivLen =  1.0f / Magnitude(pos);
+    out[0] = -1.0f * pos[1] * oneDivLen;
+    out[1] = pos[0] * oneDivLen;
+    out[2] = pos[2] * oneDivLen;
+    return true;
+  }
+
+private:
+  vtkm::Bounds bounds;
+  
 };
 
 template<typename FieldEvaluateType, typename FieldType>
@@ -399,11 +429,15 @@ template <typename IntegratorType,
 class PICSFilter
 {
 public:
+    using StateRecorder = StateRecordingIntegralCurve<FieldType, DeviceAdapterTag>;
+
     PICSFilter(const IntegratorType &it,
                std::vector<vtkm::Vec<FieldType,3> > &pts,
-               const vtkm::Id &nSteps) : integrator(it), seeds(pts), maxSteps(nSteps)
+               const vtkm::Id &nSteps) : integrator(it), seeds(pts), maxSteps(nSteps), recorder(nullptr)
     {
     }
+
+    ~PICSFilter() { delete recorder; }
 
     class GoPIC : public vtkm::worklet::WorkletMapField
     {
@@ -454,8 +488,8 @@ public:
         goPICDispatcher goPICD(go);
 
         //IntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, maxSteps);
-        StateRecordingIntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, maxSteps);
-        goPICD.Invoke(idxArray, ic);
+        recorder = new StateRecorder(posArray, maxSteps);
+        goPICD.Invoke(idxArray, *recorder);
 
 
 #if 0
@@ -486,10 +520,13 @@ public:
 #endif
     }
 
+    StateRecorder* GetRecorder() const { return recorder; }
+
 private:
     vtkm::Id maxSteps;
     IntegratorType integrator;
     std::vector<vtkm::Vec<FieldType,3> > seeds;
+    StateRecorder *recorder;
 };
 
 }
