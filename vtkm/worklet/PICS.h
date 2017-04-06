@@ -38,8 +38,31 @@
 namespace vtkm {
 namespace worklet {
 
+enum ParticleStatus
+{
+    OK=0,
+    TERMINATE,
+    AT_SPATIAL_BOUNDARY,
+    AT_TEMPORAL_BOUNDARY,
+    EXIT_SPATIAL_BOUNDARY,
+    EXIT_TEMPORAL_BOUNDARY,
+    NUMERICAL_ERROR
+};
+
+class GridEvaluate
+{
+public:
+    enum Status
+    {
+        OK=0,
+        OUTSIDE_SPATIAL,
+        OUTSIDE_TEMPORAL,
+        ERROR
+    };
+};
+
 template <typename PortalType, typename DeviceAdapter>
-class RegularGridEvaluate
+class RegularGridEvaluate : public GridEvaluate
 {
 public:
     RegularGridEvaluate(const vtkm::cont::DataSet &ds)
@@ -157,6 +180,43 @@ template<typename FieldEvaluateType, typename FieldType>
 class RK4Integrator
 {
 public:
+
+    enum StepState
+    {
+        STEP_STAGE_0 = 0,
+        STEP_STAGE_1 = 1,
+        STEP_STAGE_2 = 2,
+        STEP_STAGE_3 = 3,
+        STEP_FINISHED = 4
+    };
+
+    struct IntegrationStep
+    {
+        IntegrationStep(const vtkm::Vec<FieldType, 3> &start_pt,
+                        const FieldType step)
+        : start_point(start_pt), end_point(start_pt),
+          current_k(0, 0, 0), k_sum(0, 0, 0),
+          time_step(step), next_stage(STEP_STAGE_0) {}
+        ~IntegrationStep() = default;
+        void RestartAt(const vtkm::Vec<FieldType,3> &start)
+        {
+            start_point = start;
+            k_sum[0] = 0;
+            k_sum[1] = 0;
+            k_sum[2] = 0;
+            next_stage = STEP_STAGE_0;
+        }
+
+        bool HasFinished() const { return next_stage == STEP_FINISHED; }
+
+        vtkm::Vec<FieldType, 3> start_point;
+        vtkm::Vec<FieldType, 3> end_point;
+        vtkm::Vec<FieldType, 3> current_k;
+        vtkm::Vec<FieldType, 3> k_sum;
+        FieldType time_step;
+        StepState next_stage;
+    }; 
+
     RK4Integrator(const FieldEvaluateType &field,
                   FieldType _h) : f(field), h(_h), h_2(_h/2.f) {}
 
@@ -167,6 +227,7 @@ public:
     {
         vtkm::Vec<FieldType, 3> k1, k2, k3, k4, y;
 
+        GridEvaluate::Status s1, s2, s3, s4;
         if (f.Evaluate(pos, k1) &&
             f.Evaluate(pos+h_2*k1, k2) &&
             f.Evaluate(pos+h_2*k2, k3) &&
