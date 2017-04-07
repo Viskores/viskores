@@ -207,6 +207,33 @@ private:
 };
 
 template<typename FieldEvaluateType, typename FieldType>
+class EulerIntegrator
+{
+public:
+    EulerIntegrator(const FieldEvaluateType &field,
+                  FieldType _h) : f(field), h(_h) {}
+
+    
+    bool
+    Step(const vtkm::Vec<FieldType, 3> &pos,
+         vtkm::Vec<FieldType, 3> &out) const
+    {
+        vtkm::Vec<FieldType, 3> vCur;
+
+        if (f.Evaluate(pos, vCur))
+        {
+            out = pos + h * vCur;
+            return true;
+        }
+        
+        return false;
+    }
+
+    FieldEvaluateType f;
+    FieldType h;
+};
+
+template<typename FieldEvaluateType, typename FieldType>
 class RK4Integrator
 {
 public:
@@ -492,7 +519,7 @@ public:
         goPICD.Invoke(idxArray, *recorder);
 
 
-#if 0
+#if 1
         if (true)
         {
             int stepCnt = 0;

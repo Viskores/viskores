@@ -49,7 +49,7 @@ vtkm::cont::DataSet
 createDataSet()
 {
   //const char *tfile = "/disk2TB/proj/vtkm/pics/vtk-m/data/tornado.vec";
-  const char *tfile = "/Users/dpn/proj/vtkm/pics/data/tornado.vec";
+  const char *tfile = "/home/kbb/packages/vtkmPICS/vtk-m/data/tornado.vec";
   FILE * pFile = fopen(tfile, "rb");
   size_t ret_code = 0;
   int dims[3];
@@ -150,7 +150,9 @@ void TestPICSUniformGrid()
   vtkm::Float32 h = 0.1f;
   typedef vtkm::worklet::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter> RGEvalType;
   typedef vtkm::worklet::RK4Integrator<RGEvalType,FieldType> RK4RGType;
-
+  typedef vtkm::worklet::EulerIntegrator<RGEvalType, FieldType> EulerType;
+  
+  EulerType eul(eval, h);
   RK4RGType rk4(eval, h);
 
   val = rk4.Step(p, o);
@@ -177,7 +179,8 @@ void TestPICSUniformGrid()
 
   vtkm::Id nSteps = 1000;
   vtkm::worklet::PICSFilter<RK4RGType,FieldType,DeviceAdapter> pic(rk4,seeds,nSteps);
-  
+  //vtkm::worklet::PICSFilter<EulerType,FieldType,DeviceAdapter> pic(eul,seeds,nSteps);
+
   pic.run();
 }
 
