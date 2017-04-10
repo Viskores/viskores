@@ -42,20 +42,18 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
    // Bounds and subsample
-   vtkm::IdComponent bounds[6] = {1, 3, 1, 3, 0, 1};
-   vtkm::IdComponent sample[3] = {1, 1, 1};
-   vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
-                           vtkm::cont::make_ArrayHandle(bounds, 6);
-   vtkm::cont::ArrayHandle<vtkm::IdComponent> sampleArray =
-                           vtkm::cont::make_ArrayHandle(sample, 6);
+   vtkm::Id3 minBound(1,1,0);
+   vtkm::Id3 maxBound(3,3,1);
+   vtkm::Id3 sample(1,1,1);
   
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         boundsArray,
-                                         sampleArray,
+                                         minBound,
+                                         maxBound,
+                                         sample,
                                          DeviceAdapter());
   
     VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 9),
@@ -76,20 +74,18 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
    // Bounds and subsample
-   vtkm::IdComponent bounds[6] = {0, 4, 0, 4, 1, 3};
-   vtkm::IdComponent sample[3] = {1, 1, 1};
-   vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
-                           vtkm::cont::make_ArrayHandle(bounds, 6);
-   vtkm::cont::ArrayHandle<vtkm::IdComponent> sampleArray =
-                           vtkm::cont::make_ArrayHandle(sample, 6);
+   vtkm::Id3 minBound(0,0,1);
+   vtkm::Id3 maxBound(4,4,3);
+   vtkm::Id3 sample(1,1,1);
   
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         boundsArray,
-                                         sampleArray,
+                                         minBound,
+                                         maxBound,
+                                         sample,
                                          DeviceAdapter());
   
     VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 75),
@@ -109,21 +105,19 @@ public:
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
-   // Bounds and subsample
-   vtkm::IdComponent bounds[6] = {0, 1, 0, 1, 0, 0};
-   vtkm::IdComponent sample[3] = {1, 1, 1};
-   vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
-                           vtkm::cont::make_ArrayHandle(bounds, 6);
-   vtkm::cont::ArrayHandle<vtkm::IdComponent> sampleArray =
-                           vtkm::cont::make_ArrayHandle(sample, 6);
+    // Bounds and subsample
+    vtkm::Id3 minBound(0,0,0);
+    vtkm::Id3 maxBound(1,1,0);
+    vtkm::Id3 sample(1,1,1);
   
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         boundsArray,
-                                         sampleArray,
+                                         minBound,
+                                         maxBound,
+                                         sample,
                                          DeviceAdapter());
   
     VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 4),
@@ -144,20 +138,18 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
    // Bounds and subsample
-   vtkm::IdComponent bounds[6] = {0, 1, 0, 1, 0, 1};
-   vtkm::IdComponent sample[3] = {1, 1, 1};
-   vtkm::cont::ArrayHandle<vtkm::IdComponent> boundsArray =
-                           vtkm::cont::make_ArrayHandle(bounds, 6);
-   vtkm::cont::ArrayHandle<vtkm::IdComponent> sampleArray =
-                           vtkm::cont::make_ArrayHandle(sample, 6);
+   vtkm::Id3 minBound(0,0,0);
+   vtkm::Id3 maxBound(1,1,1);
+   vtkm::Id3 sample(1,1,1);
   
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         boundsArray,
-                                         sampleArray,
+                                         minBound,
+                                         maxBound,
+                                         sample,
                                          DeviceAdapter());
   
     VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 8),
