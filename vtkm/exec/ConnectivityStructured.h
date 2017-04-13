@@ -64,12 +64,6 @@ public:
   {
   }
 
-  template<typename IndexType>
-  VTKM_EXEC
-  vtkm::IdComponent GetNumberOfIndices(const IndexType &index) const {
-    return Helper::GetNumberOfIndices(this->Internals, index);
-  }
-
   // This needs some thought. What does cell shape mean when the to topology
   // is not a cell?
   typedef typename InternalsType::CellShapeTag CellShapeTag;
