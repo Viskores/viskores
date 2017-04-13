@@ -35,7 +35,7 @@
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 
-#include <vtkm\VectorAnalysis.h>
+#include <vtkm/VectorAnalysis.h>
 
 namespace vtkm {
 namespace worklet {
@@ -519,13 +519,13 @@ public:
         goPICD.Invoke(idxArray, *recorder);
 
 
-#if 1
+#if 0
         if (true)
         {
             int stepCnt = 0;
             for (int i = 0; i < numSeeds; i++)
             {
-                int ns = ic.GetStep(i);
+                int ns = recorder->GetStep(i);
                 stepCnt += ns;
             }
             std::cout<<"Total num steps: "<<stepCnt<<std::endl;
@@ -535,10 +535,10 @@ public:
         {
             for (int i = 0; i < numSeeds; i++)
             {
-                int ns = ic.GetStep(i);
+                int ns = recorder->GetStep(i);
                 for (int j = 0; j < ns; j++)
                 {
-                    vtkm::Vec<FieldType,3> p = ic.GetHistory(i, j);
+                    vtkm::Vec<FieldType,3> p = recorder->GetHistory(i, j);
                     std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
                     //std::cout<<"   "<<j<<" "<<p<<std::endl;
                 }

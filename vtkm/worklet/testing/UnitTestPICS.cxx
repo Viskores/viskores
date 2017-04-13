@@ -31,26 +31,12 @@
 #include <chrono>
 
 int numSeeds = 1000;
-
-template <typename T>
-VTKM_EXEC_CONT
-vtkm::Vec<T,3> Normalize(vtkm::Vec<T,3> v)
-{
-  T magnitude = static_cast<T>(sqrt(vtkm::dot(v, v)));
-  T zero = static_cast<T>(0.0);
-  T one = static_cast<T>(1.0);
-  if (magnitude == zero)
-    return vtkm::make_Vec(zero, zero, zero);
-  else
-    return one / magnitude * v;
-}
+std::string tornadoFile;
 
 vtkm::cont::DataSet
-createDataSet()
+createDataSet(const std::string &fileName)
 {
-  //const char *tfile = "/disk2TB/proj/vtkm/pics/vtk-m/data/tornado.vec";
-  const char *tfile = "/home/kbb/packages/vtkmPICS/vtk-m/data/tornado.vec";
-  FILE * pFile = fopen(tfile, "rb");
+  FILE * pFile = fopen(fileName.c_str(), "rb");
   size_t ret_code = 0;
   int dims[3];
   ret_code = fread(dims, sizeof(int), 3, pFile);
@@ -70,8 +56,8 @@ createDataSet()
       vtkm::Float32 y = data[++i];
       vtkm::Float32 z = data[++i];
       vtkm::Vec<vtkm::Float32, 3> vecData(-x, -y, -z);
-      //vtkm::Vec<vtkm::Float32, 3> vecData(x, y, z);
-      field->push_back(Normalize(vecData));
+      vtkm::Normalize(vecData);
+      field->push_back(vecData);
   }
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
   fieldArray = vtkm::cont::make_ArrayHandle(*field);
@@ -138,7 +124,7 @@ void TestPICSUniformGrid()
   typedef vtkm::Float32 FieldType;
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > FieldHandle;
   typedef typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;    
-  vtkm::cont::DataSet ds = createDataSet();
+  vtkm::cont::DataSet ds = createDataSet(tornadoFile);
   //ds.PrintSummary(std::cout);
 
   vtkm::worklet::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter> eval(ds);
@@ -186,9 +172,16 @@ void TestPICSUniformGrid()
 
 int UnitTestPICS(int argc, char *argv[])
 {
-    if (argc > 1)
-        numSeeds = atoi(argv[1]);
+    if (argc != 3)
+    {
+        std::cerr<<"Error: Usage "<<argv[0]<<" numSeeds path/tornado.vec"<<std::endl;
+        return -1;
+    }
+    numSeeds = atoi(argv[1]);
+    tornadoFile = argv[2];
+    
     std::cout<<"Num seeds= "<<numSeeds<<std::endl;
+    std::cout<<"Data file= "<<tornadoFile<<std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
     auto test_result = vtkm::cont::testing::Testing::Run(TestPICSUniformGrid);
