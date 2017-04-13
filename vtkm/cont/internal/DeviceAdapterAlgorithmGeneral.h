@@ -546,6 +546,34 @@ public:
   }
 
   //--------------------------------------------------------------------------
+  // TODO: what is the return type/value?
+  // Scan Exclusive By Key
+  template<typename T, typename U, typename KIn, typename VIn, typename VOut,
+    class BinaryFunctor>
+  VTKM_CONT static T ScanExclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U ,VOut>& output,
+    BinaryFunctor binaryFunctor,
+    const T& initialValue)
+  {
+    // TODO: add DerivedAlgorithm?
+    ScanInclusiveByKey(keys, values, output, binaryFunctor);
+
+  }
+
+  template<typename T, typename U, class KIn, typename VIn, typename VOut>
+  VTKM_CONT static T ScanExclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U, VOut>& output)
+  {
+    // TODO: add DerivedAlgorithm?
+    ScanExclusiveByKey(keys, values, output, vtkm::Sum(),
+                       vtkm::TypeTraits<U>::ZeroInitialization());
+  }
+
+  //--------------------------------------------------------------------------
   // Streaming exclusive scan
   template<typename T, class CIn, class COut>
   VTKM_CONT static T StreamingScanExclusive(
@@ -732,6 +760,7 @@ public:
       DerivedAlgorithm::Copy(reducedValues, values_output);
     }
   }
+
   //--------------------------------------------------------------------------
   // Sort
   template<typename T, class Storage, class BinaryCompare>

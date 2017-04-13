@@ -298,7 +298,6 @@ struct ReduceByKeyUnaryStencilOp
   }
 
 };
-
 template<class InputPortalType, class OutputPortalType>
 struct CopyKernel
 {
@@ -805,6 +804,37 @@ struct InclusiveToExclusiveKernel : vtkm::exec::FunctorBase
   {
     ValueType result = (index == 0) ? this->InitialValue :
         this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
+    this->OutPortal.Set(index, result);
+  }
+};
+
+template <typename InPortalType, typename OutPortalType, typename BinaryFunctor>
+struct InclusiveToExclusiveByKeyKernel : vtkm::exec::FunctorBase
+{
+  typedef typename InPortalType::ValueType ValueType;
+
+  InPortalType InPortal;
+  OutPortalType OutPortal;
+  BinaryFunctor BinaryOperator;
+  ValueType InitialValue;
+
+  VTKM_CONT
+  InclusiveToExclusiveByKeyKernel(const InPortalType &inPortal,
+                             const OutPortalType &outPortal,
+                             BinaryFunctor &binaryOperator,
+                             ValueType initialValue)
+    : InPortal(inPortal),
+      OutPortal(outPortal),
+      BinaryOperator(binaryOperator),
+      InitialValue(initialValue)
+  { }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  void operator()(vtkm::Id index) const
+  {
+    ValueType result = (index == 0) ? this->InitialValue :
+                       this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
     this->OutPortal.Set(index, result);
   }
 };
