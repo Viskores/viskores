@@ -67,6 +67,8 @@ namespace vtkm {
 namespace cont {
 namespace cuda {
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 /// This error is thrown whenever an unidentified CUDA runtime error is
 /// encountered.
 ///
@@ -91,6 +93,8 @@ public:
     this->SetMessage(message.str());
   }
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 }

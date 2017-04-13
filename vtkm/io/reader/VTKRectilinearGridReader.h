@@ -26,6 +26,8 @@ namespace vtkm {
 namespace io {
 namespace reader {
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 class VTKRectilinearGridReader : public VTKDataSetReaderBase
 {
 public:
@@ -99,6 +101,8 @@ private:
     this->ReadAttributes();
   }
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 }

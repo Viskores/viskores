@@ -33,6 +33,8 @@ namespace vtkm {
 namespace io {
 namespace reader {
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 class VTKDataSetReader : public VTKDataSetReaderBase
 {
 public:
@@ -95,6 +97,8 @@ private:
 
   std::unique_ptr<VTKDataSetReaderBase> Reader;
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 }

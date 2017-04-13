@@ -24,6 +24,8 @@
 #include <vtkm/interop/internal/OpenGLHeaders.h>
 #include <vtkm/interop/internal/BufferTypePicker.h>
 
+#include <vtkm/internal/ExportMacros.h>
+
 #include <memory>
 
 namespace vtkm{
@@ -32,6 +34,9 @@ namespace interop{
 
 namespace internal
 {
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
   /// \brief Device backend and opengl interop resources management
   ///
   /// \c TransferResource manages a context for a given device backend and a
@@ -43,6 +48,9 @@ namespace internal
   public:
     virtual ~TransferResource() {}
   };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
+
 }
 
 /// \brief Manages the state for transferring an ArrayHandle to opengl.

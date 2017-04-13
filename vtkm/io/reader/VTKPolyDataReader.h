@@ -66,6 +66,8 @@ inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
 
 } // namespace internal
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 class VTKPolyDataReader : public VTKDataSetReaderBase
 {
 public:
@@ -174,6 +176,8 @@ private:
     this->ReadAttributes();
   }
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 }

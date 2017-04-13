@@ -25,6 +25,8 @@
 namespace vtkm {
 namespace cont {
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 /// This class is thrown when VTK-m encounters data of a type that is
 /// incompatible with the current operation.
 ///
@@ -34,6 +36,8 @@ public:
   ErrorBadType(const std::string &message)
     : Error(message) { }
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 } // namespace vtkm::cont
