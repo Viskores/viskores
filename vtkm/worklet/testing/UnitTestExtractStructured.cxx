@@ -41,10 +41,10 @@ public:
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
-   // Bounds and subsample
-   vtkm::Id3 minBound(1,1,0);
-   vtkm::Id3 maxBound(3,3,1);
-   vtkm::Id3 sample(1,1,1);
+    // Bounds and subsample
+    vtkm::Id3 minBound(1,1,0);
+    vtkm::Id3 maxBound(3,3,0);
+    vtkm::Id3 sample(1,1,1);
   
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
@@ -62,7 +62,7 @@ public:
                      "Wrong result for ExtractStructured worklet");
   }
 
-  void TestUniform3D() const
+  void TestUniform3D0() const
   {
     std::cout << std::endl << std::endl;
     std::cout << "Testing extract structured uniform" << std::endl;
@@ -73,10 +73,42 @@ public:
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
-   // Bounds and subsample
-   vtkm::Id3 minBound(0,0,1);
-   vtkm::Id3 maxBound(4,4,3);
-   vtkm::Id3 sample(1,1,1);
+    // Bounds and subsample
+    vtkm::Id3 minBound(0,0,1);
+    vtkm::Id3 maxBound(4,4,3);
+    vtkm::Id3 sample(2,2,1);
+  
+    // Extract subset
+    vtkm::worklet::ExtractStructured worklet;
+    vtkm::cont::DataSet outDataSet = worklet.Run(
+                                         cellSet,
+                                         dataSet.GetCoordinateSystem(0),
+                                         minBound,
+                                         maxBound,
+                                         sample,
+                                         DeviceAdapter());
+  
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 27),
+                     "Wrong result for ExtractStructured worklet");
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 8),
+                     "Wrong result for ExtractStructured worklet");
+  }
+
+  void TestUniform3D1() const
+  {
+    std::cout << std::endl << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
+    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+  
+    // Create the input uniform cell set
+    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
+    CellSetType cellSet;
+    dataSet.GetCellSet(0).CopyTo(cellSet);
+
+    // Bounds and subsample
+    vtkm::Id3 minBound(0,0,1);
+    vtkm::Id3 maxBound(4,4,3);
+    vtkm::Id3 sample(3,3,2);
   
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
@@ -91,6 +123,38 @@ public:
     VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 75),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 32),
+                     "Wrong result for ExtractStructured worklet");
+  }
+
+  void TestUniform3D2() const
+  {
+    std::cout << std::endl << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
+    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+  
+    // Create the input uniform cell set
+    vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
+    CellSetType cellSet;
+    dataSet.GetCellSet(0).CopyTo(cellSet);
+
+    // Bounds and subsample
+    vtkm::Id3 minBound(1,1,1);
+    vtkm::Id3 maxBound(3,3,1);
+    vtkm::Id3 sample(1,1,1);
+  
+    // Extract subset
+    vtkm::worklet::ExtractStructured worklet;
+    vtkm::cont::DataSet outDataSet = worklet.Run(
+                                         cellSet,
+                                         dataSet.GetCoordinateSystem(0),
+                                         minBound,
+                                         maxBound,
+                                         sample,
+                                         DeviceAdapter());
+  
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 9),
+                     "Wrong result for ExtractStructured worklet");
+    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
   }
 
@@ -137,10 +201,10 @@ public:
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
-   // Bounds and subsample
-   vtkm::Id3 minBound(0,0,0);
-   vtkm::Id3 maxBound(1,1,1);
-   vtkm::Id3 sample(1,1,1);
+    // Bounds and subsample
+    vtkm::Id3 minBound(0,0,0);
+    vtkm::Id3 maxBound(1,1,1);
+    vtkm::Id3 sample(1,1,1);
   
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
@@ -161,7 +225,9 @@ public:
   void operator()() const
   {
     TestUniform2D();
-    TestUniform3D();
+    TestUniform3D0();
+    TestUniform3D1();
+    TestUniform3D2();
     TestRectilinear2D();
     TestRectilinear3D();
   }

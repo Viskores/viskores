@@ -34,6 +34,8 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/ScatterCounting.h>
 
+#include <vtkm/Math.h>
+
 namespace vtkm {
 namespace worklet {
 
@@ -74,12 +76,12 @@ private:
 class ExtractStructured
 {
 public:
-  ExtractStructured() :
-    DoSubset(false),
-    DoSubsample(false) {}
+  ExtractStructured() {}
 
-  // Determine if index is within range of the subset
-  class CreateDataMap : public vtkm::worklet::WorkletMapField
+  //
+  // Determine if index is within range of the subset and subsampling
+  //
+  class CreateMap : public vtkm::worklet::WorkletMapField
   {
   public:
     typedef void ControlSignature(FieldIn<IdType> index,
@@ -90,77 +92,106 @@ public:
     vtkm::Id PlaneSize;
     vtkm::Id3 MinBound;
     vtkm::Id3 MaxBound;
+    vtkm::Id3 Sample;
 
     VTKM_CONT
-    CreateDataMap(const vtkm::Id3 dimensions,
-                  const vtkm::Id3 &minBound,
-                  const vtkm::Id3 &maxBound) :
-                         RowSize(dimensions[1]),
-                         PlaneSize(dimensions[1] * dimensions[0]),
+    CreateMap(const vtkm::Id3 inDimension,
+              const vtkm::Id3 &minBound,
+              const vtkm::Id3 &maxBound,
+              const vtkm::Id3 &sample) :
+                         RowSize(inDimension[1]),
+                         PlaneSize(inDimension[1] * inDimension[0]),
                          MinBound(minBound),
-                         MaxBound(maxBound) {}
+                         MaxBound(maxBound),
+                         Sample(sample) {}
 
     VTKM_EXEC
     vtkm::IdComponent operator()(const vtkm::Id index) const
     {
       vtkm::IdComponent passValue = 0;
-      vtkm::IdComponent z = index / PlaneSize;
-      vtkm::IdComponent y = (index % PlaneSize) / RowSize; 
-      vtkm::IdComponent x = index % RowSize;
-      if (MinBound[0] <= x && x <= MaxBound[0] &&
-          MinBound[1] <= y && y <= MaxBound[1] &&
-          MinBound[2] <= z && z <= MaxBound[2])
+
+      // Position of this point or cell in the grid
+      vtkm::IdComponent k = index / PlaneSize;
+      vtkm::IdComponent j = (index % PlaneSize) / RowSize; 
+      vtkm::IdComponent i = index % RowSize;
+std::cout << "Cell index " << index << " i " << i << " j " << j << " k " << k << std::endl;
+std::cout << "i " << i << " minbound " << MinBound[0] << " maxbound " << MaxBound[0] << " sample " << Sample[0] << std::endl;
+std::cout << "j " << j << " minbound " << MinBound[1] << " maxbound " << MaxBound[1] << " sample " << Sample[1] << std::endl;
+std::cout << "k " << k << " minbound " << MinBound[2] << " maxbound " << MaxBound[2] << " sample " << Sample[2] << std::endl;
+
+      // Within the subset range
+      if (MinBound[0] <= i && i <= MaxBound[0] &&
+          MinBound[1] <= j && j <= MaxBound[1] &&
+          MinBound[2] <= k && k <= MaxBound[2])
       {
-            passValue = 1;
+std::cout << "Within bounds" << std::endl;
+        // Within the subsampling criteria
+        if (((i - MinBound[0]) % Sample[0]) == 0 &&
+            ((j - MinBound[1]) % Sample[1]) == 0 &&
+            ((k - MinBound[2]) % Sample[2]) == 0)
+        {
+          passValue = 1;
+        }
       }
       return passValue;
     }
   };
 
+  //
   // Create maps for mapping point and cell data to subset
+  //
   template <typename DeviceAdapter>
-  void CreatePointCellMaps(
-                      const vtkm::Id3 &Dimensions,
+  void CreateDataMaps(const vtkm::Id3 &pointDimension,
                       const vtkm::Id &numberOfPoints,
                       const vtkm::Id &numberOfCells,
                       const vtkm::Id3 &minBound,
                       const vtkm::Id3 &maxBound,
+                      const vtkm::Id3 &sample,
                       const DeviceAdapter)
   {
     vtkm::cont::ArrayHandleIndex pointIndices(numberOfPoints);
     vtkm::cont::ArrayHandleIndex cellIndices(numberOfCells);
 
-    // Create the map for the point data
-    CreateDataMap pointWorklet(Dimensions, minBound, maxBound);
-    vtkm::worklet::DispatcherMapField<CreateDataMap> pointDispatcher(pointWorklet);
+    // Create the map for the input point data to output
+    CreateMap pointWorklet(pointDimension, minBound, maxBound, sample);
+    vtkm::worklet::DispatcherMapField<CreateMap> pointDispatcher(pointWorklet);
     pointDispatcher.Invoke(pointIndices,
-                           this->OutPointMap);
+                           this->PointMap);
+vtkm::Id count = 0;
 for (vtkm::Id i = 0; i < numberOfPoints; i++)
-std::cout << "Point " << i << " passed " << OutPointMap.GetPortalControl().Get(i) << std::endl;
+{
+std::cout << "Point " << i << " passed " << PointMap.GetPortalControl().Get(i) << std::endl;
+if (PointMap.GetPortalControl().Get(i) == 1)
+count++;
+}
+std::cout << "Count Point " << count << std::endl;
 
-    // Create the map for the cell data
-    vtkm::Id3 CellDimensions(Dimensions[0] - 1, Dimensions[1] - 1, Dimensions[2] - 1);
-/*
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> cellBounds;
-    DeviceAlgorithm::Copy(bounds, cellBounds);
-    cellBounds.GetPortalControl().Set(1, bounds.GetPortalConstControl().Get(1) - 1);
-    cellBounds.GetPortalControl().Set(3, bounds.GetPortalConstControl().Get(3) - 1);
-    cellBounds.GetPortalControl().Set(5, bounds.GetPortalConstControl().Get(5) - 1);
-*/
-
-    CreateDataMap cellWorklet(CellDimensions, minBound, maxBound - vtkm::Id3(1,1,1));
-    vtkm::worklet::DispatcherMapField<CreateDataMap> cellDispatcher(cellWorklet);
+    // Create the map for the input cell data to output
+    vtkm::Id3 cellDimension = pointDimension - vtkm::Id3(1,1,1);
+    vtkm::Id3 cellMaxBound = maxBound - vtkm::Id3(1,1,1);
+    if (cellMaxBound[2] == -1)
+      cellMaxBound[2] = minBound[2];
+    CreateMap cellWorklet(cellDimension, minBound, cellMaxBound, sample);
+    vtkm::worklet::DispatcherMapField<CreateMap> cellDispatcher(cellWorklet);
     cellDispatcher.Invoke(cellIndices,
-                          this->OutCellMap);
+                          this->CellMap);
+count = 0;
 for (vtkm::Id i = 0; i < numberOfCells; i++)
-std::cout << "Cell " << i << " passed " << OutCellMap.GetPortalControl().Get(i) << std::endl;
+{
+std::cout << "Cell " << i << " passed " << CellMap.GetPortalControl().Get(i) << std::endl;
+if (CellMap.GetPortalControl().Get(i) == 1)
+count++;
+}
+std::cout << "Count Cell " << count << std::endl;
   }
 
+  //
   // Uniform Structured
+  //
   template <typename CellSetType,
             typename DeviceAdapter>
   vtkm::cont::DataSet ExtractUniform(
-                          const vtkm::IdComponent dimension,
+                          const vtkm::IdComponent outDim,
                           const CellSetType &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
                           const vtkm::Id3 &minBound,
@@ -185,43 +216,38 @@ std::cout << "Cell " << i << " passed " << OutCellMap.GetPortalControl().Get(i) 
     UniformConstPortal Coordinates = vertices.PrepareForInput(DeviceAdapter());
 
     // Sizes and values of input Uniform Structured
-    vtkm::Id3 Dimension = Coordinates.GetDimensions();
-    vtkm::Vec<vtkm::FloatDefault,3> Origin = Coordinates.GetOrigin();
-    vtkm::Vec<vtkm::FloatDefault,3> Spacing = Coordinates.GetSpacing();
-    std::cout << "UNIFORM DIMENSIONS " << Dimension << std::endl;
-    std::cout << "UNIFORM ORIGIN " << Origin << std::endl;
-    std::cout << "UNIFORM SPACING " << Spacing << std::endl;
-
-    // Sizes and values of output Uniform Structured
-    vtkm::Id3 OutDimension = maxBound - minBound + vtkm::Id3(1,1,1);
-    vtkm::Vec<vtkm::FloatDefault,3> OutOrigin = Origin;
-    vtkm::Vec<vtkm::FloatDefault,3> OutSpacing = Spacing;
-    std::cout << "UNIFORM OUT DIMENSIONS " << OutDimension << std::endl;
-    std::cout << "UNIFORM OUT ORIGIN " << OutOrigin << std::endl;
-    std::cout << "UNIFORM OUT SPACING " << OutSpacing << std::endl;
+    vtkm::Id3 inDimension = Coordinates.GetDimensions();
+    vtkm::Vec<vtkm::FloatDefault,3> inOrigin = Coordinates.GetOrigin();
+    vtkm::Vec<vtkm::FloatDefault,3> inSpacing = Coordinates.GetSpacing();
+    std::cout << "UNIFORM IN DIMENSION " << inDimension << std::endl;
+    std::cout << "UNIFORM IN ORIGIN " << inOrigin << std::endl;
+    std::cout << "UNIFORM IN SPACING " << inSpacing << std::endl;
 
     // Verify requested bounds are contained within the original input dataset
-    VTKM_ASSERT((minBound[0] >= 0 && maxBound[0] <= Dimension[0]) &&
-                (minBound[1] >= 0 && maxBound[1] <= Dimension[1]) &&
-                (minBound[2] >= 0 && maxBound[2] <= Dimension[2]));
+    VTKM_ASSERT((minBound[0] >= 0 && maxBound[0] <= inDimension[0]) &&
+                (minBound[1] >= 0 && maxBound[1] <= inDimension[1]) &&
+                (minBound[2] >= 0 && maxBound[2] <= inDimension[2]));
 
-    // Is the output a subset
-    if (OutDimension[0] <= Dimension[0] &&
-        OutDimension[1] <= Dimension[1] &&
-        OutDimension[2] <= Dimension[2])
+    // Sizes of output Uniform with subsets and sampling
+    vtkm::Id3 outDimension = maxBound - minBound + vtkm::Id3(1,1,1);
+    for (vtkm::IdComponent dim = 0; dim < outDim; dim++)
     {
-      this->DoSubset = true;
-std::cout << "SUBSETTING" << std::endl;
+      if (sample[dim] > 1)
+      {
+        outDimension[dim] = outDimension[dim] / sample[dim] + 1;
+      }
     }
-    else
-    {
-std::cout << "No SUBSETTING" << std::endl;
-    }
-         
+    vtkm::Vec<vtkm::FloatDefault,3> outOrigin = vtkm::make_Vec(0,0,0);
+    vtkm::Vec<vtkm::FloatDefault,3> outSpacing = vtkm::make_Vec(1,1,1);
+    std::cout << "UNIFORM OUT DIMENSION " << outDimension << std::endl;
+    std::cout << "UNIFORM OUT ORIGIN " << outOrigin << std::endl;
+    std::cout << "UNIFORM OUT SPACING " << outSpacing << std::endl;
+
+    // Create output dataset which needs modified coordinate system and cellset
     vtkm::cont::DataSet output;
 
     // Set the output CoordinateSystem information
-    UniformArrayHandle outCoordinateData(OutDimension, OutOrigin, OutSpacing);
+    UniformArrayHandle outCoordinateData(outDimension, outOrigin, outSpacing);
     vtkm::cont::CoordinateSystem outCoordinates(coordinates.GetName(), outCoordinateData);
     output.AddCoordinateSystem(outCoordinates);
 
@@ -229,24 +255,24 @@ std::cout << "No SUBSETTING" << std::endl;
     outCoordinates.PrintSummary(std::cout);
 
     // Set the size of the cell set for Uniform
-    if (dimension == 1) {
+    if (outDim == 1) {
       vtkm::cont::CellSetStructured<1> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(OutDimension[0]);
+      outCellSet.SetPointDimensions(outDimension[0]);
       output.AddCellSet(outCellSet);
     }
-    else if (dimension == 2)
+    else if (outDim == 2)
     {
       vtkm::cont::CellSetStructured<2> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(vtkm::make_Vec(OutDimension[0], 
-                                                   OutDimension[1]));
+      outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], 
+                                                   outDimension[1]));
       output.AddCellSet(outCellSet);
     }
-    else if (dimension == 3)
+    else if (outDim == 3)
     {
       vtkm::cont::CellSetStructured<3> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(vtkm::make_Vec(OutDimension[0], 
-                                                   OutDimension[1], 
-                                                   OutDimension[2]));
+      outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], 
+                                                   outDimension[1], 
+                                                   outDimension[2]));
       output.AddCellSet(outCellSet);
     }
 
@@ -254,21 +280,24 @@ std::cout << "Number of Cells " << output.GetCellSet(0).GetNumberOfCells() << st
 std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << std::endl;
 
     // Calculate and save the maps of point and cell data to subset
-    CreatePointCellMaps(Dimension, 
-                        cellSet.GetNumberOfPoints(),
-                        cellSet.GetNumberOfCells(),
-                        minBound,
-                        maxBound,
-                        DeviceAdapter());
+    CreateDataMaps(inDimension, 
+                   cellSet.GetNumberOfPoints(),
+                   cellSet.GetNumberOfCells(),
+                   minBound,
+                   maxBound,
+                   sample,
+                   DeviceAdapter());
 
     return output;
   }
 
+  //
   // Rectilinear Structured
+  //
   template <typename CellSetType,
             typename DeviceAdapter>
   vtkm::cont::DataSet ExtractRectilinear(
-                          const vtkm::IdComponent dimension,
+                          const vtkm::IdComponent outDim,
                           const CellSetType &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
                           const vtkm::Id3 &minBound,
@@ -300,36 +329,36 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
     DefaultConstHandle Y = Coordinates.GetSecondPortal();
     DefaultConstHandle Z = Coordinates.GetThirdPortal();
 
-    vtkm::Id3 Dimension(X.GetNumberOfValues(), 
-                        Y.GetNumberOfValues(), 
-                        Z.GetNumberOfValues());
-    std::cout << "Number of x coordinates " << Dimension[0] << std::endl;
-    std::cout << "Number of y coordinates " << Dimension[1] << std::endl;
-    std::cout << "Number of z coordinates " << Dimension[2] << std::endl;
+    vtkm::Id3 inDimension(X.GetNumberOfValues(), 
+                          Y.GetNumberOfValues(), 
+                          Z.GetNumberOfValues());
+    std::cout << "Number of x coordinates " << inDimension[0] << std::endl;
+    std::cout << "Number of y coordinates " << inDimension[1] << std::endl;
+    std::cout << "Number of z coordinates " << inDimension[2] << std::endl;
 
-    for (vtkm::Id x = 0; x < Dimension[0]; x++)
+    for (vtkm::Id x = 0; x < inDimension[0]; x++)
       std::cout << "X " << x << " = " << X.Get(x) << std::endl;
-    for (vtkm::Id y = 0; y < Dimension[1]; y++)
+    for (vtkm::Id y = 0; y < inDimension[1]; y++)
       std::cout << "Y " << y << " = " << Y.Get(y) << std::endl;
-    for (vtkm::Id z = 0; z < Dimension[2]; z++)
+    for (vtkm::Id z = 0; z < inDimension[2]; z++)
       std::cout << "Z " << z << " = " << Z.Get(z) << std::endl;
 
     // Verify requested bounds are contained within the original input dataset
-    VTKM_ASSERT((minBound[0] >= 0 && maxBound[0] <= Dimension[0]) &&
-                (minBound[1] >= 0 && maxBound[1] <= Dimension[1]) &&
-                (minBound[2] >= 0 && maxBound[2] <= Dimension[2]));
+    VTKM_ASSERT((minBound[0] >= 0 && maxBound[0] <= inDimension[0]) &&
+                (minBound[1] >= 0 && maxBound[1] <= inDimension[1]) &&
+                (minBound[2] >= 0 && maxBound[2] <= inDimension[2]));
 
     vtkm::cont::DataSet output;
 
     // Sizes and values of output Rectilinear Structured
-    vtkm::Id3 OutDimension = maxBound - minBound + vtkm::Id3(1,1,1);
-    std::cout << "RECTILINEAR OUT DIMENSIONS " << OutDimension << std::endl;
+    vtkm::Id3 outDimension = maxBound - minBound + vtkm::Id3(1,1,1);
+    std::cout << "RECTILINEAR OUT DIMENSIONS " << outDimension << std::endl;
 
     // Set output coordinate system
     DefaultHandle Xc, Yc, Zc;
-    Xc.Allocate(OutDimension[0]);
-    Yc.Allocate(OutDimension[1]);
-    Zc.Allocate(OutDimension[2]);
+    Xc.Allocate(outDimension[0]);
+    Yc.Allocate(outDimension[1]);
+    Zc.Allocate(outDimension[2]);
 
     vtkm::Id indx = 0;
     for (vtkm::Id x = minBound[0]; x <= maxBound[0]; x++)
@@ -347,12 +376,15 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
       Zc.GetPortalControl().Set(indx++, Z.Get(z));
     }
 
-    for (vtkm::Id x = 0; x < OutDimension[0]; x++)
+    for (vtkm::Id x = 0; x < outDimension[0]; x++)
       std::cout << "Xc " << x << " = " << Xc.GetPortalControl().Get(x) << std::endl;
-    for (vtkm::Id y = 0; y < OutDimension[1]; y++)
+    for (vtkm::Id y = 0; y < outDimension[1]; y++)
       std::cout << "Yc " << y << " = " << Yc.GetPortalControl().Get(y) << std::endl;
-    for (vtkm::Id z = 0; z < OutDimension[2]; z++)
+    for (vtkm::Id z = 0; z < outDimension[2]; z++)
       std::cout << "Zc " << z << " = " << Zc.GetPortalControl().Get(z) << std::endl;
+
+    // PKF TO DO
+    // Fix coordinate system for subsampling
 
     CartesianArrayHandle outCoordinateData(Xc, Yc, Zc);
     vtkm::cont::CoordinateSystem outCoordinates(coordinates.GetName(), outCoordinateData);
@@ -362,24 +394,24 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
     outCoordinates.PrintSummary(std::cout);
 
     // Set the size of the cell set for Rectilinear
-    if (dimension == 1) {
+    if (outDim == 1) {
       vtkm::cont::CellSetStructured<1> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(OutDimension[0]);
+      outCellSet.SetPointDimensions(outDimension[0]);
       output.AddCellSet(outCellSet);
     }
-    else if (dimension == 2)
+    else if (outDim == 2)
     {
       vtkm::cont::CellSetStructured<2> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(vtkm::make_Vec(OutDimension[0], 
-                                                   OutDimension[1]));
+      outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], 
+                                                   outDimension[1]));
       output.AddCellSet(outCellSet);
     }
-    else if (dimension == 3)
+    else if (outDim == 3)
     {
       vtkm::cont::CellSetStructured<3> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(vtkm::make_Vec(OutDimension[0], 
-                                                   OutDimension[1], 
-                                                   OutDimension[2]));
+      outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], 
+                                                   outDimension[1], 
+                                                   outDimension[2]));
       output.AddCellSet(outCellSet);
     }
 
@@ -387,17 +419,20 @@ std::cout << "Number of Cells " << output.GetCellSet(0).GetNumberOfCells() << st
 std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << std::endl;
 
     // Calculate and save the maps of point and cell data to subset
-    CreatePointCellMaps(Dimension, 
-                        cellSet.GetNumberOfPoints(),
-                        cellSet.GetNumberOfCells(),
-                        minBound,
-                        maxBound,
-                        DeviceAdapter());
+    CreateDataMaps(inDimension, 
+                   cellSet.GetNumberOfPoints(),
+                   cellSet.GetNumberOfCells(),
+                   minBound,
+                   maxBound,
+                   sample,
+                   DeviceAdapter());
 
     return output;
   }
 
-  // Run extract structured on uniform or rectilinear, subset and subsample
+  //
+  // Run extract structured on uniform or rectilinear, subset and/or subsample
+  //
   template <typename DeviceAdapter>
   vtkm::cont::DataSet Run(const vtkm::cont::DynamicCellSet &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
@@ -406,40 +441,65 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
                           const vtkm::Id3 &sample,
                           DeviceAdapter)
   {
-    vtkm::IdComponent dimension;
+std::cout << "MINBOUND " << minBound << std::endl;
+std::cout << "MAXBOUND " << maxBound << std::endl;
+std::cout << "SAMPLE " << sample << std::endl;
+
+    // Check legality of input cellset and set input dimension
+    vtkm::IdComponent inDim = 0;
     if (cellSet.IsSameType(vtkm::cont::CellSetStructured<1>()))
     {
-      dimension = 1;
+      inDim = 1;
     }
     else if (cellSet.IsSameType(vtkm::cont::CellSetStructured<2>()))
     {
-      dimension = 2;
+      inDim = 2;
     }
     else if (cellSet.IsSameType(vtkm::cont::CellSetStructured<3>()))
     {
-      dimension = 3;
+      inDim = 3;
     }
     else
     {
       throw vtkm::cont::ErrorBadType("Only Structured cell sets allowed");
       return vtkm::cont::DataSet();
     }
-    std::cout << "DIMENSION " << dimension << std::endl;
 
-    // Subsample required
-    if (sample == vtkm::Id3(1,1,1))
-    {
-      this->DoSubsample = false;
-std::cout << "No SUBSAMPLING" << std::endl;
-    }
-    else
-    {
-      VTKM_ASSERT(sample[0] >= 1 && sample[1] >= 1 && sample[2] >= 1);
-      this->DoSubsample = true;
-std::cout << "SUBSAMPLING" << std::endl;
-    }
+    // Check legality of bounds and sampling
+    VTKM_ASSERT((minBound[0] >= 0 && maxBound[0] >= minBound[0]) &&
+                (minBound[1] >= 0 && maxBound[1] >= minBound[1]) &&
+                (minBound[2] >= 0 && maxBound[2] >= minBound[2]));
+    VTKM_ASSERT(sample[0] >= 1 && sample[1] >= 1 && sample[2] >= 1);
 
-    // Uniform Structured
+    // Set output dimension
+    vtkm::IdComponent outDim = 0;
+    vtkm::Id3 bounds = maxBound - minBound;
+    if (bounds[0] >= 1 && bounds[1] >= 1 && bounds[2] >= 1)
+    {
+      outDim = 3;
+      if (outDim > inDim)
+      {
+        throw vtkm::cont::ErrorBadValue("Requested bounds exceed input extents");
+        return vtkm::cont::DataSet();
+      }
+    }
+    else if (bounds[0] >= 1 && bounds[1] >= 1)
+    {
+      outDim = 2;
+      if (outDim > inDim)
+      {
+        throw vtkm::cont::ErrorBadValue("Requested bounds exceed input extents");
+        return vtkm::cont::DataSet();
+      }
+    }
+    else if (bounds[0] >= 1)
+    {
+        outDim = 1;
+    }
+    std::cout << "INPUT DIMENSION " << inDim << std::endl;
+    std::cout << "OUTPUT DIMENSION " << outDim << std::endl;
+
+    // Uniform or Rectilinear
     typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;
     bool IsUniformDataSet = 0;
     if (coordinates.GetData().IsSameType(UniformArrayHandle()))
@@ -458,7 +518,7 @@ std::cout << "SUBSAMPLING" << std::endl;
 
     if (IsUniformDataSet)
     {
-      return ExtractUniform(dimension,
+      return ExtractUniform(outDim,
                             cellSet,
                             coordinates,
                             minBound,
@@ -468,7 +528,7 @@ std::cout << "SUBSAMPLING" << std::endl;
     }
     else
     {
-      return ExtractRectilinear(dimension,
+      return ExtractRectilinear(outDim,
                                 cellSet,
                                 coordinates,
                                 minBound,
@@ -478,7 +538,9 @@ std::cout << "SUBSAMPLING" << std::endl;
     }
   }
 
-  // Subset of Point Data
+  //
+  // Subset and/or subsampling of Point Data
+  //
   template <typename T,
             typename StorageType,
             typename DeviceAdapter>
@@ -488,14 +550,15 @@ std::cout << "SUBSAMPLING" << std::endl;
   {
     vtkm::cont::ArrayHandle<T, StorageType> output;
 
-    DistributeData distribute(this->OutPointMap, device);
-    vtkm::worklet::DispatcherMapField<DistributeData, DeviceAdapter> dispatcher(distribute);
-    dispatcher.Invoke(input, output);
-
+    DistributeData distribute(this->PointMap, device);
+    vtkm::worklet::DispatcherMapField<DistributeData, DeviceAdapter> dispatch(distribute);
+    dispatch.Invoke(input, output);
     return output;
   }
 
-  // Subset of Cell Data
+  //
+  // Subset and/or subsampling of Cell Data
+  //
   template <typename T,
             typename StorageType,
             typename DeviceAdapter>
@@ -505,18 +568,15 @@ std::cout << "SUBSAMPLING" << std::endl;
   {
     vtkm::cont::ArrayHandle<T, StorageType> output;
 
-    DistributeData distribute(this->OutCellMap, device);
-    vtkm::worklet::DispatcherMapField<DistributeData, DeviceAdapter> dispatcher(distribute);
-    dispatcher.Invoke(input, output);
-
+    DistributeData distribute(this->CellMap, device);
+    vtkm::worklet::DispatcherMapField<DistributeData, DeviceAdapter> dispatch(distribute);
+    dispatch.Invoke(input, output);
     return output;
   }
 
 private:
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> OutPointMap;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> OutCellMap;
-  bool DoSubset;
-  bool DoSubsample;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> PointMap;
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> CellMap;
 };
 
 }
