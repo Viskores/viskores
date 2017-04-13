@@ -20,6 +20,7 @@
 
 #include <vtkm/worklet/ExtractStructured.h>
 
+#include <vtkm/Bounds.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -42,8 +43,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     // Bounds and subsample
-    vtkm::Id3 minBound(1,1,0);
-    vtkm::Id3 maxBound(3,3,0);
+    vtkm::Bounds bounds(1,3, 1,3, 0,0);
     vtkm::Id3 sample(1,1,1);
   
     // Extract subset
@@ -51,8 +51,7 @@ public:
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         minBound,
-                                         maxBound,
+                                         bounds,
                                          sample,
                                          DeviceAdapter());
   
@@ -74,8 +73,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     // Bounds and subsample
-    vtkm::Id3 minBound(0,0,1);
-    vtkm::Id3 maxBound(4,4,3);
+    vtkm::Bounds bounds(0,4, 0,4, 1,3);
     vtkm::Id3 sample(2,2,1);
   
     // Extract subset
@@ -83,8 +81,7 @@ public:
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         minBound,
-                                         maxBound,
+                                         bounds,
                                          sample,
                                          DeviceAdapter());
   
@@ -106,8 +103,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     // Bounds and subsample
-    vtkm::Id3 minBound(0,0,1);
-    vtkm::Id3 maxBound(4,4,3);
+    vtkm::Bounds bounds(0,4, 0,4, 1,3);
     vtkm::Id3 sample(3,3,2);
   
     // Extract subset
@@ -115,8 +111,7 @@ public:
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         minBound,
-                                         maxBound,
+                                         bounds,
                                          sample,
                                          DeviceAdapter());
   
@@ -138,8 +133,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     // Bounds and subsample
-    vtkm::Id3 minBound(1,1,1);
-    vtkm::Id3 maxBound(3,3,1);
+    vtkm::Bounds bounds(1,3, 1,3, 1,1);
     vtkm::Id3 sample(1,1,1);
   
     // Extract subset
@@ -147,8 +141,7 @@ public:
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         minBound,
-                                         maxBound,
+                                         bounds,
                                          sample,
                                          DeviceAdapter());
   
@@ -170,8 +163,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     // Bounds and subsample
-    vtkm::Id3 minBound(0,0,0);
-    vtkm::Id3 maxBound(1,1,0);
+    vtkm::Bounds bounds(0,1, 0,1, 0,0);
     vtkm::Id3 sample(1,1,1);
   
     // Extract subset
@@ -179,8 +171,7 @@ public:
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         minBound,
-                                         maxBound,
+                                         bounds,
                                          sample,
                                          DeviceAdapter());
   
@@ -202,8 +193,7 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     // Bounds and subsample
-    vtkm::Id3 minBound(0,0,0);
-    vtkm::Id3 maxBound(1,1,1);
+    vtkm::Bounds bounds(0,1, 0,1, 0,1);
     vtkm::Id3 sample(1,1,1);
   
     // Extract subset
@@ -211,8 +201,7 @@ public:
     vtkm::cont::DataSet outDataSet = worklet.Run(
                                          cellSet,
                                          dataSet.GetCoordinateSystem(0),
-                                         minBound,
-                                         maxBound,
+                                         bounds,
                                          sample,
                                          DeviceAdapter());
   

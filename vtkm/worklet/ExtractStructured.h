@@ -90,19 +90,16 @@ public:
 
     vtkm::Id RowSize;
     vtkm::Id PlaneSize;
-    vtkm::Id3 MinBound;
-    vtkm::Id3 MaxBound;
+    vtkm::Bounds OutBounds;
     vtkm::Id3 Sample;
 
     VTKM_CONT
     CreateMap(const vtkm::Id3 inDimension,
-              const vtkm::Id3 &minBound,
-              const vtkm::Id3 &maxBound,
+              const vtkm::Bounds &outBounds,
               const vtkm::Id3 &sample) :
                          RowSize(inDimension[1]),
                          PlaneSize(inDimension[1] * inDimension[0]),
-                         MinBound(minBound),
-                         MaxBound(maxBound),
+                         OutBounds(outBounds),
                          Sample(sample) {}
 
     VTKM_EXEC
@@ -115,20 +112,22 @@ public:
       vtkm::IdComponent j = (index % PlaneSize) / RowSize; 
       vtkm::IdComponent i = index % RowSize;
 std::cout << "Cell index " << index << " i " << i << " j " << j << " k " << k << std::endl;
-std::cout << "i " << i << " minbound " << MinBound[0] << " maxbound " << MaxBound[0] << " sample " << Sample[0] << std::endl;
-std::cout << "j " << j << " minbound " << MinBound[1] << " maxbound " << MaxBound[1] << " sample " << Sample[1] << std::endl;
-std::cout << "k " << k << " minbound " << MinBound[2] << " maxbound " << MaxBound[2] << " sample " << Sample[2] << std::endl;
+std::cout << "i " << i << " minbound " << OutBounds.X.Min << " maxbound " << OutBounds.X.Max << " sample " << Sample[0] << std::endl;
+std::cout << "j " << j << " minbound " << OutBounds.Y.Min << " maxbound " << OutBounds.Y.Max << " sample " << Sample[1] << std::endl;
+std::cout << "k " << k << " minbound " << OutBounds.Z.Min << " maxbound " << OutBounds.Z.Max << " sample " << Sample[2] << std::endl;
 
       // Within the subset range
-      if (MinBound[0] <= i && i <= MaxBound[0] &&
-          MinBound[1] <= j && j <= MaxBound[1] &&
-          MinBound[2] <= k && k <= MaxBound[2])
+      vtkm::Id3 ijk = vtkm::make_Vec(i, j, k);
+      if (OutBounds.Contains(ijk))
       {
 std::cout << "Within bounds" << std::endl;
         // Within the subsampling criteria
-        if (((i - MinBound[0]) % Sample[0]) == 0 &&
-            ((j - MinBound[1]) % Sample[1]) == 0 &&
-            ((k - MinBound[2]) % Sample[2]) == 0)
+        vtkm::Id3 minPt = vtkm::make_Vec(OutBounds.X.Min,
+                                         OutBounds.Y.Min,
+                                         OutBounds.Z.Min);
+        if (((i - minPt[0]) % Sample[0]) == 0 &&
+            ((j - minPt[1]) % Sample[1]) == 0 &&
+            ((k - minPt[2]) % Sample[2]) == 0)
         {
           passValue = 1;
         }
@@ -144,16 +143,16 @@ std::cout << "Within bounds" << std::endl;
   void CreateDataMaps(const vtkm::Id3 &pointDimension,
                       const vtkm::Id &numberOfPoints,
                       const vtkm::Id &numberOfCells,
-                      const vtkm::Id3 &minBound,
-                      const vtkm::Id3 &maxBound,
+                      const vtkm::Bounds &outBounds,
                       const vtkm::Id3 &sample,
                       const DeviceAdapter)
   {
     vtkm::cont::ArrayHandleIndex pointIndices(numberOfPoints);
     vtkm::cont::ArrayHandleIndex cellIndices(numberOfCells);
+std::cout << "POINT BOUNDS " << outBounds << std::endl;
 
     // Create the map for the input point data to output
-    CreateMap pointWorklet(pointDimension, minBound, maxBound, sample);
+    CreateMap pointWorklet(pointDimension, outBounds, sample);
     vtkm::worklet::DispatcherMapField<CreateMap> pointDispatcher(pointWorklet);
     pointDispatcher.Invoke(pointIndices,
                            this->PointMap);
@@ -168,10 +167,16 @@ std::cout << "Count Point " << count << std::endl;
 
     // Create the map for the input cell data to output
     vtkm::Id3 cellDimension = pointDimension - vtkm::Id3(1,1,1);
-    vtkm::Id3 cellMaxBound = maxBound - vtkm::Id3(1,1,1);
-    if (cellMaxBound[2] == -1)
-      cellMaxBound[2] = minBound[2];
-    CreateMap cellWorklet(cellDimension, minBound, cellMaxBound, sample);
+    vtkm::Bounds cellBounds = outBounds;
+    if (cellBounds.X.Max > 0)
+      cellBounds.X.Max -= 1;
+    if (cellBounds.Y.Max > 0)
+      cellBounds.Y.Max -= 1;
+    if (cellBounds.Z.Max > 0)
+      cellBounds.Z.Max -= 1;
+std::cout << "CELL BOUNDS " << cellBounds << std::endl;
+
+    CreateMap cellWorklet(cellDimension, cellBounds, sample);
     vtkm::worklet::DispatcherMapField<CreateMap> cellDispatcher(cellWorklet);
     cellDispatcher.Invoke(cellIndices,
                           this->CellMap);
@@ -194,8 +199,7 @@ std::cout << "Count Cell " << count << std::endl;
                           const vtkm::IdComponent outDim,
                           const CellSetType &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
-                          const vtkm::Id3 &minBound,
-                          const vtkm::Id3 &maxBound,
+                          const vtkm::Bounds outBounds,
                           const vtkm::Id3 &sample,
                           DeviceAdapter)
   {
@@ -223,13 +227,12 @@ std::cout << "Count Cell " << count << std::endl;
     std::cout << "UNIFORM IN ORIGIN " << inOrigin << std::endl;
     std::cout << "UNIFORM IN SPACING " << inSpacing << std::endl;
 
-    // Verify requested bounds are contained within the original input dataset
-    VTKM_ASSERT((minBound[0] >= 0 && maxBound[0] <= inDimension[0]) &&
-                (minBound[1] >= 0 && maxBound[1] <= inDimension[1]) &&
-                (minBound[2] >= 0 && maxBound[2] <= inDimension[2]));
-
     // Sizes of output Uniform with subsets and sampling
-    vtkm::Id3 outDimension = maxBound - minBound + vtkm::Id3(1,1,1);
+    // VTK calculates the map with subset, sample and intersect boundary flag
+    // before deciding on size of the output
+    vtkm::Id3 outDimension = vtkm::make_Vec(outBounds.X.Max - outBounds.X.Min + 1,
+                                            outBounds.Y.Max - outBounds.Y.Min + 1,
+                                            outBounds.Z.Max - outBounds.Z.Min + 1);
     for (vtkm::IdComponent dim = 0; dim < outDim; dim++)
     {
       if (sample[dim] > 1)
@@ -283,8 +286,7 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
     CreateDataMaps(inDimension, 
                    cellSet.GetNumberOfPoints(),
                    cellSet.GetNumberOfCells(),
-                   minBound,
-                   maxBound,
+                   outBounds,
                    sample,
                    DeviceAdapter());
 
@@ -300,8 +302,7 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
                           const vtkm::IdComponent outDim,
                           const CellSetType &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
-                          const vtkm::Id3 &minBound,
-                          const vtkm::Id3 &maxBound,
+                          const vtkm::Bounds &outBounds,
                           const vtkm::Id3 &sample,
                           DeviceAdapter)
   {
@@ -343,15 +344,12 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
     for (vtkm::Id z = 0; z < inDimension[2]; z++)
       std::cout << "Z " << z << " = " << Z.Get(z) << std::endl;
 
-    // Verify requested bounds are contained within the original input dataset
-    VTKM_ASSERT((minBound[0] >= 0 && maxBound[0] <= inDimension[0]) &&
-                (minBound[1] >= 0 && maxBound[1] <= inDimension[1]) &&
-                (minBound[2] >= 0 && maxBound[2] <= inDimension[2]));
-
     vtkm::cont::DataSet output;
 
     // Sizes and values of output Rectilinear Structured
-    vtkm::Id3 outDimension = maxBound - minBound + vtkm::Id3(1,1,1);
+    vtkm::Id3 outDimension = vtkm::make_Vec(outBounds.X.Max - outBounds.X.Min + 1,
+                                            outBounds.Y.Max - outBounds.Y.Min + 1,
+                                            outBounds.Z.Max - outBounds.Z.Min + 1);
     std::cout << "RECTILINEAR OUT DIMENSIONS " << outDimension << std::endl;
 
     // Set output coordinate system
@@ -360,6 +358,7 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
     Yc.Allocate(outDimension[1]);
     Zc.Allocate(outDimension[2]);
 
+/*
     vtkm::Id indx = 0;
     for (vtkm::Id x = minBound[0]; x <= maxBound[0]; x++)
     {
@@ -382,6 +381,7 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
       std::cout << "Yc " << y << " = " << Yc.GetPortalControl().Get(y) << std::endl;
     for (vtkm::Id z = 0; z < outDimension[2]; z++)
       std::cout << "Zc " << z << " = " << Zc.GetPortalControl().Get(z) << std::endl;
+*/
 
     // PKF TO DO
     // Fix coordinate system for subsampling
@@ -422,8 +422,7 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
     CreateDataMaps(inDimension, 
                    cellSet.GetNumberOfPoints(),
                    cellSet.GetNumberOfCells(),
-                   minBound,
-                   maxBound,
+                   outBounds,
                    sample,
                    DeviceAdapter());
 
@@ -436,15 +435,10 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
   template <typename DeviceAdapter>
   vtkm::cont::DataSet Run(const vtkm::cont::DynamicCellSet &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
-                          const vtkm::Id3 &minBound,
-                          const vtkm::Id3 &maxBound,
+                          const vtkm::Bounds &boundingBox,
                           const vtkm::Id3 &sample,
                           DeviceAdapter)
   {
-std::cout << "MINBOUND " << minBound << std::endl;
-std::cout << "MAXBOUND " << maxBound << std::endl;
-std::cout << "SAMPLE " << sample << std::endl;
-
     // Check legality of input cellset and set input dimension
     vtkm::IdComponent inDim = 0;
     if (cellSet.IsSameType(vtkm::cont::CellSetStructured<1>()))
@@ -464,42 +458,51 @@ std::cout << "SAMPLE " << sample << std::endl;
       throw vtkm::cont::ErrorBadType("Only Structured cell sets allowed");
       return vtkm::cont::DataSet();
     }
-
-    // Check legality of bounds and sampling
-    VTKM_ASSERT((minBound[0] >= 0 && maxBound[0] >= minBound[0]) &&
-                (minBound[1] >= 0 && maxBound[1] >= minBound[1]) &&
-                (minBound[2] >= 0 && maxBound[2] >= minBound[2]));
-    VTKM_ASSERT(sample[0] >= 1 && sample[1] >= 1 && sample[2] >= 1);
-
-    // Set output dimension
-    vtkm::IdComponent outDim = 0;
-    vtkm::Id3 bounds = maxBound - minBound;
-    if (bounds[0] >= 1 && bounds[1] >= 1 && bounds[2] >= 1)
-    {
-      outDim = 3;
-      if (outDim > inDim)
-      {
-        throw vtkm::cont::ErrorBadValue("Requested bounds exceed input extents");
-        return vtkm::cont::DataSet();
-      }
-    }
-    else if (bounds[0] >= 1 && bounds[1] >= 1)
-    {
-      outDim = 2;
-      if (outDim > inDim)
-      {
-        throw vtkm::cont::ErrorBadValue("Requested bounds exceed input extents");
-        return vtkm::cont::DataSet();
-      }
-    }
-    else if (bounds[0] >= 1)
-    {
-        outDim = 1;
-    }
     std::cout << "INPUT DIMENSION " << inDim << std::endl;
-    std::cout << "OUTPUT DIMENSION " << outDim << std::endl;
 
-    // Uniform or Rectilinear
+    // Check legality of requested bounds
+    if (boundingBox.IsNonEmpty() == false)
+    {
+      throw vtkm::cont::ErrorBadValue("Requested bounding box is not valid");
+      return vtkm::cont::DataSet();
+    }
+
+    // Check legality of sampling
+    if (sample[0] < 1 || sample[1] < 1 || sample[2] < 1)
+    {
+      throw vtkm::cont::ErrorBadValue("Requested sampling is not valid");
+      return vtkm::cont::DataSet();
+    }
+
+    // Requested bounding box intersection with input bounding box
+    vtkm::Bounds inBounds = coordinates.GetBounds();
+    vtkm::Bounds outBounds = boundingBox;
+
+    std::cout << "INPUT BOUNDING BOX " << inBounds << std::endl;
+    std::cout << "ORIGINAL BOUNDING BOX " << boundingBox << std::endl;
+    std::cout << "SAMPLE " << sample << std::endl;
+
+    if (outBounds.X.Min < inBounds.X.Min)
+      outBounds.X.Min = inBounds.X.Min;
+    if (outBounds.X.Max > inBounds.X.Max)
+      outBounds.X.Max = inBounds.X.Max;
+    if (outBounds.Y.Min < inBounds.Y.Min)
+      outBounds.Y.Min = inBounds.Y.Min;
+    if (outBounds.Y.Max > inBounds.Y.Max)
+      outBounds.Y.Max = inBounds.Y.Max;
+    if (outBounds.Z.Min < inBounds.Z.Min)
+      outBounds.Z.Min = inBounds.Z.Min;
+    if (outBounds.Z.Max > inBounds.Z.Max)
+      outBounds.Z.Max = inBounds.Z.Max;
+
+    // Bounding box intersects
+    if (outBounds.IsNonEmpty() == false)
+    {
+      throw vtkm::cont::ErrorBadValue("Bounding box does not intersect input");
+      return vtkm::cont::DataSet();
+    }
+
+    // Uniform, Regular or Rectilinear
     typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;
     bool IsUniformDataSet = 0;
     if (coordinates.GetData().IsSameType(UniformArrayHandle()))
@@ -508,31 +511,21 @@ std::cout << "SAMPLE " << sample << std::endl;
     }
     std::cout << "IsUniformDataSet " << IsUniformDataSet << std::endl;
 
-    std::cout << "CoordinateSystem::Field GetName " << coordinates.GetName() << std::endl;
-    std::cout << "CoordinateSystem::Field GetAssociation " << coordinates.GetAssociation() << std::endl;
-    vtkm::Bounds inBounds = coordinates.GetBounds();
-    std::cout << "Bounds " << inBounds << std::endl;
-    std::cout << "CoordinateSystem for input:" << std::endl;
-    coordinates.PrintSummary(std::cout);
-    std::cout << std::endl;
-
     if (IsUniformDataSet)
     {
-      return ExtractUniform(outDim,
+      return ExtractUniform(inDim,
                             cellSet,
                             coordinates,
-                            minBound,
-                            maxBound,
+                            outBounds,
                             sample,
                             DeviceAdapter());
     }
     else
     {
-      return ExtractRectilinear(outDim,
+      return ExtractRectilinear(inDim,
                                 cellSet,
                                 coordinates,
-                                minBound,
-                                maxBound,
+                                outBounds,
                                 sample,
                                 DeviceAdapter());
     }
