@@ -152,7 +152,7 @@ public:
                                            0, rangeMax[1], TBB_GRAIN_SIZE_3D[1],
                                            0, rangeMax[0], TBB_GRAIN_SIZE_3D[2]);
 
-    tbb::ScheduleKernelId3<FunctorType> kernel(functor,rangeMax);
+    tbb::ScheduleKernelId3<FunctorType> kernel(functor);
     kernel.SetErrorMessageBuffer(errorMessage);
 
     ::tbb::parallel_for(range, kernel);

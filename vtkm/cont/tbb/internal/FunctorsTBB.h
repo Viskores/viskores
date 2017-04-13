@@ -508,10 +508,8 @@ template<class FunctorType>
 class ScheduleKernelId3
 {
 public:
-  VTKM_CONT ScheduleKernelId3(const FunctorType &functor,
-                                    const vtkm::Id3& dims)
-    : Functor(functor),
-      Dims(dims)
+  VTKM_CONT ScheduleKernelId3(const FunctorType &functor)
+    : Functor(functor)
     {  }
 
   VTKM_CONT void SetErrorMessageBuffer(
@@ -525,17 +523,24 @@ public:
   void operator()(const ::tbb::blocked_range3d<vtkm::Id> &range) const {
     try
       {
-      for( vtkm::Id k=range.pages().begin(); k!=range.pages().end(); ++k)
+      const vtkm::Id kstart = range.pages().begin();
+      const vtkm::Id kend = range.pages().end();
+      const vtkm::Id jstart =range.rows().begin();
+      const vtkm::Id jend = range.rows().end();
+      const vtkm::Id istart =range.cols().begin();
+      const vtkm::Id iend = range.cols().end();
+
+      vtkm::Id3 index;
+      for( vtkm::Id k=kstart; k!=kend; ++k)
         {
-        for( vtkm::Id j=range.rows().begin(); j!=range.rows().end(); ++j)
+        index[2]=k;
+        for( vtkm::Id j=jstart; j!=jend; ++j)
           {
-          const vtkm::Id start =range.cols().begin();
-          const vtkm::Id end = range.cols().end();
-VTKM_VECTORIZATION_PRE_LOOP
-          for( vtkm::Id i=start; i != end; ++i)
+          index[1]=j;
+          for( vtkm::Id i=istart; i != iend; ++i)
             {
-VTKM_VECTORIZATION_IN_LOOP
-            this->Functor(vtkm::Id3(i, j, k));
+            index[0]=i;
+            this->Functor(index);
             }
           }
         }
@@ -552,7 +557,6 @@ VTKM_VECTORIZATION_IN_LOOP
   }
 private:
   FunctorType Functor;
-  vtkm::Id3 Dims;
   vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
 };
 
