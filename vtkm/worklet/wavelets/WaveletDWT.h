@@ -1994,7 +1994,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
       else
       {
         pretendSigPaddedZero = padZeroAtExt2 = false;   // so the compiler doesn't complain
-        vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+        vtkm::cont::ErrorInternal("cDTemp Length not match!");
       }
     }
     this->Extend3DLeftRight(  coeffIn, 
@@ -2104,7 +2104,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
       else
       {
         pretendSigPaddedZero = padZeroAtExt2 = false;   // so the compiler doesn't complain
-        vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+        vtkm::cont::ErrorInternal("cDTemp Length not match!");
       }
     }
     this->Extend3DTopDown(  coeffIn, 
@@ -2214,7 +2214,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
       else
       {
         pretendSigPaddedZero = padZeroAtExt2 = false;   // so the compiler doesn't complain
-        vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+        vtkm::cont::ErrorInternal("cDTemp Length not match!");
       }
     }
     this->Extend3DFrontBack(  coeffIn, 

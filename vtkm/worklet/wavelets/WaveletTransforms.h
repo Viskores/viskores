@@ -176,7 +176,7 @@ public:
 		else
     {
       sigPretendX = sigPretendY = sigPretendZ = 0;    // so the compiler doesn't complain
-      vtkm::cont::ErrorControlInternal("Invalid extension mode for cubes!");
+      vtkm::cont::ErrorInternal("Invalid extension mode for cubes!");
     }
 
     if( sigPretendX == sigPretendDimX || 		// decides to pad a zero 
@@ -250,7 +250,7 @@ public:
       idx = inZ * dimX3 * dimY3 + inY * dimX3 + inX_local;
     }
     else
-      vtkm::cont::ErrorControlInternal("Invalid index!");
+      vtkm::cont::ErrorInternal("Invalid index!");
   }
 
 private:
@@ -299,7 +299,7 @@ public:
       idx = inZ * dimX3 * dimY3 + inY_local * dimX3 + inX;
     }
     else
-      vtkm::cont::ErrorControlInternal("Invalid index!");
+      vtkm::cont::ErrorInternal("Invalid index!");
   }
 
 private:
@@ -348,7 +348,7 @@ public:
       idx = inZ_local * dimX3 * dimY3 + inY * dimX3 + inX;
     }
     else
-      vtkm::cont::ErrorControlInternal("Invalid index!");
+      vtkm::cont::ErrorInternal("Invalid index!");
   }
 
 private:
@@ -434,7 +434,7 @@ public:
       idx = inZ * dimX4 * dimY4 + inY * dimX4 + inX_local;
     }
     else
-      vtkm::cont::ErrorControlInternal("Invalid index!");
+      vtkm::cont::ErrorInternal("Invalid index!");
   }
 
 private:
@@ -507,7 +507,7 @@ public:
       idx = inZ * dimX4 * dimY4 + inY_local * dimX4 + inX;
     }
     else
-      vtkm::cont::ErrorControlInternal("Invalid index!");
+      vtkm::cont::ErrorInternal("Invalid index!");
   }
 
 private:
@@ -591,7 +591,7 @@ public:
       idx = inZ_local * dimX4 * dimY4 + inY * dimX4 + inX;
     }
     else
-      vtkm::cont::ErrorControlInternal("Invalid index!");
+      vtkm::cont::ErrorInternal("Invalid index!");
   }
 
 private:
@@ -673,7 +673,7 @@ public:
       return MAKEVAL( portal3.Get(inIdx) );
     else
     {
-        vtkm::cont::ErrorControlInternal("Invalid cube index!");
+        vtkm::cont::ErrorInternal("Invalid cube index!");
         return -1;
     }
   }
@@ -801,7 +801,7 @@ public:
       return MAKEVAL( portal3.Get(inIdx) );
     else
     {
-        vtkm::cont::ErrorControlInternal("Invalid cube index!");
+        vtkm::cont::ErrorInternal("Invalid cube index!");
         return -1;
     }
   }
@@ -929,7 +929,7 @@ public:
       return MAKEVAL( portal3.Get(inIdx) );
     else
     {
-        vtkm::cont::ErrorControlInternal("Invalid cube index!");
+        vtkm::cont::ErrorInternal("Invalid cube index!");
         return -1;
     }
   }
@@ -1081,7 +1081,7 @@ public:
       return MAKEVAL( sig5.Get(inIdx) );
     else
     {
-        vtkm::cont::ErrorControlInternal("Invalid matrix index!");
+        vtkm::cont::ErrorInternal("Invalid matrix index!");
         return -1;
     }
   }
@@ -1256,7 +1256,7 @@ public:
       return MAKEVAL( sig5.Get(inIdx) );
     else
     {
-        vtkm::cont::ErrorControlInternal("Invalid matrix index!");
+        vtkm::cont::ErrorInternal("Invalid matrix index!");
         return -1;
     }
   }
@@ -1434,7 +1434,7 @@ public:
       return MAKEVAL( sig5.Get(inIdx) );
     else
     {
-        vtkm::cont::ErrorControlInternal("Invalid matrix index!");
+        vtkm::cont::ErrorInternal("Invalid matrix index!");
         return -1;
     }
   }
@@ -1854,7 +1854,7 @@ public:
         sigPretendY++;
     }
 		else
-      vtkm::cont::ErrorControlInternal("Invalid extension mode for matrices!");
+      vtkm::cont::ErrorInternal("Invalid extension mode for matrices!");
 
     if( sigPretendX == sigPretendDimX || sigPretendY == sigPretendDimY )
       portalOut.Set( workIndex, 0.0 );
@@ -1939,7 +1939,7 @@ public:
       return MAKEVAL( portal3.Get(inIdx) );
     else
     {
-        vtkm::cont::ErrorControlInternal("Invalid matrix index!");
+        vtkm::cont::ErrorInternal("Invalid matrix index!");
         return -1;
     }
   }

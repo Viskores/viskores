@@ -190,7 +190,7 @@ void ReadArray( ArrayType& array, vtkm::Id len )
 {
   typedef typename ArrayType::ValueType  T;
   T* buf = new T[ len ];
-  FILE *fp = fopen( "/Users/shaomeng/Git/vapor_addon/bin/gaussian3d.float", "r");
+  FILE *fp = fopen( "gaussian3d.float", "r");
   size_t rc = fread(buf, sizeof(T), len, fp);
   fclose(fp);
   assert (rc == len);

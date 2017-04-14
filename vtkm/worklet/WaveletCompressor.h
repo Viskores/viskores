@@ -171,7 +171,7 @@ public:
                        nLevels > WaveletBase::GetWaveletMaxLevel( inY ) || 
                        nLevels > WaveletBase::GetWaveletMaxLevel( inZ )    )
     {
-      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
+      throw vtkm::cont::ErrorBadValue("Number of levels of transform is not supported! ");
     }
     if( nLevels == 0 )  //  0 levels means no transform
     {
@@ -246,7 +246,7 @@ public:
                        nLevels > WaveletBase::GetWaveletMaxLevel( inY ) ||
                        nLevels > WaveletBase::GetWaveletMaxLevel( inZ )   )
     {
-      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
+      throw vtkm::cont::ErrorBadValue("Number of levels of transform is not supported! ");
     }
     typedef typename OutArrayType::ValueType          OutValueType;
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;
