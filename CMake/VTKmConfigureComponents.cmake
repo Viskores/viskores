@@ -56,10 +56,8 @@ function(vtkm_configure_component_message message_text)
     list(FIND VTKm_CONFIGURE_COMPONENT_MESSAGES "${message_text}" in_list)
     if(in_list EQUAL -1)
       message(STATUS "${message_text}")
-      set(VTKm_CONFIGURE_COMPONENT_MESSAGES
-        ${VTKm_CONFIGURE_COMPONENT_MESSAGES}
-        ${message_text}
-        CACHE INTERNAL "" FORCE)
+      set(VTKm_CONFIGURE_COMPONENT_MESSAGES "${VTKm_CONFIGURE_COMPONENT_MESSAGES} ${message_text}"
+          CACHE STRING "" FORCE)
     endif()
   endif()
 endfunction(vtkm_configure_component_message)
@@ -342,7 +340,7 @@ macro(vtkm_configure_component_CUDA)
 
     #specify the property
     set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
-    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell all)
+    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal all)
 
     #detect what the propery is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
@@ -355,8 +353,10 @@ macro(vtkm_configure_component_CUDA)
         #run execute_process to do auto_detection
         if(CMAKE_GENERATOR MATCHES "Visual Studio")
           set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
-        else()
+        elseif(CUDA_HOST_COMPILER)
           set(args "-ccbin" "${CUDA_HOST_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
+        else()
+          set(args "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
         endif()
 
         execute_process(
@@ -364,6 +364,7 @@ macro(vtkm_configure_component_CUDA)
           RESULT_VARIABLE ran_properly
           OUTPUT_VARIABLE run_output
           WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
         if(ran_properly EQUAL 0)
           #find the position of the "--generate-code" output. With some compilers such as
           #msvc we get compile output plus run output. So we need to strip out just the
@@ -376,9 +377,7 @@ macro(vtkm_configure_component_CUDA)
               "device type(s) for cuda[native]")
         else()
           set(VTKm_CUDA_Architecture "fermi")
-          vtkm_configure_component_message(
-            "Unable to run \"${CUDA_NVCC_EXECUTABLE}\" to autodetect GPU architecture.
-Falling back to fermi, please manually specify if you want something else.")
+          vtkm_configure_component_message("Unable to run ${CUDA_NVCC_EXECUTABLE} to autodetect GPU architecture. Falling back to fermi, please manually specify if you want something else.")
         endif()
       endif()
     endif()
