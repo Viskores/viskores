@@ -246,14 +246,6 @@ std::cout << "Data Points " << count << std::endl;
       cellBounds.Y.Max -= 1;
     if (cellBounds.Z.Max > 1)
       cellBounds.Z.Max -= 1;
-/*
-    if ((cellBounds.X.Max % sample[0]) == 0)
-      cellBounds.X.Max -= 1;
-    if ((cellBounds.Y.Max % sample[1]) == 0)
-      cellBounds.Y.Max -= 1;
-    if ((cellBounds.Z.Max % sample[2]) == 0)
-      cellBounds.Z.Max -= 1;
-*/
 std::cout << "CELL DIMENSION " << cellDimension << std::endl;
 std::cout << "CELL BOUNDS " << cellBounds << std::endl;
 
@@ -287,20 +279,13 @@ std::cout << "Data Cells " << count << std::endl;
     typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;
     typedef typename UniformArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst UniformConstPortal;
 
-    // Data in the Field attached to CoordinateSystem is dynamic
-    vtkm::cont::DynamicArrayHandleCoordinateSystem coordinateData = coordinates.GetData();
-
     // Cast dynamic coordinate data to Uniform type
-    UniformArrayHandle vertices;
-    vertices = coordinateData.Cast<UniformArrayHandle>();
-
-/*
-    std::cout << "Uniform vertices:" << std::endl;
-    printSummary_ArrayHandle(vertices, std::cout);
-*/
+    vtkm::cont::DynamicArrayHandleCoordinateSystem coordinateData = coordinates.GetData();
+    UniformArrayHandle inCoordinates;
+    inCoordinates = coordinateData.Cast<UniformArrayHandle>();
 
     // Portal to access data in the input coordinate system
-    UniformConstPortal Coordinates = vertices.PrepareForInput(DeviceAdapter());
+    UniformConstPortal Coordinates = inCoordinates.PrepareForInput(DeviceAdapter());
 
     // Sizes and values of input Uniform Structured
     vtkm::Id3 inDimension = Coordinates.GetDimensions();
@@ -336,11 +321,7 @@ std::cout << "Data Cells " << count << std::endl;
     vtkm::cont::CoordinateSystem outCoordinates(coordinates.GetName(), outCoordinateData);
     output.AddCoordinateSystem(outCoordinates);
 
-/*
-    std::cout << "CoordinateSystem for output:" << std::endl;
-    outCoordinates.PrintSummary(std::cout);
-*/
-
+    // Set the output cellset
     if (outDim == 3)
     {
       vtkm::cont::CellSetStructured<3> outCellSet(cellSet.GetName());
@@ -425,24 +406,17 @@ std::cout << "Geometry Cells " << output.GetCellSet(0).GetNumberOfCells() << std
     typedef typename DefaultHandle::ExecutionTypes<DeviceAdapter>::PortalConst DefaultConstHandle;
     typedef typename CartesianArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst CartesianConstPortal;
 
-    // Data in the Field attached to CoordinateSystem is dynamic
-    vtkm::cont::DynamicArrayHandleCoordinateSystem coordinateData = coordinates.GetData();
-
     // Cast dynamic coordinate data to Rectilinear type
-    CartesianArrayHandle vertices;
-    vertices = coordinateData.Cast<CartesianArrayHandle>();
+    vtkm::cont::DynamicArrayHandleCoordinateSystem coordinateData = coordinates.GetData();
+    CartesianArrayHandle inCoordinates;
+    inCoordinates = coordinateData.Cast<CartesianArrayHandle>();
 
-    std::cout << "Recilinear vertices:" << std::endl;
-    printSummary_ArrayHandle(vertices, std::cout);
-
-    CartesianConstPortal Coordinates = vertices.PrepareForInput(DeviceAdapter());
-
+    CartesianConstPortal Coordinates = inCoordinates.PrepareForInput(DeviceAdapter());
     vtkm::Id NumberOfValues = Coordinates.GetNumberOfValues();
-    std::cout << "RECTILINEAR NumberOfValues " << NumberOfValues << std::endl;
-
     DefaultConstHandle X = Coordinates.GetFirstPortal();
     DefaultConstHandle Y = Coordinates.GetSecondPortal();
     DefaultConstHandle Z = Coordinates.GetThirdPortal();
+    std::cout << "RECTILINEAR NumberOfValues " << NumberOfValues << std::endl;
 
     vtkm::Id3 inDimension(X.GetNumberOfValues(), 
                           Y.GetNumberOfValues(), 
@@ -464,6 +438,13 @@ std::cout << "Geometry Cells " << output.GetCellSet(0).GetNumberOfCells() << std
     vtkm::Id3 outDimension = vtkm::make_Vec(outBounds.X.Max - outBounds.X.Min + 1,
                                             outBounds.Y.Max - outBounds.Y.Min + 1,
                                             outBounds.Z.Max - outBounds.Z.Min + 1);
+    for (vtkm::IdComponent dim = 0; dim < outDim; dim++)
+    {
+      if (sample[dim] > 1)
+      {
+        outDimension[dim] = outDimension[dim] / sample[dim] + 1;
+      }
+    }
     std::cout << "RECTILINEAR OUT DIMENSIONS " << outDimension << std::endl;
 
     // Set output coordinate system
@@ -472,21 +453,31 @@ std::cout << "Geometry Cells " << output.GetCellSet(0).GetNumberOfCells() << std
     Yc.Allocate(outDimension[1]);
     Zc.Allocate(outDimension[2]);
 
-/*
     vtkm::Id indx = 0;
+    vtkm::Id3 minBound = vtkm::make_Vec(outBounds.X.Min, outBounds.Y.Min, outBounds.Z.Min);
+    vtkm::Id3 maxBound = vtkm::make_Vec(outBounds.X.Max, outBounds.Y.Max, outBounds.Z.Max);
     for (vtkm::Id x = minBound[0]; x <= maxBound[0]; x++)
     {
-      Xc.GetPortalControl().Set(indx++, X.Get(x));
+      if ((x % sample[0]) == 0)
+      {
+        Xc.GetPortalControl().Set(indx++, X.Get(x));
+      }
     }
     indx = 0;
     for (vtkm::Id y = minBound[1]; y <= maxBound[1]; y++)
     {
-      Yc.GetPortalControl().Set(indx++, Y.Get(y));
+      if ((y % sample[1]) == 0)
+      {
+        Yc.GetPortalControl().Set(indx++, Y.Get(y));
+      }
     }
     indx = 0;
     for (vtkm::Id z = minBound[2]; z <= maxBound[2]; z++)
     {
-      Zc.GetPortalControl().Set(indx++, Z.Get(z));
+      if ((z % sample[2]) == 0)
+      {
+        Zc.GetPortalControl().Set(indx++, Z.Get(z));
+      }
     }
 
     for (vtkm::Id x = 0; x < outDimension[0]; x++)
@@ -495,38 +486,62 @@ std::cout << "Geometry Cells " << output.GetCellSet(0).GetNumberOfCells() << std
       std::cout << "Yc " << y << " = " << Yc.GetPortalControl().Get(y) << std::endl;
     for (vtkm::Id z = 0; z < outDimension[2]; z++)
       std::cout << "Zc " << z << " = " << Zc.GetPortalControl().Get(z) << std::endl;
-*/
-
-    // PKF TO DO
-    // Fix coordinate system for subsampling
 
     CartesianArrayHandle outCoordinateData(Xc, Yc, Zc);
     vtkm::cont::CoordinateSystem outCoordinates(coordinates.GetName(), outCoordinateData);
     output.AddCoordinateSystem(outCoordinates);
 
-    std::cout << "CoordinateSystem for output:" << std::endl;
-    outCoordinates.PrintSummary(std::cout);
-
-    // Set the size of the cell set for Rectilinear
-    if (outDim == 1) {
-      vtkm::cont::CellSetStructured<1> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(outDimension[0]);
+    // Set the output cellset
+    if (outDim == 3)
+    {
+      vtkm::cont::CellSetStructured<3> outCellSet(cellSet.GetName());
+      outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0],
+                                                   outDimension[1],
+                                                   outDimension[2]));
       output.AddCellSet(outCellSet);
     }
+
     else if (outDim == 2)
     {
       vtkm::cont::CellSetStructured<2> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], 
-                                                   outDimension[1]));
-      output.AddCellSet(outCellSet);
+      if (outDimension[2] == 1)      // XY plane
+      {
+        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0],
+                                                     outDimension[1]));
+        output.AddCellSet(outCellSet);
+      }
+      else if (outDimension[1] == 1) // XZ plane
+      {
+        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0],
+                                                     outDimension[2]));
+        output.AddCellSet(outCellSet);
+      }
+      else if (outDimension[0] == 1) // YZ plane
+      {
+        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[1],
+                                                     outDimension[2]));
+        output.AddCellSet(outCellSet);
+      }
     }
-    else if (outDim == 3)
+
+    else if (outDim == 1)
     {
-      vtkm::cont::CellSetStructured<3> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], 
-                                                   outDimension[1], 
-                                                   outDimension[2]));
-      output.AddCellSet(outCellSet);
+      vtkm::cont::CellSetStructured<1> outCellSet(cellSet.GetName());
+      if (outDimension[1] == 1 && outDimension[2] == 1)
+      {
+        outCellSet.SetPointDimensions(outDimension[0]);
+        output.AddCellSet(outCellSet);
+      }
+      else if (outDimension[0] == 1 && outDimension[2] == 1)
+      {
+        outCellSet.SetPointDimensions(outDimension[1]);
+        output.AddCellSet(outCellSet);
+      }
+      else if (outDimension[0] == 1 && outDimension[1] == 1)
+      {
+        outCellSet.SetPointDimensions(outDimension[2]);
+        output.AddCellSet(outCellSet);
+      }
     }
 
 std::cout << "Number of Cells " << output.GetCellSet(0).GetNumberOfCells() << std::endl;

@@ -262,10 +262,8 @@ public:
     TestUniform2D();
     TestUniform3D();
     TestUniform3D1();
-/*
     TestRectilinear2D();
     TestRectilinear3D();
-*/
   }
 };
 
