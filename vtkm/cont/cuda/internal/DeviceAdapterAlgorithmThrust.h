@@ -664,6 +664,59 @@ private:
 
   }
 
+  template<typename KeysPortal, typename ValuesPortal, typename OutputPortal>
+  VTKM_CONT static
+  typename ValuesPortal::ValueType ScanInclusiveByKeyPortal(const KeysPortal &keys,
+                                                            const ValuesPortal &values,
+                                                            const OutputPortal &output)
+  {
+    using KeyType = typename KeysPortal::ValueType;
+    typedef typename OutputPortal::ValueType ValueType;
+    return ScanInclusiveByKeyPortal(keys, values, output,
+                                    ::thrust::equal_to<KeyType>(),
+                                    ::thrust::plus<ValueType>());
+  }
+
+  template<typename KeysPortal, typename ValuesPortal, typename OutputPortal,
+    typename BinaryPredicate, typename AssociativeOperator>
+  VTKM_CONT static
+  typename ValuesPortal::ValueType ScanInclusiveByKeyPortal(const KeysPortal &keys,
+                                                            const ValuesPortal &values,
+                                                            const OutputPortal &output,
+                                                            BinaryPredicate binary_predicate,
+                                                            AssociativeOperator binary_operator)
+  {
+    typedef typename KeysPortal::ValueType KeyType;
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType,
+      BinaryPredicate> bpred(binary_predicate);
+    typedef typename OutputPortal::ValueType ValueType;
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
+      AssociativeOperator> bop(binary_operator);
+
+
+    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
+      IteratorType;
+    try
+    {
+      IteratorType end = ::thrust::inclusive_scan_by_key(thrust::cuda::par,
+                                                         IteratorBegin(keys),
+                                                         IteratorEnd(keys),
+                                                         IteratorBegin(values),
+                                                         IteratorBegin(output),
+                                                         bpred,
+                                                         bop);
+      return *(end-1);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+      return typename ValuesPortal::ValueType();
+    }
+
+    //return the value at the last index in the array, as that is the sum
+
+  }
+
   template<class ValuesPortal>
   VTKM_CONT static void SortPortal(const ValuesPortal &values)
   {
@@ -1117,6 +1170,57 @@ public:
     return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                                binary_functor);
+  }
+
+  template<typename T, typename U, typename KIn, typename VIn, typename VOut>
+  VTKM_CONT static T ScanInclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U, VOut>& output)
+  {
+    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+    if (numberOfValues <= 0)
+    {
+      output.PrepareForOutput(0, DeviceAdapterTag());
+      return vtkm::TypeTraits<T>::ZeroInitialization();
+    }
+
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    keys.PrepareForInput(DeviceAdapterTag());
+    values.PrepareForInput(DeviceAdapterTag());
+    return ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                                    values.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+  }
+
+  template<typename T, typename U, typename KIn, typename VIn, typename VOut,
+    typename BinaryFunctor>
+  VTKM_CONT static T ScanInclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U, VOut>& output,
+    BinaryFunctor binary_functor)
+  {
+    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+    if (numberOfValues <= 0)
+    {
+      output.PrepareForOutput(0, DeviceAdapterTag());
+      return vtkm::TypeTraits<T>::ZeroInitialization();
+    }
+
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    keys.PrepareForInput(DeviceAdapterTag());
+    values.PrepareForInput(DeviceAdapterTag());
+    return ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                                    values.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                                    binary_functor);
   }
 
 // Because of some funny code conversions in nvcc, kernels for devices have to

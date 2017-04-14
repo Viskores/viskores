@@ -541,7 +541,8 @@ public:
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
-    return ScanExclusive(input, output, vtkm::Sum(),
+    // TODO: add DerivedAlgorithm?
+    return DerivedAlgorithm::ScanExclusive(input, output, vtkm::Sum(),
                          vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
@@ -754,7 +755,6 @@ public:
                                       scanOutput,
                                       ReduceByKeyAdd<BinaryFunctor>(
                                         binary_functor));
-      std::cout << scanOutput.GetNumberOfValues() << std::endl;
       //at this point we are done with keystate, so free the memory
       keystate.ReleaseResources();
       DerivedAlgorithm::Copy(reducedValues, values_output);
