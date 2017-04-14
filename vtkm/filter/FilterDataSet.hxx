@@ -26,7 +26,7 @@
 #include <vtkm/filter/internal/ResolveFieldTypeAndMap.h>
 
 #include <vtkm/cont/Error.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
@@ -42,7 +42,15 @@ FilterDataSet<Derived>::FilterDataSet():
   OutputFieldName(),
   CellSetIndex(0),
   CoordinateSystemIndex(0),
-  Tracker()
+  Tracker(vtkm::cont::GetGlobalRuntimeDeviceTracker())
+{
+
+}
+
+//----------------------------------------------------------------------------
+template<class Derived>
+inline VTKM_CONT
+FilterDataSet<Derived>::~FilterDataSet()
 {
 
 }
@@ -91,6 +99,9 @@ struct FilterDataSetPrepareForExecutionFunctor
     this->Result = this->Self->DoExecute(this->Input, this->Policy, Device());
     return this->Result.IsValid();
   }
+
+private:
+  void operator=(FilterDataSetPrepareForExecutionFunctor<Derived,DerivedPolicy> &) = delete;
 };
 } // namespace detail
 

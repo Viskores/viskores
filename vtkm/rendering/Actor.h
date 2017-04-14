@@ -46,7 +46,7 @@ public:
 
   const vtkm::cont::DynamicCellSet &GetCells() const;
 
-  const vtkm::cont::CoordinateSystem &GetCoordiantes() const;
+  const vtkm::cont::CoordinateSystem &GetCoordinates() const;
 
   const vtkm::cont::Field &GetScalarField() const;
 
@@ -55,6 +55,8 @@ public:
   const vtkm::Range &GetScalarRange() const;
 
   const vtkm::Bounds &GetSpatialBounds() const;
+
+  void SetScalarRange(const vtkm::Range &scalarRange);
 
 private:
   struct InternalsType;

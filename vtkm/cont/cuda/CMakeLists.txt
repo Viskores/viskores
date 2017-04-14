@@ -22,7 +22,7 @@ set(headers
   ArrayHandleCuda.h
   ChooseCudaDevice.h
   DeviceAdapterCuda.h
-  ErrorControlCuda.h
+  ErrorCuda.h
   )
 
 #-----------------------------------------------------------------------------

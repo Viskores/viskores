@@ -25,7 +25,7 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/ResultDataSet.h>
@@ -42,6 +42,9 @@ public:
   FilterDataSet();
 
   VTKM_CONT
+  ~FilterDataSet();
+
+  VTKM_CONT
   void SetActiveCellSet(vtkm::Id index)
     { this->CellSetIndex = index; }
 
@@ -56,6 +59,14 @@ public:
   VTKM_CONT
   vtkm::Id GetActiveCoordinateSystemIndex() const
     { return this->CoordinateSystemIndex; }
+
+  VTKM_CONT
+  void SetRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker &tracker)
+  { this->Tracker = tracker; }
+
+  VTKM_CONT
+  const vtkm::cont::RuntimeDeviceTracker &GetRuntimeDeviceTracker() const
+  { return this->Tracker; }
 
   VTKM_CONT
   ResultDataSet Execute(const vtkm::cont::DataSet &input);
@@ -90,7 +101,7 @@ private:
   std::string OutputFieldName;
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
-  vtkm::cont::internal::RuntimeDeviceTracker Tracker;
+  vtkm::cont::RuntimeDeviceTracker Tracker;
 };
 
 }

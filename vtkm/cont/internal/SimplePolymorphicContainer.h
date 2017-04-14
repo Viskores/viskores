@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_internal_SimplePolymorphicContainer_h
 #define vtk_m_cont_internal_SimplePolymorphicContainer_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/Types.h>
 #include <memory>
 
@@ -29,9 +31,11 @@ namespace internal {
 
 /// \brief Base class for SimplePolymorphicContainer
 ///
-struct SimplePolymorphicContainerBase {
+struct VTKM_CONT_EXPORT SimplePolymorphicContainerBase {
+  SimplePolymorphicContainerBase();
+
   // This must exist so that subclasses are destroyed correctly.
-  virtual ~SimplePolymorphicContainerBase() {  }
+  virtual ~SimplePolymorphicContainerBase();
 
   virtual std::shared_ptr<SimplePolymorphicContainerBase>
   NewInstance() const = 0;
@@ -49,7 +53,7 @@ struct SimplePolymorphicContainerBase {
 /// allows for safer dynamic downcasts.
 ///
 template<typename T>
-struct SimplePolymorphicContainer : public SimplePolymorphicContainerBase
+struct VTKM_ALWAYS_EXPORT SimplePolymorphicContainer : public SimplePolymorphicContainerBase
 {
   T Item;
 

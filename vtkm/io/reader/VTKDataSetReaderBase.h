@@ -31,6 +31,7 @@
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/internal/ExportMacros.h>
 #include <vtkm/io/ErrorIO.h>
 
 #include <algorithm>
@@ -165,8 +166,41 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T> &ve
   }
 }
 
+inline vtkm::cont::DynamicCellSet CreateCellSetStructured(const vtkm::Id3 &dim)
+{
+  if (dim[0] > 1 && dim[1] > 1 && dim[2] > 1)
+  {
+    vtkm::cont::CellSetStructured<3> cs("cells");
+    cs.SetPointDimensions(vtkm::make_Vec(dim[0], dim[1], dim[2]));
+    return cs;
+  }
+  else if (dim[0] > 1 && dim[1] > 1 && dim[2] <= 1)
+  {
+    vtkm::cont::CellSetStructured<2> cs("cells");
+    cs.SetPointDimensions(vtkm::make_Vec(dim[0], dim[1]));
+    return cs;
+  }
+  else if (dim[0] > 1 && dim[1] <= 1 && dim[2] <= 1)
+  {
+    vtkm::cont::CellSetStructured<1> cs("cells");
+    cs.SetPointDimensions(dim[0]);
+    return cs;
+  }
+  else
+  {
+    std::stringstream ss;
+    ss << "Unsupported dimensions: (" << dim[0] << ", " << dim[1] << ", " << dim[2]
+       << "), 2D structured datasets should be on X-Y plane and "
+       << "1D structured datasets should be along X axis";
+    throw vtkm::io::ErrorIO(ss.str());
+  }
+
+  return vtkm::cont::DynamicCellSet();
+}
+
 } // namespace internal
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
 class VTKDataSetReaderBase
 {
@@ -192,7 +226,7 @@ public:
         this->CloseFile();
         this->Loaded = true;
       }
-      catch (std::ifstream::failure e)
+      catch (std::ifstream::failure &e)
       {
         std::string message("IO Error: ");
         throw vtkm::io::ErrorIO(message + e.what());
@@ -405,7 +439,10 @@ private:
 
     char dot;
     this->DataFile->Stream >> this->DataFile->Version[0] >> dot
-                           >> this->DataFile->Version[1] >> std::ws;
+                           >> this->DataFile->Version[1];
+    // skip rest of the line
+    std::string skip;
+    std::getline(this->DataFile->Stream, skip);
 
     // Read title line
     std::getline(this->DataFile->Stream, this->DataFile->Title);
@@ -515,7 +552,8 @@ private:
 protected:
   //ReadFields needs to be protected so that derived readers can skip
   //VisIt header fields
-  void ReadFields(std::string &dataName)
+  void ReadFields(std::string &dataName,
+                  std::vector<vtkm::Float32> *visitBounds = nullptr)
   {
     std::cerr << "Support for FIELD is not implemented. Skipping."
               << std::endl;
@@ -529,7 +567,17 @@ protected:
       std::string arrayName, dataType;
       this->DataFile->Stream >> arrayName >> numComponents >> numTuples
                              >> dataType >> std::ws;
-      this->DoSkipDynamicArray(dataType, numTuples, numComponents);
+      if (arrayName == "avtOriginalBounds" && visitBounds)
+      {
+        visitBounds->resize(6);
+        internal::parseAssert(numComponents == 1 && numTuples == 6);
+        // parse the bounds and fill the bounds vector
+        this->ReadArray(*visitBounds);
+      }
+      else
+      {
+        this->DoSkipDynamicArray(dataType, numTuples, numComponents);
+      }
     }
   }
 
@@ -773,6 +821,8 @@ private:
 
   friend class VTKDataSetReader;
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 }

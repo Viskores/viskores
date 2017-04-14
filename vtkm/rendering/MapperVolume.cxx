@@ -20,8 +20,8 @@
 
 #include <vtkm/rendering/MapperVolume.h>
 
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -33,19 +33,25 @@
 
 #include <typeinfo>
 
+#define DEFAULT_SAMPLE_DISTANCE -1.f
+
 namespace vtkm {
 namespace rendering {
 
 struct MapperVolume::InternalsType
 {
   vtkm::rendering::CanvasRayTracer *Canvas;
-  vtkm::cont::internal::RuntimeDeviceTracker DeviceTracker;
+  vtkm::Float32 SampleDistance;
+  bool CompositeBackground;
+  vtkm::cont::RuntimeDeviceTracker DeviceTracker;
   std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       RayTracerContainer;
 
   VTKM_CONT
   InternalsType()
-    : Canvas(nullptr)
+    : Canvas(nullptr),
+      SampleDistance(DEFAULT_SAMPLE_DISTANCE),
+      CompositeBackground(true)
   {  }
 
   template<typename Device>
@@ -96,7 +102,7 @@ void MapperVolume::SetCanvas(vtkm::rendering::Canvas *canvas)
     this->Internals->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
     if(this->Internals->Canvas == nullptr)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
         "Ray Tracer: bad canvas type. Must be CanvasRayTracer");
     }
   }
@@ -104,6 +110,12 @@ void MapperVolume::SetCanvas(vtkm::rendering::Canvas *canvas)
   {
     this->Internals->Canvas = nullptr;
   }
+}
+
+vtkm::rendering::Canvas *
+MapperVolume::GetCanvas() const
+{
+  return this->Internals->Canvas;
 }
 
 struct MapperVolume::RenderFunctor
@@ -140,8 +152,14 @@ struct MapperVolume::RenderFunctor
 
     tracer->GetCamera().SetParameters(this->Camera,
                                       *this->Self->Internals->Canvas);
-
-    vtkm::Bounds dataBounds = this->Coordinates.GetBounds(Device());
+    // Check to see of the sample distance was set
+    if(this->Self->Internals->SampleDistance != DEFAULT_SAMPLE_DISTANCE)
+    {
+      tracer->SetSampleDistance(this->Self->Internals->SampleDistance);
+    } 
+      
+    tracer->SetCompositeBackground(this->Self->Internals->CompositeBackground);
+    vtkm::Bounds dataBounds = this->Coordinates.GetBounds();
 
     tracer->SetData(this->Coordinates,
                     this->ScalarField,
@@ -198,6 +216,16 @@ void MapperVolume::EndScene()
 vtkm::rendering::Mapper *MapperVolume::NewCopy() const
 {
   return new vtkm::rendering::MapperVolume(*this);
+}
+
+void MapperVolume::SetSampleDistance(const vtkm::Float32 sampleDistance)
+{
+  this->Internals->SampleDistance = sampleDistance;
+}
+
+void MapperVolume::SetCompositeBackground(const bool compositeBackground)
+{
+  this->Internals->CompositeBackground = compositeBackground;
 }
 
 }

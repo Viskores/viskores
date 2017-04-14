@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/CellSetListTag.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadValue.h>
 
 #include <vtkm/cont/internal/DynamicTransform.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
@@ -116,7 +116,7 @@ DynamicCellSetTryCast(
 /// with the default cell set list.
 ///
 template<typename CellSetList>
-class DynamicCellSetBase
+class VTKM_ALWAYS_EXPORT DynamicCellSetBase
 {
   VTKM_IS_LIST_TAG(CellSetList);
 public:
@@ -183,7 +183,7 @@ public:
   }
 
   /// Returns this cell set cast to the given \c CellSet type. Throws \c
-  /// ErrorControlBadType if the cast does not work. Use \c IsType to check if
+  /// ErrorBadType if the cast does not work. Use \c IsType to check if
   /// the cast can happen.
   ///
   template<typename CellSetType>
@@ -193,14 +193,14 @@ public:
         detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
     if (cellSetPointer == nullptr)
     {
-      throw vtkm::cont::ErrorControlBadType("Bad cast of dynamic cell set.");
+      throw vtkm::cont::ErrorBadType("Bad cast of dynamic cell set.");
     }
     return *cellSetPointer;
   }
 
   /// Given a reference to a concrete \c CellSet object, attempt to downcast
   /// the contain cell set to the provided type and copy into the given \c
-  /// CellSet object. Throws \c ErrorControlBadType if the cast does not work.
+  /// CellSet object. Throws \c ErrorBadType if the cast does not work.
   /// Use \c IsType to check if the cast can happen.
   ///
   /// Note that this is a shallow copy. Any data in associated arrays are not
@@ -254,37 +254,37 @@ public:
   }
 
   VTKM_CONT
-  virtual std::string GetName() const
+  std::string GetName() const
   {
     return this->CastToBase().GetName();
   }
 
   VTKM_CONT
-  virtual vtkm::Id GetNumberOfCells() const
+  vtkm::Id GetNumberOfCells() const
   {
     return this->CastToBase().GetNumberOfCells();
   }
 
   VTKM_CONT
-  virtual vtkm::Id GetNumberOfFaces() const
+  vtkm::Id GetNumberOfFaces() const
   {
     return this->CastToBase().GetNumberOfFaces();
   }
 
   VTKM_CONT
-  virtual vtkm::Id GetNumberOfEdges() const
+  vtkm::Id GetNumberOfEdges() const
   {
     return this->CastToBase().GetNumberOfEdges();
   }
 
   VTKM_CONT
-  virtual vtkm::Id GetNumberOfPoints() const
+  vtkm::Id GetNumberOfPoints() const
   {
     return this->CastToBase().GetNumberOfPoints();
   }
 
   VTKM_CONT
-  virtual void PrintSummary(std::ostream& stream) const
+  void PrintSummary(std::ostream& stream) const
   {
     return this->CastToBase().PrintSummary(stream);
   }
@@ -326,6 +326,9 @@ struct DynamicCellSetTryCellSet
       }
     }
   }
+
+private:
+  void operator=(const DynamicCellSetTryCellSet<Functor> &) = delete;
 };
 
 } // namespace detail
@@ -341,7 +344,7 @@ void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor &f) const
   vtkm::ListForEach(tryCellSet, CellSetList());
   if (!tryCellSet.FoundCast)
   {
-    throw vtkm::cont::ErrorControlBadValue(
+    throw vtkm::cont::ErrorBadValue(
           "Could not find appropriate cast for cell set.");
   }
 }

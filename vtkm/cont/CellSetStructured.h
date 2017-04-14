@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_CellSetStructured_h
 #define vtk_m_cont_CellSetStructured_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/TopologyElementTag.h>
@@ -29,10 +31,8 @@
 namespace vtkm {
 namespace cont {
 
-
-
 template<vtkm::IdComponent DIMENSION>
-class CellSetStructured : public CellSet
+class VTKM_ALWAYS_EXPORT CellSetStructured : public CellSet
 {
 private:
   typedef vtkm::cont::CellSetStructured<DIMENSION> Thisclass;
@@ -44,26 +44,14 @@ public:
 
   typedef typename InternalsType::SchedulingRangeType SchedulingRangeType;
 
-  VTKM_CONT
   CellSetStructured(const std::string &name = std::string())
-    : CellSet(name)
+    : CellSet(name), Structure()
   {
   }
 
-  VTKM_CONT
-  CellSetStructured(const Thisclass &src)
-    : CellSet(src), Structure(src.Structure)
-  {  }
+  CellSetStructured(const Thisclass &src);
 
-  VTKM_CONT
-  Thisclass &operator=(const Thisclass &src)
-  {
-    this->CellSet::operator=(src);
-    this->Structure = src.Structure;
-    return *this;
-  }
-
-  virtual ~CellSetStructured() {  }
+  Thisclass &operator=(const Thisclass &src);
 
   virtual vtkm::Id GetNumberOfCells() const
   {
@@ -74,6 +62,10 @@ public:
   {
     return this->Structure.GetNumberOfPoints();
   }
+
+  virtual vtkm::Id GetNumberOfFaces() const { return -1; }
+
+  virtual vtkm::Id GetNumberOfEdges() const { return -1; }
 
   void SetPointDimensions(SchedulingRangeType dimensions)
   {
@@ -90,25 +82,19 @@ public:
     return this->Structure.GetCellDimensions();
   }
 
-  VTKM_CONT
   vtkm::IdComponent
   GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex)=0) const
   {
     return this->Structure.GetNumberOfPointsInCell();
   }
 
-  VTKM_CONT
   vtkm::IdComponent GetCellShape() const
   {
     return this->Structure.GetCellShape();
   }
 
   template<typename TopologyElement>
-  VTKM_CONT
-  SchedulingRangeType GetSchedulingRange(TopologyElement) const {
-    VTKM_IS_TOPOLOGY_ELEMENT_TAG(TopologyElement);
-    return this->Structure.GetSchedulingRange(TopologyElement());
-  }
+  SchedulingRangeType GetSchedulingRange(TopologyElement) const;
 
   template<typename DeviceAdapter, typename FromTopology, typename ToTopology>
   struct ExecutionTypes {
@@ -120,26 +106,23 @@ public:
 
   template<typename DeviceAdapter, typename FromTopology, typename ToTopology>
   typename ExecutionTypes<DeviceAdapter,FromTopology,ToTopology>::ExecObjectType
-  PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const
-  {
-    typedef typename
-        ExecutionTypes<DeviceAdapter,FromTopology,ToTopology>::ExecObjectType
-            ConnectivityType;
-    return ConnectivityType(this->Structure);
-  }
+  PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const;
 
-  virtual void PrintSummary(std::ostream &out) const
-  {
-      out << "  StructuredCellSet: " << this->GetName() << std::endl;
-      this->Structure.PrintSummary(out);
-  }
+  virtual void PrintSummary(std::ostream &out) const;
 
 private:
   InternalsType Structure;
 };
 
+#ifndef vtkm_cont_CellSetStructured_cxx
+extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetStructured<1>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetStructured<2>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetStructured<3>;
+#endif
 
 }
 } // namespace vtkm::cont
+
+#include <vtkm/cont/CellSetStructured.hxx>
 
 #endif //vtk_m_cont_CellSetStructured_h

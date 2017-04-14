@@ -34,6 +34,9 @@ public:
   FilterCell();
 
   VTKM_CONT
+  ~FilterCell();
+
+  VTKM_CONT
   void SetActiveCellSet(vtkm::Id index)
     { this->CellSetIndex = index; }
 
@@ -41,8 +44,17 @@ public:
   vtkm::Id GetActiveCellSetIndex() const
     { return this->CellSetIndex; }
 
+  VTKM_CONT
+  void SetActiveCoordinateSystem(vtkm::Id index)
+    { this->CoordinateSystemIndex = index; }
+
+  VTKM_CONT
+  vtkm::Id GetActiveCoordinateSystemIndex() const
+    { return this->CoordinateSystemIndex; }
+
 protected:
   vtkm::Id CellSetIndex;
+  vtkm::Id CoordinateSystemIndex;
 };
 
 }

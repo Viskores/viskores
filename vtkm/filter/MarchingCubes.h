@@ -45,10 +45,22 @@ public:
   MarchingCubes();
 
   VTKM_CONT
-  void SetIsoValue(vtkm::Float64 value){ this->IsoValue = value; }
+  void SetNumberOfIsoValues(vtkm::Id num);
 
   VTKM_CONT
-  vtkm::Float64 GetIsoValue() const    { return this->IsoValue; }
+  vtkm::Id GetNumberOfIsoValues() const;
+
+  VTKM_CONT
+  void SetIsoValue(vtkm::Float64 v) { this->SetIsoValue(0, v); }
+
+  VTKM_CONT
+  void SetIsoValue(vtkm::Id index, vtkm::Float64);
+
+  VTKM_CONT
+  void SetIsoValues(const std::vector<vtkm::Float64>& values);
+
+  VTKM_CONT
+  vtkm::Float64 GetIsoValue(vtkm::Id index) const;
 
   VTKM_CONT
   void SetMergeDuplicatePoints(bool on) { this->Worklet.SetMergeDuplicatePoints(on); }
@@ -61,6 +73,12 @@ public:
 
   VTKM_CONT
   bool GetGenerateNormals() const  { return this->GenerateNormals; }
+
+  VTKM_CONT
+  void SetNormalArrayName(const std::string &name) { this->NormalArrayName = name; }
+
+  VTKM_CONT
+  const std::string& GetNormalArrayName() const { return this->NormalArrayName; }
 
   template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
@@ -81,8 +99,9 @@ public:
                   const DeviceAdapter& tag);
 
 private:
-  double IsoValue;
+  std::vector<vtkm::Float64> IsoValues;
   bool GenerateNormals;
+  std::string NormalArrayName;
   vtkm::worklet::MarchingCubes Worklet;
 };
 

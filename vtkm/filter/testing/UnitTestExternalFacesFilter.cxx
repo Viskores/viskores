@@ -21,78 +21,98 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/filter/CleanGrid.h>
 #include <vtkm/filter/ExternalFaces.h>
 
 using vtkm::cont::testing::MakeTestDataSet;
 
 namespace {
-void TestExternalFacesExplicitGrid()
+
+// convert a 5x5x5 uniform grid to unstructured grid
+vtkm::cont::DataSet MakeDataTestSet1()
 {
-  vtkm::cont::DataSet ds;
+  vtkm::cont::DataSet ds = MakeTestDataSet().Make3DUniformDataSet1();
 
-  const int nVerts = 8; //A cube that is tetrahedralized
-  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  CoordType coordinates[nVerts] = {
-    CoordType(0, 0, 0),
-    CoordType(1, 0, 0),
-    CoordType(1, 1, 0),
-    CoordType(0, 1, 0),
-    CoordType(0, 0, 1),
-    CoordType(1, 0, 1),
-    CoordType(1, 1, 1),
-    CoordType(0, 1, 1)
-    };
-
-  ds.AddCoordinateSystem(
-    vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
-
-  //Construct the VTK-m shapes and numIndices connectivity arrays
-  const int nCells = 6;  //The tetrahedrons of the cube
-  vtkm::IdComponent cellVerts[nCells][4] = {
-                                            {4,7,6,3}, {4,6,3,2}, {4,0,3,2},
-                                            {4,6,5,2}, {4,5,0,2}, {1,0,5,2}
-                                           };
-  vtkm::cont::CellSetExplicit<> cs(nVerts, "cells");
-
-  vtkm::cont::ArrayHandle<vtkm::UInt8>       shapes;
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices;
-  vtkm::cont::ArrayHandle<vtkm::Id>          conn;
-  shapes.Allocate(static_cast<vtkm::Id>(nCells));
-  numIndices.Allocate(static_cast<vtkm::Id>(nCells));
-  conn.Allocate(static_cast<vtkm::Id>(4 * nCells));
-
-  int index = 0;
-  for(int j = 0; j < nCells; j++)
+  vtkm::filter::CleanGrid clean;
+  vtkm::filter::ResultDataSet result = clean.Execute(ds);
+  for (vtkm::IdComponent i = 0; i < ds.GetNumberOfFields(); ++i)
   {
-    shapes.GetPortalControl().Set(j, static_cast<vtkm::UInt8>(vtkm::CELL_SHAPE_TETRA));
-    numIndices.GetPortalControl().Set(j, 4);
-    for(int k = 0; k < 4; k++)
-      conn.GetPortalControl().Set(index++, cellVerts[j][k]);
+    clean.MapFieldOntoOutput(result, ds.GetField(i));
   }
 
-  cs.Fill(shapes, numIndices, conn);
+  return result.GetDataSet();
+}
 
-  //Add the VTK-m cell set
-  ds.AddCellSet(cs);
+vtkm::cont::DataSet MakeDataTestSet2()
+{
+  return MakeTestDataSet().Make3DExplicitDataSet5();
+}
 
+void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet &ds,
+                                   bool compactPoints,
+                                   vtkm::Id numExpectedExtFaces,
+                                   vtkm::Id numExpectedPoints = 0)
+{
   //Run the External Faces filter
   vtkm::filter::ExternalFaces externalFaces;
+  externalFaces.SetCompactPoints(compactPoints);
   vtkm::filter::ResultDataSet result = externalFaces.Execute(ds);
 
-  //Validate the number of external faces (output) returned by the worklet
   VTKM_TEST_ASSERT(result.IsValid(), "Results should be valid");
 
-  vtkm::cont::CellSetExplicit<> &new_cs =
-      result.GetDataSet().GetCellSet(0).Cast<vtkm::cont::CellSetExplicit<> >();
+  // map fields
+  for (vtkm::IdComponent i = 0; i < ds.GetNumberOfFields(); ++i)
+  {
+    externalFaces.MapFieldOntoOutput(result, ds.GetField(i));
+  }
 
-  const vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
-  const vtkm::Id numExtFaces_actual = 12;
-  VTKM_TEST_ASSERT(numExtFaces_out == numExtFaces_actual, "Number of External Faces mismatch");
+  vtkm::cont::DataSet resultds = result.GetDataSet();
+
+  // verify cellset
+  vtkm::cont::CellSetExplicit<> &new_cellSet =
+    resultds.GetCellSet(0).Cast<vtkm::cont::CellSetExplicit<> >();
+  const vtkm::Id numOutputExtFaces = new_cellSet.GetNumberOfCells();
+  VTKM_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces,
+                   "Number of External Faces mismatch");
+
+  // verify fields
+  VTKM_TEST_ASSERT(resultds.HasField("pointvar"),
+                   "Point field not mapped succesfully");
+
+  // verify CompactPoints
+  if (compactPoints)
+  {
+    vtkm::Id numOutputPoints =
+      resultds.GetCoordinateSystem(0).GetData().GetNumberOfValues();
+    VTKM_TEST_ASSERT(numOutputPoints == numExpectedPoints,
+                     "Incorrect number of points after compacting");
+  }
+}
+
+void TestWithHexahedraMesh()
+{
+  std::cout << "Testing with Hexahedra mesh\n";
+  vtkm::cont::DataSet ds = MakeDataTestSet1();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesExplicitGrid(ds, false, 96); // 4x4 * 6 = 96
+  std::cout << "Compact Points On\n";
+  TestExternalFacesExplicitGrid(ds, true, 96, 98); // 5x5x5 - 3x3x3 = 98
+}
+
+void TestWithHeterogeneousMesh()
+{
+  std::cout << "Testing with Heterogeneous mesh\n";
+  vtkm::cont::DataSet ds = MakeDataTestSet2();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesExplicitGrid(ds, false, 12);
+  std::cout << "Compact Points On\n";
+  TestExternalFacesExplicitGrid(ds, true, 12, 11);
 }
 
 void TestExternalFacesFilter()
 {
-  TestExternalFacesExplicitGrid();
+  TestWithHeterogeneousMesh();
+  TestWithHexahedraMesh();
 }
 
 } // anonymous namespace

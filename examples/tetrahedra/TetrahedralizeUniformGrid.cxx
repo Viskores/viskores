@@ -22,7 +22,7 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/worklet/TetrahedralizeUniformGrid.h>
+#include <vtkm/filter/Tetrahedralize.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
@@ -46,21 +46,19 @@
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 // Default size of the example
-vtkm::Id3 dims(4,4,4);
-vtkm::Id cellsToDisplay = 64;
-vtkm::Id numberOfInPoints;
+static vtkm::Id3 dims(4,4,4);
+static vtkm::Id cellsToDisplay = 64;
 
 // Takes input uniform grid and outputs unstructured grid of tets
-vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter> *tetrahedralizeFilter;
-vtkm::cont::DataSet tetDataSet;
+static vtkm::cont::DataSet tetDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 
 // OpenGL display variables
-Quaternion qrot;
-int lastx, lasty;
-int mouse_state = 1;
+static Quaternion qrot;
+static int lastx, lasty;
+static int mouse_state = 1;
 
 //
 // Construct an input data set with uniform grid of indicated dimensions, origin and spacing
@@ -173,7 +171,7 @@ void displayCall()
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(numberOfInPoints);
+  vertexArray.Allocate(cellSet.GetNumberOfPoints());
   vtkm::cont::CastAndCall(tetDataSet.GetCoordinateSystem(), GetVertexArray());
 
   // Draw the five tetrahedra belonging to each hexadron
@@ -289,19 +287,10 @@ int main(int argc, char* argv[])
   // Create the input uniform cell set
   vtkm::cont::DataSet inDataSet = MakeTetrahedralizeTestDataSet(dims);
 
-  // Set number of cells and vertices in input dataset
-  numberOfInPoints = (dims[0] + 1) * (dims[1] + 1) * (dims[2] + 1);
+  vtkm::filter::Tetrahedralize tetrahedralize;
+  vtkm::filter::ResultDataSet result = tetrahedralize.Execute(inDataSet);
 
-  // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetSingleType<> cellSet(
-    vtkm::CellShapeTagTetra(), numberOfInPoints, "cells");
-  tetDataSet.AddCellSet(cellSet);
-  tetDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
-
-  // Convert uniform hexahedra to tetrahedra
-  tetrahedralizeFilter = new vtkm::worklet::TetrahedralizeFilterUniformGrid<DeviceAdapter>
-                                              (inDataSet, tetDataSet);
-  tetrahedralizeFilter->Run();
+  tetDataSet = result.GetDataSet();
 
   // Render the output dataset of tets
   lastx = lasty = 0;
@@ -319,6 +308,8 @@ int main(int argc, char* argv[])
   glutMouseFunc(mouseCall);
   glutMainLoop();
 
+  tetDataSet.Clear();
+  vertexArray.ReleaseResources();
   return 0;
 }
 

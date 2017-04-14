@@ -21,7 +21,7 @@
 # Once done this will define
 #
 # EGL_FOUND        - true if EGL has been found
-# EGL_INCLUDE_DIR  - where the EGL/egl.h and KHR/khrplatform.h can be found
+# EGL_INCLUDE_DIRS  - where the EGL/egl.h and KHR/khrplatform.h can be found
 # EGL_LIBRARY      - link this to use libEGL.so.1
 # EGL_opengl_LIBRARY     - link with these two libraries instead of the gl library
 # EGL_gldispatch_LIBRARY   for full OpenGL support through EGL
@@ -102,10 +102,15 @@ if(NOT EGL_gldispatch_LIBRARY)
   endif()
 endif()
 
-set(EGL_LIBRARIES ${EGL_LIBRARY} ${EGL_opengl_LIBRARY} ${EGL_gldispatch_LIBRARY})
-
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(EGL  DEFAULT_MSG
-                                  EGL_LIBRARY  EGL_opengl_LIBRARY EGL_gldispatch_LIBRARY EGL_INCLUDE_DIR)
+find_package_handle_standard_args(EGL
+                                  FOUND_VAR EGL_FOUND
+                                  REQUIRED_VARS EGL_LIBRARY  EGL_opengl_LIBRARY EGL_gldispatch_LIBRARY EGL_INCLUDE_DIR)
+
+if(EGL_FOUND)
+  set(EGL_LIBRARIES ${EGL_LIBRARY} ${EGL_opengl_LIBRARY} ${EGL_gldispatch_LIBRARY})
+  set(EGL_INCLUDE_DIRS ${EGL_INCLUDE_DIR})
+endif()
+
 
 mark_as_advanced(EGL_DIR EGL_INCLUDE_DIR EGL_LIBRARY EGL_opengl_LIBRARY EGL_gldispatch_LIBRARY)

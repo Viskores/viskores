@@ -39,9 +39,10 @@ cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
 
 # The VTKm version number
-set(VTKm_MAJOR_VERSION "@VTKm_MAJOR_VERSION@")
-set(VTKm_MINOR_VERSION "@VTKm_MINOR_VERSION@")
-set(VTKm_PATCH_VERSION "@VTKm_PATCH_VERSION@")
+set(VTKm_VERSION_MAJOR "@VTKm_VERSION_MAJOR@")
+set(VTKm_VERSION_MINOR "@VTKm_VERSION_MINOR@")
+set(VTKm_VERSION_PATCH "@VTKm_VERSION_PATCH@")
+set(VTKm_VERSION_FULL "@VTKm_VERSION_FULL@")
 set(VTKm_VERSION "@VTKm_VERSION@")
 
 # This is true when the package is still in the build directory (not installed)

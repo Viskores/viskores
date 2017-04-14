@@ -29,7 +29,6 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/cont/Timer.h>
 #include <vtkm/exec/AtomicArray.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>

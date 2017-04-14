@@ -19,15 +19,24 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestFieldMetadata.cxx
   UnitTestCellAverageFilter.cxx
   UnitTestCleanGrid.cxx
   UnitTestClipFilter.cxx
+  UnitTestContourTreeUniformFilter.cxx
   UnitTestExternalFacesFilter.cxx
+  UnitTestFieldMetadata.cxx
+  UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx
   UnitTestMarchingCubesFilter.cxx
+  UnitTestMaskFilter.cxx
+  UnitTestMaskPointsFilter.cxx
+  UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
+  UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx
+  UnitTestThresholdPointsFilter.cxx
+  UnitTestTriangulateFilter.cxx
+  UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
  )
 

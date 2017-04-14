@@ -61,7 +61,7 @@ public:
   const vtkm::Vec<ComponentType, NUM_COLUMNS> &
   operator[](vtkm::IdComponent rowIndex) const {
     VTKM_ASSERT(rowIndex >= 0);
-    VTKM_ASSERT(rowIndex < this->NUM_ROWS);
+    VTKM_ASSERT(rowIndex < NUM_ROWS);
     return this->Components[rowIndex];
   }
 
@@ -72,7 +72,7 @@ public:
   vtkm::Vec<ComponentType, NUM_COLUMNS> &
   operator[](vtkm::IdComponent rowIndex) {
     VTKM_ASSERT(rowIndex >= 0);
-    VTKM_ASSERT(rowIndex < this->NUM_ROWS);
+    VTKM_ASSERT(rowIndex < NUM_ROWS);
     return this->Components[rowIndex];
   }
 
@@ -83,9 +83,9 @@ public:
   const ComponentType &
   operator()(vtkm::IdComponent rowIndex, vtkm::IdComponent colIndex) const {
     VTKM_ASSERT(rowIndex >= 0);
-    VTKM_ASSERT(rowIndex < this->NUM_ROWS);
+    VTKM_ASSERT(rowIndex < NUM_ROWS);
     VTKM_ASSERT(colIndex >= 0);
-    VTKM_ASSERT(colIndex < this->NUM_COLUMNS);
+    VTKM_ASSERT(colIndex < NUM_COLUMNS);
     return (*this)[rowIndex][colIndex];
   }
 
@@ -96,9 +96,9 @@ public:
   ComponentType &
   operator()(vtkm::IdComponent rowIndex, vtkm::IdComponent colIndex) {
     VTKM_ASSERT(rowIndex >= 0);
-    VTKM_ASSERT(rowIndex < this->NUM_ROWS);
+    VTKM_ASSERT(rowIndex < NUM_ROWS);
     VTKM_ASSERT(colIndex >= 0);
-    VTKM_ASSERT(colIndex < this->NUM_COLUMNS);
+    VTKM_ASSERT(colIndex < NUM_COLUMNS);
     return (*this)[rowIndex][colIndex];
   }
 

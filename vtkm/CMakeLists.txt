@@ -18,8 +18,17 @@
 ##  this software.
 ##============================================================================
 
+# Configure version file. (Other configuration in internal/Configure.h)
+vtkm_get_kit_name(kit_name kit_dir)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Version.h.in
+  ${CMAKE_BINARY_DIR}/include/${kit_dir}/Version.h
+  @ONLY)
+vtkm_install_headers(
+  vtkm ${CMAKE_BINARY_DIR}/include/${kit_dir}/Version.h)
+
 set(headers
   Assert.h
+  BaseComponent.h
   BinaryPredicates.h
   BinaryOperators.h
   Bounds.h

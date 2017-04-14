@@ -328,6 +328,9 @@ public:
           {
             internal::ClipTables::EdgeVec edge =
                 this->ClipTables.GetEdge(shape.Id, entry);
+            // Sanity check to make sure the edge is valid.
+            VTKM_ASSERT(edge[0] != 255);
+            VTKM_ASSERT(edge[1] != 255);
 
             EdgeInterpolation ei;
             ei.Vertex1 = indices[edge[0]];
@@ -436,11 +439,14 @@ public:
   {
   }
 
-  template <typename ScalarsArrayHandle, typename DeviceAdapter>
-  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSet &cellSet,
-                                    const ScalarsArrayHandle &scalars,
-                                    vtkm::Float64 value,
-                                    DeviceAdapter device)
+  template <typename CellSetList,
+            typename ScalarsArrayHandle,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetExplicit<>
+  Run(const vtkm::cont::DynamicCellSetBase<CellSetList> &cellSet,
+      const ScalarsArrayHandle &scalars,
+      vtkm::Float64 value,
+      DeviceAdapter device)
   {
     typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
 
@@ -515,7 +521,10 @@ public:
 
 
     vtkm::cont::CellSetExplicit<> output;
-    output.Fill(shapes, numIndices, connectivity);
+    output.Fill(this->NewPointsOffset + uniqueNewPoints.GetNumberOfValues(),
+                shapes,
+                numIndices,
+                connectivity);
 
     return output;
   }
@@ -553,11 +562,14 @@ public:
     vtkm::cont::CellSetExplicit<> *Result;
   };
 
-  template <typename ImplicitFunction, typename DeviceAdapter>
-  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSet &cellSet,
-                                    const ImplicitFunction &clipFunction,
-                                    const vtkm::cont::CoordinateSystem &coords,
-                                    DeviceAdapter device)
+  template <typename CellSetList,
+            typename ImplicitFunction,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetExplicit<>
+  Run(const vtkm::cont::DynamicCellSetBase<CellSetList> &cellSet,
+      const ImplicitFunction &clipFunction,
+      const vtkm::cont::CoordinateSystem &coords,
+      DeviceAdapter device)
   {
     (void) device;
     vtkm::cont::CellSetExplicit<> output;

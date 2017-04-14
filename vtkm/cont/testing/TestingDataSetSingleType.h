@@ -88,7 +88,7 @@ private:
 
     vtkm::cont::DataSet ds;
     vtkm::cont::DataSetBuilderExplicit builder;
-    ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), conn);
+    ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), 3, conn);
 
 
     //Set point scalar
@@ -146,8 +146,8 @@ private:
     vtkm::cont::ArrayHandle<vtkm::Float32> result;
     vtkm::worklet::DispatcherMapTopology<
         vtkm::worklet::CellAverage,DeviceAdapterTag> dispatcher;
-    dispatcher.Invoke(dataSet.GetField("pointvar"),
-                      cellset,
+    dispatcher.Invoke(cellset,
+                      dataSet.GetField("pointvar"),
                       result);
 
     vtkm::Float32 expected[3] = { 20.1333f, 30.1667f, 40.2333f };

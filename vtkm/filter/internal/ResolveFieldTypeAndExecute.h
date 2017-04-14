@@ -23,7 +23,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
-#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/FieldMetadata.h>
 #include <vtkm/filter/PolicyBase.h>
@@ -41,7 +41,7 @@ struct ResolveFieldTypeAndExecute
   const vtkm::cont::DataSet &InputData;
   const vtkm::filter::FieldMetadata& Metadata;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
-  vtkm::cont::internal::RuntimeDeviceTracker& Tracker;
+  vtkm::cont::RuntimeDeviceTracker Tracker;
   ResultType& Result;
 
   ResolveFieldTypeAndExecute(
@@ -49,7 +49,7 @@ struct ResolveFieldTypeAndExecute
       const vtkm::cont::DataSet &inputData,
       const vtkm::filter::FieldMetadata& fieldMeta,
       const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-      vtkm::cont::internal::RuntimeDeviceTracker& tracker,
+      const vtkm::cont::RuntimeDeviceTracker& tracker,
       ResultType& result):
     DerivedClass(derivedClass),
     InputData(inputData),
@@ -85,6 +85,9 @@ private:
                                                  tag );
       return this->Instance.Result.IsValid();
     }
+
+  private:
+    void operator=(const ResolveFieldTypeAndExecuteForDevice<T,StorageTag>&) = delete;
   };
 
 public:
@@ -97,6 +100,9 @@ public:
                            this->Tracker,
                            typename DerivedPolicy::DeviceAdapterList());
   }
+
+private:
+  void operator=(const ResolveFieldTypeAndExecute<Derived,DerivedPolicy,ResultType> &) = delete;
 };
 
 }

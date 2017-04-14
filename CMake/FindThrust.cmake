@@ -69,9 +69,13 @@ endif()
 # Check for required components
 include( FindPackageHandleStandardArgs )
 find_package_handle_standard_args( Thrust
+  FOUND_VAR Thrust_FOUND
   REQUIRED_VARS THRUST_INCLUDE_DIR
   VERSION_VAR THRUST_VERSION
   )
 
-set(THRUST_INCLUDE_DIRS ${THRUST_INCLUDE_DIR})
+if(Thrust_FOUND)
+  set(THRUST_INCLUDE_DIRS ${THRUST_INCLUDE_DIR})
+endif()
+
 mark_as_advanced(THRUST_INCLUDE_DIR)

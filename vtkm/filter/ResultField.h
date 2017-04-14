@@ -180,7 +180,7 @@ public:
       this->GetField().GetData().CopyTo(dest);
       return true;
     }
-    catch(vtkm::cont::Error)
+    catch(vtkm::cont::Error&)
     {
       return false;
     }

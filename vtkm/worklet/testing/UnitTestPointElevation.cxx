@@ -53,7 +53,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   dataSet.AddCoordinateSystem(
         vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
-  vtkm::cont::CellSetExplicit<> cellSet(vtkm::Id(coordinates.size()), "cells");
+  vtkm::cont::CellSetExplicit<> cellSet("cells");
   cellSet.PrepareToAddCells(numCells, numCells * 4);
   for (vtkm::Id j = 0; j < dim - 1; ++j)
   {
@@ -67,7 +67,7 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
                                                (j + 1) * dim + i));
     }
   }
-  cellSet.CompleteAddingCells();
+  cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
 
   dataSet.AddCellSet(cellSet);
   return dataSet;

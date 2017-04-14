@@ -45,18 +45,6 @@ public:
   VTKM_CONT
   ResultDataSet(const vtkm::cont::DataSet &dataSet)
     : ResultBase(dataSet) {  }
-
-  VTKM_CONT
-  const vtkm::cont::DataSet &GetDataSet() const
-  {
-    return this->ResultBase::GetDataSet();
-  }
-
-  VTKM_CONT
-  vtkm::cont::DataSet &GetDataSet()
-  {
-    return this->ResultBase::GetDataSetReference();
-  }
 };
 
 }

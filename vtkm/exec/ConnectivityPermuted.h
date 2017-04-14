@@ -36,6 +36,7 @@ class ConnectivityPermuted
 public:
   typedef vtkm::Id SchedulingRangeType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ConnectivityPermuted():
     Portal(),

@@ -36,18 +36,20 @@
 // code.
 //
 #define VTKM_ASSUME(cond) \
-  do { \
+  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
+  { \
   const bool c = cond; \
   VTKM_ASSERT("Bad assumption in VTKM_ASSUME: " #cond && c); \
   VTKM_ASSUME_IMPL(c); \
   (void)c; /* Prevents unused var warnings */ \
-  } while (false) /* do-while prevents extra semicolon warnings */
+  } \
+  VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 // VTKM_ASSUME_IMPL is compiler-specific:
 #if defined(__CUDA_ARCH__)
   //For all versions of CUDA this is a no-op while we look
   //for a CUDA asm snippet that replicates this kind of behavior
-  #define VTKM_ASSUME_IMPL(cond) do {} while (false) /* no-op */
+  #define VTKM_ASSUME_IMPL(cond) (void)0 /* no-op */
 #else
 
 #if defined(VTKM_MSVC)
@@ -60,7 +62,7 @@
 #elif defined(VTKM_CLANG)
 # define VTKM_ASSUME_IMPL(cond) if (!(cond)) __builtin_unreachable()
 #else
-# define VTKM_ASSUME_IMPL(cond) do {} while (false) /* no-op */
+# define VTKM_ASSUME_IMPL(cond) (void)0 /* no-op */
 #endif
 
 #endif

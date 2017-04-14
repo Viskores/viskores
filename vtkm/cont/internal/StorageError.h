@@ -20,6 +20,7 @@
 #ifndef vtkm_cont_internal_StorageError_h
 #define vtkm_cont_internal_StorageError_h
 
+#include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm {
 namespace cont {
@@ -30,7 +31,7 @@ namespace internal {
 /// point, you have to specify an appropriate Storage or else get a compile
 /// error.
 ///
-struct StorageTagError
+struct VTKM_ALWAYS_EXPORT StorageTagError
 {
   // Not implemented.
 };

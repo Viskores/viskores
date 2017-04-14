@@ -283,7 +283,7 @@ const char unsturctureGridBin[] =
 
 const char rectilinearGrid1Ascii[] =
 "# vtk DataFile Version 3.0\n"
-"vtk output\n"
+"\n" // empty title
 "ASCII\n"
 "DATASET RECTILINEAR_GRID\n"
 "DIMENSIONS 5 5 5\n"
@@ -325,7 +325,7 @@ const char rectilinearGrid1Ascii[] =
 
 const char rectilinearGrid2Ascii[] =    
 "# vtk DataFile Version 3.0\n"
-"vtk output\n"
+"\n" // empty title
 "ASCII\n"
 "DATASET RECTILINEAR_GRID\n"
 "DIMENSIONS 3 4 2\n"
@@ -345,6 +345,64 @@ const char rectilinearGrid2Ascii[] =
 "0   1   2   3   4   5   6   7   8   9   10  11\n"
 "12  13  14  15  16  17  18  19  20  21  22  23\n";
 
+
+const char structuredGridAscii[] =
+"# vtk DataFile Version 3.0\n"
+"Structured Grid Example\n"
+"ASCII\n"
+"DATASET STRUCTURED_GRID\n"
+"DIMENSIONS 3 2 1\n"
+"POINTS 6 float\n"
+"0 0 0    1 0 0    2 0 0    0 1 0    1 1 0    2 1 0\n"
+"POINT_DATA 6\n"
+"SCALARS pointvar float 1\n"
+"LOOKUP_TABLE default\n"
+"10.1  20.1  30.1  40.1  50.1  60.1\n"
+"CELL_DATA 2\n"
+"SCALARS cellvar float 1\n"
+"LOOKUP_TABLE default\n"
+"100.1  200.1\n";
+
+const char structuredGridBin[] =
+"# vtk DataFile Version 3.0\n"
+"Structured Grid Example\n"
+"BINARY\n"
+"DATASET STRUCTURED_GRID\n"
+"DIMENSIONS 3 2 3\n"
+"POINTS 18 float\n"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x3f\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x40\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x3f\x80\x00\x00\x00\x00\x00\x00"
+"\x3f\x80\x00\x00\x3f\x80\x00\x00\x00\x00\x00\x00"
+"\x40\x00\x00\x00\x3f\x80\x00\x00\x00\x00\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x3f\x80\x00\x00"
+"\x3f\x80\x00\x00\x00\x00\x00\x00\x3f\x80\x00\x00"
+"\x40\x00\x00\x00\x00\x00\x00\x00\x3f\x80\x00\x00"
+"\x00\x00\x00\x00\x3f\x80\x00\x00\x3f\x80\x00\x00"
+"\x3f\x80\x00\x00\x3f\x80\x00\x00\x3f\x80\x00\x00"
+"\x40\x00\x00\x00\x3f\x80\x00\x00\x3f\x80\x00\x00"
+"\x00\x00\x00\x00\x00\x00\x00\x00\x40\x00\x00\x00"
+"\x3f\x80\x00\x00\x00\x00\x00\x00\x40\x00\x00\x00"
+"\x40\x00\x00\x00\x00\x00\x00\x00\x40\x00\x00\x00"
+"\x00\x00\x00\x00\x3f\x80\x00\x00\x40\x00\x00\x00"
+"\x3f\x80\x00\x00\x3f\x80\x00\x00\x40\x00\x00\x00"
+"\x40\x00\x00\x00\x3f\x80\x00\x00\x40\x00\x00\x00\n"
+"CELL_DATA 4\n"
+"SCALARS cellvar float\n"
+"LOOKUP_TABLE default\n"
+"\x42\xc8\x33\x33\x42\xc8\x66\x66\x42\xc8\x99\x9a\x42\xc8\xcc\xcd\n"
+"POINT_DATA 18\n"
+"SCALARS pointvar float\n"
+"LOOKUP_TABLE default\n"
+"\x41\x21\x99\x9a\x41\xa0\xcc\xcd\x41\xf0\xcc\xcd"
+"\x42\x20\x66\x66\x42\x48\xcc\xcd\x42\x70\xcc\xcd"
+"\x42\x8c\x66\x66\x42\xa0\x66\x66\x42\xb4\x99\x9a"
+"\x42\xc8\x99\x9a\x42\xdc\x99\x9a\x42\xf0\x99\x9a"
+"\x43\x02\x66\x66\x43\x0c\x66\x66\x43\x16\x66\x66"
+"\x43\x20\x66\x66\x43\x2a\x80\x00\x43\x34\x80\x00\n";
+
+
 inline void createFile(const char *buffer, std::size_t size, const char *fname)
 {
   std::ofstream fstr(fname, std::ios_base::out | std::ios_base::binary);
@@ -360,7 +418,7 @@ inline vtkm::cont::DataSet readVTKDataSet(const char *fname)
   {
     ds = reader.ReadDataSet();
   }
-  catch (vtkm::io::ErrorIO e)
+  catch (vtkm::io::ErrorIO &e)
   {
     std::string message("Error reading: ");
     message += fname;
@@ -396,6 +454,8 @@ void TestReadingPolyData(Format format)
                    "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 8,
                    "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 8,
+                   "Incorrect number of points (from cell set)");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 6,
                    "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetSingleType<> >(),
@@ -414,6 +474,8 @@ void TestReadingStructuredPoints(Format format)
                    "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 72,
                    "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 72,
+                   "Incorrect number of points (from cell set)");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 30,
                    "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3> >(),
@@ -432,6 +494,8 @@ void TestReadingStructuredPointsVisIt(Format format)
                      "Incorrect number of fields");
     VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 64,
                      "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 64,
+                     "Incorrect number of points (from cell set)");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 27,
                      "Incorrect number of cells");
     VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3> >(),
@@ -452,6 +516,8 @@ void TestReadingUnstructuredGrid(Format format)
                    "Incorrect number of fields");
   VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 26,
                    "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
+                   "Incorrect number of points (from cell set)");
   VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 15,
                    "Incorrect number of cells");
   VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetExplicit<> >(),
@@ -469,6 +535,8 @@ void TestReadingUnstructuredGridVisIt(Format format)
                      "Incorrect number of fields");
     VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 26,
                      "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 26,
+                     "Incorrect number of points (from cell set)");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 15,
                      "Incorrect number of cells");
     VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetExplicit<> >(),
@@ -488,6 +556,8 @@ void TestReadingRectilinearGrid1(Format format)
                      "Incorrect number of fields");
     VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 125,
                      "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 125,
+                     "Incorrect number of points (from cell set)");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 64,
                      "Incorrect number of cells");
     VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3> >(),
@@ -507,12 +577,48 @@ void TestReadingRectilinearGrid2(Format format)
                      "Incorrect number of fields");
     VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 24,
                      "Incorrect number of points");
+    VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 24,
+                     "Incorrect number of points (from cell set)");
     VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 6,
                      "Incorrect number of cells");
     VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3> >(),
                      "Incorrect cellset type");
   }
 }    
+
+void TestReadingStructuredGridASCII()
+{
+  createFile(structuredGridAscii, sizeof(structuredGridAscii), testFileName);
+  vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
+
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
+                   "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 6,
+                   "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 6,
+                   "Incorrect number of points (from cell set)");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 2,
+                   "Incorrect number of cells");
+  VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<2> >(),
+                   "Incorrect cellset type");
+}
+
+void TestReadingStructuredGridBin()
+{
+  createFile(structuredGridBin, sizeof(structuredGridBin), testFileName);
+  vtkm::cont::DataSet ds = readVTKDataSet(testFileName);
+
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
+                   "Incorrect number of fields");
+  VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == 18,
+                   "Incorrect number of points");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfPoints() == 18,
+                   "Incorrect number of points (from cell set)");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == 4,
+                   "Incorrect number of cells");
+  VTKM_TEST_ASSERT(ds.GetCellSet().IsType<vtkm::cont::CellSetStructured<3> >(),
+                   "Incorrect cellset type");
+}
 
 void TestReadingVTKDataSet()
 {
@@ -538,6 +644,11 @@ void TestReadingVTKDataSet()
   TestReadingStructuredPointsVisIt(FORMAT_ASCII);
   std::cout << "Test reading VTK/VisIt UnstructuredGrid file in ASCII" << std::endl;
   TestReadingUnstructuredGridVisIt(FORMAT_ASCII);
+
+  std::cout << "Test reading VTK StructuredGrid file in ASCII" << std::endl;
+  TestReadingStructuredGridASCII();
+  std::cout << "Test reading VTK StructuredGrid file in BINARY" << std::endl;
+  TestReadingStructuredGridBin();
 }
 
 int UnitTestVTKDataSetReader(int, char *[])

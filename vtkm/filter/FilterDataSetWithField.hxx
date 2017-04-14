@@ -26,7 +26,7 @@
 #include <vtkm/filter/internal/ResolveFieldTypeAndMap.h>
 
 #include <vtkm/cont/Error.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
@@ -42,7 +42,15 @@ FilterDataSetWithField<Derived>::FilterDataSetWithField():
   OutputFieldName(),
   CellSetIndex(0),
   CoordinateSystemIndex(0),
-  Tracker()
+  Tracker(vtkm::cont::GetGlobalRuntimeDeviceTracker())
+{
+
+}
+
+//----------------------------------------------------------------------------
+template<class Derived>
+inline VTKM_CONT
+FilterDataSetWithField<Derived>::~FilterDataSetWithField()
 {
 
 }
@@ -203,8 +211,7 @@ bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(ResultDataSet& result,
                         this->Tracker,
                         valid);
 
-    typedef vtkm::filter::FilterTraits< Derived > Traits;
-    vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(field, policy, Traits()),
+    vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(field, policy),
                              functor );
     }
 

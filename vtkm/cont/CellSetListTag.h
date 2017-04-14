@@ -33,20 +33,20 @@
 namespace vtkm {
 namespace cont {
 
-struct CellSetListTagStructured1D
+struct VTKM_ALWAYS_EXPORT CellSetListTagStructured1D
         : vtkm::ListTagBase<vtkm::cont::CellSetStructured<1> > {  };
 
-struct CellSetListTagStructured2D
+struct VTKM_ALWAYS_EXPORT CellSetListTagStructured2D
         : vtkm::ListTagBase<vtkm::cont::CellSetStructured<2> > {  };
 
-struct CellSetListTagStructured3D
+struct VTKM_ALWAYS_EXPORT CellSetListTagStructured3D
         : vtkm::ListTagBase<vtkm::cont::CellSetStructured<3> > {  };
 
 template<typename ShapeStorageTag         = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
          typename NumIndicesStorageTag    = VTKM_DEFAULT_NUM_INDICES_STORAGE_TAG,
          typename ConnectivityStorageTag  = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
          typename OffsetsStorageTag       = VTKM_DEFAULT_OFFSETS_STORAGE_TAG >
-struct CellSetListTagExplicit
+struct VTKM_ALWAYS_EXPORT CellSetListTagExplicit
         : vtkm::ListTagBase<
             vtkm::cont::CellSetExplicit<
               ShapeStorageTag,
@@ -54,11 +54,11 @@ struct CellSetListTagExplicit
               ConnectivityStorageTag,
               OffsetsStorageTag> > {  };
 
-struct CellSetListTagExplicitDefault
+struct VTKM_ALWAYS_EXPORT CellSetListTagExplicitDefault
         : CellSetListTagExplicit<> {  };
 
 
-struct CellSetListTagCommon
+struct VTKM_ALWAYS_EXPORT CellSetListTagCommon
         : vtkm::ListTagBase<
             vtkm::cont::CellSetStructured<2>,
             vtkm::cont::CellSetStructured<3>,
@@ -66,13 +66,13 @@ struct CellSetListTagCommon
             vtkm::cont::CellSetSingleType<>
             > {  };
 
-struct CellSetListTagStructured
+struct VTKM_ALWAYS_EXPORT CellSetListTagStructured
         : vtkm::ListTagBase<
             vtkm::cont::CellSetStructured<2>,
             vtkm::cont::CellSetStructured<3>
             > {  };
 
-struct CellSetListTagUnstructured
+struct VTKM_ALWAYS_EXPORT CellSetListTagUnstructured
         : vtkm::ListTagBase<
             vtkm::cont::CellSetExplicit<>,
             vtkm::cont::CellSetSingleType<>

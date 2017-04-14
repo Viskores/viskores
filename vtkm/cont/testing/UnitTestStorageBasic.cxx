@@ -182,7 +182,7 @@ struct TemplatedTests
       VTKM_TEST_ASSERT(true==false,
                        "Array shrink do a larger size was possible. This can't be allowed.");
     }
-    catch(vtkm::cont::ErrorControlBadValue) {}
+    catch(vtkm::cont::ErrorBadValue&) {}
   }
 
   void operator()()

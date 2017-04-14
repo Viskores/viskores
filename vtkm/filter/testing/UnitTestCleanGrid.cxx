@@ -25,15 +25,13 @@
 
 namespace {
 
-void TestUniformGrid()
+void TestUniformGrid(vtkm::filter::CleanGrid clean)
 {
   std::cout << "Testing 'clean' uniform grid." << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet makeData;
 
   vtkm::cont::DataSet inData = makeData.Make2DUniformDataSet0();
-
-  vtkm::filter::CleanGrid clean;
 
   vtkm::filter::ResultDataSet result = clean.Execute(inData);
   VTKM_TEST_ASSERT(result.IsValid(), "Filter failed to execute");
@@ -83,7 +81,15 @@ void TestUniformGrid()
 
 void RunTest()
 {
-  TestUniformGrid();
+  vtkm::filter::CleanGrid clean;
+
+  std::cout << "*** Test wqith compact point fields on" << std::endl;
+  clean.SetCompactPointFields(true);
+  TestUniformGrid(clean);
+
+  std::cout << "*** Test wqith compact point fields off" << std::endl;
+  clean.SetCompactPointFields(false);
+  TestUniformGrid(clean);
 }
 
 } // anonymous namespace

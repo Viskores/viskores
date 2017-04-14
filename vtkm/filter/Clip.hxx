@@ -18,9 +18,11 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
+#include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
@@ -74,11 +76,15 @@ vtkm::filter::ResultDataSet Clip::DoExecute(const vtkm::cont::DataSet& input,
   //create the output data
   vtkm::cont::DataSet output;
   output.AddCellSet( outputCellSet );
-  output.AddCoordinateSystem( inputCoords );
 
-  //add the mapped field to the output
+  // Compute the new boundary points and add them to the output:
+  vtkm::cont::DynamicArrayHandle outputCoordsArray =
+      this->Worklet.ProcessField(
+        vtkm::filter::ApplyPolicy(inputCoords, policy), device);
+  vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(),
+                                            outputCoordsArray);
+  output.AddCoordinateSystem(outputCoords);
   vtkm::filter::ResultDataSet result(output);
-  this->DoMapField(result, field, fieldMeta, policy, device);
 
   return result;
 }

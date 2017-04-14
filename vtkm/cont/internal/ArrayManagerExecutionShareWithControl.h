@@ -121,11 +121,10 @@ public:
   void ReleaseResources() { }
 
 private:
-  // Not implemented.
   ArrayManagerExecutionShareWithControl(
-      ArrayManagerExecutionShareWithControl<T, StorageTag> &);
+      ArrayManagerExecutionShareWithControl<T, StorageTag> &) = delete;
   void operator=(
-      ArrayManagerExecutionShareWithControl<T, StorageTag> &);
+      ArrayManagerExecutionShareWithControl<T, StorageTag> &) = delete;
 
   StorageType *Storage;
 };

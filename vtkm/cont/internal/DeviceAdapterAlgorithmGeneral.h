@@ -30,6 +30,8 @@
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
+#include <vtkm/TypeTraits.h>
+
 #include <vtkm/internal/Windows.h>
 
 namespace vtkm {
@@ -133,6 +135,77 @@ public:
     CopyKernelType kernel(input.PrepareForInput(DeviceAdapterTag()),
                           output.PrepareForOutput(inSize, DeviceAdapterTag()));
     DerivedAlgorithm::Schedule(kernel, inSize);
+  }
+
+  //--------------------------------------------------------------------------
+  // CopyIf
+  template<typename T, typename U, class CIn, class CStencil,
+  class COut, class UnaryPredicate>
+  VTKM_CONT static void CopyIf(
+    const vtkm::cont::ArrayHandle<T,CIn>& input,
+    const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
+    vtkm::cont::ArrayHandle<T,COut>& output,
+    UnaryPredicate unary_predicate)
+  {
+    VTKM_ASSERT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
+    vtkm::Id arrayLength = stencil.GetNumberOfValues();
+
+    typedef vtkm::cont::ArrayHandle<
+    vtkm::Id, vtkm::cont::StorageTagBasic> IndexArrayType;
+    IndexArrayType indices;
+
+    typedef typename vtkm::cont::ArrayHandle<U,CStencil>
+    ::template ExecutionTypes<DeviceAdapterTag>::PortalConst
+    StencilPortalType;
+    StencilPortalType stencilPortal =
+    stencil.PrepareForInput(DeviceAdapterTag());
+
+    typedef typename IndexArrayType
+    ::template ExecutionTypes<DeviceAdapterTag>::Portal IndexPortalType;
+    IndexPortalType indexPortal =
+    indices.PrepareForOutput(arrayLength, DeviceAdapterTag());
+
+    StencilToIndexFlagKernel< StencilPortalType,
+    IndexPortalType,
+    UnaryPredicate> indexKernel(stencilPortal,
+                                indexPortal,
+                                unary_predicate);
+
+    DerivedAlgorithm::Schedule(indexKernel, arrayLength);
+
+    vtkm::Id outArrayLength = DerivedAlgorithm::ScanExclusive(indices, indices);
+
+    typedef typename vtkm::cont::ArrayHandle<T,CIn>
+    ::template ExecutionTypes<DeviceAdapterTag>::PortalConst
+    InputPortalType;
+    InputPortalType inputPortal = input.PrepareForInput(DeviceAdapterTag());
+
+    typedef typename vtkm::cont::ArrayHandle<T,COut>
+    ::template ExecutionTypes<DeviceAdapterTag>::Portal OutputPortalType;
+    OutputPortalType outputPortal =
+    output.PrepareForOutput(outArrayLength, DeviceAdapterTag());
+
+    CopyIfKernel<
+    InputPortalType,
+    StencilPortalType,
+    IndexPortalType,
+    OutputPortalType,
+    UnaryPredicate> copyKernel(inputPortal,
+                               stencilPortal,
+                               indexPortal,
+                               outputPortal,
+                               unary_predicate);
+    DerivedAlgorithm::Schedule(copyKernel, arrayLength);
+  }
+
+  template<typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT static void CopyIf(
+    const vtkm::cont::ArrayHandle<T,CIn>& input,
+    const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
+    vtkm::cont::ArrayHandle<T,COut>& output)
+  {
+    ::vtkm::NotZeroInitialized unary_predicate;
+    DerivedAlgorithm::CopyIf(input, stencil, output, unary_predicate);
   }
 
   //--------------------------------------------------------------------------
@@ -410,9 +483,9 @@ public:
     keystate.ReleaseResources();
 
     // all we need know is an efficient way of doing the write back to the
-    // reduced global memory. this is done by using StreamCompact with the
+    // reduced global memory. this is done by using CopyIf with the
     // stencil and values we just created with the inclusive scan
-    DerivedAlgorithm::StreamCompact( reducedValues,
+    DerivedAlgorithm::CopyIf( reducedValues,
                                      stencil,
                                      values_output,
                                      ReduceByKeyUnaryStencilOp());
@@ -557,9 +630,9 @@ public:
 
     vtkm::Id numValues = output.GetNumberOfValues();
     if (numValues < 1)
-      {
-      return output.GetPortalConstControl().Get(0);
-      }
+    {
+      return vtkm::TypeTraits<T>::ZeroInitialization();
+    }
 
     PortalType portal = output.PrepareForInPlace(DeviceAdapterTag());
 
@@ -665,86 +738,6 @@ public:
   }
 
   //--------------------------------------------------------------------------
-  // Stream Compact
-  template<typename T, typename U, class CIn, class CStencil,
-           class COut, class UnaryPredicate>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,CIn>& input,
-      const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
-      vtkm::cont::ArrayHandle<T,COut>& output,
-      UnaryPredicate unary_predicate)
-  {
-    VTKM_ASSERT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
-    vtkm::Id arrayLength = stencil.GetNumberOfValues();
-
-    typedef vtkm::cont::ArrayHandle<
-        vtkm::Id, vtkm::cont::StorageTagBasic> IndexArrayType;
-    IndexArrayType indices;
-
-    typedef typename vtkm::cont::ArrayHandle<U,CStencil>
-        ::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-        StencilPortalType;
-    StencilPortalType stencilPortal =
-        stencil.PrepareForInput(DeviceAdapterTag());
-
-    typedef typename IndexArrayType
-        ::template ExecutionTypes<DeviceAdapterTag>::Portal IndexPortalType;
-    IndexPortalType indexPortal =
-        indices.PrepareForOutput(arrayLength, DeviceAdapterTag());
-
-    StencilToIndexFlagKernel< StencilPortalType,
-                              IndexPortalType,
-                              UnaryPredicate> indexKernel(stencilPortal,
-                                                         indexPortal,
-                                                         unary_predicate);
-
-    DerivedAlgorithm::Schedule(indexKernel, arrayLength);
-
-    vtkm::Id outArrayLength = DerivedAlgorithm::ScanExclusive(indices, indices);
-
-    typedef typename vtkm::cont::ArrayHandle<T,CIn>
-        ::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-        InputPortalType;
-    InputPortalType inputPortal = input.PrepareForInput(DeviceAdapterTag());
-
-    typedef typename vtkm::cont::ArrayHandle<T,COut>
-        ::template ExecutionTypes<DeviceAdapterTag>::Portal OutputPortalType;
-    OutputPortalType outputPortal =
-        output.PrepareForOutput(outArrayLength, DeviceAdapterTag());
-
-    CopyIfKernel<
-        InputPortalType,
-        StencilPortalType,
-        IndexPortalType,
-        OutputPortalType,
-        UnaryPredicate> copyKernel(inputPortal,
-                                    stencilPortal,
-                                    indexPortal,
-                                    outputPortal,
-                                    unary_predicate);
-    DerivedAlgorithm::Schedule(copyKernel, arrayLength);
-  }
-
-template<typename T, typename U, class CIn, class CStencil, class COut>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,CIn>& input,
-      const vtkm::cont::ArrayHandle<U,CStencil>& stencil,
-      vtkm::cont::ArrayHandle<T,COut>& output)
-  {
-    ::vtkm::NotZeroInitialized unary_predicate;
-    DerivedAlgorithm::StreamCompact(input, stencil, output, unary_predicate);
-  }
-
-  template<typename T, class CStencil, class COut>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,CStencil> &stencil,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut> &output)
-  {
-    vtkm::cont::ArrayHandleIndex input(stencil.GetNumberOfValues());
-    DerivedAlgorithm::StreamCompact(input, stencil, output);
-  }
-
-  //--------------------------------------------------------------------------
   // Unique
   template<typename T, class Storage>
   VTKM_CONT static void Unique(
@@ -778,7 +771,7 @@ template<typename T, typename U, class CIn, class CStencil, class COut>
     vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
         outputArray;
 
-    DerivedAlgorithm::StreamCompact(values, stencilArray, outputArray);
+    DerivedAlgorithm::CopyIf(values, stencilArray, outputArray);
 
     values.Allocate(outputArray.GetNumberOfValues());
     DerivedAlgorithm::Copy(outputArray, values);

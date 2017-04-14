@@ -22,7 +22,6 @@
 #include <cstring>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
-#include <vtkm/cont/Timer.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Ray.h>

@@ -36,8 +36,7 @@ void TestVertexClustering()
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose();
 
   //compute the bounds before calling the algorithm
-  vtkm::Bounds bounds =
-      dataSet.GetCoordinateSystem().GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::Bounds bounds = dataSet.GetCoordinateSystem().GetBounds();
 
   // run
   vtkm::worklet::VertexClustering clustering;

@@ -57,8 +57,9 @@ struct Space2D
     return Vec2(vtkm::dot(vec, this->Basis0), vtkm::dot(vec, this->Basis1));
   }
 
+  template<typename U>
   VTKM_EXEC
-  Vec3 ConvertVecFromSpace(const Vec2 vec) const {
+  vtkm::Vec<U,3> ConvertVecFromSpace(const vtkm::Vec<U,2> vec) const {
     return vec[0]*this->Basis0 + vec[1]*this->Basis1;
   }
 };
@@ -262,11 +263,12 @@ void JacobianFor3DCell(const WorldCoordType &wCoords,
 
 template<typename WorldCoordType,
          typename ParametricCoordType,
+         typename SpaceType,
          typename JacobianType>
 VTKM_EXEC
 void JacobianFor2DCell(const WorldCoordType &wCoords,
                        const vtkm::Vec<ParametricCoordType,3> &pcoords,
-                       const vtkm::exec::internal::Space2D<JacobianType> &space,
+                       const vtkm::exec::internal::Space2D<SpaceType> &space,
                        vtkm::Matrix<JacobianType,2,2> &jacobian,
                        vtkm::CellShapeTagQuad)
 {
@@ -274,7 +276,7 @@ void JacobianFor2DCell(const WorldCoordType &wCoords,
                                static_cast<JacobianType>(pcoords[1]));
   vtkm::Vec<JacobianType,2> rc = vtkm::Vec<JacobianType,2>(JacobianType(1)) - pc;
 
-  vtkm::Vec<JacobianType,2> wcoords2d;
+  vtkm::Vec<SpaceType,2> wcoords2d;
   jacobian = vtkm::Matrix<JacobianType,2,2>(JacobianType(0));
   VTKM_DERIVATIVE_WEIGHTS_QUAD(pc, rc, VTKM_ACCUM_JACOBIAN_2D);
 }

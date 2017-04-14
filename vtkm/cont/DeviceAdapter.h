@@ -24,6 +24,7 @@
 // order in which the sub-files are loaded.  (But the compile should still
 // succeed of the order is changed.)
 
+#include <vtkm/cont/internal/DeviceAdapterDefaultSelection.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>

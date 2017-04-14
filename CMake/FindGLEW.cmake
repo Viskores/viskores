@@ -64,15 +64,17 @@
 #
 #  * Kitware, Inc.
 
-
 find_path(GLEW_INCLUDE_DIR GL/glew.h)
 find_library(GLEW_LIBRARY NAMES GLEW glew32 glew glew32s PATH_SUFFIXES lib64)
 
-set(GLEW_INCLUDE_DIRS ${GLEW_INCLUDE_DIR})
-set(GLEW_LIBRARIES ${GLEW_LIBRARY})
-
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(GLEW
+                                  FOUND_VAR GLEW_FOUND
                                   REQUIRED_VARS GLEW_INCLUDE_DIR GLEW_LIBRARY)
+
+if(GLEW_FOUND)
+  set(GLEW_INCLUDE_DIRS ${GLEW_INCLUDE_DIR})
+  set(GLEW_LIBRARIES ${GLEW_LIBRARY})
+endif()
 
 mark_as_advanced(GLEW_INCLUDE_DIR GLEW_LIBRARY)

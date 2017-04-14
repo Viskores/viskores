@@ -20,7 +20,7 @@
 #ifndef vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmCuda_h
 #define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmCuda_h
 
-#include <vtkm/cont/cuda/ErrorControlCuda.h>
+#include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
 
@@ -104,8 +104,8 @@ public:
 
 private:
   // Copying CUDA events is problematic.
-  DeviceAdapterTimerImplementation(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &);
-  void operator=(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &);
+  DeviceAdapterTimerImplementation(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &) = delete;
+  void operator=(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &) = delete;
 
   cudaEvent_t StartEvent;
   cudaEvent_t EndEvent;
@@ -137,7 +137,7 @@ public:
       deviceQueryInit = true;
 
       //first query for the number of devices
-      cudaGetDeviceCount(&numDevices);
+      VTKM_CUDA_CALL(cudaGetDeviceCount(&numDevices));
 
       for (vtkm::Int32 i = 0; i < numDevices; i++)
       {

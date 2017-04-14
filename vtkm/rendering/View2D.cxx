@@ -74,6 +74,7 @@ void View2D::RenderScreenAnnotations()
   this->HorizontalAxisAnnotation.SetScreenPosition(
         viewportLeft, viewportBottom, viewportRight, viewportBottom);
   vtkm::Bounds viewRange = this->GetCamera().GetViewRange2D();
+  
   this->HorizontalAxisAnnotation.SetRangeForAutoTicks(viewRange.X.Min,
                                                       viewRange.X.Max);
   this->HorizontalAxisAnnotation.SetMajorTickSize(0, .05, 1.0);
@@ -86,7 +87,7 @@ void View2D::RenderScreenAnnotations()
   vtkm::Float32 windowaspect =
       vtkm::Float32(this->GetCanvas().GetWidth()) /
       vtkm::Float32(this->GetCanvas().GetHeight());
-
+  
   this->VerticalAxisAnnotation.SetColor(Color(1,1,1));
   this->VerticalAxisAnnotation.SetScreenPosition(
         viewportLeft, viewportBottom, viewportLeft, viewportTop);

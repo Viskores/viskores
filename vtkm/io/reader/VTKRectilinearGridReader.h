@@ -26,6 +26,8 @@ namespace vtkm {
 namespace io {
 namespace reader {
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 class VTKRectilinearGridReader : public VTKDataSetReaderBase
 {
 public:
@@ -38,24 +40,20 @@ private:
   {
     if (this->DataFile->Structure != vtkm::io::internal::DATASET_RECTILINEAR_GRID)
       throw vtkm::io::ErrorIO("Incorrect DataSet type");
-    
+
     //We need to be able to handle VisIt files which dump Field data
     //at the top of a VTK file
-    
     std::string tag;
     this->DataFile->Stream >> tag;
-    internal::parseAssert(tag == "FIELD" || tag == "DIMENSIONS");
-
     if(tag == "FIELD")
     {
       std::string name;
       this->ReadFields(name);
       this->DataFile->Stream >> tag;
     }
-    if (tag != "DIMENSIONS")
-      throw vtkm::io::ErrorIO("DIMENSIONS tag not found");
 
     // Read structured grid specific meta-data
+    internal::parseAssert(tag == "DIMENSIONS");
     vtkm::Id3 dim;
     this->DataFile->Stream >> dim[0] >> dim[1] >> dim[2] >> std::ws;
 
@@ -97,14 +95,14 @@ private:
     vtkm::cont::CoordinateSystem coordSys("coordinates", coords);
     this->DataSet.AddCoordinateSystem(coordSys);
 
-    vtkm::cont::CellSetStructured<3> cs("cells");
-    cs.SetPointDimensions(vtkm::make_Vec(dim[0], dim[1], dim[2]));
-    this->DataSet.AddCellSet(cs);
+    this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
 
     // Read points and cell attributes
     this->ReadAttributes();
   }
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 }

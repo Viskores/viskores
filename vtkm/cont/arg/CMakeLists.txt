@@ -27,6 +27,11 @@ set(headers
   TransportTagAtomicArray.h
   TransportTagCellSetIn.h
   TransportTagExecObject.h
+  TransportTagKeyedValuesIn.h
+  TransportTagKeyedValuesInOut.h
+  TransportTagKeyedValuesOut.h
+  TransportTagKeysIn.h
+  TransportTagTopologyFieldIn.h
   TransportTagWholeArrayIn.h
   TransportTagWholeArrayInOut.h
   TransportTagWholeArrayOut.h
@@ -35,6 +40,7 @@ set(headers
   TypeCheckTagAtomicArray.h
   TypeCheckTagCellSet.h
   TypeCheckTagExecObject.h
+  TypeCheckTagKeys.h
   )
 
 vtkm_declare_headers(${headers})

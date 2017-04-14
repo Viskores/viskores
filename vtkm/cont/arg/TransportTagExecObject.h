@@ -44,14 +44,18 @@ struct Transport<vtkm::cont::arg::TransportTagExecObject,ContObjectType,Device>
   // is not an execution object as an argument that is expected to be one. All
   // execution objects are expected to inherit from
   // vtkm::exec::ExecutionObjectBase.
-  static_assert(
-    std::is_base_of<vtkm::exec::ExecutionObjectBase, ContObjectType>::value,
+  VTKM_STATIC_ASSERT_MSG(
+    (std::is_base_of<vtkm::exec::ExecutionObjectBase, ContObjectType>::value),
     "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectBase");
 
   typedef ContObjectType ExecObjectType;
 
+  template<typename InputDomainType>
   VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
+  ExecObjectType operator()(const ContObjectType &object,
+                            const InputDomainType &,
+                            vtkm::Id,
+                            vtkm::Id) const
   {
     return object;
   }
