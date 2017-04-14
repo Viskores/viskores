@@ -47,6 +47,17 @@ public:
 
   // Debug use only
   template< typename ArrayType >
+  void printArraySummary( const ArrayType &arr, const char* name )
+  {
+    vtkm::Id len = arr.GetNumberOfValues();
+    std::cerr << name << " has size: " << len << std::endl;
+    for( vtkm::Id i = 0; i < 3; i++ )
+      std::cerr << "  " << arr.GetPortalConstControl().Get(i) << std::endl;
+    std::cerr << "  ..." << std::endl;
+    for( vtkm::Id i = 0; i < 3; i++ )
+      std::cerr << "  " << arr.GetPortalConstControl().Get( len - 1 - i ) << std::endl;
+  }
+  template< typename ArrayType >
   void printPlaneX( const ArrayType &arr,               // print a plane perpendicular to X axis
                     vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ,  // dims of input array
                     vtkm::Id x,                                   // x idx of the plane to print
@@ -691,14 +702,13 @@ this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
   // Performs one level of IDWT on a small cube of a big cube
   // The output array has the same dimensions as the small cube.
   template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
-  vtkm::Float64 IDWT3D( 
-            			ArrayInType   &coeffIn,
-                  vtkm::Id      inDimX,   vtkm::Id inDimY,    vtkm::Id inDimZ,
-                  vtkm::Id      inStartX, vtkm::Id inStartY,  vtkm::Id inStartZ,
-            const std::vector<vtkm::Id>   &L,
-                  ArrayOutType  &sigOut,
-									bool					discardCoeffIn,		// can we discard coeffIn for more memory
-                  DeviceTag  )
+  vtkm::Float64 IDWT3D( ArrayInType   &coeffIn,
+                        vtkm::Id      inDimX,   vtkm::Id inDimY,    vtkm::Id inDimZ,
+                        vtkm::Id      inStartX, vtkm::Id inStartY,  vtkm::Id inStartZ,
+                  const std::vector<vtkm::Id>   &L,
+                        ArrayOutType  &sigOut,
+                        bool					discardCoeffIn,		// can we discard coeffIn?
+                        DeviceTag  )
   {
     VTKM_ASSERT( L.size() == 27 );
     VTKM_ASSERT( inDimX * inDimY * inDimZ == coeffIn.GetNumberOfValues() );
@@ -718,7 +728,7 @@ this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
     vtkm::cont::Timer<DeviceTag> timer;
     vtkm::Float64 computationTime = 0.0;
 
-    // First inverse transform in Z direction
+    // First, inverse transform in Z direction
     BasicArrayType        afterZ;
     afterZ.PrepareForOutput( inPretendDimX * inPretendDimY * inPretendDimZ, DeviceTag() );
     {
@@ -731,10 +741,8 @@ this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
                     inStartX,       inStartY,       inStartZ,
                     inPretendDimX,  inPretendDimY,  inPretendDimZ,
                     L[2],           L[5], 
-                    ext1,           ext2,           
-                    ext3,           ext4, 
-                    ext1DimZ,       ext2DimZ,       
-                    ext3DimZ,       ext4DimZ,
+                    ext1,           ext2,           ext3,           ext4, 
+                    ext1DimZ,       ext2DimZ,       ext3DimZ,       ext4DimZ,
                     filterLen, 
                     wmode, 
                     DeviceTag() );
@@ -755,12 +763,12 @@ this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
       dispatcher.Invoke( ext1, ext2, ext3, ext4, coeffIn, afterZ );
       computationTime += timer.GetElapsedTime();
     }
-this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
+//this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
 
 		if( discardCoeffIn )
 			coeffIn.ReleaseResources();
     
-    // Second inverse transform in Y direction
+    // Second, inverse transform in Y direction
     BasicArrayType      afterY;
     afterY.PrepareForOutput( inPretendDimX * inPretendDimY * inPretendDimZ, DeviceTag() );
     {
@@ -773,10 +781,8 @@ this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
                     0,                0,                0,
                     inPretendDimX,    inPretendDimY,    inPretendDimZ,
                     L[1],             L[7], 
-                    ext1,             ext2, 
-                    ext3,             ext4, 
-                    ext1DimY,         ext2DimY, 
-                    ext3DimY,         ext4DimY,
+                    ext1,             ext2,             ext3,             ext4, 
+                    ext1DimY,         ext2DimY,         ext3DimY,         ext4DimY,
                     filterLen, 
                     wmode, 
                     DeviceTag()   ); 
@@ -794,18 +800,39 @@ this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
                     0,                0,                0 );
       TopDownDispatcherType dispatcher( worklet );
       timer.Reset();
-std::cerr << "ext1 size: " << ext1.GetNumberOfValues() << std::endl;
-std::cerr << "ext2 size: " << ext1.GetNumberOfValues() << std::endl;
-std::cerr << "ext3 size: " << ext1.GetNumberOfValues() << std::endl;
-std::cerr << "ext4 size: " << ext1.GetNumberOfValues() << std::endl;
-std::cerr << "afterZ size: " << afterZ.GetNumberOfValues() << std::endl;
-std::cerr << "afterY size: " << afterY.GetNumberOfValues() << std::endl;
-      dispatcher.Invoke( ext1, ext2, ext3, ext4, afterZ, afterY );
+
+BasicArrayType ext12;
+ext12.PrepareForOutput( ext1.GetNumberOfValues(), DeviceTag() );
+for( vtkm::Id i = 0; i < ext12.GetNumberOfValues(); i++ )
+  ext12.GetPortalControl().Set(i, 0.0);
+BasicArrayType ext22;
+ext22.PrepareForOutput( ext2.GetNumberOfValues(), DeviceTag() );
+for( vtkm::Id i = 0; i < ext22.GetNumberOfValues(); i++ )
+  ext22.GetPortalControl().Set(i, 0.0);
+BasicArrayType ext32;
+ext32.PrepareForOutput( ext3.GetNumberOfValues(), DeviceTag() );
+for( vtkm::Id i = 0; i < ext32.GetNumberOfValues(); i++ )
+  ext32.GetPortalControl().Set(i, 0.0);
+BasicArrayType ext42;
+ext42.PrepareForOutput( ext4.GetNumberOfValues(), DeviceTag() );
+for( vtkm::Id i = 0; i < ext42.GetNumberOfValues(); i++ )
+  ext42.GetPortalControl().Set(i, 0.0);
+BasicArrayType afterZ2;
+afterZ2.PrepareForOutput( afterZ.GetNumberOfValues(), DeviceTag() );
+for( vtkm::Id i = 0; i < afterZ2.GetNumberOfValues(); i++ )
+  afterZ2.GetPortalControl().Set(i, afterZ.GetPortalConstControl().Get(i));
+//printArraySummary( ext1, "ext1" );
+//printArraySummary( ext2, "ext2" );
+//printArraySummary( ext3, "ext3" );
+//printArraySummary( ext4, "ext4" );
+//printArraySummary( afterZ, "afterZ" );
+//printArraySummary( afterY, "afterY" );
+      dispatcher.Invoke( ext12, ext22, ext32, ext42, afterZ2, afterY );
       computationTime += timer.GetElapsedTime();
     } 
-this->dumpVolume( afterY, inDimX, inDimY, inDimZ, "IDWTafterY" );
+//this->dumpVolume( afterY, inDimX, inDimY, inDimZ, "IDWTafterY" );
 
-    // Lastly inverse transform in X direction
+    // Lastly, inverse transform in X direction
     afterZ.ReleaseResources();
     {
       BasicArrayType      ext1, ext2, ext3, ext4;
@@ -817,10 +844,8 @@ this->dumpVolume( afterY, inDimX, inDimY, inDimZ, "IDWTafterY" );
                     0,                0,                0,
                     inPretendDimX,    inPretendDimY,    inPretendDimZ,
                     L[0],             L[12],
-                    ext1,             ext2,
-                    ext3,             ext4,
-                    ext1DimX,         ext2DimX,
-                    ext3DimX,         ext4DimX,
+                    ext1,             ext2,             ext3,             ext4,
+                    ext1DimX,         ext2DimX,         ext3DimX,         ext4DimX,
                     filterLen,
                     wmode,
                     DeviceTag() );
@@ -842,7 +867,7 @@ this->dumpVolume( afterY, inDimX, inDimY, inDimZ, "IDWTafterY" );
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterY, sigOut );
 			computationTime += timer.GetElapsedTime();
     }
-this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
+//this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
 
     return computationTime;
   }
