@@ -32,6 +32,8 @@
 namespace vtkm {
 namespace cont {
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 /// The superclass of all exceptions thrown by any VTKm function or method.
 ///
 class VTKM_ALWAYS_EXPORT Error : public std::exception
@@ -68,6 +70,8 @@ protected:
 private:
   std::string Message;
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 } // namespace vtkm::cont

@@ -42,7 +42,7 @@ protected:
 public:
   AxisAnnotation();
 
-  ~AxisAnnotation();
+  virtual ~AxisAnnotation();
 
   virtual void Render(const vtkm::rendering::Camera &camera,
                       const vtkm::rendering::WorldAnnotator &worldAnnotator,

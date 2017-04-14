@@ -37,6 +37,9 @@
  *
  */
 
+// For warning suppression macros:
+#include <vtkm/internal/ExportMacros.h>
+
 /**
  * @file
  *
@@ -1352,6 +1355,10 @@ private:
   }
 };
 
+// The Action classes emit weak vtables. These classes are small, so we aren't
+// concerned about the overhead here.
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 /**
  * @internal
  * @brief Interface for actions Parser::workhorse() should perform for each Option it
@@ -1478,6 +1485,8 @@ public:
     return true;
   }
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 inline void Parser::parse(bool gnu, const Descriptor usage[], int argc, const char** argv, Option options[],
                           Option buffer[], int min_abbr_len, bool single_minus_longopt, int bufmax)

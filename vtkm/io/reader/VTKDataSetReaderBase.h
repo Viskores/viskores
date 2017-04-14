@@ -31,6 +31,7 @@
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/internal/ExportMacros.h>
 #include <vtkm/io/ErrorIO.h>
 
 #include <algorithm>
@@ -199,6 +200,7 @@ inline vtkm::cont::DynamicCellSet CreateCellSetStructured(const vtkm::Id3 &dim)
 
 } // namespace internal
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
 class VTKDataSetReaderBase
 {
@@ -819,6 +821,8 @@ private:
 
   friend class VTKDataSetReader;
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 }

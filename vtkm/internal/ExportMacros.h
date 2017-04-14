@@ -91,6 +91,21 @@
 
 #define VTKM_OVERRIDE override
 
+// Clang will warn about weak vtables (-Wweak-vtables) on exception classes,
+// but there's no good way to eliminate them in this case because MSVC (See
+// http://stackoverflow.com/questions/24511376). These macros will silence the
+// warning for classes defined within them.
+#ifdef VTKM_CLANG
+#define VTKM_SILENCE_WEAK_VTABLE_WARNING_START \
+  _Pragma("clang diagnostic push") \
+  _Pragma("clang diagnostic ignored \"-Wweak-vtables\"")
+#define VTKM_SILENCE_WEAK_VTABLE_WARNING_END \
+  _Pragma("clang diagnostic pop")
+#else // VTKM_CLANG
+#define VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+#define VTKM_SILENCE_WEAK_VTABLE_WARNING_END
+#endif // VTKM_CLANG
+
 /// Simple macro to identify a parameter as unused. This allows you to name a
 /// parameter that is not used. There are several instances where you might
 /// want to do this. For example, when using a parameter to overload or

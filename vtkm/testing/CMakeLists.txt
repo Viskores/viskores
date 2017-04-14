@@ -33,6 +33,7 @@ set(unit_tests
   UnitTestBinaryOperators.cxx
   UnitTestBounds.cxx
   UnitTestCellShape.cxx
+  UnitTestExceptions.cxx
   UnitTestImplicitFunctions.cxx
   UnitTestListTag.cxx
   UnitTestMath.cxx

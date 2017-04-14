@@ -25,6 +25,8 @@
 namespace vtkm {
 namespace cont {
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 /// This class is thrown when a VTKm function or method encounters an invalid
 /// value that inhibits progress.
 ///
@@ -34,6 +36,8 @@ public:
   ErrorBadValue(const std::string &message)
     : Error(message) { }
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 } // namespace vtkm::cont

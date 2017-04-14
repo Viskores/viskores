@@ -25,12 +25,16 @@
 namespace vtkm {
 namespace io {
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 class VTKM_ALWAYS_EXPORT ErrorIO : public vtkm::cont::Error
 {
 public:
   ErrorIO() { }
   ErrorIO(const std::string message) : Error(message) { }
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 } // namespace vtkm::io
