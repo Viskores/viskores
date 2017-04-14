@@ -794,12 +794,12 @@ this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
                     0,                0,                0 );
       TopDownDispatcherType dispatcher( worklet );
       timer.Reset();
-std::cerr << "ext1 size: " << ext1.GetNumerOfValues() << std::endl;
-std::cerr << "ext2 size: " << ext1.GetNumerOfValues() << std::endl;
-std::cerr << "ext3 size: " << ext1.GetNumerOfValues() << std::endl;
-std::cerr << "ext4 size: " << ext1.GetNumerOfValues() << std::endl;
-std::cerr << "afterZ size: " << afterZ.GetNumerOfValues() << std::endl;
-std::cerr << "afterY size: " << afterY.GetNumerOfValues() << std::endl;
+std::cerr << "ext1 size: " << ext1.GetNumberOfValues() << std::endl;
+std::cerr << "ext2 size: " << ext1.GetNumberOfValues() << std::endl;
+std::cerr << "ext3 size: " << ext1.GetNumberOfValues() << std::endl;
+std::cerr << "ext4 size: " << ext1.GetNumberOfValues() << std::endl;
+std::cerr << "afterZ size: " << afterZ.GetNumberOfValues() << std::endl;
+std::cerr << "afterY size: " << afterY.GetNumberOfValues() << std::endl;
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterZ, afterY );
       computationTime += timer.GetElapsedTime();
     } 
