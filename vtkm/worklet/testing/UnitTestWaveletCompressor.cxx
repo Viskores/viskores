@@ -185,25 +185,39 @@ void FillArray3D( ArrayType& array, vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ 
     //array.GetPortalControl().Set(i, i);
 }
 
+template< typename ArrayType >
+void ReadArray( ArrayType& array, vtkm::Id len )
+{
+  typedef typename ArrayType::ValueType  T;
+  T* buf = new T[ len ];
+  FILE *fp = fopen( "/Users/shaomeng/Git/vapor_addon/bin/gaussian3d.float", "r");
+  size_t rc = fread(buf, sizeof(T), len, fp);
+  fclose(fp);
+  assert (rc == len);
 
+  for( vtkm::Id i = 0; i < len; i++ )
+    array.GetPortalControl().Set(i, buf[i] );
+  delete[] buf;
+}
 
 void TestDecomposeReconstruct3D()
 {
-  std::cout << "Testing 3D wavelet compressor on a 10x10x10 cube: " << std::endl;
-  vtkm::Id sigX   = 10;
-  vtkm::Id sigY   = 10;
-  vtkm::Id sigZ   = 10;
+  std::cout << "Testing 3D wavelet compressor on a 11x11x11 cube: " << std::endl;
+  vtkm::Id sigX   = 11;
+  vtkm::Id sigY   = 11;
+  vtkm::Id sigZ   = 11;
   vtkm::Id sigLen = sigX * sigY * sigZ;
 
   // make input data array handle
   vtkm::cont::ArrayHandle<vtkm::Float32> inputArray;
   inputArray.PrepareForOutput( sigLen, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  FillArray3D( inputArray, sigX, sigY, sigZ );
+  //FillArray3D( inputArray, sigX, sigY, sigZ );
+  ReadArray( inputArray, sigX * sigY * sigZ );
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::BIOR2_2;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::BIOR3_3;
   //std::cout << "Wavelet kernel         = CDF 9/7" << std::endl;
   vtkm::worklet::WaveletCompressor compressor( wname );
 

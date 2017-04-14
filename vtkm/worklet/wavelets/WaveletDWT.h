@@ -58,7 +58,7 @@ public:
     {
       printf("y = %lld:    ", y );
       for( vtkm::Id z = 0; z < dimZ; z++ )
-        printf("%.8f ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
+        printf("%.6f ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
       printf("\n");
     }
     printf("\n");
@@ -74,7 +74,7 @@ public:
     {
       printf("z = %lld:    ", z );
       for( vtkm::Id x = 0; x < dimX; x++ )
-        printf("%f, ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
+        printf("%6f ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
       printf("\n");
     }
     printf("\n");
@@ -90,10 +90,21 @@ public:
     {
       printf("y = %lld:    ", y );
       for( vtkm::Id x = 0; x < dimX; x++ )
-        printf("%.8f, ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
+        printf("%.6f ", arr.GetPortalConstControl().Get( z * dimX * dimY + y * dimX + x ));
       printf("\n");
     }
     printf("\n");
+  }
+  template< typename ArrayType >
+  void dumpVolume( const ArrayType &arr,  vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ,
+                   const char* filename )
+  {
+    float* buf = new float[ dimX * dimY * dimZ ];
+    for( vtkm::Id i = 0; i < dimX * dimY * dimZ; i++ )
+      buf[i] = (float)arr.GetPortalConstControl().Get(i);
+    FILE* f = fopen( filename, "w" );
+    fwrite( buf, sizeof(float), dimX*dimY*dimZ, f );
+    fclose( f );
   }
 
 
@@ -567,8 +578,6 @@ public:
     vtkm::cont::Timer<DeviceTag> timer;
     vtkm::Float64 computationTime = 0.0;
 
-this->printPlaneZ( sigIn, sigDimX, sigDimY, sigDimZ, 9, "" );
-
     // First transform in X direction
     ArrayType           afterX;
     afterX.PrepareForOutput( sigPretendDimX * sigPretendDimY * sigPretendDimZ, DeviceTag() );
@@ -601,6 +610,7 @@ this->printPlaneZ( sigIn, sigDimX, sigDimY, sigDimZ, 9, "" );
       dispatcher.Invoke( leftExt, sigIn, rightExt, afterX );
       computationTime += timer.GetElapsedTime();
     }
+this->dumpVolume( afterX, sigDimX, sigDimY, sigDimZ, "DWTafterX" );
 
 		if( discardSigIn )
 			sigIn.ReleaseResources();
@@ -637,6 +647,7 @@ this->printPlaneZ( sigIn, sigDimX, sigDimY, sigDimZ, 9, "" );
       dispatcher.Invoke( topExt, afterX, bottomExt, afterY );
       computationTime += timer.GetElapsedTime();
     }
+this->dumpVolume( afterY, sigDimX, sigDimY, sigDimZ, "DWTafterY" );
 
     // Then do transform in Z direction
     afterX.ReleaseResources();  // release afterX
@@ -670,6 +681,7 @@ this->printPlaneZ( sigIn, sigDimX, sigDimY, sigDimZ, 9, "" );
       dispatcher.Invoke( frontExt, afterY, backExt, coeffOut );
       computationTime += timer.GetElapsedTime();
     }
+this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
 
     return computationTime;
   }
@@ -743,6 +755,7 @@ this->printPlaneZ( sigIn, sigDimX, sigDimY, sigDimZ, 9, "" );
       dispatcher.Invoke( ext1, ext2, ext3, ext4, coeffIn, afterZ );
       computationTime += timer.GetElapsedTime();
     }
+this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
 
 		if( discardCoeffIn )
 			coeffIn.ReleaseResources();
@@ -784,6 +797,7 @@ this->printPlaneZ( sigIn, sigDimX, sigDimY, sigDimZ, 9, "" );
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterZ, afterY );
       computationTime += timer.GetElapsedTime();
     } 
+this->dumpVolume( afterY, inDimX, inDimY, inDimZ, "IDWTafterY" );
 
     // Lastly inverse transform in X direction
     afterZ.ReleaseResources();
@@ -822,6 +836,7 @@ this->printPlaneZ( sigIn, sigDimX, sigDimY, sigDimZ, 9, "" );
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterY, sigOut );
 			computationTime += timer.GetElapsedTime();
     }
+this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
 
     return computationTime;
   }
