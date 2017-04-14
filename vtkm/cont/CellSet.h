@@ -20,60 +20,51 @@
 #ifndef vtk_m_cont_CellSet_h
 #define vtk_m_cont_CellSet_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/StaticAssert.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/LogicalStructure.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 namespace vtkm {
 namespace cont {
 
-class CellSet
+class VTKM_CONT_EXPORT CellSet
 {
 public:
   VTKM_CONT
   CellSet(const std::string &name)
-    : Name(name), LogicalStructure()
+    : Name(name)
   {
   }
 
   VTKM_CONT
   CellSet(const vtkm::cont::CellSet &src)
-    : Name(src.Name),
-      LogicalStructure(src.LogicalStructure)
+    : Name(src.Name)
   {  }
 
   VTKM_CONT
   CellSet &operator=(const vtkm::cont::CellSet &src)
   {
     this->Name = src.Name;
-    this->LogicalStructure = src.LogicalStructure;
     return *this;
   }
 
-  virtual ~CellSet()
-  {
-  }
+  virtual ~CellSet();
 
-  virtual std::string GetName() const
+  std::string GetName() const
   {
     return this->Name;
   }
 
   virtual vtkm::Id GetNumberOfCells() const = 0;
 
-  virtual vtkm::Id GetNumberOfFaces() const
-  {
-    return 0;
-  }
+  virtual vtkm::Id GetNumberOfFaces() const = 0;
 
-  virtual vtkm::Id GetNumberOfEdges() const
-  {
-    return 0;
-  }
+  virtual vtkm::Id GetNumberOfEdges() const = 0;
 
   virtual vtkm::Id GetNumberOfPoints() const = 0;
 
@@ -81,7 +72,6 @@ public:
 
 protected:
     std::string Name;
-    vtkm::cont::LogicalStructure LogicalStructure;
 };
 
 namespace internal {

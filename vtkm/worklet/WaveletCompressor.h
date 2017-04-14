@@ -46,7 +46,7 @@ public:
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( sigInLen ) )
     {
-      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
+      throw vtkm::cont::ErrorBadValue("Number of levels of transform is not supported! ");
     }
     if( nLevels == 0 )  //  0 levels means no transform
     {
@@ -336,7 +336,7 @@ public:
     if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( inX ) ||
                        nLevels > WaveletBase::GetWaveletMaxLevel( inY ) )
     {
-      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
+      throw vtkm::cont::ErrorBadValue("Number of levels of transform is not supported! ");
     }
     if( nLevels == 0 )  //  0 levels means no transform
     {
@@ -408,7 +408,7 @@ public:
     if( nLevels < 0 || nLevels > WaveletBase::GetWaveletMaxLevel( inX ) ||
                        nLevels > WaveletBase::GetWaveletMaxLevel( inY ) )
     {
-      throw vtkm::cont::ErrorControlBadValue("Number of levels of transform is not supported! ");
+      throw vtkm::cont::ErrorBadValue("Number of levels of transform is not supported! ");
     }
     typedef typename OutArrayType::ValueType          OutValueType;
     typedef vtkm::cont::ArrayHandle<OutValueType>     OutBasicArray;

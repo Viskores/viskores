@@ -25,6 +25,8 @@
 #include <vtkm/internal/IndexTag.h>
 #include <vtkm/internal/FunctionInterfaceDetailPre.h>
 
+#include <utility>
+
 namespace vtkm {
 namespace internal {
 
@@ -42,30 +44,34 @@ struct IdentityFunctor {
 
 // These functions exist to help copy components of a FunctionInterface.
 
-template<vtkm::IdComponent NumToCopy, vtkm::IdComponent ParameterIndex = 1>
-struct FunctionInterfaceCopyParameters {
+template<vtkm::IdComponent NumToMove, vtkm::IdComponent ParameterIndex = 1>
+struct FunctionInterfaceMoveParameters {
   VTKM_SUPPRESS_EXEC_WARNINGS
   template<typename DestSignature, typename SrcSignature>
   static
   VTKM_EXEC_CONT
-  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
+  void Move(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
   {
     ParameterContainerAccess<ParameterIndex> pca;
-    pca.Set( dest, pca.Get(src) );
-   FunctionInterfaceCopyParameters<NumToCopy-1,ParameterIndex+1>::Copy(dest, src);
+
+    // using forwarding_type = typename AtType<ParameterIndex, SrcSignature>::type;
+    pca.Move( dest, src );
+              // std::forward<forwarding_type>(pca.Get(src)) );
+             // pca.Get(src));
+   FunctionInterfaceMoveParameters<NumToMove-1,ParameterIndex+1>::Move(dest, src);
   }
 };
 
 template<vtkm::IdComponent ParameterIndex>
-struct FunctionInterfaceCopyParameters<0, ParameterIndex> {
+struct FunctionInterfaceMoveParameters<0, ParameterIndex> {
   template<typename DestSignature, typename SrcSignature>
   static
   VTKM_EXEC_CONT
-  void Copy(vtkm::internal::detail::ParameterContainer<DestSignature> &,
+  void Move(vtkm::internal::detail::ParameterContainer<DestSignature> &,
             const vtkm::internal::detail::ParameterContainer<SrcSignature> &)
   {
-    // Nothing left to copy.
+    // Nothing left to move.
   }
 };
 
@@ -539,13 +545,13 @@ public:
     typedef typename detail::ReplaceType<ComponentSig,ParameterIndex, NewType>::type ReplaceSigType;
     FunctionInterface< ReplaceSigType >  replacedFuncInterface;
 
-    detail::FunctionInterfaceCopyParameters<ParameterIndex-1>::
-        Copy(replacedFuncInterface.Parameters, this->Parameters);
+    detail::FunctionInterfaceMoveParameters<ParameterIndex-1>::
+        Move(replacedFuncInterface.Parameters, this->Parameters);
 
     replacedFuncInterface.template SetParameter<ParameterIndex>(newParameter);
 
-    detail::FunctionInterfaceCopyParameters<ARITY-ParameterIndex,ParameterIndex+1>::
-        Copy(replacedFuncInterface.Parameters, this->Parameters);
+    detail::FunctionInterfaceMoveParameters<ARITY-ParameterIndex,ParameterIndex+1>::
+        Move(replacedFuncInterface.Parameters, this->Parameters);
     return replacedFuncInterface;
   }
 
@@ -848,6 +854,8 @@ private:
   vtkm::internal::FunctionInterface<NewFunction> &NewInterface;
   const TransformFunctor &Transform;
   const FinishFunctor &Finish;
+
+  void operator=(const FunctionInterfaceDynamicTransformContContinue<OriginalFunction,NewFunction,TransformFunctor,FinishFunctor> &) = delete;
 };
 
 } // namespace detail

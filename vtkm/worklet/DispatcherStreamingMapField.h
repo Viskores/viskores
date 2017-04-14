@@ -265,12 +265,17 @@ private:
     const ParameterInterfaceType &parameters = invocation.Parameters;
 
     typedef vtkm::worklet::internal::detail::DispatcherBaseTransportFunctor<
-        typename Invocation::ControlInterface, DeviceAdapter> TransportFunctorType;
+        typename Invocation::ControlInterface,
+        typename Invocation::InputDomainType,
+        DeviceAdapter> TransportFunctorType;
     typedef typename ParameterInterfaceType::template StaticTransformType<
         TransportFunctorType>::type ExecObjectParameters;
 
     ExecObjectParameters execObjectParameters =
-        parameters.StaticTransformCont(TransportFunctorType(outputRange));
+        parameters.StaticTransformCont(TransportFunctorType(
+                                         invocation.GetInputDomain(),
+                                         inputRange,
+                                         outputRange));
 
     // Get the arrays used for scattering input to output.
     typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =

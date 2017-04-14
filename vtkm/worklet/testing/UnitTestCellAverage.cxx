@@ -36,8 +36,8 @@ void TestCellAverageUniform3D()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar"),
-                    dataSet.GetCellSet(),
+  dispatcher.Invoke(dataSet.GetCellSet(),
+                    dataSet.GetField("pointvar"),
                     result);
 
   vtkm::Float32 expected[4] = { 60.1875f, 70.2125f, 120.3375f, 130.3625f };
@@ -59,8 +59,8 @@ void TestCellAverageUniform2D()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar"),
-                    dataSet.GetCellSet(),
+  dispatcher.Invoke(dataSet.GetCellSet(),
+                    dataSet.GetField("pointvar"),
                     result);
 
   vtkm::Float32 expected[2] = { 30.1f, 40.1f };
@@ -83,8 +83,8 @@ void TestCellAverageExplicit()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar"),
-                    dataSet.GetCellSet(),
+  dispatcher.Invoke(dataSet.GetCellSet(),
+                    dataSet.GetField("pointvar"),
                     result);
 
   vtkm::Float32 expected[2] = { 20.1333f, 35.2f };

@@ -20,6 +20,9 @@
 #ifndef vtk_m_rendering_Mapper_h
 #define vtk_m_rendering_Mapper_h
 
+#include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/Field.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>
@@ -49,6 +52,7 @@ public:
   virtual void StartScene() = 0;
   virtual void EndScene() = 0;
   virtual void SetCanvas(vtkm::rendering::Canvas *canvas) = 0;
+  virtual vtkm::rendering::Canvas* GetCanvas() const = 0;
 
   virtual vtkm::rendering::Mapper *NewCopy() const = 0;
 

@@ -29,6 +29,7 @@ set(unit_tests
   UnitTestTypeCheckArray.cxx
   UnitTestTypeCheckCellSet.cxx
   UnitTestTypeCheckExecObject.cxx
+  UnitTestTypeCheckKeys.cxx
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})

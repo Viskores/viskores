@@ -168,6 +168,48 @@ struct MapColorAndVerticesInvokeFunctor
 
 template<typename PtType>
 VTKM_CONT
+void RenderStructuredLineSegments(vtkm::Id numVerts,
+                                  const PtType &verts,
+                                  const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar)
+{
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glLineWidth(1);
+  glColor3f(1.0, 1.0, 1.0);
+
+  glBegin(GL_LINE_STRIP);
+  for (int i = 0; i < numVerts; i++)
+  {
+    vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
+    vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    glVertex3f(pt[0], s, 0.0f);
+  }
+  glEnd();
+}
+
+template<typename PtType>
+VTKM_CONT
+void RenderExplicitLineSegments(vtkm::Id numVerts,
+                                const PtType &verts,
+                                const vtkm::cont::ArrayHandle<vtkm::Float32> &scalar)
+{
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+  glLineWidth(1);
+  glColor3f(1.0, 1.0, 1.0);
+
+  glBegin(GL_LINE_STRIP);
+  for (int i = 0; i < numVerts; i++)
+  {
+    vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
+    vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    glVertex3f(pt[0], s, 0.0f);
+  }
+  glEnd();
+}
+
+template<typename PtType>
+VTKM_CONT
 void RenderTriangles(MapperGL &mapper,
                      vtkm::Id numTri, const PtType &verts,
                      const vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > &indices,
@@ -178,9 +220,16 @@ void RenderTriangles(MapperGL &mapper,
 {
   if (!mapper.loaded)
   {
+    // The glewExperimental global switch can be  turned on by setting it to
+    // GL_TRUE before calling glewInit(), which  ensures that all extensions
+    // with valid entry points will be exposed. This is needed as the glut
+    // context that is being created is not a valid 'core' context but
+    // instead a 'compatibility' context
+    //
+    glewExperimental = GL_TRUE;
     GLenum GlewInitResult = glewInit();
     if (GlewInitResult)
-        std::cout << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
+        std::cerr << "ERROR: " << glewGetErrorString(GlewInitResult) << std::endl;
     mapper.loaded = true;
 
     vtkm::Float32 sMin = vtkm::Float32(scalarRange.Min);
@@ -206,7 +255,7 @@ void RenderTriangles(MapperGL &mapper,
 
     vtkm::Id floatSz = static_cast<vtkm::Id>(sizeof(vtkm::Float32));
     GLsizeiptr sz = static_cast<GLsizeiptr>(vtx_cnt*floatSz);
-    
+
     GLuint points_vbo = 0;
     glGenBuffers(1, &points_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
@@ -216,7 +265,7 @@ void RenderTriangles(MapperGL &mapper,
     glGenBuffers(1, &colours_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
     glBufferData(GL_ARRAY_BUFFER, sz, c_ptr, GL_STATIC_DRAW);
-    
+
     mapper.vao = 0;
     glGenVertexArrays(1, &mapper.vao);
     glBindVertexArray(mapper.vao);
@@ -224,10 +273,10 @@ void RenderTriangles(MapperGL &mapper,
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-    
+
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
-    
+
     const char *vertex_shader =
         "#version 120\n"
         "attribute vec3 vertex_position;"
@@ -235,7 +284,7 @@ void RenderTriangles(MapperGL &mapper,
         "varying vec3 ourColor;"
         "uniform mat4 mv_matrix;"
         "uniform mat4 p_matrix;"
-        
+
         "void main() {"
         "  gl_Position = p_matrix*mv_matrix * vec4(vertex_position, 1.0);"
         "  ourColor = vertex_color;"
@@ -246,7 +295,7 @@ void RenderTriangles(MapperGL &mapper,
         "void main() {"
         "  gl_FragColor = vec4 (ourColor, 1.0);"
         "}";
-    
+
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vs, 1, &vertex_shader, NULL);
     glCompileShader(vs);
@@ -268,7 +317,7 @@ void RenderTriangles(MapperGL &mapper,
         msg = std::string(strInfoLog);
         delete [] strInfoLog;
       }
-      throw vtkm::cont::ErrorControlBadValue("Shader compile error:"+msg);
+      throw vtkm::cont::ErrorBadValue("Shader compile error:"+msg);
     }
 
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
@@ -280,7 +329,7 @@ void RenderTriangles(MapperGL &mapper,
       GLint maxLength = 0;
       glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &maxLength);
 
-      std::string msg;      
+      std::string msg;
       if (maxLength <= 0)
           msg = "No error message";
       else
@@ -288,10 +337,10 @@ void RenderTriangles(MapperGL &mapper,
         // The maxLength includes the NULL character
         GLchar *strInfoLog = new GLchar[maxLength + 1];
         glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
-        msg = std::string(strInfoLog);          
+        msg = std::string(strInfoLog);
         delete [] strInfoLog;
       }
-      throw vtkm::cont::ErrorControlBadValue("Shader compile error:"+msg);
+      throw vtkm::cont::ErrorBadValue("Shader compile error:"+msg);
     }
 
     mapper.shader_programme = glCreateProgram();
@@ -301,7 +350,7 @@ void RenderTriangles(MapperGL &mapper,
       glAttachShader(mapper.shader_programme, vs);
       glBindAttribLocation (mapper.shader_programme, 0, "vertex_position");
       glBindAttribLocation (mapper.shader_programme, 1, "vertex_color");
-      
+
       glLinkProgram (mapper.shader_programme);
       GLint linkStatus;
       glGetProgramiv(mapper.shader_programme, GL_LINK_STATUS, &linkStatus);
@@ -311,15 +360,17 @@ void RenderTriangles(MapperGL &mapper,
         GLsizei len;
         glGetProgramInfoLog(mapper.shader_programme, 2048, &len, log);
         std::string msg = std::string("Shader program link failed: ")+std::string(log);
-        throw vtkm::cont::ErrorControlBadValue(msg);
+        throw vtkm::cont::ErrorBadValue(msg);
       }
     }
   }
 
   if (mapper.shader_programme > 0)
   {
+    vtkm::Id width = mapper.GetCanvas()->GetWidth();
+    vtkm::Id height = mapper.GetCanvas()->GetWidth();
     vtkm::Matrix<vtkm::Float32,4,4> viewM = camera.CreateViewMatrix();
-    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(512,512);
+    vtkm::Matrix<vtkm::Float32,4,4> projM = camera.CreateProjectionMatrix(width,height);
 
     MatrixHelpers::CreateOGLMatrix(viewM, mapper.mvMat);
     MatrixHelpers::CreateOGLMatrix(projM, mapper.pMat);
@@ -334,14 +385,16 @@ void RenderTriangles(MapperGL &mapper,
     glUseProgram(0);
   }
 }
-    
+
 } // anonymous namespace
 
-MapperGL::MapperGL()
-{ this->loaded = false; }
+MapperGL::MapperGL() : Canvas(NULL), loaded(false)
+{
+}
 
 MapperGL::~MapperGL()
-{  }
+{
+}
 
 void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::cont::CoordinateSystem &coords,
@@ -350,41 +403,60 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet &cellset,
                            const vtkm::rendering::Camera &camera,
                            const vtkm::Range &scalarRange)
 {
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
-  vtkm::Id numTri;
-  vtkm::rendering::internal::RunTriangulator(cellset, indices, numTri);
-
   vtkm::cont::ArrayHandle<vtkm::Float32> sf;
   sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32> >();
-
   vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
-  vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > eVerts;
+  vtkm::Id numVerts = coords.GetData().GetNumberOfValues();
 
-  if(dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
+  //Handle 1D cases.
+  if (cellset.IsSameType(vtkm::cont::CellSetStructured<1>()))
   {
-    uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-    RenderTriangles(*this, numTri, uVerts, indices, sf, colorTable, scalarRange, camera);
+    vtkm::cont::ArrayHandleUniformPointCoordinates verts;
+    verts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+    RenderStructuredLineSegments(numVerts, verts, sf);
   }
-  else if(dcoords.IsSameType(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> >()))
+  else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()) &&
+           cellset.Cast<vtkm::cont::CellSetSingleType<> >().GetCellShapeAsId() ==
+                                          vtkm::CELL_SHAPE_LINE)
   {
-    eVerts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
-    RenderTriangles(*this, numTri, eVerts, indices, sf, colorTable, scalarRange, camera);
+    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > verts;
+    verts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
+    RenderExplicitLineSegments(numVerts, verts, sf);
   }
-  else if(dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
-                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                             vtkm::cont::ArrayHandle<vtkm::FloatDefault> >()))
+  else
   {
-    vtkm::cont::ArrayHandleCartesianProduct<
+    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> > indices;
+    vtkm::Id numTri;
+    vtkm::rendering::internal::RunTriangulator(cellset, indices, numTri);
+
+    vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
+    vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > eVerts;
+
+    if(dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
+    {
+      uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      RenderTriangles(*this, numTri, uVerts, indices, sf, colorTable, scalarRange, camera);
+    }
+    else if(dcoords.IsSameType(vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> >()))
+    {
+      eVerts = dcoords.Cast<vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > > ();
+      RenderTriangles(*this, numTri, eVerts, indices, sf, colorTable, scalarRange, camera);
+    }
+    else if(dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
+                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                               vtkm::cont::ArrayHandle<vtkm::FloatDefault> >()))
+    {
+      vtkm::cont::ArrayHandleCartesianProduct<
         vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
         vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
         vtkm::cont::ArrayHandle<vtkm::FloatDefault> > rVerts;
-    rVerts = dcoords.Cast<vtkm::cont::ArrayHandleCartesianProduct<
+      rVerts = dcoords.Cast<vtkm::cont::ArrayHandleCartesianProduct<
                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                               vtkm::cont::ArrayHandle<vtkm::FloatDefault> > > ();
-    RenderTriangles(*this, numTri, rVerts, indices, sf, colorTable, scalarRange, camera);
+      RenderTriangles(*this, numTri, rVerts, indices, sf, colorTable, scalarRange, camera);
+    }
   }
   glFinish();
   glFlush();
@@ -400,9 +472,20 @@ void MapperGL::EndScene()
   // Nothing needs to be done.
 }
 
-void MapperGL::SetCanvas(vtkm::rendering::Canvas *)
+void MapperGL::SetCanvas(vtkm::rendering::Canvas *c)
 {
-  // Nothing needs to be done.
+  if (c != NULL)
+  {
+    this->Canvas = dynamic_cast<vtkm::rendering::CanvasGL*>(c);
+    if (this->Canvas == NULL)
+      throw vtkm::cont::ErrorBadValue("Bad canvas type for MapperGL. Must be CanvasGL");
+  }
+}
+
+vtkm::rendering::Canvas *
+MapperGL::GetCanvas() const
+{
+  return this->Canvas;
 }
 
 vtkm::rendering::Mapper *MapperGL::NewCopy() const

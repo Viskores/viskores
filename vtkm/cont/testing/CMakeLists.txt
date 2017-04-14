@@ -36,6 +36,7 @@ set(unit_tests
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
+  UnitTestArrayHandleDiscard.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandlePermutation.cxx

@@ -26,10 +26,10 @@
 #include <vtkm/TopologyElementTag.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
-#include <vtkm/cont/arg/TransportTagArrayIn.h>
 #include <vtkm/cont/arg/TransportTagArrayInOut.h>
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TransportTagCellSetIn.h>
+#include <vtkm/cont/arg/TransportTagTopologyFieldIn.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
 
@@ -46,9 +46,24 @@
 namespace vtkm {
 namespace worklet {
 
-class WorkletMapTopologyBase : public vtkm::worklet::internal::WorkletBase
+namespace detail {
+
+struct WorkletMapTopologyBase : vtkm::worklet::internal::WorkletBase
+{  };
+
+} // namespace detail
+
+/// Base class for worklets that do a simple mapping of field arrays. All
+/// inputs and outputs are on the same domain. That is, all the arrays are the
+/// same size.
+///
+template<typename FromTopology, typename ToTopology>
+class WorkletMapTopology : public detail::WorkletMapTopologyBase
 {
 public:
+  using FromTopologyType = FromTopology;
+  using ToTopologyType = ToTopology;
+
   /// \brief A control signature tag for input fields.
   ///
   /// This tag takes a template argument that is a type list tag that limits
@@ -56,9 +71,9 @@ public:
   ///
   template<typename TypeList = AllTypes>
   struct FieldInTo : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<ToTopologyType>;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
 
   /// \brief A control signature tag for input connectivity.
@@ -68,9 +83,9 @@ public:
   ///
   template<typename TypeList = AllTypes>
   struct FieldInFrom : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayTopologyMapIn FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagTopologyFieldIn<FromTopologyType>;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayTopologyMapIn;
   };
 
   /// \brief A control signature tag for output fields.
@@ -80,9 +95,9 @@ public:
   ///
   template<typename TypeList = AllTypes>
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
 
   /// \brief A control signature tag for input-output (in-place) fields.
@@ -92,9 +107,17 @@ public:
   ///
   template<typename TypeList = AllTypes>
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagArrayInOut TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayDirectInOut FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
+  };
+
+  /// \brief A control signature tag for input connectivity.
+  ///
+  struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagCellSet;
+    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<FromTopologyType,ToTopologyType>;
+    using FetchTag = vtkm::exec::arg::FetchTagCellSetIn;
   };
 
   /// \brief An execution signature tag for getting the cell shape.
@@ -143,102 +166,53 @@ public:
   }
 };
 
-/// Base class for worklets that do a simple mapping of field arrays. All
-/// inputs and outputs are on the same domain. That is, all the arrays are the
-/// same size.
-///
-/// TODO: I also suggest having convenience subclasses for common (supported?)
-/// link directions.
-///
-template<typename FromTopology, typename ToTopology>
-class WorkletMapTopology : public WorkletMapTopologyBase
-{
-public:
-  typedef FromTopology FromTopologyType;
-  typedef ToTopology ToTopologyType;
-
-  /// \brief A control signature tag for input connectivity.
-  ///
-  struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagCellSetIn<FromTopologyType,ToTopologyType> TransportTag;
-    typedef vtkm::exec::arg::FetchTagCellSetIn FetchTag;
-  };
-
-};
-
 /// Base class for worklets that map from Points to Cells.
 ///
-class WorkletMapPointToCell: public WorkletMapTopologyBase
+class WorkletMapPointToCell
+    : public WorkletMapTopology<
+        vtkm::TopologyElementTagPoint,vtkm::TopologyElementTagCell>
 {
 public:
-  typedef vtkm::TopologyElementTagPoint FromTopologyType;
-  typedef vtkm::TopologyElementTagCell ToTopologyType;
-
-  /// \brief A control signature tag for input connectivity.
-  ///
-  struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagCellSetIn<FromTopologyType,ToTopologyType> TransportTag;
-    typedef vtkm::exec::arg::FetchTagCellSetIn FetchTag;
-  };
-
-  //While we would love to use templates, that feature is not possible
-  //until c++11 ( alias templates), so we have to replicate that feature
-  //by using inheritance.
 
   template<typename TypeList = AllTypes >
-  struct FieldInPoint : FieldInFrom<TypeList> { };
+  using FieldInPoint = FieldInFrom<TypeList>;
 
   template<typename TypeList = AllTypes >
-  struct FieldInCell : FieldInTo<TypeList> { };
+  using FieldInCell = FieldInTo<TypeList>;
 
   template<typename TypeList = AllTypes >
-  struct FieldOutCell : FieldOut<TypeList> { };
+  using FieldOutCell = FieldOut<TypeList>;
 
   template<typename TypeList = AllTypes >
-  struct FieldInOutCell : FieldInOut<TypeList> { };
+  using FieldInOutCell = FieldInOut<TypeList>;
 
-  struct PointCount : FromCount {  };
+  using PointCount = FromCount;
 
-  struct PointIndices : FromIndices { };
+  using PointIndices = FromIndices;
 };
 
 /// Base class for worklets that map from Cells to Points.
 ///
-class WorkletMapCellToPoint: public WorkletMapTopologyBase
+class WorkletMapCellToPoint
+    : public WorkletMapTopology<
+        vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint>
 {
 public:
-  typedef vtkm::TopologyElementTagCell FromTopologyType;
-  typedef vtkm::TopologyElementTagPoint ToTopologyType;
-
-  /// \brief A control signature tag for input connectivity.
-  ///
-  struct CellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
-    typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagCellSetIn<FromTopologyType,ToTopologyType> TransportTag;
-    typedef vtkm::exec::arg::FetchTagCellSetIn FetchTag;
-  };
-
-  //While we would love to use templates, that feature is not possible
-  //until c++11 ( alias templates), so we have to replicate that feature
-  //by using inheritance.
+  template<typename TypeList = AllTypes >
+  using FieldInCell = FieldInFrom<TypeList>;
 
   template<typename TypeList = AllTypes >
-  struct FieldInCell : FieldInFrom<TypeList> { };
+  using FieldInPoint = FieldInTo<TypeList>;
 
   template<typename TypeList = AllTypes >
-  struct FieldInPoint : FieldInTo<TypeList> { };
+  using FieldOutPoint = FieldOut<TypeList>;
 
   template<typename TypeList = AllTypes >
-  struct FieldOutPoint : FieldOut<TypeList> { };
+  using FieldInOutPoint = FieldInOut<TypeList>;
 
-  template<typename TypeList = AllTypes >
-  struct FieldInOutPoint : FieldInOut<TypeList> { };
+  using CellCount = FromCount;
 
-  struct CellCount : FromCount {  };
-
-  struct CellIndices : FromIndices { };
+  using CellIndices = FromIndices;
 };
 
 }

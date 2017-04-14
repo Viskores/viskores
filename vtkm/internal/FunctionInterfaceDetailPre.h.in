@@ -195,6 +195,14 @@ struct ParameterContainerAccess<$(param_index)> {
            const typename AtType<$(param_index), FunctionSignature>::type &value) {
     parameters.Parameter$(param_index) = value;
   }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT
+  void Move(ParameterContainer<FunctionSignatureDest> &dest,
+            const ParameterContainer<FunctionSignatureSrc> &src) {
+    dest.Parameter$(param_index) = std::move(src.Parameter$(param_index));
+  }
 };
 
 $endfor\

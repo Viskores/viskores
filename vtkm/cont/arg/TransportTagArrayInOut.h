@@ -48,13 +48,17 @@ struct Transport<vtkm::cont::arg::TransportTagArrayInOut, ContObjectType, Device
   typedef typename ContObjectType::template ExecutionTypes<Device>::Portal
       ExecObjectType;
 
+  template<typename InputDomainType>
   VTKM_CONT
-  ExecObjectType operator()(ContObjectType object, vtkm::Id size) const
+  ExecObjectType operator()(ContObjectType object,
+                            const InputDomainType &vtkmNotUsed(inputDomain),
+                            vtkm::Id vtkmNotUsed(inputRange),
+                            vtkm::Id outputRange) const
   {
-    if (object.GetNumberOfValues() != size)
+    if (object.GetNumberOfValues() != outputRange)
     {
-      throw vtkm::cont::ErrorControlBadValue(
-            "Input array to worklet invocation the wrong size.");
+      throw vtkm::cont::ErrorBadValue(
+            "Input/output array to worklet invocation the wrong size.");
     }
 
     return object.PrepareForInPlace(Device());

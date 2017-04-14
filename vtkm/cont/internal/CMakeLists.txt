@@ -27,12 +27,12 @@ set(headers
   ArrayTransfer.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
+  DeviceAdapterDefaultSelection.h
   DeviceAdapterError.h
   DeviceAdapterTag.h
   DynamicTransform.h
   FunctorsGeneral.h
   IteratorFromArrayPortal.h
-  RuntimeDeviceTracker.h
   SimplePolymorphicContainer.h
   StorageError.h
   )

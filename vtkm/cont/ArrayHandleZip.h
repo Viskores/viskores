@@ -101,7 +101,7 @@ namespace cont {
 namespace internal {
 
 template<typename FirstHandleType, typename SecondHandleType>
-struct StorageTagZip {  };
+struct VTKM_ALWAYS_EXPORT StorageTagZip {  };
 
 /// This helper struct defines the value type for a zip container containing
 /// the given two array handles.
@@ -253,9 +253,8 @@ public:
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData)) {
-    const vtkm::Id numberOfValues = this->GetNumberOfValues();
-    return PortalExecution(this->FirstArray.PrepareForOutput(numberOfValues, Device()),
-                           this->SecondArray.PrepareForOutput(numberOfValues, Device()));
+    return PortalExecution(this->FirstArray.PrepareForInPlace(Device()),
+                           this->SecondArray.PrepareForInPlace(Device()));
   }
 
   VTKM_CONT

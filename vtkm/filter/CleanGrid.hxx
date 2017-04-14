@@ -18,8 +18,6 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/filter/CleanGrid.h>
-
 #include <vtkm/worklet/CellDeepCopy.h>
 #include <vtkm/worklet/RemoveUnusedPoints.h>
 
@@ -57,16 +55,16 @@ struct CleanCompactPointArrayFunctor
 
 } // namespace detail
 
-VTKM_CONT
+inline VTKM_CONT
 CleanGrid::CleanGrid()
   : CompactPointFields(true)
 {  }
 
 template<typename Policy, typename Device>
-VTKM_CONT
+inline VTKM_CONT
 vtkm::filter::ResultDataSet
 CleanGrid::DoExecute(const vtkm::cont::DataSet &inData,
-                     vtkm::filter::PolicyBase<Policy>,
+                     vtkm::filter::PolicyBase<Policy> policy,
                      Device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
@@ -85,7 +83,7 @@ CleanGrid::DoExecute(const vtkm::cont::DataSet &inData,
         inData.GetCellSet(static_cast<vtkm::IdComponent>(cellSetIndex));
 
     vtkm::worklet::CellDeepCopy::Run(
-          vtkm::filter::ApplyPolicy(inCellSet, Policy()),
+          vtkm::filter::ApplyPolicy(inCellSet, policy),
           outputCellSets[cellSetIndex],
           Device());
   }
@@ -128,11 +126,18 @@ CleanGrid::DoExecute(const vtkm::cont::DataSet &inData,
     vtkm::cont::CoordinateSystem coordSystem =
         inData.GetCoordinateSystem(coordSystemIndex);
 
-    vtkm::filter::ApplyPolicy(coordSystem,
-                              Policy(),
-                              vtkm::filter::FilterTraits<CleanGrid>())
-        .CastAndCall(detail::CleanCompactPointArrayFunctor<Device>(
-                       outData,coordSystem.GetName(),this));
+    if (this->GetCompactPointFields())
+    {
+      vtkm::filter::ApplyPolicy(coordSystem,
+                                policy,
+                                vtkm::filter::FilterTraits<CleanGrid>())
+          .CastAndCall(detail::CleanCompactPointArrayFunctor<Device>(
+                         outData,coordSystem.GetName(),this));
+    }
+    else
+    {
+      outData.AddCoordinateSystem(coordSystem);
+    }
   }
 
   return outData;
@@ -142,7 +147,7 @@ template<typename ValueType,
          typename Storage,
          typename Policy,
          typename Device>
-VTKM_CONT
+inline VTKM_CONT
 bool CleanGrid::DoMapField(
     vtkm::filter::ResultDataSet& result,
     const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
@@ -165,7 +170,7 @@ bool CleanGrid::DoMapField(
 }
 
 template<typename ValueType, typename Storage, typename Device>
-VTKM_CONT
+inline VTKM_CONT
 vtkm::cont::ArrayHandle<ValueType>
 CleanGrid::CompactPointArray(
     const vtkm::cont::ArrayHandle<ValueType,Storage> &inArray, Device) const

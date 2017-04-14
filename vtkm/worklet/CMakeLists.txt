@@ -19,41 +19,52 @@
 ##============================================================================
 
 set(headers
-  DispatcherMapField.h
-  DispatcherStreamingMapField.h
-  WorkletMapField.h
-  DispatcherMapTopology.h
-  WorkletMapTopology.h
   AverageByKey.h
   CellAverage.h
   CellDeepCopy.h
   Clip.h
+  ContourTreeUniform.h
+  DispatcherMapField.h
+  DispatcherMapTopology.h
+  DispatcherReduceByKey.h
+  DispatcherStreamingMapField.h
   ExternalFaces.h
+  ExtractGeometry.h
+  ExtractPoints.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
   KernelSplatter.h
+  Keys.h
   Magnitude.h
   MarchingCubes.h
   MarchingCubesDataTables.h
+  Mask.h
+  MaskPoints.h
+  PointAverage.h
   PointElevation.h
   RemoveUnusedPoints.h
   ScatterCounting.h
   ScatterIdentity.h
   ScatterUniform.h
   StreamLineUniformGrid.h
-  TetrahedralizeExplicitGrid.h
-  TetrahedralizeUniformGrid.h
-  TriangulateExplicitGrid.h
-  TriangulateUniformGrid.h
+  Tetrahedralize.h
   Threshold.h
+  ThresholdPoints.h
+  Triangulate.h
   VertexClustering.h
   WaveletCompressor.h
+  WorkletMapField.h
+  WorkletMapTopology.h
+  WorkletReduceByKey.h
   )
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
+add_subdirectory(contourtree)
 add_subdirectory(splatkernels)
+add_subdirectory(tetrahedralize)
+add_subdirectory(triangulate)
 add_subdirectory(wavelets)
 
 vtkm_declare_headers(${headers})

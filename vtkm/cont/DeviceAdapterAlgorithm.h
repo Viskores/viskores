@@ -58,6 +58,42 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T,CIn> &input,
                                     vtkm::cont::ArrayHandle<U, COut> &output);
 
+  /// \brief Conditionally copy elements in the input array to the output array.
+  ///
+  /// Calls the parallel primitive function of stream compaction on the \c
+  /// input to remove unwanted elements. The result of the stream compaction is
+  /// placed in \c output. The values in \c stencil are used to determine which
+  /// \c input values are placed into \c output, with all stencil values not
+  /// equal to the default constructor being considered valid.
+  /// The size of \c output will be modified after this call as we can't know
+  /// the number of elements that will be removed by the stream compaction
+  /// algorithm.
+  ///
+  template<typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT static void CopyIf(
+    const vtkm::cont::ArrayHandle<T,CIn> &input,
+    const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
+    vtkm::cont::ArrayHandle<T,COut> &output);
+
+  /// \brief Conditionally copy elements in the input array to the output array.
+  ///
+  /// Calls the parallel primitive function of stream compaction on the \c
+  /// input to remove unwanted elements. The result of the stream compaction is
+  /// placed in \c output. The values in \c stencil are passed to the unary
+  /// comparison object which is used to determine which /c input values are
+  /// placed into \c output.
+  /// The size of \c output will be modified after this call as we can't know
+  /// the number of elements that will be removed by the stream compaction
+  /// algorithm.
+  ///
+  template<typename T, typename U, class CIn, class CStencil,
+  class COut, class UnaryPredicate>
+  VTKM_CONT static void CopyIf(
+    const vtkm::cont::ArrayHandle<T,CIn> &input,
+    const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
+    vtkm::cont::ArrayHandle<T,COut> &output,
+    UnaryPredicate unary_predicate);
+
   /// \brief Copy the contents of a section of one ArrayHandle to another
   ///
   /// Copies the a range of elements of \c input to \c output. The number of
@@ -341,57 +377,6 @@ struct DeviceAdapterAlgorithm
       vtkm::cont::ArrayHandle<U,StorageU> &values,
       BinaryCompare binary_compare)
 
-  /// \brief Performs stream compaction to remove unwanted elements in the input array. Output becomes the index values of input that are valid.
-  ///
-  /// Calls the parallel primitive function of stream compaction on the \c
-  /// input to remove unwanted elements. The result of the stream compaction is
-  /// placed in \c output. The \c input values are used as the stream
-  /// compaction stencil while \c input indices are used as the values to place
-  /// into \c output. The size of \c output will be modified after this call as
-  /// we can't know the number of elements that will be removed by the stream
-  /// compaction algorithm.
-  ///
-  template<typename T, class CStencil, class COut>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,CStencil> &stencil,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut> &output);
-
-  /// \brief Performs stream compaction to remove unwanted elements in the input array.
-  ///
-  /// Calls the parallel primitive function of stream compaction on the \c
-  /// input to remove unwanted elements. The result of the stream compaction is
-  /// placed in \c output. The values in \c stencil are used to determine which
-  /// \c input values are placed into \c output, with all stencil values not
-  /// equal to the default constructor being considered valid.
-  /// The size of \c output will be modified after this call as we can't know
-  /// the number of elements that will be removed by the stream compaction
-  /// algorithm.
-  ///
-  template<typename T, typename U, class CIn, class CStencil, class COut>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
-      vtkm::cont::ArrayHandle<T,COut> &output);
-
-  /// \brief Performs stream compaction to remove unwanted elements in the input array.
-  ///
-  /// Calls the parallel primitive function of stream compaction on the \c
-  /// input to remove unwanted elements. The result of the stream compaction is
-  /// placed in \c output. The values in \c stencil are passed to the unary
-  /// comparison object which is used to determine which /c input values are
-  /// placed into \c output.
-  /// The size of \c output will be modified after this call as we can't know
-  /// the number of elements that will be removed by the stream compaction
-  /// algorithm.
-  ///
-  template<typename T, typename U, class CIn, class CStencil,
-           class COut, class UnaryPredicate>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
-      vtkm::cont::ArrayHandle<T,COut> &output,
-      UnaryPredicate unary_predicate);
-
   /// \brief Completes any asynchronous operations running on the device.
   ///
   /// Waits for any asynchronous operations running on the device to complete.
@@ -583,21 +568,5 @@ class DeviceAdapterAtomicArrayImplementation;
 
 }
 } // namespace vtkm::cont
-
-
-//-----------------------------------------------------------------------------
-// These includes are intentionally placed here after the declaration of the
-// DeviceAdapterAlgorithm template prototype, which all the implementations
-// need.
-
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
-#include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
-#include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
-// #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
-// #include <vtkm/openmp/cont/internal/DeviceAdapterAlgorithmOpenMP.h>
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-#include <vtkm/cont/tbb/internal/DeviceAdapterAlgorithmTBB.h>
-#endif
 
 #endif //vtk_m_cont_DeviceAdapterAlgorithm_h

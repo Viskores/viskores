@@ -25,6 +25,7 @@ set(headers
   ArrayHandleCompositeVector.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
+  ArrayHandleDiscard.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
   ArrayHandleImplicit.h
@@ -37,6 +38,8 @@ set(headers
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayHandleConcatenate.h
+  ArrayRangeCompute.h
+  ArrayRangeCompute.hxx
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
@@ -55,15 +58,14 @@ set(headers
   DynamicArrayHandle.h
   DynamicCellSet.h
   Error.h
-  ErrorControl.h
-  ErrorControlBadAllocation.h
-  ErrorControlBadType.h
-  ErrorControlBadValue.h
-  ErrorControlInternal.h
+  ErrorBadAllocation.h
+  ErrorBadType.h
+  ErrorBadValue.h
   ErrorExecution.h
+  ErrorInternal.h
   Field.h
-  LogicalStructure.h
   RuntimeDeviceInformation.h
+  RuntimeDeviceTracker.h
   Storage.h
   StorageBasic.h
   StorageImplicit.h
@@ -72,11 +74,41 @@ set(headers
   TryExecute.h
   )
 
+set(header_impls
+  ArrayHandle.hxx
+  CellSetStructured.hxx
+  StorageBasic.hxx
+  )
+
+set(sources
+  ArrayHandle.cxx
+  CellSet.cxx
+  CellSetStructured.cxx
+  CoordinateSystem.cxx
+  DynamicArrayHandle.cxx
+  Field.cxx
+  internal/SimplePolymorphicContainer.cxx
+  StorageBasic.cxx
+  )
+
+# This list of sources has code that uses devices and so might need to be
+# compiled with a device-specific compiler (like CUDA).
+set(device_sources
+  ArrayRangeCompute.cxx
+  RuntimeDeviceTracker.cxx
+  )
+
+vtkm_library(
+  SOURCES ${sources}
+  WRAP_FOR_CUDA ${device_sources}
+  HEADERS ${header_impls})
+target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
+
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(arg)
 
-vtkm_declare_headers(${impl_headers} ${headers})
+vtkm_declare_headers(${headers})
 
 add_subdirectory(serial)
 add_subdirectory(cuda)

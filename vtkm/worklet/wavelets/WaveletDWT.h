@@ -1107,7 +1107,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
       }
       default:
       {
-        vtkm::cont::ErrorControlInternal("Left extension mode not supported!");
+        vtkm::cont::ErrorInternal("Left extension mode not supported!");
         return 1;
       }
     }
@@ -1152,7 +1152,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
         }
         default:
         {
-          vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
+          vtkm::cont::ErrorInternal("Right extension mode not supported!");
           return 1;
         }
       }
@@ -1204,7 +1204,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
         }
         default:
         {
-          vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
+          vtkm::cont::ErrorInternal("Right extension mode not supported!");
           return 1;
         }
       }
@@ -1236,7 +1236,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( GetWaveletMaxLevel( sigInLen ) < 1 )
     {
-      vtkm::cont::ErrorControlInternal( "Signal is too short to perform DWT!" ); 
+      vtkm::cont::ErrorInternal( "Signal is too short to perform DWT!" );
       return -1;
     } 
 
@@ -1422,7 +1422,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
         }
         else
         {
-          vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+          vtkm::cont::ErrorInternal("cDTemp Length not match!");
           return 1;
         }
       }
@@ -1797,7 +1797,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
         ext4DimX = addLen + 1;
       }
       else
-        vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+        vtkm::cont::ErrorInternal("cDTemp Length not match!");
     }
   }
 
@@ -1890,7 +1890,7 @@ this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
         ext4DimY = addLen + 1;
       }
       else
-        vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+        vtkm::cont::ErrorInternal("cDTemp Length not match!");
     }
   }
 

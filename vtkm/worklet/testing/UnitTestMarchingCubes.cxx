@@ -198,7 +198,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
   const vtkm::IdComponent nCells = dim*dim*dim;
 
-vtkm::Float32 spacing = vtkm::Float32(1./dim);
+  vtkm::Float32 spacing = vtkm::Float32(1./dim);
   CoordinateArrayHandle coordinates(vtkm::Id3(dim+1,dim+1,dim+1),
                                     CoordType(-.5,-.5,-.5),
                                     CoordType(spacing,spacing,spacing));
@@ -222,8 +222,11 @@ vtkm::Float32 spacing = vtkm::Float32(1./dim);
     vtkm::cont::Field("distanceToOther", vtkm::cont::Field::ASSOC_POINTS,
                       vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
-  CellSet cellSet(HexTag(), (dim+1)*(dim+1)*(dim+1), "cells");
-  cellSet.Fill(connectivity);
+  CellSet cellSet("cells");
+  cellSet.Fill((dim+1)*(dim+1)*(dim+1),
+               HexTag::Id,
+               HexTraits::NUM_POINTS,
+               connectivity);
 
   dataSet.AddCellSet(cellSet);
 
@@ -248,10 +251,12 @@ void TestMarchingCubesUniformGrid()
   vtkm::worklet::MarchingCubes isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
 
+  vtkm::Float32 contourValue = 0.5f;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-  isosurfaceFilter.Run(0.5f,
+  isosurfaceFilter.Run(&contourValue,
+                       1,
                        cellSet,
                        dataSet.GetCoordinateSystem(),
                        fieldArray,
@@ -306,7 +311,8 @@ void TestMarchingCubesExplicit()
   vtkm::worklet::MarchingCubes marchingCubes;
   marchingCubes.SetMergeDuplicatePoints(false);
 
-  marchingCubes.Run(contourValue,
+  marchingCubes.Run(&contourValue,
+                    1,
                     cellSet,
                     dataSet.GetCoordinateSystem(),
                     contourArray,

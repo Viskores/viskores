@@ -20,14 +20,18 @@
 #ifndef vtk_m_cont_DynamicArrayHandle_h
 #define vtk_m_cont_DynamicArrayHandle_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/TypeListTag.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadType.h>
+#include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/StorageListTag.h>
 
 #include <vtkm/cont/internal/DynamicTransform.h>
+
+#include <sstream>
 
 namespace vtkm {
 namespace cont {
@@ -40,10 +44,12 @@ namespace detail {
 
 /// \brief Base class for PolymorphicArrayHandleContainer
 ///
-struct PolymorphicArrayHandleContainerBase
+struct VTKM_CONT_EXPORT PolymorphicArrayHandleContainerBase
 {
+  PolymorphicArrayHandleContainerBase();
+
   // This must exist so that subclasses are destroyed correctly.
-  virtual ~PolymorphicArrayHandleContainerBase() {  }
+  virtual ~PolymorphicArrayHandleContainerBase();
 
   virtual vtkm::IdComponent GetNumberOfComponents() const = 0;
   virtual vtkm::Id GetNumberOfValues() const = 0;
@@ -63,7 +69,7 @@ struct PolymorphicArrayHandleContainerBase
 /// simple questions about the object.
 ///
 template<typename T, typename Storage>
-struct PolymorphicArrayHandleContainer
+struct VTKM_ALWAYS_EXPORT PolymorphicArrayHandleContainer
     : public PolymorphicArrayHandleContainerBase
 {
   typedef vtkm::cont::ArrayHandle<T, Storage> ArrayHandleType;
@@ -184,7 +190,7 @@ DynamicArrayHandleTryCast(
 /// lists.
 ///
 template<typename TypeList, typename StorageList>
-class DynamicArrayHandleBase
+class VTKM_ALWAYS_EXPORT DynamicArrayHandleBase
 {
 public:
   VTKM_CONT
@@ -256,7 +262,7 @@ public:
   }
 
   /// Returns this array cast to an ArrayHandle object of the given type and
-  /// storage. Throws \c ErrorControlBadType if the cast does not work. Use
+  /// storage. Throws \c ErrorBadType if the cast does not work. Use
   /// \c IsTypeAndStorage to check if the cast can happen.
   ///
   ///
@@ -268,7 +274,7 @@ public:
         detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer);
     if (downcastArray == nullptr)
     {
-      throw vtkm::cont::ErrorControlBadType("Bad cast of dynamic array.");
+      throw vtkm::cont::ErrorBadType("Bad cast of dynamic array.");
     }
     // Technically, this method returns a copy of the \c ArrayHandle. But
     // because \c ArrayHandle acts like a shared pointer, it is valid to
@@ -277,7 +283,7 @@ public:
   }
 
   /// Returns this array cast to the given \c ArrayHandle type. Throws \c
-  /// ErrorControlBadType if the cast does not work. Use \c IsType
+  /// ErrorBadType if the cast does not work. Use \c IsType
   /// to check if the cast can happen.
   ///
   template<typename ArrayHandleType>
@@ -294,7 +300,7 @@ public:
 
   /// Given a refernce to an ArrayHandle object, casts this array to the
   /// ArrayHandle's type and sets the given ArrayHandle to this array. Throws
-  /// \c ErrorControlBadType if the cast does not work. Use \c
+  /// \c ErrorBadType if the cast does not work. Use \c
   /// ArrayHandleType to check if the cast can happen.
   ///
   /// Note that this is a shallow copy. The data are not copied and a change
@@ -399,7 +405,7 @@ public:
   }
 
   VTKM_CONT
-  virtual void PrintSummary(std::ostream &out) const
+  void PrintSummary(std::ostream &out) const
   {
     this->ArrayContainer->PrintSummary(out);
   }
@@ -452,6 +458,8 @@ private:
   {
     // This type of array handle cannot exist, so do nothing.
   }
+
+  void operator=(const DynamicArrayHandleTryStorage<Functor,Type> &) = delete;
 };
 
 template<typename Functor, typename StorageList>
@@ -478,6 +486,9 @@ struct DynamicArrayHandleTryType {
       this->FoundCast = true;
     }
   }
+
+private:
+  void operator=(const DynamicArrayHandleTryType<Functor,StorageList> &) = delete;
 };
 
 } // namespace detail
@@ -505,8 +516,13 @@ void DynamicArrayHandleBase<TypeList,StorageList>::
   vtkm::ListForEach(tryType, TypeList());
   if (!tryType.FoundCast)
   {
-    throw vtkm::cont::ErrorControlBadValue(
-          "Could not find appropriate cast for array in CastAndCall.");
+    std::ostringstream out;
+    out << "Could not find appropriate cast for array in CastAndCall1.\n"
+           "Array: ";
+    this->PrintSummary(out);
+    out << "TypeList: " << typeid(TypeList).name()
+        << "\nStorageList: " << typeid(StorageList).name() << "\n";
+    throw vtkm::cont::ErrorBadValue(out.str());
   }
 }
 
@@ -529,8 +545,8 @@ void DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
   vtkm::ListForEach(tryType, VTKM_DEFAULT_TYPE_LIST_TAG());
   if (!tryType.FoundCast)
   {
-    throw vtkm::cont::ErrorControlBadValue(
-          "Could not find appropriate cast for array in CastAndCall.");
+    throw vtkm::cont::ErrorBadValue(
+          "Could not find appropriate cast for array in CastAndCall2.");
   }
 }
 

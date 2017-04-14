@@ -19,7 +19,6 @@
 ##============================================================================
 
 include(CMakeParseArguments)
-include(GenerateExportHeader)
 
 # Utility to build a kit name from the current directory.
 function(vtkm_get_kit_name kitvar)
@@ -110,16 +109,21 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     # and we want system includes so we have to hijack cuda
     # to do it
     foreach(dir ${VTKm_INCLUDE_DIRS})
+      #this internal variable has changed names depending on the CMake ver
       list(APPEND CUDA_NVCC_INCLUDE_ARGS_USER -isystem ${dir})
+      list(APPEND CUDA_NVCC_INCLUDE_DIRS_USER -isystem ${dir})
     endforeach()
 
+    cuda_include_directories(${VTKm_SOURCE_DIR}
+                             ${VTKm_BINARY_DIR}/include
+                            )
+
     cuda_add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
-    target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
   elseif (${cxxfiles_len} GREATER 0)
     add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
-    target_include_directories(TestBuild_${name} PRIVATE ${VTKm_INCLUDE_DIRS})
+    target_include_directories(TestBuild_${name} PRIVATE vtkm ${VTKm_INCLUDE_DIRS})
   endif ()
-  target_link_libraries(TestBuild_${name} ${VTKm_LIBRARIES})
+  target_link_libraries(TestBuild_${name} PRIVATE vtkm_cont ${VTKm_LIBRARIES})
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
@@ -264,7 +268,10 @@ function(vtkm_unit_tests)
       vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
 
       # Cuda compiles do not respect target_include_directories
-      cuda_include_directories(${VTKm_INCLUDE_DIRS})
+      cuda_include_directories(${VTKm_SOURCE_DIR}
+                               ${VTKm_BINARY_DIR}/include
+                               ${VTKm_INCLUDE_DIRS}
+                               )
 
       cuda_add_executable(${test_prog} ${TestSources})
 
@@ -279,7 +286,7 @@ function(vtkm_unit_tests)
     #for any other targets
     target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
 
-    target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
+    target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_LIBRARIES})
 
     target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
@@ -396,7 +403,10 @@ function(vtkm_worklet_unit_tests device_adapter)
       vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
 
       # Cuda compiles do not respect target_include_directories
-      cuda_include_directories(${VTKm_INCLUDE_DIRS})
+      cuda_include_directories(${VTKm_SOURCE_DIR}
+                               ${VTKm_BINARY_DIR}/include
+                               ${VTKm_INCLUDE_DIRS}
+                               )
 
       cuda_add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
 
@@ -406,7 +416,7 @@ function(vtkm_worklet_unit_tests device_adapter)
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
     endif()
     target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(${test_prog} ${VTKm_LIBRARIES})
+    target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_LIBRARIES})
 
     #add the specific compile options for this executable
     target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
@@ -508,7 +518,7 @@ function(vtkm_benchmarks device_adapter)
     set(is_cuda TRUE)
   endif()
 
-  if(VTKm_ENABLE_BENCHMARKS AND VTKm_ENABLE_TESTING)
+  if(VTKm_ENABLE_BENCHMARKS)
     string(REPLACE "VTKM_DEVICE_ADAPTER_" "" device_type ${device_adapter})
 
     if(is_cuda)
@@ -523,7 +533,11 @@ function(vtkm_benchmarks device_adapter)
 
       if(is_cuda)
         # Cuda compiles do not respect target_include_directories
-        cuda_include_directories(${VTKm_INCLUDE_DIRS})
+
+        cuda_include_directories(${VTKm_SOURCE_DIR}
+                                 ${VTKm_BINARY_DIR}/include
+                                 ${VTKm_BACKEND_INCLUDE_DIRS}
+                                 )
 
         cuda_add_executable(${benchmark_prog} ${file} ${benchmark_headers})
       else()
@@ -533,8 +547,8 @@ function(vtkm_benchmarks device_adapter)
       set_source_files_properties(${benchmark_headers}
         PROPERTIES HEADER_FILE_ONLY TRUE)
 
-      target_include_directories(${benchmark_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
-      target_link_libraries(${benchmark_prog} ${VTKm_LIBRARIES})
+      target_include_directories(${benchmark_prog} PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
+      target_link_libraries(${benchmark_prog} PRIVATE vtkm_cont ${VTKm_BACKEND_LIBRARIES})
 
       if(MSVC)
         vtkm_setup_msvc_properties(${benchmark_prog})
@@ -574,10 +588,13 @@ function(vtkm_wrap_sources_for_cuda cuda_source_list_var)
     list(APPEND cuda_sources ${wrapped_file})
   endforeach(source_file)
 
+  # Set original sources as header files (which they basically are) so that
+  # we can add them to the file list and they will show up in IDE but they will
+  # not be compiled separately.
   set_source_files_properties(${original_sources}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
-  set(${cuda_source_list_var} ${cuda_sources} PARENT_SCOPE)
+  set(${cuda_source_list_var} ${cuda_sources} ${original_sources} PARENT_SCOPE)
 endfunction(vtkm_wrap_sources_for_cuda)
 
 # Add a VTK-m library. The name of the library will match the "kit" name
@@ -586,13 +603,15 @@ endfunction(vtkm_wrap_sources_for_cuda)
 # vtkm_library(
 #   [NAME <name>]
 #   SOURCES <source_list>
+#   [HEADERS <headers_list>]
 #   [CUDA]
 #   [WRAP_FOR_CUDA <source_list>]
+#   [LIBRARIES <dependent_library_list>]
 #   )
 function(vtkm_library)
   set(options CUDA)
   set(oneValueArgs NAME)
-  set(multiValueArgs SOURCES WRAP_FOR_CUDA)
+  set(multiValueArgs SOURCES HEADERS WRAP_FOR_CUDA)
   cmake_parse_arguments(VTKm_LIB
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -605,19 +624,42 @@ function(vtkm_library)
     set(lib_name ${kit})
   endif()
 
+  list(APPEND VTKm_LIB_SOURCES ${VTKm_LIB_HEADERS})
+  set_source_files_properties(${VTKm_LIB_HEADERS}
+    PROPERTIES HEADER_FILE_ONLY TRUE
+    )
+
+  if(VTKm_LIB_WRAP_FOR_CUDA)
+    if(VTKm_ENABLE_CUDA)
+      # If we have some sources marked as WRAP_FOR_CUDA and we support CUDA,
+      # then we need to turn on CDUA, wrap those sources, and add the wrapped
+      # code to the sources list.
+      set(VTKm_LIB_CUDA TRUE)
+      vtkm_wrap_sources_for_cuda(cuda_sources ${VTKm_LIB_WRAP_FOR_CUDA})
+      list(APPEND VTKm_LIB_SOURCES ${cuda_sources})
+    else()
+      # If we have some sources marked as WRAP_FOR_CUDA but we do not support
+      # CUDA, then just compile these sources normally by adding them to the
+      # sources list.
+      list(APPEND VTKm_LIB_SOURCES ${VTKm_LIB_WRAP_FOR_CUDA})
+    endif()
+  endif()
+
   if(VTKm_LIB_CUDA)
     vtkm_setup_nvcc_flags(old_nvcc_flags old_cxx_flags)
 
-    vtkm_wrap_sources_for_cuda(cuda_sources ${VTKm_LIB_WRAP_FOR_CUDA})
 
     # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS})
+    cuda_include_directories(${VTKm_SOURCE_DIR}
+                             ${VTKm_BINARY_DIR}/include
+                             ${VTKm_BACKEND_INCLUDE_DIRS}
+                             )
 
     if(BUILD_SHARED_LIBS AND NOT WIN32)
       set(compile_options -Xcompiler=${CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY}hidden)
     endif()
 
-    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES} ${cuda_sources}
+    cuda_add_library(${lib_name} ${VTKm_LIB_SOURCES}
                      OPTIONS "${compile_options}")
 
     set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
@@ -626,12 +668,11 @@ function(vtkm_library)
     add_library(${lib_name} ${VTKm_LIB_SOURCES})
   endif()
 
-  #do it as a property value so we don't pollute the include_directories
-  #for any other targets
-  set_property(TARGET ${lib_name} APPEND PROPERTY
-      INCLUDE_DIRECTORIES ${VTKm_INCLUDE_DIRS} )
-
-  target_link_libraries(${lib_name} ${VTKm_LIBRARIES})
+  target_link_libraries(${lib_name} PUBLIC vtkm)
+  target_link_libraries(${lib_name} PRIVATE
+    ${VTKm_BACKEND_LIBRARIES}
+    ${VTKm_LIB_LIBRARIES}
+    )
 
   set(cxx_args ${VTKm_COMPILE_OPTIONS})
   separate_arguments(cxx_args)
@@ -657,15 +698,34 @@ function(vtkm_library)
       )
   endif(VTKm_EXTRA_COMPILER_WARNINGS)
 
-  generate_export_header(${lib_name})
+  #Now generate a header that holds the macros needed to easily export
+  #template classes. This
+  string(TOUPPER ${lib_name} BASE_NAME_UPPER)
+  set(EXPORT_MACRO_NAME "${BASE_NAME_UPPER}")
 
-  #generate_export_header creates the header in CMAKE_CURRENT_BINARY_DIR.
-  #The build expects it in the install directory.
-  file(COPY
-    ${CMAKE_CURRENT_BINARY_DIR}/${lib_name}_export.h
-    DESTINATION
-      ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
-    )
+  set(EXPORT_IS_BUILT_STATIC 0)
+  get_target_property(is_static ${lib_name} TYPE)
+  if(${is_static} STREQUAL "STATIC_LIBRARY")
+    #If we are building statically set the define symbol
+    set(EXPORT_IS_BUILT_STATIC 1)
+  endif()
+  unset(is_static)
+
+  get_target_property(EXPORT_IMPORT_CONDITION ${lib_name} DEFINE_SYMBOL)
+  if(NOT EXPORT_IMPORT_CONDITION)
+    #set EXPORT_IMPORT_CONDITION to what the DEFINE_SYMBOL would be when
+    #building shared
+    set(EXPORT_IMPORT_CONDITION ${lib_name}_EXPORTS)
+  endif()
+
+  configure_file(
+      ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
+      ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+    @ONLY)
+
+  unset(EXPORT_MACRO_NAME)
+  unset(EXPORT_IS_BUILT_STATIC)
+  unset(EXPORT_IMPORT_CONDITION)
 
   install(TARGETS ${lib_name}
     EXPORT ${VTKm_EXPORT_NAME}
@@ -675,6 +735,7 @@ function(vtkm_library)
     )
   vtkm_install_headers("${dir_prefix}"
     ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+    ${VTKm_LIB_HEADERS}
     )
 endfunction(vtkm_library)
 

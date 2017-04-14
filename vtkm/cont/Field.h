@@ -20,26 +20,21 @@
 #ifndef vtk_m_cont_Field_h
 #define vtk_m_cont_Field_h
 
-#include <vtkm/Math.h>
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/Range.h>
 #include <vtkm/Types.h>
-#include <vtkm/VecTraits.h>
-#include <vtkm/BinaryOperators.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleTransform.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/ArrayRangeCompute.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-
-#include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
 namespace vtkm {
 namespace cont {
 
 namespace internal {
 
-template<typename DeviceAdapterTag>
 class ComputeRange
 {
 public:
@@ -48,50 +43,7 @@ public:
   template<typename ArrayHandleType>
   void operator()(const ArrayHandleType &input) const
   {
-    typedef typename ArrayHandleType::ValueType ValueType;
-    typedef vtkm::VecTraits<ValueType> VecType;
-    const vtkm::IdComponent NumberOfComponents = VecType::NUM_COMPONENTS;
-
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
-
-    //not the greatest way of doing this for performance reasons. But
-    //this implementation should generate the smallest amount of code
-    vtkm::Vec<ValueType,2> initial(input.GetPortalConstControl().Get(0));
-
-    vtkm::Vec<ValueType, 2> result =
-      Algorithm::Reduce(input, initial, vtkm::MinAndMax<ValueType>());
-
-    this->Range->Allocate(NumberOfComponents);
-    for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
-    {
-      this->Range->GetPortalControl().Set(
-            i, vtkm::Range(VecType::GetComponent(result[0], i),
-                           VecType::GetComponent(result[1], i)));
-    }
-  }
-
-  // Special implementation for regular point coordinates, which are easy
-  // to determine.
-  void operator()(const vtkm::cont::ArrayHandle<
-                      vtkm::Vec<vtkm::FloatDefault,3>,
-                      vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>
-                    &array)
-  {
-    vtkm::internal::ArrayPortalUniformPointCoordinates portal =
-        array.GetPortalConstControl();
-
-    // In this portal we know that the min value is the first entry and the
-    // max value is the last entry.
-    vtkm::Vec<vtkm::FloatDefault,3> minimum = portal.Get(0);
-    vtkm::Vec<vtkm::FloatDefault,3> maximum =
-        portal.Get(portal.GetNumberOfValues()-1);
-
-    this->Range->Allocate(3);
-    vtkm::cont::ArrayHandle<vtkm::Range>::PortalControl outPortal =
-        this->Range->GetPortalControl();
-    outPortal.Set(0, vtkm::Range(minimum[0], maximum[0]));
-    outPortal.Set(1, vtkm::Range(minimum[1], maximum[1]));
-    outPortal.Set(2, vtkm::Range(minimum[2], maximum[2]));
+    *this->Range = vtkm::cont::ArrayRangeCompute(input);
   }
 
 private:
@@ -104,7 +56,7 @@ private:
 /// A \c Field encapsulates an array on some piece of the mesh, such as
 /// the points, a cell set, a point logical dimension, or the whole mesh.
 ///
-class Field
+class VTKM_CONT_EXPORT Field
 {
 public:
 
@@ -334,6 +286,9 @@ public:
   }
 
   VTKM_CONT
+  Field &operator=(const vtkm::cont::Field &src) = default;
+
+  VTKM_CONT
   const std::string &GetName() const
   {
     return this->Name;
@@ -357,30 +312,31 @@ public:
     return this->AssocLogicalDim;
   }
 
-  template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+  template<typename TypeList, typename StorageList>
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
-                                                       TypeList,
-                                                       StorageList) const
+  const vtkm::cont::ArrayHandle<vtkm::Range>&
+  GetRange(TypeList, StorageList) const
   {
-    if (this->ModifiedFlag)
-    {
-      internal::ComputeRange<DeviceAdapterTag> computeRange(this->Range);
-      this->Data.ResetTypeAndStorageLists(TypeList(),StorageList()).CastAndCall(computeRange);
-      this->ModifiedFlag = false;
-    }
+    VTKM_IS_LIST_TAG(TypeList);
+    VTKM_IS_LIST_TAG(StorageList);
 
-    return this->Range;
+    return this->GetRangeImpl(TypeList(), StorageList());
   }
 
-  template<typename DeviceAdapterTag, typename TypeList, typename StorageList>
+  VTKM_CONT
+  const vtkm::cont::ArrayHandle<vtkm::Range>&
+  GetRange(VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG) const;
+
+  template<typename TypeList, typename StorageList>
   VTKM_CONT
   void GetRange(vtkm::Range *range,
-                DeviceAdapterTag,
                 TypeList,
                 StorageList) const
   {
-    this->GetRange(DeviceAdapterTag(), TypeList(), StorageList());
+    VTKM_IS_LIST_TAG(TypeList);
+    VTKM_IS_LIST_TAG(StorageList);
+
+    this->GetRange(TypeList(), StorageList());
 
     vtkm::Id length = this->Range.GetNumberOfValues();
     for (vtkm::Id i = 0; i < length; ++i)
@@ -389,57 +345,37 @@ public:
     }
   }
 
-  template<typename DeviceAdapterTag, typename TypeList>
+  template<typename TypeList>
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag,
-                                                       TypeList) const
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
   {
-    return this->GetRange(DeviceAdapterTag(),
-                          TypeList(),
+    VTKM_IS_LIST_TAG(TypeList);
+
+    return this->GetRange(TypeList(),
                           VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
-  template<typename DeviceAdapterTag, typename TypeList>
+  template<typename TypeList>
   VTKM_CONT
-  void GetRange(vtkm::Range *range, DeviceAdapterTag, TypeList) const
+  void GetRange(vtkm::Range *range, TypeList) const
   {
+    VTKM_IS_LIST_TAG(TypeList);
+
     this->GetRange(range,
-                   DeviceAdapterTag(),
                    TypeList(),
                    VTKM_DEFAULT_STORAGE_LIST_TAG());
   }
 
-  template<typename DeviceAdapterTag>
   VTKM_CONT
-  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(DeviceAdapterTag) const
-  {
-    return this->GetRange(DeviceAdapterTag(),
-                          VTKM_DEFAULT_TYPE_LIST_TAG(),
-                          VTKM_DEFAULT_STORAGE_LIST_TAG());
-  }
-
-  template<typename DeviceAdapterTag>
-  VTKM_CONT
-  void GetRange(vtkm::Range *range, DeviceAdapterTag) const
-  {
-    this->GetRange(range,
-                   DeviceAdapterTag(),
-                   VTKM_DEFAULT_TYPE_LIST_TAG(),
-                   VTKM_DEFAULT_STORAGE_LIST_TAG());
-  }
+  const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
 
   VTKM_CONT
-  const vtkm::cont::DynamicArrayHandle &GetData() const
-  {
-    return this->Data;
-  }
+  void GetRange(vtkm::Range *range) const;
 
-  VTKM_CONT
-  vtkm::cont::DynamicArrayHandle &GetData()
-  {
-    this->ModifiedFlag = true;
-    return this->Data;
-  }
+  const vtkm::cont::DynamicArrayHandle &GetData() const;
+
+  vtkm::cont::DynamicArrayHandle &GetData();
+
 
   template <typename T>
   VTKM_CONT
@@ -475,21 +411,7 @@ public:
   }
 
   VTKM_CONT
-  virtual void PrintSummary(std::ostream &out) const
-  {
-      out<<"   "<<this->Name;
-      out<<" assoc= ";
-      switch (this->GetAssociation())
-      {
-      case ASSOC_ANY: out<<"Any "; break;
-      case ASSOC_WHOLE_MESH: out<<"Mesh "; break;
-      case ASSOC_POINTS: out<<"Points "; break;
-      case ASSOC_CELL_SET: out<<"Cells "; break;
-      case ASSOC_LOGICAL_DIM: out<<"LogicalDim "; break;
-      }
-      this->Data.PrintSummary(out);
-      out<<"\n";
-  }
+  virtual void PrintSummary(std::ostream &out) const;
 
 private:
   std::string       Name;  ///< name of field
@@ -501,6 +423,24 @@ private:
   vtkm::cont::DynamicArrayHandle Data;
   mutable vtkm::cont::ArrayHandle<vtkm::Range> Range;
   mutable bool ModifiedFlag;
+
+  template<typename TypeList, typename StorageList>
+  VTKM_CONT
+  const vtkm::cont::ArrayHandle<vtkm::Range>&
+  GetRangeImpl(TypeList, StorageList) const
+  {
+    VTKM_IS_LIST_TAG(TypeList);
+    VTKM_IS_LIST_TAG(StorageList);
+
+    if (this->ModifiedFlag)
+    {
+      internal::ComputeRange computeRange(this->Range);
+      this->Data.ResetTypeAndStorageLists(TypeList(),StorageList()).CastAndCall(computeRange);
+      this->ModifiedFlag = false;
+    }
+
+    return this->Range;
+  }
 };
 
 template<typename Functor>

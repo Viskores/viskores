@@ -51,9 +51,12 @@ struct Transport<
 {
   typedef vtkm::exec::AtomicArray<T, Device> ExecObjectType;
 
+  template<typename InputDomainType>
   VTKM_CONT
   ExecObjectType operator()(
       vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> array,
+      const InputDomainType &,
+      vtkm::Id,
       vtkm::Id) const
   {
     // Note: we ignore the size of the domain because the randomly accessed

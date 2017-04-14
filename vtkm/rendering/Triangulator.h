@@ -449,9 +449,9 @@ public:
                vtkm::exec::ExecutionWholeArray< vtkm::UInt8 >(flags));
 
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > subset;
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::StreamCompact(outputIndices,
-                                                                     flags,
-                                                                     subset);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::CopyIf(outputIndices,
+                                                              flags,
+                                                              subset);
     outputIndices = subset;
     outputTriangles = subset.GetNumberOfValues();
   }
@@ -553,12 +553,12 @@ public:
       }
       else
       {
-        throw vtkm::cont::ErrorControlBadType("Unsupported cell type for trianglulation with CellSetSingleType");
+        throw vtkm::cont::ErrorBadType("Unsupported cell type for trianglulation with CellSetSingleType");
       }
     }
     else
     {
-      throw vtkm::cont::ErrorControlBadType("Unsupported cell set type for trianglulation");
+      throw vtkm::cont::ErrorBadType("Unsupported cell set type for trianglulation");
     }
 
     //get rid of any triagles we cannot see

@@ -62,7 +62,7 @@ public:
   VTKM_CONT
   vtkm::filter::ResultDataSet
   DoExecute(const vtkm::cont::DataSet &inData,
-            vtkm::filter::PolicyBase<Policy>,
+            vtkm::filter::PolicyBase<Policy> policy,
             Device);
 
   template<typename ValueType,

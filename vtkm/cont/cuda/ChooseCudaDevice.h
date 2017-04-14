@@ -22,6 +22,8 @@
 
 #include <vtkm/cont/ErrorExecution.h>
 
+#include <vtkm/cont/cuda/ErrorCuda.h>
+
 #include <cuda.h>
 #include <algorithm>
 #include <vector>
@@ -97,19 +99,19 @@ static int FindFastestDeviceId()
 {
   //get the number of devices and store information
   int numberOfDevices=0;
-  cudaGetDeviceCount(&numberOfDevices);
+  VTKM_CUDA_CALL(cudaGetDeviceCount(&numberOfDevices));
 
   std::vector<compute_info> devices;
   for(int i=0; i < numberOfDevices; ++i)
-    {
+  {
     cudaDeviceProp properties;
-    cudaGetDeviceProperties(&properties, i);
+    VTKM_CUDA_CALL(cudaGetDeviceProperties(&properties, i));
     if(properties.computeMode != cudaComputeModeProhibited)
-      {
+    {
       //only add devices that have compute mode allowed
       devices.push_back( compute_info(properties,i) );
-      }
     }
+  }
 
   //sort from fastest to slowest
   std::sort(devices.begin(),devices.end());

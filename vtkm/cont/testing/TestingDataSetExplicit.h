@@ -90,7 +90,7 @@ private:
       ds.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
       VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
     }
-    catch (vtkm::cont::ErrorControlBadValue error)
+    catch (vtkm::cont::ErrorBadValue &error)
     {
       std::cout << "Caught expected error for association mismatch: "
                 << std::endl << "    " << error.GetMessage() << std::endl;

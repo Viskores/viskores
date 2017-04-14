@@ -28,8 +28,9 @@
 #define VTKM_STORAGE VTKM_STORAGE_BASIC
 #endif
 
-
 #include <vtkm/StaticAssert.h>
+
+#include <vtkm/cont/vtkm_cont_export.h>
 #include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm {
@@ -55,11 +56,11 @@ namespace cont {
 /// StorageTagBasic.
 ///
 /// To implement your own StorageTag, you first must create a tag class (an
-/// empty struct) defining your tag (i.e. struct StorageTagMyAlloc { };). Then
+/// empty struct) defining your tag (i.e. struct VTKM_ALWAYS_EXPORT StorageTagMyAlloc { };). Then
 /// provide a partial template specialization of vtkm::cont::internal::Storage
 /// for your new tag.
 ///
-struct StorageTag___ {  };
+struct VTKM_ALWAYS_EXPORT StorageTag___ {  };
 #endif // VTKM_DOXYGEN_ONLY
 
 namespace internal {
@@ -131,8 +132,8 @@ public:
   ///
   /// The allocation may be done on an already existing array, but can wipe out
   /// any data already in the array. This method can throw
-  /// ErrorControlBadAllocation if the array cannot be allocated or
-  /// ErrorControlBadValue if the allocation is not feasible (for example, the
+  /// ErrorBadAllocation if the array cannot be allocated or
+  /// ErrorBadValue if the allocation is not feasible (for example, the
   /// array storage is read-only).
   ///
   VTKM_CONT

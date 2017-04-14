@@ -120,9 +120,6 @@ void TestCellGradientUniform3DWithVectorField()
     vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3> e = expected[i];
     vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3> r = result.GetPortalConstControl().Get(i);
 
-    std::cout << "0: " << e[0] << " " << r[0] << std::endl;
-    std::cout << "1: " << e[1] << " " << r[1] << std::endl;
-    std::cout << "2: " << e[2] << " " << r[2] << std::endl;
     VTKM_TEST_ASSERT(
           test_equal(e[0],r[0]),
           "Wrong result for vec field CellGradient worklet on 3D uniform data");

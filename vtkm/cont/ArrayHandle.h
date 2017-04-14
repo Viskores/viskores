@@ -20,12 +20,14 @@
 #ifndef vtk_m_cont_ArrayHandle_h
 #define vtk_m_cont_ArrayHandle_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
-#include <vtkm/cont/ErrorControlInternal.h>
+#include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/ErrorInternal.h>
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
 
@@ -35,7 +37,6 @@
 #include <memory>
 #include <vector>
 #include <iterator>
-
 
 namespace vtkm {
 namespace cont {
@@ -48,7 +49,7 @@ namespace internal {
 /// ArrayHandle class (or at least something that behaves exactly like one).
 /// The \c ArrayHandle template class inherits from this.
 ///
-class ArrayHandleBase {  };
+class VTKM_CONT_EXPORT ArrayHandleBase {  };
 
 /// Checks to see if the given type and storage can form a valid array handle
 /// (some storage objects cannot support all types). This check is compatible
@@ -141,9 +142,6 @@ struct GetTypeInParentheses<void(T)>
   classname(const vtkm::cont::ArrayHandle<typename__ Superclass::ValueType, typename__ Superclass::StorageTag> &src) : Superclass(src) {  } \
   \
   VTKM_CONT \
-  virtual ~classname() {  } \
-  \
-  VTKM_CONT \
   Thisclass &operator=(const Thisclass &src) \
   { \
     this->Superclass::operator=(src); \
@@ -224,7 +222,7 @@ struct GetTypeInParentheses<void(T)>
 template<
     typename T,
     typename StorageTag_ = VTKM_DEFAULT_STORAGE_TAG>
-class ArrayHandle : public internal::ArrayHandleBase
+class VTKM_ALWAYS_EXPORT ArrayHandle : public internal::ArrayHandleBase
 {
 private:
   typedef vtkm::cont::internal::ArrayHandleExecutionManagerBase<T,StorageTag_>
@@ -247,11 +245,7 @@ public:
   /// Constructs an empty ArrayHandle. Typically used for output or
   /// intermediate arrays that will be filled by a VTKm algorithm.
   ///
-  VTKM_CONT ArrayHandle() : Internals(new InternalStruct)
-  {
-    this->Internals->ControlArrayValid = false;
-    this->Internals->ExecutionArrayValid = false;
-  }
+  VTKM_CONT ArrayHandle();
 
   /// Copy constructor.
   ///
@@ -260,22 +254,23 @@ public:
   /// with CUDA), then the automatically generated copy constructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  VTKM_CONT
-  ArrayHandle(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
-    : Internals(src.Internals)
-  {  }
+  ArrayHandle(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src);
+
+  /// Move constructor.
+  ///
+  /// Implemented so that it is defined exclusively in the control environment.
+  /// If there is a separate device for the execution environment (for example,
+  /// with CUDA), then the automatically generated move constructor could be
+  /// created for all devices, and it would not be valid for all devices.
+  ///
+  ArrayHandle(vtkm::cont::ArrayHandle<ValueType,StorageTag> &&src);
+
 
   /// Special constructor for subclass specializations that need to set the
   /// initial state of the control array. When this constructor is used, it
   /// is assumed that the control array is valid.
   ///
-  ArrayHandle(const StorageType &storage)
-    : Internals(new InternalStruct)
-  {
-    this->Internals->ControlArray = storage;
-    this->Internals->ControlArrayValid = true;
-    this->Internals->ExecutionArrayValid = false;
-  }
+  ArrayHandle(const StorageType &storage);
 
   /// Destructs an empty ArrayHandle.
   ///
@@ -284,154 +279,66 @@ public:
   /// with CUDA), then the automatically generated destructor could be
   /// created for all devices, and it would not be valid for all devices.
   ///
-  virtual ~ArrayHandle() {  }
+  ~ArrayHandle();
 
   /// \brief Copies an ArrayHandle
   ///
   VTKM_CONT
   vtkm::cont::ArrayHandle<ValueType,StorageTag> &
-  operator=(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src)
+  operator=(const vtkm::cont::ArrayHandle<ValueType,StorageTag> &src);
+
+  /// \brief Move and Assignment of an ArrayHandle
+  ///
+  VTKM_CONT
+  vtkm::cont::ArrayHandle<ValueType,StorageTag> &
+  operator=(vtkm::cont::ArrayHandle<ValueType,StorageTag> &&src);
+
+  /// Like a pointer, two \c ArrayHandles are considered equal if they point
+  /// to the same location in memory.
+  ///
+  VTKM_CONT
+  bool operator==(const ArrayHandle<ValueType,StorageTag> &rhs) const
   {
-    this->Internals = src.Internals;
-    return *this;
+    return (this->Internals == rhs.Internals);
+  }
+  VTKM_CONT
+  bool operator!=(const ArrayHandle<ValueType,StorageTag> &rhs) const
+  {
+    return (this->Internals != rhs.Internals);
   }
 
   /// Get the storage.
   ///
-  VTKM_CONT StorageType& GetStorage()
-  {
-    this->SyncControlArray();
-    if (this->Internals->ControlArrayValid)
-    {
-      return this->Internals->ControlArray;
-    }
-    else
-    {
-      throw vtkm::cont::ErrorControlInternal(
-        "ArrayHandle::SyncControlArray did not make control array valid.");
-    }
-  }
+  VTKM_CONT StorageType& GetStorage();
 
   /// Get the storage.
   ///
-  VTKM_CONT const StorageType& GetStorage() const
-  {
-    this->SyncControlArray();
-    if (this->Internals->ControlArrayValid)
-    {
-      return this->Internals->ControlArray;
-    }
-    else
-    {
-      throw vtkm::cont::ErrorControlInternal(
-        "ArrayHandle::SyncControlArray did not make control array valid.");
-    }
-  }
+  VTKM_CONT const StorageType& GetStorage() const;
 
   /// Get the array portal of the control array.
   ///
-  VTKM_CONT PortalControl GetPortalControl()
-  {
-    this->SyncControlArray();
-    if (this->Internals->ControlArrayValid)
-    {
-      // If the user writes into the iterator we return, then the execution
-      // array will become invalid. Play it safe and release the execution
-      // resources. (Use the const version to preserve the execution array.)
-      this->ReleaseResourcesExecutionInternal();
-      return this->Internals->ControlArray.GetPortal();
-    }
-    else
-    {
-      throw vtkm::cont::ErrorControlInternal(
-            "ArrayHandle::SyncControlArray did not make control array valid.");
-    }
-  }
+  VTKM_CONT PortalControl GetPortalControl();
 
   /// Get the array portal of the control array.
   ///
-  VTKM_CONT PortalConstControl GetPortalConstControl() const
-  {
-    this->SyncControlArray();
-    if (this->Internals->ControlArrayValid)
-    {
-      return this->Internals->ControlArray.GetPortalConst();
-    }
-    else
-    {
-      throw vtkm::cont::ErrorControlInternal(
-            "ArrayHandle::SyncControlArray did not make control array valid.");
-    }
-  }
+  VTKM_CONT PortalConstControl GetPortalConstControl() const;
 
   /// Returns the number of entries in the array.
   ///
-  VTKM_CONT vtkm::Id GetNumberOfValues() const
-  {
-    if (this->Internals->ControlArrayValid)
-    {
-      return this->Internals->ControlArray.GetNumberOfValues();
-    }
-    else if (this->Internals->ExecutionArrayValid)
-    {
-      return this->Internals->ExecutionArray->GetNumberOfValues();
-    }
-    else
-    {
-      return 0;
-    }
-  }
+  VTKM_CONT vtkm::Id GetNumberOfValues() const;
 
   /// Copies data into the given iterator for the control environment. This
   /// method can skip copying into an internally managed control array.
   ///
   template<typename IteratorType, typename DeviceAdapterTag>
-  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const
-  {
-    using pointer_type = typename std::iterator_traits<IteratorType>::pointer;
-    using value_type = typename std::remove_pointer<pointer_type>::type;
-
-    static_assert( !std::is_const<value_type>::value,
-                   "CopyInto requires a non const iterator." );
-
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-    if (!this->Internals->ControlArrayValid &&
-        !this->Internals->ExecutionArrayValid)
-      {
-      throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle has no data to copy into Iterator.");
-      }
-
-    if (!this->Internals->ControlArrayValid &&
-        this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
-      {
-        /// Dynamically cast ArrayHandleExecutionManagerBase into a concrete
-        /// class and call CopyInto. The dynamic conversion will be sucessful
-        /// becuase the check to ensure the ExecutionArray is of the type
-        /// DeviceAdapterTag has already passed
-        typedef vtkm::cont::internal::ArrayHandleExecutionManager<
-                                T, StorageTag, DeviceAdapterTag> ConcreteType;
-        ConcreteType *ConcreteExecutionArray =
-                  dynamic_cast<ConcreteType*>(this->Internals->ExecutionArray.get());
-
-        ConcreteExecutionArray->CopyInto(dest);
-      }
-    else
-      {
-      PortalConstControl portal = this->GetPortalConstControl();
-      std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-                vtkm::cont::ArrayPortalToIteratorEnd(portal),
-                dest);
-      }
-  }
+  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const;
 
   /// \brief Allocates an array large enough to hold the given number of values.
   ///
   /// The allocation may be done on an already existing array, but can wipe out
   /// any data already in the array. This method can throw
-  /// ErrorControlBadAllocation if the array cannot be allocated or
-  /// ErrorControlBadValue if the allocation is not feasible (for example, the
+  /// ErrorBadAllocation if the array cannot be allocated or
+  /// ErrorBadValue if the allocation is not feasible (for example, the
   /// array storage is read-only).
   ///
   VTKM_CONT
@@ -450,33 +357,7 @@ public:
   /// \c numberOfValues must be equal or less than the preexisting size
   /// (returned from GetNumberOfValues). That is, this method can only be used
   /// to shorten the array, not lengthen.
-  void Shrink(vtkm::Id numberOfValues)
-  {
-    vtkm::Id originalNumberOfValues = this->GetNumberOfValues();
-
-    if (numberOfValues < originalNumberOfValues)
-    {
-      if (this->Internals->ControlArrayValid)
-      {
-        this->Internals->ControlArray.Shrink(numberOfValues);
-      }
-      if (this->Internals->ExecutionArrayValid)
-      {
-        this->Internals->ExecutionArray->Shrink(numberOfValues);
-      }
-    }
-    else if (numberOfValues == originalNumberOfValues)
-    {
-      // Nothing to do.
-    }
-    else // numberOfValues > originalNumberOfValues
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle::Shrink cannot be used to grow array.");
-    }
-
-    VTKM_ASSERT(this->GetNumberOfValues() == numberOfValues);
-  }
+  void Shrink(vtkm::Id numberOfValues);
 
   /// Releases any resources being used in the execution environment (that are
   /// not being shared by the control environment).
@@ -512,26 +393,7 @@ public:
   template<typename DeviceAdapterTag>
   VTKM_CONT
   typename ExecutionTypes<DeviceAdapterTag>::PortalConst
-  PrepareForInput(DeviceAdapterTag) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-    if (!this->Internals->ControlArrayValid
-        && !this->Internals->ExecutionArrayValid)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle has no data when PrepareForInput called.");
-    }
-
-    this->PrepareForDevice(DeviceAdapterTag());
-    typename ExecutionTypes<DeviceAdapterTag>::PortalConst portal =
-        this->Internals->ExecutionArray->PrepareForInput(
-          !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
-
-    this->Internals->ExecutionArrayValid = true;
-
-    return portal;
-  }
+  PrepareForInput(DeviceAdapterTag) const;
 
   /// Prepares (allocates) this array to be used as an output from an operation
   /// in the execution environment. The internal state of this class is set to
@@ -543,33 +405,7 @@ public:
   template<typename DeviceAdapterTag>
   VTKM_CONT
   typename ExecutionTypes<DeviceAdapterTag>::Portal
-  PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-    // Invalidate any control arrays.
-    // Should the control array resource be released? Probably not a good
-    // idea when shared with execution.
-    this->Internals->ControlArrayValid = false;
-
-    this->PrepareForDevice(DeviceAdapterTag());
-    typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
-        this->Internals->ExecutionArray->PrepareForOutput(numberOfValues,
-                                                          DeviceAdapterTag());
-
-    // We are assuming that the calling code will fill the array using the
-    // iterators we are returning, so go ahead and mark the execution array as
-    // having valid data. (A previous version of this class had a separate call
-    // to mark the array as filled, but that was onerous to call at the the
-    // right time and rather pointless since it is basically always the case
-    // that the array is going to be filled before anything else. In this
-    // implementation the only access to the array is through the iterators
-    // returned from this method, so you would have to work to invalidate this
-    // assumption anyway.)
-    this->Internals->ExecutionArrayValid = true;
-
-    return portal;
-  }
+  PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag);
 
   /// Prepares this array to be used in an in-place operation (both as input
   /// and output) in the execution environment. If necessary, copies data to
@@ -580,48 +416,36 @@ public:
   template<typename DeviceAdapterTag>
   VTKM_CONT
   typename ExecutionTypes<DeviceAdapterTag>::Portal
-  PrepareForInPlace(DeviceAdapterTag)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
+  PrepareForInPlace(DeviceAdapterTag);
 
-    if (!this->Internals->ControlArrayValid
-        && !this->Internals->ExecutionArrayValid)
-    {
-      throw vtkm::cont::ErrorControlBadValue(
-        "ArrayHandle has no data when PrepareForInPlace called.");
-    }
-
-    this->PrepareForDevice(DeviceAdapterTag());
-    typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
-        this->Internals->ExecutionArray->PrepareForInPlace(
-          !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
-
-    this->Internals->ExecutionArrayValid = true;
-
-    // Invalidate any control arrays since their data will become invalid when
-    // the execution data is overwritten. Don't actually release the control
-    // array. It may be shared as the execution array.
-    this->Internals->ControlArrayValid = false;
-
-    return portal;
-  }
-
-  /// Like a pointer, two \c ArrayHandles are considered equal if they point
-  /// to the same location in memory.
+  /// Gets this array handle ready to interact with the given device. If the
+  /// array handle has already interacted with this device, then this method
+  /// does nothing. Although the internal state of this class can change, the
+  /// method is declared const because logically the data does not.
   ///
+  template<typename DeviceAdapterTag>
   VTKM_CONT
-  bool operator==(const ArrayHandle<ValueType,StorageTag> &rhs) const
-  {
-    return (this->Internals.get() == rhs.Internals.get());
-  }
+  void PrepareForDevice(DeviceAdapterTag) const;
+
+  /// Synchronizes the control array with the execution array. If either the
+  /// user array or control array is already valid, this method does nothing
+  /// (because the data is already available in the control environment).
+  /// Although the internal state of this class can change, the method is
+  /// declared const because logically the data does not.
+  ///
+  VTKM_CONT void SyncControlArray() const;
+
   VTKM_CONT
-  bool operator!=(const ArrayHandle<ValueType,StorageTag> &rhs) const
+  void ReleaseResourcesExecutionInternal()
   {
-    return (this->Internals.get() != rhs.Internals.get());
+    if (this->Internals->ExecutionArrayValid)
+    {
+      this->Internals->ExecutionArray->ReleaseResources();
+      this->Internals->ExecutionArrayValid = false;
+    }
   }
 
-// private:
-  struct InternalStruct
+  struct VTKM_ALWAYS_EXPORT InternalStruct
   {
     StorageType ControlArray;
     bool ControlArrayValid;
@@ -636,91 +460,6 @@ public:
   ArrayHandle(const std::shared_ptr<InternalStruct>& i)
     : Internals(i)
   { }
-
-  /// Gets this array handle ready to interact with the given device. If the
-  /// array handle has already interacted with this device, then this method
-  /// does nothing. Although the internal state of this class can change, the
-  /// method is declared const because logically the data does not.
-  ///
-  template<typename DeviceAdapterTag>
-  VTKM_CONT
-  void PrepareForDevice(DeviceAdapterTag) const
-  {
-    if (this->Internals->ExecutionArray != nullptr)
-    {
-      if (this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
-      {
-        // Already have manager for correct device adapter. Nothing to do.
-        return;
-      }
-      else
-      {
-        // Have the wrong manager. Delete the old one and create a new one
-        // of the right type. (BTW, it would be possible for the array handle
-        // to hold references to execution arrays on multiple devices. However,
-        // there is not a clear use case for that yet and it is unclear what
-        // the behavior of "dirty" arrays should be, so it is not currently
-        // implemented.)
-        this->SyncControlArray();
-        // Need to change some state that does not change the logical state from
-        // an external point of view.
-        InternalStruct *internals
-            = const_cast<InternalStruct*>(this->Internals.get());
-        internals->ExecutionArray.reset();
-        internals->ExecutionArrayValid = false;
-        }
-      }
-
-    VTKM_ASSERT(this->Internals->ExecutionArray == nullptr);
-    VTKM_ASSERT(!this->Internals->ExecutionArrayValid);
-    // Need to change some state that does not change the logical state from
-    // an external point of view.
-    InternalStruct *internals
-        = const_cast<InternalStruct*>(this->Internals.get());
-    internals->ExecutionArray.reset(
-          new vtkm::cont::internal::ArrayHandleExecutionManager<
-            T, StorageTag, DeviceAdapterTag>(&internals->ControlArray));
-  }
-
-  /// Synchronizes the control array with the execution array. If either the
-  /// user array or control array is already valid, this method does nothing
-  /// (because the data is already available in the control environment).
-  /// Although the internal state of this class can change, the method is
-  /// declared const because logically the data does not.
-  ///
-  VTKM_CONT void SyncControlArray() const
-  {
-    if (!this->Internals->ControlArrayValid)
-    {
-      // Need to change some state that does not change the logical state from
-      // an external point of view.
-      InternalStruct *internals
-        = const_cast<InternalStruct*>(this->Internals.get());
-      if (this->Internals->ExecutionArrayValid)
-      {
-        internals->ExecutionArray->RetrieveOutputData(&internals->ControlArray);
-        internals->ControlArrayValid = true;
-      }
-      else
-      {
-        // This array is in the null state (there is nothing allocated), but
-        // the calling function wants to do something with the array. Put this
-        // class into a valid state by allocating an array of size 0.
-        internals->ControlArray.Allocate(0);
-        internals->ControlArrayValid = true;
-      }
-    }
-  }
-
-  VTKM_CONT
-  void ReleaseResourcesExecutionInternal()
-  {
-    if (this->Internals->ExecutionArrayValid)
-    {
-      this->Internals->ExecutionArray->ReleaseResources();
-      this->Internals->ExecutionArrayValid = false;
-    }
-  }
 
   std::shared_ptr<InternalStruct> Internals;
 };
@@ -748,64 +487,207 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
 make_ArrayHandle(const std::vector<T,Allocator> &array)
 {
-  return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()));
+  if (!array.empty())
+  {
+    return make_ArrayHandle(&array.front(),
+                            static_cast<vtkm::Id>(array.size()));
+  }
+  else
+  {
+    // Vector empty. Just return an empty array handle.
+    return vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>();
+  }
 }
 
-template<typename T, typename StorageT>
+namespace detail {
+
+template<typename T>
+VTKM_NEVER_EXPORT
 VTKM_CONT
-void
+inline void printSummary_ArrayHandle_Value(const T &value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << value;
+}
+
+template<typename T>
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(const T &value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagMultipleComponents)
+{
+  using Traits = vtkm::VecTraits<T>;
+  using ComponentType = typename Traits::ComponentType;
+  using IsVecOfVec = typename vtkm::VecTraits<ComponentType>::HasMultipleComponents;
+  vtkm::IdComponent numComponents = Traits::GetNumberOfComponents(value);
+  out << "(";
+  printSummary_ArrayHandle_Value(Traits::GetComponent(value,0), out, IsVecOfVec());
+  for (vtkm::IdComponent index = 1; index < numComponents; ++index)
+  {
+    out << ",";
+    printSummary_ArrayHandle_Value(Traits::GetComponent(value,index), out, IsVecOfVec());
+  }
+  out << ")";
+}
+
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(UInt8 value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << static_cast<int>(value);
+}
+
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(Int8 value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << static_cast<int>(value);
+}
+
+template<typename T1, typename T2>
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(const vtkm::Pair<T1,T2> &value,
+                                           std::ostream &out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << "{";
+  printSummary_ArrayHandle_Value(
+        value.first,
+        out,
+        typename vtkm::VecTraits<T1>::HasMultipleComponents());
+  out << ",";
+  printSummary_ArrayHandle_Value(
+        value.second,
+        out,
+        typename vtkm::VecTraits<T2>::HasMultipleComponents());
+  out << "}";
+}
+
+} // namespace detail
+
+template<typename T, typename StorageT>
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void
 printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<T,StorageT> &array,
                          std::ostream &out)
 {
-    vtkm::Id sz = array.GetNumberOfValues();
-    out<<"sz= "<<sz<<" [";
-    if (sz <= 7)
-        for (vtkm::Id i = 0 ; i < sz; i++)
-        {
-            out<<array.GetPortalConstControl().Get(i);
-            if (i != (sz-1)) out<<" ";
-        }
-    else
-    {
-        out<<array.GetPortalConstControl().Get(0)<<" ";
-        out<<array.GetPortalConstControl().Get(1)<<" ";
-        out<<array.GetPortalConstControl().Get(2);
-        out<<" ... ";
-        out<<array.GetPortalConstControl().Get(sz-3)<<" ";
-        out<<array.GetPortalConstControl().Get(sz-2)<<" ";
-        out<<array.GetPortalConstControl().Get(sz-1);
-    }
-    out<<"]";
-}
+  using ArrayType = vtkm::cont::ArrayHandle<T,StorageT>;
+  using PortalType = typename ArrayType::PortalConstControl;
+  using IsVec = typename vtkm::VecTraits<T>::HasMultipleComponents;
 
-template<typename StorageT>
-VTKM_CONT
-void
-printSummary_ArrayHandle(const vtkm::cont::ArrayHandle<vtkm::UInt8,StorageT> &array,
-                         std::ostream &out)
-{
-    vtkm::Id sz = array.GetNumberOfValues();
-    out<<"sz= "<<sz<<" [";
-    if (sz <= 7)
-        for (vtkm::Id i = 0 ; i < sz; i++)
-        {
-            out<<static_cast<int>(array.GetPortalConstControl().Get(i));
-            if (i != (sz-1)) out<<" ";
-        }
-    else
+  vtkm::Id sz = array.GetNumberOfValues();
+
+  out << "valueType=" << typeid(T).name()
+      << " storageType=" << typeid(StorageT).name()
+      << " numValues=" << sz
+      << " [";
+
+  PortalType portal = array.GetPortalConstControl();
+  if (sz <= 7)
+  {
+    for (vtkm::Id i = 0 ; i < sz; i++)
     {
-        out<<static_cast<int>(array.GetPortalConstControl().Get(0))<<" ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(1))<<" ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(2));
-        out<<" ... ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(sz-3))<<" ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(sz-2))<<" ";
-        out<<static_cast<int>(array.GetPortalConstControl().Get(sz-1));
+      detail::printSummary_ArrayHandle_Value(portal.Get(i), out, IsVec());
+      if (i != (sz-1))
+      {
+        out<<" ";
+      }
     }
-    out<<"]";
+  }
+  else
+  {
+    detail::printSummary_ArrayHandle_Value(portal.Get(0), out, IsVec());
+    out << " ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(1), out, IsVec());
+    out << " ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(2), out, IsVec());
+    out << " ... ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(sz-3), out, IsVec());
+    out << " ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(sz-2), out, IsVec());
+    out << " ";
+    detail::printSummary_ArrayHandle_Value(portal.Get(sz-1), out, IsVec());
+  }
+  out<<"]\n";
 }
 
 }
+} //namespace vtkm::cont
+
+#ifndef vtkm_cont_ArrayHandle_cxx
+
+#ifdef VTKM_MSVC
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<char, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::Int8, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::UInt8, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::Int16, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::UInt16, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::Int32, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::UInt32, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::Int64, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::UInt64, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::Float32, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic>::InternalStruct >;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Int64,2>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Int32,2>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,2>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float64,2>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Int64,3>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Int32,3>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float64,3>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<char,4>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Int8,4>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::UInt8,4>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,4>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float64,4>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+#endif
+
+namespace vtkm {
+namespace cont {
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<char, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int8, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt8, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int16, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt16, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Int64, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::UInt64, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Float32, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Float64, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int64,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int32,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float32,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float64,2>, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int64,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int32,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float32,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float64,3>, StorageTagBasic>;
+
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<char,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Int8,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::UInt8,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float32,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle< vtkm::Vec<vtkm::Float64,4>, StorageTagBasic>;
 }
+}
+#endif
+
+#include <vtkm/cont/ArrayHandle.hxx>
 
 #endif //vtk_m_cont_ArrayHandle_h

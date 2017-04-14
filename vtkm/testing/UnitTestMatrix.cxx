@@ -243,7 +243,7 @@ struct MatrixTest
   }
 
 private:
-  MatrixTest(); // Not implemented
+  MatrixTest() = delete;
 };
 
 template<typename T, int NumRow>
@@ -531,7 +531,7 @@ struct SquareMatrixTest {
   }
 
 private:
-  SquareMatrixTest();  // Not implemented
+  SquareMatrixTest() = delete;
 };
 
 struct MatrixTestFunctor

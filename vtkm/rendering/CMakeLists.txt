@@ -43,6 +43,7 @@ set(headers
   TextAnnotationScreen.h
   Triangulator.h
   View.h
+  View1D.h
   View2D.h
   View3D.h
   WorldAnnotator.h
@@ -59,6 +60,7 @@ set(sources
   Camera.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
+  Color.cxx
   ColorBarAnnotation.cxx
   ColorTable.cxx
   DecodePNG.cxx
@@ -70,11 +72,13 @@ set(sources
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
   View.cxx
+  View1D.cxx
   View2D.cxx
   View3D.cxx
   WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
+  raytracing/Ray.cxx
   )
 
 set(opengl_headers
@@ -118,7 +122,7 @@ vtkm_configure_component_OpenGL()
 if(VTKm_OpenGL_FOUND)
   list(APPEND headers ${opengl_headers})
   list(APPEND sources ${opengl_sources})
-  
+
   vtkm_configure_component_OSMesa()
   if(VTKm_OSMesa_FOUND)
     list(APPEND headers ${osmesa_headers})
@@ -140,17 +144,20 @@ endif()
 
 vtkm_declare_headers(${headers})
 
-if (VTKm_ENABLE_CUDA)
-  vtkm_library(
-    SOURCES ${sources}
-    CUDA
-    WRAP_FOR_CUDA ${device_sources}
-    )
-else()
-  vtkm_library(
-    SOURCES ${sources}
-    )
-endif()
+vtkm_library(
+  SOURCES ${sources}
+  WRAP_FOR_CUDA ${device_sources}
+  )
+
+target_link_libraries(vtkm_rendering
+                      PUBLIC vtkm_cont
+                      PRIVATE ${VTKm_OPENGL_LIBRARIES}
+                              ${VTKm_BACKEND_LIBRARIES}
+                      )
+target_include_directories(vtkm_rendering
+                          PRIVATE ${VTKm_OPENGL_INCLUDE_DIRS}
+                                  ${VTKm_BACKEND_INCLUDE_DIRS}
+                          )
 
 # Subclasses need rendering library
 vtkm_configure_component_Rendering()
