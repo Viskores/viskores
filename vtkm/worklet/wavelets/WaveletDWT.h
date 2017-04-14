@@ -720,6 +720,7 @@ this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
 
     // First inverse transform in Z direction
     BasicArrayType        afterZ;
+    afterZ.PrepareForOutput( inPretendDimX * inPretendDimY * inPretendDimZ, DeviceTag() );
     {
       BasicArrayType        ext1, ext2, ext3, ext4;
       vtkm::Id              extDimX = inPretendDimX; 
@@ -737,7 +738,6 @@ this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
                     filterLen, 
                     wmode, 
                     DeviceTag() );
-      afterZ.PrepareForOutput( inPretendDimX * inPretendDimY * inPretendDimZ, DeviceTag() );
       FrontBackXFormType worklet( 
                     WaveletBase::filter.GetLowReconstructFilter(),
                     WaveletBase::filter.GetHighReconstructFilter(),
@@ -762,6 +762,7 @@ this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
     
     // Second inverse transform in Y direction
     BasicArrayType      afterY;
+    afterY.PrepareForOutput( inPretendDimX * inPretendDimY * inPretendDimZ, DeviceTag() );
     {
       BasicArrayType     ext1, ext2, ext3, ext4;
       vtkm::Id extDimX = inPretendDimX;
@@ -779,7 +780,6 @@ this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
                     filterLen, 
                     wmode, 
                     DeviceTag()   ); 
-      afterY.PrepareForOutput( inPretendDimX * inPretendDimY * inPretendDimZ, DeviceTag() );
       TopDownXFormType  worklet( 
                     WaveletBase::filter.GetLowReconstructFilter(),
                     WaveletBase::filter.GetHighReconstructFilter(),
@@ -794,6 +794,12 @@ this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
                     0,                0,                0 );
       TopDownDispatcherType dispatcher( worklet );
       timer.Reset();
+std::cerr << "ext1 size: " << ext1.GetNumerOfValues() << std::endl;
+std::cerr << "ext2 size: " << ext1.GetNumerOfValues() << std::endl;
+std::cerr << "ext3 size: " << ext1.GetNumerOfValues() << std::endl;
+std::cerr << "ext4 size: " << ext1.GetNumerOfValues() << std::endl;
+std::cerr << "afterZ size: " << afterZ.GetNumerOfValues() << std::endl;
+std::cerr << "afterY size: " << afterY.GetNumerOfValues() << std::endl;
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterZ, afterY );
       computationTime += timer.GetElapsedTime();
     } 
