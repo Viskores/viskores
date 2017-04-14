@@ -111,12 +111,6 @@ public:
       vtkm::IdComponent k = index / PlaneSize;
       vtkm::IdComponent j = (index % PlaneSize) / RowSize; 
       vtkm::IdComponent i = index % RowSize;
-/*
-std::cout << "Point index " << index << " i " << i << " j " << j << " k " << k << std::endl;
-std::cout << "i " << i << " minbound " << OutBounds.X.Min << " maxbound " << OutBounds.X.Max << " sample " << Sample[0] << std::endl;
-std::cout << "j " << j << " minbound " << OutBounds.Y.Min << " maxbound " << OutBounds.Y.Max << " sample " << Sample[1] << std::endl;
-std::cout << "k " << k << " minbound " << OutBounds.Z.Min << " maxbound " << OutBounds.Z.Max << " sample " << Sample[2] << std::endl;
-*/
 
       // Within the subset range
       vtkm::Id3 ijk = vtkm::Id3(i, j, k);
@@ -131,7 +125,6 @@ std::cout << "k " << k << " minbound " << OutBounds.Z.Min << " maxbound " << Out
             ((k - minPt[2]) % Sample[2]) == 0)
         {
           passValue = 1;
-//std::cout << "Within sample" << std::endl;
         }
       }
       return passValue;
@@ -171,12 +164,6 @@ std::cout << "k " << k << " minbound " << OutBounds.Z.Min << " maxbound " << Out
       vtkm::IdComponent k = index / PlaneSize;
       vtkm::IdComponent j = (index % PlaneSize) / RowSize; 
       vtkm::IdComponent i = index % RowSize;
-/*
-std::cout << "Cell index " << index << " i " << i << " j " << j << " k " << k << std::endl;
-std::cout << "i " << i << " minbound " << OutBounds.X.Min << " maxbound " << OutBounds.X.Max << " sample " << Sample[0] << std::endl;
-std::cout << "j " << j << " minbound " << OutBounds.Y.Min << " maxbound " << OutBounds.Y.Max << " sample " << Sample[1] << std::endl;
-std::cout << "k " << k << " minbound " << OutBounds.Z.Min << " maxbound " << OutBounds.Z.Max << " sample " << Sample[2] << std::endl;
-*/
 
       // Within the subset range and sample range
       // Outer point of cell must be within range or is it not used
@@ -199,7 +186,6 @@ std::cout << "k " << k << " minbound " << OutBounds.Z.Min << " maxbound " << Out
               ((k - minPt[2]) % Sample[2]) == 0)
           {
             passValue = 1;
-//std::cout << "Within sample" << std::endl;
           }
         }
       }
@@ -231,9 +217,7 @@ std::cout << "POINT BOUNDS " << outBounds << std::endl;
 vtkm::Id count = 0;
 for (vtkm::Id i = 0; i < numberOfPoints; i++)
 {
-//std::cout << "Point " << i << " passed " << PointMap.GetPortalControl().Get(i) << std::endl;
-if (PointMap.GetPortalControl().Get(i) == 1)
-count++;
+if (PointMap.GetPortalControl().Get(i) == 1) count++;
 }
 std::cout << "Data Points " << count << std::endl;
 
@@ -256,9 +240,7 @@ std::cout << "CELL BOUNDS " << cellBounds << std::endl;
 count = 0;
 for (vtkm::Id i = 0; i < numberOfCells; i++)
 {
-//std::cout << "Cell " << i << " passed " << CellMap.GetPortalControl().Get(i) << std::endl;
-if (CellMap.GetPortalControl().Get(i) == 1)
-count++;
+if (CellMap.GetPortalControl().Get(i) == 1) count++;
 }
 std::cout << "Data Cells " << count << std::endl;
   }
@@ -373,7 +355,6 @@ std::cout << "Data Cells " << count << std::endl;
         output.AddCellSet(outCellSet);
       }
     }
-
 std::cout << "Geometry Points " << output.GetCellSet(0).GetNumberOfPoints() << std::endl;
 std::cout << "Geometry Cells " << output.GetCellSet(0).GetNumberOfCells() << std::endl;
 
@@ -412,11 +393,9 @@ std::cout << "Geometry Cells " << output.GetCellSet(0).GetNumberOfCells() << std
     inCoordinates = coordinateData.Cast<CartesianArrayHandle>();
 
     CartesianConstPortal Coordinates = inCoordinates.PrepareForInput(DeviceAdapter());
-    vtkm::Id NumberOfValues = Coordinates.GetNumberOfValues();
     DefaultConstHandle X = Coordinates.GetFirstPortal();
     DefaultConstHandle Y = Coordinates.GetSecondPortal();
     DefaultConstHandle Z = Coordinates.GetThirdPortal();
-    std::cout << "RECTILINEAR NumberOfValues " << NumberOfValues << std::endl;
 
     vtkm::Id3 inDimension(X.GetNumberOfValues(), 
                           Y.GetNumberOfValues(), 
@@ -543,7 +522,6 @@ std::cout << "Geometry Cells " << output.GetCellSet(0).GetNumberOfCells() << std
         output.AddCellSet(outCellSet);
       }
     }
-
 std::cout << "Number of Cells " << output.GetCellSet(0).GetNumberOfCells() << std::endl;
 std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << std::endl;
 
@@ -606,7 +584,6 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
     // Requested bounding box intersection with input bounding box
     vtkm::Bounds inBounds = coordinates.GetBounds();
     vtkm::Bounds outBounds = boundingBox;
-
     std::cout << "INPUT BOUNDING BOX " << inBounds << std::endl;
     std::cout << "ORIGINAL BOUNDING BOX " << boundingBox << std::endl;
     std::cout << "SAMPLE " << sample << std::endl;
@@ -640,8 +617,6 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
       outDim++;
     if (outBounds.Z.Min < outBounds.Z.Max)
       outDim++;
-    std::cout << "OUTPUT DIMENSION " << outDim << std::endl;
-
     if (outDim > inDim)
       outDim = inDim;
     std::cout << "OUTPUT DIMENSION " << outDim << std::endl;
@@ -653,8 +628,6 @@ std::cout << "Number of Points " << output.GetCellSet(0).GetNumberOfPoints() << 
     {
       IsUniformDataSet = true;
     }
-    //std::cout << "IsUniformDataSet " << IsUniformDataSet << std::endl;
-
     if (IsUniformDataSet)
     {
       return ExtractUniform(outDim,
