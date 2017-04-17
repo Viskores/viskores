@@ -298,6 +298,34 @@ struct ReduceByKeyUnaryStencilOp
   }
 
 };
+
+template <typename T, typename InputPortalType,
+  typename KeyStatePortalType, typename  OutputPortalType>
+struct ShiftCopyAndInit : vtkm::exec::FunctorBase
+{
+  InputPortalType Input;
+  KeyStatePortalType KeyState;
+  OutputPortalType Output;
+  T initValue;
+
+  ShiftCopyAndInit(const InputPortalType& _input,
+                   const KeyStatePortalType &kstate,
+                    OutputPortalType& _output,
+                   T _init) : Input(_input),
+                              KeyState(kstate),
+                              Output(_output),
+                              initValue(_init) {}
+
+  void operator()(vtkm::Id index) const
+  {
+    if (this->KeyState.Get(index).fStart) {
+      Output.Set(index, initValue);
+    } else {
+      Output.Set(index, Input.Get(index-1));
+    }
+  }
+};
+
 template<class InputPortalType, class OutputPortalType>
 struct CopyKernel
 {
@@ -808,23 +836,27 @@ struct InclusiveToExclusiveKernel : vtkm::exec::FunctorBase
   }
 };
 
-template <typename InPortalType, typename OutPortalType, typename BinaryFunctor>
+template <typename InPortalType, typename OutPortalType, typename StencilPortalType,
+  typename BinaryFunctor>
 struct InclusiveToExclusiveByKeyKernel : vtkm::exec::FunctorBase
 {
   typedef typename InPortalType::ValueType ValueType;
 
   InPortalType InPortal;
   OutPortalType OutPortal;
+  StencilPortalType StencilPortal;
   BinaryFunctor BinaryOperator;
   ValueType InitialValue;
 
   VTKM_CONT
   InclusiveToExclusiveByKeyKernel(const InPortalType &inPortal,
-                             const OutPortalType &outPortal,
-                             BinaryFunctor &binaryOperator,
-                             ValueType initialValue)
+                                  const OutPortalType &outPortal,
+                                  const StencilPortalType &stencilPortal,
+                                  BinaryFunctor &binaryOperator,
+                                  ValueType initialValue)
     : InPortal(inPortal),
       OutPortal(outPortal),
+      StencilPortal(stencilPortal),
       BinaryOperator(binaryOperator),
       InitialValue(initialValue)
   { }
@@ -833,7 +865,7 @@ struct InclusiveToExclusiveByKeyKernel : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    ValueType result = (index == 0) ? this->InitialValue :
+    ValueType result = (this->StencilPortal.Get(index).fState == true) ? this->InitialValue :
                        this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
     this->OutPortal.Set(index, result);
   }

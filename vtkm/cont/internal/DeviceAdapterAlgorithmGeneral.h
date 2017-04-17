@@ -551,20 +551,62 @@ public:
   // Scan Exclusive By Key
   template<typename T, typename U, typename KIn, typename VIn, typename VOut,
     class BinaryFunctor>
-  VTKM_CONT static T ScanExclusiveByKey(
+  VTKM_CONT static void ScanExclusiveByKey(
     const vtkm::cont::ArrayHandle<T, KIn>& keys,
     const vtkm::cont::ArrayHandle<U, VIn>& values,
     vtkm::cont::ArrayHandle<U ,VOut>& output,
     BinaryFunctor binaryFunctor,
-    const T& initialValue)
+    const U& initialValue)
   {
-    // TODO: add DerivedAlgorithm?
-    ScanInclusiveByKey(keys, values, output, binaryFunctor);
+    // 0. TODO: special case for 1 element input?
+    vtkm::Id numberOfKeys = keys.GetNumberOfValues();
 
+    // 1. Create head flags
+    //we need to determine based on the keys what is the keystate for
+    //each key. The states are start, middle, end of a series and the special
+    //state start and end of a series
+    vtkm::cont::ArrayHandle< ReduceKeySeriesStates > keystate;
+
+    {
+      typedef typename vtkm::cont::ArrayHandle<T,KIn>::template ExecutionTypes<DeviceAdapterTag>
+      ::PortalConst InputPortalType;
+
+      typedef typename vtkm::cont::ArrayHandle< ReduceKeySeriesStates >::template ExecutionTypes<DeviceAdapterTag>
+      ::Portal KeyStatePortalType;
+
+      InputPortalType inputPortal = keys.PrepareForInput(DeviceAdapterTag());
+      KeyStatePortalType keyStatePortal = keystate.PrepareForOutput(numberOfKeys,
+                                                                    DeviceAdapterTag());
+      ReduceStencilGeneration<InputPortalType, KeyStatePortalType> kernel(inputPortal, keyStatePortal);
+      DerivedAlgorithm::Schedule(kernel, numberOfKeys);
+    }
+
+    // 2. Shift input and initialize elements at head flags position to initValue
+    typedef typename vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic> TempArrayType;
+    typedef typename vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal TempPortalType;
+    TempArrayType temp;
+    {
+      typedef typename vtkm::cont::ArrayHandle<T,KIn>::template ExecutionTypes<DeviceAdapterTag>
+      ::PortalConst InputPortalType;
+
+      typedef typename vtkm::cont::ArrayHandle< ReduceKeySeriesStates >::template ExecutionTypes<DeviceAdapterTag>
+      ::PortalConst KeyStatePortalType;
+
+      InputPortalType inputPortal = values.PrepareForInput(DeviceAdapterTag());
+      KeyStatePortalType keyStatePortal = keystate.PrepareForInput(DeviceAdapterTag());
+      TempPortalType tempPortal = temp.PrepareForOutput(numberOfKeys,
+                                                              DeviceAdapterTag());
+
+      ShiftCopyAndInit<U, InputPortalType, KeyStatePortalType, TempPortalType>
+        kernel(inputPortal, keyStatePortal, tempPortal, initialValue);
+      DerivedAlgorithm::Schedule(kernel, numberOfKeys);
+    }
+    // 3. Perform an ScanInclusiveByKey
+    DerivedAlgorithm::ScanInclusiveByKey(keys, temp, output, binaryFunctor);
   }
 
   template<typename T, typename U, class KIn, typename VIn, typename VOut>
-  VTKM_CONT static T ScanExclusiveByKey(
+  VTKM_CONT static void ScanExclusiveByKey(
     const vtkm::cont::ArrayHandle<T, KIn>& keys,
     const vtkm::cont::ArrayHandle<U, VIn>& values,
     vtkm::cont::ArrayHandle<U, VOut>& output)
