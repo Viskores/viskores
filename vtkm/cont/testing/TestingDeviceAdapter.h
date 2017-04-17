@@ -1351,8 +1351,8 @@ private:
 
     IdArrayHandle valuesOut;
 
-    Algorithm::ScanExclusiveByKey(keys, values, valuesOut, vtkm::Add(), init);
-    
+    Algorithm::ScanExclusiveByKey(keys, values, valuesOut, init, vtkm::Add());
+
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
     for (auto i= 0; i < expectedLength; i++) {

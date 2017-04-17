@@ -719,27 +719,27 @@ private:
 
   template<typename KeysPortal, typename ValuesPortal, typename OutputPortal>
   VTKM_CONT static
-  typename ValuesPortal::ValueType ScanExclusiveByKeyPortal(const KeysPortal &keys,
-                                                            const ValuesPortal &values,
-                                                            const OutputPortal &output)
+  void ScanExclusiveByKeyPortal(const KeysPortal &keys,
+                                const ValuesPortal &values,
+                                const OutputPortal &output)
   {
     using KeyType = typename KeysPortal::ValueType;
     typedef typename OutputPortal::ValueType ValueType;
-    return ScanExclusiveByKeyPortal(keys, values, output,
-                                    vtkm::TypeTraits<ValueType>::ZeroInitialization(),
-                                    ::thrust::equal_to<KeyType>(),
-                                    ::thrust::plus<ValueType>());
+    ScanExclusiveByKeyPortal(keys, values, output,
+                             vtkm::TypeTraits<ValueType>::ZeroInitialization(),
+                             ::thrust::equal_to<KeyType>(),
+                             ::thrust::plus<ValueType>());
   }
 
   template<typename KeysPortal, typename ValuesPortal, typename OutputPortal, typename T,
     typename BinaryPredicate, typename AssociativeOperator>
   VTKM_CONT static
-  typename ValuesPortal::ValueType ScanExclusiveByKeyPortal(const KeysPortal &keys,
-                                                            const ValuesPortal &values,
-                                                            const OutputPortal &output,
-                                                            T initValue,
-                                                            BinaryPredicate binary_predicate,
-                                                            AssociativeOperator binary_operator)
+  void ScanExclusiveByKeyPortal(const KeysPortal &keys,
+                                const ValuesPortal &values,
+                                const OutputPortal &output,
+                                T initValue,
+                                BinaryPredicate binary_predicate,
+                                AssociativeOperator binary_operator)
   {
     typedef typename KeysPortal::ValueType KeyType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType,
@@ -761,12 +761,12 @@ private:
                                                          initValue,
                                                          bpred,
                                                          bop);
-      return *(end-1);
+      return;
     }
     catch(...)
     {
       throwAsVTKmException();
-      return typename ValuesPortal::ValueType();
+      return;
     }
 
     //return the value at the last index in the array, as that is the sum
@@ -1280,7 +1280,7 @@ public:
   }
 
   template<typename T, typename U, typename KIn, typename VIn, typename VOut>
-  VTKM_CONT static T ScanExclusiveByKey(
+  VTKM_CONT static void ScanExclusiveByKey(
     const vtkm::cont::ArrayHandle<T, KIn>& keys,
     const vtkm::cont::ArrayHandle<U, VIn>& values,
     vtkm::cont::ArrayHandle<U, VOut>& output)
@@ -1298,26 +1298,27 @@ public:
     //use case breaks.
     keys.PrepareForInput(DeviceAdapterTag());
     values.PrepareForInput(DeviceAdapterTag());
-    return ScanExnclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                                     values.PrepareForInput(DeviceAdapterTag()),
-                                     output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
-                                     vtkm::TypeTraits<T>::ZeroInitialization());
+    ScanExnclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                              values.PrepareForInput(DeviceAdapterTag()),
+                              output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                              vtkm::TypeTraits<T>::ZeroInitialization(),
+                              vtkm::Add());
   }
 
   template<typename T, typename U, typename KIn, typename VIn, typename VOut,
     typename BinaryFunctor>
-  VTKM_CONT static T ScanExclusiveByKey(
+  VTKM_CONT static void ScanExclusiveByKey(
     const vtkm::cont::ArrayHandle<T, KIn>& keys,
     const vtkm::cont::ArrayHandle<U, VIn>& values,
     vtkm::cont::ArrayHandle<U, VOut>& output,
-    BinaryFunctor binary_functor,
-  const U& initialValue)
+    const U& initialValue,
+    BinaryFunctor binary_functor)
   {
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
       output.PrepareForOutput(0, DeviceAdapterTag());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
+      return;
     }
 
     //We need call PrepareForInput on the input argument before invoking a
@@ -1326,12 +1327,12 @@ public:
     //use case breaks.
     keys.PrepareForInput(DeviceAdapterTag());
     values.PrepareForInput(DeviceAdapterTag());
-    return ScanExclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                                    values.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
-                                    initialValue,
-                                    ::thrust::equal_to<T>(),
-                                    binary_functor);
+    ScanExclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                             values.PrepareForInput(DeviceAdapterTag()),
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                             initialValue,
+                             ::thrust::equal_to<T>(),
+                             binary_functor);
   }
 // Because of some funny code conversions in nvcc, kernels for devices have to
 // be public.

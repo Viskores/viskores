@@ -555,8 +555,8 @@ public:
     const vtkm::cont::ArrayHandle<T, KIn>& keys,
     const vtkm::cont::ArrayHandle<U, VIn>& values,
     vtkm::cont::ArrayHandle<U ,VOut>& output,
-    BinaryFunctor binaryFunctor,
-    const U& initialValue)
+    const U& initialValue,
+    BinaryFunctor binaryFunctor)
   {
     // 0. TODO: special case for 1 element input?
     vtkm::Id numberOfKeys = keys.GetNumberOfValues();
@@ -601,7 +601,7 @@ public:
         kernel(inputPortal, keyStatePortal, tempPortal, initialValue);
       DerivedAlgorithm::Schedule(kernel, numberOfKeys);
     }
-    // 3. Perform an ScanInclusiveByKey
+    // 3. Perform a ScanInclusiveByKey
     DerivedAlgorithm::ScanInclusiveByKey(keys, temp, output, binaryFunctor);
   }
 
@@ -612,8 +612,9 @@ public:
     vtkm::cont::ArrayHandle<U, VOut>& output)
   {
     // TODO: add DerivedAlgorithm?
-    ScanExclusiveByKey(keys, values, output, vtkm::Sum(),
-                       vtkm::TypeTraits<U>::ZeroInitialization());
+    ScanExclusiveByKey(keys, values, output,
+                       vtkm::TypeTraits<U>::ZeroInitialization(),
+                       vtkm::Sum());
   }
 
   //--------------------------------------------------------------------------
