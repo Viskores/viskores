@@ -69,7 +69,7 @@ public:
                                       const DeviceAdapter&)
   {
     TetrahedralizeExplicit<DeviceAdapter> worklet;
-    return worklet.Run(cellSet, this->OutCellsPerCell); 
+    return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
   // Tetrahedralize structured data set, save number of tetra cells per input
@@ -78,7 +78,7 @@ public:
                                       const DeviceAdapter&)
   {
     TetrahedralizeStructured<DeviceAdapter> worklet;
-    return worklet.Run(cellSet, this->OutCellsPerCell); 
+    return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
   template <typename DeviceAdapter>
@@ -86,7 +86,6 @@ public:
                                       const DeviceAdapter&)
   {
     throw vtkm::cont::ErrorBadType("CellSetStructured<2> can't be tetrahedralized");
-    return vtkm::cont::CellSetSingleType<>();
   }
 
   // Using the saved input to output cells, expand cell data

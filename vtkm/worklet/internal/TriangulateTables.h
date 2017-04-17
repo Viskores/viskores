@@ -86,7 +86,8 @@ public:
   typedef typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst
       PortalType;
 
-  VTKM_EXEC_CONT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
   TriangulateTablesExecutionObject()
   {  }
 
@@ -234,7 +235,8 @@ public:
   typedef typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst
       PortalType;
 
-  VTKM_EXEC_CONT
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
   TetrahedralizeTablesExecutionObject()
   {  }
 
