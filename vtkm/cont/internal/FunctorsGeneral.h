@@ -836,41 +836,6 @@ struct InclusiveToExclusiveKernel : vtkm::exec::FunctorBase
   }
 };
 
-template <typename InPortalType, typename OutPortalType, typename StencilPortalType,
-  typename BinaryFunctor>
-struct InclusiveToExclusiveByKeyKernel : vtkm::exec::FunctorBase
-{
-  typedef typename InPortalType::ValueType ValueType;
-
-  InPortalType InPortal;
-  OutPortalType OutPortal;
-  StencilPortalType StencilPortal;
-  BinaryFunctor BinaryOperator;
-  ValueType InitialValue;
-
-  VTKM_CONT
-  InclusiveToExclusiveByKeyKernel(const InPortalType &inPortal,
-                                  const OutPortalType &outPortal,
-                                  const StencilPortalType &stencilPortal,
-                                  BinaryFunctor &binaryOperator,
-                                  ValueType initialValue)
-    : InPortal(inPortal),
-      OutPortal(outPortal),
-      StencilPortal(stencilPortal),
-      BinaryOperator(binaryOperator),
-      InitialValue(initialValue)
-  { }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  void operator()(vtkm::Id index) const
-  {
-    ValueType result = (this->StencilPortal.Get(index).fState == true) ? this->InitialValue :
-                       this->BinaryOperator(this->InitialValue, this->InPortal.Get(index - 1));
-    this->OutPortal.Set(index, result);
-  }
-};
-
 template<typename PortalType, typename BinaryFunctor>
 struct ScanKernel : vtkm::exec::FunctorBase
 {
