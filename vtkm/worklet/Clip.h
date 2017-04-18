@@ -177,22 +177,6 @@ struct EdgeInterpolation
 };
 
 
-VTKM_EXEC_CONT
-std::ostream& operator<<(std::ostream &out, const ClipStats &val)
-{
-  return out << std::endl << "{ Cells: " << val.NumberOfCells
-             << ", Indices: " << val.NumberOfIndices
-             << ", NewPoints: " << val.NumberOfNewPoints << " }";
-}
-
-VTKM_EXEC_CONT
-std::ostream& operator<<(std::ostream &out, const EdgeInterpolation &val)
-{
-  return out << std::endl << "{ Vertex1: " << val.Vertex1
-             << ", Vertex2: " << val.Vertex2
-             << ", Weight: " << val.Weight << " }";
-}
-
 class Clip
 {
 public:
@@ -543,6 +527,8 @@ public:
     VTKM_CONT
     void operator()(const ArrayHandleType &handle) const
     {
+      // Evaluate the implicit function on the input coordinates using
+      // ArrayHandleTransform
       vtkm::cont::ArrayHandleTransform<
         vtkm::FloatDefault,
         ArrayHandleType,

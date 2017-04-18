@@ -21,7 +21,8 @@
 set(headers
   CellAverage.h
   CleanGrid.h
-  Clip.h
+  ClipWithField.h
+  ClipWithImplicitFunction.h
   ContourTreeUniform.h
   ExternalFaces.h
   FieldMetadata.h
@@ -53,7 +54,8 @@ set(headers
 set(header_template_sources
   CellAverage.hxx
   CleanGrid.hxx
-  Clip.hxx
+  ClipWithField.h
+  ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
   ExternalFaces.hxx
   FilterCell.hxx
