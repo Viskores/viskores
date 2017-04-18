@@ -1988,7 +1988,7 @@ private:
 
       TestScanInclusive();
       TestScanInclusiveWithComparisonObject();
-      
+
       TestScanExclusiveByKeyOne();
       TestScanInclusiveByKey();
 
