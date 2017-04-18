@@ -58,10 +58,15 @@ struct ArrayRangeComputeFunctor
 
     typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
 
+    this->RangeArray.Allocate(NumberOfComponents);
+
     if (this->InputArray.GetNumberOfValues() < 1)
     {
-      throw vtkm::cont::ErrorBadValue(
-            "Called ArrayComputeRange on empty array (which has no range).");
+      for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
+      {
+        this->RangeArray.GetPortalControl().Set(i, vtkm::Range());
+      }
+      return true;
     }
 
     vtkm::Vec<ValueType,2> initial(
@@ -72,7 +77,6 @@ struct ArrayRangeComputeFunctor
                           initial,
                           vtkm::MinAndMax<ValueType>());
 
-    this->RangeArray.Allocate(NumberOfComponents);
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
       this->RangeArray.GetPortalControl().Set(
