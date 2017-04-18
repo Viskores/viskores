@@ -97,10 +97,11 @@ public:
     CreatePointMap(const vtkm::Id3 inDimension,
                    const vtkm::Bounds &outBounds,
                    const vtkm::Id3 &sample) :
-                         RowSize(inDimension[1]),
+                         RowSize(inDimension[0]),
                          PlaneSize(inDimension[1] * inDimension[0]),
                          OutBounds(outBounds),
-                         Sample(sample) {}
+                         Sample(sample) 
+    {}
 
     VTKM_EXEC
     vtkm::IdComponent operator()(const vtkm::Id index) const
@@ -108,9 +109,9 @@ public:
       vtkm::IdComponent passValue = 0;
 
       // Position of this point or cell in the grid
-      vtkm::IdComponent k = index / PlaneSize;
-      vtkm::IdComponent j = (index % PlaneSize) / RowSize; 
-      vtkm::IdComponent i = index % RowSize;
+      vtkm::Id k = index / PlaneSize;
+      vtkm::Id j = (index % PlaneSize) / RowSize; 
+      vtkm::Id i = index % RowSize;
 
       // Within the subset range
       vtkm::Id3 ijk = vtkm::Id3(i, j, k);
@@ -150,8 +151,8 @@ public:
     CreateCellMap(const vtkm::Id3 inDimension,
                   const vtkm::Bounds &outBounds,
                   const vtkm::Id3 &sample) :
-                         RowSize(inDimension[1]),
-                         PlaneSize(inDimension[1] * inDimension[0]),
+                         RowSize(inDimension[0]),
+                         PlaneSize(inDimension[0] * inDimension[1]),
                          OutBounds(outBounds),
                          Sample(sample) {}
 
@@ -161,9 +162,9 @@ public:
       vtkm::IdComponent passValue = 0;
 
       // Position of this point or cell in the grid
-      vtkm::IdComponent k = index / PlaneSize;
-      vtkm::IdComponent j = (index % PlaneSize) / RowSize; 
-      vtkm::IdComponent i = index % RowSize;
+      vtkm::Id k = index / PlaneSize;
+      vtkm::Id j = (index % PlaneSize) / RowSize; 
+      vtkm::Id i = index % RowSize;
 
       // Within the subset range and sample range
       // Outer point of cell must be within range or is it not used
@@ -217,6 +218,7 @@ std::cout << "POINT BOUNDS " << outBounds << std::endl;
 vtkm::Id count = 0;
 for (vtkm::Id i = 0; i < numberOfPoints; i++)
 {
+std::cout << "point " << i << " = " << PointMap.GetPortalControl().Get(i) << std::endl;
 if (PointMap.GetPortalControl().Get(i) == 1) count++;
 }
 std::cout << "Data Points " << count << std::endl;
