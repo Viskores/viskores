@@ -546,7 +546,6 @@ public:
   }
 
   //--------------------------------------------------------------------------
-  // TODO: what is the return type/value?
   // Scan Exclusive By Key
   template<typename T, typename U, typename KIn, typename VIn, typename VOut,
     class BinaryFunctor>
@@ -557,8 +556,21 @@ public:
     const U& initialValue,
     BinaryFunctor binaryFunctor)
   {
-    // 0. TODO: special case for 1 element input?
+    VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
+
+    // 0. Special case for 0 and 1 element input
     vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+
+    if (numberOfKeys == 0)
+    {
+      return;
+    }
+    else if (numberOfKeys == 1)
+    {
+      output.PrepareForOutput(1, DeviceAdapterTag());
+      output.GetPortalControl().Set(0, initialValue);
+      return;
+    }
 
     // 1. Create head flags
     //we need to determine based on the keys what is the keystate for
