@@ -69,7 +69,7 @@ public:
                                       const DeviceAdapter&)
   {
     TriangulateExplicit<DeviceAdapter> worklet;
-    return worklet.Run(cellSet, this->OutCellsPerCell); 
+    return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
   // Triangulate structured data set, save number of triangulated cells per input
@@ -78,7 +78,7 @@ public:
                                       const DeviceAdapter&)
   {
     TriangulateStructured<DeviceAdapter> worklet;
-    return worklet.Run(cellSet, this->OutCellsPerCell); 
+    return worklet.Run(cellSet, this->OutCellsPerCell);
   }
 
   template <typename DeviceAdapter>
@@ -86,7 +86,6 @@ public:
                                       const DeviceAdapter&)
   {
     throw vtkm::cont::ErrorBadType("CellSetStructured<3> can't be triangulated");
-    return vtkm::cont::CellSetSingleType<>();
   }
 
   // Using the saved input to output cells, expand cell data
