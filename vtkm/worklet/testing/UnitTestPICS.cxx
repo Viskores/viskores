@@ -42,7 +42,7 @@ createDataSet(const std::string &fileName)
   int dims[3];
   ret_code = fread(dims, sizeof(int), 3, pFile);
   const vtkm::Id3 vdims(dims[0], dims[1], dims[2]);
-  std::cout<<vdims<<std::endl;
+  //std::cout<<vdims<<std::endl;
 
   // Read vector data at each point of the uniform grid and store
   vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
@@ -148,6 +148,7 @@ void TestPICSUniformGrid()
 
   std::vector<vtkm::Vec<FieldType,3> > seeds;
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
+  srand(314);
   for (int i = 0; i < numSeeds; i++)
   {
       vtkm::Vec<FieldType, 3> p;
@@ -176,14 +177,14 @@ int UnitTestPICS(int argc, char *argv[])
     numSeeds = atoi(argv[1]);
     tornadoFile = argv[2];
     
-    std::cout<<"Num seeds= "<<numSeeds<<std::endl;
-    std::cout<<"Data file= "<<tornadoFile<<std::endl;
+    std::cerr<<"Num seeds= "<<numSeeds<<std::endl;
+    std::cerr<<"Data file= "<<tornadoFile<<std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
     auto test_result = vtkm::cont::testing::Testing::Run(TestPICSUniformGrid);
     auto duration_taken = std::chrono::high_resolution_clock::now() - start;
     std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(duration_taken).count();
-    std::cout << "Runtime = " << runtime << " ms" << std::endl;
+    std::cerr << "Runtime = " << runtime << " ms" << std::endl;
 
     //test_result = vtkm::cont::testing::Testing::Run(TestPICSAnalyticalOrbit);
 

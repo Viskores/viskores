@@ -72,11 +72,12 @@ public:
 
     VTKM_EXEC_CONT            
     IntegralCurve(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
+                  vtkm::cont::ArrayHandle<vtkm::Id> &stepsArray,
                   const vtkm::Id &_maxSteps) :
         maxSteps(_maxSteps)
     {
         pos = posArray.PrepareForInPlace(DeviceAdapterTag());
-        vtkm::Id nPos = posArray.GetNumberOfValues();
+        steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
     }
 
     VTKM_EXEC_CONT                
@@ -84,14 +85,13 @@ public:
                   const vtkm::Vec<T,3> &pt)
     {
         pos.Set(idx, pt);
-        //steps.Set(idx, steps.Get(idx)+1);
+        steps.Set(idx, steps.Get(idx)+1);
     }
 
     VTKM_EXEC_CONT                    
     bool Done(const vtkm::Id &idx)
     {
-        return false;
-        //return steps.Get(idx) == maxSteps;
+        return steps.Get(idx) == maxSteps;
     }
 
     VTKM_EXEC_CONT                        
@@ -99,10 +99,86 @@ public:
     
 private:
     vtkm::Id maxSteps;
-    
     IdPortal steps;
     PosPortal pos;
 };
+
+
+template<typename T,typename DeviceAdapterTag>
+class StateRecordingIntegralCurve : public vtkm::exec::ExecutionObjectBase
+{
+private:
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>
+        ::template ExecutionTypes<DeviceAdapterTag>::Portal IdPortal;    
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T,3> >
+        ::template ExecutionTypes<DeviceAdapterTag>::Portal PosPortal;
+public:
+    VTKM_EXEC_CONT
+    StateRecordingIntegralCurve(const StateRecordingIntegralCurve &s) :
+        pos(s.pos), steps(s.steps), maxSteps(s.maxSteps), history(s.history)
+    {
+    }
+    VTKM_EXEC_CONT
+    StateRecordingIntegralCurve() : pos(), steps(), maxSteps(0)
+    {
+    }
+
+    VTKM_EXEC_CONT
+    StateRecordingIntegralCurve(const PosPortal &_pos,
+                                const IdPortal &_steps,
+                                const vtkm::Id &_maxSteps) :
+        pos(_pos), steps(_steps), maxSteps(_maxSteps)
+    {
+    }
+
+    VTKM_EXEC_CONT    
+    StateRecordingIntegralCurve(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
+                                vtkm::cont::ArrayHandle<vtkm::Id> &stepsArray,                                
+                                const vtkm::Id &_maxSteps) :
+        maxSteps(_maxSteps)
+    {
+        pos = posArray.PrepareForInPlace(DeviceAdapterTag());
+        steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
+
+        numPos = posArray.GetNumberOfValues();
+        vtkm::Id nHist = numPos * maxSteps;
+        history = historyArray.PrepareForOutput(nHist, DeviceAdapterTag());
+    }
+
+    VTKM_EXEC_CONT
+    void TakeStep(const vtkm::Id &idx,
+                  const vtkm::Vec<T,3> &pt)
+    {
+        vtkm::Id loc = idx*maxSteps + steps.Get(idx);
+        //std::cout<<"TakeStep("<<idx<<", "<<pt<<"); loc= "<<loc<<" "<<numPos*maxSteps<<std::endl;
+        history.Set(loc, pt);
+        steps.Set(idx, steps.Get(idx)+1);
+    }
+
+    VTKM_EXEC_CONT
+    bool Done(const vtkm::Id &idx)
+    {
+        //vtkm::Id s = steps.Get(idx);
+        //std::cout<<idx<<" steps= "<<s<<std::endl;
+        return steps.Get(idx) >= maxSteps;
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Vec<T,3> GetPos(const vtkm::Id &idx) const {return pos.Get(idx);}
+    VTKM_EXEC_CONT
+    vtkm::Id GetStep(const vtkm::Id &idx) const {return steps.Get(idx);}
+    VTKM_EXEC_CONT
+    vtkm::Vec<T,3> GetHistory(const vtkm::Id &idx, const vtkm::Id &step) const
+    {
+        return history.Get(idx*maxSteps+step);
+    }    
+
+private:
+    vtkm::Id maxSteps, numPos;
+    IdPortal steps;
+    PosPortal pos, history;
+    vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > historyArray;
+};    
 
 
 template<typename FieldEvaluateType, typename FieldType, typename PortalType>
@@ -111,7 +187,7 @@ class RK4Integrator
 public:
     VTKM_EXEC_CONT    
     RK4Integrator(const FieldEvaluateType &field,
-                  FieldType _h) : f(field), h(_h) {}
+                  FieldType _h) : f(field), h(_h), h_2(_h/2.f) {}
 
     VTKM_EXEC
     bool
@@ -122,20 +198,21 @@ public:
         vtkm::Vec<FieldType, 3> vCur;
 
         //printf("RK4::Step\n");
-        if (f.Evaluate(pos,
-                       field,
-                       vCur))
+        vtkm::Vec<FieldType, 3> k1, k2, k3, k4, y;
+
+        if (f.Evaluate(pos, field, k1) &&
+            f.Evaluate(pos+h_2*k1, field, k2) &&
+            f.Evaluate(pos+h_2*k2, field, k3) &&
+            f.Evaluate(pos+h*k3, field, k4))
         {
-            out = pos + h * vCur;
-            printf("%f %f %f\n", out[0],out[1],out[2]);
+            out = pos + h/6.0f*(k1+2*k2+2*k3+k4);
             return true;
-        }
-        
+        }        
         return false;
     }
 
     FieldEvaluateType f;
-    FieldType h;
+    FieldType h, h_2;
 };
 
 template <typename PortalType, typename DeviceAdapter>
@@ -319,6 +396,7 @@ public:
         std::vector<vtkm::Id> steps(numSeeds, 0);
 
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > posArray = vtkm::cont::make_ArrayHandle(&seeds[0], numSeeds);
+        vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], numSeeds);
         vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
 
         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
@@ -329,7 +407,9 @@ public:
         typedef typename vtkm::worklet::DispatcherMapField<PICWorklet> picWDispatcher;
         picWDispatcher picWD(picW);
 
-        IntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, maxSteps);
+        //maxSteps = 1;
+        //IntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, stepArray, maxSteps);
+        StateRecordingIntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, stepArray, maxSteps);
         //recorder = new StateRecorder(posArray, maxSteps);
 
         picWD.Invoke(idxArray, ic);
@@ -340,7 +420,7 @@ public:
             int stepCnt = 0;
             for (int i = 0; i < numSeeds; i++)
             {
-                int ns = recorder->GetStep(i);
+                int ns = ic.GetStep(i);
                 stepCnt += ns;
             }
             std::cout<<"Total num steps: "<<stepCnt<<std::endl;
@@ -350,13 +430,14 @@ public:
         {
             for (int i = 0; i < numSeeds; i++)
             {
-                int ns = recorder->GetStep(i);
+                int ns = ic.GetStep(i);
                 for (int j = 0; j < ns; j++)
                 {
-                    vtkm::Vec<FieldType,3> p = recorder->GetHistory(i, j);
+                    vtkm::Vec<FieldType,3> p = ic.GetHistory(i, j);
                     std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
                     //std::cout<<"   "<<j<<" "<<p<<std::endl;
                 }
+                cout<<endl;
             }
         }
 #endif
