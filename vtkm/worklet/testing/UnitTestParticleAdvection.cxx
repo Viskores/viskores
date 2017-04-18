@@ -18,11 +18,14 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/PICS.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/io/writer/VTKDataSetWriter.h>
+#include <vtkm/worklet/particleadvection/Integrators.h>
+#include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/worklet/particleadvection/GridEvaluators.h>
+#include <vtkm/worklet/particleadvection/ParticleAdvectionFilters.h>
 
 #include <fstream>
 #include <vector>
@@ -115,36 +118,22 @@ void TestPICSAnalyticalOrbit()
 }
 
 
-void TestPICSUniformGrid()
+void TestParticleAdvectionUniformGrid()
 {
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-  
-  //std::cout << "Testing PICS uniform grid" << std::endl;
 
-  //Read in data file.
-  
   typedef vtkm::Float32 FieldType;
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > FieldHandle;
   typedef typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;    
   vtkm::cont::DataSet ds = createDataSet(tornadoFile);
-  //ds.PrintSummary(std::cout);
 
-  vtkm::worklet::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter> eval(ds);
-  
-//  vtkm::Vec<FieldType, 3> p(2,2,2), o;
-//  bool val = eval.Evaluate(p, o);
-  //std::cout<<"EVAL: "<<p<<" --> "<<o<<" : "<<val<<std::endl;
+  vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter> eval(ds);
 
   vtkm::Float32 h = 0.1f;
-  typedef vtkm::worklet::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter> RGEvalType;
-  typedef vtkm::worklet::RK4Integrator<RGEvalType,FieldType,FieldPortalConstType> RK4RGType;
-  //typedef vtkm::worklet::EulerIntegrator<RGEvalType, FieldType> EulerType;
-  //EulerType eul(eval, h);
+  typedef vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter> RGEvalType;
+  typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType,FieldType,FieldPortalConstType> RK4RGType;
   
   RK4RGType rk4(eval, h);
-
-  //val = rk4.Step(p, o);
-  //std::cout<<"RK4: "<<p<<" --> "<<o<<" : "<<val<<std::endl;
 
   std::vector<vtkm::Vec<FieldType,3> > seeds;
   vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
@@ -161,13 +150,14 @@ void TestPICSUniformGrid()
       seeds.push_back(p);
   }
 
-  vtkm::worklet::PICSFilter<RK4RGType,FieldType,DeviceAdapter> pic(rk4,seeds,ds,numSteps);
-  //vtkm::worklet::PICSFilter<EulerType,FieldType,DeviceAdapter> pic(eul,seeds,numSteps);
+  vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType,
+                                                            FieldType,
+                                                            DeviceAdapter> pa(rk4,seeds,ds,numSteps);
 
-  pic.run();
+  pa.run();
 }
 
-int UnitTestPICS(int argc, char *argv[])
+int UnitTestParticleAdvection(int argc, char *argv[])
 {
     if (argc != 3)
     {
@@ -181,7 +171,7 @@ int UnitTestPICS(int argc, char *argv[])
     std::cerr<<"Data file= "<<tornadoFile<<std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
-    auto test_result = vtkm::cont::testing::Testing::Run(TestPICSUniformGrid);
+    auto test_result = vtkm::cont::testing::Testing::Run(TestParticleAdvectionUniformGrid);
     auto duration_taken = std::chrono::high_resolution_clock::now() - start;
     std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(duration_taken).count();
     std::cerr << "Runtime = " << runtime << " ms" << std::endl;

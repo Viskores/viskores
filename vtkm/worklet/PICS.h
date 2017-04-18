@@ -33,7 +33,7 @@
 #include <vtkm/worklet/ScatterUniform.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/exec/ExecutionObjectBase.h>
 
 #include <vtkm/VectorAnalysis.h>
 

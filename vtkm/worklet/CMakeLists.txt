@@ -62,6 +62,7 @@ add_subdirectory(internal)
 add_subdirectory(contourtree)
 add_subdirectory(splatkernels)
 add_subdirectory(wavelets)
+add_subdirectory(particleadvection)
 
 vtkm_declare_headers(${headers})
 
