@@ -541,9 +541,8 @@ public:
       const vtkm::cont::ArrayHandle<T,CIn>& input,
       vtkm::cont::ArrayHandle<T,COut>& output)
   {
-    // TODO: add DerivedAlgorithm?
     return DerivedAlgorithm::ScanExclusive(input, output, vtkm::Sum(),
-                         vtkm::TypeTraits<T>::ZeroInitialization());
+                                           vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
   //--------------------------------------------------------------------------
@@ -611,10 +610,9 @@ public:
     const vtkm::cont::ArrayHandle<U, VIn>& values,
     vtkm::cont::ArrayHandle<U, VOut>& output)
   {
-    // TODO: add DerivedAlgorithm?
-    ScanExclusiveByKey(keys, values, output,
-                       vtkm::TypeTraits<U>::ZeroInitialization(),
-                       vtkm::Sum());
+    DerivedAlgorithm::ScanExclusiveByKey(keys, values, output,
+                                         vtkm::TypeTraits<U>::ZeroInitialization(),
+                                         vtkm::Sum());
   }
 
   //--------------------------------------------------------------------------
