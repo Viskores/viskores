@@ -1333,6 +1333,32 @@ private:
 
   }
 
+  static VTKM_CONT void TestScanExclusiveByKeyOne()
+  {
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing Scan Exclusive By Key with 1 elements" << std::endl;
+
+    const vtkm::Id inputLength = 1;
+    vtkm::Id inputKeys[inputLength] = {0};
+    vtkm::Id inputValues[inputLength] = {0};
+    vtkm::Id init = 5;
+
+    const vtkm::Id expectedLength = 1;
+
+    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+
+    IdArrayHandle valuesOut;
+
+    Algorithm::ScanExclusiveByKey(keys, values, valuesOut, init, vtkm::Add());
+
+    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                     "Got wrong number of output values");
+    const vtkm::Id v = valuesOut.GetPortalConstControl().Get(0);
+    VTKM_TEST_ASSERT(init == v, "Incorrect scanned value");
+
+  }
+
   static VTKM_CONT void TestScanExclusiveByKey()
   {
     std::cout << "-------------------------------------------" << std::endl;
@@ -1962,7 +1988,8 @@ private:
 
       TestScanInclusive();
       TestScanInclusiveWithComparisonObject();
-
+      
+      TestScanExclusiveByKeyOne();
       TestScanInclusiveByKey();
 
       TestScanExclusiveByKey();
