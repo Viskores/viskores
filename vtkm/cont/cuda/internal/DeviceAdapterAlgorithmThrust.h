@@ -1273,9 +1273,10 @@ public:
     //use case breaks.
     keys.PrepareForInput(DeviceAdapterTag());
     values.PrepareForInput(DeviceAdapterTag());
-    return ScanExclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+    return ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
                                     values.PrepareForInput(DeviceAdapterTag()),
                                     output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                                    ::thrust::equal_to<T>(),
                                     binary_functor);
   }
 
