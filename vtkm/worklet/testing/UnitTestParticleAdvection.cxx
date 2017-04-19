@@ -27,6 +27,8 @@
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/ParticleAdvectionFilters.h>
 
+#include <vtkm/io/reader/BOVDataSetReader.h>
+
 #include <fstream>
 #include <vector>
 #include <math.h>
@@ -153,8 +155,12 @@ void TestParticleAdvectionUniformGrid()
   vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType,
                                                             FieldType,
                                                             DeviceAdapter> pa(rk4,seeds,ds,numSteps);
-
   pa.run();
+
+  vtkm::io::reader::BOVDataSetReader rdr("/home/pugmire/data/vec.bov");
+  vtkm::cont::DataSet bov_ds = rdr.ReadDataSet();
+  vtkm::io::writer::VTKDataSetWriter writer("bov_out.vtk");
+  writer.WriteDataSet(bov_ds);
 }
 
 int UnitTestParticleAdvection(int argc, char *argv[])
