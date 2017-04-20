@@ -334,9 +334,9 @@ public:
 
   // Copy a small cube to a big cube
   template< typename SmallArrayType, typename BigArrayType, typename DeviceTag>
-  void DeviceCubeCopyTo( const SmallArrayType   &smallRect,
+  void DeviceCubeCopyTo( const SmallArrayType   &smallCube,
                          vtkm::Id     smallX,   vtkm::Id smallY,    vtkm::Id smallZ,
-                         BigArrayType           &bigRect,
+                         BigArrayType           &bigCube,
                          vtkm::Id     bigX,     vtkm::Id bigY,      vtkm::Id bigZ,
                          vtkm::Id     startX,   vtkm::Id startY,    vtkm::Id startZ,
                          DeviceTag   )
@@ -344,7 +344,7 @@ public:
     typedef vtkm::worklet::wavelets::CubeCopyTo  CopyToWorklet;
     CopyToWorklet cp( smallX, smallY, smallZ, bigX, bigY, bigZ, startX, startY, startZ );
     vtkm::worklet::DispatcherMapField< CopyToWorklet, DeviceTag > dispatcher( cp );
-    dispatcher.Invoke(smallRect, bigRect);
+    dispatcher.Invoke(smallCube, bigCube);
   }
 
 
