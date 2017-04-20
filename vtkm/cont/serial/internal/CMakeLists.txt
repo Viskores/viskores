@@ -37,7 +37,9 @@ target_include_directories(vtkm_cont_serial PRIVATE
     ${VTKm_BINARY_DIR}/include
   )
 
-set_property(TARGET vtkm_cont_serial
-  PROPERTY POSITION_INDEPENDENT_CODE ON
-)
+if (BUILD_SHARED_LIBS)
+  set_property(TARGET vtkm_cont_serial
+    PROPERTY POSITION_INDEPENDENT_CODE ON
+  )
+endif()
 
