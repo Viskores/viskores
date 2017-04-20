@@ -154,7 +154,7 @@ void TestParticleAdvectionUniformGrid()
 
   vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType,
                                                             FieldType,
-                                                            DeviceAdapter> pa(rk4,seeds,ds,numSteps);
+                                                            DeviceAdapter> pa(rk4,seeds,ds,numSteps,false);
   pa.run();
 
   vtkm::io::reader::BOVDataSetReader rdr("/home/pugmire/data/vec.bov");

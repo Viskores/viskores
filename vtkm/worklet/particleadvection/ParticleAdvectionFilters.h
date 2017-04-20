@@ -47,9 +47,11 @@ public:
     typedef typename FieldHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst FieldPortalConstType;
     
     ParticleAdvectionFilter(const IntegratorType &it,
-               std::vector<vtkm::Vec<FieldType,3> > &pts,
-               vtkm::cont::DataSet &_ds,
-               const vtkm::Id &nSteps) : integrator(it), seeds(pts), maxSteps(nSteps), ds(_ds)
+                            std::vector<vtkm::Vec<FieldType,3> > &pts,
+                            vtkm::cont::DataSet &_ds,
+                            const vtkm::Id &nSteps,
+                            bool _streamlines) : integrator(it), seeds(pts),
+                                                 maxSteps(nSteps), ds(_ds), streamlines(_streamlines)
     {
         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
         ds.GetField(0).GetData().CopyTo(fieldArray);
@@ -72,7 +74,7 @@ public:
                         IntegralCurveType &ic) const
         {
             vtkm::Vec<FieldType, 3> p = ic.GetPos(idx);
-            vtkm::Vec<FieldType, 3> p2, p0 = p;
+            vtkm::Vec<FieldType, 3> p2;
 
             while (!ic.Done(idx))
             {
@@ -99,7 +101,7 @@ public:
     
     FieldPortalConstType field;
     
-    void run()
+    void run(bool dumpOutput=false)
     {
         vtkm::Id numSeeds = seeds.size();
         std::vector<vtkm::Vec<FieldType,3> > out(numSeeds);
@@ -117,39 +119,44 @@ public:
         typedef typename vtkm::worklet::DispatcherMapField<PICWorklet> picWDispatcher;
         picWDispatcher picWD(picW);
 
-        vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag> ic(posArray, stepArray, maxSteps);
-        //StateRecordingIntegralCurve<FieldType, DeviceAdapterTag> ic(posArray, stepArray, maxSteps);
-        //recorder = new StateRecorder(posArray, maxSteps);
-
-        picWD.Invoke(idxArray, ic);
-
-#if 0
-        if (true)
+        if (streamlines)
         {
-            int stepCnt = 0;
-            for (int i = 0; i < numSeeds; i++)
+            vtkm::worklet::particleadvection::StateRecordingParticle<FieldType, DeviceAdapterTag> sl(posArray,
+                                                                                                     stepArray,
+                                                                                                     maxSteps);
+            picWD.Invoke(idxArray, sl);
+            
+            if (dumpOutput)
             {
-                int ns = ic.GetStep(i);
-                stepCnt += ns;
-            }
-            std::cout<<"Total num steps: "<<stepCnt<<std::endl;
-        }
-
-        if (true)
-        {
-            for (int i = 0; i < numSeeds; i++)
-            {
-                int ns = ic.GetStep(i);
-                for (int j = 0; j < ns; j++)
+                for (int i = 0; i < numSeeds; i++)
                 {
-                    vtkm::Vec<FieldType,3> p = ic.GetHistory(i, j);
-                    std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
-                    //std::cout<<"   "<<j<<" "<<p<<std::endl;
+                    int ns = sl.GetStep(i);
+                    for (int j = 0; j < ns; j++)
+                    {
+                        vtkm::Vec<FieldType,3> pos = sl.GetHistory(i, j);
+                        std::cout<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<std::endl;
+                    }
                 }
-                cout<<endl;
             }
         }
-#endif
+        else
+        {
+            vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag> p(posArray,
+                                                                                       stepArray,
+                                                                                       maxSteps);
+            picWD.Invoke(idxArray, p);
+            if (dumpOutput)
+            {
+                vtkm::Vec<FieldType, 3> pos;
+                for (int i = 0; i < numSeeds; i++)
+                {
+                    pos = seeds[i];
+                    std::cout<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<std::endl;                    
+                    pos = p.GetPos(i);
+                    std::cout<<pos[0]<<" "<<pos[1]<<" "<<pos[2]<<std::endl;
+                }
+            }            
+        }
     }
 
 private:
@@ -157,6 +164,7 @@ private:
     IntegratorType integrator;
     std::vector<vtkm::Vec<FieldType,3> > seeds;
     //StateRecorder *recorder;
+    bool streamlines;
 
     vtkm::cont::DataSet ds;
 };

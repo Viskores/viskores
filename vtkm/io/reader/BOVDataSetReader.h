@@ -36,6 +36,9 @@ public:
     BOVDataSetReader(const char *fileName) : FileName(fileName), Loaded(false), DataSet()
     {
     }
+    BOVDataSetReader(const std::string &fileName) : FileName(fileName), Loaded(false), DataSet()
+    {
+    }    
 
     const vtkm::cont::DataSet &
     ReadDataSet()
@@ -55,12 +58,6 @@ public:
 
 private:
     typedef enum {ByteData, ShortData, IntegerData, FloatData, DoubleData} DataFormat;
-
-    void parseAssert(bool v)
-    {
-        if (!v)
-            throw vtkm::io::ErrorIO("ParseError");
-    }
 
     void LoadFile()
     {
@@ -206,6 +203,8 @@ private:
                 dsf.AddPointField(this->DataSet, variableName, var);
             }                        
         }
+        
+        this->Loaded = true;
     }
 
     template<typename T>
