@@ -763,7 +763,7 @@ this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
       dispatcher.Invoke( ext1, ext2, ext3, ext4, coeffIn, afterZ );
       computationTime += timer.GetElapsedTime();
     }
-//this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
+this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
 
 		if( discardCoeffIn )
 			coeffIn.ReleaseResources();
@@ -800,37 +800,10 @@ this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
                     0,                0,                0 );
       TopDownDispatcherType dispatcher( worklet );
       timer.Reset();
-
-BasicArrayType ext12;
-ext12.PrepareForOutput( ext1.GetNumberOfValues(), DeviceTag() );
-for( vtkm::Id i = 0; i < ext12.GetNumberOfValues(); i++ )
-  ext12.GetPortalControl().Set(i, 0.0);
-BasicArrayType ext22;
-ext22.PrepareForOutput( ext2.GetNumberOfValues(), DeviceTag() );
-for( vtkm::Id i = 0; i < ext22.GetNumberOfValues(); i++ )
-  ext22.GetPortalControl().Set(i, 0.0);
-BasicArrayType ext32;
-ext32.PrepareForOutput( ext3.GetNumberOfValues(), DeviceTag() );
-for( vtkm::Id i = 0; i < ext32.GetNumberOfValues(); i++ )
-  ext32.GetPortalControl().Set(i, 0.0);
-BasicArrayType ext42;
-ext42.PrepareForOutput( ext4.GetNumberOfValues(), DeviceTag() );
-for( vtkm::Id i = 0; i < ext42.GetNumberOfValues(); i++ )
-  ext42.GetPortalControl().Set(i, 0.0);
-BasicArrayType afterZ2;
-afterZ2.PrepareForOutput( afterZ.GetNumberOfValues(), DeviceTag() );
-for( vtkm::Id i = 0; i < afterZ2.GetNumberOfValues(); i++ )
-  afterZ2.GetPortalControl().Set(i, afterZ.GetPortalConstControl().Get(i));
-//printArraySummary( ext1, "ext1" );
-//printArraySummary( ext2, "ext2" );
-//printArraySummary( ext3, "ext3" );
-//printArraySummary( ext4, "ext4" );
-//printArraySummary( afterZ, "afterZ" );
-//printArraySummary( afterY, "afterY" );
-      dispatcher.Invoke( ext12, ext22, ext32, ext42, afterZ2, afterY );
+      dispatcher.Invoke( ext1, ext2, ext3, ext4, afterZ, afterY );
       computationTime += timer.GetElapsedTime();
     } 
-//this->dumpVolume( afterY, inDimX, inDimY, inDimZ, "IDWTafterY" );
+this->dumpVolume( afterY, inDimX, inDimY, inDimZ, "IDWTafterY" );
 
     // Lastly, inverse transform in X direction
     afterZ.ReleaseResources();
@@ -867,7 +840,7 @@ for( vtkm::Id i = 0; i < afterZ2.GetNumberOfValues(); i++ )
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterY, sigOut );
 			computationTime += timer.GetElapsedTime();
     }
-//this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
+this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
 
     return computationTime;
   }
