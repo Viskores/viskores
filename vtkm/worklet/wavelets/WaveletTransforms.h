@@ -3093,7 +3093,7 @@ public:
 
   VTKM_EXEC_CONT
   void GetLogicalDimOfInputCube( vtkm::Id idx,  
-                                 vtkm::Id  &x,   vtkm::Id   &y,   vtkm::Id &z ) const     
+                                 vtkm::Id &x,   vtkm::Id &y,   vtkm::Id &z ) const     
   {
     z = idx / (inDimX * inDimY);
     y = (idx - z * inDimX * inDimY) / inDimX;
@@ -3101,9 +3101,9 @@ public:
   }
 
   VTKM_EXEC_CONT
-  vtkm::Id Get1DIdxOfOutputCube( vtkm::Id   x,  vtkm::Id  y,  vtkm::Id z ) const     
+  vtkm::Id Get1DIdxOfOutputCube( vtkm::Id x,  vtkm::Id y,  vtkm::Id z ) const     
   {
-    return z * outDimX * outDimZ + y * outDimX + x;
+    return z * outDimX * outDimY + y * outDimX + x;
   }
 
   template< typename ValueInType, typename PortalOutType >
