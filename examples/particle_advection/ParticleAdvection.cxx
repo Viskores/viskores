@@ -73,7 +73,7 @@ void RunTest(const std::string &fname,
   vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType,
                                                             FieldType,
                                                             DeviceAdapter> pa(rk4,seeds,ds,numSteps,(advectType==1));
-  pa.run(true);  
+  pa.run(false);
 }
 
 int main(int argc, char **argv)
@@ -98,8 +98,11 @@ int main(int argc, char **argv)
     }
     std::string dataFile = argv[5];
 
-    std::cerr<<"Num seeds= "<<numSeeds<<std::endl;
-    std::cerr<<"Data file= "<<dataFile<<std::endl;
+    if (advectType == 0)
+        std::cerr<<"PARTICLE   ";
+    else
+        std::cerr<<"STREAMLINE ";
+    std::cerr<<argv[0]<<" "<<numSeeds<<" "<<numSteps<<" file= "<<dataFile<<std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
     RunTest(dataFile, numSeeds, numSteps, stepSize, advectType);
