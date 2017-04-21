@@ -76,34 +76,100 @@ void RunTest(const std::string &fname,
   pa.run(false);
 }
 
-int main(int argc, char **argv)
+bool ParseArgs(int argc, char **argv,
+               vtkm::Id &numSeeds, vtkm::Id &numSteps, vtkm::Float32 &stepSize,
+               vtkm::Id &advectType, vtkm::Id &numThreads, std::string &dataFile,
+               std::string &pgmType)
 {
-    if (argc != 6)
+    numSeeds = 100;
+    numSteps = 100;
+    stepSize = 0.1f;
+    advectType = 0;
+    numThreads = -1;
+    dataFile = "";
+    pgmType = "UNKNOWN";
+
+    if (argc < 2)
     {
-        std::cerr<<"Usage "<<argv[0]<<" numSeeds numSteps stepSize type[-particle, -streamline] BOVfile"<<std::endl;
+        std::cerr<<"Usage "<<argv[0]<<std::endl;
+        std::cerr<<" -seeds #seeds"<<std::endl;
+        std::cerr<<" -steps maxSteps"<<std::endl;
+        std::cerr<<" -h stepSize"<<std::endl;
+        std::cerr<<" -particle : particle push"<<std::endl;
+        std::cerr<<" -streamline : particle history"<<std::endl;
+        std::cerr<<" -t #numThreads"<<std::endl;
+        std::cerr<<" -file dataFile"<<std::endl;
+        return false;
+    }
+
+    std::string pgm = argv[0];
+    if (pgm.find("SERIAL") != std::string::npos)
+        pgmType = "SER";
+    else if (pgm.find("TBB") != std::string::npos)
+        pgmType = "TBB";
+    else if (pgm.find("CUDA") != std::string::npos)
+        pgmType = "CUD";
+    
+    for (int i = 1; i < argc; i++)
+    {
+        std::string arg = argv[i];
+        if (arg == "-seeds")
+            numSeeds = static_cast<vtkm::Id>(atoi(argv[++i]));
+        else if (arg == "-steps")
+            numSteps = static_cast<vtkm::Id>(atoi(argv[++i]));
+        else if (arg == "-h")
+            stepSize = static_cast<vtkm::Float32>(atof(argv[++i]));
+        else if (arg == "-particle")
+            advectType = 0;
+        else if (arg == "-streamline")
+            advectType = 1;
+        else if (arg == "-file")
+            dataFile = argv[++i];
+        else if (arg == "-t")
+            numThreads = static_cast<vtkm::Id>(atoi(argv[++i]));
+        else
+            std::cerr<<"Unexpected argument: "<<arg<<std::endl;
+    }
+
+    if (dataFile.size()==0)
+    {
+        std::cerr<<"Error: no data file specified"<<std::endl;
+        return false;
+    }
+
+#ifdef __BUILDING_TBB_VERSION__
+    if (pgmType == "TBB")
+    {
+        int nT = tbb::task_scheduler_init::default_num_threads();
+        if (numThreads != -1)
+            nT = numThreads;
+        tbb::task_scheduler_init init(nT);
+    }
+#endif
+
+    //Congratulations user, we have a valid run:
+    std::cerr<<pgmType<<": "<<numSeeds<<" "<<numSteps<<" "<<stepSize<<" ";
+    if (advectType == 0) std::cerr<<"PP ";
+    else std::cerr<<"SL ";
+    std::cerr<<numThreads<<" ";
+    std::cerr<<dataFile<<std::endl;
+    return true;
+}
+
+int
+main(int argc, char **argv)
+{
+    vtkm::Id numSeeds = 100, numSteps = 100, advectType = 0, numThreads=-1;
+    vtkm::Float32 stepSize = 0.1f;
+    std::string dataFile, pgmType;
+    
+    if (!ParseArgs(argc, argv,
+                   numSeeds, numSteps, stepSize,
+                   advectType, numThreads, dataFile, pgmType))
+    {
         return -1;
     }
-    vtkm::Id numSeeds = atoi(argv[1]);
-    vtkm::Id numSteps = atoi(argv[2]);
-    vtkm::Float32 stepSize = atof(argv[3]);
-    vtkm::Id advectType;
-    if (std::string(argv[4]) == "-particle")
-        advectType = 0;
-    else if (std::string(argv[4]) == "-streamline")
-        advectType = 1;
-    else
-    {
-        std::cerr<<"Unknown particle advection type: "<<argv[4]<<std::endl;
-        return -1;
-    }
-    std::string dataFile = argv[5];
-
-    if (advectType == 0)
-        std::cerr<<"PARTICLE   ";
-    else
-        std::cerr<<"STREAMLINE ";
-    std::cerr<<argv[0]<<" "<<numSeeds<<" "<<numSteps<<" file= "<<dataFile<<std::endl;
-
+    
     auto start = std::chrono::high_resolution_clock::now();
     RunTest(dataFile, numSeeds, numSteps, stepSize, advectType);
     auto duration_taken = std::chrono::high_resolution_clock::now() - start;
