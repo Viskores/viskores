@@ -164,8 +164,13 @@ private:
                 baseDir = this->FileName.substr(0, pos);
             
             if (bovFile.substr(0,2) == "./")
+            {
                 baseFile = bovFile.substr(2, bovFile.size()-2);
-            fullPathDataFile = baseDir + "/" + baseFile;
+            }
+            if (baseDir.size() == 0)
+                fullPathDataFile = baseFile;
+            else
+                fullPathDataFile = baseDir + "/" + baseFile;                
         }
 
         vtkm::cont::DataSetBuilderUniform dataSetBuilder;
