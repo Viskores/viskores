@@ -106,13 +106,17 @@ private:
                      token.find("ORIGIN") != std::string::npos)
             {
                 strStream >> origin[0] >> origin[1] >> origin[2] >> std::ws;
-            }            
+            }
+            
+            //DRP
+            /*
             else if (token.find("BRICK") != std::string::npos &&
                      token.find("SIZE") != std::string::npos)
             {
                 strStream >> spacing[0] >> spacing[1] >> spacing[2] >> std::ws;
                 spacingSet = true;
             }
+            */
             else if (token.find("DATA") != std::string::npos &&
                 token.find("FORMAT") != std::string::npos)
             {
@@ -126,7 +130,7 @@ private:
                 else
                     throw vtkm::io::ErrorIO("Unsupported data type: "+token);
             }
-            else if (token.find("DATA") != std::string::npos ||
+            else if (token.find("DATA") != std::string::npos &&
                      token.find("COMPONENTS") != std::string::npos)
             {
                 strStream >> numComponents >> std::ws;
@@ -151,6 +155,18 @@ private:
             spacing[2] = (spacing[2]) / static_cast<vtkm::FloatDefault>(dim[2]-1);
         }
 
+        std::string fullPathDataFile;
+        std::size_t pos = FileName.rfind("/");
+        if (pos != std::string::npos)
+        {
+            std::string baseDir;
+            baseDir = this->FileName.substr(0, pos);
+            fullPathDataFile = baseDir + "/" + bovFile;
+        }
+        else
+            fullPathDataFile = bovFile;
+        
+/*
         //Get whole path for data file.
         std::string fullPathDataFile;
         if (bovFile[0] == '/')
@@ -159,9 +175,11 @@ private:
         {
             //Get base dir.
             std::string baseDir, baseFile;
+            std::cout<<FileName<<std::endl;
             std::size_t pos = FileName.rfind("/");
             if (pos != std::string::npos)
                 baseDir = this->FileName.substr(0, pos);
+            std::cout<<"BASE: "<<baseDir<<std::endl;
             
             if (bovFile.substr(0,2) == "./")
             {
@@ -170,11 +188,14 @@ private:
             if (baseDir.size() == 0)
                 fullPathDataFile = baseFile;
             else
-                fullPathDataFile = baseDir + "/" + baseFile;                
+                fullPathDataFile = baseDir + "/" + baseFile;
+            std::cout<<baseDir<<" : "<<baseFile<<std::endl;
+            std::cout<<fullPathDataFile<<std::endl;
         }
+*/
 
         vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-        vtkm::cont::DataSetFieldAdd dsf;        
+        vtkm::cont::DataSetFieldAdd dsf;
         this->DataSet = dataSetBuilder.Create(dim, origin, spacing);
 
         vtkm::Id numTuples = dim[0]*dim[1]*dim[2];
