@@ -128,9 +128,9 @@ public:
             
             if (dumpOutput)
             {
-                for (int i = 0; i < numSeeds; i++)
+                for (vtkm::Id i = 0; i < numSeeds; i++)
                 {
-                    int ns = sl.GetStep(i);
+                    vtkm::Id ns = sl.GetStep(i);
                     for (int j = 0; j < ns; j++)
                     {
                         vtkm::Vec<FieldType,3> pos = sl.GetHistory(i, j);
