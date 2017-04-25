@@ -1352,9 +1352,9 @@ private:
 
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
-    for (auto i = 0; i < expectedLength; i++) {
+    for (vtkm::Id i = 0; i < expectedLength; i++) {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(expectedValues[i] == v, "Incorrect scanned value");
+      VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
   }
   static VTKM_CONT void TestScanInclusiveByKeyLarge()
@@ -1368,9 +1368,9 @@ private:
 
     for (vtkm::Id i = 0; i < ARRAY_SIZE; i++) {
       if (i % 100 < 98)
-        inputKeys[i] = static_cast<vtkm::Id>(i / 100);
+        inputKeys[static_cast<std::size_t>(i)] = static_cast<vtkm::Id>(i / 100);
       else
-        inputKeys[i] = static_cast<vtkm::Id>(i);
+        inputKeys[static_cast<std::size_t>(i)] = static_cast<vtkm::Id>(i);
     }
     std::vector<vtkm::Id> inputValues(inputLength, 1);
 
@@ -1394,7 +1394,7 @@ private:
                      "Got wrong number of output values");
     for (auto i = 0; i < expectedLength; i++) {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(expectedValues[i] == v, "Incorrect scanned value");
+      VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
   }
   static VTKM_CONT void TestScanInclusiveByKey()
@@ -1419,7 +1419,7 @@ private:
                      "Got wrong number of output values");
     for (auto i = 0; i < expectedLength; i++) {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(expectedValues[i] == v, "Incorrect scanned value");
+      VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
 
   }
@@ -1497,11 +1497,11 @@ private:
 
     const vtkm::Id expectedLength = ARRAY_SIZE;
     std::vector<vtkm::Id> expectedValues(expectedLength);
-    for (std::size_t i = 0; i < ARRAY_SIZE; i++) {
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; i++) {
       if (i % 100 < 98)
-        expectedValues[i] = static_cast<vtkm::Id>(init + i % 100);
+        expectedValues[static_cast<std::size_t>(i)] = static_cast<vtkm::Id>(init + i % 100);
       else
-        expectedValues[i] = init;
+        expectedValues[static_cast<std::size_t>(i)] = init;
     }
 
     IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys);
@@ -1513,9 +1513,9 @@ private:
 
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
-    for (std::size_t i= 0; i < expectedLength; i++) {
+    for (vtkm::Id i = 0; i < expectedLength; i++) {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(expectedValues[i] == v, "Incorrect scanned value");
+      VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
   }
 
@@ -1541,9 +1541,9 @@ private:
 
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
-    for (std::size_t i= 0; i < expectedLength; i++) {
+    for (vtkm::Id i= 0; i < expectedLength; i++) {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(expectedValues[i] == v, "Incorrect scanned value");
+      VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
   }
 
