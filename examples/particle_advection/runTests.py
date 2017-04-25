@@ -3,9 +3,10 @@ import subprocess
 
 FILES = ['astro.bov', 'fusion.bov', 'fishtank.bov']
 #STEPSIZE = {'astro.bov':0.0025, 'fusion.bov':0.01, 'fishtank.bov':0.0002}
-STEPSIZE = {'astro.bov':0.01, 'fusion.bov':0.01, 'fishtank.bov':0.01}
-TERMINATE = {'short' : 50, 'med' : 500, 'long' : 1000}
-SEEDS = [100, 200]
+STEPSIZE = {'astro.bov':0.005, 'fusion.bov':0.005, 'fishtank.bov':0.0002}
+TERMINATE = {'short' : 10, 'med' : 100, 'long' : 1000}
+SEEDS = [1000, 10000, 100000, 1000000]
+
 
 def buildMachineMap(machineMap, machName, exeDir='.',dataDir='.', hasGPU=False, hasTBB=False, maxThreads=-1) :
     mi = {'exeDir':exeDir,
@@ -13,7 +14,8 @@ def buildMachineMap(machineMap, machName, exeDir='.',dataDir='.', hasGPU=False, 
           'hasGPU':hasGPU,
           'hasTBB':hasTBB,
           'maxThreads':maxThreads,
-          'dbFile':'%s/%s.pickle'%(dataDir,machName)}
+          'dbFile':'%s/%s.pickle'%(dataDir,machName),
+          'name':machName}
         
     machineMap[machName] = mi
     return machineMap
@@ -56,7 +58,10 @@ def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt) :
     exe = 'Particle_Advection_TBB'
     if 'GPU' in alg :
         exe = 'Particle_Advection_CUDA'
-    exe = machineInfo['exeDir'] + '/' + exe
+    if machineInfo['name'] == 'titan' :
+       exe = 'cd %s; aprun -n 1 %s' %(machineInfo['exeDir'], exe)
+    else:  
+       exe = machineInfo['exeDir'] + '/' + exe
         
     args = ''
     args = args + '-seeds %d ' % seeds
@@ -76,9 +81,14 @@ def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt) :
 
 
 machineMap = {}
-machineMap = buildMachineMap(machineMap, 'titan', 'lustre', 'lustre', hasGPU=True, hasTBB=True, maxThreads=16)
+machineMap = buildMachineMap(machineMap, 'titan',
+                             '/lustre/atlas/scratch/pugmire/csc094/vtkm/titan',
+                             '/lustre/atlas/scratch/pugmire/csc094/vtkm/titan', 
+                             hasGPU=True, hasTBB=True, maxThreads=16)
 machineMap = buildMachineMap(machineMap, 'rhea', 'build/bin/', '.', hasGPU=False, hasTBB=True, maxThreads=16)  ##HT 32
-machineMap = buildMachineMap(machineMap, 'rheaGPU', 'build.rhea/bin', '.', hasGPU=True, hasTBB=True, maxThreads=28) ##HT 56
+machineMap = buildMachineMap(machineMap, 'rheaGPU', 'build.rhea/bin',
+                             '/lustre/atlas/scratch/pugmire/csc094/vtkm/titan',
+                             hasGPU=True, hasTBB=True, maxThreads=28) ##HT 56
 machineMap = buildMachineMap(machineMap, 'whoopingcough', './build/bin', 'data', hasGPU=True, hasTBB=True, maxThreads=24)
 
 
@@ -100,16 +110,19 @@ machineInfo = machineMap[machine]
 db = GetDB(machineInfo['dbFile'])
 
 ALG = makeAlg(machineInfo, doTBBScaling=False)
+
+
 PT = ['particle', 'streamline']
+PT = ['particle']
 
 for f in FILES :
-    for t in ['short', 'long'] :
+    for t in TERMINATE :
         for a in ALG :
             for s in SEEDS :
                 for p in PT :
                     cmd = createCommand(db, machineInfo, f, a, s, t, p)
                     if cmd == '' : continue
-                    print 'running....', cmd
+                    #print 'running....', cmd
                     result = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
                     recordTest(db, result.stderr.readlines(), f, a, s, t, p)
                     pickle.dump(db, open(machineInfo['dbFile'], 'wb'))
