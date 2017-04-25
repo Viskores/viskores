@@ -88,7 +88,6 @@ void RunTest(const std::string &fname,
   auto duration_taken = std::chrono::high_resolution_clock::now() - start;
   std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(duration_taken).count();
   std::cerr << "Runtime = " << runtime << " ms" << std::endl;
-
 }
 
 bool ParseArgs(int argc, char **argv,
@@ -176,6 +175,5 @@ main(int argc, char **argv)
     }
     
     RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType);
-    
     return 0;
 }
