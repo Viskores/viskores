@@ -37,6 +37,7 @@ void RunTest(const std::string &fname,
              vtkm::Id numSeeds,
              vtkm::Id numSteps,
              vtkm::Float32 stepSize,
+             vtkm::Id numThreads,
              vtkm::Id advectType)
 {
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
@@ -69,6 +70,14 @@ void RunTest(const std::string &fname,
       p[2] = static_cast<FieldType>(bounds.Z.Min + rz*bounds.Z.Length());
       seeds.push_back(p);
   }
+
+#ifdef __BUILDING_TBB_VERSION__
+  int nT = tbb::task_scheduler_init::default_num_threads();
+  if (numThreads != -1)
+    nT = numThreads;  
+  //make sure the task_scheduler_init object is in scope when running sth w/ TBB
+  tbb::task_scheduler_init init(nT);
+#endif
 
   vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType,
                                                             FieldType,
@@ -137,16 +146,6 @@ bool ParseArgs(int argc, char **argv,
         return false;
     }
 
-#ifdef __BUILDING_TBB_VERSION__
-    if (pgmType == "TBB")
-    {
-        int nT = tbb::task_scheduler_init::default_num_threads();
-        if (numThreads != -1)
-            nT = numThreads;
-        tbb::task_scheduler_init init(nT);
-    }
-#endif
-
     //Congratulations user, we have a valid run:
     std::cerr<<pgmType<<": "<<numSeeds<<" "<<numSteps<<" "<<stepSize<<" ";
     if (advectType == 0) std::cerr<<"PP ";
@@ -176,5 +175,7 @@ main(int argc, char **argv)
     std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(duration_taken).count();
     std::cerr << "Runtime = " << runtime << " ms" << std::endl;
 
+    RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType);
+    
     return 0;
 }
