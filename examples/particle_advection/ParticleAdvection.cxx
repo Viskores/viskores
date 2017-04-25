@@ -82,7 +82,13 @@ void RunTest(const std::string &fname,
   vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType,
                                                             FieldType,
                                                             DeviceAdapter> pa(rk4,seeds,ds,numSteps,(advectType==1));
+  //time only the actual run
+  auto start = std::chrono::high_resolution_clock::now();
   pa.run(false);
+  auto duration_taken = std::chrono::high_resolution_clock::now() - start;
+  std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(duration_taken).count();
+  std::cerr << "Runtime = " << runtime << " ms" << std::endl;
+
 }
 
 bool ParseArgs(int argc, char **argv,
@@ -169,12 +175,6 @@ main(int argc, char **argv)
         return -1;
     }
     
-    auto start = std::chrono::high_resolution_clock::now();
-    RunTest(dataFile, numSeeds, numSteps, stepSize, advectType);
-    auto duration_taken = std::chrono::high_resolution_clock::now() - start;
-    std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(duration_taken).count();
-    std::cerr << "Runtime = " << runtime << " ms" << std::endl;
-
     RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType);
     
     return 0;
