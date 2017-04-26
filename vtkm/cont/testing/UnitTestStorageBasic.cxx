@@ -20,6 +20,7 @@
 
 #define VTKM_STORAGE VTKM_STORAGE_ERROR
 
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>

@@ -57,7 +57,7 @@ struct DeviceAdapterTagCheck
 #define VTKM_VALID_DEVICE_ADAPTER(Name, Id) \
   namespace vtkm { \
   namespace cont { \
-  struct DeviceAdapterTag##Name {  }; \
+  struct VTKM_ALWAYS_EXPORT DeviceAdapterTag##Name {  }; \
   template<> \
   struct DeviceAdapterTraits<vtkm::cont::DeviceAdapterTag##Name> { \
     static DeviceAdapterId GetId() { \
