@@ -79,9 +79,11 @@ public:
         return steps.Get(idx) == maxSteps;
     }
 
-    VTKM_EXEC_CONT                        
-    vtkm::Vec<T,3> GetPos(const vtkm::Id &idx) const {return pos.Get(idx);}    
-    
+    VTKM_EXEC_CONT
+    vtkm::Vec<T,3> GetPos(const vtkm::Id &idx) const {return pos.Get(idx);}
+    VTKM_EXEC_CONT
+    vtkm::Id GetStep(const vtkm::Id &idx) const {return steps.Get(idx);}
+
 private:
     vtkm::Id maxSteps;
     IdPortal steps;
