@@ -20,4 +20,6 @@
 
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
 
+#define __BUILDING_CUDA_VERSION__
+
 #include "ParticleAdvection.cxx"
