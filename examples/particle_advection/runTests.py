@@ -5,6 +5,7 @@ FILES = ['astro.bov', 'fusion.bov', 'fishtank.bov']
 #STEPSIZE = {'astro.bov':0.0025, 'fusion.bov':0.01, 'fishtank.bov':0.0002}
 STEPSIZE = {'astro.bov':0.005, 'fusion.bov':0.005, 'fishtank.bov':0.0002}
 TERMINATE = {'short' : 10, 'med' : 100, 'long' : 1000}
+SEEDS = [1000, 10000, 100000, 1000000, 10000000]
 SEEDS = [1000, 10000, 100000, 1000000]
 
 
@@ -44,6 +45,7 @@ def GetDB(dbFile) :
 
 def needToRun(db, dataFile, alg, seeds, term) :
     key = (dataFile, alg, seeds, term)
+    print 'need to run: ', key, key not in db.keys()
     return key not in db.keys()
 
 def recordTest(db, output, dataFile, alg, seeds, term, pt) :
@@ -94,13 +96,15 @@ machineMap = buildMachineMap(machineMap, 'whoopingcough', './build/bin', 'data',
 
 #########################
 machine = ''
-fileDir = ''
+tbbScale = False
 
 for i in range(len(sys.argv)) :
     arg = sys.argv[i]
     if arg == '-mach' :
         i = i+1
         machine = sys.argv[i]
+    elif arg == '-tbbscale' :
+        tbbScale = True
 
 if machine == '' :
     print 'Usage: python %s -mach <machine>' %sys.argv[0]
@@ -109,20 +113,20 @@ if machine == '' :
 machineInfo = machineMap[machine]
 db = GetDB(machineInfo['dbFile'])
 
-ALG = makeAlg(machineInfo, doTBBScaling=False)
+ALG = makeAlg(machineInfo, doTBBScaling=tbbScale)
 
 
 PT = ['particle', 'streamline']
 PT = ['particle']
 
 for f in FILES :
-    for t in TERMINATE :
+    for t in ['short', 'med', 'long'] :
         for a in ALG :
             for s in SEEDS :
                 for p in PT :
                     cmd = createCommand(db, machineInfo, f, a, s, t, p)
                     if cmd == '' : continue
-                    #print 'running....', cmd
+                    print 'running....', cmd
                     result = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
                     recordTest(db, result.stderr.readlines(), f, a, s, t, p)
                     pickle.dump(db, open(machineInfo['dbFile'], 'wb'))
