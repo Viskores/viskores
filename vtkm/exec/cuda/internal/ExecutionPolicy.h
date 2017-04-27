@@ -23,6 +23,7 @@
 
 #include <vtkm/BinaryPredicates.h>
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
+#include <vtkm/cont/cuda/ErrorCuda.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/execution_policy.h>
