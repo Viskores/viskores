@@ -144,8 +144,10 @@ private:
                 if (variableName[0] == '"')
                     variableName = variableName.substr(1, variableName.size()-2);
             }
+/*
             else
                 std::cerr<<"Unsupported BOV option: "<<token<<std::endl;
+*/
         }
 
         if (spacingSet)
