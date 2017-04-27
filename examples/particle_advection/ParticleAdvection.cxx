@@ -29,6 +29,7 @@
 #include <vtkm/worklet/particleadvection/ParticleAdvectionFilters.h>
 
 #include <vtkm/io/reader/BOVDataSetReader.h>
+#include <vtkm/cont/Timer.h>
 
 #include <vector>
 #include <chrono>
@@ -79,15 +80,18 @@ void RunTest(const std::string &fname,
   tbb::task_scheduler_init init(nT);
 #endif
 
+  //time only the actual run
+  vtkm::cont::Timer<DeviceAdapter> timer;
+  auto t0 = std::chrono::high_resolution_clock::now();
   vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType,
                                                             FieldType,
                                                             DeviceAdapter> pa(rk4,seeds,ds,numSteps,(advectType==1));
-  //time only the actual run
-  auto start = std::chrono::high_resolution_clock::now();
+  //auto t1 = std::chrono::high_resolution_clock::now() - t0;
   pa.run(false);
-  auto duration_taken = std::chrono::high_resolution_clock::now() - start;
-  std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(duration_taken).count();
-  std::cerr << "Runtime = " << runtime << " ms" << std::endl;
+  vtkm::Float64 dT = timer.GetElapsedTime();  
+  auto t2 = std::chrono::high_resolution_clock::now() - t0;
+  std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(t2).count();
+  std::cerr<<"Runtime = "<<runtime<<" ms "<<dT<<std::endl;
 }
 
 bool ParseArgs(int argc, char **argv,
