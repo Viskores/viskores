@@ -32,6 +32,7 @@
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
+#include <vtkm/cont/Timer.h>
 
 namespace vtkm {
 namespace worklet {
@@ -86,8 +87,7 @@ public:
                 else
                     break;
             }
-
-            p2 = ic.GetPos(idx);
+            //p2 = ic.GetPos(idx);
             //std::cout<<"PIC: "<<idx<<" "<<p0<<" --> "<<p2<<" #steps= "<<ic.GetStep(idx)<<std::endl;
         }
         
@@ -103,6 +103,7 @@ public:
     
     void run(bool dumpOutput=false)
     {
+
         vtkm::Id numSeeds = seeds.size();
         std::vector<vtkm::Vec<FieldType,3> > out(numSeeds);
         std::vector<vtkm::Id> steps(numSeeds, 0);
@@ -110,10 +111,6 @@ public:
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > posArray = vtkm::cont::make_ArrayHandle(&seeds[0], numSeeds);
         vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], numSeeds);
         vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
-
-        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
-        ds.GetField(0).GetData().CopyTo(fieldArray);
-        field = fieldArray.PrepareForInPlace(DeviceAdapterTag());
         
         PICWorklet picW(integrator, field);
         typedef typename vtkm::worklet::DispatcherMapField<PICWorklet> picWDispatcher;
@@ -124,7 +121,9 @@ public:
             vtkm::worklet::particleadvection::StateRecordingParticle<FieldType, DeviceAdapterTag> sl(posArray,
                                                                                                      stepArray,
                                                                                                      maxSteps);
+            vtkm::cont::Timer<DeviceAdapterTag> timer;
             picWD.Invoke(idxArray, sl);
+            std::cerr<<" ***** Invoke: "<<timer.GetElapsedTime()<<std::endl;
             
             if (dumpOutput)
             {
@@ -144,7 +143,16 @@ public:
             vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag> p(posArray,
                                                                                        stepArray,
                                                                                        maxSteps);
+            vtkm::cont::Timer<DeviceAdapterTag> timer;
             picWD.Invoke(idxArray, p);
+            std::cerr<<" ***** Invoke: "<<timer.GetElapsedTime()<<std::endl;
+/*
+            vtkm::Id totSteps = 0;
+            for (vtkm::Id i = 0; i < numSeeds; i++)
+                totSteps += p.GetStep(i);
+            std::cerr<<"*** TotSteps= "<<totSteps<<std::endl;
+*/
+
             if (dumpOutput)
             {
                 vtkm::Vec<FieldType, 3> pos;
