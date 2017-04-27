@@ -55,13 +55,17 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 71.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(8) == 91.0f, "Wrong point field data");
@@ -72,17 +76,15 @@ public:
 
   void TestUniform3D0() const
   {
-    std::cout << std::endl << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
     vtkm::filter::ExtractStructured extract;
 
     // VOI within dataset
-    vtkm::Bounds bounds(1,3, 1,3, 1,3);
-    vtkm::Id3 sample(1,1,1);
-    extract.SetVOI(bounds);
-    extract.SetSampleRate(sample);
+    extract.SetVOI(1,3, 1,3, 1,3);
+    extract.SetSampleRate(1,1,1);
 
     result = extract.Execute(dataset);
 
@@ -96,13 +98,17 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 99.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 97.0f, "Wrong point field data");
@@ -113,17 +119,17 @@ public:
 
   void TestUniform3D1() const
   {
-    std::cout << std::endl << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
     vtkm::filter::ExtractStructured extract;
 
     // VOI surrounds dataset
-    vtkm::Bounds bounds(-1,7, -1,7, -1,7);
-    vtkm::Id3 sample(1,1,1);
-    extract.SetVOI(bounds);
-    extract.SetSampleRate(sample);
+    vtkm::Id3 minPoint(-1,-1,-1);
+    vtkm::Id3 maxPoint(7,7,7);
+    extract.SetVOI(minPoint, maxPoint);
+    extract.SetSampleRate(1,1,1);
 
     result = extract.Execute(dataset);
 
@@ -137,13 +143,17 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 64),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(31) == 99.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(93) == 97.0f, "Wrong point field data");
@@ -154,7 +164,7 @@ public:
 
   void TestUniform3D2() const
   {
-    std::cout << std::endl << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
@@ -178,13 +188,17 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 15.0f, "Wrong point field data");
@@ -195,7 +209,7 @@ public:
 
   void TestUniform3D3() const
   {
-    std::cout << std::endl << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
@@ -219,13 +233,17 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 27),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 99.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(63) == 0.0f, "Wrong point field data");
@@ -236,7 +254,7 @@ public:
 
   void TestUniform3D4() const
   {
-    std::cout << std::endl << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
@@ -260,13 +278,17 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 90.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 0.0f, "Wrong point field data");
@@ -277,7 +299,7 @@ public:
 
   void TestUniform3D5() const
   {
-    std::cout << std::endl << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
@@ -301,13 +323,17 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 90.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(8) == 0.0f, "Wrong point field data");
@@ -318,7 +344,7 @@ public:
 
   void TestUniform3D6() const
   {
-    std::cout << std::endl << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
@@ -342,18 +368,18 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
-std::cout << outPointData.GetPortalConstControl().Get(0) << std::endl;
-std::cout << outPointData.GetPortalConstControl().Get(26) << std::endl;
-std::cout << outCellData.GetPortalConstControl().Get(0) << std::endl;
-std::cout << outCellData.GetPortalConstControl().Get(3) << std::endl;
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(26) == 0.0f, "Wrong point field data");
 
@@ -363,7 +389,7 @@ std::cout << outCellData.GetPortalConstControl().Get(3) << std::endl;
 
   void TestUniform3D7() const
   {
-    std::cout << std::endl << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
@@ -387,13 +413,17 @@ std::cout << outCellData.GetPortalConstControl().Get(3) << std::endl;
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(7) == 97.0f, "Wrong point field data");
@@ -401,9 +431,56 @@ std::cout << outCellData.GetPortalConstControl().Get(3) << std::endl;
     VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 16.0f, "Wrong cell field data");
   }
 
+  void TestUniform3D8() const
+  {
+    std::cout << "Testing extract structured uniform" << std::endl;
+    vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
+    vtkm::filter::ResultDataSet result;
+
+    vtkm::filter::ExtractStructured extract;
+
+    // Bounding box within data set with sampling
+    vtkm::Bounds bounds(0,4, 0,4, 1,3);
+    vtkm::Id3 sample(3,3,2);
+    extract.SetVOI(bounds);
+    extract.SetSampleRate(sample);
+    extract.SetIncludeBoundary(true);
+
+    result = extract.Execute(dataset);
+
+    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
+    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
+
+    vtkm::cont::DataSet output = result.GetDataSet();
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 18),
+                     "Wrong result for ExtractStructured worklet");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
+                     "Wrong result for ExtractStructured worklet");
+
+    vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
+    vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
+    output.GetField("pointvar").GetData().CopyTo(outPointData);
+    output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+
+    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(4) == 99.0f, "Wrong point field data");
+    VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(13) == 97.0f, "Wrong point field data");
+
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 16.0f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(3) == 31.0f, "Wrong cell field data");
+  }
+
   void TestRectilinear2D() const
   {
-    std::cout << std::endl << "Testing extract structured rectilinear" << std::endl;
+    std::cout << "Testing extract structured rectilinear" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DRectilinearDataSet0();
     vtkm::filter::ResultDataSet result;
 
@@ -427,13 +504,17 @@ std::cout << outCellData.GetPortalConstControl().Get(3) << std::endl;
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(3) == 4.0f, "Wrong point field data");
@@ -468,13 +549,17 @@ std::cout << outCellData.GetPortalConstControl().Get(3) << std::endl;
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
                      "Wrong result for ExtractStructured worklet");
 
-    VTKM_TEST_ASSERT(output.HasField("pointvar"), "Point field not mapped correctly");
-    VTKM_TEST_ASSERT(output.HasField("cellvar"), "Cell field not mapped correctly");
-
     vtkm::cont::ArrayHandle<vtkm::Float32> outPointData;
     vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("pointvar").GetData().CopyTo(outPointData);
     output.GetField("cellvar").GetData().CopyTo(outCellData);
+
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 
+                                outPointData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 
+                                outCellData.GetNumberOfValues()),
+                     "Data/Geometry mismatch for ExtractStructured filter");
 
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(0) == 0.0f, "Wrong point field data");
     VTKM_TEST_ASSERT(outPointData.GetPortalConstControl().Get(7) == 10.0f, "Wrong point field data");
@@ -493,6 +578,7 @@ std::cout << outCellData.GetPortalConstControl().Get(3) << std::endl;
     this->TestUniform3D5();
     this->TestUniform3D6();
     this->TestUniform3D7();
+    this->TestUniform3D8();
     this->TestRectilinear2D();
     this->TestRectilinear3D();
   }

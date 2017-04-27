@@ -27,6 +27,9 @@ namespace filter {
 inline VTKM_CONT
 ExtractStructured::ExtractStructured():
   vtkm::filter::FilterDataSet<ExtractStructured>(),
+  VOI(vtkm::Bounds(1,1,1,1,1,1)),
+  SampleRate(vtkm::Id3(1,1,1)),
+  IncludeBoundary(false),
   Worklet()
 {
 }
@@ -37,7 +40,7 @@ template<typename DerivedPolicy,
 inline VTKM_CONT
 vtkm::filter::ResultDataSet ExtractStructured::DoExecute(
                                                  const vtkm::cont::DataSet& input,
-                                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                                 const vtkm::filter::PolicyBase<DerivedPolicy>&,
                                                  const DeviceAdapter&)
 {
   const vtkm::cont::DynamicCellSet& cells =
@@ -50,6 +53,7 @@ vtkm::filter::ResultDataSet ExtractStructured::DoExecute(
                                            coordinates,
                                            this->VOI,
                                            this->SampleRate,
+                                           this->IncludeBoundary,
                                            DeviceAdapter());
 
   return vtkm::filter::ResultDataSet(output);

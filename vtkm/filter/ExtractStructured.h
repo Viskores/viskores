@@ -35,15 +35,37 @@ public:
 
   // Set the bounding box for the volume of interest
   VTKM_CONT
-  const vtkm::Bounds& GetVOI() const       { return this->VOI; }
+  vtkm::Bounds GetVOI() const { return this->VOI; }
+
   VTKM_CONT
-  void SetVOI(vtkm::Bounds voi)            { this->VOI = voi; }
+  void SetVOI(const int &i0, const int &i1, 
+              const int &j0, const int &j1, 
+              const int &k0, const int &k1) 
+                             { this->VOI = vtkm::Bounds(i0, i1, j0, j1, k0, k1); }
+  VTKM_CONT
+  void SetVOI(const int bounds[6]) 
+                             { this->VOI = vtkm::Bounds(bounds); }
+  VTKM_CONT
+  void SetVOI(const vtkm::Id3 &minPoint, const vtkm::Id3 &maxPoint)
+                             { this->VOI = vtkm::Bounds(minPoint, maxPoint); }
+  VTKM_CONT
+  void SetVOI(const vtkm::Bounds &voi)      
+                             { this->VOI = voi; }
 
   // Sampling rate
   VTKM_CONT
-  const vtkm::Id3& GetSampleRate() const   { return this->SampleRate; }
+  vtkm::Id3 GetSampleRate() const             { return this->SampleRate; }
   VTKM_CONT
-  void SetSampleRate(vtkm::Id3 sampleRate) { this->SampleRate = sampleRate; }
+  void SetSampleRate(const int & i, const int &j, const int &k)
+                                              { this->SampleRate = vtkm::Id3(i,j,k); }
+  VTKM_CONT
+  void SetSampleRate(vtkm::Id3 sampleRate)    { this->SampleRate = sampleRate; }
+
+  // Include the outer boundary on a subsample
+  VTKM_CONT
+  bool GetIncludeBoundary()                   { return this->IncludeBoundary; }
+  VTKM_CONT
+  void SetIncludeBoundary(const bool &value)  { this->IncludeBoundary = value; }
 
   template<typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
@@ -63,6 +85,7 @@ public:
 private:
   vtkm::Bounds VOI;
   vtkm::Id3 SampleRate;
+  bool IncludeBoundary;
   vtkm::worklet::ExtractStructured Worklet;
 };
 
