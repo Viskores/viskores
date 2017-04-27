@@ -22,6 +22,7 @@
 #define vtk_m_exec_cuda_internal_ExecutionPolicy_h
 
 #include <vtkm/BinaryPredicates.h>
+#include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
