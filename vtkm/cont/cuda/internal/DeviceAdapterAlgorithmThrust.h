@@ -36,7 +36,7 @@
 
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
-#include <vtkm/exec/internal/WorkletInvokeFunctor.h>
+#include <vtkm/exec/internal/TaskSingular.h>
 
 
 
