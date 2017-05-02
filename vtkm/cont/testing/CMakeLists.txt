@@ -28,6 +28,8 @@ set(headers
   TestingDataSetExplicit.h
   TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
+  TestingImplicitFunction.h
+  TestingVirtualObjectCache.h
   )
 
 vtkm_declare_headers(${headers})

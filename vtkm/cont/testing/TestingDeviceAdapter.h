@@ -38,6 +38,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/internal/DeviceAdapterError.h>
+#include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -311,6 +312,59 @@ public:
     vtkm::exec::AtomicArray<T,DeviceAdapterTag> AArray;
   };
 
+  class VirtualObjectTransferKernel
+  {
+  public:
+    struct Interface
+    {
+      using FooSig = vtkm::Id (const void*);
+
+      template<typename T>
+      VTKM_EXEC
+      void Bind(const T *target)
+      {
+        this->Target = target;
+        this->FooPtr = [](const void* t){ return static_cast<const T*>(t)->Foo(); };
+      }
+
+      VTKM_EXEC
+      vtkm::Id Foo() const
+      {
+        return this->FooPtr(this->Target);
+      }
+
+      const void *Target;
+      FooSig *FooPtr;
+    };
+
+    struct Concrete
+    {
+      vtkm::Id Foo() const
+      {
+        return this->Value;
+      }
+
+      vtkm::Id Value = 0;
+    };
+
+    VirtualObjectTransferKernel(const Interface &vo, IdArrayHandle &result)
+      : Virtual(vo), Result(result.PrepareForInPlace(DeviceAdapterTag()))
+    { }
+
+    VTKM_EXEC
+    void operator()(vtkm::Id) const
+    {
+      this->Result.Set(0, this->Virtual.Foo());
+    }
+
+    VTKM_CONT void SetErrorMessageBuffer(
+        const vtkm::exec::internal::ErrorMessageBuffer&)
+    {  }
+
+  private:
+    Interface Virtual;
+    IdPortalType Result;
+  };
 
 private:
 
@@ -470,6 +524,41 @@ private:
     const bool valid_runtime = runtime.Exists();
 
     VTKM_TEST_ASSERT(valid_runtime, "runtime detection failed for device");
+  }
+
+  VTKM_CONT
+  static void TestVirtualObjectTransfer()
+  {
+    using VirtualObject = typename VirtualObjectTransferKernel::Interface;
+    using TargetType = typename VirtualObjectTransferKernel::Concrete;
+    using Transfer = vtkm::cont::internal::VirtualObjectTransfer<
+                       VirtualObject, TargetType, DeviceAdapterTag>;
+
+    IdArrayHandle result;
+    result.Allocate(1);
+    result.GetPortalControl().Set(0, 0);
+
+    TargetType target;
+    target.Value = 5;
+
+    VirtualObject vo;
+    void* state = Transfer::Create(vo, &target);
+
+
+    std::cout << "-------------------------------------------" << std::endl;
+    std::cout << "Testing VirtualObjectTransfer" << std::endl;
+
+    Algorithm::Schedule(VirtualObjectTransferKernel(vo, result), 1);
+    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 5,
+                     "Did not get expected result");
+
+    target.Value = 10;
+    Transfer::Update(state, &target);
+    Algorithm::Schedule(VirtualObjectTransferKernel(vo, result), 1);
+    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 10,
+                     "Did not get expected result");
+
+    Transfer::Cleanup(state);
   }
 
   static VTKM_CONT void TestAlgorithmSchedule()
@@ -2133,6 +2222,7 @@ private:
       TestOutOfMemory();
       TestTimer();
       TestRuntime();
+      TestVirtualObjectTransfer();
 
       TestAlgorithmSchedule();
       TestErrorExecution();

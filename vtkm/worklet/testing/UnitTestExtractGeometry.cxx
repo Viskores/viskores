@@ -95,7 +95,7 @@ public:
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.0f, 0.0f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(2.0f, 2.0f, 2.0f);
-    vtkm::Box box(minPoint, maxPoint);
+    vtkm::cont::Box box(minPoint, maxPoint);
   
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
@@ -215,7 +215,7 @@ public:
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0f, 1.0f, 1.0f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0f, 3.0f, 3.0f);
-    vtkm::Box box(minPoint, maxPoint);
+    vtkm::cont::Box box(minPoint, maxPoint);
   
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
@@ -255,7 +255,7 @@ public:
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
     vtkm::FloatDefault radius(1.8f);
-    vtkm::Sphere sphere(center, radius);
+    vtkm::cont::Sphere sphere(center, radius);
   
     // Output data set with cell set containing extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;

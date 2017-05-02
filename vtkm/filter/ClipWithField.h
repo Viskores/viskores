@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_Clip_h
-#define vtk_m_filter_Clip_h
+#ifndef vtk_m_filter_ClipWithField_h
+#define vtk_m_filter_ClipWithField_h
 
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/Clip.h>
@@ -27,11 +27,11 @@
 namespace vtkm {
 namespace filter {
 
-class Clip : public vtkm::filter::FilterDataSetWithField<Clip>
+class ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
 {
 public:
   VTKM_CONT
-  Clip();
+  ClipWithField();
 
   VTKM_CONT
   void SetClipValue(vtkm::Float64 value){ this->ClipValue = value; }
@@ -64,7 +64,7 @@ private:
 };
 
 template<>
-class FilterTraits<Clip>
+class FilterTraits<ClipWithField>
 { //currently the Clip filter only works on scalar data.
 public:
   typedef TypeListTagScalarAll InputFieldTypeList;
@@ -75,6 +75,6 @@ public:
 } // namespace vtkm::filter
 
 
-#include <vtkm/filter/Clip.hxx>
+#include <vtkm/filter/ClipWithField.hxx>
 
-#endif // vtk_m_filter_Clip_h
+#endif // vtk_m_filter_ClipWithField_h

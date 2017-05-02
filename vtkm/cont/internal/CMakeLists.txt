@@ -36,6 +36,8 @@ set(headers
   IteratorFromArrayPortal.h
   SimplePolymorphicContainer.h
   StorageError.h
+  VirtualObjectTransfer.h
+  VirtualObjectTransferShareWithControl.h
   )
 
 vtkm_declare_headers(${headers})
