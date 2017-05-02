@@ -94,18 +94,18 @@ public:
     bool IncludeBoundary;
 
     VTKM_CONT
-    CreatePointMap(const vtkm::Id3 inDimension,
+    CreatePointMap(const vtkm::Id3 &inDimension,
                    const vtkm::Bounds &outBounds,
                    const vtkm::Id3 &sample,
-                   const bool includeBoundary) :
-                         RowSize(inDimension[0]),
-                         PlaneSize(inDimension[0] * inDimension[1]),
-                         OutBounds(outBounds),
-                         Sample(sample),
-                         IncludeBoundary(includeBoundary) {}
+                         bool includeBoundary) :
+                            RowSize(inDimension[0]),
+                            PlaneSize(inDimension[0] * inDimension[1]),
+                            OutBounds(outBounds),
+                            Sample(sample),
+                            IncludeBoundary(includeBoundary) {}
 
     VTKM_EXEC
-    vtkm::IdComponent operator()(const vtkm::Id index) const
+    vtkm::IdComponent operator()(vtkm::Id index) const
     {
       vtkm::IdComponent passValue = 0;
 
@@ -170,7 +170,7 @@ public:
 
     template <typename ConnectivityInVec, typename InPointMap>
     VTKM_EXEC
-    vtkm::IdComponent operator()(const vtkm::Id numIndices,
+    vtkm::IdComponent operator()(      vtkm::Id numIndices,
                                  const ConnectivityInVec &connectivityIn,
                                  const InPointMap &pointMap) const
     {
@@ -238,13 +238,13 @@ public:
   template <typename CellSetType,
             typename DeviceAdapter>
   vtkm::cont::DataSet ExtractUniform(
-                          const vtkm::IdComponent outDim,
+                                vtkm::IdComponent outDim,
                           const CellSetType &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
-                          const vtkm::Bounds outBounds,
+                          const vtkm::Bounds &outBounds,
                           const vtkm::Id3 &sample,
-                          const bool &includeBoundary,
-                          DeviceAdapter)
+                                bool includeBoundary,
+                                DeviceAdapter)
   {
     typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;
     typedef typename UniformArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst UniformConstPortal;
@@ -374,13 +374,13 @@ public:
   template <typename CellSetType,
             typename DeviceAdapter>
   vtkm::cont::DataSet ExtractRectilinear(
-                          const vtkm::IdComponent outDim,
+                                vtkm::IdComponent outDim,
                           const CellSetType &cellSet,
                           const vtkm::cont::CoordinateSystem &coordinates,
                           const vtkm::Bounds &outBounds,
                           const vtkm::Id3 &sample,
-                          const bool &includeBoundary,
-                          DeviceAdapter)
+                                bool includeBoundary,
+                                DeviceAdapter)
   {
     typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
     typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle,DefaultHandle,DefaultHandle> CartesianArrayHandle;
@@ -543,8 +543,8 @@ public:
                           const vtkm::cont::CoordinateSystem &coordinates,
                           const vtkm::Bounds &boundingBox,
                           const vtkm::Id3 &sample,
-                          const bool &includeBoundary,
-                          DeviceAdapter)
+                                bool includeBoundary,
+                                DeviceAdapter)
   {
     // Check legality of input cellset and set input dimension
     vtkm::IdComponent inDim = 0;
@@ -652,7 +652,7 @@ public:
             typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T, StorageType> ProcessPointField(
                                             const vtkm::cont::ArrayHandle<T, StorageType> &input,
-                                            const DeviceAdapter& device)
+                                                  DeviceAdapter device)
   {
     vtkm::cont::ArrayHandle<T, StorageType> output;
 
@@ -670,7 +670,7 @@ public:
             typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T, StorageType> ProcessCellField(
                                             const vtkm::cont::ArrayHandle<T, StorageType> &input,
-                                            const DeviceAdapter& device)
+                                                  DeviceAdapter device)
   {
     vtkm::cont::ArrayHandle<T, StorageType> output;
 

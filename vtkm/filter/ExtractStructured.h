@@ -38,15 +38,15 @@ public:
   vtkm::Bounds GetVOI() const { return this->VOI; }
 
   VTKM_CONT
-  void SetVOI(const int &i0, const int &i1, 
-              const int &j0, const int &j1, 
-              const int &k0, const int &k1) 
+  void SetVOI(int i0, int i1, 
+              int j0, int j1, 
+              int k0, int k1) 
                              { this->VOI = vtkm::Bounds(i0, i1, j0, j1, k0, k1); }
   VTKM_CONT
-  void SetVOI(const int bounds[6]) 
+  void SetVOI(int bounds[6]) 
                              { this->VOI = vtkm::Bounds(bounds); }
   VTKM_CONT
-  void SetVOI(const vtkm::Id3 &minPoint, const vtkm::Id3 &maxPoint)
+  void SetVOI(vtkm::Id3 minPoint, vtkm::Id3 maxPoint)
                              { this->VOI = vtkm::Bounds(minPoint, maxPoint); }
   VTKM_CONT
   void SetVOI(const vtkm::Bounds &voi)      
@@ -56,7 +56,7 @@ public:
   VTKM_CONT
   vtkm::Id3 GetSampleRate() const             { return this->SampleRate; }
   VTKM_CONT
-  void SetSampleRate(const int & i, const int &j, const int &k)
+  void SetSampleRate(int i, int j, int k)
                                               { this->SampleRate = vtkm::Id3(i,j,k); }
   VTKM_CONT
   void SetSampleRate(vtkm::Id3 sampleRate)    { this->SampleRate = sampleRate; }
@@ -65,7 +65,7 @@ public:
   VTKM_CONT
   bool GetIncludeBoundary()                   { return this->IncludeBoundary; }
   VTKM_CONT
-  void SetIncludeBoundary(const bool &value)  { this->IncludeBoundary = value; }
+  void SetIncludeBoundary(bool value)         { this->IncludeBoundary = value; }
 
   template<typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT
