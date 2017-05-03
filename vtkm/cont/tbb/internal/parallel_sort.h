@@ -86,14 +86,14 @@ public:
         size_t j=range.size;
         // Partition interval [i+1,j-1] with key *key0.
         for(;;) {
-            __TBB_ASSERT( i<j, NULL );
+            __TBB_ASSERT( i<j, nullptr );
             // Loop must terminate since array[l]==*key0.
             do {
                 --j;
                 __TBB_ASSERT( i<=j, "bad ordering relation?" );
             } while( comp( *key0, array[j] ));
             do {
-                __TBB_ASSERT( i<=j, NULL );
+                __TBB_ASSERT( i<=j, nullptr );
                 if( i==j ) goto partition;
                 ++i;
             } while( comp( array[i],*key0 ));

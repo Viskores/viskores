@@ -36,7 +36,7 @@ namespace {
 struct TestExecObject
 {
   VTKM_EXEC_CONT
-  TestExecObject() : Value(NULL) {  }
+  TestExecObject() : Value(nullptr) {  }
 
   VTKM_EXEC_CONT
   TestExecObject(vtkm::Id *value) : Value(value) {  }

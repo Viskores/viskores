@@ -47,7 +47,7 @@ keyCallback(GLFWwindow* vtkmNotUsed(window), int key,
       done = true;
   if (action == 1)
     which = (which+1) % NUM_DATASETS;
-}   
+}
 
 void RenderTests()
 {
@@ -57,12 +57,12 @@ void RenderTests()
     typedef vtkm::rendering::CanvasGL CanvasType;
     typedef vtkm::rendering::View3D View3DType;
     typedef vtkm::rendering::View2D View2DType;
-    
+
     vtkm::cont::testing::MakeTestDataSet maker;
     vtkm::rendering::ColorTable colorTable("thermal");
-    
+
     glfwInit();
-    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "GLFW Test", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "GLFW Test", nullptr, nullptr);
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, keyCallback);
 
