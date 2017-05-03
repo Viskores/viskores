@@ -34,7 +34,7 @@
 #include <vtkm/cont/internal/DynamicTransform.h>
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
-#include <vtkm/exec/internal/WorkletInvokeFunctor.h>
+#include <vtkm/exec/internal/TaskSingular.h>
 
 #include <vtkm/internal/IntegerSequence.h>
 #include <vtkm/internal/brigand.hpp>
@@ -531,10 +531,10 @@ private:
                       RangeType range,
                       DeviceAdapter) const
   {
-    // The WorkletInvokeFunctor class handles the magic of fetching values
+    // The TaskSingular class handles the magic of fetching values
     // for each instance and calling the worklet's function. So just create
-    // a WorkletInvokeFunctor and schedule it with the device adapter.
-    typedef vtkm::exec::internal::WorkletInvokeFunctor<WorkletType,Invocation>
+    // a TaskSingular and schedule it with the device adapter.
+    typedef vtkm::exec::internal::TaskSingular<WorkletType,Invocation>
         WorkletInvokeFunctorType;
     WorkletInvokeFunctorType workletFunctor =
         WorkletInvokeFunctorType(this->Worklet, invocation);

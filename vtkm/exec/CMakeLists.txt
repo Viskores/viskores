@@ -33,6 +33,7 @@ set(headers
   ImplicitFunction.h
   Jacobian.h
   ParametricCoordinates.h
+  TaskBase.h
   )
 
 #-----------------------------------------------------------------------------

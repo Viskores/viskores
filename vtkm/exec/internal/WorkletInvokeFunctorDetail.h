@@ -28,8 +28,8 @@
 #ifndef vtk_m_exec_internal_WorkletInvokeFunctorDetail_h
 #define vtk_m_exec_internal_WorkletInvokeFunctorDetail_h
 
-#if !defined(vtk_m_exec_internal_WorkletInvokeFunctor_h) && !defined(VTKM_TEST_HEADER_BUILD)
-#error WorkletInvokeFunctorDetail.h must be included from WorkletInvokeFunctor.h
+#if !defined(vtk_m_exec_internal_TaskSingular_h) && !defined(VTKM_TEST_HEADER_BUILD)
+#error WorkletInvokeFunctorDetail.h must be included from TaskSingular.h
 #endif
 
 #include <vtkm/internal/FunctionInterface.h>
