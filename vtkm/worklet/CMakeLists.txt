@@ -31,6 +31,7 @@ set(headers
   ExternalFaces.h
   ExtractGeometry.h
   ExtractPoints.h
+  ExtractStructured.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h

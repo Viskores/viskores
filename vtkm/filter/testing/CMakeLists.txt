@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestExternalFacesFilter.cxx
+  UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx

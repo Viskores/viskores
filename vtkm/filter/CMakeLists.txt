@@ -25,6 +25,7 @@ set(headers
   ClipWithImplicitFunction.h
   ContourTreeUniform.h
   ExternalFaces.h
+  ExtractStructured.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -58,6 +59,7 @@ set(header_template_sources
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
   ExternalFaces.hxx
+  ExtractStructured.hxx
   FilterCell.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
