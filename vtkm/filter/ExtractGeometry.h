@@ -18,29 +18,21 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_ExtractPoints_h
-#define vtk_m_filter_ExtractPoints_h
+#ifndef vtk_m_filter_ExtractGeometry_h
+#define vtk_m_filter_ExtractGeometry_h
 
 #include <vtkm/cont/ImplicitFunction.h>
 #include <vtkm/filter/FilterDataSet.h>
-#include <vtkm/filter/CleanGrid.h>
-#include <vtkm/worklet/ExtractPoints.h>
+#include <vtkm/worklet/ExtractGeometry.h>
 
 namespace vtkm {
 namespace filter {
 
-class ExtractPoints : public vtkm::filter::FilterDataSet<ExtractPoints>
+class ExtractGeometry : public vtkm::filter::FilterDataSet<ExtractGeometry>
 {
 public:
   VTKM_CONT
-  ExtractPoints();
-
-  // When CompactPoints is set, instead of copying the points and point fields
-  // from the input, the filter will create new compact fields without the unused elements
-  VTKM_CONT
-  bool GetCompactPoints() const     { return this->CompactPoints; }
-  VTKM_CONT
-  void SetCompactPoints(bool value) { this->CompactPoints = value; }
+  ExtractGeometry();
 
   // Set the volume of interest to extract
   template <typename ImplicitFunctionType, typename DerivedPolicy>
@@ -59,13 +51,32 @@ public:
   }
 
   VTKM_CONT
-  bool GetExtractInside()              { return this->ExtractInside; }
+  bool GetExtractInside()                       { return this->ExtractInside; }
   VTKM_CONT
-  void SetExtractInside(bool value)    { this->ExtractInside = value; }
+  void SetExtractInside(bool value)             { this->ExtractInside = value; }
   VTKM_CONT
-  void ExtractInsideOn()               { this->ExtractInside = true; }
+  void ExtractInsideOn()                        { this->ExtractInside = true; }
   VTKM_CONT
-  void ExtractInsideOff()              { this->ExtractInside = false; }
+  void ExtractInsideOff()                       { this->ExtractInside = false; }
+
+  VTKM_CONT
+  bool GetExtractBoundaryCells()                { return this->ExtractBoundaryCells; }
+  VTKM_CONT
+  void SetExtractBoundaryCells(bool value)      { this->ExtractBoundaryCells = value; }
+  VTKM_CONT
+  void ExtractBoundaryCellsOn()                 { this->ExtractBoundaryCells = true; }
+  VTKM_CONT
+  void ExtractBoundaryCellsOff()                { this->ExtractBoundaryCells = false; }
+  
+  VTKM_CONT
+  bool GetExtractOnlyBoundaryCells()            { return this->ExtractOnlyBoundaryCells; }
+  VTKM_CONT
+  void SetExtractOnlyBoundaryCells(bool value)  { this->ExtractOnlyBoundaryCells = value; }
+  VTKM_CONT
+  void ExtractOnlyBoundaryCellsOn()             { this->ExtractOnlyBoundaryCells = true; }
+  VTKM_CONT
+  void ExtractOnlyBoundaryCellsOff()            { this->ExtractOnlyBoundaryCells = false; }
+  
 
   template<typename DerivedPolicy, typename DeviceAdapter>
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
@@ -82,16 +93,25 @@ public:
 
 private:
   bool ExtractInside;
+  bool ExtractBoundaryCells;
+  bool ExtractOnlyBoundaryCells;
   std::shared_ptr<vtkm::cont::ImplicitFunction> Function;
 
-  bool CompactPoints;
-  vtkm::filter::CleanGrid Compactor;
+  //vtkm::worklet::ExtractGeometry Worklet;
+  vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
+};
+
+template<>
+class FilterTraits<ExtractGeometry>
+{ //currently the ExtractGeometry filter only works on scalar data.
+public:
+  typedef TypeListTagScalarAll InputFieldTypeList;
 };
 
 }
 } // namespace vtkm::filter
 
 
-#include <vtkm/filter/ExtractPoints.hxx>
+#include <vtkm/filter/ExtractGeometry.hxx>
 
-#endif // vtk_m_filter_ExtractPoints_h
+#endif // vtk_m_filter_ExtractGeometry_h
