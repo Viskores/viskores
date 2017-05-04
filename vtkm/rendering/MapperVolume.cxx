@@ -65,7 +65,7 @@ struct MapperVolume::InternalsType
         RayTracerType;
     typedef vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType>
         ContainerType;
-    RayTracerType *tracer = NULL;
+    RayTracerType *tracer = nullptr;
     if (this->RayTracerContainer)
     {
       ContainerType *container =
@@ -76,7 +76,7 @@ struct MapperVolume::InternalsType
       }
     }
 
-    if (tracer == NULL)
+    if (tracer == nullptr)
     {
       ContainerType *container
           = new vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType>;
@@ -156,8 +156,8 @@ struct MapperVolume::RenderFunctor
     if(this->Self->Internals->SampleDistance != DEFAULT_SAMPLE_DISTANCE)
     {
       tracer->SetSampleDistance(this->Self->Internals->SampleDistance);
-    } 
-      
+    }
+
     tracer->SetCompositeBackground(this->Self->Internals->CompositeBackground);
     vtkm::Bounds dataBounds = this->Coordinates.GetBounds();
 

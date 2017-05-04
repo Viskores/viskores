@@ -54,7 +54,7 @@ public:
 
   VTKM_CONT
   AtomicArray()
-    : AtomicImplementation(vtkm::cont::make_ArrayHandle((T*)NULL, 0))
+    : AtomicImplementation(vtkm::cont::make_ArrayHandle((T*)nullptr, 0))
   {  }
 
   template<typename StorageType>

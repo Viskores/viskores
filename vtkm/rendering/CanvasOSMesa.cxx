@@ -64,7 +64,7 @@ CanvasOSMesa::~CanvasOSMesa()
 void CanvasOSMesa::Initialize()
 {
   this->Internals->Context =
-      OSMesaCreateContextExt(OSMESA_RGBA, 32, 0, 0, NULL);
+      OSMesaCreateContextExt(OSMESA_RGBA, 32, 0, 0, nullptr);
 
   if (!this->Internals->Context)
   {

@@ -102,7 +102,7 @@ void CanvasEGL::Initialize()
   }
   eglBindAPI(EGL_OPENGL_API);
   this->Internals->Context =
-      eglCreateContext(this->Internals->Display, cfg, EGL_NO_CONTEXT, NULL);
+      eglCreateContext(this->Internals->Display, cfg, EGL_NO_CONTEXT, nullptr);
   if (!this->Internals->Context)
   {
     throw vtkm::cont::ErrorBadValue("Failed to create EGL context");
