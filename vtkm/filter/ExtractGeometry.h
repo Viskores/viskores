@@ -97,7 +97,6 @@ private:
   bool ExtractOnlyBoundaryCells;
   std::shared_ptr<vtkm::cont::ImplicitFunction> Function;
 
-  //vtkm::worklet::ExtractGeometry Worklet;
   vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
 };
 

@@ -86,20 +86,17 @@ public:
           ExtractInside == true &&
           ExtractOnlyBoundaryCells == false)
       {
-        // Inside cell requested
         passFlag = true;
       } 
       else if (outCnt == numIndices &&
                ExtractInside == false &&
                ExtractOnlyBoundaryCells == false)
       {
-        // Outside cell requested
         passFlag = true;
       }
       else if (inCnt > 0 && outCnt > 0 &&
                (ExtractBoundaryCells || ExtractOnlyBoundaryCells))
       {
-        // Boundary cell requested
         passFlag = true;
       }
       return passFlag;
