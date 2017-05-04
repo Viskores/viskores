@@ -23,13 +23,6 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/CellSet.h>
-
-#include <algorithm>
-#include <iostream>
-#include <vector>
-
 using vtkm::cont::testing::MakeTestDataSet;
 
 template <typename DeviceAdapter>

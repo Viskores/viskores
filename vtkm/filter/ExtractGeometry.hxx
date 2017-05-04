@@ -21,7 +21,6 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -136,7 +135,7 @@ bool ExtractGeometry::DoMapField(
                            vtkm::filter::ResultDataSet& result,
                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
                            const vtkm::filter::FieldMetadata& fieldMeta,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                           const vtkm::filter::PolicyBase<DerivedPolicy>&,
                            const DeviceAdapter&)
 {
   // point data is copied as is because it was not collapsed

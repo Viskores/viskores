@@ -24,7 +24,6 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
@@ -67,7 +66,7 @@ public:
                     const ConnectivityInVec &connectivityIn,
                     const InVecFieldPortalType &coordinates) const
     {
-      // Count points inside volume of interest
+      // Count points inside/outside volume of interest
       vtkm::IdComponent inCnt = 0;
       vtkm::IdComponent outCnt = 0;
       for (vtkm::IdComponent indx = 0; indx < numIndices; indx++)
@@ -81,16 +80,17 @@ public:
           outCnt++;
       }
 
+      // Decide if cell is extracted
       bool passFlag = false;
       if (inCnt == numIndices &&
-          ExtractInside == true &&
-          ExtractOnlyBoundaryCells == false)
+          ExtractInside &&
+          !ExtractOnlyBoundaryCells)
       {
         passFlag = true;
       } 
       else if (outCnt == numIndices &&
-               ExtractInside == false &&
-               ExtractOnlyBoundaryCells == false)
+               !ExtractInside &&
+               !ExtractOnlyBoundaryCells)
       {
         passFlag = true;
       }
