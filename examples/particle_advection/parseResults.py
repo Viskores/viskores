@@ -9,7 +9,7 @@ def compare(x,y) :
     if x[0] == 'rhea' :
         for i in reversed(range(16*2)) : A.append('TBB_%d' %(i+1))
 
-    T = ['short','med','long']
+    T = ['short','med','long', 'long2', 'long5', 'long10', 'long20', 'long100']
     F = ['astro','fusion','fishtank']
     sx = (A.index(x[1]), F.index(x[2]), T.index(x[3]), x[4])
     sy = (A.index(y[1]), F.index(y[2]), T.index(y[3]), y[4])
@@ -39,8 +39,8 @@ def printIt(x):
 def printCompare(tD, rcD, rgD) :
     print 'FILE DIST SEEDS Titan-GPU Titan-TBB RheaG-GPU RheaG-TBB RheaC-TBB'
     for f in ['astro.bov', 'fusion.bov', 'fishtank.bov'] :
-        for t in ['short', 'med', 'long'] :
-            for s in [1000, 10000, 100000, 1000000, 10000000]:
+        for t in ['short', 'med', 'long', 'long2', 'long5', 'long10', 'long20', 'long100'] :
+            for s in [1,10,100,1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000]:
                 t_gpu, rg_gpu, t_tbb, rg_tbb, rc_tbb = (0,0,0,0,0)
                 key = (f,'GPU',s,t)
                 if key in tD.keys() : t_gpu = tD[key]
