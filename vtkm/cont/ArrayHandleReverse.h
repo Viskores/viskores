@@ -214,11 +214,12 @@ private:
 };
 
 } // namespace internal
-/// \brief Cast the values of an array to the specified type, on demand.
+
+/// \brief Reverse the order of an array, on demand.
 ///
-/// ArrayHandleReverse is a specialization of ArrayHandleTransform. Given an ArrayHandle
-/// and a type, it creates a new handle that returns the elements of the array cast
-/// to the specified type.
+/// ArrayHandleReverse is a specialization of ArrayHandle. Given an ArrayHandle,
+/// it creates a new handle that returns the elements of the array in reverse
+/// order (i.e. from end to beginning).
 ///
 template< typename ArrayHandleType >
 class ArrayHandleReverse : public vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
