@@ -39,6 +39,7 @@ set(unit_tests
   UnitTestArrayHandleDiscard.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
+  UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
