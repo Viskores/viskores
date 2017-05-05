@@ -513,12 +513,12 @@ public:
     return output;
   }
 
-  template<typename DeviceAdapter>
+  template<typename DynamicCellSet, typename DeviceAdapter>
   class ClipWithImplicitFunction
   {
   public:
     VTKM_CONT
-    ClipWithImplicitFunction(Clip *clipper, const vtkm::cont::DynamicCellSet &cellSet,
+    ClipWithImplicitFunction(Clip *clipper, const DynamicCellSet &cellSet,
       const vtkm::exec::ImplicitFunction &function, vtkm::cont::CellSetExplicit<> *result)
       : Clipper(clipper), CellSet(&cellSet), Function(function), Result(result)
     { }
@@ -543,7 +543,7 @@ public:
 
   private:
     Clip *Clipper;
-    const vtkm::cont::DynamicCellSet *CellSet;
+    const DynamicCellSet *CellSet;
     const vtkm::exec::ImplicitFunctionValue Function;
     vtkm::cont::CellSetExplicit<> *Result;
   };
@@ -558,10 +558,10 @@ public:
   {
     vtkm::cont::CellSetExplicit<> output;
 
-    ClipWithImplicitFunction<DeviceAdapter> clip(this,
-                                                 cellSet,
-                                                 clipFunction.PrepareForExecution(device),
-                                                 &output);
+    ClipWithImplicitFunction<
+      vtkm::cont::DynamicCellSetBase<CellSetList>, DeviceAdapter>
+      clip(this, cellSet, clipFunction.PrepareForExecution(device), &output);
+
     CastAndCall(coords, clip);
     return output;
   }

@@ -34,7 +34,7 @@ void ClipWithImplicitFunction::SetImplicitFunction(
   const std::shared_ptr<ImplicitFunctionType> &func,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  func->ResetDevice(DerivedPolicy::DeviceAdapterList);
+  func->ResetDevices(DerivedPolicy::DeviceAdapterList);
   this->Function = func;
 }
 
