@@ -40,8 +40,11 @@
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/DispatcherReduceByKey.h>
+#include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/WorkletReduceByKey.h>
 
 #include <vtkm/worklet/MarchingCubesDataTables.h>
 
@@ -389,17 +392,6 @@ public:
 };
 
 // ---------------------------------------------------------------------------
-struct FirstValueSame
-{
-  template<typename T, typename U>
-  VTKM_EXEC_CONT bool operator()(const vtkm::Pair<T,U>& a,
-                                 const vtkm::Pair<T,U>& b) const
-  {
-    return (a.first == b.first);
-  }
-};
-
-// ---------------------------------------------------------------------------
 struct MultiContourLess
 {
   template<typename T>
@@ -425,43 +417,92 @@ struct MultiContourLess
 };
 
 // ---------------------------------------------------------------------------
-template<typename KeyType, typename KeyStorage,
-         typename ValueType, typename ValueStorage,
-         typename DeviceAdapterTag>
-vtkm::cont::ArrayHandle<KeyType, KeyStorage>
-MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& input_keys,
-                vtkm::cont::ArrayHandle<ValueType, ValueStorage> values,
-                vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
-                DeviceAdapterTag)
+struct MergeDuplicateValues : vtkm::worklet::WorkletReduceByKey
+{
+  typedef void ControlSignature(KeysIn keys,
+                                ValuesIn<> valuesIn1,
+                                ValuesIn<> valuesIn2,
+                                ReducedValuesOut<> valueOut1,
+                                ReducedValuesOut<> valueOut2);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+  typedef _1 InputDomain;
+
+  template<typename T,
+           typename ValuesInType,
+           typename Values2InType,
+           typename ValuesOutType,
+           typename Values2OutType>
+  VTKM_EXEC
+  void operator()(const T &key,
+                  const ValuesInType &values1,
+                  const Values2InType &values2,
+                  ValuesOutType &valueOut1,
+                  Values2OutType &valueOut2) const
+  {
+    valueOut1 = values1[0];
+    valueOut2 = values2[0];
+  }
+};
+
+// ---------------------------------------------------------------------------
+struct CopyEdgeIds : vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ExecutionSignature(_1, _2);
+  typedef _1 InputDomain;
+
+
+  VTKM_EXEC
+  void operator()(const vtkm::Id2& input, vtkm::Id2& output) const
+  {
+    output = input;
+  }
+
+  template<typename T>
+  VTKM_EXEC
+  void operator()(const vtkm::Pair<T, vtkm::Id2>& input, vtkm::Id2& output) const
+  {
+    output = input.second;
+  }
+};
+
+// ---------------------------------------------------------------------------
+template<typename KeyType, typename KeyStorage, typename DeviceAdapterTag>
+void
+MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& original_keys,
+                  vtkm::cont::ArrayHandle<vtkm::FloatDefault>& weights,
+                  vtkm::cont::ArrayHandle<vtkm::Id2>& edgeIds,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& cellids,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
+                  DeviceAdapterTag)
 {
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  //1. Copy the input keys as we need both a sorted & unique version and
-  // the original version to
-  vtkm::cont::ArrayHandle<KeyType, KeyStorage> keys;
-  Algorithm::Copy(input_keys, keys);
+  vtkm::cont::ArrayHandle<KeyType> input_keys;
+  Algorithm::Copy(original_keys, input_keys);
+  vtkm::worklet::Keys<KeyType> keys(input_keys, DeviceAdapterTag());
+  input_keys.ReleaseResources();
 
-  //2. Sort by key, making duplicate ids be adjacent so they are eligable
-  // to be removed by unique
-  Algorithm::SortByKey(keys, values, marchingcubes::MultiContourLess());
+  {
+  vtkm::worklet::DispatcherReduceByKey<MergeDuplicateValues> dispatcher;
+  vtkm::cont::ArrayHandle<vtkm::Id> writeCells;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> writeWeights;
+  dispatcher.Invoke(keys,
+                    weights,
+                    cellids,
+                    writeWeights,
+                    writeCells);
+  weights = writeWeights;
+  cellids = writeCells;
+  }
 
-  //3. lastly we need to do a unique by key, but since vtkm doesn't
-  // offer that feature, we use a zip handle.
-  // We use a custom comparison operator as we only want to compare
-  // the keys
-  auto zipped_kv = vtkm::cont::make_ArrayHandleZip(keys, values);
-  Algorithm::Unique( zipped_kv, marchingcubes::FirstValueSame());
+  //need to build the new connectivity
+  auto uniqueKeys = keys.GetUniqueKeys();
+  Algorithm::LowerBounds(uniqueKeys, original_keys, connectivity, marchingcubes::MultiContourLess());
 
-  //4. LowerBounds generates the output cell connections. It does this by
-  // finding for each interpolationId where it would be inserted in the
-  // sorted & unique subset, which generates an index value aka the lookup
-  // value.
-  //
-  Algorithm::LowerBounds(keys, input_keys, connectivity, marchingcubes::MultiContourLess());
-
-  //5. We need to return the sorted-unique keys as the caller will need
-  // to hold onto it for interpolation of other fields
-  return keys;
+  //update the edge ids
+  vtkm::worklet::DispatcherMapField<CopyEdgeIds> edgeDispatcher;
+  edgeDispatcher.Invoke(uniqueKeys, edgeIds);
 }
 
 /// \brief Compute the weights for each edge that is used to generate
@@ -709,6 +750,10 @@ vtkm::cont::CellSetSingleType< >
            bool withNormals,
            const DeviceAdapter& )
 {
+  typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapter> DeviceTraits;
+
+  std::cout << "Running MC on device adapter: " << DeviceTraits::GetName()
+            << std::endl;
   using vtkm::worklet::marchingcubes::ApplyToField;
   using vtkm::worklet::marchingcubes::EdgeWeightGenerate;
   using vtkm::worklet::marchingcubes::EdgeWeightGenerateMetaData;
@@ -731,22 +776,25 @@ vtkm::cont::CellSetSingleType< >
       vtkm::cont::make_ArrayHandle(isovalues, numIsoValues);
   // Call the ClassifyCell functor to compute the Marching Cubes case numbers
   // for each cell, and the number of vertices to be generated
-  ClassifyCell<ValueType> classifyCell;
-  ClassifyDispatcher classifyCellDispatcher(classifyCell);
 
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutputTrisPerCell;
+
+  {
+  ClassifyCell<ValueType> classifyCell;
+  ClassifyDispatcher classifyCellDispatcher(classifyCell);
   classifyCellDispatcher.Invoke(isoValuesHandle,
                                 inputField,
                                 cells,
                                 numOutputTrisPerCell,
                                 this->NumTrianglesTable);
-
+  }
 
   //Pass 2 Generate the edges
   vtkm::cont::ArrayHandle<vtkm::UInt8> contourIds;
   vtkm::cont::ArrayHandle<vtkm::Id> originalCellIds;
   {
   vtkm::worklet::ScatterCounting scatter(numOutputTrisPerCell, DeviceAdapter());
+
   EdgeWeightGenerateMetaData< DeviceAdapter
                             > metaData( scatter.GetOutputRange(numOutputTrisPerCell.GetNumberOfValues()),
                                         this->InterpolationWeights,
@@ -760,7 +808,6 @@ vtkm::cont::CellSetSingleType< >
                                       );
 
   EdgeWeightGenerate<ValueType, DeviceAdapter> weightGenerate( metaData );
-
   GenerateDispatcher edgeDispatcher(weightGenerate);
   edgeDispatcher.Invoke( cells,
                          //cast to a scalar field if not one, as cellderivative only works on those
@@ -784,21 +831,23 @@ vtkm::cont::CellSetSingleType< >
     // output. But for InterpolationEdgeIds we need to do it manually once done
     if(numIsoValues == 1)
     {
-      auto&& result = marchingcubes::MergeDuplicates(
+      marchingcubes::MergeDuplicates(
           this->InterpolationEdgeIds, //keys
-          vtkm::cont::make_ArrayHandleZip(this->InterpolationWeights, originalCellIds), //values
-          connectivity,
+          this->InterpolationWeights, //values
+          this->InterpolationEdgeIds, //values
+          originalCellIds, //values
+          connectivity, // computed using lower bounds
           DeviceAdapter() );
-      this->InterpolationEdgeIds = result;
     }
     else if(numIsoValues > 1)
     {
-      auto&& result = marchingcubes::MergeDuplicates(
+      marchingcubes::MergeDuplicates(
           vtkm::cont::make_ArrayHandleZip(contourIds, this->InterpolationEdgeIds), //keys
-          vtkm::cont::make_ArrayHandleZip(this->InterpolationWeights, originalCellIds), //values
-          connectivity,
+          this->InterpolationWeights, //values
+          this->InterpolationEdgeIds, //values
+          originalCellIds, //values
+          connectivity, // computed using lower bounds
           DeviceAdapter() );
-      this->InterpolationEdgeIds = result.GetStorage().GetSecondArray();
     }
   }
   else
@@ -810,7 +859,6 @@ vtkm::cont::CellSetSingleType< >
     vtkm::cont::ArrayHandleIndex temp(this->InterpolationEdgeIds.GetNumberOfValues());
     Algorithm::Copy(temp, connectivity);
   }
-
 
   //generate the vertices's
   ApplyToField applyToField;
@@ -828,7 +876,6 @@ vtkm::cont::CellSetSingleType< >
                     vtkm::CELL_SHAPE_TRIANGLE,
                     3,
                     connectivity );
-
 
   //now that the vertices have been generated we can generate the normals
   if(withNormals)

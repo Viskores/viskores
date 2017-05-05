@@ -258,6 +258,7 @@ private:
         vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanInclusive(
           vtkm::cont::make_ArrayHandleCast(count, vtkm::Id()),
           inputToOutputMapOffByOne);
+    std::cout << "outputSize from scatter: " << outputSize << std::endl;
 
     // We have implemented two different ways to compute the output to input
     // map. The first way is to use a binary search on each output index into
