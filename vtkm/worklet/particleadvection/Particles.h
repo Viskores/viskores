@@ -165,8 +165,8 @@ public:
         //std::cerr<<"TakeStep("<<idx<<", "<<pt<<"); loc= "<<loc<<" "<<numPos*maxSteps<<std::endl;
         if (loc > histSize*numPos)
         {
-            std::cout<<"PROBLEM: "<<idx<<" loc= "<<idx*histSize<<" + "<<steps.Get(idx)<<"-"<<stepOffset<<std::endl;
-            std::cout<<"       "<<loc<<" "<<histSize*numPos<<std::endl;
+            //std::cout<<"PROBLEM: "<<idx<<" loc= "<<idx*histSize<<" + "<<steps.Get(idx)<<"-"<<stepOffset<<std::endl;
+            //std::cout<<"       "<<loc<<" "<<histSize*numPos<<std::endl;
         }
         history.Set(loc, pt);
         steps.Set(idx, steps.Get(idx)+1);
