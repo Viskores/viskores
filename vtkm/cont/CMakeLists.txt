@@ -31,6 +31,7 @@ set(headers
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
   ArrayHandlePermutation.h
+  ArrayHandleReverse.h
   ArrayHandleStreaming.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
