@@ -284,7 +284,7 @@ public:
     this->Modified();
   }
 
-  void GetCenter(const vtkm::Vec<FloatDefault, 3> &center)
+  void SetCenter(const vtkm::Vec<FloatDefault, 3> &center)
   {
     this->Center = center;
     this->Modified();
