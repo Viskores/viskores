@@ -89,7 +89,7 @@ public:
   }
 
   BufferState():
-    OpenGLHandle(NULL),
+    OpenGLHandle(nullptr),
     BufferType(GL_INVALID_VALUE),
      SizeOfActiveSection(0),
      CapacityOfBuffer(0),

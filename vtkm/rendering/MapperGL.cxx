@@ -270,9 +270,9 @@ void RenderTriangles(MapperGL &mapper,
     glGenVertexArrays(1, &mapper.vao);
     glBindVertexArray(mapper.vao);
     glBindBuffer(GL_ARRAY_BUFFER, points_vbo);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glBindBuffer(GL_ARRAY_BUFFER, colours_vbo);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -297,7 +297,7 @@ void RenderTriangles(MapperGL &mapper,
         "}";
 
     GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vertex_shader, NULL);
+    glShaderSource(vs, 1, &vertex_shader, nullptr);
     glCompileShader(vs);
     GLint isCompiled = 0;
     glGetShaderiv(vs, GL_COMPILE_STATUS, &isCompiled);
@@ -311,7 +311,7 @@ void RenderTriangles(MapperGL &mapper,
         msg = "No error message";
       else
       {
-        // The maxLength includes the NULL character
+        // The maxLength includes the nullptr character
         GLchar *strInfoLog = new GLchar[maxLength + 1];
         glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
         msg = std::string(strInfoLog);
@@ -321,7 +321,7 @@ void RenderTriangles(MapperGL &mapper,
     }
 
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fragment_shader, NULL);
+    glShaderSource(fs, 1, &fragment_shader, nullptr);
     glCompileShader(fs);
     glGetShaderiv(fs, GL_COMPILE_STATUS, &isCompiled);
     if(isCompiled == GL_FALSE)
@@ -334,7 +334,7 @@ void RenderTriangles(MapperGL &mapper,
           msg = "No error message";
       else
       {
-        // The maxLength includes the NULL character
+        // The maxLength includes the nullptr character
         GLchar *strInfoLog = new GLchar[maxLength + 1];
         glGetShaderInfoLog(vs, maxLength, &maxLength, strInfoLog);
         msg = std::string(strInfoLog);
@@ -388,7 +388,7 @@ void RenderTriangles(MapperGL &mapper,
 
 } // anonymous namespace
 
-MapperGL::MapperGL() : Canvas(NULL), loaded(false)
+MapperGL::MapperGL() : Canvas(nullptr), loaded(false)
 {
 }
 
@@ -474,10 +474,10 @@ void MapperGL::EndScene()
 
 void MapperGL::SetCanvas(vtkm::rendering::Canvas *c)
 {
-  if (c != NULL)
+  if (c != nullptr)
   {
     this->Canvas = dynamic_cast<vtkm::rendering::CanvasGL*>(c);
-    if (this->Canvas == NULL)
+    if (this->Canvas == nullptr)
       throw vtkm::cont::ErrorBadValue("Bad canvas type for MapperGL. Must be CanvasGL");
   }
 }

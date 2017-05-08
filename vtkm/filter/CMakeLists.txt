@@ -57,7 +57,7 @@ set(headers
 set(header_template_sources
   CellAverage.hxx
   CleanGrid.hxx
-  ClipWithField.h
+  ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
   ExternalFaces.hxx
