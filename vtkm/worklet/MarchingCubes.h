@@ -433,7 +433,7 @@ struct MergeDuplicateValues : vtkm::worklet::WorkletReduceByKey
            typename ValuesOutType,
            typename Values2OutType>
   VTKM_EXEC
-  void operator()(const T &key,
+  void operator()(const T &,
                   const ValuesInType &values1,
                   const Values2InType &values2,
                   ValuesOutType &valueOut1,
@@ -550,19 +550,20 @@ public:
       }
     }
 
-    const vtkm::Vec<vtkm::FloatDefault, 3> edgePCoord0 =
+    auto grad0 = vtkm::exec::CellDerivative(
+      fieldIn, coords,
       vtkm::exec::ParametricCoordinatesPoint(
-        fieldIn.GetNumberOfComponents(), edgeVertex0, shape, *this);
+        fieldIn.GetNumberOfComponents(), edgeVertex0, shape, *this),
+      shape, *this);
 
-    const vtkm::Vec<vtkm::FloatDefault, 3> edgePCoord1 =
+    auto grad1 = vtkm::exec::CellDerivative(
+      fieldIn, coords,
       vtkm::exec::ParametricCoordinatesPoint(
-        fieldIn.GetNumberOfComponents(), edgeVertex1, shape, *this);
+        fieldIn.GetNumberOfComponents(), edgeVertex1, shape, *this),
+      shape, *this);
 
-    const vtkm::Vec<vtkm::FloatDefault, 3> interpPCoord =
-      vtkm::Lerp(edgePCoord0, edgePCoord1, weight);
 
-    normal = vtkm::Normal(
-      vtkm::exec::CellDerivative(fieldIn, coords, interpPCoord, shape, *this));
+    normal = vtkm::Normal(vtkm::Lerp(grad0,grad1,weight));
   }
 };
 
@@ -750,10 +751,6 @@ vtkm::cont::CellSetSingleType< >
            bool withNormals,
            const DeviceAdapter& )
 {
-  typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapter> DeviceTraits;
-
-  std::cout << "Running MC on device adapter: " << DeviceTraits::GetName()
-            << std::endl;
   using vtkm::worklet::marchingcubes::ApplyToField;
   using vtkm::worklet::marchingcubes::EdgeWeightGenerate;
   using vtkm::worklet::marchingcubes::EdgeWeightGenerateMetaData;
