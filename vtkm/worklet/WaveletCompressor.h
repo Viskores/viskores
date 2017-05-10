@@ -480,7 +480,7 @@ public:
                                vtkm::Float64    ratio,
                                DeviceTag                )
   {
-    if( ratio > 1 )
+    if( ratio > 1.0 )
     {
       vtkm::Id coeffLen = coeffIn.GetNumberOfValues();
       typedef typename CoeffArrayType::ValueType ValueType;
@@ -488,13 +488,8 @@ public:
       CoeffArrayBasic sortedArray;
       vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( coeffIn, sortedArray );
 
-std::cerr << "squash: finish copy" << std::endl;
-coeffIn.ReleaseResources();
-
       WaveletBase::DeviceSort( sortedArray, DeviceTag() );
 
-std::cerr << "squash: finish sort" << std::endl;
-      
       vtkm::Id n = coeffLen - 
                    static_cast<vtkm::Id>( static_cast<vtkm::Float64>(coeffLen)/ratio );
       vtkm::Float64 nthVal = static_cast<vtkm::Float64>
@@ -502,9 +497,9 @@ std::cerr << "squash: finish sort" << std::endl;
       if( nthVal < 0.0 )
         nthVal *= -1.0;
       typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
-      ThresholdType tw( nthVal );
-      vtkm::worklet::DispatcherMapField< ThresholdType, DeviceTag > dispatcher( tw );
-      dispatcher.Invoke( sortedArray );
+      ThresholdType thresholdWorklet( nthVal );
+      vtkm::worklet::DispatcherMapField< ThresholdType, DeviceTag > dispatcher( thresholdWorklet );
+      dispatcher.Invoke( coeffIn );
     } 
 
     return 0;
