@@ -29,6 +29,13 @@ namespace vtkm {
 namespace worklet {
 namespace particleadvection {
 
+enum ParticleStatus
+{
+    OK = 0,
+    TERMINATE=1,
+    OUT_OF_BOUNDS=2,
+};
+
 template<typename T,typename DeviceAdapterTag>
 class Particles : public vtkm::exec::ExecutionObjectBase
 {
@@ -44,25 +51,28 @@ public:
     }
     VTKM_EXEC_CONT    
     Particles(const Particles &ic) :
-        pos(ic.pos), steps(ic.steps), maxSteps(ic.maxSteps)
+        pos(ic.pos), steps(ic.steps), maxSteps(ic.maxSteps), status(ic.status)
     {
     }
 
     VTKM_EXEC_CONT        
     Particles(const PosPortal &_pos,
               const IdPortal &_steps,
-              const vtkm::Id &_maxSteps) : pos(_pos), steps(_steps), maxSteps(_maxSteps)
+              const IdPortal &_status,
+              const vtkm::Id &_maxSteps) : pos(_pos), steps(_steps), maxSteps(_maxSteps), status(_status)
     {
     }
 
     VTKM_EXEC_CONT            
     Particles(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
               vtkm::cont::ArrayHandle<vtkm::Id> &stepsArray,
+              vtkm::cont::ArrayHandle<vtkm::Id> &statusArray,
               const vtkm::Id &_maxSteps) :
         maxSteps(_maxSteps)
     {
         pos = posArray.PrepareForInPlace(DeviceAdapterTag());
         steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
+        status = statusArray.PrepareForInPlace(DeviceAdapterTag());
     }
 
     VTKM_EXEC_CONT                
@@ -70,36 +80,45 @@ public:
                   const vtkm::Vec<T,3> &pt)
     {
         pos.Set(idx, pt);
-        steps.Set(idx, steps.Get(idx)+1);
+        vtkm::Id nSteps = steps.Get(idx);
+        nSteps = nSteps+1;
+        steps.Set(idx, nSteps);
+        if (nSteps == maxSteps)
+            SetStatusTerminate(idx);
     }
+
+    VTKM_EXEC_CONT
+    void SetStatusTerminate(const vtkm::Id &idx)
+    {
+        status.Set(idx, TERMINATE);
+    }
+    VTKM_EXEC_CONT
+    void SetStatusOutOfBounds(const vtkm::Id &idx)
+    {
+        status.Set(idx, OUT_OF_BOUNDS);
+    }    
 
     VTKM_EXEC_CONT                    
     bool Done(const vtkm::Id &idx)
     {
-        return steps.Get(idx) == maxSteps;
+        return status.Get(idx) != OK;
     }
 
     VTKM_EXEC_CONT
     vtkm::Vec<T,3> GetPos(const vtkm::Id &idx) const {return pos.Get(idx);}
     VTKM_EXEC_CONT
     vtkm::Id GetStep(const vtkm::Id &idx) const {return steps.Get(idx);}
-
     VTKM_EXEC_CONT
-    void Dump() const
-    {
-        vtkm::Id N = pos.GetNumberOfValues();
-        for (vtkm::Id i = 0; i < N; i++)
-            std::cout<<GetPos(i)<<std::endl;
-    }
+    vtkm::Id GetStatus(const vtkm::Id &idx) const {return status.Get(idx);}
 
 private:
     vtkm::Id maxSteps;
-    IdPortal steps;
+    IdPortal steps, status;
     PosPortal pos;
 };
 
 template<typename T,typename DeviceAdapterTag>
-class StateRecordingParticle : public vtkm::exec::ExecutionObjectBase
+class StateRecordingParticles : public vtkm::exec::ExecutionObjectBase
 {
 private:
     typedef typename vtkm::cont::ArrayHandle<vtkm::Id>
@@ -108,52 +127,55 @@ private:
         ::template ExecutionTypes<DeviceAdapterTag>::Portal PosPortal;
 public:
     VTKM_EXEC_CONT
-    StateRecordingParticle(const StateRecordingParticle &s) :
+    StateRecordingParticles(const StateRecordingParticles &s) :
         pos(s.pos), steps(s.steps), maxSteps(s.maxSteps), 
-        history(s.history), histSize(s.histSize), stepOffset(s.stepOffset)
+        history(s.history), histSize(s.histSize),
+        status(s.status)
     {
     }
     VTKM_EXEC_CONT
-    StateRecordingParticle() : pos(), steps(), maxSteps(0), histSize(-1), stepOffset(0)
+    StateRecordingParticles() : pos(), steps(), maxSteps(0), histSize(-1)
     {
     }
 
     VTKM_EXEC_CONT
-    StateRecordingParticle(const PosPortal &_pos,
-                           const IdPortal &_steps,
-                           const vtkm::Id &_maxSteps) :
-        pos(_pos), steps(_steps), maxSteps(_maxSteps)
+    StateRecordingParticles(const PosPortal &_pos,
+                            const IdPortal &_steps,
+                            const IdPortal &_status,                            
+                            const vtkm::Id &_maxSteps) :
+        pos(_pos), steps(_steps), maxSteps(_maxSteps), status(_status)
     {
-        std::cout<<"why calling this?????"<<std::endl;
+        //std::cout<<"why calling this?????"<<std::endl;
     }
 
     VTKM_EXEC_CONT
-    StateRecordingParticle(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
-                           vtkm::cont::ArrayHandle<vtkm::Id> &stepsArray,                                
-                           const vtkm::Id &_maxSteps) :
-        maxSteps(_maxSteps), histSize(_maxSteps), stepOffset(0)
+    StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
+                            vtkm::cont::ArrayHandle<vtkm::Id> &stepsArray,
+                            vtkm::cont::ArrayHandle<vtkm::Id> &statusArray,
+                            const vtkm::Id &_maxSteps) :
+        maxSteps(_maxSteps), histSize(_maxSteps)
     {
         pos = posArray.PrepareForInPlace(DeviceAdapterTag());
         steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
+        status = statusArray.PrepareForInPlace(DeviceAdapterTag());        
 
         numPos = posArray.GetNumberOfValues();
-        std::cerr<<"Alloc history: "<<histSize<<" sOffset "<<stepOffset<<std::endl;
         history = historyArray.PrepareForOutput(numPos*histSize, DeviceAdapterTag());
     }
 
     VTKM_EXEC_CONT
-    StateRecordingParticle(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
-                           vtkm::cont::ArrayHandle<vtkm::Id> &stepsArray,                                
-                           const vtkm::Id &_maxSteps,
-                           vtkm::Id &_histSize,
-                           vtkm::Id &_stepOffset) :
-        maxSteps(_maxSteps), histSize(_histSize), stepOffset(_stepOffset)
+    StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
+                            vtkm::cont::ArrayHandle<vtkm::Id> &stepsArray,
+                            vtkm::cont::ArrayHandle<vtkm::Id> &statusArray,                            
+                            const vtkm::Id &_maxSteps,
+                            vtkm::Id &_histSize) :
+        maxSteps(_maxSteps), histSize(_histSize)
     {
         pos = posArray.PrepareForInPlace(DeviceAdapterTag());
         steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
+        status = statusArray.PrepareForInPlace(DeviceAdapterTag());
 
         numPos = posArray.GetNumberOfValues();
-        std::cerr<<"Alloc history: "<<histSize<<" sOffset "<<stepOffset<<std::endl;
         history = historyArray.PrepareForOutput(numPos*histSize, DeviceAdapterTag());
     }
 
@@ -161,25 +183,31 @@ public:
     void TakeStep(const vtkm::Id &idx,
                   const vtkm::Vec<T,3> &pt)
     {
-        vtkm::Id loc = idx*histSize + (steps.Get(idx)-stepOffset);
-        //std::cerr<<"TakeStep("<<idx<<", "<<pt<<"); loc= "<<loc<<" "<<numPos*maxSteps<<std::endl;
-        if (loc > histSize*numPos)
-        {
-            //std::cout<<"PROBLEM: "<<idx<<" loc= "<<idx*histSize<<" + "<<steps.Get(idx)<<"-"<<stepOffset<<std::endl;
-            //std::cout<<"       "<<loc<<" "<<histSize*numPos<<std::endl;
-        }
+        vtkm::Id nSteps = steps.Get(idx);
+        
+        vtkm::Id loc = idx*histSize + nSteps;
         history.Set(loc, pt);
-        steps.Set(idx, steps.Get(idx)+1);
-        //Only needed for rounds algorithm.
-        pos.Set(idx, pt);
+        nSteps = nSteps+1;
+        steps.Set(idx, nSteps);
+        if (nSteps == maxSteps)
+            SetStatusTerminate(idx);
+    }
+
+    VTKM_EXEC_CONT
+    void SetStatusTerminate(const vtkm::Id &idx)
+    {
+        status.Set(idx, TERMINATE);
+    }
+    VTKM_EXEC_CONT
+    void SetStatusOutOfBounds(const vtkm::Id &idx)
+    {
+        status.Set(idx, OUT_OF_BOUNDS);
     }
 
     VTKM_EXEC_CONT
     bool Done(const vtkm::Id &idx)
     {
-        //vtkm::Id s = steps.Get(idx);
-        //std::cout<<idx<<" steps= "<<s<<std::endl;
-        return steps.Get(idx) >= maxSteps;
+        return status.Get(idx) != OK;
     }
 
     VTKM_EXEC_CONT
@@ -187,37 +215,131 @@ public:
     VTKM_EXEC_CONT
     vtkm::Id GetStep(const vtkm::Id &idx) const {return steps.Get(idx);}
     VTKM_EXEC_CONT
+    vtkm::Id GetStatus(const vtkm::Id &idx) const {return status.Get(idx);}    
+    VTKM_EXEC_CONT
     vtkm::Vec<T,3> GetHistory(const vtkm::Id &idx, const vtkm::Id &step) const
     {
-        //std::cerr<<stepOffset<<"::"<<idx<<" "<<step<<std::endl;
         return history.Get(idx*histSize+step);
     }    
 
-    VTKM_EXEC_CONT
-    vtkm::Id Dump() const
-    {
-        vtkm::Id totSteps = 0;
-        vtkm::Id N = pos.GetNumberOfValues();
-        for (vtkm::Id i = 0; i < N; i++)
-        {
-            vtkm::Id ns = GetStep(i)-stepOffset;
-            totSteps += ns;
-            for (vtkm::Id j = 0; j < ns; j++)
-            {
-                vtkm::Vec<T,3> p = GetHistory(i,j);
-                std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
-            }
-        }
-        return totSteps;
-    }
-
 private:
-    vtkm::Id maxSteps, numPos, histSize, stepOffset;
-    IdPortal steps;
+    vtkm::Id maxSteps, numPos, histSize;
+    IdPortal steps, status;
     PosPortal pos, history;
+public:
     vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > historyArray;
 };    
 
+
+
+template<typename T,typename DeviceAdapterTag>
+class StateRecordingParticlesRound : public vtkm::exec::ExecutionObjectBase
+{
+private:
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>
+        ::template ExecutionTypes<DeviceAdapterTag>::Portal IdPortal;    
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T,3> >
+        ::template ExecutionTypes<DeviceAdapterTag>::Portal PosPortal;
+public:
+    VTKM_EXEC_CONT
+    StateRecordingParticlesRound(const StateRecordingParticlesRound &s) :
+        pos(s.pos), steps(s.steps), maxSteps(s.maxSteps), 
+        history(s.history), histSize(s.histSize),
+        status(s.status), offset(s.offset), numPos(s.numPos),
+        totalMaxSteps(s.totalMaxSteps)
+    {
+    }
+    VTKM_EXEC_CONT
+    StateRecordingParticlesRound() : pos(), steps(), maxSteps(0), histSize(-1), offset(0), totalMaxSteps(0)
+    {
+    }
+
+    VTKM_EXEC_CONT
+    StateRecordingParticlesRound(const PosPortal &_pos,
+                                 const IdPortal &_steps,
+                                 const IdPortal &_status,                            
+                                 const vtkm::Id &_maxSteps,
+                                 const vtkm::Id &_histSize,
+                                 const vtkm::Id &_offset,
+                                 const vtkm::Id &_totalMaxSteps) :
+        pos(_pos), steps(_steps), maxSteps(_maxSteps), status(_status), histSize(_histSize), offset(_offset), totalMaxSteps(_totalMaxSteps)
+    {
+        //std::cout<<"why calling this?????"<<std::endl;
+    }
+
+    VTKM_EXEC_CONT
+    StateRecordingParticlesRound(vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > &posArray,
+                                 vtkm::cont::ArrayHandle<vtkm::Id> &stepsArray,
+                                 vtkm::cont::ArrayHandle<vtkm::Id> &statusArray,                            
+                                 const vtkm::Id &_maxSteps,
+                                 const vtkm::Id &_histSize,
+                                 const vtkm::Id &_offset,
+                                 const vtkm::Id &_totalMaxSteps) :
+        maxSteps(_maxSteps), histSize(_histSize), offset(_offset),totalMaxSteps(_totalMaxSteps)
+    {
+        pos = posArray.PrepareForInPlace(DeviceAdapterTag());
+        steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
+        status = statusArray.PrepareForInPlace(DeviceAdapterTag());
+
+        numPos = posArray.GetNumberOfValues();
+        history = historyArray.PrepareForOutput(numPos*histSize, DeviceAdapterTag());
+    }
+
+    VTKM_EXEC_CONT
+    void TakeStep(const vtkm::Id &idx,
+                  const vtkm::Vec<T,3> &pt)
+    {
+        vtkm::Id nSteps = steps.Get(idx);
+        vtkm::Id loc = idx*histSize + (nSteps-offset);
+        history.Set(loc, pt);
+        
+        nSteps = nSteps+1;
+        steps.Set(idx, nSteps);
+        if (nSteps == totalMaxSteps)
+            SetStatusTerminate(idx);
+        pos.Set(idx, pt);
+    }
+
+    VTKM_EXEC_CONT
+    void SetStatusTerminate(const vtkm::Id &idx)
+    {
+        status.Set(idx, TERMINATE);
+    }
+    VTKM_EXEC_CONT
+    void SetStatusOutOfBounds(const vtkm::Id &idx)
+    {
+        status.Set(idx, OUT_OF_BOUNDS);
+    }
+
+    VTKM_EXEC_CONT
+    bool Done(const vtkm::Id &idx)
+    {
+        vtkm::Id nSteps = steps.Get(idx);
+        return (nSteps-offset == histSize) || status.Get(idx) != OK;
+    }
+
+    VTKM_EXEC_CONT
+    vtkm::Vec<T,3> GetPos(const vtkm::Id &idx) const {return pos.Get(idx);}
+    VTKM_EXEC_CONT
+    vtkm::Id GetStep(const vtkm::Id &idx) const {return steps.Get(idx);}
+    VTKM_EXEC_CONT
+    vtkm::Id GetStatus(const vtkm::Id &idx) const {return status.Get(idx);}    
+    VTKM_EXEC_CONT
+    vtkm::Vec<T,3> GetHistory(const vtkm::Id &idx, const vtkm::Id &step) const
+    {
+        return history.Get(idx*histSize+step);
+    }    
+
+public:
+    vtkm::Id maxSteps, numPos, histSize, offset, totalMaxSteps;
+    IdPortal steps, status;
+    PosPortal pos, history;
+public:
+    vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > historyArray;
+};    
+    
+
+#if 0
 template<typename T,typename DeviceAdapterTag>
 class StateRecordingParticleTwoPass : public vtkm::exec::ExecutionObjectBase
 {
@@ -266,7 +388,6 @@ public:
                   const vtkm::Vec<T,3> &pt)
     {
         vtkm::Id loc = historyOffset.Get(idx) + steps.Get(idx);
-        //std::cerr<<"TakeStep("<<idx<<", "<<pt<<"); loc= "<<historyOffset.Get(idx)<<" + "<<steps.Get(idx)<<std::endl;
         history.Set(loc, pt);
         steps.Set(idx, steps.Get(idx)+1);
     }
@@ -274,10 +395,6 @@ public:
     VTKM_EXEC_CONT
     bool Done(const vtkm::Id &idx)
     {
-        //vtkm::Id s = steps.Get(idx);
-        //std::cout<<idx<<" steps= "<<s<<std::endl;
-        //std::cerr<<steps.Get(idx)<<"  >= "<<maxSteps<<std::endl;
-
         return steps.Get(idx) >= maxSteps;
     }
 
@@ -291,24 +408,13 @@ public:
         return history.Get(historyOffset.Get(idx)+step);
     }    
 
-    VTKM_EXEC_CONT
-    void Dump() const
-    {
-        vtkm::Id N = pos.GetNumberOfValues();
-        for (vtkm::Id i = 0; i < N; i++)
-        {
-            vtkm::Id ns = GetStep(i);
-            for (vtkm::Id j = 0; j < ns; j++)
-                std::cout<<GetHistory(i,j)<<std::endl;
-        }
-    }
-
 private:
     vtkm::Id maxSteps;
     IdPortal steps, historyOffset;
     PosPortal pos, history;
     vtkm::cont::ArrayHandle<vtkm::Vec<T,3> > historyArray;
-};    
+};
+#endif
     
 
 }

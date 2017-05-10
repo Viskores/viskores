@@ -40,7 +40,8 @@ void RunTest(const std::string &fname,
              vtkm::Float32 stepSize,
              vtkm::Id numThreads,
              vtkm::Id advectType,
-             vtkm::Id slType)
+             vtkm::Id stepsPerRound,
+             bool dumpOutput)
 {
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
@@ -82,32 +83,40 @@ void RunTest(const std::string &fname,
 #endif
 
   //time only the actual run
-  vtkm::cont::Timer<DeviceAdapter> timer;
   auto t0 = std::chrono::high_resolution_clock::now();
-  vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType,
-                                                            FieldType,
-                                                            DeviceAdapter> pa(rk4,seeds,ds,numSteps,(advectType==1), slType);
-  //auto t1 = std::chrono::high_resolution_clock::now() - t0;
-  pa.run(true);
-  vtkm::Float64 dT = timer.GetElapsedTime();  
-  auto t2 = std::chrono::high_resolution_clock::now() - t0;
-  std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(t2).count();
-  std::cerr<<"Runtime = "<<runtime<<" ms "<<dT<<std::endl;
+  if (advectType == 0)
+  {
+      vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType,
+                                                                FieldType,
+                                                                DeviceAdapter> pa(rk4,seeds,ds,numSteps);
+      pa.run(dumpOutput);
+  }
+  else
+  {
+      vtkm::worklet::particleadvection::StreamlineFilter<RK4RGType,
+                                                         FieldType,
+                                                         DeviceAdapter> sl(rk4,seeds,ds,numSteps,stepsPerRound);
+      sl.run(dumpOutput);
+  }
+  auto t1 = std::chrono::high_resolution_clock::now() - t0;
+  std::uint64_t runtime = std::chrono::duration_cast<std::chrono::milliseconds>(t1).count();
+  std::cerr<<"Runtime = "<<runtime<<" ms "<<std::endl;
 }
 
 bool ParseArgs(int argc, char **argv,
                vtkm::Id &numSeeds, vtkm::Id &numSteps, vtkm::Float32 &stepSize,
-               vtkm::Id &advectType, vtkm::Id &slType, vtkm::Id &numThreads, std::string &dataFile,
-               std::string &pgmType)
+               vtkm::Id &advectType, vtkm::Id &stepsPerRound, vtkm::Id &numThreads, std::string &dataFile,
+               std::string &pgmType, bool &dumpOutput)
 {
     numSeeds = 100;
     numSteps = 100;
     stepSize = 0.1f;
     advectType = 0;
-    slType = 0;
+    stepsPerRound = -1;
     numThreads = -1;
     dataFile = "";
     pgmType = "UNKNOWN";
+    dumpOutput = false;
 
     if (argc < 2)
     {
@@ -116,9 +125,10 @@ bool ParseArgs(int argc, char **argv,
         std::cerr<<" -steps maxSteps"<<std::endl;
         std::cerr<<" -h stepSize"<<std::endl;
         std::cerr<<" -particle : particle push"<<std::endl;
-        std::cerr<<" -streamline type: particle history"<<std::endl;
+        std::cerr<<" -streamline steps_per_round (-1 = 0 rounds): particle history"<<std::endl;
         std::cerr<<" -t #numThreads"<<std::endl;
         std::cerr<<" -file dataFile"<<std::endl;
+        std::cerr<<" -dump : dump output points"<<std::endl;
         return false;
     }
 
@@ -144,12 +154,14 @@ bool ParseArgs(int argc, char **argv,
         else if (arg == "-streamline")
         {
             advectType = 1;
-            slType = static_cast<vtkm::Id>(atoi(argv[++i]));
+            stepsPerRound = static_cast<vtkm::Id>(atoi(argv[++i]));
         }
         else if (arg == "-file")
             dataFile = argv[++i];
         else if (arg == "-t")
             numThreads = static_cast<vtkm::Id>(atoi(argv[++i]));
+        else if (arg == "-dump")
+            dumpOutput = true;
         else
             std::cerr<<"Unexpected argument: "<<arg<<std::endl;
     }
@@ -172,17 +184,18 @@ bool ParseArgs(int argc, char **argv,
 int
 main(int argc, char **argv)
 {
-    vtkm::Id numSeeds = 100, numSteps = 100, advectType = 0, numThreads=-1, slType=0;
+    vtkm::Id numSeeds = 100, numSteps = 100, advectType = 0, numThreads=-1, stepsPerRound=-1;
     vtkm::Float32 stepSize = 0.1f;
     std::string dataFile, pgmType;
+    bool dumpOutput = false;
     
     if (!ParseArgs(argc, argv,
                    numSeeds, numSteps, stepSize,
-                   advectType, slType, numThreads, dataFile, pgmType))
+                   advectType, stepsPerRound, numThreads, dataFile, pgmType, dumpOutput))
     {
         return -1;
     }
     
-    RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType, slType);
+    RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType, stepsPerRound, dumpOutput);
     return 0;
 }
