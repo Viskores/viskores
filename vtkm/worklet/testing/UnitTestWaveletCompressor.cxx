@@ -108,7 +108,7 @@ public:
   GaussianWorklet3D( vtkm::Id dx,  vtkm::Id dy,  vtkm::Id dz )
                   :  dimX( dx ),   dimY( dy ),   dimZ( dz )
   {  
-    amp = 10.0;
+    amp = 20.0;
     sigmaX = (T)dimX / 4.0;   sigmaX2 = sigmaX * sigmaX * 2.0;
     sigmaY = (T)dimY / 4.0;   sigmaY2 = sigmaY * sigmaY * 2.0;
     sigmaZ = (T)dimZ / 4.0;   sigmaZ2 = sigmaZ * sigmaZ * 2.0;
@@ -202,30 +202,28 @@ void ReadArray( ArrayType& array, vtkm::Id len )
 
 void TestDecomposeReconstruct3D()
 {
-  std::cout << "Testing 3D wavelet compressor on a 11x11x11 cube: " << std::endl;
-  vtkm::Id sigX   = 11;
-  vtkm::Id sigY   = 11;
-  vtkm::Id sigZ   = 11;
+  vtkm::Id sigX   = 101;
+  vtkm::Id sigY   = 101;
+  vtkm::Id sigZ   = 101;
   vtkm::Id sigLen = sigX * sigY * sigZ;
+  printf("Testing 3D wavelet compressor on a (%ldx%ldx%ld) cube:\n", sigX, sigY, sigZ ); 
 
   // make input data array handle
   vtkm::cont::ArrayHandle<vtkm::Float32> inputArray;
   inputArray.PrepareForOutput( sigLen, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  //FillArray3D( inputArray, sigX, sigY, sigZ );
-  ReadArray( inputArray, sigX * sigY * sigZ );
+  FillArray3D( inputArray, sigX, sigY, sigZ );
+  //ReadArray( inputArray, sigX * sigY * sigZ );
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outputArray;
 
   // Use a WaveletCompressor
-  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::BIOR3_3;
-  //std::cout << "Wavelet kernel         = CDF 9/7" << std::endl;
+  vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::BIOR4_4;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
   vtkm::Id YMaxLevel = compressor.GetWaveletMaxLevel( sigY );
   vtkm::Id ZMaxLevel = compressor.GetWaveletMaxLevel( sigZ );
   vtkm::Id nLevels   = vtkm::Min( vtkm::Min(XMaxLevel, YMaxLevel), ZMaxLevel );
-  nLevels = 1;
   std::cout << "Decomposition levels   = " << nLevels << std::endl;
   vtkm::Float64 computationTime = 0.0;
   vtkm::Float64 elapsedTime1, elapsedTime2, elapsedTime3;

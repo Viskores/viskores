@@ -19,39 +19,39 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestCellAverage.cxx
-  UnitTestCellDeepCopy.cxx
-  UnitTestCellGradient.cxx
-  UnitTestClipping.cxx
-  UnitTestContourTreeUniform.cxx
-  UnitTestExternalFaces.cxx
-  UnitTestExtractGeometry.cxx
-  UnitTestExtractPoints.cxx
-  UnitTestFieldHistogram.cxx
-  UnitTestFieldStatistics.cxx
-  UnitTestKeys.cxx
-  UnitTestMagnitude.cxx
-  UnitTestMarchingCubes.cxx
-  UnitTestMask.cxx
-  UnitTestMaskPoints.cxx
-  UnitTestPointElevation.cxx
-  UnitTestPointGradient.cxx
-  UnitTestRemoveUnusedPoints.cxx
-  UnitTestScatterCounting.cxx
-  UnitTestSplatKernels.cxx
-  UnitTestStreamingSine.cxx
-  UnitTestStreamLineUniformGrid.cxx
-  UnitTestTetrahedralize.cxx
-  UnitTestThreshold.cxx
-  UnitTestThresholdPoints.cxx
-  UnitTestTriangulate.cxx
-  UnitTestWorkletMapField.cxx
-  UnitTestWorkletMapFieldExecArg.cxx
-  UnitTestWorkletMapFieldWholeArray.cxx
-  UnitTestWorkletMapTopologyExplicit.cxx
-  UnitTestWorkletMapTopologyUniform.cxx
-  UnitTestWorkletReduceByKey.cxx
-  UnitTestVertexClustering.cxx
+#  UnitTestCellAverage.cxx
+#  UnitTestCellDeepCopy.cxx
+#  UnitTestCellGradient.cxx
+#  UnitTestClipping.cxx
+#  UnitTestContourTreeUniform.cxx
+#  UnitTestExternalFaces.cxx
+#  UnitTestExtractGeometry.cxx
+#  UnitTestExtractPoints.cxx
+#  UnitTestFieldHistogram.cxx
+#  UnitTestFieldStatistics.cxx
+#  UnitTestKeys.cxx
+#  UnitTestMagnitude.cxx
+#  UnitTestMarchingCubes.cxx
+#  UnitTestMask.cxx
+#  UnitTestMaskPoints.cxx
+#  UnitTestPointElevation.cxx
+#  UnitTestPointGradient.cxx
+#  UnitTestRemoveUnusedPoints.cxx
+#  UnitTestScatterCounting.cxx
+#  UnitTestSplatKernels.cxx
+#  UnitTestStreamingSine.cxx
+#  UnitTestStreamLineUniformGrid.cxx
+#  UnitTestTetrahedralize.cxx
+#  UnitTestThreshold.cxx
+#  UnitTestThresholdPoints.cxx
+#  UnitTestTriangulate.cxx
+#  UnitTestWorkletMapField.cxx
+#  UnitTestWorkletMapFieldExecArg.cxx
+#  UnitTestWorkletMapFieldWholeArray.cxx
+#  UnitTestWorkletMapTopologyExplicit.cxx
+#  UnitTestWorkletMapTopologyUniform.cxx
+#  UnitTestWorkletReduceByKey.cxx
+#  UnitTestVertexClustering.cxx
   UnitTestWaveletCompressor.cxx
  )
 

@@ -621,7 +621,6 @@ public:
       dispatcher.Invoke( leftExt, sigIn, rightExt, afterX );
       computationTime += timer.GetElapsedTime();
     }
-this->dumpVolume( afterX, sigDimX, sigDimY, sigDimZ, "DWTafterX" );
 
 		if( discardSigIn )
 			sigIn.ReleaseResources();
@@ -658,7 +657,6 @@ this->dumpVolume( afterX, sigDimX, sigDimY, sigDimZ, "DWTafterX" );
       dispatcher.Invoke( topExt, afterX, bottomExt, afterY );
       computationTime += timer.GetElapsedTime();
     }
-this->dumpVolume( afterY, sigDimX, sigDimY, sigDimZ, "DWTafterY" );
 
     // Then do transform in Z direction
     afterX.ReleaseResources();  // release afterX
@@ -692,7 +690,6 @@ this->dumpVolume( afterY, sigDimX, sigDimY, sigDimZ, "DWTafterY" );
       dispatcher.Invoke( frontExt, afterY, backExt, coeffOut );
       computationTime += timer.GetElapsedTime();
     }
-this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
 
     return computationTime;
   }
@@ -763,7 +760,6 @@ this->dumpVolume( coeffOut, sigDimX, sigDimY, sigDimZ, "DWTafterZ" );
       dispatcher.Invoke( ext1, ext2, ext3, ext4, coeffIn, afterZ );
       computationTime += timer.GetElapsedTime();
     }
-this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
 
 		if( discardCoeffIn )
 			coeffIn.ReleaseResources();
@@ -803,7 +799,6 @@ this->dumpVolume( afterZ, inDimX, inDimY, inDimZ, "IDWTafterZ" );
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterZ, afterY );
       computationTime += timer.GetElapsedTime();
     } 
-this->dumpVolume( afterY, inDimX, inDimY, inDimZ, "IDWTafterY" );
 
     // Lastly, inverse transform in X direction
     afterZ.ReleaseResources();
@@ -840,7 +835,6 @@ this->dumpVolume( afterY, inDimX, inDimY, inDimZ, "IDWTafterY" );
       dispatcher.Invoke( ext1, ext2, ext3, ext4, afterY, sigOut );
 			computationTime += timer.GetElapsedTime();
     }
-this->dumpVolume( sigOut, inDimX, inDimY, inDimZ, "IDWTafterX" );
 
     return computationTime;
   }
