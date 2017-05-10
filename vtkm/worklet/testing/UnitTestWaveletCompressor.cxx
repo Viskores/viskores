@@ -94,10 +94,10 @@ public:
   GaussianWorklet3D( vtkm::Id dx,  vtkm::Id dy,  vtkm::Id dz )
                   :  dimX( dx ),   dimY( dy ),   dimZ( dz )
   {  
-    amp = 20.0;
-    sigmaX = (T)dimX / 4.0;   sigmaX2 = sigmaX * sigmaX * 2.0;
-    sigmaY = (T)dimY / 4.0;   sigmaY2 = sigmaY * sigmaY * 2.0;
-    sigmaZ = (T)dimZ / 4.0;   sigmaZ2 = sigmaZ * sigmaZ * 2.0;
+    amp = (T)20.0;
+    sigmaX = (T)dimX / (T)4.0;   sigmaX2 = sigmaX * sigmaX * (T)2.0;
+    sigmaY = (T)dimY / (T)4.0;   sigmaY2 = sigmaY * sigmaY * (T)2.0;
+    sigmaZ = (T)dimZ / (T)4.0;   sigmaZ2 = sigmaZ * sigmaZ * (T)2.0;
   }
 
   VTKM_EXEC
@@ -111,12 +111,12 @@ public:
   VTKM_EXEC
   T GetGaussian( T x, T y, T z ) const
   {
-    x -= (T)dimX / 2.0;   // translate to center at (0, 0, 0)
-    y -= (T)dimY / 2.0;
-    z -= (T)dimZ / 2.0;
+    x -= (T)dimX / (T)2.0;   // translate to center at (0, 0, 0)
+    y -= (T)dimY / (T)2.0;
+    z -= (T)dimZ / (T)2.0;
     T power = x*x/sigmaX2 + y*y/sigmaY2 + z*z/sigmaZ2;
 
-    return vtkm::Exp( power * -1.0 ) * amp;
+    return vtkm::Exp( power * (T)-1.0 ) * amp;
   }
 
   VTKM_EXEC
