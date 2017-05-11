@@ -105,7 +105,7 @@ struct TestingArrayHandles
   {
     ExecutionPortalType Portal;
     VTKM_CONT
-    InplaceFunctor(ExecutionPortalType p): Portal(p) {}
+    InplaceFunctor(const ExecutionPortalType &p): Portal(p) {}
 
     VTKM_EXEC
     void operator()(vtkm::Id index) const
@@ -142,6 +142,10 @@ private:
       arrayHandle.ReleaseResourcesExecution();
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       arrayHandle.ReleaseResources();
+      arrayHandle = vtkm::cont::make_ArrayHandle(std::vector<T>());
+      arrayHandle.PrepareForInput(DeviceAdapterTag());
+      arrayHandle = vtkm::cont::ArrayHandle<T>();
+      arrayHandle.PrepareForInPlace(DeviceAdapterTag());
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
     }

@@ -24,7 +24,7 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/Assert.h>
@@ -38,7 +38,7 @@ namespace exec {
 namespace internal {
 
 template<typename SourcePortalType, typename OffsetsPortalType>
-class ArrayPortalGroupVecVariable
+class VTKM_ALWAYS_EXPORT ArrayPortalGroupVecVariable
 {
 public:
   using ComponentType =
@@ -180,7 +180,7 @@ namespace cont {
 namespace internal {
 
 template<typename SourceArrayHandleType, typename OffsetsArrayHandleType>
-struct StorageTagGroupVecVariable {  };
+struct VTKM_ALWAYS_EXPORT StorageTagGroupVecVariable {  };
 
 template<typename SourceArrayHandleType, typename OffsetsArrayHandleType>
 class Storage<
@@ -210,6 +210,20 @@ public:
   Storage(const SourceArrayHandleType &sourceArray,
           const OffsetsArrayHandleType &offsetsArray)
     : SourceArray(sourceArray), OffsetsArray(offsetsArray), Valid(true) {  }
+
+  VTKM_CONT
+  PortalType GetPortal()
+  {
+    return PortalType(this->SourceArray.GetPortalControl(),
+                      this->OffsetsArray.GetPortalControl());
+  }
+
+  VTKM_CONT
+  PortalConstType GetPortalConst() const
+  {
+    return PortalConstType(this->SourceArray.GetPortalConstControl(),
+                           this->OffsetsArray.GetPortalConstControl());
+  }
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const
@@ -291,7 +305,7 @@ public:
   using PortalExecution =
       vtkm::exec::internal::ArrayPortalGroupVecVariable<
         typename SourceArrayHandleType::template ExecutionTypes<Device>::Portal,
-        typename OffsetsArrayHandleType::template ExecutionTypes<Device>::Portal>;
+        typename OffsetsArrayHandleType::template ExecutionTypes<Device>::PortalConst>;
   using PortalConstExecution =
       vtkm::exec::internal::ArrayPortalGroupVecVariable<
         typename SourceArrayHandleType::template ExecutionTypes<Device>::PortalConst,
@@ -320,7 +334,7 @@ public:
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
     return PortalExecution(this->SourceArray.PrepareForInPlace(Device()),
-                           this->OffsetsArray.PrepareForInPlace(Device()));
+                           this->OffsetsArray.PrepareForInput(Device()));
   }
 
   VTKM_CONT
@@ -330,8 +344,7 @@ public:
     VTKM_ASSERT(numberOfValues == this->OffsetsArray.GetNumberOfValues());
     return PortalExecution(this->SourceArray.PrepareForOutput(
                              this->SourceArray.GetNumberOfValues(), Device()),
-                           this->OffsetsArray.PrepareForOutput(
-                             numberOfValues, Device()));
+                           this->OffsetsArray.PrepareForInput(Device()));
   }
 
   VTKM_CONT
@@ -487,7 +500,7 @@ void DoConvertNumComponentsToOffsets(
   if (!success)
   {
     // Internal error? Maybe need to make a failed to execute error.
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
           "Failed to run ExclusiveScan on any device.");
   }
 

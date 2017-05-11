@@ -287,7 +287,8 @@ vtkm::cont::DataSet MakeTestDataSet()
 void VerifyHistogram(const vtkm::filter::ResultField& result,
                     vtkm::Id numberOfBins,
                     const vtkm::Range& range,
-                    vtkm::Float64 delta)
+                    vtkm::Float64 delta,
+                    bool output = true)
 {
   VTKM_TEST_ASSERT( result.IsValid(), "result should be valid" );
   VTKM_TEST_ASSERT( result.GetField().GetName() == "histogram",
@@ -302,8 +303,11 @@ void VerifyHistogram(const vtkm::filter::ResultField& result,
     vtkm::Float64 lo = range.Min + (static_cast<vtkm::Float64>(i) * delta);
     vtkm::Float64 hi = lo + delta;
     sum += binPortal.Get(i);
-    std::cout << "  BIN[" << i << "] Range[" << lo << ", " << hi << "] = "
-              << binPortal.Get(i) << std::endl;
+    if(output)
+    {
+      std::cout << "  BIN[" << i << "] Range[" << lo << ", " << hi << "] = "
+                << binPortal.Get(i) << std::endl;
+    }
   }
   VTKM_TEST_ASSERT(test_equal(sum, 1000), "Histogram not full");
 }
@@ -337,7 +341,7 @@ void TestHistogram()
   result = histogram.Execute(ds, "p_normal");
   delta = histogram.GetBinDelta();
   range = histogram.GetDataRange();
-  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);
 
   histogram.SetNumberOfBins(1);
   result = histogram.Execute(ds, "p_chiSquare");
@@ -349,7 +353,7 @@ void TestHistogram()
   result = histogram.Execute(ds, "p_uniform");
   delta = histogram.GetBinDelta();
   range = histogram.GetDataRange();
-  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
+  VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);
 
 } // TestFieldHistogram
 

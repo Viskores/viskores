@@ -29,14 +29,10 @@ namespace raytracing {
 class RayBase
 {
 public:
-  VTKM_CONT
-  RayBase()
-  {
-  }
+  RayBase() {}
 
-  VTKM_CONT
-  virtual ~RayBase(){}
-  VTKM_CONT
+  virtual ~RayBase();
+
   virtual void resize(const vtkm::Int32 vtkmNotUsed(newSize)){}
 };
 template<typename DeviceAdapter>

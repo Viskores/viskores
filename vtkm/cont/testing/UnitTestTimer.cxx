@@ -29,10 +29,10 @@ void Time()
 {
   vtkm::cont::Timer<> timer;
 
-#ifndef _WIN32
-  sleep(1);
-#else
+#ifdef VTKM_WINDOWS
   Sleep(1000);
+#else
+  sleep(1);
 #endif
 
   vtkm::Float64 elapsedTime = timer.GetElapsedTime();

@@ -26,7 +26,7 @@
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/ErrorControlBadType.h>
+#include <vtkm/cont/ErrorBadType.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/Transport.h>
@@ -34,7 +34,7 @@
 #include <vtkm/cont/internal/DynamicTransform.h>
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
-#include <vtkm/exec/internal/WorkletInvokeFunctor.h>
+#include <vtkm/exec/internal/TaskSingular.h>
 
 #include <vtkm/internal/IntegerSequence.h>
 #include <vtkm/internal/brigand.hpp>
@@ -62,7 +62,7 @@ inline void PrintFailureMessage(int index, std::false_type)
   message << "Encountered bad type for parameter "
           << index
           << " when calling Invoke on a dispatcher.";
-  throw vtkm::cont::ErrorControlBadType(message.str());
+  throw vtkm::cont::ErrorBadType(message.str());
 }
 
 // Is designed as a brigand fold operation.
@@ -155,6 +155,8 @@ private:
   VTKM_CONT
   void WillContinue(const T&, std::false_type) const
   { }
+
+  void operator=(const DispatcherBaseTypeCheckFunctor<ContinueFunctor,TypeCheckTag,Index> &) = delete;
 };
 
 // Uses vtkm::cont::internal::DynamicTransform and the DynamicTransformCont
@@ -213,31 +215,49 @@ struct DispatcherBaseTransportInvokeTypes
   typedef typename ControlSignatureTag::TransportTag TransportTag;
 };
 
+VTKM_CONT
+inline
+vtkm::Id FlatRange(vtkm::Id range)
+{
+  return range;
+}
+
+VTKM_CONT
+inline
+vtkm::Id FlatRange(const vtkm::Id3 &range)
+{
+  return range[0]*range[1]*range[2];
+}
+
 // A functor used in a StaticCast of a FunctionInterface to transport arguments
 // from the control environment to the execution environment.
-template<typename ControlInterface, typename Device>
+template<typename ControlInterface, typename InputDomainType, typename Device>
 struct DispatcherBaseTransportFunctor
 {
-  vtkm::Id NumInstances;
-
-  VTKM_CONT
-  DispatcherBaseTransportFunctor(vtkm::Id numInstances)
-    : NumInstances(numInstances) {  }
+  const InputDomainType &InputDomain;   // Warning: this is a reference
+  vtkm::Id InputRange;
+  vtkm::Id OutputRange;
 
   // TODO: We need to think harder about how scheduling on 3D arrays works.
   // Chances are we need to allow the transport for each argument to manage
   // 3D indices (for example, allocate a 3D array instead of a 1D array).
   // But for now, just treat all transports as 1D arrays.
+  template<typename InputRangeType, typename OutputRangeType>
   VTKM_CONT
-  DispatcherBaseTransportFunctor(vtkm::Id3 dimensions)
-    : NumInstances(dimensions[0]*dimensions[1]*dimensions[2]) {  }
+  DispatcherBaseTransportFunctor(const InputDomainType &inputDomain,
+                                 const InputRangeType &inputRange,
+                                 const OutputRangeType &outputRange)
+    : InputDomain(inputDomain),
+      InputRange(FlatRange(inputRange)),
+      OutputRange(FlatRange(outputRange))
+  {  }
 
 
   template<typename ControlParameter, vtkm::IdComponent Index>
   struct ReturnType {
-    typedef typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag TransportTag;
-    typedef typename vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> TransportType;
-    typedef typename TransportType::ExecObjectType type;
+    using TransportTag = typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
+    using TransportType = typename vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device>;
+    using type = typename TransportType::ExecObjectType;
   };
 
   template<typename ControlParameter, vtkm::IdComponent Index>
@@ -246,10 +266,16 @@ struct DispatcherBaseTransportFunctor
   operator()(const ControlParameter &invokeData,
              vtkm::internal::IndexTag<Index>) const
   {
-    typedef typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag TransportTag;
+    using TransportTag = typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
     vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> transport;
-    return transport(invokeData, this->NumInstances);
+    return transport(invokeData,
+                     this->InputDomain,
+                     this->InputRange,
+                     this->OutputRange);
   }
+
+private:
+  void operator=(const DispatcherBaseTransportFunctor &) = delete;
 };
 
 } // namespace detail
@@ -446,9 +472,9 @@ protected:
   WorkletType Worklet;
 
 private:
-  // These are not implemented. Dispatchers cannot be copied.
-  DispatcherBase(const MyType &);
-  void operator=(const MyType &);
+  // Dispatchers cannot be copied
+  DispatcherBase(const MyType &) = delete;
+  void operator=(const MyType &) = delete;
 
   template<typename Invocation, typename InputRangeType, typename OutputRangeType, typename DeviceAdapter>
   VTKM_CONT
@@ -470,12 +496,17 @@ private:
     const ParameterInterfaceType &parameters = invocation.Parameters;
 
     typedef detail::DispatcherBaseTransportFunctor<
-        typename Invocation::ControlInterface, DeviceAdapter> TransportFunctorType;
+        typename Invocation::ControlInterface,
+        typename Invocation::InputDomainType,
+        DeviceAdapter> TransportFunctorType;
     typedef typename ParameterInterfaceType::template StaticTransformType<
         TransportFunctorType>::type ExecObjectParameters;
 
     ExecObjectParameters execObjectParameters =
-        parameters.StaticTransformCont(TransportFunctorType(outputRange));
+        parameters.StaticTransformCont(TransportFunctorType(
+                                         invocation.GetInputDomain(),
+                                         inputRange,
+                                         outputRange));
 
     // Get the arrays used for scattering input to output.
     typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
@@ -500,10 +531,10 @@ private:
                       RangeType range,
                       DeviceAdapter) const
   {
-    // The WorkletInvokeFunctor class handles the magic of fetching values
+    // The TaskSingular class handles the magic of fetching values
     // for each instance and calling the worklet's function. So just create
-    // a WorkletInvokeFunctor and schedule it with the device adapter.
-    typedef vtkm::exec::internal::WorkletInvokeFunctor<WorkletType,Invocation>
+    // a TaskSingular and schedule it with the device adapter.
+    typedef vtkm::exec::internal::TaskSingular<WorkletType,Invocation>
         WorkletInvokeFunctorType;
     WorkletInvokeFunctorType workletFunctor =
         WorkletInvokeFunctorType(this->Worklet, invocation);

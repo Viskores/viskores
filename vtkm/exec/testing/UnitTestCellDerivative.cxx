@@ -51,14 +51,18 @@ vtkm::Vec<T,3> WorldToParametric(const vtkm::Vec<T,3> &wcoord)
 
 /// Simple structure describing a linear field.  Has a convienience class
 /// for getting values.
+template<typename FieldType>
 struct LinearField {
-  vtkm::Vec<vtkm::Float64,3> Gradient;
-  vtkm::Float64 OriginValue;
+  vtkm::Vec<FieldType,3> Gradient;
+  FieldType OriginValue;
 
   template<typename T>
-  T GetValue(vtkm::Vec<T,3> coordinates) const {
-    return vtkm::dot(coordinates,
-                     vtkm::Vec<T,3>(this->Gradient)) + T(this->OriginValue);
+  FieldType GetValue(vtkm::Vec<T,3> coordinates) const
+  {
+    return ( ( coordinates[0]*this->Gradient[0] +
+               coordinates[1]*this->Gradient[1] +
+               coordinates[2]*this->Gradient[2] )
+            + this->OriginValue );
   }
 };
 
@@ -92,7 +96,7 @@ struct TestDerivativeFunctor
   template<typename CellShapeTag, typename WCoordsVecType>
   void DoTestWithWCoords(CellShapeTag shape,
                          const WCoordsVecType worldCoordinates,
-                         LinearField field,
+                         LinearField<FieldType> field,
                          vtkm::Vec<FieldType,3> expectedGradient) const
   {
     // Stuff to fake running in the execution environment.
@@ -159,7 +163,7 @@ struct TestDerivativeFunctor
   template<typename CellShapeTag>
   void DoTest(CellShapeTag shape,
               vtkm::IdComponent numPoints,
-              LinearField field,
+              LinearField<FieldType> field,
               vtkm::Vec<FieldType,3> expectedGradient) const
   {
     // Stuff to fake running in the execution environment.
@@ -192,8 +196,11 @@ struct TestDerivativeFunctor
               vtkm::IdComponent numPoints,
               vtkm::IdComponent topDim) const
   {
-    LinearField field;
+    LinearField<FieldType> field;
     vtkm::Vec<FieldType,3> expectedGradient;
+
+    using FieldTraits = vtkm::VecTraits<FieldType>;
+    using FieldComponentType = typename FieldTraits::ComponentType;
 
     // Correct topDim for polygons with fewer than 3 points.
     if (topDim > numPoints-1)
@@ -202,38 +209,70 @@ struct TestDerivativeFunctor
     }
 
     std::cout << "Simple field, " << numPoints << " points" << std::endl;
-    field.OriginValue = 0.0;
-    field.Gradient = vtkm::make_Vec(1.0, 1.0, 1.0);
-    expectedGradient[0] = static_cast<FieldType>((topDim > 0) ? field.Gradient[0] : 0);
-    expectedGradient[1] = static_cast<FieldType>((topDim > 1) ? field.Gradient[1] : 0);
-    expectedGradient[2] = static_cast<FieldType>((topDim > 2) ? field.Gradient[2] : 0);
+    for (vtkm::IdComponent fieldComponent = 0;
+         fieldComponent < FieldTraits::GetNumberOfComponents(FieldType());
+         fieldComponent++)
+    {
+      FieldTraits::SetComponent(field.OriginValue, fieldComponent, 0.0);
+    }
+    field.Gradient = vtkm::make_Vec(FieldType(1.0f), FieldType(1.0f), FieldType(1.0f));
+    expectedGradient[0] = ((topDim > 0) ? field.Gradient[0] : FieldType(0));
+    expectedGradient[1] = ((topDim > 1) ? field.Gradient[1] : FieldType(0));
+    expectedGradient[2] = ((topDim > 2) ? field.Gradient[2] : FieldType(0));
     this->DoTest(shape, numPoints, field, expectedGradient);
 
     std::cout << "Uneven gradient, " << numPoints << " points" << std::endl;
-    field.OriginValue = -7.0;
-    field.Gradient = vtkm::make_Vec(0.25, 14.0, 11.125);
-    expectedGradient[0] = static_cast<FieldType>((topDim > 0) ? field.Gradient[0] : 0);
-    expectedGradient[1] = static_cast<FieldType>((topDim > 1) ? field.Gradient[1] : 0);
-    expectedGradient[2] = static_cast<FieldType>((topDim > 2) ? field.Gradient[2] : 0);
+    for (vtkm::IdComponent fieldComponent = 0;
+         fieldComponent < FieldTraits::GetNumberOfComponents(FieldType());
+         fieldComponent++)
+    {
+      FieldTraits::SetComponent(field.OriginValue,
+                                fieldComponent,
+                                FieldComponentType(-7.0f));
+    }
+    field.Gradient = vtkm::make_Vec(FieldType(0.25f), FieldType(14.0f), FieldType(11.125f));
+    expectedGradient[0] = ((topDim > 0) ? field.Gradient[0] : FieldType(0));
+    expectedGradient[1] = ((topDim > 1) ? field.Gradient[1] : FieldType(0));
+    expectedGradient[2] = ((topDim > 2) ? field.Gradient[2] : FieldType(0));
     this->DoTest(shape, numPoints, field, expectedGradient);
 
     std::cout << "Negative gradient directions, " << numPoints << " points" << std::endl;
-    field.OriginValue = 5.0;
-    field.Gradient = vtkm::make_Vec(-11.125, -0.25, 14.0);
-    expectedGradient[0] = static_cast<FieldType>((topDim > 0) ? field.Gradient[0] : 0);
-    expectedGradient[1] = static_cast<FieldType>((topDim > 1) ? field.Gradient[1] : 0);
-    expectedGradient[2] = static_cast<FieldType>((topDim > 2) ? field.Gradient[2] : 0);
+    for (vtkm::IdComponent fieldComponent = 0;
+         fieldComponent < FieldTraits::GetNumberOfComponents(FieldType());
+         fieldComponent++)
+    {
+      FieldTraits::SetComponent(field.OriginValue,
+                                fieldComponent,
+                                FieldComponentType(5.0f));
+    }
+    field.Gradient = vtkm::make_Vec(FieldType(-11.125f), FieldType(-0.25f), FieldType(14.0f));
+    expectedGradient[0] = ((topDim > 0) ? field.Gradient[0] : FieldType(0));
+    expectedGradient[1] = ((topDim > 1) ? field.Gradient[1] : FieldType(0));
+    expectedGradient[2] = ((topDim > 2) ? field.Gradient[2] : FieldType(0));
     this->DoTest(shape, numPoints, field, expectedGradient);
 
     std::cout << "Random linear field, " << numPoints << " points" << std::endl;
-    std::uniform_real_distribution<vtkm::Float64> randomDist(-20.0, 20.0);
-    field.OriginValue = randomDist(g_RandomGenerator);
-    field.Gradient = vtkm::make_Vec(randomDist(g_RandomGenerator),
-                                    randomDist(g_RandomGenerator),
-                                    randomDist(g_RandomGenerator));
-    expectedGradient[0] = static_cast<FieldType>((topDim > 0) ? field.Gradient[0] : 0);
-    expectedGradient[1] = static_cast<FieldType>((topDim > 1) ? field.Gradient[1] : 0);
-    expectedGradient[2] = static_cast<FieldType>((topDim > 2) ? field.Gradient[2] : 0);
+    std::uniform_real_distribution<FieldComponentType> randomDist(-20.0f, 20.0f);
+    for (vtkm::IdComponent fieldComponent = 0;
+         fieldComponent < FieldTraits::GetNumberOfComponents(FieldType());
+         fieldComponent++)
+    {
+      FieldTraits::SetComponent(field.OriginValue,
+                                fieldComponent,
+                                randomDist(g_RandomGenerator));
+      FieldTraits::SetComponent(field.Gradient[0],
+                                fieldComponent,
+                                randomDist(g_RandomGenerator));
+      FieldTraits::SetComponent(field.Gradient[1],
+                                fieldComponent,
+                                randomDist(g_RandomGenerator));
+      FieldTraits::SetComponent(field.Gradient[2],
+                                fieldComponent,
+                                randomDist(g_RandomGenerator));
+    }
+    expectedGradient[0] = ((topDim > 0) ? field.Gradient[0] : FieldType(0));
+    expectedGradient[1] = ((topDim > 1) ? field.Gradient[1] : FieldType(0));
+    expectedGradient[2] = ((topDim > 2) ? field.Gradient[2] : FieldType(0));
     this->DoTest(shape, numPoints, field, expectedGradient);
   }
 
@@ -277,7 +316,7 @@ struct TestDerivativeFunctor
 
 void TestDerivative()
 {
-  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(NULL));
+  vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
@@ -285,38 +324,82 @@ void TestDerivative()
   vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Float32>());
   std::cout << "======== Float64 ==========================" << std::endl;
   vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Float64>());
+  std::cout << "======== Vec<Float32,3> ===================" << std::endl;
+  vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Vec<vtkm::Float32,3> >());
+  std::cout << "======== Vec<Float64,3> ===================" << std::endl;
+  vtkm::testing::Testing::TryAllCellShapes(TestDerivativeFunctor<vtkm::Vec<vtkm::Float64,3> >());
 
   std::uniform_real_distribution<vtkm::Float64> randomDist(-20.0, 20.0);
-  LinearField field;
-  field.OriginValue = randomDist(g_RandomGenerator);
-  field.Gradient = vtkm::make_Vec(randomDist(g_RandomGenerator),
-                                  randomDist(g_RandomGenerator),
-                                  randomDist(g_RandomGenerator));
-  vtkm::Vec<vtkm::Float64,3> expectedGradient = field.Gradient;
-
-  TestDerivativeFunctor<vtkm::Float64> testFunctor;
   vtkm::Vec<vtkm::FloatDefault,3> origin = vtkm::Vec<vtkm::FloatDefault,3>(0.25f, 0.25f, 0.25f);
   vtkm::Vec<vtkm::FloatDefault,3> spacing = vtkm::Vec<vtkm::FloatDefault,3>(2.0f, 2.0f, 2.0f);
+
+  LinearField<vtkm::Float64> scalarField;
+  scalarField.OriginValue = randomDist(g_RandomGenerator);
+  scalarField.Gradient = vtkm::make_Vec(randomDist(g_RandomGenerator),
+                                        randomDist(g_RandomGenerator),
+                                        randomDist(g_RandomGenerator));
+  vtkm::Vec<vtkm::Float64,3> expectedScalarGradient = scalarField.Gradient;
+
+  TestDerivativeFunctor<vtkm::Float64> testFunctorScalar;
   std::cout << "======== Uniform Point Coordinates 3D =====" << std::endl;
-  testFunctor.DoTestWithWCoords(
+  testFunctorScalar.DoTestWithWCoords(
         vtkm::CellShapeTagHexahedron(),
         vtkm::VecRectilinearPointCoordinates<3>(origin, spacing),
-        field,
-        expectedGradient);
+        scalarField,
+        expectedScalarGradient);
   std::cout << "======== Uniform Point Coordinates 2D =====" << std::endl;
-  expectedGradient[2] = 0.0;
-  testFunctor.DoTestWithWCoords(
+  expectedScalarGradient[2] = 0.0;
+  testFunctorScalar.DoTestWithWCoords(
         vtkm::CellShapeTagQuad(),
         vtkm::VecRectilinearPointCoordinates<2>(origin, spacing),
-        field,
-        expectedGradient);
+        scalarField,
+        expectedScalarGradient);
   std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
-  expectedGradient[1] = 0.0;
-  testFunctor.DoTestWithWCoords(
+  expectedScalarGradient[1] = 0.0;
+  testFunctorScalar.DoTestWithWCoords(
         vtkm::CellShapeTagLine(),
         vtkm::VecRectilinearPointCoordinates<1>(origin, spacing),
-        field,
-        expectedGradient);
+        scalarField,
+        expectedScalarGradient);
+
+  LinearField<vtkm::Vec<vtkm::Float64,3> > vectorField;
+  vectorField.OriginValue = vtkm::make_Vec(randomDist(g_RandomGenerator),
+                                           randomDist(g_RandomGenerator),
+                                           randomDist(g_RandomGenerator));
+  vectorField.Gradient = vtkm::make_Vec(
+        vtkm::make_Vec(randomDist(g_RandomGenerator),
+                       randomDist(g_RandomGenerator),
+                       randomDist(g_RandomGenerator)),
+        vtkm::make_Vec(randomDist(g_RandomGenerator),
+                       randomDist(g_RandomGenerator),
+                       randomDist(g_RandomGenerator)),
+        vtkm::make_Vec(randomDist(g_RandomGenerator),
+                       randomDist(g_RandomGenerator),
+                       randomDist(g_RandomGenerator)));
+  vtkm::Vec<vtkm::Vec<vtkm::Float64,3>,3> expectedVectorGradient =
+      vectorField.Gradient;
+
+  TestDerivativeFunctor<vtkm::Vec<vtkm::Float64,3> > testFunctorVector;
+  std::cout << "======== Uniform Point Coordinates 3D =====" << std::endl;
+  testFunctorVector.DoTestWithWCoords(
+        vtkm::CellShapeTagHexahedron(),
+        vtkm::VecRectilinearPointCoordinates<3>(origin, spacing),
+        vectorField,
+        expectedVectorGradient);
+  std::cout << "======== Uniform Point Coordinates 2D =====" << std::endl;
+  expectedVectorGradient[2] = vtkm::Vec<vtkm::Float64,3>(0.0);
+  testFunctorVector.DoTestWithWCoords(
+        vtkm::CellShapeTagQuad(),
+        vtkm::VecRectilinearPointCoordinates<2>(origin, spacing),
+        vectorField,
+        expectedVectorGradient);
+  std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
+  expectedVectorGradient[1] = vtkm::Vec<vtkm::Float64,3>(0.0);
+  testFunctorVector.DoTestWithWCoords(
+        vtkm::CellShapeTagLine(),
+        vtkm::VecRectilinearPointCoordinates<1>(origin, spacing),
+        vectorField,
+        expectedVectorGradient);
 }
 
 } // anonymous namespace

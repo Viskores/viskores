@@ -20,7 +20,7 @@
 
 #include <vtkm/rendering/AxisAnnotation.h>
 
-#include <vtkm/cont/ErrorControlBadType.h>
+#include <vtkm/cont/ErrorBadType.h>
 
 namespace vtkm {
 namespace rendering {

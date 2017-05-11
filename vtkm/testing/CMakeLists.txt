@@ -20,7 +20,6 @@
 
 set(headers
   Testing.h
-  TestingImplicitFunctions.h
   TestingMath.h
   OptionParser.h
   VecTraitsTests.h
@@ -33,7 +32,7 @@ set(unit_tests
   UnitTestBinaryOperators.cxx
   UnitTestBounds.cxx
   UnitTestCellShape.cxx
-  UnitTestImplicitFunctions.cxx
+  UnitTestExceptions.cxx
   UnitTestListTag.cxx
   UnitTestMath.cxx
   UnitTestMatrix.cxx

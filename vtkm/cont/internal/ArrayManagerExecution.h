@@ -159,20 +159,4 @@ public:
 }
 } // namespace vtkm::cont::internal
 
-
-//-----------------------------------------------------------------------------
-// These includes are intentionally placed here after the declaration of the
-// ArrayManagerExecution template prototype, which all the implementations
-// need.
-
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
-#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
-// #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
-// #include <vtkm/openmp/cont/internal/ArrayManagerExecutionOpenMP.h>
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
-#endif
-
 #endif //vtk_m_cont_internal_ArrayManagerExecution_h

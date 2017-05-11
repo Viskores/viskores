@@ -131,7 +131,35 @@ struct TypeTraits<vtkm::Vec<T,Size> >
 
   VTKM_EXEC_CONT
   static vtkm::Vec<T,Size> ZeroInitialization()
-    { return vtkm::Vec<T,Size>( (T()) ); }
+  {
+    return vtkm::Vec<T,Size>(vtkm::TypeTraits<T>::ZeroInitialization());
+  }
+};
+
+/// Traits for VecCConst types.
+///
+template<typename T>
+struct TypeTraits<vtkm::VecCConst<T> >
+{
+  using NumericTag = typename vtkm::TypeTraits<T>::NumericTag;
+  using DimensionalityTag = TypeTraitsVectorTag;
+
+  VTKM_EXEC_CONT
+  static vtkm::VecCConst<T> ZeroInitialization()
+    { return vtkm::VecCConst<T>(); }
+};
+
+/// Traits for VecC types.
+///
+template<typename T>
+struct TypeTraits<vtkm::VecC<T> >
+{
+  using NumericTag = typename vtkm::TypeTraits<T>::NumericTag;
+  using DimensionalityTag = TypeTraitsVectorTag;
+
+  VTKM_EXEC_CONT
+  static vtkm::VecC<T> ZeroInitialization()
+    { return vtkm::VecC<T>(); }
 };
 
 /// \brief Traits for Pair types.

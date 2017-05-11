@@ -1,0 +1,79 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 UT-Battelle, LLC.
+//  Copyright 2015 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
+
+#include <vtkm/cont/Field.h>
+
+namespace vtkm {
+namespace cont {
+
+VTKM_CONT
+void Field::PrintSummary(std::ostream &out) const
+{
+  out<<"   "<<this->Name;
+  out<<" assoc= ";
+  switch (this->GetAssociation())
+  {
+    case ASSOC_ANY: out<<"Any "; break;
+    case ASSOC_WHOLE_MESH: out<<"Mesh "; break;
+    case ASSOC_POINTS: out<<"Points "; break;
+    case ASSOC_CELL_SET: out<<"Cells "; break;
+    case ASSOC_LOGICAL_DIM: out<<"LogicalDim "; break;
+  }
+  this->Data.PrintSummary(out);
+}
+
+VTKM_CONT
+const vtkm::cont::ArrayHandle<vtkm::Range> &
+Field::GetRange() const
+{
+  return this->GetRange(VTKM_DEFAULT_TYPE_LIST_TAG(),
+                        VTKM_DEFAULT_STORAGE_LIST_TAG());
+}
+
+VTKM_CONT
+void Field::GetRange(vtkm::Range *range) const
+{
+  this->GetRange(range,
+                 VTKM_DEFAULT_TYPE_LIST_TAG(),
+                 VTKM_DEFAULT_STORAGE_LIST_TAG());
+}
+
+VTKM_CONT
+const vtkm::cont::DynamicArrayHandle &Field::GetData() const
+{
+  return this->Data;
+}
+
+VTKM_CONT
+vtkm::cont::DynamicArrayHandle &Field::GetData()
+{
+  this->ModifiedFlag = true;
+  return this->Data;
+}
+
+VTKM_CONT
+const vtkm::cont::ArrayHandle<vtkm::Range> &
+Field::GetRange(VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG) const
+{
+  return this->GetRangeImpl(VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
+}
+
+}
+} // namespace vtkm::cont

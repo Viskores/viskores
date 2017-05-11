@@ -78,7 +78,7 @@ inline vtkm::cont::DataSet make_SingleTypeDataSet()
 
   vtkm::cont::DataSet ds;
   vtkm::cont::DataSetBuilderExplicit builder;
-  ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), conn);
+  ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), 3, conn);
 
   //Set point scalar
   const int nVerts = 5;
@@ -125,8 +125,8 @@ void TestDataSet_Explicit()
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar"),
-                    subset,
+  dispatcher.Invoke(subset,
+                    dataSet.GetField("pointvar"),
                     result);
 
   //iterate same cell 4 times
@@ -173,8 +173,8 @@ void TestDataSet_Structured2D()
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar"),
-                    subset,
+  dispatcher.Invoke(subset,
+                    dataSet.GetField("pointvar"),
                     result);
 
   vtkm::Float32 expected[4] = { 40.1f, 40.1f, 40.1f, 40.1f };
@@ -218,8 +218,8 @@ void TestDataSet_Structured3D()
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar"),
-                    subset,
+  dispatcher.Invoke(subset,
+                    dataSet.GetField("pointvar"),
                     result);
 
 vtkm::Float32 expected[4] = { 70.2125f, 70.2125f, 70.2125f, 70.2125f };

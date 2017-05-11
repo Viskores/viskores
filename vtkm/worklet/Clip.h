@@ -29,8 +29,8 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/ImplicitFunction.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/ImplicitFunctions.h>
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/exec/FunctorBase.h>
@@ -177,22 +177,6 @@ struct EdgeInterpolation
 };
 
 
-VTKM_EXEC_CONT
-std::ostream& operator<<(std::ostream &out, const ClipStats &val)
-{
-  return out << std::endl << "{ Cells: " << val.NumberOfCells
-             << ", Indices: " << val.NumberOfIndices
-             << ", NewPoints: " << val.NumberOfNewPoints << " }";
-}
-
-VTKM_EXEC_CONT
-std::ostream& operator<<(std::ostream &out, const EdgeInterpolation &val)
-{
-  return out << std::endl << "{ Vertex1: " << val.Vertex1
-             << ", Vertex2: " << val.Vertex2
-             << ", Weight: " << val.Weight << " }";
-}
-
 class Clip
 {
 public:
@@ -328,6 +312,9 @@ public:
           {
             internal::ClipTables::EdgeVec edge =
                 this->ClipTables.GetEdge(shape.Id, entry);
+            // Sanity check to make sure the edge is valid.
+            VTKM_ASSERT(edge[0] != 255);
+            VTKM_ASSERT(edge[1] != 255);
 
             EdgeInterpolation ei;
             ei.Vertex1 = indices[edge[0]];
@@ -436,11 +423,14 @@ public:
   {
   }
 
-  template <typename ScalarsArrayHandle, typename DeviceAdapter>
-  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSet &cellSet,
-                                    const ScalarsArrayHandle &scalars,
-                                    vtkm::Float64 value,
-                                    DeviceAdapter device)
+  template <typename CellSetList,
+            typename ScalarsArrayHandle,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetExplicit<>
+  Run(const vtkm::cont::DynamicCellSetBase<CellSetList> &cellSet,
+      const ScalarsArrayHandle &scalars,
+      vtkm::Float64 value,
+      DeviceAdapter device)
   {
     typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
 
@@ -515,18 +505,21 @@ public:
 
 
     vtkm::cont::CellSetExplicit<> output;
-    output.Fill(shapes, numIndices, connectivity);
+    output.Fill(this->NewPointsOffset + uniqueNewPoints.GetNumberOfValues(),
+                shapes,
+                numIndices,
+                connectivity);
 
     return output;
   }
 
-  template<typename ImplicitFunction, typename DeviceAdapter>
+  template<typename DynamicCellSet, typename DeviceAdapter>
   class ClipWithImplicitFunction
   {
   public:
     VTKM_CONT
-    ClipWithImplicitFunction(Clip *clipper, const vtkm::cont::DynamicCellSet &cellSet,
-      ImplicitFunction function, vtkm::cont::CellSetExplicit<> *result)
+    ClipWithImplicitFunction(Clip *clipper, const DynamicCellSet &cellSet,
+      const vtkm::exec::ImplicitFunction &function, vtkm::cont::CellSetExplicit<> *result)
       : Clipper(clipper), CellSet(&cellSet), Function(function), Result(result)
     { }
 
@@ -534,40 +527,42 @@ public:
     VTKM_CONT
     void operator()(const ArrayHandleType &handle) const
     {
+      // Evaluate the implicit function on the input coordinates using
+      // ArrayHandleTransform
       vtkm::cont::ArrayHandleTransform<
         vtkm::FloatDefault,
         ArrayHandleType,
-        vtkm::ImplicitFunctionValue<ImplicitFunction> > clipScalars(handle,
-                                                                    this->Function);
+        vtkm::exec::ImplicitFunctionValue> clipScalars(handle, this->Function);
 
-        *this->Result = this->Clipper->Run(*this->CellSet,
-                                           clipScalars,
-                                           0.0,
-                                           DeviceAdapter());
+      // Clip at locations where the implicit function evaluates to 0
+      *this->Result = this->Clipper->Run(*this->CellSet,
+                                         clipScalars,
+                                         0.0,
+                                         DeviceAdapter());
     }
 
   private:
     Clip *Clipper;
-    const vtkm::cont::DynamicCellSet *CellSet;
-    const vtkm::ImplicitFunctionValue<ImplicitFunction> Function;
+    const DynamicCellSet *CellSet;
+    const vtkm::exec::ImplicitFunctionValue Function;
     vtkm::cont::CellSetExplicit<> *Result;
   };
 
-  template <typename ImplicitFunction, typename DeviceAdapter>
-  vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSet &cellSet,
-                                    const ImplicitFunction &clipFunction,
-                                    const vtkm::cont::CoordinateSystem &coords,
-                                    DeviceAdapter device)
+  template <typename CellSetList,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetExplicit<>
+  Run(const vtkm::cont::DynamicCellSetBase<CellSetList> &cellSet,
+      const vtkm::cont::ImplicitFunction &clipFunction,
+      const vtkm::cont::CoordinateSystem &coords,
+      DeviceAdapter device)
   {
-    (void) device;
     vtkm::cont::CellSetExplicit<> output;
-    ClipWithImplicitFunction<ImplicitFunction,
-                                DeviceAdapter> clip(this,
-                                                    cellSet,
-                                                    clipFunction,
-                                                    &output);
-    CastAndCall(coords, clip);
 
+    ClipWithImplicitFunction<
+      vtkm::cont::DynamicCellSetBase<CellSetList>, DeviceAdapter>
+      clip(this, cellSet, clipFunction.PrepareForExecution(device), &output);
+
+    CastAndCall(coords, clip);
     return output;
   }
 

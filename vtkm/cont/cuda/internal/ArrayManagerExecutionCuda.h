@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
-#include <vtkm/cont/Storage.h>
+#include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionThrustDevice.h>
 
@@ -60,7 +60,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForInput<void>(updateData);
     }
-    catch (vtkm::cont::ErrorControlBadAllocation error)
+    catch (vtkm::cont::ErrorBadAllocation &error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -81,7 +81,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForInPlace<void>(updateData);
     }
-    catch (vtkm::cont::ErrorControlBadAllocation error)
+    catch (vtkm::cont::ErrorBadAllocation &error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -102,7 +102,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForOutput<void>(numberOfValues);
     }
-    catch (vtkm::cont::ErrorControlBadAllocation error)
+    catch (vtkm::cont::ErrorBadAllocation &error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -115,9 +115,13 @@ public:
   }
 };
 
-}
-}
-} // namespace vtkm::cont::internal
+} // namespace internal
 
+#ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
+VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagCuda)
+#endif // !vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
+
+}
+} // namespace vtkm::cont
 
 #endif //vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_h

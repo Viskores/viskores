@@ -20,6 +20,7 @@
 
 #define VTKM_STORAGE VTKM_STORAGE_ERROR
 
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -182,7 +183,7 @@ struct TemplatedTests
       VTKM_TEST_ASSERT(true==false,
                        "Array shrink do a larger size was possible. This can't be allowed.");
     }
-    catch(vtkm::cont::ErrorControlBadValue) {}
+    catch(vtkm::cont::ErrorBadValue&) {}
   }
 
   void operator()()

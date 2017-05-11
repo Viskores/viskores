@@ -25,6 +25,7 @@
 #ifdef VTKM_ENABLE_TBB
 #include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterAlgorithmTBB.h>
+#include <vtkm/cont/tbb/internal/VirtualObjectTransferTBB.h>
 #endif
 
 #endif //vtk_m_cont_tbb_DeviceAdapterTBB_h

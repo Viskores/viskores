@@ -51,8 +51,8 @@
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 // Output data set shared with opengl
-vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter> *streamLineFilter;
-vtkm::cont::DataSet outDataSet;
+static vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter> *streamLineFilter;
+static vtkm::cont::DataSet outDataSet;
 
 // Input parameters
 const vtkm::Id nSeeds = 25;
@@ -61,7 +61,7 @@ const vtkm::Float32 tStep = 0.5f;
 const vtkm::Id direction = vtkm::worklet::internal::BOTH;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > vertexArray;
 
 // OpenGL display variables
 Quaternion qrot;
@@ -313,6 +313,9 @@ int main(int argc, char* argv[])
   glutMouseFunc(mouseCall);
   glutMainLoop();
 
+  delete streamLineFilter;
+  outDataSet.Clear();
+  vertexArray.ReleaseResources();
   return 0;
 }
 

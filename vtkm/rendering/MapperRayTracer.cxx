@@ -21,7 +21,6 @@
 #include <vtkm/rendering/MapperRayTracer.h>
 
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/RuntimeDeviceTracker.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
@@ -35,7 +34,6 @@ namespace rendering {
 struct MapperRayTracer::InternalsType
 {
   vtkm::rendering::CanvasRayTracer *Canvas;
-  vtkm::cont::internal::RuntimeDeviceTracker DeviceTracker;
   std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
       RayTracerContainer;
 
@@ -53,7 +51,7 @@ struct MapperRayTracer::InternalsType
     typedef vtkm::rendering::raytracing::RayTracer<Device> RayTracerType;
     typedef vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType>
         ContainerType;
-    RayTracerType *tracer = NULL;
+    RayTracerType *tracer = nullptr;
     if (this->RayTracerContainer)
     {
       ContainerType *container =
@@ -64,7 +62,7 @@ struct MapperRayTracer::InternalsType
       }
     }
 
-    if (tracer == NULL)
+    if (tracer == nullptr)
     {
       ContainerType *container
           = new vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType>;
@@ -90,7 +88,7 @@ void MapperRayTracer::SetCanvas(vtkm::rendering::Canvas *canvas)
     this->Internals->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
     if(this->Internals->Canvas == nullptr)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
         "Ray Tracer: bad canvas type. Must be CanvasRayTracer");
     }
   }
@@ -98,6 +96,12 @@ void MapperRayTracer::SetCanvas(vtkm::rendering::Canvas *canvas)
   {
     this->Internals->Canvas = nullptr;
   }
+}
+
+vtkm::rendering::Canvas *
+MapperRayTracer::GetCanvas() const
+{
+  return this->Internals->Canvas;
 }
 
 struct MapperRayTracer::RenderFunctor
@@ -138,7 +142,7 @@ struct MapperRayTracer::RenderFunctor
     tracer->GetCamera().SetParameters(this->Camera,
                                       *this->Self->Internals->Canvas);
 
-    vtkm::Bounds dataBounds = this->Coordinates.GetBounds(Device());
+    vtkm::Bounds dataBounds = this->Coordinates.GetBounds();
 
     tracer->SetData(this->Coordinates.GetData(),
                     this->TriangleIndices,
@@ -166,7 +170,7 @@ void MapperRayTracer::RenderCells(
   vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
   vtkm::Id numberOfTriangles;
   vtkm::rendering::internal::RunTriangulator(
-        cellset, indices, numberOfTriangles, this->Internals->DeviceTracker);
+        cellset, indices, numberOfTriangles);
 
   RenderFunctor functor(this,
                         indices,
@@ -175,9 +179,7 @@ void MapperRayTracer::RenderCells(
                         scalarField,
                         camera,
                         scalarRange);
-  vtkm::cont::TryExecute(functor,
-                         this->Internals->DeviceTracker,
-                         VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+  vtkm::cont::TryExecute(functor);
 }
 
 void MapperRayTracer::StartScene()

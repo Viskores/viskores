@@ -24,7 +24,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 
 #include <iterator>
 #include <limits>
@@ -65,7 +65,7 @@ public:
 #ifndef VTKM_USE_64BIT_IDS
     if (numberOfValues > (std::numeric_limits<vtkm::Id>::max)())
     {
-      throw vtkm::cont::ErrorControlBadAllocation(
+      throw vtkm::cont::ErrorBadAllocation(
         "Distance of iterators larger than maximum array size. "
         "To support larger arrays, try turning on VTKM_USE_64BIT_IDS.");
     }
@@ -149,7 +149,7 @@ public:
 #ifndef VTKM_USE_64BIT_IDS
     if (numberOfValues > (std::numeric_limits<vtkm::Id>::max)())
     {
-      throw vtkm::cont::ErrorControlBadAllocation(
+      throw vtkm::cont::ErrorBadAllocation(
         "Distance of iterators larger than maximum array size. "
         "To support larger arrays, try turning on VTKM_USE_64BIT_IDS.");
     }
@@ -179,6 +179,15 @@ public:
   ValueType Get(vtkm::Id index) const
   {
     return *this->IteratorAt(index);
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
+  {
+#if ! (defined(VTKM_MSVC) && defined(VTKM_CUDA))
+    VTKM_ASSERT(false && "Attempted to write to constant array.");
+#endif
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS

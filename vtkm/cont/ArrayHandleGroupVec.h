@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortal.h>
-#include <vtkm/cont/ErrorControlBadValue.h>
+#include <vtkm/cont/ErrorBadValue.h>
 
 namespace vtkm {
 namespace exec {
@@ -30,7 +30,7 @@ namespace exec {
 namespace internal {
 
 template<typename _SourcePortalType, vtkm::IdComponent _NUM_COMPONENTS>
-class ArrayPortalGroupVec
+class VTKM_ALWAYS_EXPORT ArrayPortalGroupVec
 {
 public:
   static const vtkm::IdComponent NUM_COMPONENTS = _NUM_COMPONENTS;
@@ -115,7 +115,7 @@ namespace cont {
 namespace internal {
 
 template<typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
-struct StorageTagGroupVec {  };
+struct VTKM_ALWAYS_EXPORT StorageTagGroupVec {  };
 
 template<typename SourceArrayHandleType,
          vtkm::IdComponent NUM_COMPONENTS>
@@ -164,7 +164,7 @@ public:
     vtkm::Id sourceSize = this->SourceArray.GetNumberOfValues();
     if(sourceSize%NUM_COMPONENTS != 0)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
     return sourceSize/NUM_COMPONENTS;
@@ -247,7 +247,7 @@ public:
     vtkm::Id sourceSize = this->SourceArray.GetNumberOfValues();
     if (sourceSize%NUM_COMPONENTS != 0)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
     return sourceSize/NUM_COMPONENTS;
@@ -258,7 +258,7 @@ public:
   {
     if (this->SourceArray.GetNumberOfValues()%NUM_COMPONENTS != 0)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
     return PortalConstExecution(this->SourceArray.PrepareForInput(Device()));
@@ -269,7 +269,7 @@ public:
   {
     if (this->SourceArray.GetNumberOfValues()%NUM_COMPONENTS != 0)
     {
-      throw vtkm::cont::ErrorControlBadValue(
+      throw vtkm::cont::ErrorBadValue(
             "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
     return PortalExecution(this->SourceArray.PrepareForInPlace(Device()));

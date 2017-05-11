@@ -62,6 +62,10 @@
 # endif
 #endif
 
+#if defined(_WIN32)
+# define VTKM_WINDOWS
+#endif
+
 #if !defined(VTKM_USE_DOUBLE_PRECISION) && !defined(VTKM_NO_DOUBLE_PRECISION)
 #cmakedefine VTKM_USE_DOUBLE_PRECISION
 #endif
@@ -262,6 +266,32 @@
 #define VTKM_HAVE_CXX_11
 #else
 #error "VTK-m requires at least a C++11 compiler"
+#endif
+
+
+// Define a pair of macros, VTKM_SWALLOW_SEMICOLON_PRE_BLOCK and
+// VTKM_SWALLOW_SEMICOLON_POST_BLOCK that can be used around a block in a
+// macro to "swallow" the semicolon after the macro's use so that it is
+// used like a function without warnings about extra semicolons. It is
+// generally implemented by wrapping the block as a do/while with a false
+// condition so that it executes exactly once. (See, for example,
+// https://gcc.gnu.org/onlinedocs/cpp/Swallowing-the-Semicolon.html)
+// However, some compilers might complain about this, too. For example, you
+// might get a complaint about a loop with a constant expression. These
+// macros take care of these conditions.
+#ifdef VTKM_MSVC
+#define VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
+  __pragma(warning(push)) \
+  __pragma(warning(disable:4127)) \
+  do
+#define VTKM_SWALLOW_SEMICOLON_POST_BLOCK \
+  while (false) \
+  __pragma(warning(pop))
+#else // not VTKM_MSVC
+#define VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
+  do
+#define VTKM_SWALLOW_SEMICOLON_POST_BLOCK \
+  while (false)
 #endif
 
 #ifdef VTKM_MSVC

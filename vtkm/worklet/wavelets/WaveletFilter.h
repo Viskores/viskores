@@ -96,7 +96,7 @@ public:
   }
 
   // destructor
-  virtual ~WaveletFilter()
+  ~WaveletFilter()
   {
     if(  LowDecomposeFilter )
     {

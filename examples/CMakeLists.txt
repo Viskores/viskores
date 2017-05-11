@@ -24,6 +24,7 @@
 set(CMAKE_PREFIX_PATH ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR})
 
 add_subdirectory(clipping)
+add_subdirectory(contour_tree)
 add_subdirectory(demo)
 add_subdirectory(dynamic_dispatcher)
 add_subdirectory(hello_world)
@@ -34,4 +35,5 @@ add_subdirectory(tetrahedra)
 if(VTKm_ENABLE_RENDERING)
   add_subdirectory(rendering)
 endif()
+add_subdirectory(unified_memory)
 

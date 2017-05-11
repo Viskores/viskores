@@ -33,20 +33,6 @@
 #define VTKM_DEVICE_ADAPTER_CUDA       2
 #define VTKM_DEVICE_ADAPTER_TBB        3
 
-#ifndef VTKM_DEVICE_ADAPTER
-#ifdef VTKM_CUDA
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
-#elif defined(VTKM_OPENMP) // !VTKM_CUDA
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_OPENMP
-#elif defined(VTKM_ENABLE_TBB) // !VTKM_CUDA && !VTKM_OPENMP
-// Unfortunately, VTKM_ENABLE_TBB does not guarantee that TBB is (or isn't)
-// available, but there is no way to check for sure in a header library.
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_TBB
-#else // !VTKM_CUDA && !VTKM_OPENMP && !VTKM_ENABLE_TBB
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif // !VTKM_CUDA && !VTKM_OPENMP
-#endif // VTKM_DEVICE_ADAPTER
-
 namespace vtkm {
 namespace cont {
 
@@ -71,7 +57,7 @@ struct DeviceAdapterTagCheck
 #define VTKM_VALID_DEVICE_ADAPTER(Name, Id) \
   namespace vtkm { \
   namespace cont { \
-  struct DeviceAdapterTag##Name {  }; \
+  struct VTKM_ALWAYS_EXPORT DeviceAdapterTag##Name {  }; \
   template<> \
   struct DeviceAdapterTraits<vtkm::cont::DeviceAdapterTag##Name> { \
     static DeviceAdapterId GetId() { \
@@ -124,39 +110,5 @@ struct DeviceAdapterTagCheck
   VTKM_STATIC_ASSERT_MSG( \
       ::vtkm::cont::DeviceAdapterTagCheck<tag>::Valid, \
       "Provided type is not a valid VTK-m device adapter tag.")
-
-//-----------------------------------------------------------------------------
-#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_SERIAL
-
-#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
-#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagSerial
-
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
-
-#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
-#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagCuda
-
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
-
-#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
-#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagTBB
-
-#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_ERROR
-
-#include <vtkm/cont/internal/DeviceAdapterError.h>
-#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagError
-
-#elif (VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_UNDEFINED) || !defined(VTKM_DEVICE_ADAPTER)
-
-#ifndef VTKM_DEFAULT_DEVICE_ADAPTER_TAG
-#warning If device adapter is undefined, VTKM_DEFAULT_DEVICE_ADAPTER_TAG must be defined.
-#endif
-
-#else
-
-#warning Unrecognized device adapter given.
-
-#endif
-
 
 #endif //vtk_m_cont_internal_DeviceAdapterTag_h

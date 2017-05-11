@@ -22,7 +22,7 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/worklet/TetrahedralizeExplicitGrid.h>
+#include <vtkm/filter/Triangulate.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
@@ -46,12 +46,11 @@ typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 namespace {
 
 // Takes input uniform grid and outputs unstructured grid of triangles
-vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter> *tetrahedralizeFilter;
-vtkm::cont::DataSet outDataSet;
-vtkm::Id numberOfInPoints;
+static vtkm::cont::DataSet outDataSet;
+static vtkm::Id numberOfInPoints;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
 
 } // anonymous namespace
 
@@ -225,15 +224,10 @@ int main(int argc, char* argv[])
 
   numberOfInPoints = inCellSet.GetNumberOfPoints();
 
-  // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetSingleType<> cellSet(vtkm::CellShapeTagTriangle(), "cells");;
-  outDataSet.AddCellSet(cellSet);
-  outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
-
   // Convert 2D explicit cells to triangles
-  tetrahedralizeFilter = new vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter>
-                                              (inDataSet, outDataSet);
-  tetrahedralizeFilter->Run();
+  vtkm::filter::Triangulate triangulate;
+  vtkm::filter::ResultDataSet result = triangulate.Execute(inDataSet);
+  outDataSet = result.GetDataSet();
 
   // Render the output dataset of tets
   glutInit(&argc, argv);
@@ -248,6 +242,8 @@ int main(int argc, char* argv[])
   glutDisplayFunc(displayCall);
   glutMainLoop();
 
+  outDataSet.Clear();
+  vertexArray.ReleaseResources();
   return 0;
 }
 

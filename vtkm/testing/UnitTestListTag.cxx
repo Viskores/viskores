@@ -55,6 +55,14 @@ struct TestListTagJoin
     : vtkm::ListTagJoin<TestListTag3, TestListTag1>
 {  };
 
+struct TestListTagIntersect
+    : vtkm::ListTagIntersect<TestListTag3, TestListTagJoin>
+{  };
+
+struct TestListTagUniversal
+    : vtkm::ListTagUniversal
+{  };
+
 struct MutableFunctor
 {
   std::vector<int> FoundTypes;
@@ -97,14 +105,36 @@ void CheckSame(const vtkm::Vec<int,N> &expected,
 }
 
 template<int N, typename ListTag>
-void CheckContains(TestClass<N>, ListTag, const std::vector<int> contents)
+void CheckContains(TestClass<N>, ListTag, const std::vector<int>& contents)
 {
+  //Use intersect to verify at compile time that ListTag contains TestClass<N>
+  using intersectWith = vtkm::ListTagBase< TestClass<N> >;
+  using intersectResult = typename vtkm::ListTagIntersect<intersectWith, ListTag>::list;
+  VTKM_CONSTEXPR bool intersectContains = (brigand::size<intersectResult>::value != 0);
+
   bool listContains = vtkm::ListContains<ListTag, TestClass<N> >::value;
   bool shouldContain =
       std::find(contents.begin(), contents.end(), N) != contents.end();
+
+  VTKM_TEST_ASSERT(intersectContains == shouldContain,
+                   "ListTagIntersect check failed.");
   VTKM_TEST_ASSERT(listContains == shouldContain,
                    "ListContains check failed.");
 }
+
+template<int N>
+void CheckContains(TestClass<N>, TestListTagUniversal, const std::vector<int>&)
+{
+  //Use intersect to verify at compile time that ListTag contains TestClass<N>
+  using intersectWith = vtkm::ListTagBase< TestClass<N> >;
+  using intersectResult = typename vtkm::ListTagIntersect<intersectWith, TestListTagUniversal>::list;
+  VTKM_CONSTEXPR bool intersectContains = (brigand::size<intersectResult>::value != 0);
+  VTKM_CONSTEXPR bool listContains = vtkm::ListContains<TestListTagUniversal, TestClass<N> >::value;
+
+  VTKM_TEST_ASSERT(intersectContains == listContains,
+                   "ListTagIntersect check failed.");
+}
+
 
 template<vtkm::IdComponent N, typename ListTag>
 void TryList(const vtkm::Vec<int,N> &expected, ListTag)
@@ -131,6 +161,27 @@ void TryList(const vtkm::Vec<int,N> &expected, ListTag)
   CheckContains(TestClass<42>(), ListTag(), functor.FoundTypes);
   CheckContains(TestClass<43>(), ListTag(), functor.FoundTypes);
   CheckContains(TestClass<44>(), ListTag(), functor.FoundTypes);
+}
+
+template<vtkm::IdComponent N>
+void TryList(const vtkm::Vec<int,N> &, TestListTagUniversal tag)
+{
+  VTKM_IS_LIST_TAG(TestListTagUniversal);
+
+  //TestListTagUniversal can't be used with for_each on purpose
+
+  std::vector<int> found;
+  std::cout << "    Try checking contents" << std::endl;
+  CheckContains(TestClass<11>(), tag, found);
+  CheckContains(TestClass<21>(), tag, found);
+  CheckContains(TestClass<22>(), tag, found);
+  CheckContains(TestClass<31>(), tag, found);
+  CheckContains(TestClass<32>(), tag, found);
+  CheckContains(TestClass<33>(), tag, found);
+  CheckContains(TestClass<41>(), tag, found);
+  CheckContains(TestClass<42>(), tag, found);
+  CheckContains(TestClass<43>(), tag, found);
+  CheckContains(TestClass<44>(), tag, found);
 }
 
 void TestLists()
@@ -160,6 +211,12 @@ void TestLists()
 
   std::cout << "ListTagJoin" << std::endl;
   TryList(vtkm::Vec<int,4>(31,32,33,11), TestListTagJoin());
+
+  std::cout << "ListTagIntersect" << std::endl;
+  TryList(vtkm::Vec<int,3>(31,32,33), TestListTagIntersect());
+
+  std::cout << "ListTagUniversal" << std::endl;
+  TryList(vtkm::Vec<int,4>(1,2,3,4), TestListTagUniversal());
 }
 
 } // anonymous namespace

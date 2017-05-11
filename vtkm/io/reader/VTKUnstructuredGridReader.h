@@ -26,6 +26,8 @@ namespace vtkm {
 namespace io {
 namespace reader {
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 class VTKUnstructuredGridReader : public VTKDataSetReaderBase
 {
 public:
@@ -45,18 +47,19 @@ private:
     //at the top of a VTK file
     std::string tag;
     this->DataFile->Stream >> tag;
-    internal::parseAssert(tag == "POINTS" || tag == "FIELD");
-
     if(tag == "FIELD")
     {
       std::string name;
       this->ReadFields(name);
       this->DataFile->Stream >> tag;
-      internal::parseAssert(tag == "POINTS");
     }
 
     // Read the points
+    internal::parseAssert(tag == "POINTS");
     this->ReadPoints();
+
+    vtkm::Id numPoints =
+        this->DataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
 
     // Read the cellset
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
@@ -75,27 +78,26 @@ private:
 
     if (vtkm::io::internal::IsSingleShape(shapes))
     {
-      vtkm::cont::CellSetSingleType<> cs;
-      switch(shapes.GetPortalConstControl().Get(0))
-      {
-      vtkmGenericCellShapeMacro((cs = vtkm::cont::CellSetSingleType<>(CellShapeTag(), 0, "cells")));
-      default:
-        break;
-      }
-      cs.Fill(connectivity);
-      this->DataSet.AddCellSet(cs);
+      vtkm::cont::CellSetSingleType<> cellSet("cells");
+      cellSet.Fill(numPoints,
+              shapes.GetPortalConstControl().Get(0),
+              numIndices.GetPortalConstControl().Get(0),
+              connectivity);
+      this->DataSet.AddCellSet(cellSet);
     }
     else
     {
-      vtkm::cont::CellSetExplicit<> cs(0, "cells");
-      cs.Fill(shapes, numIndices, connectivity);
-      this->DataSet.AddCellSet(cs);
+      vtkm::cont::CellSetExplicit<> cellSet("cells");
+      cellSet.Fill(numPoints, shapes, numIndices, connectivity);
+      this->DataSet.AddCellSet(cellSet);
     }
 
     // Read points and cell attributes
     this->ReadAttributes();
   }
 };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
 }
 }

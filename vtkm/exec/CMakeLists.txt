@@ -21,6 +21,8 @@
 set(headers
   AtomicArray.h
   CellDerivative.h
+  CellEdge.h
+  CellFace.h
   CellInterpolate.h
   ConnectivityExplicit.h
   ConnectivityPermuted.h
@@ -28,8 +30,10 @@ set(headers
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
+  ImplicitFunction.h
   Jacobian.h
   ParametricCoordinates.h
+  TaskBase.h
   )
 
 #-----------------------------------------------------------------------------

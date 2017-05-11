@@ -28,6 +28,8 @@ set(headers
   TestingDataSetExplicit.h
   TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
+  TestingImplicitFunction.h
+  TestingVirtualObjectCache.h
   )
 
 vtkm_declare_headers(${headers})
@@ -36,8 +38,10 @@ set(unit_tests
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
+  UnitTestArrayHandleDiscard.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
+  UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandlePermutation.cxx
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx

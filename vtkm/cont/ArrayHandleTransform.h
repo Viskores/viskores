@@ -23,8 +23,8 @@
 #define vtk_m_cont_ArrayHandleTransform_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadType.h>
-#include <vtkm/cont/ErrorControlInternal.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorInternal.h>
 
 namespace vtkm {
 namespace cont {
@@ -47,10 +47,10 @@ typedef vtkm::cont::internal::NullFunctorType NullFunctorType;
 ///
 template<typename ValueType_, typename PortalType_, typename FunctorType_,
   typename InverseFunctorType_=NullFunctorType>
-class ArrayPortalTransform;
+class VTKM_ALWAYS_EXPORT ArrayPortalTransform;
 
 template<typename ValueType_, typename PortalType_, typename FunctorType_>
-class ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
+class VTKM_ALWAYS_EXPORT ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
 {
 public:
   typedef PortalType_ PortalType;
@@ -90,6 +90,16 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index),
+           const ValueType &vtkmNotUsed(value)) const
+  {
+#if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
+    VTKM_ASSERT(false && "Cannot write to read-only transform array. (No inverse transform given.)");
+#endif
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
   const PortalType &GetPortal() const { return this->Portal; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -103,7 +113,7 @@ protected:
 
 template<typename ValueType_, typename PortalType_,
   typename FunctorType_, typename InverseFunctorType_>
-class ArrayPortalTransform : public ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
+class VTKM_ALWAYS_EXPORT ArrayPortalTransform : public ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
 {
 public:
   typedef ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType> Superclass;
@@ -155,7 +165,7 @@ namespace internal {
 
 template<typename ValueType, typename ArrayHandleType, typename FunctorType,
   typename InverseFunctorType=NullFunctorType>
-struct StorageTagTransform {};
+struct VTKM_ALWAYS_EXPORT StorageTagTransform {};
 
 template<typename T, typename ArrayHandleType, typename FunctorType>
 class Storage<T, StorageTagTransform<T, ArrayHandleType, FunctorType, NullFunctorType > >
@@ -205,13 +215,13 @@ public:
 
   VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform is read only. It cannot be allocated.");
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform is read only. It cannot shrink.");
   }
 
@@ -364,20 +374,20 @@ public:
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool &vtkmNotUsed(updateData)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform read only. "
           "Cannot be used for in-place operations.");
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform read only. Cannot be used as output.");
   }
 
   VTKM_CONT
   void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
-    throw vtkm::cont::ErrorControlInternal(
+    throw vtkm::cont::ErrorInternal(
           "ArrayHandleTransform read only. "
           "There should be no occurance of the ArrayHandle trying to pull "
           "data from the execution environment.");
@@ -385,7 +395,7 @@ public:
 
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorControlBadType(
+    throw vtkm::cont::ErrorBadType(
           "ArrayHandleTransform read only. Cannot shrink.");
   }
 

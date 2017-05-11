@@ -32,7 +32,7 @@ namespace internal {
 
 /// \brief An implicit array portal that returns an counting value.
 template <class CountingValueType>
-class ArrayPortalCounting
+class VTKM_ALWAYS_EXPORT ArrayPortalCounting
 {
   typedef typename vtkm::VecTraits<CountingValueType>::ComponentType
       ComponentType;
@@ -80,6 +80,13 @@ public:
   ValueType Get(vtkm::Id index) const {
     return ValueType(this->Start +
                      this->Step*ValueType(static_cast<ComponentType>(index)));
+  }
+
+  VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index),
+           const ValueType &vtkmNotUsed(value)) const
+  {
+    VTKM_ASSERT(false && "Cannot write to read-only counting array.");
   }
 
 private:

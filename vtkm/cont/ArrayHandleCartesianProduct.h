@@ -23,7 +23,7 @@
 #include <vtkm/Assert.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorControlBadAllocation.h>
+#include <vtkm/cont/ErrorBadAllocation.h>
 
 namespace vtkm {
 namespace exec {
@@ -35,7 +35,7 @@ template<typename ValueType_,
          typename PortalTypeFirst_,
          typename PortalTypeSecond_,
          typename PortalTypeThird_>
-class ArrayPortalCartesianProduct
+class VTKM_ALWAYS_EXPORT ArrayPortalCartesianProduct
 {
 public:
   typedef ValueType_ ValueType;
@@ -151,7 +151,7 @@ namespace cont {
 namespace internal {
 
 template<typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-struct StorageTagCartesianProduct {  };
+struct VTKM_ALWAYS_EXPORT StorageTagCartesianProduct {  };
 
 /// This helper struct defines the value type for a zip container containing
 /// the given two array handles.
@@ -229,13 +229,13 @@ public:
   VTKM_CONT
   void Allocate(vtkm::Id /*numberOfValues*/)
   {
-      throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
+      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id /*numberOfValues*/)
   {
-      throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
+      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
   }
 
   VTKM_CONT
@@ -327,7 +327,7 @@ public:
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    throw vtkm::cont::ErrorControlBadAllocation(
+    throw vtkm::cont::ErrorBadAllocation(
           "Cannot write to an ArrayHandleCartesianProduct. It does not make "
           "sense because there is overlap in the data.");
   }
@@ -335,7 +335,7 @@ public:
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorControlBadAllocation(
+    throw vtkm::cont::ErrorBadAllocation(
         "Cannot write to an ArrayHandleCartesianProduct. It does not make "
         "sense because there is overlap in the data.");
   }
@@ -351,7 +351,7 @@ public:
   VTKM_CONT
   void Shrink(vtkm::Id /*numberOfValues*/)
   {
-      throw vtkm::cont::ErrorControlBadAllocation("Does not make sense.");
+      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
   }
 
   VTKM_CONT

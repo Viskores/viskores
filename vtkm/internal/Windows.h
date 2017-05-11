@@ -22,7 +22,7 @@
 
 #include <vtkm/internal/Configure.h>
 
-#if  defined(VTKM_MSVC)
+#if  defined(VTKM_WINDOWS)
 // Use pragma push_macro to properly save the state of WIN32_LEAN_AND_MEAN
 // and NOMINMAX that the caller of vtkm has setup
 
@@ -30,8 +30,13 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 
 #pragma push_macro("WIN32_LEAN_AND_MEAN")
 #pragma push_macro("NOMINMAX")
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
+
+#ifndef WIN32_LEAN_AND_MEAN
+# define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+# define NOMINMAX
+#endif
 
 // windows.h, clobbers min and max functions so we
 // define NOMINMAX to fix that problem. We also include WIN32_LEAN_AND_MEAN

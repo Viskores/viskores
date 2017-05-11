@@ -28,12 +28,15 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/UnaryPredicates.h>
 
+#include <vtkm/cont/cuda/ErrorCuda.h>
+
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
-#include <vtkm/exec/internal/WorkletInvokeFunctor.h>
+#include <vtkm/exec/internal/TaskSingular.h>
 
 
 
@@ -171,8 +174,8 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
       for(vtkm::UInt32 k=0; k < 16; k++)
         {
         cudaEvent_t start, stop;
-        cudaEventCreate(&start);
-        cudaEventCreate(&stop);
+        VTKM_CUDA_CALL(cudaEventCreate(&start));
+        VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
         dim3 blockSize3d(indexTable[i],indexTable[j],indexTable[k]);
         dim3 gridSize3d;
@@ -191,16 +194,16 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
           }
 
         compute_block_size(ranges, blockSize3d, gridSize3d);
-        cudaEventRecord(start, 0);
+        VTKM_CUDA_CALL(cudaEventRecord(start, 0));
         Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, ranges);
-        cudaEventRecord(stop, 0);
+        VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
 
-        cudaEventSynchronize(stop);
+        VTKM_CUDA_CALL(cudaEventSynchronize(stop));
         float elapsedTimeMilliseconds;
-        cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop);
+        VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
 
-        cudaEventDestroy(start);
-        cudaEventDestroy(stop);
+        VTKM_CUDA_CALL(cudaEventDestroy(start));
+        VTKM_CUDA_CALL(cudaEventDestroy(stop));
 
         PerfRecord record(elapsedTimeMilliseconds, blockSize3d);
         results.push_back( record );
@@ -224,22 +227,22 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   std::cout << "flat array performance " << std::endl;
   {
   cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
+  VTKM_CUDA_CALL(cudaEventCreate(&start));
+  VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
-  cudaEventRecord(start, 0);
+  VTKM_CUDA_CALL(cudaEventRecord(start, 0));
   typedef
     vtkm::cont::cuda::internal::DeviceAdapterAlgorithmThrust<
           vtkm::cont::DeviceAdapterTagCuda > Algorithm;
   Algorithm::Schedule(functor, numInstances);
-  cudaEventRecord(stop, 0);
+  VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
 
-  cudaEventSynchronize(stop);
+  VTKM_CUDA_CALL(cudaEventSynchronize(stop));
   float elapsedTimeMilliseconds;
-  cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop);
+  VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
 
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
+  VTKM_CUDA_CALL(cudaEventDestroy(start));
+  VTKM_CUDA_CALL(cudaEventDestroy(stop));
 
   std::cout << "Flat index required: " << elapsedTimeMilliseconds << std::endl;
   }
@@ -247,23 +250,23 @@ static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& range
   std::cout << "fixed 3d block size performance " << std::endl;
   {
   cudaEvent_t start, stop;
-  cudaEventCreate(&start);
-  cudaEventCreate(&stop);
+  VTKM_CUDA_CALL(cudaEventCreate(&start));
+  VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
   dim3 blockSize3d(64,2,1);
   dim3 gridSize3d;
 
   compute_block_size(ranges, blockSize3d, gridSize3d);
-  cudaEventRecord(start, 0);
+  VTKM_CUDA_CALL(cudaEventRecord(start, 0));
   Schedule3DIndexKernel<Functor> <<<gridSize3d, blockSize3d>>> (functor, ranges);
-  cudaEventRecord(stop, 0);
+  VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
 
-  cudaEventSynchronize(stop);
+  VTKM_CUDA_CALL(cudaEventSynchronize(stop));
   float elapsedTimeMilliseconds;
-  cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop);
+  VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
 
-  cudaEventDestroy(start);
-  cudaEventDestroy(stop);
+  VTKM_CUDA_CALL(cudaEventDestroy(start));
+  VTKM_CUDA_CALL(cudaEventDestroy(stop));
 
   std::cout << "BlockSize of: " << blockSize3d.x << "," << blockSize3d.y << "," << blockSize3d.z << " required: " << elapsedTimeMilliseconds << std::endl;
   std::cout << "GridSize of: " << gridSize3d.x << "," << gridSize3d.y << "," << gridSize3d.z << " required: " << elapsedTimeMilliseconds << std::endl;
@@ -302,6 +305,63 @@ private:
     {
       throwAsVTKmException();
     }
+  }
+
+  template<class ValueIterator,
+  class StencilPortal,
+  class OutputPortal,
+  class UnaryPredicate>
+  VTKM_CONT static
+  vtkm::Id CopyIfPortal(ValueIterator valuesBegin,
+                        ValueIterator valuesEnd,
+                        StencilPortal stencil,
+                        OutputPortal output,
+                        UnaryPredicate unary_predicate)
+  {
+    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
+    IteratorType;
+
+    IteratorType outputBegin = IteratorBegin(output);
+
+    typedef typename StencilPortal::ValueType ValueType;
+
+    vtkm::exec::cuda::internal::WrappedUnaryPredicate<ValueType,
+    UnaryPredicate> up(unary_predicate);
+
+    try
+    {
+      IteratorType newLast = ::thrust::copy_if(thrust::cuda::par,
+                                               valuesBegin,
+                                               valuesEnd,
+                                               IteratorBegin(stencil),
+                                               outputBegin,
+                                               up);
+      return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+      return vtkm::Id(0);
+    }
+
+
+  }
+
+  template<class ValuePortal,
+  class StencilPortal,
+  class OutputPortal,
+  class UnaryPredicate>
+  VTKM_CONT static
+  vtkm::Id CopyIfPortal(ValuePortal values,
+                        StencilPortal stencil,
+                        OutputPortal output,
+                        UnaryPredicate unary_predicate)
+  {
+    return CopyIfPortal(IteratorBegin(values),
+                        IteratorEnd(values),
+                        stencil,
+                        output,
+                        unary_predicate);
   }
 
   template<class InputPortal, class OutputPortal>
@@ -604,6 +664,115 @@ private:
 
   }
 
+  template<typename KeysPortal, typename ValuesPortal, typename OutputPortal>
+  VTKM_CONT static
+  typename ValuesPortal::ValueType ScanInclusiveByKeyPortal(const KeysPortal &keys,
+                                                            const ValuesPortal &values,
+                                                            const OutputPortal &output)
+  {
+    using KeyType = typename KeysPortal::ValueType;
+    typedef typename OutputPortal::ValueType ValueType;
+    return ScanInclusiveByKeyPortal(keys, values, output,
+                                    ::thrust::equal_to<KeyType>(),
+                                    ::thrust::plus<ValueType>());
+  }
+
+  template<typename KeysPortal, typename ValuesPortal, typename OutputPortal,
+    typename BinaryPredicate, typename AssociativeOperator>
+  VTKM_CONT static
+  typename ValuesPortal::ValueType ScanInclusiveByKeyPortal(const KeysPortal &keys,
+                                                            const ValuesPortal &values,
+                                                            const OutputPortal &output,
+                                                            BinaryPredicate binary_predicate,
+                                                            AssociativeOperator binary_operator)
+  {
+    typedef typename KeysPortal::ValueType KeyType;
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType,
+      BinaryPredicate> bpred(binary_predicate);
+    typedef typename OutputPortal::ValueType ValueType;
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
+      AssociativeOperator> bop(binary_operator);
+
+
+    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
+      IteratorType;
+    try
+    {
+      IteratorType end = ::thrust::inclusive_scan_by_key(thrust::cuda::par,
+                                                         IteratorBegin(keys),
+                                                         IteratorEnd(keys),
+                                                         IteratorBegin(values),
+                                                         IteratorBegin(output),
+                                                         bpred,
+                                                         bop);
+      return *(end-1);
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+      return typename ValuesPortal::ValueType();
+    }
+
+    //return the value at the last index in the array, as that is the sum
+
+  }
+
+  template<typename KeysPortal, typename ValuesPortal, typename OutputPortal>
+  VTKM_CONT static
+  void ScanExclusiveByKeyPortal(const KeysPortal &keys,
+                                const ValuesPortal &values,
+                                const OutputPortal &output)
+  {
+    using KeyType = typename KeysPortal::ValueType;
+    typedef typename OutputPortal::ValueType ValueType;
+    ScanExclusiveByKeyPortal(keys, values, output,
+                             vtkm::TypeTraits<ValueType>::ZeroInitialization(),
+                             ::thrust::equal_to<KeyType>(),
+                             ::thrust::plus<ValueType>());
+  }
+
+  template<typename KeysPortal, typename ValuesPortal, typename OutputPortal, typename T,
+    typename BinaryPredicate, typename AssociativeOperator>
+  VTKM_CONT static
+  void ScanExclusiveByKeyPortal(const KeysPortal &keys,
+                                const ValuesPortal &values,
+                                const OutputPortal &output,
+                                T initValue,
+                                BinaryPredicate binary_predicate,
+                                AssociativeOperator binary_operator)
+  {
+    typedef typename KeysPortal::ValueType KeyType;
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType,
+      BinaryPredicate> bpred(binary_predicate);
+    typedef typename OutputPortal::ValueType ValueType;
+    vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType,
+      AssociativeOperator> bop(binary_operator);
+
+
+    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
+      IteratorType;
+    try
+    {
+      IteratorType end = ::thrust::exclusive_scan_by_key(thrust::cuda::par,
+                                                         IteratorBegin(keys),
+                                                         IteratorEnd(keys),
+                                                         IteratorBegin(values),
+                                                         IteratorBegin(output),
+                                                         initValue,
+                                                         bpred,
+                                                         bop);
+      return;
+    }
+    catch(...)
+    {
+      throwAsVTKmException();
+      return;
+    }
+
+    //return the value at the last index in the array, as that is the sum
+
+  }
+
   template<class ValuesPortal>
   VTKM_CONT static void SortPortal(const ValuesPortal &values)
   {
@@ -660,63 +829,6 @@ private:
     {
       throwAsVTKmException();
     }
-  }
-
-  template<class ValueIterator,
-           class StencilPortal,
-           class OutputPortal,
-           class UnaryPredicate>
-  VTKM_CONT static
-  vtkm::Id CopyIfPortal(ValueIterator valuesBegin,
-                        ValueIterator valuesEnd,
-                        StencilPortal stencil,
-                        OutputPortal output,
-                        UnaryPredicate unary_predicate)
-  {
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType
-                                                            IteratorType;
-
-    IteratorType outputBegin = IteratorBegin(output);
-
-    typedef typename StencilPortal::ValueType ValueType;
-
-    vtkm::exec::cuda::internal::WrappedUnaryPredicate<ValueType,
-                                                      UnaryPredicate> up(unary_predicate);
-
-    try
-    {
-      IteratorType newLast = ::thrust::copy_if(thrust::cuda::par,
-                                               valuesBegin,
-                                               valuesEnd,
-                                               IteratorBegin(stencil),
-                                               outputBegin,
-                                               up);
-      return static_cast<vtkm::Id>( ::thrust::distance(outputBegin, newLast) );
-    }
-    catch(...)
-    {
-      throwAsVTKmException();
-      return vtkm::Id(0);
-    }
-
-
-  }
-
-    template<class ValuePortal,
-             class StencilPortal,
-             class OutputPortal,
-             class UnaryPredicate>
-  VTKM_CONT static
-  vtkm::Id CopyIfPortal(ValuePortal values,
-                        StencilPortal stencil,
-                        OutputPortal output,
-                        UnaryPredicate unary_predicate)
-  {
-    return CopyIfPortal(IteratorBegin(values),
-                        IteratorEnd(values),
-                        stencil,
-                        output,
-                        unary_predicate);
   }
 
   template<class ValuesPortal>
@@ -845,6 +957,44 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
     CopyPortal(input.PrepareForInput(DeviceAdapterTag()),
                output.PrepareForOutput(inSize, DeviceAdapterTag()));
+  }
+
+  template<typename T,
+  typename U,
+  class SIn,
+  class SStencil,
+  class SOut>
+  VTKM_CONT static void CopyIf(
+    const vtkm::cont::ArrayHandle<U,SIn>& input,
+    const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
+    vtkm::cont::ArrayHandle<U,SOut>& output)
+  {
+    vtkm::Id size = stencil.GetNumberOfValues();
+    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
+                                    stencil.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(size, DeviceAdapterTag()),
+                                    ::vtkm::NotZeroInitialized()); //yes on the stencil
+    output.Shrink(newSize);
+  }
+
+  template<typename T,
+  typename U,
+  class SIn,
+  class SStencil,
+  class SOut,
+  class UnaryPredicate>
+  VTKM_CONT static void CopyIf(
+    const vtkm::cont::ArrayHandle<U,SIn>& input,
+    const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
+    vtkm::cont::ArrayHandle<U,SOut>& output,
+    UnaryPredicate unary_predicate)
+  {
+    vtkm::Id size = stencil.GetNumberOfValues();
+    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
+                                    stencil.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(size, DeviceAdapterTag()),
+                                    unary_predicate);
+    output.Shrink(newSize);
   }
 
   template<typename T, typename U, class SIn, class SOut>
@@ -1078,6 +1228,113 @@ public:
                                binary_functor);
   }
 
+  template<typename T, typename U, typename KIn, typename VIn, typename VOut>
+  VTKM_CONT static T ScanInclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U, VOut>& output)
+  {
+    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+    if (numberOfValues <= 0)
+    {
+      output.PrepareForOutput(0, DeviceAdapterTag());
+      return vtkm::TypeTraits<T>::ZeroInitialization();
+    }
+
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    keys.PrepareForInput(DeviceAdapterTag());
+    values.PrepareForInput(DeviceAdapterTag());
+    return ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                                    values.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+  }
+
+  template<typename T, typename U, typename KIn, typename VIn, typename VOut,
+    typename BinaryFunctor>
+  VTKM_CONT static T ScanInclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U, VOut>& output,
+    BinaryFunctor binary_functor)
+  {
+    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+    if (numberOfValues <= 0)
+    {
+      output.PrepareForOutput(0, DeviceAdapterTag());
+      return vtkm::TypeTraits<T>::ZeroInitialization();
+    }
+
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    keys.PrepareForInput(DeviceAdapterTag());
+    values.PrepareForInput(DeviceAdapterTag());
+    return ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                                    values.PrepareForInput(DeviceAdapterTag()),
+                                    output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                                    ::thrust::equal_to<T>(),
+                                    binary_functor);
+  }
+
+  template<typename T, typename U, typename KIn, typename VIn, typename VOut>
+  VTKM_CONT static void ScanExclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U, VOut>& output)
+  {
+    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+    if (numberOfValues <= 0)
+    {
+      output.PrepareForOutput(0, DeviceAdapterTag());
+      return vtkm::TypeTraits<T>::ZeroInitialization();
+    }
+
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    keys.PrepareForInput(DeviceAdapterTag());
+    values.PrepareForInput(DeviceAdapterTag());
+    ScanExnclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                              values.PrepareForInput(DeviceAdapterTag()),
+                              output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                              vtkm::TypeTraits<T>::ZeroInitialization(),
+                              vtkm::Add());
+  }
+
+  template<typename T, typename U, typename KIn, typename VIn, typename VOut,
+    typename BinaryFunctor>
+  VTKM_CONT static void ScanExclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U, VOut>& output,
+    const U& initialValue,
+    BinaryFunctor binary_functor)
+  {
+    const vtkm::Id numberOfValues = keys.GetNumberOfValues();
+    if (numberOfValues <= 0)
+    {
+      output.PrepareForOutput(0, DeviceAdapterTag());
+      return;
+    }
+
+    //We need call PrepareForInput on the input argument before invoking a
+    //function. The order of execution of parameters of a function is undefined
+    //so we need to make sure input is called before output, or else in-place
+    //use case breaks.
+    keys.PrepareForInput(DeviceAdapterTag());
+    values.PrepareForInput(DeviceAdapterTag());
+    ScanExclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                             values.PrepareForInput(DeviceAdapterTag()),
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                             initialValue,
+                             ::thrust::equal_to<T>(),
+                             binary_functor);
+  }
 // Because of some funny code conversions in nvcc, kernels for devices have to
 // be public.
 #ifndef VTKM_CUDA
@@ -1094,8 +1351,10 @@ private:
     static char* devicePtr = nullptr;
     if( !errorArrayInit )
       {
-      cudaMallocHost( (void**)&hostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped );
-      cudaHostGetDevicePointer(&devicePtr, hostPtr, 0);
+      VTKM_CUDA_CALL(cudaMallocHost( (void**)&hostPtr,
+                                     ERROR_ARRAY_SIZE,
+                                     cudaHostAllocMapped ));
+      VTKM_CUDA_CALL(cudaHostGetDevicePointer(&devicePtr, hostPtr, 0));
       errorArrayInit = true;
       }
     //set the size of the array
@@ -1117,10 +1376,11 @@ private:
     if( !gridQueryInit )
       {
       gridQueryInit = true;
-      int currDevice; cudaGetDevice(&currDevice); //get deviceid from cuda
+      int currDevice;
+      VTKM_CUDA_CALL(cudaGetDevice(&currDevice)); //get deviceid from cuda
 
       cudaDeviceProp properties;
-      cudaGetDeviceProperties(&properties, currDevice);
+      VTKM_CUDA_CALL(cudaGetDeviceProperties(&properties, currDevice));
       maxGridSize[0] = static_cast<vtkm::UInt32>(properties.maxGridSize[0]);
       maxGridSize[1] = static_cast<vtkm::UInt32>(properties.maxGridSize[1]);
       maxGridSize[2] = static_cast<vtkm::UInt32>(properties.maxGridSize[2]);
@@ -1134,14 +1394,16 @@ private:
       //what we are going to do next, and than we will store that result
 
       vtkm::UInt32 *dev_actual_size;
-      cudaMalloc( (void**)&dev_actual_size, sizeof(vtkm::UInt32) );
+      VTKM_CUDA_CALL(
+            cudaMalloc( (void**)&dev_actual_size, sizeof(vtkm::UInt32) )
+            );
       DetermineProperXGridSize <<<1,1>>> (maxGridSize[0], dev_actual_size);
-      cudaDeviceSynchronize();
-      cudaMemcpy( &maxGridSize[0],
-                  dev_actual_size,
-                  sizeof(vtkm::UInt32),
-                  cudaMemcpyDeviceToHost );
-      cudaFree(dev_actual_size);
+      VTKM_CUDA_CALL(cudaDeviceSynchronize());
+      VTKM_CUDA_CALL(cudaMemcpy( &maxGridSize[0],
+                                 dev_actual_size,
+                                 sizeof(vtkm::UInt32),
+                                 cudaMemcpyDeviceToHost ));
+      VTKM_CUDA_CALL(cudaFree(dev_actual_size));
       }
     return maxGridSize;
     }
@@ -1150,6 +1412,13 @@ public:
   template<class Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
+    VTKM_ASSERT(numInstances >= 0);
+    if (numInstances < 1)
+    {
+      // No instances means nothing to run. Just return.
+      return;
+    }
+
     //since the memory is pinned we can access it safely on the host
     //without a memcpy
     vtkm::Id errorArraySize = 0;
@@ -1196,7 +1465,7 @@ public:
     //In the future I want move this before the schedule call, and throwing
     //an exception if the previous schedule wrote an error. This would help
     //cuda to run longer before we hard sync.
-    cudaDeviceSynchronize();
+    VTKM_CUDA_CALL(cudaDeviceSynchronize());
 
     //check what the value is
     if (hostErrorPtr[0] != '\0')
@@ -1209,6 +1478,13 @@ public:
   VTKM_CONT
   static void Schedule(Functor functor, const vtkm::Id3& rangeMax)
   {
+    VTKM_ASSERT((rangeMax[0]>=0) && (rangeMax[1]>=0) && (rangeMax[2]>=0));
+    if ((rangeMax[0]<1) || (rangeMax[1]<1) || (rangeMax[2]<1))
+    {
+      // No instances means nothing to run. Just return.
+      return;
+    }
+
     //since the memory is pinned we can access it safely on the host
     //without a memcpy
     vtkm::Id errorArraySize = 0;
@@ -1255,7 +1531,7 @@ public:
     //In the future I want move this before the schedule call, and throwing
     //an exception if the previous schedule wrote an error. This would help
     //cuda to run longer before we hard sync.
-    cudaDeviceSynchronize();
+    VTKM_CUDA_CALL(cudaDeviceSynchronize());
 
     //check what the value is
     if (hostErrorPtr[0] != '\0')
@@ -1300,59 +1576,6 @@ public:
     SortByKeyPortal(keys.PrepareForInPlace(DeviceAdapterTag()),
                     values.PrepareForInPlace(DeviceAdapterTag()),
                     binary_compare);
-  }
-
-
-  template<typename T, class SStencil, class SOut>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
-      vtkm::cont::ArrayHandle<vtkm::Id,SOut>& output)
-  {
-    vtkm::Id size = stencil.GetNumberOfValues();
-    vtkm::Id newSize = CopyIfPortal(::thrust::make_counting_iterator<vtkm::Id>(0),
-                                    ::thrust::make_counting_iterator<vtkm::Id>(size),
-                                    stencil.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(size, DeviceAdapterTag()),
-                                    ::vtkm::NotZeroInitialized());
-    output.Shrink(newSize);
-  }
-
-  template<typename T,
-           typename U,
-           class SIn,
-           class SStencil,
-           class SOut>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<U,SIn>& input,
-      const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
-      vtkm::cont::ArrayHandle<U,SOut>& output)
-  {
-    vtkm::Id size = stencil.GetNumberOfValues();
-    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
-                                    stencil.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(size, DeviceAdapterTag()),
-                                    ::vtkm::NotZeroInitialized()); //yes on the stencil
-    output.Shrink(newSize);
-  }
-
-  template<typename T,
-           typename U,
-           class SIn,
-           class SStencil,
-           class SOut,
-           class UnaryPredicate>
-  VTKM_CONT static void StreamCompact(
-      const vtkm::cont::ArrayHandle<U,SIn>& input,
-      const vtkm::cont::ArrayHandle<T,SStencil>& stencil,
-      vtkm::cont::ArrayHandle<U,SOut>& output,
-      UnaryPredicate unary_predicate)
-  {
-    vtkm::Id size = stencil.GetNumberOfValues();
-    vtkm::Id newSize = CopyIfPortal(input.PrepareForInput(DeviceAdapterTag()),
-                                    stencil.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(size, DeviceAdapterTag()),
-                                    unary_predicate);
-    output.Shrink(newSize);
   }
 
   template<typename T, class Storage>

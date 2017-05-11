@@ -21,6 +21,9 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/worklet/CellAverage.h>
+#include <vtkm/worklet/PointAverage.h>
+
 #include <vtkm/Math.h>
 
 #include <vtkm/cont/DataSet.h>
@@ -66,62 +69,6 @@ public:
   }
 };
 
-class AveragePointToCellValue : public vtkm::worklet::WorkletMapPointToCell
-{
-public:
-  typedef void ControlSignature(FieldInPoint<Scalar> inPoints,
-                                CellSetIn topology,
-                                FieldOutCell<Scalar> outCells);
-  typedef void ExecutionSignature(_1, _3, PointCount);
-  typedef _2 InputDomain;
-
-  VTKM_CONT
-  AveragePointToCellValue() { }
-
-  template<typename PointVecType, typename OutType>
-  VTKM_EXEC
-  void operator()(const PointVecType &pointValues,
-                  OutType &avgVal,
-                  const vtkm::IdComponent &numPoints) const
-  {
-    //simple functor that returns the average pointValue.
-    avgVal = static_cast<OutType>(pointValues[0]);
-    for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
-    {
-      avgVal += static_cast<OutType>(pointValues[pointIndex]);
-    }
-    avgVal = avgVal / static_cast<OutType>(numPoints);
-  }
-};
-
-class AverageCellToPointValue : public vtkm::worklet::WorkletMapCellToPoint
-{
-public:
-  typedef void ControlSignature(FieldInCell<Scalar> inCells,
-                                CellSetIn topology,
-                                FieldOut<Scalar> outPoints);
-  typedef void ExecutionSignature(_1, _3, CellCount);
-  typedef _2 InputDomain;
-
-  VTKM_CONT
-  AverageCellToPointValue() { }
-
-  template<typename CellVecType, typename OutType>
-  VTKM_EXEC
-  void operator()(const CellVecType &cellValues,
-                  OutType &avgVal,
-                  const vtkm::IdComponent &numCellIDs) const
-  {
-    //simple functor that returns the average cell Value.
-    avgVal = static_cast<OutType>(cellValues[0]);
-    for (vtkm::IdComponent cellIndex = 1; cellIndex < numCellIDs; ++cellIndex)
-    {
-      avgVal += static_cast<OutType>(cellValues[cellIndex]);
-    }
-    avgVal = avgVal / static_cast<OutType>(numCellIDs);
-  }
-};
-
 }
 
 namespace {
@@ -159,7 +106,7 @@ TestMaxPointOrCell()
                     dataSet.GetCellSet(0),
                     result);
 
-  //Make sure we got the right answer.
+  std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
                    "Wrong result for PointToCellMax worklet");
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 100.2f),
@@ -176,16 +123,34 @@ TestAvgPointToCell()
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  vtkm::worklet::DispatcherMapTopology< ::test_explicit::AveragePointToCellValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("pointvar"),
-                    dataSet.GetCellSet(),
+  vtkm::worklet::DispatcherMapTopology< vtkm::worklet::CellAverage > dispatcher;
+  dispatcher.Invoke(dataSet.GetCellSet(),
+                    dataSet.GetField("pointvar"),
                     result);
 
-  //make sure we got the right answer.
+  std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 20.1333f),
                    "Wrong result for PointToCellAverage worklet");
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 35.2f),
                    "Wrong result for PointToCellAverage worklet");
+
+  std::cout << "Try to invoke with an input array of the wrong size."
+            << std::endl;
+  bool exceptionThrown = false;
+  try
+  {
+    dispatcher.Invoke(dataSet.GetCellSet(),
+                      dataSet.GetField("cellvar"), // should be pointvar
+                      result);
+  }
+  catch (vtkm::cont::ErrorBadValue &error)
+  {
+    std::cout << "  Caught expected error: " << error.GetMessage()
+              << std::endl;
+    exceptionThrown = true;
+  }
+  VTKM_TEST_ASSERT(exceptionThrown,
+                   "Dispatcher did not throw expected exception.");
 }
 
 static void
@@ -199,16 +164,34 @@ TestAvgCellToPoint()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
 
-  vtkm::worklet::DispatcherMapTopology< ::test_explicit::AverageCellToPointValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar"),
-                    dataSet.GetCellSet(),
+  vtkm::worklet::DispatcherMapTopology< vtkm::worklet::PointAverage > dispatcher;
+  dispatcher.Invoke(dataSet.GetCellSet(),
+                    dataSet.GetField("cellvar"),
                     result);
 
-  //make sure we got the right answer.
+  std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
                    "Wrong result for CellToPointAverage worklet");
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 100.15f),
                    "Wrong result for CellToPointAverage worklet");
+
+  std::cout << "Try to invoke with an input array of the wrong size."
+            << std::endl;
+  bool exceptionThrown = false;
+  try
+  {
+    dispatcher.Invoke(dataSet.GetCellSet(),
+                      dataSet.GetField("pointvar"), // should be cellvar
+                      result);
+  }
+  catch (vtkm::cont::ErrorBadValue &error)
+  {
+    std::cout << "  Caught expected error: " << error.GetMessage()
+              << std::endl;
+    exceptionThrown = true;
+  }
+  VTKM_TEST_ASSERT(exceptionThrown,
+                   "Dispatcher did not throw expected exception.");
 }
 
 } // anonymous namespace

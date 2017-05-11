@@ -88,7 +88,7 @@ private:
 
     vtkm::cont::DataSet ds;
     vtkm::cont::DataSetBuilderExplicit builder;
-    ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), conn);
+    ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), 3, conn);
 
 
     //Set point scalar
@@ -131,7 +131,7 @@ private:
 
     //verify that the cell to point connectivity types are correct
     //note the handle storage types differ compared to point to cell
-    vtkm::cont::ArrayHandle<vtkm::UInt8> shapesCellToPoint = cellset.GetShapesArray(
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesCellToPoint = cellset.GetShapesArray(
       vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesCellToPoint = cellset.GetNumIndicesArray(
       vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
@@ -146,8 +146,8 @@ private:
     vtkm::cont::ArrayHandle<vtkm::Float32> result;
     vtkm::worklet::DispatcherMapTopology<
         vtkm::worklet::CellAverage,DeviceAdapterTag> dispatcher;
-    dispatcher.Invoke(dataSet.GetField("pointvar"),
-                      cellset,
+    dispatcher.Invoke(cellset,
+                      dataSet.GetField("pointvar"),
                       result);
 
     vtkm::Float32 expected[3] = { 20.1333f, 30.1667f, 40.2333f };

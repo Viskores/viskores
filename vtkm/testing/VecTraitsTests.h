@@ -55,61 +55,92 @@ inline void CheckIsStatic(const T &, vtkm::VecTraitsTagSizeVariable)
   // If we are here, everything is fine.
 }
 
+template<typename VecType>
+struct VecIsWritable
+{
+  using type = std::true_type;
+};
+
+template<typename ComponentType>
+struct VecIsWritable<vtkm::VecCConst<ComponentType> >
+{
+  using type = std::false_type;
+};
+
+// Part of TestVecTypeImpl that writes to the Vec type
+template <vtkm::IdComponent NUM_COMPONENTS, typename T, typename VecCopyType>
+static void TestVecTypeWritableImpl(const T &inVector,
+                                    const VecCopyType &vectorCopy,
+                                    T &outVector,
+                                    std::true_type)
+{
+  using Traits = vtkm::VecTraits<T>;
+  using ComponentType = typename Traits::ComponentType;
+
+  {
+    const ComponentType multiplier = 4;
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
+    {
+      Traits::SetComponent(outVector,
+                           i,
+                           ComponentType(
+                               multiplier*Traits::GetComponent(inVector, i)));
+    }
+    vtkm::Vec<ComponentType,NUM_COMPONENTS> resultCopy;
+    Traits::CopyInto(outVector, resultCopy);
+    VTKM_TEST_ASSERT(test_equal(resultCopy, multiplier*vectorCopy),
+                     "Got bad result for scalar multiple");
+  }
+
+  {
+    const ComponentType multiplier = 7;
+    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
+    {
+      Traits::GetComponent(outVector, i)
+        = ComponentType(multiplier * Traits::GetComponent(inVector, i));
+    }
+    vtkm::Vec<ComponentType,NUM_COMPONENTS> resultCopy;
+    Traits::CopyInto(outVector, resultCopy);
+    VTKM_TEST_ASSERT(test_equal(resultCopy, multiplier*vectorCopy),
+                     "Got bad result for scalar multiple");
+  }
+}
+
+template <vtkm::IdComponent NUM_COMPONENTS, typename T, typename VecCopyType>
+static void TestVecTypeWritableImpl(const T &vtkmNotUsed(inVector),
+                                    const VecCopyType &vtkmNotUsed(vectorCopy),
+                                    T &vtkmNotUsed(outVector),
+                                    std::false_type)
+{
+  // Skip writable functionality.
+}
+
 /// Compares some manual arithmetic through type traits to arithmetic with
 /// the Tuple class.
 template <vtkm::IdComponent NUM_COMPONENTS, typename T>
 static void TestVecTypeImpl(
-  const typename std::remove_const<T>::type &vector)
+    const typename std::remove_const<T>::type &inVector,
+    typename std::remove_const<T>::type &outVector)
 {
-  typedef typename vtkm::VecTraits<T> Traits;
-  typedef typename Traits::ComponentType ComponentType;
-  typedef typename std::remove_const<T>::type NonConstT;
+  using Traits = vtkm::VecTraits<T>;
+  using ComponentType = typename Traits::ComponentType;
+  using NonConstT = typename std::remove_const<T>::type;
 
-  CheckIsStatic<NUM_COMPONENTS>(vector, typename Traits::IsSizeStatic());
+  CheckIsStatic<NUM_COMPONENTS>(inVector, typename Traits::IsSizeStatic());
 
-  VTKM_TEST_ASSERT(Traits::GetNumberOfComponents(vector) == NUM_COMPONENTS,
+  VTKM_TEST_ASSERT(Traits::GetNumberOfComponents(inVector) == NUM_COMPONENTS,
                    "Traits returned wrong number of components.");
 
   vtkm::Vec<ComponentType,NUM_COMPONENTS> vectorCopy;
-  Traits::CopyInto(vector, vectorCopy);
-  VTKM_TEST_ASSERT(test_equal(vectorCopy, vector), "CopyInto does not work.");
-
-  {
-    NonConstT result;
-    const ComponentType multiplier = 4;
-    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
-    {
-      Traits::SetComponent(result,
-                           i,
-                           ComponentType(
-                               multiplier*Traits::GetComponent(vector, i)));
-    }
-    vtkm::Vec<ComponentType,NUM_COMPONENTS> resultCopy;
-    Traits::CopyInto(result, resultCopy);
-    VTKM_TEST_ASSERT(test_equal(resultCopy, multiplier*vectorCopy),
-                     "Got bad result for scalar multiple");
-  }
-
-  {
-    NonConstT result;
-    const ComponentType multiplier = 7;
-    for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
-    {
-      Traits::GetComponent(result, i)
-        = ComponentType(multiplier * Traits::GetComponent(vector, i));
-    }
-    vtkm::Vec<ComponentType,NUM_COMPONENTS> resultCopy;
-    Traits::CopyInto(result, resultCopy);
-    VTKM_TEST_ASSERT(test_equal(resultCopy, multiplier*vectorCopy),
-                     "Got bad result for scalar multiple");
-  }
+  Traits::CopyInto(inVector, vectorCopy);
+  VTKM_TEST_ASSERT(test_equal(vectorCopy, inVector), "CopyInto does not work.");
 
   {
     ComponentType result = 0;
     for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {
       ComponentType component
-        = Traits::GetComponent(vector, i);
+        = Traits::GetComponent(inVector, i);
       result = ComponentType(result + (component * component));
     }
     VTKM_TEST_ASSERT(
@@ -121,6 +152,12 @@ static void TestVecTypeImpl(
   detail::CompareDimensionalityTags(
     typename vtkm::TypeTraits<T>::DimensionalityTag(),
     typename vtkm::VecTraits<T>::HasMultipleComponents());
+
+  TestVecTypeWritableImpl<NUM_COMPONENTS,NonConstT>(
+        inVector,
+        vectorCopy,
+        outVector,
+        typename VecIsWritable<NonConstT>::type());
 }
 
 inline void CheckVecComponentsTag(vtkm::VecTraitsTagMultipleComponents)
@@ -155,10 +192,10 @@ inline void CheckScalarComponentsTag(vtkm::VecTraitsTagSingleComponent)
 /// Compares some manual arithmetic through type traits to arithmetic with
 /// the Tuple class.
 template <vtkm::IdComponent NUM_COMPONENTS, typename T>
-static void TestVecType(const T &vector)
+static void TestVecType(const T &inVector, T &outVector)
 {
-  detail::TestVecTypeImpl<NUM_COMPONENTS, T>(vector);
-  detail::TestVecTypeImpl<NUM_COMPONENTS, const T>(vector);
+  detail::TestVecTypeImpl<NUM_COMPONENTS, T>(inVector, outVector);
+  detail::TestVecTypeImpl<NUM_COMPONENTS, const T>(inVector, outVector);
 }
 
 /// Checks to make sure that the HasMultipleComponents tag is actually for a

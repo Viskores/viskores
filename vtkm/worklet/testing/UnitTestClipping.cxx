@@ -30,8 +30,8 @@
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/ImplicitFunction.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/ImplicitFunctions.h>
 
 #include <vector>
 
@@ -77,7 +77,7 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
 
   vtkm::cont::DataSet ds;
   vtkm::cont::DataSetBuilderExplicit builder;
-  ds = builder.Create(coords, vtkm::CellShapeTagTriangle(), connectivity, "coords");
+  ds = builder.Create(coords, vtkm::CellShapeTagTriangle(), 3, connectivity, "coords");
 
   std::vector<vtkm::Float32> values;
   values.push_back(1.0);
@@ -143,6 +143,9 @@ void TestClippingExplicit()
   };
   vtkm::Float32 expectedScalars[] = { 1, 2, 1, 0, 0.5, 0.5, 0.5 };
 
+  VTKM_TEST_ASSERT(outputCellSet.GetNumberOfPoints() == fieldSize,
+                   "Wrong number of points in cell set.");
+
   VTKM_TEST_ASSERT(
       TestArrayHandle(outputCellSet.GetConnectivityArray(
         vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()),
@@ -197,6 +200,9 @@ void TestClippingStrucutred()
   };
   vtkm::Float32 expectedScalars[] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5 };
 
+  VTKM_TEST_ASSERT(outputCellSet.GetNumberOfPoints() == fieldSize,
+                   "Wrong number of points in cell set.");
+
   VTKM_TEST_ASSERT(
       TestArrayHandle(outputCellSet.GetConnectivityArray(
         vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell()),
@@ -224,7 +230,7 @@ void TestClippingWithImplicitFunction()
 {
   vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
-  vtkm::Sphere sphere(center, radius);
+  vtkm::cont::Sphere sphere(center, radius);
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 

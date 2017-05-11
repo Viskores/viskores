@@ -103,7 +103,7 @@ class VTKM_RENDERING_EXPORT Camera
   };
 
 public:
-  enum ModeEnum { MODE_2D, MODE_3D };
+  enum ModeEnum {MODE_2D, MODE_3D };
   VTKM_CONT
   Camera(ModeEnum vtype=Camera::MODE_3D)
     : Mode(vtype),
@@ -559,6 +559,9 @@ public:
   {
     this->SetViewRange2D(viewRange.X, viewRange.Y);
   }
+
+  VTKM_CONT
+  void Print() const;
 
 private:
   ModeEnum Mode;

@@ -77,7 +77,7 @@ inline GLuint LoadShaders()
 	// Compile Vertex Shader
 	std::cout << "Compiling vertex shader" << std::endl;
 	char const * VertexSourcePointer = VertexShaderCode.c_str();
-	glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
+	glShaderSource(VertexShaderID, 1, &VertexSourcePointer, nullptr);
 	glCompileShader(VertexShaderID);
 
 	// Check Vertex Shader
@@ -86,14 +86,14 @@ inline GLuint LoadShaders()
 	std::vector<char> VertexShaderErrorMessage( static_cast<std::size_t>(InfoLogLength) );
 	if(VertexShaderErrorMessage.size() > 0)
 	{
-		glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
+		glGetShaderInfoLog(VertexShaderID, InfoLogLength, nullptr, &VertexShaderErrorMessage[0]);
 		std::cout << &VertexShaderErrorMessage[0] << std::endl;
 	}
 
 	// Compile Fragment Shader
 	std::cout << "Compiling fragment shader" << std::endl;
 	char const * FragmentSourcePointer = FragmentShaderCode.c_str();
-	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
+	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, nullptr);
 	glCompileShader(FragmentShaderID);
 
 	// Check Fragment Shader
@@ -102,7 +102,7 @@ inline GLuint LoadShaders()
 	std::vector<char> FragmentShaderErrorMessage( static_cast<std::size_t>(InfoLogLength) );
 	if(FragmentShaderErrorMessage.size() > 0)
 	{
-		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
+		glGetShaderInfoLog(FragmentShaderID, InfoLogLength, nullptr, &FragmentShaderErrorMessage[0]);
 		std::cout << &FragmentShaderErrorMessage[0] << std::endl;
 	}
 
@@ -119,7 +119,7 @@ inline GLuint LoadShaders()
 	std::vector<char> ProgramErrorMessage( static_cast<std::size_t>(InfoLogLength) );
 	if(ProgramErrorMessage.size() > 0)
 	{
-		glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
+		glGetProgramInfoLog(ProgramID, InfoLogLength, nullptr, &ProgramErrorMessage[0]);
 		std::cout << &ProgramErrorMessage[0] << std::endl;
 	}
 

@@ -72,17 +72,16 @@ ApplyPolicy(const vtkm::cont::Field& field,
 template<typename DerivedPolicy, typename FilterType>
 VTKM_CONT
 vtkm::cont::DynamicArrayHandleBase<
-                                  typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList,
-                                  typename DerivedPolicy::FieldStorageList
-                                  >
+  typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType>::TypeList,
+  typename DerivedPolicy::FieldStorageList
+  >
 ApplyPolicy(const vtkm::cont::Field& field,
             const vtkm::filter::PolicyBase<DerivedPolicy>&,
             const vtkm::filter::FilterTraits<FilterType>&)
 {
-  //todo: we need to intersect the policy field type list and the
-  //filter traits to the get smallest set of valid types
-  typedef typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList TypeList;
-  // typedef typename DerivedPolicy::FieldTypeList TypeList;
+  typedef typename vtkm::filter::DeduceFilterFieldTypes<
+                      DerivedPolicy, FilterType>::TypeList TypeList;
+
   typedef typename DerivedPolicy::FieldStorageList StorageList;
   return field.GetData().ResetTypeAndStorageLists(TypeList(),StorageList());
 }

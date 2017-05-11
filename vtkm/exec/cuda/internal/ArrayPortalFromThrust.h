@@ -226,7 +226,6 @@ struct load_through_texture<T, typename std::enable_if< UseMultipleScalarTexture
   }
 };
 
-
 class ArrayPortalFromThrustBase {};
 
 /// This templated implementation of an ArrayPortal allows you to adapt a pair
@@ -265,14 +264,14 @@ public:
     return static_cast<vtkm::Id>( (this->EndIterator - this->BeginIterator) );
   }
 
-  __host__ __device__
+  VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const {
     typedef typename ::thrust::iterator_traits<IteratorType>::difference_type
         SizeType;
     return *(this->BeginIterator + static_cast<SizeType>(index));
   }
 
-  __host__ __device__
+  VTKM_EXEC_CONT
   void Set(vtkm::Id index, ValueType value) const {
     typedef typename ::thrust::iterator_traits<IteratorType>::difference_type
         SizeType;
@@ -337,18 +336,22 @@ public:
   ValueType Get(vtkm::Id index) const {
     return vtkm::exec::cuda::internal::load_through_texture<ValueType>::get( this->BeginIterator + index );
   }
+
+  __device__
+  void Set(vtkm::Id vtkmNotUsed(index), ValueType vtkmNotUsed(value)) const {
+  }
+
 #else
-  __host__
   ValueType Get(vtkm::Id vtkmNotUsed(index) ) const {
     return ValueType();
   }
+
+    void Set(vtkm::Id vtkmNotUsed(index), ValueType vtkmNotUsed(value)) const {
+#if ! (defined(VTKM_MSVC) && defined(VTKM_CUDA))
+    VTKM_ASSERT(true && "Cannot set to const array.");
 #endif
-
-
-  __host__ __device__
-  void Set(vtkm::Id index, ValueType value) const {
-    *(this->BeginIterator + index) = value;
   }
+#endif
 
   VTKM_EXEC_CONT
   IteratorType GetIteratorBegin() const { return this->BeginIterator; }

@@ -78,9 +78,14 @@ struct Transport<TestTransportTag, vtkm::Id *, Device>
   typedef TestExecObject ExecObjectType;
 
   VTKM_CONT
-  ExecObjectType operator()(vtkm::Id *contData, vtkm::Id size) const
+  ExecObjectType operator()(vtkm::Id *contData,
+                            vtkm::Id *,
+                            vtkm::Id inputRange,
+                            vtkm::Id outputRange) const
   {
-    VTKM_TEST_ASSERT(size == ARRAY_SIZE,
+    VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE,
+                     "Got unexpected size in test transport.");
+    VTKM_TEST_ASSERT(outputRange == ARRAY_SIZE,
                      "Got unexpected size in test transport.");
     return ExecObjectType(contData);
   }
@@ -294,7 +299,7 @@ void TestInvokeWithError()
     dispatcher.Invoke(inputArray, execObject, outputArray);
     VTKM_TEST_FAIL("Exception not thrown.");
   }
-  catch (vtkm::cont::ErrorExecution error)
+  catch (vtkm::cont::ErrorExecution &error)
   {
     std::cout << "  Got expected exception." << std::endl;
     VTKM_TEST_ASSERT(error.GetMessage() == ERROR_MESSAGE,
@@ -318,7 +323,7 @@ void TestInvokeWithDynamicAndBadTypes()
     dispatcher.Invoke(nullptr, execObject, array);
     VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
-  catch (vtkm::cont::ErrorControlBadType error)
+  catch (vtkm::cont::ErrorBadType &error)
   {
     std::cout << "    Got expected exception." << std::endl;
     std::cout << "    " << error.GetMessage() << std::endl;
@@ -332,7 +337,7 @@ void TestInvokeWithDynamicAndBadTypes()
     dispatcher.Invoke(array, execObject, nullptr);
     VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
-  catch (vtkm::cont::ErrorControlBadType error)
+  catch (vtkm::cont::ErrorBadType &error)
   {
     std::cout << "    Got expected exception." << std::endl;
     std::cout << "    " << error.GetMessage() << std::endl;

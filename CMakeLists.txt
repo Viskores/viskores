@@ -27,11 +27,6 @@ cmake_minimum_required(VERSION 3.3)
 
 project (VTKm)
 
-set(VTKm_MAJOR_VERSION 1)
-set(VTKm_MINOR_VERSION 1)
-set(VTKm_PATCH_VERSION 0)
-set(VTKm_VERSION "${VTKm_MAJOR_VERSION}.${VTKm_MINOR_VERSION}.${VTKm_PATCH_VERSION}")
-
 set(VTKm_INSTALL_INCLUDE_DIR "include")
 set(VTKm_INSTALL_CONFIG_DIR "lib")
 set(VTKm_INSTALL_LIB_DIR "lib")
@@ -43,13 +38,17 @@ set(VTKm_EXPORT_NAME "VTKmTargets")
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
+# Determine VTK-m version
+include(Utilities/Git/Git.cmake)
+include(VTKmDetermineVersion)
+# Load hardcoded version in case this is not a Git repository
+file(STRINGS version.txt version_txt)
+extract_version_components("${version_txt}" "VTKm")
+# Get the version from git if we can
+determine_version(${VTKm_SOURCE_DIR} ${GIT_EXECUTABLE} "VTKm")
+
 # include some vtkm-specific cmake code.
 include(VTKmMacros)
-
-set(VTKm_INCLUDE_DIRS
-  ${CMAKE_CURRENT_BINARY_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}
-  )
 
 # Create an "interface" target library. This is not a real library but rather
 # holds CMake configuration that is required for CXX targets that use VTK-m
@@ -60,6 +59,11 @@ set(VTKm_INCLUDE_DIRS
 # configuration.
 add_library(vtkm INTERFACE)
 target_compile_features(vtkm INTERFACE cxx_auto_type)
+target_include_directories(vtkm INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
 install(TARGETS vtkm EXPORT ${VTKm_EXPORT_NAME})
 
 # Load the base VTK-m configuration, which is required for some of the later
@@ -103,6 +107,18 @@ option(VTKm_USE_DOUBLE_PRECISION
   OFF
   )
 option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
+
+if (VTKm_ENABLE_CUDA)
+  option(VTKm_USE_UNIFIED_MEMORY
+    "Use CUDA unified memory"
+    OFF
+    )
+endif (VTKm_ENABLE_CUDA)
+
+if (VTKm_USE_UNIFIED_MEMORY)
+  set(CMAKE_CXX_FLAGS "-DVTKM_USE_UNIFIED_MEMORY ${CMAKE_CXX_FLAGS}")
+endif()
+
 
 option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
@@ -297,6 +313,7 @@ install(
     ${VTKm_SOURCE_DIR}/CMake/VTKmConfigureComponents.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmCompilerOptimizations.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cu
+    ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
@@ -313,9 +330,9 @@ install(EXPORT ${VTKm_EXPORT_NAME}
 set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The VTKm Toolkit")
 set(CPACK_PACKAGE_NAME "VTKm")
-set(CPACK_PACKAGE_VERSION_MAJOR ${VTKm_MAJOR_VERSION})
-set(CPACK_PACKAGE_VERSION_MINOR ${VTKm_MINOR_VERSION})
-set(CPACK_PACKAGE_VERSION_PATCH ${VTKm_PATCH_VERSION})
+set(CPACK_PACKAGE_VERSION_MAJOR ${VTKm_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${VTKm_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${VTKm_VERSION_PATCH})
 set(CPACK_PACKAGE_FILE_NAME "VTKm-${VTKm_VERSION}")
 set(CPACK_RESOURCE_FILE_LICENSE ${VTKm_SOURCE_DIR}/LICENSE.txt)
 set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)

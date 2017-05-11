@@ -32,7 +32,7 @@ struct TestNotCellSet {  };
 
 void TestCheckCellSet()
 {
-  std::cout << "Checking reporting of type checking exec object." << std::endl;
+  std::cout << "Checking reporting of type checking cell set." << std::endl;
 
   using vtkm::cont::arg::TypeCheck;
   using vtkm::cont::arg::TypeCheckTagCellSet;

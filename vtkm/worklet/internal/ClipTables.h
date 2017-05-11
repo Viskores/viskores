@@ -39,7 +39,7 @@ static vtkm::UInt8 ClipTablesData[] = {
    1,   1,   1, 100,                                                        // 1
   // vtkm::CELL_SHAPE_LINE
    0,                                                                       // 0
-   1,   3,   2, 100,   1,                                                   // 1
+   1,   3,   2, 100,   0,                                                   // 1
    1,   3,   2,   0, 101,                                                   // 2
    1,   3,   2, 100, 101,                                                   // 3
   // vtkm::CELL_SHAPE_TRIANGLE
@@ -1616,38 +1616,40 @@ enum {
   CELL_EDGES_SIZE = vtkm::NUMBER_OF_CELL_SHAPES * MAX_CELL_EDGES * 2
 };
 
+#define X 255
 static vtkm::UInt8 CellEdges[CELL_EDGES_SIZE] = {
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_EMPTY_CELL
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_VERTEX
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_POLY_VERTEX
-  0, 1,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_LINE
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_POLY_LINE
-  0, 1,   1, 2,   2, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_TRIANGLE
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_TRIANGLE_STRIP
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_POLYGON
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_PIXEL
-  0, 1,   1, 2,   3, 2,   0, 3,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_QUAD
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_EMPTY_CELL
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_VERTEX
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_POLY_VERTEX
+  0, 1,   X, X,   X, X,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_LINE
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_POLY_LINE
+  0, 1,   1, 2,   2, 0,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_TRIANGLE
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_TRIANGLE_STRIP
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_POLYGON
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_PIXEL
+  0, 1,   1, 2,   3, 2,   0, 3,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_QUAD
   0, 1,   1, 2,   2, 0,   0, 3,   1, 3,   2, 3,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_TETRA
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0,
-  0, 0,   0, 0,   0, 0,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_VOXEL
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_TETRA
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X,
+  X, X,   X, X,   X, X,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_VOXEL
   0, 1,   1, 2,   3, 2,   0, 3,   4, 5,   5, 6,
   7, 6,   4, 7,   0, 4,   1, 5,   3, 7,   2, 6, // vtkm::CELL_SHAPE_HEXAHEDRON
   0, 1,   1, 2,   2, 0,   3, 4,   4, 5,   5, 3,
-  0, 3,   1, 4,   2, 5,   0, 0,   0, 0,   0, 0, // vtkm::CELL_SHAPE_WEDGE
+  0, 3,   1, 4,   2, 5,   X, X,   X, X,   X, X, // vtkm::CELL_SHAPE_WEDGE
   0, 1,   1, 2,   2, 3,   3, 0,   0, 4,   1, 4,
-  2, 4,   3, 4,   0, 0,   0, 0,   0, 0,   0, 0  // vtkm::CELL_SHAPE_PYRAMID
+  2, 4,   3, 4,   X, X,   X, X,   X, X,   X, X  // vtkm::CELL_SHAPE_PYRAMID
 };
+#undef X
 
 // index into ClipTablesIndices for each shape
 VTKM_EXEC_CONSTANT

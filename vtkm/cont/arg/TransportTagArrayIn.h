@@ -40,18 +40,23 @@ struct TransportTagArrayIn {  };
 template<typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
 {
-  ///\todo: something equivalent to VTKM_IS_ARRAY_HANDLE(ContObjectType);
+  VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
   typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
       ExecObjectType;
 
+  template<typename InputDomainType>
   VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object, vtkm::Id) const
+  ExecObjectType operator()(const ContObjectType &object,
+                            const InputDomainType &vtkmNotUsed(inputDomain),
+                            vtkm::Id inputRange,
+                            vtkm::Id vtkmNotUsed(outputRange)) const
   {
-    // TODO: Throw an exception if object.GetNumberOfValues() does not equal
-    // the size passed into this operator. Currently, the size passed into
-    // this method is sometimes wrong (for example with point fields when
-    // mapping on cells).
+    if (object.GetNumberOfValues() != inputRange)
+    {
+      throw vtkm::cont::ErrorBadValue(
+            "Input array to worklet invocation the wrong size.");
+    }
 
     return object.PrepareForInput(Device());
   }

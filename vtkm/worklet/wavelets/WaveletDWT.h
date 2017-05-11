@@ -306,7 +306,7 @@ public:
       }
       default:
       {
-        vtkm::cont::ErrorControlInternal("Left extension mode not supported!");
+        vtkm::cont::ErrorInternal("Left extension mode not supported!");
         return 1;
       }
     }
@@ -351,7 +351,7 @@ public:
         }
         default:
         {
-          vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
+          vtkm::cont::ErrorInternal("Right extension mode not supported!");
           return 1;
         }
       }
@@ -403,7 +403,7 @@ public:
         }
         default:
         {
-          vtkm::cont::ErrorControlInternal("Right extension mode not supported!");
+          vtkm::cont::ErrorInternal("Right extension mode not supported!");
           return 1;
         }
       }
@@ -435,7 +435,7 @@ public:
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     if( GetWaveletMaxLevel( sigInLen ) < 1 )
     {
-      vtkm::cont::ErrorControlInternal( "Signal is too short to perform DWT!" ); 
+      vtkm::cont::ErrorInternal( "Signal is too short to perform DWT!" );
       return -1;
     } 
 
@@ -621,7 +621,7 @@ public:
         }
         else
         {
-          vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+          vtkm::cont::ErrorInternal("cDTemp Length not match!");
           return 1;
         }
       }
@@ -987,7 +987,7 @@ public:
         ext4DimX = addLen + 1;
       }
       else
-        vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+        vtkm::cont::ErrorInternal("cDTemp Length not match!");
     }
   }
 
@@ -1089,7 +1089,7 @@ public:
         ext4DimY = addLen + 1;
       }
       else
-        vtkm::cont::ErrorControlInternal("cDTemp Length not match!");
+        vtkm::cont::ErrorInternal("cDTemp Length not match!");
     }
   }
 

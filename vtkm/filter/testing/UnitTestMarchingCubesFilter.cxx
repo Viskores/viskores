@@ -221,7 +221,7 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
   const vtkm::IdComponent nCells = dim*dim*dim;
 
-vtkm::Float32 spacing = vtkm::Float32(1./dim);
+  vtkm::Float32 spacing = vtkm::Float32(1./dim);
   CoordinateArrayHandle coordinates(vtkm::Id3(dim+1,dim+1,dim+1),
                                     CoordType(-.5,-.5,-.5),
                                     CoordType(spacing,spacing,spacing));
@@ -245,8 +245,11 @@ vtkm::Float32 spacing = vtkm::Float32(1./dim);
     vtkm::cont::Field("distanceToOther", vtkm::cont::Field::ASSOC_POINTS,
                       vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
-  CellSet cellSet(HexTag(), "cells");
-  cellSet.Fill(connectivity);
+  CellSet cellSet("cells");
+  cellSet.Fill(coordinates.GetNumberOfValues(),
+               HexTag::Id,
+               HexTraits::NUM_POINTS,
+               connectivity);
 
   dataSet.AddCellSet(cellSet);
 
@@ -264,7 +267,7 @@ void TestMarchingCubesUniformGrid()
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals(true);
-  mc.SetIsoValue( 0.5 );
+  mc.SetIsoValue(0, 0.5);
 
   result = mc.Execute( dataSet,
                        dataSet.GetField("nodevar") );
@@ -336,7 +339,10 @@ void TestMarchingCubesCustomPolicy()
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals( false );
-  mc.SetIsoValue( 0.45 );
+  mc.SetIsoValue(0, 0.45);
+  mc.SetIsoValue(1, 0.45);
+  mc.SetIsoValue(2, 0.45);
+  mc.SetIsoValue(3, 0.45);
 
   //We specify a custom execution policy here, since the contourField is a
   //custom field type
@@ -358,7 +364,7 @@ void TestMarchingCubesCustomPolicy()
 
 
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 414,
+  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == (414*4),
                    "Should have some coordinates");
 }
 
