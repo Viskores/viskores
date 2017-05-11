@@ -28,7 +28,7 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/ImplicitFunctions.h>
+#include <vtkm/cont/ImplicitFunction.h>
 
 namespace vtkm {
 namespace worklet {
@@ -40,7 +40,6 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Worklet to identify cells within volume of interest
-  template <typename ImplicitFunction>
   class ExtractCellsByVOI : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
@@ -53,7 +52,7 @@ public:
     ExtractCellsByVOI() : Function() {}
 
     VTKM_CONT
-    explicit ExtractCellsByVOI(const ImplicitFunction &function)
+    explicit ExtractCellsByVOI(const vtkm::exec::ImplicitFunction &function)
                                            : Function(function) {}
 
     template <typename ConnectivityInVec, typename InVecFieldPortalType>
@@ -76,7 +75,7 @@ public:
     }
 
   private:
-    ImplicitFunction Function;
+    vtkm::exec::ImplicitFunction Function;
   };
 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -99,22 +98,20 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract cells by implicit function permutes input data
   template <typename CellSetType,
-            typename ImplicitFunction,
             typename DeviceAdapter>
   vtkm::cont::CellSetPermutation<CellSetType> Run(
                                     const CellSetType &cellSet,
                                     const vtkm::cont::CoordinateSystem &coordinates,
-                                    const ImplicitFunction &implicitFunction,
-                                    DeviceAdapter)
+                                    const vtkm::cont::ImplicitFunction &implicitFunction,
+                                    DeviceAdapter device)
   {
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
 
     // Worklet output will be a boolean passFlag array
-    typedef ExtractCellsByVOI<ImplicitFunction> ExtractCellsWorklet;
     vtkm::cont::ArrayHandle<bool> passFlags;
 
-    ExtractCellsWorklet worklet(implicitFunction);
-    DispatcherMapTopology<ExtractCellsWorklet, DeviceAdapter> dispatcher(worklet);
+    ExtractCellsByVOI worklet(implicitFunction.PrepareForExecution(device));
+    DispatcherMapTopology<ExtractCellsByVOI, DeviceAdapter> dispatcher(worklet);
     dispatcher.Invoke(cellSet,
                       coordinates,
                       passFlags);

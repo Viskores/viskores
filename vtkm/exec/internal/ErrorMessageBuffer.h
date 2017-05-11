@@ -41,7 +41,7 @@ class ErrorMessageBuffer
 {
 public:
   VTKM_EXEC_CONT ErrorMessageBuffer()
-    : MessageBuffer(NULL), MessageBufferSize(0) {  }
+    : MessageBuffer(nullptr), MessageBufferSize(0) {  }
 
   VTKM_EXEC_CONT
   ErrorMessageBuffer(char *messageBuffer, vtkm::Id bufferSize)

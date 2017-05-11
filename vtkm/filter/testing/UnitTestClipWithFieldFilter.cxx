@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/filter/Clip.h>
+#include <vtkm/filter/ClipWithField.h>
 
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -67,7 +67,7 @@ void TestClipExplicit()
   vtkm::cont::DataSet ds = MakeTestDatasetExplicit();
 
   vtkm::filter::ResultDataSet result;
-  vtkm::filter::Clip clip;
+  vtkm::filter::ClipWithField clip;
   clip.SetClipValue(0.5);
 
   result = clip.Execute( ds, std::string("scalars"));
@@ -110,7 +110,7 @@ void TestClip()
 
 }
 
-int UnitTestClipFilter(int, char *[])
+int UnitTestClipWithFieldFilter(int, char *[])
 {
   return vtkm::cont::testing::Testing::Run(TestClip);
 }

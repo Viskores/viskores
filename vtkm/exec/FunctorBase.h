@@ -24,12 +24,15 @@
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
+
 namespace vtkm {
 namespace exec {
 
-/// Base class for all functors invoked in the execution environment from a
-/// call to vtkm::cont::DeviceAdapterAlgorithm::Schedule. Subclasses must
-/// implement operator() const with an index argument.
+
+/// Base class for all user worklets invoked in the execution environment from a
+/// call to vtkm::cont::DeviceAdapterAlgorithm::Schedule.
 ///
 /// This class contains a public method named RaiseError that can be called in
 /// the execution environment to signal a problem.
@@ -56,7 +59,6 @@ public:
   {
     this->ErrorMessage = buffer;
   }
-
 private:
   vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
 };

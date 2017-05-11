@@ -95,10 +95,16 @@ public:
     : Superclass(storage) {  }
 };
 
+template<typename VirtualObject, typename TargetClass>
+struct VirtualObjectTransfer<
+  VirtualObject, TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> :
+  public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
+{
+};
 
 }
 }
-} // namespace vtkm::cont::testing
+} // namespace vtkm::cont::internal
 
 int UnitTestDeviceAdapterAlgorithmGeneral(int, char *[])
 {

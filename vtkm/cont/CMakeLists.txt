@@ -31,6 +31,7 @@ set(headers
   ArrayHandleImplicit.h
   ArrayHandleIndex.h
   ArrayHandlePermutation.h
+  ArrayHandleReverse.h
   ArrayHandleStreaming.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
@@ -64,6 +65,7 @@ set(headers
   ErrorExecution.h
   ErrorInternal.h
   Field.h
+  ImplicitFunction.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Storage.h
@@ -72,11 +74,13 @@ set(headers
   StorageListTag.h
   Timer.h
   TryExecute.h
+  VirtualObjectCache.h
   )
 
 set(header_impls
   ArrayHandle.hxx
   CellSetStructured.hxx
+  ImplicitFunction.hxx
   StorageBasic.hxx
   )
 
@@ -87,6 +91,7 @@ set(sources
   CoordinateSystem.cxx
   DynamicArrayHandle.cxx
   Field.cxx
+  ImplicitFunction.cxx
   internal/SimplePolymorphicContainer.cxx
   StorageBasic.cxx
   )
@@ -98,12 +103,6 @@ set(device_sources
   RuntimeDeviceTracker.cxx
   )
 
-vtkm_library(
-  SOURCES ${sources}
-  WRAP_FOR_CUDA ${device_sources}
-  HEADERS ${header_impls})
-target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
-
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(arg)
@@ -111,8 +110,36 @@ add_subdirectory(arg)
 vtkm_declare_headers(${headers})
 
 add_subdirectory(serial)
+set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_serial>)
+
 add_subdirectory(cuda)
+if (VTKm_ENABLE_CUDA)
+  get_property(vtkm_cont_cuda_object_files GLOBAL
+               PROPERTY vtkm_cont_cuda_object_files )
+  # mark the file as generated, this needs to be done in this directory
+  # for 'reasons'.
+  set_source_files_properties(${vtkm_cont_cuda_object_files}
+                              PROPERTIES GENERATED TRUE)
+
+  set(sources ${sources} ${vtkm_cont_cuda_object_files})
+
+endif()
+
 add_subdirectory(tbb)
+if (VTKm_ENABLE_TBB)
+  set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_tbb>)
+endif()
+
+
+vtkm_library(
+  SOURCES ${sources}
+  WRAP_FOR_CUDA ${device_sources}
+  HEADERS ${header_impls})
+target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
+
+if(VTKm_ENABLE_CUDA)
+  add_dependencies(vtkm_cont vtkm_cont_cuda)
+endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

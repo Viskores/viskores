@@ -299,6 +299,33 @@ struct ReduceByKeyUnaryStencilOp
 
 };
 
+template <typename T, typename InputPortalType,
+  typename KeyStatePortalType, typename  OutputPortalType>
+struct ShiftCopyAndInit : vtkm::exec::FunctorBase
+{
+  InputPortalType Input;
+  KeyStatePortalType KeyState;
+  OutputPortalType Output;
+  T initValue;
+
+  ShiftCopyAndInit(const InputPortalType& _input,
+                   const KeyStatePortalType &kstate,
+                    OutputPortalType& _output,
+                   T _init) : Input(_input),
+                              KeyState(kstate),
+                              Output(_output),
+                              initValue(_init) {}
+
+  void operator()(vtkm::Id index) const
+  {
+    if (this->KeyState.Get(index).fStart) {
+      Output.Set(index, initValue);
+    } else {
+      Output.Set(index, Input.Get(index-1));
+    }
+  }
+};
+
 template<class InputPortalType, class OutputPortalType>
 struct CopyKernel
 {

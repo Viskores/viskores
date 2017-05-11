@@ -21,9 +21,11 @@
 set(unit_tests
   UnitTestCellAverageFilter.cxx
   UnitTestCleanGrid.cxx
-  UnitTestClipFilter.cxx
+  UnitTestClipWithFieldFilter.cxx
+  UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
   UnitTestExternalFacesFilter.cxx
+  UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx

@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
-#include <vtkm/cont/Storage.h>
+#include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionThrustDevice.h>
 
@@ -115,9 +115,13 @@ public:
   }
 };
 
-}
-}
-} // namespace vtkm::cont::internal
+} // namespace internal
 
+#ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
+VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagCuda)
+#endif // !vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
+
+}
+} // namespace vtkm::cont
 
 #endif //vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_h

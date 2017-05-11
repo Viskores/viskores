@@ -51,7 +51,7 @@ struct MapperRayTracer::InternalsType
     typedef vtkm::rendering::raytracing::RayTracer<Device> RayTracerType;
     typedef vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType>
         ContainerType;
-    RayTracerType *tracer = NULL;
+    RayTracerType *tracer = nullptr;
     if (this->RayTracerContainer)
     {
       ContainerType *container =
@@ -62,7 +62,7 @@ struct MapperRayTracer::InternalsType
       }
     }
 
-    if (tracer == NULL)
+    if (tracer == nullptr)
     {
       ContainerType *container
           = new vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType>;

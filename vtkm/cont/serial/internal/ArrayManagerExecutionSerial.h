@@ -20,6 +20,7 @@
 #ifndef vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_h
 #define vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_h
 
+#include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
@@ -45,8 +46,13 @@ public:
     : Superclass(storage) {  }
 };
 
+} // namespace internal
+
+#ifndef vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_cxx
+VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagSerial)
+#endif // !vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_cxx
+
 }
-}
-} // namespace vtkm::cont::internal
+} // namespace vtkm::cont
 
 #endif //vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_h

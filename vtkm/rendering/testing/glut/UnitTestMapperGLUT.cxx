@@ -58,7 +58,7 @@ displayCall()
 {
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
-  
+
   typedef vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> M;
   typedef vtkm::rendering::CanvasGL C;
   typedef vtkm::rendering::View3D V3;
@@ -94,7 +94,7 @@ void RenderTests()
     std::cout<<"Press any key to cycle through datasets. ESC to quit."<<std::endl;
 
   int argc = 0;
-  char *argv = NULL;
+  char *argv = nullptr;
   glutInit(&argc, &argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
   glutInitWindowSize(WIDTH,HEIGHT);
@@ -103,10 +103,10 @@ void RenderTests()
   glutKeyboardFunc(keyboardCall);
   if (batch)
     glutIdleFunc(batchIdle);
-  
+
   glutMainLoop();
 }
-    
+
 } //namespace
 
 int UnitTestMapperGLUT(int argc, char *argv[])
@@ -117,6 +117,6 @@ int UnitTestMapperGLUT(int argc, char *argv[])
     {
       batch = true;
     }
-  }    
+  }
   return vtkm::cont::testing::Testing::Run(RenderTests);
 }

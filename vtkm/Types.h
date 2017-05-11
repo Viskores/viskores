@@ -1062,7 +1062,7 @@ public:
 
   VTKM_EXEC_CONT
   VecC()
-    : Components(NULL), NumberOfComponents(0)
+    : Components(nullptr), NumberOfComponents(0)
   {  }
 
   VTKM_EXEC_CONT
@@ -1151,7 +1151,7 @@ public:
 
   VTKM_EXEC_CONT
   VecCConst()
-    : Components(NULL), NumberOfComponents(0)
+    : Components(nullptr), NumberOfComponents(0)
   {  }
 
   VTKM_EXEC_CONT

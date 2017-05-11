@@ -200,7 +200,7 @@ struct DeviceAdapterAlgorithm
   /// values inside that range. Once finished a single key and value is created
   /// for each segment.
   ///
-  template<typename T,
+  template<typename T, typename U,
            class CKeyIn,  class CValIn,
            class CKeyOut, class CValOut,
            class BinaryFunctor >
@@ -258,6 +258,38 @@ struct DeviceAdapterAlgorithm
       vtkm::cont::ArrayHandle<T,COut>& output,
       BinaryFunctor binary_functor);
 
+  /// \brief Compute a segmented inclusive prefix sum operation on the input key value pairs.
+  ///
+  /// Computes a segmented inclusive prefix sum (or any user binary operation)
+  /// on the \c keys and \c values ArrayHandle(s). Each segmented inclusive
+  /// prefix sum is run on consecutive equal keys with the binary operation
+  /// applied to all values inside that range. Once finished the result is
+  /// stored in \c values_output ArrayHandle.
+  ///
+  template<typename T, typename U,
+           typename KIn, typename VIn,
+           typename VOut, typename BinaryFunctor>
+  VTKM_CONT static void ScanInclusiveByKey(
+      const vtkm::cont::ArrayHandle<T, KIn> &keys,
+      const vtkm::cont::ArrayHandle<U, VIn> &values,
+      vtkm::cont::ArrayHandle<U, VOut> &values_output,
+      BinaryFunctor binary_functor);
+
+  /// \brief Compute a segmented inclusive prefix sum operation on the input key value pairs.
+  ///
+  /// Computes a segmented inclusive prefix sum on the \c keys and \c values
+  /// ArrayHandle(s). Each segmented inclusive prefix sum is run on consecutive
+  /// equal keys with the binary operation vtkm::Add applied to all values inside
+  /// that range. Once finished the result is stored in \c values_output ArrayHandle.
+  ///
+  template<typename T, typename U,
+           typename KIn, typename VIn,
+           typename VOut>
+  VTKM_CONT static void ScanInclusiveByKey(
+      const vtkm::cont::ArrayHandle<T, KIn> &keys,
+      const vtkm::cont::ArrayHandle<U, VIn> &values,
+      vtkm::cont::ArrayHandle<U, VOut> &values_output);
+
   /// \brief Streaming version of scan inclusive
   ///
   /// Computes a scan one block at a time.
@@ -287,6 +319,37 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static T ScanExclusive(
       const vtkm::cont::ArrayHandle<T,CIn> &input,
       vtkm::cont::ArrayHandle<T,COut>& output);
+
+  /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
+  ///
+  /// Computes a segmented exclusive prefix sum (or any user binary operation)
+  /// on the \c keys and \c values ArrayHandle(s). Each segmented exclusive
+  /// prefix sum is run on consecutive equal keys with the binary operation
+  /// applied to all values inside that range. Once finished the result is
+  /// stored in \c values_output ArrayHandle.
+  ///
+  template<typename T, typename U,
+           typename KIn, typename VIn,
+           typename VOut, class BinaryFunctor>
+  VTKM_CONT static void ScanExclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U ,VOut>& output,
+    const U& initialValue,
+    BinaryFunctor binaryFunctor);
+
+  /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
+  ///
+  /// Computes a segmented inclusive prefix sum on the \c keys and \c values
+  /// ArrayHandle(s). Each segmented inclusive prefix sum is run on consecutive
+  /// equal keys with the binary operation vtkm::Add applied to all values inside
+  /// that range. Once finished the result is stored in \c values_output ArrayHandle.
+  ///
+  template<typename T, typename U, class KIn, typename VIn, typename VOut>
+  VTKM_CONT static void ScanExclusiveByKey(
+    const vtkm::cont::ArrayHandle<T, KIn>& keys,
+    const vtkm::cont::ArrayHandle<U, VIn>& values,
+    vtkm::cont::ArrayHandle<U, VOut>& output);
 
   /// \brief Schedule many instances of a function to run on concurrent threads.
   ///
