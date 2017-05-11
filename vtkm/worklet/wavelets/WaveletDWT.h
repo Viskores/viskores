@@ -46,6 +46,7 @@ public:
 
 
   // Debug use only
+#ifdef DEBUG
   template< typename ArrayType >
   void printArraySummary( const ArrayType &arr, const char* name )
   {
@@ -96,6 +97,7 @@ public:
                     vtkm::Id z,                                   // z idx of the plane to print
                     const char* msg )
   {
+    (void) dimZ;
     printf("%s:\n", msg );
     for( vtkm::Id y = dimY - 1; y >= 0; y-- )
     {
@@ -114,9 +116,10 @@ public:
     for( vtkm::Id i = 0; i < dimX * dimY * dimZ; i++ )
       buf[i] = (float)arr.GetPortalConstControl().Get(i);
     FILE* f = fopen( filename, "w" );
-    fwrite( buf, sizeof(float), dimX*dimY*dimZ, f );
+    fwrite( buf, sizeof(float), (size_t)(dimX*dimY*dimZ), f );
     fclose( f );
   }
+#endif
 
 
   // Function: extend a cube in X direction
