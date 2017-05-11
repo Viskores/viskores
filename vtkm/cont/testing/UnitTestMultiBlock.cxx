@@ -35,53 +35,52 @@ static void MultiBlock_TwoDimUniformTest();
 void TestMultiBlock_Uniform()
 {
   std::cout << std::endl;
-  std::cout << "--TestDataSet_Uniform--" << std::endl << std::endl;
-
+  std::cout << "--TestDataSet Uniform and Rectilinear--" << std::endl << std::endl;
   MultiBlock_TwoDimUniformTest();
- 
 }
 
 static void
 MultiBlock_TwoDimUniformTest()
-{
-  std::cout<<"MultiBlock 2D Uniform data set"<<std::endl;
+{ 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::MultiBlock TestBlock;
+  vtkm::cont::MultiBlock TestBlock;  
+    
+  vtkm::cont::DataSet TDset1=testDataSet.Make2DUniformDataSet0();
+  vtkm::cont::DataSet TDset2=testDataSet.Make3DUniformDataSet0();
 
-  vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
-
-  TestBlock.AddBlock(dataSet);
-  TestBlock.AddBlock(dataSet);
-  
-  vtkm::cont::DataSet TestDSet =TestBlock.GetBlock(1);
-  
+  TestBlock.AddBlock(TDset1);
+  TestBlock.AddBlock(TDset2);
+   
   VTKM_TEST_ASSERT(TestBlock.GetNumberOfBlocks() == 2,
                    "Incorrect number of blocks");
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
+
+  vtkm::cont::DataSet TestDSet =TestBlock.GetBlock(0);
+  VTKM_TEST_ASSERT(TDset1.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
                    "Incorrect number of fields");
-  VTKM_TEST_ASSERT(dataSet.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
+  VTKM_TEST_ASSERT(TDset1.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
                    "Incorrect number of coordinate systems");
-  
 
-  // test various field-getting methods and associations
-  try
-  {
-      TestDSet.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
-  }
-  catch (...)
-  {
-      VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
-  }
+  TestDSet =TestBlock.GetBlock(1);
+  VTKM_TEST_ASSERT(TDset2.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
+                   "Incorrect number of fields");
+  VTKM_TEST_ASSERT(TDset2.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
+                   "Incorrect number of coordinate systems");
+ 
+  std::vector<vtkm::cont::DataSet> Vblocks;
+  Vblocks.push_back(testDataSet.Make2DRectilinearDataSet0());
+  Vblocks.push_back(testDataSet.Make3DRegularDataSet1());
+  Vblocks.push_back(testDataSet.Make3DRegularDataSet0());
 
-  try
+  vtkm::cont::MultiBlock T2Block(Vblocks);
+  std::vector<vtkm::cont::DataSet> InBlocks = T2Block.GetBlocks();
+  for(int j=0; j<InBlocks.size(); j++)
   {
-    TestDSet.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
-  }
-  catch (...)
-  {
-      VTKM_TEST_FAIL("Failed to get field 'pointvar' with ASSOC_POINT_SET.");
-  }
-    
+    vtkm::cont::DataSet TestDSet =InBlocks[j];
+    VTKM_TEST_ASSERT(Vblocks[j].GetNumberOfFields() == TestDSet.GetNumberOfFields(),
+                   "Incorrect number of fields");
+    VTKM_TEST_ASSERT(Vblocks[j].GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
+                   "Incorrect number of coordinate systems");
+  }  
 }
 
 

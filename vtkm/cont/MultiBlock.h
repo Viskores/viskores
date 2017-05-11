@@ -37,13 +37,13 @@ public:
   VTKM_CONT
   MultiBlock(const vtkm::cont::DataSet &ds)
   {
-   this->blocks.push_back(ds);
+    this->blocks.push_back(ds);
   }
 
   VTKM_CONT
   MultiBlock(const vtkm::cont::MultiBlock &src)
   {
-   this->blocks=src.GetBlocks();
+    this->blocks = src.GetBlocks();
   }
 
   VTKM_CONT
@@ -52,15 +52,15 @@ public:
   }
 
   VTKM_CONT
-  MultiBlock(const std::vector<vtkm::cont::DataSet> mblocks)
+  MultiBlock(const std::vector<vtkm::cont::DataSet> &mblocks)
   {
-   this->blocks=mblocks;
+    this->blocks = mblocks;
   }
 
   VTKM_CONT
   MultiBlock &operator=(const vtkm::cont::MultiBlock &src)
   {
-    this->blocks=src.GetBlocks();
+    this->blocks = src.GetBlocks();
   }
 
   ~MultiBlock()
@@ -76,19 +76,27 @@ public:
   VTKM_CONT
   const vtkm::cont::DataSet &GetBlock(vtkm::Id blockId) const
   {
-     return this->blocks[blockId];
+    return this->blocks[blockId];
   }
   
   const std::vector<vtkm::cont::DataSet> &GetBlocks() const
   {
-     return this->blocks;
+    return this->blocks;
   }
  
   VTKM_CONT
-  vtkm::cont::DataSet &AddBlock(vtkm::cont::DataSet ds)
+  void AddBlock(vtkm::cont::DataSet &ds)
   {
-     this->blocks.push_back(ds);
-     return this->blocks[this->blocks.size()-1];
+    this->blocks.push_back(ds);
+  }
+
+  VTKM_CONT
+  void AddBlocks(std::vector<vtkm::cont::DataSet> &mblocks)
+  {    
+    for(int i = 0; i < mblocks.size(); i++)
+    {
+      AddBlock(mblocks[i]);
+    }
   }
 
 private:
@@ -100,4 +108,4 @@ private:
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_CellSet_h
+#endif 
