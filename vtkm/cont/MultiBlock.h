@@ -24,7 +24,6 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/LogicalStructure.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
