@@ -70,6 +70,7 @@ MultiBlock_TwoDimUniformTest()
   Vblocks.push_back(testDataSet.Make2DRectilinearDataSet0());
   Vblocks.push_back(testDataSet.Make3DRegularDataSet1());
   Vblocks.push_back(testDataSet.Make3DRegularDataSet0());
+  Vblocks.push_back(testDataSet.Make3DExplicitDataSet4());
 
   vtkm::cont::MultiBlock T2Block(Vblocks);
   std::vector<vtkm::cont::DataSet> InBlocks = T2Block.GetBlocks();
