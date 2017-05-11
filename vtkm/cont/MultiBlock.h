@@ -61,6 +61,7 @@ public:
   MultiBlock &operator=(const vtkm::cont::MultiBlock &src)
   {
     this->blocks = src.GetBlocks();
+    return *this;
   }
 
   ~MultiBlock()
@@ -70,7 +71,7 @@ public:
   VTKM_CONT
   vtkm::Id GetNumberOfBlocks() const
   { 
-    return this->blocks.size();
+    return static_cast<vtkm::Id>(this->blocks.size());
   }
  
   VTKM_CONT
@@ -93,7 +94,7 @@ public:
   VTKM_CONT
   void AddBlocks(std::vector<vtkm::cont::DataSet> &mblocks)
   {    
-    for(int i = 0; i < mblocks.size(); i++)
+    for(unsigned int i = 0; i < mblocks.size(); i++)
     {
       AddBlock(mblocks[i]);
     }
