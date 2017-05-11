@@ -76,7 +76,9 @@ public:
                         mode(m), 
                         direction( dir ), 
                         padZero( pad_zero )  
-  {}
+  { 
+    (void)sigDimZ; 
+  }
 
   // Index translation helper
   VTKM_EXEC_CONT
@@ -226,7 +228,13 @@ public:
             startX2( startx_2 ),      startY2( starty_2 ),      startZ2(startz_2),
             pretendDimX2(pretendx_2), pretendDimY2(pretendy_2), pretendDimZ2(pretendz_2),
             dimX3(x_3),               dimY3(y_3),               dimZ3(z_3)
-  { (void)dimY2; }
+  { 
+    (void)dimZ1;
+    (void)dimZ2;
+    (void)dimZ3;
+    (void)pretendDimY2;
+    (void)pretendDimZ2;
+  }
 
   VTKM_EXEC_CONT
   void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 3D indices as input
@@ -275,7 +283,13 @@ public:
             startX2( startx_2 ),      startY2( starty_2 ),      startZ2(startz_2),
             pretendDimX2(pretendx_2), pretendDimY2(pretendy_2), pretendDimZ2(pretendz_2),
             dimX3(x_3),               dimY3(y_3),               dimZ3(z_3)
-  { }
+  { 
+    (void)dimZ1; 
+    (void)dimZ2; 
+    (void)dimZ3;
+    (void)pretendDimX2;
+    (void)pretendDimZ2;
+  }
 
   VTKM_EXEC_CONT
   void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 3D indices as input
@@ -324,7 +338,11 @@ public:
             startX2( startx_2 ),      startY2( starty_2 ),      startZ2(startz_2),
             pretendDimX2(pretendx_2), pretendDimY2(pretendy_2), pretendDimZ2(pretendz_2),
             dimX3(x_3),               dimY3(y_3),               dimZ3(z_3)
-  { }
+  { 
+    (void)dimZ2;
+    (void)pretendDimX2;
+    (void)pretendDimY2;
+  }
 
   VTKM_EXEC_CONT
   void Translate3Dto1D( vtkm::Id  inX,  vtkm::Id  inY,  vtkm::Id  inZ,    // 3D indices as input
@@ -391,7 +409,17 @@ public:
             dimXd(x_d),         dimYd(y_d),         dimZd(z_d),
             dimX5(x_5),         dimY5(y_5),         dimZ5(z_5),
             startX5(start_x5),  startY5(start_y5),  startZ5(start_z5)
-  { }
+  { 
+    (void)dimYa;
+    (void)dimYd;
+    (void)dimZa;
+    (void)dimZd;
+    (void)dimZ5;
+    (void)dimZ4;
+    (void)dimZ3;
+    (void)dimZ2;
+    (void)dimZ1;
+  }
 
   VTKM_EXEC_CONT
   void Translate3Dto1D( vtkm::Id  inX,   vtkm::Id  inY,  vtkm::Id  inZ,   // 3D indices as input
@@ -465,7 +493,17 @@ public:
             dimXd(x_d),         dimYd(y_d),         dimZd(z_d),
             dimX5(x_5),         dimY5(y_5),         dimZ5(z_5),
             startX5(start_x5),  startY5(start_y5),  startZ5(start_z5)
-  { }
+  { 
+    (void)dimXa;
+    (void)dimXd;
+    (void)dimZd;
+    (void)dimZa;
+    (void)dimZ5;
+    (void)dimZ4;
+    (void)dimZ3;
+    (void)dimZ2;
+    (void)dimZ1;
+  }
 
   VTKM_EXEC_CONT
   void Translate3Dto1D( vtkm::Id  inX,   vtkm::Id  inY,  vtkm::Id  inZ,   // 3D indices as input
@@ -541,15 +579,11 @@ public:
             dimX5(x_5),         dimY5(y_5),         dimZ5(z_5),
             startX5(start_x5),  startY5(start_y5),  startZ5(start_z5)
   {
-  /*  printf("IndexTranslator6CubesFrontBack: \n" );
-    printf("  cube1 dims: (%lld, %lld, %lld)\n", dimX1, dimY1, dimZ1 );
-    printf("  cube2 dims: (%lld, %lld, %lld)\n", dimX2, dimY2, dimZ2 );
-    printf("  cube3 dims: (%lld, %lld, %lld)\n", dimX3, dimY3, dimZ3 );
-    printf("  cube4 dims: (%lld, %lld, %lld)\n", dimX4, dimY4, dimZ4 );
-    printf("  cube5 dims: (%lld, %lld, %lld)\n", dimX5, dimY5, dimZ5 );
-    printf("  cA    dims: (%lld, %lld, %lld)\n", dimXa, dimYa, dimZa );
-    printf("  cD    dims: (%lld, %lld, %lld)\n", dimXd, dimYd, dimZd );
-    printf("  start idx : (%lld, %lld, %lld)\n", startX5, startY5, startZ5 ); */
+    (void)dimXd;
+    (void)dimXa;
+    (void)dimYd;
+    (void)dimYa;
+    (void)dimZ5;
   }
 
   VTKM_EXEC_CONT
@@ -1699,7 +1733,9 @@ public:
                             pretendDimX2( pretendx_2 ), pretendDimY2( pretendy_2 ),
                             dimX3(x_3),                 dimY3(y_3), 
                             mode_lr(mode)  
-  { (void)dimY2; }
+  { 
+    (void)dimY2; 
+  }
 
   VTKM_EXEC_CONT
   void Translate2Dto1D( vtkm::Id  inX,  vtkm::Id  inY,         // 2D indices as input
@@ -1783,7 +1819,9 @@ public:
                         mode( m ), 
                         direction( dir ), 
                         padZero( pad_zero )  
-  { (void)sigDimY; }
+  { 
+    (void)sigDimY; 
+  }
 
   // Index translation helper
   VTKM_EXEC_CONT
@@ -2942,7 +2980,9 @@ public:
   VTKM_EXEC_CONT
   AssignZero2DWorklet( vtkm::Id x, vtkm::Id y, vtkm::Id zero_x, vtkm::Id zero_y )
         : dimX( x ), dimY( y ), zeroX( zero_x ), zeroY( zero_y )  
-  { (void)dimY; }
+  { 
+    (void)dimY; 
+  }
 
   // Index translation helper
   VTKM_EXEC_CONT
@@ -2987,7 +3027,9 @@ public:
                        vtkm::Id zero_x, vtkm::Id zero_y,  vtkm::Id zero_z )
                      : dimX( x ),       dimY( y ),        dimZ( z ),
                        zeroX( zero_x ), zeroY( zero_y ),  zeroZ( zero_z )
-  { }
+  { 
+    (void)dimZ;
+  }
 
   // Index translation helper
   VTKM_EXEC_CONT
@@ -3038,7 +3080,10 @@ public:
                    inXLen   (inx),      inYLen   ( iny ),
                    outXLen  (outx),     outYLen  ( outy ),
                    outXStart(xStart),   outYStart( yStart )
-  { }
+  { 
+    (void)outYLen;
+    (void)inYLen;
+  }
 
   VTKM_EXEC_CONT
   void GetLogicalDimOfInputRect( const vtkm::Id    &idx,    
@@ -3093,7 +3138,10 @@ public:
               inDimX( inx ),      inDimY( iny ),        inDimZ( inz ),
               outDimX( outx ),    outDimY( outy ),      outDimZ( outz ),
               outStartX( xStart), outStartY( yStart ),  outStartZ( zStart ) 
-  { }
+  { 
+    (void)outDimZ;
+    (void)inDimZ; 
+  }
 
   VTKM_EXEC_CONT
   void GetLogicalDimOfInputCube( vtkm::Id idx,  
