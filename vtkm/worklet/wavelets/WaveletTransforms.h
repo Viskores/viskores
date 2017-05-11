@@ -256,7 +256,7 @@ public:
 private:
   const vtkm::Id      dimX1, dimY1, dimZ1;		// left extension
   const vtkm::Id      dimX2, dimY2, dimZ2;		// actual signal dims
-	const vtkm::Id			startX2, startY2, startZ2, pretendDimX2, pretendDimY2, pretendDimZ2;
+  const vtkm::Id			startX2, startY2, startZ2, pretendDimX2, pretendDimY2, pretendDimZ2;
   const vtkm::Id      dimX3, dimY3, dimZ3;		// right extension
 };
 
@@ -438,7 +438,8 @@ public:
   }
 
 private:
-  const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
+  const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2;   // extension cube sizes
+  const vtkm::Id      dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
   const vtkm::Id      dimXa, dimYa, dimZa, dimXd, dimYd, dimZd;         // signal cube sizes
   const vtkm::Id      dimX5, dimY5, dimZ5, startX5, startY5, startZ5;   // entire cube size
 };
@@ -511,7 +512,8 @@ public:
   }
 
 private:
-  const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
+  const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2;   // extension cube sizes
+  const vtkm::Id      dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
   const vtkm::Id      dimXa, dimYa, dimZa, dimXd, dimYd, dimZd;         // signal cube sizes
   const vtkm::Id      dimX5, dimY5, dimZ5, startX5, startY5, startZ5;   // entire cube size
 };
@@ -595,7 +597,8 @@ public:
   }
 
 private:
-  const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
+  const vtkm::Id      dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2;   // extension cube sizes
+  const vtkm::Id      dimX3, dimY3, dimZ3, dimX4, dimY4, dimZ4;   // extension cube sizes
   const vtkm::Id      dimXa, dimYa, dimZa, dimXd, dimYd, dimZd;         // signal cube sizes
   const vtkm::Id      dimX5, dimY5, dimZ5, startX5, startY5, startZ5;   // entire cube size
 };
@@ -1454,8 +1457,6 @@ public:
     vtkm::Id      k1,     k2,     zi; 
     vtkm::Id      inputCube,      inputIdx; 
     Output1Dto3D( workIdx, workX, workY, workZ );
-//printf("A new iteration: \n");
-//printf("  workIdx = %lld, workX = %lld, workY = %lld, workZ = %lld\n", workIdx, workX, workY, workZ );
 
     if( filterLen % 2 != 0 ) // odd filter
     {
@@ -1563,7 +1564,8 @@ public:
                             vtkm::Id x_5,       vtkm::Id y_5,     // actual size of matrix5
                             vtkm::Id start_x5,  vtkm::Id start_y5,// start indices of pretend matrix
                             bool mode )
-                         :  x1(x_1),            y1(y_1), 
+                         :  
+                            x1(x_1),            y1(y_1), 
                             xa(x_a),            ya(y_a), 
                             x2(x_2),            y2(y_2), 
                             x3(x_3),            y3(y_3), 
@@ -2084,7 +2086,8 @@ public:
                       vtkm::Id x_5,       vtkm::Id y_5,
                       vtkm::Id startX5,   vtkm::Id startY5,
                       bool mode_lr )
-                   :  lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
+                   :  
+                      lowFilter(  lo_fil.PrepareForInput( DeviceTag() ) ),
                       highFilter( hi_fil.PrepareForInput( DeviceTag() ) ),
                       filterLen( fil_len ), 
                       translator(x_1, y_1, x_a, y_a, x_2, y_2,
@@ -2329,7 +2332,8 @@ public:
   ForwardTransform( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
                     const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
                     vtkm::Id filLen, vtkm::Id approx_len, vtkm::Id detail_len,
-                    bool odd_low, bool odd_high )  :
+                    bool odd_low, bool odd_high )  
+                :
                     lowFilter(  loFilter.PrepareForInput(DeviceTag()) ), 
                     highFilter( hiFilter.PrepareForInput(DeviceTag()) ), 
                     filterLen( filLen ), 
@@ -2407,7 +2411,8 @@ public:
   InverseTransformOdd( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
                        const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
                        vtkm::Id filLen, vtkm::Id ca_len, vtkm::Id ext_len )
-                    :  lowFilter(  loFilter.PrepareForInput(DeviceTag()) ),
+                    :  
+                       lowFilter(  loFilter.PrepareForInput(DeviceTag()) ),
                        highFilter( hiFilter.PrepareForInput(DeviceTag()) ),
                        filterLen( filLen ), cALen( ca_len ),
                        cALen2( ca_len * 2 ), cALenExtended( ext_len )  {}
@@ -2486,7 +2491,8 @@ public:
   InverseTransformEven( const vtkm::cont::ArrayHandle<vtkm::Float64> &loFilter,
                         const vtkm::cont::ArrayHandle<vtkm::Float64> &hiFilter,
                         vtkm::Id filtL, vtkm::Id cAL, vtkm::Id cALExt, bool m )
-                    :   lowFilter(  loFilter.PrepareForInput(DeviceTag()) ),
+                    :   
+                        lowFilter(  loFilter.PrepareForInput(DeviceTag()) ),
                         highFilter( hiFilter.PrepareForInput(DeviceTag()) ),
                         filterLen(  filtL ), cALen( cAL ), cALen2( cAL * 2 ),
                         cALenExtended( cALExt ), matlab( m )    {}
@@ -2957,8 +2963,6 @@ public:
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
     else if( zeroX < 0 && y == zeroY )    // assign zero to a row
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
-    // else if( x == zeroX && y == zeroY )   // assign zero to an element
-    //   array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
   }
 
 private:

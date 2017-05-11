@@ -297,7 +297,8 @@ public:
     ExtensionWorklet worklet( extDimX,          extDimY,          extDimZ,
                               sigDimX,          sigDimY,          sigDimZ,
                               sigStartX,        sigStartY,        sigStartZ,
-                              sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,                                                       ext1Method, 
+                              sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,
+                              ext1Method, 
                               dir, 
                               false  );    // not treating input signal as having zeros
     DispatcherType dispatcher( worklet );
@@ -422,7 +423,8 @@ public:
     ExtensionWorklet worklet( extDimX,          extDimY,          extDimZ,
                               sigDimX,          sigDimY,          sigDimZ,
                               sigStartX,        sigStartY,        sigStartZ,
-                              sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,                                                       ext1Method, 
+                              sigPretendDimX,   sigPretendDimY,   sigPretendDimZ,
+                              ext1Method, 
                               dir, 
                               false  );    // not treating input signal as having zeros
     DispatcherType dispatcher( worklet );
@@ -844,7 +846,6 @@ public:
 
   //=============================================================================
 
-  
   template< typename SigInArrayType, typename ExtensionArrayType, typename DeviceTag >
   vtkm::Id Extend2D  (const SigInArrayType            &sigIn,     // Input
                             vtkm::Id  sigDimX,        vtkm::Id   sigDimY,
