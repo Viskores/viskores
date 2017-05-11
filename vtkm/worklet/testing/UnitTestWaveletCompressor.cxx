@@ -166,7 +166,7 @@ void TestDecomposeReconstruct3D( vtkm::Float64 cratio )
   vtkm::Id sigY   = 99;
   vtkm::Id sigZ   = 99;
   vtkm::Id sigLen = sigX * sigY * sigZ;
-  printf("Testing 3D wavelet compressor on a (%lldx%lldx%lld) cube:\n", sigX, sigY, sigZ ); 
+  std::cout << "Testing 3D wavelet compressor on a (99x99x99) cube..." << std::endl;
 
   // make input data array handle
   vtkm::cont::ArrayHandle<vtkm::Float32> inputArray;
@@ -241,7 +241,7 @@ void TestDecomposeReconstruct3D( vtkm::Float64 cratio )
 
 void TestDecomposeReconstruct2D( vtkm::Float64 cratio )
 {
-  std::cout << "Testing 2D wavelet compressor on a (1000x1000) square: " << std::endl;
+  std::cout << "Testing 2D wavelet compressor on a (1000x1000) square... " << std::endl;
   vtkm::Id sigX = 1000;
   vtkm::Id sigY = 1000;
   vtkm::Id sigLen = sigX * sigY;
@@ -311,7 +311,7 @@ void TestDecomposeReconstruct2D( vtkm::Float64 cratio )
 
 void TestDecomposeReconstruct1D( vtkm::Float64 cratio )
 {
-  std::cout << "Testing 1D wavelet compressor  on a 1 million sized array " << std::endl;
+  std::cout << "Testing 1D wavelet compressor on a 1 million sized array... " << std::endl;
   vtkm::Id sigLen = 1000000;
 
   // make input data array handle
