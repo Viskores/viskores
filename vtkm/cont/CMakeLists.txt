@@ -66,6 +66,7 @@ set(headers
   ErrorInternal.h
   Field.h
   ImplicitFunction.h
+  MultiBlock.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Storage.h
