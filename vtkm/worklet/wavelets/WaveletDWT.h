@@ -709,8 +709,8 @@ public:
                         bool					discardCoeffIn,		// can we discard coeffIn?
                         DeviceTag  )
   {
-    VTKM_ASSERT( L.size() == 27 );
-    VTKM_ASSERT( inDimX * inDimY * inDimZ == coeffIn.GetNumberOfValues() );
+    //VTKM_ASSERT( L.size() == 27 );
+    //VTKM_ASSERT( inDimX * inDimY * inDimZ == coeffIn.GetNumberOfValues() );
     vtkm::Id inPretendDimX = L[0] + L[12];
     vtkm::Id inPretendDimY = L[1] + L[7];
     vtkm::Id inPretendDimZ = L[2] + L[5];
@@ -1233,12 +1233,12 @@ public:
       return -1;
     } 
 
-    VTKM_ASSERT( L.size() == 3 );
+    //VTKM_ASSERT( L.size() == 3 );
     L[0] = WaveletBase::GetApproxLength( sigInLen );
     L[1] = WaveletBase::GetDetailLength( sigInLen );
     L[2] = sigInLen;
 
-    VTKM_ASSERT( L[0] + L[1] == L[2] );
+    //VTKM_ASSERT( L[0] + L[1] == L[2] );
 
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
 
@@ -1279,7 +1279,7 @@ public:
 
     this->Extend1D( sigIn, sigInExtended, addLen, WaveletBase::wmode, 
                     WaveletBase::wmode, false, false, DeviceTag() ); 
-    VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
+    //VTKM_ASSERT( sigInExtended.GetNumberOfValues() == sigExtendedLen );
 
     // initialize a worklet for forward transform
     vtkm::worklet::wavelets::ForwardTransform<DeviceTag> forwardTransform 
@@ -1296,7 +1296,7 @@ public:
                        coeffOut );
     vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
 
-    VTKM_ASSERT( L[0] + L[1] <= coeffOut.GetNumberOfValues() );
+    //VTKM_ASSERT( L[0] + L[1] <= coeffOut.GetNumberOfValues() );
     coeffOut.Shrink( L[0] + L[1] );
     
     return elapsedTime;  
@@ -1312,8 +1312,8 @@ public:
                               SignalArrayType       &sigOut,      // Output
                               DeviceTag                     )
   {
-    VTKM_ASSERT( L.size() == 3 );
-    VTKM_ASSERT( L[2] == coeffIn.GetNumberOfValues() );
+    //VTKM_ASSERT( L.size() == 3 );
+    //VTKM_ASSERT( L[2] == coeffIn.GetNumberOfValues() );
 
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
     bool doSymConv = false;
@@ -1436,8 +1436,8 @@ public:
     }
 
     // make sure signal extension went as expected
-    VTKM_ASSERT( cATemp.GetNumberOfValues() == cATempLen );
-    VTKM_ASSERT( cDTemp.GetNumberOfValues() == cDTempLen );
+    //VTKM_ASSERT( cATemp.GetNumberOfValues() == cATempLen );
+    //VTKM_ASSERT( cDTemp.GetNumberOfValues() == cDTempLen );
 
     vtkm::cont::ArrayHandleConcatenate< Concat2, Concat2>
         coeffInExtended( cATemp, cDTemp );
@@ -1515,9 +1515,9 @@ public:
                                   std::vector<vtkm::Id>    &L,
                                   DeviceTag                     )
   {
-    VTKM_ASSERT( sigDimX * sigDimY == sigIn.GetNumberOfValues() );
+    //VTKM_ASSERT( sigDimX * sigDimY == sigIn.GetNumberOfValues() );
     
-    VTKM_ASSERT( L.size() == 10 );
+    //VTKM_ASSERT( L.size() == 10 );
     L[0] = WaveletBase::GetApproxLength( sigPretendDimX );    L[2] = L[0];
     L[1] = WaveletBase::GetApproxLength( sigPretendDimY );    L[5] = L[1];
     L[3] = WaveletBase::GetDetailLength( sigPretendDimY );    L[7] = L[3];
@@ -1609,8 +1609,8 @@ public:
                                 ArrayOutType              &sigOut,
                                 DeviceTag     )
   {
-    VTKM_ASSERT( L.size() == 10 );
-    VTKM_ASSERT( inDimX * inDimY == coeffIn.GetNumberOfValues() );
+    //VTKM_ASSERT( L.size() == 10 );
+    //VTKM_ASSERT( inDimX * inDimY == coeffIn.GetNumberOfValues() );
     vtkm::Id inPretendDimX = L[0] + L[4];
     vtkm::Id inPretendDimY = L[1] + L[3];
 
