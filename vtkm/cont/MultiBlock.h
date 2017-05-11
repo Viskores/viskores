@@ -77,7 +77,7 @@ public:
   VTKM_CONT
   const vtkm::cont::DataSet &GetBlock(vtkm::Id blockId) const
   {
-    return this->blocks[blockId];
+    return this->blocks[(unsigned long) blockId];
   }
   
   const std::vector<vtkm::cont::DataSet> &GetBlocks() const

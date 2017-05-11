@@ -74,9 +74,9 @@ MultiBlock_TwoDimUniformTest()
 
   vtkm::cont::MultiBlock T2Block(Vblocks);
   std::vector<vtkm::cont::DataSet> InBlocks = T2Block.GetBlocks();
-  for(int j=0; j<InBlocks.size(); j++)
+  for(unsigned int j=0; j<InBlocks.size(); j++)
   {
-    vtkm::cont::DataSet TestDSet =InBlocks[j];
+    TestDSet =InBlocks[j];
     VTKM_TEST_ASSERT(Vblocks[j].GetNumberOfFields() == TestDSet.GetNumberOfFields(),
                    "Incorrect number of fields");
     VTKM_TEST_ASSERT(Vblocks[j].GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
