@@ -1,13 +1,20 @@
-import sys, os, pickle
+import sys, os, pickle, math
 import subprocess
+
+def mkSeeds(N) :
+    seeds = []
+    n = 0
+    while n <= N :
+          seeds.append(int(math.pow(10,n)))
+          n = n+1
+    return seeds
+    
 
 FILES = ['astro.bov', 'fusion.bov', 'fishtank.bov']
 #STEPSIZE = {'astro.bov':0.0025, 'fusion.bov':0.01, 'fishtank.bov':0.0002}
 STEPSIZE = {'astro.bov':0.005, 'fusion.bov':0.005, 'fishtank.bov':0.0002}
-TERMINATE = {'short' : 10, 'med' : 100, 'long' : 1000}
-SEEDS = [1000, 10000, 100000, 1000000, 10000000]
-SEEDS = [1000, 10000, 100000, 1000000]
-
+TERMINATE = {'short' : 10, 'med' : 100, 'long' : 1000, 'long2' : 2000, 'long5' : 5000, 'long10' : 10000, 'long20':20000, 'long100': 100000}
+SEEDS = mkSeeds(4)
 
 def buildMachineMap(machineMap, machName, exeDir='.',dataDir='.', hasGPU=False, hasTBB=False, maxThreads=-1) :
     mi = {'exeDir':exeDir,
@@ -20,6 +27,11 @@ def buildMachineMap(machineMap, machName, exeDir='.',dataDir='.', hasGPU=False, 
         
     machineMap[machName] = mi
     return machineMap
+
+TBB_LIST = {'titan':[1,2,4,8,16, 3,5,6,7,9,10,11,12,13,14,15],
+            'rhea':[1,2,4,8,16,32, 3,5,6,7,9,10,11,12,13,14,15],
+            'rheaGPU':[1,2,4,8,14,28,56, 3,4,6,7,9,10,11,12,13,15,16,17,18,19,20,21,22,23,24,25,26,27]}
+            
               
 def makeAlg(mach, doTBBScaling=False):
     alg = []
@@ -30,31 +42,32 @@ def makeAlg(mach, doTBBScaling=False):
     if doTBBScaling :
         maxThreads = mach['maxThreads']
         if maxThreads > 1 :
-            nt = 1
-            while nt < maxThreads :
-                alg.append('TBB_%d'%nt)
-                nt = nt+1
+           for n in TBB_LIST[mach['name']] :
+               alg.append('TBB_%d'%n)
     return alg
 
 def GetDB(dbFile) :
+    print dbFile
     if not os.path.isfile(dbFile) :
         db = {}
         pickle.dump(db, open(dbFile, 'wb'))
     db = pickle.load(open(dbFile, 'rb'))
     return db
 
-def needToRun(db, dataFile, alg, seeds, term) :
-    key = (dataFile, alg, seeds, term)
-    print 'need to run: ', key, key not in db.keys()
+def needToRun(db, dataFile, alg, seeds, term, pt) :
+    key = (dataFile, alg, seeds, term, pt)
+    if key not in db.keys() :
+        print 'need to run: ', key
     return key not in db.keys()
 
 def recordTest(db, output, dataFile, alg, seeds, term, pt) :
-    key = (dataFile, alg, seeds, term)
+    key = (dataFile, alg, seeds, term, pt)
     for l in output :
         if 'Runtime =' in l :
             time = int(l.split()[2])
             db[key] = time
             print key, time
+            return
 
 def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt) :
     exe = 'Particle_Advection_TBB'
@@ -77,19 +90,18 @@ def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt) :
         args = args + '-t %d ' % nt
 
     cmd = ''
-    if needToRun(db, dataFile, alg, seeds, term) :
+    if needToRun(db, dataFile, alg, seeds, term, pt) :
         cmd = '%s %s' % (exe, args)
     return cmd
 
+lustreDataDir = '/lustre/atlas/scratch/pugmire/csc094/vtkm/titan'
 
 machineMap = {}
-machineMap = buildMachineMap(machineMap, 'titan',
-                             '/lustre/atlas/scratch/pugmire/csc094/vtkm/titan',
-                             '/lustre/atlas/scratch/pugmire/csc094/vtkm/titan', 
+machineMap = buildMachineMap(machineMap, 'titan', lustreDataDir, lustreDataDir,
                              hasGPU=True, hasTBB=True, maxThreads=16)
-machineMap = buildMachineMap(machineMap, 'rhea', 'build/bin/', '.', hasGPU=False, hasTBB=True, maxThreads=16)  ##HT 32
-machineMap = buildMachineMap(machineMap, 'rheaGPU', 'build.rhea/bin',
-                             '/lustre/atlas/scratch/pugmire/csc094/vtkm/titan',
+machineMap = buildMachineMap(machineMap, 'rhea', 'build.rheaC/bin/', lustreDataDir,
+                             hasGPU=False, hasTBB=True, maxThreads=16)  ##HT 32
+machineMap = buildMachineMap(machineMap, 'rheaGPU', 'build.rheaG/bin', lustreDataDir,
                              hasGPU=True, hasTBB=True, maxThreads=28) ##HT 56
 machineMap = buildMachineMap(machineMap, 'whoopingcough', './build/bin', 'data', hasGPU=True, hasTBB=True, maxThreads=24)
 
@@ -117,15 +129,19 @@ ALG = makeAlg(machineInfo, doTBBScaling=tbbScale)
 
 
 PT = ['particle', 'streamline']
-PT = ['particle']
+PT = ['particle', 'streamline -1']
 
-for f in FILES :
-    for t in ['short', 'med', 'long'] :
+print SEEDS
+
+for s in SEEDS :
+    for t in TERMINATE.keys() :
         for a in ALG :
-            for s in SEEDS :
+            for f in FILES :
                 for p in PT :
+                    print (a,s,t,p), f
                     cmd = createCommand(db, machineInfo, f, a, s, t, p)
                     if cmd == '' : continue
+
                     print 'running....', cmd
                     result = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
                     recordTest(db, result.stderr.readlines(), f, a, s, t, p)
