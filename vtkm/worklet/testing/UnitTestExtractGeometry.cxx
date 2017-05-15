@@ -23,13 +23,6 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/CellSet.h>
-
-#include <algorithm>
-#include <iostream>
-#include <vector>
-
 using vtkm::cont::testing::MakeTestDataSet;
 
 template <typename DeviceAdapter>
@@ -96,6 +89,10 @@ public:
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.0f, 0.0f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(2.0f, 2.0f, 2.0f);
     vtkm::cont::Box box(minPoint, maxPoint);
+
+    bool extractInside = true;
+    bool extractBoundaryCells = false;
+    bool extractOnlyBoundaryCells = false;
   
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
@@ -103,6 +100,9 @@ public:
         extractGeometry.Run(cellSet,
                             dataset.GetCoordinateSystem("coordinates"),
                             box,
+                            extractInside,
+                            extractBoundaryCells,
+                            extractOnlyBoundaryCells,
                             DeviceAdapter());
 
     vtkm::cont::Field cellField =
@@ -217,12 +217,19 @@ public:
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0f, 3.0f, 3.0f);
     vtkm::cont::Box box(minPoint, maxPoint);
   
+    bool extractInside = true;
+    bool extractBoundaryCells = false;
+    bool extractOnlyBoundaryCells = false;
+
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
         extractGeometry.Run(cellSet,
                             dataset.GetCoordinateSystem("coords"),
                             box,
+                            extractInside,
+                            extractBoundaryCells,
+                            extractOnlyBoundaryCells,
                             DeviceAdapter());
 
     vtkm::cont::Field cellField =
@@ -257,12 +264,19 @@ public:
     vtkm::FloatDefault radius(1.8f);
     vtkm::cont::Sphere sphere(center, radius);
   
+    bool extractInside = true;
+    bool extractBoundaryCells = false;
+    bool extractOnlyBoundaryCells = false;
+
     // Output data set with cell set containing extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = 
         extractGeometry.Run(cellSet,
                             dataset.GetCoordinateSystem("coords"),
                             sphere,
+                            extractInside,
+                            extractBoundaryCells,
+                            extractOnlyBoundaryCells,
                             DeviceAdapter());
 
     vtkm::cont::Field cellField =
