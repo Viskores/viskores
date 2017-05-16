@@ -411,7 +411,7 @@ public:
                                      extDimX,     extDimY,      extDimZ,
                                      ext2, 
                                      extDimX,     extDimY,      extDimZ + 1,
-                                     0,           0,          1,
+                                     0,           0,            1,
                                      DeviceTag()  );
       WaveletBase::DeviceAssignZero3DPlaneZ( ext2, 
                                              extDimX,   extDimY,    extDimZ + 1,
@@ -450,13 +450,13 @@ public:
   // The output has the same size as the small cube
   template< typename ArrayInType, typename ArrayOutType, typename DeviceTag >
   vtkm::Float64 DWT3D  (
-								ArrayInType               &sigIn,
-								vtkm::Id sigDimX,        	vtkm::Id sigDimY,       	vtkm::Id sigDimZ,
-								vtkm::Id sigStartX,      	vtkm::Id sigStartY,       vtkm::Id sigStartZ,
-								vtkm::Id sigPretendDimX, 	vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
-								ArrayOutType             	&coeffOut,
-								bool											discardSigIn,	// discard sigIn for more memory
-								DeviceTag   )
+                ArrayInType               &sigIn,
+                vtkm::Id sigDimX,         vtkm::Id sigDimY,         vtkm::Id sigDimZ,
+                vtkm::Id sigStartX,       vtkm::Id sigStartY,       vtkm::Id sigStartZ,
+                vtkm::Id sigPretendDimX,  vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
+                ArrayOutType              &coeffOut,
+                bool                      discardSigIn,	// discard sigIn for more memory
+                DeviceTag   )
   {
     std::vector<vtkm::Id> L(27, 0);
 
@@ -1237,9 +1237,6 @@ public:
                               SignalArrayType       &sigOut,      // Output
                               DeviceTag                     )
   {
-    //VTKM_ASSERT( L.size() == 3 );
-    //VTKM_ASSERT( L[2] == coeffIn.GetNumberOfValues() );
-
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
     bool doSymConv = false;
     vtkm::worklet::wavelets::DWTMode cALeftMode  = WaveletBase::wmode;
@@ -1360,10 +1357,6 @@ public:
                ( cDLeftOn, dummyArray );
     }
 
-    // make sure signal extension went as expected
-    //VTKM_ASSERT( cATemp.GetNumberOfValues() == cATempLen );
-    //VTKM_ASSERT( cDTemp.GetNumberOfValues() == cDTempLen );
-
     vtkm::cont::ArrayHandleConcatenate< Concat2, Concat2>
         coeffInExtended( cATemp, cDTemp );
 
@@ -1440,9 +1433,6 @@ public:
                                   std::vector<vtkm::Id>    &L,
                                   DeviceTag                     )
   {
-    //VTKM_ASSERT( sigDimX * sigDimY == sigIn.GetNumberOfValues() );
-    
-    //VTKM_ASSERT( L.size() == 10 );
     L[0] = WaveletBase::GetApproxLength( sigPretendDimX );    L[2] = L[0];
     L[1] = WaveletBase::GetApproxLength( sigPretendDimY );    L[5] = L[1];
     L[3] = WaveletBase::GetDetailLength( sigPretendDimY );    L[7] = L[3];
@@ -1534,8 +1524,6 @@ public:
                                 ArrayOutType              &sigOut,
                                 DeviceTag     )
   {
-    //VTKM_ASSERT( L.size() == 10 );
-    //VTKM_ASSERT( inDimX * inDimY == coeffIn.GetNumberOfValues() );
     vtkm::Id inPretendDimX = L[0] + L[4];
     vtkm::Id inPretendDimY = L[1] + L[3];
 

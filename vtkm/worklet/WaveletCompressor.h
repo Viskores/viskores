@@ -158,11 +158,11 @@ public:
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT
   vtkm::Float64 WaveDecompose3D( 
-            			InArrayType             &sigIn,     // Input
+                  InArrayType             &sigIn,     // Input
                   vtkm::Id                nLevels,    // n levels of DWT
                   vtkm::Id                inX,        vtkm::Id  inY,    vtkm::Id  inZ,
                   OutArrayType            &coeffOut,
-                  bool										discardSigIn,	// can we discard sigIn for more memory?
+                  bool                    discardSigIn,	// can we discard sigIn for more memory?
                   DeviceTag  )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
@@ -233,11 +233,11 @@ public:
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT
   vtkm::Float64 WaveReconstruct3D( 
-            			InArrayType           &arrIn,     // Input
+                  InArrayType           &arrIn,     // Input
                   vtkm::Id              nLevels,    // n levels of DWT
                   vtkm::Id              inX,        vtkm::Id inY,       vtkm::Id inZ,
                   OutArrayType          &arrOut,
-                  bool									discardArrIn,	// can we discard input for more memory?
+                  bool                  discardArrIn,	// can we discard input for more memory?
                   DeviceTag                       )
   {
     vtkm::Id arrInLen = arrIn.GetNumberOfValues();
@@ -279,13 +279,13 @@ public:
       OutBasicArray  tempOutput;
 
       // IDWT
-      computationTime += WaveletDWT::IDWT3D( 	outBuffer, 
-																							inX,        inY,      inZ,
-																							0,          0,        0,
-																							L3d,    
-																							tempOutput, 
-																							false, 
-																							DeviceTag() );
+      computationTime += WaveletDWT::IDWT3D(  outBuffer, 
+                                              inX,        inY,      inZ,
+                                              0,          0,        0,
+                                              L3d,    
+                                              tempOutput, 
+                                              false, 
+                                              DeviceTag() );
 
       // copy back reconstructed block
       WaveletBase::DeviceCubeCopyTo(  tempOutput, 
@@ -307,13 +307,13 @@ public:
     L3d[24] = L3d[0] + L3d[12];
     L3d[25] = L3d[1] + L3d[7];
     L3d[26] = L3d[2] + L3d[5]; 
-    computationTime += WaveletDWT::IDWT3D( 	outBuffer, 
-																						inX,        inY,      inZ,
-																						0,          0,        0,
-																						L3d, 
-																						arrOut, 
-																						true, 
-																						DeviceTag() );
+    computationTime += WaveletDWT::IDWT3D( outBuffer, 
+                                           inX,        inY,      inZ,
+                                           0,          0,        0,
+                                           L3d, 
+                                           arrOut, 
+                                           true, 
+                                           DeviceTag() );
     
     return computationTime;
   }
