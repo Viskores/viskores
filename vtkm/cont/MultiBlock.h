@@ -77,7 +77,7 @@ public:
   VTKM_CONT
   const vtkm::cont::DataSet &GetBlock(vtkm::Id blockId) const
   {
-    return this->blocks[(unsigned long) blockId];
+    return this->blocks[(std::size_t) blockId];
   }
   
   const std::vector<vtkm::cont::DataSet> &GetBlocks() const
@@ -94,7 +94,7 @@ public:
   VTKM_CONT
   void AddBlocks(std::vector<vtkm::cont::DataSet> &mblocks)
   {    
-    for(unsigned int i = 0; i < mblocks.size(); i++)
+    for(std::size_t i = 0; i < mblocks.size(); i++)
     {
       AddBlock(mblocks[i]);
     }

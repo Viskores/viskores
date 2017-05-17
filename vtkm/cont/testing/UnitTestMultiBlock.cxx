@@ -22,6 +22,11 @@
 
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/VectorAnalysis.h>
+
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/MultiBlock.h>
 #include <vtkm/exec/ConnectivityStructured.h>
@@ -29,8 +34,15 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-static void MultiBlock_TwoDimUniformTest();
+#include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
+
+
+static void MultiBlock_TwoDimUniformTest();
+static void MultiBlock_WorkletTest(vtkm::cont::MultiBlock Block);
 
 void TestMultiBlock_Uniform()
 {
@@ -39,14 +51,38 @@ void TestMultiBlock_Uniform()
   MultiBlock_TwoDimUniformTest();
 }
 
+namespace vtkm {
+namespace worklet {
+
+class Threshold : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<Scalar> InputField, FieldOut<Scalar> FilterResult);
+  typedef void ExecutionSignature (_1 , _2);
+  //typedef _1 InputDomain;
+
+  template <typename T,typename H>
+  VTKM_EXEC
+  void operator()( const T Input,  H Out) const
+  {  
+    if(Input > 5)
+    {   Out=1 ; }
+    else
+    {   Out=0 ;}
+    return ;
+  }
+};
+
+}
+}
 static void
 MultiBlock_TwoDimUniformTest()
 { 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::MultiBlock TestBlock;  
     
-  vtkm::cont::DataSet TDset1=testDataSet.Make2DUniformDataSet0();
-  vtkm::cont::DataSet TDset2=testDataSet.Make3DUniformDataSet0();
+  vtkm::cont::DataSet TDset1 = testDataSet.Make2DUniformDataSet0();
+  vtkm::cont::DataSet TDset2 = testDataSet.Make3DUniformDataSet0();
 
   TestBlock.AddBlock(TDset1);
   TestBlock.AddBlock(TDset2);
@@ -74,14 +110,32 @@ MultiBlock_TwoDimUniformTest()
 
   vtkm::cont::MultiBlock T2Block(Vblocks);
   std::vector<vtkm::cont::DataSet> InBlocks = T2Block.GetBlocks();
-  for(unsigned int j=0; j<InBlocks.size(); j++)
+  for(std::size_t j=0; j<InBlocks.size(); j++)
   {
-    TestDSet =InBlocks[j];
+    TestDSet = InBlocks[j];
     VTKM_TEST_ASSERT(Vblocks[j].GetNumberOfFields() == TestDSet.GetNumberOfFields(),
                    "Incorrect number of fields");
     VTKM_TEST_ASSERT(Vblocks[j].GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
                    "Incorrect number of coordinate systems");
   }  
+  MultiBlock_WorkletTest(T2Block);
+}
+
+void MultiBlock_WorkletTest(vtkm::cont::MultiBlock Blocks)
+{
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> output;
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::Threshold> dispatcher;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> input;
+
+  std::vector<vtkm::cont::DataSet> InBlocks = Blocks.GetBlocks();
+  //for(unsigned int j=0; j<InBlocks.size(); j++)
+  { 
+    //std::cout<<"block id "<<j;
+    dispatcher.Invoke(InBlocks[0].GetPointField("pointvar").GetData(),output);
+    //dispatcher.Invoke(input,output);    
+  }
+
+  return ;
 }
 
 
