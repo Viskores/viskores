@@ -128,10 +128,10 @@ void MultiBlock_WorkletTest(vtkm::cont::MultiBlock Blocks)
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> input;
 
   std::vector<vtkm::cont::DataSet> InBlocks = Blocks.GetBlocks();
-  //for(unsigned int j=0; j<InBlocks.size(); j++)
+  for(unsigned int j=0; j<InBlocks.size(); j++)
   { 
     //std::cout<<"block id "<<j;
-    dispatcher.Invoke(InBlocks[0].GetPointField("pointvar").GetData(),output);
+    dispatcher.Invoke(InBlocks[j].GetPointField("pointvar").GetData(),output);
     //dispatcher.Invoke(input,output);    
   }
 
