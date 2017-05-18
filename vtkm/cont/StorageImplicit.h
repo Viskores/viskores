@@ -28,8 +28,10 @@
 
 #include <vtkm/cont/internal/ArrayTransfer.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 /// \brief An implementation for read-only implicit arrays.
 ///
@@ -41,18 +43,17 @@ namespace cont {
 /// desired values. An ArrayHandle created with this tag will raise an error on
 /// any operation that tries to modify it.
 ///
-template<class ArrayPortalType>
+template <class ArrayPortalType>
 struct VTKM_ALWAYS_EXPORT StorageTagImplicit
 {
   typedef ArrayPortalType PortalType;
 };
 
-namespace internal {
+namespace internal
+{
 
-template<class ArrayPortalType>
-class Storage<
-    typename ArrayPortalType::ValueType,
-    StorageTagImplicit<ArrayPortalType> >
+template <class ArrayPortalType>
+class Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>
 {
 public:
   typedef typename ArrayPortalType::ValueType ValueType;
@@ -62,30 +63,23 @@ public:
   // should only be able to use the const version.
   struct PortalType
   {
-    typedef void *ValueType;
-    typedef void *IteratorType;
+    typedef void* ValueType;
+    typedef void* IteratorType;
   };
 
   VTKM_CONT
-  Storage(const PortalConstType &portal = PortalConstType())
-    : Portal(portal) {  }
+  Storage(const PortalConstType& portal = PortalConstType())
+    : Portal(portal)
+  {
+  }
 
   // All these methods do nothing but raise errors.
   VTKM_CONT
-  PortalType GetPortal()
-  {
-    throw vtkm::cont::ErrorBadValue("Implicit arrays are read-only.");
-  }
+  PortalType GetPortal() { throw vtkm::cont::ErrorBadValue("Implicit arrays are read-only."); }
   VTKM_CONT
-  PortalConstType GetPortalConst() const
-  {
-    return this->Portal;
-  }
+  PortalConstType GetPortalConst() const { return this->Portal; }
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return this->Portal.GetNumberOfValues();
-  }
+  vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
   VTKM_CONT
   void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
   {
@@ -97,20 +91,18 @@ public:
     throw vtkm::cont::ErrorBadValue("Implicit arrays are read-only.");
   }
   VTKM_CONT
-  void ReleaseResources()
-  {
-  }
+  void ReleaseResources() {}
 
 private:
   PortalConstType Portal;
 };
 
-template<typename T, class ArrayPortalType, class DeviceAdapterTag>
+template <typename T, class ArrayPortalType, class DeviceAdapterTag>
 class ArrayTransfer<T, StorageTagImplicit<ArrayPortalType>, DeviceAdapterTag>
 {
 private:
   typedef StorageTagImplicit<ArrayPortalType> StorageTag;
-  typedef vtkm::cont::internal::Storage<T,StorageTag> StorageType;
+  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
 
 public:
   typedef T ValueType;
@@ -121,13 +113,13 @@ public:
   typedef PortalConstControl PortalConstExecution;
 
   VTKM_CONT
-  ArrayTransfer(StorageType *storage) : Storage(storage) {  }
+  ArrayTransfer(StorageType* storage)
+    : Storage(storage)
+  {
+  }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return this->Storage->GetNumberOfValues();
-  }
+  vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
 
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
@@ -138,21 +130,18 @@ public:
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    throw vtkm::cont::ErrorBadValue(
-          "Implicit arrays cannot be used for output or in place.");
+    throw vtkm::cont::ErrorBadValue("Implicit arrays cannot be used for output or in place.");
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorBadValue(
-          "Implicit arrays cannot be used for output.");
+    throw vtkm::cont::ErrorBadValue("Implicit arrays cannot be used for output.");
   }
   VTKM_CONT
-  void RetrieveOutputData(StorageType *vtkmNotUsed(controlArray)) const
+  void RetrieveOutputData(StorageType* vtkmNotUsed(controlArray)) const
   {
-    throw vtkm::cont::ErrorBadValue(
-          "Implicit arrays cannot be used for output.");
+    throw vtkm::cont::ErrorBadValue("Implicit arrays cannot be used for output.");
   }
 
   template <class IteratorTypeControl>
@@ -162,8 +151,7 @@ public:
     PortalType portal = this->Storage->GetPortalConst();
 
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-              vtkm::cont::ArrayPortalToIteratorEnd(portal),
-              dest);
+              vtkm::cont::ArrayPortalToIteratorEnd(portal), dest);
   }
 
   VTKM_CONT
@@ -173,14 +161,13 @@ public:
   }
 
   VTKM_CONT
-  void ReleaseResources() {  }
+  void ReleaseResources() {}
 
 private:
-  StorageType *Storage;
+  StorageType* Storage;
 };
 
 } // namespace internal
-
 }
 } // namespace vtkm::cont
 

@@ -24,37 +24,38 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace vtkm {
-namespace cont {
-namespace testing {
+namespace vtkm
+{
+namespace cont
+{
+namespace testing
+{
 
 struct Testing
 {
 public:
-  template<class Func>
+  template <class Func>
   static VTKM_CONT int Run(Func function)
   {
     try
     {
       function();
     }
-    catch (vtkm::testing::Testing::TestFailure &error)
+    catch (vtkm::testing::Testing::TestFailure& error)
     {
-      std::cout << "***** Test failed @ "
-                << error.GetFile() << ":" << error.GetLine() << std::endl
+      std::cout << "***** Test failed @ " << error.GetFile() << ":" << error.GetLine() << std::endl
                 << error.GetMessage() << std::endl;
       return 1;
     }
-    catch (vtkm::cont::Error &error)
+    catch (vtkm::cont::Error& error)
     {
       std::cout << "***** Uncaught VTKm exception thrown." << std::endl
                 << error.GetMessage() << std::endl;
       return 1;
     }
-    catch (std::exception &error)
+    catch (std::exception& error)
     {
-      std::cout << "***** STL exception throw." << std::endl
-                << error.what() << std::endl;
+      std::cout << "***** STL exception throw." << std::endl << error.what() << std::endl;
     }
     catch (...)
     {
@@ -64,7 +65,6 @@ public:
     return 0;
   }
 };
-
 }
 }
 } // namespace vtkm::cont::testing

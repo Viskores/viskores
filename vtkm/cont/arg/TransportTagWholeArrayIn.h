@@ -28,9 +28,12 @@
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief \c Transport tag for in-place arrays with random access.
 ///
@@ -40,11 +43,12 @@ namespace arg {
 /// The worklet will have random access to the array through a portal
 /// interface.
 ///
-struct TransportTagWholeArrayIn {  };
+struct TransportTagWholeArrayIn
+{
+};
 
-template<typename ContObjectType, typename Device>
-struct Transport<
-    vtkm::cont::arg::TransportTagWholeArrayIn, ContObjectType, Device>
+template <typename ContObjectType, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagWholeArrayIn, ContObjectType, Device>
 {
   // If you get a compile error here, it means you tried to use an object that
   // is not an array handle as an argument that is expected to be one.
@@ -53,15 +57,11 @@ struct Transport<
   typedef typename ContObjectType::ValueType ValueType;
   typedef typename ContObjectType::StorageTag StorageTag;
 
-  typedef vtkm::exec::ExecutionWholeArrayConst<ValueType, StorageTag, Device>
-      ExecObjectType;
+  typedef vtkm::exec::ExecutionWholeArrayConst<ValueType, StorageTag, Device> ExecObjectType;
 
-  template<typename InputDomainType>
-  VTKM_CONT
-  ExecObjectType operator()(ContObjectType array,
-                            const InputDomainType &,
-                            vtkm::Id,
-                            vtkm::Id) const
+  template <typename InputDomainType>
+  VTKM_CONT ExecObjectType operator()(ContObjectType array, const InputDomainType&, vtkm::Id,
+                                      vtkm::Id) const
   {
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using
@@ -70,7 +70,6 @@ struct Transport<
     return ExecObjectType(array);
   }
 };
-
 }
 }
 } // namespace vtkm::cont::arg

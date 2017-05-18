@@ -82,9 +82,12 @@
 #include <vtkm/Types.h>
 #include <vtkm/internal/ExportMacros.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 template <typename InFieldPortalType>
 class VertexValueComparator
@@ -93,10 +96,13 @@ public:
   const InFieldPortalType& values;
 
   VTKM_EXEC_CONT
-  VertexValueComparator(const InFieldPortalType& Values) : values(Values) {}
+  VertexValueComparator(const InFieldPortalType& Values)
+    : values(Values)
+  {
+  }
 
   VTKM_EXEC
-  bool operator () (const vtkm::Id &i, const vtkm::Id &j, bool ascending)
+  bool operator()(const vtkm::Id& i, const vtkm::Id& j, bool ascending)
   {
     if (values.Get(i) < values.Get(j))
       return ascending ^ true;
@@ -107,10 +113,9 @@ public:
     else if (j < i)
       return ascending ^ false;
     // fall through to return false
-      return false;
-    }
+    return false;
+  }
 };
-
 }
 }
 }

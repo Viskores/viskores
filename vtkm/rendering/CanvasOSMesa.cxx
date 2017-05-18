@@ -37,10 +37,13 @@
 #endif
 #include <GL/osmesa.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-namespace detail {
+namespace detail
+{
 
 struct CanvasOSMesaInternals
 {
@@ -50,8 +53,8 @@ struct CanvasOSMesaInternals
 } // namespace detail
 
 CanvasOSMesa::CanvasOSMesa(vtkm::Id width, vtkm::Id height)
-  : CanvasGL(width,height),
-    Internals(new detail::CanvasOSMesaInternals)
+  : CanvasGL(width, height)
+  , Internals(new detail::CanvasOSMesaInternals)
 {
   this->Internals->Context = nullptr;
   this->ResizeBuffers(width, height);
@@ -63,25 +66,19 @@ CanvasOSMesa::~CanvasOSMesa()
 
 void CanvasOSMesa::Initialize()
 {
-  this->Internals->Context =
-      OSMesaCreateContextExt(OSMESA_RGBA, 32, 0, 0, nullptr);
+  this->Internals->Context = OSMesaCreateContextExt(OSMESA_RGBA, 32, 0, 0, nullptr);
 
   if (!this->Internals->Context)
   {
     throw vtkm::cont::ErrorBadValue("OSMesa context creation failed.");
   }
-  vtkm::Vec<vtkm::Float32,4> *colorBuffer =
-      this->GetColorBuffer().GetStorage().GetArray();
-  if (!OSMesaMakeCurrent(this->Internals->Context,
-                         reinterpret_cast<vtkm::Float32*>(colorBuffer),
-                         GL_FLOAT,
-                         static_cast<GLsizei>(this->GetWidth()),
+  vtkm::Vec<vtkm::Float32, 4>* colorBuffer = this->GetColorBuffer().GetStorage().GetArray();
+  if (!OSMesaMakeCurrent(this->Internals->Context, reinterpret_cast<vtkm::Float32*>(colorBuffer),
+                         GL_FLOAT, static_cast<GLsizei>(this->GetWidth()),
                          static_cast<GLsizei>(this->GetHeight())))
   {
     throw vtkm::cont::ErrorBadValue("OSMesa context activation failed.");
   }
-
-
 }
 
 void CanvasOSMesa::RefreshColorBuffer() const
@@ -99,7 +96,7 @@ void CanvasOSMesa::Finish()
 {
   this->CanvasGL::Finish();
 
-  // This is disabled because it is handled in RefreshDepthBuffer
+// This is disabled because it is handled in RefreshDepthBuffer
 #if 0
   //Copy zbuff into floating point array.
   unsigned int *raw_zbuff;
@@ -123,10 +120,9 @@ void CanvasOSMesa::Finish()
 #endif
 }
 
-vtkm::rendering::Canvas *CanvasOSMesa::NewCopy() const
+vtkm::rendering::Canvas* CanvasOSMesa::NewCopy() const
 {
   return new vtkm::rendering::CanvasOSMesa(*this);
 }
-
 }
 } // namespace vtkm::rendering

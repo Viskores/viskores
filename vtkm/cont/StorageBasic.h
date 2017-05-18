@@ -33,25 +33,31 @@
 #define VTKM_CACHE_LINE_SIZE 64
 #endif
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 /// A tag for the basic implementation of a Storage object.
-struct VTKM_ALWAYS_EXPORT StorageTagBasic {  };
+struct VTKM_ALWAYS_EXPORT StorageTagBasic
+{
+};
 
-namespace internal {
+namespace internal
+{
 
 VTKM_CONT_EXPORT
 void* alloc_aligned(size_t size, size_t align);
 
 VTKM_CONT_EXPORT
-void free_aligned(void *mem);
+void free_aligned(void* mem);
 
 /// A simple aligned allocator type that will align allocations to `Alignment` bytes
 /// TODO: Once C++11 std::allocator_traits is better used by STL and we want to drop
 /// support for pre-C++11 we can drop a lot of the typedefs and functions here.
-template<typename T, size_t Alignment>
-struct AlignedAllocator {
+template <typename T, size_t Alignment>
+struct AlignedAllocator
+{
   typedef T value_type;
   typedef T& reference;
   typedef const T& const_reference;
@@ -62,45 +68,39 @@ struct AlignedAllocator {
   typedef std::ptrdiff_t difference_type;
   typedef std::size_t size_type;
 
-  template<typename U>
-  struct rebind {
+  template <typename U>
+  struct rebind
+  {
     typedef AlignedAllocator<U, Alignment> other;
   };
 
-  AlignedAllocator(){}
+  AlignedAllocator() {}
 
-  template<typename Tb>
-  AlignedAllocator(const AlignedAllocator<Tb, Alignment>&){}
+  template <typename Tb>
+  AlignedAllocator(const AlignedAllocator<Tb, Alignment>&)
+  {
+  }
 
-  pointer allocate(size_t n){
+  pointer allocate(size_t n)
+  {
     return static_cast<pointer>(alloc_aligned(n * sizeof(T), Alignment));
   }
-  void deallocate(pointer p, size_t){
-    free_aligned(static_cast<void*>(p));
-  }
-  pointer address(reference r){
-    return &r;
-  }
-  const_pointer address(const_reference r){
-    return &r;
-  }
-  size_type max_size() const {
-    return (std::numeric_limits<size_type>::max)() / sizeof(T);
-  }
-  void construct(pointer p, const T &t){
-    new(p) T(t);
-  }
-  void destroy(pointer p){
-    p->~T();
-  }
+  void deallocate(pointer p, size_t) { free_aligned(static_cast<void*>(p)); }
+  pointer address(reference r) { return &r; }
+  const_pointer address(const_reference r) { return &r; }
+  size_type max_size() const { return (std::numeric_limits<size_type>::max)() / sizeof(T); }
+  void construct(pointer p, const T& t) { new (p) T(t); }
+  void destroy(pointer p) { p->~T(); }
 };
 
-template<typename T, typename U, size_t AlignA, size_t AlignB>
-bool operator==(const AlignedAllocator<T, AlignA>&, const AlignedAllocator<U, AlignB>&){
+template <typename T, typename U, size_t AlignA, size_t AlignB>
+bool operator==(const AlignedAllocator<T, AlignA>&, const AlignedAllocator<U, AlignB>&)
+{
   return AlignA == AlignB;
 }
-template<typename T, typename U, size_t AlignA, size_t AlignB>
-bool operator!=(const AlignedAllocator<T, AlignA>&, const AlignedAllocator<U, AlignB>&){
+template <typename T, typename U, size_t AlignA, size_t AlignB>
+bool operator!=(const AlignedAllocator<T, AlignA>&, const AlignedAllocator<U, AlignB>&)
+{
   return AlignA != AlignB;
 }
 
@@ -130,18 +130,17 @@ public:
   typedef AlignedAllocator<ValueType, VTKM_CACHE_LINE_SIZE> AllocatorType;
 
 public:
-
   VTKM_CONT
-  Storage(const ValueType *array = nullptr, vtkm::Id numberOfValues = 0);
+  Storage(const ValueType* array = nullptr, vtkm::Id numberOfValues = 0);
 
   VTKM_CONT
   ~Storage();
 
   VTKM_CONT
-  Storage(const Storage<ValueType, StorageTagBasic> &src);
+  Storage(const Storage<ValueType, StorageTagBasic>& src);
 
   VTKM_CONT
-  Storage &operator=(const Storage<ValueType, StorageTagBasic> &src);
+  Storage& operator=(const Storage<ValueType, StorageTagBasic>& src);
 
   VTKM_CONT
   void ReleaseResources();
@@ -150,19 +149,13 @@ public:
   void Allocate(vtkm::Id numberOfValues);
 
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return this->NumberOfValues;
-  }
+  vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_CONT
   void Shrink(vtkm::Id numberOfValues);
 
   VTKM_CONT
-  PortalType GetPortal()
-  {
-    return PortalType(this->Array, this->Array + this->NumberOfValues);
-  }
+  PortalType GetPortal() { return PortalType(this->Array, this->Array + this->NumberOfValues); }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
@@ -177,15 +170,9 @@ public:
   /// Storage will eventually deallocate the array).
   ///
   VTKM_CONT
-  ValueType *GetArray()
-  {
-    return this->Array;
-  }
+  ValueType* GetArray() { return this->Array; }
   VTKM_CONT
-  const ValueType *GetArray() const
-  {
-    return this->Array;
-  }
+  const ValueType* GetArray() const { return this->Array; }
 
   /// \brief Take the reference away from this object.
   ///
@@ -197,10 +184,10 @@ public:
   /// destroying the memory.
   ///
   VTKM_CONT
-  ValueType *StealArray();
+  ValueType* StealArray();
 
 private:
-  ValueType *Array;
+  ValueType* Array;
   vtkm::Id NumberOfValues;
   vtkm::Id AllocatedSize;
   bool DeallocateOnRelease;
@@ -212,9 +199,12 @@ private:
 } // namespace vtkm::cont
 
 #ifndef vtkm_cont_StorageBasic_cxx
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<char, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Int8, StorageTagBasic>;
@@ -228,21 +218,27 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::UInt64, StorageTag
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Float32, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Float64, StorageTagBasic>;
 
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Int64,2>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Int32,2>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float32,2>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float64,2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<vtkm::Int64, 2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<vtkm::Int32, 2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT
+  Storage<vtkm::Vec<vtkm::Float32, 2>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT
+  Storage<vtkm::Vec<vtkm::Float64, 2>, StorageTagBasic>;
 
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Int64,3>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Int32,3>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float32,3>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float64,3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<vtkm::Int64, 3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<vtkm::Int32, 3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT
+  Storage<vtkm::Vec<vtkm::Float32, 3>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT
+  Storage<vtkm::Vec<vtkm::Float64, 3>, StorageTagBasic>;
 
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<char,4>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<Int8,4>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<UInt8,4>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float32,4>, StorageTagBasic>;
-extern template class VTKM_CONT_TEMPLATE_EXPORT Storage< vtkm::Vec<vtkm::Float64,4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<char, 4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<Int8, 4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Vec<UInt8, 4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT
+  Storage<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic>;
+extern template class VTKM_CONT_TEMPLATE_EXPORT
+  Storage<vtkm::Vec<vtkm::Float64, 4>, StorageTagBasic>;
 }
 }
 }

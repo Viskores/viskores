@@ -24,8 +24,10 @@
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractStructured.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 class ExtractStructured : public vtkm::filter::FilterDataSet<ExtractStructured>
 {
@@ -38,49 +40,46 @@ public:
   vtkm::Bounds GetVOI() const { return this->VOI; }
 
   VTKM_CONT
-  void SetVOI(int i0, int i1, 
-              int j0, int j1, 
-              int k0, int k1) 
-                             { this->VOI = vtkm::Bounds(i0, i1, j0, j1, k0, k1); }
+  void SetVOI(int i0, int i1, int j0, int j1, int k0, int k1)
+  {
+    this->VOI = vtkm::Bounds(i0, i1, j0, j1, k0, k1);
+  }
   VTKM_CONT
-  void SetVOI(int bounds[6]) 
-                             { this->VOI = vtkm::Bounds(bounds); }
+  void SetVOI(int bounds[6]) { this->VOI = vtkm::Bounds(bounds); }
   VTKM_CONT
   void SetVOI(vtkm::Id3 minPoint, vtkm::Id3 maxPoint)
-                             { this->VOI = vtkm::Bounds(minPoint, maxPoint); }
+  {
+    this->VOI = vtkm::Bounds(minPoint, maxPoint);
+  }
   VTKM_CONT
-  void SetVOI(const vtkm::Bounds &voi)      
-                             { this->VOI = voi; }
+  void SetVOI(const vtkm::Bounds& voi) { this->VOI = voi; }
 
   // Sampling rate
   VTKM_CONT
-  vtkm::Id3 GetSampleRate() const             { return this->SampleRate; }
+  vtkm::Id3 GetSampleRate() const { return this->SampleRate; }
   VTKM_CONT
-  void SetSampleRate(int i, int j, int k)
-                                              { this->SampleRate = vtkm::Id3(i,j,k); }
+  void SetSampleRate(int i, int j, int k) { this->SampleRate = vtkm::Id3(i, j, k); }
   VTKM_CONT
-  void SetSampleRate(vtkm::Id3 sampleRate)    { this->SampleRate = sampleRate; }
+  void SetSampleRate(vtkm::Id3 sampleRate) { this->SampleRate = sampleRate; }
 
   // Include the outer boundary on a subsample
   VTKM_CONT
-  bool GetIncludeBoundary()                   { return this->IncludeBoundary; }
+  bool GetIncludeBoundary() { return this->IncludeBoundary; }
   VTKM_CONT
-  void SetIncludeBoundary(bool value)         { this->IncludeBoundary = value; }
+  void SetIncludeBoundary(bool value) { this->IncludeBoundary = value; }
 
-  template<typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
-                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                        const DeviceAdapter& tag);
+  template <typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultDataSet DoExecute(
+    const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+    const DeviceAdapter& tag);
 
   // Map new field onto the resulting dataset after running the filter
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  bool DoMapField(vtkm::filter::ResultDataSet& result,
-                  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                  const vtkm::filter::FieldMetadata& fieldMeta,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                  const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT bool DoMapField(vtkm::filter::ResultDataSet& result,
+                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                            const vtkm::filter::FieldMetadata& fieldMeta,
+                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                            const DeviceAdapter& tag);
 
 private:
   vtkm::Bounds VOI;
@@ -88,10 +87,8 @@ private:
   bool IncludeBoundary;
   vtkm::worklet::ExtractStructured Worklet;
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/ExtractStructured.hxx>
 

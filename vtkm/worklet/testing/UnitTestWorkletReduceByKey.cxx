@@ -27,48 +27,39 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 #define STRINGIFY(x) STRINGIFY_IMPL(x)
 #define STRINGIFY_IMPL(x) #x
 
-#define TEST_ASSERT_WORKLET(condition) \
-  do { \
-    if (!(condition)) \
-    { \
-      this->RaiseError("Test assert failed: " #condition \
-                       "\n" __FILE__ ":" STRINGIFY(__LINE__)); \
-      return; \
-    } \
+#define TEST_ASSERT_WORKLET(condition)                                                             \
+  do                                                                                               \
+  {                                                                                                \
+    if (!(condition))                                                                              \
+    {                                                                                              \
+      this->RaiseError("Test assert failed: " #condition "\n" __FILE__ ":" STRINGIFY(__LINE__));   \
+      return;                                                                                      \
+    }                                                                                              \
   } while (false)
 
 static const vtkm::Id ARRAY_SIZE = 1033;
 static const vtkm::IdComponent GROUP_SIZE = 10;
-static const vtkm::Id NUM_UNIQUE = ARRAY_SIZE/GROUP_SIZE;
+static const vtkm::Id NUM_UNIQUE = ARRAY_SIZE / GROUP_SIZE;
 
 struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn keys,
-                                ValuesIn<> keyMirror,
-                                ValuesIn<> indexValues,
-                                ValuesInOut<> valuesToModify,
-                                ValuesOut<> writeKey);
+  typedef void ControlSignature(KeysIn keys, ValuesIn<> keyMirror, ValuesIn<> indexValues,
+                                ValuesInOut<> valuesToModify, ValuesOut<> writeKey);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex, ValueCount);
   typedef _1 InputDomain;
 
-  template<typename T,
-           typename KeyMirrorVecType,
-           typename IndexValuesVecType,
-           typename ValuesToModifyVecType,
-           typename WriteKeysVecType>
-  VTKM_EXEC
-  void operator()(const T &key,
-                  const KeyMirrorVecType &keyMirror,
-                  const IndexValuesVecType &valueIndices,
-                  ValuesToModifyVecType &valuesToModify,
-                  WriteKeysVecType &writeKey,
-                  vtkm::Id workIndex,
-                  vtkm::IdComponent numValues) const
+  template <typename T, typename KeyMirrorVecType, typename IndexValuesVecType,
+            typename ValuesToModifyVecType, typename WriteKeysVecType>
+  VTKM_EXEC void operator()(const T& key, const KeyMirrorVecType& keyMirror,
+                            const IndexValuesVecType& valueIndices,
+                            ValuesToModifyVecType& valuesToModify, WriteKeysVecType& writeKey,
+                            vtkm::Id workIndex, vtkm::IdComponent numValues) const
   {
     // These tests only work if keys are in sorted order, which is how we group
     // them.
@@ -81,11 +72,10 @@ struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
     TEST_ASSERT_WORKLET(valuesToModify.GetNumberOfComponents() == numValues);
     TEST_ASSERT_WORKLET(writeKey.GetNumberOfComponents() == numValues);
 
-
     for (vtkm::IdComponent iComponent = 0; iComponent < numValues; iComponent++)
     {
       TEST_ASSERT_WORKLET(test_equal(keyMirror[iComponent], key));
-      TEST_ASSERT_WORKLET(valueIndices[iComponent]%NUM_UNIQUE == workIndex);
+      TEST_ASSERT_WORKLET(valueIndices[iComponent] % NUM_UNIQUE == workIndex);
 
       T value = valuesToModify[iComponent];
       valuesToModify[iComponent] = static_cast<T>(key + value);
@@ -97,19 +87,13 @@ struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 
 struct CheckReducedValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn,
-                                ReducedValuesOut<> extractKeys,
-                                ReducedValuesIn<> indexReference,
-                                ReducedValuesInOut<> copyKeyPair);
+  typedef void ControlSignature(KeysIn, ReducedValuesOut<> extractKeys,
+                                ReducedValuesIn<> indexReference, ReducedValuesInOut<> copyKeyPair);
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
 
-  template<typename T>
-  VTKM_EXEC
-  void operator()(const T &key,
-                  T &reducedValueOut,
-                  vtkm::Id indexReference,
-                  vtkm::Pair<T,T> &copyKeyPair,
-                  vtkm::Id workIndex) const
+  template <typename T>
+  VTKM_EXEC void operator()(const T& key, T& reducedValueOut, vtkm::Id indexReference,
+                            vtkm::Pair<T, T>& copyKeyPair, vtkm::Id workIndex) const
   {
     // This check only work if keys are in sorted order, which is how we group
     // them.
@@ -124,24 +108,21 @@ struct CheckReducedValuesWorklet : vtkm::worklet::WorkletReduceByKey
   }
 };
 
-template<typename KeyType>
+template <typename KeyType>
 void TryKeyType(KeyType)
 {
   KeyType keyBuffer[ARRAY_SIZE];
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    keyBuffer[index] = TestValue(index%NUM_UNIQUE, KeyType());
+    keyBuffer[index] = TestValue(index % NUM_UNIQUE, KeyType());
   }
 
-  vtkm::cont::ArrayHandle<KeyType> keyArray =
-      vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
+  vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
-      Copy(keyArray, sortedKeys);
+  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(keyArray, sortedKeys);
 
-  vtkm::worklet::Keys<KeyType> keys(sortedKeys,
-                                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   vtkm::cont::ArrayHandle<KeyType> valuesToModify;
   valuesToModify.Allocate(ARRAY_SIZE);
@@ -149,31 +130,23 @@ void TryKeyType(KeyType)
 
   vtkm::cont::ArrayHandle<KeyType> writeKey;
 
-  vtkm::worklet::DispatcherReduceByKey<CheckKeyValuesWorklet>
-      dispatcherCheckKeyValues;
-  dispatcherCheckKeyValues.Invoke(keys,
-                                  keyArray,
-                                  vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
-                                  valuesToModify,
-                                  writeKey);
+  vtkm::worklet::DispatcherReduceByKey<CheckKeyValuesWorklet> dispatcherCheckKeyValues;
+  dispatcherCheckKeyValues.Invoke(keys, keyArray, vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
+                                  valuesToModify, writeKey);
 
-  VTKM_TEST_ASSERT(valuesToModify.GetNumberOfValues() == ARRAY_SIZE,
-                   "Bad array size.");
-  VTKM_TEST_ASSERT(writeKey.GetNumberOfValues() == ARRAY_SIZE,
-                   "Bad array size.");
+  VTKM_TEST_ASSERT(valuesToModify.GetNumberOfValues() == ARRAY_SIZE, "Bad array size.");
+  VTKM_TEST_ASSERT(writeKey.GetNumberOfValues() == ARRAY_SIZE, "Bad array size.");
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
-    KeyType key = TestValue(index%NUM_UNIQUE, KeyType());
+    KeyType key = TestValue(index % NUM_UNIQUE, KeyType());
     KeyType value = TestValue(index, KeyType());
 
-    VTKM_TEST_ASSERT(
-          test_equal(static_cast<KeyType>(key+value),
-                     valuesToModify.GetPortalConstControl().Get(index)),
-          "Bad in/out value.");
+    VTKM_TEST_ASSERT(test_equal(static_cast<KeyType>(key + value),
+                                valuesToModify.GetPortalConstControl().Get(index)),
+                     "Bad in/out value.");
 
-    VTKM_TEST_ASSERT(
-          test_equal(key, writeKey.GetPortalConstControl().Get(index)),
-          "Bad out value.");
+    VTKM_TEST_ASSERT(test_equal(key, writeKey.GetPortalConstControl().Get(index)),
+                     "Bad out value.");
   }
 
   vtkm::cont::ArrayHandle<KeyType> keyPairIn;
@@ -183,13 +156,9 @@ void TryKeyType(KeyType)
   vtkm::cont::ArrayHandle<KeyType> keyPairOut;
   keyPairOut.Allocate(NUM_UNIQUE);
 
-  vtkm::worklet::DispatcherReduceByKey<CheckReducedValuesWorklet>
-      dispatcherCheckReducedValues;
-  dispatcherCheckReducedValues.Invoke(
-        keys,
-        writeKey,
-        vtkm::cont::ArrayHandleIndex(NUM_UNIQUE),
-        vtkm::cont::make_ArrayHandleZip(keyPairIn, keyPairOut));
+  vtkm::worklet::DispatcherReduceByKey<CheckReducedValuesWorklet> dispatcherCheckReducedValues;
+  dispatcherCheckReducedValues.Invoke(keys, writeKey, vtkm::cont::ArrayHandleIndex(NUM_UNIQUE),
+                                      vtkm::cont::make_ArrayHandleZip(keyPairIn, keyPairOut));
 
   VTKM_TEST_ASSERT(writeKey.GetNumberOfValues() == NUM_UNIQUE,
                    "Reduced values output not sized correctly.");
@@ -200,10 +169,9 @@ void TryKeyType(KeyType)
 
 void TestReduceByKey()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<
-                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
-  std::cout << "Testing Map Field on device adapter: "
-            << DeviceAdapterTraits::GetName() << std::endl;
+  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  std::cout << "Testing Map Field on device adapter: " << DeviceAdapterTraits::GetName()
+            << std::endl;
 
   std::cout << "Testing vtkm::Id keys." << std::endl;
   TryKeyType(vtkm::Id());
@@ -220,7 +188,7 @@ void TestReduceByKey()
 
 } // anonymous namespace
 
-int UnitTestWorkletReduceByKey(int, char*[])
+int UnitTestWorkletReduceByKey(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestReduceByKey);
 }

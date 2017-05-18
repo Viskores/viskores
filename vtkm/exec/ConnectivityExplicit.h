@@ -25,14 +25,13 @@
 
 #include <vtkm/VecFromPortal.h>
 
-namespace vtkm {
-namespace exec {
+namespace vtkm
+{
+namespace exec
+{
 
-template<typename ShapePortalType,
-         typename NumIndicesPortalType,
-         typename ConnectivityPortalType,
-         typename IndexOffsetPortalType
-         >
+template <typename ShapePortalType, typename NumIndicesPortalType, typename ConnectivityPortalType,
+          typename IndexOffsetPortalType>
 class ConnectivityExplicit
 {
 public:
@@ -43,29 +42,21 @@ public:
   ConnectivityExplicit(const ShapePortalType& shapePortal,
                        const NumIndicesPortalType& numIndicesPortal,
                        const ConnectivityPortalType& connPortal,
-                       const IndexOffsetPortalType& indexOffsetPortal
-                       )
-  : Shapes(shapePortal),
-    NumIndices(numIndicesPortal),
-    Connectivity(connPortal),
-    IndexOffset(indexOffsetPortal)
+                       const IndexOffsetPortalType& indexOffsetPortal)
+    : Shapes(shapePortal)
+    , NumIndices(numIndicesPortal)
+    , Connectivity(connPortal)
+    , IndexOffset(indexOffsetPortal)
   {
-
   }
 
   VTKM_EXEC
-  SchedulingRangeType GetNumberOfElements() const
-  {
-    return this->Shapes.GetNumberOfValues();
-  }
+  SchedulingRangeType GetNumberOfElements() const { return this->Shapes.GetNumberOfValues(); }
 
   typedef vtkm::CellShapeTagGeneric CellShapeTag;
 
   VTKM_EXEC
-  CellShapeTag GetCellShape(vtkm::Id index) const
-  {
-    return CellShapeTag(this->Shapes.Get(index));
-  }
+  CellShapeTag GetCellShape(vtkm::Id index) const { return CellShapeTag(this->Shapes.Get(index)); }
 
   using IndicesType = vtkm::VecFromPortal<ConnectivityPortalType>;
 

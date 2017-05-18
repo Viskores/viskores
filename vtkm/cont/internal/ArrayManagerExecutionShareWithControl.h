@@ -27,16 +27,19 @@
 
 #include <algorithm>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 /// \c ArrayManagerExecutionShareWithControl provides an implementation for a
 /// \c ArrayManagerExecution class for a device adapter when the execution
 /// and control environments share memory. This class basically defers all its
 /// calls to a \c Storage class and uses the array allocated there.
 ///
-template<typename T, class StorageTag>
+template <typename T, class StorageTag>
 class ArrayManagerExecutionShareWithControl
 {
 public:
@@ -46,16 +49,15 @@ public:
   typedef typename StorageType::PortalConstType PortalConstType;
 
   VTKM_CONT
-  ArrayManagerExecutionShareWithControl(StorageType *storage)
-    : Storage(storage) { }
+  ArrayManagerExecutionShareWithControl(StorageType* storage)
+    : Storage(storage)
+  {
+  }
 
   /// Returns the size of the storage.
   ///
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return this->Storage->GetNumberOfValues();
-  }
+  vtkm::Id GetNumberOfValues() const { return this->Storage->GetNumberOfValues(); }
 
   /// Returns the constant portal from the storage.
   ///
@@ -68,10 +70,7 @@ public:
   /// Returns the read-write portal from the storage.
   ///
   VTKM_CONT
-  PortalType PrepareForInPlace(bool vtkmNotUsed(uploadData))
-  {
-    return this->Storage->GetPortal();
-  }
+  PortalType PrepareForInPlace(bool vtkmNotUsed(uploadData)) { return this->Storage->GetPortal(); }
 
   /// Allocates data in the storage and return the portal to that.
   ///
@@ -87,7 +86,7 @@ public:
   /// controlArray (under correct operation).
   ///
   VTKM_CONT
-  void RetrieveOutputData(StorageType *storage) const
+  void RetrieveOutputData(StorageType* storage) const
   {
     (void)storage;
     VTKM_ASSERT(storage == this->Storage);
@@ -100,35 +99,28 @@ public:
   VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
     typedef typename StorageType::PortalConstType::IteratorType IteratorType;
-    IteratorType beginIterator = 
-                    this->Storage->GetPortalConst().GetIteratorBegin();
+    IteratorType beginIterator = this->Storage->GetPortalConst().GetIteratorBegin();
 
-    std::copy(beginIterator, 
-              beginIterator + this->Storage->GetNumberOfValues(), dest);
+    std::copy(beginIterator, beginIterator + this->Storage->GetNumberOfValues(), dest);
   }
 
   /// Shrinks the storage.
   ///
   VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues)
-  {
-    this->Storage->Shrink(numberOfValues);
-  }
+  void Shrink(vtkm::Id numberOfValues) { this->Storage->Shrink(numberOfValues); }
 
   /// A no-op.
   ///
   VTKM_CONT
-  void ReleaseResources() { }
+  void ReleaseResources() {}
 
 private:
-  ArrayManagerExecutionShareWithControl(
-      ArrayManagerExecutionShareWithControl<T, StorageTag> &) = delete;
-  void operator=(
-      ArrayManagerExecutionShareWithControl<T, StorageTag> &) = delete;
+  ArrayManagerExecutionShareWithControl(ArrayManagerExecutionShareWithControl<T, StorageTag>&) =
+    delete;
+  void operator=(ArrayManagerExecutionShareWithControl<T, StorageTag>&) = delete;
 
-  StorageType *Storage;
+  StorageType* Storage;
 };
-
 }
 }
 } // namespace vtkm::cont::internal

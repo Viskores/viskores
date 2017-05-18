@@ -24,18 +24,18 @@
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
-namespace vtkm {
-namespace cont {
-namespace internal {
-
-template<typename VirtualObject, typename TargetClass>
-struct VirtualObjectTransfer<
-  VirtualObject, TargetClass, vtkm::cont::DeviceAdapterTagTBB> :
-  public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
+template <typename VirtualObject, typename TargetClass>
+struct VirtualObjectTransfer<VirtualObject, TargetClass, vtkm::cont::DeviceAdapterTagTBB>
+  : public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
 {
 };
-
 }
 }
 } // vtkm::cont::internal

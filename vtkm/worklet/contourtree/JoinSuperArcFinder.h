@@ -92,9 +92,12 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for finding join superarc - expressed as a unary functor since it is not
 // guaranteed to write back
@@ -107,27 +110,30 @@ template <typename T>
 class JoinSuperArcFinder : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T> {};
+  struct TagType : vtkm::ListTagBase<T>
+  {
+  };
 
   typedef void ControlSignature(FieldIn<IdType> vertex,           // (input) index into sorted edges
                                 WholeArrayIn<TagType> values,     // (input) data values
                                 WholeArrayInOut<IdType> saddles,  // (in out) saddles
                                 WholeArrayInOut<IdType> extrema); // (in out) maxima
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   bool isJoinTree;
 
   // Constructor
   VTKM_EXEC_CONT
-  JoinSuperArcFinder(bool IsJoinTree) :	isJoinTree(IsJoinTree) {}
+  JoinSuperArcFinder(bool IsJoinTree)
+    : isJoinTree(IsJoinTree)
+  {
+  }
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertex,
-                  const InFieldPortalType& values,
-                  const OutFieldPortalType& saddles,
-                  const OutFieldPortalType& extrema) const
+  VTKM_EXEC void operator()(const vtkm::Id& vertex, const InFieldPortalType& values,
+                            const OutFieldPortalType& saddles,
+                            const OutFieldPortalType& extrema) const
   {
     VertexValueComparator<InFieldPortalType> lessThan(values);
 
@@ -147,14 +153,13 @@ public:
       // if we're in the trunk, break immediately
       if (saddle == NO_VERTEX_ASSIGNED)
         break;
-      } // saddle above vertex
+    } // saddle above vertex
 
-      // when done, write back to the array
-      extrema.Set(vertex, extreme);
-      saddles.Set(vertex, saddle);
+    // when done, write back to the array
+    extrema.Set(vertex, extreme);
+    saddles.Set(vertex, saddle);
   }
 }; // JoinSuperArcFinder
-
 }
 }
 }

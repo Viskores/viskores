@@ -24,9 +24,12 @@
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief \c Fetch tag for getting topology information.
 ///
@@ -34,38 +37,31 @@ namespace arg {
 /// values from a topology object.  This default parameter returns
 /// the basis topology type, i.e. cell type in a \c WorkletCellMap.
 ///
-struct FetchTagCellSetIn {  };
-
-
-template<typename ConnectivityType,
-         typename ExecObjectType>
-struct Fetch<
-    vtkm::exec::arg::FetchTagCellSetIn,
-    vtkm::exec::arg::AspectTagDefault,
-    vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
-    ExecObjectType>
+struct FetchTagCellSetIn
 {
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>
-      ThreadIndicesType;
+};
+
+template <typename ConnectivityType, typename ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagCellSetIn, vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>, ExecObjectType>
+{
+  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
 
   typedef typename ThreadIndicesType::CellShapeTag ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Load(const ThreadIndicesType &indices, const ExecObjectType &) const
+  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
     return indices.GetCellShape();
   }
 
   VTKM_EXEC
-  void Store(const ThreadIndicesType &,
-             const ExecObjectType &,
-             const ValueType &) const
+  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

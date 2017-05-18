@@ -36,7 +36,6 @@ template <typename DeviceAdapter>
 class TestingMask
 {
 public:
-
   /////////////////////////////////////////////////////////////////////////////////////////////////
   void TestUniform2D() const
   {
@@ -44,30 +43,26 @@ public:
 
     typedef vtkm::cont::CellSetStructured<2> CellSetType;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
     CellSetType cellSet;
     dataset.GetCellSet(0).CopyTo(cellSet);
-  
+
     // Output data set permutation
     vtkm::worklet::Mask maskCells;
-    OutCellSetType outCellSet = 
-        maskCells.Run(cellSet,
-                      2,
-                      DeviceAdapter());
+    OutCellSetType outCellSet = maskCells.Run(cellSet, 2, DeviceAdapter());
 
-    vtkm::cont::Field cellField =
-        maskCells.ProcessCellField(dataset.GetField("cellvar"));
+    vtkm::cont::Field cellField = maskCells.ProcessCellField(dataset.GetField("cellvar"));
     OutCellFieldArrayHandleType cellFieldArray;
     cellField.GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for Mask");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
-                     cellFieldArray.GetPortalConstControl().Get(7) == 14.f,
+                       cellFieldArray.GetPortalConstControl().Get(7) == 14.f,
                      "Wrong cell field data");
   }
 
@@ -78,30 +73,26 @@ public:
 
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
     dataset.GetCellSet(0).CopyTo(cellSet);
-  
+
     // Output data set with cell set permuted
     vtkm::worklet::Mask maskCells;
-    OutCellSetType outCellSet = 
-        maskCells.Run(cellSet,
-                      9,
-                      DeviceAdapter());
+    OutCellSetType outCellSet = maskCells.Run(cellSet, 9, DeviceAdapter());
 
-    vtkm::cont::Field cellField =
-        maskCells.ProcessCellField(dataset.GetField("cellvar"));
+    vtkm::cont::Field cellField = maskCells.ProcessCellField(dataset.GetField("cellvar"));
     OutCellFieldArrayHandleType cellFieldArray;
     cellField.GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 7), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 7 &&
-                     cellFieldArray.GetPortalConstControl().Get(2) == 18.f,
+                       cellFieldArray.GetPortalConstControl().Get(2) == 18.f,
                      "Wrong cell field data");
   }
 
@@ -112,9 +103,9 @@ public:
 
     typedef vtkm::cont::CellSetExplicit<> CellSetType;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -123,20 +114,15 @@ public:
 
     // Output data set with cell set permuted
     vtkm::worklet::Mask maskCells;
-    OutCellSetType outCellSet = 
-        maskCells.Run(cellSet,
-                      2,
-                      DeviceAdapter());
+    OutCellSetType outCellSet = maskCells.Run(cellSet, 2, DeviceAdapter());
 
-
-    vtkm::cont::Field cellField =
-        maskCells.ProcessCellField(dataset.GetField("cellvar"));
+    vtkm::cont::Field cellField = maskCells.ProcessCellField(dataset.GetField("cellvar"));
     OutCellFieldArrayHandleType cellFieldArray;
     cellField.GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 2), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                     cellFieldArray.GetPortalConstControl().Get(1) == 120.2f,
+                       cellFieldArray.GetPortalConstControl().Get(1) == 120.2f,
                      "Wrong cell field data");
   }
 
@@ -148,8 +134,7 @@ public:
   }
 };
 
-int UnitTestMask(int, char *[])
+int UnitTestMask(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(
-      TestingMask<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingMask<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
 }

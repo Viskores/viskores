@@ -24,47 +24,54 @@
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/ErrorBadValue.h>
 
-namespace vtkm {
-namespace exec {
+namespace vtkm
+{
+namespace exec
+{
 
-namespace internal {
+namespace internal
+{
 
-template<typename _SourcePortalType, vtkm::IdComponent _NUM_COMPONENTS>
+template <typename _SourcePortalType, vtkm::IdComponent _NUM_COMPONENTS>
 class VTKM_ALWAYS_EXPORT ArrayPortalGroupVec
 {
 public:
   static const vtkm::IdComponent NUM_COMPONENTS = _NUM_COMPONENTS;
   typedef _SourcePortalType SourcePortalType;
 
-  typedef typename
-    std::remove_const<typename SourcePortalType::ValueType>::type
-      ComponentType;
+  typedef typename std::remove_const<typename SourcePortalType::ValueType>::type ComponentType;
   typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalGroupVec() : SourcePortal() {  }
+  ArrayPortalGroupVec()
+    : SourcePortal()
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalGroupVec(const SourcePortalType &sourcePortal)
-    : SourcePortal(sourcePortal) {  }
+  ArrayPortalGroupVec(const SourcePortalType& sourcePortal)
+    : SourcePortal(sourcePortal)
+  {
+  }
 
   /// Copy constructor for any other ArrayPortalConcatenate with a portal type
   /// that can be copied to this portal type. This allows us to do any type
   /// casting that the portals do (like the non-const to const cast).
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template<typename OtherSourcePortalType>
-  VTKM_EXEC_CONT
-  ArrayPortalGroupVec(
-      const ArrayPortalGroupVec<OtherSourcePortalType, NUM_COMPONENTS> &src)
-    : SourcePortal(src.GetPortal()) {  }
+  template <typename OtherSourcePortalType>
+  VTKM_EXEC_CONT ArrayPortalGroupVec(
+    const ArrayPortalGroupVec<OtherSourcePortalType, NUM_COMPONENTS>& src)
+    : SourcePortal(src.GetPortal())
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const
   {
-    return this->SourcePortal.GetNumberOfValues()/NUM_COMPONENTS;
+    return this->SourcePortal.GetNumberOfValues() / NUM_COMPONENTS;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -72,10 +79,8 @@ public:
   ValueType Get(vtkm::Id index) const
   {
     ValueType result;
-    vtkm::Id sourceIndex = index*NUM_COMPONENTS;
-    for (vtkm::IdComponent componentIndex = 0;
-         componentIndex < NUM_COMPONENTS;
-         componentIndex++)
+    vtkm::Id sourceIndex = index * NUM_COMPONENTS;
+    for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
     {
       result[componentIndex] = this->SourcePortal.Get(sourceIndex);
       sourceIndex++;
@@ -85,12 +90,10 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType &value) const
+  void Set(vtkm::Id index, const ValueType& value) const
   {
-    vtkm::Id sourceIndex = index*NUM_COMPONENTS;
-    for (vtkm::IdComponent componentIndex = 0;
-         componentIndex < NUM_COMPONENTS;
-         componentIndex++)
+    vtkm::Id sourceIndex = index * NUM_COMPONENTS;
+    for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
     {
       this->SourcePortal.Set(sourceIndex, value[componentIndex]);
       sourceIndex++;
@@ -99,49 +102,56 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  const SourcePortalType &GetPortal() const { return this->SourcePortal; }
+  const SourcePortalType& GetPortal() const { return this->SourcePortal; }
 
 private:
   SourcePortalType SourcePortal;
 };
-
 }
 }
 } // namespace vtkm::exec::internal
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-namespace internal {
+namespace internal
+{
 
-template<typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
-struct VTKM_ALWAYS_EXPORT StorageTagGroupVec {  };
+template <typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
+struct VTKM_ALWAYS_EXPORT StorageTagGroupVec
+{
+};
 
-template<typename SourceArrayHandleType,
-         vtkm::IdComponent NUM_COMPONENTS>
-class Storage<
-    vtkm::Vec<typename SourceArrayHandleType::ValueType,NUM_COMPONENTS>,
-    vtkm::cont::internal::StorageTagGroupVec<
-      SourceArrayHandleType, NUM_COMPONENTS> >
+template <typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
+class Storage<vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
+              vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>>
 {
   typedef typename SourceArrayHandleType::ValueType ComponentType;
 
 public:
-  typedef vtkm::Vec<ComponentType,NUM_COMPONENTS> ValueType;
+  typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
 
+  typedef vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::PortalControl,
+                                                    NUM_COMPONENTS>
+    PortalType;
   typedef vtkm::exec::internal::ArrayPortalGroupVec<
-      typename SourceArrayHandleType::PortalControl,
-      NUM_COMPONENTS> PortalType;
-  typedef vtkm::exec::internal::ArrayPortalGroupVec<
-      typename SourceArrayHandleType::PortalConstControl,
-      NUM_COMPONENTS> PortalConstType;
+    typename SourceArrayHandleType::PortalConstControl, NUM_COMPONENTS>
+    PortalConstType;
 
   VTKM_CONT
-  Storage() : Valid(false) {  }
+  Storage()
+    : Valid(false)
+  {
+  }
 
   VTKM_CONT
-  Storage(const SourceArrayHandleType &sourceArray)
-    : SourceArray(sourceArray), Valid(true) {  }
+  Storage(const SourceArrayHandleType& sourceArray)
+    : SourceArray(sourceArray)
+    , Valid(true)
+  {
+  }
 
   VTKM_CONT
   PortalType GetPortal()
@@ -162,26 +172,26 @@ public:
   {
     VTKM_ASSERT(this->Valid);
     vtkm::Id sourceSize = this->SourceArray.GetNumberOfValues();
-    if(sourceSize%NUM_COMPONENTS != 0)
+    if (sourceSize % NUM_COMPONENTS != 0)
     {
       throw vtkm::cont::ErrorBadValue(
-            "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
+        "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
-    return sourceSize/NUM_COMPONENTS;
+    return sourceSize / NUM_COMPONENTS;
   }
 
   VTKM_CONT
   void Allocate(vtkm::Id numberOfValues)
   {
     VTKM_ASSERT(this->Valid);
-    this->SourceArray.Allocate(numberOfValues*NUM_COMPONENTS);
+    this->SourceArray.Allocate(numberOfValues * NUM_COMPONENTS);
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id numberOfValues)
   {
     VTKM_ASSERT(this->Valid);
-    this->SourceArray.Shrink(numberOfValues*NUM_COMPONENTS);
+    this->SourceArray.Shrink(numberOfValues * NUM_COMPONENTS);
   }
 
   VTKM_CONT
@@ -195,7 +205,7 @@ public:
 
   // Required for later use in ArrayTransfer class
   VTKM_CONT
-  const SourceArrayHandleType &GetSourceArray() const
+  const SourceArrayHandleType& GetSourceArray() const
   {
     VTKM_ASSERT(this->Valid);
     return this->SourceArray;
@@ -206,22 +216,18 @@ private:
   bool Valid;
 };
 
-template<typename SourceArrayHandleType,
-         vtkm::IdComponent NUM_COMPONENTS,
-         typename Device>
-class ArrayTransfer<
-    vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
-    vtkm::cont::internal::StorageTagGroupVec<
-      SourceArrayHandleType, NUM_COMPONENTS>,
-    Device>
+template <typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS, typename Device>
+class ArrayTransfer<vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
+                    vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>,
+                    Device>
 {
 public:
   typedef typename SourceArrayHandleType::ValueType ComponentType;
   typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
 
 private:
-  typedef vtkm::cont::internal::StorageTagGroupVec<
-    SourceArrayHandleType, NUM_COMPONENTS> StorageTag;
+  typedef vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>
+    StorageTag;
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
@@ -229,37 +235,37 @@ public:
   typedef typename StorageType::PortalConstType PortalConstControl;
 
   typedef vtkm::exec::internal::ArrayPortalGroupVec<
-      typename SourceArrayHandleType::template ExecutionTypes<Device>::Portal,
-      NUM_COMPONENTS>
+    typename SourceArrayHandleType::template ExecutionTypes<Device>::Portal, NUM_COMPONENTS>
     PortalExecution;
   typedef vtkm::exec::internal::ArrayPortalGroupVec<
-      typename SourceArrayHandleType::template ExecutionTypes<Device>::PortalConst,
-      NUM_COMPONENTS>
+    typename SourceArrayHandleType::template ExecutionTypes<Device>::PortalConst, NUM_COMPONENTS>
     PortalConstExecution;
 
   VTKM_CONT
-  ArrayTransfer(StorageType *storage)
-    : SourceArray(storage->GetSourceArray()) {  }
+  ArrayTransfer(StorageType* storage)
+    : SourceArray(storage->GetSourceArray())
+  {
+  }
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
     vtkm::Id sourceSize = this->SourceArray.GetNumberOfValues();
-    if (sourceSize%NUM_COMPONENTS != 0)
+    if (sourceSize % NUM_COMPONENTS != 0)
     {
       throw vtkm::cont::ErrorBadValue(
-            "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
+        "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
-    return sourceSize/NUM_COMPONENTS;
+    return sourceSize / NUM_COMPONENTS;
   }
 
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    if (this->SourceArray.GetNumberOfValues()%NUM_COMPONENTS != 0)
+    if (this->SourceArray.GetNumberOfValues() % NUM_COMPONENTS != 0)
     {
       throw vtkm::cont::ErrorBadValue(
-            "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
+        "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
     return PortalConstExecution(this->SourceArray.PrepareForInput(Device()));
   }
@@ -267,10 +273,10 @@ public:
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    if (this->SourceArray.GetNumberOfValues()%NUM_COMPONENTS != 0)
+    if (this->SourceArray.GetNumberOfValues() % NUM_COMPONENTS != 0)
     {
       throw vtkm::cont::ErrorBadValue(
-            "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
+        "ArrayHandleGroupVec's source array does not divide evenly into Vecs.");
     }
     return PortalExecution(this->SourceArray.PrepareForInPlace(Device()));
   }
@@ -278,12 +284,12 @@ public:
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
-    return PortalExecution(this->SourceArray.PrepareForOutput(
-                             numberOfValues*NUM_COMPONENTS, Device()));
+    return PortalExecution(
+      this->SourceArray.PrepareForOutput(numberOfValues * NUM_COMPONENTS, Device()));
   }
 
   VTKM_CONT
-  void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const
+  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
   {
     // Implementation of this method should be unnecessary. The internal
     // array handles should automatically retrieve the output data as
@@ -293,14 +299,11 @@ public:
   VTKM_CONT
   void Shrink(vtkm::Id numberOfValues)
   {
-    this->SourceArray.Shrink(numberOfValues*NUM_COMPONENTS);
+    this->SourceArray.Shrink(numberOfValues * NUM_COMPONENTS);
   }
 
   VTKM_CONT
-  void ReleaseResources()
-  {
-    this->SourceArray.ReleaseResourcesExecution();
-  }
+  void ReleaseResources() { this->SourceArray.ReleaseResourcesExecution(); }
 
 private:
   SourceArrayHandleType SourceArray;
@@ -320,23 +323,20 @@ private:
 /// to 3, you get an array that looks like it contains two values of \c Vec
 /// values of size 3 with the data [0,1,2], [3,4,5].
 ///
-template<typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
+template <typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
 class ArrayHandleGroupVec
-    : public vtkm::cont::ArrayHandle<
-        vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
-        vtkm::cont::internal::StorageTagGroupVec<
-          SourceArrayHandleType, NUM_COMPONENTS> >
+  : public vtkm::cont::ArrayHandle<
+      vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
+      vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>>
 {
   VTKM_IS_ARRAY_HANDLE(SourceArrayHandleType);
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-        ArrayHandleGroupVec,
-        (ArrayHandleGroupVec<SourceArrayHandleType, NUM_COMPONENTS>),
-        (vtkm::cont::ArrayHandle<
-           vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
-           vtkm::cont::internal::StorageTagGroupVec<
-             SourceArrayHandleType, NUM_COMPONENTS> >));
+    ArrayHandleGroupVec, (ArrayHandleGroupVec<SourceArrayHandleType, NUM_COMPONENTS>),
+    (vtkm::cont::ArrayHandle<
+      vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
+      vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>>));
 
   typedef typename SourceArrayHandleType::ValueType ComponentType;
 
@@ -345,8 +345,10 @@ private:
 
 public:
   VTKM_CONT
-  ArrayHandleGroupVec(const SourceArrayHandleType &sourceArray)
-    : Superclass(StorageType(sourceArray)) {  }
+  ArrayHandleGroupVec(const SourceArrayHandleType& sourceArray)
+    : Superclass(StorageType(sourceArray))
+  {
+  }
 };
 
 /// \c make_ArrayHandleGroupVec is convenience function to generate an
@@ -354,15 +356,12 @@ public:
 /// (as a specified template parameter), and returns an array handle with
 /// consecutive entries grouped in a Vec.
 ///
-template<vtkm::IdComponent NUM_COMPONENTS,
-         typename ArrayHandleType>
-VTKM_CONT
-vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS>
-make_ArrayHandleGroupVec(const ArrayHandleType &array)
+template <vtkm::IdComponent NUM_COMPONENTS, typename ArrayHandleType>
+VTKM_CONT vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS> make_ArrayHandleGroupVec(
+  const ArrayHandleType& array)
 {
-  return vtkm::cont::ArrayHandleGroupVec<ArrayHandleType,NUM_COMPONENTS>(array);
+  return vtkm::cont::ArrayHandleGroupVec<ArrayHandleType, NUM_COMPONENTS>(array);
 }
-
 }
 } // namespace vtkm::cont
 

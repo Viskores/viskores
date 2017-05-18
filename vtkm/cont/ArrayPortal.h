@@ -22,8 +22,10 @@
 
 #include <vtkm/Types.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 #ifdef VTKM_DOXYGEN_ONLY
 
@@ -53,7 +55,7 @@ namespace cont {
 /// Although portals are defined in the execution environment, they are also
 /// used in the control environment for accessing data on the host.
 ///
-template<typename T>
+template <typename T>
 class ArrayPortal
 {
 public:
@@ -77,11 +79,10 @@ public:
   /// this case the behavior is undefined.
   ///
   VTKM_CONT
-  void Set(vtkm::Id index, const ValueType &value) const;
+  void Set(vtkm::Id index, const ValueType& value) const;
 };
 
 #endif // VTKM_DOXYGEN_ONLY
-
 }
 } // namespace vtkm::cont
 

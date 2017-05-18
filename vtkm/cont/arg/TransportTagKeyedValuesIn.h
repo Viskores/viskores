@@ -22,9 +22,12 @@
 
 #include <vtkm/cont/arg/Transport.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief \c Transport tag for input values in a reduce by key.
 ///
@@ -32,12 +35,13 @@ namespace arg {
 /// transport \c ArrayHandle objects for input values. The values are
 /// rearranged and grouped based on the keys they are associated with.
 ///
-struct TransportTagKeyedValuesIn {  };
+struct TransportTagKeyedValuesIn
+{
+};
 
 // Specialization of Transport class for TransportTagKeyedValuesIn is
 // implemented in vtkm/worklet/Keys.h. That class is not accessible from here
 // due to VTK-m package dependencies.
-
 }
 }
 }

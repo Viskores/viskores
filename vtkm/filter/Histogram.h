@@ -23,8 +23,10 @@
 
 #include <vtkm/filter/FilterField.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 class Histogram : public vtkm::filter::FilterField<Histogram>
 {
@@ -34,10 +36,10 @@ public:
   Histogram();
 
   VTKM_CONT
-  void SetNumberOfBins(vtkm::Id count){ this->NumberOfBins = count; }
+  void SetNumberOfBins(vtkm::Id count) { this->NumberOfBins = count; }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfBins() const    { return this->NumberOfBins; }
+  vtkm::Id GetNumberOfBins() const { return this->NumberOfBins; }
 
   //Returns the bin delta of the last computed field, be it from DoExecute
   //or from MapField
@@ -48,21 +50,19 @@ public:
   VTKM_CONT
   vtkm::Range GetDataRange() const { return this->DataRange; }
 
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet& input,
-                                      const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                      const vtkm::filter::FieldMetadata& fieldMeta,
-                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                      const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultField DoExecute(
+    const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& tag);
 
 private:
-  vtkm::Id  NumberOfBins;
+  vtkm::Id NumberOfBins;
   vtkm::Float64 BinDelta;
   vtkm::Range DataRange;
 };
 
-template<>
+template <>
 class FilterTraits<Histogram>
 { //currently the Histogram filter only works on scalar data.
   //this mainly has to do with getting the ranges for each bin
@@ -70,11 +70,8 @@ class FilterTraits<Histogram>
 public:
   typedef TypeListTagScalarAll InputFieldTypeList;
 };
-
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/Histogram.hxx>
 

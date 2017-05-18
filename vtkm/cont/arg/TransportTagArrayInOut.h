@@ -26,9 +26,12 @@
 
 #include <vtkm/cont/arg/Transport.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief \c Transport tag for in-place arrays.
 ///
@@ -36,35 +39,32 @@ namespace arg {
 /// transport \c ArrayHandle objects for data that is both input and output
 /// (that is, in place modification of array data).
 ///
-struct TransportTagArrayInOut {  };
+struct TransportTagArrayInOut
+{
+};
 
-template<typename ContObjectType, typename Device>
+template <typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagArrayInOut, ContObjectType, Device>
 {
   // If you get a compile error here, it means you tried to use an object that
   // is not an array handle as an argument that is expected to be one.
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  typedef typename ContObjectType::template ExecutionTypes<Device>::Portal
-      ExecObjectType;
+  typedef typename ContObjectType::template ExecutionTypes<Device>::Portal ExecObjectType;
 
-  template<typename InputDomainType>
-  VTKM_CONT
-  ExecObjectType operator()(ContObjectType object,
-                            const InputDomainType &vtkmNotUsed(inputDomain),
-                            vtkm::Id vtkmNotUsed(inputRange),
-                            vtkm::Id outputRange) const
+  template <typename InputDomainType>
+  VTKM_CONT ExecObjectType operator()(ContObjectType object,
+                                      const InputDomainType& vtkmNotUsed(inputDomain),
+                                      vtkm::Id vtkmNotUsed(inputRange), vtkm::Id outputRange) const
   {
     if (object.GetNumberOfValues() != outputRange)
     {
-      throw vtkm::cont::ErrorBadValue(
-            "Input/output array to worklet invocation the wrong size.");
+      throw vtkm::cont::ErrorBadValue("Input/output array to worklet invocation the wrong size.");
     }
 
     return object.PrepareForInPlace(Device());
   }
 };
-
 }
 }
 } // namespace vtkm::cont::arg

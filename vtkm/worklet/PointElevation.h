@@ -25,18 +25,19 @@
 
 #include <vtkm/Math.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
-namespace internal {
+namespace internal
+{
 
 template <typename T>
-VTKM_EXEC
-T clamp(const T& val, const T& min, const T& max)
+VTKM_EXEC T clamp(const T& val, const T& min, const T& max)
 {
   return vtkm::Min(max, vtkm::Max(min, val));
 }
-
 }
 
 class PointElevation : public vtkm::worklet::WorkletMapField
@@ -46,20 +47,19 @@ public:
   typedef _2 ExecutionSignature(_1);
 
   VTKM_CONT
-  PointElevation() : LowPoint(0.0, 0.0, 0.0), HighPoint(0.0, 0.0, 1.0),
-      RangeLow(0.0), RangeHigh(1.0) {}
-
-  VTKM_CONT
-  void SetLowPoint(const vtkm::Vec<vtkm::Float64, 3> &point)
+  PointElevation()
+    : LowPoint(0.0, 0.0, 0.0)
+    , HighPoint(0.0, 0.0, 1.0)
+    , RangeLow(0.0)
+    , RangeHigh(1.0)
   {
-    this->LowPoint = point;
   }
 
   VTKM_CONT
-  void SetHighPoint(const vtkm::Vec<vtkm::Float64, 3> &point)
-  {
-    this->HighPoint = point;
-  }
+  void SetLowPoint(const vtkm::Vec<vtkm::Float64, 3>& point) { this->LowPoint = point; }
+
+  VTKM_CONT
+  void SetHighPoint(const vtkm::Vec<vtkm::Float64, 3>& point) { this->HighPoint = point; }
 
   VTKM_CONT
   void SetRange(vtkm::Float64 low, vtkm::Float64 high)
@@ -69,7 +69,7 @@ public:
   }
 
   VTKM_EXEC
-  vtkm::Float64 operator()(const vtkm::Vec<vtkm::Float64,3> &vec) const
+  vtkm::Float64 operator()(const vtkm::Vec<vtkm::Float64, 3>& vec) const
   {
     vtkm::Vec<vtkm::Float64, 3> direction = this->HighPoint - this->LowPoint;
     vtkm::Float64 lengthSqr = vtkm::dot(direction, direction);
@@ -80,8 +80,7 @@ public:
   }
 
   template <typename T>
-  VTKM_EXEC
-  vtkm::Float64 operator()(const vtkm::Vec<T,3> &vec) const
+  VTKM_EXEC vtkm::Float64 operator()(const vtkm::Vec<T, 3>& vec) const
   {
     return (*this)(vtkm::make_Vec(static_cast<vtkm::Float64>(vec[0]),
                                   static_cast<vtkm::Float64>(vec[1]),
@@ -92,7 +91,6 @@ private:
   vtkm::Vec<vtkm::Float64, 3> LowPoint, HighPoint;
   vtkm::Float64 RangeLow, RangeHigh;
 };
-
 }
 } // namespace vtkm::worklet
 

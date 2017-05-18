@@ -28,11 +28,12 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
-template<typename PortalType>
+template <typename PortalType>
 struct TestKernel : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
@@ -45,27 +46,23 @@ struct TestKernel : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename Device>
+template <typename Device>
 struct TryArrayOutType
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     typedef vtkm::cont::ArrayHandle<T> ArrayHandleType;
     ArrayHandleType handle;
 
-    typedef typename ArrayHandleType::
-        template ExecutionTypes<Device>::Portal PortalType;
+    typedef typename ArrayHandleType::template ExecutionTypes<Device>::Portal PortalType;
 
-    vtkm::cont::arg::Transport<
-        vtkm::cont::arg::TransportTagArrayOut, ArrayHandleType, Device>
-        transport;
+    vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayOut, ArrayHandleType, Device>
+      transport;
 
     TestKernel<PortalType> kernel;
-    kernel.Portal = transport(handle,
-                              vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
-                              ARRAY_SIZE,
-                              ARRAY_SIZE);
+    kernel.Portal =
+      transport(handle, vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), ARRAY_SIZE, ARRAY_SIZE);
 
     VTKM_TEST_ASSERT(handle.GetNumberOfValues() == ARRAY_SIZE,
                      "ArrayOut transport did not allocate array correctly.");
@@ -76,7 +73,7 @@ struct TryArrayOutType
   }
 };
 
-template<typename Device>
+template <typename Device>
 void TryArrayOutTransport(Device)
 {
   vtkm::testing::Testing::TryTypes(TryArrayOutType<Device>());
@@ -90,7 +87,7 @@ void TestArrayOutTransport()
 
 } // Anonymous namespace
 
-int UnitTestTransportArrayOut(int, char *[])
+int UnitTestTransportArrayOut(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestArrayOutTransport);
 }

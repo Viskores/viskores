@@ -88,29 +88,31 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
 class TrunkBuilder : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexID,           // (input) index into active vertices
-                                WholeArrayIn<IdType> chainExtremum, // (input) chain extemum for vertices
-                                WholeArrayOut<IdType> prunesTo);    // (output) where a vertex prunes to
+  typedef void ControlSignature(
+    FieldIn<IdType> vertexID,           // (input) index into active vertices
+    WholeArrayIn<IdType> chainExtremum, // (input) chain extemum for vertices
+    WholeArrayOut<IdType> prunesTo);    // (output) where a vertex prunes to
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   TrunkBuilder() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertexID,
-                  const InFieldPortalType& chainExtremum,
-                  const OutFieldPortalType& prunesTo) const
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID, const InFieldPortalType& chainExtremum,
+                            const OutFieldPortalType& prunesTo) const
   {
     // the chain max of everyone prunes to the global minimum
     vtkm::Id chainExt = chainExtremum.Get(vertexID);
@@ -120,7 +122,6 @@ public:
       prunesTo.Set(vertexID, chainExt);
   }
 }; // TrunkBuilder
-
 }
 }
 }

@@ -23,11 +23,13 @@
 
 #include <vtkm/filter/FilterField.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
-template<class Derived>
-class FilterCell : public vtkm::filter::FilterField< Derived >
+template <class Derived>
+class FilterCell : public vtkm::filter::FilterField<Derived>
 {
 public:
   VTKM_CONT
@@ -37,29 +39,23 @@ public:
   ~FilterCell();
 
   VTKM_CONT
-  void SetActiveCellSet(vtkm::Id index)
-    { this->CellSetIndex = index; }
+  void SetActiveCellSet(vtkm::Id index) { this->CellSetIndex = index; }
 
   VTKM_CONT
-  vtkm::Id GetActiveCellSetIndex() const
-    { return this->CellSetIndex; }
+  vtkm::Id GetActiveCellSetIndex() const { return this->CellSetIndex; }
 
   VTKM_CONT
-  void SetActiveCoordinateSystem(vtkm::Id index)
-    { this->CoordinateSystemIndex = index; }
+  void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
 
   VTKM_CONT
-  vtkm::Id GetActiveCoordinateSystemIndex() const
-    { return this->CoordinateSystemIndex; }
+  vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
 
 protected:
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/FilterCell.hxx>
 

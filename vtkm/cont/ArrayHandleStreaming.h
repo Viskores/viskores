@@ -23,11 +23,14 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayPortal.h>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
-template<typename P>
+template <typename P>
 class VTKM_ALWAYS_EXPORT ArrayPortalStreaming
 {
 public:
@@ -35,39 +38,50 @@ public:
   typedef typename PortalType::ValueType ValueType;
 
   VTKM_CONT
-  ArrayPortalStreaming() : InputPortal(), BlockIndex(0), BlockSize(0), CurBlockSize(0) {  }
-
-  VTKM_CONT
-  ArrayPortalStreaming(const PortalType &inputPortal, vtkm::Id blockIndex,
-                       vtkm::Id blockSize, vtkm::Id curBlockSize) :
-                       InputPortal(inputPortal), BlockIndex(blockIndex),
-                       BlockSize(blockSize), CurBlockSize(curBlockSize) {  }
-
-  template<typename OtherP>
-  VTKM_CONT
-  ArrayPortalStreaming(const ArrayPortalStreaming<OtherP> &src) :
-                       InputPortal(src.GetPortal()),
-                       BlockIndex(src.GetBlockIndex()),
-                       BlockSize(src.GetBlockSize()),
-                       CurBlockSize(src.GetCurBlockSize()) {  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const {
-    return this->CurBlockSize;
+  ArrayPortalStreaming()
+    : InputPortal()
+    , BlockIndex(0)
+    , BlockSize(0)
+    , CurBlockSize(0)
+  {
   }
 
   VTKM_CONT
-  ValueType Get(vtkm::Id index) const {
-    return this->InputPortal.Get(this->BlockIndex*this->BlockSize + index);
+  ArrayPortalStreaming(const PortalType& inputPortal, vtkm::Id blockIndex, vtkm::Id blockSize,
+                       vtkm::Id curBlockSize)
+    : InputPortal(inputPortal)
+    , BlockIndex(blockIndex)
+    , BlockSize(blockSize)
+    , CurBlockSize(curBlockSize)
+  {
+  }
+
+  template <typename OtherP>
+  VTKM_CONT ArrayPortalStreaming(const ArrayPortalStreaming<OtherP>& src)
+    : InputPortal(src.GetPortal())
+    , BlockIndex(src.GetBlockIndex())
+    , BlockSize(src.GetBlockSize())
+    , CurBlockSize(src.GetCurBlockSize())
+  {
   }
 
   VTKM_CONT
-  void Set(vtkm::Id index, const ValueType &value) const {
-    this->InputPortal.Set(this->BlockIndex*this->BlockSize + index, value);
+  vtkm::Id GetNumberOfValues() const { return this->CurBlockSize; }
+
+  VTKM_CONT
+  ValueType Get(vtkm::Id index) const
+  {
+    return this->InputPortal.Get(this->BlockIndex * this->BlockSize + index);
   }
 
   VTKM_CONT
-  const PortalType &GetPortal() const { return this->InputPortal; }
+  void Set(vtkm::Id index, const ValueType& value) const
+  {
+    this->InputPortal.Set(this->BlockIndex * this->BlockSize + index, value);
+  }
+
+  VTKM_CONT
+  const PortalType& GetPortal() const { return this->InputPortal; }
 
   VTKM_CONT
   void SetBlockSize(vtkm::Id blockSize) { this->BlockSize = blockSize; }
@@ -96,79 +110,96 @@ private:
 
 } // internal
 
-template<typename ArrayHandleInputType>
-struct VTKM_ALWAYS_EXPORT StorageTagStreaming { };
+template <typename ArrayHandleInputType>
+struct VTKM_ALWAYS_EXPORT StorageTagStreaming
+{
+};
 
-namespace internal {
+namespace internal
+{
 
-template<typename ArrayHandleInputType>
-class Storage<
-    typename ArrayHandleInputType::ValueType,
-    StorageTagStreaming<ArrayHandleInputType> >
+template <typename ArrayHandleInputType>
+class Storage<typename ArrayHandleInputType::ValueType, StorageTagStreaming<ArrayHandleInputType>>
 {
 public:
   typedef typename ArrayHandleInputType::ValueType ValueType;
 
+  typedef vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalControl>
+    PortalType;
   typedef vtkm::cont::internal::ArrayPortalStreaming<
-      typename ArrayHandleInputType::PortalControl> PortalType;
-  typedef vtkm::cont::internal::ArrayPortalStreaming<
-      typename ArrayHandleInputType::PortalConstControl> PortalConstType;
+    typename ArrayHandleInputType::PortalConstControl>
+    PortalConstType;
 
   VTKM_CONT
-  Storage() : Valid(false) { }
-
-  VTKM_CONT
-  Storage(const ArrayHandleInputType inputArray, vtkm::Id blockSize,
-          vtkm::Id blockIndex, vtkm::Id curBlockSize) :
-          InputArray(inputArray), BlockSize(blockSize),
-          BlockIndex(blockIndex), CurBlockSize(curBlockSize), Valid(true) { }
-
-  VTKM_CONT
-  PortalType GetPortal() {
-    VTKM_ASSERT(this->Valid);
-    return PortalType(this->InputArray.GetPortalControl(),
-        BlockSize, BlockIndex, CurBlockSize);
+  Storage()
+    : Valid(false)
+  {
   }
 
   VTKM_CONT
-  PortalConstType GetPortalConst() const {
-    VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->InputArray.GetPortalConstControl(),
-        BlockSize, BlockIndex, CurBlockSize);
+  Storage(const ArrayHandleInputType inputArray, vtkm::Id blockSize, vtkm::Id blockIndex,
+          vtkm::Id curBlockSize)
+    : InputArray(inputArray)
+    , BlockSize(blockSize)
+    , BlockIndex(blockIndex)
+    , CurBlockSize(curBlockSize)
+    , Valid(true)
+  {
   }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const {
+  PortalType GetPortal()
+  {
+    VTKM_ASSERT(this->Valid);
+    return PortalType(this->InputArray.GetPortalControl(), BlockSize, BlockIndex, CurBlockSize);
+  }
+
+  VTKM_CONT
+  PortalConstType GetPortalConst() const
+  {
+    VTKM_ASSERT(this->Valid);
+    return PortalConstType(this->InputArray.GetPortalConstControl(), BlockSize, BlockIndex,
+                           CurBlockSize);
+  }
+
+  VTKM_CONT
+  vtkm::Id GetNumberOfValues() const
+  {
     VTKM_ASSERT(this->Valid);
     return CurBlockSize;
   }
 
   VTKM_CONT
-  void Allocate(vtkm::Id numberOfValues) const {
+  void Allocate(vtkm::Id numberOfValues) const
+  {
     (void)numberOfValues;
     // Do nothing, since we only allocate a streaming array once at the beginning
   }
 
   VTKM_CONT
-  void AllocateFullArray(vtkm::Id numberOfValues) {
+  void AllocateFullArray(vtkm::Id numberOfValues)
+  {
     VTKM_ASSERT(this->Valid);
     this->InputArray.Allocate(numberOfValues);
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues) {
+  void Shrink(vtkm::Id numberOfValues)
+  {
     VTKM_ASSERT(this->Valid);
     this->InputArray.Shrink(numberOfValues);
   }
 
   VTKM_CONT
-  void ReleaseResources() {
+  void ReleaseResources()
+  {
     VTKM_ASSERT(this->Valid);
     this->InputArray.ReleaseResources();
   }
 
   VTKM_CONT
-  const ArrayHandleInputType &GetArray() const {
+  const ArrayHandleInputType& GetArray() const
+  {
     VTKM_ASSERT(this->Valid);
     return this->InputArray;
   }
@@ -180,37 +211,33 @@ private:
   vtkm::Id CurBlockSize;
   bool Valid;
 };
-
 }
 }
 }
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-template<typename ArrayHandleInputType>
+template <typename ArrayHandleInputType>
 class ArrayHandleStreaming
-    : public vtkm::cont::ArrayHandle<
-        typename ArrayHandleInputType::ValueType,
-        StorageTagStreaming<ArrayHandleInputType> >
+  : public vtkm::cont::ArrayHandle<typename ArrayHandleInputType::ValueType,
+                                   StorageTagStreaming<ArrayHandleInputType>>
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(
-      ArrayHandleStreaming,
-      (ArrayHandleStreaming<ArrayHandleInputType>),
-      (vtkm::cont::ArrayHandle<
-         typename ArrayHandleInputType::ValueType,
-         StorageTagStreaming<ArrayHandleInputType> >));
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleStreaming, (ArrayHandleStreaming<ArrayHandleInputType>),
+                             (vtkm::cont::ArrayHandle<typename ArrayHandleInputType::ValueType,
+                                                      StorageTagStreaming<ArrayHandleInputType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType,StorageTag> StorageType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
   VTKM_CONT
-  ArrayHandleStreaming(const ArrayHandleInputType &inputArray,
-                       const vtkm::Id blockIndex, const vtkm::Id blockSize,
-                       const vtkm::Id curBlockSize)
-     : Superclass(StorageType(inputArray, blockIndex, blockSize, curBlockSize))
+  ArrayHandleStreaming(const ArrayHandleInputType& inputArray, const vtkm::Id blockIndex,
+                       const vtkm::Id blockSize, const vtkm::Id curBlockSize)
+    : Superclass(StorageType(inputArray, blockIndex, blockSize, curBlockSize))
   {
     this->GetPortalConstControl().SetBlockIndex(blockIndex);
     this->GetPortalConstControl().SetBlockSize(blockSize);
@@ -218,14 +245,13 @@ public:
   }
 
   VTKM_CONT
-  void AllocateFullArray(vtkm::Id numberOfValues) {
+  void AllocateFullArray(vtkm::Id numberOfValues)
+  {
     this->ReleaseResourcesExecutionInternal();
     this->Internals->ControlArray.AllocateFullArray(numberOfValues);
     this->Internals->ControlArrayValid = true;
   }
-
 };
-
 }
 }
 

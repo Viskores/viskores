@@ -30,19 +30,21 @@
 #include <iostream>
 #include <vector>
 
-namespace {
+namespace
+{
 
 // Predicate for values less than minimum
 class ValuesBelow
 {
 public:
   VTKM_CONT
-  ValuesBelow(const vtkm::FloatDefault& value) : Value(value)
-  { }
+  ValuesBelow(const vtkm::FloatDefault& value)
+    : Value(value)
+  {
+  }
 
-  template<typename ScalarType>
-  VTKM_EXEC
-  bool operator()(const ScalarType& value) const
+  template <typename ScalarType>
+  VTKM_EXEC bool operator()(const ScalarType& value) const
   {
     return static_cast<vtkm::FloatDefault>(value) <= this->Value;
   }
@@ -56,12 +58,13 @@ class ValuesAbove
 {
 public:
   VTKM_CONT
-  ValuesAbove(const vtkm::FloatDefault& value) : Value(value)
-  { }
+  ValuesAbove(const vtkm::FloatDefault& value)
+    : Value(value)
+  {
+  }
 
-  template<typename ScalarType>
-  VTKM_EXEC
-  bool operator()(const ScalarType& value) const
+  template <typename ScalarType>
+  VTKM_EXEC bool operator()(const ScalarType& value) const
   {
     return static_cast<vtkm::FloatDefault>(value) >= this->Value;
   }
@@ -70,24 +73,22 @@ private:
   vtkm::FloatDefault Value;
 };
 
-
 // Predicate for values between minimum and maximum
 class ValuesBetween
 {
 public:
   VTKM_CONT
-  ValuesBetween(const vtkm::FloatDefault& lower,
-                const vtkm::FloatDefault& upper) :
-    Lower(lower),
-    Upper(upper)
-  { }
+  ValuesBetween(const vtkm::FloatDefault& lower, const vtkm::FloatDefault& upper)
+    : Lower(lower)
+    , Upper(upper)
+  {
+  }
 
-  template<typename ScalarType>
-  VTKM_EXEC
-  bool operator()(const ScalarType& value) const
+  template <typename ScalarType>
+  VTKM_EXEC bool operator()(const ScalarType& value) const
   {
     return static_cast<vtkm::FloatDefault>(value) >= this->Lower &&
-           static_cast<vtkm::FloatDefault>(value) <= this->Upper;
+      static_cast<vtkm::FloatDefault>(value) <= this->Upper;
   }
 
 private:
@@ -117,13 +118,12 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(dataset.GetCellSet(0),
-                               dataset.GetField("pointvar").GetData(),
-                               ValuesBetween(40.0f, 71.0f),
-                               DeviceAdapter());
+    outCellSet = threshold.Run(dataset.GetCellSet(0), dataset.GetField("pointvar").GetData(),
+                               ValuesBetween(40.0f, 71.0f), DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11), "Wrong result for ThresholdPoints");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11),
+                     "Wrong result for ThresholdPoints");
 
     vtkm::cont::Field pointField = outDataSet.GetField("pointvar");
     vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
@@ -148,14 +148,12 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(dataset.GetCellSet(0),
-                               dataset.GetField("pointvar").GetData(),
-                               ValuesAbove(1.0f),
-                               DeviceAdapter());
+    outCellSet = threshold.Run(dataset.GetCellSet(0), dataset.GetField("pointvar").GetData(),
+                               ValuesAbove(1.0f), DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ThresholdPoints");
-
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
+                     "Wrong result for ThresholdPoints");
   }
 
   void TestExplicit3D() const
@@ -173,13 +171,12 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(dataset.GetCellSet(0),
-                               dataset.GetField("pointvar").GetData(),
-                               ValuesBelow(50.0f),
-                               DeviceAdapter());
+    outCellSet = threshold.Run(dataset.GetCellSet(0), dataset.GetField("pointvar").GetData(),
+                               ValuesBelow(50.0f), DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 6), "Wrong result for ThresholdPoints");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 6),
+                     "Wrong result for ThresholdPoints");
   }
 
   void operator()() const
@@ -189,10 +186,9 @@ public:
     this->TestExplicit3D();
   }
 };
-
 }
 
-int UnitTestThresholdPoints(int, char *[])
+int UnitTestThresholdPoints(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(
     TestingThresholdPoints<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());

@@ -31,27 +31,27 @@
 
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-#if defined (__APPLE__)
-# include <GLUT/glut.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
 #else
-# include <GL/glut.h>
+#include <GL/glut.h>
 #endif
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 // Default size of the example
-static vtkm::Id2 dims(4,4);
+static vtkm::Id2 dims(4, 4);
 static vtkm::Id cellsToDisplay = 16;
 
 // Takes input uniform grid and outputs unstructured grid of triangles
 static vtkm::cont::DataSet triDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> vertexArray;
 
 //
 // Construct an input data set with uniform grid of indicated dimensions, origin and spacing
@@ -64,14 +64,11 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dim)
   const vtkm::Id3 vdims(dim[0] + 1, dim[1] + 1, 1);
   const vtkm::Vec<vtkm::Float32, 3> origin = vtkm::make_Vec(0.0f, 0.0f, 0.0f);
   const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(
-                                              1.0f/static_cast<vtkm::Float32>(dim[0]),
-                                              1.0f/static_cast<vtkm::Float32>(dim[1]),
-                                              0.0f);
+    1.0f / static_cast<vtkm::Float32>(dim[0]), 1.0f / static_cast<vtkm::Float32>(dim[1]), 0.0f);
 
   // Generate coordinate system
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
-  dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", coordinates));
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   // Generate cell set
   vtkm::cont::CellSetStructured<2> cellSet("cells");
@@ -89,16 +86,14 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dim)
 struct GetVertexArray
 {
   template <typename ArrayHandleType>
-  VTKM_CONT
-  void operator()(ArrayHandleType array) const
+  VTKM_CONT void operator()(ArrayHandleType array) const
   {
     this->GetVertexPortal(array.GetPortalConstControl());
   }
 
 private:
   template <typename PortalType>
-  VTKM_CONT
-  void GetVertexPortal(const PortalType &portal) const
+  VTKM_CONT void GetVertexPortal(const PortalType& portal) const
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
@@ -117,7 +112,6 @@ void initializeGL()
   glLoadIdentity();
   glOrtho(-0.5f, 1.5f, -0.5f, 1.5f, -1.0f, 1.0f);
 }
-
 
 //
 // Render the output using simple OpenGL
@@ -138,12 +132,8 @@ void displayCall()
 
   // Draw the two triangles belonging to each quad
   vtkm::Id triangle = 0;
-  vtkm::Float32 color[4][3] =
-  {
-    {1.0f, 0.0f, 0.0f},
-    {0.0f, 1.0f, 0.0f},
-    {0.0f, 0.0f, 1.0f},
-    {1.0f, 1.0f, 0.0f}
+  vtkm::Float32 color[4][3] = {
+    { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 0.0f }
   };
 
   for (vtkm::Id quad = 0; quad < cellsToDisplay; quad++)
@@ -158,16 +148,16 @@ void displayCall()
       cellSet.GetIndices(triangle, triIndices);
 
       // Get the vertex points for this triangle
-      vtkm::Vec<vtkm::Float64,3> pt0 = vertexArray.GetPortalConstControl().Get(triIndices[0]);
-      vtkm::Vec<vtkm::Float64,3> pt1 = vertexArray.GetPortalConstControl().Get(triIndices[1]);
-      vtkm::Vec<vtkm::Float64,3> pt2 = vertexArray.GetPortalConstControl().Get(triIndices[2]);
+      vtkm::Vec<vtkm::Float64, 3> pt0 = vertexArray.GetPortalConstControl().Get(triIndices[0]);
+      vtkm::Vec<vtkm::Float64, 3> pt1 = vertexArray.GetPortalConstControl().Get(triIndices[1]);
+      vtkm::Vec<vtkm::Float64, 3> pt2 = vertexArray.GetPortalConstControl().Get(triIndices[2]);
 
       // Draw the triangle filled with alternating colors
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       glBegin(GL_TRIANGLES);
-        glVertex3d(pt0[0], pt0[1], pt0[2]);
-        glVertex3d(pt1[0], pt1[1], pt1[2]);
-        glVertex3d(pt2[0], pt2[1], pt2[2]);
+      glVertex3d(pt0[0], pt0[1], pt0[2]);
+      glVertex3d(pt1[0], pt1[1], pt1[2]);
+      glVertex3d(pt2[0], pt2[1], pt2[2]);
       glEnd();
 
       triangle++;
@@ -222,5 +212,5 @@ int main(int argc, char* argv[])
 }
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif

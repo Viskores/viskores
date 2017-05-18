@@ -32,21 +32,21 @@
 #include <algorithm>
 #include <iostream>
 
-namespace vtkm {
-namespace cont {
-namespace testing {
+namespace vtkm
+{
+namespace cont
+{
+namespace testing
+{
 
-struct CustomTypeList : vtkm::ListTagBase<vtkm::Vec<Int32, 3>,
-                                          vtkm::Vec<Int64, 3>,
-                                          vtkm::Vec<Float32, 3>,
-                                          vtkm::Vec<Float64, 3>,
-                                          vtkm::Vec<Int32, 9>,
-                                          vtkm::Vec<Int64, 9>,
-                                          vtkm::Vec<Float32, 9>,
-                                          vtkm::Vec<Float64, 9> >
-{};
+struct CustomTypeList
+  : vtkm::ListTagBase<vtkm::Vec<Int32, 3>, vtkm::Vec<Int64, 3>, vtkm::Vec<Float32, 3>,
+                      vtkm::Vec<Float64, 3>, vtkm::Vec<Int32, 9>, vtkm::Vec<Int64, 9>,
+                      vtkm::Vec<Float32, 9>, vtkm::Vec<Float64, 9>>
+{
+};
 
-template<typename DeviceAdapterTag>
+template <typename DeviceAdapterTag>
 class TestingComputeRange
 {
 private:
@@ -56,16 +56,14 @@ private:
     const vtkm::Id nvals = 11;
     T data[nvals] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1, 0 };
     std::random_shuffle(data, data + nvals);
-    vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, data,
-                            nvals);
+    vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, data, nvals);
 
     vtkm::Range result;
     field.GetRange(&result);
 
     std::cout << result << std::endl;
-    VTKM_TEST_ASSERT(
-          (test_equal(result.Min, -5.0) && test_equal(result.Max, 5.0)),
-          "Unexpected scalar field range.");
+    VTKM_TEST_ASSERT((test_equal(result.Min, -5.0) && test_equal(result.Max, 5.0)),
+                     "Unexpected scalar field range.");
   }
 
   template <typename T, vtkm::Id NumberOfComponents>
@@ -82,29 +80,23 @@ private:
         fieldData[j][i] = data[j];
       }
     }
-    vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, fieldData,
-                            nvals);
+    vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, fieldData, nvals);
 
     vtkm::Range result[NumberOfComponents];
-    field.GetRange(result,
-                   CustomTypeList(),
-                   VTKM_DEFAULT_STORAGE_LIST_TAG());
+    field.GetRange(result, CustomTypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
 
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
-      VTKM_TEST_ASSERT(
-            (test_equal(result[i].Min, -5.0) && test_equal(result[i].Max, 5.0)),
-            "Unexpected vector field range.");
+      VTKM_TEST_ASSERT((test_equal(result[i].Min, -5.0) && test_equal(result[i].Max, 5.0)),
+                       "Unexpected vector field range.");
     }
   }
 
   static void TestUniformCoordinateField()
   {
-    vtkm::cont::CoordinateSystem field(
-          "TestField",
-          vtkm::Id3(10, 20, 5),
-          vtkm::Vec<vtkm::FloatDefault,3>(0.0f,-5.0f,4.0f),
-          vtkm::Vec<vtkm::FloatDefault,3>(1.0f,0.5f,2.0f));
+    vtkm::cont::CoordinateSystem field("TestField", vtkm::Id3(10, 20, 5),
+                                       vtkm::Vec<vtkm::FloatDefault, 3>(0.0f, -5.0f, 4.0f),
+                                       vtkm::Vec<vtkm::FloatDefault, 3>(1.0f, 0.5f, 2.0f));
 
     vtkm::Bounds result = field.GetBounds();
 
@@ -159,7 +151,6 @@ public:
     return vtkm::cont::testing::Testing::Run(TestAll());
   }
 };
-
 }
 }
 } // namespace vtkm::cont::testing

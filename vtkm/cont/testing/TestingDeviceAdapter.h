@@ -51,9 +51,12 @@
 
 #include <vtkm/internal/Windows.h>
 
-namespace vtkm {
-namespace cont {
-namespace testing {
+namespace vtkm
+{
+namespace cont
+{
+namespace testing
+{
 
 #define ERROR_MESSAGE "Got an error."
 #define ARRAY_SIZE 100000
@@ -63,31 +66,26 @@ namespace testing {
 /// This class has a single static member, Run, that tests the templated
 /// DeviceAdapter for conformance.
 ///
-template<class DeviceAdapterTag>
+template <class DeviceAdapterTag>
 struct TestingDeviceAdapter
 {
 private:
   typedef vtkm::cont::StorageTagBasic StorageTag;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag>
-        IdArrayHandle;
+  typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag> IdArrayHandle;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault,StorageTag>
-      ScalarArrayHandle;
+  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag> ScalarArrayHandle;
 
-  typedef vtkm::cont::internal::ArrayManagerExecution<
-      vtkm::Id, StorageTag, DeviceAdapterTag>
-      IdArrayManagerExecution;
+  typedef vtkm::cont::internal::ArrayManagerExecution<vtkm::Id, StorageTag, DeviceAdapterTag>
+    IdArrayManagerExecution;
 
   typedef vtkm::cont::internal::Storage<vtkm::Id, StorageTag> IdStorage;
 
-  typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>
-      ::Portal IdPortalType;
-  typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>
-      ::PortalConst IdPortalConstType;
+  typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal IdPortalType;
+  typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst
+    IdPortalConstType;
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>
-      Algorithm;
+  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
 
 public:
   // Cuda kernels have to be public (in Cuda 4.0).
@@ -95,19 +93,18 @@ public:
   struct CopyArrayKernel
   {
     VTKM_CONT
-    CopyArrayKernel(const IdPortalConstType &input,
-                    const IdPortalType &output)
-      : InputArray(input), OutputArray(output) {  }
+    CopyArrayKernel(const IdPortalConstType& input, const IdPortalType& output)
+      : InputArray(input)
+      , OutputArray(output)
+    {
+    }
 
-    VTKM_EXEC void operator()(
-        vtkm::Id index,
-        const vtkm::exec::internal::ErrorMessageBuffer &) const
+    VTKM_EXEC void operator()(vtkm::Id index, const vtkm::exec::internal::ErrorMessageBuffer&) const
     {
       this->OutputArray.Set(index, this->InputArray.Get(index));
     }
 
-    VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
+    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
     IdPortalConstType InputArray;
     IdPortalType OutputArray;
@@ -116,27 +113,29 @@ public:
   struct ClearArrayKernel
   {
     VTKM_CONT
-    ClearArrayKernel(const IdPortalType &array) : Array(array), Dims() {  }
+    ClearArrayKernel(const IdPortalType& array)
+      : Array(array)
+      , Dims()
+    {
+    }
 
     VTKM_CONT
-    ClearArrayKernel(const IdPortalType &array,
-                     const vtkm::Id3& dims) : Array(array), Dims(dims) {  }
-
-    VTKM_EXEC void operator()(vtkm::Id index) const
+    ClearArrayKernel(const IdPortalType& array, const vtkm::Id3& dims)
+      : Array(array)
+      , Dims(dims)
     {
-      this->Array.Set(index, OFFSET);
     }
+
+    VTKM_EXEC void operator()(vtkm::Id index) const { this->Array.Set(index, OFFSET); }
 
     VTKM_EXEC void operator()(vtkm::Id3 index) const
     {
       //convert from id3 to id
-      vtkm::Id flatIndex =
-                  index[0]+ this->Dims[0]*(index[1]+ this->Dims[1]*index[2]);
+      vtkm::Id flatIndex = index[0] + this->Dims[0] * (index[1] + this->Dims[1] * index[2]);
       this->operator()(flatIndex);
     }
 
-    VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
+    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
     IdPortalType Array;
     vtkm::Id3 Dims;
@@ -148,7 +147,7 @@ public:
     // typedef void ControlSignature(Field(Out));
     // typedef void ExecutionSignature(_1);
 
-    template<typename T>
+    template <typename T>
     VTKM_EXEC void operator()(T& value) const
     {
       value = OFFSET;
@@ -158,12 +157,18 @@ public:
   struct AddArrayKernel
   {
     VTKM_CONT
-    AddArrayKernel(const IdPortalType &array) : Array(array), Dims() {  }
+    AddArrayKernel(const IdPortalType& array)
+      : Array(array)
+      , Dims()
+    {
+    }
 
     VTKM_CONT
-    AddArrayKernel(const IdPortalType &array,
-                     const vtkm::Id3& dims) : Array(array), Dims(dims) {  }
-
+    AddArrayKernel(const IdPortalType& array, const vtkm::Id3& dims)
+      : Array(array)
+      , Dims(dims)
+    {
+    }
 
     VTKM_EXEC void operator()(vtkm::Id index) const
     {
@@ -173,13 +178,11 @@ public:
     VTKM_EXEC void operator()(vtkm::Id3 index) const
     {
       //convert from id3 to id
-      vtkm::Id flatIndex =
-                  index[0]+ this->Dims[0]*(index[1]+ this->Dims[1]*index[2]);
+      vtkm::Id flatIndex = index[0] + this->Dims[0] * (index[1] + this->Dims[1] * index[2]);
       this->operator()(flatIndex);
     }
 
-    VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
+    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
     IdPortalType Array;
     vtkm::Id3 Dims;
@@ -189,14 +192,14 @@ public:
   {
     VTKM_EXEC void operator()(vtkm::Id index) const
     {
-      if (index == ARRAY_SIZE/2)
+      if (index == ARRAY_SIZE / 2)
       {
         this->ErrorMessage.RaiseError(ERROR_MESSAGE);
       }
     }
 
     VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &errorMessage)
+      const vtkm::exec::internal::ErrorMessageBuffer& errorMessage)
     {
       this->ErrorMessage = errorMessage;
     }
@@ -212,7 +215,7 @@ public:
     }
 
     VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &errorMessage)
+      const vtkm::exec::internal::ErrorMessageBuffer& errorMessage)
     {
       this->ErrorMessage = errorMessage;
     }
@@ -223,15 +226,14 @@ public:
   struct OffsetPlusIndexKernel
   {
     VTKM_CONT
-    OffsetPlusIndexKernel(const IdPortalType &array) : Array(array) {  }
-
-    VTKM_EXEC void operator()(vtkm::Id index) const
+    OffsetPlusIndexKernel(const IdPortalType& array)
+      : Array(array)
     {
-      this->Array.Set(index, OFFSET + index);
     }
 
-    VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
+    VTKM_EXEC void operator()(vtkm::Id index) const { this->Array.Set(index, OFFSET + index); }
+
+    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
     IdPortalType Array;
   };
@@ -239,22 +241,21 @@ public:
   struct MarkOddNumbersKernel
   {
     VTKM_CONT
-    MarkOddNumbersKernel(const IdPortalType &array) : Array(array) {  }
-
-    VTKM_EXEC void operator()(vtkm::Id index) const
+    MarkOddNumbersKernel(const IdPortalType& array)
+      : Array(array)
     {
-      this->Array.Set(index, index%2);
     }
 
-    VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
+    VTKM_EXEC void operator()(vtkm::Id index) const { this->Array.Set(index, index % 2); }
+
+    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
     IdPortalType Array;
   };
 
   struct FuseAll
   {
-    template<typename T>
+    template <typename T>
     VTKM_EXEC bool operator()(const T&, const T&) const
     {
       //binary predicates for unique return true if they are the same
@@ -262,54 +263,53 @@ public:
     }
   };
 
-  template<typename T>
+  template <typename T>
   struct AtomicKernel
   {
     VTKM_CONT
-    AtomicKernel(const vtkm::exec::AtomicArray<T,DeviceAdapterTag> &array)
-    : AArray(array)
-    {  }
+    AtomicKernel(const vtkm::exec::AtomicArray<T, DeviceAdapterTag>& array)
+      : AArray(array)
+    {
+    }
 
     VTKM_EXEC void operator()(vtkm::Id index) const
     {
-      T value = (T) index;
+      T value = (T)index;
       this->AArray.Add(0, value);
     }
 
-    VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
+    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
-    vtkm::exec::AtomicArray<T,DeviceAdapterTag> AArray;
+    vtkm::exec::AtomicArray<T, DeviceAdapterTag> AArray;
   };
 
-  template<typename T>
+  template <typename T>
   struct AtomicCASKernel
   {
     VTKM_CONT
-    AtomicCASKernel(const vtkm::exec::AtomicArray<T,DeviceAdapterTag> &array)
-    : AArray(array)
-    {  }
+    AtomicCASKernel(const vtkm::exec::AtomicArray<T, DeviceAdapterTag>& array)
+      : AArray(array)
+    {
+    }
 
     VTKM_EXEC void operator()(vtkm::Id index) const
     {
-      T value = (T) index;
+      T value = (T)index;
       //Get the old value from the array with a no-op
-      T oldValue = this->AArray.Add(0,T(0));
+      T oldValue = this->AArray.Add(0, T(0));
       //This creates an atomic add using the CAS operatoin
       T assumed = T(0);
       do
       {
         assumed = oldValue;
-        oldValue = this->AArray.CompareAndSwap(0, (assumed + value) , assumed);
+        oldValue = this->AArray.CompareAndSwap(0, (assumed + value), assumed);
 
       } while (assumed != oldValue);
-
     }
 
-    VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer &) {  }
+    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
-    vtkm::exec::AtomicArray<T,DeviceAdapterTag> AArray;
+    vtkm::exec::AtomicArray<T, DeviceAdapterTag> AArray;
   };
 
   class VirtualObjectTransferKernel
@@ -317,49 +317,39 @@ public:
   public:
     struct Interface
     {
-      using FooSig = vtkm::Id (const void*);
+      using FooSig = vtkm::Id(const void*);
 
-      template<typename T>
-      VTKM_EXEC
-      void Bind(const T *target)
+      template <typename T>
+      VTKM_EXEC void Bind(const T* target)
       {
         this->Target = target;
-        this->FooPtr = [](const void* t){ return static_cast<const T*>(t)->Foo(); };
+        this->FooPtr = [](const void* t) { return static_cast<const T*>(t)->Foo(); };
       }
 
       VTKM_EXEC
-      vtkm::Id Foo() const
-      {
-        return this->FooPtr(this->Target);
-      }
+      vtkm::Id Foo() const { return this->FooPtr(this->Target); }
 
-      const void *Target;
-      FooSig *FooPtr;
+      const void* Target;
+      FooSig* FooPtr;
     };
 
     struct Concrete
     {
-      vtkm::Id Foo() const
-      {
-        return this->Value;
-      }
+      vtkm::Id Foo() const { return this->Value; }
 
       vtkm::Id Value = 0;
     };
 
-    VirtualObjectTransferKernel(const Interface &vo, IdArrayHandle &result)
-      : Virtual(vo), Result(result.PrepareForInPlace(DeviceAdapterTag()))
-    { }
-
-    VTKM_EXEC
-    void operator()(vtkm::Id) const
+    VirtualObjectTransferKernel(const Interface& vo, IdArrayHandle& result)
+      : Virtual(vo)
+      , Result(result.PrepareForInPlace(DeviceAdapterTag()))
     {
-      this->Result.Set(0, this->Virtual.Foo());
     }
 
-    VTKM_CONT void SetErrorMessageBuffer(
-        const vtkm::exec::internal::ErrorMessageBuffer&)
-    {  }
+    VTKM_EXEC
+    void operator()(vtkm::Id) const { this->Result.Set(0, this->Virtual.Foo()); }
+
+    VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
   private:
     Interface Virtual;
@@ -367,15 +357,13 @@ public:
   };
 
 private:
-
   static VTKM_CONT void TestDeviceAdapterTag()
   {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing device adapter tag" << std::endl;
 
     typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
-    typedef vtkm::cont::DeviceAdapterTraits<
-        vtkm::cont::DeviceAdapterTagError> ErrorTraits;
+    typedef vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError> ErrorTraits;
 
     VTKM_TEST_ASSERT(Traits::GetId() == Traits::GetId(),
                      "Device adapter Id does not equal itself.");
@@ -397,18 +385,17 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing ArrayManagerExecution" << std::endl;
 
-    typedef vtkm::cont::internal::ArrayManagerExecution<
-        vtkm::Id,StorageTagBasic,DeviceAdapterTag>
-        ArrayManagerExecution;
+    typedef vtkm::cont::internal::ArrayManagerExecution<vtkm::Id, StorageTagBasic, DeviceAdapterTag>
+      ArrayManagerExecution;
 
-    typedef vtkm::cont::internal::Storage<vtkm::Id,StorageTagBasic> StorageType;
+    typedef vtkm::cont::internal::Storage<vtkm::Id, StorageTagBasic> StorageType;
 
     // Create original input array.
     StorageType storage;
-    storage.Allocate(ARRAY_SIZE*2);
+    storage.Allocate(ARRAY_SIZE * 2);
 
     StorageType::PortalType portal = storage.GetPortal();
-    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE*2,
+    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE * 2,
                      "Storage portal has unexpected size.");
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -421,8 +408,7 @@ private:
     // Do an operation just so we know the values are placed in the execution
     // environment and they change. We are only calling on half the array
     // because we are about to shrink.
-    Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(true)),
-                        ARRAY_SIZE);
+    Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(true)), ARRAY_SIZE);
 
     // Change size.
     manager.Shrink(ARRAY_SIZE);
@@ -441,33 +427,30 @@ private:
 
     // Check array.
     StorageType::PortalConstType checkPortal = storage.GetPortalConst();
-    VTKM_TEST_ASSERT(checkPortal.GetNumberOfValues() == ARRAY_SIZE,
-                     "Storage portal wrong size.");
+    VTKM_TEST_ASSERT(checkPortal.GetNumberOfValues() == ARRAY_SIZE, "Storage portal wrong size.");
 
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      VTKM_TEST_ASSERT(
-            checkPortal.Get(index) == TestValue(index, vtkm::Id()) + index,
-            "Did not get correct values from array.");
+      VTKM_TEST_ASSERT(checkPortal.Get(index) == TestValue(index, vtkm::Id()) + index,
+                       "Did not get correct values from array.");
     }
   }
 
   static VTKM_CONT void TestOutOfMemory()
   {
-    // Only test out of memory with 64 bit ids.  If there are 32 bit ids on
-    // a 64 bit OS (common), it is simply too hard to get a reliable allocation
-    // that is too much memory.
+// Only test out of memory with 64 bit ids.  If there are 32 bit ids on
+// a 64 bit OS (common), it is simply too hard to get a reliable allocation
+// that is too much memory.
 #ifdef VTKM_USE_64BIT_IDS
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Out of Memory" << std::endl;
     try
     {
       std::cout << "Do array allocation that should fail." << std::endl;
-      vtkm::cont::internal::Storage<
-          vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic> supportArray;
-      vtkm::cont::internal::ArrayManagerExecution<
-          vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic, DeviceAdapterTag>
-          bigManager(&supportArray);
+      vtkm::cont::internal::Storage<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic> supportArray;
+      vtkm::cont::internal::ArrayManagerExecution<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic,
+                                                  DeviceAdapterTag>
+        bigManager(&supportArray);
 
       const vtkm::Id bigSize = 0x7FFFFFFFFFFFFFFFLL;
       bigManager.PrepareForOutput(bigSize);
@@ -477,7 +460,7 @@ private:
                      "or the width of vtkm::Id is not large enough to express all "
                      "array sizes.");
     }
-    catch (vtkm::cont::ErrorBadAllocation &error)
+    catch (vtkm::cont::ErrorBadAllocation& error)
     {
       std::cout << "Got the expected error: " << error.GetMessage() << std::endl;
     }
@@ -508,10 +491,8 @@ private:
 
     std::cout << "Elapsed time: " << elapsedTime << std::endl;
 
-    VTKM_TEST_ASSERT(elapsedTime > 0.999,
-                     "Timer did not capture full second wait.");
-    VTKM_TEST_ASSERT(elapsedTime < 2.0,
-                     "Timer counted too far or system really busy.");
+    VTKM_TEST_ASSERT(elapsedTime > 0.999, "Timer did not capture full second wait.");
+    VTKM_TEST_ASSERT(elapsedTime < 2.0, "Timer counted too far or system really busy.");
   }
 
   VTKM_CONT
@@ -531,8 +512,8 @@ private:
   {
     using VirtualObject = typename VirtualObjectTransferKernel::Interface;
     using TargetType = typename VirtualObjectTransferKernel::Concrete;
-    using Transfer = vtkm::cont::internal::VirtualObjectTransfer<
-                       VirtualObject, TargetType, DeviceAdapterTag>;
+    using Transfer =
+      vtkm::cont::internal::VirtualObjectTransfer<VirtualObject, TargetType, DeviceAdapterTag>;
 
     IdArrayHandle result;
     result.Allocate(1);
@@ -544,19 +525,16 @@ private:
     VirtualObject vo;
     void* state = Transfer::Create(vo, &target);
 
-
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing VirtualObjectTransfer" << std::endl;
 
     Algorithm::Schedule(VirtualObjectTransferKernel(vo, result), 1);
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 5,
-                     "Did not get expected result");
+    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 5, "Did not get expected result");
 
     target.Value = 10;
     Transfer::Update(state, &target);
     Algorithm::Schedule(VirtualObjectTransferKernel(vo, result), 1);
-    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 10,
-                     "Did not get expected result");
+    VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 10, "Did not get expected result");
 
     Transfer::Cleanup(state);
   }
@@ -597,12 +575,10 @@ private:
       IdArrayManagerExecution manager(&storage);
 
       std::cout << "Running clear." << std::endl;
-      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(ARRAY_SIZE)),
-                          ARRAY_SIZE);
+      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(ARRAY_SIZE)), ARRAY_SIZE);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)),
-                          ARRAY_SIZE);
+      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)), ARRAY_SIZE);
 
       std::cout << "Checking results." << std::endl;
       manager.RetrieveOutputData(&storage);
@@ -610,8 +586,7 @@ private:
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
         vtkm::Id value = storage.GetPortalConst().Get(index);
-        VTKM_TEST_ASSERT(value == index + OFFSET,
-                         "Got bad value for scheduled kernels.");
+        VTKM_TEST_ASSERT(value == index + OFFSET, "Got bad value for scheduled kernels.");
       }
     } //release memory
 
@@ -628,21 +603,18 @@ private:
       //size is selected to be larger than the CUDA backend can launch in a
       //single invocation when compiled for SM_2 support
       const vtkm::Id size = 8400000;
-      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(size)),
-                          size);
+      Algorithm::Schedule(ClearArrayKernel(manager.PrepareForOutput(size)), size);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)),
-                          size);
+      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false)), size);
 
       std::cout << "Checking results." << std::endl;
       manager.RetrieveOutputData(&storage);
 
-      for (vtkm::Id index = 0; index < size; index+=100)
+      for (vtkm::Id index = 0; index < size; index += 100)
       {
         vtkm::Id value = storage.GetPortalConst().Get(index);
-        VTKM_TEST_ASSERT(value == index + OFFSET,
-                         "Got bad value for scheduled kernels.");
+        VTKM_TEST_ASSERT(value == index + OFFSET, "Got bad value for scheduled kernels.");
       }
     } //release memory
 
@@ -658,13 +630,11 @@ private:
 
       std::cout << "Running clear." << std::endl;
       Algorithm::Schedule(
-            ClearArrayKernel(manager.PrepareForOutput(
-                               DIM_SIZE * DIM_SIZE * DIM_SIZE), maxRange),
-            maxRange);
+        ClearArrayKernel(manager.PrepareForOutput(DIM_SIZE * DIM_SIZE * DIM_SIZE), maxRange),
+        maxRange);
 
       std::cout << "Running add." << std::endl;
-      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false), maxRange),
-                          maxRange);
+      Algorithm::Schedule(AddArrayKernel(manager.PrepareForInPlace(false), maxRange), maxRange);
 
       std::cout << "Checking results." << std::endl;
       manager.RetrieveOutputData(&storage);
@@ -673,8 +643,7 @@ private:
       for (vtkm::Id index = 0; index < maxId; index++)
       {
         vtkm::Id value = storage.GetPortalConst().Get(index);
-        VTKM_TEST_ASSERT(value == index + OFFSET,
-                         "Got bad value for scheduled vtkm::Id3 kernels.");
+        VTKM_TEST_ASSERT(value == index + OFFSET, "Got bad value for scheduled vtkm::Id3 kernels.");
       }
     } //release memory
   }
@@ -691,31 +660,25 @@ private:
     std::cout << "  Standard call" << std::endl;
     //construct the index array
     Algorithm::Schedule(
-          OffsetPlusIndexKernel(array.PrepareForOutput(ARRAY_SIZE,
-                                                       DeviceAdapterTag())),
-          ARRAY_SIZE);
+      OffsetPlusIndexKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
     Algorithm::Schedule(
-          MarkOddNumbersKernel(stencil.PrepareForOutput(ARRAY_SIZE,
-                                                        DeviceAdapterTag())),
-          ARRAY_SIZE);
+      MarkOddNumbersKernel(stencil.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
 
-    Algorithm::CopyIf(array,stencil,result);
-    VTKM_TEST_ASSERT(result.GetNumberOfValues() == array.GetNumberOfValues()/2,
+    Algorithm::CopyIf(array, stencil, result);
+    VTKM_TEST_ASSERT(result.GetNumberOfValues() == array.GetNumberOfValues() / 2,
                      "result of CopyIf has an incorrect size");
 
     for (vtkm::Id index = 0; index < result.GetNumberOfValues(); index++)
     {
       const vtkm::Id value = result.GetPortalConstControl().Get(index);
-      VTKM_TEST_ASSERT(value == (OFFSET + (index*2)+1),
-                       "Incorrect value in CopyIf result.");
+      VTKM_TEST_ASSERT(value == (OFFSET + (index * 2) + 1), "Incorrect value in CopyIf result.");
     }
 
     std::cout << "  CopyIf on zero size arrays." << std::endl;
     array.Shrink(0);
     stencil.Shrink(0);
     Algorithm::CopyIf(array, stencil, result);
-    VTKM_TEST_ASSERT(result.GetNumberOfValues() == 0,
-                     "result of CopyIf has an incorrect size");
+    VTKM_TEST_ASSERT(result.GetNumberOfValues() == 0, "result of CopyIf has an incorrect size");
   }
 
   static VTKM_CONT void TestOrderedUniqueValues()
@@ -723,16 +686,16 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Sort, Unique, LowerBounds and UpperBounds" << std::endl;
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
+    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= static_cast<vtkm::Id>(OFFSET+(i % 50));
+      testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
     }
 
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(&(*testData.begin()), ARRAY_SIZE);
 
     //make a deep copy of input and place it into temp
     IdArrayHandle temp;
-    Algorithm::Copy(input,temp);
+    Algorithm::Copy(input, temp);
 
     Algorithm::Sort(temp);
     Algorithm::Unique(temp);
@@ -741,18 +704,17 @@ private:
     IdArrayHandle handle1;
 
     //verify lower and upper bounds work
-    Algorithm::LowerBounds(temp,input,handle);
-    Algorithm::UpperBounds(temp,input,handle1);
+    Algorithm::LowerBounds(temp, input, handle);
+    Algorithm::UpperBounds(temp, input, handle1);
 
     // Check to make sure that temp was resized correctly during Unique.
     // (This was a discovered bug at one point.)
-    temp.GetPortalConstControl();  // Forces copy back to control.
+    temp.GetPortalConstControl();     // Forces copy back to control.
     temp.ReleaseResourcesExecution(); // Make sure not counting on execution.
-    VTKM_TEST_ASSERT(
-          temp.GetNumberOfValues() == 50,
-          "Unique did not resize array (or size did not copy to control).");
+    VTKM_TEST_ASSERT(temp.GetNumberOfValues() == 50,
+                     "Unique did not resize array (or size did not copy to control).");
 
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id value = handle.GetPortalConstControl().Get(i);
       vtkm::Id value1 = handle1.GetPortalConstControl().Get(i);
@@ -765,38 +727,35 @@ private:
     //now test it works when the id are not incrementing
     const vtkm::Id RANDOMDATA_SIZE = 6;
     vtkm::Id randomData[RANDOMDATA_SIZE];
-    randomData[0]=500;  // 2 (lower), 3 (upper)
-    randomData[1]=955;  // 3 (lower), 4 (upper)
-    randomData[2]=955;  // 3 (lower), 4 (upper)
-    randomData[3]=120;  // 0 (lower), 1 (upper)
-    randomData[4]=320;  // 1 (lower), 2 (upper)
-    randomData[5]=955;  // 3 (lower), 4 (upper)
+    randomData[0] = 500; // 2 (lower), 3 (upper)
+    randomData[1] = 955; // 3 (lower), 4 (upper)
+    randomData[2] = 955; // 3 (lower), 4 (upper)
+    randomData[3] = 120; // 0 (lower), 1 (upper)
+    randomData[4] = 320; // 1 (lower), 2 (upper)
+    randomData[5] = 955; // 3 (lower), 4 (upper)
 
     //change the control structure under the handle
     input = vtkm::cont::make_ArrayHandle(randomData, RANDOMDATA_SIZE);
-    Algorithm::Copy(input,handle);
+    Algorithm::Copy(input, handle);
     VTKM_TEST_ASSERT(handle.GetNumberOfValues() == RANDOMDATA_SIZE,
                      "Handle incorrect size after setting new control data");
 
-    Algorithm::Copy(input,handle1);
+    Algorithm::Copy(input, handle1);
     VTKM_TEST_ASSERT(handle.GetNumberOfValues() == RANDOMDATA_SIZE,
                      "Handle incorrect size after setting new control data");
 
-    Algorithm::Copy(handle,temp);
-    VTKM_TEST_ASSERT(temp.GetNumberOfValues() == RANDOMDATA_SIZE,
-                     "Copy failed");
+    Algorithm::Copy(handle, temp);
+    VTKM_TEST_ASSERT(temp.GetNumberOfValues() == RANDOMDATA_SIZE, "Copy failed");
     Algorithm::Sort(temp);
     Algorithm::Unique(temp);
-    Algorithm::LowerBounds(temp,handle);
-    Algorithm::UpperBounds(temp,handle1);
+    Algorithm::LowerBounds(temp, handle);
+    Algorithm::UpperBounds(temp, handle1);
 
     VTKM_TEST_ASSERT(handle.GetNumberOfValues() == RANDOMDATA_SIZE,
                      "LowerBounds returned incorrect size");
 
-    std::copy(
-          vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalConstControl()),
-          vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalConstControl()),
-          randomData);
+    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalConstControl()),
+              vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalConstControl()), randomData);
     VTKM_TEST_ASSERT(randomData[0] == 2, "Got bad value - LowerBounds");
     VTKM_TEST_ASSERT(randomData[1] == 3, "Got bad value - LowerBounds");
     VTKM_TEST_ASSERT(randomData[2] == 3, "Got bad value - LowerBounds");
@@ -807,10 +766,8 @@ private:
     VTKM_TEST_ASSERT(handle1.GetNumberOfValues() == RANDOMDATA_SIZE,
                      "UppererBounds returned incorrect size");
 
-    std::copy(
-          vtkm::cont::ArrayPortalToIteratorBegin(handle1.GetPortalConstControl()),
-          vtkm::cont::ArrayPortalToIteratorEnd(handle1.GetPortalConstControl()),
-          randomData);
+    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(handle1.GetPortalConstControl()),
+              vtkm::cont::ArrayPortalToIteratorEnd(handle1.GetPortalConstControl()), randomData);
     VTKM_TEST_ASSERT(randomData[0] == 3, "Got bad value - UpperBound");
     VTKM_TEST_ASSERT(randomData[1] == 4, "Got bad value - UpperBound");
     VTKM_TEST_ASSERT(randomData[2] == 4, "Got bad value - UpperBound");
@@ -824,9 +781,9 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort" << std::endl;
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
+    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= static_cast<vtkm::Id>(OFFSET+((ARRAY_SIZE-i) % 50));
+      testData[i] = static_cast<vtkm::Id>(OFFSET + ((ARRAY_SIZE - i) % 50));
     }
 
     IdArrayHandle unsorted = vtkm::cont::make_ArrayHandle(testData);
@@ -836,10 +793,10 @@ private:
     //Validate the standard inplace sort is correct
     Algorithm::Sort(sorted);
 
-    for (vtkm::Id i = 0; i < ARRAY_SIZE-1; ++i)
+    for (vtkm::Id i = 0; i < ARRAY_SIZE - 1; ++i)
     {
       vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
-      vtkm::Id sorted2 = sorted.GetPortalConstControl().Get(i+1);
+      vtkm::Id sorted2 = sorted.GetPortalConstControl().Get(i + 1);
       VTKM_TEST_ASSERT(sorted1 <= sorted2, "Values not properly sorted.");
     }
 
@@ -853,9 +810,9 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort with comparison object" << std::endl;
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
+    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= static_cast<vtkm::Id>(OFFSET+((ARRAY_SIZE-i) % 50));
+      testData[i] = static_cast<vtkm::Id>(OFFSET + ((ARRAY_SIZE - i) % 50));
     }
 
     //sort the users memory in-place
@@ -866,25 +823,23 @@ private:
     //we would also sort the 'sorted' handle
     IdArrayHandle comp_sorted;
     Algorithm::Copy(sorted, comp_sorted);
-    Algorithm::Sort(comp_sorted,vtkm::SortGreater());
+    Algorithm::Sort(comp_sorted, vtkm::SortGreater());
 
     //Validate that sorted and comp_sorted are sorted in the opposite directions
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
       vtkm::Id sorted2 = comp_sorted.GetPortalConstControl().Get(ARRAY_SIZE - (i + 1));
-      VTKM_TEST_ASSERT(sorted1 == sorted2,
-                       "Got bad sort values when using SortGreater");
+      VTKM_TEST_ASSERT(sorted1 == sorted2, "Got bad sort values when using SortGreater");
     }
 
     //validate that sorted and comp_sorted are now equal
-    Algorithm::Sort(comp_sorted,vtkm::SortLess());
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    Algorithm::Sort(comp_sorted, vtkm::SortLess());
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id sorted1 = sorted.GetPortalConstControl().Get(i);
       vtkm::Id sorted2 = comp_sorted.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(sorted1 == sorted2,
-                       "Got bad sort values when using SortLess");
+      VTKM_TEST_ASSERT(sorted1 == sorted2, "Got bad sort values when using SortLess");
     }
   }
 
@@ -894,9 +849,9 @@ private:
     std::cout << "Sort of a ArrayHandleZip" << std::endl;
 
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
+    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= static_cast<vtkm::Id>(OFFSET+((ARRAY_SIZE-i) % 50));
+      testData[i] = static_cast<vtkm::Id>(OFFSET + ((ARRAY_SIZE - i) % 50));
     }
 
     IdArrayHandle unsorted = vtkm::cont::make_ArrayHandle(testData);
@@ -904,7 +859,7 @@ private:
     Algorithm::Copy(unsorted, sorted);
 
     //verify that we can use ArrayHandleZip inplace
-    vtkm::cont::ArrayHandleZip< IdArrayHandle, IdArrayHandle> zipped(unsorted, sorted);
+    vtkm::cont::ArrayHandleZip<IdArrayHandle, IdArrayHandle> zipped(unsorted, sorted);
 
     //verify we can use sort with zip handle
     Algorithm::Sort(zipped, vtkm::SortGreater());
@@ -912,8 +867,8 @@ private:
 
     for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
-      vtkm::Pair<vtkm::Id,vtkm::Id> kv_sorted = zipped.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(( OFFSET +  ( i / (ARRAY_SIZE/50)) ) == kv_sorted.first,
+      vtkm::Pair<vtkm::Id, vtkm::Id> kv_sorted = zipped.GetPortalConstControl().Get(i);
+      VTKM_TEST_ASSERT((OFFSET + (i / (ARRAY_SIZE / 50))) == kv_sorted.first,
                        "ArrayZipHandle improperly sorted");
     }
 
@@ -922,15 +877,15 @@ private:
 
     //verify that we can use ArrayHandlePermutation inplace
     vtkm::cont::ArrayHandleIndex index(ARRAY_SIZE);
-    vtkm::cont::ArrayHandlePermutation< vtkm::cont::ArrayHandleIndex,
-                                        IdArrayHandle> perm(index, sorted);
+    vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandleIndex, IdArrayHandle> perm(index,
+                                                                                         sorted);
 
     //verify we can use a custom operator sort with permutation handle
     Algorithm::Sort(perm, vtkm::SortGreater());
     for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id sorted_value = perm.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(( OFFSET +  ( (ARRAY_SIZE-(i+1)) / (ARRAY_SIZE/50)) ) == sorted_value,
+      VTKM_TEST_ASSERT((OFFSET + ((ARRAY_SIZE - (i + 1)) / (ARRAY_SIZE / 50))) == sorted_value,
                        "ArrayZipPermutation improperly sorted");
     }
 
@@ -939,7 +894,7 @@ private:
     for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id sorted_value = perm.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(( OFFSET +  ( i / (ARRAY_SIZE/50)) ) == sorted_value,
+      VTKM_TEST_ASSERT((OFFSET + (i / (ARRAY_SIZE / 50))) == sorted_value,
                        "ArrayZipPermutation improperly sorted");
     }
   }
@@ -949,67 +904,61 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort by keys" << std::endl;
 
-    typedef vtkm::Vec<FloatDefault,3> Vec3;
-    typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3>,StorageTag>
-      Vec3ArrayHandle;
-
+    typedef vtkm::Vec<FloatDefault, 3> Vec3;
+    typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>, StorageTag> Vec3ArrayHandle;
 
     std::vector<vtkm::Id> testKeys(ARRAY_SIZE);
     std::vector<Vec3> testValues(testKeys.size());
 
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
-      {
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
       std::size_t index = static_cast<size_t>(i);
       testKeys[index] = ARRAY_SIZE - i;
       testValues[index] = TestValue(i, Vec3());
-      }
+    }
 
     IdArrayHandle keys = vtkm::cont::make_ArrayHandle(testKeys);
     Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues);
 
-    Algorithm::SortByKey(keys,values);
+    Algorithm::SortByKey(keys, values);
 
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
-      {
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
       //keys should be sorted from 1 to ARRAY_SIZE
       //values should be sorted from (ARRAY_SIZE-1) to 0
       Vec3 sorted_value = values.GetPortalConstControl().Get(i);
       vtkm::Id sorted_key = keys.GetPortalConstControl().Get(i);
 
-      VTKM_TEST_ASSERT( (sorted_key == (i+1)) , "Got bad SortByKeys key");
-      VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(ARRAY_SIZE-1-i, Vec3())),
-                                      "Got bad SortByKeys value");
-      }
+      VTKM_TEST_ASSERT((sorted_key == (i + 1)), "Got bad SortByKeys key");
+      VTKM_TEST_ASSERT(test_equal(sorted_value, TestValue(ARRAY_SIZE - 1 - i, Vec3())),
+                       "Got bad SortByKeys value");
+    }
 
     // this will return everything back to what it was before sorting
-    Algorithm::SortByKey(keys,values,vtkm::SortGreater());
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
-      {
+    Algorithm::SortByKey(keys, values, vtkm::SortGreater());
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
       //keys should be sorted from ARRAY_SIZE to 1
       //values should be sorted from 0 to (ARRAY_SIZE-1)
       Vec3 sorted_value = values.GetPortalConstControl().Get(i);
       vtkm::Id sorted_key = keys.GetPortalConstControl().Get(i);
 
-      VTKM_TEST_ASSERT( (sorted_key == (ARRAY_SIZE-i)),
-                                      "Got bad SortByKeys key");
-      VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(i, Vec3())),
-                                      "Got bad SortByKeys value");
-      }
+      VTKM_TEST_ASSERT((sorted_key == (ARRAY_SIZE - i)), "Got bad SortByKeys key");
+      VTKM_TEST_ASSERT(test_equal(sorted_value, TestValue(i, Vec3())), "Got bad SortByKeys value");
+    }
 
     //this is here to verify we can sort by vtkm::Vec
-    Algorithm::SortByKey(values,keys);
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
-      {
+    Algorithm::SortByKey(values, keys);
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+    {
       //keys should be sorted from ARRAY_SIZE to 1
       //values should be sorted from 0 to (ARRAY_SIZE-1)
       Vec3 sorted_value = values.GetPortalConstControl().Get(i);
       vtkm::Id sorted_key = keys.GetPortalConstControl().Get(i);
 
-      VTKM_TEST_ASSERT( (sorted_key == (ARRAY_SIZE-i)),
-                                      "Got bad SortByKeys key");
-      VTKM_TEST_ASSERT( test_equal(sorted_value, TestValue(i, Vec3())),
-                                      "Got bad SortByKeys value");
-      }
+      VTKM_TEST_ASSERT((sorted_key == (ARRAY_SIZE - i)), "Got bad SortByKeys key");
+      VTKM_TEST_ASSERT(test_equal(sorted_value, TestValue(i, Vec3())), "Got bad SortByKeys value");
+    }
   }
 
   static VTKM_CONT void TestLowerBoundsWithComparisonObject()
@@ -1017,73 +966,70 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing LowerBounds with comparison object" << std::endl;
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
+    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= static_cast<vtkm::Id>(OFFSET+(i % 50));
+      testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
     }
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
 
     //make a deep copy of input and place it into temp
     IdArrayHandle temp;
-    Algorithm::Copy(input,temp);
+    Algorithm::Copy(input, temp);
 
     Algorithm::Sort(temp);
     Algorithm::Unique(temp);
 
     IdArrayHandle handle;
     //verify lower bounds work
-    Algorithm::LowerBounds(temp,input,handle,vtkm::SortLess());
+    Algorithm::LowerBounds(temp, input, handle, vtkm::SortLess());
 
     // Check to make sure that temp was resized correctly during Unique.
     // (This was a discovered bug at one point.)
-    temp.GetPortalConstControl();  // Forces copy back to control.
+    temp.GetPortalConstControl();     // Forces copy back to control.
     temp.ReleaseResourcesExecution(); // Make sure not counting on execution.
-    VTKM_TEST_ASSERT(
-          temp.GetNumberOfValues() == 50,
-          "Unique did not resize array (or size did not copy to control).");
+    VTKM_TEST_ASSERT(temp.GetNumberOfValues() == 50,
+                     "Unique did not resize array (or size did not copy to control).");
 
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id value = handle.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(value == i % 50, "Got bad LowerBounds value with SortLess");
     }
   }
 
-
   static VTKM_CONT void TestUpperBoundsWithComparisonObject()
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing UpperBounds with comparison object" << std::endl;
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
+    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= static_cast<vtkm::Id>(OFFSET+(i % 50));
+      testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
     }
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
 
     //make a deep copy of input and place it into temp
     IdArrayHandle temp;
-    Algorithm::Copy(input,temp);
+    Algorithm::Copy(input, temp);
 
     Algorithm::Sort(temp);
     Algorithm::Unique(temp);
 
     IdArrayHandle handle;
     //verify upper bounds work
-    Algorithm::UpperBounds(temp,input,handle,vtkm::SortLess());
+    Algorithm::UpperBounds(temp, input, handle, vtkm::SortLess());
 
     // Check to make sure that temp was resized correctly during Unique.
     // (This was a discovered bug at one point.)
-    temp.GetPortalConstControl();  // Forces copy back to control.
+    temp.GetPortalConstControl();     // Forces copy back to control.
     temp.ReleaseResourcesExecution(); // Make sure not counting on execution.
-    VTKM_TEST_ASSERT(
-          temp.GetNumberOfValues() == 50,
-          "Unique did not resize array (or size did not copy to control).");
+    VTKM_TEST_ASSERT(temp.GetNumberOfValues() == 50,
+                     "Unique did not resize array (or size did not copy to control).");
 
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id value = handle.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(value == (i % 50)+1, "Got bad UpperBounds value with SortLess");
+      VTKM_TEST_ASSERT(value == (i % 50) + 1, "Got bad UpperBounds value with SortLess");
     }
   }
 
@@ -1092,9 +1038,9 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Unique with comparison object" << std::endl;
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
+    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= static_cast<vtkm::Id>(OFFSET+(i % 50));
+      testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
     }
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
     Algorithm::Sort(input);
@@ -1102,11 +1048,10 @@ private:
 
     // Check to make sure that input was resized correctly during Unique.
     // (This was a discovered bug at one point.)
-    input.GetPortalConstControl();  // Forces copy back to control.
+    input.GetPortalConstControl();     // Forces copy back to control.
     input.ReleaseResourcesExecution(); // Make sure not counting on execution.
-    VTKM_TEST_ASSERT(
-          input.GetNumberOfValues() == 1,
-          "Unique did not resize array (or size did not copy to control).");
+    VTKM_TEST_ASSERT(input.GetNumberOfValues() == 1,
+                     "Unique did not resize array (or size did not copy to control).");
 
     vtkm::Id value = input.GetPortalConstControl().Get(0);
     VTKM_TEST_ASSERT(value == OFFSET, "Got bad unique value");
@@ -1119,17 +1064,14 @@ private:
 
     //construct the index array
     IdArrayHandle array;
-    Algorithm::Schedule(
-      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
-                       DeviceAdapterTag())),
-      ARRAY_SIZE);
+    Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                        ARRAY_SIZE);
 
     //the output of reduce and scan inclusive should be the same
     std::cout << "  Reduce with initial value of 0." << std::endl;
     vtkm::Id reduce_sum = Algorithm::Reduce(array, vtkm::Id(0));
     std::cout << "  Reduce with initial value." << std::endl;
-    vtkm::Id reduce_sum_with_intial_value = Algorithm::Reduce(array,
-                                                          vtkm::Id(ARRAY_SIZE));
+    vtkm::Id reduce_sum_with_intial_value = Algorithm::Reduce(array, vtkm::Id(ARRAY_SIZE));
     std::cout << "  Inclusive scan to check" << std::endl;
     vtkm::Id inclusive_sum = Algorithm::ScanInclusive(array, array);
     std::cout << "  Reduce with 1 value." << std::endl;
@@ -1139,14 +1081,11 @@ private:
     array.Shrink(0);
     vtkm::Id reduce_sum_no_values = Algorithm::Reduce(array, vtkm::Id(0));
 
-    VTKM_TEST_ASSERT(reduce_sum == OFFSET * ARRAY_SIZE,
-                     "Got bad sum from Reduce");
+    VTKM_TEST_ASSERT(reduce_sum == OFFSET * ARRAY_SIZE, "Got bad sum from Reduce");
     VTKM_TEST_ASSERT(reduce_sum_with_intial_value == reduce_sum + ARRAY_SIZE,
                      "Got bad sum from Reduce with initial value");
-    VTKM_TEST_ASSERT(reduce_sum_one_value == OFFSET,
-                     "Got bad single sum from Reduce");
-    VTKM_TEST_ASSERT(reduce_sum_no_values == 0,
-                     "Got bad empty sum from Reduce");
+    VTKM_TEST_ASSERT(reduce_sum_one_value == OFFSET, "Got bad single sum from Reduce");
+    VTKM_TEST_ASSERT(reduce_sum_no_values == 0, "Got bad empty sum from Reduce");
 
     VTKM_TEST_ASSERT(reduce_sum == inclusive_sum,
                      "Got different sums from Reduce and ScanInclusive");
@@ -1160,24 +1099,21 @@ private:
     //construct the index array. Assign an abnormally large value
     //to the middle of the array, that should be what we see as our sum.
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    const vtkm::Id maxValue = ARRAY_SIZE*2;
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
+    const vtkm::Id maxValue = ARRAY_SIZE * 2;
+    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
     {
       vtkm::Id index = static_cast<vtkm::Id>(i);
-      testData[i]= index;
+      testData[i] = index;
     }
-    testData[ARRAY_SIZE/2] = maxValue;
+    testData[ARRAY_SIZE / 2] = maxValue;
 
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
-    vtkm::Vec<vtkm::Id,2> range = Algorithm::Reduce(input,
-                                              vtkm::Vec<vtkm::Id,2>(0,0),
-                                              vtkm::MinAndMax<vtkm::Id>());
+    vtkm::Vec<vtkm::Id, 2> range =
+      Algorithm::Reduce(input, vtkm::Vec<vtkm::Id, 2>(0, 0), vtkm::MinAndMax<vtkm::Id>());
 
-    VTKM_TEST_ASSERT(maxValue == range[1],
-                    "Got bad value from Reduce with comparison object");
+    VTKM_TEST_ASSERT(maxValue == range[1], "Got bad value from Reduce with comparison object");
 
-    VTKM_TEST_ASSERT(0 == range[0],
-                    "Got bad value from Reduce with comparison object");
+    VTKM_TEST_ASSERT(0 == range[0], "Got bad value from Reduce with comparison object");
   }
 
   static VTKM_CONT void TestReduceWithFancyArrays()
@@ -1185,59 +1121,53 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce with ArrayHandleZip" << std::endl;
     {
-    IdArrayHandle keys, values;
-    Algorithm::Schedule(
-      ClearArrayKernel(keys.PrepareForOutput(ARRAY_SIZE,
-                       DeviceAdapterTag())),
-      ARRAY_SIZE);
+      IdArrayHandle keys, values;
+      Algorithm::Schedule(ClearArrayKernel(keys.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                          ARRAY_SIZE);
 
-    Algorithm::Schedule(
-      ClearArrayKernel(values.PrepareForOutput(ARRAY_SIZE,
-                       DeviceAdapterTag())),
-      ARRAY_SIZE);
+      Algorithm::Schedule(ClearArrayKernel(values.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                          ARRAY_SIZE);
 
-    vtkm::cont::ArrayHandleZip< IdArrayHandle,
-                                IdArrayHandle > zipped(keys,values);
+      vtkm::cont::ArrayHandleZip<IdArrayHandle, IdArrayHandle> zipped(keys, values);
 
-    //the output of reduce and scan inclusive should be the same
-    typedef vtkm::Pair<vtkm::Id,vtkm::Id> ResultType;
-    ResultType reduce_sum_with_intial_value =
-               Algorithm::Reduce(zipped, ResultType(ARRAY_SIZE,ARRAY_SIZE));
+      //the output of reduce and scan inclusive should be the same
+      typedef vtkm::Pair<vtkm::Id, vtkm::Id> ResultType;
+      ResultType reduce_sum_with_intial_value =
+        Algorithm::Reduce(zipped, ResultType(ARRAY_SIZE, ARRAY_SIZE));
 
-    ResultType expectedResult(OFFSET * ARRAY_SIZE + ARRAY_SIZE,
-                              OFFSET * ARRAY_SIZE + ARRAY_SIZE);
-    VTKM_TEST_ASSERT( ( reduce_sum_with_intial_value == expectedResult),
-                     "Got bad sum from Reduce with initial value");
+      ResultType expectedResult(OFFSET * ARRAY_SIZE + ARRAY_SIZE, OFFSET * ARRAY_SIZE + ARRAY_SIZE);
+      VTKM_TEST_ASSERT((reduce_sum_with_intial_value == expectedResult),
+                       "Got bad sum from Reduce with initial value");
     }
 
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce with ArrayHandlePermutation" << std::endl;
     {
-    //lastly test with heterogeneous zip values ( vec3, and constant array handle),
-    //and a custom reduce binary functor
-    const vtkm::Id indexLength = 30;
-    const vtkm::Id valuesLength = 10;
-    typedef vtkm::Float32 ValueType;
+      //lastly test with heterogeneous zip values ( vec3, and constant array handle),
+      //and a custom reduce binary functor
+      const vtkm::Id indexLength = 30;
+      const vtkm::Id valuesLength = 10;
+      typedef vtkm::Float32 ValueType;
 
-    vtkm::Id indexs[indexLength] =    {0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,
-                                       5,5,5,1,4,9,7,7,7,8,8,8,0,1,2};
-    ValueType values[valuesLength] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f,
-                                      6.0f, 7.0f, 8.0f, 9.0f, -2.0f};
-    const ValueType expectedSum = 125;
+      vtkm::Id indexs[indexLength] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
+                                       5, 5, 5, 1, 4, 9, 7, 7, 7, 8, 8, 8, 0, 1, 2 };
+      ValueType values[valuesLength] = {
+        1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, -2.0f
+      };
+      const ValueType expectedSum = 125;
 
-    IdArrayHandle indexHandle = vtkm::cont::make_ArrayHandle(indexs, indexLength);
-    vtkm::cont::ArrayHandle<ValueType> valueHandle = vtkm::cont::make_ArrayHandle(values, valuesLength);
+      IdArrayHandle indexHandle = vtkm::cont::make_ArrayHandle(indexs, indexLength);
+      vtkm::cont::ArrayHandle<ValueType> valueHandle =
+        vtkm::cont::make_ArrayHandle(values, valuesLength);
 
-    vtkm::cont::ArrayHandlePermutation< IdArrayHandle, vtkm::cont::ArrayHandle<ValueType> > perm;
-    perm = vtkm::cont::make_ArrayHandlePermutation(indexHandle, valueHandle);
+      vtkm::cont::ArrayHandlePermutation<IdArrayHandle, vtkm::cont::ArrayHandle<ValueType>> perm;
+      perm = vtkm::cont::make_ArrayHandlePermutation(indexHandle, valueHandle);
 
-    const ValueType sum = Algorithm::Reduce(perm, ValueType(0.0f));
+      const ValueType sum = Algorithm::Reduce(perm, ValueType(0.0f));
 
-    std::cout << "sum: " << sum << std::endl;
-    VTKM_TEST_ASSERT( ( sum == expectedSum),
-                     "Got bad sum from Reduce with permutation handle");
+      std::cout << "sum: " << sum << std::endl;
+      VTKM_TEST_ASSERT((sum == expectedSum), "Got bad sum from Reduce with permutation handle");
     }
-
   }
 
   static VTKM_CONT void TestReduceByKey()
@@ -1247,116 +1177,96 @@ private:
 
     //first test with very basic integer key / values
     {
-    const vtkm::Id inputLength = 12;
-    const vtkm::Id expectedLength = 6;
-    vtkm::Id inputKeys[inputLength] =    {0, 0, 0,\
-                                          1, 1,\
-                                          4,\
-                                          0,\
-                                          2, 2, 2, 2,\
-                                          -1}; // input keys
-    vtkm::Id inputValues[inputLength] =  {13, -2, -1,\
-                                          1, 1,\
-                                          0,\
-                                          3,\
-                                          1, 2, 3, 4, \
-                                          -42}; // input keys
-    vtkm::Id expectedKeys[expectedLength] =   { 0, 1, 4, 0,  2, -1 };
-    vtkm::Id expectedValues[expectedLength] = {10, 2, 0, 3, 10, -42};
+      const vtkm::Id inputLength = 12;
+      const vtkm::Id expectedLength = 6;
+      vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 };       // input keys
+      vtkm::Id inputValues[inputLength] = { 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 }; // input keys
+      vtkm::Id expectedKeys[expectedLength] = { 0, 1, 4, 0, 2, -1 };
+      vtkm::Id expectedValues[expectedLength] = { 10, 2, 0, 3, 10, -42 };
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+      IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+      IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
-    IdArrayHandle keysOut, valuesOut;
-    Algorithm::ReduceByKey( keys,
-                            values,
-                            keysOut,
-                            valuesOut,
-                           vtkm::Add() );
+      IdArrayHandle keysOut, valuesOut;
+      Algorithm::ReduceByKey(keys, values, keysOut, valuesOut, vtkm::Add());
 
-    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
-                    "Got wrong number of output keys");
+      VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
+                       "Got wrong number of output keys");
 
-    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                    "Got wrong number of output values");
+      VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                       "Got wrong number of output values");
 
-    for(vtkm::Id i=0; i < expectedLength; ++i)
+      for (vtkm::Id i = 0; i < expectedLength; ++i)
       {
-      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
-      const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
-      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced value");
+        const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
+        const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(expectedKeys[i] == k, "Incorrect reduced key");
+        VTKM_TEST_ASSERT(expectedValues[i] == v, "Incorrect reduced value");
       }
     }
 
     //next test with a single key across the entire set, using vec3 as the
     //value, using a custom reduce binary functor
     {
-    const vtkm::Id inputLength = 3;
-    const vtkm::Id expectedLength = 1;
-    vtkm::Id inputKeys[inputLength] =    {0, 0, 0}; // input keys
-    vtkm::Vec<vtkm::Float64, 3> inputValues[inputLength];
-    inputValues[0] = vtkm::make_Vec(13.1, 13.3, 13.5);
-    inputValues[1] = vtkm::make_Vec(-2.1, -2.3, -2.5);
-    inputValues[2] = vtkm::make_Vec(-1.0, -1.0, 1.0); // input keys
-    vtkm::Id expectedKeys[expectedLength] =   { 0};
+      const vtkm::Id inputLength = 3;
+      const vtkm::Id expectedLength = 1;
+      vtkm::Id inputKeys[inputLength] = { 0, 0, 0 }; // input keys
+      vtkm::Vec<vtkm::Float64, 3> inputValues[inputLength];
+      inputValues[0] = vtkm::make_Vec(13.1, 13.3, 13.5);
+      inputValues[1] = vtkm::make_Vec(-2.1, -2.3, -2.5);
+      inputValues[2] = vtkm::make_Vec(-1.0, -1.0, 1.0); // input keys
+      vtkm::Id expectedKeys[expectedLength] = { 0 };
 
-    vtkm::Vec<vtkm::Float64, 3> expectedValues[expectedLength];
-    expectedValues[0] = vtkm::make_Vec(27.51, 30.59, -33.75);
+      vtkm::Vec<vtkm::Float64, 3> expectedValues[expectedLength];
+      expectedValues[0] = vtkm::make_Vec(27.51, 30.59, -33.75);
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
+      IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> values =
+        vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
-    IdArrayHandle keysOut;
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> valuesOut;
-    Algorithm::ReduceByKey( keys,
-                            values,
-                            keysOut,
-                            valuesOut,
-                            vtkm::Multiply() );
+      IdArrayHandle keysOut;
+      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> valuesOut;
+      Algorithm::ReduceByKey(keys, values, keysOut, valuesOut, vtkm::Multiply());
 
-    VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
-                    "Got wrong number of output keys");
+      VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
+                       "Got wrong number of output keys");
 
-    VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
-                    "Got wrong number of output values");
+      VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
+                       "Got wrong number of output values");
 
-    for(vtkm::Id i=0; i < expectedLength; ++i)
+      for (vtkm::Id i = 0; i < expectedLength; ++i)
       {
-      const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
-      const vtkm::Vec<vtkm::Float64, 3> v = valuesOut.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
-      VTKM_TEST_ASSERT( expectedValues[i] == v, "Incorrect reduced vale");
-      }
+        const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
+        const vtkm::Vec<vtkm::Float64, 3> v = valuesOut.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(expectedKeys[i] == k, "Incorrect reduced key");
+        VTKM_TEST_ASSERT(expectedValues[i] == v, "Incorrect reduced vale");
       }
     }
+  }
 
-   static VTKM_CONT void TestReduceByKeyWithFancyArrays()
-    {
+  static VTKM_CONT void TestReduceByKeyWithFancyArrays()
+  {
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Reduce By Key with Fancy Arrays" << std::endl;
-
 
     //lastly test with heterogeneous zip values ( vec3, and constant array handle),
     //and a custom reduce binary functor
     const vtkm::Id inputLength = 30;
     const vtkm::Id expectedLength = 10;
     typedef vtkm::Float32 ValueType;
-    vtkm::Id inputKeys[inputLength] =    {0,0,0,1,1,1,2,2,2,3,3,3,4,4,4,
-                                          5,5,5,6,6,6,7,7,7,8,8,8,9,9,9}; // input keys
-    ValueType inputValues1[inputLength] = {13.1f, -2.1f, -1.0f,
-                                           13.1f, -2.1f, -1.0f,
-                                           13.1f, -2.1f, -1.0f,
-                                           13.1f, -2.1f, -1.0f,
-                                           13.1f, -2.1f, -1.0f,
-                                           13.1f, -2.1f, -1.0f,
-                                           13.1f, -2.1f, -1.0f,
-                                           13.1f, -2.1f, -1.0f,
-                                           13.1f, -2.1f, -1.0f,
-                                           13.1f, -2.1f, -1.0f}; // input values array1
-    vtkm::Id expectedKeys[expectedLength] =   {0,1,2,3,4,5,6,7,8,9};
-    ValueType expectedValues1[expectedLength] = {10.f,10.f,10.f,10.f,10.f,10.f,10.f,10.f,10.f,10.f}; // output values 1
-    ValueType expectedValues2[expectedLength] = {3.f,3.f,3.f,3.f,3.f,3.f,3.f,3.f,3.f,3.f}; // output values 2
+    vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
+                                        5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9 }; // input keys
+    ValueType inputValues1[inputLength] = {
+      13.1f, -2.1f, -1.0f, 13.1f, -2.1f, -1.0f, 13.1f, -2.1f, -1.0f, 13.1f,
+      -2.1f, -1.0f, 13.1f, -2.1f, -1.0f, 13.1f, -2.1f, -1.0f, 13.1f, -2.1f,
+      -1.0f, 13.1f, -2.1f, -1.0f, 13.1f, -2.1f, -1.0f, 13.1f, -2.1f, -1.0f
+    }; // input values array1
+    vtkm::Id expectedKeys[expectedLength] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    ValueType expectedValues1[expectedLength] = { 10.f, 10.f, 10.f, 10.f, 10.f,
+                                                  10.f, 10.f, 10.f, 10.f, 10.f }; // output values 1
+    ValueType expectedValues2[expectedLength] = {
+      3.f, 3.f, 3.f, 3.f, 3.f, 3.f, 3.f, 3.f, 3.f, 3.f
+    }; // output values 2
 
     IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ValueArrayType;
@@ -1372,26 +1282,24 @@ private:
     ValueArrayType valuesOut2;
     vtkm::cont::ArrayHandleZip<ValueArrayType, ValueArrayType> valuesOutZip(valuesOut1, valuesOut2);
 
-    Algorithm::ReduceByKey( keys,
-                        valuesZip,
-                        keysOut,
-                        valuesOutZip,
-                       vtkm::Add() );
+    Algorithm::ReduceByKey(keys, valuesZip, keysOut, valuesOutZip, vtkm::Add());
 
     VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
-                "Got wrong number of output keys");
+                     "Got wrong number of output keys");
 
     VTKM_TEST_ASSERT(valuesOutZip.GetNumberOfValues() == expectedLength,
-                "Got wrong number of output values");
+                     "Got wrong number of output values");
 
-    for(vtkm::Id i=0; i < expectedLength; ++i)
+    for (vtkm::Id i = 0; i < expectedLength; ++i)
     {
       const vtkm::Id k = keysOut.GetPortalConstControl().Get(i);
       const vtkm::Pair<ValueType, ValueType> v = valuesOutZip.GetPortalConstControl().Get(i);
-      std::cout << "key=" << k << "," << "expectedValues1[i] = " << expectedValues1[i] <<  "," << "computed value1 = " << v.first << std::endl;
-      VTKM_TEST_ASSERT( expectedKeys[i] == k, "Incorrect reduced key");
-      VTKM_TEST_ASSERT( expectedValues1[i] == v.first, "Incorrect reduced value1");
-      VTKM_TEST_ASSERT( expectedValues2[i] == v.second, "Incorrect reduced value2");
+      std::cout << "key=" << k << ","
+                << "expectedValues1[i] = " << expectedValues1[i] << ","
+                << "computed value1 = " << v.first << std::endl;
+      VTKM_TEST_ASSERT(expectedKeys[i] == k, "Incorrect reduced key");
+      VTKM_TEST_ASSERT(expectedValues1[i] == v.first, "Incorrect reduced value1");
+      VTKM_TEST_ASSERT(expectedValues2[i] == v.second, "Incorrect reduced value2");
     }
   }
 
@@ -1401,8 +1309,8 @@ private:
     std::cout << "Testing Scan Inclusive By Key with 1 elements" << std::endl;
 
     const vtkm::Id inputLength = 1;
-    vtkm::Id inputKeys[inputLength] = {0};
-    vtkm::Id inputValues[inputLength] = {5};
+    vtkm::Id inputKeys[inputLength] = { 0 };
+    vtkm::Id inputValues[inputLength] = { 5 };
 
     const vtkm::Id expectedLength = 1;
 
@@ -1417,7 +1325,6 @@ private:
                      "Got wrong number of output values");
     const vtkm::Id v = valuesOut.GetPortalConstControl().Get(0);
     VTKM_TEST_ASSERT(5 == v, "Incorrect scanned value");
-
   }
 
   static VTKM_CONT void TestScanInclusiveByKeyTwo()
@@ -1426,11 +1333,11 @@ private:
     std::cout << "Testing Scan Exclusive By Key with 2 elements" << std::endl;
 
     const vtkm::Id inputLength = 2;
-    vtkm::Id inputKeys[inputLength] = {0, 1};
-    vtkm::Id inputValues[inputLength] = {1, 1};
+    vtkm::Id inputKeys[inputLength] = { 0, 1 };
+    vtkm::Id inputValues[inputLength] = { 1, 1 };
 
     const vtkm::Id expectedLength = 2;
-    vtkm::Id expectedValues[expectedLength] = {1, 1};
+    vtkm::Id expectedValues[expectedLength] = { 1, 1 };
 
     IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
@@ -1441,7 +1348,8 @@ private:
 
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
-    for (vtkm::Id i = 0; i < expectedLength; i++) {
+    for (vtkm::Id i = 0; i < expectedLength; i++)
+    {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
@@ -1449,13 +1357,13 @@ private:
   static VTKM_CONT void TestScanInclusiveByKeyLarge()
   {
     std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing Scan Inclusive By Key with "
-              << ARRAY_SIZE << " elements" << std::endl;
+    std::cout << "Testing Scan Inclusive By Key with " << ARRAY_SIZE << " elements" << std::endl;
 
     const vtkm::Id inputLength = ARRAY_SIZE;
     std::vector<vtkm::Id> inputKeys(inputLength);
 
-    for (vtkm::Id i = 0; i < ARRAY_SIZE; i++) {
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
+    {
       if (i % 100 < 98)
         inputKeys[static_cast<std::size_t>(i)] = static_cast<vtkm::Id>(i / 100);
       else
@@ -1465,7 +1373,8 @@ private:
 
     const vtkm::Id expectedLength = ARRAY_SIZE;
     std::vector<vtkm::Id> expectedValues(expectedLength);
-    for (std::size_t i = 0; i < ARRAY_SIZE; i++) {
+    for (std::size_t i = 0; i < ARRAY_SIZE; i++)
+    {
       if (i % 100 < 98)
         expectedValues[i] = static_cast<vtkm::Id>(1 + i % 100);
       else
@@ -1481,7 +1390,8 @@ private:
 
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
-    for (auto i = 0; i < expectedLength; i++) {
+    for (auto i = 0; i < expectedLength; i++)
+    {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
@@ -1492,11 +1402,11 @@ private:
     std::cout << "Testing Scan Inclusive By Key" << std::endl;
 
     const vtkm::Id inputLength = 10;
-    vtkm::Id inputKeys[inputLength] = {0, 0, 0, 1, 1, 2, 3, 3, 3, 3};
-    vtkm::Id inputValues[inputLength] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
     const vtkm::Id expectedLength = 10;
-    vtkm::Id expectedValues[expectedLength] = {1, 2, 3, 1, 2, 1, 1, 2, 3, 4};
+    vtkm::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
 
     IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
@@ -1506,11 +1416,11 @@ private:
     Algorithm::ScanInclusiveByKey(keys, values, valuesOut);
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
-    for (auto i = 0; i < expectedLength; i++) {
+    for (auto i = 0; i < expectedLength; i++)
+    {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
-
   }
 
   static VTKM_CONT void TestScanExclusiveByKeyOne()
@@ -1519,8 +1429,8 @@ private:
     std::cout << "Testing Scan Exclusive By Key with 1 elements" << std::endl;
 
     const vtkm::Id inputLength = 1;
-    vtkm::Id inputKeys[inputLength] = {0};
-    vtkm::Id inputValues[inputLength] = {0};
+    vtkm::Id inputKeys[inputLength] = { 0 };
+    vtkm::Id inputValues[inputLength] = { 0 };
     vtkm::Id init = 5;
 
     const vtkm::Id expectedLength = 1;
@@ -1536,7 +1446,6 @@ private:
                      "Got wrong number of output values");
     const vtkm::Id v = valuesOut.GetPortalConstControl().Get(0);
     VTKM_TEST_ASSERT(init == v, "Incorrect scanned value");
-
   }
 
   static VTKM_CONT void TestScanExclusiveByKeyTwo()
@@ -1545,12 +1454,12 @@ private:
     std::cout << "Testing Scan Exclusive By Key with 2 elements" << std::endl;
 
     const vtkm::Id inputLength = 2;
-    vtkm::Id inputKeys[inputLength] = {0, 1};
-    vtkm::Id inputValues[inputLength] = {1, 1};
+    vtkm::Id inputKeys[inputLength] = { 0, 1 };
+    vtkm::Id inputValues[inputLength] = { 1, 1 };
     vtkm::Id init = 5;
 
     const vtkm::Id expectedLength = 2;
-    vtkm::Id expectedValues[expectedLength] = {5, 5};
+    vtkm::Id expectedValues[expectedLength] = { 5, 5 };
 
     IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
@@ -1561,7 +1470,8 @@ private:
 
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
-    for (auto i = 0; i < expectedLength; i++) {
+    for (auto i = 0; i < expectedLength; i++)
+    {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(expectedValues[i] == v, "Incorrect scanned value");
     }
@@ -1570,12 +1480,12 @@ private:
   static VTKM_CONT void TestScanExclusiveByKeyLarge()
   {
     std::cout << "-------------------------------------------" << std::endl;
-    std::cout << "Testing Scan Exclusive By Key with "
-              << ARRAY_SIZE << " elements" << std::endl;
+    std::cout << "Testing Scan Exclusive By Key with " << ARRAY_SIZE << " elements" << std::endl;
 
     const vtkm::Id inputLength = ARRAY_SIZE;
     std::vector<vtkm::Id> inputKeys(inputLength);
-    for (std::size_t i = 0; i < ARRAY_SIZE; i++) {
+    for (std::size_t i = 0; i < ARRAY_SIZE; i++)
+    {
       if (i % 100 < 98)
         inputKeys[i] = static_cast<vtkm::Id>(i / 100);
       else
@@ -1586,7 +1496,8 @@ private:
 
     const vtkm::Id expectedLength = ARRAY_SIZE;
     std::vector<vtkm::Id> expectedValues(expectedLength);
-    for (vtkm::Id i = 0; i < ARRAY_SIZE; i++) {
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
+    {
       if (i % 100 < 98)
         expectedValues[static_cast<std::size_t>(i)] = static_cast<vtkm::Id>(init + i % 100);
       else
@@ -1602,7 +1513,8 @@ private:
 
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
-    for (vtkm::Id i = 0; i < expectedLength; i++) {
+    for (vtkm::Id i = 0; i < expectedLength; i++)
+    {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
@@ -1614,12 +1526,12 @@ private:
     std::cout << "Testing Scan Exclusive By Key" << std::endl;
 
     const vtkm::Id inputLength = 10;
-    vtkm::Id inputKeys[inputLength] = {0, 0, 0, 1, 1, 2, 3, 3, 3, 3};
-    vtkm::Id inputValues[inputLength] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     vtkm::Id init = 5;
 
     const vtkm::Id expectedLength = 10;
-    vtkm::Id expectedValues[expectedLength] = {5, 6, 7, 5, 6, 5, 5, 6, 7, 8};
+    vtkm::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
 
     IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
@@ -1630,7 +1542,8 @@ private:
 
     VTKM_TEST_ASSERT(valuesOut.GetNumberOfValues() == expectedLength,
                      "Got wrong number of output values");
-    for (vtkm::Id i= 0; i < expectedLength; i++) {
+    for (vtkm::Id i = 0; i < expectedLength; i++)
+    {
       const vtkm::Id v = valuesOut.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(expectedValues[static_cast<std::size_t>(i)] == v, "Incorrect scanned value");
     }
@@ -1642,97 +1555,89 @@ private:
     std::cout << "Testing Inclusive Scan" << std::endl;
 
     {
-    std::cout << "  size " << ARRAY_SIZE << std::endl;
-    //construct the index array
-    IdArrayHandle array;
-    Algorithm::Schedule(
-      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
-                       DeviceAdapterTag())),
-      ARRAY_SIZE);
+      std::cout << "  size " << ARRAY_SIZE << std::endl;
+      //construct the index array
+      IdArrayHandle array;
+      Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                          ARRAY_SIZE);
 
-    //we know have an array whose sum is equal to OFFSET * ARRAY_SIZE,
-    //let's validate that
-    vtkm::Id sum = Algorithm::ScanInclusive(array, array);
-    VTKM_TEST_ASSERT(sum == OFFSET * ARRAY_SIZE,
-                     "Got bad sum from Inclusive Scan");
+      //we know have an array whose sum is equal to OFFSET * ARRAY_SIZE,
+      //let's validate that
+      vtkm::Id sum = Algorithm::ScanInclusive(array, array);
+      VTKM_TEST_ASSERT(sum == OFFSET * ARRAY_SIZE, "Got bad sum from Inclusive Scan");
 
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
-    {
-      const vtkm::Id value = array.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(value == (i+1) * OFFSET,
-                       "Incorrect partial sum");
-    }
+      for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+      {
+        const vtkm::Id value = array.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(value == (i + 1) * OFFSET, "Incorrect partial sum");
+      }
 
-    std::cout << "  size 1" << std::endl;
-    array.Shrink(1);
-    sum = Algorithm::ScanInclusive(array, array);
-    VTKM_TEST_ASSERT(sum == OFFSET, "Incorrect partial sum");
-    const vtkm::Id value = array.GetPortalConstControl().Get(0);
-    VTKM_TEST_ASSERT(value == OFFSET, "Incorrect partial sum");
+      std::cout << "  size 1" << std::endl;
+      array.Shrink(1);
+      sum = Algorithm::ScanInclusive(array, array);
+      VTKM_TEST_ASSERT(sum == OFFSET, "Incorrect partial sum");
+      const vtkm::Id value = array.GetPortalConstControl().Get(0);
+      VTKM_TEST_ASSERT(value == OFFSET, "Incorrect partial sum");
 
-    std::cout << "  size 0" << std::endl;
-    array.Shrink(0);
-    sum = Algorithm::ScanInclusive(array, array);
-    VTKM_TEST_ASSERT(sum == 0, "Incorrect partial sum");
+      std::cout << "  size 0" << std::endl;
+      array.Shrink(0);
+      sum = Algorithm::ScanInclusive(array, array);
+      VTKM_TEST_ASSERT(sum == 0, "Incorrect partial sum");
     }
 
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Inclusive Scan with multiplication operator" << std::endl;
     {
-    std::vector<vtkm::Float64> inputValues(ARRAY_SIZE);
-    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
-    {
-      inputValues[i] = 1.01;
-    }
+      std::vector<vtkm::Float64> inputValues(ARRAY_SIZE);
+      for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
+      {
+        inputValues[i] = 1.01;
+      }
 
-    std::size_t mid = ARRAY_SIZE/2;
-    inputValues[mid] = 0.0;
+      std::size_t mid = ARRAY_SIZE / 2;
+      inputValues[mid] = 0.0;
 
-    vtkm::cont::ArrayHandle<vtkm::Float64> array =
-            vtkm::cont::make_ArrayHandle(&inputValues[0], ARRAY_SIZE);
+      vtkm::cont::ArrayHandle<vtkm::Float64> array =
+        vtkm::cont::make_ArrayHandle(&inputValues[0], ARRAY_SIZE);
 
-    vtkm::Float64 product = Algorithm::ScanInclusive(array, array,
-                                                     vtkm::Multiply());
+      vtkm::Float64 product = Algorithm::ScanInclusive(array, array, vtkm::Multiply());
 
-    VTKM_TEST_ASSERT(product == 0.0f, "ScanInclusive product result not 0.0");
-    for (std::size_t i = 0; i < mid; ++i)
-    {
-      vtkm::Id index = static_cast<vtkm::Id>(i);
-      vtkm::Float64 expected = pow(1.01, static_cast<vtkm::Float64>(i + 1));
-      vtkm::Float64 got = array.GetPortalConstControl().Get(index);
-      VTKM_TEST_ASSERT(test_equal(got, expected),
-                       "Incorrect results for ScanInclusive");
-    }
-    for (std::size_t i = mid; i < ARRAY_SIZE; ++i)
-    {
-      vtkm::Id index = static_cast<vtkm::Id>(i);
-      VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(index) == 0.0f,
-                       "Incorrect results for ScanInclusive");
-    }
+      VTKM_TEST_ASSERT(product == 0.0f, "ScanInclusive product result not 0.0");
+      for (std::size_t i = 0; i < mid; ++i)
+      {
+        vtkm::Id index = static_cast<vtkm::Id>(i);
+        vtkm::Float64 expected = pow(1.01, static_cast<vtkm::Float64>(i + 1));
+        vtkm::Float64 got = array.GetPortalConstControl().Get(index);
+        VTKM_TEST_ASSERT(test_equal(got, expected), "Incorrect results for ScanInclusive");
+      }
+      for (std::size_t i = mid; i < ARRAY_SIZE; ++i)
+      {
+        vtkm::Id index = static_cast<vtkm::Id>(i);
+        VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(index) == 0.0f,
+                         "Incorrect results for ScanInclusive");
+      }
     }
 
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Inclusive Scan with a vtkm::Vec" << std::endl;
 
     {
-    typedef vtkm::Vec<Float64,3> Vec3;
-    typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>,StorageTag>
-      Vec3ArrayHandle;
+      typedef vtkm::Vec<Float64, 3> Vec3;
+      typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> Vec3ArrayHandle;
 
-    std::vector<Vec3> testValues(ARRAY_SIZE);
+      std::vector<Vec3> testValues(ARRAY_SIZE);
 
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
-    {
-      testValues[i] = TestValue(1, Vec3());
+      for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
+      {
+        testValues[i] = TestValue(1, Vec3());
+      }
+      Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues);
+
+      Vec3 sum = Algorithm::ScanInclusive(values, values);
+      std::cout << "Sum that was returned " << sum << std::endl;
+      VTKM_TEST_ASSERT(test_equal(sum, TestValue(1, Vec3()) * ARRAY_SIZE),
+                       "Got bad sum from Inclusive Scan");
     }
-    Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues);
-
-    Vec3 sum = Algorithm::ScanInclusive(values, values);
-    std::cout << "Sum that was returned " << sum << std::endl;
-    VTKM_TEST_ASSERT( test_equal(sum, TestValue(1, Vec3()) * ARRAY_SIZE ),
-                      "Got bad sum from Inclusive Scan");
-    }
-
   }
 
   static VTKM_CONT void TestScanInclusiveWithComparisonObject()
@@ -1742,25 +1647,19 @@ private:
 
     //construct the index array
     IdArrayHandle array;
-    Algorithm::Schedule(
-      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
-                       DeviceAdapterTag())),
-      ARRAY_SIZE);
+    Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                        ARRAY_SIZE);
 
-    Algorithm::Schedule(
-      AddArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
-                     DeviceAdapterTag())),
-      ARRAY_SIZE);
+    Algorithm::Schedule(AddArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                        ARRAY_SIZE);
     //we know have an array whose sum is equal to OFFSET * ARRAY_SIZE,
     //let's validate that
     IdArrayHandle result;
-    vtkm::Id sum = Algorithm::ScanInclusive(array,
-                                            result,
-                                            vtkm::Maximum());
-    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
+    vtkm::Id sum = Algorithm::ScanInclusive(array, result, vtkm::Maximum());
+    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE - 1),
                      "Got bad sum from Inclusive Scan with comparison object");
 
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       const vtkm::Id input_value = array.GetPortalConstControl().Get(i);
       const vtkm::Id result_value = result.GetPortalConstControl().Get(i);
@@ -1768,19 +1667,16 @@ private:
     }
 
     //now try it inline
-    sum = Algorithm::ScanInclusive(array,
-                                   array,
-                                   vtkm::Maximum());
-    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE-1),
+    sum = Algorithm::ScanInclusive(array, array, vtkm::Maximum());
+    VTKM_TEST_ASSERT(sum == OFFSET + (ARRAY_SIZE - 1),
                      "Got bad sum from Inclusive Scan with comparison object");
 
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
     {
       const vtkm::Id input_value = array.GetPortalConstControl().Get(i);
       const vtkm::Id result_value = result.GetPortalConstControl().Get(i);
       VTKM_TEST_ASSERT(input_value == result_value, "Incorrect partial sum");
     }
-
   }
 
   static VTKM_CONT void TestScanExclusive()
@@ -1789,40 +1685,36 @@ private:
     std::cout << "Testing Exclusive Scan" << std::endl;
 
     {
-    std::cout << "  size " << ARRAY_SIZE << std::endl;
-    //construct the index array
-    IdArrayHandle array;
-    Algorithm::Schedule(
-      ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE,
-                       DeviceAdapterTag())),
-      ARRAY_SIZE);
+      std::cout << "  size " << ARRAY_SIZE << std::endl;
+      //construct the index array
+      IdArrayHandle array;
+      Algorithm::Schedule(ClearArrayKernel(array.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                          ARRAY_SIZE);
 
-    // we know have an array whose sum = (OFFSET * ARRAY_SIZE),
-    // let's validate that
-    vtkm::Id sum = Algorithm::ScanExclusive(array, array);
-    std::cout << "  Sum that was returned " << sum << std::endl;
-    VTKM_TEST_ASSERT(sum == (OFFSET * ARRAY_SIZE),
-                     "Got bad sum from Exclusive Scan");
+      // we know have an array whose sum = (OFFSET * ARRAY_SIZE),
+      // let's validate that
+      vtkm::Id sum = Algorithm::ScanExclusive(array, array);
+      std::cout << "  Sum that was returned " << sum << std::endl;
+      VTKM_TEST_ASSERT(sum == (OFFSET * ARRAY_SIZE), "Got bad sum from Exclusive Scan");
 
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i)
-    {
-      const vtkm::Id value = array.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(value == i * OFFSET,
-                       "Incorrect partial sum");
-    }
+      for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)
+      {
+        const vtkm::Id value = array.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(value == i * OFFSET, "Incorrect partial sum");
+      }
 
-    std::cout << "  size 1" << std::endl;
-    array.Shrink(1);
-    array.GetPortalControl().Set(0, OFFSET);
-    sum = Algorithm::ScanExclusive(array, array);
-    VTKM_TEST_ASSERT(sum == OFFSET, "Incorrect partial sum");
-    const vtkm::Id value = array.GetPortalConstControl().Get(0);
-    VTKM_TEST_ASSERT(value == 0, "Incorrect partial sum");
+      std::cout << "  size 1" << std::endl;
+      array.Shrink(1);
+      array.GetPortalControl().Set(0, OFFSET);
+      sum = Algorithm::ScanExclusive(array, array);
+      VTKM_TEST_ASSERT(sum == OFFSET, "Incorrect partial sum");
+      const vtkm::Id value = array.GetPortalConstControl().Get(0);
+      VTKM_TEST_ASSERT(value == 0, "Incorrect partial sum");
 
-    std::cout << "  size 0" << std::endl;
-    array.Shrink(0);
-    sum = Algorithm::ScanExclusive(array, array);
-    VTKM_TEST_ASSERT(sum == 0, "Incorrect partial sum");
+      std::cout << "  size 0" << std::endl;
+      array.Shrink(0);
+      sum = Algorithm::ScanExclusive(array, array);
+      VTKM_TEST_ASSERT(sum == 0, "Incorrect partial sum");
     }
 
     // Enable when Exclusive Scan with custom operator is implemented for all
@@ -1830,61 +1722,58 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exclusive Scan with multiplication operator" << std::endl;
     {
-    std::vector<vtkm::Float64> inputValues(ARRAY_SIZE);
-    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
-    {
-      inputValues[i] = 1.01;
-    }
+      std::vector<vtkm::Float64> inputValues(ARRAY_SIZE);
+      for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
+      {
+        inputValues[i] = 1.01;
+      }
 
-    std::size_t mid = ARRAY_SIZE/2;
-    inputValues[mid] = 0.0;
+      std::size_t mid = ARRAY_SIZE / 2;
+      inputValues[mid] = 0.0;
 
-    vtkm::cont::ArrayHandle<vtkm::Float64> array = vtkm::cont::make_ArrayHandle(inputValues);
+      vtkm::cont::ArrayHandle<vtkm::Float64> array = vtkm::cont::make_ArrayHandle(inputValues);
 
-    vtkm::Float64 initialValue = 2.00;
-    vtkm::Float64 product = Algorithm::ScanExclusive(array, array,
-        vtkm::Multiply(), initialValue);
+      vtkm::Float64 initialValue = 2.00;
+      vtkm::Float64 product =
+        Algorithm::ScanExclusive(array, array, vtkm::Multiply(), initialValue);
 
-    VTKM_TEST_ASSERT(product == 0.0f, "ScanExclusive product result not 0.0");
-    VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(0) == initialValue,
-                     "ScanExclusive result's first value != initialValue");
-    for (std::size_t i = 1; i <= mid; ++i)
-    {
-      vtkm::Id index = static_cast<vtkm::Id>(i);
-      vtkm::Float64 expected = pow(1.01, static_cast<vtkm::Float64>(i)) *
-                               initialValue;
-      vtkm::Float64 got = array.GetPortalConstControl().Get(index);
-      VTKM_TEST_ASSERT(test_equal(got, expected),
-                       "Incorrect results for ScanExclusive");
-    }
-    for (std::size_t i = mid + 1; i < ARRAY_SIZE; ++i)
-    {
-      vtkm::Id index = static_cast<vtkm::Id>(i);
-      VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(index) == 0.0f,
-                       "Incorrect results for ScanExclusive");
-    }
+      VTKM_TEST_ASSERT(product == 0.0f, "ScanExclusive product result not 0.0");
+      VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(0) == initialValue,
+                       "ScanExclusive result's first value != initialValue");
+      for (std::size_t i = 1; i <= mid; ++i)
+      {
+        vtkm::Id index = static_cast<vtkm::Id>(i);
+        vtkm::Float64 expected = pow(1.01, static_cast<vtkm::Float64>(i)) * initialValue;
+        vtkm::Float64 got = array.GetPortalConstControl().Get(index);
+        VTKM_TEST_ASSERT(test_equal(got, expected), "Incorrect results for ScanExclusive");
+      }
+      for (std::size_t i = mid + 1; i < ARRAY_SIZE; ++i)
+      {
+        vtkm::Id index = static_cast<vtkm::Id>(i);
+        VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(index) == 0.0f,
+                         "Incorrect results for ScanExclusive");
+      }
     }
 
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing Exclusive Scan with a vtkm::Vec" << std::endl;
 
     {
-    typedef vtkm::Vec<Float64,3> Vec3;
-    typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64,3>,StorageTag>
-      Vec3ArrayHandle;
+      typedef vtkm::Vec<Float64, 3> Vec3;
+      typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> Vec3ArrayHandle;
 
-    std::vector<Vec3> testValues(ARRAY_SIZE);
+      std::vector<Vec3> testValues(ARRAY_SIZE);
 
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
-    {
-      testValues[i] = TestValue(1, Vec3());
-    }
-    Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues);
+      for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
+      {
+        testValues[i] = TestValue(1, Vec3());
+      }
+      Vec3ArrayHandle values = vtkm::cont::make_ArrayHandle(testValues);
 
-    Vec3 sum = Algorithm::ScanExclusive(values, values);
-    std::cout << "Sum that was returned " << sum << std::endl;
-    VTKM_TEST_ASSERT( test_equal(sum, (TestValue(1, Vec3()) * ARRAY_SIZE) ),
-                      "Got bad sum from Exclusive Scan");
+      Vec3 sum = Algorithm::ScanExclusive(values, values);
+      std::cout << "Sum that was returned " << sum << std::endl;
+      VTKM_TEST_ASSERT(test_equal(sum, (TestValue(1, Vec3()) * ARRAY_SIZE)),
+                       "Got bad sum from Exclusive Scan");
     }
   }
 
@@ -1899,13 +1788,12 @@ private:
     {
       Algorithm::Schedule(OneErrorKernel(), ARRAY_SIZE);
     }
-    catch (vtkm::cont::ErrorExecution &error)
+    catch (vtkm::cont::ErrorExecution& error)
     {
       std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
     }
-    VTKM_TEST_ASSERT(message == ERROR_MESSAGE,
-                     "Did not get expected error message.");
+    VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
 
     std::cout << "Generating lots of errors." << std::endl;
     message = "";
@@ -1913,32 +1801,37 @@ private:
     {
       Algorithm::Schedule(AllErrorKernel(), ARRAY_SIZE);
     }
-    catch (vtkm::cont::ErrorExecution &error)
+    catch (vtkm::cont::ErrorExecution& error)
     {
       std::cout << "Got expected error: " << error.GetMessage() << std::endl;
       message = error.GetMessage();
     }
-    VTKM_TEST_ASSERT(message == ERROR_MESSAGE,
-                     "Did not get expected error message.");
+    VTKM_TEST_ASSERT(message == ERROR_MESSAGE, "Did not get expected error message.");
   }
 
-  template <typename T, int N=0>
-  struct TestCopy {};
+  template <typename T, int N = 0>
+  struct TestCopy
+  {
+  };
 
   template <typename T>
-  struct TestCopy<T> {
-      static T get(vtkm::Id i) { return static_cast<T>(i); }
+  struct TestCopy<T>
+  {
+    static T get(vtkm::Id i) { return static_cast<T>(i); }
   };
 
   template <typename T, int N>
-  struct TestCopy<vtkm::Vec<T, N> > {
-      static vtkm::Vec<T, N> get(vtkm::Id i) {
-          vtkm::Vec<T, N> temp;
-          for (int j=0; j<N; ++j) {
-            temp[j] = static_cast<T>( OFFSET+(i % 50) );
-          }
-          return temp;
+  struct TestCopy<vtkm::Vec<T, N>>
+  {
+    static vtkm::Vec<T, N> get(vtkm::Id i)
+    {
+      vtkm::Vec<T, N> temp;
+      for (int j = 0; j < N; ++j)
+      {
+        temp[j] = static_cast<T>(OFFSET + (i % 50));
       }
+      return temp;
+    }
   };
 
   template <typename T>
@@ -1949,177 +1842,173 @@ private:
     std::vector<T> testData(COPY_ARRAY_SIZE);
 
     vtkm::Id index = 0;
-    for(std::size_t i=0; i < COPY_ARRAY_SIZE; ++i, ++index)
+    for (std::size_t i = 0; i < COPY_ARRAY_SIZE; ++i, ++index)
     {
-      testData[i]= TestCopy<T>::get(index);
+      testData[i] = TestCopy<T>::get(index);
     }
 
-    vtkm::cont::ArrayHandle<T> input = vtkm::cont::make_ArrayHandle(&testData[0],
-                                                                    COPY_ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> input = vtkm::cont::make_ArrayHandle(&testData[0], COPY_ARRAY_SIZE);
 
     //make a deep copy of input and place it into temp
     {
-    vtkm::cont::ArrayHandle<T> temp;
-    temp.Allocate( COPY_ARRAY_SIZE * 2 );
-    Algorithm::Copy(input,temp);
-    VTKM_TEST_ASSERT(temp.GetNumberOfValues() == COPY_ARRAY_SIZE,
-                     "Copy Needs to Resize Array");
+      vtkm::cont::ArrayHandle<T> temp;
+      temp.Allocate(COPY_ARRAY_SIZE * 2);
+      Algorithm::Copy(input, temp);
+      VTKM_TEST_ASSERT(temp.GetNumberOfValues() == COPY_ARRAY_SIZE, "Copy Needs to Resize Array");
 
-    typename std::vector<T>::const_iterator c = testData.begin();
-    for(vtkm::Id i=0; i < COPY_ARRAY_SIZE; i+=50,c+=50)
-    {
-      T value = temp.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(value == *c, "Got bad value (Copy)");
-    }
+      typename std::vector<T>::const_iterator c = testData.begin();
+      for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
+      {
+        T value = temp.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(value == *c, "Got bad value (Copy)");
+      }
     }
 
     //Verify copy of empty array works
     {
-    vtkm::cont::ArrayHandle<T> tempIn;
-    vtkm::cont::ArrayHandle<T> tempOut;
+      vtkm::cont::ArrayHandle<T> tempIn;
+      vtkm::cont::ArrayHandle<T> tempOut;
 
-    tempOut.Allocate(COPY_ARRAY_SIZE);
-    Algorithm::Copy(tempIn, tempOut);
-    VTKM_TEST_ASSERT(tempIn.GetNumberOfValues() == tempOut.GetNumberOfValues(),
-                     "Copy sized wrong");
+      tempOut.Allocate(COPY_ARRAY_SIZE);
+      Algorithm::Copy(tempIn, tempOut);
+      VTKM_TEST_ASSERT(tempIn.GetNumberOfValues() == tempOut.GetNumberOfValues(),
+                       "Copy sized wrong");
 
-    // Actually allocate input array to 0 in case that makes a difference.
-    tempIn.Allocate(0);
-    tempOut.Allocate(COPY_ARRAY_SIZE);
-    Algorithm::Copy(tempIn, tempOut);
-    VTKM_TEST_ASSERT(tempIn.GetNumberOfValues() == tempOut.GetNumberOfValues(),
-                     "Copy sized wrong");
+      // Actually allocate input array to 0 in case that makes a difference.
+      tempIn.Allocate(0);
+      tempOut.Allocate(COPY_ARRAY_SIZE);
+      Algorithm::Copy(tempIn, tempOut);
+      VTKM_TEST_ASSERT(tempIn.GetNumberOfValues() == tempOut.GetNumberOfValues(),
+                       "Copy sized wrong");
     }
 
     //CopySubRange tests:
 
     //1. Verify invalid input start position fails
     {
-    vtkm::cont::ArrayHandle<T> output;
-    bool result = Algorithm::CopySubRange(input, COPY_ARRAY_SIZE*4, 1, output);
-    VTKM_TEST_ASSERT(result == false, "CopySubRange when given bad input offset");
+      vtkm::cont::ArrayHandle<T> output;
+      bool result = Algorithm::CopySubRange(input, COPY_ARRAY_SIZE * 4, 1, output);
+      VTKM_TEST_ASSERT(result == false, "CopySubRange when given bad input offset");
     }
 
     //2. Verify unallocated output gets allocated
     {
-    vtkm::cont::ArrayHandle<T> output;
-    bool result = Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
-    VTKM_TEST_ASSERT(result == true, "CopySubRange should succeed");
-    VTKM_TEST_ASSERT(output.GetNumberOfValues() == COPY_ARRAY_SIZE,
-                     "CopySubRange needs to allocate output");
+      vtkm::cont::ArrayHandle<T> output;
+      bool result = Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
+      VTKM_TEST_ASSERT(result == true, "CopySubRange should succeed");
+      VTKM_TEST_ASSERT(output.GetNumberOfValues() == COPY_ARRAY_SIZE,
+                       "CopySubRange needs to allocate output");
     }
 
     //3. Verify under allocated output gets resized properly
     {
-    vtkm::cont::ArrayHandle<T> output;
-    output.Allocate(2);
-    bool result = Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
-    VTKM_TEST_ASSERT(result == true, "CopySubRange should succeed");
-    VTKM_TEST_ASSERT(output.GetNumberOfValues() == COPY_ARRAY_SIZE,
-                     "CopySubRange needs to re-allocate output");
+      vtkm::cont::ArrayHandle<T> output;
+      output.Allocate(2);
+      bool result = Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
+      VTKM_TEST_ASSERT(result == true, "CopySubRange should succeed");
+      VTKM_TEST_ASSERT(output.GetNumberOfValues() == COPY_ARRAY_SIZE,
+                       "CopySubRange needs to re-allocate output");
     }
 
     //4. Verify invalid input length gets shortened
     {
-    vtkm::cont::ArrayHandle<T> output;
-    bool result = Algorithm::CopySubRange(input, 100, COPY_ARRAY_SIZE, output);
-    VTKM_TEST_ASSERT(result == true, "CopySubRange needs to shorten input range");
-    VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE-100),
-                     "CopySubRange needs to shorten input range");
+      vtkm::cont::ArrayHandle<T> output;
+      bool result = Algorithm::CopySubRange(input, 100, COPY_ARRAY_SIZE, output);
+      VTKM_TEST_ASSERT(result == true, "CopySubRange needs to shorten input range");
+      VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE - 100),
+                       "CopySubRange needs to shorten input range");
 
-    typename std::vector<T>::const_iterator c = testData.begin() + 100;
-    for(vtkm::Id i=0; i < (COPY_ARRAY_SIZE-100); i+=100,c+=100)
-    {
-      T value = output.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 2)");
-
-    }
+      typename std::vector<T>::const_iterator c = testData.begin() + 100;
+      for (vtkm::Id i = 0; i < (COPY_ARRAY_SIZE - 100); i += 100, c += 100)
+      {
+        T value = output.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 2)");
+      }
     }
 
     //5. Verify sub range copy works when copying into a larger output
     {
-    vtkm::cont::ArrayHandle<T> output;
-    output.Allocate( COPY_ARRAY_SIZE * 2 );
-    Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
-    Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, COPY_ARRAY_SIZE);
-    VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE*2),
-                     "CopySubRange needs to not resize array");
+      vtkm::cont::ArrayHandle<T> output;
+      output.Allocate(COPY_ARRAY_SIZE * 2);
+      Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
+      Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, COPY_ARRAY_SIZE);
+      VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE * 2),
+                       "CopySubRange needs to not resize array");
 
-    typename std::vector<T>::const_iterator c = testData.begin();
-    for(vtkm::Id i=0; i < COPY_ARRAY_SIZE; i+=50,c+=50)
-    {
-      T value = output.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 5)");
-      value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + i);
-      VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 5)");
-    }
+      typename std::vector<T>::const_iterator c = testData.begin();
+      for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
+      {
+        T value = output.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 5)");
+        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + i);
+        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 5)");
+      }
     }
 
     //6. Verify that whey sub range needs to reallocate the output it
     // properly copies the original data instead of clearing it
     {
-    vtkm::cont::ArrayHandle<T> output;
-    output.Allocate( COPY_ARRAY_SIZE );
-    Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
-    Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, COPY_ARRAY_SIZE);
-    VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE*2),
-                     "CopySubRange needs too resize Array");
-    typename std::vector<T>::const_iterator c = testData.begin();
-    for(vtkm::Id i=0; i < COPY_ARRAY_SIZE; i+=50,c+=50)
-    {
-      T value = output.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 6)");
-      value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + i);
-      VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 6)");
+      vtkm::cont::ArrayHandle<T> output;
+      output.Allocate(COPY_ARRAY_SIZE);
+      Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output);
+      Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, COPY_ARRAY_SIZE);
+      VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE * 2),
+                       "CopySubRange needs too resize Array");
+      typename std::vector<T>::const_iterator c = testData.begin();
+      for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
+      {
+        T value = output.GetPortalConstControl().Get(i);
+        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 6)");
+        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + i);
+        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 6)");
+      }
     }
-    }
 
     {
-    vtkm::cont::ArrayHandle<T> output;
+      vtkm::cont::ArrayHandle<T> output;
 
-    //7. Verify negative input index returns false
-    bool result = Algorithm::CopySubRange(input, -1, COPY_ARRAY_SIZE, output);
-    VTKM_TEST_ASSERT(result == false, "CopySubRange negative index should fail");
+      //7. Verify negative input index returns false
+      bool result = Algorithm::CopySubRange(input, -1, COPY_ARRAY_SIZE, output);
+      VTKM_TEST_ASSERT(result == false, "CopySubRange negative index should fail");
 
-    //8. Verify negative input numberOfElementsToCopy returns false
-    result = Algorithm::CopySubRange(input, 0, -COPY_ARRAY_SIZE, output);
-    VTKM_TEST_ASSERT(result == false, "CopySubRange negative number elements should fail");
+      //8. Verify negative input numberOfElementsToCopy returns false
+      result = Algorithm::CopySubRange(input, 0, -COPY_ARRAY_SIZE, output);
+      VTKM_TEST_ASSERT(result == false, "CopySubRange negative number elements should fail");
 
-    //9. Verify negative output index return false
-    result = Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, -2);
-    VTKM_TEST_ASSERT(result == false, "CopySubRange negative output index should fail");
+      //9. Verify negative output index return false
+      result = Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, -2);
+      VTKM_TEST_ASSERT(result == false, "CopySubRange negative output index should fail");
     }
 
 #undef COPY_ARRAY_SIZE
-
   }
 
   static VTKM_CONT void TestCopyArraysMany()
   {
-      std::cout << "-------------------------------------------------" << std::endl;
-      std::cout << "Testing Copy to same array type" << std::endl;
-      TestCopyArrays< vtkm::Vec<vtkm::Float32,4> >();
-      TestCopyArrays< vtkm::Vec<vtkm::Float64,4> >();
-      //
-      TestCopyArrays< vtkm::Vec<vtkm::UInt8,2> >();
-      TestCopyArrays< vtkm::Vec<vtkm::UInt16,2> >();
-      TestCopyArrays< vtkm::Vec<vtkm::UInt32,2> >();
-      TestCopyArrays< vtkm::Vec<vtkm::UInt64,2> >();
-      //
-      TestCopyArrays< vtkm::Float32 >();
-      TestCopyArrays< vtkm::Float64 >();
-      //
-      TestCopyArrays< vtkm::Int8 >();
-      TestCopyArrays< vtkm::Int16 >();
-      TestCopyArrays< vtkm::Int32 >();
-      TestCopyArrays< vtkm::Int64 >();
-      //
-      TestCopyArrays< vtkm::UInt8 >();
-      TestCopyArrays< vtkm::UInt16 >();
-      TestCopyArrays< vtkm::UInt32 >();
-      TestCopyArrays< vtkm::UInt64 >();
-      //
-      TestCopyArrays<vtkm::Id>();
+    std::cout << "-------------------------------------------------" << std::endl;
+    std::cout << "Testing Copy to same array type" << std::endl;
+    TestCopyArrays<vtkm::Vec<vtkm::Float32, 4>>();
+    TestCopyArrays<vtkm::Vec<vtkm::Float64, 4>>();
+    //
+    TestCopyArrays<vtkm::Vec<vtkm::UInt8, 2>>();
+    TestCopyArrays<vtkm::Vec<vtkm::UInt16, 2>>();
+    TestCopyArrays<vtkm::Vec<vtkm::UInt32, 2>>();
+    TestCopyArrays<vtkm::Vec<vtkm::UInt64, 2>>();
+    //
+    TestCopyArrays<vtkm::Float32>();
+    TestCopyArrays<vtkm::Float64>();
+    //
+    TestCopyArrays<vtkm::Int8>();
+    TestCopyArrays<vtkm::Int16>();
+    TestCopyArrays<vtkm::Int32>();
+    TestCopyArrays<vtkm::Int64>();
+    //
+    TestCopyArrays<vtkm::UInt8>();
+    TestCopyArrays<vtkm::UInt16>();
+    TestCopyArrays<vtkm::UInt32>();
+    TestCopyArrays<vtkm::UInt64>();
+    //
+    TestCopyArrays<vtkm::Id>();
   }
 
   static VTKM_CONT void TestCopyArraysInDiffTypes()
@@ -2127,25 +2016,23 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Copy to a different array type" << std::endl;
     std::vector<vtkm::Id> testData(ARRAY_SIZE);
-    for(std::size_t i=0; i < ARRAY_SIZE; ++i)
+    for (std::size_t i = 0; i < ARRAY_SIZE; ++i)
     {
-      testData[i]= static_cast<vtkm::Id>(OFFSET+(i % 50));
+      testData[i] = static_cast<vtkm::Id>(OFFSET + (i % 50));
     }
 
     IdArrayHandle input = vtkm::cont::make_ArrayHandle(testData);
 
     //make a deep copy of input and place it into temp
     vtkm::cont::ArrayHandle<vtkm::Float64> temp;
-    Algorithm::Copy(input,temp);
+    Algorithm::Copy(input, temp);
 
     std::vector<vtkm::Id>::const_iterator c = testData.begin();
-    for(vtkm::Id i=0; i < ARRAY_SIZE; ++i, ++c)
+    for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i, ++c)
     {
       vtkm::Float64 value = temp.GetPortalConstControl().Get(i);
-      VTKM_TEST_ASSERT(value == static_cast<vtkm::Float64>(*c),
-                       "Got bad value (Copy)");
+      VTKM_TEST_ASSERT(value == static_cast<vtkm::Float64>(*c), "Got bad value (Copy)");
     }
-
   }
 
   static VTKM_CONT void TestAtomicArray()
@@ -2154,63 +2041,66 @@ private:
     vtkm::Int32 SHORT_ARRAY_SIZE = 10000;
 
     vtkm::Int32 atomicCount = 0;
-    for(vtkm::Int32 i = 0; i < SHORT_ARRAY_SIZE; i++) atomicCount += i;
+    for (vtkm::Int32 i = 0; i < SHORT_ARRAY_SIZE; i++)
+      atomicCount += i;
     std::cout << "-------------------------------------------" << std::endl;
     // To test the atomics, SHORT_ARRAY_SIZE number of threads will all increment
     // a single atomic value.
     std::cout << "Testing Atomic Add with vtkm::Int32" << std::endl;
     {
-    std::vector<vtkm::Int32> singleElement;
-    singleElement.push_back(0);
-    vtkm::cont::ArrayHandle<vtkm::Int32> atomicElement = vtkm::cont::make_ArrayHandle(singleElement);
+      std::vector<vtkm::Int32> singleElement;
+      singleElement.push_back(0);
+      vtkm::cont::ArrayHandle<vtkm::Int32> atomicElement =
+        vtkm::cont::make_ArrayHandle(singleElement);
 
-    vtkm::exec::AtomicArray<vtkm::Int32, DeviceAdapterTag> atomic(atomicElement);
-    Algorithm::Schedule(AtomicKernel<vtkm::Int32>(atomic), SHORT_ARRAY_SIZE);
-    vtkm::Int32 expected = vtkm::Int32(atomicCount);
-    vtkm::Int32 actual= atomicElement.GetPortalControl().Get(0);
-    VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int32");
+      vtkm::exec::AtomicArray<vtkm::Int32, DeviceAdapterTag> atomic(atomicElement);
+      Algorithm::Schedule(AtomicKernel<vtkm::Int32>(atomic), SHORT_ARRAY_SIZE);
+      vtkm::Int32 expected = vtkm::Int32(atomicCount);
+      vtkm::Int32 actual = atomicElement.GetPortalControl().Get(0);
+      VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int32");
     }
 
     std::cout << "Testing Atomic Add with vtkm::Int64" << std::endl;
     {
-    std::vector<vtkm::Int64> singleElement;
-    singleElement.push_back(0);
-    vtkm::cont::ArrayHandle<vtkm::Int64> atomicElement = vtkm::cont::make_ArrayHandle(singleElement);
+      std::vector<vtkm::Int64> singleElement;
+      singleElement.push_back(0);
+      vtkm::cont::ArrayHandle<vtkm::Int64> atomicElement =
+        vtkm::cont::make_ArrayHandle(singleElement);
 
-    vtkm::exec::AtomicArray<vtkm::Int64, DeviceAdapterTag> atomic(atomicElement);
-    Algorithm::Schedule(AtomicKernel<vtkm::Int64>(atomic), SHORT_ARRAY_SIZE);
-    vtkm::Int64 expected = vtkm::Int64(atomicCount);
-    vtkm::Int64 actual= atomicElement.GetPortalControl().Get(0);
-    VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int64");
+      vtkm::exec::AtomicArray<vtkm::Int64, DeviceAdapterTag> atomic(atomicElement);
+      Algorithm::Schedule(AtomicKernel<vtkm::Int64>(atomic), SHORT_ARRAY_SIZE);
+      vtkm::Int64 expected = vtkm::Int64(atomicCount);
+      vtkm::Int64 actual = atomicElement.GetPortalControl().Get(0);
+      VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic add Int64");
     }
 
     std::cout << "Testing Atomic CAS with vtkm::Int32" << std::endl;
     {
-    std::vector<vtkm::Int32> singleElement;
-    singleElement.push_back(0);
-    vtkm::cont::ArrayHandle<vtkm::Int32> atomicElement = vtkm::cont::make_ArrayHandle(singleElement);
+      std::vector<vtkm::Int32> singleElement;
+      singleElement.push_back(0);
+      vtkm::cont::ArrayHandle<vtkm::Int32> atomicElement =
+        vtkm::cont::make_ArrayHandle(singleElement);
 
-    vtkm::exec::AtomicArray<vtkm::Int32, DeviceAdapterTag> atomic(atomicElement);
-    Algorithm::Schedule(AtomicCASKernel<vtkm::Int32>(atomic), SHORT_ARRAY_SIZE);
-    vtkm::Int32 expected = vtkm::Int32(atomicCount);
-    vtkm::Int32 actual= atomicElement.GetPortalControl().Get(0);
-    VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic CAS Int32");
+      vtkm::exec::AtomicArray<vtkm::Int32, DeviceAdapterTag> atomic(atomicElement);
+      Algorithm::Schedule(AtomicCASKernel<vtkm::Int32>(atomic), SHORT_ARRAY_SIZE);
+      vtkm::Int32 expected = vtkm::Int32(atomicCount);
+      vtkm::Int32 actual = atomicElement.GetPortalControl().Get(0);
+      VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic CAS Int32");
     }
 
     std::cout << "Testing Atomic CAS with vtkm::Int64" << std::endl;
     {
-    std::vector<vtkm::Int64> singleElement;
-    singleElement.push_back(0);
-    vtkm::cont::ArrayHandle<vtkm::Int64> atomicElement = vtkm::cont::make_ArrayHandle(singleElement);
+      std::vector<vtkm::Int64> singleElement;
+      singleElement.push_back(0);
+      vtkm::cont::ArrayHandle<vtkm::Int64> atomicElement =
+        vtkm::cont::make_ArrayHandle(singleElement);
 
-    vtkm::exec::AtomicArray<vtkm::Int64, DeviceAdapterTag> atomic(atomicElement);
-    Algorithm::Schedule(AtomicCASKernel<vtkm::Int64>(atomic), SHORT_ARRAY_SIZE);
-    vtkm::Int64 expected = vtkm::Int64(atomicCount);
-    vtkm::Int64 actual= atomicElement.GetPortalControl().Get(0);
-    VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic CAS Int64");
+      vtkm::exec::AtomicArray<vtkm::Int64, DeviceAdapterTag> atomic(atomicElement);
+      Algorithm::Schedule(AtomicCASKernel<vtkm::Int64>(atomic), SHORT_ARRAY_SIZE);
+      vtkm::Int64 expected = vtkm::Int64(atomicCount);
+      vtkm::Int64 actual = atomicElement.GetPortalControl().Get(0);
+      VTKM_TEST_ASSERT(expected == actual, "Did not get expected value: Atomic CAS Int64");
     }
-
-
   }
 
   struct TestAll
@@ -2271,22 +2161,17 @@ private:
   };
 
 public:
-
   /// Run a suite of tests to check to see if a DeviceAdapter properly supports
   /// all members and classes required for driving vtkm algorithms. Returns an
   /// error code that can be returned from the main function of a test.
   ///
-  static VTKM_CONT int Run()
-  {
-    return vtkm::cont::testing::Testing::Run(TestAll());
-  }
+  static VTKM_CONT int Run() { return vtkm::cont::testing::Testing::Run(TestAll()); }
 };
 
 #undef ERROR_MESSAGE
 #undef ARRAY_SIZE
 #undef OFFSET
 #undef DIM
-
 }
 }
 } // namespace vtkm::cont::testing

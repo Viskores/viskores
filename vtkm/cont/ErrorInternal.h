@@ -22,8 +22,10 @@
 
 #include <vtkm/cont/Error.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
@@ -34,12 +36,13 @@ VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 class VTKM_ALWAYS_EXPORT ErrorInternal : public Error
 {
 public:
-  ErrorInternal(const std::string &message)
-    : Error(message) { }
+  ErrorInternal(const std::string& message)
+    : Error(message)
+  {
+  }
 };
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
-
 }
 } // namespace vtkm::cont
 

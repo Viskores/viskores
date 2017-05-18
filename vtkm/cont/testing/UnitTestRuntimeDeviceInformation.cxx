@@ -27,40 +27,42 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-template<bool> struct DoesExist;
+template <bool>
+struct DoesExist;
 
-template<typename DeviceAdapterTag>
+template <typename DeviceAdapterTag>
 void detect_if_exists(DeviceAdapterTag tag)
 {
   typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> DeviceAdapterTraits;
   DoesExist<DeviceAdapterTraits::Valid>::Exist(tag);
 }
 
-template<>
+template <>
 struct DoesExist<false>
 {
-  template<typename DeviceAdapterTag>
+  template <typename DeviceAdapterTag>
   static void Exist(DeviceAdapterTag)
   {
     //runtime information for this device should return false
     vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
     VTKM_TEST_ASSERT(runtime.Exists() == false,
-      "A backend with zero compile time support, can't have runtime support");
+                     "A backend with zero compile time support, can't have runtime support");
   }
 };
 
-template<>
+template <>
 struct DoesExist<true>
 {
-  template<typename DeviceAdapterTag>
+  template <typename DeviceAdapterTag>
   static void Exist(DeviceAdapterTag)
   {
     //runtime information for this device should return true
     vtkm::cont::RuntimeDeviceInformation<DeviceAdapterTag> runtime;
     VTKM_TEST_ASSERT(runtime.Exists() == true,
-      "A backend with compile time support, should have runtime support");
+                     "A backend with compile time support, should have runtime support");
   }
 };
 
@@ -75,12 +77,11 @@ void Detection()
   detect_if_exists(CudaTag());
   detect_if_exists(TBBTag());
   detect_if_exists(SerialTag());
-
 }
 
 } // anonymous namespace
 
-int UnitTestRuntimeDeviceInformation(int, char *[])
+int UnitTestRuntimeDeviceInformation(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(Detection);
 }

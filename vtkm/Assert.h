@@ -37,11 +37,9 @@
 /// for the possibility that the condition is never evaluated.
 ///
 #if !defined(NDEBUG)
-#define VTKM_ASSERT(condition) \
-  assert(condition)
+#define VTKM_ASSERT(condition) assert(condition)
 #else
 #define VTKM_ASSERT(condition)
 #endif
-
 
 #endif //vtk_m_Assert_h

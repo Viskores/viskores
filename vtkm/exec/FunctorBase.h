@@ -26,10 +26,10 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
-
-namespace vtkm {
-namespace exec {
-
+namespace vtkm
+{
+namespace exec
+{
 
 /// Base class for all user worklets invoked in the execution environment from a
 /// call to vtkm::cont::DeviceAdapterAlgorithm::Schedule.
@@ -41,28 +41,27 @@ class FunctorBase
 {
 public:
   VTKM_EXEC_CONT
-  FunctorBase(): ErrorMessage() {  }
+  FunctorBase()
+    : ErrorMessage()
+  {
+  }
 
   VTKM_EXEC
-  void RaiseError(const char *message) const
-  {
-    this->ErrorMessage.RaiseError(message);
-  }
+  void RaiseError(const char* message) const { this->ErrorMessage.RaiseError(message); }
 
   /// Set the error message buffer so that running algorithms can report
   /// errors. This is supposed to be set by the dispatcher. This method may be
   /// replaced as the execution semantics change.
   ///
   VTKM_CONT
-  void SetErrorMessageBuffer(
-      const vtkm::exec::internal::ErrorMessageBuffer &buffer)
+  void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer& buffer)
   {
     this->ErrorMessage = buffer;
   }
+
 private:
   vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
 };
-
 }
 } // namespace vtkm::exec
 

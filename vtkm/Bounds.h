@@ -23,7 +23,8 @@
 
 #include <vtkm/Range.h>
 
-namespace vtkm {
+namespace vtkm
+{
 
 /// \brief Represent an axis-aligned 3D bounds in space.
 ///
@@ -42,53 +43,49 @@ struct Bounds
   vtkm::Range Z;
 
   VTKM_EXEC_CONT
-  Bounds() {  }
+  Bounds() {}
 
   VTKM_EXEC_CONT
-  Bounds(const vtkm::Range &xRange,
-         const vtkm::Range &yRange,
-         const vtkm::Range &zRange)
-    : X(xRange), Y(yRange), Z(zRange) {  }
+  Bounds(const vtkm::Range& xRange, const vtkm::Range& yRange, const vtkm::Range& zRange)
+    : X(xRange)
+    , Y(yRange)
+    , Z(zRange)
+  {
+  }
 
-  template<typename T1,
-           typename T2,
-           typename T3,
-           typename T4,
-           typename T5,
-           typename T6>
-  VTKM_EXEC_CONT
-  Bounds(const T1 &minX, const T2 &maxX,
-         const T3 &minY, const T4 &maxY,
-         const T5 &minZ, const T6 &maxZ)
-    : X(vtkm::Range(minX, maxX)),
-      Y(vtkm::Range(minY, maxY)),
-      Z(vtkm::Range(minZ, maxZ))
-  {  }
+  template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
+  VTKM_EXEC_CONT Bounds(const T1& minX, const T2& maxX, const T3& minY, const T4& maxY,
+                        const T5& minZ, const T6& maxZ)
+    : X(vtkm::Range(minX, maxX))
+    , Y(vtkm::Range(minY, maxY))
+    , Z(vtkm::Range(minZ, maxZ))
+  {
+  }
 
   /// Initialize bounds with an array of 6 values in the order xmin, xmax,
   /// ymin, ymax, zmin, zmax.
   ///
-  template<typename T>
-  VTKM_EXEC_CONT
-  explicit Bounds(const T bounds[6])
-    : X(vtkm::Range(bounds[0], bounds[1])),
-      Y(vtkm::Range(bounds[2], bounds[3])),
-      Z(vtkm::Range(bounds[4], bounds[5]))
-  {  }
+  template <typename T>
+  VTKM_EXEC_CONT explicit Bounds(const T bounds[6])
+    : X(vtkm::Range(bounds[0], bounds[1]))
+    , Y(vtkm::Range(bounds[2], bounds[3]))
+    , Z(vtkm::Range(bounds[4], bounds[5]))
+  {
+  }
 
   /// Initialize bounds with the minimum corner point and the maximum corner
   /// point.
   ///
-  template<typename T>
-  VTKM_EXEC_CONT
-  Bounds(const vtkm::Vec<T,3> &minPoint, const vtkm::Vec<T,3> &maxPoint)
-    : X(vtkm::Range(minPoint[0], maxPoint[0])),
-      Y(vtkm::Range(minPoint[1], maxPoint[1])),
-      Z(vtkm::Range(minPoint[2], maxPoint[2]))
-  {  }
+  template <typename T>
+  VTKM_EXEC_CONT Bounds(const vtkm::Vec<T, 3>& minPoint, const vtkm::Vec<T, 3>& maxPoint)
+    : X(vtkm::Range(minPoint[0], maxPoint[0]))
+    , Y(vtkm::Range(minPoint[1], maxPoint[1]))
+    , Z(vtkm::Range(minPoint[2], maxPoint[2]))
+  {
+  }
 
   VTKM_EXEC_CONT
-  const vtkm::Bounds &operator=(const vtkm::Bounds &src)
+  const vtkm::Bounds& operator=(const vtkm::Bounds& src)
   {
     this->X = src.X;
     this->Y = src.Y;
@@ -105,20 +102,15 @@ struct Bounds
   VTKM_EXEC_CONT
   bool IsNonEmpty() const
   {
-    return (this->X.IsNonEmpty() &&
-            this->Y.IsNonEmpty() &&
-            this->Z.IsNonEmpty());
+    return (this->X.IsNonEmpty() && this->Y.IsNonEmpty() && this->Z.IsNonEmpty());
   }
 
   /// \b Determines if a point coordinate is within the bounds.
   ///
-  template<typename T>
-  VTKM_EXEC_CONT
-  bool Contains(const vtkm::Vec<T,3> &point) const
+  template <typename T>
+  VTKM_EXEC_CONT bool Contains(const vtkm::Vec<T, 3>& point) const
   {
-    return (this->X.Contains(point[0]) &&
-            this->Y.Contains(point[1]) &&
-            this->Z.Contains(point[2]));
+    return (this->X.Contains(point[0]) && this->Y.Contains(point[1]) && this->Z.Contains(point[2]));
   }
 
   /// \b Returns the center of the range.
@@ -127,11 +119,9 @@ struct Bounds
   /// are empty, the results are undefined.
   ///
   VTKM_EXEC_CONT
-  vtkm::Vec<vtkm::Float64,3> Center() const
+  vtkm::Vec<vtkm::Float64, 3> Center() const
   {
-    return vtkm::Vec<vtkm::Float64,3>(this->X.Center(),
-                                      this->Y.Center(),
-                                      this->Z.Center());
+    return vtkm::Vec<vtkm::Float64, 3>(this->X.Center(), this->Y.Center(), this->Z.Center());
   }
 
   /// \b Expand bounds to include a point.
@@ -140,9 +130,8 @@ struct Bounds
   /// given point coordinates. If the bounds already include this point, then
   /// nothing is done.
   ///
-  template<typename T>
-  VTKM_EXEC_CONT
-  void Include(const vtkm::Vec<T,3> &point)
+  template <typename T>
+  VTKM_EXEC_CONT void Include(const vtkm::Vec<T, 3>& point)
   {
     this->X.Include(point[0]);
     this->Y.Include(point[1]);
@@ -155,7 +144,7 @@ struct Bounds
   /// that of another bounds. Esentially it is the union of the two bounds.
   ///
   VTKM_EXEC_CONT
-  void Include(const vtkm::Bounds &bounds)
+  void Include(const vtkm::Bounds& bounds)
   {
     this->X.Include(bounds.X);
     this->Y.Include(bounds.Y);
@@ -167,7 +156,7 @@ struct Bounds
   /// This is a nondestructive form of \c Include.
   ///
   VTKM_EXEC_CONT
-  vtkm::Bounds Union(const vtkm::Bounds &otherBounds) const
+  vtkm::Bounds Union(const vtkm::Bounds& otherBounds) const
   {
     vtkm::Bounds unionBounds(*this);
     unionBounds.Include(otherBounds);
@@ -177,25 +166,18 @@ struct Bounds
   /// \b Operator for union
   ///
   VTKM_EXEC_CONT
-  vtkm::Bounds operator+(const vtkm::Bounds &otherBounds) const
+  vtkm::Bounds operator+(const vtkm::Bounds& otherBounds) const { return this->Union(otherBounds); }
+
+  VTKM_EXEC_CONT
+  bool operator==(const vtkm::Bounds& bounds) const
   {
-    return this->Union(otherBounds);
+    return ((this->X == bounds.X) && (this->Y == bounds.Y) && (this->Z == bounds.Z));
   }
 
   VTKM_EXEC_CONT
-  bool operator==(const vtkm::Bounds &bounds) const
+  bool operator!=(const vtkm::Bounds& bounds) const
   {
-    return ((this->X == bounds.X) &&
-            (this->Y == bounds.Y) &&
-            (this->Z == bounds.Z));
-  }
-
-  VTKM_EXEC_CONT
-  bool operator!=(const vtkm::Bounds &bounds) const
-  {
-    return ((this->X != bounds.X) ||
-            (this->Y != bounds.Y) ||
-            (this->Z != bounds.Z));
+    return ((this->X != bounds.X) || (this->Y != bounds.Y) || (this->Z != bounds.Z));
   }
 };
 
@@ -203,12 +185,9 @@ struct Bounds
 
 /// Helper function for printing bounds during testing
 ///
-static inline VTKM_CONT
-std::ostream &operator<<(std::ostream &stream, const vtkm::Bounds &bounds)
+static inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Bounds& bounds)
 {
-  return stream << "{ X:" << bounds.X
-                << ", Y:" << bounds.Y
-                << ", Z:" << bounds.Z << " }";
+  return stream << "{ X:" << bounds.X << ", Y:" << bounds.Y << ", Z:" << bounds.Z << " }";
 }
 
 #endif //vtk_m_Bounds_h

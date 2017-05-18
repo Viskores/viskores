@@ -20,9 +20,9 @@
 #ifndef vtk_m_cont_Storage_h
 #define vtk_m_cont_Storage_h
 
-#define VTKM_STORAGE_ERROR      -2
-#define VTKM_STORAGE_UNDEFINED  -1
-#define VTKM_STORAGE_BASIC       1
+#define VTKM_STORAGE_ERROR -2
+#define VTKM_STORAGE_UNDEFINED -1
+#define VTKM_STORAGE_BASIC 1
 
 #ifndef VTKM_STORAGE
 #define VTKM_STORAGE VTKM_STORAGE_BASIC
@@ -33,8 +33,10 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 #include <vtkm/internal/ExportMacros.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 #ifdef VTKM_DOXYGEN_ONLY
 /// \brief A tag specifying client memory allocation.
@@ -60,21 +62,28 @@ namespace cont {
 /// provide a partial template specialization of vtkm::cont::internal::Storage
 /// for your new tag.
 ///
-struct VTKM_ALWAYS_EXPORT StorageTag___ {  };
+struct VTKM_ALWAYS_EXPORT StorageTag___
+{
+};
 #endif // VTKM_DOXYGEN_ONLY
 
-namespace internal {
+namespace internal
+{
 
-struct UndefinedStorage {  };
+struct UndefinedStorage
+{
+};
 
-namespace detail {
+namespace detail
+{
 
 // This class should never be used. It is used as a placeholder for undefined
 // Storage objects. If you get a compiler error involving this object, then it
 // probably comes from trying to use an ArrayHandle with bad template
 // arguments.
-template<typename T>
-struct UndefinedArrayPortal {
+template <typename T>
+struct UndefinedArrayPortal
+{
   VTKM_STATIC_ASSERT(sizeof(T) == static_cast<size_t>(-1));
 };
 
@@ -83,19 +92,18 @@ struct UndefinedArrayPortal {
 /// This templated class must be partially specialized for each StorageTag
 /// created, which will define the implementation for that tag.
 ///
-template<typename T, class StorageTag>
+template <typename T, class StorageTag>
 class Storage
 #ifndef VTKM_DOXYGEN_ONLY
-    : public vtkm::cont::internal::UndefinedStorage
+  : public vtkm::cont::internal::UndefinedStorage
 {
 public:
   typedef vtkm::cont::internal::detail::UndefinedArrayPortal<T> PortalType;
   typedef vtkm::cont::internal::detail::UndefinedArrayPortal<T> PortalConstType;
 };
-#else //VTKM_DOXYGEN_ONLY
+#else  //VTKM_DOXYGEN_ONLY
 {
 public:
-
   /// The type of each item in the array.
   ///
   typedef T ValueType;
@@ -161,7 +169,6 @@ public:
 #endif // VTKM_DOXYGEN_ONLY
 
 } // namespace internal
-
 }
 } // namespace vtkm::cont
 

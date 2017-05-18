@@ -84,17 +84,23 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Comparator for edges to sort governing saddles high
 template <typename T, typename StorageType, typename DeviceAdapter>
 class EdgePeakComparator
 {
 public:
-  typedef typename vtkm::cont::ArrayHandle<T,StorageType>::template ExecutionTypes<DeviceAdapter>::PortalConst ValuePortalType;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
+  typedef typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst ValuePortalType;
+  typedef
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
+      IdPortalType;
 
   ValuePortalType values;
   IdPortalType valueIndex;
@@ -104,21 +110,19 @@ public:
   bool isJoinGraph;
 
   VTKM_CONT
-  EdgePeakComparator(ValuePortalType Values,
-                     IdPortalType ValueIndex,
-                     IdPortalType EdgeFar,
-                     IdPortalType EdgeNear,
-                     IdPortalType ArcArray,
-                     bool IsJoinGraph) :
-                               values(Values),
-                               valueIndex(ValueIndex),
-                               edgeFar(EdgeFar),
-                               edgeNear(EdgeNear),
-                               arcArray(ArcArray),
-                               isJoinGraph(IsJoinGraph) {}
+  EdgePeakComparator(ValuePortalType Values, IdPortalType ValueIndex, IdPortalType EdgeFar,
+                     IdPortalType EdgeNear, IdPortalType ArcArray, bool IsJoinGraph)
+    : values(Values)
+    , valueIndex(ValueIndex)
+    , edgeFar(EdgeFar)
+    , edgeNear(EdgeNear)
+    , arcArray(ArcArray)
+    , isJoinGraph(IsJoinGraph)
+  {
+  }
 
   VTKM_EXEC
-  bool operator() (const vtkm::Id &i, const vtkm::Id &j) const
+  bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   {
     // first compare the far end
     if (edgeFar.Get(i) < edgeFar.Get(j))
@@ -151,7 +155,6 @@ public:
   }
 
 }; // EdgePeakComparator
-
 }
 }
 }

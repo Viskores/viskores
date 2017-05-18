@@ -24,8 +24,7 @@
 
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-int UnitTestTBBDeviceAdapter(int, char *[])
+int UnitTestTBBDeviceAdapter(int, char* [])
 {
-  return vtkm::cont::testing::TestingDeviceAdapter
-      <vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingDeviceAdapter<vtkm::cont::DeviceAdapterTagTBB>::Run();
 }

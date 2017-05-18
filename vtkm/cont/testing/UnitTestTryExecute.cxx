@@ -28,7 +28,8 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
@@ -41,12 +42,14 @@ struct TryExecuteTestFunctor
   VTKM_CONT
   TryExecuteTestFunctor(vtkm::cont::ArrayHandle<vtkm::FloatDefault> inArray,
                         vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray)
-    : NumCalls(0), InArray(inArray), OutArray(outArray)
-  {  }
+    : NumCalls(0)
+    , InArray(inArray)
+    , OutArray(outArray)
+  {
+  }
 
-  template<typename Device>
-  VTKM_CONT
-  bool operator()(Device)
+  template <typename Device>
+  VTKM_CONT bool operator()(Device)
   {
     typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
     Algorithm::Copy(this->InArray, this->OutArray);
@@ -55,7 +58,7 @@ struct TryExecuteTestFunctor
   }
 };
 
-template<typename DeviceList>
+template <typename DeviceList>
 void TryExecuteWithList(DeviceList, bool expectSuccess)
 {
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> inArray;
@@ -90,7 +93,7 @@ static void Run()
   TryExecuteWithList(SingleValidList(), true);
 
   std::cout << "Try a list with two valid devices." << std::endl;
-  typedef vtkm::ListTagBase<ValidDevice,ValidDevice> DoubleValidList;
+  typedef vtkm::ListTagBase<ValidDevice, ValidDevice> DoubleValidList;
   TryExecuteWithList(DoubleValidList(), true);
 
   std::cout << "Try a list with only invalid device." << std::endl;
@@ -98,13 +101,13 @@ static void Run()
   TryExecuteWithList(SingleInvalidList(), false);
 
   std::cout << "Try a list with an invalid and valid device." << std::endl;
-  typedef vtkm::ListTagBase<InvalidDevice,ValidDevice> InvalidAndValidList;
+  typedef vtkm::ListTagBase<InvalidDevice, ValidDevice> InvalidAndValidList;
   TryExecuteWithList(InvalidAndValidList(), true);
 }
 
 } // anonymous namespace
 
-int UnitTestTryExecute(int, char*[])
+int UnitTestTryExecute(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(Run);
 }

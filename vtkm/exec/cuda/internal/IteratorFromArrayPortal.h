@@ -31,22 +31,29 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/execution_policy.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
-namespace vtkm {
-namespace exec {
-namespace cuda {
-namespace internal {
+namespace vtkm
+{
+namespace exec
+{
+namespace cuda
+{
+namespace internal
+{
 
-template<class ArrayPortalType>
+template <class ArrayPortalType>
 struct PortalValue
 {
   typedef typename ArrayPortalType::ValueType ValueType;
 
   VTKM_EXEC_CONT
-  PortalValue(const ArrayPortalType &portal, vtkm::Id index)
-    : Portal(portal), Index(index) {  }
+  PortalValue(const ArrayPortalType& portal, vtkm::Id index)
+    : Portal(portal)
+    , Index(index)
+  {
+  }
 
   VTKM_EXEC
-  void Swap( PortalValue<ArrayPortalType> &rhs ) throw()
+  void Swap(PortalValue<ArrayPortalType>& rhs) throw()
   {
     //we need use the explicit type not a proxy temp object
     //A proxy temp object would point to the same underlying data structure
@@ -57,8 +64,7 @@ struct PortalValue
   }
 
   VTKM_EXEC
-  PortalValue<ArrayPortalType> &operator=(
-    const PortalValue<ArrayPortalType> &rhs)
+  PortalValue<ArrayPortalType>& operator=(const PortalValue<ArrayPortalType>& rhs)
   {
     this->Portal.Set(this->Index, rhs.Portal.Get(rhs.Index));
     return *this;
@@ -72,42 +78,38 @@ struct PortalValue
   }
 
   VTKM_EXEC
-  operator ValueType(void) const
-  {
-    return this->Portal.Get(this->Index);
-  }
+  operator ValueType(void) const { return this->Portal.Get(this->Index); }
 
   const ArrayPortalType& Portal;
   vtkm::Id Index;
 };
 
-template<class ArrayPortalType>
-class IteratorFromArrayPortal : public
-    ::thrust::iterator_facade<
-      IteratorFromArrayPortal<ArrayPortalType>,
-      typename ArrayPortalType::ValueType,
-      ::thrust::system::cuda::tag,
-      ::thrust::random_access_traversal_tag,
-      PortalValue<ArrayPortalType>,
-      std::ptrdiff_t>
+template <class ArrayPortalType>
+class IteratorFromArrayPortal
+  : public ::thrust::iterator_facade<
+      IteratorFromArrayPortal<ArrayPortalType>, typename ArrayPortalType::ValueType,
+      ::thrust::system::cuda::tag, ::thrust::random_access_traversal_tag,
+      PortalValue<ArrayPortalType>, std::ptrdiff_t>
 {
 public:
-
   VTKM_EXEC_CONT
   IteratorFromArrayPortal()
-    : Portal(), Index(0) { }
+    : Portal()
+    , Index(0)
+  {
+  }
 
   VTKM_CONT
-  explicit IteratorFromArrayPortal(const ArrayPortalType &portal,
-                                   vtkm::Id index = 0)
-    : Portal(portal), Index(index) {  }
+  explicit IteratorFromArrayPortal(const ArrayPortalType& portal, vtkm::Id index = 0)
+    : Portal(portal)
+    , Index(index)
+  {
+  }
 
   VTKM_EXEC
-  PortalValue<ArrayPortalType>
-  operator[](std::ptrdiff_t idx) const //NEEDS to be signed
+  PortalValue<ArrayPortalType> operator[](std::ptrdiff_t idx) const //NEEDS to be signed
   {
-    return PortalValue<ArrayPortalType>(this->Portal,
-           this->Index + static_cast<vtkm::Id>(idx) );
+    return PortalValue<ArrayPortalType>(this->Portal, this->Index + static_cast<vtkm::Id>(idx));
   }
 
 private:
@@ -120,12 +122,11 @@ private:
   VTKM_EXEC
   PortalValue<ArrayPortalType> dereference() const
   {
-    return PortalValue<ArrayPortalType>(this->Portal,
-           this->Index);
+    return PortalValue<ArrayPortalType>(this->Portal, this->Index);
   }
 
   VTKM_EXEC
-  bool equal(const IteratorFromArrayPortal<ArrayPortalType> &other) const
+  bool equal(const IteratorFromArrayPortal<ArrayPortalType>& other) const
   {
     // Technically, we should probably check that the portals are the same,
     // but the portal interface does not specify an equal operator.  It is
@@ -135,26 +136,16 @@ private:
   }
 
   VTKM_EXEC_CONT
-  void increment()
-  {
-    this->Index++;
-  }
+  void increment() { this->Index++; }
 
   VTKM_EXEC_CONT
-  void decrement()
-  {
-    this->Index--;
-  }
+  void decrement() { this->Index--; }
 
   VTKM_EXEC_CONT
-  void advance(std::ptrdiff_t delta)
-  {
-    this->Index += static_cast<vtkm::Id>(delta);
-  }
+  void advance(std::ptrdiff_t delta) { this->Index += static_cast<vtkm::Id>(delta); }
 
   VTKM_EXEC_CONT
-  std::ptrdiff_t
-  distance_to(const IteratorFromArrayPortal<ArrayPortalType> &other) const
+  std::ptrdiff_t distance_to(const IteratorFromArrayPortal<ArrayPortalType>& other) const
   {
     // Technically, we should probably check that the portals are the same,
     // but the portal interface does not specify an equal operator.  It is
@@ -163,7 +154,6 @@ private:
     return static_cast<std::ptrdiff_t>(other.Index - this->Index);
   }
 };
-
 }
 }
 }
@@ -181,13 +171,14 @@ namespace thrust
 namespace detail
 {
 
-  template< typename T > struct is_non_const_reference;
+template <typename T>
+struct is_non_const_reference;
 
-  template< typename T >
-  struct is_non_const_reference< vtkm::exec::cuda::internal::PortalValue<T> >
-    : thrust::detail::true_type
-  { };
-
+template <typename T>
+struct is_non_const_reference<vtkm::exec::cuda::internal::PortalValue<T>>
+  : thrust::detail::true_type
+{
+};
 }
 }
 

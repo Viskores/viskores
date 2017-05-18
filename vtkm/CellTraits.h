@@ -22,22 +22,29 @@
 
 #include <vtkm/CellShape.h>
 
-namespace vtkm {
+namespace vtkm
+{
 
 /// \c vtkm::CellTraits::TopologyDimensionType is typedef to this with the
 /// template parameter set to \c TOPOLOGICAL_DIMENSIONS. See \c
 /// vtkm::CellTraits for more information.
 ///
-template<vtkm::IdComponent dimension>
-struct CellTopologicalDimensionsTag { };
+template <vtkm::IdComponent dimension>
+struct CellTopologicalDimensionsTag
+{
+};
 
 /// \brief Tag for cell shapes with a fixed number of points.
 ///
-struct CellTraitsTagSizeFixed {  };
+struct CellTraitsTagSizeFixed
+{
+};
 
 /// \brief Tag for cell shapes that can have a variable number of points.
 ///
-struct CellTraitsTagSizeVariable {  };
+struct CellTraitsTagSizeVariable
+{
+};
 
 /// \brief Information about a cell based on its tag.
 ///
@@ -45,7 +52,7 @@ struct CellTraitsTagSizeVariable {  };
 /// about cells (like the number of vertices in the cell or its
 /// dimensionality).
 ///
-template<class CellTag>
+template <class CellTag>
 struct CellTraits
 #ifdef VTKM_DOXYGEN_ONLY
 {
@@ -59,8 +66,7 @@ struct CellTraits
   /// a convenient way to overload a function based on topological dimensions
   /// (which is usually more efficient than conditionals).
   ///
-  typedef vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>
-      TopologicalDimensionsTag;
+  typedef vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS> TopologicalDimensionsTag;
 
   /// \brief A tag specifying whether the number of points is fixed.
   ///
@@ -77,31 +83,31 @@ struct CellTraits
   ///
   static const vtkm::IdComponent NUM_POINTS = 3;
 };
-#else // VTKM_DOXYGEN_ONLY
-    ;
+#else  // VTKM_DOXYGEN_ONLY
+  ;
 #endif // VTKM_DOXYGEN_ONLY
 
 //-----------------------------------------------------------------------------
 
 // Define traits for every cell type.
 
-#define VTKM_DEFINE_CELL_TRAITS(name, dimensions, numPoints) \
-  template<> \
-  struct CellTraits<vtkm::CellShapeTag ## name> { \
-    const static vtkm::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions; \
-    typedef vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS> \
-        TopologicalDimensionsTag; \
-    typedef vtkm::CellTraitsTagSizeFixed IsSizeFixed; \
-    static const vtkm::IdComponent NUM_POINTS = numPoints; \
+#define VTKM_DEFINE_CELL_TRAITS(name, dimensions, numPoints)                                       \
+  template <>                                                                                      \
+  struct CellTraits<vtkm::CellShapeTag##name>                                                      \
+  {                                                                                                \
+    const static vtkm::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions;                            \
+    typedef vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS> TopologicalDimensionsTag;   \
+    typedef vtkm::CellTraitsTagSizeFixed IsSizeFixed;                                              \
+    static const vtkm::IdComponent NUM_POINTS = numPoints;                                         \
   }
 
-#define VTKM_DEFINE_CELL_TRAITS_VARIABLE(name, dimensions) \
-  template<> \
-  struct CellTraits<vtkm::CellShapeTag ## name> { \
-    const static vtkm::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions; \
-    typedef vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS> \
-        TopologicalDimensionsTag; \
-    typedef vtkm::CellTraitsTagSizeVariable IsSizeFixed; \
+#define VTKM_DEFINE_CELL_TRAITS_VARIABLE(name, dimensions)                                         \
+  template <>                                                                                      \
+  struct CellTraits<vtkm::CellShapeTag##name>                                                      \
+  {                                                                                                \
+    const static vtkm::IdComponent TOPOLOGICAL_DIMENSIONS = dimensions;                            \
+    typedef vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS> TopologicalDimensionsTag;   \
+    typedef vtkm::CellTraitsTagSizeVariable IsSizeFixed;                                           \
   }
 
 VTKM_DEFINE_CELL_TRAITS(Empty, 0, 0);

@@ -23,7 +23,8 @@
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/internal/Windows.h>
-namespace {
+namespace
+{
 
 void Time()
 {
@@ -39,15 +40,13 @@ void Time()
 
   std::cout << "Elapsed time: " << elapsedTime << std::endl;
 
-  VTKM_TEST_ASSERT(elapsedTime > 0.999,
-                   "Timer did not capture full second wait.");
-  VTKM_TEST_ASSERT(elapsedTime < 2.0,
-                   "Timer counted too far or system really busy.");
+  VTKM_TEST_ASSERT(elapsedTime > 0.999, "Timer did not capture full second wait.");
+  VTKM_TEST_ASSERT(elapsedTime < 2.0, "Timer counted too far or system really busy.");
 }
 
 } // anonymous namespace
 
-int UnitTestTimer(int, char *[])
+int UnitTestTimer(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(Time);
 }

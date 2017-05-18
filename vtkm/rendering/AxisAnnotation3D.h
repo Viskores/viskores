@@ -37,8 +37,10 @@
 
 #include <sstream>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT AxisAnnotation3D : public AxisAnnotation
 {
@@ -46,9 +48,9 @@ private:
 protected:
   vtkm::Float64 TickMajorSize, TickMajorOffset;
   vtkm::Float64 TickMinorSize, TickMinorOffset;
-  int    Axis;
-  vtkm::Vec<vtkm::Float32,3> Invert;
-  vtkm::Vec<vtkm::Float64,3> Point0, Point1;
+  int Axis;
+  vtkm::Vec<vtkm::Float32, 3> Invert;
+  vtkm::Vec<vtkm::Float64, 3> Point0, Point1;
   vtkm::Range Range;
   vtkm::Float64 FontScale;
   vtkm::Float32 FontOffset;
@@ -56,29 +58,20 @@ protected:
   vtkm::rendering::Color Color;
   std::vector<TextAnnotationBillboard*> Labels;
   int MoreOrLessTickAdjustment;
-public:
 
+public:
   AxisAnnotation3D();
 
   ~AxisAnnotation3D();
 
   VTKM_CONT
-  void SetMoreOrLessTickAdjustment(int offset)
-  {
-    this->MoreOrLessTickAdjustment = offset;
-  }
+  void SetMoreOrLessTickAdjustment(int offset) { this->MoreOrLessTickAdjustment = offset; }
 
   VTKM_CONT
-  void SetColor(vtkm::rendering::Color c)
-  {
-    this->Color = c;
-  }
+  void SetColor(vtkm::rendering::Color c) { this->Color = c; }
 
   VTKM_CONT
-  void SetAxis(int a)
-  {
-    this->Axis = a;
-  }
+  void SetAxis(int a) { this->Axis = a; }
 
   void SetTickInvert(bool x, bool y, bool z);
 
@@ -99,43 +92,36 @@ public:
   }
 
   VTKM_CONT
-  void SetWorldPosition(const vtkm::Vec<vtkm::Float64,3> &point0,
-                        const vtkm::Vec<vtkm::Float64,3> &point1)
+  void SetWorldPosition(const vtkm::Vec<vtkm::Float64, 3>& point0,
+                        const vtkm::Vec<vtkm::Float64, 3>& point1)
   {
     this->Point0 = point0;
     this->Point1 = point1;
   }
 
   VTKM_CONT
-  void SetWorldPosition(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 z0,
-                        vtkm::Float64 x1, vtkm::Float64 y1, vtkm::Float64 z1)
+  void SetWorldPosition(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 z0, vtkm::Float64 x1,
+                        vtkm::Float64 y1, vtkm::Float64 z1)
   {
-    this->SetWorldPosition(vtkm::make_Vec(x0,y0,z0), vtkm::make_Vec(x1,y1,z1));
+    this->SetWorldPosition(vtkm::make_Vec(x0, y0, z0), vtkm::make_Vec(x1, y1, z1));
   }
 
   void SetLabelFontScale(vtkm::Float64 s);
 
-  void SetLabelFontOffset(vtkm::Float32 off)
-  {
-    this->FontOffset = off;
-  }
+  void SetLabelFontOffset(vtkm::Float32 off) { this->FontOffset = off; }
 
-  void SetRange(const vtkm::Range &range)
-  {
-    this->Range = range;
-  }
+  void SetRange(const vtkm::Range& range) { this->Range = range; }
 
   void SetRange(vtkm::Float64 lower, vtkm::Float64 upper)
   {
     this->SetRange(vtkm::Range(lower, upper));
   }
 
-  virtual void Render(const vtkm::rendering::Camera &camera,
-                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::Canvas &canvas) VTKM_OVERRIDE;
+  virtual void Render(const vtkm::rendering::Camera& camera,
+                      const vtkm::rendering::WorldAnnotator& worldAnnotator,
+                      vtkm::rendering::Canvas& canvas) VTKM_OVERRIDE;
 };
-
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif // vtk_m_rendering_AxisAnnotation3D_h

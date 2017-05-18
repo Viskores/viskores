@@ -29,18 +29,20 @@
 #include <iostream>
 #include <vector>
 
-namespace {
+namespace
+{
 
 class HasValue
 {
 public:
   VTKM_CONT
-  HasValue(vtkm::Float32 value) : Value(value)
-  { }
+  HasValue(vtkm::Float32 value)
+    : Value(value)
+  {
+  }
 
   template <typename ScalarType>
-  VTKM_EXEC
-  bool operator()(ScalarType value) const
+  VTKM_EXEC bool operator()(ScalarType value) const
   {
     return static_cast<vtkm::Float32>(value) == this->Value;
   }
@@ -61,9 +63,9 @@ public:
 
     typedef vtkm::cont::CellSetStructured<2> CellSetType;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellFieldArrayHandleType;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet0();
 
@@ -71,12 +73,9 @@ public:
     dataset.GetCellSet(0).CopyTo(cellset);
 
     vtkm::worklet::Threshold threshold;
-    OutCellSetType outCellSet = threshold.Run(cellset,
-                                              dataset.GetField("pointvar"),
-                                              HasValue(60.1f),
-                                              DeviceAdapter());
-    vtkm::cont::Field cellField =
-        threshold.ProcessCellField(dataset.GetField("cellvar"));
+    OutCellSetType outCellSet =
+      threshold.Run(cellset, dataset.GetField("pointvar"), HasValue(60.1f), DeviceAdapter());
+    vtkm::cont::Field cellField = threshold.ProcessCellField(dataset.GetField("cellvar"));
 
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 1, "Wrong number of cells");
 
@@ -84,7 +83,7 @@ public:
     cellField.GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
-                     cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
+                       cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
                      "Wrong cell field data");
   }
 
@@ -94,9 +93,9 @@ public:
 
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellFieldArrayHandleType;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
 
@@ -104,12 +103,9 @@ public:
     dataset.GetCellSet(0).CopyTo(cellset);
 
     vtkm::worklet::Threshold threshold;
-    OutCellSetType outCellSet = threshold.Run(cellset,
-                                              dataset.GetField("pointvar"),
-                                              HasValue(20.1f),
-                                              DeviceAdapter());
-    vtkm::cont::Field cellField =
-        threshold.ProcessCellField(dataset.GetField("cellvar"));
+    OutCellSetType outCellSet =
+      threshold.Run(cellset, dataset.GetField("pointvar"), HasValue(20.1f), DeviceAdapter());
+    vtkm::cont::Field cellField = threshold.ProcessCellField(dataset.GetField("cellvar"));
 
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 2, "Wrong number of cells");
 
@@ -117,8 +113,8 @@ public:
     cellField.GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                     cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
-                     cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
+                       cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
+                       cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
                      "Wrong cell field data");
   }
 
@@ -128,9 +124,9 @@ public:
 
     typedef vtkm::cont::CellSetExplicit<> CellSetType;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellFieldArrayHandleType;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet0();
 
@@ -138,12 +134,9 @@ public:
     dataset.GetCellSet(0).CopyTo(cellset);
 
     vtkm::worklet::Threshold threshold;
-    OutCellSetType outCellSet = threshold.Run(cellset,
-                                              dataset.GetField("cellvar"),
-                                              HasValue(100.1f),
-                                              DeviceAdapter());
-    vtkm::cont::Field cellField =
-        threshold.ProcessCellField(dataset.GetField("cellvar"));
+    OutCellSetType outCellSet =
+      threshold.Run(cellset, dataset.GetField("cellvar"), HasValue(100.1f), DeviceAdapter());
+    vtkm::cont::Field cellField = threshold.ProcessCellField(dataset.GetField("cellvar"));
 
     VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 1, "Wrong number of cells");
 
@@ -151,7 +144,7 @@ public:
     cellField.GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
-                     cellFieldArray.GetPortalConstControl().Get(0) == 100.1f,
+                       cellFieldArray.GetPortalConstControl().Get(0) == 100.1f,
                      "Wrong cell field data");
   }
 
@@ -162,11 +155,9 @@ public:
     this->TestExplicit3D();
   }
 };
-
 }
 
-int UnitTestThreshold(int, char *[])
+int UnitTestThreshold(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestingThreshold<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingThreshold<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
 }

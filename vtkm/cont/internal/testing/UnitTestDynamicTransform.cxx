@@ -28,14 +28,15 @@
 
 #include "vtkm/cont/testing/Testing.h"
 
-namespace vtkm {
+namespace vtkm
+{
 
 // DynamicArrayHandle requires its value type to have a defined VecTraits
 // class. One of the tests is to use an "unusual" array of std::string
 // (which is pretty pointless but might tease out some assumptions).
 // Make an implementation here. Because I am lazy, this is only a partial
 // implementation.
-template<>
+template <>
 struct VecTraits<std::string>
 {
   static const vtkm::IdComponent NUM_COMPONENTS = 1;
@@ -44,64 +45,78 @@ struct VecTraits<std::string>
 
 } // namespace vtkm
 
-namespace {
+namespace
+{
 
 static int g_FunctionCalls;
 
-#define TRY_TRANSFORM(expr) \
-  g_FunctionCalls = 0; \
-  expr; \
+#define TRY_TRANSFORM(expr)                                                                        \
+  g_FunctionCalls = 0;                                                                             \
+  expr;                                                                                            \
   VTKM_TEST_ASSERT(g_FunctionCalls == 1, "Functor not called correctly.")
 
-struct TypeListTagString : vtkm::ListTagBase<std::string> { };
+struct TypeListTagString : vtkm::ListTagBase<std::string>
+{
+};
 
-struct ScalarFunctor {
-  void operator()(vtkm::FloatDefault) const {
+struct ScalarFunctor
+{
+  void operator()(vtkm::FloatDefault) const
+  {
     std::cout << "    In Scalar functor." << std::endl;
     g_FunctionCalls++;
   }
 };
 
-struct ArrayHandleScalarFunctor {
-  template<typename T>
-  void operator()(const vtkm::cont::ArrayHandle<T> &) const {
+struct ArrayHandleScalarFunctor
+{
+  template <typename T>
+  void operator()(const vtkm::cont::ArrayHandle<T>&) const
+  {
     VTKM_TEST_FAIL("Called wrong form of functor operator.");
   }
-  void operator()(const vtkm::cont::ArrayHandle<vtkm::FloatDefault> &) const {
+  void operator()(const vtkm::cont::ArrayHandle<vtkm::FloatDefault>&) const
+  {
     std::cout << "    In ArrayHandle<Scalar> functor." << std::endl;
     g_FunctionCalls++;
   }
 };
 
-struct ArrayHandleStringFunctor {
-  void operator()(const vtkm::cont::ArrayHandle<std::string> &) const {
+struct ArrayHandleStringFunctor
+{
+  void operator()(const vtkm::cont::ArrayHandle<std::string>&) const
+  {
     std::cout << "    In ArrayHandle<string> functor." << std::endl;
     g_FunctionCalls++;
   }
 };
 
-struct CellSetStructuredFunctor {
-  template<typename T>
-  void operator()(const T &) const {
+struct CellSetStructuredFunctor
+{
+  template <typename T>
+  void operator()(const T&) const
+  {
     VTKM_TEST_FAIL("Called wrong form of functor operator.");
   }
-  void operator()(const vtkm::cont::CellSetStructured<3> &) const {
+  void operator()(const vtkm::cont::CellSetStructured<3>&) const
+  {
     std::cout << "    In CellSetStructured<3> functor." << std::endl;
     g_FunctionCalls++;
   }
 };
 
-struct FunctionInterfaceFunctor {
-  template<typename Signature>
-  void operator()(const vtkm::internal::FunctionInterface<Signature> &) const {
+struct FunctionInterfaceFunctor
+{
+  template <typename Signature>
+  void operator()(const vtkm::internal::FunctionInterface<Signature>&) const
+  {
     VTKM_TEST_FAIL("Called wrong form of functor operator.");
   }
   void operator()(
-      const vtkm::internal::FunctionInterface<
-        void(vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-             vtkm::cont::ArrayHandle<std::string>,
-             vtkm::cont::CellSetStructured<3>)> &) const {
+    const vtkm::internal::FunctionInterface<
+      void(vtkm::cont::ArrayHandle<vtkm::FloatDefault>, vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+           vtkm::cont::ArrayHandle<std::string>, vtkm::cont::CellSetStructured<3>)>&) const
+  {
     std::cout << "    In FunctionInterface<...> functor." << std::endl;
     g_FunctionCalls++;
   }
@@ -128,20 +143,15 @@ void TestBasicTransform()
   std::cout << "  Trying with unusual (string) dynamic array." << std::endl;
   dynamicArray = vtkm::cont::ArrayHandle<std::string>();
   TRY_TRANSFORM(transform(dynamicArray.ResetTypeList(TypeListTagString()),
-                          ArrayHandleStringFunctor(),
-                          indexTag));
+                          ArrayHandleStringFunctor(), indexTag));
 
   std::cout << "  Trying with structured cell set." << std::endl;
   vtkm::cont::CellSetStructured<3> concreteCellSet;
-  TRY_TRANSFORM(transform(concreteCellSet,
-                          CellSetStructuredFunctor(),
-                          indexTag));
+  TRY_TRANSFORM(transform(concreteCellSet, CellSetStructuredFunctor(), indexTag));
 
   std::cout << "  Trying with dynamic cell set." << std::endl;
   vtkm::cont::DynamicCellSet dynamicCellSet = concreteCellSet;
-  TRY_TRANSFORM(transform(dynamicCellSet,
-                          CellSetStructuredFunctor(),
-                          indexTag));
+  TRY_TRANSFORM(transform(dynamicCellSet, CellSetStructuredFunctor(), indexTag));
 }
 
 void TestFunctionTransform()
@@ -152,24 +162,17 @@ void TestFunctionTransform()
   vtkm::cont::ArrayHandle<std::string> stringArray;
   vtkm::cont::CellSetStructured<3> structuredCellSet;
 
-  std::cout << "  Trying basic functor call w/o transform (make sure it works)."
-            << std::endl;
-  TRY_TRANSFORM(FunctionInterfaceFunctor()(
-                  vtkm::internal::make_FunctionInterface<void>(
-                    scalarArray,
-                    scalarArray,
-                    stringArray,
-                    structuredCellSet)));
+  std::cout << "  Trying basic functor call w/o transform (make sure it works)." << std::endl;
+  TRY_TRANSFORM(FunctionInterfaceFunctor()(vtkm::internal::make_FunctionInterface<void>(
+    scalarArray, scalarArray, stringArray, structuredCellSet)));
 
   std::cout << "  Trying dynamic cast" << std::endl;
   TRY_TRANSFORM(
-        vtkm::internal::make_FunctionInterface<void>(
-          scalarArray,
-          vtkm::cont::DynamicArrayHandle(scalarArray),
-          vtkm::cont::DynamicArrayHandle(stringArray).ResetTypeList(TypeListTagString()),
-          vtkm::cont::DynamicCellSet(structuredCellSet))
-        .DynamicTransformCont(vtkm::cont::internal::DynamicTransform(),
-                              FunctionInterfaceFunctor()));
+    vtkm::internal::make_FunctionInterface<void>(
+      scalarArray, vtkm::cont::DynamicArrayHandle(scalarArray),
+      vtkm::cont::DynamicArrayHandle(stringArray).ResetTypeList(TypeListTagString()),
+      vtkm::cont::DynamicCellSet(structuredCellSet))
+      .DynamicTransformCont(vtkm::cont::internal::DynamicTransform(), FunctionInterfaceFunctor()));
 }
 
 void TestDynamicTransform()
@@ -180,7 +183,7 @@ void TestDynamicTransform()
 
 } // anonymous namespace
 
-int UnitTestDynamicTransform(int, char *[])
+int UnitTestDynamicTransform(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestDynamicTransform);
 }

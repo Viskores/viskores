@@ -19,21 +19,20 @@
 //============================================================================
 #include <vtkm/cont/testing/TestingVirtualObjectCache.h>
 
-namespace {
+namespace
+{
 
 void TestVirtualObjectCache()
 {
   using DeviceAdapterList =
-    vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial,
-                      vtkm::cont::DeviceAdapterTagCuda>;
+    vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial, vtkm::cont::DeviceAdapterTagCuda>;
 
   vtkm::cont::testing::TestingVirtualObjectCache<DeviceAdapterList>::Run();
 }
 
 } // anonymous namespace
 
-
-int UnitTestCudaVirtualObjectCache(int, char *[])
+int UnitTestCudaVirtualObjectCache(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestVirtualObjectCache);
 }

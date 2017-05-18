@@ -20,20 +20,21 @@
 #ifndef vtk_m_cont_VirtualObjectCache_h
 #define vtk_m_cont_VirtualObjectCache_h
 
+#include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
-#include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
 #include <array>
 #include <type_traits>
 
-
 #define VTKM_MAX_DEVICE_ADAPTER_ID 8
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 /// \brief Implements VTK-m's execution side <em> Virtual Methods </em>
 /// functionality.
@@ -64,33 +65,30 @@ namespace cont {
 ///
 /// \sa vtkm::exec::ImplicitFunction, vtkm::cont::ImplicitFunction
 ///
-template<typename VirtualObject>
+template <typename VirtualObject>
 class VirtualObjectCache
 {
 public:
   VirtualObjectCache()
-    : Target(nullptr),
-      CurrentDevice(VTKM_DEVICE_ADAPTER_UNDEFINED),
-      DeviceState(nullptr),
-      RefreshFlag(false)
+    : Target(nullptr)
+    , CurrentDevice(VTKM_DEVICE_ADAPTER_UNDEFINED)
+    , DeviceState(nullptr)
+    , RefreshFlag(false)
   {
   }
 
-  ~VirtualObjectCache()
-  {
-    this->Reset();
-  }
+  ~VirtualObjectCache() { this->Reset(); }
 
-  VirtualObjectCache(const VirtualObjectCache &other)
-    : Target(other.Target),
-      Transfers(other.Transfers),
-      CurrentDevice(VTKM_DEVICE_ADAPTER_UNDEFINED),
-      DeviceState(nullptr),
-      RefreshFlag(false)
+  VirtualObjectCache(const VirtualObjectCache& other)
+    : Target(other.Target)
+    , Transfers(other.Transfers)
+    , CurrentDevice(VTKM_DEVICE_ADAPTER_UNDEFINED)
+    , DeviceState(nullptr)
+    , RefreshFlag(false)
   {
   }
 
-  VirtualObjectCache& operator=(const VirtualObjectCache &other)
+  VirtualObjectCache& operator=(const VirtualObjectCache& other)
   {
     if (this != &other)
     {
@@ -104,19 +102,19 @@ public:
     return *this;
   }
 
-  VirtualObjectCache(VirtualObjectCache &&other)
-    : Target(other.Target),
-      Transfers(other.Transfers),
-      CurrentDevice(other.CurrentDevice),
-      DeviceState(other.DeviceState),
-      RefreshFlag(other.RefreshFlag),
-      Object(other.Object)
+  VirtualObjectCache(VirtualObjectCache&& other)
+    : Target(other.Target)
+    , Transfers(other.Transfers)
+    , CurrentDevice(other.CurrentDevice)
+    , DeviceState(other.DeviceState)
+    , RefreshFlag(other.RefreshFlag)
+    , Object(other.Object)
   {
     other.CurrentDevice = VTKM_DEVICE_ADAPTER_UNDEFINED;
     other.DeviceState = nullptr;
   }
 
-  VirtualObjectCache& operator=(VirtualObjectCache &&other)
+  VirtualObjectCache& operator=(VirtualObjectCache&& other)
   {
     if (this != &other)
     {
@@ -155,38 +153,25 @@ public:
   }
 
   /// Get if in a valid state (a target is bound)
-  bool GetValid() const
-  {
-    return this->Target != nullptr;
-  }
+  bool GetValid() const { return this->Target != nullptr; }
 
   // Set/Get if the cached virtual object should be refreshed to the current
   // state of the target
-  void SetRefreshFlag(bool value)
-  {
-    this->RefreshFlag = value;
-  }
-  bool GetRefreshFlag() const
-  {
-    return this->RefreshFlag;
-  }
+  void SetRefreshFlag(bool value) { this->RefreshFlag = value; }
+  bool GetRefreshFlag() const { return this->RefreshFlag; }
 
   /// Bind to \c target. The lifetime of target is expected to be managed
   /// externally, and should be valid for as long as it is bound.
   /// Also accepts a list-tag of device adapters where the virtual
   /// object may be used (default = \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG).
   ///
-  template<typename TargetClass,
-           typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
-  void Bind(const TargetClass *target,
-            DeviceAdapterList devices = DeviceAdapterList())
+  template <typename TargetClass, typename DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG>
+  void Bind(const TargetClass* target, DeviceAdapterList devices = DeviceAdapterList())
   {
     this->Reset();
 
     this->Target = target;
-    vtkm::ListForEach(
-      CreateTransferInterface<TargetClass>(this->Transfers.data()),
-      devices);
+    vtkm::ListForEach(CreateTransferInterface<TargetClass>(this->Transfers.data()), devices);
   }
 
   /// Get a \c VirtualObject for \c DeviceAdapter.
@@ -196,7 +181,7 @@ public:
   /// 2. VirtualObjectCache is destroyed
   /// 3. Reset or ReleaseResources is called
   ///
-  template<typename DeviceAdapter>
+  template <typename DeviceAdapter>
   VirtualObject GetVirtualObject(DeviceAdapter)
   {
     using DeviceInfo = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
@@ -209,8 +194,7 @@ public:
     vtkm::cont::DeviceAdapterId deviceId = DeviceInfo::GetId();
     if (deviceId < 0 || deviceId >= VTKM_MAX_DEVICE_ADAPTER_ID)
     {
-      std::string msg =
-        "Device '" + DeviceInfo::GetName() + "' has invalid ID of " +
+      std::string msg = "Device '" + DeviceInfo::GetName() + "' has invalid ID of " +
         std::to_string(deviceId) + "(VTKM_MAX_DEVICE_ADAPTER_ID = " +
         std::to_string(VTKM_MAX_DEVICE_ADAPTER_ID) + ")";
       throw vtkm::cont::ErrorBadType(msg);
@@ -221,11 +205,10 @@ public:
       this->ReleaseResources();
 
       std::size_t idx = static_cast<std::size_t>(deviceId);
-      TransferInterface &transfer = this->Transfers[idx];
+      TransferInterface& transfer = this->Transfers[idx];
       if (!TransferInterfaceValid(transfer))
       {
-        std::string msg = DeviceInfo::GetName() +
-                          " was not in the list specified in Bind";
+        std::string msg = DeviceInfo::GetName() + " was not in the list specified in Bind";
         throw vtkm::cont::ErrorBadType(msg);
       }
       this->CurrentDevice = deviceId;
@@ -243,56 +226,51 @@ public:
 private:
   struct TransferInterface
   {
-    using CreateSig = void*(VirtualObject &, const void *);
-    using UpdateSig = void(void *, const void *);
-    using CleanupSig = void(void *);
+    using CreateSig = void*(VirtualObject&, const void*);
+    using UpdateSig = void(void*, const void*);
+    using CleanupSig = void(void*);
 
-    CreateSig *Create = nullptr;
-    UpdateSig *Update = nullptr;
-    CleanupSig *Cleanup = nullptr;
+    CreateSig* Create = nullptr;
+    UpdateSig* Update = nullptr;
+    CleanupSig* Cleanup = nullptr;
   };
 
-  static bool TransferInterfaceValid(const TransferInterface &t)
-  {
-    return t.Create != nullptr;
-  }
+  static bool TransferInterfaceValid(const TransferInterface& t) { return t.Create != nullptr; }
 
   TransferInterface& GetCurrentTransfer()
   {
     return this->Transfers[static_cast<std::size_t>(this->CurrentDevice)];
   }
 
-  template<typename TargetClass>
+  template <typename TargetClass>
   class CreateTransferInterface
   {
   private:
-    template<typename DeviceAdapter>
-    using EnableIfValid =
-      std::enable_if<vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::Valid>;
+    template <typename DeviceAdapter>
+    using EnableIfValid = std::enable_if<vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::Valid>;
 
-    template<typename DeviceAdapter>
-    using EnableIfInvalid =
-      std::enable_if<!vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::Valid>;
+    template <typename DeviceAdapter>
+    using EnableIfInvalid = std::enable_if<!vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::Valid>;
 
   public:
-    CreateTransferInterface(TransferInterface *transfers)
+    CreateTransferInterface(TransferInterface* transfers)
       : Transfers(transfers)
-    { }
+    {
+    }
 
     // Use SFINAE to create entries for valid device adapters only
-    template<typename DeviceAdapter>
+    template <typename DeviceAdapter>
     typename EnableIfValid<DeviceAdapter>::type operator()(DeviceAdapter) const
     {
       using DeviceInfo = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
 
-      if (DeviceInfo::GetId() >= 0 &&
-          DeviceInfo::GetId() < VTKM_MAX_DEVICE_ADAPTER_ID)
+      if (DeviceInfo::GetId() >= 0 && DeviceInfo::GetId() < VTKM_MAX_DEVICE_ADAPTER_ID)
       {
         using TransferImpl =
           internal::VirtualObjectTransfer<VirtualObject, TargetClass, DeviceAdapter>;
 
         std::size_t id = static_cast<std::size_t>(DeviceInfo::GetId());
-        TransferInterface &transfer = this->Transfers[id];
+        TransferInterface& transfer = this->Transfers[id];
 
         transfer.Create = &TransferImpl::Create;
         transfer.Update = &TransferImpl::Update;
@@ -300,31 +278,30 @@ private:
       }
       else
       {
-        std::string msg =
-          "Device '" + DeviceInfo::GetName() + "' has invalid ID of " +
+        std::string msg = "Device '" + DeviceInfo::GetName() + "' has invalid ID of " +
           std::to_string(DeviceInfo::GetId()) + "(VTKM_MAX_DEVICE_ADAPTER_ID = " +
           std::to_string(VTKM_MAX_DEVICE_ADAPTER_ID) + ")";
         throw vtkm::cont::ErrorBadType(msg);
       }
     }
 
-    template<typename DeviceAdapter>
+    template <typename DeviceAdapter>
     typename EnableIfInvalid<DeviceAdapter>::type operator()(DeviceAdapter) const
-    { }
+    {
+    }
 
   private:
-    TransferInterface *Transfers;
+    TransferInterface* Transfers;
   };
 
-  const void *Target;
+  const void* Target;
   std::array<TransferInterface, VTKM_MAX_DEVICE_ADAPTER_ID> Transfers;
 
   vtkm::cont::DeviceAdapterId CurrentDevice;
-  void *DeviceState;
+  void* DeviceState;
   bool RefreshFlag;
   VirtualObject Object;
 };
-
 }
 } // vtkm::cont
 

@@ -23,7 +23,8 @@
 #include <vtkm/Math.h>
 #include <vtkm/internal/ExportMacros.h>
 
-namespace vtkm {
+namespace vtkm
+{
 
 // Disable conversion warnings for Sum and Product on GCC only.
 // GCC creates false positive warnings for signed/unsigned char* operations.
@@ -41,7 +42,7 @@ namespace vtkm {
 /// Note: Requires Type \p T implement the + operator.
 struct Sum
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x + y;
@@ -53,7 +54,7 @@ struct Sum
 /// Note: Requires Type \p T implement the * operator.
 struct Product
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x * y;
@@ -64,17 +65,16 @@ struct Product
 #pragma GCC diagnostic pop
 #endif // gcc || clang
 
-
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns the \c x if x > y otherwise returns \c y.
 /// Note: Requires Type \p T implement the < operator.
 //needs to be full length to not clash with vtkm::math function Max.
 struct Maximum
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
-    return x < y ? y: x;
+    return x < y ? y : x;
   }
 };
 
@@ -84,13 +84,12 @@ struct Maximum
 //needs to be full length to not clash with vtkm::math function Min.
 struct Minimum
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
-    return x < y ? x: y;
+    return x < y ? x : y;
   }
 };
-
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns a vtkm::Vec<T,2> that represents the minimum and maximum values
@@ -99,27 +98,25 @@ template <typename T>
 struct MinAndMax
 {
   VTKM_EXEC_CONT
-  vtkm::Vec<T,2> operator()(const T& a, const T& b) const
+  vtkm::Vec<T, 2> operator()(const T& a, const T& b) const
   {
     return vtkm::make_Vec(vtkm::Min(a, b), vtkm::Max(a, b));
   }
 
   VTKM_EXEC_CONT
-  vtkm::Vec<T,2> operator()(
-    const vtkm::Vec<T,2>& a, const vtkm::Vec<T,2>& b) const
+  vtkm::Vec<T, 2> operator()(const vtkm::Vec<T, 2>& a, const vtkm::Vec<T, 2>& b) const
   {
-    return vtkm::make_Vec(
-      vtkm::Min(a[0], b[0]), vtkm::Max(a[1], b[1]));
+    return vtkm::make_Vec(vtkm::Min(a[0], b[0]), vtkm::Max(a[1], b[1]));
   }
 
   VTKM_EXEC_CONT
-  vtkm::Vec<T,2> operator()(const T& a, const vtkm::Vec<T,2>& b) const
+  vtkm::Vec<T, 2> operator()(const T& a, const vtkm::Vec<T, 2>& b) const
   {
     return vtkm::make_Vec(vtkm::Min(a, b[0]), vtkm::Max(a, b[1]));
   }
 
   VTKM_EXEC_CONT
-  vtkm::Vec<T,2> operator()(const vtkm::Vec<T,2>& a, const T& b) const
+  vtkm::Vec<T, 2> operator()(const vtkm::Vec<T, 2>& a, const T& b) const
   {
     return vtkm::make_Vec(vtkm::Min(a[0], b), vtkm::Max(a[1], b));
   }
@@ -130,7 +127,7 @@ struct MinAndMax
 /// Note: Requires Type \p T implement the & operator.
 struct BitwiseAnd
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x & y;
@@ -142,7 +139,7 @@ struct BitwiseAnd
 /// Note: Requires Type \p T implement the | operator.
 struct BitwiseOr
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x | y;
@@ -154,13 +151,12 @@ struct BitwiseOr
 /// Note: Requires Type \p T implement the ^ operator.
 struct BitwiseXor
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT T operator()(const T& x, const T& y) const
   {
     return x ^ y;
   }
 };
-
 
 } // namespace vtkm
 

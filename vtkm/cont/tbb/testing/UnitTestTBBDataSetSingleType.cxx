@@ -22,8 +22,7 @@
 
 #include <vtkm/cont/testing/TestingDataSetSingleType.h>
 
-int UnitTestTBBDataSetSingleType(int, char *[])
+int UnitTestTBBDataSetSingleType(int, char* [])
 {
-  return vtkm::cont::testing::TestingDataSetSingleType
-      <vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagTBB>::Run();
 }

@@ -35,16 +35,16 @@
 #include <vtkm/worklet/ScatterUniform.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
-namespace detail {
+namespace detail
+{
 
 VTKM_EXEC_CONSTANT
-const static vtkm::IdComponent StructuredTriangleIndices[2][3] = {
-  { 0, 1, 2 },
-  { 0, 2, 3 }
-};
+const static vtkm::IdComponent StructuredTriangleIndices[2][3] = { { 0, 1, 2 }, { 0, 2, 3 } };
 
 } // namespace detail
 
@@ -62,28 +62,22 @@ public:
   class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
-                                  FieldOutCell<> connectivityOut);
+    typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(PointIndices, _2, VisitIndex);
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterUniform ScatterType;
     VTKM_CONT
-    ScatterType GetScatter() const
-    {
-      return ScatterType(2);
-    }
+    ScatterType GetScatter() const { return ScatterType(2); }
 
     VTKM_CONT
-    TriangulateCell()
-    {  }
+    TriangulateCell() {}
 
     // Each quad cell produces 2 triangle cells
-    template<typename ConnectivityInVec, typename ConnectivityOutVec>
-    VTKM_EXEC
-    void operator()(const ConnectivityInVec &connectivityIn,
-                    ConnectivityOutVec &connectivityOut,
-                    vtkm::IdComponent visitIndex) const
+    template <typename ConnectivityInVec, typename ConnectivityOutVec>
+    VTKM_EXEC void operator()(const ConnectivityInVec& connectivityIn,
+                              ConnectivityOutVec& connectivityOut,
+                              vtkm::IdComponent visitIndex) const
     {
       connectivityOut[0] = connectivityIn[detail::StructuredTriangleIndices[visitIndex][0]];
       connectivityOut[1] = connectivityIn[detail::StructuredTriangleIndices[visitIndex][1]];
@@ -92,8 +86,8 @@ public:
   };
 
   template <typename CellSetType>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet,
-                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
 
   {
     typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
@@ -101,25 +95,19 @@ public:
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    vtkm::worklet::DispatcherMapTopology<TriangulateCell,DeviceAdapter> dispatcher;
-    dispatcher.Invoke(cellSet,
-                      vtkm::cont::make_ArrayHandleGroupVec<3>(connectivity));
+    vtkm::worklet::DispatcherMapTopology<TriangulateCell, DeviceAdapter> dispatcher;
+    dispatcher.Invoke(cellSet, vtkm::cont::make_ArrayHandleGroupVec<3>(connectivity));
 
     // Fill in array of output cells per input cell
     DeviceAlgorithm::Copy(
-        vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, cellSet.GetNumberOfCells()),
-        outCellsPerCell);
+      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, cellSet.GetNumberOfCells()),
+      outCellsPerCell);
 
     // Add cells to output cellset
-    outCellSet.Fill(
-          cellSet.GetNumberOfPoints(),
-          vtkm::CellShapeTagTriangle::Id,
-          3,
-          connectivity);
+    outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagTriangle::Id, 3, connectivity);
     return outCellSet;
   }
 };
-
 }
 } // namespace vtkm::worklet
 

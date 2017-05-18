@@ -24,9 +24,10 @@
 #include <vtkm/interop/BufferState.h>
 #include <vtkm/interop/internal/TransferToOpenGL.h>
 
-namespace vtkm{
-namespace interop{
-
+namespace vtkm
+{
+namespace interop
+{
 
 /// \brief Manages transferring an ArrayHandle to opengl .
 ///
@@ -41,16 +42,14 @@ namespace interop{
 ///
 /// This function will throw exceptions if the transfer wasn't possible
 ///
-template<typename ValueType, class StorageTag, class DeviceAdapterTag>
-VTKM_CONT
-void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
-                      BufferState& state,
-                      DeviceAdapterTag)
+template <typename ValueType, class StorageTag, class DeviceAdapterTag>
+VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
+                                BufferState& state, DeviceAdapterTag)
 {
   vtkm::interop::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
   return toGL.Transfer(handle);
 }
-
-}}
+}
+}
 
 #endif //vtk_m_interop_TransferToOpenGL_h

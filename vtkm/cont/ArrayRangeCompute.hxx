@@ -28,12 +28,15 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/TryExecute.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-namespace detail {
+namespace detail
+{
 
-template<typename ArrayHandleType>
+template <typename ArrayHandleType>
 struct ArrayRangeComputeFunctor
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
@@ -42,13 +45,13 @@ struct ArrayRangeComputeFunctor
   vtkm::cont::ArrayHandle<vtkm::Range> RangeArray;
 
   VTKM_CONT
-  ArrayRangeComputeFunctor(const ArrayHandleType &input)
+  ArrayRangeComputeFunctor(const ArrayHandleType& input)
     : InputArray(input)
-  {  }
+  {
+  }
 
-  template<typename Device>
-  VTKM_CONT
-  bool operator()(Device)
+  template <typename Device>
+  VTKM_CONT bool operator()(Device)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
@@ -69,31 +72,25 @@ struct ArrayRangeComputeFunctor
       return true;
     }
 
-    vtkm::Vec<ValueType,2> initial(
-          this->InputArray.GetPortalConstControl().Get(0));
+    vtkm::Vec<ValueType, 2> initial(this->InputArray.GetPortalConstControl().Get(0));
 
     vtkm::Vec<ValueType, 2> result =
-        Algorithm::Reduce(this->InputArray,
-                          initial,
-                          vtkm::MinAndMax<ValueType>());
+      Algorithm::Reduce(this->InputArray, initial, vtkm::MinAndMax<ValueType>());
 
     for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
     {
       this->RangeArray.GetPortalControl().Set(
-            i, vtkm::Range(VecTraits::GetComponent(result[0], i),
-                           VecTraits::GetComponent(result[1], i)));
+        i,
+        vtkm::Range(VecTraits::GetComponent(result[0], i), VecTraits::GetComponent(result[1], i)));
     }
 
     return true;
   }
 };
 
-
-template<typename ArrayHandleType>
-inline
-vtkm::cont::ArrayHandle<vtkm::Range>
-ArrayRangeComputeImpl(const ArrayHandleType &input,
-                      vtkm::cont::RuntimeDeviceTracker tracker)
+template <typename ArrayHandleType>
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
+  const ArrayHandleType& input, vtkm::cont::RuntimeDeviceTracker tracker)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
@@ -101,8 +98,7 @@ ArrayRangeComputeImpl(const ArrayHandleType &input,
 
   if (!vtkm::cont::TryExecute(functor, tracker))
   {
-    throw vtkm::cont::ErrorExecution(
-          "Failed to run ArrayRangeComputation on any device.");
+    throw vtkm::cont::ErrorExecution("Failed to run ArrayRangeComputation on any device.");
   }
 
   return functor.RangeArray;
@@ -110,18 +106,14 @@ ArrayRangeComputeImpl(const ArrayHandleType &input,
 
 } // namespace detail
 
-template<typename ArrayHandleType>
-inline
-vtkm::cont::ArrayHandle<vtkm::Range>
-ArrayRangeCompute(const ArrayHandleType &input,
-                  vtkm::cont::RuntimeDeviceTracker tracker)
+template <typename ArrayHandleType>
+inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const ArrayHandleType& input, vtkm::cont::RuntimeDeviceTracker tracker)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
   return detail::ArrayRangeComputeImpl(input, tracker);
 }
-
-
 }
 } // namespace vtkm::cont
 

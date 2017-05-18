@@ -22,40 +22,38 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-vtkm::cont::CellSetExplicit<>
-CreateInputCellSet()
+vtkm::cont::CellSetExplicit<> CreateInputCellSet()
 {
   vtkm::cont::CellSetExplicit<> cellSet("cells");
   cellSet.PrepareToAddCells(2, 7);
-  cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE,3,vtkm::make_Vec<vtkm::Id>(0,2,4));
-  cellSet.AddCell(vtkm::CELL_SHAPE_QUAD,4,vtkm::make_Vec<vtkm::Id>(4,2,6,8));
+  cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::make_Vec<vtkm::Id>(0, 2, 4));
+  cellSet.AddCell(vtkm::CELL_SHAPE_QUAD, 4, vtkm::make_Vec<vtkm::Id>(4, 2, 6, 8));
   cellSet.CompleteAddingCells(11);
   return cellSet;
 }
 
-void CheckOutputCellSet(const vtkm::cont::CellSetExplicit<> &cellSet,
-                        const vtkm::cont::ArrayHandle<vtkm::Float32> &field)
+void CheckOutputCellSet(const vtkm::cont::CellSetExplicit<>& cellSet,
+                        const vtkm::cont::ArrayHandle<vtkm::Float32>& field)
 {
   VTKM_TEST_ASSERT(cellSet.GetNumberOfCells() == 2, "Wrong num cells.");
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPoints() == 5, "Wrong num points.");
 
-  VTKM_TEST_ASSERT(cellSet.GetCellShape(0) == vtkm::CELL_SHAPE_TRIANGLE,
-                   "Wrong shape");
-  VTKM_TEST_ASSERT(cellSet.GetCellShape(1) == vtkm::CELL_SHAPE_QUAD,
-                   "Wrong shape");
+  VTKM_TEST_ASSERT(cellSet.GetCellShape(0) == vtkm::CELL_SHAPE_TRIANGLE, "Wrong shape");
+  VTKM_TEST_ASSERT(cellSet.GetCellShape(1) == vtkm::CELL_SHAPE_QUAD, "Wrong shape");
 
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(0) == 3, "Wrong num points");
   VTKM_TEST_ASSERT(cellSet.GetNumberOfPointsInCell(1) == 4, "Wrong num points");
 
-  vtkm::Vec<vtkm::Id,3> pointIds3;
+  vtkm::Vec<vtkm::Id, 3> pointIds3;
   cellSet.GetIndices(0, pointIds3);
   VTKM_TEST_ASSERT(pointIds3[0] == 0, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds3[1] == 1, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds3[2] == 2, "Wrong point id for cell");
 
-  vtkm::Vec<vtkm::Id,4> pointIds4;
+  vtkm::Vec<vtkm::Id, 4> pointIds4;
   cellSet.GetIndices(1, pointIds4);
   VTKM_TEST_ASSERT(pointIds4[0] == 2, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds4[1] == 1, "Wrong point id for cell");
@@ -64,16 +62,11 @@ void CheckOutputCellSet(const vtkm::cont::CellSetExplicit<> &cellSet,
 
   vtkm::Float32 fieldValues[5];
   field.CopyInto(fieldValues, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  VTKM_TEST_ASSERT(
-        test_equal(fieldValues[0], TestValue(0,vtkm::Float32())), "Bad field");
-  VTKM_TEST_ASSERT(
-        test_equal(fieldValues[1], TestValue(2,vtkm::Float32())), "Bad field");
-  VTKM_TEST_ASSERT(
-        test_equal(fieldValues[2], TestValue(4,vtkm::Float32())), "Bad field");
-  VTKM_TEST_ASSERT(
-        test_equal(fieldValues[3], TestValue(6,vtkm::Float32())), "Bad field");
-  VTKM_TEST_ASSERT(
-        test_equal(fieldValues[4], TestValue(8,vtkm::Float32())), "Bad field");
+  VTKM_TEST_ASSERT(test_equal(fieldValues[0], TestValue(0, vtkm::Float32())), "Bad field");
+  VTKM_TEST_ASSERT(test_equal(fieldValues[1], TestValue(2, vtkm::Float32())), "Bad field");
+  VTKM_TEST_ASSERT(test_equal(fieldValues[2], TestValue(4, vtkm::Float32())), "Bad field");
+  VTKM_TEST_ASSERT(test_equal(fieldValues[3], TestValue(6, vtkm::Float32())), "Bad field");
+  VTKM_TEST_ASSERT(test_equal(fieldValues[4], TestValue(8, vtkm::Float32())), "Bad field");
 }
 
 void RunTest()
@@ -89,10 +82,9 @@ void RunTest()
 
   std::cout << "Removing unused points" << std::endl;
   vtkm::worklet::RemoveUnusedPoints compactPoints(inCellSet, Device());
-  vtkm::cont::CellSetExplicit<> outCellSet =
-      compactPoints.MapCellSet(inCellSet, Device());
+  vtkm::cont::CellSetExplicit<> outCellSet = compactPoints.MapCellSet(inCellSet, Device());
   vtkm::cont::ArrayHandle<vtkm::Float32> outField =
-      compactPoints.MapPointFieldDeep(inField, Device());
+    compactPoints.MapPointFieldDeep(inField, Device());
 
   std::cout << "Checking resulting cell set" << std::endl;
   CheckOutputCellSet(outCellSet, outField);
@@ -100,7 +92,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestRemoveUnusedPoints(int, char *[])
+int UnitTestRemoveUnusedPoints(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(RunTest);
 }
