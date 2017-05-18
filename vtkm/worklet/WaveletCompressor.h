@@ -157,13 +157,14 @@ public:
   // Multi-level 3D wavelet decomposition
   template< typename InArrayType, typename OutArrayType, typename DeviceTag>
   VTKM_CONT
-  vtkm::Float64 WaveDecompose3D( 
-                  InArrayType             &sigIn,     // Input
-                  vtkm::Id                nLevels,    // n levels of DWT
-                  vtkm::Id                inX,        vtkm::Id  inY,    vtkm::Id  inZ,
-                  OutArrayType            &coeffOut,
-                  bool                    discardSigIn,	// can we discard sigIn for more memory?
-                  DeviceTag  )
+  vtkm::Float64 WaveDecompose3D( InArrayType      &sigIn,     // Input
+                                 vtkm::Id         nLevels,    // n levels of DWT
+                                 vtkm::Id         inX,        
+                                 vtkm::Id         inY,    
+                                 vtkm::Id         inZ,
+                                 OutArrayType     &coeffOut,
+                                 bool             discardSigIn,	// can we discard sigIn on devices?
+                                 DeviceTag  )
   {
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
     VTKM_ASSERT( inX * inY * inZ == sigInLen );
@@ -259,9 +260,13 @@ public:
       return 0; 
     }
     else if ( discardArrIn )
+    {
 			outBuffer = arrIn;
+    }
 		else
+    {
       vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, outBuffer );
+    }
 
     std::vector<vtkm::Id> L;
     this->ComputeL3( inX, inY, inZ, nLevels, L );
@@ -269,7 +274,9 @@ public:
     
     // All transforms but the last level operate on temporary arrays
     for( size_t i = 0; i < 24; i++ )
+    {
       L3d[i] = L[i];
+    }
     for( size_t i = 1; i < static_cast<size_t>(nLevels); i++ )
     {
       L3d[24] = L3d[0] + L3d[12];     // Total X dim; this is always true for Biorthogonal wavelets
@@ -300,7 +307,9 @@ public:
       L3d[1]    = L3d[25];
       L3d[2]    = L3d[26];
       for( size_t j = 3; j < 24; j++ )
+      {
         L3d[j]  = L[ 21 * i + j ];
+      }
     }
 
     // The last transform outputs to the final output
@@ -421,7 +430,9 @@ public:
       return 0; 
     }
     else
+    {
       vtkm::cont::DeviceAdapterAlgorithm< DeviceTag >::Copy( arrIn, outBuffer );
+    }
       
     VTKM_ASSERT( vtkm::Id(L.size()) == 6 * nLevels + 4 );
 
@@ -495,7 +506,9 @@ public:
       vtkm::Float64 nthVal = static_cast<vtkm::Float64>
                                (sortedArray.GetPortalConstControl().Get(n));
       if( nthVal < 0.0 )
+      {
         nthVal *= -1.0;
+      }
       typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
       ThresholdType thresholdWorklet( nthVal );
       vtkm::worklet::DispatcherMapField< ThresholdType, DeviceTag > dispatcher( thresholdWorklet );
@@ -690,7 +703,9 @@ public:
   {
     vtkm::Id sum = L[0];        // 1st level cA
     for( size_t i = 1; i <= size_t(nLevels); i++ )
+    {
       sum += L[i];
+    }
     return sum;
   }
   // Compute the length of coefficients for 2D transforms
@@ -715,7 +730,9 @@ public:
     {
       cALen = WaveletBase::GetApproxLength( cALen );
       if( cALen == 0 )    
+      {
         return cALen;
+      }
     }
 
     return cALen;

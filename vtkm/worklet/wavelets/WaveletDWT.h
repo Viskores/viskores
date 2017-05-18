@@ -75,7 +75,9 @@ public:
                                                DeviceTag() );
       }
       else
+      {
         ext2.PrepareForOutput( 0, DeviceTag() );    // No extension on the right side
+      }
       return 0;
     }
 
@@ -200,7 +202,9 @@ public:
                                                DeviceTag() );
       }
       else
+      {
         ext2.PrepareForOutput( 0, DeviceTag() );    // No extension on the right side
+      }
       return 0;
     }
 
@@ -326,7 +330,9 @@ public:
                                                DeviceTag() );
       }
       else
+      {
         ext2.PrepareForOutput( 0, DeviceTag() );    // No extension on the right side
+      }
       return 0;
     }
 
@@ -455,7 +461,7 @@ public:
                 vtkm::Id sigStartX,       vtkm::Id sigStartY,       vtkm::Id sigStartZ,
                 vtkm::Id sigPretendDimX,  vtkm::Id sigPretendDimY,  vtkm::Id sigPretendDimZ,
                 ArrayOutType              &coeffOut,
-                bool                      discardSigIn,	// discard sigIn for more memory
+                bool                      discardSigIn,	// discard sigIn on devices
                 DeviceTag   )
   {
     std::vector<vtkm::Id> L(27, 0);
@@ -501,7 +507,9 @@ public:
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
     bool oddLow        = true;
     if( filterLen % 2 != 0 )
+    {
       oddLow = false;
+    }
     vtkm::Id addLen    = filterLen / 2;
 
     typedef typename ArrayInType::ValueType            ValueType;
@@ -550,7 +558,9 @@ public:
     }
 
 		if( discardSigIn )
-			sigIn.ReleaseResources();
+    {
+			sigIn.ReleaseResourcesExecution();
+    }
 
     // Then do transform in Y direction
     ArrayType           afterY;
@@ -689,7 +699,9 @@ public:
     }
 
 		if( discardCoeffIn )
-			coeffIn.ReleaseResources();
+    {
+			coeffIn.ReleaseResourcesExecution();
+    }
     
     // Second, inverse transform in Y direction
     BasicArrayType      afterY;
@@ -807,7 +819,9 @@ public:
         }
       }
       else
+      {
         ext2.PrepareForOutput( 0, DeviceTag() );
+      }
       return 0;
     }
 
@@ -1034,9 +1048,13 @@ public:
     {
       // Allocate memory
       if( attachZeroRightRight )
+      {
         rightExtend.PrepareForOutput( addLen+1, DeviceTag() );
+      }
       else                  
+      {
         rightExtend.PrepareForOutput( addLen, DeviceTag() );
+      }
 
       switch( rightExtMethod )
       {
@@ -1075,7 +1093,9 @@ public:
         }
       }
       if( attachZeroRightRight )
+      {
         WaveletBase::DeviceAssignZero( rightExtend, addLen, DeviceTag() );
+      }
     }
     else    // attachZeroRightLeft mode
     {
@@ -1172,7 +1192,9 @@ public:
     {
       if( ( WaveletBase::wmode == SYMW && ( filterLen % 2 != 0 ) ) ||
           ( WaveletBase::wmode == SYMH && ( filterLen % 2 == 0 ) ) )
+      {
         doSymConv = true;
+      }
     }
 
     vtkm::Id sigConvolvedLen = L[0] + L[1];     // approx + detail coeffs
@@ -1180,15 +1202,21 @@ public:
     bool oddLow  = true;
     bool oddHigh = true;
     if( filterLen % 2 != 0 )
+    {
       oddLow = false;
+    }
     if( doSymConv )
     {
       addLen = filterLen / 2;
       if( sigInLen % 2 != 0 )
+      {
         sigConvolvedLen += 1;
+      }
     }
     else
+    {
       addLen = filterLen - 1; 
+    }
   
     vtkm::Id sigExtendedLen = sigInLen + 2 * addLen;
 
@@ -1260,7 +1288,9 @@ public:
             cDRightMode = ASYMW;
           }
           else
+          {
             cDRightMode = ASYMH;
+          }
         }
         else
         {
@@ -1271,7 +1301,9 @@ public:
             cDRightMode = SYMH;
           }
           else
+          {
             cARightMode = SYMH;
+          }
         }
       }
     } 
@@ -1283,8 +1315,9 @@ public:
     {
       addLen = filterLen / 4;   // addLen == 0 for Haar kernel
       if( (L[0] > L[1]) && (WaveletBase::wmode == SYMH) )
+      {
         cDPadLen = L[0];  
-
+      }
       cATempLen = L[0] + 2 * addLen;
       cDTempLen = cATempLen;  // same length
     }
@@ -1443,7 +1476,9 @@ public:
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
     bool oddLow        = true;
     if( filterLen % 2 != 0 )
+    {
       oddLow = false;
+    }
     vtkm::Id addLen          = filterLen / 2;
 
     typedef typename ArrayInType::ValueType         ValueType;
@@ -1644,7 +1679,9 @@ public:
         cDRight = ASYMW;
       }   
       else
+      {
         cDRight = ASYMH;
+      }
     }   
     else  // mode == SYMW
     {   
@@ -1655,14 +1692,18 @@ public:
         cDRight = SYMH;
       }   
       else
+      {
         cARight = SYMH;
+      }
     } 
     // determine length after extension
     vtkm::Id cAExtendedDimX, cDExtendedDimX;
     vtkm::Id cDPadLen  = 0;
     vtkm::Id addLen = filterLen / 4;    // addLen == 0 for Haar kernel
     if( (cADimX > cDDimX) && (mode == SYMH) )
+    {
       cDPadLen = cADimX;
+    }
     cAExtendedDimX = cADimX + 2 * addLen;
     cDExtendedDimX = cAExtendedDimX;
 
@@ -1703,7 +1744,9 @@ public:
         ext4DimX = addLen + 1;
       }
       else
+      {
         vtkm::cont::ErrorInternal("cDTemp Length not match!");
+      }
     }
   }
 
@@ -1738,7 +1781,9 @@ public:
         cDDownMode = ASYMW;
       }   
       else
+      {
         cDDownMode = ASYMH;
+      }
     }   
     else  // mode == SYMW
     {   
@@ -1749,7 +1794,9 @@ public:
         cDDownMode = SYMH;
       }   
       else
+      {
         cADownMode = SYMH;
+      }
     } 
     // determine length after extension
     vtkm::Id cAExtendedDimY, cDExtendedDimY;
@@ -1796,7 +1843,9 @@ public:
         ext4DimY = addLen + 1;
       }
       else
+      {
         vtkm::cont::ErrorInternal("cDTemp Length not match!");
+      }
     }
   }
 
@@ -1833,7 +1882,9 @@ public:
         cDRightMode = ASYMW;
       }   
       else
+      {
         cDRightMode = ASYMH;
+      }
     }   
     else  // mode == SYMW
     {   
@@ -1844,7 +1895,9 @@ public:
         cDRightMode = SYMH;
       }   
       else
+      {
         cARightMode = SYMH;
+      }
     } 
 
     // determine length after extension
@@ -1852,7 +1905,9 @@ public:
     vtkm::Id cDPadLen  = 0;
     vtkm::Id addLen = filterLen / 4;    // addLen == 0 for Haar kernel
     if( (cADimX > cDDimX) && (mode == SYMH) )
+    {
       cDPadLen = cADimX;
+    }
     cAExtendedDimX = cADimX + 2 * addLen;
     cDExtendedDimX = cAExtendedDimX;
 
@@ -1943,7 +1998,9 @@ public:
         cDDownMode = ASYMW;
       }   
       else
+      {
         cDDownMode = ASYMH;
+      }
     }   
     else  // mode == SYMW
     {   
@@ -1954,7 +2011,9 @@ public:
         cDDownMode = SYMH;
       }   
       else
+      {
         cADownMode = SYMH;
+      }
     } 
 
     // determine length after extension
@@ -1962,7 +2021,9 @@ public:
     vtkm::Id cDPadLen  = 0;
     vtkm::Id addLen = filterLen / 4;    // addLen == 0 for Haar kernel
     if( (cADimY > cDDimY) && (mode == SYMH) )
+    {
       cDPadLen = cADimY;
+    }
     cAExtendedDimY = cADimY + 2 * addLen;
     cDExtendedDimY = cAExtendedDimY;
 
@@ -2053,7 +2114,9 @@ public:
         cDBackMode = ASYMW;
       }   
       else
+      {
         cDBackMode = ASYMH;
+      }
     }   
     else  // mode == SYMW
     {   
@@ -2064,7 +2127,9 @@ public:
         cDBackMode = SYMH;
       }   
       else
+      {
         cABackMode = SYMH;
+      }
     } 
 
     // determine length after extension
@@ -2072,7 +2137,9 @@ public:
     vtkm::Id cDPadLen  = 0;
     vtkm::Id addLen = filterLen / 4;    // addLen == 0 for Haar kernel
     if( (cADimZ > cDDimZ) && (mode == SYMH) )
+    {
       cDPadLen = cADimZ;
+    }
     cAExtendedDimZ = cADimZ + 2 * addLen;
     cDExtendedDimZ = cAExtendedDimZ;
 

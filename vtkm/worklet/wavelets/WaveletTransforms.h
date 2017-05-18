@@ -114,66 +114,98 @@ public:
     Ext1Dto3D( workIndex, extX, extY, extZ );
     typename PortalOutType::ValueType sym = 1.0;
     if( mode == ASYMH || mode == ASYMW )
+    {
       sym = -1.0;
+    }
     if( direction == LEFT )
     {
       sigPretendY = extY;
       sigPretendZ = extZ;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendX = extDimX - extX - 1;
+      }
       else    // mode == SYMW || mode == ASYMW
+      {
         sigPretendX = extDimX - extX; 
+      }
     }
     else if( direction == RIGHT )
     {
       sigPretendY = extY;
       sigPretendZ = extZ;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendX = sigPretendDimX - extX - 1;
+      }
       else
+      {
         sigPretendX = sigPretendDimX - extX - 2;
+      }
       if( padZero )
+      {
         sigPretendX++;
+      }
     }
     else if( direction == TOP ) 
     {
       sigPretendX = extX;
       sigPretendZ = extZ;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendY = extDimY - extY - 1;
+      }
       else    // mode == SYMW || mode == ASYMW
+      {
         sigPretendY = extDimY - extY; 
+      }
     }
     else if( direction == BOTTOM )
     {
       sigPretendX = extX;
       sigPretendZ = extZ;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendY = sigPretendDimY - extY - 1;
+      }
       else
+      {
         sigPretendY = sigPretendDimY - extY - 2;
+      }
       if( padZero )
+      {
         sigPretendY++;
+      }
     }
     else if( direction == FRONT ) 
     {
       sigPretendX = extX;
       sigPretendY = extY;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendZ = extDimZ - extZ - 1;
+      }
       else    // mode == SYMW || mode == ASYMW
+      {
         sigPretendZ = extDimZ - extZ; 
+      }
     }
     else if( direction == BACK )
     {
       sigPretendX = extX;
       sigPretendY = extY;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendZ = sigPretendDimZ - extZ - 1;
+      }
       else
+      {
         sigPretendZ = sigPretendDimZ - extZ - 2;
+      }
       if( padZero )
+      {
         sigPretendZ++;
+      }
     }
 		else
     {
@@ -183,11 +215,15 @@ public:
 
     if( sigPretendX == sigPretendDimX || 		// decides to pad a zero 
 				sigPretendY == sigPretendDimY ||
-				sigPretendZ == sigPretendDimZ  )
+				sigPretendZ == sigPretendDimZ    )
+    {
       portalOut.Set( workIndex, 0.0 );
+    }
     else
+    {
       portalOut.Set( workIndex, sym * portalIn.Get( 
 										 SigPretend3Dto1D(sigPretendX, sigPretendY, sigPretendZ) ));
+    }
   }
 
 private:
@@ -258,7 +294,9 @@ public:
       idx = inZ * dimX3 * dimY3 + inY * dimX3 + inX_local;
     }
     else
+    {
       vtkm::cont::ErrorInternal("Invalid index!");
+    }
   }
 
 private:
@@ -313,7 +351,9 @@ public:
       idx = inZ * dimX3 * dimY3 + inY_local * dimX3 + inX;
     }
     else
+    {
       vtkm::cont::ErrorInternal("Invalid index!");
+    }
   }
 
 private:
@@ -366,7 +406,9 @@ public:
       idx = inZ_local * dimX3 * dimY3 + inY * dimX3 + inX;
     }
     else
+    {
       vtkm::cont::ErrorInternal("Invalid index!");
+    }
   }
 
 private:
@@ -462,7 +504,9 @@ public:
       idx = inZ * dimX4 * dimY4 + inY * dimX4 + inX_local;
     }
     else
+    {
       vtkm::cont::ErrorInternal("Invalid index!");
+    }
   }
 
 private:
@@ -546,7 +590,9 @@ public:
       idx = inZ * dimX4 * dimY4 + inY_local * dimX4 + inX;
     }
     else
+    {
       vtkm::cont::ErrorInternal("Invalid index!");
+    }
   }
 
 private:
@@ -627,7 +673,9 @@ public:
       idx = inZ_local * dimX4 * dimY4 + inY * dimX4 + inX;
     }
     else
+    {
       vtkm::cont::ErrorInternal("Invalid index!");
+    }
   }
 
 private:
@@ -703,11 +751,17 @@ public:
               const InPortalType3 &portal3, vtkm::Id inCube, vtkm::Id inIdx ) const
   {
     if( inCube == 2 )
+    {
       return MAKEVAL( portal2.Get(inIdx) );
+    }
     else if( inCube == 1 )
+    {
       return MAKEVAL( portal1.Get(inIdx) );
+    }
     else if( inCube == 3 )
+    {
       return MAKEVAL( portal3.Get(inIdx) );
+    }
     else
     {
         vtkm::cont::ErrorInternal("Invalid cube index!");
@@ -831,15 +885,21 @@ public:
               const InPortalType3 &portal3, vtkm::Id inCube, vtkm::Id inIdx ) const
   {
     if( inCube == 2 )
+    {
       return MAKEVAL( portal2.Get(inIdx) );
+    }
     else if( inCube == 1 )
+    {
       return MAKEVAL( portal1.Get(inIdx) );
+    }
     else if( inCube == 3 )
+    {
       return MAKEVAL( portal3.Get(inIdx) );
+    }
     else
     {
-        vtkm::cont::ErrorInternal("Invalid cube index!");
-        return -1;
+      vtkm::cont::ErrorInternal("Invalid cube index!");
+      return -1;
     }
   }
  
@@ -959,15 +1019,21 @@ public:
               const InPortalType3 &portal3, vtkm::Id inCube, vtkm::Id inIdx ) const
   {
     if( inCube == 2 )
+    {
       return MAKEVAL( portal2.Get(inIdx) );
+    }
     else if( inCube == 1 )
+    {
       return MAKEVAL( portal1.Get(inIdx) );
+    }
     else if( inCube == 3 )
+    {
       return MAKEVAL( portal3.Get(inIdx) );
+    }
     else
     {
-        vtkm::cont::ErrorInternal("Invalid cube index!");
-        return -1;
+      vtkm::cont::ErrorInternal("Invalid cube index!");
+      return -1;
     }
   }
  
@@ -1107,19 +1173,29 @@ public:
                     vtkm::Id          inIdx ) const
   {
     if( inCube == 2 )
+    {
       return MAKEVAL( ext2.Get(inIdx) );
+    }
     else if( inCube == 4 )
+    {
       return MAKEVAL( ext4.Get(inIdx) );
+    }
     else if( inCube == 1 )
+    {
       return MAKEVAL( ext1.Get(inIdx) );
+    }
     else if( inCube == 3 )
+    {
       return MAKEVAL( ext3.Get(inIdx) );
+    }
     else if( inCube == 5 )
+    {
       return MAKEVAL( sig5.Get(inIdx) );
+    }
     else
     {
-        vtkm::cont::ErrorInternal("Invalid matrix index!");
-        return -1;
+      vtkm::cont::ErrorInternal("Invalid matrix index!");
+      return -1;
     }
   }
 
@@ -1177,17 +1253,25 @@ public:
       {
         xi = workX / 2;
         if( workX % 2 != 0 )
+        {
           k1 = filterLen - 1;
+        }
         else
+        {
           k1 = filterLen - 2;
+        }
       }
       else                          // even length half filter
       {
         xi = (workX + 1) / 2;
         if( workX % 2 != 0 )
+        {
           k1 = filterLen - 2;
+        }
         else
+        {
           k1 = filterLen - 1;
+        }
       }
       VAL cA, cD;
       VAL sum = 0.0;
@@ -1282,15 +1366,25 @@ public:
                     vtkm::Id          inIdx ) const
   {
     if( inCube == 2 )
+    {
       return MAKEVAL( ext2.Get(inIdx) );
+    }
     else if( inCube == 4 )
+    {
       return MAKEVAL( ext4.Get(inIdx) );
+    }
     else if( inCube == 1 )
+    {
       return MAKEVAL( ext1.Get(inIdx) );
+    }
     else if( inCube == 3 )
+    {
       return MAKEVAL( ext3.Get(inIdx) );
+    }
     else if( inCube == 5 )
+    {
       return MAKEVAL( sig5.Get(inIdx) );
+    }
     else
     {
         vtkm::cont::ErrorInternal("Invalid matrix index!");
@@ -1318,11 +1412,13 @@ public:
     {
       if( workY % 2 != 0 )
       {
-        k1 = filterLen - 2;   k2 = filterLen - 1;
+        k1 = filterLen - 2;   
+        k2 = filterLen - 1;
       }
       else
       {
-        k1 = filterLen - 1;   k2 = filterLen - 2;
+        k1 = filterLen - 1;   
+        k2 = filterLen - 2;
       }
 
       VAL sum = 0.0;
@@ -1352,17 +1448,25 @@ public:
       {
         yi = workY / 2;
         if( workY % 2 != 0 )
+        {
           k1 = filterLen - 1;
+        }
         else
+        {
           k1 = filterLen - 2;
+        }
       }
       else
       {
         yi = (workY + 1) / 2;
         if( workY % 2 != 0 )
+        {
           k1 = filterLen - 2;
+        }
         else
+        {
           k1 = filterLen - 1;
+        }
       }
       VAL cA, cD;
       VAL sum = 0.0;
@@ -1460,15 +1564,25 @@ public:
                     vtkm::Id          inIdx ) const
   {
     if( inCube == 2 )
+    {
       return MAKEVAL( ext2.Get(inIdx) );
+    }
     else if( inCube == 4 )
+    {
       return MAKEVAL( ext4.Get(inIdx) );
+    }
     else if( inCube == 1 )
+    {
       return MAKEVAL( ext1.Get(inIdx) );
+    }
     else if( inCube == 3 )
+    {
       return MAKEVAL( ext3.Get(inIdx) );
+    }
     else if( inCube == 5 )
+    {
       return MAKEVAL( sig5.Get(inIdx) );
+    }
     else
     {
         vtkm::cont::ErrorInternal("Invalid matrix index!");
@@ -1496,11 +1610,13 @@ public:
     {
       if( workZ % 2 != 0 )
       {
-        k1 = filterLen - 2;   k2 = filterLen - 1;
+        k1 = filterLen - 2;   
+        k2 = filterLen - 1;
       }
       else
       {
-        k1 = filterLen - 1;   k2 = filterLen - 2;
+        k1 = filterLen - 1;   
+        k2 = filterLen - 2;
       }
 
       VAL sum = 0.0;
@@ -1530,17 +1646,25 @@ public:
       {
         zi = workZ / 2;
         if( workZ % 2 != 0 )
+        {
           k1 = filterLen - 1;
+        }
         else
+        {
           k1 = filterLen - 2;
+        }
       }
       else
       {
         zi = (workZ + 1) / 2;
         if( workZ % 2 != 0 )
+        {
           k1 = filterLen - 2;
+        }
         else
+        {
           k1 = filterLen - 1;
+        }
       }
       VAL cA, cD;
       VAL sum = 0.0;
@@ -1660,7 +1784,9 @@ public:
         idx = inY * x4 + (inX - x1 - xa - x2 - x3 - xd);
       }
       else
+      {
         vtkm::cont::ErrorInternal("Invalid index!");
+      }
     }
     else          // top-down mode
     {
@@ -1695,7 +1821,9 @@ public:
         idx = (inY - y1 - ya - y2 - y3 - yd) * x4 + inX;
       }
       else
+      {
         vtkm::cont::ErrorInternal("Invalid index!");
+      }
     }
   }
 
@@ -1759,7 +1887,9 @@ public:
         idx = inY * dimX3 + (inX - dimX1 - pretendDimX2);
       }
       else
+      {
         vtkm::cont::ErrorInternal("Invalid index!");
+      }
     }
     else          // top-down mode
     {
@@ -1779,7 +1909,9 @@ public:
         idx = (inY - dimY1 - pretendDimY2) * dimX3 + inX;
       }
       else
+      {
         vtkm::cont::ErrorInternal("Invalid index!");
+      }
     }
   }
 
@@ -1856,51 +1988,79 @@ public:
     Ext1Dto2D( workIndex, extX, extY );
     typename PortalOutType::ValueType sym = 1.0;
     if( mode == ASYMH || mode == ASYMW )
+    {
       sym = -1.0;
+    }
     if( direction == LEFT )     
     {
       sigPretendY = extY;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendX = extDimX - extX - 1;
+      }
       else    // mode == SYMW || mode == ASYMW
+      {
         sigPretendX = extDimX - extX; 
+      }
     }
     else if( direction == TOP ) 
     {
       sigPretendX = extX;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendY = extDimY - extY - 1;
+      }
       else    // mode == SYMW || mode == ASYMW
+      {
         sigPretendY = extDimY - extY; 
+      }
     }
     else if( direction == RIGHT )
     {
       sigPretendY = extY;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendX = sigPretendDimX - extX - 1;
+      }
       else
+      {
         sigPretendX = sigPretendDimX - extX - 2;
+      }
       if( padZero )
+      {
         sigPretendX++;
+      }
     }
     else if( direction == BOTTOM )
     {
       sigPretendX = extX;
       if( mode == SYMH || mode == ASYMH )
+      {
         sigPretendY = sigPretendDimY - extY - 1;
+      }
       else
+      {
         sigPretendY = sigPretendDimY - extY - 2;
+      }
       if( padZero )
+      {
         sigPretendY++;
+      }
     }
 		else
+    {
       vtkm::cont::ErrorInternal("Invalid extension mode for matrices!");
+    }
 
     if( sigPretendX == sigPretendDimX || sigPretendY == sigPretendDimY )
+    {
       portalOut.Set( workIndex, 0.0 );
+    }
     else
+    {
       portalOut.Set( workIndex, sym * 
                      portalIn.Get( SigPretend2Dto1D(sigPretendX, sigPretendY) ));
+    }
   }
 
 private:
@@ -1972,15 +2132,21 @@ public:
               const InPortalType3 &portal3, vtkm::Id inMatrix, vtkm::Id inIdx ) const
   {
     if( inMatrix == 1 )
+    {
       return MAKEVAL( portal1.Get(inIdx) );
+    }
     else if( inMatrix == 2 )
+    {
       return MAKEVAL( portal2.Get(inIdx) );
+    }
     else if( inMatrix == 3 )
+    {
       return MAKEVAL( portal3.Get(inIdx) );
+    }
     else
     {
-        vtkm::cont::ErrorInternal("Invalid matrix index!");
-        return -1;
+      vtkm::cont::ErrorInternal("Invalid matrix index!");
+      return -1;
     }
   }
   
@@ -2168,15 +2334,25 @@ public:
               vtkm::Id inMatrix, vtkm::Id inIdx ) const
   {
     if( inMatrix == 1 )
+    {
       return MAKEVAL( ext1.Get(inIdx) );
+    }
     else if( inMatrix == 2 )
+    {
       return MAKEVAL( ext2.Get(inIdx) );
+    }
     else if( inMatrix == 3 )
+    {
       return MAKEVAL( ext3.Get(inIdx) );
+    }
     else if( inMatrix == 4 )
+    {
       return MAKEVAL( ext4.Get(inIdx) );
+    }
     else if( inMatrix == 5 )
+    {
       return MAKEVAL( cAcD.Get(inIdx) );
+    }
     else
     {
         vtkm::cont::ErrorInternal("Invalid matrix index!");
@@ -2205,11 +2381,13 @@ public:
     {
       if( workX % 2 != 0 )
       {
-        k1 = filterLen - 2;   k2 = filterLen - 1;
+        k1 = filterLen - 2;   
+        k2 = filterLen - 1;
       }
       else
       {
-        k1 = filterLen - 1;   k2 = filterLen - 2;
+        k1 = filterLen - 1;   
+        k2 = filterLen - 2;
       }
 
       VAL sum = 0.0;
@@ -2239,11 +2417,13 @@ public:
     {
       if( workY % 2 != 0 )
       {
-        k1 = filterLen - 2;   k2 = filterLen - 1;
+        k1 = filterLen - 2;   
+        k2 = filterLen - 1;
       }
       else
       {
-        k1 = filterLen - 1;   k2 = filterLen - 2;
+        k1 = filterLen - 1;   
+        k2 = filterLen - 2;
       }
 
       VAL sum = 0.0;
@@ -2275,17 +2455,25 @@ public:
       {
         xi = workX / 2;
         if( workX % 2 != 0 )
+        {
           k1 = filterLen - 1;
+        }
         else
+        {
           k1 = filterLen - 2;
+        }
       }
       else                          // even length half filter
       {
         xi = (workX + 1) / 2;
         if( workX % 2 != 0 )
+        {
           k1 = filterLen - 2;
+        }
         else
+        {
           k1 = filterLen - 1;
+        }
       }
       VAL cA, cD;
       VAL sum = 0.0;
@@ -2311,17 +2499,25 @@ public:
       {
         yi = workY / 2;
         if( workY % 2 != 0 )
+        {
           k1 = filterLen - 1;
+        }
         else
+        {
           k1 = filterLen - 2;
+        }
       }
       else
       {
         yi = (workY + 1) / 2;
         if( workY % 2 != 0 )
+        {
           k1 = filterLen - 2;
+        }
         else
+        {
           k1 = filterLen - 1;
+        }
       }
       VAL cA, cD;
       VAL sum = 0.0;
@@ -2379,7 +2575,9 @@ public:
                     detailLen( detail_len ),
                     oddlow   ( odd_low ),
                     oddhigh  ( odd_high )
-  { this->SetStartPosition(); }
+  { 
+    this->SetStartPosition(); 
+  }
 
   // Use 64-bit float for convolution calculation
   #define VAL        vtkm::Float64
@@ -2398,7 +2596,9 @@ public:
         vtkm::Id xl = xlstart + workIndex;
         VAL sum=MAKEVAL(0.0);
         for( vtkm::Id k = filterLen - 1; k >= 0; k-- )
+        {
           sum += lowFilter.Get(k) * MAKEVAL( signalIn.Get(xl++) );
+        }
         vtkm::Id outputIdx = workIndex / 2; // put cA at the beginning 
         coeffOut.Set( outputIdx, static_cast<OutputValueType>(sum) );
       }
@@ -2407,7 +2607,9 @@ public:
         VAL sum=MAKEVAL(0.0);
         vtkm::Id xh = xhstart + workIndex - 1;
         for( vtkm::Id k = filterLen - 1; k >= 0; k-- )
+        {
           sum += highFilter.Get(k) * MAKEVAL( signalIn.Get(xh++) );
+        }
         vtkm::Id outputIdx = approxLen + (workIndex-1) / 2; // put cD after cA
         coeffOut.Set( outputIdx, static_cast<OutputValueType>(sum) );
       }
@@ -2554,17 +2756,25 @@ public:
       {
         xi = workIndex / 2;
         if( workIndex % 2 != 0 )
+        {
           k = filterLen - 1;
+        }
         else
+        {
           k = filterLen - 2;
+        }
       }
       else
       {
         xi = (workIndex + 1) / 2;
         if( workIndex % 2 != 0 )
+        {
           k = filterLen - 2;
+        }
         else
+        {
           k = filterLen - 1;
+        }
       }
 
       while( k > -1 )   // k >= 0
@@ -2610,7 +2820,9 @@ public:
   void operator()( ValueType    &coeffVal ) const
   {
     if( neg_threshold < coeffVal && coeffVal < threshold )
+    {
       coeffVal = 0.0;
+    }
   }
 
 private:
@@ -2959,7 +3171,9 @@ public:
                    const vtkm::Id     &workIdx ) const
   {
     if( workIdx == this->zeroIdx )
+    {
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    }
   }
 
 private:
@@ -3000,9 +3214,13 @@ public:
     vtkm::Id x, y;
     GetLogicalDim( workIdx, x, y );
     if( zeroY < 0 && x == zeroX )         // assign zero to a column
+    {
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    }
     else if( zeroX < 0 && y == zeroY )    // assign zero to a row
+    {
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    }
   }
 
 private:
@@ -3048,11 +3266,17 @@ public:
     vtkm::Id    x, y, z;
     GetLogicalDim( workIdx, x, y, z );
     if( zeroZ < 0 && zeroY < 0 && x == zeroX )         // plane perpendicular to X axis
+    {
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    }
     else if( zeroZ < 0 && zeroX < 0 && y == zeroY )    // plane perpendicular to Y axis
+    {
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    }
     else if( zeroY < 0 && zeroX < 0 && z == zeroZ )    // plane perpendicular to Z axis
+    {
       array.Set( workIdx, static_cast<typename PortalType::ValueType>(0.0) );
+    }
   }
 
 private:

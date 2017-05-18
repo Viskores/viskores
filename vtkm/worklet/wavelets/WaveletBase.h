@@ -60,9 +60,13 @@ public:
   vtkm::Id GetApproxLength( vtkm::Id sigInLen )
   {
     if (sigInLen % 2 != 0)
+    {
       return((sigInLen+1) / 2);
+    }
     else 
+    {
       return((sigInLen) / 2);
+    }
   }
 
 
@@ -70,9 +74,13 @@ public:
   vtkm::Id GetDetailLength( vtkm::Id sigInLen )
   {
     if (sigInLen % 2 != 0)
+    {
       return((sigInLen-1) / 2);
+    }
     else 
+    {
       return((sigInLen) / 2);
+    }
   }
 
 
@@ -358,7 +366,9 @@ public:
     {
       std::cerr << arr.GetPortalConstControl().Get(i) << "  ";
       if( i % dimX == dimX - 1 )
+      {
         std::cerr << std::endl;
+      }
     }
   }
 
@@ -372,11 +382,15 @@ protected:
   void WaveLengthValidate( vtkm::Id sigInLen, vtkm::Id filterLength, vtkm::Id &level)
   {
     if( sigInLen < filterLength )
+    {
       level = 0;
+    }
     else
-      level = static_cast<vtkm::Id>( vtkm::Floor( 
+    {
+      level = static_cast<vtkm::Id>( vtkm::Floor( 1.0 + 
                   vtkm::Log2( static_cast<vtkm::Float64>(sigInLen) / 
-                              static_cast<vtkm::Float64>(filterLength) ) + 1.0 ) );
+                              static_cast<vtkm::Float64>(filterLength) ) ) );
+    }
   }
 
 };    // class WaveletBase.
