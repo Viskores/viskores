@@ -18,9 +18,9 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/TextAnnotation.h>
+#include <vtkm/rendering/View1D.h>
 
 namespace vtkm {
 namespace rendering {

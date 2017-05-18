@@ -21,8 +21,8 @@
 #include <vtkm/filter/ClipWithImplicitFunction.h>
 
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 namespace {
 

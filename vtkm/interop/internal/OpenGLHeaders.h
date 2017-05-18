@@ -24,14 +24,17 @@
 
 #if defined(__APPLE__)
 # include <GL/glew.h>
+
 # include <OpenGL/gl.h>
 #else
 # include <GL/glew.h>
+
 # include <GL/gl.h>
 #endif
 
 #ifdef VTKM_CUDA
 # include <cuda_runtime.h>
+
 # include <cuda_gl_interop.h>
 #endif
 

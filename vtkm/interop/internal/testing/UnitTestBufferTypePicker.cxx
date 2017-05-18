@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/interop/internal/BufferTypePicker.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/interop/internal/BufferTypePicker.h>
 
 namespace
 {

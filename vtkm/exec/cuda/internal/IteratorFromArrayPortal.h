@@ -20,8 +20,8 @@
 #ifndef vtk_m_exec_cuda_internal_IteratorFromArrayPortal_h
 #define vtk_m_exec_cuda_internal_IteratorFromArrayPortal_h
 
-#include <vtkm/Types.h>
 #include <vtkm/Pair.h>
+#include <vtkm/Types.h>
 #include <vtkm/internal/ExportMacros.h>
 
 // Disable warnings we check vtkm for but Thrust does not.

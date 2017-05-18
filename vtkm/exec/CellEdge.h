@@ -24,8 +24,8 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/CellTraits.h>
 #include <vtkm/Types.h>
-#include <vtkm/internal/Assume.h>
 #include <vtkm/exec/FunctorBase.h>
+#include <vtkm/internal/Assume.h>
 
 namespace vtkm {
 namespace exec {

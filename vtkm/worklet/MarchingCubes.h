@@ -21,8 +21,8 @@
 #ifndef vtk_m_worklet_MarchingCubes_h
 #define vtk_m_worklet_MarchingCubes_h
 
-#include <vtkm/VectorAnalysis.h>
 #include <vtkm/BinaryPredicates.h>
+#include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/exec/CellDerivative.h>
 #include <vtkm/exec/ParametricCoordinates.h>

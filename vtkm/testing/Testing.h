@@ -27,8 +27,8 @@
 #include <vtkm/Pair.h>
 #include <vtkm/Range.h>
 #include <vtkm/TypeListTag.h>
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
 #include <exception>

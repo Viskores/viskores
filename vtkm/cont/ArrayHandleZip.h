@@ -20,8 +20,8 @@
 #ifndef vtk_m_cont_ArrayHandleZip_h
 #define vtk_m_cont_ArrayHandleZip_h
 
-#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/Pair.h>
+#include <vtkm/cont/ArrayHandle.h>
 
 namespace vtkm {
 namespace exec {

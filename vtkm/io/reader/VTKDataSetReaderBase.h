@@ -28,9 +28,9 @@
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/internal/ExportMacros.h>
 #include <vtkm/io/ErrorIO.h>
 

@@ -20,24 +20,24 @@
 #ifndef vtk_m_worklet_BoundingVolumeHierachy_h
 #define vtk_m_worklet_BoundingVolumeHierachy_h
 #include <math.h>
+#include <vtkm/Math.h>
 #include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/Math.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/exec/AtomicArray.h>
+#include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/rendering/ColorTable.h>
+#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
+#include <vtkm/rendering/raytracing/Worklets.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/raytracing/Worklets.h>
-#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
 
-#include <limits>
 #include <cstring>
+#include <limits>
 
 namespace vtkm {
 namespace rendering {

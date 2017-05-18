@@ -24,13 +24,13 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/benchmarking/Benchmarker.h>
+#include <vtkm/cont/testing/Testing.h>
 
 #include <random>
 #include <string>

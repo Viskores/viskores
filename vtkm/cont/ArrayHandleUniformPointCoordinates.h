@@ -20,9 +20,9 @@
 #ifndef vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 #define vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 
-#include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageImplicit.h>
+#include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 
 namespace vtkm {
 namespace cont {

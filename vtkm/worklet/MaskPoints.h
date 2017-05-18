@@ -20,9 +20,9 @@
 #ifndef vtkm_m_worklet_MaskPoints_h
 #define vtkm_m_worklet_MaskPoints_h
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 namespace vtkm {

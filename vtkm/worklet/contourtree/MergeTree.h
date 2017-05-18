@@ -113,10 +113,10 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/worklet/contourtree/PrintVectors.h>
 #include <vtkm/worklet/contourtree/ChainDoubler.h>
-#include <vtkm/worklet/contourtree/JoinSuperArcFinder.h>
 #include <vtkm/worklet/contourtree/JoinArcConnector.h>
+#include <vtkm/worklet/contourtree/JoinSuperArcFinder.h>
+#include <vtkm/worklet/contourtree/PrintVectors.h>
 #include <vtkm/worklet/contourtree/VertexMergeComparator.h>
 
 //#define DEBUG_PRINT 1

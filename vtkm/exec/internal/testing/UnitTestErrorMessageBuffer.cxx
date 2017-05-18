@@ -20,8 +20,8 @@
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
-#include <vtkm/testing/Testing.h>
 #include <cstring>
+#include <vtkm/testing/Testing.h>
 
 namespace {
 

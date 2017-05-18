@@ -81,17 +81,17 @@
 #ifndef vtkm_worklet_contourtree_chaingraph_h
 #define vtkm_worklet_contourtree_chaingraph_h
 
-#include <vtkm/worklet/contourtree/PrintVectors.h>
-#include <vtkm/worklet/contourtree/EdgePeakComparator.h>
-#include <vtkm/worklet/contourtree/GoverningSaddleFinder.h>
-#include <vtkm/worklet/contourtree/RegularPointTransferrer.h>
-#include <vtkm/worklet/contourtree/VertexDegreeUpdater.h>
 #include <vtkm/worklet/contourtree/ActiveEdgeTransferrer.h>
 #include <vtkm/worklet/contourtree/ChainDoubler.h>
+#include <vtkm/worklet/contourtree/EdgePeakComparator.h>
+#include <vtkm/worklet/contourtree/GoverningSaddleFinder.h>
+#include <vtkm/worklet/contourtree/JoinTreeTransferrer.h>
+#include <vtkm/worklet/contourtree/PrintVectors.h>
+#include <vtkm/worklet/contourtree/RegularPointTransferrer.h>
 #include <vtkm/worklet/contourtree/SaddleAscentFunctor.h>
 #include <vtkm/worklet/contourtree/SaddleAscentTransferrer.h>
 #include <vtkm/worklet/contourtree/TrunkBuilder.h>
-#include <vtkm/worklet/contourtree/JoinTreeTransferrer.h>
+#include <vtkm/worklet/contourtree/VertexDegreeUpdater.h>
 
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/worklet/DispatcherMapField.h>

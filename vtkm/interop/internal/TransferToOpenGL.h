@@ -21,11 +21,11 @@
 #define vtk_m_interop_internal_TransferToOpenGL_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/StorageBasic.h>
 
-#include <vtkm/interop/internal/OpenGLHeaders.h>
 #include <vtkm/interop/BufferState.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
 
 
 namespace vtkm {

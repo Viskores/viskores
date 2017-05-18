@@ -20,8 +20,8 @@
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/cont/testing/Testing.h>
 
 namespace {
 

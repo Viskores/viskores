@@ -27,19 +27,19 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/Timer.h>
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/Timer.h>
 
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/worklet/splatkernels/KernelBase.h>
 #include <vtkm/worklet/splatkernels/Gaussian.h>
+#include <vtkm/worklet/splatkernels/KernelBase.h>
 #include <vtkm/worklet/splatkernels/Spline3rdOrder.h>
 
 #define __VTKM_GAUSSIAN_SPLATTER_BENCHMARK

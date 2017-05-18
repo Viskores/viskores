@@ -19,8 +19,8 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleIndex.h>
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/CellSetSingleType.h>
+#include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterCounting.h>

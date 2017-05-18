@@ -22,8 +22,8 @@
 #ifndef vtk_m_rendering_raytracing_VolumeRendererStructured_h
 #define vtk_m_rendering_raytracing_VolumeRendererStructured_h
 
-#include <math.h>
 #include <iostream>
+#include <math.h>
 #include <stdio.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -31,11 +31,11 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/Camera.h>
+#include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm {
 namespace rendering{

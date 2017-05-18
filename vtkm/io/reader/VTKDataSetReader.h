@@ -21,10 +21,10 @@
 #define vtk_m_io_reader_VTKDataSetReader_h
 
 #include <vtkm/io/reader/VTKDataSetReaderBase.h>
-#include <vtkm/io/reader/VTKStructuredPointsReader.h>
+#include <vtkm/io/reader/VTKPolyDataReader.h>
 #include <vtkm/io/reader/VTKRectilinearGridReader.h>
 #include <vtkm/io/reader/VTKStructuredGridReader.h>
-#include <vtkm/io/reader/VTKPolyDataReader.h>
+#include <vtkm/io/reader/VTKStructuredPointsReader.h>
 #include <vtkm/io/reader/VTKUnstructuredGridReader.h>
 
 #include <memory>

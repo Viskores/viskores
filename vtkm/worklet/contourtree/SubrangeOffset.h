@@ -67,8 +67,8 @@
 #ifndef vtkm_worklet_contourtree_subrange_offset_h
 #define vtkm_worklet_contourtree_subrange_offset_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm {
 namespace worklet {

@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 
 namespace {
 

@@ -31,9 +31,9 @@
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
-#include <vtkm/worklet/ScatterCounting.h>
 
 namespace vtkm {
 namespace worklet {

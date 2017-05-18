@@ -21,8 +21,8 @@
 #define vtk_m_interop_BufferState_h
 
 //gl headers needs to be buffer anything to do with buffer's
-#include <vtkm/interop/internal/OpenGLHeaders.h>
 #include <vtkm/interop/internal/BufferTypePicker.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
 
 #include <vtkm/internal/ExportMacros.h>
 

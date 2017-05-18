@@ -20,13 +20,13 @@
 #ifndef vtkm_m_worklet_ExtractGeometry_h
 #define vtkm_m_worklet_ExtractGeometry_h
 
-#include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ImplicitFunction.h>
 
 namespace vtkm {

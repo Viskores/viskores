@@ -20,20 +20,20 @@
 #ifndef vtk_m_cont_cuda_internal_MakeThrustIterator_h
 #define vtk_m_cont_cuda_internal_MakeThrustIterator_h
 
-#include <vtkm/Types.h>
 #include <vtkm/Pair.h>
-#include <vtkm/internal/ExportMacros.h>
+#include <vtkm/Types.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/internal/ExportMacros.h>
 
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
-#include <thrust/system/cuda/memory.h>
 #include <thrust/functional.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/iterator/transform_iterator.h>
+#include <thrust/system/cuda/memory.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm {

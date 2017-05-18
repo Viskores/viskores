@@ -19,10 +19,10 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleStreaming.h>
-#include <vtkm/worklet/DispatcherStreamingMapField.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/DispatcherStreamingMapField.h>
 
 #include <vector>
 

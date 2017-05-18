@@ -21,8 +21,8 @@
 #define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmCuda_h
 
 #include <vtkm/cont/cuda/ErrorCuda.h>
-#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
+#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 

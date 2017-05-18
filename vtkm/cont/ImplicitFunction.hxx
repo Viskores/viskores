@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/ErrorBadValue.h>
 
 #include <algorithm>
 #include <limits>

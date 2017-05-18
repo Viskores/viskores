@@ -23,9 +23,9 @@
 
 #include <vtkm/Math.h>
 
-#include <vector>
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
 /*
  * Writing a Benchmark

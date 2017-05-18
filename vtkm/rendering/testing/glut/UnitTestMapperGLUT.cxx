@@ -25,15 +25,15 @@
 #else
 # include <GL/glut.h>
 #endif
+#include <string.h>
+#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasGL.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/testing/RenderTest.h>
-#include <string.h>
 
 namespace {
 static const vtkm::Id WIDTH = 512, HEIGHT = 512;

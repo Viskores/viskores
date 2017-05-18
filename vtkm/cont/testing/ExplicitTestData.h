@@ -20,8 +20,8 @@
 //
 //=============================================================================
 
-#include <vtkm/Types.h>
 #include <vtkm/CellShape.h>
+#include <vtkm/Types.h>
 
 namespace vtkm {
 namespace cont {

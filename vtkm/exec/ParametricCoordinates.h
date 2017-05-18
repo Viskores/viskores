@@ -25,10 +25,10 @@
 #include <vtkm/Math.h>
 #include <vtkm/NewtonsMethod.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
-#include <vtkm/internal/Assume.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/Jacobian.h>
+#include <vtkm/internal/Assume.h>
 
 namespace vtkm {
 namespace exec {

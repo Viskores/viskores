@@ -23,12 +23,12 @@
 #include <vtkm/BinaryPredicates.h>
 #include <vtkm/VecTraits.h>
 
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>

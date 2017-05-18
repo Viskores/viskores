@@ -18,14 +18,14 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 
 namespace {

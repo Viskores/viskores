@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/io/reader/VTKDataSetReader.h>
 
 #include <string>
 

@@ -22,8 +22,8 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
-#include <vtkm/Types.h>
 #include <memory>
+#include <vtkm/Types.h>
 
 namespace vtkm {
 namespace cont {

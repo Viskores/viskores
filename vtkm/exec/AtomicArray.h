@@ -21,8 +21,8 @@
 #define vtk_m_exec_AtomicArray_h
 
 #include <vtkm/ListTag.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
 
 namespace vtkm {

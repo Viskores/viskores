@@ -20,12 +20,12 @@
 #ifndef vtk_m_cont_testing_TestingVirtualObjectCache_h
 #define vtk_m_cont_testing_TestingVirtualObjectCache_h
 
+#include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/VirtualObjectCache.h>
-#include <vtkm/Types.h>
+#include <vtkm/cont/testing/Testing.h>
 
 
 #define ARRAY_LEN 8

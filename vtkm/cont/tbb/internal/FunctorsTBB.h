@@ -20,8 +20,8 @@
 #ifndef vtk_m_cont_tbb_internal_FunctorsTBB_h
 #define vtk_m_cont_tbb_internal_FunctorsTBB_h
 
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/internal/FunctorsGeneral.h>
@@ -54,6 +54,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <tbb/parallel_sort.h>
 #endif
 
+#include <numeric>
 #include <tbb/blocked_range.h>
 #include <tbb/blocked_range3d.h>
 #include <tbb/parallel_for.h>
@@ -61,7 +62,6 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <tbb/parallel_scan.h>
 #include <tbb/partitioner.h>
 #include <tbb/tick_count.h>
-#include <numeric>
 
 #if defined(VTKM_MSVC)
 #pragma pop_macro("__TBB_NO_IMPLICITLINKAGE")

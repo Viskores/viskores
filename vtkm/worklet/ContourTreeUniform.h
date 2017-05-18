@@ -71,16 +71,16 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation.h>
-#include <vtkm/worklet/contourtree/Mesh3D_DEM_Triangulation.h>
-#include <vtkm/worklet/contourtree/MergeTree.h>
 #include <vtkm/worklet/contourtree/ChainGraph.h>
 #include <vtkm/worklet/contourtree/ContourTree.h>
+#include <vtkm/worklet/contourtree/MergeTree.h>
+#include <vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation.h>
+#include <vtkm/worklet/contourtree/Mesh3D_DEM_Triangulation.h>
 
 #ifndef VTKM_DEVICE_ADAPTER
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL

@@ -84,8 +84,8 @@
 //
 // So that is the explanation on why we have the following function which is
 // used once, doesn't look to be useful and seems very crazy.
-#include <pthread.h>
 #include <iostream>
+#include <pthread.h>
 #define VTKM_NVIDIA_PTHREAD_WORKAROUND 1
 static int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
   { return static_cast<int>(pthread_self()); }

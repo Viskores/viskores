@@ -25,8 +25,8 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
-#include <vtkm/Transform3D.h>
 #include <vtkm/Range.h>
+#include <vtkm/Transform3D.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/rendering/MatrixHelpers.h>
 

@@ -20,10 +20,10 @@
 
 #include <vtkm/rendering/CanvasGL.h>
 
+#include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/DecodePNG.h>
 #include <vtkm/rendering/MatrixHelpers.h>
 #include <vtkm/rendering/WorldAnnotatorGL.h>
