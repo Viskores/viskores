@@ -21,16 +21,16 @@
 #define vtk_m_cont_CellSetExplicit_h
 
 #include <vtkm/CellShape.h>
+#include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
 #include <vtkm/exec/ConnectivityExplicit.h>
-#include <vtkm/TopologyElementTag.h>
 
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <map>
 #include <utility>

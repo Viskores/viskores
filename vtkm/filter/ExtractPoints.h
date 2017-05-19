@@ -22,8 +22,8 @@
 #define vtk_m_filter_ExtractPoints_h
 
 #include <vtkm/cont/ImplicitFunction.h>
-#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/CleanGrid.h>
+#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractPoints.h>
 
 namespace vtkm {

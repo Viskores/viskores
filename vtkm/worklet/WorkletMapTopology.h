@@ -22,8 +22,8 @@
 
 #include <vtkm/worklet/internal/WorkletBase.h>
 
-#include <vtkm/TypeListTag.h>
 #include <vtkm/TopologyElementTag.h>
+#include <vtkm/TypeListTag.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
 #include <vtkm/cont/arg/TransportTagArrayInOut.h>
@@ -37,8 +37,8 @@
 #include <vtkm/exec/arg/FetchTagArrayDirectIn.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
-#include <vtkm/exec/arg/FetchTagCellSetIn.h>
 #include <vtkm/exec/arg/FetchTagArrayTopologyMapIn.h>
+#include <vtkm/exec/arg/FetchTagCellSetIn.h>
 #include <vtkm/exec/arg/FromCount.h>
 #include <vtkm/exec/arg/FromIndices.h>
 #include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>

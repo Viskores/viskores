@@ -20,8 +20,8 @@
 #ifndef vtkm_interop_cuda_internal_TransferToOpenGL_h
 #define vtkm_interop_cuda_internal_TransferToOpenGL_h
 
-#include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/ErrorExecution.h>
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>

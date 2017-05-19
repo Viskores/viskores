@@ -23,11 +23,11 @@
 #endif
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/cuda/ArrayHandleCuda.h>
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-#include <vtkm/cont/testing/TestingArrayHandles.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
+#include <vtkm/cont/testing/TestingArrayHandles.h>
 
 #include <vtkm/cont/Field.h>
 

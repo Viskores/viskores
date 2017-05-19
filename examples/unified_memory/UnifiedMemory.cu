@@ -21,9 +21,9 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
 
 #include <vtkm/cont/ArrayHandleStreaming.h>
-#include <vtkm/worklet/DispatcherStreamingMapField.h>
 #include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/DispatcherStreamingMapField.h>
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandleCounting.h>

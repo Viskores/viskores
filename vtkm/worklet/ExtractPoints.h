@@ -20,12 +20,12 @@
 #ifndef vtkm_m_worklet_ExtractPoints_h
 #define vtkm_m_worklet_ExtractPoints_h
 
-#include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ImplicitFunction.h>
 
 namespace vtkm {

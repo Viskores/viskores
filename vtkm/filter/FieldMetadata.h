@@ -21,8 +21,8 @@
 #ifndef vtk_m_filter_FieldMetadata_h
 #define vtk_m_filter_FieldMetadata_h
 
-#include <vtkm/cont/Field.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/Field.h>
 
 namespace vtkm {
 namespace filter {

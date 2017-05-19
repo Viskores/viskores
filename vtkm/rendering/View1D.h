@@ -20,8 +20,8 @@
 #ifndef vtk_m_rendering_View1D_h
 #define vtk_m_rendering_View1D_h
 
-#include <vtkm/rendering/View.h>
 #include <vtkm/rendering/AxisAnnotation2D.h>
+#include <vtkm/rendering/View.h>
 
 namespace vtkm {
 namespace rendering {

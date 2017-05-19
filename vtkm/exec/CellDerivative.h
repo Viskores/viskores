@@ -29,8 +29,8 @@
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/exec/CellInterpolate.h>
-#include <vtkm/exec/Jacobian.h>
 #include <vtkm/exec/FunctorBase.h>
+#include <vtkm/exec/Jacobian.h>
 
 namespace vtkm {
 namespace exec {

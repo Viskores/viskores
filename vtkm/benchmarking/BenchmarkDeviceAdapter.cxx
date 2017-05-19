@@ -19,19 +19,19 @@
 //============================================================================
 
 #include <vtkm/TypeTraits.h>
+#include <vtkm/benchmarking/Benchmarker.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/benchmarking/Benchmarker.h>
 
 
 #include <algorithm>

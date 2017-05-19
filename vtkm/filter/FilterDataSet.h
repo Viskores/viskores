@@ -21,9 +21,9 @@
 #ifndef vtk_m_filter_DataSetFilter_h
 #define vtk_m_filter_DataSetFilter_h
 
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 

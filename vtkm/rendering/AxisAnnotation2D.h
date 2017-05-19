@@ -28,8 +28,8 @@
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/rendering/TextAnnotation.h>
+#include <vtkm/rendering/WorldAnnotator.h>
 
 namespace vtkm {
 namespace rendering {

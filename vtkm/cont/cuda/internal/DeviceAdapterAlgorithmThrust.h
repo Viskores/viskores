@@ -21,12 +21,12 @@
 #ifndef vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
 #define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
 
+#include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
+#include <vtkm/UnaryPredicates.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ErrorExecution.h>
-#include <vtkm/Types.h>
-#include <vtkm/TypeTraits.h>
-#include <vtkm/UnaryPredicates.h>
 
 #include <vtkm/cont/cuda/ErrorCuda.h>
 
@@ -46,15 +46,15 @@
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
 //our own custom thrust execution policy
-#include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
 #include <thrust/advance.h>
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
 #include <thrust/scan.h>
 #include <thrust/sort.h>
-#include <thrust/unique.h>
 #include <thrust/system/cuda/vector.h>
+#include <thrust/unique.h>
+#include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
 
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/system/cuda/execution_policy.h>

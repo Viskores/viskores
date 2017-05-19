@@ -21,8 +21,8 @@
 #ifndef vtk_m_filter_FieldFilter_h
 #define vtk_m_filter_FieldFilter_h
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 

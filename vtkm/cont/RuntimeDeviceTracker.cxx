@@ -24,8 +24,8 @@
 #include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadValue.h>
 
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 #include <algorithm>

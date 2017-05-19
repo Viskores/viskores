@@ -21,8 +21,8 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 #include <vtkm/cont/internal/DeviceAdapterError.h>
 

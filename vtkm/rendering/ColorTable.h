@@ -21,8 +21,8 @@
 #define vtk_m_rendering_ColorTable_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/rendering/vtkm_rendering_export.h>
 #include <vtkm/rendering/Color.h>
+#include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <memory>
 

@@ -20,11 +20,11 @@
 #ifndef vtk_m_exec_cuda_internal_WrappedOperators_h
 #define vtk_m_exec_cuda_internal_WrappedOperators_h
 
-#include <vtkm/Types.h>
 #include <vtkm/BinaryPredicates.h>
 #include <vtkm/Pair.h>
-#include <vtkm/internal/ExportMacros.h>
+#include <vtkm/Types.h>
 #include <vtkm/exec/cuda/internal/IteratorFromArrayPortal.h>
+#include <vtkm/internal/ExportMacros.h>
 
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE

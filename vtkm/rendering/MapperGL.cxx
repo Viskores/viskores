@@ -20,12 +20,12 @@
 
 #include <vtkm/rendering/MapperGL.h>
 
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 #include <vtkm/rendering/internal/RunTriangulator.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/cont/ArrayHandleIndex.h>
 
 #include <vector>
 

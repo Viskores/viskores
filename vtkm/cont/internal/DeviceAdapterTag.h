@@ -21,9 +21,9 @@
 #define vtk_m_cont_internal_DeviceAdapterTag_h
 
 #include <vtkm/StaticAssert.h>
+#include <vtkm/Types.h>
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
-#include <vtkm/Types.h>
 
 #include <string>
 

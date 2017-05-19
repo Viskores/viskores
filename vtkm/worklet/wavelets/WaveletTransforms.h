@@ -21,8 +21,8 @@
 #ifndef vtk_m_worklet_Wavelets_h
 #define vtk_m_worklet_Wavelets_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/Math.h>
 

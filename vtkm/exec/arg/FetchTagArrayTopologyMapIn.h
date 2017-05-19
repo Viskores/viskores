@@ -28,8 +28,8 @@
 
 #include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 
-#include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
+#include <vtkm/exec/ConnectivityStructured.h>
 
 #include <vtkm/VecFromPortalPermute.h>
 

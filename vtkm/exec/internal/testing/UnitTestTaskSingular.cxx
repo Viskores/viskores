@@ -20,9 +20,9 @@
 
 #include <vtkm/exec/internal/TaskSingular.h>
 
+#include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
-#include <vtkm/exec/FunctorBase.h>
 
 #include <vtkm/StaticAssert.h>
 

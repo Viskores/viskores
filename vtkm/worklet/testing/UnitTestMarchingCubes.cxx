@@ -25,8 +25,8 @@
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/worklet/MarchingCubes.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/MarchingCubes.h>
 
 namespace {
 

@@ -23,8 +23,8 @@
 #endif
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/testing/TestingDataSetExplicit.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
+#include <vtkm/cont/testing/TestingDataSetExplicit.h>
 
 int UnitTestCudaDataSetExplicit(int, char *[])
 {

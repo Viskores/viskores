@@ -24,8 +24,8 @@
 
 #include <vtkm/cont/cuda/ErrorCuda.h>
 
-#include <cuda.h>
 #include <algorithm>
+#include <cuda.h>
 #include <vector>
 
 namespace vtkm{

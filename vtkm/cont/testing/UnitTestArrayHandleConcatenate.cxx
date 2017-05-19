@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleConcatenate.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 
 #include <vtkm/cont/testing/Testing.h>
 

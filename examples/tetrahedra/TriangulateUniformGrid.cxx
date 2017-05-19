@@ -22,10 +22,10 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/filter/Triangulate.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/filter/Triangulate.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
 

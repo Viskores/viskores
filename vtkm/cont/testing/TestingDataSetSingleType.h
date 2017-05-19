@@ -21,12 +21,12 @@
 #ifndef vtk_m_cont_testing_TestingDataSetSingleType_h
 #define vtk_m_cont_testing_TestingDataSetSingleType_h
 
-#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/worklet/CellAverage.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>

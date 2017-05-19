@@ -20,12 +20,12 @@
 
 #include <vtkm/worklet/WaveletCompressor.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/testing/Testing.h>
 
-#include <vector>
 #include <iomanip>
+#include <vector>
 
 namespace vtkm
 {

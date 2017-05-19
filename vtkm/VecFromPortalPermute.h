@@ -21,8 +21,8 @@
 #define vtk_m_VecFromPortalPermute_h
 
 #include <vtkm/Math.h>
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
 namespace vtkm {

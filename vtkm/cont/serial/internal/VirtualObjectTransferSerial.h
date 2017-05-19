@@ -20,9 +20,9 @@
 #ifndef vtk_m_cont_serial_internal_VirtualObjectTransferSerial_h
 #define vtk_m_cont_serial_internal_VirtualObjectTransferSerial_h
 
-#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
 
 namespace vtkm {

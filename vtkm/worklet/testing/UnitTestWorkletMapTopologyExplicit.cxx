@@ -28,8 +28,8 @@
 
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 namespace test_explicit {
 

@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/Magnitude.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/Magnitude.h>
 
 #include <vtkm/cont/testing/Testing.h>
 

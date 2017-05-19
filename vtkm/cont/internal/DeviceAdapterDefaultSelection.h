@@ -24,8 +24,8 @@
 #ifndef vtk_m_cont_internal_DeviceAdapterDefaultSelection_h
 #define vtk_m_cont_internal_DeviceAdapterDefaultSelection_h
 
-#include <vtkm/internal/Configure.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/internal/Configure.h>
 
 //-----------------------------------------------------------------------------
 // Select the default devices based on available options.

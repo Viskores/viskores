@@ -21,11 +21,13 @@
 #ifndef vtk_m_benchmarking_Benchmarker_h
 #define vtk_m_benchmarking_Benchmarker_h
 
+#include <vtkm/ListTag.h>
 #include <vtkm/Math.h>
+#include <vtkm/cont/testing/Testing.h>
 
-#include <vector>
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
 /*
  * Writing a Benchmark

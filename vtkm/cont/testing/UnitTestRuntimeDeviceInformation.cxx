@@ -22,8 +22,8 @@
 
 //include all backends
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 #include <vtkm/cont/testing/Testing.h>
 

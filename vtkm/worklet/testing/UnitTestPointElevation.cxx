@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/PointElevation.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/PointElevation.h>
 
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>

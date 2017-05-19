@@ -131,32 +131,32 @@
 #define vtkm_worklet_contourtree_contourtree_h
 
 // local includes
-#include <vtkm/worklet/contourtree/MergeTree.h>
 #include <vtkm/worklet/contourtree/ChainGraph.h>
-#include <vtkm/worklet/contourtree/PrintVectors.h>
-#include <vtkm/worklet/contourtree/Types.h>
-#include <vtkm/worklet/contourtree/RegularToCriticalUp.h>
-#include <vtkm/worklet/contourtree/RegularToCriticalDown.h>
-#include <vtkm/worklet/contourtree/RegularToCandidate.h>
-#include <vtkm/worklet/contourtree/SubrangeOffset.h>
-#include <vtkm/worklet/contourtree/DegreeDelta.h>
-#include <vtkm/worklet/contourtree/FillSupernodes.h>
-#include <vtkm/worklet/contourtree/CopySupernodes.h>
-#include <vtkm/worklet/contourtree/SetJoinAndSplitArcs.h>
-#include <vtkm/worklet/contourtree/FindLeaves.h>
 #include <vtkm/worklet/contourtree/CopyJoinSplit.h>
-#include <vtkm/worklet/contourtree/UpdateOutbound.h>
+#include <vtkm/worklet/contourtree/CopyNeighbors.h>
+#include <vtkm/worklet/contourtree/CopySupernodes.h>
+#include <vtkm/worklet/contourtree/DegreeDelta.h>
+#include <vtkm/worklet/contourtree/DegreeSubrangeOffset.h>
+#include <vtkm/worklet/contourtree/FillSupernodes.h>
+#include <vtkm/worklet/contourtree/FindLeaves.h>
+#include <vtkm/worklet/contourtree/MergeTree.h>
+#include <vtkm/worklet/contourtree/PrintVectors.h>
+#include <vtkm/worklet/contourtree/RegularToCandidate.h>
+#include <vtkm/worklet/contourtree/RegularToCriticalDown.h>
+#include <vtkm/worklet/contourtree/RegularToCriticalUp.h>
+#include <vtkm/worklet/contourtree/ResetDegrees.h>
+#include <vtkm/worklet/contourtree/SetJoinAndSplitArcs.h>
 #include <vtkm/worklet/contourtree/SetSupernodeInward.h>
 #include <vtkm/worklet/contourtree/SkipVertex.h>
-#include <vtkm/worklet/contourtree/CopyNeighbors.h>
-#include <vtkm/worklet/contourtree/ResetDegrees.h>
-#include <vtkm/worklet/contourtree/DegreeSubrangeOffset.h>
+#include <vtkm/worklet/contourtree/SubrangeOffset.h>
+#include <vtkm/worklet/contourtree/Types.h>
+#include <vtkm/worklet/contourtree/UpdateOutbound.h>
 
 #include <vtkm/Pair.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleConcatenate.h>
+#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
-#include <vtkm/cont/ArrayHandleConcatenate.h>
-#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 #define DEBUG_PRINT 1

@@ -26,10 +26,10 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 typedef vtkm::Vec< vtkm::Float32, 3 > FloatVec3;
 typedef vtkm::Vec< vtkm::UInt8, 4 > Uint8Vec4;

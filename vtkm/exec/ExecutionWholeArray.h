@@ -20,8 +20,8 @@
 #ifndef vtk_m_exec_ExecutionWholeArray_h
 #define vtk_m_exec_ExecutionWholeArray_h
 
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
 
 namespace vtkm {

@@ -26,8 +26,8 @@
 
 #include <vtkm/exec/ConnectivityStructured.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 static void TwoDimUniformTest();
 static void ThreeDimUniformTest();

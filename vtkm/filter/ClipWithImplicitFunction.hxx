@@ -18,9 +18,9 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
+#include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 

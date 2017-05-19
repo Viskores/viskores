@@ -22,12 +22,14 @@
 
 // These are listed in non-alphabetical order because this is the conceptual
 // order in which the sub-files are loaded.  (But the compile should still
-// succeed of the order is changed.)
+// succeed of the order is changed.)  Turn off formatting to keep the order.
 
+// clang-format off
 #include <vtkm/cont/internal/DeviceAdapterDefaultSelection.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
+// clang-format on
 
 namespace vtkm {
 namespace cont {

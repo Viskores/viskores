@@ -25,8 +25,8 @@
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/internal/RunTriangulator.h>
-#include <vtkm/rendering/raytracing/RayTracer.h>
 #include <vtkm/rendering/raytracing/Camera.h>
+#include <vtkm/rendering/raytracing/RayTracer.h>
 
 namespace vtkm {
 namespace rendering {

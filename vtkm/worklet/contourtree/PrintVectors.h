@@ -67,10 +67,10 @@
 #ifndef vtkm_worklet_contourtree_print_vector_h
 #define vtkm_worklet_contourtree_print_vector_h
 
-#include <iostream>
-#include <iomanip>
-#include <string>
 #include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <string>
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>

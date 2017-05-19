@@ -20,8 +20,8 @@
 #ifndef vtk_m_cont_testing_TestingArrayHandles_h
 #define vtk_m_cont_testing_TestingArrayHandles_h
 
-#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/cont/ArrayHandle.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>

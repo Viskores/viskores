@@ -22,11 +22,11 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/filter/Tetrahedralize.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/filter/Tetrahedralize.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
 

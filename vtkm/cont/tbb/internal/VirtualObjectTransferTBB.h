@@ -20,9 +20,9 @@
 #ifndef vtk_m_cont_tbb_internal_VirtualObjectTransferTBB_h
 #define vtk_m_cont_tbb_internal_VirtualObjectTransferTBB_h
 
-#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
+#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 
 
 namespace vtkm {

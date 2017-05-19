@@ -25,8 +25,8 @@
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-#include <vtkm/cont/testing/TestingDeviceAdapter.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
+#include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
 int UnitTestCudaDeviceAdapter(int, char *[])
 {

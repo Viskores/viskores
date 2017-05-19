@@ -22,9 +22,9 @@
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
+#include <vtkm/cont/cuda/internal/ArrayManagerExecutionThrustDevice.h>
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
-#include <vtkm/cont/cuda/internal/ArrayManagerExecutionThrustDevice.h>
 
 // These must be placed in the vtkm::cont::internal namespace so that
 // the template can be found.

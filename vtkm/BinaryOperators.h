@@ -20,8 +20,8 @@
 #ifndef vtk_m_BinaryOperators_h
 #define vtk_m_BinaryOperators_h
 
-#include <vtkm/internal/ExportMacros.h>
 #include <vtkm/Math.h>
+#include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm {
 

@@ -20,8 +20,8 @@
 #ifndef vtk_m_exec_arg_CellShape_h
 #define vtk_m_exec_arg_CellShape_h
 
-#include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+#include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
 namespace vtkm {

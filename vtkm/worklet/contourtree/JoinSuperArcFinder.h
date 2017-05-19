@@ -87,10 +87,10 @@
 #ifndef vtkm_worklet_contourtree_join_super_arc_finder_h
 #define vtkm_worklet_contourtree_join_super_arc_finder_h
 
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include "vtkm/worklet/contourtree/Types.h"
 #include "vtkm/worklet/contourtree/VertexValueComparator.h"
+#include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm {
 namespace worklet {
