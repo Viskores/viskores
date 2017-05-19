@@ -119,7 +119,7 @@ public:
   }
 
   VTKM_CONT
-  void Shrink( vtkm::Id numberOfValues )
+  void Shrink( vtkm::Id vtkmNotUsed(numberOfValues) )
   {
 //    throw vtkm::cont::ErrorBadType(
 //        "ArrayHandleReverse cannot shrink.");
@@ -197,7 +197,7 @@ public:
   }
 
   VTKM_CONT
-  void Shrink( vtkm::Id numberOfValues )
+  void Shrink( vtkm::Id vtkmNotUsed(numberOfValues) )
   {
 //    throw vtkm::cont::ErrorBadType(
 //        "ArrayHandleReverse cannot shrink.");
