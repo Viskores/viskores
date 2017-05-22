@@ -34,6 +34,18 @@
 #include <vector>
 #include <chrono>
 
+const vtkm::Id SPARSE=0;
+const vtkm::Id DENSE=1;
+const vtkm::Id MEDIUM=2;
+
+static vtkm::Range
+subRange(vtkm::Range &range, vtkm::Float32 a, vtkm::Float32 b)
+{
+    vtkm::Float32 len = range.Length();
+    return vtkm::Range(range.Min + a*len,
+                       range.Min + b*len);
+}
+
 void RunTest(const std::string &fname,
              vtkm::Id numSeeds,
              vtkm::Id numSteps,
@@ -41,7 +53,8 @@ void RunTest(const std::string &fname,
              vtkm::Id numThreads,
              vtkm::Id advectType,
              vtkm::Id stepsPerRound,
-             bool dumpOutput)
+             bool dumpOutput,
+             vtkm::Id seeding)
 {
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
@@ -60,8 +73,54 @@ void RunTest(const std::string &fname,
   RK4RGType rk4(eval, stepSize);
 
   std::vector<vtkm::Vec<FieldType,3> > seeds;
-  vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
   srand(314);
+
+  vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
+  if (seeding == SPARSE)
+      bounds = ds.GetCoordinateSystem().GetBounds();
+  else if (seeding == DENSE)
+  {
+      if (fname.find("astro") != std::string::npos)
+      {
+          bounds.X = subRange(bounds.X, .1, .15);
+          bounds.Y = subRange(bounds.Y, .1, .15);
+          bounds.Z = subRange(bounds.Z, .1, .15);
+      }
+      else if (fname.find("fusion") != std::string::npos)      
+      {
+          bounds.X = subRange(bounds.X, .8, .85);
+          bounds.Y = subRange(bounds.Y, .55, .60);
+          bounds.Z = subRange(bounds.Z, .55, .60);
+      }
+      else if (fname.find("fishtank") != std::string::npos)            
+      {
+          bounds.X = subRange(bounds.X, .1, .15);
+          bounds.Y = subRange(bounds.Y, .1, .15);
+          bounds.Z = subRange(bounds.Z, .55, .60);
+      }            
+  }
+  else if (seeding == MEDIUM)
+  {
+      if (fname.find("astro") != std::string::npos)      
+      {
+          bounds.X = subRange(bounds.X, .4, .6);
+          bounds.Y = subRange(bounds.Y, .4, .6);
+          bounds.Z = subRange(bounds.Z, .4, .6);
+      }
+      else if (fname.find("fusion") != std::string::npos)            
+      {
+          bounds.X = subRange(bounds.X, .01, .99);
+          bounds.Y = subRange(bounds.Y, .01, .99);
+          bounds.Z = subRange(bounds.Z, .45, .55);
+      }
+      else if (fname.find("fishtank") != std::string::npos)
+      {
+          bounds.X = subRange(bounds.X, .4, .6);
+          bounds.Y = subRange(bounds.Y, .4, .6);
+          bounds.Z = subRange(bounds.Z, .4, .6);
+      }
+  }  
+
   for (int i = 0; i < numSeeds; i++)
   {
       vtkm::Vec<FieldType, 3> p;
@@ -106,7 +165,7 @@ void RunTest(const std::string &fname,
 bool ParseArgs(int argc, char **argv,
                vtkm::Id &numSeeds, vtkm::Id &numSteps, vtkm::Float32 &stepSize,
                vtkm::Id &advectType, vtkm::Id &stepsPerRound, vtkm::Id &numThreads, std::string &dataFile,
-               std::string &pgmType, bool &dumpOutput)
+               std::string &pgmType, bool &dumpOutput, vtkm::Id &seeding)
 {
     numSeeds = 100;
     numSteps = 100;
@@ -117,6 +176,7 @@ bool ParseArgs(int argc, char **argv,
     dataFile = "";
     pgmType = "UNKNOWN";
     dumpOutput = false;
+    seeding = SPARSE;
 
     if (argc < 2)
     {
@@ -162,6 +222,12 @@ bool ParseArgs(int argc, char **argv,
             numThreads = static_cast<vtkm::Id>(atoi(argv[++i]));
         else if (arg == "-dump")
             dumpOutput = true;
+        else if (arg == "-sparse")
+            seeding = SPARSE;
+        else if (arg == "-dense")
+            seeding = DENSE;
+        else if (arg == "-medium")
+            seeding = MEDIUM;
         else
             std::cerr<<"Unexpected argument: "<<arg<<std::endl;
     }
@@ -187,15 +253,16 @@ main(int argc, char **argv)
     vtkm::Id numSeeds = 100, numSteps = 100, advectType = 0, numThreads=-1, stepsPerRound=-1;
     vtkm::Float32 stepSize = 0.1f;
     std::string dataFile, pgmType;
+    vtkm::Id seeding = SPARSE;
     bool dumpOutput = false;
     
     if (!ParseArgs(argc, argv,
                    numSeeds, numSteps, stepSize,
-                   advectType, stepsPerRound, numThreads, dataFile, pgmType, dumpOutput))
+                   advectType, stepsPerRound, numThreads, dataFile, pgmType, dumpOutput, seeding))
     {
         return -1;
     }
     
-    RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType, stepsPerRound, dumpOutput);
+    RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType, stepsPerRound, dumpOutput, seeding);
     return 0;
 }
