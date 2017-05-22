@@ -14,7 +14,7 @@ FILES = ['astro.bov', 'fusion.bov', 'fishtank.bov']
 #STEPSIZE = {'astro.bov':0.0025, 'fusion.bov':0.01, 'fishtank.bov':0.0002}
 STEPSIZE = {'astro.bov':0.005, 'fusion.bov':0.005, 'fishtank.bov':0.0002}
 TERMINATE = {'short' : 10, 'med' : 100, 'long' : 1000, 'long2' : 2000, 'long5' : 5000, 'long10' : 10000, 'long20':20000, 'long100': 100000}
-SEEDS = mkSeeds(4)
+TERMINATE = {'short' : 10, 'med' : 100, 'long' : 1000}
 
 def buildMachineMap(machineMap, machName, exeDir='.',dataDir='.', hasGPU=False, hasTBB=False, maxThreads=-1) :
     mi = {'exeDir':exeDir,
@@ -58,18 +58,25 @@ def needToRun(db, dataFile, alg, seeds, term, pt) :
     key = (dataFile, alg, seeds, term, pt)
     if key not in db.keys() :
         print 'need to run: ', key
+    else:
+        print 'Test was run:', key, db[key]
     return key not in db.keys()
 
 def recordTest(db, output, dataFile, alg, seeds, term, pt) :
     key = (dataFile, alg, seeds, term, pt)
+    print key, output
     for l in output :
         if 'Runtime =' in l :
             time = int(l.split()[2])
             db[key] = time
             print key, time
             return
+        if 'Error' in l :
+           db[key] = -1
+           print 'ERROR:', key
+           return
 
-def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt) :
+def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt, test=False) :
     exe = 'Particle_Advection_TBB'
     if 'GPU' in alg :
         exe = 'Particle_Advection_CUDA'
@@ -77,6 +84,12 @@ def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt) :
        exe = 'cd %s; aprun -n 1 %s' %(machineInfo['exeDir'], exe)
     else:  
        exe = machineInfo['exeDir'] + '/' + exe
+
+    if 'streamline' in pt :
+       stepsPerRound = int(pt.split()[1])
+       if stepsPerRound > 0 :
+          if TERMINATE[term] <= stepsPerRound :
+             return ''
         
     args = ''
     args = args + '-seeds %d ' % seeds
@@ -90,7 +103,7 @@ def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt) :
         args = args + '-t %d ' % nt
 
     cmd = ''
-    if needToRun(db, dataFile, alg, seeds, term, pt) :
+    if test or needToRun(db, dataFile, alg, seeds, term, pt) :
         cmd = '%s %s' % (exe, args)
     return cmd
 
@@ -109,14 +122,15 @@ machineMap = buildMachineMap(machineMap, 'whoopingcough', './build/bin', 'data',
 #########################
 machine = ''
 tbbScale = False
+doTest = False
 
 for i in range(len(sys.argv)) :
     arg = sys.argv[i]
     if arg == '-mach' :
         i = i+1
         machine = sys.argv[i]
-    elif arg == '-tbbscale' :
-        tbbScale = True
+    elif arg == '-tbbscale' : tbbScale = True
+    elif arg == '-test' : doTest = True
 
 if machine == '' :
     print 'Usage: python %s -mach <machine>' %sys.argv[0]
@@ -129,22 +143,50 @@ ALG = makeAlg(machineInfo, doTBBScaling=tbbScale)
 
 
 PT = ['particle', 'streamline']
-PT = ['particle', 'streamline -1']
+PT = ['particle', 'streamline -1', 'streamline 100', 'streamline 1000']
+PT = ['particle', 'streamline 100', 'streamline 1000', 'streamline -1']
+
+if machine == 'titan' :
+   SEEDS = mkSeeds(6)
+elif machine == 'rhea' :
+   SEEDS = mkSeeds(8)
+elif machine == 'rheaGPU' :
+   SEEDS = mkSeeds(8)
 
 print SEEDS
 
-for s in SEEDS :
-    for t in TERMINATE.keys() :
-        for a in ALG :
-            for f in FILES :
-                for p in PT :
-                    print (a,s,t,p), f
-                    cmd = createCommand(db, machineInfo, f, a, s, t, p)
-                    if cmd == '' : continue
+def runTests() :
+    for p in PT :
+        for s in SEEDS :
+            for t in TERMINATE.keys() :
+                for a in ALG :
+                    for f in FILES :
+                        #print (a,s,t,p), f
+                        cmd = createCommand(db, machineInfo, f, a, s, t, p)
+                        if cmd == '' : continue
+                        #print 'running....', cmd
+                        result = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
+                        recordTest(db, result.stderr.readlines(), f, a, s, t, p)
+                        pickle.dump(db, open(machineInfo['dbFile'], 'wb'))
+    pickle.dump(db, open(machineInfo['dbFile'], 'wb'))
 
-                    print 'running....', cmd
-                    result = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
-                    recordTest(db, result.stderr.readlines(), f, a, s, t, p)
-                    pickle.dump(db, open(machineInfo['dbFile'], 'wb'))
-                    
-pickle.dump(db, open(machineInfo['dbFile'], 'wb'))
+
+if not doTest :
+   runTests()
+else:
+  a = 'GPU'
+  s = 10000
+  t = 'short'
+  f = 'astro.bov'
+  p = 'particle'
+
+  cmd = createCommand(db, machineInfo, f, a, s, t, p, test=True)
+  print 'running....', cmd
+  key = (f,a,s,t,p)
+  if key in db.keys() :
+     print 'Test was run, time= ', db[key]
+  else:      
+     print 'Test NOT run'
+  result = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
+  print key
+  print result.stderr.readlines()
