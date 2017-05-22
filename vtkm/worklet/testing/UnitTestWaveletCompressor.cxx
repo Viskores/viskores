@@ -46,7 +46,7 @@ public:
                      vtkm::Float64 sx, vtkm::Float64 xy )
                   :  dimX( dx ), dimY( dy ), amp (a),
                      x0( x ), y0( y ),
-                     sigmaX( sx ), sigmaY( xy )  
+                     sigmaX( sx ), sigmaY( xy )
   {
     sigmaX2 = 2 * sigmaX * sigmaX;
     sigmaY2 = 2 * sigmaY * sigmaY;
@@ -58,7 +58,7 @@ public:
     x = idx % dimX;
     y = idx / dimX;
   }
-  
+
   VTKM_EXEC
   vtkm::Float64 GetGaussian( vtkm::Float64 x, vtkm::Float64 y ) const
   {
@@ -68,7 +68,7 @@ public:
 
   template<typename T>
   VTKM_EXEC
-  void operator()(T& val, const vtkm::Id& workIdx) const 
+  void operator()(T& val, const vtkm::Id& workIdx) const
   {
     vtkm::Id x, y;
     Sig1Dto2D( workIdx, x, y );
@@ -93,7 +93,7 @@ public:
   VTKM_EXEC
   GaussianWorklet3D( vtkm::Id dx,  vtkm::Id dy,  vtkm::Id dz )
                   :  dimX( dx ),   dimY( dy ),   dimZ( dz )
-  {  
+  {
     amp = (T)20.0;
     sigmaX = (T)dimX / (T)4.0;   sigmaX2 = sigmaX * sigmaX * (T)2.0;
     sigmaY = (T)dimY / (T)4.0;   sigmaY2 = sigmaY * sigmaY * (T)2.0;
@@ -107,7 +107,7 @@ public:
     y = (idx - z * dimX * dimY) / dimX;
     x = idx % dimX;
   }
-  
+
   VTKM_EXEC
   T GetGaussian( T x, T y, T z ) const
   {
@@ -120,7 +120,7 @@ public:
   }
 
   VTKM_EXEC
-  void operator()(T& val, const vtkm::Id& workIdx) const 
+  void operator()(T& val, const vtkm::Id& workIdx) const
   {
     vtkm::Id x, y, z;
     Sig1Dto3D( workIdx, x, y, z );
@@ -142,7 +142,7 @@ template< typename ArrayType >
 void FillArray2D( ArrayType& array, vtkm::Id dimX, vtkm::Id dimY )
 {
   typedef vtkm::worklet::wavelets::GaussianWorklet2D WorkletType;
-  WorkletType worklet( dimX, dimY, 100.0, 
+  WorkletType worklet( dimX, dimY, 100.0,
                        static_cast<vtkm::Float64>(dimX)/2.0, // center
                        static_cast<vtkm::Float64>(dimY)/2.0, // center
                        static_cast<vtkm::Float64>(dimX)/4.0, // spread
@@ -177,14 +177,14 @@ void TestDecomposeReconstruct3D( vtkm::Float64 cratio )
 
   // Use a WaveletCompressor
   vtkm::worklet::wavelets::WaveletName wname = vtkm::worklet::wavelets::BIOR4_4;
-	if( wname == vtkm::worklet::wavelets::BIOR1_1 )
-		std::cout << "Using wavelet kernel   = Bior1.1 (HAAR)" << std::endl;
-	else if( wname == vtkm::worklet::wavelets::BIOR2_2 )
-		std::cout << "Using wavelet kernel   = Bior2.2 (CDF 5/3)" << std::endl;
-	else if( wname == vtkm::worklet::wavelets::BIOR3_3 )
-		std::cout << "Using wavelet kernel   = Bior3.3 (CDF 8/4)" << std::endl;
-	else if( wname == vtkm::worklet::wavelets::BIOR4_4 )
-		std::cout << "Using wavelet kernel   = Bior4.4 (CDF 9/7)" << std::endl;
+  if( wname == vtkm::worklet::wavelets::BIOR1_1 )
+    std::cout << "Using wavelet kernel   = Bior1.1 (HAAR)" << std::endl;
+  else if( wname == vtkm::worklet::wavelets::BIOR2_2 )
+    std::cout << "Using wavelet kernel   = Bior2.2 (CDF 5/3)" << std::endl;
+  else if( wname == vtkm::worklet::wavelets::BIOR3_3 )
+    std::cout << "Using wavelet kernel   = Bior3.3 (CDF 8/4)" << std::endl;
+  else if( wname == vtkm::worklet::wavelets::BIOR4_4 )
+    std::cout << "Using wavelet kernel   = Bior4.4 (CDF 9/7)" << std::endl;
   vtkm::worklet::WaveletCompressor compressor( wname );
 
   vtkm::Id XMaxLevel = compressor.GetWaveletMaxLevel( sigX );
@@ -197,31 +197,31 @@ void TestDecomposeReconstruct3D( vtkm::Float64 cratio )
 
   // Decompose
   vtkm::cont::Timer<> timer;
-  computationTime = 
+  computationTime =
   compressor.WaveDecompose3D( inputArray, nLevels, sigX, sigY, sigZ, outputArray,
                               false, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime1 = timer.GetElapsedTime();  
+  elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Decompose time         = " << elapsedTime1 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   // Squash small coefficients
   timer.Reset();
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime2 = timer.GetElapsedTime();  
+  elapsedTime2 = timer.GetElapsedTime();
   std::cout << "Squash time            = " << elapsedTime2 << std::endl;
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float32> reconstructArray;
   timer.Reset();
-  computationTime = 
+  computationTime =
   compressor.WaveReconstruct3D( outputArray, nLevels, sigX, sigY, sigZ, reconstructArray,
                                 false, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime3 = timer.GetElapsedTime();  
+  elapsedTime3 = timer.GetElapsedTime();
   std::cout << "Reconstruction time    = " << elapsedTime3 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
-  std::cout << "Total time             = " 
+  std::cout << "Total time             = "
             << (elapsedTime1 + elapsedTime2 + elapsedTime3) << std::endl;
-  
+
   outputArray.ReleaseResources();
 
   compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
@@ -233,7 +233,7 @@ void TestDecomposeReconstruct3D( vtkm::Float64 cratio )
                                   inputArray.GetPortalConstControl().Get(i) ),
                       "WaveletCompressor 3D failed..." );
   }
-  elapsedTime1 = timer.GetElapsedTime();  
+  elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Verification time      = " << elapsedTime1 << std::endl;
 }
 
@@ -268,31 +268,31 @@ void TestDecomposeReconstruct2D( vtkm::Float64 cratio )
 
   // Decompose
   vtkm::cont::Timer<> timer;
-  computationTime = 
-  compressor.WaveDecompose2D( inputArray, nLevels, sigX, sigY, outputArray, L, 
+  computationTime =
+  compressor.WaveDecompose2D( inputArray, nLevels, sigX, sigY, outputArray, L,
                               VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime1 = timer.GetElapsedTime();  
+  elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Decompose time         = " << elapsedTime1 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
 
   // Squash small coefficients
   timer.Reset();
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime2 = timer.GetElapsedTime();  
+  elapsedTime2 = timer.GetElapsedTime();
   std::cout << "Squash time            = " << elapsedTime2 << std::endl;
 
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
-  computationTime = 
+  computationTime =
   compressor.WaveReconstruct2D( outputArray, nLevels, sigX, sigY, reconstructArray, L,
                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime3 = timer.GetElapsedTime();  
+  elapsedTime3 = timer.GetElapsedTime();
   std::cout << "Reconstruction time    = " << elapsedTime3 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
-  std::cout << "Total time             = " 
+  std::cout << "Total time             = "
             << (elapsedTime1 + elapsedTime2 + elapsedTime3) << std::endl;
-  
+
   outputArray.ReleaseResources();
 
   compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
@@ -304,7 +304,7 @@ void TestDecomposeReconstruct2D( vtkm::Float64 cratio )
                                   inputArray.GetPortalConstControl().Get(i) ),
                       "WaveletCompressor 2D failed..." );
   }
-  elapsedTime1 = timer.GetElapsedTime();  
+  elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Verification time      = " << elapsedTime1 << std::endl;
 }
 
@@ -320,7 +320,7 @@ void TestDecomposeReconstruct1D( vtkm::Float64 cratio )
   {
     tmpVector.push_back( 100.0 * vtkm::Sin(static_cast<vtkm::Float64>(i)/100.0 ));
   }
-  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray = 
+  vtkm::cont::ArrayHandle<vtkm::Float64> inputArray =
     vtkm::cont::make_ArrayHandle(tmpVector);
 
   vtkm::cont::ArrayHandle<vtkm::Float64> outputArray;
@@ -341,20 +341,20 @@ void TestDecomposeReconstruct1D( vtkm::Float64 cratio )
   vtkm::cont::Timer<> timer;
   compressor.WaveDecompose( inputArray, nLevels, outputArray, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
 
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();  
+  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
   std::cout << "Decompose time         = " << elapsedTime << std::endl;
 
   // Squash small coefficients
   timer.Reset();
   compressor.SquashCoefficients( outputArray, cratio, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime = timer.GetElapsedTime();  
+  elapsedTime = timer.GetElapsedTime();
   std::cout << "Squash time            = " << elapsedTime << std::endl;
-  
+
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
   compressor.WaveReconstruct( outputArray, nLevels, L, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
-  elapsedTime = timer.GetElapsedTime();  
+  elapsedTime = timer.GetElapsedTime();
   std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
 
   compressor.EvaluateReconstruction( inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG() );
@@ -362,19 +362,19 @@ void TestDecomposeReconstruct1D( vtkm::Float64 cratio )
   timer.Reset();
   for( vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++ )
   {
-    VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i), 
+    VTKM_TEST_ASSERT( test_equal( reconstructArray.GetPortalConstControl().Get(i),
                                   inputArray.GetPortalConstControl().Get(i)),
                       "WaveletCompressor 1D failed..." );
   }
-  elapsedTime = timer.GetElapsedTime();  
+  elapsedTime = timer.GetElapsedTime();
   std::cout << "Verification time      = " << elapsedTime << std::endl;
 }
 
 void TestWaveletCompressor()
 {
   vtkm::Float64 cratio = 2.0;   // X:1 compression, where X >= 1
-	std::cout << "Compression ratio       = " << cratio << ":1 ";
-	std::cout << "(Reconstruction using higher compression ratios may result in failure in verification)" << std::endl;
+  std::cout << "Compression ratio       = " << cratio << ":1 ";
+  std::cout << "(Reconstruction using higher compression ratios may result in failure in verification)" << std::endl;
 
   TestDecomposeReconstruct1D( cratio );
   std::cout << std::endl;
