@@ -40,7 +40,7 @@ enum WaveletName {
   BIOR4_4,  // the same as CDF9_7
   BIOR3_3,  // the same as CDF8_4
   BIOR2_2,  // the same as CDF5_3
-  BIOR1_1   // the same as HAAE
+  BIOR1_1   // the same as HAAR
 };
 
 // Wavelet filter class;
@@ -106,8 +106,15 @@ public:
     }
   }
 
-  vtkm::Id GetFilterLength()    { return this->FilterLength; }
-  bool     isSymmetric()        { return this->Symmetricity; }
+  vtkm::Id GetFilterLength()    
+  { 
+    return this->FilterLength; 
+  }
+
+  bool     isSymmetric()        
+  { 
+    return this->Symmetricity; 
+  }
 
   typedef vtkm::cont::ArrayHandle<vtkm::Float64> FilterType;
 
@@ -160,7 +167,9 @@ private:
   void wrev( const vtkm::Float64* arrIn, vtkm::Float64* arrOut, vtkm::Id length )
   {
     for( vtkm::Id count = 0; count < length; count++)
+    {
       arrOut[count] = arrIn[length - count - 1];
+    }
   }
 
   // Quadrature mirror filtering operation: helper function to initialize a filter.
@@ -172,7 +181,9 @@ private:
       {
         arrOut[count] = arrIn[length - count - 1];
         if (count % 2 != 0)
+        {
           arrOut[count] = -1.0 * arrOut[count];
+        }
       }
     }
     else
@@ -181,7 +192,9 @@ private:
       {
         arrOut[count] = arrIn[length - count - 1];
         if (count % 2 == 0)
+        {
           arrOut[count] = -1.0 * arrOut[count];
+        }
       }
     }
   }
@@ -203,7 +216,9 @@ private:
   void verbatim_copy ( const vtkm::Float64* arrIn, vtkm::Float64* arrOut, vtkm::Id length )
   {
     for (vtkm::Id count = 0; count < length; count++)
+    {
       arrOut[count] = arrIn[count];
+    }
   }
 
 };    // class WaveletFilter.
