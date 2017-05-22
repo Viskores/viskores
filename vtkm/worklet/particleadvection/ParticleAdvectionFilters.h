@@ -207,9 +207,8 @@ public:
             {
                 for (vtkm::Id i = 0; i < numSeeds; i++)
                 {
-                    vtkm::Id numSteps = streamlines.GetStep(i);
-                    vtkm::Id status = streamlines.GetStatus(i);                    
-                    for (vtkm::Id j = 0; j < numSteps; j++)
+                    vtkm::Id ns = streamlines.GetStep(i);
+                    for (vtkm::Id j = 0; j < ns; j++)
                     {
                         vtkm::Vec<FieldType,3> p = streamlines.GetHistory(i,j);
                         std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
@@ -244,9 +243,8 @@ public:
                 {
                     for (vtkm::Id i = 0; i < numSeeds; i++)
                     {
-                        vtkm::Id numSteps = streamlines.GetStep(i);
-                        vtkm::Id status = streamlines.GetStatus(i);
-                        for (vtkm::Id j = stepOffset; j < numSteps; j++)
+                        vtkm::Id ns = streamlines.GetStep(i);
+                        for (vtkm::Id j = stepOffset; j < ns; j++)
                         {
                             vtkm::Vec<FieldType,3> p = historyPortal.Get(i*StepsPerRound+(j-stepOffset));
                             std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
