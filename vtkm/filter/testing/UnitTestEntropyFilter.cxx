@@ -108,7 +108,7 @@ void TestEntropy()
   vtkm::filter::Entropy entropyFilter;
 
   ///// calculate entropy of "nodevar" field of the data set /////
-  entropyFilter.SetNumberOfBins(50);  //set number of bins 
+  entropyFilter.SetNumberOfBins(50);//set number of bins
   resultEntropy = entropyFilter.Execute(dataSet, "nodevar");
 
   ///// get entropy from resultEntropy /////
@@ -118,7 +118,7 @@ void TestEntropy()
   vtkm::Float64 entropyFromFilter = portal.Get(0);
 
   /////// check if calculating entopry is close enough to ground truth value /////
-  VTKM_TEST_ASSERT(fabs(entropyFromFilter - 4.59093) < 0.0001, "Entropy calculation is incorrect");
+  VTKM_TEST_ASSERT(fabs(entropyFromFilter - 4.59093) < 0.001, "Entropy calculation is incorrect");
 } // TestFieldEntropy
 
 }
@@ -127,4 +127,3 @@ int UnitTestEntropyFilter(int, char *[])
 {
   return vtkm::cont::testing::Testing::Run(TestEntropy);
 }
-

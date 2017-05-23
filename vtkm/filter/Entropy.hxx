@@ -51,19 +51,16 @@ Entropy::DoExecute(const vtkm::cont::DataSet &inDataSet,
   vtkm::Float64 e = worklet.Run(field, this->NumberOfBins, device);
 
   //the entropy vector only contain one element, the entorpy of the input field
-  std::vector<vtkm::Float64> entropy;
-  entropy.push_back( e );
-  vtkm::cont::ArrayHandle<vtkm::Float64> tmpEntropyHandle = vtkm::cont::make_ArrayHandle(entropy);
-  vtkm::cont::ArrayHandle<vtkm::Float64> entropyHandle;
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(tmpEntropyHandle, entropyHandle);
+  vtkm::cont::ArrayHandle<vtkm::Float64> entropy;
+  entropy.Allocate(1);
+  entropy.GetPortalControl().Set(0, e);
 
   return vtkm::filter::ResultField(inDataSet,
-                                   entropyHandle,
+                                   entropy,
                                    this->GetOutputFieldName(),
                                    fieldMetadata.GetAssociation(),
                                    fieldMetadata.GetCellSetName());
                                    
 }
-
 }
 } // namespace vtkm::filter

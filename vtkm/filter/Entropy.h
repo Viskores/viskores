@@ -50,7 +50,7 @@ private:
 
 template<>
 class FilterTraits<Entropy>
-{ 
+{
 public:
   typedef TypeListTagScalarAll InputFieldTypeList;
 };

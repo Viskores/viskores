@@ -31,7 +31,7 @@ class WaveletCompressor : public vtkm::worklet::wavelets::WaveletDWT
 public:
 
   // Constructor
-  WaveletCompressor( wavelets::WaveletName name ) : WaveletDWT( name ) {} 
+  WaveletCompressor( wavelets::WaveletName name ) : WaveletDWT( name ) {}
 
 
 

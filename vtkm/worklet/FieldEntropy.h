@@ -26,14 +26,10 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/FieldHistogram.h>
 
 #include <vtkm/cont/Field.h>
-
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
@@ -45,7 +41,6 @@ class FieldEntropy
 {
 public:
   // For each bin, calculate its information content (log2)
-  template<typename FreqType>
   class SetBinInformationContent : public vtkm::worklet::WorkletMapField
   {
   public:
@@ -53,17 +48,18 @@ public:
                                   FieldOut<> informationContent);
     typedef void ExecutionSignature(_1,_2);
 
-    vtkm::Float64 freqSum;
+    vtkm::Float64 FreqSum;
 
     VTKM_CONT
-    SetBinInformationContent(vtkm::Float64 _freqSum) : freqSum(_freqSum) {}
+    SetBinInformationContent(vtkm::Float64 _freqSum) : FreqSum(_freqSum) {}
 
+    template<typename FreqType>
     VTKM_EXEC
     void operator()(const FreqType &freq, vtkm::Float64 &informationContent) const
     {
-      vtkm::Float64 p = ( (vtkm::Float64)freq ) / freqSum;
+      vtkm::Float64 p = ( (vtkm::Float64)freq ) / FreqSum;
       if( p > 0 )
-        informationContent = -1 * p * log2(p);
+        informationContent = -1 * p * vtkm::Log2(p);
       else
         informationContent = 0;
     }
@@ -93,9 +89,8 @@ public:
 
     ///// calculate information content of each bin using self-define worklet /////
     vtkm::cont::ArrayHandle<vtkm::Float64> informationContent;
-    informationContent.Allocate(numberOfBins);
-    SetBinInformationContent<vtkm::Id> binWorklet( (vtkm::Float64)freqSum );
-    vtkm::worklet::DispatcherMapField< SetBinInformationContent<vtkm::Id> > setBinInformationContentDispatcher(binWorklet);
+    SetBinInformationContent binWorklet( static_cast<vtkm::Float64> (freqSum) );
+    vtkm::worklet::DispatcherMapField< SetBinInformationContent > setBinInformationContentDispatcher(binWorklet);
     setBinInformationContentDispatcher.Invoke(binArray, informationContent);
 
     ///// calculate entropy by summing up information conetent of all bins /////
