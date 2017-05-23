@@ -287,7 +287,7 @@ void TestMarchingCubesExplicit()
   std::cout << "Testing MarchingCubes filter on explicit data" << std::endl;
 
   typedef MakeRadiantDataSet DataSetGenerator;
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceTag;
+  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > Vec3Handle;
   typedef vtkm::cont::ArrayHandle<vtkm::Float32> DataHandle;
 
@@ -318,7 +318,7 @@ void TestMarchingCubesExplicit()
                     contourArray,
                     vertices,
                     normals,
-                    DeviceTag());
+                    DeviceAdapter());
 
   DataHandle scalars;
 
@@ -329,7 +329,7 @@ void TestMarchingCubesExplicit()
 
   marchingCubes.MapFieldOntoIsosurface(projectedArray,
                                        scalars,
-                                       DeviceTag());
+                                       DeviceAdapter());
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(vertices, std::cout);
