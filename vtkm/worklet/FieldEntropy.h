@@ -85,7 +85,7 @@ public:
     FieldType delta;
     vtkm::cont::ArrayHandle<vtkm::Id> binArray;
     vtkm::worklet::FieldHistogram histogram;
-    histogram.Run(fieldArray, numberOfBins, range, delta, binArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    histogram.Run(fieldArray, numberOfBins, range, delta, binArray, device);
 
     ///// calculate sum of frequency of the histogram /////
     vtkm::Id initFreqSumValue = 0;
