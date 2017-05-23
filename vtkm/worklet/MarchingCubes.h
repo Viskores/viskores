@@ -33,14 +33,18 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
+#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/DispatcherReduceByKey.h>
+#include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/WorkletReduceByKey.h>
 
 #include <vtkm/worklet/MarchingCubesDataTables.h>
 
@@ -159,9 +163,7 @@ public:
 /// This information is not passed as part of the arguments to the worklet as
 /// that dramatically increase compile time by 200%
 // -----------------------------------------------------------------------------
-template< typename NormalType,
-          typename NormalStorage,
-          typename DeviceAdapter >
+template< typename DeviceAdapter >
 class EdgeWeightGenerateMetaData
 {
   template<typename FieldType>
@@ -174,45 +176,33 @@ class EdgeWeightGenerateMetaData
     typedef typename ExecutionTypes::PortalConst PortalConst;
   };
 
-  struct NormalPortalTypes
-  {
-    typedef vtkm::cont::ArrayHandle<vtkm::Vec< NormalType, 3>, NormalStorage> HandleType;
-    typedef typename HandleType::template ExecutionTypes<DeviceAdapter> ExecutionTypes;
-
-    typedef typename ExecutionTypes::Portal Portal;
-  };
-
 public:
   VTKM_CONT
   EdgeWeightGenerateMetaData(
                      vtkm::Id size,
-                     vtkm::cont::ArrayHandle< vtkm::Vec<NormalType, 3>, NormalStorage >& normals,
                      vtkm::cont::ArrayHandle< vtkm::FloatDefault >& interpWeights,
                      vtkm::cont::ArrayHandle<vtkm::Id2>& interpIds,
+                     vtkm::cont::ArrayHandle<vtkm::Id>& interpCellIds,
                      vtkm::cont::ArrayHandle<vtkm::UInt8>& interpContourId,
                      const vtkm::cont::ArrayHandle< vtkm::IdComponent >& edgeTable,
                      const vtkm::cont::ArrayHandle< vtkm::IdComponent >& numTriTable,
                      const vtkm::cont::ArrayHandle< vtkm::IdComponent >& triTable,
                      const vtkm::worklet::ScatterCounting& scatter):
-  NormalPortal( normals.PrepareForOutput( 3*size, DeviceAdapter() ) ),
   InterpWeightsPortal( interpWeights.PrepareForOutput( 3*size, DeviceAdapter()) ),
   InterpIdPortal( interpIds.PrepareForOutput( 3*size, DeviceAdapter() ) ),
+  InterpCellIdPortal( interpCellIds .PrepareForOutput( 3*size, DeviceAdapter() ) ),
   InterpContourPortal( interpContourId.PrepareForOutput( 3*size, DeviceAdapter() ) ),
   EdgeTable( edgeTable.PrepareForInput(DeviceAdapter()) ),
   NumTriTable( numTriTable.PrepareForInput(DeviceAdapter()) ),
   TriTable( triTable.PrepareForInput(DeviceAdapter()) ),
   Scatter(scatter)
   {
-  //any way we can easily build an interface so that we don't need to hold
-  //onto a billion portals?
-
-  //Normal and Interp need to be 3 times longer than size as they
-  //are per point of the output triangle
+  // Interp needs to be 3 times longer than size as they are per point of the
+  // output triangle
   }
-
-  typename NormalPortalTypes::Portal NormalPortal;
   typename PortalTypes<vtkm::FloatDefault>::Portal InterpWeightsPortal;
   typename PortalTypes<vtkm::Id2>::Portal InterpIdPortal;
+  typename PortalTypes<vtkm::Id>::Portal InterpCellIdPortal;
   typename PortalTypes<vtkm::UInt8>::Portal InterpContourPortal;
   typename PortalTypes<vtkm::IdComponent>::PortalConst EdgeTable;
   typename PortalTypes<vtkm::IdComponent>::PortalConst NumTriTable;
@@ -223,46 +213,39 @@ public:
 /// \brief Compute the weights for each edge that is used to generate
 /// a point in the resulting iso-surface
 // -----------------------------------------------------------------------------
-template< typename T,
-          typename NormalType,
-          typename NormalStorage,
-          typename DeviceAdapter >
+template< typename T, typename DeviceAdapter >
 class EdgeWeightGenerate : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  struct ClassifyCellTagType : vtkm::ListTagBase< typename float_type<T>::type > { };
+  struct ClassifyCellTagType : vtkm::ListTagBase<T> { };
 
   typedef vtkm::worklet::ScatterCounting ScatterType;
 
   typedef void ControlSignature(
       CellSetIn cellset, // Cell set
       WholeArrayIn< ClassifyCellTagType > isoValues,
-      FieldInPoint< ClassifyCellTagType > fieldIn, // Input point field defining the contour
-      FieldInPoint<Vec3> pcoordIn // Input point coordinates
+      FieldInPoint< ClassifyCellTagType > fieldIn // Input point field defining the contour
       );
-  typedef void ExecutionSignature(CellShape, _2, _3, _4, WorkIndex, VisitIndex, FromIndices);
+  typedef void ExecutionSignature(CellShape, _2, _3, InputIndex, WorkIndex, VisitIndex, FromIndices);
 
   typedef _1 InputDomain;
 
 
   VTKM_CONT
-  EdgeWeightGenerate(bool genNormals,
-                     const EdgeWeightGenerateMetaData<NormalType, NormalStorage, DeviceAdapter>& meta) :
-    GenerateNormals(genNormals),
+  EdgeWeightGenerate(const EdgeWeightGenerateMetaData<DeviceAdapter>& meta) :
     MetaData( meta )
   {
   }
 
   template<typename IsoValuesType,
            typename FieldInType, // Vec-like, one per input point
-           typename CoordType,
            typename IndicesVecType>
   VTKM_EXEC
   void operator()(
       vtkm::CellShapeTagGeneric shape,
       const IsoValuesType &isovalues,
       const FieldInType & fieldIn, // Input point field defining the contour
-      const CoordType & coords, // Input point coordinates
+      vtkm::Id inputCellId,
       vtkm::Id outputCellId,
       vtkm::IdComponent visitIndex,
       const IndicesVecType & indices) const
@@ -272,7 +255,7 @@ public:
       this->operator()(vtkm::CellShapeTagHexahedron(),
                        isovalues,
                        fieldIn,
-                       coords,
+                       inputCellId,
                        outputCellId,
                        visitIndex,
                        indices);
@@ -281,14 +264,13 @@ public:
 
   template<typename IsoValuesType,
            typename FieldInType, // Vec-like, one per input point
-           typename CoordType,
            typename IndicesVecType>
   VTKM_EXEC
   void operator()(
       CellShapeTagQuad vtkmNotUsed(shape),
       const IsoValuesType &vtkmNotUsed(isovalues),
       const FieldInType & vtkmNotUsed(fieldIn), // Input point field defining the contour
-      const CoordType & vtkmNotUsed(coords), // Input point coordinates
+      vtkm::Id vtkmNotUsed(inputCellId),
       vtkm::Id vtkmNotUsed(outputCellId),
       vtkm::IdComponent vtkmNotUsed(visitIndex),
       const IndicesVecType & vtkmNotUsed(indices) ) const
@@ -297,14 +279,13 @@ public:
 
   template<typename IsoValuesType,
            typename FieldInType, // Vec-like, one per input point
-           typename CoordType,
            typename IndicesVecType>
   VTKM_EXEC
   void operator()(
-      vtkm::CellShapeTagHexahedron shape,
+      vtkm::CellShapeTagHexahedron,
       const IsoValuesType &isovalues,
       const FieldInType &fieldIn, // Input point field defining the contour
-      const CoordType &coords, // Input point coordinates
+      vtkm::Id inputCellId,
       vtkm::Id outputCellId,
       vtkm::IdComponent visitIndex,
       const IndicesVecType &indices) const
@@ -313,20 +294,21 @@ public:
     typedef typename vtkm::VecTraits<FieldInType>::ComponentType FieldType;
 
     vtkm::IdComponent sum = 0, caseNumber = 0;
-    vtkm::Id i=0;
-    for(i=0; i < isovalues.GetNumberOfValues(); ++i)
+    vtkm::IdComponent i=0, size = static_cast<vtkm::IdComponent>(isovalues.GetNumberOfValues());
+    for(i=0; i < size; ++i)
     {
+      const FieldType ivalue = isovalues[i];
       // Compute the Marching Cubes case number for this cell. We need to iterate
       // the isovalues until the sum >= our visit index. But we need to make
       // sure the caseNumber is correct before stoping
-      caseNumber = ((fieldIn[0] > isovalues[i])      |
-                    (fieldIn[1] > isovalues[i]) << 1 |
-                    (fieldIn[2] > isovalues[i]) << 2 |
-                    (fieldIn[3] > isovalues[i]) << 3 |
-                    (fieldIn[4] > isovalues[i]) << 4 |
-                    (fieldIn[5] > isovalues[i]) << 5 |
-                    (fieldIn[6] > isovalues[i]) << 6 |
-                    (fieldIn[7] > isovalues[i]) << 7);
+      caseNumber = ((fieldIn[0] > ivalue)      |
+                    (fieldIn[1] > ivalue) << 1 |
+                    (fieldIn[2] > ivalue) << 2 |
+                    (fieldIn[3] > ivalue) << 3 |
+                    (fieldIn[4] > ivalue) << 4 |
+                    (fieldIn[5] > ivalue) << 5 |
+                    (fieldIn[6] > ivalue) << 6 |
+                    (fieldIn[7] > ivalue) << 7);
       sum  += MetaData.NumTriTable.Get(caseNumber);
       if(sum > visitIndex)
       {
@@ -349,7 +331,12 @@ public:
       const FieldType fieldValue0 = fieldIn[edgeVertex0];
       const FieldType fieldValue1 = fieldIn[edgeVertex1];
 
+      // Store the input cell id so that we can properly generate the normals
+      // in a subsequent call, after we have merged duplicate points
+      MetaData.InterpCellIdPortal.Set(outputPointId+triVertex, inputCellId);
+
       MetaData.InterpContourPortal.Set(outputPointId+triVertex, static_cast<vtkm::UInt8>(i) );
+
       MetaData.InterpIdPortal.Set(
             outputPointId+triVertex,
             vtkm::Id2(indices[edgeVertex0],
@@ -359,28 +346,7 @@ public:
           static_cast<vtkm::FloatDefault>(isovalues[i] - fieldValue0) /
           static_cast<vtkm::FloatDefault>(fieldValue1 - fieldValue0);
 
-      //need to factor in outputCellId
       MetaData.InterpWeightsPortal.Set(outputPointId+triVertex, interpolant);
-
-      if(this->GenerateNormals)
-      {
-      const vtkm::Vec<vtkm::FloatDefault,3> edgePCoord0 =
-          vtkm::exec::ParametricCoordinatesPoint(
-            fieldIn.GetNumberOfComponents(), edgeVertex0, shape, *this);
-      const vtkm::Vec<vtkm::FloatDefault,3> edgePCoord1 =
-          vtkm::exec::ParametricCoordinatesPoint(
-            fieldIn.GetNumberOfComponents(), edgeVertex1, shape, *this);
-
-        const vtkm::Vec<vtkm::FloatDefault,3> interpPCoord =
-            vtkm::Lerp(edgePCoord0, edgePCoord1, interpolant);
-
-        //need to factor in outputCellId
-        MetaData.NormalPortal.Set(outputPointId+triVertex,
-          vtkm::Normal(vtkm::exec::CellDerivative(
-                         fieldIn, coords, interpPCoord, shape, *this))
-          );
-      }
-
     }
   }
 
@@ -391,12 +357,10 @@ public:
   }
 
 private:
-  const bool GenerateNormals;
-  EdgeWeightGenerateMetaData<NormalType, NormalStorage, DeviceAdapter> MetaData;
+  EdgeWeightGenerateMetaData<DeviceAdapter> MetaData;
 
-  void operator=(const EdgeWeightGenerate<T,NormalType,NormalStorage,DeviceAdapter> &) = delete;
+  void operator=(const EdgeWeightGenerate<T,DeviceAdapter> &) = delete;
 };
-
 
 // ---------------------------------------------------------------------------
 class ApplyToField : public vtkm::worklet::WorkletMapField
@@ -428,17 +392,6 @@ public:
 };
 
 // ---------------------------------------------------------------------------
-struct FirstValueSame
-{
-  template<typename T, typename U>
-  VTKM_EXEC_CONT bool operator()(const vtkm::Pair<T,U>& a,
-                                 const vtkm::Pair<T,U>& b) const
-  {
-    return (a.first == b.first);
-  }
-};
-
-// ---------------------------------------------------------------------------
 struct MultiContourLess
 {
   template<typename T>
@@ -464,44 +417,212 @@ struct MultiContourLess
 };
 
 // ---------------------------------------------------------------------------
-template<typename KeyType, typename KeyStorage,
-         typename ValueType, typename ValueStorage,
-         typename DeviceAdapterTag>
-vtkm::cont::ArrayHandle<KeyType, KeyStorage>
-MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& input_keys,
-                vtkm::cont::ArrayHandle<ValueType, ValueStorage> values,
-                vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
-                DeviceAdapterTag)
+struct MergeDuplicateValues : vtkm::worklet::WorkletReduceByKey
+{
+  typedef void ControlSignature(KeysIn keys,
+                                ValuesIn<> valuesIn1,
+                                ValuesIn<> valuesIn2,
+                                ReducedValuesOut<> valueOut1,
+                                ReducedValuesOut<> valueOut2);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+  typedef _1 InputDomain;
+
+  template<typename T,
+           typename ValuesInType,
+           typename Values2InType,
+           typename ValuesOutType,
+           typename Values2OutType>
+  VTKM_EXEC
+  void operator()(const T &,
+                  const ValuesInType &values1,
+                  const Values2InType &values2,
+                  ValuesOutType &valueOut1,
+                  Values2OutType &valueOut2) const
+  {
+    valueOut1 = values1[0];
+    valueOut2 = values2[0];
+  }
+};
+
+// ---------------------------------------------------------------------------
+struct CopyEdgeIds : vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<>, FieldOut<>);
+  typedef void ExecutionSignature(_1, _2);
+  typedef _1 InputDomain;
+
+
+  VTKM_EXEC
+  void operator()(const vtkm::Id2& input, vtkm::Id2& output) const
+  {
+    output = input;
+  }
+
+  template<typename T>
+  VTKM_EXEC
+  void operator()(const vtkm::Pair<T, vtkm::Id2>& input, vtkm::Id2& output) const
+  {
+    output = input.second;
+  }
+};
+
+// ---------------------------------------------------------------------------
+template<typename KeyType, typename KeyStorage, typename DeviceAdapterTag>
+void
+MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& original_keys,
+                  vtkm::cont::ArrayHandle<vtkm::FloatDefault>& weights,
+                  vtkm::cont::ArrayHandle<vtkm::Id2>& edgeIds,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& cellids,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
+                  DeviceAdapterTag)
 {
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  //1. Copy the input keys as we need both a sorted & unique version and
-  // the original version to
-  vtkm::cont::ArrayHandle<KeyType, KeyStorage> keys;
-  Algorithm::Copy(input_keys, keys);
+  vtkm::cont::ArrayHandle<KeyType> input_keys;
+  Algorithm::Copy(original_keys, input_keys);
+  vtkm::worklet::Keys<KeyType> keys(input_keys, DeviceAdapterTag());
+  input_keys.ReleaseResources();
 
-  //2. Sort by key, making duplicate ids be adjacent so they are eligable
-  // to be removed by unique
-  Algorithm::SortByKey(keys, values, marchingcubes::MultiContourLess());
+  {
+  vtkm::worklet::DispatcherReduceByKey<MergeDuplicateValues> dispatcher;
+  vtkm::cont::ArrayHandle<vtkm::Id> writeCells;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> writeWeights;
+  dispatcher.Invoke(keys,
+                    weights,
+                    cellids,
+                    writeWeights,
+                    writeCells);
+  weights = writeWeights;
+  cellids = writeCells;
+  }
 
-  //3. lastly we need to do a unique by key, but since vtkm doesn't
-  // offer that feature, we use a zip handle.
-  // We use a custom comparison operator as we only want to compare
-  // the keys
-  auto zipped_kv = vtkm::cont::make_ArrayHandleZip(keys, values);
-  Algorithm::Unique( zipped_kv, marchingcubes::FirstValueSame());
+  //need to build the new connectivity
+  auto uniqueKeys = keys.GetUniqueKeys();
+  Algorithm::LowerBounds(uniqueKeys, original_keys, connectivity, marchingcubes::MultiContourLess());
 
-  //4. LowerBounds generates the output cell connections. It does this by
-  // finding for each interpolationId where it would be inserted in the
-  // sorted & unique subset, which generates an index value aka the lookup
-  // value.
-  //
-  Algorithm::LowerBounds(keys, input_keys, connectivity, marchingcubes::MultiContourLess());
-
-  //5. We need to return the sorted-unique keys as the caller will need
-  // to hold onto it for interpolation of other fields
-  return keys;
+  //update the edge ids
+  vtkm::worklet::DispatcherMapField<CopyEdgeIds> edgeDispatcher;
+  edgeDispatcher.Invoke(uniqueKeys, edgeIds);
 }
+
+/// \brief Compute the weights for each edge that is used to generate
+/// a point in the resulting iso-surface
+// -----------------------------------------------------------------------------
+template<typename T>
+class NormalWorklet : public vtkm::worklet::WorkletMapPointToCell
+{
+public:
+  struct ClassifyCellTagType : vtkm::ListTagBase< typename float_type<T>::type > { };
+
+  typedef void ControlSignature(
+      CellSetIn cellset, // Cell set
+      FieldInPoint< ClassifyCellTagType > field,
+      FieldInPoint< Vec3 > originalCellPoints,
+      FieldInCell< Id2Type > edges,
+      FieldInCell< Scalar > weights,
+      FieldOutCell< Vec3 > normal
+      );
+  typedef void ExecutionSignature(CellShape, FromIndices, _2, _3, _4, _5, _6);
+
+  typedef _1 InputDomain;
+
+  template <typename CellType, typename IndicesVecType, typename FieldType,
+    typename CoordType, typename EdgeType, typename WeightType,
+    typename NormalType>
+  VTKM_EXEC void operator()(CellType shape, const IndicesVecType& indices,
+    const FieldType& fieldIn, const CoordType& coords, const EdgeType& edges,
+    const WeightType& weight, NormalType& normal) const
+  {
+    // steps to get the normal calculation to work.
+    // we need to back compute the correct parametric point
+    vtkm::IdComponent edgeVertex0 = 0;
+    vtkm::IdComponent edgeVertex1 = 1;
+
+    for (vtkm::IdComponent i = 0; i < indices.GetNumberOfComponents(); ++i)
+    {
+      if (indices[i] == edges[0])
+      {
+        edgeVertex0 = i;
+      }
+      if (indices[i] == edges[1])
+      {
+        edgeVertex1 = i;
+      }
+    }
+
+    auto grad0 = vtkm::exec::CellDerivative(
+      fieldIn, coords,
+      vtkm::exec::ParametricCoordinatesPoint(
+        fieldIn.GetNumberOfComponents(), edgeVertex0, shape, *this),
+      shape, *this);
+
+    auto grad1 = vtkm::exec::CellDerivative(
+      fieldIn, coords,
+      vtkm::exec::ParametricCoordinatesPoint(
+        fieldIn.GetNumberOfComponents(), edgeVertex1, shape, *this),
+      shape, *this);
+
+
+    normal = vtkm::Normal(vtkm::Lerp(grad0,grad1,weight));
+  }
+};
+
+
+
+// ---------------------------------------------------------------------------
+//missing we need the original cells field
+//missing we need the original cells coordinates
+
+template< typename InputFieldType,
+          typename InputStorageType,
+          typename CoordinateSystem,
+          typename NormalCType,
+          typename DeviceAdapter >
+struct GenerateNormals
+{
+  GenerateNormals(vtkm::cont::ArrayHandle< vtkm::Vec<NormalCType,3> >& normals,
+                  const vtkm::cont::ArrayHandle<InputFieldType, InputStorageType>& field,
+                  const CoordinateSystem& coordinates,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
+                  vtkm::cont::ArrayHandle<vtkm::Id2>& edges,
+                  vtkm::cont::ArrayHandle<vtkm::FloatDefault>& weights):
+  Field(field),
+  Coordinates(coordinates),
+  CellIds(cellIds),
+  Edges(edges),
+  Weights(weights),
+  OutputNormals(normals)
+  {
+  }
+
+
+  template <typename CellSetType>
+  void operator()(const CellSetType &cellset) const
+  {
+    vtkm::cont::CellSetPermutation<CellSetType> permutation;
+    permutation.Fill(this->CellIds, cellset);
+
+    using NormalDispatcher = typename vtkm::worklet::DispatcherMapTopology<
+                                        NormalWorklet<InputFieldType>,
+                                        DeviceAdapter
+                                        >;
+
+    NormalDispatcher dispatcher;
+    dispatcher.Invoke( permutation,
+                       marchingcubes::make_ScalarField(this->Field),
+                       this->Coordinates,
+                       this->Edges,
+                       this->Weights,
+                       this->OutputNormals );
+  }
+
+  const vtkm::cont::ArrayHandle<InputFieldType, InputStorageType>& Field;
+  const CoordinateSystem& Coordinates;
+  vtkm::cont::ArrayHandle<vtkm::Id>& CellIds;
+  vtkm::cont::ArrayHandle<vtkm::Id2>& Edges;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault>& Weights;
+  vtkm::cont::ArrayHandle< vtkm::Vec<NormalCType,3> >& OutputNormals;
+};
 
 }
 
@@ -517,7 +638,7 @@ MarchingCubes(bool mergeDuplicates=true):
   NumTrianglesTable(),
   TriangleTable(),
   InterpolationWeights(),
-  InterpolationIds()
+  InterpolationEdgeIds()
 {
   // Set up the Marching Cubes case tables as part of the filter so that
   // we cache these tables in the execution environment between execution runs
@@ -601,7 +722,7 @@ void MapFieldOntoIsosurface(const ArrayHandleIn& input,
 
 
   //todo: need to use the policy to get the correct storage tag for output
-  applyFieldDispatcher.Invoke(this->InterpolationIds,
+  applyFieldDispatcher.Invoke(this->InterpolationEdgeIds,
                               this->InterpolationWeights,
                               input,
                               output);
@@ -643,8 +764,6 @@ vtkm::cont::CellSetSingleType< >
 
   using GenerateDispatcher = typename vtkm::worklet::DispatcherMapTopology<
                                         EdgeWeightGenerate<ValueType,
-                                                           NormalType,
-                                                           StorageTagNormals,
                                                            DeviceAdapter
                                                           >,
                                         DeviceAdapter
@@ -654,28 +773,30 @@ vtkm::cont::CellSetSingleType< >
       vtkm::cont::make_ArrayHandle(isovalues, numIsoValues);
   // Call the ClassifyCell functor to compute the Marching Cubes case numbers
   // for each cell, and the number of vertices to be generated
-  ClassifyCell<ValueType> classifyCell;
-  ClassifyDispatcher classifyCellDispatcher(classifyCell);
 
   vtkm::cont::ArrayHandle<vtkm::IdComponent> numOutputTrisPerCell;
+
+  {
+  ClassifyCell<ValueType> classifyCell;
+  ClassifyDispatcher classifyCellDispatcher(classifyCell);
   classifyCellDispatcher.Invoke(isoValuesHandle,
                                 inputField,
                                 cells,
                                 numOutputTrisPerCell,
                                 this->NumTrianglesTable);
-
+  }
 
   //Pass 2 Generate the edges
+  vtkm::cont::ArrayHandle<vtkm::UInt8> contourIds;
+  vtkm::cont::ArrayHandle<vtkm::Id> originalCellIds;
+  {
   vtkm::worklet::ScatterCounting scatter(numOutputTrisPerCell, DeviceAdapter());
 
-  vtkm::cont::ArrayHandle<vtkm::UInt8> contourIds;
-  EdgeWeightGenerateMetaData< NormalType,
-                              StorageTagNormals,
-                              DeviceAdapter
+  EdgeWeightGenerateMetaData< DeviceAdapter
                             > metaData( scatter.GetOutputRange(numOutputTrisPerCell.GetNumberOfValues()),
-                                        normals,
                                         this->InterpolationWeights,
-                                        this->InterpolationIds,
+                                        this->InterpolationEdgeIds,
+                                        originalCellIds,
                                         contourIds,
                                         this->EdgeTable,
                                         this->NumTrianglesTable,
@@ -683,86 +804,47 @@ vtkm::cont::CellSetSingleType< >
                                         scatter
                                       );
 
-  EdgeWeightGenerate<ValueType,
-                     CoordinateType,
-                     StorageTagNormals,
-                     DeviceAdapter
-                     > weightGenerate( withNormals,
-                                       metaData);
-
+  EdgeWeightGenerate<ValueType, DeviceAdapter> weightGenerate( metaData );
   GenerateDispatcher edgeDispatcher(weightGenerate);
   edgeDispatcher.Invoke( cells,
                          //cast to a scalar field if not one, as cellderivative only works on those
-                         marchingcubes::make_ScalarField(isoValuesHandle),
-                         marchingcubes::make_ScalarField(inputField),
-                         coordinateSystem
+                         isoValuesHandle,
+                         inputField
                          );
+  }
 
   if(numIsoValues <= 1 || !this->MergeDuplicatePoints)
   { //release memory early that we are not going to need again
     contourIds.ReleaseResources();
   }
 
-  // Now that we have the edge interpolation finished we can generate the
-  // coordinates, connectivity and resolve duplicate points.
-  // Given that normals, and point merging are optional it generates the
-  // following permutations that we need to support
-  //
-  //[0] 1 iso-contour
-  //[1] 1 iso-contour + point merging
-  //[2] 1 iso-contour + point merging + normals
-  //[3] 1 iso-contour + normals
-  //[4] 2+ iso-contour
-  //[5] 2+ iso-contour + point merging
-  //[6] 2+ iso-contour + point merging + normals
-  //[7] 2+ iso-contour + normals
-  //
-  // [0], [3], [4], and [7] are easy to implement as they require zero logic
-  // other than simple connectivity generation. The challenge is the other
-  // 4 options
   vtkm::cont::DataSet output;
   vtkm::cont::ArrayHandle< vtkm::Id > connectivity;
   if(this->MergeDuplicatePoints)
   {
     // In all the below cases you will notice that only interpolation ids
     // are updated. That is because MergeDuplicates will internally update
-    // the InterpolationWeights and normals arrays to be the correct for the
-    // output. But for InterpolationIds we need to do it manually once done
-    if(withNormals && numIsoValues == 1)
+    // the InterpolationWeights and InterpolationOriginCellIds arrays to be the correct for the
+    // output. But for InterpolationEdgeIds we need to do it manually once done
+    if(numIsoValues == 1)
     {
-      auto&& result = marchingcubes::MergeDuplicates(
-          this->InterpolationIds, //keys
-          vtkm::cont::make_ArrayHandleZip(this->InterpolationWeights, normals), //values
-          connectivity,
-          DeviceAdapter() );
-      this->InterpolationIds = result;
-    }
-    else if(withNormals && numIsoValues > 1)
-    {
-      auto&& result = marchingcubes::MergeDuplicates(
-          vtkm::cont::make_ArrayHandleZip(contourIds, this->InterpolationIds), //keys
-          vtkm::cont::make_ArrayHandleZip(this->InterpolationWeights, normals), //values
-          connectivity,
-          DeviceAdapter() );
-      this->InterpolationIds = result.GetStorage().GetSecondArray();
-    }
-    else if(!withNormals && numIsoValues == 1)
-    {
-      auto&& result = marchingcubes::MergeDuplicates(
-          this->InterpolationIds, //keys
+      marchingcubes::MergeDuplicates(
+          this->InterpolationEdgeIds, //keys
           this->InterpolationWeights, //values
-          connectivity,
+          this->InterpolationEdgeIds, //values
+          originalCellIds, //values
+          connectivity, // computed using lower bounds
           DeviceAdapter() );
-      this->InterpolationIds = result;
     }
-    else if(!withNormals && numIsoValues >= 1)
+    else if(numIsoValues > 1)
     {
-      auto&& result = marchingcubes::MergeDuplicates(
-          vtkm::cont::make_ArrayHandleZip(contourIds, this->InterpolationIds), //keys
+      marchingcubes::MergeDuplicates(
+          vtkm::cont::make_ArrayHandleZip(contourIds, this->InterpolationEdgeIds), //keys
           this->InterpolationWeights, //values
-          connectivity,
+          this->InterpolationEdgeIds, //values
+          originalCellIds, //values
+          connectivity, // computed using lower bounds
           DeviceAdapter() );
-      this->InterpolationIds = result.GetStorage().GetSecondArray();
     }
   }
   else
@@ -771,17 +853,16 @@ vtkm::cont::CellSetSingleType< >
     //by a counting array. The danger of doing it this way is that the output
     //type is unknown. That is why we copy it into an explicit array
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-    vtkm::cont::ArrayHandleIndex temp(this->InterpolationIds.GetNumberOfValues());
+    vtkm::cont::ArrayHandleIndex temp(this->InterpolationEdgeIds.GetNumberOfValues());
     Algorithm::Copy(temp, connectivity);
   }
-
 
   //generate the vertices's
   ApplyToField applyToField;
   vtkm::worklet::DispatcherMapField<ApplyToField,
                                     DeviceAdapter> applyFieldDispatcher(applyToField);
 
-  applyFieldDispatcher.Invoke(this->InterpolationIds,
+  applyFieldDispatcher.Invoke(this->InterpolationEdgeIds,
                               this->InterpolationWeights,
                               coordinateSystem,
                               vertices);
@@ -793,6 +874,23 @@ vtkm::cont::CellSetSingleType< >
                     3,
                     connectivity );
 
+  //now that the vertices have been generated we can generate the normals
+  if(withNormals)
+  {
+    using GenNormals = marchingcubes::GenerateNormals<ValueType, StorageTagField,
+                                                      CoordinateSystem, NormalType,
+                                                      DeviceAdapter>;
+    GenNormals gen( normals,
+                    inputField,
+                    coordinateSystem,
+                    originalCellIds,
+                    this->InterpolationEdgeIds,
+                    this->InterpolationWeights
+                    );
+
+    CastAndCall(cells,gen);
+  }
+
   return outputCells;
 }
 
@@ -803,7 +901,7 @@ vtkm::cont::CellSetSingleType< >
   vtkm::cont::ArrayHandle<vtkm::IdComponent> TriangleTable;
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> InterpolationWeights;
-  vtkm::cont::ArrayHandle<vtkm::Id2> InterpolationIds;
+  vtkm::cont::ArrayHandle<vtkm::Id2> InterpolationEdgeIds;
 };
 
 }

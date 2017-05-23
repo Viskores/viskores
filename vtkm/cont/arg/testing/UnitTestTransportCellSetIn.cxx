@@ -45,8 +45,8 @@ struct TestKernel : public vtkm::exec::FunctorBase
       this->RaiseError("Got bad number of shapes in exec cellset object.");
     }
 
-  if (this->CellSet.GetNumberOfIndices(0) != 3 ||
-      this->CellSet.GetNumberOfIndices(1) != 4 )
+  if (this->CellSet.GetIndices(0).GetNumberOfComponents() != 3 ||
+      this->CellSet.GetIndices(1).GetNumberOfComponents() != 4 )
     {
       this->RaiseError("Got bad number of Indices in exec cellset object.");
     }

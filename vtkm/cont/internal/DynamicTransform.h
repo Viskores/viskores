@@ -26,6 +26,10 @@ namespace vtkm {
 namespace cont {
 
 template<typename T, typename S> class ArrayHandle;
+template<vtkm::IdComponent> class CellSetStructured;
+template<typename T> class CellSetSingleType;
+template<typename T, typename S, typename U, typename V> class CellSetExplicit;
+template<typename T, typename S> class CellSetPermutation;
 
 /// A Generic interface to CastAndCall. The default implementation simply calls
 /// DynamicObject's CastAndCall, but specializations of this function exist for
@@ -44,6 +48,43 @@ void CastAndCall(const vtkm::cont::ArrayHandle<T,U>& handle, const Functor &f)
 {
   f(handle);
 }
+
+/// A specialization of CastAndCall for basic CellSetStructured types,
+/// Since the type is already known no deduction is needed.
+/// This specialization is used to simplify numerous worklet algorithms
+template<vtkm::IdComponent Dim, typename Functor>
+void CastAndCall(const vtkm::cont::CellSetStructured<Dim>& cellset, const Functor &f)
+{
+  f(cellset);
+}
+
+/// A specialization of CastAndCall for basic CellSetSingleType types,
+/// Since the type is already known no deduction is needed.
+/// This specialization is used to simplify numerous worklet algorithms
+template<typename ConnectivityStorageTag, typename Functor>
+void CastAndCall(const vtkm::cont::CellSetSingleType<ConnectivityStorageTag>& cellset, const Functor &f)
+{
+  f(cellset);
+}
+
+/// A specialization of CastAndCall for basic CellSetExplicit types,
+/// Since the type is already known no deduction is needed.
+/// This specialization is used to simplify numerous worklet algorithms
+template<typename T, typename S, typename U, typename V, typename Functor>
+void CastAndCall(const vtkm::cont::CellSetExplicit<T,S,U,V>& cellset, const Functor &f)
+{
+  f(cellset);
+}
+
+/// A specialization of CastAndCall for basic CellSetPermutation types,
+/// Since the type is already known no deduction is needed.
+/// This specialization is used to simplify numerous worklet algorithms
+template<typename PermutationType, typename CellSetType, typename Functor>
+void CastAndCall(const vtkm::cont::CellSetPermutation<PermutationType,CellSetType>& cellset, const Functor &f)
+{
+  f(cellset);
+}
+
 
 namespace internal {
 
