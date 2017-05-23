@@ -68,9 +68,9 @@ public:
     this->Structure.SetPointDimensions(dimensions);
   }
 
-  SchedulingRangeType GetPointDimensions() { return this->Structure.GetPointDimensions(); }
+  SchedulingRangeType GetPointDimensions() const { return this->Structure.GetPointDimensions(); }
 
-  SchedulingRangeType GetCellDimensions() { return this->Structure.GetCellDimensions(); }
+  SchedulingRangeType GetCellDimensions() const { return this->Structure.GetCellDimensions(); }
 
   vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex) = 0) const
   {
