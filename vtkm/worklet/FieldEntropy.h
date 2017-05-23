@@ -31,8 +31,6 @@
 
 #include <vtkm/cont/Field.h>
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-
 namespace vtkm {
 namespace worklet {
 
@@ -104,4 +102,4 @@ public:
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_FieldHistogram_h
+#endif // vtk_m_worklet_FieldEntropy_h

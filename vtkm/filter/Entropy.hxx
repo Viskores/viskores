@@ -24,7 +24,6 @@
 namespace vtkm {
 namespace filter {
 
-
 //-----------------------------------------------------------------------------
 inline VTKM_CONT
 Entropy::Entropy():
