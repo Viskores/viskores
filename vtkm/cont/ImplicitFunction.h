@@ -20,11 +20,12 @@
 #ifndef vtk_m_cont_ImplicitFunction_h
 #define vtk_m_cont_ImplicitFunction_h
 
+#include <vtkm/internal/Configure.h>
+
 #include <vtkm/cont/VirtualObjectCache.h>
 #include <vtkm/exec/ImplicitFunction.h>
 
 #include <memory>
-
 
 namespace vtkm {
 namespace cont {
