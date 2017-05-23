@@ -37,28 +37,28 @@ public:
 
   // Set the bounding box for the volume of interest
   VTKM_CONT
-  vtkm::Bounds GetVOI() const { return this->VOI; }
+  vtkm::RangeId3 GetVOI() const { return this->VOI; }
 
   VTKM_CONT
-  void SetVOI(int i0, int i1, int j0, int j1, int k0, int k1)
+  void SetVOI(vtkm::Id i0, vtkm::Id i1, vtkm::Id j0, vtkm::Id j1, vtkm::Id k0, vtkm::Id k1)
   {
-    this->VOI = vtkm::Bounds(i0, i1, j0, j1, k0, k1);
+    this->VOI = vtkm::RangeId3(i0, i1, j0, j1, k0, k1);
   }
   VTKM_CONT
-  void SetVOI(int bounds[6]) { this->VOI = vtkm::Bounds(bounds); }
+  void SetVOI(vtkm::Id extents[6]) { this->VOI = vtkm::RangeId3(extents); }
   VTKM_CONT
   void SetVOI(vtkm::Id3 minPoint, vtkm::Id3 maxPoint)
   {
-    this->VOI = vtkm::Bounds(minPoint, maxPoint);
+    this->VOI = vtkm::RangeId3(minPoint, maxPoint);
   }
   VTKM_CONT
-  void SetVOI(const vtkm::Bounds& voi) { this->VOI = voi; }
+  void SetVOI(const vtkm::RangeId3& voi) { this->VOI = voi; }
 
   // Sampling rate
   VTKM_CONT
   vtkm::Id3 GetSampleRate() const { return this->SampleRate; }
   VTKM_CONT
-  void SetSampleRate(int i, int j, int k) { this->SampleRate = vtkm::Id3(i, j, k); }
+  void SetSampleRate(vtkm::Id i, vtkm::Id j, vtkm::Id k) { this->SampleRate = vtkm::Id3(i, j, k); }
   VTKM_CONT
   void SetSampleRate(vtkm::Id3 sampleRate) { this->SampleRate = sampleRate; }
 
@@ -83,7 +83,7 @@ public:
                             const DeviceAdapter& tag);
 
 private:
-  vtkm::Bounds VOI;
+  vtkm::RangeId3 VOI;
   vtkm::Id3 SampleRate;
   bool IncludeBoundary;
   vtkm::worklet::ExtractStructured Worklet;

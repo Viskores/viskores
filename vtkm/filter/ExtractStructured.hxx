@@ -28,7 +28,7 @@ namespace filter
 //-----------------------------------------------------------------------------
 inline VTKM_CONT ExtractStructured::ExtractStructured()
   : vtkm::filter::FilterDataSet<ExtractStructured>()
-  , VOI(vtkm::Bounds(1, 1, 1, 1, 1, 1))
+  , VOI(vtkm::RangeId3(0, -1, 0, -1, 0, -1))
   , SampleRate(vtkm::Id3(1, 1, 1))
   , IncludeBoundary(false)
   , Worklet()
@@ -39,16 +39,27 @@ inline VTKM_CONT ExtractStructured::ExtractStructured()
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultDataSet ExtractStructured::DoExecute(
   const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter& device)
 {
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
   const vtkm::cont::CoordinateSystem& coordinates =
     input.GetCoordinateSystem(this->GetActiveCellSetIndex());
 
-  vtkm::cont::DataSet output = this->Worklet.Run(
-    cells, coordinates, this->VOI, this->SampleRate, this->IncludeBoundary, DeviceAdapter());
+  auto cellset = this->Worklet.Run(vtkm::filter::ApplyPolicyStructured(cells, policy),
+                                   this->VOI,
+                                   this->SampleRate,
+                                   this->IncludeBoundary,
+                                   device);
 
+  auto coords =
+    this->Worklet.MapCoordinates(vtkm::filter::ApplyPolicy(coordinates, policy), device);
+  vtkm::cont::CoordinateSystem outputCoordinates(coordinates.GetName(),
+                                                 vtkm::cont::DynamicArrayHandle(coords));
+
+  vtkm::cont::DataSet output;
+  output.AddCellSet(vtkm::cont::DynamicCellSet(cellset));
+  output.AddCoordinateSystem(outputCoordinates);
   return vtkm::filter::ResultDataSet(output);
 }
 
@@ -61,10 +72,9 @@ inline VTKM_CONT bool ExtractStructured::DoMapField(
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
-  // point data is copied as is because it was not collapsed
   if (fieldMeta.IsPointField())
   {
-    vtkm::cont::ArrayHandle<T, StorageType> output = this->Worklet.ProcessPointField(input, device);
+    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessPointField(input, device);
 
     result.GetDataSet().AddField(fieldMeta.AsField(output));
     return true;
@@ -73,7 +83,7 @@ inline VTKM_CONT bool ExtractStructured::DoMapField(
   // cell data must be scattered to the cells created per input cell
   if (fieldMeta.IsCellField())
   {
-    vtkm::cont::ArrayHandle<T, StorageType> output = this->Worklet.ProcessCellField(input, device);
+    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input, device);
 
     result.GetDataSet().AddField(fieldMeta.AsField(output));
     return true;
