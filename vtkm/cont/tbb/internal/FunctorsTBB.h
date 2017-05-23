@@ -155,8 +155,8 @@ struct ReduceBody
   }
 };
 
-template<class InputPortalType, typename T, class BinaryOperationType>
 VTKM_SUPPRESS_EXEC_WARNINGS
+template<class InputPortalType, typename T, class BinaryOperationType>
 VTKM_CONT static
 T ReducePortals(InputPortalType inputPortal,
                 T initialValue,
@@ -399,9 +399,9 @@ struct ScanExclusiveBody
   }
 };
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
-VTKM_SUPPRESS_EXEC_WARNINGS
 VTKM_CONT static
 typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanInclusivePortals(InputPortalType inputPortal,
@@ -424,9 +424,9 @@ ScanInclusivePortals(InputPortalType inputPortal,
   return body.Sum;
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<class InputPortalType, class OutputPortalType,
     class BinaryOperationType>
-VTKM_SUPPRESS_EXEC_WARNINGS
 VTKM_CONT static
 typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanExclusivePortals(InputPortalType inputPortal,
@@ -609,10 +609,10 @@ private:
   vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
 };
 
+VTKM_SUPPRESS_EXEC_WARNINGS
 template<typename InputPortalType,
          typename IndexPortalType,
          typename OutputPortalType>
-VTKM_SUPPRESS_EXEC_WARNINGS
 VTKM_CONT static void ScatterPortal(InputPortalType  inputPortal,
                                            IndexPortalType  indexPortal,
                                            OutputPortalType outputPortal)
