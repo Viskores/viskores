@@ -43,7 +43,7 @@ public:
   WaveletBase( WaveletName name ) : wname ( name ),
                                     filter( name )
   {
-    if( wname == CDF9_7 || wname == BIOR4_4 || 
+    if( wname == CDF9_7 || wname == BIOR4_4 ||
         wname == CDF5_3 || wname == BIOR2_2 )
     {
       this->wmode = SYMW;   // Default extension mode, see MatWaveBase.cpp
@@ -63,7 +63,7 @@ public:
     {
       return((sigInLen+1) / 2);
     }
-    else 
+    else
     {
       return((sigInLen) / 2);
     }
@@ -77,7 +77,7 @@ public:
     {
       return((sigInLen-1) / 2);
     }
-    else 
+    else
     {
       return((sigInLen) / 2);
     }
@@ -103,7 +103,7 @@ public:
   // Returns maximum wavelet decompostion level
   vtkm::Id GetWaveletMaxLevel( vtkm::Id sigInLen )
   {
-    vtkm::Id filterLen = this->filter.GetFilterLength(); 
+    vtkm::Id filterLen = this->filter.GetFilterLength();
     vtkm::Id level;
     this->WaveLengthValidate( sigInLen, filterLen, level );
     return level;
@@ -113,7 +113,7 @@ public:
 
   // perform a device copy. The whole 1st array to a certain start location of the 2nd array
   template< typename ArrayType1, typename ArrayType2, typename DeviceTag >
-  void DeviceCopyStartX( const ArrayType1   &srcArray, 
+  void DeviceCopyStartX( const ArrayType1   &srcArray,
                                ArrayType2   &dstArray,
                                vtkm::Id     startIdx,
                                DeviceTag                )
@@ -141,7 +141,7 @@ public:
   // Assign zeros to a certain row to a matrix
   template< typename ArrayType, typename DeviceTag >
   void DeviceAssignZero2DRow( ArrayType &array, vtkm::Id dimX, vtkm::Id dimY, // input
-                              vtkm::Id rowIdx, DeviceTag )           
+                              vtkm::Id rowIdx, DeviceTag )
   {
     typedef vtkm::worklet::wavelets::AssignZero2DWorklet  AssignZero2DType;
     AssignZero2DType  zeroWorklet( dimX, dimY, -1, rowIdx );
@@ -155,7 +155,7 @@ public:
   // Assign zeros to a certain column to a matrix
   template< typename ArrayType, typename DeviceTag >
   void DeviceAssignZero2DColumn( ArrayType &array, vtkm::Id dimX, vtkm::Id dimY, // input
-                                 vtkm::Id colIdx, DeviceTag )           
+                                 vtkm::Id colIdx, DeviceTag )
   {
     typedef vtkm::worklet::wavelets::AssignZero2DWorklet  AssignZero2DType;
     AssignZero2DType  zeroWorklet( dimX, dimY, colIdx, -1 );
@@ -213,14 +213,14 @@ public:
 
   // Sort by the absolute value on device
   struct SortLessAbsFunctor
-  { 
+  {
     template< typename T >
     VTKM_EXEC
-    bool operator()(const T& x, const T& y) const 
-    { 
-      return vtkm::Abs(x) < vtkm::Abs(y); 
-    } 
-  }; 
+    bool operator()(const T& x, const T& y) const
+    {
+      return vtkm::Abs(x) < vtkm::Abs(y);
+    }
+  };
   template< typename ArrayType, typename DeviceTag >
   void DeviceSort( ArrayType &array, DeviceTag )
   {
@@ -229,7 +229,7 @@ public:
   }
 
 
-  
+
   // Reduce to the sum of all values on device
   template< typename ArrayType, typename DeviceTag >
   typename ArrayType::ValueType DeviceSum( const ArrayType &array, DeviceTag )
@@ -257,7 +257,7 @@ public:
       return vtkm::Max(x, y);
     }
   };
-  
+
 
 
   // Device Min and Max functions
@@ -301,18 +301,18 @@ public:
   template< typename ArrayType, typename DeviceTag >
   vtkm::Float64 DeviceCalculateVariance( ArrayType &array, DeviceTag )
   {
-    vtkm::Float64 mean = static_cast<vtkm::Float64>(this->DeviceSum( array, DeviceTag() )) / 
+    vtkm::Float64 mean = static_cast<vtkm::Float64>(this->DeviceSum( array, DeviceTag() )) /
                          static_cast<vtkm::Float64>(array.GetNumberOfValues());
-    
+
     vtkm::cont::ArrayHandle< vtkm::Float64 > squaredDeviation;
-    
+
     // Use a worklet
     typedef vtkm::worklet::wavelets::SquaredDeviation SDWorklet;
     SDWorklet sdw( mean );
     vtkm::worklet::DispatcherMapField< SDWorklet, DeviceTag > dispatcher( sdw  );
     dispatcher.Invoke( array, squaredDeviation );
 
-    vtkm::Float64 sdMean = this->DeviceSum( squaredDeviation, DeviceTag() ) / 
+    vtkm::Float64 sdMean = this->DeviceSum( squaredDeviation, DeviceTag() ) /
                            static_cast<vtkm::Float64>( squaredDeviation.GetNumberOfValues() );
 
     return sdMean;
@@ -387,8 +387,8 @@ protected:
     }
     else
     {
-      level = static_cast<vtkm::Id>( vtkm::Floor( 1.0 + 
-                  vtkm::Log2( static_cast<vtkm::Float64>(sigInLen) / 
+      level = static_cast<vtkm::Id>( vtkm::Floor( 1.0 +
+                  vtkm::Log2( static_cast<vtkm::Float64>(sigInLen) /
                               static_cast<vtkm::Float64>(filterLength) ) ) );
     }
   }
@@ -401,4 +401,4 @@ protected:
 }     // namespace worklet
 }     // namespace vtkm
 
-#endif 
+#endif

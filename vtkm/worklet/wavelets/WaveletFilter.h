@@ -106,14 +106,14 @@ public:
     }
   }
 
-  vtkm::Id GetFilterLength()    
-  { 
-    return this->FilterLength; 
+  vtkm::Id GetFilterLength()
+  {
+    return this->FilterLength;
   }
 
-  bool     isSymmetric()        
-  { 
-    return this->Symmetricity; 
+  bool     isSymmetric()
+  {
+    return this->Symmetricity;
   }
 
   typedef vtkm::cont::ArrayHandle<vtkm::Float64> FilterType;
