@@ -27,7 +27,9 @@ namespace UnitTestArrayHandleIndexNamespace {
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-void TestArrayHandleReverse() {
+
+void TestArrayHandleReverseRead()
+{
   vtkm::cont::ArrayHandleIndex array(ARRAY_SIZE);
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Bad size.");
 
@@ -45,9 +47,34 @@ void TestArrayHandleReverse() {
   }
 
 }
+
+void TestArrayHandleReverseWrite()
+{
+  std::vector<vtkm::Id> ids(ARRAY_SIZE, 0);
+  vtkm::cont::ArrayHandle<vtkm::Id> handle = vtkm::cont::make_ArrayHandle(ids);
+
+  vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<vtkm::Id>> reverse =
+    vtkm::cont::make_ArrayHandleReverse(handle);
+
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++) {
+    reverse.GetPortalControl().Set(index, index);
+  }
+
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++) {
+    VTKM_TEST_ASSERT(handle.GetPortalConstControl().Get(index) == (9 - index),
+                     "ArrayHandleReverse does not reverse array");
+  }
+}
+
+void TestArrayHandleReverse()
+{
+  TestArrayHandleReverseRead();
+  TestArrayHandleReverseWrite();
+}
 };// namespace UnitTestArrayHandleIndexNamespace
 
-int UnitTestArrayHandleReverse(int, char *[]) {
+int UnitTestArrayHandleReverse(int, char *[])
+{
   using namespace UnitTestArrayHandleIndexNamespace;
   return vtkm::cont::testing::Testing::Run(TestArrayHandleReverse);
 }

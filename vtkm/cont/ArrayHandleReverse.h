@@ -25,6 +25,8 @@
 #define vtk_m_cont_ArrayHandleReverse_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorBadValue.h>
 
 namespace vtkm {
 namespace cont {
@@ -59,7 +61,7 @@ public:
 
   VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType &value) const {
-    this->portal1.Set(portal.GetNumberOfValues() - index - 1, value);
+    this->portal.Set(portal.GetNumberOfValues() - index - 1, value);
   }
 
 private:
@@ -121,8 +123,8 @@ public:
   VTKM_CONT
   void Shrink( vtkm::Id vtkmNotUsed(numberOfValues) )
   {
-//    throw vtkm::cont::ErrorBadType(
-//        "ArrayHandleReverse cannot shrink.");
+    throw vtkm::cont::Error(
+        "ArrayHandleReverse cannot shrink.");
   }
 
   VTKM_CONT
@@ -199,8 +201,8 @@ public:
   VTKM_CONT
   void Shrink( vtkm::Id vtkmNotUsed(numberOfValues) )
   {
-//    throw vtkm::cont::ErrorBadType(
-//        "ArrayHandleReverse cannot shrink.");
+    throw vtkm::cont::ErrorBadType(
+        "ArrayHandleReverse cannot shrink.");
   }
 
   VTKM_CONT
