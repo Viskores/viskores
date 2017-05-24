@@ -42,7 +42,7 @@
 #include <vtkm/worklet/splatkernels/KernelBase.h>
 #include <vtkm/worklet/splatkernels/Spline3rdOrder.h>
 
-#define __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
+//#define __VTKM_GAUSSIAN_SPLATTER_BENCHMARK
 
 //----------------------------------------------------------------------------
 // Macros for timing

@@ -31,12 +31,6 @@
 
 #include <stdio.h>
 
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-
 namespace vtkm {
 namespace worklet {
 
