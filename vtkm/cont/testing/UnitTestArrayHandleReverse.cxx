@@ -86,7 +86,6 @@ void TestArrayHandleReverseScanInclusiveByKey()
   vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<vtkm::Id>> expected_reversed =
     vtkm::cont::make_ArrayHandleReverse(vtkm::cont::make_ArrayHandle(expected, 10));
   for (int i = 0; i < 10; i++) {
-    //std::cout << output.GetPortalConstControl().Get(i) << " ";
     VTKM_TEST_ASSERT(output.GetPortalConstControl().Get(i) ==
                      expected_reversed.GetPortalConstControl().Get(i),
                      "ArrayHandleReverse as output of ScanInclusiveByKey");
