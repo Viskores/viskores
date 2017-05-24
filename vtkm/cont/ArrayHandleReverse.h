@@ -89,8 +89,8 @@ public:
   Storage() : valid( false ) { }
 
   VTKM_CONT
-  Storage( const ArrayHandleType &a1 )
-    : array( a1 ), valid( true ) {};
+  Storage( const ArrayHandleType &a )
+    : array( a ), valid( true ) {};
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
@@ -189,26 +189,8 @@ public:
   VTKM_CONT
    PortalExecution PrepareForOutput( vtkm::Id numberOfValues )
    {
-     if (numberOfValues != this->GetNumberOfValues()) {
-       throw vtkm::cont::ErrorBadValue(
-             "An ArrayHandlePermutation can be used as an output array, "
-             "but it cannot be resized. Make sure the index array is sized "
-             "to the appropriate length before trying to prepare for output.");
-     }
-
-     // We cannot practically allocate array because we do not know the
-     // range of indices. We try to check by seeing if array has no
-     // entries, which clearly indicates that it is not allocated. Otherwise,
-     // we have to assume the allocation is correct.
-     if ((numberOfValues > 0) && (this->array.GetNumberOfValues() < 1))
-     {
-       throw vtkm::cont::ErrorBadValue(
-             "The value array must be pre-allocated before it is used for the "
-             "output of ArrayHandlePermutation.");
-     }
-
      return PortalExecution( this->array.PrepareForOutput(
-       this->array.GetNumberOfValues(), Device() ));
+       numberOfValues, Device()));
    }
 
   VTKM_CONT

@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 namespace UnitTestArrayHandleIndexNamespace {
 
@@ -66,10 +67,38 @@ void TestArrayHandleReverseWrite()
   }
 }
 
+void TestArrayHandleReverseScanInclusiveByKey()
+{
+  vtkm::Id ids[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  vtkm::Id seg[] = {0, 0, 0, 0, 1, 1, 2, 3, 3, 4};
+  vtkm::cont::ArrayHandle<vtkm::Id> values = vtkm::cont::make_ArrayHandle(ids, 10);
+  vtkm::cont::ArrayHandle<vtkm::Id> keys = vtkm::cont::make_ArrayHandle(seg, 10);
+
+  vtkm::cont::ArrayHandle<vtkm::Id> output;
+  vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<vtkm::Id>> reversed =
+    vtkm::cont::make_ArrayHandleReverse(output);
+
+  typedef vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>
+      Algorithm;
+  Algorithm::ScanInclusiveByKey(keys, values, reversed);
+
+  vtkm::Id expected[] = {0, 1, 3, 6, 4, 9, 6, 7, 15, 9};
+  vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<vtkm::Id>> expected_reversed =
+    vtkm::cont::make_ArrayHandleReverse(vtkm::cont::make_ArrayHandle(expected, 10));
+  for (int i = 0; i < 10; i++) {
+    //std::cout << output.GetPortalConstControl().Get(i) << " ";
+    VTKM_TEST_ASSERT(output.GetPortalConstControl().Get(i) ==
+                     expected_reversed.GetPortalConstControl().Get(i),
+                     "ArrayHandleReverse as output of ScanInclusiveByKey");
+  }
+  std::cout << std::endl;
+}
+
 void TestArrayHandleReverse()
 {
   TestArrayHandleReverseRead();
   TestArrayHandleReverseWrite();
+  TestArrayHandleReverseScanInclusiveByKey();
 }
 };// namespace UnitTestArrayHandleIndexNamespace
 
