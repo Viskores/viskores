@@ -17,9 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <GLFW/glfw3.h>
-#include <cstring>
-#include <string>
+
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -32,6 +30,13 @@
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
+
+// this needs to be included after the vtk-m headers so that we include
+// the gl headers in the correct order
+#include <GLFW/glfw3.h>
+
+#include <cstring>
+#include <string>
 
 namespace {
 static const vtkm::Id WIDTH = 512, HEIGHT = 512;
