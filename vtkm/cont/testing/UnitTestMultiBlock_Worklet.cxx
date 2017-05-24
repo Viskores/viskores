@@ -40,15 +40,68 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/AverageByKey.h>
+#include <vtkm/filter/FilterField.h>
+namespace vtkm {
+namespace filter {
+
+class DivideField : public vtkm::filter::FilterField<DivideField>
+{
+public:
+  VTKM_CONT
+  DivideField()
+  {}
+
+  VTKM_CONT
+  void SetDividerValue(vtkm::Id value){ this->DividerValue = value; }
+
+  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT
+  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet& input,
+                                        const vtkm::cont::ArrayHandle<T, StorageType>& fieldata,
+                                        const vtkm::filter::FieldMetadata& fieldMeta,
+                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                        const DeviceAdapter& tag)
+  { 
+    vtkm::cont::Field output;
+    output.SetData(fieldata);
+    typedef vtkm::cont::ArrayHandleConstant<vtkm::Id> ConstIdArray;
+    ConstIdArray constArray(this->DividerValue, fieldata.GetNumberOfValues());
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::DivideWorklet> dispatcher;
+    dispatcher.Invoke(fieldata,constArray,output); 
+    return vtkm::filter::ResultField(input,output.GetData(),std::string("pointvar"),vtkm::cont::Field::ASSOC_POINTS);
+  }
+private:
+  vtkm::Id DividerValue;
+};
+
+template<>
+class FilterTraits<DivideField>
+{ //currently the Clip filter only works on scalar data.
+public:
+  typedef TypeListTagScalarAll InputFieldTypeList;
+};
 
 
-static void MultiBlock_WorkletTest();
+}
+}
+const std::vector<vtkm::filter::ResultField> MultiBlock_WorkletTest();
 
 void TestMultiBlock_Worklet()
 {
   std::cout << std::endl;
   std::cout << "--TestDataSet Uniform and Rectilinear--" << std::endl << std::endl;
-  MultiBlock_WorkletTest();
+  std::vector<vtkm::filter::ResultField> results=MultiBlock_WorkletTest();
+  for(std::size_t j=0; j<results.size(); j++)
+  {
+    results[j].GetField().PrintSummary(std::cout);
+    for(std::size_t i=0; i<results[j].GetField().GetData().GetNumberOfValues(); i++)
+    { 
+      vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic> array;
+      results[j].GetField().GetData().CopyTo(array);
+      VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == vtkm::Float64(j/2.0), "result incorrect");
+    }
+    std::cout<<"\n"<< std::endl;
+  }
 }
 
 /*namespace vtkm {
@@ -75,34 +128,57 @@ public:
 
 }
 }*/
+template <typename T>
+vtkm::cont::MultiBlock UniformMultiBlockBuilder()
+{
+  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
+  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetFieldAdd dsf;
+  vtkm::Vec<T,3> origin(0);
+  vtkm::Vec<T,3> spacing(1);
+  vtkm::cont::MultiBlock Blocks;
+  for (vtkm::Id trial = 0; trial < 5; trial++)
+  {
+    vtkm::Id3 dimensions(10, 10, 10);
+    vtkm::Id numPoints = dimensions[0] * dimensions[1];
+    vtkm::Id numCells = (dimensions[0]-1) * (dimensions[1]-1);
+    std::vector<T> varP2D(static_cast<unsigned long>(numPoints));
+    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
+    {
+      varP2D[i] = static_cast<T>(trial);
+    }
+    std::vector<T> varC2D(static_cast<unsigned long>(numCells));
+    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
+    {
+      varC2D[i] = static_cast<T>(trial);
+    }
+    dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
+                                    vtkm::Vec<T,2>(origin[0], origin[1]),
+                                    vtkm::Vec<T,2>(spacing[0], spacing[1]));
+    dsf.AddPointField(dataSet, "pointvar", varP2D);
+    dsf.AddCellField(dataSet, "cellvar", varC2D);
+    Blocks.AddBlock(dataSet);
+  }
+  return Blocks;
+}
 
-
-static void MultiBlock_WorkletTest()
+const std::vector<vtkm::filter::ResultField> MultiBlock_WorkletTest()
 {
   vtkm::cont::DynamicArrayHandle output;
   
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::DivideWorklet> dispatcher;
-  
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  std::vector<vtkm::cont::DataSet> Vblocks;
-  Vblocks.push_back(testDataSet.Make2DRectilinearDataSet0());
-  Vblocks.push_back(testDataSet.Make3DRegularDataSet1());
-  Vblocks.push_back(testDataSet.Make3DRegularDataSet0());
-  Vblocks.push_back(testDataSet.Make3DExplicitDataSet4());
+  vtkm::cont::MultiBlock Blocks=UniformMultiBlockBuilder<vtkm::Float64>();
+  std::vector<vtkm::filter::ResultField> results;
 
-  vtkm::cont::MultiBlock T2Blocks(Vblocks);
-
-  std::vector<vtkm::cont::DataSet> InBlocks = T2Blocks.GetBlocks();
-  for(std::size_t j=0; j<InBlocks.size(); j++)
-  { 
-    output=InBlocks[j].GetCellField("cellvar").GetData();
-    typedef vtkm::cont::ArrayHandleConstant<vtkm::Id> ConstIdArray;
-    ConstIdArray constArray(3, InBlocks[j].GetCellField("cellvar").GetData().GetNumberOfValues());
-    //divide each cell's field value by 3 and store the results in "output" 
-    dispatcher.Invoke(InBlocks[j].GetCellField("cellvar").GetData(),constArray,output); 
+  vtkm::filter::DivideField divider;
+  for(std::size_t j=0; j<Blocks.GetNumberOfBlocks(); j++)
+  {   
+    divider.SetDividerValue(2);
+    vtkm::filter::ResultField result = divider.Execute(Blocks.GetBlock(j), std::string("pointvar"));
+    results.push_back(result); 
   }
 
-  return ;
+  return results;
 }
 
 
