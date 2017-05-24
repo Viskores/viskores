@@ -24,6 +24,7 @@ set(headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   ContourTreeUniform.h
+  Entropy.h
   ExternalFaces.h
   ExtractGeometry.h
   ExtractPoints.h
@@ -60,6 +61,7 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
+  Entropy.hxx
   ExternalFaces.hxx
   ExtractGeometry.hxx
   ExtractPoints.hxx
