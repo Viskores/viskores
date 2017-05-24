@@ -68,8 +68,8 @@ public:
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
-  template<class OtherV, class OtherP, class OtherF>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<class OtherV, class OtherP, class OtherF>
   VTKM_EXEC_CONT
   ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF> &src)
     : Portal(src.GetPortal()),
@@ -130,8 +130,8 @@ public:
     : Superclass(portal,functor), InverseFunctor(inverseFunctor)
   {  }
 
-  template<class OtherV, class OtherP, class OtherF, class OtherInvF>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<class OtherV, class OtherP, class OtherF, class OtherInvF>
   VTKM_EXEC_CONT
   ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF,OtherInvF> &src)
     : Superclass(src), InverseFunctor(src.GetInverseFunctor())

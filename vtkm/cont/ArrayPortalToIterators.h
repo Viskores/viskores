@@ -77,8 +77,8 @@ private:
 
 /// Convienience function for converting an ArrayPortal to a begin iterator.
 ///
-template<typename PortalType>
 VTKM_SUPPRESS_EXEC_WARNINGS
+template<typename PortalType>
 VTKM_EXEC_CONT
 typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType
 ArrayPortalToIteratorBegin(const PortalType &portal)
@@ -89,8 +89,8 @@ ArrayPortalToIteratorBegin(const PortalType &portal)
 
 /// Convienience function for converting an ArrayPortal to an end iterator.
 ///
-template<typename PortalType>
 VTKM_SUPPRESS_EXEC_WARNINGS
+template<typename PortalType>
 VTKM_EXEC_CONT
 typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType
 ArrayPortalToIteratorEnd(const PortalType &portal)
