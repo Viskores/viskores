@@ -59,7 +59,6 @@ Entropy::DoExecute(const vtkm::cont::DataSet &inDataSet,
                                    this->GetOutputFieldName(),
                                    fieldMetadata.GetAssociation(),
                                    fieldMetadata.GetCellSetName());
-                                   
 }
 }
 } // namespace vtkm::filter
