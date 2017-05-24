@@ -23,19 +23,13 @@
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/Field.h>
 
 #include <stdio.h>
-
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 namespace vtkm {
 namespace worklet {

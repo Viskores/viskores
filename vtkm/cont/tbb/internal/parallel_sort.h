@@ -29,12 +29,12 @@
 #ifndef __TBB_parallel_sort_H
 #define __TBB_parallel_sort_H
 
-#include <tbb/parallel_for.h>
 #include <tbb/blocked_range.h>
+#include <tbb/parallel_for.h>
 
 #include <algorithm>
-#include <iterator>
 #include <functional>
+#include <iterator>
 
 namespace tbb {
 

@@ -20,8 +20,8 @@
 
 #include <vtkm/filter/Gradient.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 namespace {
 

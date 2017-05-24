@@ -25,15 +25,15 @@
 #ifndef vtk_m_Math_h
 #define vtk_m_Math_h
 
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
 #ifndef VTKM_CUDA
+#include <cmath>
 #include <limits.h>
 #include <math.h>
 #include <stdlib.h>
-#include <cmath>
 #endif // !VTKM_CUDA
 
 #if !defined(__CUDA_ARCH__)

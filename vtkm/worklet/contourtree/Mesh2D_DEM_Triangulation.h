@@ -83,17 +83,17 @@
 #ifndef vtkm_worklet_contourtree_mesh2d_dem_triangulation_h
 #define vtkm_worklet_contourtree_mesh2d_dem_triangulation_h
 
-#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 
-#include <vtkm/worklet/contourtree/Types.h>
 #include <vtkm/worklet/contourtree/ChainGraph.h>
-#include <vtkm/worklet/contourtree/PrintVectors.h>
-#include <vtkm/worklet/contourtree/Mesh2D_DEM_VertexStarter.h>
-#include <vtkm/worklet/contourtree/Mesh2D_DEM_VertexOutdegreeStarter.h>
 #include <vtkm/worklet/contourtree/Mesh2D_DEM_SaddleStarter.h>
+#include <vtkm/worklet/contourtree/Mesh2D_DEM_VertexOutdegreeStarter.h>
+#include <vtkm/worklet/contourtree/Mesh2D_DEM_VertexStarter.h>
+#include <vtkm/worklet/contourtree/PrintVectors.h>
+#include <vtkm/worklet/contourtree/Types.h>
 
 #define DEBUG_PRINT 1
 //#define DEBUG_TIMING 1

@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/Triangulate.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/Triangulate.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>

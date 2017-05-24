@@ -67,8 +67,8 @@
 #ifndef vtkm_worklet_contourtree_set_supernode_inward_h
 #define vtkm_worklet_contourtree_set_supernode_inward_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
 namespace vtkm {

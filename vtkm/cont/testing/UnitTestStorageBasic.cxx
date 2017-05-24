@@ -23,18 +23,18 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/cont/testing/Testing.h>
 
 // We use these to check if the aligned allocator provided by
 // StorageBasic can be used with all STL containers
-#include <vector>
 #include <deque>
 #include <list>
-#include <set>
 #include <map>
-#include <stack>
 #include <queue>
+#include <set>
+#include <stack>
+#include <vector>
 
 namespace {
 

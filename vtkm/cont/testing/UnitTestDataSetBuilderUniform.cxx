@@ -26,8 +26,8 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-#include <time.h>
 #include <random>
+#include <time.h>
 #include <vector>
 
 namespace DataSetBuilderUniformNamespace {

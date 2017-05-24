@@ -20,11 +20,12 @@
 #ifndef vtk_m_cont_ImplicitFunction_h
 #define vtk_m_cont_ImplicitFunction_h
 
-#include <vtkm/exec/ImplicitFunction.h>
+#include <vtkm/internal/Configure.h>
+
 #include <vtkm/cont/VirtualObjectCache.h>
+#include <vtkm/exec/ImplicitFunction.h>
 
 #include <memory>
-
 
 namespace vtkm {
 namespace cont {
@@ -125,63 +126,28 @@ protected:
 class VTKM_ALWAYS_EXPORT Box : public ImplicitFunctionImpl<Box>
 {
 public:
-  Box() : MinPoint(vtkm::Vec<FloatDefault,3>(FloatDefault(0), FloatDefault(0), FloatDefault(0))),
-          MaxPoint(vtkm::Vec<FloatDefault,3>(FloatDefault(1), FloatDefault(1), FloatDefault(1)))
-  { }
-
-  Box(vtkm::Vec<FloatDefault, 3> minPoint, vtkm::Vec<FloatDefault, 3> maxPoint)
-    : MinPoint(minPoint), MaxPoint(maxPoint)
-  { }
-
+  Box();
+  Box(vtkm::Vec<FloatDefault, 3> minPoint, vtkm::Vec<FloatDefault, 3> maxPoint);
   Box(FloatDefault xmin, FloatDefault xmax,
       FloatDefault ymin, FloatDefault ymax,
-      FloatDefault zmin, FloatDefault zmax)
-  {
-    MinPoint[0] = xmin;  MaxPoint[0] = xmax;
-    MinPoint[1] = ymin;  MaxPoint[1] = ymax;
-    MinPoint[2] = zmin;  MaxPoint[2] = zmax;
-  }
+      FloatDefault zmin, FloatDefault zmax);
 
-  void SetMinPoint(const vtkm::Vec<FloatDefault, 3> &point)
-  {
-    this->MinPoint = point;
-    this->Modified();
-  }
+  void SetMinPoint(const vtkm::Vec<FloatDefault, 3> &point);
+  void SetMaxPoint(const vtkm::Vec<FloatDefault, 3> &point);
 
-  void SetMaxPoint(const vtkm::Vec<FloatDefault, 3> &point)
-  {
-    this->MaxPoint = point;
-    this->Modified();
-  }
-
-  const vtkm::Vec<FloatDefault, 3>& GetMinPoint() const
-  {
-    return this->MinPoint;
-  }
-
-  const vtkm::Vec<FloatDefault, 3>& GetMaxPoint() const
-  {
-    return this->MaxPoint;
-  }
+  const vtkm::Vec<FloatDefault, 3>& GetMinPoint() const;
+  const vtkm::Vec<FloatDefault, 3>& GetMaxPoint() const;
 
   VTKM_EXEC_CONT
   FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const;
-
   VTKM_EXEC_CONT
-  FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const
-  {
-    return this->Value(vtkm::Vec<vtkm::FloatDefault,3>(x, y, z));
-  }
+  FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const;
 
   VTKM_EXEC_CONT
   vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3> &x) const;
-
   VTKM_EXEC_CONT
-  vtkm::Vec<FloatDefault, 3> Gradient(FloatDefault x, FloatDefault y, FloatDefault z)
-    const
-  {
-    return this->Gradient(vtkm::Vec<FloatDefault, 3>(x, y, z));
-  }
+  vtkm::Vec<FloatDefault, 3>
+  Gradient(FloatDefault x, FloatDefault y, FloatDefault z) const;
 
 private:
   vtkm::Vec<FloatDefault, 3> MinPoint;
@@ -190,72 +156,108 @@ private:
 
 
 //============================================================================
+/// \brief Implicit function for a cylinder
+class VTKM_ALWAYS_EXPORT Cylinder : public ImplicitFunctionImpl<Cylinder>
+{
+public:
+  Cylinder();
+  Cylinder(const vtkm::Vec<FloatDefault, 3> &axis, FloatDefault radius);
+  Cylinder(const vtkm::Vec<FloatDefault, 3> &center,
+           const vtkm::Vec<FloatDefault, 3> &axis,
+           FloatDefault radius);
+
+  void SetCenter(const vtkm::Vec<FloatDefault, 3> &center);
+  void SetAxis(const vtkm::Vec<FloatDefault, 3> &axis);
+  void SetRadius(FloatDefault radius);
+
+  const vtkm::Vec<FloatDefault, 3>& GetCenter() const;
+  const vtkm::Vec<FloatDefault, 3>& GetAxis() const;
+  FloatDefault GetRadius() const;
+
+  VTKM_EXEC_CONT
+  FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const;
+  VTKM_EXEC_CONT
+  FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const;
+
+  VTKM_EXEC_CONT
+  vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3> &x) const;
+  VTKM_EXEC_CONT
+  vtkm::Vec<FloatDefault, 3>
+  Gradient(FloatDefault x, FloatDefault y, FloatDefault z) const;
+
+private:
+  vtkm::Vec<FloatDefault, 3> Center;
+  vtkm::Vec<FloatDefault, 3> Axis;
+  FloatDefault Radius;
+};
+
+
+//============================================================================
+/// \brief Implicit function for a frustum
+class VTKM_ALWAYS_EXPORT Frustum : public ImplicitFunctionImpl<Frustum>
+{
+public:
+  Frustum();
+  Frustum(const vtkm::Vec<FloatDefault, 3> points[6],
+          const vtkm::Vec<FloatDefault, 3> normals[6]);
+  explicit Frustum(const vtkm::Vec<FloatDefault, 3> points[8]);
+
+  void SetPlanes(const vtkm::Vec<FloatDefault, 3> points[6],
+                 const vtkm::Vec<FloatDefault, 3> normals[6]);
+  void SetPlane(int idx, vtkm::Vec<FloatDefault, 3> &point,
+                vtkm::Vec<FloatDefault, 3> &normal);
+
+  void GetPlanes(vtkm::Vec<FloatDefault, 3> points[6],
+                 vtkm::Vec<FloatDefault, 3> normals[6]) const;
+  const vtkm::Vec<FloatDefault, 3>* GetPoints() const;
+  const vtkm::Vec<FloatDefault, 3>* GetNormals() const;
+
+  // The points should be specified in the order of hex-cell vertices
+  void CreateFromPoints(const vtkm::Vec<FloatDefault, 3> points[8]);
+
+  VTKM_EXEC_CONT
+  FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const;
+  VTKM_EXEC_CONT
+  FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const;
+
+  VTKM_EXEC_CONT
+  vtkm::Vec<FloatDefault, 3>
+  Gradient(FloatDefault, FloatDefault, FloatDefault) const;
+  VTKM_EXEC_CONT
+  vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3>&) const;
+
+private:
+  vtkm::Vec<FloatDefault, 3> Points[6];
+  vtkm::Vec<FloatDefault, 3> Normals[6];
+};
+
+
+//============================================================================
 /// \brief Implicit function for a plane
 class VTKM_ALWAYS_EXPORT Plane : public ImplicitFunctionImpl<Plane>
 {
 public:
-  Plane()
-    : Origin(FloatDefault(0)),
-      Normal(FloatDefault(0), FloatDefault(0), FloatDefault(1))
-  { }
-
-  explicit Plane(const vtkm::Vec<FloatDefault, 3> &normal)
-    : Origin(FloatDefault(0)),
-      Normal(normal)
-  { }
-
+  Plane();
+  explicit Plane(const vtkm::Vec<FloatDefault, 3> &normal);
   Plane(const vtkm::Vec<FloatDefault, 3> &origin,
-        const vtkm::Vec<FloatDefault, 3> &normal)
-    : Origin(origin), Normal(normal)
-  { }
+        const vtkm::Vec<FloatDefault, 3> &normal);
 
-  void SetOrigin(const vtkm::Vec<FloatDefault, 3> &origin)
-  {
-    this->Origin = origin;
-    this->Modified();
-  }
+  void SetOrigin(const vtkm::Vec<FloatDefault, 3> &origin);
+  void SetNormal(const vtkm::Vec<FloatDefault, 3> &normal);
 
-  void SetNormal(const vtkm::Vec<FloatDefault, 3> &normal)
-  {
-    this->Normal = normal;
-    this->Modified();
-  }
-
-  const vtkm::Vec<FloatDefault, 3>& GetOrigin() const
-  {
-    return this->Origin;
-  }
-
-  const vtkm::Vec<FloatDefault, 3>& GetNormal() const
-  {
-    return this->Normal;
-  }
+  const vtkm::Vec<FloatDefault, 3>& GetOrigin() const;
+  const vtkm::Vec<FloatDefault, 3>& GetNormal() const;
 
   VTKM_EXEC_CONT
-  FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const
-  {
-    return ((x - this->Origin[0]) * this->Normal[0]) +
-           ((y - this->Origin[1]) * this->Normal[1]) +
-           ((z - this->Origin[2]) * this->Normal[2]);
-  }
+  FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const;
+  VTKM_EXEC_CONT
+  FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const;
 
   VTKM_EXEC_CONT
-  FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const
-  {
-    return this->Value(x[0], x[1], x[2]);
-  }
-
+  vtkm::Vec<FloatDefault, 3>
+  Gradient(FloatDefault, FloatDefault, FloatDefault) const;
   VTKM_EXEC_CONT
-  vtkm::Vec<FloatDefault, 3> Gradient(FloatDefault, FloatDefault, FloatDefault) const
-  {
-    return this->Normal;
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3>&) const
-  {
-    return this->Normal;
-  }
+  vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3>&) const;
 
 private:
   vtkm::Vec<FloatDefault, 3> Origin;
@@ -268,65 +270,27 @@ private:
 class VTKM_ALWAYS_EXPORT Sphere : public ImplicitFunctionImpl<Sphere>
 {
 public:
-  Sphere() : Radius(FloatDefault(0.2)), Center(FloatDefault(0))
-  { }
+  Sphere();
+  explicit Sphere(FloatDefault radius);
+  Sphere(vtkm::Vec<FloatDefault, 3> center, FloatDefault radius);
 
-  explicit Sphere(FloatDefault radius) : Radius(radius), Center(FloatDefault(0))
-  { }
+  void SetRadius(FloatDefault radius);
+  void SetCenter(const vtkm::Vec<FloatDefault, 3> &center);
 
-  Sphere(vtkm::Vec<FloatDefault, 3> center, FloatDefault radius)
-    : Radius(radius), Center(center)
-  { }
-
-  void SetRadius(FloatDefault radius)
-  {
-    this->Radius = radius;
-    this->Modified();
-  }
-
-  void SetCenter(const vtkm::Vec<FloatDefault, 3> &center)
-  {
-    this->Center = center;
-    this->Modified();
-  }
-
-  FloatDefault GetRadius() const
-  {
-    return this->Radius;
-  }
-
-  const vtkm::Vec<FloatDefault, 3>& GetCenter() const
-  {
-    return this->Center;
-  }
+  FloatDefault GetRadius() const;
+  const vtkm::Vec<FloatDefault, 3>& GetCenter() const;
 
   VTKM_EXEC_CONT
-  FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const
-  {
-    return ((x - this->Center[0]) * (x - this->Center[0]) +
-            (y - this->Center[1]) * (y - this->Center[1]) +
-            (z - this->Center[2]) * (z - this->Center[2])) -
-           (this->Radius * this->Radius);
-  }
+  FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const;
+  VTKM_EXEC_CONT
+  FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const;
 
   VTKM_EXEC_CONT
-  FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const
-  {
-    return this->Value(x[0], x[1], x[2]);
-  }
-
+  vtkm::Vec<FloatDefault, 3>
+  Gradient(FloatDefault x, FloatDefault y, FloatDefault z) const;
   VTKM_EXEC_CONT
-  vtkm::Vec<FloatDefault, 3> Gradient(FloatDefault x, FloatDefault y, FloatDefault z)
-    const
-  {
-    return this->Gradient(vtkm::Vec<FloatDefault, 3>(x, y, z));
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
-  {
-    return FloatDefault(2) * (x - this->Center);
-  }
+  vtkm::Vec<FloatDefault, 3>
+  Gradient(const vtkm::Vec<FloatDefault, 3> &x) const;
 
 private:
   FloatDefault Radius;

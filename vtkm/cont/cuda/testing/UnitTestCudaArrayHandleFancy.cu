@@ -25,8 +25,8 @@
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-#include <vtkm/cont/testing/TestingFancyArrayHandles.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
+#include <vtkm/cont/testing/TestingFancyArrayHandles.h>
 
 int UnitTestCudaArrayHandleFancy(int, char *[])
 {

@@ -20,8 +20,8 @@
 #ifndef vtk_m_cont_ArrayHandleDiscard_h
 #define vtk_m_cont_ArrayHandleDiscard_h
 
-#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/cont/ArrayHandle.h>
 
 namespace vtkm {
 namespace exec {

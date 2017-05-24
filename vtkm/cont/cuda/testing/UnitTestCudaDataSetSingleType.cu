@@ -25,8 +25,8 @@
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-#include <vtkm/cont/testing/TestingDataSetSingleType.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
+#include <vtkm/cont/testing/TestingDataSetSingleType.h>
 
 int UnitTestCudaDataSetSingleType(int, char *[])
 {

@@ -20,8 +20,8 @@
 #ifndef vtk_m_StaticAssert_h
 #define vtk_m_StaticAssert_h
 
-#include <vtkm/internal/Configure.h>
 #include <type_traits>
+#include <vtkm/internal/Configure.h>
 
 #define VTKM_STATIC_ASSERT(condition) \
   static_assert( (condition), "Failed static assert: " #condition)

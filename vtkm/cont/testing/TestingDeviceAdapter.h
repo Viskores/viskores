@@ -20,9 +20,9 @@
 #ifndef vtk_m_cont_testing_TestingDeviceAdapter_h
 #define vtk_m_cont_testing_TestingDeviceAdapter_h
 
-#include <vtkm/TypeTraits.h>
-#include <vtkm/BinaryPredicates.h>
 #include <vtkm/BinaryOperators.h>
+#include <vtkm/BinaryPredicates.h>
+#include <vtkm/TypeTraits.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
@@ -30,12 +30,12 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>

@@ -22,17 +22,17 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/worklet/StreamLineUniformGrid.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/StreamLineUniformGrid.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 #include <fstream>
-#include <vector>
 #include <math.h>
+#include <vector>
 
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))

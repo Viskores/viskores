@@ -20,8 +20,8 @@
 
 #include <vtkm/cont/ArrayHandleReverse.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/testing/Testing.h>
 
 namespace UnitTestArrayHandleIndexNamespace {
 

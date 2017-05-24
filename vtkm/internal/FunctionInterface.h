@@ -22,8 +22,8 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/internal/IndexTag.h>
 #include <vtkm/internal/FunctionInterfaceDetailPre.h>
+#include <vtkm/internal/IndexTag.h>
 
 #include <utility>
 

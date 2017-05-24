@@ -22,8 +22,8 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/Math.h>
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
 namespace vtkm {

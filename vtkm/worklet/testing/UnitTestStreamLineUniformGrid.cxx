@@ -18,14 +18,14 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/StreamLineUniformGrid.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/worklet/StreamLineUniformGrid.h>
 
 #include <fstream>
-#include <vector>
 #include <math.h>
+#include <vector>
 
 namespace {
 

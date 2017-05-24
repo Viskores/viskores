@@ -21,9 +21,9 @@
 #define vtk_m_filter_internal_ResolveFieldTypeAndExecute_h
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
-#include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/FieldMetadata.h>
 #include <vtkm/filter/PolicyBase.h>

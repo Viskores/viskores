@@ -67,8 +67,8 @@
 #ifndef vtkm_worklet_contourtree_update_outbound_h
 #define vtkm_worklet_contourtree_update_outbound_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
 namespace vtkm {

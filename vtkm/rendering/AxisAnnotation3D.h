@@ -28,12 +28,12 @@
 #endif
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/rendering/AxisAnnotation.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/Scene.h>
-#include <vtkm/rendering/WorldAnnotator.h>
-#include <vtkm/rendering/AxisAnnotation.h>
 #include <vtkm/rendering/TextAnnotationBillboard.h>
+#include <vtkm/rendering/WorldAnnotator.h>
 
 #include <sstream>
 

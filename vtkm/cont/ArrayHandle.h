@@ -31,9 +31,9 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
 
+#include <iterator>
 #include <memory>
 #include <vector>
-#include <iterator>
 
 #include <vtkm/cont/internal/ArrayHandleExecutionManager.h>
 #include <vtkm/cont/internal/ArrayPortalFromIterators.h>

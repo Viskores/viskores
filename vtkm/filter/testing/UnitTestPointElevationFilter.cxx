@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/filter/PointElevation.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/PointElevation.h>
 
 #include <vector>
 

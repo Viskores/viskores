@@ -19,9 +19,9 @@
 //  this software.
 //
 //=============================================================================
+#include <cstdio>
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <cstdio>
 int main()
 {
   int count = 0;
@@ -42,7 +42,7 @@ int main()
       //handle multiple cards of the same architecture
       if(arch == prev_arch) { continue; }
       prev_arch = arch;
-      printf("--generate-code arch=compute_%d,code=sm_%d ", compute_level, arch);
+      printf(" --generate-code=arch=compute_%d,code=sm_%d", compute_level, arch);
       }
     }
   return 0;

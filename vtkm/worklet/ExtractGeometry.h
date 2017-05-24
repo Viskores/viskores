@@ -20,14 +20,13 @@
 #ifndef vtkm_m_worklet_ExtractGeometry_h
 #define vtkm_m_worklet_ExtractGeometry_h
 
-#include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/CellSetSingleType.h>
-#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ImplicitFunction.h>
 
 namespace vtkm {
@@ -52,8 +51,14 @@ public:
     ExtractCellsByVOI() : Function() {}
 
     VTKM_CONT
-    explicit ExtractCellsByVOI(const vtkm::exec::ImplicitFunction &function)
-                                           : Function(function) {}
+    ExtractCellsByVOI(const vtkm::exec::ImplicitFunction &function,
+                      bool extractInside,
+                      bool extractBoundaryCells,
+                      bool extractOnlyBoundaryCells) :
+                            Function(function),
+                            ExtractInside(extractInside),
+                            ExtractBoundaryCells(extractBoundaryCells),
+                            ExtractOnlyBoundaryCells(extractOnlyBoundaryCells) {}
 
     template <typename ConnectivityInVec, typename InVecFieldPortalType>
     VTKM_EXEC
@@ -61,21 +66,47 @@ public:
                     const ConnectivityInVec &connectivityIn,
                     const InVecFieldPortalType &coordinates) const
     {
-      // If any point is outside volume of interest, cell is also
-      bool pass = true;
+      // Count points inside/outside volume of interest
+      vtkm::IdComponent inCnt = 0;
+      vtkm::IdComponent outCnt = 0;
       for (vtkm::IdComponent indx = 0; indx < numIndices; indx++)
       {
         vtkm::Id ptId = connectivityIn[indx];
         vtkm::Vec<FloatDefault,3> coordinate = coordinates.Get(ptId);
         vtkm::FloatDefault value = this->Function.Value(coordinate);
-        if (value > 0)
-          pass = false;
+        if (value <= 0)
+          inCnt++;
+        if (value >= 0)
+          outCnt++;
       }
-      return pass;
+
+      // Decide if cell is extracted
+      bool passFlag = false;
+      if (inCnt == numIndices &&
+          ExtractInside &&
+          !ExtractOnlyBoundaryCells)
+      {
+        passFlag = true;
+      } 
+      else if (outCnt == numIndices &&
+               !ExtractInside &&
+               !ExtractOnlyBoundaryCells)
+      {
+        passFlag = true;
+      }
+      else if (inCnt > 0 && outCnt > 0 &&
+               (ExtractBoundaryCells || ExtractOnlyBoundaryCells))
+      {
+        passFlag = true;
+      }
+      return passFlag;
     }
 
   private:
     vtkm::exec::ImplicitFunction Function;
+    bool ExtractInside;
+    bool ExtractBoundaryCells;
+    bool ExtractOnlyBoundaryCells;
   };
 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -103,6 +134,9 @@ public:
                                     const CellSetType &cellSet,
                                     const vtkm::cont::CoordinateSystem &coordinates,
                                     const vtkm::cont::ImplicitFunction &implicitFunction,
+                                    bool extractInside,
+                                    bool extractBoundaryCells,
+                                    bool extractOnlyBoundaryCells,
                                     DeviceAdapter device)
   {
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
@@ -110,7 +144,10 @@ public:
     // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;
 
-    ExtractCellsByVOI worklet(implicitFunction.PrepareForExecution(device));
+    ExtractCellsByVOI worklet(implicitFunction.PrepareForExecution(device),
+                              extractInside,
+                              extractBoundaryCells,
+                              extractOnlyBoundaryCells);
     DispatcherMapTopology<ExtractCellsByVOI, DeviceAdapter> dispatcher(worklet);
     dispatcher.Invoke(cellSet,
                       coordinates,

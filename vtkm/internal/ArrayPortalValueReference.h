@@ -20,8 +20,8 @@
 #ifndef vtk_m_internal_ArrayPortalValueReference_h
 #define vtk_m_internal_ArrayPortalValueReference_h
 
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
 namespace vtkm {

@@ -24,17 +24,11 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
 #include <vtkm/cont/Field.h>
-
-#ifndef VTKM_DEVICE_ADAPTER
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif
-
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 namespace
 {
@@ -105,24 +99,21 @@ public:
   {
   public:
     typedef void ControlSignature(FieldIn<IdType> inputIndex,
+                                  WholeArrayIn<IdType> counts,
                                   FieldOut<IdType> outputCount);
-    typedef void ExecutionSignature(_1,_2);
+    typedef void ExecutionSignature(_1,_2,_3);
     typedef _1 InputDomain;
 
-    typedef vtkm::cont::ArrayHandle<vtkm::Id>::ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
-    IdPortalType totalCountArray;
-
-    VTKM_CONT
-    AdjacentDifference(IdPortalType totalCount) :
-                       totalCountArray(totalCount) { }
-
+    template<typename WholeArrayType>
     VTKM_EXEC
-    void operator()(const vtkm::Id &index, vtkm::Id & difference) const
+    void operator()(const vtkm::Id &index,
+                    const WholeArrayType& counts,
+                    vtkm::Id & difference) const
     {
       if (index == 0)
-        difference = this->totalCountArray.Get(index);
+        difference = counts.Get(index);
       else
-        difference = this->totalCountArray.Get(index) - this->totalCountArray.Get(index - 1);
+        difference = counts.Get(index) - counts.Get(index - 1);
     }
   };
 
@@ -137,9 +128,8 @@ public:
            vtkm::Range& rangeOfValues,
            FieldType& binDelta,
            vtkm::cont::ArrayHandle<vtkm::Id>& binArray,
-           DeviceAdapter device)
+           DeviceAdapter vtkmNotUsed(device))
   {
-    (void) device;
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
 
     //todo: need to have a signature that can use an input range so we can
@@ -155,8 +145,6 @@ public:
 
     const FieldType& fieldMinValue = result[0];
     const FieldType& fieldMaxValue = result[1];
-
-
     const FieldType fieldDelta = compute_delta(fieldMinValue, fieldMaxValue, numberOfBins);
 
     // Worklet fills in the bin belonging to each value
@@ -177,9 +165,8 @@ public:
     DeviceAlgorithms::UpperBounds(binIndex, binCounter, totalCount);
 
     // Difference between adjacent items is the bin count
-    vtkm::worklet::DispatcherMapField<AdjacentDifference>
-      adjacentDifferenceDispatcher(AdjacentDifference(totalCount.PrepareForInput(DeviceAdapter())));
-    adjacentDifferenceDispatcher.Invoke(binCounter, binArray);
+    vtkm::worklet::DispatcherMapField<AdjacentDifference, DeviceAdapter> dispatcher;
+    dispatcher.Invoke(binCounter, totalCount, binArray);
 
     //update the users data
     rangeOfValues = vtkm::Range( fieldMinValue, fieldMaxValue );

@@ -20,10 +20,10 @@
 #ifndef vtk_m_cont_VirtualObjectCache_h
 #define vtk_m_cont_VirtualObjectCache_h
 
-#include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
+#include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
 #include <array>

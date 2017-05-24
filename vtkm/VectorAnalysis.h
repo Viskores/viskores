@@ -25,8 +25,8 @@
 // This header file defines math functions that deal with linear albegra funcitons
 
 #include <vtkm/Math.h>
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
 namespace vtkm {

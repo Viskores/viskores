@@ -20,8 +20,8 @@
 
 #include <vtkm/rendering/Canvas.h>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 namespace vtkm {
 namespace rendering {

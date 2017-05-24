@@ -20,9 +20,9 @@
 #ifndef vtk_m_rendering_MapperRayTracer_h
 #define vtk_m_rendering_MapperRayTracer_h
 
+#include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
-#include <vtkm/rendering/Camera.h>
 
 #include <memory>
 

@@ -53,8 +53,8 @@ public:
   /// do any type casting that the delegate portals do (like the non-const to
   /// const cast).
   ///
-  template<typename OtherIP, typename OtherVP>
   VTKM_SUPPRESS_EXEC_WARNINGS
+  template<typename OtherIP, typename OtherVP>
   VTKM_EXEC_CONT
   ArrayPortalPermutation(
       const ArrayPortalPermutation<OtherIP,OtherVP> &src)

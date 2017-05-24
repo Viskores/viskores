@@ -21,8 +21,8 @@
 #ifndef vtk_m_filter_ExternalFaces_h
 #define vtk_m_filter_ExternalFaces_h
 
-#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/CleanGrid.h>
+#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExternalFaces.h>
 
 namespace vtkm {

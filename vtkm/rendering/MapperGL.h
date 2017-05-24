@@ -22,9 +22,9 @@
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasGL.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
-#include <vtkm/rendering/CanvasGL.h>
 
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 

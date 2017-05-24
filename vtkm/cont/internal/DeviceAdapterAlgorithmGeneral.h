@@ -21,10 +21,10 @@
 #ifndef vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 #define vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 
-#include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/internal/FunctorsGeneral.h>
 

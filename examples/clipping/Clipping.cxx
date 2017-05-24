@@ -29,8 +29,8 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
-#include <string>
 #include <stdexcept>
+#include <string>
 
 typedef vtkm::Vec<vtkm::Float32, 3> FloatVec3;
 

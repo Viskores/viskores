@@ -21,6 +21,7 @@
 #define vtk_m_rendering_testing_RenderTest_h
 
 #include <vtkm/Bounds.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Camera.h>
@@ -30,7 +31,6 @@
 #include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
-#include <vtkm/cont/DeviceAdapter.h>
 
 namespace vtkm {
 namespace rendering {

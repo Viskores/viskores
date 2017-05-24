@@ -20,8 +20,8 @@
 #ifndef vtk_m_worklet_internal_WorkletBase_h
 #define vtk_m_worklet_internal_WorkletBase_h
 
-#include <vtkm/TypeListTag.h>
 #include <vtkm/TopologyElementTag.h>
+#include <vtkm/TypeListTag.h>
 
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
@@ -43,8 +43,8 @@
 #include <vtkm/cont/arg/TransportTagWholeArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagAtomicArray.h>
-#include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
+#include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
 #include <vtkm/worklet/ScatterIdentity.h>
 

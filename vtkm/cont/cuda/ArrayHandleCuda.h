@@ -23,8 +23,8 @@
 #define vtk_m_cont_cuda_ArrayHandleCuda_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/Storage.h>
 
 #ifdef VTKM_CUDA

@@ -22,9 +22,9 @@
 
 #include <vtkm/Bounds.h>
 
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
+#include <vtkm/cont/ArrayHandleCompositeVector.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/Field.h>
 
 #ifndef VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG

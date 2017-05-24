@@ -20,10 +20,10 @@
 #ifndef vtk_m_worklet_Dispatcher_Streaming_MapField_h
 #define vtk_m_worklet_Dispatcher_Streaming_MapField_h
 
+#include <vtkm/cont/ArrayHandleStreaming.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
-#include <vtkm/cont/ArrayHandleStreaming.h>
 
 namespace vtkm {
 namespace worklet {

@@ -22,6 +22,7 @@
 #ifndef vtk_m_cont_testing_TestingFancyArrayHandles_h
 #define vtk_m_cont_testing_TestingFancyArrayHandles_h
 
+#include <vtkm/VecTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
@@ -36,7 +37,6 @@
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleZip.h>
-#include <vtkm/VecTraits.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>

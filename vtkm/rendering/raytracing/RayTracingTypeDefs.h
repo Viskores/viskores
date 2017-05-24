@@ -19,8 +19,8 @@
 //============================================================================
 #ifndef vtk_m_rendering_raytracing_RayTracingTypeDefs_h
 #define vtk_m_rendering_raytracing_RayTracingTypeDefs_h
-#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/ListTag.h>
+#include <vtkm/cont/ArrayHandle.h>
 namespace vtkm {
 namespace rendering {
 namespace raytracing {

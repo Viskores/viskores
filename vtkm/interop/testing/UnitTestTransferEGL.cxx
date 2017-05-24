@@ -21,9 +21,9 @@
 
 //This sets up testing with the default device adapter and array container
 
-#include <vtkm/rendering/CanvasEGL.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/interop/testing/TestingOpenGLInterop.h>
+#include <vtkm/rendering/CanvasEGL.h>
 
 int UnitTestTransferEGL(int, char *[])
 {

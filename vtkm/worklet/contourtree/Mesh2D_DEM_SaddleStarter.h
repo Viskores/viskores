@@ -83,8 +83,8 @@
 #ifndef vtkm_worklet_contourtree_mesh2d_dem_saddle_starter_h
 #define vtkm_worklet_contourtree_mesh2d_dem_saddle_starter_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation_Macros.h>
 
 namespace vtkm {

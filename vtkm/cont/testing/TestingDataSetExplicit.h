@@ -21,10 +21,10 @@
 #ifndef vtk_m_cont_testing_TestingDataSetExplicit_h
 #define vtk_m_cont_testing_TestingDataSetExplicit_h
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 #include <set>
 

@@ -93,14 +93,6 @@ public:
   }
 
   VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
-  {
-    return
-        (static_cast<vtkm::IdComponent>(pointIndex > 0)
-         + static_cast<vtkm::IdComponent>(pointIndex < this->PointDimensions-1));
-  }
-
-  VTKM_EXEC_CONT
   vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT>
   GetCellsOfPoint(vtkm::Id index) const
   {
@@ -224,25 +216,6 @@ public:
       GetPointsOfCell(vtkm::Id cellIndex) const
   {
     return this->GetPointsOfCell(this->FlatToLogicalCellIndex(cellIndex));
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::IdComponent
-  GetNumberOfCellsIncidentOnPoint(const SchedulingRangeType &ij) const
-  {
-    return
-        (static_cast<vtkm::IdComponent>((ij[0] > 0) && (ij[1] > 0))
-         + static_cast<vtkm::IdComponent>((ij[0] < this->PointDimensions[0]-1) && (ij[1] > 0))
-         + static_cast<vtkm::IdComponent>((ij[0] > 0) && (ij[1] < this->PointDimensions[1]-1))
-         + static_cast<vtkm::IdComponent>(
-          (ij[0] < this->PointDimensions[0]-1) && (ij[1] < this->PointDimensions[1]-1)));
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
-  {
-    return this->GetNumberOfCellsIncidentOnPoint(
-          this->FlatToLogicalPointIndex(pointIndex));
   }
 
   VTKM_EXEC_CONT
@@ -407,37 +380,6 @@ public:
   }
 
   VTKM_EXEC_CONT
-  vtkm::IdComponent
-  GetNumberOfCellsIncidentOnPoint(const SchedulingRangeType &ijk) const
-  {
-    return (
-            static_cast<vtkm::IdComponent>((ijk[0] > 0) && (ijk[1] > 0) && (ijk[2] > 0))
-          + static_cast<vtkm::IdComponent>((ijk[0] < this->PointDimensions[0]-1) && (ijk[1] > 0) && (ijk[2] > 0))
-          + static_cast<vtkm::IdComponent>((ijk[0] > 0) && (ijk[1] < this->PointDimensions[1]-1) && (ijk[2] > 0))
-          + static_cast<vtkm::IdComponent>((ijk[0] < this->PointDimensions[0]-1) &&
-                                           (ijk[1] < this->PointDimensions[1]-1) &&
-                                           (ijk[2] > 0))
-          + static_cast<vtkm::IdComponent>((ijk[0] > 0) && (ijk[1] > 0) && (ijk[2] < this->PointDimensions[2]-1))
-          + static_cast<vtkm::IdComponent>((ijk[0] < this->PointDimensions[0]-1) &&
-                                           (ijk[1] > 0) &&
-                                           (ijk[2] < this->PointDimensions[2]-1))
-          + static_cast<vtkm::IdComponent>((ijk[0] > 0) &&
-                                           (ijk[1] < this->PointDimensions[1]-1) &&
-                                           (ijk[2] < this->PointDimensions[2]-1))
-          + static_cast<vtkm::IdComponent>((ijk[0] < this->PointDimensions[0]-1) &&
-                                           (ijk[1] < this->PointDimensions[1]-1) &&
-                                           (ijk[2] < this->PointDimensions[2]-1))
-            );
-  }
-
-  VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfCellsIncidentOnPoint(vtkm::Id pointIndex) const
-  {
-    return this->GetNumberOfCellsIncidentOnPoint(
-          this->FlatToLogicalPointIndex(pointIndex));
-  }
-
-  VTKM_EXEC_CONT
   vtkm::VecVariable<vtkm::Id,MAX_CELL_TO_POINT>
   GetCellsOfPoint(const SchedulingRangeType &ijk) const
   {
@@ -578,15 +520,6 @@ struct ConnectivityStructuredIndexHelper<
     return connectivity.GetPointsOfCell(cellIndex);
   }
 
-  template<typename IndexType>
-  VTKM_EXEC_CONT
-  static vtkm::IdComponent GetNumberOfIndices(
-        const ConnectivityType &connectivity,
-        const IndexType &vtkmNotUsed(cellIndex))
-  {
-    return connectivity.GetNumberOfPointsInCell();
-  }
-
   VTKM_EXEC_CONT
   static LogicalIndexType
   FlatToLogicalFromIndex(const ConnectivityType &connectivity,
@@ -637,15 +570,6 @@ struct ConnectivityStructuredIndexHelper<
                                 const IndexType &pointIndex)
   {
     return connectivity.GetCellsOfPoint(pointIndex);
-  }
-
-  template<typename IndexType>
-  VTKM_EXEC_CONT
-  static vtkm::IdComponent GetNumberOfIndices(
-        const ConnectivityType &connectivity,
-        const IndexType &pointIndex)
-  {
-    return connectivity.GetNumberOfCellsIncidentOnPoint(pointIndex);
   }
 
   VTKM_EXEC_CONT

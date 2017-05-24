@@ -20,12 +20,12 @@
 #ifndef vtkm_m_worklet_ExtractPoints_h
 #define vtkm_m_worklet_ExtractPoints_h
 
-#include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ImplicitFunction.h>
 
 namespace vtkm {
@@ -47,21 +47,26 @@ public:
     typedef   _3 ExecutionSignature(_2);
 
     VTKM_CONT
-    ExtractPointsByVOI(const vtkm::exec::ImplicitFunction &function) :
-                                     Function(function) {}
+    ExtractPointsByVOI(const vtkm::exec::ImplicitFunction &function,
+                       bool extractInside) :
+                                     Function(function),
+                                     passValue(extractInside),
+                                     failValue(!extractInside) {}
 
     VTKM_EXEC
     bool operator()(const vtkm::Vec<vtkm::Float64,3> &coordinate) const
     {
-      bool pass = true;
+      bool pass = passValue;
       vtkm::Float64 value = this->Function.Value(coordinate);
       if (value > 0)
-        pass = false;
+        pass = failValue;
       return pass;
     }
 
   private:
     vtkm::exec::ImplicitFunction Function;
+    bool passValue;
+    bool failValue;
   };
 
   ////////////////////////////////////////////////////////////////////////////////////
@@ -89,11 +94,13 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract points by implicit function
   template <typename CellSetType,
+            typename CoordinateType,
             typename DeviceAdapter>
   vtkm::cont::CellSetSingleType<> Run(
                                     const CellSetType &cellSet,
-                                    const vtkm::cont::CoordinateSystem &coordinates,
+                                    const CoordinateType &coordinates,
                                     const vtkm::cont::ImplicitFunction &implicitFunction,
+                                    bool extractInside,
                                     DeviceAdapter device)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
@@ -101,7 +108,8 @@ public:
     // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;
 
-    ExtractPointsByVOI worklet(implicitFunction.PrepareForExecution(device));
+    ExtractPointsByVOI worklet(implicitFunction.PrepareForExecution(device), 
+                               extractInside);
     DispatcherMapTopology<ExtractPointsByVOI, DeviceAdapter> dispatcher(worklet);
     dispatcher.Invoke(cellSet, coordinates, passFlags);
 

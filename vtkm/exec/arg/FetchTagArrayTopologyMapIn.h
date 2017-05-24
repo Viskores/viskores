@@ -28,8 +28,8 @@
 
 #include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 
-#include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/VecRectilinearPointCoordinates.h>
+#include <vtkm/exec/ConnectivityStructured.h>
 
 #include <vtkm/VecFromPortalPermute.h>
 
@@ -160,6 +160,42 @@ struct FetchArrayTopologyMapInImplementation<
   {
     // This works because the logical cell index is the same as the logical
     // point index of the first point on the cell.
+    return vtkm::exec::arg::detail::make_VecRectilinearPointCoordinates(
+          field.GetOrigin(),
+          field.GetSpacing(),
+          indices.GetIndexLogical());
+  }
+};
+
+template<typename PermutationPortal, vtkm::IdComponent NumDimensions>
+struct FetchArrayTopologyMapInImplementation<
+    vtkm::exec::ConnectivityPermuted<PermutationPortal,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                       vtkm::TopologyElementTagCell,
+                                       NumDimensions> >,
+    vtkm::internal::ArrayPortalUniformPointCoordinates>
+
+{
+  typedef vtkm::exec::ConnectivityPermuted<PermutationPortal,
+            vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                             vtkm::TopologyElementTagCell,
+                                             NumDimensions> > ConnectivityType;
+  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>
+      ThreadIndicesType;
+
+  typedef vtkm::VecRectilinearPointCoordinates<NumDimensions> ValueType;
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  static ValueType Load(
+      const ThreadIndicesType &indices,
+      const vtkm::internal::ArrayPortalUniformPointCoordinates &field)
+  {
+    // This works because the logical cell index is the same as the logical
+    // point index of the first point on the cell.
+
+    // we have a flat index but we need 3d rectilinear coordiantes, so we
+    // need to take an flat index and convert to logical index
     return vtkm::exec::arg::detail::make_VecRectilinearPointCoordinates(
           field.GetOrigin(),
           field.GetSpacing(),

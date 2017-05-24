@@ -26,8 +26,8 @@
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/ArrayRangeCompute.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
 namespace vtkm {

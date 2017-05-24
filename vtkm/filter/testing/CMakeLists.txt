@@ -26,6 +26,8 @@ set(unit_tests
   UnitTestContourTreeUniformFilter.cxx
   UnitTestEntropyFilter.cxx
   UnitTestExternalFacesFilter.cxx
+  UnitTestExtractGeometryFilter.cxx
+  UnitTestExtractPointsFilter.cxx
   UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestGradient.cxx

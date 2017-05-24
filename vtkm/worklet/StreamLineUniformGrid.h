@@ -21,12 +21,12 @@
 #ifndef vtk_m_worklet_StreamLineUniformGrid_h
 #define vtk_m_worklet_StreamLineUniformGrid_h
 
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/CellSetExplicit.h>
+#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>

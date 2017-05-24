@@ -22,11 +22,11 @@
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
+#include <vtkm/TopologyElementTag.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/TopologyElementTag.h>
-#include <vtkm/internal/ConnectivityStructuredInternals.h>
 #include <vtkm/exec/ConnectivityStructured.h>
+#include <vtkm/internal/ConnectivityStructuredInternals.h>
 
 namespace vtkm {
 namespace cont {

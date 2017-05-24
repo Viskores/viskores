@@ -20,8 +20,8 @@
 #ifndef vtk_m_interop_internal_BufferTypePicker_h
 #define vtk_m_interop_internal_BufferTypePicker_h
 
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/interop/internal/OpenGLHeaders.h>
 
 namespace vtkm {

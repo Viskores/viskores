@@ -21,8 +21,8 @@
 #define vtk_m_cont_internal_IteratorFromArrayPortal_h
 
 #include <vtkm/Assert.h>
-#include <vtkm/internal/ArrayPortalValueReference.h>
 #include <vtkm/cont/ArrayPortal.h>
+#include <vtkm/internal/ArrayPortalValueReference.h>
 
 namespace vtkm {
 namespace cont {

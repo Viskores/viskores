@@ -20,8 +20,8 @@
 #ifndef vtk_m_exec_arg_InputIndex_h
 #define vtk_m_exec_arg_InputIndex_h
 
-#include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+#include <vtkm/exec/arg/Fetch.h>
 
 namespace vtkm {
 namespace exec {
