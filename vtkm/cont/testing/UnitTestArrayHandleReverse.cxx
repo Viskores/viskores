@@ -103,6 +103,7 @@ void TestArrayHandleReverse()
   TestArrayHandleReverseWrite();
   TestArrayHandleReverseScanInclusiveByKey();
 }
+
 }; // namespace UnitTestArrayHandleReverseNamespace
 
 int UnitTestArrayHandleReverse(int, char* [])
