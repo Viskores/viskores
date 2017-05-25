@@ -96,12 +96,12 @@ A reader should have a general idea of the feature or fix to be developed given 
       to efficiently support data files.
 
 
-Guidelines for Commit logs
---------------------------
+Guidelines for Commit Messages
+------------------------------
 
-Remember to *motivate & summarize*. When writing commit logs, make sure
-that there is enough information there for any developer to read and glean
-relevant information such as:
+Remember to *motivate & summarize*. When writing commit messages, get into
+the habit of creating messages that have enough information for any developer
+to read and glean relevant information such as:
 
 1.  Is this change important and why?
 2.  If addressing an issue, which issue(s)?
@@ -109,12 +109,17 @@ relevant information such as:
 4.  Are there background references or documentation?
 
 A short description of what the issue being addressed and how will go a long way
-towards making the log more readable and the software more maintainable.
+towards making the log more readable and the software more maintainable. VTK-m
+requires that your message start with a single subject line, followed by a
+blank line, followed by the message body which contains the more detailed
+explanatory text for the commit. You can consider a commit message to very
+similar to an email with the first line being the subject of an email and the
+rest of the text as the body.
 
-Style guidelines for commit logs are as follows:
+Style guidelines for commit messages are as follows:
 
 1. Separate subject from body with a blank line
-2. Limit the subject line to 60 characters
+2. Limit the subject line to 78 characters
 3. Capitalize the subject line
 4. Use the imperative mood in the subject line e.g. "Refactor foo" or "Fix Issue #12322",
    instead of "Refactoring foo", or "Fixing issue #12322".
