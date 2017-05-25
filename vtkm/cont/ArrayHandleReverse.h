@@ -24,6 +24,8 @@
 #define vtk_m_cont_ArrayHandleReverse_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ErrorBadType.h>
+#include <vtkm/cont/ErrorBadValue.h>
 
 namespace vtkm
 {
@@ -69,7 +71,7 @@ public:
   VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const
   {
-    this->portal1.Set(portal.GetNumberOfValues() - index - 1, value);
+    this->portal.Set(portal.GetNumberOfValues() - index - 1, value);
   }
 
 private:
@@ -100,8 +102,8 @@ public:
   }
 
   VTKM_CONT
-  Storage(const ArrayHandleType& a1)
-    : array(a1)
+  Storage(const ArrayHandleType& a)
+    : array(a)
     , valid(true){};
 
   VTKM_CONT
@@ -134,8 +136,7 @@ public:
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    //    throw vtkm::cont::ErrorBadType(
-    //        "ArrayHandleReverse cannot shrink.");
+    throw vtkm::cont::ErrorBadType("ArrayHandleReverse cannot shrink.");
   }
 
   VTKM_CONT
@@ -199,9 +200,9 @@ public:
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
-    return PortalExecution(this->array.PrepareForOutput(Device()));
+    return PortalExecution(this->array.PrepareForOutput(numberOfValues, Device()));
   }
 
   VTKM_CONT
@@ -213,8 +214,7 @@ public:
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    //    throw vtkm::cont::ErrorBadType(
-    //        "ArrayHandleReverse cannot shrink.");
+    throw vtkm::cont::ErrorBadType("ArrayHandleReverse cannot shrink.");
   }
 
   VTKM_CONT
