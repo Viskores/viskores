@@ -29,7 +29,8 @@
 
 #define EXPECTED_NUMBER 42
 
-namespace {
+namespace
+{
 
 struct TestExecutionObject : public vtkm::exec::ExecutionObjectBase
 {
@@ -50,15 +51,14 @@ struct TestKernel : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename Device>
+template <typename Device>
 void TryExecObjectTransport(Device)
 {
   TestExecutionObject contObject;
   contObject.Number = EXPECTED_NUMBER;
 
-  vtkm::cont::arg::Transport<
-      vtkm::cont::arg::TransportTagExecObject, TestExecutionObject, Device>
-      transport;
+  vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagExecObject, TestExecutionObject, Device>
+    transport;
 
   TestKernel kernel;
   kernel.Object = transport(contObject, nullptr, 1, 1);
@@ -74,7 +74,7 @@ void TestExecObjectTransport()
 
 } // Anonymous namespace
 
-int UnitTestTransportExecObject(int, char *[])
+int UnitTestTransportExecObject(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestExecObjectTransport);
 }

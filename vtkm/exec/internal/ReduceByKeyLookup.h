@@ -27,9 +27,12 @@
 
 #include <type_traits>
 
-namespace vtkm {
-namespace exec {
-namespace internal {
+namespace vtkm
+{
+namespace exec
+{
+namespace internal
+{
 
 /// \brief Execution object holding lookup info for reduce by key.
 ///
@@ -37,17 +40,14 @@ namespace internal {
 /// to the respective key and group of values. This execution object holds that
 /// state.
 ///
-template<typename KeyPortalType,
-         typename IdPortalType,
-         typename IdComponentPortalType>
+template <typename KeyPortalType, typename IdPortalType, typename IdComponentPortalType>
 struct ReduceByKeyLookup : vtkm::exec::ExecutionObjectBase
 {
   using KeyType = typename KeyPortalType::ValueType;
 
+  VTKM_STATIC_ASSERT((std::is_same<typename IdPortalType::ValueType, vtkm::Id>::value));
   VTKM_STATIC_ASSERT(
-      (std::is_same<typename IdPortalType::ValueType, vtkm::Id>::value));
-  VTKM_STATIC_ASSERT(
-      (std::is_same<typename IdComponentPortalType::ValueType, vtkm::IdComponent>::value));
+    (std::is_same<typename IdComponentPortalType::ValueType, vtkm::IdComponent>::value));
 
   KeyPortalType UniqueKeys;
   IdPortalType SortedValuesMap;
@@ -55,21 +55,18 @@ struct ReduceByKeyLookup : vtkm::exec::ExecutionObjectBase
   IdComponentPortalType Counts;
 
   VTKM_EXEC_CONT
-  ReduceByKeyLookup(const KeyPortalType &uniqueKeys,
-                    const IdPortalType &sortedValuesMap,
-                    const IdPortalType &offsets,
-                    const IdComponentPortalType &counts)
-    : UniqueKeys(uniqueKeys),
-      SortedValuesMap(sortedValuesMap),
-      Offsets(offsets),
-      Counts(counts)
-  {  }
+  ReduceByKeyLookup(const KeyPortalType& uniqueKeys, const IdPortalType& sortedValuesMap,
+                    const IdPortalType& offsets, const IdComponentPortalType& counts)
+    : UniqueKeys(uniqueKeys)
+    , SortedValuesMap(sortedValuesMap)
+    , Offsets(offsets)
+    , Counts(counts)
+  {
+  }
 
   VTKM_EXEC_CONT
-  ReduceByKeyLookup()
-  {  }
+  ReduceByKeyLookup() {}
 };
-
 }
 }
 } // namespace vtkm::exec::internal

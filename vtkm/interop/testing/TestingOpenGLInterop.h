@@ -34,93 +34,87 @@
 #include <iterator>
 #include <vector>
 
-
-namespace vtkm {
-namespace interop {
-namespace testing {
+namespace vtkm
+{
+namespace interop
+{
+namespace testing
+{
 
 /// This class has a single static member, Run, that tests the templated
 /// DeviceAdapter for support for opengl interop.
 ///
-template< class DeviceAdapterTag,
-          class StorageTag = VTKM_DEFAULT_STORAGE_TAG>
+template <class DeviceAdapterTag, class StorageTag = VTKM_DEFAULT_STORAGE_TAG>
 struct TestingOpenGLInterop
 {
 private:
   //fill the array with a collection of values and return it wrapped in
   //an vtkm array handle
-  template<typename T>
-  static
-  vtkm::cont::ArrayHandle<T,StorageTag>
-  FillArray(std::vector<T>& data, std::size_t length)
+  template <typename T>
+  static vtkm::cont::ArrayHandle<T, StorageTag> FillArray(std::vector<T>& data, std::size_t length)
   {
     typedef typename std::vector<T>::iterator iterator;
     //make sure the data array is exactly the right length
     data.clear();
     data.resize(length);
     vtkm::Id pos = 0;
-    for(iterator i = data.begin(); i != data.end(); ++i, ++pos)
-      { *i=TestValue(pos,T()); }
+    for (iterator i = data.begin(); i != data.end(); ++i, ++pos)
+    {
+      *i = TestValue(pos, T());
+    }
 
-    std::random_shuffle(data.begin(),data.end());
+    std::random_shuffle(data.begin(), data.end());
     return vtkm::cont::make_ArrayHandle(data);
   }
 
   //Transfer the data in a vtkm ArrayHandle to open gl while making sure
   //we don't throw any errors
-  template<typename ArrayHandleType>
-  static
-  void SafelyTransferArray(ArrayHandleType array, GLuint& handle)
+  template <typename ArrayHandleType>
+  static void SafelyTransferArray(ArrayHandleType array, GLuint& handle)
   {
     try
-      {
+    {
       vtkm::interop::BufferState state(handle);
       vtkm::interop::TransferToOpenGL(array, state, DeviceAdapterTag());
-      }
-    catch (vtkm::cont::ErrorBadAllocation &error)
-      {
+    }
+    catch (vtkm::cont::ErrorBadAllocation& error)
+    {
       std::cout << error.GetMessage() << std::endl;
-      VTKM_TEST_ASSERT(true==false,
-                "Got an unexpected Out Of Memory error transferring to openGL");
-      }
-    catch (vtkm::cont::ErrorBadValue &bvError)
-      {
+      VTKM_TEST_ASSERT(true == false,
+                       "Got an unexpected Out Of Memory error transferring to openGL");
+    }
+    catch (vtkm::cont::ErrorBadValue& bvError)
+    {
       std::cout << bvError.GetMessage() << std::endl;
-      VTKM_TEST_ASSERT(true==false,
-                "Got an unexpected Bad Value error transferring to openGL");
-      }
+      VTKM_TEST_ASSERT(true == false, "Got an unexpected Bad Value error transferring to openGL");
+    }
   }
 
-  template<typename ArrayHandleType>
-  static
-  void SafelyTransferArray(ArrayHandleType array, GLuint& handle, GLenum type)
+  template <typename ArrayHandleType>
+  static void SafelyTransferArray(ArrayHandleType array, GLuint& handle, GLenum type)
   {
     try
-      {
+    {
       vtkm::interop::BufferState state(handle, type);
       vtkm::interop::TransferToOpenGL(array, state, DeviceAdapterTag());
-      }
-    catch (vtkm::cont::ErrorBadAllocation &error)
-      {
+    }
+    catch (vtkm::cont::ErrorBadAllocation& error)
+    {
       std::cout << error.GetMessage() << std::endl;
-      VTKM_TEST_ASSERT(true==false,
-                "Got an unexpected Out Of Memory error transferring to openGL");
-      }
-    catch (vtkm::cont::ErrorBadValue &bvError)
-      {
+      VTKM_TEST_ASSERT(true == false,
+                       "Got an unexpected Out Of Memory error transferring to openGL");
+    }
+    catch (vtkm::cont::ErrorBadValue& bvError)
+    {
       std::cout << bvError.GetMessage() << std::endl;
-      VTKM_TEST_ASSERT(true==false,
-                "Got an unexpected Bad Value error transferring to openGL");
-      }
+      VTKM_TEST_ASSERT(true == false, "Got an unexpected Bad Value error transferring to openGL");
+    }
   }
-
-
 
   //bring the data back from openGL and into a std vector. Will bind the
   //passed in handle to the default buffer type for the type T
-  template<typename T>
-  static
-  std::vector<T> CopyGLBuffer(GLuint& handle, T t)
+  template <typename T>
+  static std::vector<T> CopyGLBuffer(GLuint& handle, T t)
   {
     //get the type we used for this buffer.
     GLenum type = vtkm::interop::internal::BufferTypePicker(t);
@@ -132,12 +126,12 @@ private:
     //get the size of the buffer
     int bytesInBuffer = 0;
     glGetBufferParameteriv(type, GL_BUFFER_SIZE, &bytesInBuffer);
-    const std::size_t size = ( static_cast<std::size_t>(bytesInBuffer) / sizeof(T) );
+    const std::size_t size = (static_cast<std::size_t>(bytesInBuffer) / sizeof(T));
 
     //get the buffer contents and place it into a vector
     std::vector<T> data;
     data.resize(size);
-    glGetBufferSubData(type,0,bytesInBuffer,&data[0]);
+    glGetBufferSubData(type, 0, bytesInBuffer, &data[0]);
 
     return data;
   }
@@ -154,16 +148,14 @@ private:
       //than pull down the results from the array buffer and verify
       //that they match the handles contents
       std::vector<T> tempData;
-      vtkm::cont::ArrayHandle<T,StorageTag> temp =
-            FillArray(tempData,Size);
+      vtkm::cont::ArrayHandle<T, StorageTag> temp = FillArray(tempData, Size);
 
       //verify that the signature that doesn't have type works
-      SafelyTransferArray(temp,GLHandle);
+      SafelyTransferArray(temp, GLHandle);
 
-      GLboolean  is_buffer;
+      GLboolean is_buffer;
       is_buffer = glIsBuffer(GLHandle);
-      VTKM_TEST_ASSERT(is_buffer==GL_TRUE,
-                    "OpenGL buffer not filled");
+      VTKM_TEST_ASSERT(is_buffer == GL_TRUE, "OpenGL buffer not filled");
 
       std::vector<T> returnedValues = CopyGLBuffer(GLHandle, t);
 
@@ -171,44 +163,41 @@ private:
       temp.SyncControlArray();
       T* expectedValues = temp.Internals->ControlArray.StealArray();
 
-      for(std::size_t i=0; i < Size; ++i)
-        {
-        VTKM_TEST_ASSERT(test_equal(*(expectedValues+i),returnedValues[i]),
-                        "Array Handle failed to transfer properly");
-        }
+      for (std::size_t i = 0; i < Size; ++i)
+      {
+        VTKM_TEST_ASSERT(test_equal(*(expectedValues + i), returnedValues[i]),
+                         "Array Handle failed to transfer properly");
+      }
 
       temp.ReleaseResources();
-      temp = FillArray(tempData,Size*2);
+      temp = FillArray(tempData, Size * 2);
       GLenum type = vtkm::interop::internal::BufferTypePicker(t);
-      SafelyTransferArray(temp,GLHandle,type);
+      SafelyTransferArray(temp, GLHandle, type);
       is_buffer = glIsBuffer(GLHandle);
-      VTKM_TEST_ASSERT(is_buffer==GL_TRUE,
-                    "OpenGL buffer not filled");
+      VTKM_TEST_ASSERT(is_buffer == GL_TRUE, "OpenGL buffer not filled");
       returnedValues = CopyGLBuffer(GLHandle, t);
       //verify the results match what is in the array handle
       temp.SyncControlArray();
       expectedValues = temp.Internals->ControlArray.StealArray();
 
-      for(std::size_t i=0; i < Size*2; ++i)
-        {
-        VTKM_TEST_ASSERT(test_equal(*(expectedValues+i),returnedValues[i]),
-                        "Array Handle failed to transfer properly");
-        }
+      for (std::size_t i = 0; i < Size * 2; ++i)
+      {
+        VTKM_TEST_ASSERT(test_equal(*(expectedValues + i), returnedValues[i]),
+                         "Array Handle failed to transfer properly");
+      }
 
       //verify this work for a constant value array handle
-      T constantValue = TestValue(2,T()); //verified by die roll
-      vtkm::cont::ArrayHandleConstant<T> constant(constantValue,
-                                                  static_cast<vtkm::Id>(Size) );
-      SafelyTransferArray(constant,GLHandle);
+      T constantValue = TestValue(2, T()); //verified by die roll
+      vtkm::cont::ArrayHandleConstant<T> constant(constantValue, static_cast<vtkm::Id>(Size));
+      SafelyTransferArray(constant, GLHandle);
       is_buffer = glIsBuffer(GLHandle);
-      VTKM_TEST_ASSERT(is_buffer==GL_TRUE,
-                    "OpenGL buffer not filled");
+      VTKM_TEST_ASSERT(is_buffer == GL_TRUE, "OpenGL buffer not filled");
       returnedValues = CopyGLBuffer(GLHandle, constantValue);
-      for(std::size_t i=0; i < Size; ++i)
-        {
-        VTKM_TEST_ASSERT(test_equal(returnedValues[i],constantValue),
-                        "Constant value array failed to transfer properly");
-        }
+      for (std::size_t i = 0; i < Size; ++i)
+      {
+        VTKM_TEST_ASSERT(test_equal(returnedValues[i], constantValue),
+                         "Constant value array failed to transfer properly");
+      }
     }
   };
 
@@ -277,12 +266,11 @@ private:
   //   }
   // };
 
-
 public:
   VTKM_CONT static int Run()
-    {
+  {
     std::cout << "TestingOpenGLInterop Run() " << std::endl;
-    
+
     //verify that we can transfer basic arrays and constant value arrays to opengl
     vtkm::testing::Testing::TryTypes(TransferFunctor());
 
@@ -295,10 +283,10 @@ public:
     //                              DeviceAdapterTag() );
 
     return 0;
-    }
+  }
 };
-
-
-} } }
+}
+}
+}
 
 #endif //vtk_m_interop_testing_TestingOpenGLInterop_h

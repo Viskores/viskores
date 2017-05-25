@@ -29,10 +29,13 @@
 #include <EGL/egl.h>
 //#include <GL/gl.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-namespace detail {
+namespace detail
+{
 
 struct CanvasEGLInternals
 {
@@ -44,8 +47,8 @@ struct CanvasEGLInternals
 } // namespace detail
 
 CanvasEGL::CanvasEGL(vtkm::Id width, vtkm::Id height)
-  : CanvasGL(width, height),
-    Internals(new detail::CanvasEGLInternals)
+  : CanvasGL(width, height)
+  , Internals(new detail::CanvasEGLInternals)
 {
   this->Internals->Context = nullptr;
   this->ResizeBuffers(width, height);
@@ -68,48 +71,46 @@ void CanvasEGL::Initialize()
     throw vtkm::cont::ErrorBadValue("Failed to initialize EGL display");
   }
 
-  const EGLint cfgAttrs[] =
-  {
-    EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-    EGL_BLUE_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_RED_SIZE, 8,
-    EGL_DEPTH_SIZE, 8,
-    EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
-    EGL_NONE
-  };
+  const EGLint cfgAttrs[] = { EGL_SURFACE_TYPE,
+                              EGL_PBUFFER_BIT,
+                              EGL_BLUE_SIZE,
+                              8,
+                              EGL_GREEN_SIZE,
+                              8,
+                              EGL_RED_SIZE,
+                              8,
+                              EGL_DEPTH_SIZE,
+                              8,
+                              EGL_RENDERABLE_TYPE,
+                              EGL_OPENGL_BIT,
+                              EGL_NONE };
 
   EGLint nCfgs;
   EGLConfig cfg;
-  if (!(eglChooseConfig(this->Internals->Display, cfgAttrs, &cfg, 1, &nCfgs)) ||
-      (nCfgs == 0))
+  if (!(eglChooseConfig(this->Internals->Display, cfgAttrs, &cfg, 1, &nCfgs)) || (nCfgs == 0))
   {
     throw vtkm::cont::ErrorBadValue("Failed to get EGL config");
   }
 
-  const EGLint pbAttrs[] =
-  {
-    EGL_WIDTH, static_cast<EGLint>(this->GetWidth()),
+  const EGLint pbAttrs[] = {
+    EGL_WIDTH,  static_cast<EGLint>(this->GetWidth()),
     EGL_HEIGHT, static_cast<EGLint>(this->GetHeight()),
     EGL_NONE,
   };
 
-  this->Internals->Surface =
-      eglCreatePbufferSurface(this->Internals->Display, cfg, pbAttrs);
+  this->Internals->Surface = eglCreatePbufferSurface(this->Internals->Display, cfg, pbAttrs);
   if (!this->Internals->Surface)
   {
     throw vtkm::cont::ErrorBadValue("Failed to create EGL PBuffer surface");
   }
   eglBindAPI(EGL_OPENGL_API);
   this->Internals->Context =
-      eglCreateContext(this->Internals->Display, cfg, EGL_NO_CONTEXT, nullptr);
+    eglCreateContext(this->Internals->Display, cfg, EGL_NO_CONTEXT, nullptr);
   if (!this->Internals->Context)
   {
     throw vtkm::cont::ErrorBadValue("Failed to create EGL context");
   }
-  if (!(eglMakeCurrent(this->Internals->Display,
-                       this->Internals->Surface,
-                       this->Internals->Surface,
+  if (!(eglMakeCurrent(this->Internals->Display, this->Internals->Surface, this->Internals->Surface,
                        this->Internals->Context)))
   {
     throw vtkm::cont::ErrorBadValue("Failed to create EGL context current");
@@ -121,10 +122,9 @@ void CanvasEGL::Activate()
   glEnable(GL_DEPTH_TEST);
 }
 
-vtkm::rendering::Canvas *CanvasEGL::NewCopy() const
+vtkm::rendering::Canvas* CanvasEGL::NewCopy() const
 {
   return new vtkm::rendering::CanvasEGL(*this);
 }
-
 }
 } // namespace vtkm::rendering

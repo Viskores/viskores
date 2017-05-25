@@ -23,7 +23,8 @@
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
 
-namespace vtkm {
+namespace vtkm
+{
 
 /// Uses Newton's method (a.k.a. Newton-Raphson method) to solve a nonlinear
 /// system of equations. This function assumes that the number of variables
@@ -36,30 +37,22 @@ namespace vtkm {
 /// returned.
 ///
 VTKM_SUPPRESS_EXEC_WARNINGS
-template<typename ScalarType,
-         vtkm::IdComponent Size,
-         typename JacobianFunctor,
-         typename FunctionFunctor>
-VTKM_EXEC_CONT
-vtkm::Vec<ScalarType,Size>
-NewtonsMethod(JacobianFunctor jacobianEvaluator,
-              FunctionFunctor functionEvaluator,
-              vtkm::Vec<ScalarType,Size> desiredFunctionOutput,
-              vtkm::Vec<ScalarType,Size> initialGuess
-              = vtkm::Vec<ScalarType,Size>(ScalarType(0)),
-              ScalarType convergeDifference = ScalarType(1e-3),
-              vtkm::IdComponent maxIterations = 10)
+template <typename ScalarType, vtkm::IdComponent Size, typename JacobianFunctor,
+          typename FunctionFunctor>
+VTKM_EXEC_CONT vtkm::Vec<ScalarType, Size> NewtonsMethod(
+  JacobianFunctor jacobianEvaluator, FunctionFunctor functionEvaluator,
+  vtkm::Vec<ScalarType, Size> desiredFunctionOutput,
+  vtkm::Vec<ScalarType, Size> initialGuess = vtkm::Vec<ScalarType, Size>(ScalarType(0)),
+  ScalarType convergeDifference = ScalarType(1e-3), vtkm::IdComponent maxIterations = 10)
 {
-  typedef vtkm::Vec<ScalarType,Size> VectorType;
-  typedef vtkm::Matrix<ScalarType,Size,Size> MatrixType;
+  typedef vtkm::Vec<ScalarType, Size> VectorType;
+  typedef vtkm::Matrix<ScalarType, Size, Size> MatrixType;
 
   VectorType x = initialGuess;
 
   bool converged = false;
-  for (vtkm::IdComponent iteration = 0;
-       !converged && (iteration < maxIterations);
-       iteration++)
-    {
+  for (vtkm::IdComponent iteration = 0; !converged && (iteration < maxIterations); iteration++)
+  {
     // For Newton's method, we solve the linear system
     //
     // Jacobian x deltaX = currentFunctionOutput - desiredFunctionOutput
@@ -72,21 +65,18 @@ NewtonsMethod(JacobianFunctor jacobianEvaluator,
     MatrixType jacobian = jacobianEvaluator(x);
     VectorType currentFunctionOutput = functionEvaluator(x);
 
-    bool valid;  // Ignored.
+    bool valid; // Ignored.
     VectorType deltaX =
-        vtkm::SolveLinearSystem(
-          jacobian,
-          currentFunctionOutput - desiredFunctionOutput,
-          valid);
+      vtkm::SolveLinearSystem(jacobian, currentFunctionOutput - desiredFunctionOutput, valid);
 
     x = x - deltaX;
 
     converged = true;
     for (vtkm::IdComponent index = 0; index < Size; index++)
-      {
+    {
       converged &= (vtkm::Abs(deltaX[index]) < convergeDifference);
-      }
     }
+  }
 
   // Not checking whether converged.
   return x;

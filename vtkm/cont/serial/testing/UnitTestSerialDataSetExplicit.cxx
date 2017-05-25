@@ -26,9 +26,7 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/TestingDataSetExplicit.h>
 
-int UnitTestSerialDataSetExplicit(int, char *[])
+int UnitTestSerialDataSetExplicit(int, char* [])
 {
-  return vtkm::cont::testing::TestingDataSetExplicit
-         <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingDataSetExplicit<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }
-

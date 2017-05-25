@@ -25,8 +25,10 @@
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 /// \brief A scatter that maps input directly to output.
 ///
@@ -47,30 +49,24 @@ struct ScatterIdentity
   VTKM_CONT
   OutputToInputMapType GetOutputToInputMap(vtkm::Id3 inputRange) const
   {
-    return this->GetOutputToInputMap(
-          inputRange[0]*inputRange[1]*inputRange[2]);
+    return this->GetOutputToInputMap(inputRange[0] * inputRange[1] * inputRange[2]);
   }
 
   typedef vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> VisitArrayType;
   VTKM_CONT
-  VisitArrayType GetVisitArray(vtkm::Id inputRange) const
-  {
-    return VisitArrayType(1, inputRange);
-  }
+  VisitArrayType GetVisitArray(vtkm::Id inputRange) const { return VisitArrayType(1, inputRange); }
   VTKM_CONT
   VisitArrayType GetVisitArray(vtkm::Id3 inputRange) const
   {
-    return this->GetVisitArray(inputRange[0]*inputRange[1]*inputRange[2]);
+    return this->GetVisitArray(inputRange[0] * inputRange[1] * inputRange[2]);
   }
 
-  template<typename RangeType>
-  VTKM_CONT
-  RangeType GetOutputRange(RangeType inputRange) const
+  template <typename RangeType>
+  VTKM_CONT RangeType GetOutputRange(RangeType inputRange) const
   {
     return inputRange;
   }
 };
-
 }
 } // namespace vtkm::worklet
 

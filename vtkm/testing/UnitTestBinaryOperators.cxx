@@ -22,65 +22,64 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 //general pair test
 template <typename T>
-void BinaryOperatorTest( )
-{
+void BinaryOperatorTest(){
 
   //Not using TestValue method as it causes roll-over to occur with
   //uint8 and int8 leading to unexpected comparisons.
 
   //test Sum
-  {
-  vtkm::Sum sum;
-  T result;
+  { vtkm::Sum sum;
+T result;
 
-  result = sum( vtkm::TypeTraits<T>::ZeroInitialization(), T(1));
-  VTKM_TEST_ASSERT( result == T(1), "Sum wrong.");
+result = sum(vtkm::TypeTraits<T>::ZeroInitialization(), T(1));
+VTKM_TEST_ASSERT(result == T(1), "Sum wrong.");
 
-  result = sum( T(1), T(1));
-  VTKM_TEST_ASSERT( result == T(2), "Sum wrong.");
-  }
+result = sum(T(1), T(1));
+VTKM_TEST_ASSERT(result == T(2), "Sum wrong.");
+}
 
-  //test Product
-  {
+//test Product
+{
   vtkm::Product product;
   T result;
 
-  result = product( vtkm::TypeTraits<T>::ZeroInitialization(), T(1));
-  VTKM_TEST_ASSERT( result == vtkm::TypeTraits<T>::ZeroInitialization(), "Product wrong.");
+  result = product(vtkm::TypeTraits<T>::ZeroInitialization(), T(1));
+  VTKM_TEST_ASSERT(result == vtkm::TypeTraits<T>::ZeroInitialization(), "Product wrong.");
 
-  result = product( T(1), T(1));
-  VTKM_TEST_ASSERT( result == T(1), "Product wrong.");
+  result = product(T(1), T(1));
+  VTKM_TEST_ASSERT(result == T(1), "Product wrong.");
 
+  result = product(T(2), T(3));
+  VTKM_TEST_ASSERT(result == T(6), "Product wrong.");
+}
 
-  result = product( T(2), T(3));
-  VTKM_TEST_ASSERT( result == T(6), "Product wrong.");
-  }
-
-  //test Maximum
-  {
+//test Maximum
+{
   vtkm::Maximum maximum;
-  VTKM_TEST_ASSERT( maximum( T(1), T(2) ) == T(2), "Maximum wrong.");
-  VTKM_TEST_ASSERT( maximum( T(2), T(2) ) == T(2), "Maximum wrong.");
-  VTKM_TEST_ASSERT( maximum( T(2), T(1) ) == T(2), "Maximum wrong.");
-  }
+  VTKM_TEST_ASSERT(maximum(T(1), T(2)) == T(2), "Maximum wrong.");
+  VTKM_TEST_ASSERT(maximum(T(2), T(2)) == T(2), "Maximum wrong.");
+  VTKM_TEST_ASSERT(maximum(T(2), T(1)) == T(2), "Maximum wrong.");
+}
 
-  //test Minimum
-  {
+//test Minimum
+{
   vtkm::Minimum minimum;
-  VTKM_TEST_ASSERT( minimum( T(1), T(2) ) == T(1), "Minimum wrong.");
-  VTKM_TEST_ASSERT( minimum( T(1), T(1) ) == T(1), "Minimum wrong.");
-  VTKM_TEST_ASSERT( minimum( T(3), T(2) ) == T(2), "Minimum wrong.");
-  }
-
-};
+  VTKM_TEST_ASSERT(minimum(T(1), T(2)) == T(1), "Minimum wrong.");
+  VTKM_TEST_ASSERT(minimum(T(1), T(1)) == T(1), "Minimum wrong.");
+  VTKM_TEST_ASSERT(minimum(T(3), T(2)) == T(2), "Minimum wrong.");
+}
+}
+;
 
 struct BinaryOperatorTestFunctor
 {
-  template <typename T> void operator()(const T&) const
+  template <typename T>
+  void operator()(const T&) const
   {
     BinaryOperatorTest<T>();
   }
@@ -92,36 +91,35 @@ void TestBinaryOperators()
 
   //test BitwiseAnd
   {
-  vtkm::BitwiseAnd bitwise_and;
-  VTKM_TEST_ASSERT( bitwise_and(true, true) == true, "bitwise_and true wrong.");
-  VTKM_TEST_ASSERT( bitwise_and(true, false) == false, "bitwise_and true wrong.");
-  VTKM_TEST_ASSERT( bitwise_and(false, true) == false, "bitwise_and true wrong.");
-  VTKM_TEST_ASSERT( bitwise_and(false, false) == false, "bitwise_and true wrong.");
+    vtkm::BitwiseAnd bitwise_and;
+    VTKM_TEST_ASSERT(bitwise_and(true, true) == true, "bitwise_and true wrong.");
+    VTKM_TEST_ASSERT(bitwise_and(true, false) == false, "bitwise_and true wrong.");
+    VTKM_TEST_ASSERT(bitwise_and(false, true) == false, "bitwise_and true wrong.");
+    VTKM_TEST_ASSERT(bitwise_and(false, false) == false, "bitwise_and true wrong.");
   }
 
   //test BitwiseOr
   {
-  vtkm::BitwiseOr bitwise_or;
-  VTKM_TEST_ASSERT( bitwise_or(true, true) == true, "bitwise_or true wrong.");
-  VTKM_TEST_ASSERT( bitwise_or(true, false) == true, "bitwise_or true wrong.");
-  VTKM_TEST_ASSERT( bitwise_or(false, true) == true, "bitwise_or true wrong.");
-  VTKM_TEST_ASSERT( bitwise_or(false, false) == false, "bitwise_or true wrong.");
+    vtkm::BitwiseOr bitwise_or;
+    VTKM_TEST_ASSERT(bitwise_or(true, true) == true, "bitwise_or true wrong.");
+    VTKM_TEST_ASSERT(bitwise_or(true, false) == true, "bitwise_or true wrong.");
+    VTKM_TEST_ASSERT(bitwise_or(false, true) == true, "bitwise_or true wrong.");
+    VTKM_TEST_ASSERT(bitwise_or(false, false) == false, "bitwise_or true wrong.");
   }
 
   //test BitwiseXor
   {
-  vtkm::BitwiseXor bitwise_xor;
-  VTKM_TEST_ASSERT( bitwise_xor(true, true) == false, "bitwise_xor true wrong.");
-  VTKM_TEST_ASSERT( bitwise_xor(true, false) == true, "bitwise_xor true wrong.");
-  VTKM_TEST_ASSERT( bitwise_xor(false, true) == true, "bitwise_xor true wrong.");
-  VTKM_TEST_ASSERT( bitwise_xor(false, false) == false, "bitwise_xor true wrong.");
+    vtkm::BitwiseXor bitwise_xor;
+    VTKM_TEST_ASSERT(bitwise_xor(true, true) == false, "bitwise_xor true wrong.");
+    VTKM_TEST_ASSERT(bitwise_xor(true, false) == true, "bitwise_xor true wrong.");
+    VTKM_TEST_ASSERT(bitwise_xor(false, true) == true, "bitwise_xor true wrong.");
+    VTKM_TEST_ASSERT(bitwise_xor(false, false) == false, "bitwise_xor true wrong.");
   }
-
 }
 
 } // anonymous namespace
 
-int UnitTestBinaryOperators(int, char *[])
+int UnitTestBinaryOperators(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestBinaryOperators);
 }

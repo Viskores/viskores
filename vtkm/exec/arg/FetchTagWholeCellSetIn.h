@@ -27,42 +27,40 @@
 
 #include <type_traits>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief \c Fetch tag for whole cell sets.
 ///
 ///
-struct FetchTagWholeCellSetIn {  };
+struct FetchTagWholeCellSetIn
+{
+};
 
-
-template<typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<
-    vtkm::exec::arg::FetchTagWholeCellSetIn,
-    vtkm::exec::arg::AspectTagDefault,
-    ThreadIndicesType,
-    ExecObjectType>
+template <typename ThreadIndicesType, typename ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagWholeCellSetIn, vtkm::exec::arg::AspectTagDefault,
+             ThreadIndicesType, ExecObjectType>
 {
   typedef ExecObjectType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Load(const ThreadIndicesType &vtkmNotUsed(indices),
-                 const ExecObjectType &execObject) const
+  ValueType Load(const ThreadIndicesType& vtkmNotUsed(indices),
+                 const ExecObjectType& execObject) const
   {
     return execObject;
   }
 
   VTKM_EXEC
-  void Store(const ThreadIndicesType &,
-             const ExecObjectType &,
-             const ValueType &) const
+  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

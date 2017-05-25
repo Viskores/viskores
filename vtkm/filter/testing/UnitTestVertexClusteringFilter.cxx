@@ -25,7 +25,8 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-namespace {
+namespace
+{
 }
 
 void TestVertexClustering()
@@ -36,38 +37,38 @@ void TestVertexClustering()
   vtkm::filter::VertexClustering clustering;
   vtkm::filter::ResultDataSet result;
 
-  clustering.SetNumberOfDivisions( vtkm::Id3(3, 3, 3) );
+  clustering.SetNumberOfDivisions(vtkm::Id3(3, 3, 3));
   result = clustering.Execute(dataSet);
 
-  VTKM_TEST_ASSERT( result.IsValid(), "results should be valid");
+  VTKM_TEST_ASSERT(result.IsValid(), "results should be valid");
 
   vtkm::cont::DataSet output = result.GetDataSet();
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Number of output coordinate systems mismatch");
 
-
   // test
   const vtkm::Id output_points = 6;
-  vtkm::Float64 output_point[output_points][3] = {{0.0174716003,0.0501927994,0.0930275023}, {0.0320714004,0.14704667,0.0952706337}, {0.0268670674,0.246195346,0.119720004}, {0.00215422804,0.0340906903,0.180881709}, {0.0108188,0.152774006,0.167914003}, {0.0202241503,0.225427493,0.140208006}};
+  vtkm::Float64 output_point[output_points][3] = {
+    { 0.0174716003, 0.0501927994, 0.0930275023 }, { 0.0320714004, 0.14704667, 0.0952706337 },
+    { 0.0268670674, 0.246195346, 0.119720004 },   { 0.00215422804, 0.0340906903, 0.180881709 },
+    { 0.0108188, 0.152774006, 0.167914003 },      { 0.0202241503, 0.225427493, 0.140208006 }
+  };
 
   typedef vtkm::Vec<vtkm::Float64, 3> PointType;
   vtkm::cont::ArrayHandle<PointType> pointArray;
   output.GetCoordinateSystem(0).GetData().CopyTo(pointArray);
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
-                   "Number of output points mismatch" );
+                   "Number of output points mismatch");
   for (vtkm::Id i = 0; i < pointArray.GetNumberOfValues(); ++i)
-    {
-      const PointType &p1 = pointArray.GetPortalConstControl().Get(i);
-      PointType p2 = vtkm::make_Vec(output_point[i][0],
-                                    output_point[i][1],
-                                    output_point[i][2]);
-      std::cout << "point: " << p1 << " " << p2 << std::endl;
-      VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
-    }
+  {
+    const PointType& p1 = pointArray.GetPortalConstControl().Get(i);
+    PointType p2 = vtkm::make_Vec(output_point[i][0], output_point[i][1], output_point[i][2]);
+    std::cout << "point: " << p1 << " " << p2 << std::endl;
+    VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
+  }
 }
 
-int UnitTestVertexClusteringFilter(int, char *[])
+int UnitTestVertexClusteringFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestVertexClustering);
-
 }

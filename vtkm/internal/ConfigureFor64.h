@@ -23,7 +23,7 @@
 //need to be included look at vtkm/internal/Configure.h for all defines that
 //you can over-ride.
 #ifdef vtk_m_internal_Configure_h
-# error Incorrect header order. Include this header before any other VTKm headers.
+#error Incorrect header order. Include this header before any other VTKm headers.
 #endif
 
 #ifndef vtk_m_internal_Configure32_h

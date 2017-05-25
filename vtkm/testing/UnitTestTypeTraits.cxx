@@ -24,19 +24,21 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 struct TypeTraitTest
 {
-  template <typename T> void operator()(T t) const
+  template <typename T>
+  void operator()(T t) const
   {
     // If you get compiler errors here, it could be a TypeTraits instance
     // has missing or malformed tags.
     this->TestDimensionality(t, typename vtkm::TypeTraits<T>::DimensionalityTag());
     this->TestNumeric(t, typename vtkm::TypeTraits<T>::NumericTag());
   }
-private:
 
+private:
   template <typename T>
   void TestDimensionality(T, vtkm::TypeTraitsScalarTag) const
   {
@@ -82,7 +84,7 @@ static void TestTypeTraits()
 } // anonymous namespace
 
 //-----------------------------------------------------------------------------
-int UnitTestTypeTraits(int, char *[])
+int UnitTestTypeTraits(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestTypeTraits);
 }

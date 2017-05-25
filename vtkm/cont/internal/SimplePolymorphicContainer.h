@@ -25,22 +25,25 @@
 #include <memory>
 #include <vtkm/Types.h>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 /// \brief Base class for SimplePolymorphicContainer
 ///
-struct VTKM_CONT_EXPORT SimplePolymorphicContainerBase {
+struct VTKM_CONT_EXPORT SimplePolymorphicContainerBase
+{
   SimplePolymorphicContainerBase();
 
   // This must exist so that subclasses are destroyed correctly.
   virtual ~SimplePolymorphicContainerBase();
 
-  virtual std::shared_ptr<SimplePolymorphicContainerBase>
-  NewInstance() const = 0;
+  virtual std::shared_ptr<SimplePolymorphicContainerBase> NewInstance() const = 0;
 
-  virtual const void *GetVoidPointer() const = 0;
+  virtual const void* GetVoidPointer() const = 0;
 };
 
 /// \brief Simple object container that can use C++ run-time type information.
@@ -52,29 +55,30 @@ struct VTKM_CONT_EXPORT SimplePolymorphicContainerBase {
 /// around a void* except that C++ will capture run-time type information that
 /// allows for safer dynamic downcasts.
 ///
-template<typename T>
+template <typename T>
 struct VTKM_ALWAYS_EXPORT SimplePolymorphicContainer : public SimplePolymorphicContainerBase
 {
   T Item;
 
   VTKM_CONT
-  SimplePolymorphicContainer() : Item() {  }
+  SimplePolymorphicContainer()
+    : Item()
+  {
+  }
 
   VTKM_CONT
-  SimplePolymorphicContainer(const T &src) : Item(src) {  }
+  SimplePolymorphicContainer(const T& src)
+    : Item(src)
+  {
+  }
 
   virtual std::shared_ptr<SimplePolymorphicContainerBase> NewInstance() const
   {
-    return std::shared_ptr<SimplePolymorphicContainerBase>(
-          new SimplePolymorphicContainer<T>());
+    return std::shared_ptr<SimplePolymorphicContainerBase>(new SimplePolymorphicContainer<T>());
   }
 
-  virtual const void *GetVoidPointer() const
-  {
-    return &this->Item;
-  }
+  virtual const void* GetVoidPointer() const { return &this->Item; }
 };
-
 }
 }
 } // namespace vtkm::cont::internal

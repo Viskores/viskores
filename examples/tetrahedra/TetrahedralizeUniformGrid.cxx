@@ -31,14 +31,14 @@
 
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-#if defined (__APPLE__)
-# include <GLUT/glut.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
 #else
-# include <GL/glut.h>
+#include <GL/glut.h>
 #endif
 
 #include "../isosurface/quaternion.h"
@@ -46,14 +46,14 @@
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 // Default size of the example
-static vtkm::Id3 dims(4,4,4);
+static vtkm::Id3 dims(4, 4, 4);
 static vtkm::Id cellsToDisplay = 64;
 
 // Takes input uniform grid and outputs unstructured grid of tets
 static vtkm::cont::DataSet tetDataSet;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> vertexArray;
 
 // OpenGL display variables
 static Quaternion qrot;
@@ -71,14 +71,12 @@ vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dim)
   const vtkm::Id3 vdims(dim[0] + 1, dim[1] + 1, dim[2] + 1);
   const vtkm::Vec<vtkm::Float32, 3> origin = vtkm::make_Vec(0.0f, 0.0f, 0.0f);
   const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(
-                                              1.0f/static_cast<vtkm::Float32>(dim[0]),
-                                              1.0f/static_cast<vtkm::Float32>(dim[1]),
-                                              1.0f/static_cast<vtkm::Float32>(dim[2]));
+    1.0f / static_cast<vtkm::Float32>(dim[0]), 1.0f / static_cast<vtkm::Float32>(dim[1]),
+    1.0f / static_cast<vtkm::Float32>(dim[2]));
 
   // Generate coordinate system
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
-  dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", coordinates));
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   // Generate cell set
   vtkm::cont::CellSetStructured<3> cellSet("cells");
@@ -96,16 +94,14 @@ vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dim)
 struct GetVertexArray
 {
   template <typename ArrayHandleType>
-  VTKM_CONT
-  void operator()(ArrayHandleType array) const
+  VTKM_CONT void operator()(ArrayHandleType array) const
   {
     this->GetVertexPortal(array.GetPortalConstControl());
   }
 
 private:
   template <typename PortalType>
-  VTKM_CONT
-  void GetVertexPortal(const PortalType &portal) const
+  VTKM_CONT void GetVertexPortal(const PortalType& portal) const
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
@@ -141,7 +137,6 @@ void initializeGL()
   glEnable(GL_COLOR_MATERIAL);
 }
 
-
 //
 // Render the output using simple OpenGL
 //
@@ -152,7 +147,7 @@ void displayCall()
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective( 45.0f, 1.0f, 1.0f, 20.0f);
+  gluPerspective(45.0f, 1.0f, 1.0f, 20.0f);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -176,14 +171,11 @@ void displayCall()
 
   // Draw the five tetrahedra belonging to each hexadron
   vtkm::Id tetra = 0;
-  vtkm::Float32 color[5][3] =
-  {
-    {1.0f, 0.0f, 0.0f},
-    {0.0f, 1.0f, 0.0f},
-    {0.0f, 0.0f, 1.0f},
-    {1.0f, 0.0f, 1.0f},
-    {1.0f, 1.0f, 0.0f}
-  };
+  vtkm::Float32 color[5][3] = { { 1.0f, 0.0f, 0.0f },
+                                { 0.0f, 1.0f, 0.0f },
+                                { 0.0f, 0.0f, 1.0f },
+                                { 1.0f, 0.0f, 1.0f },
+                                { 1.0f, 1.0f, 0.0f } };
 
   for (vtkm::Id hex = 0; hex < cellsToDisplay; hex++)
   {
@@ -197,13 +189,13 @@ void displayCall()
       cellSet.GetIndices(tetra, tetIndices);
 
       // Get the vertex points for this tetrahedron
-      vtkm::Vec<vtkm::Float64,3> pt0 = vertexArray.GetPortalConstControl().Get(tetIndices[0]);
-      vtkm::Vec<vtkm::Float64,3> pt1 = vertexArray.GetPortalConstControl().Get(tetIndices[1]);
-      vtkm::Vec<vtkm::Float64,3> pt2 = vertexArray.GetPortalConstControl().Get(tetIndices[2]);
-      vtkm::Vec<vtkm::Float64,3> pt3 = vertexArray.GetPortalConstControl().Get(tetIndices[3]);
+      vtkm::Vec<vtkm::Float64, 3> pt0 = vertexArray.GetPortalConstControl().Get(tetIndices[0]);
+      vtkm::Vec<vtkm::Float64, 3> pt1 = vertexArray.GetPortalConstControl().Get(tetIndices[1]);
+      vtkm::Vec<vtkm::Float64, 3> pt2 = vertexArray.GetPortalConstControl().Get(tetIndices[2]);
+      vtkm::Vec<vtkm::Float64, 3> pt3 = vertexArray.GetPortalConstControl().Get(tetIndices[3]);
 
       // Draw the tetrahedron filled with alternating colors
-      glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+      glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
       glBegin(GL_TRIANGLE_STRIP);
       glVertex3d(pt0[0], pt0[1], pt0[2]);
       glVertex3d(pt1[0], pt1[1], pt1[2]);
@@ -215,7 +207,7 @@ void displayCall()
 
       // Draw the tetrahedron wireframe
       glColor3f(1.0f, 1.0f, 1.0f);
-      glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+      glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
       glBegin(GL_TRIANGLE_STRIP);
       glVertex3d(pt0[0], pt0[1], pt0[2]);
       glVertex3d(pt1[0], pt1[1], pt1[2]);
@@ -232,7 +224,6 @@ void displayCall()
   glPopMatrix();
   glutSwapBuffers();
 }
-
 
 // Allow rotations of the view
 void mouseMove(int x, int y)
@@ -257,14 +248,17 @@ void mouseMove(int x, int y)
   glutPostRedisplay();
 }
 
-
 // Respond to mouse button
 void mouseCall(int button, int state, int x, int y)
 {
-  if (button == 0) mouse_state = state;
-  if ((button == 0) && (state == 0)) { lastx = x;  lasty = y; }
+  if (button == 0)
+    mouse_state = state;
+  if ((button == 0) && (state == 0))
+  {
+    lastx = x;
+    lasty = y;
+  }
 }
-
 
 // Tetrahedralize and render uniform grid example
 int main(int argc, char* argv[])
@@ -280,7 +274,8 @@ int main(int argc, char* argv[])
     dims[2] = atoi(argv[3]);
     cellsToDisplay = dims[0] * dims[1] * dims[2];
   }
-  if (argc == 5) {
+  if (argc == 5)
+  {
     cellsToDisplay = atoi(argv[4]);
   }
 
@@ -314,5 +309,5 @@ int main(int argc, char* argv[])
 }
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif

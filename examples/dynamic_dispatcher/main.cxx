@@ -31,18 +31,13 @@
 
 struct ExampleFieldWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature( FieldIn<>, FieldIn<>, FieldIn<>,
-                                 FieldOut<>, FieldOut<>, FieldOut<> );
-  typedef void ExecutionSignature( _1, _2, _3, _4, _5, _6 );
+  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>, FieldOut<>,
+                                FieldOut<>);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
 
-  template<typename T, typename U, typename V>
-  VTKM_EXEC
-  void operator()( const vtkm::Vec< T, 3 > & vec,
-                   const U & scalar1,
-                   const V& scalar2,
-                   vtkm::Vec<T, 3>& out_vec,
-                   U& out_scalar1,
-                   V& out_scalar2 ) const
+  template <typename T, typename U, typename V>
+  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& vec, const U& scalar1, const V& scalar2,
+                            vtkm::Vec<T, 3>& out_vec, U& out_scalar1, V& out_scalar2) const
   {
     out_vec = vec * scalar1;
     out_scalar1 = static_cast<U>(scalar1 + scalar2);
@@ -50,46 +45,35 @@ struct ExampleFieldWorklet : public vtkm::worklet::WorkletMapField
     std::cout << "hello world" << std::endl;
   }
 
-  template<typename T, typename U, typename V, typename W, typename X, typename Y>
-  VTKM_EXEC
-  void operator()( const T &,
-                   const U &,
-                   const V&,
-                   W&,
-                   X&,
-                   Y& ) const
+  template <typename T, typename U, typename V, typename W, typename X, typename Y>
+  VTKM_EXEC void operator()(const T&, const U&, const V&, W&, X&, Y&) const
   {
-  //no-op
+    //no-op
   }
 };
-
 
 int main(int argc, char** argv)
 {
   (void)argc;
   (void)argv;
 
-  std::vector< vtkm::Vec<vtkm::Float32, 3> > inputVec(10);
-  std::vector< vtkm::Int32 > inputScalar1(10);
-  std::vector< vtkm::Float64 > inputScalar2(10);
+  std::vector<vtkm::Vec<vtkm::Float32, 3>> inputVec(10);
+  std::vector<vtkm::Int32> inputScalar1(10);
+  std::vector<vtkm::Float64> inputScalar2(10);
 
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32, 3> > handleV =
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> handleV =
     vtkm::cont::make_ArrayHandle(inputVec);
 
-  vtkm::cont::ArrayHandle< vtkm::Int32 > handleS1 =
-    vtkm::cont::make_ArrayHandle(inputScalar1);
+  vtkm::cont::ArrayHandle<vtkm::Int32> handleS1 = vtkm::cont::make_ArrayHandle(inputScalar1);
 
-  vtkm::cont::ArrayHandle< vtkm::Float64 > handleS2 =
-    vtkm::cont::make_ArrayHandle(inputScalar2);
+  vtkm::cont::ArrayHandle<vtkm::Float64> handleS2 = vtkm::cont::make_ArrayHandle(inputScalar2);
 
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32, 3> > handleOV;
-  vtkm::cont::ArrayHandle< vtkm::Int32 >   handleOS1;
-  vtkm::cont::ArrayHandle< vtkm::Float64 > handleOS2;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> handleOV;
+  vtkm::cont::ArrayHandle<vtkm::Int32> handleOS1;
+  vtkm::cont::ArrayHandle<vtkm::Float64> handleOS2;
 
   vtkm::cont::DynamicArrayHandle out1(handleOV), out2(handleOS1), out3(handleOS2);
 
   vtkm::worklet::DispatcherMapField<ExampleFieldWorklet> dispatcher;
   dispatcher.Invoke(handleV, handleS1, handleS2, out1, out2, out3);
-
 }
-

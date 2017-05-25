@@ -31,19 +31,22 @@
 #include <vtkm/worklet/CellAverage.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
-namespace vtkm {
-namespace cont {
-namespace testing {
+namespace vtkm
+{
+namespace cont
+{
+namespace testing
+{
 
 /// This class has a single static member, Run, that tests DataSetSingleType
 /// with the given DeviceAdapter
 ///
-template<class DeviceAdapterTag>
+template <class DeviceAdapterTag>
 class TestingDataSetSingleType
 {
 private:
-  template<typename T, typename Storage>
-  static bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *expected,
+  template <typename T, typename Storage>
+  static bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah, const T* expected,
                               vtkm::Id size)
   {
     if (size != ah.GetNumberOfValues())
@@ -64,13 +67,13 @@ private:
 
   static inline vtkm::cont::DataSet make_SingleTypeDataSet()
   {
-    typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-    std::vector< CoordType > coordinates;
-    coordinates.push_back( CoordType(0, 0, 0) );
-    coordinates.push_back( CoordType(1, 0, 0) );
-    coordinates.push_back( CoordType(1, 1, 0) );
-    coordinates.push_back( CoordType(2, 1, 0) );
-    coordinates.push_back( CoordType(2, 2, 0) );
+    typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
+    std::vector<CoordType> coordinates;
+    coordinates.push_back(CoordType(0, 0, 0));
+    coordinates.push_back(CoordType(1, 0, 0));
+    coordinates.push_back(CoordType(1, 1, 0));
+    coordinates.push_back(CoordType(2, 1, 0));
+    coordinates.push_back(CoordType(2, 2, 0));
 
     std::vector<vtkm::Id> conn;
     // First Cell
@@ -90,10 +93,9 @@ private:
     vtkm::cont::DataSetBuilderExplicit builder;
     ds = builder.Create(coordinates, vtkm::CellShapeTagTriangle(), 3, conn);
 
-
     //Set point scalar
     const int nVerts = 5;
-    vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
+    vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
 
     vtkm::cont::DataSetFieldAdd fieldAdder;
     fieldAdder.AddPointField(ds, "pointvar", vars, nVerts);
@@ -109,70 +111,58 @@ private:
     vtkm::cont::CellSetSingleType<> cellset;
     dataSet.GetCellSet(0).CopyTo(cellset);
 
-
     //verify that we can compute the cell to point connectivity
-    cellset.BuildConnectivity(DeviceAdapterTag(),
-                              vtkm::TopologyElementTagCell(),
+    cellset.BuildConnectivity(DeviceAdapterTag(), vtkm::TopologyElementTagCell(),
                               vtkm::TopologyElementTagPoint());
 
     dataSet.PrintSummary(std::cout);
 
     //verify that the point to cell connectivity types are correct
-    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesPointToCell = cellset.GetShapesArray(
-      vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
-    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> numIndicesPointToCell = cellset.GetNumIndicesArray(
-      vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
-    vtkm::cont::ArrayHandle<vtkm::Id> connPointToCell = cellset.GetConnectivityArray(
-      vtkm::TopologyElementTagPoint(),vtkm::TopologyElementTagCell());
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesPointToCell =
+      cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> numIndicesPointToCell =
+      cellset.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::cont::ArrayHandle<vtkm::Id> connPointToCell =
+      cellset.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
-    VTKM_TEST_ASSERT( shapesPointToCell.GetNumberOfValues() == 3, "Wrong number of shapes");
-    VTKM_TEST_ASSERT( numIndicesPointToCell.GetNumberOfValues() == 3, "Wrong number of indices");
-    VTKM_TEST_ASSERT( connPointToCell.GetNumberOfValues() == 9, "Wrong connectivity length");
+    VTKM_TEST_ASSERT(shapesPointToCell.GetNumberOfValues() == 3, "Wrong number of shapes");
+    VTKM_TEST_ASSERT(numIndicesPointToCell.GetNumberOfValues() == 3, "Wrong number of indices");
+    VTKM_TEST_ASSERT(connPointToCell.GetNumberOfValues() == 9, "Wrong connectivity length");
 
     //verify that the cell to point connectivity types are correct
     //note the handle storage types differ compared to point to cell
-    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesCellToPoint = cellset.GetShapesArray(
-      vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesCellToPoint = cellset.GetNumIndicesArray(
-      vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
-    vtkm::cont::ArrayHandle<vtkm::Id> connCellToPoint = cellset.GetConnectivityArray(
-      vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesCellToPoint =
+      cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesCellToPoint =
+      cellset.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+    vtkm::cont::ArrayHandle<vtkm::Id> connCellToPoint =
+      cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
-    VTKM_TEST_ASSERT( shapesCellToPoint.GetNumberOfValues() == 5, "Wrong number of shapes");
-    VTKM_TEST_ASSERT( numIndicesCellToPoint.GetNumberOfValues() == 5, "Wrong number of indices");
-    VTKM_TEST_ASSERT( connCellToPoint.GetNumberOfValues() == 9, "Wrong connectivity length");
+    VTKM_TEST_ASSERT(shapesCellToPoint.GetNumberOfValues() == 5, "Wrong number of shapes");
+    VTKM_TEST_ASSERT(numIndicesCellToPoint.GetNumberOfValues() == 5, "Wrong number of indices");
+    VTKM_TEST_ASSERT(connCellToPoint.GetNumberOfValues() == 9, "Wrong connectivity length");
 
     //run a basic for-each topology algorithm on this
     vtkm::cont::ArrayHandle<vtkm::Float32> result;
-    vtkm::worklet::DispatcherMapTopology<
-        vtkm::worklet::CellAverage,DeviceAdapterTag> dispatcher;
-    dispatcher.Invoke(cellset,
-                      dataSet.GetField("pointvar"),
-                      result);
+    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage, DeviceAdapterTag> dispatcher;
+    dispatcher.Invoke(cellset, dataSet.GetField("pointvar"), result);
 
     vtkm::Float32 expected[3] = { 20.1333f, 30.1667f, 40.2333f };
     for (int i = 0; i < 3; ++i)
     {
-      VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i),
-          expected[i]), "Wrong result for CellAverage worklet on explicit single type cellset data");
+      VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+                       "Wrong result for CellAverage worklet on explicit single type cellset data");
     }
   }
 
   struct TestAll
   {
-    VTKM_CONT void operator()() const
-    {
-      TestingDataSetSingleType::TestDataSet_SingleType();
-    }
+    VTKM_CONT void operator()() const { TestingDataSetSingleType::TestDataSet_SingleType(); }
   };
 
 public:
-  static VTKM_CONT int Run()
-  {
-    return vtkm::cont::testing::Testing::Run(TestAll());
-  }
+  static VTKM_CONT int Run() { return vtkm::cont::testing::Testing::Run(TestAll()); }
 };
-
 }
 }
 } // namespace vtkm::cont::testing

@@ -18,29 +18,33 @@
 //  this software.
 //============================================================================
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-template<typename T, typename S>
-ArrayHandle<T,S>::ArrayHandle()
+template <typename T, typename S>
+ArrayHandle<T, S>::ArrayHandle()
   : Internals(new InternalStruct)
 {
   this->Internals->ControlArrayValid = false;
   this->Internals->ExecutionArrayValid = false;
 }
 
-template<typename T, typename S>
-ArrayHandle<T,S>::ArrayHandle(const ArrayHandle<T,S> &src)
+template <typename T, typename S>
+ArrayHandle<T, S>::ArrayHandle(const ArrayHandle<T, S>& src)
   : Internals(src.Internals)
-{  }
+{
+}
 
-template<typename T, typename S>
-ArrayHandle<T,S>::ArrayHandle(ArrayHandle<T,S> &&src)
+template <typename T, typename S>
+ArrayHandle<T, S>::ArrayHandle(ArrayHandle<T, S>&& src)
   : Internals(std::move(src.Internals))
-{  }
+{
+}
 
-template<typename T, typename S>
-ArrayHandle<T,S>::ArrayHandle(const typename ArrayHandle<T,S>::StorageType &storage)
+template <typename T, typename S>
+ArrayHandle<T, S>::ArrayHandle(const typename ArrayHandle<T, S>::StorageType& storage)
   : Internals(new InternalStruct)
 {
   this->Internals->ControlArray = storage;
@@ -48,30 +52,27 @@ ArrayHandle<T,S>::ArrayHandle(const typename ArrayHandle<T,S>::StorageType &stor
   this->Internals->ExecutionArrayValid = false;
 }
 
-template<typename T, typename S>
-ArrayHandle<T,S>::~ArrayHandle()
+template <typename T, typename S>
+ArrayHandle<T, S>::~ArrayHandle()
 {
 }
 
-template<typename T, typename S>
-ArrayHandle<T,S>&
-ArrayHandle<T,S>::operator=(const ArrayHandle<T,S> &src)
+template <typename T, typename S>
+ArrayHandle<T, S>& ArrayHandle<T, S>::operator=(const ArrayHandle<T, S>& src)
 {
   this->Internals = src.Internals;
   return *this;
 }
 
-template<typename T, typename S>
-ArrayHandle<T,S>&
-ArrayHandle<T,S>::operator=(ArrayHandle<T,S> &&src)
+template <typename T, typename S>
+ArrayHandle<T, S>& ArrayHandle<T, S>::operator=(ArrayHandle<T, S>&& src)
 {
   this->Internals = std::move(src.Internals);
   return *this;
 }
 
-template<typename T, typename S>
-typename ArrayHandle<T,S>::StorageType&
-ArrayHandle<T,S>::GetStorage()
+template <typename T, typename S>
+typename ArrayHandle<T, S>::StorageType& ArrayHandle<T, S>::GetStorage()
 {
   this->SyncControlArray();
   if (this->Internals->ControlArrayValid)
@@ -85,9 +86,8 @@ ArrayHandle<T,S>::GetStorage()
   }
 }
 
-template<typename T, typename S>
-const typename ArrayHandle<T,S>::StorageType&
-ArrayHandle<T,S>::GetStorage() const
+template <typename T, typename S>
+const typename ArrayHandle<T, S>::StorageType& ArrayHandle<T, S>::GetStorage() const
 {
   this->SyncControlArray();
   if (this->Internals->ControlArrayValid)
@@ -101,9 +101,8 @@ ArrayHandle<T,S>::GetStorage() const
   }
 }
 
-template<typename T, typename S>
-typename ArrayHandle<T,S>::PortalControl
-ArrayHandle<T,S>::GetPortalControl()
+template <typename T, typename S>
+typename ArrayHandle<T, S>::PortalControl ArrayHandle<T, S>::GetPortalControl()
 {
   this->SyncControlArray();
   if (this->Internals->ControlArrayValid)
@@ -117,13 +116,12 @@ ArrayHandle<T,S>::GetPortalControl()
   else
   {
     throw vtkm::cont::ErrorInternal(
-          "ArrayHandle::SyncControlArray did not make control array valid.");
+      "ArrayHandle::SyncControlArray did not make control array valid.");
   }
 }
 
-template<typename T, typename S>
-typename ArrayHandle<T,S>::PortalConstControl
-ArrayHandle<T,S>::GetPortalConstControl() const
+template <typename T, typename S>
+typename ArrayHandle<T, S>::PortalConstControl ArrayHandle<T, S>::GetPortalConstControl() const
 {
   this->SyncControlArray();
   if (this->Internals->ControlArrayValid)
@@ -133,12 +131,12 @@ ArrayHandle<T,S>::GetPortalConstControl() const
   else
   {
     throw vtkm::cont::ErrorInternal(
-          "ArrayHandle::SyncControlArray did not make control array valid.");
+      "ArrayHandle::SyncControlArray did not make control array valid.");
   }
 }
 
-template<typename T, typename S>
-vtkm::Id ArrayHandle<T,S>::GetNumberOfValues() const
+template <typename T, typename S>
+vtkm::Id ArrayHandle<T, S>::GetNumberOfValues() const
 {
   if (this->Internals->ControlArrayValid)
   {
@@ -154,50 +152,46 @@ vtkm::Id ArrayHandle<T,S>::GetNumberOfValues() const
   }
 }
 
-template<typename T, typename S>
-template<typename IteratorType, typename DeviceAdapterTag>
-void ArrayHandle<T,S>::CopyInto(IteratorType dest, DeviceAdapterTag) const
+template <typename T, typename S>
+template <typename IteratorType, typename DeviceAdapterTag>
+void ArrayHandle<T, S>::CopyInto(IteratorType dest, DeviceAdapterTag) const
 {
   using pointer_type = typename std::iterator_traits<IteratorType>::pointer;
   using value_type = typename std::remove_pointer<pointer_type>::type;
 
-  static_assert( !std::is_const<value_type>::value,
-                 "CopyInto requires a non const iterator." );
+  static_assert(!std::is_const<value_type>::value, "CopyInto requires a non const iterator.");
 
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-  if (!this->Internals->ControlArrayValid &&
-      !this->Internals->ExecutionArrayValid)
-    {
-    throw vtkm::cont::ErrorBadValue(
-      "ArrayHandle has no data to copy into Iterator.");
-    }
+  if (!this->Internals->ControlArrayValid && !this->Internals->ExecutionArrayValid)
+  {
+    throw vtkm::cont::ErrorBadValue("ArrayHandle has no data to copy into Iterator.");
+  }
 
   if (!this->Internals->ControlArrayValid &&
       this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
-    {
-      /// Dynamically cast ArrayHandleExecutionManagerBase into a concrete
-      /// class and call CopyInto. The dynamic conversion will be sucessful
-      /// becuase the check to ensure the ExecutionArray is of the type
-      /// DeviceAdapterTag has already passed
-      typedef vtkm::cont::internal::ArrayHandleExecutionManager<
-                              T, StorageTag, DeviceAdapterTag> ConcreteType;
-      ConcreteType *ConcreteExecutionArray =
-                dynamic_cast<ConcreteType*>(this->Internals->ExecutionArray.get());
+  {
+    /// Dynamically cast ArrayHandleExecutionManagerBase into a concrete
+    /// class and call CopyInto. The dynamic conversion will be sucessful
+    /// becuase the check to ensure the ExecutionArray is of the type
+    /// DeviceAdapterTag has already passed
+    typedef vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>
+      ConcreteType;
+    ConcreteType* ConcreteExecutionArray =
+      dynamic_cast<ConcreteType*>(this->Internals->ExecutionArray.get());
 
-      ConcreteExecutionArray->CopyInto(dest);
-    }
+    ConcreteExecutionArray->CopyInto(dest);
+  }
   else
-    {
+  {
     PortalConstControl portal = this->GetPortalConstControl();
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-              vtkm::cont::ArrayPortalToIteratorEnd(portal),
-              dest);
-    }
+              vtkm::cont::ArrayPortalToIteratorEnd(portal), dest);
+  }
 }
 
-template<typename T, typename S>
-void ArrayHandle<T,S>::Shrink(vtkm::Id numberOfValues)
+template <typename T, typename S>
+void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
 {
   VTKM_ASSERT(numberOfValues >= 0);
 
@@ -222,8 +216,7 @@ void ArrayHandle<T,S>::Shrink(vtkm::Id numberOfValues)
     }
     else // numberOfValues > originalNumberOfValues
     {
-      throw vtkm::cont::ErrorBadValue(
-            "ArrayHandle::Shrink cannot be used to grow array.");
+      throw vtkm::cont::ErrorBadValue("ArrayHandle::Shrink cannot be used to grow array.");
     }
 
     VTKM_ASSERT(this->GetNumberOfValues() == numberOfValues);
@@ -237,15 +230,14 @@ void ArrayHandle<T,S>::Shrink(vtkm::Id numberOfValues)
   }
 }
 
-template<typename T, typename S>
-template<typename DeviceAdapterTag>
-typename ArrayHandle<T,S>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-ArrayHandle<T,S>::PrepareForInput(DeviceAdapterTag) const
+template <typename T, typename S>
+template <typename DeviceAdapterTag>
+typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
+  ArrayHandle<T, S>::PrepareForInput(DeviceAdapterTag) const
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-  if (!this->Internals->ControlArrayValid
-      && !this->Internals->ExecutionArrayValid)
+  if (!this->Internals->ControlArrayValid && !this->Internals->ExecutionArrayValid)
   {
     // Want to use an empty array.
     // Set up ArrayHandle state so this actually works.
@@ -255,18 +247,18 @@ ArrayHandle<T,S>::PrepareForInput(DeviceAdapterTag) const
 
   this->PrepareForDevice(DeviceAdapterTag());
   typename ExecutionTypes<DeviceAdapterTag>::PortalConst portal =
-      this->Internals->ExecutionArray->PrepareForInput(
-        !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
+    this->Internals->ExecutionArray->PrepareForInput(!this->Internals->ExecutionArrayValid,
+                                                     DeviceAdapterTag());
 
   this->Internals->ExecutionArrayValid = true;
 
   return portal;
 }
 
-template<typename T, typename S>
-template<typename DeviceAdapterTag>
-typename ArrayHandle<T,S>::template ExecutionTypes<DeviceAdapterTag>::Portal
-ArrayHandle<T,S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
+template <typename T, typename S>
+template <typename DeviceAdapterTag>
+typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::Portal
+ArrayHandle<T, S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
@@ -277,8 +269,7 @@ ArrayHandle<T,S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
 
   this->PrepareForDevice(DeviceAdapterTag());
   typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
-      this->Internals->ExecutionArray->PrepareForOutput(numberOfValues,
-                                                        DeviceAdapterTag());
+    this->Internals->ExecutionArray->PrepareForOutput(numberOfValues, DeviceAdapterTag());
 
   // We are assuming that the calling code will fill the array using the
   // iterators we are returning, so go ahead and mark the execution array as
@@ -294,15 +285,14 @@ ArrayHandle<T,S>::PrepareForOutput(vtkm::Id numberOfValues, DeviceAdapterTag)
   return portal;
 }
 
-template<typename T, typename S>
-template<typename DeviceAdapterTag>
-typename ArrayHandle<T,S>::template ExecutionTypes<DeviceAdapterTag>::Portal
-ArrayHandle<T,S>::PrepareForInPlace(DeviceAdapterTag)
+template <typename T, typename S>
+template <typename DeviceAdapterTag>
+typename ArrayHandle<T, S>::template ExecutionTypes<DeviceAdapterTag>::Portal
+  ArrayHandle<T, S>::PrepareForInPlace(DeviceAdapterTag)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-  if (!this->Internals->ControlArrayValid
-      && !this->Internals->ExecutionArrayValid)
+  if (!this->Internals->ControlArrayValid && !this->Internals->ExecutionArrayValid)
   {
     // Want to use an empty array.
     // Set up ArrayHandle state so this actually works.
@@ -312,8 +302,8 @@ ArrayHandle<T,S>::PrepareForInPlace(DeviceAdapterTag)
 
   this->PrepareForDevice(DeviceAdapterTag());
   typename ExecutionTypes<DeviceAdapterTag>::Portal portal =
-      this->Internals->ExecutionArray->PrepareForInPlace(
-        !this->Internals->ExecutionArrayValid, DeviceAdapterTag());
+    this->Internals->ExecutionArray->PrepareForInPlace(!this->Internals->ExecutionArrayValid,
+                                                       DeviceAdapterTag());
 
   this->Internals->ExecutionArrayValid = true;
 
@@ -325,9 +315,9 @@ ArrayHandle<T,S>::PrepareForInPlace(DeviceAdapterTag)
   return portal;
 }
 
-template<typename T, typename S>
-template<typename DeviceAdapterTag>
-void ArrayHandle<T,S>::PrepareForDevice(DeviceAdapterTag) const
+template <typename T, typename S>
+template <typename DeviceAdapterTag>
+void ArrayHandle<T, S>::PrepareForDevice(DeviceAdapterTag) const
 {
   if (this->Internals->ExecutionArray != nullptr)
   {
@@ -347,34 +337,30 @@ void ArrayHandle<T,S>::PrepareForDevice(DeviceAdapterTag) const
       this->SyncControlArray();
       // Need to change some state that does not change the logical state from
       // an external point of view.
-      InternalStruct *internals
-          = const_cast<InternalStruct*>(this->Internals.get());
+      InternalStruct* internals = const_cast<InternalStruct*>(this->Internals.get());
       internals->ExecutionArray.reset();
       internals->ExecutionArrayValid = false;
-      }
     }
+  }
 
   VTKM_ASSERT(this->Internals->ExecutionArray == nullptr);
   VTKM_ASSERT(!this->Internals->ExecutionArrayValid);
   // Need to change some state that does not change the logical state from
   // an external point of view.
-  InternalStruct *internals
-      = const_cast<InternalStruct*>(this->Internals.get());
+  InternalStruct* internals = const_cast<InternalStruct*>(this->Internals.get());
   internals->ExecutionArray.reset(
-        new vtkm::cont::internal::ArrayHandleExecutionManager<
-          T, StorageTag, DeviceAdapterTag>(&internals->ControlArray));
+    new vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>(
+      &internals->ControlArray));
 }
 
-
-template<typename T, typename S>
-void ArrayHandle<T,S>::SyncControlArray() const
+template <typename T, typename S>
+void ArrayHandle<T, S>::SyncControlArray() const
 {
   if (!this->Internals->ControlArrayValid)
   {
     // Need to change some state that does not change the logical state from
     // an external point of view.
-    InternalStruct *internals
-      = const_cast<InternalStruct*>(this->Internals.get());
+    InternalStruct* internals = const_cast<InternalStruct*>(this->Internals.get());
     if (this->Internals->ExecutionArrayValid)
     {
       internals->ExecutionArray->RetrieveOutputData(&internals->ControlArray);
@@ -390,7 +376,5 @@ void ArrayHandle<T,S>::SyncControlArray() const
     }
   }
 }
-
-
 }
 }

@@ -81,9 +81,12 @@
 
 #include <vtkm/cont/ArrayHandle.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 //=======================================================================================
 //
@@ -98,22 +101,26 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 class VertexMergeComparator
 {
 public:
-  typedef typename vtkm::cont::ArrayHandle<T,StorageType>::template ExecutionTypes<DeviceAdapter>::PortalConst ValuePortalType;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
+  typedef typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst ValuePortalType;
+  typedef
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
+      IdPortalType;
 
   ValuePortalType values;
   IdPortalType extrema;
   bool isJoinTree;
 
   VTKM_EXEC_CONT
-  VertexMergeComparator(ValuePortalType Values,
-                        IdPortalType Extrema,
-                        bool IsJoinTree)
-		: values(Values), extrema(Extrema), isJoinTree(IsJoinTree)
-		{}
+  VertexMergeComparator(ValuePortalType Values, IdPortalType Extrema, bool IsJoinTree)
+    : values(Values)
+    , extrema(Extrema)
+    , isJoinTree(IsJoinTree)
+  {
+  }
 
   VTKM_EXEC
-  bool operator() (const vtkm::Id& i, const vtkm::Id& j) const
+  bool operator()(const vtkm::Id& i, const vtkm::Id& j) const
   {
     // retrieve the pseudo-extremum the vertex belongs to
     vtkm::Id pseudoExtI = extrema.Get(i);
@@ -138,7 +145,6 @@ public:
     return false; // true ^ isJoinTree;
   }
 }; // VertexMergeComparator
-
 }
 }
 }

@@ -25,34 +25,33 @@
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletMapTopology.
 ///
-template<typename WorkletType,
-         typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
-class DispatcherMapTopology :
-    public vtkm::worklet::internal::DispatcherBase<
-      DispatcherMapTopology<WorkletType,Device>,
-      WorkletType,
-      vtkm::worklet::detail::WorkletMapTopologyBase
-      >
+template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+class DispatcherMapTopology
+  : public vtkm::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType, Device>,
+                                                   WorkletType,
+                                                   vtkm::worklet::detail::WorkletMapTopologyBase>
 {
-  typedef vtkm::worklet::internal::DispatcherBase<
-    DispatcherMapTopology<WorkletType,Device>,
-    WorkletType,
-    vtkm::worklet::detail::WorkletMapTopologyBase
-    > Superclass;
+  typedef vtkm::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType, Device>,
+                                                  WorkletType,
+                                                  vtkm::worklet::detail::WorkletMapTopologyBase>
+    Superclass;
 
 public:
   VTKM_CONT
-  DispatcherMapTopology(const WorkletType &worklet = WorkletType())
-    : Superclass(worklet) {  }
+  DispatcherMapTopology(const WorkletType& worklet = WorkletType())
+    : Superclass(worklet)
+  {
+  }
 
-  template<typename Invocation>
-  VTKM_CONT
-  void DoInvoke(const Invocation &invocation) const
+  template <typename Invocation>
+  VTKM_CONT void DoInvoke(const Invocation& invocation) const
   {
     // This is the type for the input domain
     typedef typename Invocation::InputDomainType InputDomainType;
@@ -64,17 +63,14 @@ public:
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    const InputDomainType &inputDomain = invocation.GetInputDomain();
+    const InputDomainType& inputDomain = invocation.GetInputDomain();
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BadicInvoke.
-    this->BasicInvoke(invocation,
-                      inputDomain.GetSchedulingRange(
-                            typename WorkletType::ToTopologyType()),
-                      Device());
+    this->BasicInvoke(
+      invocation, inputDomain.GetSchedulingRange(typename WorkletType::ToTopologyType()), Device());
   }
 };
-
 }
 } // namespace vtkm::worklet
 

@@ -29,42 +29,46 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ImplicitFunction.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 class ExtractGeometry
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool> {};
+  struct BoolType : vtkm::ListTagBase<bool>
+  {
+  };
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Worklet to identify cells within volume of interest
   class ExtractCellsByVOI : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
-                                  WholeArrayIn<Vec3> coordinates,
+    typedef void ControlSignature(CellSetIn cellset, WholeArrayIn<Vec3> coordinates,
                                   FieldOutCell<BoolType> passFlags);
-    typedef   _3 ExecutionSignature(PointCount, PointIndices, _2);
+    typedef _3 ExecutionSignature(PointCount, PointIndices, _2);
 
     VTKM_CONT
-    ExtractCellsByVOI() : Function() {}
+    ExtractCellsByVOI()
+      : Function()
+    {
+    }
 
     VTKM_CONT
-    ExtractCellsByVOI(const vtkm::exec::ImplicitFunction &function,
-                      bool extractInside,
-                      bool extractBoundaryCells,
-                      bool extractOnlyBoundaryCells) :
-                            Function(function),
-                            ExtractInside(extractInside),
-                            ExtractBoundaryCells(extractBoundaryCells),
-                            ExtractOnlyBoundaryCells(extractOnlyBoundaryCells) {}
+    ExtractCellsByVOI(const vtkm::exec::ImplicitFunction& function, bool extractInside,
+                      bool extractBoundaryCells, bool extractOnlyBoundaryCells)
+      : Function(function)
+      , ExtractInside(extractInside)
+      , ExtractBoundaryCells(extractBoundaryCells)
+      , ExtractOnlyBoundaryCells(extractOnlyBoundaryCells)
+    {
+    }
 
     template <typename ConnectivityInVec, typename InVecFieldPortalType>
-    VTKM_EXEC
-    bool operator()(       vtkm::Id numIndices,
-                    const ConnectivityInVec &connectivityIn,
-                    const InVecFieldPortalType &coordinates) const
+    VTKM_EXEC bool operator()(vtkm::Id numIndices, const ConnectivityInVec& connectivityIn,
+                              const InVecFieldPortalType& coordinates) const
     {
       // Count points inside/outside volume of interest
       vtkm::IdComponent inCnt = 0;
@@ -72,7 +76,7 @@ public:
       for (vtkm::IdComponent indx = 0; indx < numIndices; indx++)
       {
         vtkm::Id ptId = connectivityIn[indx];
-        vtkm::Vec<FloatDefault,3> coordinate = coordinates.Get(ptId);
+        vtkm::Vec<FloatDefault, 3> coordinate = coordinates.Get(ptId);
         vtkm::FloatDefault value = this->Function.Value(coordinate);
         if (value <= 0)
           inCnt++;
@@ -82,20 +86,15 @@ public:
 
       // Decide if cell is extracted
       bool passFlag = false;
-      if (inCnt == numIndices &&
-          ExtractInside &&
-          !ExtractOnlyBoundaryCells)
-      {
-        passFlag = true;
-      } 
-      else if (outCnt == numIndices &&
-               !ExtractInside &&
-               !ExtractOnlyBoundaryCells)
+      if (inCnt == numIndices && ExtractInside && !ExtractOnlyBoundaryCells)
       {
         passFlag = true;
       }
-      else if (inCnt > 0 && outCnt > 0 &&
-               (ExtractBoundaryCells || ExtractOnlyBoundaryCells))
+      else if (outCnt == numIndices && !ExtractInside && !ExtractOnlyBoundaryCells)
+      {
+        passFlag = true;
+      }
+      else if (inCnt > 0 && outCnt > 0 && (ExtractBoundaryCells || ExtractOnlyBoundaryCells))
       {
         passFlag = true;
       }
@@ -111,12 +110,10 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract cells by ids permutes input data
-  template <typename CellSetType,
-            typename DeviceAdapter>
-  vtkm::cont::CellSetPermutation<CellSetType> Run(
-                                    const CellSetType &cellSet,
-                                    const vtkm::cont::ArrayHandle<vtkm::Id> &cellIds,
-                                    DeviceAdapter)
+  template <typename CellSetType, typename DeviceAdapter>
+  vtkm::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet,
+                                                  const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
+                                                  DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
@@ -128,35 +125,26 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract cells by implicit function permutes input data
-  template <typename CellSetType,
-            typename DeviceAdapter>
+  template <typename CellSetType, typename DeviceAdapter>
   vtkm::cont::CellSetPermutation<CellSetType> Run(
-                                    const CellSetType &cellSet,
-                                    const vtkm::cont::CoordinateSystem &coordinates,
-                                    const vtkm::cont::ImplicitFunction &implicitFunction,
-                                    bool extractInside,
-                                    bool extractBoundaryCells,
-                                    bool extractOnlyBoundaryCells,
-                                    DeviceAdapter device)
+    const CellSetType& cellSet, const vtkm::cont::CoordinateSystem& coordinates,
+    const vtkm::cont::ImplicitFunction& implicitFunction, bool extractInside,
+    bool extractBoundaryCells, bool extractOnlyBoundaryCells, DeviceAdapter device)
   {
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
 
     // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;
 
-    ExtractCellsByVOI worklet(implicitFunction.PrepareForExecution(device),
-                              extractInside,
-                              extractBoundaryCells,
-                              extractOnlyBoundaryCells);
+    ExtractCellsByVOI worklet(implicitFunction.PrepareForExecution(device), extractInside,
+                              extractBoundaryCells, extractOnlyBoundaryCells);
     DispatcherMapTopology<ExtractCellsByVOI, DeviceAdapter> dispatcher(worklet);
-    dispatcher.Invoke(cellSet,
-                      coordinates,
-                      passFlags);
+    dispatcher.Invoke(cellSet, coordinates, passFlags);
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
       vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>
-        ::CopyIf(indices, passFlags, this->ValidCellIds);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::CopyIf(indices, passFlags,
+                                                              this->ValidCellIds);
 
     return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
   }
@@ -167,12 +155,14 @@ public:
   {
   public:
     PermuteCellData(const vtkm::cont::ArrayHandle<vtkm::Id> validCellIds,
-                    vtkm::cont::DynamicArrayHandle &data)
-      : ValidCellIds(validCellIds), Data(&data)
-    { }
+                    vtkm::cont::DynamicArrayHandle& data)
+      : ValidCellIds(validCellIds)
+      , Data(&data)
+    {
+    }
 
     template <typename ArrayHandleType>
-    void operator()(const ArrayHandleType &input) const
+    void operator()(const ArrayHandleType& input) const
     {
       *(this->Data) = vtkm::cont::DynamicArrayHandle(
         vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input));
@@ -180,7 +170,7 @@ public:
 
   private:
     vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
-    vtkm::cont::DynamicArrayHandle *Data;
+    vtkm::cont::DynamicArrayHandle* Data;
   };
 
   vtkm::cont::Field ProcessCellField(const vtkm::cont::Field field) const
@@ -193,14 +183,13 @@ public:
     vtkm::cont::DynamicArrayHandle data;
     CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
 
-    return vtkm::cont::Field(field.GetName(), field.GetAssociation(),
-                             field.GetAssocCellSet(), data);
+    return vtkm::cont::Field(field.GetName(), field.GetAssociation(), field.GetAssocCellSet(),
+                             data);
   }
 
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
 };
-
 }
 } // namespace vtkm::worklet
 

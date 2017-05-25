@@ -30,21 +30,22 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 // Subselect points using stride for now, creating new cellset of vertices
 class Mask
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool> {};
+  struct BoolType : vtkm::ListTagBase<bool>
+  {
+  };
 
-  template <typename CellSetType, 
-            typename DeviceAdapter>
-  vtkm::cont::CellSetPermutation<CellSetType> Run(
-                          const CellSetType &cellSet,
-                          const vtkm::Id stride,
-                          DeviceAdapter)
+  template <typename CellSetType, typename DeviceAdapter>
+  vtkm::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet, const vtkm::Id stride,
+                                                  DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
@@ -63,12 +64,14 @@ public:
   {
   public:
     PermuteCellData(const vtkm::cont::ArrayHandle<vtkm::Id> validCellIds,
-                    vtkm::cont::DynamicArrayHandle &data)
-      : ValidCellIds(validCellIds), Data(&data)
-    { }
+                    vtkm::cont::DynamicArrayHandle& data)
+      : ValidCellIds(validCellIds)
+      , Data(&data)
+    {
+    }
 
     template <typename ArrayHandleType>
-    void operator()(const ArrayHandleType &input) const
+    void operator()(const ArrayHandleType& input) const
     {
       *(this->Data) = vtkm::cont::DynamicArrayHandle(
         vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input));
@@ -76,7 +79,7 @@ public:
 
   private:
     vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
-    vtkm::cont::DynamicArrayHandle *Data;
+    vtkm::cont::DynamicArrayHandle* Data;
   };
 
   vtkm::cont::Field ProcessCellField(const vtkm::cont::Field field) const
@@ -89,14 +92,13 @@ public:
     vtkm::cont::DynamicArrayHandle data;
     CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
 
-    return vtkm::cont::Field(field.GetName(), field.GetAssociation(),
-                             field.GetAssocCellSet(), data);
+    return vtkm::cont::Field(field.GetName(), field.GetAssociation(), field.GetAssocCellSet(),
+                             data);
   }
 
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
 };
-
 }
 } // namespace vtkm::worklet
 

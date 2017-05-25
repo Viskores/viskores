@@ -24,21 +24,28 @@
 
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 struct TextureGL::InternalsType
 {
   GLuint Id;
-  int    Dimension;
-  bool   MIPMap;
-  bool   Linear2D;
-  bool   LinearMIP;
+  int Dimension;
+  bool MIPMap;
+  bool Linear2D;
+  bool LinearMIP;
 
   VTKM_CONT
   InternalsType()
-    : Id(0), Dimension(0), MIPMap(false), Linear2D(true), LinearMIP(true)
-  {  }
+    : Id(0)
+    , Dimension(0)
+    , MIPMap(false)
+    , Linear2D(true)
+    , LinearMIP(true)
+  {
+  }
 
   VTKM_CONT
   ~InternalsType()
@@ -52,10 +59,12 @@ struct TextureGL::InternalsType
 
 TextureGL::TextureGL()
   : Internals(new InternalsType)
-{  }
+{
+}
 
 TextureGL::~TextureGL()
-{  }
+{
+}
 
 bool TextureGL::Valid() const
 {
@@ -135,16 +144,15 @@ void TextureGL::Disable() const
   }
 }
 
-void TextureGL::CreateAlphaFromRGBA(vtkm::Id width,
-                                    vtkm::Id height,
-                                    const std::vector<unsigned char> &rgba)
+void TextureGL::CreateAlphaFromRGBA(vtkm::Id width, vtkm::Id height,
+                                    const std::vector<unsigned char>& rgba)
 {
   this->Internals->Dimension = 2;
-  std::vector<unsigned char> alpha(rgba.size()/4);
-  VTKM_ASSERT(width*height == static_cast<vtkm::Id>(alpha.size()));
-  for (std::size_t i=0; i<alpha.size(); i++)
+  std::vector<unsigned char> alpha(rgba.size() / 4);
+  VTKM_ASSERT(width * height == static_cast<vtkm::Id>(alpha.size()));
+  for (std::size_t i = 0; i < alpha.size(); i++)
   {
-    alpha[i] = rgba[i*4+3];
+    alpha[i] = rgba[i * 4 + 3];
   }
 
   if (this->Internals->Id == 0)
@@ -164,15 +172,9 @@ void TextureGL::CreateAlphaFromRGBA(vtkm::Id width,
     mpimap = true;
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
 #endif
-    glTexImage2D(GL_TEXTURE_2D, 0,
-                 GL_ALPHA,
-                 static_cast<GLsizei>(width), static_cast<GLsizei>(height),
-                 0,
-                 GL_ALPHA,
-                 GL_UNSIGNED_BYTE,
-                 (void*)(&(alpha[0])));
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, static_cast<GLsizei>(width),
+                 static_cast<GLsizei>(height), 0, GL_ALPHA, GL_UNSIGNED_BYTE, (void*)(&(alpha[0])));
   }
 }
-
 }
 } // namespace vtkm::rendering

@@ -23,26 +23,30 @@
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/rendering/Triangulator.h>
 
-namespace vtkm {
-namespace rendering {
-namespace internal {
+namespace vtkm
+{
+namespace rendering
+{
+namespace internal
+{
 
-namespace {
+namespace
+{
 
 struct TriangulatorFunctor
 {
   vtkm::cont::DynamicCellSet CellSet;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > Indices;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
   vtkm::Id NumberOfTriangles;
 
   VTKM_CONT
   TriangulatorFunctor(vtkm::cont::DynamicCellSet cellSet)
     : CellSet(cellSet)
-  {  }
+  {
+  }
 
-  template<typename Device>
-  VTKM_CONT
-  bool operator()(Device)
+  template <typename Device>
+  VTKM_CONT bool operator()(Device)
   {
     vtkm::rendering::Triangulator<Device> triangulator;
     triangulator.Run(this->CellSet, this->Indices, this->NumberOfTriangles);
@@ -52,10 +56,9 @@ struct TriangulatorFunctor
 
 } // anonymous namespace
 
-void RunTriangulator(const vtkm::cont::DynamicCellSet &cellSet,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > &indices,
-                     vtkm::Id &numberOfTriangles,
-                     const vtkm::cont::RuntimeDeviceTracker &tracker)
+void RunTriangulator(const vtkm::cont::DynamicCellSet& cellSet,
+                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
+                     vtkm::Id& numberOfTriangles, const vtkm::cont::RuntimeDeviceTracker& tracker)
 {
   // TODO: Should the rendering library support policies or some other way to
   // configure with custom devices?
@@ -68,7 +71,6 @@ void RunTriangulator(const vtkm::cont::DynamicCellSet &cellSet,
   indices = triangulatorFunctor.Indices;
   numberOfTriangles = triangulatorFunctor.NumberOfTriangles;
 }
-
 }
 }
 } // namespace vtkm::rendering::internal

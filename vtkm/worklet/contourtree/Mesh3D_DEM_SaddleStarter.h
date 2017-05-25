@@ -88,68 +88,69 @@
 #include <vtkm/worklet/contourtree/LinkComponentCaseTable3D.h>
 #include <vtkm/worklet/contourtree/Mesh3D_DEM_Triangulation_Macros.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
-template<typename DeviceAdapter>
+template <typename DeviceAdapter>
 class Mesh3D_DEM_SaddleStarter : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct PairType : vtkm::ListTagBase<vtkm::Pair<vtkm::Id, vtkm::Id> > {};
+  struct PairType : vtkm::ListTagBase<vtkm::Pair<vtkm::Id, vtkm::Id>>
+  {
+  };
 
-  typedef void ControlSignature(FieldIn<IdType> vertex,             // (input) index into active vertices
-                                FieldIn<PairType> outDegFirstEdge,  // (input) out degree/first edge of vertex
-                                FieldIn<IdType> valueIndex,         // (input) index into regular graph
-                                WholeArrayIn<IdType> linkMask,      // (input) neighbors of vertex
-                                WholeArrayIn<IdType> arcArray,      // (input) chain extrema per vertex
-                                WholeArrayIn<IdType> inverseIndex,  // (input) permutation of index
-                                WholeArrayOut<IdType> edgeNear,     // (output) low end of edges
-                                WholeArrayOut<IdType> edgeFar,      // (output) high end of edges
-                                WholeArrayOut<IdType> activeEdges); // (output) active edge list
+  typedef void ControlSignature(
+    FieldIn<IdType> vertex,             // (input) index into active vertices
+    FieldIn<PairType> outDegFirstEdge,  // (input) out degree/first edge of vertex
+    FieldIn<IdType> valueIndex,         // (input) index into regular graph
+    WholeArrayIn<IdType> linkMask,      // (input) neighbors of vertex
+    WholeArrayIn<IdType> arcArray,      // (input) chain extrema per vertex
+    WholeArrayIn<IdType> inverseIndex,  // (input) permutation of index
+    WholeArrayOut<IdType> edgeNear,     // (output) low end of edges
+    WholeArrayOut<IdType> edgeFar,      // (output) high end of edges
+    WholeArrayOut<IdType> activeEdges); // (output) active edge list
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
-  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template
-    ExecutionTypes<DeviceAdapter>::PortalConst IdComponentPortalType;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template
-    ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst IdComponentPortalType;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst IdPortalType;
 
-  vtkm::Id nRows;                                  // (input) number of rows in 3D
-  vtkm::Id nCols;                                  // (input) number of cols in 3D
-  vtkm::Id nSlices;                                // (input) number of cols in 3D
-  bool ascending;                                  // (input) ascending or descending (join or split)
-  IdComponentPortalType neighbourTable;            // (input) table for neighbour offsets
-  IdPortalType caseTable;                          // (input) case table for neighbours
+  vtkm::Id nRows;                       // (input) number of rows in 3D
+  vtkm::Id nCols;                       // (input) number of cols in 3D
+  vtkm::Id nSlices;                     // (input) number of cols in 3D
+  bool ascending;                       // (input) ascending or descending (join or split)
+  IdComponentPortalType neighbourTable; // (input) table for neighbour offsets
+  IdPortalType caseTable;               // (input) case table for neighbours
 
   // Constructor
   VTKM_EXEC_CONT
-  Mesh3D_DEM_SaddleStarter(vtkm::Id NRows,
-                           vtkm::Id NCols,
-                           vtkm::Id NSlices,
-                           bool Ascending,
-                           IdComponentPortalType NeighbourTable,
-                           IdPortalType CaseTable) :
-                                             nRows(NRows),
-                                             nCols(NCols),
-                                             nSlices(NSlices),
-                                             ascending(Ascending),
-                                             neighbourTable(NeighbourTable),
-                                             caseTable(CaseTable) {}
+  Mesh3D_DEM_SaddleStarter(vtkm::Id NRows, vtkm::Id NCols, vtkm::Id NSlices, bool Ascending,
+                           IdComponentPortalType NeighbourTable, IdPortalType CaseTable)
+    : nRows(NRows)
+    , nCols(NCols)
+    , nSlices(NSlices)
+    , ascending(Ascending)
+    , neighbourTable(NeighbourTable)
+    , caseTable(CaseTable)
+  {
+  }
 
   // operator() routine that executes the loop
-  template<typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertex,
-                  const vtkm::Pair<vtkm::Id,vtkm::Id>& outDegFirstEdge,
-                  const vtkm::Id& valueIndex,
-                  const InFieldPortalType& linkMask,
-                  const InFieldPortalType& arcArray,
-                  const InFieldPortalType& inverseIndex,
-                  const OutFieldPortalType& edgeNear,
-                  const OutFieldPortalType& edgeFar,
-                  const OutFieldPortalType& activeEdges) const
+  template <typename InFieldPortalType, typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
+                            const vtkm::Pair<vtkm::Id, vtkm::Id>& outDegFirstEdge,
+                            const vtkm::Id& valueIndex, const InFieldPortalType& linkMask,
+                            const InFieldPortalType& arcArray,
+                            const InFieldPortalType& inverseIndex,
+                            const OutFieldPortalType& edgeNear, const OutFieldPortalType& edgeFar,
+                            const OutFieldPortalType& activeEdges) const
   {
     vtkm::Id outdegree = outDegFirstEdge.first;
     vtkm::Id firstEdge = outDegFirstEdge.second;
@@ -175,8 +176,8 @@ public:
       {
         vtkm::Id indx = edgeNo * 3;
         vtkm::Id nbrSlice = slice + neighbourTable.Get(indx);
-        vtkm::Id nbrRow   = row   + neighbourTable.Get(indx + 1);
-        vtkm::Id nbrCol   = col   + neighbourTable.Get(indx + 2);
+        vtkm::Id nbrRow = row + neighbourTable.Get(indx + 1);
+        vtkm::Id nbrCol = col + neighbourTable.Get(indx + 2);
         vtkm::Id nbr = VERTEX_ID_3D(nbrSlice, nbrRow, nbrCol, nRows, nCols);
 
         farEnds[outDegree++] = inverseIndex.Get(arcArray.Get(nbr));
@@ -205,13 +206,13 @@ public:
           // and reset the count
           outDegree = 2;
         } //
-      } // first two match
+      }   // first two match
       else if ((farEnds[0] == farEnds[2]) || (farEnds[1] == farEnds[2]))
       { // second one matches either of the first two
         // decrease the count, keeping 0 & 1
         outDegree = 2;
       } // second one matches either of the first two
-    } // outDegree 3
+    }   // outDegree 3
 
     // now the farEnds array holds the far ends we can reach
     for (vtkm::Id edge = 0; edge < outDegree; edge++)
@@ -222,12 +223,11 @@ public:
       // now set the near and far ends and save the edge itself
       edgeNear.Set(edgeID, vertex);
       edgeFar.Set(edgeID, farEnds[edge]);
-      activeEdges.Set(edgeID,  edgeID);
+      activeEdges.Set(edgeID, edgeID);
     } // per start
-  } // operator()
+  }   // operator()
 
 }; // Mesh3D_DEM_SaddleStarter
-
 }
 }
 }

@@ -30,7 +30,8 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 template <typename T>
 struct TestImplicitStorage
@@ -38,33 +39,26 @@ struct TestImplicitStorage
   typedef T ValueType;
   ValueType Temp;
 
-
   VTKM_EXEC_CONT
-  TestImplicitStorage(): Temp(1) {  }
-
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfValues() const
+  TestImplicitStorage()
+    : Temp(1)
   {
-    return 1;
   }
 
   VTKM_EXEC_CONT
-  ValueType Get(vtkm::Id vtkmNotUsed(index)) const
-  {
-    return Temp;
-  }
+  vtkm::Id GetNumberOfValues() const { return 1; }
 
+  VTKM_EXEC_CONT
+  ValueType Get(vtkm::Id vtkmNotUsed(index)) const { return Temp; }
 };
 
 const vtkm::Id ARRAY_SIZE = 1;
 
-
 template <typename T>
 struct TemplatedTests
 {
-  typedef vtkm::cont::StorageTagImplicit< TestImplicitStorage<T> >
-      StorageTagType;
-  typedef vtkm::cont::internal::Storage< T, StorageTagType > StorageType;
+  typedef vtkm::cont::StorageTagImplicit<TestImplicitStorage<T>> StorageTagType;
+  typedef vtkm::cont::internal::Storage<T, StorageTagType> StorageType;
 
   typedef typename StorageType::ValueType ValueType;
   typedef typename StorageType::PortalType PortalType;
@@ -82,30 +76,31 @@ struct TemplatedTests
     try
     {
       arrayStorage.Allocate(ARRAY_SIZE);
-      VTKM_TEST_ASSERT(false == true,
-                       "Implicit Storage Allocate method didn't throw error.");
+      VTKM_TEST_ASSERT(false == true, "Implicit Storage Allocate method didn't throw error.");
     }
-    catch(vtkm::cont::ErrorBadValue&) {}
+    catch (vtkm::cont::ErrorBadValue&)
+    {
+    }
 
     try
     {
       arrayStorage.Shrink(ARRAY_SIZE);
-      VTKM_TEST_ASSERT(true==false,
+      VTKM_TEST_ASSERT(true == false,
                        "Array shrink do a larger size was possible. This can't be allowed.");
     }
-    catch(vtkm::cont::ErrorBadValue&) {}
+    catch (vtkm::cont::ErrorBadValue&)
+    {
+    }
 
     //verify that calling ReleaseResources doesn't throw an exception
     arrayStorage.ReleaseResources();
-
   }
 
   void BasicAccess()
   {
     TestImplicitStorage<T> portal;
-    vtkm::cont::ArrayHandle<T,StorageTagType> implictHandle(portal);
-    VTKM_TEST_ASSERT(implictHandle.GetNumberOfValues() == 1,
-                     "handle should have size 1");
+    vtkm::cont::ArrayHandle<T, StorageTagType> implictHandle(portal);
+    VTKM_TEST_ASSERT(implictHandle.GetNumberOfValues() == 1, "handle should have size 1");
     VTKM_TEST_ASSERT(implictHandle.GetPortalConstControl().Get(0) == T(1),
                      "portals first values should be 1");
     ;
@@ -125,7 +120,6 @@ struct TestFunctor
   {
     TemplatedTests<T> tests;
     tests();
-
   }
 };
 
@@ -136,7 +130,7 @@ void TestStorageBasic()
 
 } // Anonymous namespace
 
-int UnitTestStorageImplicit(int, char *[])
+int UnitTestStorageImplicit(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestStorageBasic);
 }

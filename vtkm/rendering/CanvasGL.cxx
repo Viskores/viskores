@@ -29,11 +29,13 @@
 #include <vtkm/rendering/WorldAnnotatorGL.h>
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 CanvasGL::CanvasGL(vtkm::Id width, vtkm::Id height)
-  : Canvas(width,height)
+  : Canvas(width, height)
 {
 }
 
@@ -58,10 +60,8 @@ void CanvasGL::Activate()
 void CanvasGL::Clear()
 {
   vtkm::rendering::Color backgroundColor = this->GetBackgroundColor();
-  glClearColor(backgroundColor.Components[0],
-               backgroundColor.Components[1],
-               backgroundColor.Components[2],
-               1.0f);
+  glClearColor(backgroundColor.Components[0], backgroundColor.Components[1],
+               backgroundColor.Components[2], 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -70,20 +70,17 @@ void CanvasGL::Finish()
   glFinish();
 }
 
-vtkm::rendering::Canvas *CanvasGL::NewCopy() const
+vtkm::rendering::Canvas* CanvasGL::NewCopy() const
 {
   return new vtkm::rendering::CanvasGL(*this);
 }
 
-void CanvasGL::SetViewToWorldSpace(const vtkm::rendering::Camera &camera,
-                                   bool clip)
+void CanvasGL::SetViewToWorldSpace(const vtkm::rendering::Camera& camera, bool clip)
 {
   vtkm::Float32 oglP[16], oglM[16];
 
-  MatrixHelpers::CreateOGLMatrix(
-        camera.CreateProjectionMatrix(this->GetWidth(),
-                                      this->GetHeight()),
-        oglP);
+  MatrixHelpers::CreateOGLMatrix(camera.CreateProjectionMatrix(this->GetWidth(), this->GetHeight()),
+                                 oglP);
   glMatrixMode(GL_PROJECTION);
   glLoadMatrixf(oglP);
   MatrixHelpers::CreateOGLMatrix(camera.CreateViewMatrix(), oglM);
@@ -93,24 +90,23 @@ void CanvasGL::SetViewToWorldSpace(const vtkm::rendering::Camera &camera,
   this->SetViewportClipping(camera, clip);
 }
 
-void CanvasGL::SetViewToScreenSpace(const vtkm::rendering::Camera &camera,
-                                    bool clip)
+void CanvasGL::SetViewToScreenSpace(const vtkm::rendering::Camera& camera, bool clip)
 {
-  vtkm::Float32 oglP[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
-  vtkm::Float32 oglM[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
+  vtkm::Float32 oglP[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+  vtkm::Float32 oglM[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
-  oglP[0*4+0] = 1.;
-  oglP[1*4+1] = 1.;
-  oglP[2*4+2] = -1.;
-  oglP[3*4+3] = 1.;
+  oglP[0 * 4 + 0] = 1.;
+  oglP[1 * 4 + 1] = 1.;
+  oglP[2 * 4 + 2] = -1.;
+  oglP[3 * 4 + 3] = 1.;
 
   glMatrixMode(GL_PROJECTION);
   glLoadMatrixf(oglP);
 
-  oglM[0*4+0] = 1.;
-  oglM[1*4+1] = 1.;
-  oglM[2*4+2] = 1.;
-  oglM[3*4+3] = 1.;
+  oglM[0 * 4 + 0] = 1.;
+  oglM[1 * 4 + 1] = 1.;
+  oglM[2 * 4 + 2] = 1.;
+  oglM[3 * 4 + 3] = 1.;
 
   glMatrixMode(GL_MODELVIEW);
   glLoadMatrixf(oglM);
@@ -118,27 +114,23 @@ void CanvasGL::SetViewToScreenSpace(const vtkm::rendering::Camera &camera,
   this->SetViewportClipping(camera, clip);
 }
 
-void CanvasGL::SetViewportClipping(const vtkm::rendering::Camera &camera,
-                                   bool clip)
+void CanvasGL::SetViewportClipping(const vtkm::rendering::Camera& camera, bool clip)
 {
   if (clip)
   {
     vtkm::Float32 vl, vr, vb, vt;
-    camera.GetRealViewport(this->GetWidth(), this->GetHeight(),
-                           vl,vr,vb,vt);
-    vtkm::Float32 _x = static_cast<vtkm::Float32>(this->GetWidth())*(1.f+vl)/2.f;
-    vtkm::Float32 _y = static_cast<vtkm::Float32>(this->GetHeight())*(1.f+vb)/2.f;
-    vtkm::Float32 _w = static_cast<vtkm::Float32>(this->GetWidth())*(vr-vl)/2.f;
-    vtkm::Float32 _h = static_cast<vtkm::Float32>(this->GetHeight())*(vt-vb)/2.f;
+    camera.GetRealViewport(this->GetWidth(), this->GetHeight(), vl, vr, vb, vt);
+    vtkm::Float32 _x = static_cast<vtkm::Float32>(this->GetWidth()) * (1.f + vl) / 2.f;
+    vtkm::Float32 _y = static_cast<vtkm::Float32>(this->GetHeight()) * (1.f + vb) / 2.f;
+    vtkm::Float32 _w = static_cast<vtkm::Float32>(this->GetWidth()) * (vr - vl) / 2.f;
+    vtkm::Float32 _h = static_cast<vtkm::Float32>(this->GetHeight()) * (vt - vb) / 2.f;
 
-    glViewport(static_cast<GLint>(_x), static_cast<GLint>(_y),
-               static_cast<GLsizei>(_w), static_cast<GLsizei>(_h));
+    glViewport(static_cast<GLint>(_x), static_cast<GLint>(_y), static_cast<GLsizei>(_w),
+               static_cast<GLsizei>(_h));
   }
   else
   {
-    glViewport(0,
-               0,
-               static_cast<GLsizei>(this->GetWidth()),
+    glViewport(0, 0, static_cast<GLsizei>(this->GetWidth()),
                static_cast<GLsizei>(this->GetHeight()));
   }
 }
@@ -150,10 +142,8 @@ void CanvasGL::RefreshColorBuffer() const
   VTKM_ASSERT(viewport[2] == this->GetWidth());
   VTKM_ASSERT(viewport[3] == this->GetHeight());
 
-  glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
-      GL_RGBA, GL_FLOAT,
-      const_cast<vtkm::Vec<float,4> *>(
-        this->GetColorBuffer().GetStorage().GetArray()));
+  glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_RGBA, GL_FLOAT,
+               const_cast<vtkm::Vec<float, 4>*>(this->GetColorBuffer().GetStorage().GetArray()));
 }
 
 void CanvasGL::RefreshDepthBuffer() const
@@ -163,16 +153,13 @@ void CanvasGL::RefreshDepthBuffer() const
   VTKM_ASSERT(viewport[2] == this->GetWidth());
   VTKM_ASSERT(viewport[3] == this->GetHeight());
 
-  glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3],
-      GL_DEPTH_COMPONENT, GL_FLOAT,
-      const_cast<vtkm::Float32 *>(
-        this->GetDepthBuffer().GetStorage().GetArray()));
+  glReadPixels(viewport[0], viewport[1], viewport[2], viewport[3], GL_DEPTH_COMPONENT, GL_FLOAT,
+               const_cast<vtkm::Float32*>(this->GetDepthBuffer().GetStorage().GetArray()));
 }
 
-void CanvasGL::AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,
-                       const vtkm::Vec<vtkm::Float64,2> &point1,
-                       vtkm::Float32 linewidth,
-                       const vtkm::rendering::Color &color) const
+void CanvasGL::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
+                       const vtkm::Vec<vtkm::Float64, 2>& point1, vtkm::Float32 linewidth,
+                       const vtkm::rendering::Color& color) const
 {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
@@ -181,14 +168,13 @@ void CanvasGL::AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,
   glLineWidth(linewidth);
 
   glBegin(GL_LINES);
-  glVertex2f(float(point0[0]),float(point0[1]));
-  glVertex2f(float(point1[0]),float(point1[1]));
+  glVertex2f(float(point0[0]), float(point0[1]));
+  glVertex2f(float(point1[0]), float(point1[1]));
   glEnd();
 }
 
-void CanvasGL::AddColorBar(const vtkm::Bounds &bounds,
-                           const vtkm::rendering::ColorTable &colorTable,
-                           bool horizontal) const
+void CanvasGL::AddColorBar(const vtkm::Bounds& bounds,
+                           const vtkm::rendering::ColorTable& colorTable, bool horizontal) const
 {
   const int n = 256;
   vtkm::Float32 startX = static_cast<vtkm::Float32>(bounds.X.Min);
@@ -198,68 +184,63 @@ void CanvasGL::AddColorBar(const vtkm::Bounds &bounds,
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glBegin(GL_QUADS);
-  for (int i=0; i<n; i++)
+  for (int i = 0; i < n; i++)
   {
-    vtkm::Float32 v0 = static_cast<vtkm::Float32>(i)/static_cast<vtkm::Float32>(n);
-    vtkm::Float32 v1 = static_cast<vtkm::Float32>(i+1)/static_cast<vtkm::Float32>(n);
+    vtkm::Float32 v0 = static_cast<vtkm::Float32>(i) / static_cast<vtkm::Float32>(n);
+    vtkm::Float32 v1 = static_cast<vtkm::Float32>(i + 1) / static_cast<vtkm::Float32>(n);
     vtkm::rendering::Color c0 = colorTable.MapRGB(v0);
     vtkm::rendering::Color c1 = colorTable.MapRGB(v1);
     if (horizontal)
     {
-      vtkm::Float32 x0 = startX + width*v0;
-      vtkm::Float32 x1 = startX + width*v1;
+      vtkm::Float32 x0 = startX + width * v0;
+      vtkm::Float32 x1 = startX + width * v1;
       vtkm::Float32 y0 = startY;
       vtkm::Float32 y1 = startY + height;
       glColor3f(c0.Components[0], c0.Components[1], c0.Components[2]);
-      glVertex2f(x0,y0);
-      glVertex2f(x0,y1);
+      glVertex2f(x0, y0);
+      glVertex2f(x0, y1);
       glColor3f(c1.Components[0], c1.Components[1], c1.Components[2]);
-      glVertex2f(x1,y1);
-      glVertex2f(x1,y0);
+      glVertex2f(x1, y1);
+      glVertex2f(x1, y0);
     }
     else // vertical
     {
       vtkm::Float32 x0 = startX;
       vtkm::Float32 x1 = startX + width;
-      vtkm::Float32 y0 = startY + height*v0;
-      vtkm::Float32 y1 = startY + height*v1;
+      vtkm::Float32 y0 = startY + height * v0;
+      vtkm::Float32 y1 = startY + height * v1;
       glColor3f(c0.Components[0], c0.Components[1], c0.Components[2]);
-      glVertex2f(x0,y1);
-      glVertex2f(x1,y1);
+      glVertex2f(x0, y1);
+      glVertex2f(x1, y1);
       glColor3f(c1.Components[0], c1.Components[1], c1.Components[2]);
-      glVertex2f(x1,y0);
-      glVertex2f(x0,y0);
+      glVertex2f(x1, y0);
+      glVertex2f(x0, y0);
     }
   }
   glEnd();
 }
 
-void CanvasGL::AddText(const vtkm::Vec<vtkm::Float32,2> &position,
-                       vtkm::Float32 scale,
-                       vtkm::Float32 angle,
-                       vtkm::Float32 windowAspect,
-                       const vtkm::Vec<vtkm::Float32,2> &anchor,
-                       const vtkm::rendering::Color & color,
-                       const std::string &text) const
+void CanvasGL::AddText(const vtkm::Vec<vtkm::Float32, 2>& position, vtkm::Float32 scale,
+                       vtkm::Float32 angle, vtkm::Float32 windowAspect,
+                       const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                       const vtkm::rendering::Color& color, const std::string& text) const
 {
   glPushMatrix();
-  glTranslatef(position[0],position[1],0);
-  glScalef(1.f/windowAspect, 1, 1);
-  glRotatef(angle, 0,0,1);
+  glTranslatef(position[0], position[1], 0);
+  glScalef(1.f / windowAspect, 1, 1);
+  glRotatef(angle, 0, 0, 1);
   glColor3f(color.Components[0], color.Components[1], color.Components[2]);
   this->RenderText(scale, anchor, text);
   glPopMatrix();
 }
 
-vtkm::rendering::WorldAnnotator *
-CanvasGL::CreateWorldAnnotator() const
+vtkm::rendering::WorldAnnotator* CanvasGL::CreateWorldAnnotator() const
 {
   return new vtkm::rendering::WorldAnnotatorGL;
 }
 
-void CanvasGL::RenderText(vtkm::Float32 scale,
-                          const vtkm::Vec<vtkm::Float32,2> &anchor,
-                          const std::string &text) const
+void CanvasGL::RenderText(vtkm::Float32 scale, const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                          const std::string& text) const
 {
   if (!this->FontTexture.Valid())
   {
@@ -267,24 +248,20 @@ void CanvasGL::RenderText(vtkm::Float32 scale,
     // use it. Although technically we are changing the state, the logical
     // state does not change, so we go ahead and do it in this const
     // function.
-    vtkm::rendering::CanvasGL *self =
-        const_cast<vtkm::rendering::CanvasGL *>(this);
+    vtkm::rendering::CanvasGL* self = const_cast<vtkm::rendering::CanvasGL*>(this);
     self->Font = BitmapFontFactory::CreateLiberation2Sans();
-    const std::vector<unsigned char> &rawpngdata =
-        this->Font.GetRawImageData();
+    const std::vector<unsigned char>& rawpngdata = this->Font.GetRawImageData();
 
     std::vector<unsigned char> rgba;
     unsigned long width, height;
-    int error = vtkm::rendering::DecodePNG(rgba, width, height,
-                                           &rawpngdata[0], rawpngdata.size());
+    int error = vtkm::rendering::DecodePNG(rgba, width, height, &rawpngdata[0], rawpngdata.size());
     if (error != 0)
     {
       return;
     }
 
-    self->FontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
+    self->FontTexture.CreateAlphaFromRGBA(int(width), int(height), rgba);
   }
-
 
   this->FontTexture.Enable();
 
@@ -299,31 +276,29 @@ void CanvasGL::RenderText(vtkm::Float32 scale,
 
   vtkm::Float32 textwidth = this->Font.GetTextWidth(text);
 
-  vtkm::Float32 fx = -(.5f + .5f*anchor[0]) * textwidth;
-  vtkm::Float32 fy = -(.5f + .5f*anchor[1]);
+  vtkm::Float32 fx = -(.5f + .5f * anchor[0]) * textwidth;
+  vtkm::Float32 fy = -(.5f + .5f * anchor[1]);
   vtkm::Float32 fz = 0;
-  for (unsigned int i=0; i<text.length(); ++i)
+  for (unsigned int i = 0; i < text.length(); ++i)
   {
     char c = text[i];
-    char nextchar = (i < text.length()-1) ? text[i+1] : 0;
+    char nextchar = (i < text.length() - 1) ? text[i + 1] : 0;
 
-    vtkm::Float32 vl,vr,vt,vb;
-    vtkm::Float32 tl,tr,tt,tb;
-    this->Font.GetCharPolygon(c, fx, fy,
-                        vl, vr, vt, vb,
-                        tl, tr, tt, tb, nextchar);
+    vtkm::Float32 vl, vr, vt, vb;
+    vtkm::Float32 tl, tr, tt, tb;
+    this->Font.GetCharPolygon(c, fx, fy, vl, vr, vt, vb, tl, tr, tt, tb, nextchar);
 
-    glTexCoord2f(tl, 1.f-tt);
-    glVertex3f(scale*vl, scale*vt, fz);
+    glTexCoord2f(tl, 1.f - tt);
+    glVertex3f(scale * vl, scale * vt, fz);
 
-    glTexCoord2f(tl, 1.f-tb);
-    glVertex3f(scale*vl, scale*vb, fz);
+    glTexCoord2f(tl, 1.f - tb);
+    glVertex3f(scale * vl, scale * vb, fz);
 
-    glTexCoord2f(tr, 1.f-tb);
-    glVertex3f(scale*vr, scale*vb, fz);
+    glTexCoord2f(tr, 1.f - tb);
+    glVertex3f(scale * vr, scale * vb, fz);
 
-    glTexCoord2f(tr, 1.f-tt);
-    glVertex3f(scale*vr, scale*vt, fz);
+    glTexCoord2f(tr, 1.f - tt);
+    glVertex3f(scale * vr, scale * vt, fz);
   }
 
   glEnd();
@@ -334,6 +309,5 @@ void CanvasGL::RenderText(vtkm::Float32 scale,
   glDepthMask(GL_TRUE);
   glDisable(GL_ALPHA_TEST);
 }
-
 }
 } // namespace vtkm::rendering

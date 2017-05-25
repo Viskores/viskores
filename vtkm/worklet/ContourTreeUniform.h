@@ -64,7 +64,6 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
-
 #ifndef vtk_m_worklet_ContourTreeUniform_h
 #define vtk_m_worklet_ContourTreeUniform_h
 
@@ -87,62 +86,60 @@ const bool SPLIT = false;
 const bool JOIN_3D = true;
 const bool SPLIT_3D = false;
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 class ContourTreeMesh2D
 {
 public:
-
-  template<typename FieldType, typename StorageType, typename DeviceAdapter>
-  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
-           const vtkm::Id nRows,
+  template <typename FieldType, typename StorageType, typename DeviceAdapter>
+  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray, const vtkm::Id nRows,
            const vtkm::Id nCols,
-           vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > &saddlePeak,
+           vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>>& saddlePeak,
            const DeviceAdapter& device)
   {
     // DeviceAdapter is passed only to be available in template but is not used
-    (void) device;
+    (void)device;
 
     vtkm::Id nSlices = 1;
 
     // Build the mesh and fill in the values
-    contourtree::Mesh2D_DEM_Triangulation<FieldType,StorageType,DeviceAdapter>
-                                          mesh(fieldArray, nRows, nCols);
+    contourtree::Mesh2D_DEM_Triangulation<FieldType, StorageType, DeviceAdapter> mesh(fieldArray,
+                                                                                      nRows, nCols);
 
     // Initialize the join tree so that all arcs point to maxima
-    contourtree::MergeTree<FieldType,StorageType,DeviceAdapter>
-                           joinTree(fieldArray, nRows, nCols, nSlices, JOIN);
+    contourtree::MergeTree<FieldType, StorageType, DeviceAdapter> joinTree(fieldArray, nRows, nCols,
+                                                                           nSlices, JOIN);
     mesh.SetStarts(joinTree.extrema, JOIN);
     joinTree.BuildRegularChains();
 
     // Create the active topology graph from the regular graph
-    contourtree::ChainGraph<FieldType,StorageType,DeviceAdapter>
-                           joinGraph(fieldArray, joinTree.extrema, JOIN);
+    contourtree::ChainGraph<FieldType, StorageType, DeviceAdapter> joinGraph(
+      fieldArray, joinTree.extrema, JOIN);
     mesh.SetSaddleStarts(joinGraph, JOIN);
 
     // Call join graph to finish computation
     joinGraph.Compute(joinTree.saddles);
 
     // Initialize the split tree so that all arcs point to maxima
-    contourtree::MergeTree<FieldType,StorageType,DeviceAdapter>
-                           splitTree(fieldArray, nRows, nCols, nSlices, SPLIT);
+    contourtree::MergeTree<FieldType, StorageType, DeviceAdapter> splitTree(fieldArray, nRows,
+                                                                            nCols, nSlices, SPLIT);
     mesh.SetStarts(splitTree.extrema, SPLIT);
     splitTree.BuildRegularChains();
 
     // Create the active topology graph from the regular graph
-    contourtree::ChainGraph<FieldType,StorageType,DeviceAdapter>
-                           splitGraph(fieldArray, splitTree.extrema, SPLIT);
+    contourtree::ChainGraph<FieldType, StorageType, DeviceAdapter> splitGraph(
+      fieldArray, splitTree.extrema, SPLIT);
     mesh.SetSaddleStarts(splitGraph, SPLIT);
 
     // Call split graph to finish computation
     splitGraph.Compute(splitTree.saddles);
 
     // Now compute the contour tree
-    contourtree::ContourTree<FieldType,StorageType,DeviceAdapter>
-                             contourTree(fieldArray,
-                                         joinTree, splitTree,
-                                         joinGraph, splitGraph);
+    contourtree::ContourTree<FieldType, StorageType, DeviceAdapter> contourTree(
+      fieldArray, joinTree, splitTree, joinGraph, splitGraph);
 
     contourTree.CollectSaddlePeak(saddlePeak);
   }
@@ -151,60 +148,54 @@ public:
 class ContourTreeMesh3D
 {
 public:
-
-  template<typename FieldType, typename StorageType, typename DeviceAdapter>
-  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray,
-           const vtkm::Id nRows,
-           const vtkm::Id nCols,
-           const vtkm::Id nSlices,
-           vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id> > &saddlePeak,
+  template <typename FieldType, typename StorageType, typename DeviceAdapter>
+  void Run(const vtkm::cont::ArrayHandle<FieldType, StorageType> fieldArray, const vtkm::Id nRows,
+           const vtkm::Id nCols, const vtkm::Id nSlices,
+           vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>>& saddlePeak,
            const DeviceAdapter& device)
   {
     // DeviceAdapter is passed only to be available in template but is not used
-    (void) device;
+    (void)device;
 
     // Build the mesh and fill in the values
-    contourtree::Mesh3D_DEM_Triangulation<FieldType,StorageType,DeviceAdapter>
-                                          mesh(fieldArray, nRows, nCols, nSlices);
+    contourtree::Mesh3D_DEM_Triangulation<FieldType, StorageType, DeviceAdapter> mesh(
+      fieldArray, nRows, nCols, nSlices);
 
     // Initialize the join tree so that all arcs point to maxima
-    contourtree::MergeTree<FieldType,StorageType,DeviceAdapter>
-                           joinTree(fieldArray, nRows, nCols, nSlices, JOIN_3D);
+    contourtree::MergeTree<FieldType, StorageType, DeviceAdapter> joinTree(fieldArray, nRows, nCols,
+                                                                           nSlices, JOIN_3D);
     mesh.SetStarts(joinTree.extrema, JOIN_3D);
     joinTree.BuildRegularChains();
 
     // Create the active topology graph from the regular graph
-    contourtree::ChainGraph<FieldType,StorageType,DeviceAdapter>
-                           joinGraph(fieldArray, joinTree.extrema, JOIN_3D);
+    contourtree::ChainGraph<FieldType, StorageType, DeviceAdapter> joinGraph(
+      fieldArray, joinTree.extrema, JOIN_3D);
     mesh.SetSaddleStarts(joinGraph, JOIN_3D);
 
     // Call join graph to finish computation
     joinGraph.Compute(joinTree.saddles);
 
     // Initialize the split tree so that all arcs point to maxima
-    contourtree::MergeTree<FieldType,StorageType,DeviceAdapter>
-                           splitTree(fieldArray, nRows, nCols, nSlices, SPLIT_3D);
+    contourtree::MergeTree<FieldType, StorageType, DeviceAdapter> splitTree(
+      fieldArray, nRows, nCols, nSlices, SPLIT_3D);
     mesh.SetStarts(splitTree.extrema, SPLIT_3D);
     splitTree.BuildRegularChains();
 
     // Create the active topology graph from the regular graph
-    contourtree::ChainGraph<FieldType,StorageType,DeviceAdapter>
-                           splitGraph(fieldArray, splitTree.extrema, SPLIT_3D);
+    contourtree::ChainGraph<FieldType, StorageType, DeviceAdapter> splitGraph(
+      fieldArray, splitTree.extrema, SPLIT_3D);
     mesh.SetSaddleStarts(splitGraph, SPLIT_3D);
 
     // Call split graph to finish computation
     splitGraph.Compute(splitTree.saddles);
 
     // Now compute the contour tree
-    contourtree::ContourTree<FieldType,StorageType,DeviceAdapter>
-                             contourTree(fieldArray,
-                                         joinTree, splitTree,
-                                         joinGraph, splitGraph);
+    contourtree::ContourTree<FieldType, StorageType, DeviceAdapter> contourTree(
+      fieldArray, joinTree, splitTree, joinGraph, splitGraph);
 
     contourTree.CollectSaddlePeak(saddlePeak);
   }
 };
-
 }
 } // namespace vtkm::worklet
 

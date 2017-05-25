@@ -24,16 +24,21 @@
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ThreadIndicesReduceByKey.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief Aspect tag to use for getting the value count.
 ///
 /// The \c AspectTagValueCount aspect tag causes the \c Fetch class to obtain
 /// the number of values that map to the key.
 ///
-struct AspectTagValueCount {  };
+struct AspectTagValueCount
+{
+};
 
 /// \brief The \c ExecutionSignature tag to get the number of values.
 ///
@@ -48,12 +53,9 @@ struct ValueCount : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagValueCount AspectTag;
 };
 
-template<typename FetchTag,
-         typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagValueCount,
-             vtkm::exec::arg::ThreadIndicesReduceByKey,
-             ExecObjectType>
+template <typename FetchTag, typename ExecObjectType>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagValueCount,
+             vtkm::exec::arg::ThreadIndicesReduceByKey, ExecObjectType>
 {
   using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesReduceByKey;
 
@@ -61,20 +63,17 @@ struct Fetch<FetchTag,
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Load(const ThreadIndicesType &indices, const ExecObjectType &) const
+  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
     return indices.GetNumberOfValues();
   }
 
   VTKM_EXEC
-  void Store(const ThreadIndicesType &,
-             const ExecObjectType &,
-             const ValueType &) const
+  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op.
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

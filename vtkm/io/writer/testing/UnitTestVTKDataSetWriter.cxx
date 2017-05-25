@@ -23,7 +23,8 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void TestVTKExplicitWrite()
 {
@@ -66,7 +67,7 @@ void TestVTKWrite()
 
 } //Anonymous namespace
 
-int UnitTestVTKDataSetWriter(int, char *[])
+int UnitTestVTKDataSetWriter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestVTKWrite);
 }

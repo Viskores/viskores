@@ -20,15 +20,18 @@
 
 #include <vtkm/rendering/Mapper.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-Mapper::~Mapper() {  }
+Mapper::~Mapper()
+{
+}
 
-void Mapper::SetActiveColorTable(const vtkm::rendering::ColorTable &colorTable)
+void Mapper::SetActiveColorTable(const vtkm::rendering::ColorTable& colorTable)
 {
   colorTable.Sample(1024, this->ColorMap);
 }
-
 }
 }

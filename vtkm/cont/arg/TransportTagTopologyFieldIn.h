@@ -28,9 +28,12 @@
 
 #include <vtkm/cont/arg/Transport.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief \c Transport tag for input arrays in topology maps.
 ///
@@ -39,34 +42,37 @@ namespace arg {
 /// on a topology element tag and expects a cell set input domain to check the
 /// size of the input array.
 ///
-template<typename TopologyElementTag>
-struct TransportTagTopologyFieldIn {  };
+template <typename TopologyElementTag>
+struct TransportTagTopologyFieldIn
+{
+};
 
-namespace detail {
+namespace detail
+{
 
 VTKM_CONT
-inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet &cellSet,
+inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet& cellSet,
                                           vtkm::TopologyElementTagPoint)
 {
   return cellSet.GetNumberOfPoints();
 }
 
 VTKM_CONT
-inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet &cellSet,
+inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet& cellSet,
                                           vtkm::TopologyElementTagCell)
 {
   return cellSet.GetNumberOfCells();
 }
 
 VTKM_CONT
-inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet &cellSet,
+inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet& cellSet,
                                           vtkm::TopologyElementTagFace)
 {
   return cellSet.GetNumberOfFaces();
 }
 
 VTKM_CONT
-inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet &cellSet,
+inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet& cellSet,
                                           vtkm::TopologyElementTagEdge)
 {
   return cellSet.GetNumberOfEdges();
@@ -74,34 +80,26 @@ inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet &cellSet,
 
 } // namespace detail
 
-template<typename TopologyElementTag, typename ContObjectType, typename Device>
-struct Transport<
-    vtkm::cont::arg::TransportTagTopologyFieldIn<TopologyElementTag>,
-    ContObjectType,
-    Device>
+template <typename TopologyElementTag, typename ContObjectType, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagTopologyFieldIn<TopologyElementTag>, ContObjectType,
+                 Device>
 {
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
-      ExecObjectType;
+  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst ExecObjectType;
 
   VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object,
-                            const vtkm::cont::CellSet &inputDomain,
-                            vtkm::Id,
-                            vtkm::Id) const
+  ExecObjectType operator()(const ContObjectType& object, const vtkm::cont::CellSet& inputDomain,
+                            vtkm::Id, vtkm::Id) const
   {
-    if (object.GetNumberOfValues() !=
-        detail::TopologyDomainSize(inputDomain, TopologyElementTag()))
+    if (object.GetNumberOfValues() != detail::TopologyDomainSize(inputDomain, TopologyElementTag()))
     {
-      throw vtkm::cont::ErrorBadValue(
-            "Input array to worklet invocation the wrong size.");
+      throw vtkm::cont::ErrorBadValue("Input array to worklet invocation the wrong size.");
     }
 
     return object.PrepareForInput(Device());
   }
 };
-
 }
 }
 } // namespace vtkm::cont::arg

@@ -20,7 +20,6 @@
 #ifndef vtk_m_internal_Assume_h
 #define vtk_m_internal_Assume_h
 
-
 #include <vtkm/Assert.h>
 
 // Description:
@@ -35,34 +34,38 @@
 // assert that only valid cell types will be used, producing more efficient
 // code.
 //
-#define VTKM_ASSUME(cond) \
-  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
-  { \
-  const bool c = cond; \
-  VTKM_ASSERT("Bad assumption in VTKM_ASSUME: " #cond && c); \
-  VTKM_ASSUME_IMPL(c); \
-  (void)c; /* Prevents unused var warnings */ \
-  } \
+#define VTKM_ASSUME(cond)                                                                          \
+  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK                                                                 \
+  {                                                                                                \
+    const bool c = cond;                                                                           \
+    VTKM_ASSERT("Bad assumption in VTKM_ASSUME: " #cond&& c);                                      \
+    VTKM_ASSUME_IMPL(c);                                                                           \
+    (void)c; /* Prevents unused var warnings */                                                    \
+  }                                                                                                \
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 // VTKM_ASSUME_IMPL is compiler-specific:
 #if defined(__CUDA_ARCH__)
-  //For all versions of CUDA this is a no-op while we look
-  //for a CUDA asm snippet that replicates this kind of behavior
-  #define VTKM_ASSUME_IMPL(cond) (void)0 /* no-op */
+//For all versions of CUDA this is a no-op while we look
+//for a CUDA asm snippet that replicates this kind of behavior
+#define VTKM_ASSUME_IMPL(cond) (void)0 /* no-op */
 #else
 
 #if defined(VTKM_MSVC)
-# define VTKM_ASSUME_IMPL(cond) __assume(cond)
+#define VTKM_ASSUME_IMPL(cond) __assume(cond)
 #elif defined(VTKM_ICC)
-# define VTKM_ASSUME_IMPL(cond) __assume(cond)
-#elif defined(VTKM_GCC) && ( __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5) )
+#define VTKM_ASSUME_IMPL(cond) __assume(cond)
+#elif defined(VTKM_GCC) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
 // Added in 4.5.0:
-# define VTKM_ASSUME_IMPL(cond) if (!(cond)) __builtin_unreachable()
+#define VTKM_ASSUME_IMPL(cond)                                                                     \
+  if (!(cond))                                                                                     \
+  __builtin_unreachable()
 #elif defined(VTKM_CLANG)
-# define VTKM_ASSUME_IMPL(cond) if (!(cond)) __builtin_unreachable()
+#define VTKM_ASSUME_IMPL(cond)                                                                     \
+  if (!(cond))                                                                                     \
+  __builtin_unreachable()
 #else
-# define VTKM_ASSUME_IMPL(cond) (void)0 /* no-op */
+#define VTKM_ASSUME_IMPL(cond) (void)0 /* no-op */
 #endif
 
 #endif

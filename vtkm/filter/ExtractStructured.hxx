@@ -20,73 +20,57 @@
 
 #include <vtkm/worklet/DispatcherMapField.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT
-ExtractStructured::ExtractStructured():
-  vtkm::filter::FilterDataSet<ExtractStructured>(),
-  VOI(vtkm::Bounds(1,1,1,1,1,1)),
-  SampleRate(vtkm::Id3(1,1,1)),
-  IncludeBoundary(false),
-  Worklet()
+inline VTKM_CONT ExtractStructured::ExtractStructured()
+  : vtkm::filter::FilterDataSet<ExtractStructured>()
+  , VOI(vtkm::Bounds(1, 1, 1, 1, 1, 1))
+  , SampleRate(vtkm::Id3(1, 1, 1))
+  , IncludeBoundary(false)
+  , Worklet()
 {
 }
 
 //-----------------------------------------------------------------------------
-template<typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-vtkm::filter::ResultDataSet ExtractStructured::DoExecute(
-                                                 const vtkm::cont::DataSet& input,
-                                                 const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                                 const DeviceAdapter&)
+template <typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT vtkm::filter::ResultDataSet ExtractStructured::DoExecute(
+  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  const DeviceAdapter&)
 {
-  const vtkm::cont::DynamicCellSet& cells =
-                  input.GetCellSet(this->GetActiveCellSetIndex());
-  const vtkm::cont::CoordinateSystem& coordinates = 
-                  input.GetCoordinateSystem(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::CoordinateSystem& coordinates =
+    input.GetCoordinateSystem(this->GetActiveCellSetIndex());
 
-  vtkm::cont::DataSet output = this->Worklet.Run(
-                                           cells,
-                                           coordinates,
-                                           this->VOI,
-                                           this->SampleRate,
-                                           this->IncludeBoundary,
-                                           DeviceAdapter());
+  vtkm::cont::DataSet output = this->Worklet.Run(cells, coordinates, this->VOI, this->SampleRate,
+                                                 this->IncludeBoundary, DeviceAdapter());
 
   return vtkm::filter::ResultDataSet(output);
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-bool ExtractStructured::DoMapField(
-                           vtkm::filter::ResultDataSet& result,
-                           const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                           const vtkm::filter::FieldMetadata& fieldMeta,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                           const DeviceAdapter& device)
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool ExtractStructured::DoMapField(
+  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  const DeviceAdapter& device)
 {
   // point data is copied as is because it was not collapsed
-  if(fieldMeta.IsPointField())
+  if (fieldMeta.IsPointField())
   {
-    vtkm::cont::ArrayHandle<T, StorageType> output =
-        this->Worklet.ProcessPointField(input, device);
+    vtkm::cont::ArrayHandle<T, StorageType> output = this->Worklet.ProcessPointField(input, device);
 
     result.GetDataSet().AddField(fieldMeta.AsField(output));
     return true;
   }
-  
+
   // cell data must be scattered to the cells created per input cell
-  if(fieldMeta.IsCellField())
+  if (fieldMeta.IsCellField())
   {
-    vtkm::cont::ArrayHandle<T, StorageType> output =
-        this->Worklet.ProcessCellField(input, device);
+    vtkm::cont::ArrayHandle<T, StorageType> output = this->Worklet.ProcessCellField(input, device);
 
     result.GetDataSet().AddField(fieldMeta.AsField(output));
     return true;
@@ -94,6 +78,5 @@ bool ExtractStructured::DoMapField(
 
   return false;
 }
-
 }
 }

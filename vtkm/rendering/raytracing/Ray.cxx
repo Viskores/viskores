@@ -20,17 +20,16 @@
 
 #include <vtkm/rendering/raytracing/Ray.h>
 
-namespace vtkm {
-namespace rendering {
-namespace raytracing {
+namespace vtkm
+{
+namespace rendering
+{
+namespace raytracing
+{
 
 RayBase::~RayBase()
 {
-
 }
-
-
 }
 }
 } // namespace vtkm::rendering::raytracing
-

@@ -23,7 +23,8 @@
 #include <cstring>
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void TestErrorMessageBuffer()
 {
@@ -36,8 +37,7 @@ void TestErrorMessageBuffer()
 
   largeBuffer.RaiseError("Hello World");
   VTKM_TEST_ASSERT(largeBuffer.IsErrorRaised(), "Error not reported.");
-  VTKM_TEST_ASSERT(strcmp(messageBuffer, "Hello World") == 0,
-                  "Did not record error message.");
+  VTKM_TEST_ASSERT(strcmp(messageBuffer, "Hello World") == 0, "Did not record error message.");
 
   std::cout << "Testing truncated error message." << std::endl;
   messageBuffer[0] = '\0';
@@ -46,13 +46,12 @@ void TestErrorMessageBuffer()
 
   smallBuffer.RaiseError("Hello World");
   VTKM_TEST_ASSERT(smallBuffer.IsErrorRaised(), "Error not reported.");
-  VTKM_TEST_ASSERT(strcmp(messageBuffer, "Hello Wo") == 0,
-                  "Did not record error message.");
+  VTKM_TEST_ASSERT(strcmp(messageBuffer, "Hello Wo") == 0, "Did not record error message.");
 }
 
 } // anonymous namespace
 
-int UnitTestErrorMessageBuffer(int, char *[])
+int UnitTestErrorMessageBuffer(int, char* [])
 {
   return (vtkm::testing::Testing::Run(TestErrorMessageBuffer));
 }

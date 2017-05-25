@@ -26,20 +26,21 @@
 
 #include <memory>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-namespace detail {
+namespace detail
+{
 
 struct CanvasEGLInternals;
-
 }
 
 class VTKM_RENDERING_EXPORT CanvasEGL : public CanvasGL
 {
 public:
-  CanvasEGL(vtkm::Id width=1024,
-            vtkm::Id height=1024);
+  CanvasEGL(vtkm::Id width = 1024, vtkm::Id height = 1024);
 
   ~CanvasEGL();
 
@@ -47,12 +48,12 @@ public:
 
   virtual void Activate() VTKM_OVERRIDE;
 
-  vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
 
 private:
   std::shared_ptr<detail::CanvasEGLInternals> Internals;
 };
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif //vtk_m_rendering_CanvasEGL_h

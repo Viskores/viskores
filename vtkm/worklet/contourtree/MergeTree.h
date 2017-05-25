@@ -123,70 +123,67 @@
 //#define DEBUG_FUNCTION_ENTRY 1
 //#define DEBUG_TIMING 1
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 template <typename T, typename StorageType, typename DeviceAdapter>
 class MergeTree
 {
 public:
-        typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
-        // original data array
-        const vtkm::cont::ArrayHandle<T,StorageType> &values;
+  // original data array
+  const vtkm::cont::ArrayHandle<T, StorageType>& values;
 
-        // size of mesh
-	vtkm::Id nRows, nCols, nSlices, nVertices, nLogSteps;
+  // size of mesh
+  vtkm::Id nRows, nCols, nSlices, nVertices, nLogSteps;
 
-	// whether it is join or split tree
-	bool isJoinTree;
+  // whether it is join or split tree
+  bool isJoinTree;
 
-	// vector of arcs representing the merge tree
-	vtkm::cont::ArrayHandle<vtkm::Id> mergeArcs;
+  // vector of arcs representing the merge tree
+  vtkm::cont::ArrayHandle<vtkm::Id> mergeArcs;
 
-	// vector storing an extremum for each vertex
-	vtkm::cont::ArrayHandle<vtkm::Id> extrema;
+  // vector storing an extremum for each vertex
+  vtkm::cont::ArrayHandle<vtkm::Id> extrema;
 
-	// vector storing a saddle for each vertex
-	vtkm::cont::ArrayHandle<vtkm::Id> saddles;
+  // vector storing a saddle for each vertex
+  vtkm::cont::ArrayHandle<vtkm::Id> saddles;
 
-	// merge tree constructor
-	MergeTree(const vtkm::cont::ArrayHandle<T,StorageType> &Values,
-                  vtkm::Id NRows,
-                  vtkm::Id NCols,
-                  vtkm::Id NSlices,
-                  bool IsJoinTree);
+  // merge tree constructor
+  MergeTree(const vtkm::cont::ArrayHandle<T, StorageType>& Values, vtkm::Id NRows, vtkm::Id NCols,
+            vtkm::Id NSlices, bool IsJoinTree);
 
-	// routine that does pointer-doubling in the mergeArc array
-	void BuildRegularChains();
+  // routine that does pointer-doubling in the mergeArc array
+  void BuildRegularChains();
 
-	// routine that computes the augmented merge tree superarcs from the merge graph
-	void ComputeAugmentedSuperarcs();
+  // routine that computes the augmented merge tree superarcs from the merge graph
+  void ComputeAugmentedSuperarcs();
 
-	// routine that computes the augmented merge arcs from the superarcs
-	// this is separate from the previous routine because it also gets called separately
-	// once saddle & extrema are set for a given set of vertices, the merge arcs can be
-	// computed for any subset of those vertices that contains all of the critical points
-	void ComputeAugmentedArcs(vtkm::cont::ArrayHandle<vtkm::Id> &vertices);
+  // routine that computes the augmented merge arcs from the superarcs
+  // this is separate from the previous routine because it also gets called separately
+  // once saddle & extrema are set for a given set of vertices, the merge arcs can be
+  // computed for any subset of those vertices that contains all of the critical points
+  void ComputeAugmentedArcs(vtkm::cont::ArrayHandle<vtkm::Id>& vertices);
 
-	// debug routine
-	void DebugPrint(const char *message);
+  // debug routine
+  void DebugPrint(const char* message);
 };
 
 // creates merge tree
 template <typename T, typename StorageType, typename DeviceAdapter>
-MergeTree<T,StorageType,DeviceAdapter>::MergeTree(
-                  const vtkm::cont::ArrayHandle<T,StorageType> &Values,
-                  vtkm::Id NRows,
-                  vtkm::Id NCols,
-                  vtkm::Id NSlices,
-                  bool IsJoinTree) :
-                                     values(Values),
-                                     nRows(NRows),
-                                     nCols(NCols),
-                                     nSlices(NSlices),
-                                     isJoinTree(IsJoinTree)
+MergeTree<T, StorageType, DeviceAdapter>::MergeTree(
+  const vtkm::cont::ArrayHandle<T, StorageType>& Values, vtkm::Id NRows, vtkm::Id NCols,
+  vtkm::Id NSlices, bool IsJoinTree)
+  : values(Values)
+  , nRows(NRows)
+  , nCols(NCols)
+  , nSlices(NSlices)
+  , isJoinTree(IsJoinTree)
 {
   nVertices = nRows * nCols * nSlices;
   nLogSteps = 1;
@@ -205,42 +202,42 @@ MergeTree<T,StorageType,DeviceAdapter>::MergeTree(
 }
 
 // routine that does pointer-doubling in the saddles array
-template<typename T, typename StorageType, typename DeviceAdapter>
-void MergeTree<T,StorageType,DeviceAdapter>::BuildRegularChains()
+template <typename T, typename StorageType, typename DeviceAdapter>
+void MergeTree<T, StorageType, DeviceAdapter>::BuildRegularChains()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		std::cout << std::endl;
-		std::cout << "====================" << std::endl;
-		std::cout << "Build Regular Chains" << std::endl;
-		std::cout << "====================" << std::endl;
-		std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "====================" << std::endl;
+  std::cout << "Build Regular Chains" << std::endl;
+  std::cout << "====================" << std::endl;
+  std::cout << std::endl;
 #endif
-	// 2. Create a temporary array so that we can alternate writing between them
-	vtkm::cont::ArrayHandle<vtkm::Id> temporaryArcs;
-        temporaryArcs.Allocate(nVertices);
+  // 2. Create a temporary array so that we can alternate writing between them
+  vtkm::cont::ArrayHandle<vtkm::Id> temporaryArcs;
+  temporaryArcs.Allocate(nVertices);
 
-        vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
-        ChainDoubler chainDoubler;
-        vtkm::worklet::DispatcherMapField<ChainDoubler> chainDoublerDispatcher(chainDoubler);
+  vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
+  ChainDoubler chainDoubler;
+  vtkm::worklet::DispatcherMapField<ChainDoubler> chainDoublerDispatcher(chainDoubler);
 
-        // 3. Apply pointer-doubling to build chains to maxima, rocking between two arrays
-        for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
-        {
-          chainDoublerDispatcher.Invoke(vertexIndexArray,  // input
-                                        extrema);          // i/o whole array
-        }
+  // 3. Apply pointer-doubling to build chains to maxima, rocking between two arrays
+  for (vtkm::Id logStep = 0; logStep < nLogSteps; logStep++)
+  {
+    chainDoublerDispatcher.Invoke(vertexIndexArray, // input
+                                  extrema);         // i/o whole array
+  }
 } // BuildRegularChains()
 
 // routine that computes the augmented merge tree from the merge graph
 template <typename T, typename StorageType, typename DeviceAdapter>
-void MergeTree<T,StorageType,DeviceAdapter>::ComputeAugmentedSuperarcs()
+void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedSuperarcs()
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		std::cout << std::endl;
-		std::cout << "=================================" << std::endl;
-		std::cout << "Compute Augmented Merge Superarcs" << std::endl;
-		std::cout << "=================================" << std::endl;
-		std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "=================================" << std::endl;
+  std::cout << "Compute Augmented Merge Superarcs" << std::endl;
+  std::cout << "=================================" << std::endl;
+  std::cout << std::endl;
 #endif
 
   // our first step is to assign every vertex to a pseudo-extremum based on how the
@@ -252,8 +249,8 @@ void MergeTree<T,StorageType,DeviceAdapter>::ComputeAugmentedSuperarcs()
   vtkm::Id nExtrema = extrema.GetNumberOfValues();
 
   JoinSuperArcFinder<T> joinSuperArcFinder(isJoinTree);
-  vtkm::worklet::DispatcherMapField<JoinSuperArcFinder<T> >
-                 joinSuperArcFinderDispatcher(joinSuperArcFinder);
+  vtkm::worklet::DispatcherMapField<JoinSuperArcFinder<T>> joinSuperArcFinderDispatcher(
+    joinSuperArcFinder);
   vtkm::cont::ArrayHandleIndex vertexIndexArray(nExtrema);
 
   joinSuperArcFinderDispatcher.Invoke(vertexIndexArray, // input
@@ -261,8 +258,8 @@ void MergeTree<T,StorageType,DeviceAdapter>::ComputeAugmentedSuperarcs()
                                       saddles,          // i/o (whole array)
                                       extrema);         // i/o (whole array)
 
-  // at the end of this, all vertices should have a pseudo-extremum in the extrema array
-  // and a pseudo-saddle in the saddles array
+// at the end of this, all vertices should have a pseudo-extremum in the extrema array
+// and a pseudo-saddle in the saddles array
 #ifdef DEBUG_PRINT
   DebugPrint("Merge Superarcs Set");
 #endif
@@ -273,15 +270,15 @@ void MergeTree<T,StorageType,DeviceAdapter>::ComputeAugmentedSuperarcs()
 // once saddle & extrema are set for a given set of vertices, the merge arcs can be
 // computed for any subset of those vertices that contains all of the critical points
 template <typename T, typename StorageType, typename DeviceAdapter>
-void MergeTree<T,StorageType,DeviceAdapter>::ComputeAugmentedArcs(
-                             vtkm::cont::ArrayHandle<vtkm::Id> &vertices)
+void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedArcs(
+  vtkm::cont::ArrayHandle<vtkm::Id>& vertices)
 {
 #ifdef DEBUG_FUNCTION_ENTRY
-		std::cout << std::endl;
-		std::cout << "============================" << std::endl;
-		std::cout << "Compute Augmented Merge Arcs" << std::endl;
-		std::cout << "============================" << std::endl;
-		std::cout << std::endl;
+  std::cout << std::endl;
+  std::cout << "============================" << std::endl;
+  std::cout << "Compute Augmented Merge Arcs" << std::endl;
+  std::cout << "============================" << std::endl;
+  std::cout << std::endl;
 #endif
 
   // create a vector of indices for sorting
@@ -290,11 +287,9 @@ void MergeTree<T,StorageType,DeviceAdapter>::ComputeAugmentedArcs(
   DeviceAlgorithm::Copy(vertices, vertexSorter);
 
   // We sort by pseudo-maximum to establish the extents
-  DeviceAlgorithm::Sort(vertexSorter,
-                        VertexMergeComparator<T,StorageType,DeviceAdapter>(
-                                              values.PrepareForInput(DeviceAdapter()),
-                                              extrema.PrepareForInput(DeviceAdapter()),
-                                              isJoinTree));
+  DeviceAlgorithm::Sort(vertexSorter, VertexMergeComparator<T, StorageType, DeviceAdapter>(
+                                        values.PrepareForInput(DeviceAdapter()),
+                                        extrema.PrepareForInput(DeviceAdapter()), isJoinTree));
 #ifdef DEBUG_PRINT
   DebugPrint("Sorting Complete");
 #endif
@@ -304,29 +299,28 @@ void MergeTree<T,StorageType,DeviceAdapter>::ComputeAugmentedArcs(
 
   vtkm::cont::ArrayHandleIndex critVertexIndexArray(nCriticalVerts);
   JoinArcConnector joinArcConnector;
-  vtkm::worklet::DispatcherMapField<JoinArcConnector>
-                 joinArcConnectorDispatcher(joinArcConnector);
+  vtkm::worklet::DispatcherMapField<JoinArcConnector> joinArcConnectorDispatcher(joinArcConnector);
 
-  joinArcConnectorDispatcher.Invoke(critVertexIndexArray,  // input
-                                    vertexSorter,          // input (whole array)
-                                    extrema,               // input (whole array)
-                                    saddles,               // input (whole array)
-                                    mergeArcs);            // output (whole array)
+  joinArcConnectorDispatcher.Invoke(critVertexIndexArray, // input
+                                    vertexSorter,         // input (whole array)
+                                    extrema,              // input (whole array)
+                                    saddles,              // input (whole array)
+                                    mergeArcs);           // output (whole array)
 #ifdef DEBUG_PRINT
   DebugPrint("Augmented Arcs Set");
 #endif
 } // ComputeAugmentedArcs()
 
 // debug routine
-template<typename T, typename StorageType, typename DeviceAdapter>
-void MergeTree<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
+template <typename T, typename StorageType, typename DeviceAdapter>
+void MergeTree<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
 {
   std::cout << "---------------------------" << std::endl;
   std::cout << std::string(message) << std::endl;
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
-  printLabelledBlock("Values", values, nRows*nSlices, nCols);
+  printLabelledBlock("Values", values, nRows * nSlices, nCols);
   std::cout << std::endl;
   printLabelledBlock("MergeArcs", mergeArcs, nRows, nCols);
   std::cout << std::endl;
@@ -335,7 +329,6 @@ void MergeTree<T,StorageType,DeviceAdapter>::DebugPrint(const char *message)
   printLabelledBlock("Saddles", saddles, nRows, nCols);
   std::cout << std::endl;
 } // DebugPrint()
-
 }
 }
 }

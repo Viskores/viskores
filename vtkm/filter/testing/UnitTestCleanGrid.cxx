@@ -23,7 +23,8 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void TestUniformGrid(vtkm::filter::CleanGrid clean)
 {
@@ -48,35 +49,27 @@ void TestUniformGrid(vtkm::filter::CleanGrid clean)
   outData.GetCellSet().CopyTo(outCellSet);
   VTKM_TEST_ASSERT(outCellSet.GetNumberOfPoints() == 6, "Wrong number of points");
   VTKM_TEST_ASSERT(outCellSet.GetNumberOfCells() == 2, "Wrong number of cells");
-  vtkm::Vec<vtkm::Id,4> cellIds;
+  vtkm::Vec<vtkm::Id, 4> cellIds;
   outCellSet.GetIndices(0, cellIds);
-  VTKM_TEST_ASSERT((cellIds == vtkm::Vec<vtkm::Id,4>(0, 1, 4, 3)),
-                   "Bad cell ids");
+  VTKM_TEST_ASSERT((cellIds == vtkm::Vec<vtkm::Id, 4>(0, 1, 4, 3)), "Bad cell ids");
   outCellSet.GetIndices(1, cellIds);
-  VTKM_TEST_ASSERT((cellIds == vtkm::Vec<vtkm::Id,4>(1, 2, 5, 4)),
-                   "Bad cell ids");
+  VTKM_TEST_ASSERT((cellIds == vtkm::Vec<vtkm::Id, 4>(1, 2, 5, 4)), "Bad cell ids");
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outPointField;
   outData.GetField("pointvar").GetData().CopyTo(outPointField);
-  VTKM_TEST_ASSERT(outPointField.GetNumberOfValues() == 6,
-                   "Wrong point field size.");
-  VTKM_TEST_ASSERT(
-        test_equal(outPointField.GetPortalConstControl().Get(1), 20.1),
-        "Bad point field value");
-  VTKM_TEST_ASSERT(
-        test_equal(outPointField.GetPortalConstControl().Get(4), 50.1),
-        "Bad point field value");
+  VTKM_TEST_ASSERT(outPointField.GetNumberOfValues() == 6, "Wrong point field size.");
+  VTKM_TEST_ASSERT(test_equal(outPointField.GetPortalConstControl().Get(1), 20.1),
+                   "Bad point field value");
+  VTKM_TEST_ASSERT(test_equal(outPointField.GetPortalConstControl().Get(4), 50.1),
+                   "Bad point field value");
 
   vtkm::cont::ArrayHandle<vtkm::Float32> outCellField;
   outData.GetField("cellvar").GetData().CopyTo(outCellField);
-  VTKM_TEST_ASSERT(outCellField.GetNumberOfValues() == 2,
-                   "Wrong cell field size.");
-  VTKM_TEST_ASSERT(
-        test_equal(outCellField.GetPortalConstControl().Get(0), 100.1),
-        "Bad cell field value");
-  VTKM_TEST_ASSERT(
-        test_equal(outCellField.GetPortalConstControl().Get(1), 200.1),
-        "Bad cell field value");
+  VTKM_TEST_ASSERT(outCellField.GetNumberOfValues() == 2, "Wrong cell field size.");
+  VTKM_TEST_ASSERT(test_equal(outCellField.GetPortalConstControl().Get(0), 100.1),
+                   "Bad cell field value");
+  VTKM_TEST_ASSERT(test_equal(outCellField.GetPortalConstControl().Get(1), 200.1),
+                   "Bad cell field value");
 }
 
 void RunTest()
@@ -94,7 +87,7 @@ void RunTest()
 
 } // anonymous namespace
 
-int UnitTestCleanGrid(int, char *[])
+int UnitTestCleanGrid(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(RunTest);
 }

@@ -25,8 +25,8 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-namespace {
-
+namespace
+{
 
 class TestingExtractGeometry
 {
@@ -57,20 +57,18 @@ public:
     }
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for ExtractGeometry");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-                        vtkm::cont::ArrayHandle<vtkm::Id>,
-                        vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellArrayHandleType;
 
     OutCellArrayHandleType outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 21.f,
-                     "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(7) == 42.f,
-                     "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 21.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(7) == 42.f, "Wrong cell field data");
   }
 
   void TestUniformByBox1() const
@@ -99,20 +97,18 @@ public:
     }
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
                      "Wrong result for ExtractGeometry");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-                        vtkm::cont::ArrayHandle<vtkm::Id>,
-                        vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellArrayHandleType;
 
     OutCellArrayHandleType outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.f,
-                     "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(55) == 63.f,
-                     "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(55) == 63.f, "Wrong cell field data");
   }
 
   void TestUniformByBox2() const
@@ -141,20 +137,18 @@ public:
     }
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 64), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 64),
                      "Wrong result for ExtractGeometry");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-                        vtkm::cont::ArrayHandle<vtkm::Id>,
-                        vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellArrayHandleType;
 
     OutCellArrayHandleType outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.f,
-                     "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(63) == 63.f,
-                     "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(63) == 63.f, "Wrong cell field data");
   }
   void TestUniformByBox3() const
   {
@@ -182,20 +176,18 @@ public:
     }
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
                      "Wrong result for ExtractGeometry");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-                        vtkm::cont::ArrayHandle<vtkm::Id>,
-                        vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellArrayHandleType;
 
     OutCellArrayHandleType outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.f,
-                     "Wrong cell field data");
-    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(55) == 63.f,
-                     "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.f, "Wrong cell field data");
+    VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(55) == 63.f, "Wrong cell field data");
   }
 
   void operator()() const
@@ -206,10 +198,9 @@ public:
     this->TestUniformByBox3();
   }
 };
-
 }
 
-int UnitTestExtractGeometryFilter(int, char *[])
+int UnitTestExtractGeometryFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestingExtractGeometry());
 }

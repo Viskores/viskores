@@ -87,13 +87,14 @@
  * instance of your benchmark for the type being benchmarked. The VA_ARGS are used to
  * pass any extra arguments needed by your benchmark
  */
-#define VTKM_MAKE_BENCHMARK(Name, Bench, ...) \
-  struct MakeBench##Name { \
-    template<typename Value> \
-    VTKM_CONT \
-    Bench<Value> operator()(const Value vtkmNotUsed(v)) const { \
-      return Bench<Value>(__VA_ARGS__); \
-    } \
+#define VTKM_MAKE_BENCHMARK(Name, Bench, ...)                                                      \
+  struct MakeBench##Name                                                                           \
+  {                                                                                                \
+    template <typename Value>                                                                      \
+    VTKM_CONT Bench<Value> operator()(const Value vtkmNotUsed(v)) const                            \
+    {                                                                                              \
+      return Bench<Value>(__VA_ARGS__);                                                            \
+    }                                                                                              \
   }
 
 /*
@@ -101,20 +102,26 @@
  * You must have previously defined a maker functor with VTKM_MAKE_BENCHMARK that this
  * macro will look for and use
  */
-#define VTKM_RUN_BENCHMARK(Name, Types) \
+#define VTKM_RUN_BENCHMARK(Name, Types)                                                            \
   vtkm::benchmarking::BenchmarkTypes(MakeBench##Name(), (Types))
 
-namespace vtkm {
-namespace benchmarking {
-namespace stats {
+namespace vtkm
+{
+namespace benchmarking
+{
+namespace stats
+{
 // Checks that the sequence is sorted, returns true if it's sorted, false
 // otherwise
-template<typename ForwardIt>
-bool is_sorted(ForwardIt first, ForwardIt last){
+template <typename ForwardIt>
+bool is_sorted(ForwardIt first, ForwardIt last)
+{
   ForwardIt next = first;
   ++next;
-  for (; next != last; ++next, ++first){
-    if (*first > *next){
+  for (; next != last; ++next, ++first)
+  {
+    if (*first > *next)
+    {
       return false;
     }
   }
@@ -123,16 +130,19 @@ bool is_sorted(ForwardIt first, ForwardIt last){
 
 // Get the value representing the `percent` percentile of the
 // sorted samples using linear interpolation
-vtkm::Float64 PercentileValue(const std::vector<vtkm::Float64> &samples, const vtkm::Float64 percent){
+vtkm::Float64 PercentileValue(const std::vector<vtkm::Float64>& samples,
+                              const vtkm::Float64 percent)
+{
   VTKM_ASSERT(!samples.empty());
-  if (samples.size() == 1){
+  if (samples.size() == 1)
+  {
     return samples.front();
   }
   VTKM_ASSERT(percent >= 0.0);
   VTKM_ASSERT(percent <= 100.0);
-  VTKM_ASSERT(
-        vtkm::benchmarking::stats::is_sorted(samples.begin(), samples.end()));
-  if (percent == 100.0){
+  VTKM_ASSERT(vtkm::benchmarking::stats::is_sorted(samples.begin(), samples.end()));
+  if (percent == 100.0)
+  {
     return samples.back();
   }
   // Find the two nearest percentile values and linearly
@@ -149,45 +159,56 @@ vtkm::Float64 PercentileValue(const std::vector<vtkm::Float64> &samples, const v
 // Will replace all samples below `percent` and above 100 - `percent` percentiles
 // with the value at the percentile
 // NOTE: Assumes the samples have been sorted, as we make use of PercentileValue
-void Winsorize(std::vector<vtkm::Float64> &samples, const vtkm::Float64 percent){
+void Winsorize(std::vector<vtkm::Float64>& samples, const vtkm::Float64 percent)
+{
   const vtkm::Float64 low_percentile = PercentileValue(samples, percent);
   const vtkm::Float64 high_percentile = PercentileValue(samples, 100.0 - percent);
-  for (std::vector<vtkm::Float64>::iterator it = samples.begin(); it != samples.end(); ++it){
-    if (*it < low_percentile){
+  for (std::vector<vtkm::Float64>::iterator it = samples.begin(); it != samples.end(); ++it)
+  {
+    if (*it < low_percentile)
+    {
       *it = low_percentile;
     }
-    else if (*it > high_percentile){
+    else if (*it > high_percentile)
+    {
       *it = high_percentile;
     }
   }
 }
 // Compute the mean value of the dataset
-vtkm::Float64 Mean(const std::vector<vtkm::Float64> &samples){
+vtkm::Float64 Mean(const std::vector<vtkm::Float64>& samples)
+{
   vtkm::Float64 mean = 0;
-  for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it){
+  for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it)
+  {
     mean += *it;
   }
   return mean / static_cast<vtkm::Float64>(samples.size());
 }
 // Compute the sample variance of the samples
-vtkm::Float64 Variance(const std::vector<vtkm::Float64> &samples){
+vtkm::Float64 Variance(const std::vector<vtkm::Float64>& samples)
+{
   vtkm::Float64 mean = Mean(samples);
   vtkm::Float64 square_deviations = 0;
-  for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it){
+  for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it)
+  {
     square_deviations += vtkm::Pow(*it - mean, 2.0);
   }
   return square_deviations / (static_cast<vtkm::Float64>(samples.size()) - 1.0);
 }
 // Compute the standard deviation of the samples
-vtkm::Float64 StandardDeviation(const std::vector<vtkm::Float64> &samples){
+vtkm::Float64 StandardDeviation(const std::vector<vtkm::Float64>& samples)
+{
   return vtkm::Sqrt(Variance(samples));
 }
 // Compute the median absolute deviation of the dataset
-vtkm::Float64 MedianAbsDeviation(const std::vector<vtkm::Float64> &samples){
+vtkm::Float64 MedianAbsDeviation(const std::vector<vtkm::Float64>& samples)
+{
   std::vector<vtkm::Float64> abs_deviations;
   abs_deviations.reserve(samples.size());
   const vtkm::Float64 median = PercentileValue(samples, 50.0);
-  for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it){
+  for (std::vector<vtkm::Float64>::const_iterator it = samples.begin(); it != samples.end(); ++it)
+  {
     abs_deviations.push_back(vtkm::Abs(*it - median));
   }
   std::sort(abs_deviations.begin(), abs_deviations.end());
@@ -202,15 +223,20 @@ vtkm::Float64 MedianAbsDeviation(const std::vector<vtkm::Float64> &samples){
  * in seconds, this lets us avoid including any per-run setup time in the benchmark.
  * However any one-time setup should be done in the functor's constructor
  */
-struct Benchmarker {
+struct Benchmarker
+{
   const vtkm::Float64 MAX_RUNTIME;
   const size_t MAX_ITERATIONS;
 
-  Benchmarker() : MAX_RUNTIME(30), MAX_ITERATIONS(500){}
+  Benchmarker()
+    : MAX_RUNTIME(30)
+    , MAX_ITERATIONS(500)
+  {
+  }
 
-  template<typename Functor>
-  VTKM_CONT
-  void operator()(Functor func) const {
+  template <typename Functor>
+  VTKM_CONT void operator()(Functor func) const
+  {
     std::vector<vtkm::Float64> samples;
     // Do a warm-up run. If the benchmark allocates any additional memory
     // eg. storage for output results, this will let it do that and
@@ -224,50 +250,49 @@ struct Benchmarker {
     // could be increased
     size_t iter = 0;
     for (vtkm::Float64 elapsed = 0.0; elapsed < MAX_RUNTIME && iter < MAX_ITERATIONS;
-        elapsed += samples.back(), ++iter)
+         elapsed += samples.back(), ++iter)
     {
       samples.push_back(func());
     }
     std::sort(samples.begin(), samples.end());
     stats::Winsorize(samples, 5.0);
-    std::cout << "Benchmark \'"
-      << func.Description() << "\' results:\n"
-      << "\tmedian = " << stats::PercentileValue(samples, 50.0) << "s\n"
-      << "\tmedian abs dev = " << stats::MedianAbsDeviation(samples) << "s\n"
-      << "\tmean = " << stats::Mean(samples) << "s\n"
-      << "\tstd dev = " << stats::StandardDeviation(samples) << "s\n"
-      << "\tmin = " << samples.front() << "s\n"
-      << "\tmax = " << samples.back() << "s\n";
+    std::cout << "Benchmark \'" << func.Description() << "\' results:\n"
+              << "\tmedian = " << stats::PercentileValue(samples, 50.0) << "s\n"
+              << "\tmedian abs dev = " << stats::MedianAbsDeviation(samples) << "s\n"
+              << "\tmean = " << stats::Mean(samples) << "s\n"
+              << "\tstd dev = " << stats::StandardDeviation(samples) << "s\n"
+              << "\tmin = " << samples.front() << "s\n"
+              << "\tmax = " << samples.back() << "s\n";
   }
 };
 
-template<typename MakerFunctor>
-class InternalPrintTypeAndBench {
+template <typename MakerFunctor>
+class InternalPrintTypeAndBench
+{
   MakerFunctor Maker;
 
 public:
   VTKM_CONT
-  InternalPrintTypeAndBench(MakerFunctor maker) : Maker(maker) {}
+  InternalPrintTypeAndBench(MakerFunctor maker)
+    : Maker(maker)
+  {
+  }
 
-  template<typename T>
-  VTKM_CONT
-  void operator()(T t) const {
-    std::cout << "*** "
-              << vtkm::testing::TypeName<T>::Name()
-              << " ***************" << std::endl;
+  template <typename T>
+  VTKM_CONT void operator()(T t) const
+  {
+    std::cout << "*** " << vtkm::testing::TypeName<T>::Name() << " ***************" << std::endl;
     Benchmarker bench;
     bench(Maker(t));
   }
 };
 
-template<class MakerFunctor, class TypeList>
-VTKM_CONT
-void BenchmarkTypes(const MakerFunctor &maker, TypeList){
+template <class MakerFunctor, class TypeList>
+VTKM_CONT void BenchmarkTypes(const MakerFunctor& maker, TypeList)
+{
   vtkm::ListForEach(InternalPrintTypeAndBench<MakerFunctor>(maker), TypeList());
 }
-
 }
 }
 
 #endif
-

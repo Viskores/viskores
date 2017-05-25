@@ -24,9 +24,12 @@
 
 #include <vtkm/exec/internal/ReduceByKeyLookup.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief Container for thread indices in a reduce by key invocation.
 ///
@@ -40,36 +43,27 @@ class ThreadIndicesReduceByKey : public vtkm::exec::arg::ThreadIndicesBasic
   using Superclass = vtkm::exec::arg::ThreadIndicesBasic;
 
 public:
-  template<typename P1, typename P2, typename P3>
-  VTKM_EXEC
-  ThreadIndicesReduceByKey(
-      vtkm::Id threadIndex,
-      vtkm::Id inIndex,
-      vtkm::IdComponent visitIndex,
-      const vtkm::exec::internal::ReduceByKeyLookup<P1,P2,P3> &keyLookup,
-      vtkm::Id globalThreadIndexOffset=0)
-    : Superclass(threadIndex, inIndex, visitIndex, globalThreadIndexOffset),
-      ValueOffset(keyLookup.Offsets.Get(inIndex)),
-      NumberOfValues(keyLookup.Counts.Get(inIndex))
-  {  }
-
-  VTKM_EXEC
-  vtkm::Id GetValueOffset() const
+  template <typename P1, typename P2, typename P3>
+  VTKM_EXEC ThreadIndicesReduceByKey(
+    vtkm::Id threadIndex, vtkm::Id inIndex, vtkm::IdComponent visitIndex,
+    const vtkm::exec::internal::ReduceByKeyLookup<P1, P2, P3>& keyLookup,
+    vtkm::Id globalThreadIndexOffset = 0)
+    : Superclass(threadIndex, inIndex, visitIndex, globalThreadIndexOffset)
+    , ValueOffset(keyLookup.Offsets.Get(inIndex))
+    , NumberOfValues(keyLookup.Counts.Get(inIndex))
   {
-    return this->ValueOffset;
   }
 
   VTKM_EXEC
-  vtkm::IdComponent GetNumberOfValues() const
-  {
-    return this->NumberOfValues;
-  }
+  vtkm::Id GetValueOffset() const { return this->ValueOffset; }
+
+  VTKM_EXEC
+  vtkm::IdComponent GetNumberOfValues() const { return this->NumberOfValues; }
 
 private:
   vtkm::Id ValueOffset;
   vtkm::IdComponent NumberOfValues;
 };
-
 }
 }
 } // namespace vtkm::exec::arg

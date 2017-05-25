@@ -24,14 +24,15 @@
 
 #include <vtkm/rendering/Canvas.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT CanvasRayTracer : public Canvas
 {
 public:
-  CanvasRayTracer(vtkm::Id width=1024,
-                  vtkm::Id height=1024);
+  CanvasRayTracer(vtkm::Id width = 1024, vtkm::Id height = 1024);
 
   ~CanvasRayTracer();
 
@@ -43,27 +44,20 @@ public:
 
   void Clear() VTKM_OVERRIDE;
 
-  vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
 
-  void AddLine(const vtkm::Vec<vtkm::Float64,2> &point0,
-               const vtkm::Vec<vtkm::Float64,2> &point1,
-               vtkm::Float32 linewidth,
-               const vtkm::rendering::Color &color) const VTKM_OVERRIDE;
+  void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0, const vtkm::Vec<vtkm::Float64, 2>& point1,
+               vtkm::Float32 linewidth, const vtkm::rendering::Color& color) const VTKM_OVERRIDE;
 
-  void AddColorBar(const vtkm::Bounds &bounds,
-                   const vtkm::rendering::ColorTable &colorTable,
+  void AddColorBar(const vtkm::Bounds& bounds, const vtkm::rendering::ColorTable& colorTable,
                    bool horizontal) const VTKM_OVERRIDE;
 
-
-  void AddText(const vtkm::Vec<vtkm::Float32,2> &position,
-               vtkm::Float32 scale,
-               vtkm::Float32 angle,
-               vtkm::Float32 windowAspect,
-               const vtkm::Vec<vtkm::Float32,2> &anchor,
-               const vtkm::rendering::Color & color,
-               const std::string &text) const VTKM_OVERRIDE;
+  void AddText(const vtkm::Vec<vtkm::Float32, 2>& position, vtkm::Float32 scale,
+               vtkm::Float32 angle, vtkm::Float32 windowAspect,
+               const vtkm::Vec<vtkm::Float32, 2>& anchor, const vtkm::rendering::Color& color,
+               const std::string& text) const VTKM_OVERRIDE;
 };
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif //vtk_m_rendering_CanvasRayTracer_h

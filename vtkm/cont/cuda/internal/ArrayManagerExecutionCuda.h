@@ -29,27 +29,29 @@
 // These must be placed in the vtkm::cont::internal namespace so that
 // the template can be found.
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 template <typename T, class StorageTag>
-class ArrayManagerExecution
-    <T, StorageTag, vtkm::cont::DeviceAdapterTagCuda>
-    : public vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice
-        <T, StorageTag>
+class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagCuda>
+  : public vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice<T, StorageTag>
 {
 public:
-  typedef vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice
-      <T, StorageTag> Superclass;
+  typedef vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice<T, StorageTag> Superclass;
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
   typedef typename Superclass::StorageType StorageType;
 
   VTKM_CONT
-  ArrayManagerExecution(StorageType *storage)
-    : Superclass(storage) {  }
+  ArrayManagerExecution(StorageType* storage)
+    : Superclass(storage)
+  {
+  }
 
   VTKM_CONT
   PortalConstType PrepareForInput(bool updateData)
@@ -60,7 +62,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForInput<void>(updateData);
     }
-    catch (vtkm::cont::ErrorBadAllocation &error)
+    catch (vtkm::cont::ErrorBadAllocation& error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -81,7 +83,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForInPlace<void>(updateData);
     }
-    catch (vtkm::cont::ErrorBadAllocation &error)
+    catch (vtkm::cont::ErrorBadAllocation& error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -102,7 +104,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForOutput<void>(numberOfValues);
     }
-    catch (vtkm::cont::ErrorBadAllocation &error)
+    catch (vtkm::cont::ErrorBadAllocation& error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -120,7 +122,6 @@ public:
 #ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
 VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagCuda)
 #endif // !vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
-
 }
 } // namespace vtkm::cont
 

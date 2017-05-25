@@ -26,17 +26,18 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void TestWorkIndexFetch()
 {
   std::cout << "Trying WorkIndex fetch." << std::endl;
 
   typedef vtkm::exec::arg::Fetch<
-      vtkm::exec::arg::FetchTagArrayDirectIn, // Not used but probably common.
-      vtkm::exec::arg::AspectTagWorkIndex,
-      vtkm::exec::arg::ThreadIndicesTesting,
-      vtkm::internal::NullType> FetchType;
+    vtkm::exec::arg::FetchTagArrayDirectIn, // Not used but probably common.
+    vtkm::exec::arg::AspectTagWorkIndex, vtkm::exec::arg::ThreadIndicesTesting,
+    vtkm::internal::NullType>
+    FetchType;
 
   FetchType fetch;
 
@@ -45,8 +46,7 @@ void TestWorkIndexFetch()
     vtkm::exec::arg::ThreadIndicesTesting indices(index);
 
     vtkm::Id value = fetch.Load(indices, vtkm::internal::NullType());
-    VTKM_TEST_ASSERT(value == index,
-                     "Fetch did not give correct work index.");
+    VTKM_TEST_ASSERT(value == index, "Fetch did not give correct work index.");
 
     value++;
 
@@ -57,7 +57,7 @@ void TestWorkIndexFetch()
 
 } // anonymous namespace
 
-int UnitTestFetchWorkIndex(int, char *[])
+int UnitTestFetchWorkIndex(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestWorkIndexFetch);
 }

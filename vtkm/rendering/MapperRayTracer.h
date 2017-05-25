@@ -26,8 +26,10 @@
 
 #include <memory>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT MapperRayTracer : public Mapper
 {
@@ -36,20 +38,19 @@ public:
 
   ~MapperRayTracer();
 
-  void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
+  void SetCanvas(vtkm::rendering::Canvas* canvas) VTKM_OVERRIDE;
   virtual vtkm::rendering::Canvas* GetCanvas() const VTKM_OVERRIDE;
 
-  void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
-                   const vtkm::cont::CoordinateSystem &coords,
-                   const vtkm::cont::Field &scalarField,
-                   const vtkm::rendering::ColorTable &colorTable,
-                   const vtkm::rendering::Camera &camera,
-                   const vtkm::Range &scalarRange) VTKM_OVERRIDE;
+  void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+                   const vtkm::cont::CoordinateSystem& coords, const vtkm::cont::Field& scalarField,
+                   const vtkm::rendering::ColorTable& colorTable,
+                   const vtkm::rendering::Camera& camera,
+                   const vtkm::Range& scalarRange) VTKM_OVERRIDE;
 
   virtual void StartScene() VTKM_OVERRIDE;
   virtual void EndScene() VTKM_OVERRIDE;
 
-  vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Mapper* NewCopy() const VTKM_OVERRIDE;
 
 private:
   struct InternalsType;
@@ -57,7 +58,6 @@ private:
 
   struct RenderFunctor;
 };
-
 }
 } //namespace vtkm::rendering
 

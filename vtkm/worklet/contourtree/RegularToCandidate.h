@@ -71,30 +71,31 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class RegularToCandidate : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexId,               // (input) vertex id of candidate
-                                WholeArrayIn<IdType> mergeArcs,         // (input) merge arcs
+  typedef void ControlSignature(FieldIn<IdType> vertexId,       // (input) vertex id of candidate
+                                WholeArrayIn<IdType> mergeArcs, // (input) merge arcs
                                 WholeArrayIn<IdType> regularToCritical, // (input) sorting indices
-                                FieldOut<IdType> sortVector);           // (output) target for write back
+                                FieldOut<IdType> sortVector); // (output) target for write back
   typedef _4 ExecutionSignature(_1, _2, _3);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   RegularToCandidate() {}
 
   template <typename InFieldPortalType>
-  VTKM_EXEC
-  vtkm::Id operator()(const vtkm::Id& vertexID,
-                      const InFieldPortalType& mergeArcs,
-                      const InFieldPortalType& regularToCritical) const
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID, const InFieldPortalType& mergeArcs,
+                                const InFieldPortalType& regularToCritical) const
   {
     vtkm::Id sortVector;
 
@@ -111,7 +112,6 @@ public:
     return sortVector;
   }
 }; // RegularToCandidate
-
 }
 }
 }

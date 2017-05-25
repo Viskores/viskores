@@ -23,15 +23,18 @@
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/testing/Testing.h>
 
-namespace UnitTestArrayHandleIndexNamespace {
+namespace UnitTestArrayHandleIndexNamespace
+{
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-void TestArrayHandleReverse() {
+void TestArrayHandleReverse()
+{
   vtkm::cont::ArrayHandleIndex array(ARRAY_SIZE);
   VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Bad size.");
 
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++) {
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  {
     VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(index) == index,
                      "Index array has unexpected value.");
   }
@@ -39,17 +42,17 @@ void TestArrayHandleReverse() {
   vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandleIndex> reverse =
     vtkm::cont::make_ArrayHandleReverse(array);
 
-  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++) {
-    VTKM_TEST_ASSERT(reverse.GetPortalConstControl().Get(index) == array.GetPortalConstControl().Get(9 - index),
+  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+  {
+    VTKM_TEST_ASSERT(reverse.GetPortalConstControl().Get(index) ==
+                       array.GetPortalConstControl().Get(9 - index),
                      "ArrayHandleReverse does not reverse array");
   }
-
 }
-};// namespace UnitTestArrayHandleIndexNamespace
+}; // namespace UnitTestArrayHandleIndexNamespace
 
-int UnitTestArrayHandleReverse(int, char *[]) {
+int UnitTestArrayHandleReverse(int, char* [])
+{
   using namespace UnitTestArrayHandleIndexNamespace;
   return vtkm::cont::testing::Testing::Run(TestArrayHandleReverse);
 }
-
-

@@ -25,8 +25,8 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-namespace {
-
+namespace
+{
 
 class TestingMask
 {
@@ -51,18 +51,18 @@ public:
     }
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for Mask");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellFieldArrayHandleType;
 
     OutCellFieldArrayHandleType cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
-                     cellFieldArray.GetPortalConstControl().Get(7) == 14.f,
+                       cellFieldArray.GetPortalConstControl().Get(7) == 14.f,
                      "Wrong mask data");
   }
 
@@ -86,18 +86,18 @@ public:
     }
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 7), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 7),
                      "Wrong result for Mask");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellFieldArrayHandleType;
 
     OutCellFieldArrayHandleType cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 7 &&
-                     cellFieldArray.GetPortalConstControl().Get(2) == 18.f,
+                       cellFieldArray.GetPortalConstControl().Get(2) == 18.f,
                      "Wrong mask data");
   }
 
@@ -121,18 +121,18 @@ public:
     }
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 2), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 2),
                      "Wrong result for Mask");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
+      OutCellFieldArrayHandleType;
 
     OutCellFieldArrayHandleType cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                     cellFieldArray.GetPortalConstControl().Get(1) == 120.2f,
+                       cellFieldArray.GetPortalConstControl().Get(1) == 120.2f,
                      "Wrong mask data");
   }
 
@@ -143,10 +143,9 @@ public:
     this->TestExplicit();
   }
 };
-
 }
 
-int UnitTestMaskFilter(int, char *[])
+int UnitTestMaskFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestingMask());
 }

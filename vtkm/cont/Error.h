@@ -29,8 +29,10 @@
 
 #include <vtkm/internal/ExportMacros.h> // For VTKM_OVERRIDE
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
@@ -41,38 +43,34 @@ class VTKM_ALWAYS_EXPORT Error : public std::exception
 public:
 //See note about GetMessage macro below.
 #ifndef GetMessage
-  const std::string &GetMessage() const { return this->Message; }
+  const std::string& GetMessage() const { return this->Message; }
 #endif
 
 //GetMessage is a macro defined by <windows.h> to redirrect to
 //GetMessageA or W depending on if you are using ansi or unicode.
 //To get around this we make our own A/W variants on windows.
 #ifdef _WIN32
-  const std::string &GetMessageA() const { return this->Message; }
-  const std::string &GetMessageW() const { return this->Message; }
+  const std::string& GetMessageA() const { return this->Message; }
+  const std::string& GetMessageW() const { return this->Message; }
 #endif
 
   // For std::exception compatibility:
-  const char* what() const VTKM_NOEXCEPT VTKM_OVERRIDE
-  {
-    return this->Message.c_str();
-  }
+  const char* what() const VTKM_NOEXCEPT VTKM_OVERRIDE { return this->Message.c_str(); }
 
 protected:
-  Error() { }
-  Error(const std::string message) : Message(message) { }
-
-  void SetMessage(const std::string &message)
+  Error() {}
+  Error(const std::string message)
+    : Message(message)
   {
-    this->Message = message;
   }
+
+  void SetMessage(const std::string& message) { this->Message = message; }
 
 private:
   std::string Message;
 };
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
-
 }
 } // namespace vtkm::cont
 

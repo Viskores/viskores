@@ -25,8 +25,8 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-namespace {
-
+namespace
+{
 
 class TestingMaskPoints
 {
@@ -41,10 +41,10 @@ public:
     maskPoints.SetStride(2);
     result = maskPoints.Execute(dataset);
 
-    maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
+    maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 12), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 12),
                      "Wrong number of cells for MaskPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 12),
                      "Wrong number of points for MaskPoints");
@@ -60,10 +60,10 @@ public:
     maskPoints.SetStride(5);
     result = maskPoints.Execute(dataset);
 
-    maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
+    maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 25), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 25),
                      "Wrong number of cells for MaskPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 25),
                      "Wrong number of points for MaskPoints");
@@ -80,10 +80,10 @@ public:
     maskPoints.SetCompactPoints(false);
     result = maskPoints.Execute(dataset);
 
-    maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
+    maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 3), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 3),
                      "Wrong number of cells for MaskPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 11),
                      "Wrong number of points for MaskPoints");
@@ -96,10 +96,9 @@ public:
     this->TestExplicit3D();
   }
 };
-
 }
 
-int UnitTestMaskPointsFilter(int, char *[])
+int UnitTestMaskPointsFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestingMaskPoints());
 }

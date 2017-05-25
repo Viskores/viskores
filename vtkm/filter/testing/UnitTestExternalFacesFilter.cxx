@@ -26,7 +26,8 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-namespace {
+namespace
+{
 
 // convert a 5x5x5 uniform grid to unstructured grid
 vtkm::cont::DataSet MakeDataTestSet1()
@@ -48,10 +49,8 @@ vtkm::cont::DataSet MakeDataTestSet2()
   return MakeTestDataSet().Make3DExplicitDataSet5();
 }
 
-void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet &ds,
-                                   bool compactPoints,
-                                   vtkm::Id numExpectedExtFaces,
-                                   vtkm::Id numExpectedPoints = 0)
+void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds, bool compactPoints,
+                                   vtkm::Id numExpectedExtFaces, vtkm::Id numExpectedPoints = 0)
 {
   //Run the External Faces filter
   vtkm::filter::ExternalFaces externalFaces;
@@ -69,21 +68,18 @@ void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet &ds,
   vtkm::cont::DataSet resultds = result.GetDataSet();
 
   // verify cellset
-  vtkm::cont::CellSetExplicit<> &new_cellSet =
-    resultds.GetCellSet(0).Cast<vtkm::cont::CellSetExplicit<> >();
+  vtkm::cont::CellSetExplicit<>& new_cellSet =
+    resultds.GetCellSet(0).Cast<vtkm::cont::CellSetExplicit<>>();
   const vtkm::Id numOutputExtFaces = new_cellSet.GetNumberOfCells();
-  VTKM_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces,
-                   "Number of External Faces mismatch");
+  VTKM_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces, "Number of External Faces mismatch");
 
   // verify fields
-  VTKM_TEST_ASSERT(resultds.HasField("pointvar"),
-                   "Point field not mapped succesfully");
+  VTKM_TEST_ASSERT(resultds.HasField("pointvar"), "Point field not mapped succesfully");
 
   // verify CompactPoints
   if (compactPoints)
   {
-    vtkm::Id numOutputPoints =
-      resultds.GetCoordinateSystem(0).GetData().GetNumberOfValues();
+    vtkm::Id numOutputPoints = resultds.GetCoordinateSystem(0).GetData().GetNumberOfValues();
     VTKM_TEST_ASSERT(numOutputPoints == numExpectedPoints,
                      "Incorrect number of points after compacting");
   }
@@ -117,8 +113,7 @@ void TestExternalFacesFilter()
 
 } // anonymous namespace
 
-
-int UnitTestExternalFacesFilter(int, char *[])
+int UnitTestExternalFacesFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestExternalFacesFilter);
 }

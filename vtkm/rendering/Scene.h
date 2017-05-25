@@ -29,23 +29,24 @@
 
 #include <memory>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT Scene
 {
 public:
   Scene();
 
-  void AddActor(const vtkm::rendering::Actor &actor);
+  void AddActor(const vtkm::rendering::Actor& actor);
 
-  const vtkm::rendering::Actor &GetActor(vtkm::IdComponent index) const;
+  const vtkm::rendering::Actor& GetActor(vtkm::IdComponent index) const;
 
   vtkm::IdComponent GetNumberOfActors() const;
 
-  void Render(vtkm::rendering::Mapper &mapper,
-              vtkm::rendering::Canvas &canvas,
-              const vtkm::rendering::Camera &camera) const;
+  void Render(vtkm::rendering::Mapper& mapper, vtkm::rendering::Canvas& canvas,
+              const vtkm::rendering::Camera& camera) const;
 
   vtkm::Bounds GetSpatialBounds() const;
 
@@ -53,6 +54,7 @@ private:
   struct InternalsType;
   std::shared_ptr<InternalsType> Internals;
 };
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif //vtk_m_rendering_Scene_h

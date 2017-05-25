@@ -34,29 +34,24 @@
 
 typedef vtkm::Vec<vtkm::Float32, 3> FloatVec3;
 
-
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   if (argc < 4)
   {
     std::cout << "Usage: " << std::endl
-              << "$ " << argv[0]
-              << " <input_vtk_file> [fieldName] <isoval> <output_vtk_file>"
+              << "$ " << argv[0] << " <input_vtk_file> [fieldName] <isoval> <output_vtk_file>"
               << std::endl;
     return 1;
   }
 
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-  std::cout << "Device Adapter Name: "
-            << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName()
+  std::cout << "Device Adapter Name: " << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName()
             << std::endl;
 
   vtkm::io::reader::VTKDataSetReader reader(argv[1]);
   vtkm::cont::DataSet input = reader.ReadDataSet();
 
-  vtkm::cont::Field scalarField = (argc == 5) ?
-                                  input.GetField(argv[2]) :
-                                  input.GetField(0);
+  vtkm::cont::Field scalarField = (argc == 5) ? input.GetField(argv[2]) : input.GetField(0);
 
   vtkm::Float32 clipValue = std::stof(argv[argc - 2]);
   vtkm::worklet::Clip clip;
@@ -64,10 +59,8 @@ int main(int argc, char *argv[])
   vtkm::cont::Timer<DeviceAdapter> total;
   vtkm::cont::Timer<DeviceAdapter> timer;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(input.GetCellSet(0),
-             scalarField.GetData().ResetTypeList(vtkm::TypeListTagScalarAll()),
-             clipValue,
-             DeviceAdapter());
+    clip.Run(input.GetCellSet(0), scalarField.GetData().ResetTypeList(vtkm::TypeListTagScalarAll()),
+             clipValue, DeviceAdapter());
   vtkm::Float64 clipTime = timer.GetElapsedTime();
 
   vtkm::cont::DataSet output;
@@ -75,7 +68,7 @@ int main(int argc, char *argv[])
 
   timer.Reset();
   vtkm::cont::DynamicArrayHandle coords =
-      clip.ProcessField(input.GetCoordinateSystem(0), DeviceAdapter());
+    clip.ProcessField(input.GetCoordinateSystem(0), DeviceAdapter());
   vtkm::Float64 processCoordinatesTime = timer.GetElapsedTime();
   output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coords));
 
@@ -88,10 +81,8 @@ int main(int argc, char *argv[])
       continue; // clip only supports point fields for now.
     }
     vtkm::cont::DynamicArrayHandle data =
-      clip.ProcessField(inField.GetData().ResetTypeList(vtkm::TypeListTagAll()),
-                        DeviceAdapter());
-    output.AddField(vtkm::cont::Field(inField.GetName(),
-                    vtkm::cont::Field::ASSOC_POINTS, data));
+      clip.ProcessField(inField.GetData().ResetTypeList(vtkm::TypeListTagAll()), DeviceAdapter());
+    output.AddField(vtkm::cont::Field(inField.GetName(), vtkm::cont::Field::ASSOC_POINTS, data));
   }
   vtkm::Float64 processScalarsTime = timer.GetElapsedTime();
 

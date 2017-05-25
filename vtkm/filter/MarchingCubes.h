@@ -24,10 +24,10 @@
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/MarchingCubes.h>
 
-
-namespace vtkm {
-namespace filter {
-
+namespace vtkm
+{
+namespace filter
+{
 
 /*
 * Outstanding issues:
@@ -66,37 +66,34 @@ public:
   void SetMergeDuplicatePoints(bool on) { this->Worklet.SetMergeDuplicatePoints(on); }
 
   VTKM_CONT
-  bool GetMergeDuplicatePoints() const  { return this->Worklet.GetMergeDuplicatePoints(); }
+  bool GetMergeDuplicatePoints() const { return this->Worklet.GetMergeDuplicatePoints(); }
 
   VTKM_CONT
   void SetGenerateNormals(bool on) { this->GenerateNormals = on; }
 
   VTKM_CONT
-  bool GetGenerateNormals() const  { return this->GenerateNormals; }
+  bool GetGenerateNormals() const { return this->GenerateNormals; }
 
   VTKM_CONT
-  void SetNormalArrayName(const std::string &name) { this->NormalArrayName = name; }
+  void SetNormalArrayName(const std::string& name) { this->NormalArrayName = name; }
 
   VTKM_CONT
   const std::string& GetNormalArrayName() const { return this->NormalArrayName; }
 
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
-                                        const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                        const vtkm::filter::FieldMetadata& fieldMeta,
-                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                        const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultDataSet DoExecute(
+    const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  bool DoMapField(vtkm::filter::ResultDataSet& result,
-                  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                  const vtkm::filter::FieldMetadata& fieldMeta,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                  const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT bool DoMapField(vtkm::filter::ResultDataSet& result,
+                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                            const vtkm::filter::FieldMetadata& fieldMeta,
+                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                            const DeviceAdapter& tag);
 
 private:
   std::vector<vtkm::Float64> IsoValues;
@@ -105,18 +102,18 @@ private:
   vtkm::worklet::MarchingCubes Worklet;
 };
 
-template<>
+template <>
 class FilterTraits<MarchingCubes>
 {
 public:
-  struct TypeListTagMCScalars : vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8,
-                                                  vtkm::Float32,vtkm::Float64> { };
+  struct TypeListTagMCScalars
+    : vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>
+  {
+  };
   typedef TypeListTagMCScalars InputFieldTypeList;
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/MarchingCubes.hxx>
 

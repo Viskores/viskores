@@ -33,36 +33,35 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
-struct DivideWorklet: public vtkm::worklet::WorkletMapField
+struct DivideWorklet : public vtkm::worklet::WorkletMapField
 {
   typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
   typedef void ExecutionSignature(_1, _2, _3);
 
   template <class ValueType>
-  VTKM_EXEC
-  void operator()(const ValueType &v, const vtkm::Id &count, ValueType &vout) const
+  VTKM_EXEC void operator()(const ValueType& v, const vtkm::Id& count, ValueType& vout) const
   {
     typedef typename VecTraits<ValueType>::ComponentType ComponentType;
-    vout = v * ComponentType(1./static_cast<double>(count));
+    vout = v * ComponentType(1. / static_cast<double>(count));
   }
 
   template <class T1, class T2>
-  VTKM_EXEC
-  void operator()(const T1&, const vtkm::Id &, T2 &) const
-  {  }
+  VTKM_EXEC void operator()(const T1&, const vtkm::Id&, T2&) const
+  {
+  }
 };
 
-template <class KeyType, class ValueType,
-          class KeyInStorage, class KeyOutStorage,
-          class ValueInStorage, class ValueOutStorage,
-          class DeviceAdapter>
-void AverageByKey(const vtkm::cont::ArrayHandle<KeyType, KeyInStorage> &keyArray,
-                  const vtkm::cont::ArrayHandle<ValueType, ValueInStorage> &valueArray,
-                  vtkm::cont::ArrayHandle<KeyType, KeyOutStorage> &outputKeyArray,
-                  vtkm::cont::ArrayHandle<ValueType, ValueOutStorage> &outputValueArray,
+template <class KeyType, class ValueType, class KeyInStorage, class KeyOutStorage,
+          class ValueInStorage, class ValueOutStorage, class DeviceAdapter>
+void AverageByKey(const vtkm::cont::ArrayHandle<KeyType, KeyInStorage>& keyArray,
+                  const vtkm::cont::ArrayHandle<ValueType, ValueInStorage>& valueArray,
+                  vtkm::cont::ArrayHandle<KeyType, KeyOutStorage>& outputKeyArray,
+                  vtkm::cont::ArrayHandle<ValueType, ValueOutStorage>& outputValueArray,
                   DeviceAdapter)
 {
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
@@ -75,33 +74,31 @@ void AverageByKey(const vtkm::cont::ArrayHandle<KeyType, KeyInStorage> &keyArray
   IdArray indexArraySorted;
   vtkm::cont::ArrayHandle<KeyType> keyArraySorted;
 
-  Algorithm::Copy( keyArray, keyArraySorted ); // keep the input key array unchanged
-  Algorithm::Copy( indexArray, indexArraySorted );
-  Algorithm::SortByKey( keyArraySorted, indexArraySorted, vtkm::SortLess() ) ;
+  Algorithm::Copy(keyArray, keyArraySorted); // keep the input key array unchanged
+  Algorithm::Copy(indexArray, indexArraySorted);
+  Algorithm::SortByKey(keyArraySorted, indexArraySorted, vtkm::SortLess());
 
   // generate permultation array based on the indexes
-  typedef vtkm::cont::ArrayHandlePermutation<IdArray, ValueInArray > PermutatedValueArray;
-  PermutatedValueArray valueArraySorted = vtkm::cont::make_ArrayHandlePermutation( indexArraySorted, valueArray );
+  typedef vtkm::cont::ArrayHandlePermutation<IdArray, ValueInArray> PermutatedValueArray;
+  PermutatedValueArray valueArraySorted =
+    vtkm::cont::make_ArrayHandlePermutation(indexArraySorted, valueArray);
 
   // reduce both sumArray and countArray by key
   typedef vtkm::cont::ArrayHandleConstant<vtkm::Id> ConstIdArray;
   ConstIdArray constOneArray(1, valueArray.GetNumberOfValues());
   IdArray countArray;
   ValueArray sumArray;
-  vtkm::cont::ArrayHandleZip< PermutatedValueArray, ConstIdArray > inputZipHandle(valueArraySorted, constOneArray);
-  vtkm::cont::ArrayHandleZip< ValueArray, IdArray > outputZipHandle(sumArray, countArray);
+  vtkm::cont::ArrayHandleZip<PermutatedValueArray, ConstIdArray> inputZipHandle(valueArraySorted,
+                                                                                constOneArray);
+  vtkm::cont::ArrayHandleZip<ValueArray, IdArray> outputZipHandle(sumArray, countArray);
 
-  Algorithm::ReduceByKey( keyArraySorted, inputZipHandle,
-                          outputKeyArray, outputZipHandle,
-                         vtkm::Add()  );
+  Algorithm::ReduceByKey(keyArraySorted, inputZipHandle, outputKeyArray, outputZipHandle,
+                         vtkm::Add());
 
   // get average
-  DispatcherMapField<DivideWorklet, DeviceAdapter>().Invoke(sumArray,
-                                                            countArray,
-                                                            outputValueArray);
+  DispatcherMapField<DivideWorklet, DeviceAdapter>().Invoke(sumArray, countArray, outputValueArray);
 }
-
 }
 } // vtkm::worklet
 
-#endif  //vtk_m_worklet_AverageByKey_h
+#endif //vtk_m_worklet_AverageByKey_h
