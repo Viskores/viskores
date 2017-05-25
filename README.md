@@ -120,8 +120,7 @@ vtkm::filter::ResultDataSet result = filter.Execute( inputData,
 filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
 
 // compute the bounds and extends of the input data
-vtkm::Bounds coordsBounds =
-    inputData.GetCoordinateSystem().GetBounds();
+vtkm::Bounds coordsBounds = inputData.GetCoordinateSystem().GetBounds();
 vtkm::Vec<vtkm::Float64,3> totalExtent( coordsBounds.X.Length(),
                                         coordsBounds.Y.Length(),
                                         coordsBounds.Z.Length() );
@@ -132,17 +131,17 @@ vtkm::Normalize(totalExtent);
 vtkm::rendering::Camera camera;
 camera.ResetToBounds(coordsBounds);
 
-camera.SetLookAt(totalExtent * (mag * .5f));
+camera.SetLookAt(totalExtent*(mag * .5f));
 camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
 camera.SetClippingRange(1.f, 100.f);
 camera.SetFieldOfView(60.f);
-camera.SetPosition(totalExtent * (mag * 2.f));
+camera.SetPosition(totalExtent*(mag * 2.f));
 vtkm::rendering::ColorTable colorTable("thermal");
 
 // Create a mapper, canvas and view that will be used to render the scene
 vtkm::rendering::Scene scene;
 vtkm::rendering::MapperRayTracer mapper;
-vtkm::rendering::CanvasRayTracer canvas(512,512);
+vtkm::rendering::CanvasRayTracer canvas(512, 512);
 vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
 
 // Render an image of the output isosurface
