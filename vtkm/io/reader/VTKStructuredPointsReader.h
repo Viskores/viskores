@@ -22,18 +22,22 @@
 
 #include <vtkm/io/reader/VTKDataSetReaderBase.h>
 
-namespace vtkm {
-namespace io {
-namespace reader {
+namespace vtkm
+{
+namespace io
+{
+namespace reader
+{
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
 class VTKStructuredPointsReader : public VTKDataSetReaderBase
 {
 public:
-  explicit VTKStructuredPointsReader(const char *fileName)
+  explicit VTKStructuredPointsReader(const char* fileName)
     : VTKDataSetReaderBase(fileName)
-  { }
+  {
+  }
 
 private:
   virtual void Read()
@@ -60,7 +64,7 @@ private:
       this->ReadFields(name, &visitBounds);
       this->DataFile->Stream >> tag;
     }
-    if(visitBounds.empty())
+    if (visitBounds.empty())
     {
       internal::parseAssert(tag == "DIMENSIONS");
       this->DataFile->Stream >> dim[0] >> dim[1] >> dim[2] >> std::ws;
@@ -81,8 +85,8 @@ private:
     internal::parseAssert(tag == "ORIGIN");
 
     this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
-    this->DataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates",
-        dim, origin, spacing));
+    this->DataSet.AddCoordinateSystem(
+      vtkm::cont::CoordinateSystem("coordinates", dim, origin, spacing));
 
     // Read points and cell attributes
     this->ReadAttributes();
@@ -90,7 +94,6 @@ private:
 };
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
-
 }
 }
 } // namespace vtkm::io:reader

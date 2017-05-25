@@ -25,8 +25,10 @@
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractGeometry.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 class ExtractGeometry : public vtkm::filter::FilterDataSet<ExtractGeometry>
 {
@@ -40,7 +42,7 @@ public:
                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename ImplicitFunctionType>
-  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType> &func)
+  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func)
   {
     this->Function = func;
   }
@@ -51,45 +53,43 @@ public:
   }
 
   VTKM_CONT
-  bool GetExtractInside()                       { return this->ExtractInside; }
+  bool GetExtractInside() { return this->ExtractInside; }
   VTKM_CONT
-  void SetExtractInside(bool value)             { this->ExtractInside = value; }
+  void SetExtractInside(bool value) { this->ExtractInside = value; }
   VTKM_CONT
-  void ExtractInsideOn()                        { this->ExtractInside = true; }
+  void ExtractInsideOn() { this->ExtractInside = true; }
   VTKM_CONT
-  void ExtractInsideOff()                       { this->ExtractInside = false; }
+  void ExtractInsideOff() { this->ExtractInside = false; }
 
   VTKM_CONT
-  bool GetExtractBoundaryCells()                { return this->ExtractBoundaryCells; }
+  bool GetExtractBoundaryCells() { return this->ExtractBoundaryCells; }
   VTKM_CONT
-  void SetExtractBoundaryCells(bool value)      { this->ExtractBoundaryCells = value; }
+  void SetExtractBoundaryCells(bool value) { this->ExtractBoundaryCells = value; }
   VTKM_CONT
-  void ExtractBoundaryCellsOn()                 { this->ExtractBoundaryCells = true; }
+  void ExtractBoundaryCellsOn() { this->ExtractBoundaryCells = true; }
   VTKM_CONT
-  void ExtractBoundaryCellsOff()                { this->ExtractBoundaryCells = false; }
-  
-  VTKM_CONT
-  bool GetExtractOnlyBoundaryCells()            { return this->ExtractOnlyBoundaryCells; }
-  VTKM_CONT
-  void SetExtractOnlyBoundaryCells(bool value)  { this->ExtractOnlyBoundaryCells = value; }
-  VTKM_CONT
-  void ExtractOnlyBoundaryCellsOn()             { this->ExtractOnlyBoundaryCells = true; }
-  VTKM_CONT
-  void ExtractOnlyBoundaryCellsOff()            { this->ExtractOnlyBoundaryCells = false; }
-  
+  void ExtractBoundaryCellsOff() { this->ExtractBoundaryCells = false; }
 
-  template<typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT
+  bool GetExtractOnlyBoundaryCells() { return this->ExtractOnlyBoundaryCells; }
+  VTKM_CONT
+  void SetExtractOnlyBoundaryCells(bool value) { this->ExtractOnlyBoundaryCells = value; }
+  VTKM_CONT
+  void ExtractOnlyBoundaryCellsOn() { this->ExtractOnlyBoundaryCells = true; }
+  VTKM_CONT
+  void ExtractOnlyBoundaryCellsOff() { this->ExtractOnlyBoundaryCells = false; }
+
+  template <typename DerivedPolicy, typename DeviceAdapter>
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
                                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                         const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   bool DoMapField(vtkm::filter::ResultDataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                  const DeviceAdapter& tag);
+                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& tag);
 
 private:
   bool ExtractInside;
@@ -100,16 +100,14 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
 };
 
-template<>
+template <>
 class FilterTraits<ExtractGeometry>
 { //currently the ExtractGeometry filter only works on scalar data.
 public:
   typedef TypeListTagScalarAll InputFieldTypeList;
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/ExtractGeometry.hxx>
 

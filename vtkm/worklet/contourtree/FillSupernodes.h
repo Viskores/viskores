@@ -70,17 +70,20 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet
 class FillSupernodes : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> upCandidate,          // (input)
-                                FieldIn<IdType> downCandidate,        // (input)
-                                FieldOut<IdType> isSupernode);        // (output)
+  typedef void ControlSignature(FieldIn<IdType> upCandidate,   // (input)
+                                FieldIn<IdType> downCandidate, // (input)
+                                FieldOut<IdType> isSupernode); // (output)
   typedef _3 ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
 
@@ -88,14 +91,12 @@ public:
   VTKM_EXEC_CONT
   FillSupernodes() {}
 
-  vtkm::Id operator()(const vtkm::Id& upCandidate,
-                      const vtkm::Id& downCandidate) const
+  vtkm::Id operator()(const vtkm::Id& upCandidate, const vtkm::Id& downCandidate) const
   {
     vtkm::Id isSupernode = ((upCandidate != 1) || (downCandidate != 1));
     return isSupernode;
   }
 }; // FillSupernodes
-
 }
 }
 }

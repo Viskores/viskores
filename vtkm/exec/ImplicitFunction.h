@@ -22,16 +22,20 @@
 
 #include <vtkm/Types.h>
 
-
-namespace vtkm {
-namespace exec {
+namespace vtkm
+{
+namespace exec
+{
 
 class VTKM_ALWAYS_EXPORT ImplicitFunction
 {
 public:
   ImplicitFunction()
-    : Function(nullptr), ValueCaller(nullptr), GradientCaller(nullptr)
-  { }
+    : Function(nullptr)
+    , ValueCaller(nullptr)
+    , GradientCaller(nullptr)
+  {
+  }
 
   VTKM_EXEC
   FloatDefault Value(FloatDefault x, FloatDefault y, FloatDefault z) const
@@ -40,48 +44,43 @@ public:
   }
 
   VTKM_EXEC
-  FloatDefault Value(const vtkm::Vec<FloatDefault, 3> &x) const
+  FloatDefault Value(const vtkm::Vec<FloatDefault, 3>& x) const
   {
     return this->ValueCaller(this->Function, x[0], x[1], x[2]);
   }
 
   VTKM_EXEC
-  vtkm::Vec<FloatDefault, 3> Gradient(FloatDefault x, FloatDefault y,
-                                      FloatDefault z) const
+  vtkm::Vec<FloatDefault, 3> Gradient(FloatDefault x, FloatDefault y, FloatDefault z) const
   {
     return this->GradientCaller(this->Function, x, y, z);
   }
 
   VTKM_EXEC
-  vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
+  vtkm::Vec<FloatDefault, 3> Gradient(const vtkm::Vec<FloatDefault, 3>& x) const
   {
     return this->GradientCaller(this->Function, x[0], x[1], x[2]);
   }
 
-  template<typename T>
-  VTKM_EXEC
-  void Bind(const T *function)
+  template <typename T>
+  VTKM_EXEC void Bind(const T* function)
   {
     this->Function = function;
-    this->ValueCaller =
-      [](const void *t, FloatDefault x, FloatDefault y, FloatDefault z) {
-        return static_cast<const T*>(t)->Value(x, y, z);
-      };
-    this->GradientCaller =
-      [](const void *t, FloatDefault x, FloatDefault y, FloatDefault z) {
-        return static_cast<const T*>(t)->Gradient(x, y, z);
-      };
+    this->ValueCaller = [](const void* t, FloatDefault x, FloatDefault y, FloatDefault z) {
+      return static_cast<const T*>(t)->Value(x, y, z);
+    };
+    this->GradientCaller = [](const void* t, FloatDefault x, FloatDefault y, FloatDefault z) {
+      return static_cast<const T*>(t)->Gradient(x, y, z);
+    };
   }
 
 private:
-  using ValueCallerSig =
-    FloatDefault(const void*, FloatDefault, FloatDefault, FloatDefault);
-  using GradientCallerSig =
-    vtkm::Vec<FloatDefault, 3>(const void*, FloatDefault, FloatDefault, FloatDefault);
+  using ValueCallerSig = FloatDefault(const void*, FloatDefault, FloatDefault, FloatDefault);
+  using GradientCallerSig = vtkm::Vec<FloatDefault, 3>(const void*, FloatDefault, FloatDefault,
+                                                       FloatDefault);
 
-  const void *Function;
-  ValueCallerSig *ValueCaller;
-  GradientCallerSig *GradientCaller;
+  const void* Function;
+  ValueCallerSig* ValueCaller;
+  GradientCallerSig* GradientCaller;
 };
 
 /// \brief A function object that evaluates the contained implicit function
@@ -90,9 +89,10 @@ class VTKM_ALWAYS_EXPORT ImplicitFunctionValue
 public:
   ImplicitFunctionValue() = default;
 
-  explicit ImplicitFunctionValue(const vtkm::exec::ImplicitFunction &func)
+  explicit ImplicitFunctionValue(const vtkm::exec::ImplicitFunction& func)
     : Function(func)
-  { }
+  {
+  }
 
   VTKM_EXEC
   FloatDefault operator()(const vtkm::Vec<FloatDefault, 3> x) const
@@ -117,9 +117,10 @@ class VTKM_ALWAYS_EXPORT ImplicitFunctionGradient
 public:
   ImplicitFunctionGradient() = default;
 
-  explicit ImplicitFunctionGradient(const vtkm::exec::ImplicitFunction &func)
+  explicit ImplicitFunctionGradient(const vtkm::exec::ImplicitFunction& func)
     : Function(func)
-  { }
+  {
+  }
 
   VTKM_EXEC
   vtkm::Vec<FloatDefault, 3> operator()(const vtkm::Vec<FloatDefault, 3> x) const
@@ -136,7 +137,6 @@ public:
 private:
   vtkm::exec::ImplicitFunction Function;
 };
-
 }
 } // vtkm::exec
 

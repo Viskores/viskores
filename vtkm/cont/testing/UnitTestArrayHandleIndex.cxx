@@ -22,7 +22,8 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace UnitTestArrayHandleIndexNamespace {
+namespace UnitTestArrayHandleIndexNamespace
+{
 
 const vtkm::Id ARRAY_SIZE = 10;
 
@@ -40,7 +41,7 @@ void TestArrayHandleIndex()
 
 } // namespace UnitTestArrayHandleIndexNamespace
 
-int UnitTestArrayHandleIndex(int, char *[])
+int UnitTestArrayHandleIndex(int, char* [])
 {
   using namespace UnitTestArrayHandleIndexNamespace;
   return vtkm::cont::testing::Testing::Run(TestArrayHandleIndex);

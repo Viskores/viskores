@@ -20,13 +20,17 @@
 
 #include <vtkm/rendering/TextAnnotation.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-TextAnnotation::TextAnnotation(const std::string &text,
-                               const vtkm::rendering::Color &color,
+TextAnnotation::TextAnnotation(const std::string& text, const vtkm::rendering::Color& color,
                                vtkm::Float32 scale)
-  : Text(text), TextColor(color), Scale(scale), Anchor(-1,-1)
+  : Text(text)
+  , TextColor(color)
+  , Scale(scale)
+  , Anchor(-1, -1)
 {
 }
 
@@ -34,33 +38,39 @@ TextAnnotation::~TextAnnotation()
 {
 }
 
-void TextAnnotation::SetText(const std::string &text)
+void TextAnnotation::SetText(const std::string& text)
 {
   this->Text = text;
 }
 
-const std::string &TextAnnotation::GetText() const
+const std::string& TextAnnotation::GetText() const
 {
   return this->Text;
 }
 
-void TextAnnotation::SetRawAnchor(const vtkm::Vec<vtkm::Float32,2> &anchor)
+void TextAnnotation::SetRawAnchor(const vtkm::Vec<vtkm::Float32, 2>& anchor)
 {
   this->Anchor = anchor;
 }
 
 void TextAnnotation::SetRawAnchor(vtkm::Float32 h, vtkm::Float32 v)
 {
-  this->SetRawAnchor(vtkm::make_Vec(h,v));
+  this->SetRawAnchor(vtkm::make_Vec(h, v));
 }
 
 void TextAnnotation::SetAlignment(HorizontalAlignment h, VerticalAlignment v)
 {
   switch (h)
   {
-    case Left:    this->Anchor[0] = -1.0f; break;
-    case HCenter: this->Anchor[0] =  0.0f; break;
-    case Right:   this->Anchor[0] = +1.0f; break;
+    case Left:
+      this->Anchor[0] = -1.0f;
+      break;
+    case HCenter:
+      this->Anchor[0] = 0.0f;
+      break;
+    case Right:
+      this->Anchor[0] = +1.0f;
+      break;
   }
 
   // For vertical alignment, "center" is generally the center
@@ -74,9 +84,15 @@ void TextAnnotation::SetAlignment(HorizontalAlignment h, VerticalAlignment v)
   // the bottom of the window.
   switch (v)
   {
-    case Bottom:  this->Anchor[1] = -1.0f;  break;
-    case VCenter: this->Anchor[1] = -0.06f; break;
-    case Top:     this->Anchor[1] = +1.0f;  break;
+    case Bottom:
+      this->Anchor[1] = -1.0f;
+      break;
+    case VCenter:
+      this->Anchor[1] = -0.06f;
+      break;
+    case Top:
+      this->Anchor[1] = +1.0f;
+      break;
   }
 }
 
@@ -84,6 +100,5 @@ void TextAnnotation::SetScale(vtkm::Float32 scale)
 {
   this->Scale = scale;
 }
-
 }
 } // namespace vtkm::rendering

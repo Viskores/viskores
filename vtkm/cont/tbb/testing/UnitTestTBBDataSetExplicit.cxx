@@ -22,8 +22,7 @@
 
 #include <vtkm/cont/testing/TestingDataSetExplicit.h>
 
-int UnitTestTBBDataSetExplicit(int, char *[])
+int UnitTestTBBDataSetExplicit(int, char* [])
 {
-  return vtkm::cont::testing::TestingDataSetExplicit
-      <vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingDataSetExplicit<vtkm::cont::DeviceAdapterTagTBB>::Run();
 }

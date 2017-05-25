@@ -18,26 +18,24 @@
 //  this software.
 //============================================================================
 
-
 //This sets up testing with the default device adapter and array container
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/interop/testing/TestingOpenGLInterop.h>
 
 #include <vtkm/internal/Configure.h>
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
 // OpenGL Graphics includes
 //glew needs to go before glut
 #include <vtkm/interop/internal/OpenGLHeaders.h>
-#if defined (__APPLE__)
-# include <GLUT/glut.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
 #else
-# include <GL/glut.h>
+#include <GL/glut.h>
 #endif
-
 
 #if defined(VTKM_GCC) && defined(VTKM_POSIX) && !defined(__APPLE__)
 //
@@ -88,31 +86,32 @@
 #include <pthread.h>
 #define VTKM_NVIDIA_PTHREAD_WORKAROUND 1
 static int vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug()
-  { return static_cast<int>(pthread_self()); }
+{
+  return static_cast<int>(pthread_self());
+}
 #endif
 
-int UnitTestTransferGLUT(int argc, char *argv[])
+int UnitTestTransferGLUT(int argc, char* argv[])
 {
   //get glut to construct a context for us
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-  glutInitWindowSize(1024,1024);
+  glutInitWindowSize(1024, 1024);
   glutCreateWindow("GLUT test");
 
   //get glew to bind all the opengl functions
   glewInit();
 
-  if(!glewIsSupported("GL_VERSION_2_1"))
-    {
+  if (!glewIsSupported("GL_VERSION_2_1"))
+  {
     std::cerr << glGetString(GL_RENDERER) << std::endl;
     std::cerr << glGetString(GL_VERSION) << std::endl;
     return 1;
-    }
+  }
 
 #if defined(VTKM_NVIDIA_PTHREAD_WORKAROUND)
   std::cout << ::vtkm_force_linking_to_pthread_to_fix_nvidia_libgl_bug();
 #endif
 
-  return vtkm::interop::testing::TestingOpenGLInterop<
-            vtkm::cont::DeviceAdapterTagSerial >::Run();
+  return vtkm::interop::testing::TestingOpenGLInterop<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

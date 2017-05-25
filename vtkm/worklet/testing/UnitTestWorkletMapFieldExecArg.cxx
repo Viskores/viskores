@@ -31,15 +31,13 @@
 class TestExecObjectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature( FieldIn<>, ExecObject, ExecObject, FieldOut<>);
+  typedef void ControlSignature(FieldIn<>, ExecObject, ExecObject, FieldOut<>);
   typedef void ExecutionSignature(_1, _2, _3, _4);
 
-  template<typename T, typename StorageTag>
-  VTKM_EXEC
-  void operator()(const vtkm::Id &index,
-                  const vtkm::exec::ExecutionWholeArrayConst<T,StorageTag> &execIn,
-                  vtkm::exec::ExecutionWholeArray<T,StorageTag> &execOut,
-                  T& out) const
+  template <typename T, typename StorageTag>
+  VTKM_EXEC void operator()(const vtkm::Id& index,
+                            const vtkm::exec::ExecutionWholeArrayConst<T, StorageTag>& execIn,
+                            vtkm::exec::ExecutionWholeArray<T, StorageTag>& execOut, T& out) const
   {
     if (!test_equal(execIn.Get(index), TestValue(index, T()) + T(100)))
     {
@@ -49,24 +47,23 @@ public:
     execOut.Set(index, out);
   }
 
-  template<typename T1, typename T2, typename T3>
-  VTKM_EXEC
-  void operator()(const vtkm::Id &, const T1 &, const T2 &, const T3&) const
+  template <typename T1, typename T2, typename T3>
+  VTKM_EXEC void operator()(const vtkm::Id&, const T1&, const T2&, const T3&) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
   }
 };
 
-namespace map_exec_field {
+namespace map_exec_field
+{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
-template<typename WorkletType>
+template <typename WorkletType>
 struct DoTestWorklet
 {
-  template<typename T>
-  VTKM_CONT
-  void operator()(T) const
+  template <typename T>
+  VTKM_CONT void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;
     T inputArray[ARRAY_SIZE];
@@ -77,15 +74,13 @@ struct DoTestWorklet
     }
 
     vtkm::cont::ArrayHandleIndex counting(ARRAY_SIZE);
-    vtkm::cont::ArrayHandle<T> inputHandle =
-        vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> outputFieldArray;
 
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(counting,
-                      vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
+    dispatcher.Invoke(counting, vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
                       vtkm::exec::ExecutionWholeArray<T>(outputHandle, ARRAY_SIZE),
                       outputFieldArray);
 
@@ -99,8 +94,7 @@ struct DoTestWorklet
     outputHandle = vtkm::cont::ArrayHandle<T>();
 
     vtkm::cont::DynamicArrayHandle outputFieldDynamic(outputFieldArray);
-    dispatcher.Invoke(counting,
-                      vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
+    dispatcher.Invoke(counting, vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
                       vtkm::exec::ExecutionWholeArray<T>(outputHandle, ARRAY_SIZE),
                       outputFieldDynamic);
 
@@ -112,21 +106,18 @@ struct DoTestWorklet
 
 void TestWorkletMapFieldExecArg()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<
-                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
   std::cout << "Testing Worklet with ExecutionWholeArray on device adapter: "
             << DeviceAdapterTraits::GetName() << std::endl;
 
   std::cout << "--- Worklet accepting all types." << std::endl;
-  vtkm::testing::Testing::TryTypes(
-                         map_exec_field::DoTestWorklet< TestExecObjectWorklet >(),
-                         vtkm::TypeListTagCommon());
-
+  vtkm::testing::Testing::TryTypes(map_exec_field::DoTestWorklet<TestExecObjectWorklet>(),
+                                   vtkm::TypeListTagCommon());
 }
 
 } // anonymous namespace
 
-int UnitTestWorkletMapFieldExecArg(int, char *[])
+int UnitTestWorkletMapFieldExecArg(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(map_exec_field::TestWorkletMapFieldExecArg);
 }

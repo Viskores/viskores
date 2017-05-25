@@ -23,9 +23,12 @@
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief \c Fetch tag for in-place modifying array values with direct indexing.
 ///
@@ -43,36 +46,31 @@ namespace arg {
 /// have to worry about writes stomping on each other (which they would
 /// inevitably do if index as input).
 ///
-struct FetchTagArrayDirectInOut {  };
+struct FetchTagArrayDirectInOut
+{
+};
 
-
-template<typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<
-    vtkm::exec::arg::FetchTagArrayDirectInOut,
-    vtkm::exec::arg::AspectTagDefault,
-    ThreadIndicesType,
-    ExecObjectType>
+template <typename ThreadIndicesType, typename ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagArrayDirectInOut, vtkm::exec::arg::AspectTagDefault,
+             ThreadIndicesType, ExecObjectType>
 {
   typedef typename ExecObjectType::ValueType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Load(const ThreadIndicesType &indices,
-                 const ExecObjectType &arrayPortal) const
+  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType& arrayPortal) const
   {
     return arrayPortal.Get(indices.GetOutputIndex());
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void Store(const ThreadIndicesType &indices,
-             const ExecObjectType &arrayPortal,
-             const ValueType &value) const
+  void Store(const ThreadIndicesType& indices, const ExecObjectType& arrayPortal,
+             const ValueType& value) const
   {
     arrayPortal.Set(indices.GetOutputIndex(), value);
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

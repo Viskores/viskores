@@ -23,8 +23,10 @@
 
 #include <vtkm/filter/ResultBase.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 /// \brief Results for filters that generate new geometry
 ///
@@ -40,13 +42,14 @@ class ResultDataSet : public vtkm::filter::ResultBase
 {
 public:
   VTKM_CONT
-  ResultDataSet() {  }
+  ResultDataSet() {}
 
   VTKM_CONT
-  ResultDataSet(const vtkm::cont::DataSet &dataSet)
-    : ResultBase(dataSet) {  }
+  ResultDataSet(const vtkm::cont::DataSet& dataSet)
+    : ResultBase(dataSet)
+  {
+  }
 };
-
 }
 } // namespace vtkm::filter
 

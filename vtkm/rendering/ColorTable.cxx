@@ -23,29 +23,34 @@
 #include <string>
 #include <vector>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-namespace detail {
+namespace detail
+{
 
 struct ColorControlPoint
 {
   vtkm::Float32 Position;
   vtkm::rendering::Color RGBA;
-  ColorControlPoint(vtkm::Float32 position,
-                    const vtkm::rendering::Color &rgba)
-    : Position(position), RGBA(rgba)
-  { }
+  ColorControlPoint(vtkm::Float32 position, const vtkm::rendering::Color& rgba)
+    : Position(position)
+    , RGBA(rgba)
+  {
+  }
 };
 
 struct AlphaControlPoint
 {
   vtkm::Float32 Position;
   vtkm::Float32 AlphaValue;
-  AlphaControlPoint(vtkm::Float32 position,
-                    const vtkm::Float32 &alphaValue)
-    : Position(position), AlphaValue(alphaValue)
-  { }
+  AlphaControlPoint(vtkm::Float32 position, const vtkm::Float32& alphaValue)
+    : Position(position)
+    , AlphaValue(alphaValue)
+  {
+  }
 };
 
 struct ColorTableInternals
@@ -65,7 +70,7 @@ ColorTable::ColorTable()
   this->Internals->Smooth = false;
 }
 
-const std::string &ColorTable::GetName() const
+const std::string& ColorTable::GetName() const
 {
   return this->Internals->UniqueName;
 }
@@ -75,21 +80,20 @@ bool ColorTable::GetSmooth() const
   return this->Internals->Smooth;
 }
 
-void ColorTable::Sample(
-    int numSamples,
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > &colors) const
+void ColorTable::Sample(int numSamples,
+                        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colors) const
 {
   colors.Allocate(numSamples);
 
-  for (vtkm::Id i=0; i<numSamples; i++)
+  for (vtkm::Id i = 0; i < numSamples; i++)
   {
-    vtkm::Vec<vtkm::Float32,4> color;
-    Color c = MapRGB(static_cast<vtkm::Float32>(i)/static_cast<vtkm::Float32>(numSamples-1));
+    vtkm::Vec<vtkm::Float32, 4> color;
+    Color c = MapRGB(static_cast<vtkm::Float32>(i) / static_cast<vtkm::Float32>(numSamples - 1));
     color[0] = c.Components[0];
     color[1] = c.Components[1];
     color[2] = c.Components[2];
-    color[3] = MapAlpha(static_cast<vtkm::Float32>(i)/static_cast<vtkm::Float32>(numSamples-1));
-    colors.GetPortalControl().Set(i,color);
+    color[3] = MapAlpha(static_cast<vtkm::Float32>(i) / static_cast<vtkm::Float32>(numSamples - 1));
+    colors.GetPortalControl().Set(i, color);
   }
 }
 
@@ -100,8 +104,7 @@ vtkm::rendering::Color ColorTable::MapRGB(vtkm::Float32 scalar) const
   {
     return Color(0.5f, 0.5f, 0.5f);
   }
-  if ((numControlPoints == 1) ||
-      (scalar <= this->Internals->RGBPoints[0].Position))
+  if ((numControlPoints == 1) || (scalar <= this->Internals->RGBPoints[0].Position))
   {
     return this->Internals->RGBPoints[0].RGBA;
   }
@@ -111,9 +114,7 @@ vtkm::rendering::Color ColorTable::MapRGB(vtkm::Float32 scalar) const
   }
 
   std::size_t secondColorIndex;
-  for (secondColorIndex = 1;
-       secondColorIndex < numControlPoints - 1;
-       secondColorIndex++)
+  for (secondColorIndex = 1; secondColorIndex < numControlPoints - 1; secondColorIndex++)
   {
     if (scalar < this->Internals->RGBPoints[secondColorIndex].Position)
     {
@@ -122,9 +123,8 @@ vtkm::rendering::Color ColorTable::MapRGB(vtkm::Float32 scalar) const
   }
 
   std::size_t firstColorIndex = secondColorIndex - 1;
-  vtkm::Float32 seg =
-      this->Internals->RGBPoints[secondColorIndex].Position -
-      this->Internals->RGBPoints[firstColorIndex].Position;
+  vtkm::Float32 seg = this->Internals->RGBPoints[secondColorIndex].Position -
+    this->Internals->RGBPoints[firstColorIndex].Position;
   vtkm::Float32 alpha;
   if (seg == 0.f)
   {
@@ -132,17 +132,15 @@ vtkm::rendering::Color ColorTable::MapRGB(vtkm::Float32 scalar) const
   }
   else
   {
-    alpha = (scalar - this->Internals->RGBPoints[firstColorIndex].Position)/seg;
+    alpha = (scalar - this->Internals->RGBPoints[firstColorIndex].Position) / seg;
   }
 
-  const vtkm::rendering::Color &firstColor =
-      this->Internals->RGBPoints[firstColorIndex].RGBA;
-  const vtkm::rendering::Color &secondColor =
-      this->Internals->RGBPoints[secondColorIndex].RGBA;
+  const vtkm::rendering::Color& firstColor = this->Internals->RGBPoints[firstColorIndex].RGBA;
+  const vtkm::rendering::Color& secondColor = this->Internals->RGBPoints[secondColorIndex].RGBA;
   if (this->Internals->Smooth)
   {
-    return vtkm::rendering::Color(
-          firstColor.Components*(1.0f-alpha) + secondColor.Components*alpha);
+    return vtkm::rendering::Color(firstColor.Components * (1.0f - alpha) +
+                                  secondColor.Components * alpha);
   }
   else
   {
@@ -165,20 +163,17 @@ vtkm::Float32 ColorTable::MapAlpha(vtkm::Float32 scalar) const
   {
     return 1.f;
   }
-  if ((numControlPoints == 1) ||
-      (scalar <= this->Internals->AlphaPoints[0].Position))
+  if ((numControlPoints == 1) || (scalar <= this->Internals->AlphaPoints[0].Position))
   {
     return this->Internals->AlphaPoints[0].AlphaValue;
   }
-  if (scalar >= this->Internals->AlphaPoints[numControlPoints-1].Position)
+  if (scalar >= this->Internals->AlphaPoints[numControlPoints - 1].Position)
   {
-    return this->Internals->AlphaPoints[numControlPoints-1].AlphaValue;
+    return this->Internals->AlphaPoints[numControlPoints - 1].AlphaValue;
   }
 
   std::size_t secondColorIndex;
-  for (secondColorIndex=1;
-       secondColorIndex<numControlPoints-1;
-       secondColorIndex++)
+  for (secondColorIndex = 1; secondColorIndex < numControlPoints - 1; secondColorIndex++)
   {
     if (scalar < this->Internals->AlphaPoints[secondColorIndex].Position)
     {
@@ -187,7 +182,8 @@ vtkm::Float32 ColorTable::MapAlpha(vtkm::Float32 scalar) const
   }
 
   std::size_t firstColorIndex = secondColorIndex - 1;
-  vtkm::Float32 seg = this->Internals->AlphaPoints[secondColorIndex].Position-this->Internals->AlphaPoints[firstColorIndex].Position;
+  vtkm::Float32 seg = this->Internals->AlphaPoints[secondColorIndex].Position -
+    this->Internals->AlphaPoints[firstColorIndex].Position;
   vtkm::Float32 alpha;
   if (seg == 0.f)
   {
@@ -195,16 +191,14 @@ vtkm::Float32 ColorTable::MapAlpha(vtkm::Float32 scalar) const
   }
   else
   {
-    alpha = (scalar - this->Internals->AlphaPoints[firstColorIndex].Position)/seg;
+    alpha = (scalar - this->Internals->AlphaPoints[firstColorIndex].Position) / seg;
   }
 
-  vtkm::Float32 firstAlpha =
-      this->Internals->AlphaPoints[firstColorIndex].AlphaValue;
-  vtkm::Float32 secondAlpha =
-      this->Internals->AlphaPoints[secondColorIndex].AlphaValue;
+  vtkm::Float32 firstAlpha = this->Internals->AlphaPoints[firstColorIndex].AlphaValue;
+  vtkm::Float32 secondAlpha = this->Internals->AlphaPoints[secondColorIndex].AlphaValue;
   if (this->Internals->Smooth)
   {
-    return (firstAlpha * (1.f-alpha) + secondAlpha * alpha);
+    return (firstAlpha * (1.f - alpha) + secondAlpha * alpha);
   }
   else
   {
@@ -260,31 +254,24 @@ void ColorTable::Reverse()
   }
 }
 
-void ColorTable::AddControlPoint(vtkm::Float32 position,
-                                 const vtkm::rendering::Color &color)
+void ColorTable::AddControlPoint(vtkm::Float32 position, const vtkm::rendering::Color& color)
 {
-  this->Internals->RGBPoints.push_back(
-        detail::ColorControlPoint(position, color));
+  this->Internals->RGBPoints.push_back(detail::ColorControlPoint(position, color));
 }
 
-void ColorTable::AddControlPoint(vtkm::Float32 position,
-                                 const vtkm::rendering::Color &color,
+void ColorTable::AddControlPoint(vtkm::Float32 position, const vtkm::rendering::Color& color,
                                  vtkm::Float32 alpha)
 {
-  this->Internals->RGBPoints.push_back(
-        detail::ColorControlPoint(position, color));
-  this->Internals->AlphaPoints.push_back(
-        detail::AlphaControlPoint(position, alpha));
+  this->Internals->RGBPoints.push_back(detail::ColorControlPoint(position, color));
+  this->Internals->AlphaPoints.push_back(detail::AlphaControlPoint(position, alpha));
 }
 
-void ColorTable::AddAlphaControlPoint(vtkm::Float32 position,
-                                      vtkm::Float32 alpha)
+void ColorTable::AddAlphaControlPoint(vtkm::Float32 position, vtkm::Float32 alpha)
 {
-  this->Internals->AlphaPoints.push_back(
-        detail::AlphaControlPoint(position, alpha));
+  this->Internals->AlphaPoints.push_back(detail::AlphaControlPoint(position, alpha));
 }
 
-ColorTable::ColorTable(const std::string &name_)
+ColorTable::ColorTable(const std::string& name_)
   : Internals(new detail::ColorTableInternals)
 {
   std::string name = name_;
@@ -296,22 +283,22 @@ ColorTable::ColorTable(const std::string &name_)
   this->Internals->Smooth = true;
   if (name == "grey" || name == "gray")
   {
-    AddControlPoint(0.0f, Color( 0.f, 0.f, 0.f));
-    AddControlPoint(1.0f, Color( 1.f, 1.f, 1.f));
+    AddControlPoint(0.0f, Color(0.f, 0.f, 0.f));
+    AddControlPoint(1.0f, Color(1.f, 1.f, 1.f));
   }
   else if (name == "blue")
   {
-    AddControlPoint(0.00f, Color( 0.f, 0.f, 0.f));
-    AddControlPoint(0.33f, Color( 0.f, 0.f, .5f));
-    AddControlPoint(0.66f, Color( 0.f, .5f, 1.f));
-    AddControlPoint(1.00f, Color( 1.f, 1.f, 1.f));
+    AddControlPoint(0.00f, Color(0.f, 0.f, 0.f));
+    AddControlPoint(0.33f, Color(0.f, 0.f, .5f));
+    AddControlPoint(0.66f, Color(0.f, .5f, 1.f));
+    AddControlPoint(1.00f, Color(1.f, 1.f, 1.f));
   }
   else if (name == "orange")
   {
-    AddControlPoint(0.00f, Color( 0.f, 0.f, 0.f));
-    AddControlPoint(0.33f, Color( .5f, 0.f, 0.f));
-    AddControlPoint(0.66f, Color( 1.f, .5f, 0.f));
-    AddControlPoint(1.00f, Color( 1.f, 1.f, 1.f));
+    AddControlPoint(0.00f, Color(0.f, 0.f, 0.f));
+    AddControlPoint(0.33f, Color(.5f, 0.f, 0.f));
+    AddControlPoint(0.66f, Color(1.f, .5f, 0.f));
+    AddControlPoint(1.00f, Color(1.f, 1.f, 1.f));
   }
   else if (name == "cool2warm")
   {
@@ -574,38 +561,38 @@ ColorTable::ColorTable(const std::string &name_)
   }
   else if (name == "temperature")
   {
-    AddControlPoint(0.05f, Color( 0.f, 0.f, 1.f));
-    AddControlPoint(0.35f, Color( 0.f, 1.f, 1.f));
-    AddControlPoint(0.50f, Color( 1.f, 1.f, 1.f));
-    AddControlPoint(0.65f, Color( 1.f, 1.f, 0.f));
-    AddControlPoint(0.95f, Color( 1.f, 0.f, 0.f));
+    AddControlPoint(0.05f, Color(0.f, 0.f, 1.f));
+    AddControlPoint(0.35f, Color(0.f, 1.f, 1.f));
+    AddControlPoint(0.50f, Color(1.f, 1.f, 1.f));
+    AddControlPoint(0.65f, Color(1.f, 1.f, 0.f));
+    AddControlPoint(0.95f, Color(1.f, 0.f, 0.f));
   }
   else if (name == "rainbow")
   {
     // I really want to delete this. If users want to make a crap
     // color map, let them build it themselves.
-    AddControlPoint(0.00f, Color( 0.f, 0.f, 1.f));
-    AddControlPoint(0.20f, Color( 0.f, 1.f, 1.f));
-    AddControlPoint(0.45f, Color( 0.f, 1.f, 0.f));
-    AddControlPoint(0.55f, Color( .7f, 1.f, 0.f));
-    AddControlPoint(0.6f,  Color( 1.f, 1.f, 0.f));
-    AddControlPoint(0.75f, Color( 1.f, .5f, 0.f));
-    AddControlPoint(0.9f,  Color( 1.f, 0.f, 0.f));
-    AddControlPoint(0.98f, Color( 1.f, 0.f, .5F));
-    AddControlPoint(1.0f,  Color( 1.f, 0.f, 1.f));
+    AddControlPoint(0.00f, Color(0.f, 0.f, 1.f));
+    AddControlPoint(0.20f, Color(0.f, 1.f, 1.f));
+    AddControlPoint(0.45f, Color(0.f, 1.f, 0.f));
+    AddControlPoint(0.55f, Color(.7f, 1.f, 0.f));
+    AddControlPoint(0.6f, Color(1.f, 1.f, 0.f));
+    AddControlPoint(0.75f, Color(1.f, .5f, 0.f));
+    AddControlPoint(0.9f, Color(1.f, 0.f, 0.f));
+    AddControlPoint(0.98f, Color(1.f, 0.f, .5F));
+    AddControlPoint(1.0f, Color(1.f, 0.f, 1.f));
   }
   else if (name == "levels")
   {
-    AddControlPoint(0.0f, Color( 0.f, 0.f, 1.f));
-    AddControlPoint(0.2f, Color( 0.f, 0.f, 1.f));
-    AddControlPoint(0.2f, Color( 0.f, 1.f, 1.f));
-    AddControlPoint(0.4f, Color( 0.f, 1.f, 1.f));
-    AddControlPoint(0.4f, Color( 0.f, 1.f, 0.f));
-    AddControlPoint(0.6f, Color( 0.f, 1.f, 0.f));
-    AddControlPoint(0.6f, Color( 1.f, 1.f, 0.f));
-    AddControlPoint(0.8f, Color( 1.f, 1.f, 0.f));
-    AddControlPoint(0.8f, Color( 1.f, 0.f, 0.f));
-    AddControlPoint(1.0f, Color( 1.f, 0.f, 0.f));
+    AddControlPoint(0.0f, Color(0.f, 0.f, 1.f));
+    AddControlPoint(0.2f, Color(0.f, 0.f, 1.f));
+    AddControlPoint(0.2f, Color(0.f, 1.f, 1.f));
+    AddControlPoint(0.4f, Color(0.f, 1.f, 1.f));
+    AddControlPoint(0.4f, Color(0.f, 1.f, 0.f));
+    AddControlPoint(0.6f, Color(0.f, 1.f, 0.f));
+    AddControlPoint(0.6f, Color(1.f, 1.f, 0.f));
+    AddControlPoint(0.8f, Color(1.f, 1.f, 0.f));
+    AddControlPoint(0.8f, Color(1.f, 0.f, 0.f));
+    AddControlPoint(1.0f, Color(1.f, 0.f, 0.f));
   }
   else if (name == "dense" || name == "sharp")
   {
@@ -626,13 +613,13 @@ ColorTable::ColorTable(const std::string &name_)
   else if (name == "thermal")
   {
     AddControlPoint(0.0f, Color(0.30f, 0.00f, 0.00f));
-    AddControlPoint(0.25f,Color(1.00f, 0.00f, 0.00f));
-    AddControlPoint(0.50f,Color(1.00f, 1.00f, 0.00f));
-    AddControlPoint(0.55f,Color(0.80f, 0.55f, 0.20f));
-    AddControlPoint(0.60f,Color(0.60f, 0.37f, 0.40f));
-    AddControlPoint(0.65f,Color(0.40f, 0.22f, 0.60f));
-    AddControlPoint(0.75f,Color(0.00f, 0.00f, 1.00f));
-    AddControlPoint(1.00f,Color(1.00f, 1.00f, 1.00f));
+    AddControlPoint(0.25f, Color(1.00f, 0.00f, 0.00f));
+    AddControlPoint(0.50f, Color(1.00f, 1.00f, 0.00f));
+    AddControlPoint(0.55f, Color(0.80f, 0.55f, 0.20f));
+    AddControlPoint(0.60f, Color(0.60f, 0.37f, 0.40f));
+    AddControlPoint(0.65f, Color(0.40f, 0.22f, 0.60f));
+    AddControlPoint(0.75f, Color(0.00f, 0.00f, 1.00f));
+    AddControlPoint(1.00f, Color(1.00f, 1.00f, 1.00f));
   }
   // The following five tables are perceeptually linearized colortables
   // (4 rainbow, one heatmap) from BSD-licensed code by Matteo Niccoli.
@@ -640,92 +627,92 @@ ColorTable::ColorTable(const std::string &name_)
   else if (name == "IsoL")
   {
     vtkm::Float32 n = 5;
-    AddControlPoint(0.f/n,  Color(0.9102f, 0.2236f, 0.8997f));
-    AddControlPoint(1.f/n,  Color(0.4027f, 0.3711f, 1.0000f));
-    AddControlPoint(2.f/n,  Color(0.0422f, 0.5904f, 0.5899f));
-    AddControlPoint(3.f/n,  Color(0.0386f, 0.6206f, 0.0201f));
-    AddControlPoint(4.f/n,  Color(0.5441f, 0.5428f, 0.0110f));
-    AddControlPoint(5.f/n,  Color(1.0000f, 0.2288f, 0.1631f));
+    AddControlPoint(0.f / n, Color(0.9102f, 0.2236f, 0.8997f));
+    AddControlPoint(1.f / n, Color(0.4027f, 0.3711f, 1.0000f));
+    AddControlPoint(2.f / n, Color(0.0422f, 0.5904f, 0.5899f));
+    AddControlPoint(3.f / n, Color(0.0386f, 0.6206f, 0.0201f));
+    AddControlPoint(4.f / n, Color(0.5441f, 0.5428f, 0.0110f));
+    AddControlPoint(5.f / n, Color(1.0000f, 0.2288f, 0.1631f));
   }
   else if (name == "CubicL")
   {
     vtkm::Float32 n = 15;
-    AddControlPoint(0.f/n,  Color(0.4706f, 0.0000f, 0.5216f));
-    AddControlPoint(1.f/n,  Color(0.5137f, 0.0527f, 0.7096f));
-    AddControlPoint(2.f/n,  Color(0.4942f, 0.2507f, 0.8781f));
-    AddControlPoint(3.f/n,  Color(0.4296f, 0.3858f, 0.9922f));
-    AddControlPoint(4.f/n,  Color(0.3691f, 0.5172f, 0.9495f));
-    AddControlPoint(5.f/n,  Color(0.2963f, 0.6191f, 0.8515f));
-    AddControlPoint(6.f/n,  Color(0.2199f, 0.7134f, 0.7225f));
-    AddControlPoint(7.f/n,  Color(0.2643f, 0.7836f, 0.5756f));
-    AddControlPoint(8.f/n,  Color(0.3094f, 0.8388f, 0.4248f));
-    AddControlPoint(9.f/n,  Color(0.3623f, 0.8917f, 0.2858f));
-    AddControlPoint(10.f/n, Color(0.5200f, 0.9210f, 0.3137f));
-    AddControlPoint(11.f/n, Color(0.6800f, 0.9255f, 0.3386f));
-    AddControlPoint(12.f/n, Color(0.8000f, 0.9255f, 0.3529f));
-    AddControlPoint(13.f/n, Color(0.8706f, 0.8549f, 0.3608f));
-    AddControlPoint(14.f/n, Color(0.9514f, 0.7466f, 0.3686f));
-    AddControlPoint(15.f/n, Color(0.9765f, 0.5887f, 0.3569f));
+    AddControlPoint(0.f / n, Color(0.4706f, 0.0000f, 0.5216f));
+    AddControlPoint(1.f / n, Color(0.5137f, 0.0527f, 0.7096f));
+    AddControlPoint(2.f / n, Color(0.4942f, 0.2507f, 0.8781f));
+    AddControlPoint(3.f / n, Color(0.4296f, 0.3858f, 0.9922f));
+    AddControlPoint(4.f / n, Color(0.3691f, 0.5172f, 0.9495f));
+    AddControlPoint(5.f / n, Color(0.2963f, 0.6191f, 0.8515f));
+    AddControlPoint(6.f / n, Color(0.2199f, 0.7134f, 0.7225f));
+    AddControlPoint(7.f / n, Color(0.2643f, 0.7836f, 0.5756f));
+    AddControlPoint(8.f / n, Color(0.3094f, 0.8388f, 0.4248f));
+    AddControlPoint(9.f / n, Color(0.3623f, 0.8917f, 0.2858f));
+    AddControlPoint(10.f / n, Color(0.5200f, 0.9210f, 0.3137f));
+    AddControlPoint(11.f / n, Color(0.6800f, 0.9255f, 0.3386f));
+    AddControlPoint(12.f / n, Color(0.8000f, 0.9255f, 0.3529f));
+    AddControlPoint(13.f / n, Color(0.8706f, 0.8549f, 0.3608f));
+    AddControlPoint(14.f / n, Color(0.9514f, 0.7466f, 0.3686f));
+    AddControlPoint(15.f / n, Color(0.9765f, 0.5887f, 0.3569f));
   }
   else if (name == "CubicYF")
   {
     vtkm::Float32 n = 15;
-    AddControlPoint(0.f/n,  Color(0.5151f, 0.0482f, 0.6697f));
-    AddControlPoint(1.f/n,  Color(0.5199f, 0.1762f, 0.8083f));
-    AddControlPoint(2.f/n,  Color(0.4884f, 0.2912f, 0.9234f));
-    AddControlPoint(3.f/n,  Color(0.4297f, 0.3855f, 0.9921f));
-    AddControlPoint(4.f/n,  Color(0.3893f, 0.4792f, 0.9775f));
-    AddControlPoint(5.f/n,  Color(0.3337f, 0.5650f, 0.9056f));
-    AddControlPoint(6.f/n,  Color(0.2795f, 0.6419f, 0.8287f));
-    AddControlPoint(7.f/n,  Color(0.2210f, 0.7123f, 0.7258f));
-    AddControlPoint(8.f/n,  Color(0.2468f, 0.7612f, 0.6248f));
-    AddControlPoint(9.f/n,  Color(0.2833f, 0.8125f, 0.5069f));
-    AddControlPoint(10.f/n, Color(0.3198f, 0.8492f, 0.3956f));
-    AddControlPoint(11.f/n, Color(0.3602f, 0.8896f, 0.2919f));
-    AddControlPoint(12.f/n, Color(0.4568f, 0.9136f, 0.3018f));
-    AddControlPoint(13.f/n, Color(0.6033f, 0.9255f, 0.3295f));
-    AddControlPoint(14.f/n, Color(0.7066f, 0.9255f, 0.3414f));
-    AddControlPoint(15.f/n, Color(0.8000f, 0.9255f, 0.3529f));
+    AddControlPoint(0.f / n, Color(0.5151f, 0.0482f, 0.6697f));
+    AddControlPoint(1.f / n, Color(0.5199f, 0.1762f, 0.8083f));
+    AddControlPoint(2.f / n, Color(0.4884f, 0.2912f, 0.9234f));
+    AddControlPoint(3.f / n, Color(0.4297f, 0.3855f, 0.9921f));
+    AddControlPoint(4.f / n, Color(0.3893f, 0.4792f, 0.9775f));
+    AddControlPoint(5.f / n, Color(0.3337f, 0.5650f, 0.9056f));
+    AddControlPoint(6.f / n, Color(0.2795f, 0.6419f, 0.8287f));
+    AddControlPoint(7.f / n, Color(0.2210f, 0.7123f, 0.7258f));
+    AddControlPoint(8.f / n, Color(0.2468f, 0.7612f, 0.6248f));
+    AddControlPoint(9.f / n, Color(0.2833f, 0.8125f, 0.5069f));
+    AddControlPoint(10.f / n, Color(0.3198f, 0.8492f, 0.3956f));
+    AddControlPoint(11.f / n, Color(0.3602f, 0.8896f, 0.2919f));
+    AddControlPoint(12.f / n, Color(0.4568f, 0.9136f, 0.3018f));
+    AddControlPoint(13.f / n, Color(0.6033f, 0.9255f, 0.3295f));
+    AddControlPoint(14.f / n, Color(0.7066f, 0.9255f, 0.3414f));
+    AddControlPoint(15.f / n, Color(0.8000f, 0.9255f, 0.3529f));
   }
   else if (name == "LinearL")
   {
     vtkm::Float32 n = 15;
-    AddControlPoint(0.f/n,  Color(0.0143f, 0.0143f, 0.0143f));
-    AddControlPoint(1.f/n,  Color(0.1413f, 0.0555f, 0.1256f));
-    AddControlPoint(2.f/n,  Color(0.1761f, 0.0911f, 0.2782f));
-    AddControlPoint(3.f/n,  Color(0.1710f, 0.1314f, 0.4540f));
-    AddControlPoint(4.f/n,  Color(0.1074f, 0.2234f, 0.4984f));
-    AddControlPoint(5.f/n,  Color(0.0686f, 0.3044f, 0.5068f));
-    AddControlPoint(6.f/n,  Color(0.0008f, 0.3927f, 0.4267f));
-    AddControlPoint(7.f/n,  Color(0.0000f, 0.4763f, 0.3464f));
-    AddControlPoint(8.f/n,  Color(0.0000f, 0.5565f, 0.2469f));
-    AddControlPoint(9.f/n,  Color(0.0000f, 0.6381f, 0.1638f));
-    AddControlPoint(10.f/n, Color(0.2167f, 0.6966f, 0.0000f));
-    AddControlPoint(11.f/n, Color(0.3898f, 0.7563f, 0.0000f));
-    AddControlPoint(12.f/n, Color(0.6912f, 0.7795f, 0.0000f));
-    AddControlPoint(13.f/n, Color(0.8548f, 0.8041f, 0.4555f));
-    AddControlPoint(14.f/n, Color(0.9712f, 0.8429f, 0.7287f));
-    AddControlPoint(15.f/n, Color(0.9692f, 0.9273f, 0.8961f));
+    AddControlPoint(0.f / n, Color(0.0143f, 0.0143f, 0.0143f));
+    AddControlPoint(1.f / n, Color(0.1413f, 0.0555f, 0.1256f));
+    AddControlPoint(2.f / n, Color(0.1761f, 0.0911f, 0.2782f));
+    AddControlPoint(3.f / n, Color(0.1710f, 0.1314f, 0.4540f));
+    AddControlPoint(4.f / n, Color(0.1074f, 0.2234f, 0.4984f));
+    AddControlPoint(5.f / n, Color(0.0686f, 0.3044f, 0.5068f));
+    AddControlPoint(6.f / n, Color(0.0008f, 0.3927f, 0.4267f));
+    AddControlPoint(7.f / n, Color(0.0000f, 0.4763f, 0.3464f));
+    AddControlPoint(8.f / n, Color(0.0000f, 0.5565f, 0.2469f));
+    AddControlPoint(9.f / n, Color(0.0000f, 0.6381f, 0.1638f));
+    AddControlPoint(10.f / n, Color(0.2167f, 0.6966f, 0.0000f));
+    AddControlPoint(11.f / n, Color(0.3898f, 0.7563f, 0.0000f));
+    AddControlPoint(12.f / n, Color(0.6912f, 0.7795f, 0.0000f));
+    AddControlPoint(13.f / n, Color(0.8548f, 0.8041f, 0.4555f));
+    AddControlPoint(14.f / n, Color(0.9712f, 0.8429f, 0.7287f));
+    AddControlPoint(15.f / n, Color(0.9692f, 0.9273f, 0.8961f));
   }
   else if (name == "LinLhot")
   {
     vtkm::Float32 n = 15;
-    AddControlPoint(0.f/n,  Color(0.0225f, 0.0121f, 0.0121f));
-    AddControlPoint(1.f/n,  Color(0.1927f, 0.0225f, 0.0311f));
-    AddControlPoint(2.f/n,  Color(0.3243f, 0.0106f, 0.0000f));
-    AddControlPoint(3.f/n,  Color(0.4463f, 0.0000f, 0.0091f));
-    AddControlPoint(4.f/n,  Color(0.5706f, 0.0000f, 0.0737f));
-    AddControlPoint(5.f/n,  Color(0.6969f, 0.0000f, 0.1337f));
-    AddControlPoint(6.f/n,  Color(0.8213f, 0.0000f, 0.1792f));
-    AddControlPoint(7.f/n,  Color(0.8636f, 0.0000f, 0.0565f));
-    AddControlPoint(8.f/n,  Color(0.8821f, 0.2555f, 0.0000f));
-    AddControlPoint(9.f/n,  Color(0.8720f, 0.4182f, 0.0000f));
-    AddControlPoint(10.f/n, Color(0.8424f, 0.5552f, 0.0000f));
-    AddControlPoint(11.f/n, Color(0.8031f, 0.6776f, 0.0000f));
-    AddControlPoint(12.f/n, Color(0.7659f, 0.7870f, 0.0000f));
-    AddControlPoint(13.f/n, Color(0.8170f, 0.8296f, 0.0000f));
-    AddControlPoint(14.f/n, Color(0.8853f, 0.8896f, 0.4113f));
-    AddControlPoint(15.f/n, Color(0.9481f, 0.9486f, 0.7165f));
+    AddControlPoint(0.f / n, Color(0.0225f, 0.0121f, 0.0121f));
+    AddControlPoint(1.f / n, Color(0.1927f, 0.0225f, 0.0311f));
+    AddControlPoint(2.f / n, Color(0.3243f, 0.0106f, 0.0000f));
+    AddControlPoint(3.f / n, Color(0.4463f, 0.0000f, 0.0091f));
+    AddControlPoint(4.f / n, Color(0.5706f, 0.0000f, 0.0737f));
+    AddControlPoint(5.f / n, Color(0.6969f, 0.0000f, 0.1337f));
+    AddControlPoint(6.f / n, Color(0.8213f, 0.0000f, 0.1792f));
+    AddControlPoint(7.f / n, Color(0.8636f, 0.0000f, 0.0565f));
+    AddControlPoint(8.f / n, Color(0.8821f, 0.2555f, 0.0000f));
+    AddControlPoint(9.f / n, Color(0.8720f, 0.4182f, 0.0000f));
+    AddControlPoint(10.f / n, Color(0.8424f, 0.5552f, 0.0000f));
+    AddControlPoint(11.f / n, Color(0.8031f, 0.6776f, 0.0000f));
+    AddControlPoint(12.f / n, Color(0.7659f, 0.7870f, 0.0000f));
+    AddControlPoint(13.f / n, Color(0.8170f, 0.8296f, 0.0000f));
+    AddControlPoint(14.f / n, Color(0.8853f, 0.8896f, 0.4113f));
+    AddControlPoint(15.f / n, Color(0.9481f, 0.9486f, 0.7165f));
   }
   // ColorBrewer tables here.  (See LICENSE.txt)
   else if (name == "PuRd")
@@ -1182,7 +1169,7 @@ ColorTable::ColorTable(const std::string &name_)
   }
   else
   {
-    std::cout<<"Unknown Color Table"<<std::endl;
+    std::cout << "Unknown Color Table" << std::endl;
     AddControlPoint(0.0000f, Color(1.0000f, 1.0000f, 0.8000f));
     AddControlPoint(0.1250f, Color(1.0000f, 0.9294f, 0.6275f));
     AddControlPoint(0.2500f, Color(0.9961f, 0.8510f, 0.4627f));
@@ -1200,14 +1187,13 @@ ColorTable::ColorTable(const std::string &name_)
   }
 }
 
-ColorTable::ColorTable(const vtkm::rendering::Color &color)
+ColorTable::ColorTable(const vtkm::rendering::Color& color)
 {
   this->Internals->UniqueName = "";
   this->Internals->Smooth = false;
-  
+
   AddControlPoint(0, color);
   AddControlPoint(1, color);
 }
-
 }
 } // namespace vtkm::rendering

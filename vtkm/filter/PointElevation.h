@@ -24,9 +24,10 @@
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/PointElevation.h>
 
-
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 class PointElevation : public vtkm::filter::FilterField<PointElevation>
 {
@@ -43,31 +44,25 @@ public:
   VTKM_CONT
   void SetRange(vtkm::Float64 low, vtkm::Float64 high);
 
-
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
-                                      const vtkm::cont::ArrayHandle<T, StorageType> &field,
-                                      const vtkm::filter::FieldMetadata& fieldMeta,
-                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                      const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultField DoExecute(
+    const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& tag);
 
 private:
   vtkm::worklet::PointElevation Worklet;
-
 };
 
-template<>
+template <>
 class FilterTraits<PointElevation>
 {
 public:
   //Point Elevation can only convert Float and Double Vec3 arrays
   typedef vtkm::TypeListTagFieldVec3 InputFieldTypeList;
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/PointElevation.hxx>
 

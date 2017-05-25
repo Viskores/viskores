@@ -18,59 +18,49 @@
 //  this software.
 //============================================================================
 
-namespace vtkm {
-namespace filter {
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT
-VertexClustering::VertexClustering():
-  vtkm::filter::FilterDataSet<VertexClustering>(),
-  NumberOfDivisions(256, 256, 256)
+namespace vtkm
+{
+namespace filter
 {
 
+//-----------------------------------------------------------------------------
+inline VTKM_CONT VertexClustering::VertexClustering()
+  : vtkm::filter::FilterDataSet<VertexClustering>()
+  , NumberOfDivisions(256, 256, 256)
+{
 }
 
 //-----------------------------------------------------------------------------
-template<typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-vtkm::filter::ResultDataSet VertexClustering::DoExecute(const vtkm::cont::DataSet& input,
-                                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                                        const DeviceAdapter& tag)
+template <typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT vtkm::filter::ResultDataSet VertexClustering::DoExecute(
+  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter& tag)
 {
   // todo this code needs to obey the policy for what storage types
   // the output should use
   vtkm::worklet::VertexClustering clustering;
 
   //need to compute bounds first
-  vtkm::Bounds bounds =
-      input.GetCoordinateSystem().GetBounds(
-        typename DerivedPolicy::CoordinateTypeList(),
-        typename DerivedPolicy::CoordinateStorageList());
+  vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds(
+    typename DerivedPolicy::CoordinateTypeList(), typename DerivedPolicy::CoordinateStorageList());
 
-  vtkm::cont::DataSet outDataSet = clustering.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
-                                                  vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy),
-                                                  bounds,
-                                                  this->GetNumberOfDivisions(),
-                                                  tag);
+  vtkm::cont::DataSet outDataSet =
+    clustering.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
+                   vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy), bounds,
+                   this->GetNumberOfDivisions(), tag);
 
   return vtkm::filter::ResultDataSet(outDataSet);
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-bool VertexClustering::DoMapField(vtkm::filter::ResultDataSet&,
-                               const vtkm::cont::ArrayHandle<T, StorageType>&,
-                               const vtkm::filter::FieldMetadata&,
-                               const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                               const DeviceAdapter&)
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool VertexClustering::DoMapField(vtkm::filter::ResultDataSet&,
+                                                   const vtkm::cont::ArrayHandle<T, StorageType>&,
+                                                   const vtkm::filter::FieldMetadata&,
+                                                   const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                                                   const DeviceAdapter&)
 {
   return false;
 }
-
 }
 }

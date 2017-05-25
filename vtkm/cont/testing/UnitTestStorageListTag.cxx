@@ -24,42 +24,44 @@
 
 #include <vector>
 
-namespace {
+namespace
+{
 
-enum TypeId {
+enum TypeId
+{
   BASIC
 };
 
-TypeId GetTypeId(vtkm::cont::StorageTagBasic) { return BASIC; }
+TypeId GetTypeId(vtkm::cont::StorageTagBasic)
+{
+  return BASIC;
+}
 
 struct TestFunctor
 {
   std::vector<TypeId> FoundTypes;
 
-  template<typename T>
-  VTKM_CONT
-  void operator()(T) {
+  template <typename T>
+  VTKM_CONT void operator()(T)
+  {
     this->FoundTypes.push_back(GetTypeId(T()));
   }
 };
 
-template<vtkm::IdComponent N>
-void CheckSame(const vtkm::Vec<TypeId,N> &expected,
-               const std::vector<TypeId> &found)
+template <vtkm::IdComponent N>
+void CheckSame(const vtkm::Vec<TypeId, N>& expected, const std::vector<TypeId>& found)
 {
-  VTKM_TEST_ASSERT(static_cast<vtkm::IdComponent>(found.size()) == N,
-                   "Got wrong number of items.");
+  VTKM_TEST_ASSERT(static_cast<vtkm::IdComponent>(found.size()) == N, "Got wrong number of items.");
 
   for (vtkm::IdComponent index = 0; index < N; index++)
   {
     vtkm::UInt32 i = static_cast<vtkm::UInt32>(index);
-    VTKM_TEST_ASSERT(expected[index] == found[i],
-                     "Got wrong type.");
+    VTKM_TEST_ASSERT(expected[index] == found[i], "Got wrong type.");
   }
 }
 
-template<vtkm::IdComponent N, typename ListTag>
-void TryList(const vtkm::Vec<TypeId,N> &expected, ListTag)
+template <vtkm::IdComponent N, typename ListTag>
+void TryList(const vtkm::Vec<TypeId, N>& expected, ListTag)
 {
   TestFunctor functor;
   vtkm::ListForEach(functor, ListTag());
@@ -69,12 +71,12 @@ void TryList(const vtkm::Vec<TypeId,N> &expected, ListTag)
 void TestLists()
 {
   std::cout << "StorageListTagBasic" << std::endl;
-  TryList(vtkm::Vec<TypeId,1>(BASIC), vtkm::cont::StorageListTagBasic());
+  TryList(vtkm::Vec<TypeId, 1>(BASIC), vtkm::cont::StorageListTagBasic());
 }
 
 } // anonymous namespace
 
-int UnitTestStorageListTag(int, char *[])
+int UnitTestStorageListTag(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestLists);
 }

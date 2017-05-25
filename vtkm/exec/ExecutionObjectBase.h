@@ -20,8 +20,10 @@
 #ifndef vtk_m_exec_ExecutionObjectBase_h
 #define vtk_m_exec_ExecutionObjectBase_h
 
-namespace vtkm {
-namespace exec {
+namespace vtkm
+{
+namespace exec
+{
 
 /// Base \c ExecutionObjectBase for execution objects to inherit from so that
 /// you can use an arbitrary object as a parameter in an execution environment
@@ -30,9 +32,7 @@ namespace exec {
 ///
 class ExecutionObjectBase
 {
-
 };
-
 }
 } // namespace vtkm::exec
 

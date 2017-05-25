@@ -27,29 +27,27 @@
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT AxisAnnotation
 {
 protected:
-  void CalculateTicks(const vtkm::Range &range,
-                      bool minor,
-                      std::vector<vtkm::Float64> &positions,
-                      std::vector<vtkm::Float64> &proportions,
-                      int modifyTickQuantity) const;
+  void CalculateTicks(const vtkm::Range& range, bool minor, std::vector<vtkm::Float64>& positions,
+                      std::vector<vtkm::Float64>& proportions, int modifyTickQuantity) const;
 
 public:
   AxisAnnotation();
 
   virtual ~AxisAnnotation();
 
-  virtual void Render(const vtkm::rendering::Camera &camera,
-                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::Canvas &canvas) = 0;
+  virtual void Render(const vtkm::rendering::Camera& camera,
+                      const vtkm::rendering::WorldAnnotator& worldAnnotator,
+                      vtkm::rendering::Canvas& canvas) = 0;
 };
-
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif // vtk_m_rendering_AxisAnnotation_h

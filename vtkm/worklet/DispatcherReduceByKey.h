@@ -26,33 +26,31 @@
 
 #include <vtkm/worklet/internal/DispatcherBase.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 /// \brief Dispatcher for worklets that inherit from \c WorkletReduceByKey.
 ///
-template<typename WorkletType,
-         typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class DispatcherReduceByKey
-    : public vtkm::worklet::internal::DispatcherBase<
-        DispatcherReduceByKey<WorkletType, Device>,
-        WorkletType,
-        vtkm::worklet::WorkletReduceByKey>
+  : public vtkm::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType, Device>,
+                                                   WorkletType, vtkm::worklet::WorkletReduceByKey>
 {
   using Superclass =
-    vtkm::worklet::internal::DispatcherBase<
-      DispatcherReduceByKey<WorkletType, Device>,
-      WorkletType,
-      vtkm::worklet::WorkletReduceByKey>;
+    vtkm::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType, Device>, WorkletType,
+                                            vtkm::worklet::WorkletReduceByKey>;
 
 public:
   VTKM_CONT
-  DispatcherReduceByKey(const WorkletType &worklet = WorkletType())
+  DispatcherReduceByKey(const WorkletType& worklet = WorkletType())
     : Superclass(worklet)
-  {  }
+  {
+  }
 
-  template<typename Invocation>
-  void DoInvoke(const Invocation &invocation) const
+  template <typename Invocation>
+  void DoInvoke(const Invocation& invocation) const
   {
     // This is the type for the input domain
     using InputDomainType = typename Invocation::InputDomainType;
@@ -61,19 +59,18 @@ public:
     // something other than vtkm::worklet::Keys as the input domain, which
     // is illegal.
     VTKM_STATIC_ASSERT_MSG(
-          (vtkm::cont::arg::TypeCheck<vtkm::cont::arg::TypeCheckTagKeys,InputDomainType>::value),
-          "Invalid input domain for WorkletReduceByKey.");
+      (vtkm::cont::arg::TypeCheck<vtkm::cont::arg::TypeCheckTagKeys, InputDomainType>::value),
+      "Invalid input domain for WorkletReduceByKey.");
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
-    const InputDomainType &inputDomain = invocation.GetInputDomain();
+    const InputDomainType& inputDomain = invocation.GetInputDomain();
 
     // Now that we have the input domain, we can extract the range of the
     // scheduling and call BadicInvoke.
     this->BasicInvoke(invocation, inputDomain.GetInputRange(), Device());
   }
 };
-
 }
 } // namespace vtkm::worklet
 

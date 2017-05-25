@@ -29,40 +29,42 @@
 //Todo: rename this header to TaskSingularDetail.h
 #include <vtkm/exec/internal/WorkletInvokeFunctorDetail.h>
 
-namespace vtkm {
-namespace exec {
-namespace internal {
+namespace vtkm
+{
+namespace exec
+{
+namespace internal
+{
 
-template<typename WorkletType, typename InvocationType>
+template <typename WorkletType, typename InvocationType>
 class TaskSingular : public vtkm::exec::TaskBase
 {
 public:
   VTKM_CONT
-  TaskSingular(const WorkletType &worklet,
-                       const InvocationType &invocation,
-                       const vtkm::Id &globalIndexOffset=0)
-    : Worklet(worklet), Invocation(invocation), GlobalIndexOffset(globalIndexOffset) {  }
+  TaskSingular(const WorkletType& worklet, const InvocationType& invocation,
+               const vtkm::Id& globalIndexOffset = 0)
+    : Worklet(worklet)
+    , Invocation(invocation)
+    , GlobalIndexOffset(globalIndexOffset)
+  {
+  }
   VTKM_CONT
-  void SetErrorMessageBuffer(
-      const vtkm::exec::internal::ErrorMessageBuffer &buffer)
+  void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer& buffer)
   {
     this->Worklet.SetErrorMessageBuffer(buffer);
   }
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template<typename T>
-  VTKM_EXEC
-  void operator()(T index) const
+  template <typename T>
+  VTKM_EXEC void operator()(T index) const
   {
     //Todo: rename this function to DoTaskSingular
-    detail::DoWorkletInvokeFunctor(this->Worklet,
-                                   this->Invocation,
-                                   this->Worklet.GetThreadIndices(index,
-                                                                  this->Invocation.OutputToInputMap,
-                                                                  this->Invocation.VisitArray,
-                                                                  this->Invocation.GetInputDomain(),
-                                                                  GlobalIndexOffset)
-                                   );
+    detail::DoWorkletInvokeFunctor(
+      this->Worklet, this->Invocation,
+      this->Worklet.GetThreadIndices(index, this->Invocation.OutputToInputMap,
+                                     this->Invocation.VisitArray, this->Invocation.GetInputDomain(),
+                                     GlobalIndexOffset));
   }
+
 private:
   WorkletType Worklet;
   // This is held by by value so that when we transfer the invocation object
@@ -72,8 +74,6 @@ private:
   const InvocationType Invocation;
   const vtkm::Id GlobalIndexOffset;
 };
-
-
 }
 }
 } // vtkm::exec::internal

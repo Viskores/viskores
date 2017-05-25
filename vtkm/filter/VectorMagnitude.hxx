@@ -20,46 +20,36 @@
 
 #include <vtkm/worklet/DispatcherMapField.h>
 
-namespace vtkm {
-namespace filter {
-
+namespace vtkm
+{
+namespace filter
+{
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT
-VectorMagnitude::VectorMagnitude():
-  vtkm::filter::FilterField<VectorMagnitude>(),
-  Worklet()
+inline VTKM_CONT VectorMagnitude::VectorMagnitude()
+  : vtkm::filter::FilterField<VectorMagnitude>()
+  , Worklet()
 {
   this->SetOutputFieldName("magnitude");
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-vtkm::filter::ResultField
-VectorMagnitude::DoExecute(const vtkm::cont::DataSet &inDataSet,
-                           const vtkm::cont::ArrayHandle<T,StorageType> &field,
-                           const vtkm::filter::FieldMetadata &fieldMetadata,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                           const DeviceAdapter&)
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT vtkm::filter::ResultField VectorMagnitude::DoExecute(
+  const vtkm::cont::DataSet& inDataSet, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::filter::FieldMetadata& fieldMetadata, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  const DeviceAdapter&)
 {
   typedef typename detail::FloatingPointReturnType<T>::Type ReturnType;
   vtkm::cont::ArrayHandle<ReturnType> outArray;
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude,
-                                    DeviceAdapter > dispatcher(this->Worklet);
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude, DeviceAdapter> dispatcher(
+    this->Worklet);
 
   dispatcher.Invoke(field, outArray);
 
-  return vtkm::filter::ResultField(inDataSet,
-                                   outArray,
-                                   this->GetOutputFieldName(),
-                                   fieldMetadata.GetAssociation(),
-                                   fieldMetadata.GetCellSetName());
+  return vtkm::filter::ResultField(inDataSet, outArray, this->GetOutputFieldName(),
+                                   fieldMetadata.GetAssociation(), fieldMetadata.GetCellSetName());
 }
-
 }
 } // namespace vtkm::filter

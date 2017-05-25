@@ -70,25 +70,21 @@
 #include <vtkm/Types.h>
 #include <vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation_Macros.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
-const vtkm::IdComponent neighbourOffsets3D[N_INCIDENT_EDGES * 2] = {
-   0,  1,
-   1,  1,
-   1,  0,
-   0, -1,
-  -1, -1,
-  -1,  0
-};
+const vtkm::IdComponent neighbourOffsets3D[N_INCIDENT_EDGES * 2] = { 0, 1,  1,  1,  1,  0,
+                                                                     0, -1, -1, -1, -1, 0 };
 
-const vtkm::UInt8 linkComponentCaseTable[64] = {
-  0, 1, 2, 2, 4, 5, 4, 4, 8, 9, 10, 10, 8, 9, 8, 8, 16, 17, 18, 18, 20, 21, 20, 20, 16,
-  17, 18, 18, 16, 17, 16, 16, 32, 32, 34, 32, 36, 36, 36, 32, 40, 40, 42, 40, 40, 40, 40, 32, 32, 32,
-  34, 32, 36, 36, 36, 32, 32, 32, 34, 32, 32, 32, 32, 32
-};
-
+const vtkm::UInt8 linkComponentCaseTable[64] = { 0,  1,  2,  2,  4,  5,  4,  4,  8,  9,  10, 10, 8,
+                                                 9,  8,  8,  16, 17, 18, 18, 20, 21, 20, 20, 16, 17,
+                                                 18, 18, 16, 17, 16, 16, 32, 32, 34, 32, 36, 36, 36,
+                                                 32, 40, 40, 42, 40, 40, 40, 40, 32, 32, 32, 34, 32,
+                                                 36, 36, 36, 32, 32, 32, 34, 32, 32, 32, 32, 32 };
 }
 }
 }

@@ -23,9 +23,12 @@
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 #include <vtkm/exec/arg/Fetch.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief Aspect tag to use for getting the thread indices.
 ///
@@ -33,7 +36,9 @@ namespace arg {
 /// ignore whatever data is in the associated execution object and return the
 /// thread indices.
 ///
-struct AspectTagThreadIndices {  };
+struct AspectTagThreadIndices
+{
+};
 
 /// \brief The \c ExecutionSignature tag to use to get the thread indices
 ///
@@ -54,30 +59,23 @@ struct ThreadIndices : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagThreadIndices AspectTag;
 };
 
-template<typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagThreadIndices,
-             ThreadIndicesType,
-             ExecObjectType>
+template <typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagThreadIndices, ThreadIndicesType, ExecObjectType>
 {
-  typedef const ThreadIndicesType &ValueType;
+  typedef const ThreadIndicesType& ValueType;
 
   VTKM_EXEC
-  const ThreadIndicesType &
-  Load(const ThreadIndicesType &indices, const ExecObjectType &) const
+  const ThreadIndicesType& Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
     return indices;
   }
 
   VTKM_EXEC
-  void Store(const ThreadIndicesType &,
-             const ExecObjectType &,
-             const ThreadIndicesType &) const
+  void Store(const ThreadIndicesType&, const ExecObjectType&, const ThreadIndicesType&) const
   {
     // Store is a no-op.
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

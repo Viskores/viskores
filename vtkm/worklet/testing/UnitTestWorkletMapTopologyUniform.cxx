@@ -31,74 +31,61 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-namespace test_uniform {
+namespace test_uniform
+{
 
 class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(FieldInCell<Scalar> inCells,
-                                FieldInPoint<Scalar> inPoints,
-                                CellSetIn topology,
-                                FieldOutCell<Scalar> outCells);
+  typedef void ControlSignature(FieldInCell<Scalar> inCells, FieldInPoint<Scalar> inPoints,
+                                CellSetIn topology, FieldOutCell<Scalar> outCells);
   typedef void ExecutionSignature(_1, _4, _2, PointCount, CellShape, PointIndices);
   typedef _3 InputDomain;
 
   VTKM_CONT
-  MaxPointOrCellValue() { }
+  MaxPointOrCellValue() {}
 
-  template<typename InCellType,
-           typename OutCellType,
-           typename InPointVecType,
-           typename CellShapeTag,
-           typename PointIndexType>
-  VTKM_EXEC
-  void operator()(const InCellType &cellValue,
-                  OutCellType &maxValue,
-                  const InPointVecType &pointValues,
-                  const vtkm::IdComponent &numPoints,
-                  const CellShapeTag &vtkmNotUsed(type),
-                  const PointIndexType &vtkmNotUsed(pointIDs)) const
+  template <typename InCellType, typename OutCellType, typename InPointVecType,
+            typename CellShapeTag, typename PointIndexType>
+  VTKM_EXEC void operator()(const InCellType& cellValue, OutCellType& maxValue,
+                            const InPointVecType& pointValues, const vtkm::IdComponent& numPoints,
+                            const CellShapeTag& vtkmNotUsed(type),
+                            const PointIndexType& vtkmNotUsed(pointIDs)) const
   {
     //simple functor that returns the max of cellValue and pointValue
     maxValue = static_cast<OutCellType>(cellValue);
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; ++pointIndex)
     {
-      maxValue = vtkm::Max(maxValue,
-                           static_cast<OutCellType>(pointValues[pointIndex]));
+      maxValue = vtkm::Max(maxValue, static_cast<OutCellType>(pointValues[pointIndex]));
     }
   }
 };
 
-struct CheckStructuredUniformPointCoords
-    : public vtkm::worklet::WorkletMapPointToCell
+struct CheckStructuredUniformPointCoords : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn topology,
-                                FieldInPoint<Vec3> pointCoords);
+  typedef void ControlSignature(CellSetIn topology, FieldInPoint<Vec3> pointCoords);
   typedef void ExecutionSignature(_2);
 
   VTKM_CONT
-  CheckStructuredUniformPointCoords() {  }
+  CheckStructuredUniformPointCoords() {}
 
-  template<vtkm::IdComponent NumDimensions>
-  VTKM_EXEC
-  void operator()(
-      const vtkm::VecRectilinearPointCoordinates<NumDimensions> &
-        vtkmNotUsed(coords)) const
+  template <vtkm::IdComponent NumDimensions>
+  VTKM_EXEC void operator()(
+    const vtkm::VecRectilinearPointCoordinates<NumDimensions>& vtkmNotUsed(coords)) const
   {
     // Success if here.
   }
 
-  template<typename PointCoordsVecType>
-  VTKM_EXEC
-  void operator()(const PointCoordsVecType &vtkmNotUsed(coords)) const
+  template <typename PointCoordsVecType>
+  VTKM_EXEC void operator()(const PointCoordsVecType& vtkmNotUsed(coords)) const
   {
     this->RaiseError("Got wrong point coordinates type.");
   }
 };
-
 }
 
-namespace {
+namespace
+{
 
 static void TestMaxPointOrCell();
 static void TestAvgPointToCell();
@@ -107,36 +94,32 @@ static void TestStructuredUniformPointCoords();
 
 void TestWorkletMapTopologyUniform()
 {
-    typedef vtkm::cont::DeviceAdapterTraits<
-        VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
-    std::cout << "Testing Topology Worklet ( Uniform ) on device adapter: "
-              << DeviceAdapterTraits::GetName() << std::endl;
+  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  std::cout << "Testing Topology Worklet ( Uniform ) on device adapter: "
+            << DeviceAdapterTraits::GetName() << std::endl;
 
-    TestMaxPointOrCell();
-    TestAvgPointToCell();
-    TestAvgCellToPoint();
-    TestStructuredUniformPointCoords();
+  TestMaxPointOrCell();
+  TestAvgPointToCell();
+  TestAvgCellToPoint();
+  TestStructuredUniformPointCoords();
 }
 
-static void
-TestMaxPointOrCell()
+static void TestMaxPointOrCell()
 {
-  std::cout<<"Testing MaxPointOfCell worklet"<<std::endl;
+  std::cout << "Testing MaxPointOfCell worklet" << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  vtkm::worklet::DispatcherMapTopology< ::test_uniform::MaxPointOrCellValue > dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar"),
-                    dataSet.GetField("pointvar"),
-                    // We know that the cell set is a structured 2D grid and
-                    // The worklet does not work with general types because
-                    // of the way we get cell indices. We need to make that
-                    // part more flexible.
-                    dataSet.GetCellSet(0).ResetCellSetList(
-                      vtkm::cont::CellSetListTagStructured2D()),
-                    result);
+  vtkm::worklet::DispatcherMapTopology<::test_uniform::MaxPointOrCellValue> dispatcher;
+  dispatcher.Invoke(
+    dataSet.GetField("cellvar"), dataSet.GetField("pointvar"),
+    // We know that the cell set is a structured 2D grid and
+    // The worklet does not work with general types because
+    // of the way we get cell indices. We need to make that
+    // part more flexible.
+    dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()), result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
@@ -145,25 +128,22 @@ TestMaxPointOrCell()
                    "Wrong result for MaxPointOrCell worklet");
 }
 
-static void
-TestAvgPointToCell()
+static void TestAvgPointToCell()
 {
-  std::cout<<"Testing AvgPointToCell worklet"<<std::endl;
+  std::cout << "Testing AvgPointToCell worklet" << std::endl;
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  vtkm::worklet::DispatcherMapTopology< vtkm::worklet::CellAverage > dispatcher;
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
   dispatcher.Invoke(
-                    // We know that the cell set is a structured 2D grid and
-                    // The worklet does not work with general types because
-                    // of the way we get cell indices. We need to make that
-                    // part more flexible.
-                    dataSet.GetCellSet(0).ResetCellSetList(
-                      vtkm::cont::CellSetListTagStructured2D()),
-                    dataSet.GetField("pointvar"),
-                    result);
+    // We know that the cell set is a structured 2D grid and
+    // The worklet does not work with general types because
+    // of the way we get cell indices. We need to make that
+    // part more flexible.
+    dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    dataSet.GetField("pointvar"), result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 30.1f),
@@ -171,50 +151,43 @@ TestAvgPointToCell()
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 40.1f),
                    "Wrong result for PointToCellAverage worklet");
 
-  std::cout << "Try to invoke with an input array of the wrong size."
-            << std::endl;
+  std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
   bool exceptionThrown = false;
   try
   {
-    dispatcher.Invoke(// We know that the cell set is a structured 2D grid and
-                      // The worklet does not work with general types because
-                      // of the way we get cell indices. We need to make that
-                      // part more flexible.
-                      dataSet.GetCellSet().ResetCellSetList(
-                        vtkm::cont::CellSetListTagStructured2D()),
-                      dataSet.GetField("cellvar"), // should be pointvar
-                      result);
+    dispatcher.Invoke( // We know that the cell set is a structured 2D grid and
+      // The worklet does not work with general types because
+      // of the way we get cell indices. We need to make that
+      // part more flexible.
+      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+      dataSet.GetField("cellvar"), // should be pointvar
+      result);
   }
-  catch (vtkm::cont::ErrorBadValue &error)
+  catch (vtkm::cont::ErrorBadValue& error)
   {
-    std::cout << "  Caught expected error: " << error.GetMessage()
-              << std::endl;
+    std::cout << "  Caught expected error: " << error.GetMessage() << std::endl;
     exceptionThrown = true;
   }
-  VTKM_TEST_ASSERT(exceptionThrown,
-                   "Dispatcher did not throw expected exception.");
+  VTKM_TEST_ASSERT(exceptionThrown, "Dispatcher did not throw expected exception.");
 }
 
-static void
-TestAvgCellToPoint()
+static void TestAvgCellToPoint()
 {
-  std::cout<<"Testing AvgCellToPoint worklet"<<std::endl;
+  std::cout << "Testing AvgCellToPoint worklet" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
-  vtkm::worklet::DispatcherMapTopology< vtkm::worklet::PointAverage > dispatcher;
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointAverage> dispatcher;
   dispatcher.Invoke(
-                    // We know that the cell set is a structured 2D grid and
-                    // The worklet does not work with general types because
-                    // of the way we get cell indices. We need to make that
-                    // part more flexible.
-                    dataSet.GetCellSet(0).ResetCellSetList(
-                      vtkm::cont::CellSetListTagStructured2D()),
-                    dataSet.GetField("cellvar"),
-                    result);
+    // We know that the cell set is a structured 2D grid and
+    // The worklet does not work with general types because
+    // of the way we get cell indices. We need to make that
+    // part more flexible.
+    dataSet.GetCellSet(0).ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+    dataSet.GetField("cellvar"), result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),
@@ -222,53 +195,45 @@ TestAvgCellToPoint()
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(1), 150.1f),
                    "Wrong result for CellToPointAverage worklet");
 
-  std::cout << "Try to invoke with an input array of the wrong size."
-            << std::endl;
+  std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
   bool exceptionThrown = false;
   try
   {
-    dispatcher.Invoke(// We know that the cell set is a structured 2D grid and
-                      // The worklet does not work with general types because
-                      // of the way we get cell indices. We need to make that
-                      // part more flexible.
-                      dataSet.GetCellSet().ResetCellSetList(
-                        vtkm::cont::CellSetListTagStructured2D()),
-                      dataSet.GetField("pointvar"), // should be cellvar
-                      result);
+    dispatcher.Invoke( // We know that the cell set is a structured 2D grid and
+      // The worklet does not work with general types because
+      // of the way we get cell indices. We need to make that
+      // part more flexible.
+      dataSet.GetCellSet().ResetCellSetList(vtkm::cont::CellSetListTagStructured2D()),
+      dataSet.GetField("pointvar"), // should be cellvar
+      result);
   }
-  catch (vtkm::cont::ErrorBadValue &error)
+  catch (vtkm::cont::ErrorBadValue& error)
   {
-    std::cout << "  Caught expected error: " << error.GetMessage()
-              << std::endl;
+    std::cout << "  Caught expected error: " << error.GetMessage() << std::endl;
     exceptionThrown = true;
   }
-  VTKM_TEST_ASSERT(exceptionThrown,
-                   "Dispatcher did not throw expected exception.");
+  VTKM_TEST_ASSERT(exceptionThrown, "Dispatcher did not throw expected exception.");
 }
 
-static void
-TestStructuredUniformPointCoords()
+static void TestStructuredUniformPointCoords()
 {
-  std::cout << "Testing uniform point coordinates in structured grids"
-            << std::endl;
+  std::cout << "Testing uniform point coordinates in structured grids" << std::endl;
 
   vtkm::cont::testing::MakeTestDataSet testDataSet;
 
-  vtkm::worklet::DispatcherMapTopology<
-      ::test_uniform::CheckStructuredUniformPointCoords> dispatcher;
+  vtkm::worklet::DispatcherMapTopology<::test_uniform::CheckStructuredUniformPointCoords>
+    dispatcher;
 
   vtkm::cont::DataSet dataSet3D = testDataSet.Make3DUniformDataSet0();
-  dispatcher.Invoke(dataSet3D.GetCellSet(),
-                    dataSet3D.GetCoordinateSystem());
+  dispatcher.Invoke(dataSet3D.GetCellSet(), dataSet3D.GetCoordinateSystem());
 
   vtkm::cont::DataSet dataSet2D = testDataSet.Make2DUniformDataSet0();
-  dispatcher.Invoke(dataSet2D.GetCellSet(),
-                    dataSet2D.GetCoordinateSystem());
+  dispatcher.Invoke(dataSet2D.GetCellSet(), dataSet2D.GetCoordinateSystem());
 }
 
 } // anonymous namespace
 
-int UnitTestWorkletMapTopologyUniform(int, char *[])
+int UnitTestWorkletMapTopologyUniform(int, char* [])
 {
-    return vtkm::cont::testing::Testing::Run(TestWorkletMapTopologyUniform);
+  return vtkm::cont::testing::Testing::Run(TestWorkletMapTopologyUniform);
 }

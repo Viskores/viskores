@@ -27,34 +27,40 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 class ThresholdPoints
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool> { };
+  struct BoolType : vtkm::ListTagBase<bool>
+  {
+  };
 
   template <typename UnaryPredicate>
   class ThresholdPointField : public vtkm::worklet::WorkletMapCellToPoint
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInPoint<ScalarAll> scalars,
+    typedef void ControlSignature(CellSetIn cellset, FieldInPoint<ScalarAll> scalars,
                                   FieldOutPoint<BoolType> passFlags);
     typedef _3 ExecutionSignature(_2);
 
     VTKM_CONT
-    ThresholdPointField() : Predicate() { }
+    ThresholdPointField()
+      : Predicate()
+    {
+    }
 
     VTKM_CONT
-    explicit ThresholdPointField(const UnaryPredicate &predicate)
+    explicit ThresholdPointField(const UnaryPredicate& predicate)
       : Predicate(predicate)
-    { }
+    {
+    }
 
-    template<typename ScalarType>
-    VTKM_EXEC
-    bool operator()(const ScalarType &scalar) const
+    template <typename ScalarType>
+    VTKM_EXEC bool operator()(const ScalarType& scalar) const
     {
       return this->Predicate(scalar);
     }
@@ -63,15 +69,10 @@ public:
     UnaryPredicate Predicate;
   };
 
-  template <typename CellSetType, 
-            typename ScalarsArrayHandle,
-            typename UnaryPredicate, 
+  template <typename CellSetType, typename ScalarsArrayHandle, typename UnaryPredicate,
             typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(
-                          const CellSetType &cellSet,
-                          const ScalarsArrayHandle &scalars,
-                          const UnaryPredicate &predicate,
-                          DeviceAdapter)
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet, const ScalarsArrayHandle& scalars,
+                                      const UnaryPredicate& predicate, DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
@@ -89,16 +90,12 @@ public:
     DeviceAlgorithm::CopyIf(indices, passFlags, pointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType< > outCellSet(cellSet.GetName());
-    outCellSet.Fill(cellSet.GetNumberOfPoints(),
-                    vtkm::CellShapeTagVertex::Id,
-                    1,
-                    pointIds);
+    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, pointIds);
 
     return outCellSet;
   }
 };
-
 }
 } // namespace vtkm::worklet
 

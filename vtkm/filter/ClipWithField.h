@@ -24,8 +24,10 @@
 #include <vtkm/filter/FilterDataSetWithField.h>
 #include <vtkm/worklet/Clip.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 class ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
 {
@@ -34,46 +36,39 @@ public:
   ClipWithField();
 
   VTKM_CONT
-  void SetClipValue(vtkm::Float64 value){ this->ClipValue = value; }
+  void SetClipValue(vtkm::Float64 value) { this->ClipValue = value; }
 
   VTKM_CONT
-  vtkm::Float64 GetClipValue() const    { return this->ClipValue; }
+  vtkm::Float64 GetClipValue() const { return this->ClipValue; }
 
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
-                                        const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                        const vtkm::filter::FieldMetadata& fieldMeta,
-                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                        const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultDataSet DoExecute(
+    const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter.
   //This call is only valid after Execute has been called.
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  bool DoMapField(vtkm::filter::ResultDataSet& result,
-                  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                  const vtkm::filter::FieldMetadata& fieldMeta,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                  const DeviceAdapter& tag);
-
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT bool DoMapField(vtkm::filter::ResultDataSet& result,
+                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                            const vtkm::filter::FieldMetadata& fieldMeta,
+                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                            const DeviceAdapter& tag);
 
 private:
   vtkm::Float64 ClipValue;
   vtkm::worklet::Clip Worklet;
 };
 
-template<>
+template <>
 class FilterTraits<ClipWithField>
 { //currently the Clip filter only works on scalar data.
 public:
   typedef TypeListTagScalarAll InputFieldTypeList;
 };
-
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/ClipWithField.hxx>
 

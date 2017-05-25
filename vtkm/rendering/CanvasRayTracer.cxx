@@ -27,24 +27,28 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-namespace internal {
+namespace internal
+{
 
 class ClearBuffers : public vtkm::worklet::WorkletMapField
 {
   vtkm::rendering::Color ClearColor;
+
 public:
   VTKM_CONT
-  ClearBuffers(const vtkm::rendering::Color &clearColor)
+  ClearBuffers(const vtkm::rendering::Color& clearColor)
     : ClearColor(clearColor)
-  {}
+  {
+  }
   typedef void ControlSignature(FieldOut<>, FieldOut<>);
   typedef void ExecutionSignature(_1, _2);
   VTKM_EXEC
-  void operator()(vtkm::Vec<vtkm::Float32,4> &color,
-                  vtkm::Float32 &depth) const
+  void operator()(vtkm::Vec<vtkm::Float32, 4>& color, vtkm::Float32& depth) const
   {
     color = this->ClearColor.Components;
     depth = 1.001f;
@@ -61,23 +65,21 @@ struct ClearBuffersInvokeFunctor
   DepthBufferType DepthBuffer;
 
   VTKM_CONT
-  ClearBuffersInvokeFunctor(const vtkm::rendering::Color &backgroundColor,
-                            const ColorBufferType &colorBuffer,
-                            const DepthBufferType &depthBuffer)
-    : Worklet(backgroundColor),
-      ColorBuffer(colorBuffer),
-      DepthBuffer(depthBuffer)
-  {  }
+  ClearBuffersInvokeFunctor(const vtkm::rendering::Color& backgroundColor,
+                            const ColorBufferType& colorBuffer, const DepthBufferType& depthBuffer)
+    : Worklet(backgroundColor)
+    , ColorBuffer(colorBuffer)
+    , DepthBuffer(depthBuffer)
+  {
+  }
 
-  template<typename Device>
-  VTKM_CONT
-  bool operator()(Device) const
+  template <typename Device>
+  VTKM_CONT bool operator()(Device) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-    vtkm::worklet::DispatcherMapField<ClearBuffers, Device>
-        dispatcher(this->Worklet);
-    dispatcher.Invoke( this->ColorBuffer, this->DepthBuffer);
+    vtkm::worklet::DispatcherMapField<ClearBuffers, Device> dispatcher(this->Worklet);
+    dispatcher.Invoke(this->ColorBuffer, this->DepthBuffer);
     return true;
   }
 };
@@ -86,10 +88,12 @@ struct ClearBuffersInvokeFunctor
 
 CanvasRayTracer::CanvasRayTracer(vtkm::Id width, vtkm::Id height)
   : Canvas(width, height)
-{  }
+{
+}
 
 CanvasRayTracer::~CanvasRayTracer()
-{  }
+{
+}
 
 void CanvasRayTracer::Initialize()
 {
@@ -110,42 +114,33 @@ void CanvasRayTracer::Clear()
 {
   // TODO: Should the rendering library support policies or some other way to
   // configure with custom devices?
-  vtkm::cont::TryExecute(
-        internal::ClearBuffersInvokeFunctor(this->GetBackgroundColor(),
-                                            this->GetColorBuffer(),
-                                            this->GetDepthBuffer()));
+  vtkm::cont::TryExecute(internal::ClearBuffersInvokeFunctor(
+    this->GetBackgroundColor(), this->GetColorBuffer(), this->GetDepthBuffer()));
 }
 
-vtkm::rendering::Canvas *CanvasRayTracer::NewCopy() const
+vtkm::rendering::Canvas* CanvasRayTracer::NewCopy() const
 {
   return new vtkm::rendering::CanvasRayTracer(*this);
 }
 
-void CanvasRayTracer::AddLine(const vtkm::Vec<vtkm::Float64,2> &,
-                              const vtkm::Vec<vtkm::Float64,2> &,
-                              vtkm::Float32,
-                              const vtkm::rendering::Color &) const
+void CanvasRayTracer::AddLine(const vtkm::Vec<vtkm::Float64, 2>&,
+                              const vtkm::Vec<vtkm::Float64, 2>&, vtkm::Float32,
+                              const vtkm::rendering::Color&) const
 {
   // Not implemented
 }
 
-void CanvasRayTracer::AddColorBar(const vtkm::Bounds &,
-                                  const vtkm::rendering::ColorTable &,
-                                  bool ) const
+void CanvasRayTracer::AddColorBar(const vtkm::Bounds&, const vtkm::rendering::ColorTable&,
+                                  bool) const
 {
   // Not implemented
 }
 
-void CanvasRayTracer::AddText(const vtkm::Vec<vtkm::Float32,2> &,
-                              vtkm::Float32,
-                              vtkm::Float32,
-                              vtkm::Float32,
-                              const vtkm::Vec<vtkm::Float32,2> &,
-                              const vtkm::rendering::Color &,
-                              const std::string &) const
+void CanvasRayTracer::AddText(const vtkm::Vec<vtkm::Float32, 2>&, vtkm::Float32, vtkm::Float32,
+                              vtkm::Float32, const vtkm::Vec<vtkm::Float32, 2>&,
+                              const vtkm::rendering::Color&, const std::string&) const
 {
   // Not implemented
 }
-
 }
 }

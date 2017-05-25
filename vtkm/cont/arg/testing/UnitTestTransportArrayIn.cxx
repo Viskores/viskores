@@ -27,11 +27,12 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
-template<typename PortalType>
+template <typename PortalType>
 struct TestKernel : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
@@ -47,10 +48,10 @@ struct TestKernel : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename Device>
+template <typename Device>
 struct TryArrayInType
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     T array[ARRAY_SIZE];
@@ -62,12 +63,10 @@ struct TryArrayInType
     typedef vtkm::cont::ArrayHandle<T> ArrayHandleType;
     ArrayHandleType handle = vtkm::cont::make_ArrayHandle(array, ARRAY_SIZE);
 
-    typedef typename ArrayHandleType::
-        template ExecutionTypes<Device>::PortalConst PortalType;
+    typedef typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst PortalType;
 
-    vtkm::cont::arg::Transport<
-        vtkm::cont::arg::TransportTagArrayIn, ArrayHandleType, Device>
-        transport;
+    vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayIn, ArrayHandleType, Device>
+      transport;
 
     TestKernel<PortalType> kernel;
     kernel.Portal = transport(handle, handle, ARRAY_SIZE, ARRAY_SIZE);
@@ -76,7 +75,7 @@ struct TryArrayInType
   }
 };
 
-template<typename Device>
+template <typename Device>
 void TryArrayInTransport(Device)
 {
   vtkm::testing::Testing::TryTypes(TryArrayInType<Device>());
@@ -90,7 +89,7 @@ void TestArrayInTransport()
 
 } // Anonymous namespace
 
-int UnitTestTransportArrayIn(int, char *[])
+int UnitTestTransportArrayIn(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestArrayInTransport);
 }

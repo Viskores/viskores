@@ -35,79 +35,72 @@
 
 VTKM_VALID_DEVICE_ADAPTER(TestAlgorithmGeneral, -3);
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-template<>
-struct DeviceAdapterAlgorithm<
-           vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> :
-    vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
-        DeviceAdapterAlgorithm<
-                   vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>,
-        vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+template <>
+struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+  : vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
+      DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>,
+      vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
 {
 private:
-  typedef vtkm::cont::DeviceAdapterAlgorithm<
-      vtkm::cont::DeviceAdapterTagSerial> Algorithm;
+  typedef vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial> Algorithm;
 
-  typedef vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral
-            DeviceAdapterTagTestAlgorithmGeneral;
+  typedef vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral DeviceAdapterTagTestAlgorithmGeneral;
 
 public:
-
-  template<class Functor>
-  VTKM_CONT static void Schedule(Functor functor,
-                                        vtkm::Id numInstances)
+  template <class Functor>
+  VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
   {
     Algorithm::Schedule(functor, numInstances);
   }
 
-  template<class Functor>
-  VTKM_CONT static void Schedule(Functor functor,
-                                        vtkm::Id3 rangeMax)
+  template <class Functor>
+  VTKM_CONT static void Schedule(Functor functor, vtkm::Id3 rangeMax)
   {
     Algorithm::Schedule(functor, rangeMax);
   }
 
-  VTKM_CONT static void Synchronize()
-  {
-    Algorithm::Synchronize();
-  }
+  VTKM_CONT static void Synchronize() { Algorithm::Synchronize(); }
 };
 
-namespace internal {
+namespace internal
+{
 
 template <typename T, class StorageTag>
-class ArrayManagerExecution
-    <T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
-    : public vtkm::cont::internal::ArrayManagerExecution
-          <T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
+class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+  : public vtkm::cont::internal::ArrayManagerExecution<T, StorageTag,
+                                                       vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
-  typedef vtkm::cont::internal::ArrayManagerExecution
-      <T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
-      Superclass;
+  typedef vtkm::cont::internal::ArrayManagerExecution<T, StorageTag,
+                                                      vtkm::cont::DeviceAdapterTagSerial>
+    Superclass;
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
 
-  ArrayManagerExecution(vtkm::cont::internal::Storage<T, StorageTag> *storage)
-    : Superclass(storage) {  }
+  ArrayManagerExecution(vtkm::cont::internal::Storage<T, StorageTag>* storage)
+    : Superclass(storage)
+  {
+  }
 };
 
-template<typename VirtualObject, typename TargetClass>
-struct VirtualObjectTransfer<
-  VirtualObject, TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral> :
-  public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
+template <typename VirtualObject, typename TargetClass>
+struct VirtualObjectTransfer<VirtualObject, TargetClass,
+                             vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+  : public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
 {
 };
-
 }
 }
 } // namespace vtkm::cont::internal
 
-int UnitTestDeviceAdapterAlgorithmGeneral(int, char *[])
+int UnitTestDeviceAdapterAlgorithmGeneral(int, char* [])
 {
-  return vtkm::cont::testing::TestingDeviceAdapter
-      <vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>::Run();
+  return vtkm::cont::testing::TestingDeviceAdapter<
+    vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>::Run();
 }

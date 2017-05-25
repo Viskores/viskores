@@ -32,61 +32,53 @@ struct CellSetSingleTypePolicy : public BasePolicy
 };
 
 template <typename DerivedPolicy>
-inline vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>>
-GetCellSetSingleTypePolicy(const vtkm::filter::PolicyBase<DerivedPolicy>&)
+inline vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>> GetCellSetSingleTypePolicy(
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   return vtkm::filter::PolicyBase<CellSetSingleTypePolicy<DerivedPolicy>>();
 }
-
 }
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 //-----------------------------------------------------------------------------
 template <typename ImplicitFunctionType, typename DerivedPolicy>
-inline
-void ExtractPoints::SetImplicitFunction(
-                       const std::shared_ptr<ImplicitFunctionType> &func,
-                       const vtkm::filter::PolicyBase<DerivedPolicy>&) 
+inline void ExtractPoints::SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func,
+                                               const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   func->ResetDevices(DerivedPolicy::DeviceAdapterList);
   this->Function = func;
 }
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT
-ExtractPoints::ExtractPoints():
-  vtkm::filter::FilterDataSet<ExtractPoints>(),
-  ExtractInside(true),
-  CompactPoints(false)
+inline VTKM_CONT ExtractPoints::ExtractPoints()
+  : vtkm::filter::FilterDataSet<ExtractPoints>()
+  , ExtractInside(true)
+  , CompactPoints(false)
 {
 }
 
 //-----------------------------------------------------------------------------
-template<typename DerivedPolicy,
-         typename DeviceAdapter>
-inline
-vtkm::filter::ResultDataSet ExtractPoints::DoExecute(
-                                                 const vtkm::cont::DataSet& input,
-                                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                                 const DeviceAdapter& device)
+template <typename DerivedPolicy, typename DeviceAdapter>
+inline vtkm::filter::ResultDataSet ExtractPoints::DoExecute(
+  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter& device)
 {
   // extract the input cell set and coordinates
-  const vtkm::cont::DynamicCellSet& cells =
-                  input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
   const vtkm::cont::CoordinateSystem& coords =
-                      input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   // run the worklet on the cell set
   vtkm::cont::CellSetSingleType<> outCellSet(cells.GetName());
   vtkm::worklet::ExtractPoints worklet;
 
-  outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                           vtkm::filter::ApplyPolicy(coords, policy),
-                           *this->Function,
-                           this->ExtractInside,
-                           device);
+  outCellSet =
+    worklet.Run(vtkm::filter::ApplyPolicy(cells, policy), vtkm::filter::ApplyPolicy(coords, policy),
+                *this->Function, this->ExtractInside, device);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -97,9 +89,7 @@ vtkm::filter::ResultDataSet ExtractPoints::DoExecute(
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
-    return this->Compactor.DoExecute(output, 
-                                     GetCellSetSingleTypePolicy(policy),
-                                     DeviceAdapter());
+    return this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy), DeviceAdapter());
   }
   else
   {
@@ -108,20 +98,14 @@ vtkm::filter::ResultDataSet ExtractPoints::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-bool ExtractPoints::DoMapField(
-                           vtkm::filter::ResultDataSet& result,
-                           const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                           const vtkm::filter::FieldMetadata& fieldMeta,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                           const DeviceAdapter&)
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool ExtractPoints::DoMapField(
+  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter&)
 {
   // point data is copied as is because it was not collapsed
-  if(fieldMeta.IsPointField())
+  if (fieldMeta.IsPointField())
   {
     if (this->CompactPoints)
     {
@@ -133,10 +117,9 @@ bool ExtractPoints::DoMapField(
       return true;
     }
   }
-  
+
   // cell data does not apply
   return false;
 }
-
 }
 }

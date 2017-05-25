@@ -20,7 +20,6 @@
 //
 //=============================================================================
 
-
 #ifndef vtk_m_cont_ArrayHandleReverse_h
 #define vtk_m_cont_ArrayHandleReverse_h
 
@@ -28,107 +27,120 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-namespace internal {
+namespace internal
+{
 
-template< typename PortalType >
+template <typename PortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalReverse
 {
 public:
   typedef typename PortalType::ValueType ValueType;
 
   VTKM_EXEC_CONT
-  ArrayPortalReverse() : portal() {}
-
-  VTKM_EXEC_CONT
-  ArrayPortalReverse(const PortalType &p) : portal(p) {}
-
-  template< typename OtherPortal >
-  VTKM_EXEC_CONT
-  ArrayPortalReverse(const ArrayPortalReverse<OtherPortal> &src) : portal(src.GetPortal()) {}
-
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfValues() const {
-    return this->portal.GetNumberOfValues();
+  ArrayPortalReverse()
+    : portal()
+  {
   }
 
   VTKM_EXEC_CONT
-  ValueType Get(vtkm::Id index) const {
+  ArrayPortalReverse(const PortalType& p)
+    : portal(p)
+  {
+  }
+
+  template <typename OtherPortal>
+  VTKM_EXEC_CONT ArrayPortalReverse(const ArrayPortalReverse<OtherPortal>& src)
+    : portal(src.GetPortal())
+  {
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::Id GetNumberOfValues() const { return this->portal.GetNumberOfValues(); }
+
+  VTKM_EXEC_CONT
+  ValueType Get(vtkm::Id index) const
+  {
     return this->portal.Get(portal.GetNumberOfValues() - index - 1);
   }
 
   VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType &value) const {
+  void Set(vtkm::Id index, const ValueType& value) const
+  {
     this->portal.Set(portal.GetNumberOfValues() - index - 1, value);
   }
 
 private:
   PortalType portal;
-
 };
 }
 
-template< typename ArrayHandleType >
+template <typename ArrayHandleType>
 class StorageTagReverse
 {
 };
 
-namespace internal {
+namespace internal
+{
 
-template< typename ArrayHandleType >
-class Storage< typename ArrayHandleType::ValueType, StorageTagReverse<ArrayHandleType > >
+template <typename ArrayHandleType>
+class Storage<typename ArrayHandleType::ValueType, StorageTagReverse<ArrayHandleType>>
 {
 public:
   typedef typename ArrayHandleType::ValueType ValueType;
-  typedef ArrayPortalReverse< typename ArrayHandleType::PortalControl > PortalType;
-  typedef ArrayPortalReverse< typename ArrayHandleType::PortalConstControl > PortalConstType;
+  typedef ArrayPortalReverse<typename ArrayHandleType::PortalControl> PortalType;
+  typedef ArrayPortalReverse<typename ArrayHandleType::PortalConstControl> PortalConstType;
 
   VTKM_CONT
-  Storage() : valid( false ) { }
+  Storage()
+    : valid(false)
+  {
+  }
 
   VTKM_CONT
-  Storage( const ArrayHandleType &a )
-    : array( a ), valid( true ) {};
+  Storage(const ArrayHandleType& a)
+    : array(a)
+    , valid(true){};
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
-    VTKM_ASSERT( this->valid );
-    return PortalConstType( this->array.GetPortalConstControl() );
+    VTKM_ASSERT(this->valid);
+    return PortalConstType(this->array.GetPortalConstControl());
   }
 
   VTKM_CONT
   PortalType GetPortal()
   {
-    VTKM_ASSERT( this->valid );
-    return PortalType( this->array.GetPortalControl() );
+    VTKM_ASSERT(this->valid);
+    return PortalType(this->array.GetPortalControl());
   }
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
-    VTKM_ASSERT( this->valid );
+    VTKM_ASSERT(this->valid);
     return this->array.GetNumberOfValues();
   }
 
   VTKM_CONT
-  void Allocate( vtkm::Id vtkmNotUsed(numberOfValues) )
+  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorInternal(
-    "ArrayHandleReverse should not be allocated explicitly. " );
+    throw vtkm::cont::ErrorInternal("ArrayHandleReverse should not be allocated explicitly. ");
   }
 
   VTKM_CONT
-  void Shrink( vtkm::Id vtkmNotUsed(numberOfValues) )
+  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorBadType(
-        "ArrayHandleReverse cannot shrink.");
+    throw vtkm::cont::ErrorBadType("ArrayHandleReverse cannot shrink.");
   }
 
   VTKM_CONT
-  void ReleaseResources( )
+  void ReleaseResources()
   {
     // This request is ignored since it is asking to release the resources
     // of the delegate array, which may be used elsewhere. Should the behavior
@@ -136,81 +148,77 @@ public:
   }
 
   VTKM_CONT
-  const ArrayHandleType &GetArray() const
+  const ArrayHandleType& GetArray() const
   {
-    VTKM_ASSERT( this->valid );
+    VTKM_ASSERT(this->valid);
     return this->array;
   }
 
 private:
   ArrayHandleType array;
-  bool            valid;
+  bool valid;
 }; // class storage
 
-template< typename ArrayHandleType, typename Device >
-class ArrayTransfer< typename ArrayHandleType::ValueType, StorageTagReverse< ArrayHandleType >, Device >
+template <typename ArrayHandleType, typename Device>
+class ArrayTransfer<typename ArrayHandleType::ValueType, StorageTagReverse<ArrayHandleType>, Device>
 {
 public:
   typedef typename ArrayHandleType::ValueType ValueType;
 
 private:
-  typedef StorageTagReverse< ArrayHandleType > StorageTag;
-  typedef vtkm::cont::internal::Storage< ValueType, StorageTag> StorageType;
+  typedef StorageTagReverse<ArrayHandleType> StorageTag;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
-  typedef ArrayPortalReverse<typename ArrayHandleType::template ExecutionTypes< Device >::Portal> PortalExecution;
-  typedef ArrayPortalReverse<typename ArrayHandleType::template ExecutionTypes< Device >::PortalConst> PortalConstExecution;
+  typedef ArrayPortalReverse<typename ArrayHandleType::template ExecutionTypes<Device>::Portal>
+    PortalExecution;
+  typedef ArrayPortalReverse<typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst>
+    PortalConstExecution;
 
   VTKM_CONT
-  ArrayTransfer( StorageType* storage )
-  : array( storage->GetArray() ) {}
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
+  ArrayTransfer(StorageType* storage)
+    : array(storage->GetArray())
   {
-    return this->array.GetNumberOfValues();
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput( bool vtkmNotUsed( updateData ) )
+  vtkm::Id GetNumberOfValues() const { return this->array.GetNumberOfValues(); }
+
+  VTKM_CONT
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    return PortalConstExecution( this->array.PrepareForInput( Device() ));
+    return PortalConstExecution(this->array.PrepareForInput(Device()));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace( bool vtkmNotUsed( updateData ) )
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    return PortalExecution( this->array.PrepareForInPlace( Device() ));
+    return PortalExecution(this->array.PrepareForInPlace(Device()));
   }
 
   VTKM_CONT
-   PortalExecution PrepareForOutput( vtkm::Id numberOfValues )
-   {
-     return PortalExecution( this->array.PrepareForOutput(
-       numberOfValues, Device()));
-   }
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  {
+    return PortalExecution(this->array.PrepareForOutput(numberOfValues, Device()));
+  }
 
   VTKM_CONT
-  void RetrieveOutputData( StorageType* vtkmNotUsed(storage) ) const
+  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
   {
     // not need to implement
   }
 
   VTKM_CONT
-  void Shrink( vtkm::Id vtkmNotUsed(numberOfValues) )
+  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {
-    throw vtkm::cont::ErrorBadType(
-        "ArrayHandleReverse cannot shrink.");
+    throw vtkm::cont::ErrorBadType("ArrayHandleReverse cannot shrink.");
   }
 
   VTKM_CONT
-  void ReleaseResources()
-  {
-    this->array.ReleaseResourcesExecution();
-  }
+  void ReleaseResources() { this->array.ReleaseResourcesExecution(); }
 
 private:
   ArrayHandleType array;
@@ -224,33 +232,34 @@ private:
 /// it creates a new handle that returns the elements of the array in reverse
 /// order (i.e. from end to beginning).
 ///
-template< typename ArrayHandleType >
+template <typename ArrayHandleType>
 class ArrayHandleReverse : public vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
-                                                          StorageTagReverse<ArrayHandleType> >
+                                                          StorageTagReverse<ArrayHandleType>>
 
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleReverse,
-  (ArrayHandleReverse<ArrayHandleType>),
-  (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType, StorageTagReverse<ArrayHandleType> >));
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleReverse, (ArrayHandleReverse<ArrayHandleType>),
+                             (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
+                                                      StorageTagReverse<ArrayHandleType>>));
 
- protected:
-  typedef vtkm::cont::internal::Storage< ValueType, StorageTag > StorageType;
+protected:
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
-  ArrayHandleReverse(const ArrayHandleType &handle)
-  : Superclass(handle) {}
+  ArrayHandleReverse(const ArrayHandleType& handle)
+    : Superclass(handle)
+  {
+  }
 };
 
 /// make_ArrayHandleReverse is convenience function to generate an
 /// ArrayHandleReverse.
 ///
-template< typename HandleType >
-VTKM_CONT
-ArrayHandleReverse<HandleType> make_ArrayHandleReverse(const HandleType &handle) {
+template <typename HandleType>
+VTKM_CONT ArrayHandleReverse<HandleType> make_ArrayHandleReverse(const HandleType& handle)
+{
   return ArrayHandleReverse<HandleType>(handle);
 }
-
 }
 } // namespace vtkm::cont
 

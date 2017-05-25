@@ -37,8 +37,10 @@
 
 #include <vtkm/worklet/internal/TriangulateTables.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 /// \brief Compute the triangulate cells for an explicit grid data set
 template <typename DeviceAdapter>
@@ -53,11 +55,9 @@ public:
   class TrianglesPerCell : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> shapes,
-                                  FieldIn<> numPoints,
-                                  ExecObject tables,
+    typedef void ControlSignature(FieldIn<> shapes, FieldIn<> numPoints, ExecObject tables,
                                   FieldOut<> triangleCount);
-    typedef _4 ExecutionSignature(_1,_2,_3);
+    typedef _4 ExecutionSignature(_1, _2, _3);
     typedef _1 InputDomain;
 
     VTKM_CONT
@@ -65,9 +65,8 @@ public:
 
     VTKM_EXEC
     vtkm::IdComponent operator()(
-        vtkm::UInt8 shape,
-        vtkm::IdComponent numPoints,
-        const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter> &tables) const
+      vtkm::UInt8 shape, vtkm::IdComponent numPoints,
+      const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter>& tables) const
     {
       return tables.GetCount(vtkm::CellShapeTagGeneric(shape), numPoints);
     }
@@ -80,39 +79,29 @@ public:
   class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
-                                  ExecObject tables,
+    typedef void ControlSignature(CellSetIn cellset, ExecObject tables,
                                   FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(CellShape, PointIndices, _2, _3, VisitIndex);
     typedef _1 InputDomain;
 
     typedef vtkm::worklet::ScatterCounting ScatterType;
     VTKM_CONT
-    ScatterType GetScatter() const
+    ScatterType GetScatter() const { return this->Scatter; }
+
+    template <typename CountArrayType>
+    VTKM_CONT TriangulateCell(const CountArrayType& countArray)
+      : Scatter(countArray, DeviceAdapter())
     {
-      return this->Scatter;
     }
 
-    template<typename CountArrayType>
-    VTKM_CONT
-    TriangulateCell(const CountArrayType &countArray)
-      : Scatter(countArray, DeviceAdapter())
-    {  }
-
     // Each cell produces triangles and write result at the offset
-    template<typename CellShapeTag,
-             typename ConnectivityInVec,
-             typename ConnectivityOutVec>
-    VTKM_EXEC
-    void operator()(
-        CellShapeTag shape,
-        const ConnectivityInVec &connectivityIn,
-        const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter> &tables,
-        ConnectivityOutVec &connectivityOut,
-        vtkm::IdComponent visitIndex) const
+    template <typename CellShapeTag, typename ConnectivityInVec, typename ConnectivityOutVec>
+    VTKM_EXEC void operator()(
+      CellShapeTag shape, const ConnectivityInVec& connectivityIn,
+      const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter>& tables,
+      ConnectivityOutVec& connectivityOut, vtkm::IdComponent visitIndex) const
     {
-      vtkm::Vec<vtkm::IdComponent,3> triIndices =
-          tables.GetIndices(shape, visitIndex);
+      vtkm::Vec<vtkm::IdComponent, 3> triIndices = tables.GetIndices(shape, visitIndex);
       connectivityOut[0] = connectivityIn[triIndices[0]];
       connectivityOut[1] = connectivityIn[triIndices[1]];
       connectivityOut[2] = connectivityIn[triIndices[2]];
@@ -123,18 +112,16 @@ public:
   };
 
   template <typename CellSetType>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet,
-                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
     // Input topology
-    auto inShapes = 
-        cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), 
-                               vtkm::TopologyElementTagCell());
-    auto inNumIndices = 
-        cellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), 
-                                   vtkm::TopologyElementTagCell());
+    auto inShapes =
+      cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    auto inNumIndices =
+      cellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
     // Output topology
     vtkm::cont::ArrayHandle<vtkm::Id> outConnectivity;
@@ -142,30 +129,23 @@ public:
     vtkm::worklet::internal::TriangulateTables tables;
 
     // Determine the number of output cells each input cell will generate
-    vtkm::worklet::DispatcherMapField<TrianglesPerCell,DeviceAdapter>
-                   triPerCellDispatcher;
-    triPerCellDispatcher.Invoke(inShapes,
-                                inNumIndices,
-                                tables.PrepareForInput(DeviceAdapter()),
+    vtkm::worklet::DispatcherMapField<TrianglesPerCell, DeviceAdapter> triPerCellDispatcher;
+    triPerCellDispatcher.Invoke(inShapes, inNumIndices, tables.PrepareForInput(DeviceAdapter()),
                                 outCellsPerCell);
 
     // Build new cells
     TriangulateCell triangulateWorklet(outCellsPerCell);
-    vtkm::worklet::DispatcherMapTopology<TriangulateCell,DeviceAdapter>
-                   triangulateDispatcher(triangulateWorklet);
-    triangulateDispatcher.Invoke(cellSet,
-                                 tables.PrepareForInput(DeviceAdapter()),
+    vtkm::worklet::DispatcherMapTopology<TriangulateCell, DeviceAdapter> triangulateDispatcher(
+      triangulateWorklet);
+    triangulateDispatcher.Invoke(cellSet, tables.PrepareForInput(DeviceAdapter()),
                                  vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
 
     // Add cells to output cellset
-    outCellSet.Fill(cellSet.GetNumberOfPoints(),
-                    vtkm::CellShapeTagTriangle::Id,
-                    3,
+    outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagTriangle::Id, 3,
                     outConnectivity);
     return outCellSet;
   }
 };
-
 }
 } // namespace vtkm::worklet
 

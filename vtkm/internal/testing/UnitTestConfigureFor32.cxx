@@ -35,23 +35,20 @@
 #error VTKM_SIZE_SCALAR an unexpected size.
 #endif
 
-namespace {
+namespace
+{
 
 void TestTypeSizes()
 {
-  VTKM_TEST_ASSERT(VTKM_SIZE_ID == EXPECTED_SIZE,
-                   "VTKM_SIZE_ID an unexpected size.");
-  VTKM_TEST_ASSERT(sizeof(vtkm::Id) == EXPECTED_SIZE,
-                   "vtkm::Id an unexpected size.");
-  VTKM_TEST_ASSERT(VTKM_SIZE_SCALAR == EXPECTED_SIZE,
-                   "VTKM_SIZE_SCALAR an unexpected size.");
+  VTKM_TEST_ASSERT(VTKM_SIZE_ID == EXPECTED_SIZE, "VTKM_SIZE_ID an unexpected size.");
+  VTKM_TEST_ASSERT(sizeof(vtkm::Id) == EXPECTED_SIZE, "vtkm::Id an unexpected size.");
+  VTKM_TEST_ASSERT(VTKM_SIZE_SCALAR == EXPECTED_SIZE, "VTKM_SIZE_SCALAR an unexpected size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::FloatDefault) == EXPECTED_SIZE,
                    "vtkm::FloatDefault an unexpected size.");
 }
-
 }
 
-int UnitTestConfigureFor32(int, char *[])
+int UnitTestConfigureFor32(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestTypeSizes);
 }

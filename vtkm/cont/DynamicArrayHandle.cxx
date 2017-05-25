@@ -20,20 +20,20 @@
 
 #include <vtkm/cont/DynamicArrayHandle.h>
 
-namespace vtkm {
-namespace cont {
-namespace detail {
+namespace vtkm
+{
+namespace cont
+{
+namespace detail
+{
 
 PolymorphicArrayHandleContainerBase::PolymorphicArrayHandleContainerBase()
 {
-
 }
 
 PolymorphicArrayHandleContainerBase::~PolymorphicArrayHandleContainerBase()
 {
-
 }
-
 }
 }
 } // namespace vtkm::cont::detail

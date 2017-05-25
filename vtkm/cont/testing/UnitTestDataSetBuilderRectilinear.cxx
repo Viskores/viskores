@@ -30,26 +30,21 @@
 #include <random>
 #include <vector>
 
-namespace DataSetBuilderRectilinearNamespace {
+namespace DataSetBuilderRectilinearNamespace
+{
 
 std::mt19937 g_RandomGenerator;
 
-void ValidateDataSet(const vtkm::cont::DataSet &ds,
-                     int dim,
-                     vtkm::Id numPoints, vtkm::Id numCells,
-                     const vtkm::Bounds &bounds)
+void ValidateDataSet(const vtkm::cont::DataSet& ds, int dim, vtkm::Id numPoints, vtkm::Id numCells,
+                     const vtkm::Bounds& bounds)
 {
   //Verify basics..
-  VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
-                   "Wrong number of cell sets.");
-  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
-                   "Wrong number of fields.");
-  VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                   "Wrong number of coordinate systems.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1, "Wrong number of cell sets.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Wrong number of fields.");
+  VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1, "Wrong number of coordinate systems.");
   VTKM_TEST_ASSERT(ds.GetCoordinateSystem().GetData().GetNumberOfValues() == numPoints,
                    "Wrong number of coordinates.");
-  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells,
-                   "Wrong number of cells.");
+  VTKM_TEST_ASSERT(ds.GetCellSet().GetNumberOfCells() == numCells, "Wrong number of cells.");
 
   // test various field-getting methods and associations
   try
@@ -72,8 +67,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
 
   //Make sure the bounds are correct.
   vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds();
-  VTKM_TEST_ASSERT(test_equal(bounds, res),
-                   "Bounds of coordinates do not match");
+  VTKM_TEST_ASSERT(test_equal(bounds, res), "Bounds of coordinates do not match");
   if (dim == 2)
   {
     vtkm::cont::CellSetStructured<2> cellSet;
@@ -91,9 +85,7 @@ void ValidateDataSet(const vtkm::cont::DataSet &ds,
 }
 
 template <typename T>
-void FillArray(std::vector<T> &arr,
-               vtkm::Id size,
-               vtkm::IdComponent fillMethod)
+void FillArray(std::vector<T>& arr, vtkm::Id size, vtkm::IdComponent fillMethod)
 {
   arr.resize(static_cast<std::size_t>(size));
   for (size_t i = 0; i < static_cast<std::size_t>(size); i++)
@@ -102,20 +94,29 @@ void FillArray(std::vector<T> &arr,
 
     switch (fillMethod)
     {
-      case 0: break;
-      case 1: xi /= static_cast<vtkm::Float32>(size-1); break;
-      case 2: xi *= 2; break;
-      case 3: xi *= 0.1f; break;
-      case 4: xi *= xi; break;
-      default: VTKM_TEST_FAIL("Bad internal test state: invalid fill method.");
+      case 0:
+        break;
+      case 1:
+        xi /= static_cast<vtkm::Float32>(size - 1);
+        break;
+      case 2:
+        xi *= 2;
+        break;
+      case 3:
+        xi *= 0.1f;
+        break;
+      case 4:
+        xi *= xi;
+        break;
+      default:
+        VTKM_TEST_FAIL("Bad internal test state: invalid fill method.");
     }
     arr[i] = xi;
   }
 }
 
 template <typename T>
-void
-RectilinearTests()
+void RectilinearTests()
 {
   const vtkm::Id NUM_TRIALS = 10;
   const vtkm::Id MAX_DIM_SIZE = 20;
@@ -125,25 +126,22 @@ RectilinearTests()
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetFieldAdd dsf;
 
-  std::uniform_int_distribution<vtkm::Id> randomDim(2,MAX_DIM_SIZE);
-  std::uniform_int_distribution<vtkm::IdComponent> randomFill(0,NUM_FILL_METHODS-1);
+  std::uniform_int_distribution<vtkm::Id> randomDim(2, MAX_DIM_SIZE);
+  std::uniform_int_distribution<vtkm::IdComponent> randomFill(0, NUM_FILL_METHODS - 1);
 
   for (vtkm::Id trial = 0; trial < NUM_TRIALS; trial++)
   {
     std::cout << "Trial " << trial << std::endl;
 
-    vtkm::Id3 dimensions(randomDim(g_RandomGenerator),
-                         randomDim(g_RandomGenerator),
+    vtkm::Id3 dimensions(randomDim(g_RandomGenerator), randomDim(g_RandomGenerator),
                          randomDim(g_RandomGenerator));
     std::cout << "Dimensions: " << dimensions << std::endl;
 
     vtkm::IdComponent fillMethodX = randomFill(g_RandomGenerator);
     vtkm::IdComponent fillMethodY = randomFill(g_RandomGenerator);
     vtkm::IdComponent fillMethodZ = randomFill(g_RandomGenerator);
-    std::cout << "Fill methods: ["
-              << fillMethodX << ","
-              << fillMethodY << ","
-              << fillMethodZ << "]" << std::endl;
+    std::cout << "Fill methods: [" << fillMethodX << "," << fillMethodY << "," << fillMethodZ << "]"
+              << std::endl;
 
     std::vector<T> xCoordinates;
     std::vector<T> yCoordinates;
@@ -153,20 +151,20 @@ RectilinearTests()
     FillArray(zCoordinates, dimensions[2], fillMethodZ);
 
     vtkm::Id numPoints, numCells;
-    vtkm::Bounds bounds(0,0, 0,0, 0,0);
+    vtkm::Bounds bounds(0, 0, 0, 0, 0, 0);
 
     std::cout << "1D cases" << std::endl;
     numPoints = dimensions[0];
-    numCells = dimensions[0]-1;
+    numCells = dimensions[0] - 1;
     std::vector<T> varP1D(static_cast<unsigned long>(numPoints));
     for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
     {
-      varP1D[i] = static_cast<T>(i*1.1f);
+      varP1D[i] = static_cast<T>(i * 1.1f);
     }
     std::vector<T> varC1D(static_cast<unsigned long>(numCells));
     for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
     {
-      varC1D[i] = static_cast<T>(i*1.1f);
+      varC1D[i] = static_cast<T>(i * 1.1f);
     }
     bounds.X = vtkm::Range(xCoordinates.front(), xCoordinates.back());
     std::cout << "  Create with std::vector" << std::endl;
@@ -176,17 +174,17 @@ RectilinearTests()
     ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
 
     std::cout << "2D cases" << std::endl;
-    numPoints = dimensions[0]*dimensions[1];
-    numCells = (dimensions[0]-1)*(dimensions[1]-1);
+    numPoints = dimensions[0] * dimensions[1];
+    numCells = (dimensions[0] - 1) * (dimensions[1] - 1);
     std::vector<T> varP2D(static_cast<unsigned long>(numPoints));
     for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
     {
-      varP2D[i] = static_cast<T>(i*1.1f);
+      varP2D[i] = static_cast<T>(i * 1.1f);
     }
     std::vector<T> varC2D(static_cast<unsigned long>(numCells));
     for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
     {
-      varC2D[i] = static_cast<T>(i*1.1f);
+      varC2D[i] = static_cast<T>(i * 1.1f);
     }
     bounds.Y = vtkm::Range(yCoordinates.front(), yCoordinates.back());
     std::cout << "  Create with std::vector" << std::endl;
@@ -196,9 +194,7 @@ RectilinearTests()
     ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
 
     std::cout << "  Create with C array" << std::endl;
-    dataSet = dataSetBuilder.Create(dimensions[0],
-                                    dimensions[1],
-                                    &xCoordinates.front(),
+    dataSet = dataSetBuilder.Create(dimensions[0], dimensions[1], &xCoordinates.front(),
                                     &yCoordinates.front());
     dsf.AddPointField(dataSet, "pointvar", &varP2D.front(), numPoints);
     dsf.AddCellField(dataSet, "cellvar", &varC2D.front(), numCells);
@@ -213,16 +209,17 @@ RectilinearTests()
 
     std::cout << "3D cases" << std::endl;
     numPoints *= dimensions[2];
-    numCells *= dimensions[2]-1;
+    numCells *= dimensions[2] - 1;
     std::vector<T> varP3D(static_cast<unsigned long>(numPoints));
     for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
     {
-      varP3D[i] = static_cast<T>(i*1.1f);;
+      varP3D[i] = static_cast<T>(i * 1.1f);
+      ;
     }
     std::vector<T> varC3D(static_cast<unsigned long>(numCells));
     for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
     {
-      varC3D[i] = static_cast<T>(i*1.1f);
+      varC3D[i] = static_cast<T>(i * 1.1f);
     }
     bounds.Z = vtkm::Range(zCoordinates.front(), zCoordinates.back());
 
@@ -233,12 +230,9 @@ RectilinearTests()
     ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
 
     std::cout << "  Create with C array" << std::endl;
-    dataSet = dataSetBuilder.Create(dimensions[0],
-                                    dimensions[1],
-                                    dimensions[2],
-                                    &xCoordinates.front(),
-                                    &yCoordinates.front(),
-                                    &zCoordinates.front());
+    dataSet =
+      dataSetBuilder.Create(dimensions[0], dimensions[1], dimensions[2], &xCoordinates.front(),
+                            &yCoordinates.front(), &zCoordinates.front());
     dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP3D));
     dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC3D));
     ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
@@ -253,8 +247,7 @@ RectilinearTests()
   }
 }
 
-void
-TestDataSetBuilderRectilinear()
+void TestDataSetBuilderRectilinear()
 {
   vtkm::UInt32 seed = static_cast<vtkm::UInt32>(std::time(nullptr));
   std::cout << "Seed: " << seed << std::endl;
@@ -268,8 +261,8 @@ TestDataSetBuilderRectilinear()
 
 } // namespace DataSetBuilderRectilinearNamespace
 
-int UnitTestDataSetBuilderRectilinear(int, char *[])
+int UnitTestDataSetBuilderRectilinear(int, char* [])
 {
-    using namespace DataSetBuilderRectilinearNamespace;
-    return vtkm::cont::testing::Testing::Run(TestDataSetBuilderRectilinear);
+  using namespace DataSetBuilderRectilinearNamespace;
+  return vtkm::cont::testing::Testing::Run(TestDataSetBuilderRectilinear);
 }

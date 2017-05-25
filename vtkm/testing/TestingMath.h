@@ -33,124 +33,117 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-#define VTKM_MATH_ASSERT(condition, message) \
-  if (!(condition)) \
-  { \
-    this->RaiseError(message); \
+#define VTKM_MATH_ASSERT(condition, message)                                                       \
+  if (!(condition))                                                                                \
+  {                                                                                                \
+    this->RaiseError(message);                                                                     \
   }
 
 //-----------------------------------------------------------------------------
-namespace UnitTestMathNamespace {
+namespace UnitTestMathNamespace
+{
 
 const vtkm::IdComponent NUM_NUMBERS = 5;
 VTKM_EXEC_CONSTANT
 const vtkm::Float64 NumberList[NUM_NUMBERS] = { 0.25, 0.5, 1.0, 2.0, 3.75 };
 
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 AngleList[NUM_NUMBERS] =
-  { 0.643501108793284,  // angle for 3, 4, 5 triangle.
-    0.78539816339745,   // pi/4
-    0.5235987755983,    // pi/6
-    1.0471975511966,    // pi/3
-    0.0 };
+const vtkm::Float64 AngleList[NUM_NUMBERS] = { 0.643501108793284, // angle for 3, 4, 5 triangle.
+                                               0.78539816339745,  // pi/4
+                                               0.5235987755983,   // pi/6
+                                               1.0471975511966,   // pi/3
+                                               0.0 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 OppositeList[NUM_NUMBERS] =   { 3.0, 1.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 0.0 };
+const vtkm::Float64 OppositeList[NUM_NUMBERS] = { 3.0, 1.0, 1.0, 1.732050807568877 /*sqrt(3)*/,
+                                                  0.0 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 AdjacentList[NUM_NUMBERS] =   { 4.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 1.0, 1.0 };
+const vtkm::Float64 AdjacentList[NUM_NUMBERS] = { 4.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 1.0,
+                                                  1.0 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 HypotenuseList[NUM_NUMBERS] = { 5.0, 1.414213562373095 /*sqrt(2)*/, 2.0, 2.0, 1.0 };
+const vtkm::Float64 HypotenuseList[NUM_NUMBERS] = { 5.0, 1.414213562373095 /*sqrt(2)*/, 2.0, 2.0,
+                                                    1.0 };
 
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 NumeratorList[NUM_NUMBERS] =   { 6.5, 5.8, 9.3, 77.0, 0.1 };
+const vtkm::Float64 NumeratorList[NUM_NUMBERS] = { 6.5, 5.8, 9.3, 77.0, 0.1 };
 VTKM_EXEC_CONSTANT
 const vtkm::Float64 DenominatorList[NUM_NUMBERS] = { 2.3, 1.6, 3.1, 19.0, 0.4 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 FModRemainderList[NUM_NUMBERS]={ 1.9, 1.0, 0.0,  1.0, 0.1 };
+const vtkm::Float64 FModRemainderList[NUM_NUMBERS] = { 1.9, 1.0, 0.0, 1.0, 0.1 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 RemainderList[NUM_NUMBERS] =   {-0.4,-0.6, 0.0,  1.0, 0.1 };
+const vtkm::Float64 RemainderList[NUM_NUMBERS] = { -0.4, -0.6, 0.0, 1.0, 0.1 };
 VTKM_EXEC_CONSTANT
-const vtkm::Int64   QuotientList[NUM_NUMBERS] =    { 3  , 4  , 3  ,  4  , 0   };
+const vtkm::Int64 QuotientList[NUM_NUMBERS] = { 3, 4, 3, 4, 0 };
 
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 XList[NUM_NUMBERS] =           {4.6, 0.1, 73.4, 55.0, 3.75 };
+const vtkm::Float64 XList[NUM_NUMBERS] = { 4.6, 0.1, 73.4, 55.0, 3.75 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 FractionalList[NUM_NUMBERS] =  {0.6, 0.1,  0.4,  0.0, 0.75 };
+const vtkm::Float64 FractionalList[NUM_NUMBERS] = { 0.6, 0.1, 0.4, 0.0, 0.75 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 FloorList[NUM_NUMBERS] =       {4.0, 0.0, 73.0, 55.0, 3.0  };
+const vtkm::Float64 FloorList[NUM_NUMBERS] = { 4.0, 0.0, 73.0, 55.0, 3.0 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 CeilList[NUM_NUMBERS] =        {5.0, 1.0, 74.0, 55.0, 4.0  };
+const vtkm::Float64 CeilList[NUM_NUMBERS] = { 5.0, 1.0, 74.0, 55.0, 4.0 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 RoundList[NUM_NUMBERS] =       {5.0, 0.0, 73.0, 55.0, 4.0  };
+const vtkm::Float64 RoundList[NUM_NUMBERS] = { 5.0, 0.0, 73.0, 55.0, 4.0 };
 
 //-----------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 struct ScalarFieldTests : public vtkm::exec::FunctorBase
 {
   VTKM_EXEC
   void TestPi() const
   {
-//    std::cout << "Testing Pi" << std::endl;
+    //    std::cout << "Testing Pi" << std::endl;
     VTKM_MATH_ASSERT(test_equal(vtkm::Pi(), 3.14159265), "Pi not correct.");
   }
 
   VTKM_EXEC
   void TestArcTan2() const
   {
-//    std::cout << "Testing arc tan 2" << std::endl;
+    //    std::cout << "Testing arc tan 2" << std::endl;
 
-    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(0.0), T(1.0)),
-                                T(0.0)),
-                     "ATan2 x+ axis.");
-    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(0.0)),
-                                T(0.5*vtkm::Pi())),
+    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(0.0), T(1.0)), T(0.0)), "ATan2 x+ axis.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(0.0)), T(0.5 * vtkm::Pi())),
                      "ATan2 y+ axis.");
-    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(-1.0), T(0.0)),
-                                T(-0.5*vtkm::Pi())),
+    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(-1.0), T(0.0)), T(-0.5 * vtkm::Pi())),
                      "ATan2 y- axis.");
 
-    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(1.0)),
-                                T(0.25*vtkm::Pi())),
+    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(1.0)), T(0.25 * vtkm::Pi())),
                      "ATan2 Quadrant 1");
-    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(-1.0)),
-                                T(0.75*vtkm::Pi())),
+    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(1.0), T(-1.0)), T(0.75 * vtkm::Pi())),
                      "ATan2 Quadrant 2");
-    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(-1.0), T(-1.0)),
-                                T(-0.75*vtkm::Pi())),
+    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(-1.0), T(-1.0)), T(-0.75 * vtkm::Pi())),
                      "ATan2 Quadrant 3");
-    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(-1.0), T(1.0)),
-                                T(-0.25*vtkm::Pi())),
+    VTKM_MATH_ASSERT(test_equal(vtkm::ATan2(T(-1.0), T(1.0)), T(-0.25 * vtkm::Pi())),
                      "ATan2 Quadrant 4");
   }
 
   VTKM_EXEC
   void TestPow() const
   {
-//    std::cout << "Running power tests." << std::endl;
+    //    std::cout << "Running power tests." << std::endl;
     for (vtkm::IdComponent index = 0; index < NUM_NUMBERS; index++)
-      {
+    {
       T x = static_cast<T>(NumberList[index]);
       T powx = vtkm::Pow(x, static_cast<T>(2.0));
-      T sqrx = x*x;
+      T sqrx = x * x;
       VTKM_MATH_ASSERT(test_equal(powx, sqrx), "Power gave wrong result.");
-      }
+    }
   }
 
   VTKM_EXEC
   void TestLog2() const
   {
-//    std::cout << "Testing Log2" << std::endl;
-    VTKM_MATH_ASSERT(test_equal(vtkm::Log2(T(0.25)), T(-2.0)),
+    //    std::cout << "Testing Log2" << std::endl;
+    VTKM_MATH_ASSERT(test_equal(vtkm::Log2(T(0.25)), T(-2.0)), "Bad value from Log2");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Log2(vtkm::Vec<T, 4>(0.5, 1.0, 2.0, 4.0)),
+                                vtkm::Vec<T, 4>(-1.0, 0.0, 1.0, 2.0)),
                      "Bad value from Log2");
-    VTKM_MATH_ASSERT(
-          test_equal(vtkm::Log2(vtkm::Vec<T,4>(0.5, 1.0, 2.0, 4.0)),
-                     vtkm::Vec<T,4>(-1.0, 0.0, 1.0, 2.0)),
-          "Bad value from Log2");
   }
 
   VTKM_EXEC
   void TestNonFinites() const
   {
-//    std::cout << "Testing non-finites." << std::endl;
+    //    std::cout << "Testing non-finites." << std::endl;
 
     T zero = 0.0;
     T finite = 1.0;
@@ -203,7 +196,7 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void TestRemainders() const
   {
-//    std::cout << "Testing remainders." << std::endl;
+    //    std::cout << "Testing remainders." << std::endl;
     for (vtkm::IdComponent index = 0; index < NUM_NUMBERS; index++)
     {
       T numerator = static_cast<T>(NumeratorList[index]);
@@ -219,15 +212,14 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
       vtkm::Int64 q;
       VTKM_MATH_ASSERT(test_equal(vtkm::RemainderQuotient(numerator, denominator, q), remainder),
                        "Bad remainder-quotient remainder.");
-      VTKM_MATH_ASSERT(test_equal(q, quotient),
-                       "Bad reminder-quotient quotient.");
+      VTKM_MATH_ASSERT(test_equal(q, quotient), "Bad reminder-quotient quotient.");
     }
   }
 
   VTKM_EXEC
   void TestRound() const
   {
-//    std::cout << "Testing round." << std::endl;
+    //    std::cout << "Testing round." << std::endl;
     for (vtkm::IdComponent index = 0; index < NUM_NUMBERS; index++)
     {
       T x = static_cast<T>(XList[index]);
@@ -237,23 +229,19 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
       T round = static_cast<T>(RoundList[index]);
 
       T intPart;
-      VTKM_MATH_ASSERT(test_equal(vtkm::ModF(x,intPart), fractional),
+      VTKM_MATH_ASSERT(test_equal(vtkm::ModF(x, intPart), fractional),
                        "ModF returned wrong fractional part.");
-      VTKM_MATH_ASSERT(test_equal(intPart, floor),
-                       "ModF returned wrong integral part.");
-      VTKM_MATH_ASSERT(test_equal(vtkm::Floor(x), floor),
-                       "Bad floor.");
-      VTKM_MATH_ASSERT(test_equal(vtkm::Ceil(x), ceil),
-                       "Bad ceil.");
-      VTKM_MATH_ASSERT(test_equal(vtkm::Round(x), round),
-                       "Bad round.");
+      VTKM_MATH_ASSERT(test_equal(intPart, floor), "ModF returned wrong integral part.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::Floor(x), floor), "Bad floor.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::Ceil(x), ceil), "Bad ceil.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::Round(x), round), "Bad round.");
     }
   }
 
   VTKM_EXEC
   void TestIsNegative() const
   {
-//    std::cout << "Testing SignBit and IsNegative." << std::endl;
+    //    std::cout << "Testing SignBit and IsNegative." << std::endl;
     T x = 0;
     VTKM_MATH_ASSERT(vtkm::SignBit(x) == 0, "SignBit wrong for 0.");
     VTKM_MATH_ASSERT(!vtkm::IsNegative(x), "IsNegative wrong for 0.");
@@ -289,354 +277,307 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename Device>
+template <typename Device>
 struct TryScalarFieldTests
 {
-  template<typename T>
+  template <typename T>
   void operator()(const T&) const
   {
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-          ScalarFieldTests<T>(), 1);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(ScalarFieldTests<T>(), 1);
   }
 };
 
 //-----------------------------------------------------------------------------
-template<typename VectorType>
+template <typename VectorType>
 struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
 {
   typedef vtkm::VecTraits<VectorType> Traits;
   typedef typename Traits::ComponentType ComponentType;
-  enum {
+  enum
+  {
     NUM_COMPONENTS = Traits::NUM_COMPONENTS
   };
 
   VTKM_EXEC
   void TestTriangleTrig() const
   {
-//    std::cout << "Testing normal trig functions." << std::endl;
+    //    std::cout << "Testing normal trig functions." << std::endl;
 
-    for (vtkm::IdComponent index = 0;
-         index < NUM_NUMBERS - NUM_COMPONENTS + 1;
-         index++)
+    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType angle;
       VectorType opposite;
       VectorType adjacent;
       VectorType hypotenuse;
-      for (vtkm::IdComponent componentIndex = 0;
-           componentIndex < NUM_COMPONENTS;
-           componentIndex++)
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        Traits::SetComponent(
-              angle,
-              componentIndex,
-              static_cast<ComponentType>(AngleList[componentIndex+index]));
-        Traits::SetComponent(
-              opposite,
-              componentIndex,
-              static_cast<ComponentType>(OppositeList[componentIndex+index]));
-        Traits::SetComponent(
-              adjacent,
-              componentIndex,
-              static_cast<ComponentType>(AdjacentList[componentIndex+index]));
-        Traits::SetComponent(
-              hypotenuse,
-              componentIndex,
-              static_cast<ComponentType>(HypotenuseList[componentIndex+index]));
+        Traits::SetComponent(angle, componentIndex,
+                             static_cast<ComponentType>(AngleList[componentIndex + index]));
+        Traits::SetComponent(opposite, componentIndex,
+                             static_cast<ComponentType>(OppositeList[componentIndex + index]));
+        Traits::SetComponent(adjacent, componentIndex,
+                             static_cast<ComponentType>(AdjacentList[componentIndex + index]));
+        Traits::SetComponent(hypotenuse, componentIndex,
+                             static_cast<ComponentType>(HypotenuseList[componentIndex + index]));
       }
 
-      VTKM_MATH_ASSERT(test_equal(vtkm::Sin(angle), opposite/hypotenuse),
-                      "Sin failed test.");
-      VTKM_MATH_ASSERT(test_equal(vtkm::Cos(angle), adjacent/hypotenuse),
-                      "Cos failed test.");
-      VTKM_MATH_ASSERT(test_equal(vtkm::Tan(angle), opposite/adjacent),
-                      "Tan failed test.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::Sin(angle), opposite / hypotenuse), "Sin failed test.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::Cos(angle), adjacent / hypotenuse), "Cos failed test.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::Tan(angle), opposite / adjacent), "Tan failed test.");
 
-      VTKM_MATH_ASSERT(test_equal(vtkm::ASin(opposite/hypotenuse), angle),
-                      "Arc Sin failed test.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::ASin(opposite / hypotenuse), angle),
+                       "Arc Sin failed test.");
 
 #if defined(VTKM_ICC)
-// When the intel compiler has vectorization enabled ( -O2/-O3 ) it converts the
-// `adjacent/hypotenuse` divide operation into reciprocal (rcpps) and
-// multiply (mulps) operations. This causes a change in the expected result that
-// is larger than the default tolerance of test_equal.
-//
-    VTKM_MATH_ASSERT(test_equal(vtkm::ACos(adjacent/hypotenuse), angle, 0.0004),
-                      "Arc Cos failed test.");
+      // When the intel compiler has vectorization enabled ( -O2/-O3 ) it converts the
+      // `adjacent/hypotenuse` divide operation into reciprocal (rcpps) and
+      // multiply (mulps) operations. This causes a change in the expected result that
+      // is larger than the default tolerance of test_equal.
+      //
+      VTKM_MATH_ASSERT(test_equal(vtkm::ACos(adjacent / hypotenuse), angle, 0.0004),
+                       "Arc Cos failed test.");
 #else
-      VTKM_MATH_ASSERT(test_equal(vtkm::ACos(adjacent/hypotenuse), angle),
-                      "Arc Cos failed test.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::ACos(adjacent / hypotenuse), angle),
+                       "Arc Cos failed test.");
 #endif
-      VTKM_MATH_ASSERT(test_equal(vtkm::ATan(opposite/adjacent), angle),
-                      "Arc Tan failed test.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::ATan(opposite / adjacent), angle), "Arc Tan failed test.");
     }
   }
 
   VTKM_EXEC
   void TestHyperbolicTrig() const
   {
-//    std::cout << "Testing hyperbolic trig functions." << std::endl;
+    //    std::cout << "Testing hyperbolic trig functions." << std::endl;
 
     const VectorType zero(0);
     const VectorType half(0.5);
 
-    for (vtkm::IdComponent index = 0;
-         index < NUM_NUMBERS - NUM_COMPONENTS + 1;
-         index++)
+    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType x;
-      for (vtkm::IdComponent componentIndex = 0;
-           componentIndex < NUM_COMPONENTS;
-           componentIndex++)
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        Traits::SetComponent(
-              x,
-              componentIndex,
-              static_cast<ComponentType>(AngleList[componentIndex+index]));
+        Traits::SetComponent(x, componentIndex,
+                             static_cast<ComponentType>(AngleList[componentIndex + index]));
       }
 
       const VectorType minusX = zero - x;
 
-      VTKM_MATH_ASSERT(test_equal(vtkm::SinH(x),
-                                  half*(vtkm::Exp(x) - vtkm::Exp(minusX))),
-                      "SinH does not match definition.");
-      VTKM_MATH_ASSERT(test_equal(vtkm::CosH(x),
-                                  half*(vtkm::Exp(x) + vtkm::Exp(minusX))),
-                      "SinH does not match definition.");
-      VTKM_MATH_ASSERT(test_equal(vtkm::TanH(x), vtkm::SinH(x)/vtkm::CosH(x)),
-                      "TanH does not match definition");
+      VTKM_MATH_ASSERT(test_equal(vtkm::SinH(x), half * (vtkm::Exp(x) - vtkm::Exp(minusX))),
+                       "SinH does not match definition.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::CosH(x), half * (vtkm::Exp(x) + vtkm::Exp(minusX))),
+                       "SinH does not match definition.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::TanH(x), vtkm::SinH(x) / vtkm::CosH(x)),
+                       "TanH does not match definition");
 
-      VTKM_MATH_ASSERT(test_equal(vtkm::ASinH(vtkm::SinH(x)), x),
-                      "SinH not inverting.");
-      VTKM_MATH_ASSERT(test_equal(vtkm::ACosH(vtkm::CosH(x)), x),
-                      "CosH not inverting.");
-      VTKM_MATH_ASSERT(test_equal(vtkm::ATanH(vtkm::TanH(x)), x),
-                      "TanH not inverting.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::ASinH(vtkm::SinH(x)), x), "SinH not inverting.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::ACosH(vtkm::CosH(x)), x), "CosH not inverting.");
+      VTKM_MATH_ASSERT(test_equal(vtkm::ATanH(vtkm::TanH(x)), x), "TanH not inverting.");
     }
   }
 
-  template<typename FunctionType>
-  VTKM_EXEC
-  void RaiseToTest(FunctionType function,
-                   ComponentType exponent) const
+  template <typename FunctionType>
+  VTKM_EXEC void RaiseToTest(FunctionType function, ComponentType exponent) const
   {
-    for (vtkm::IdComponent index = 0;
-         index < NUM_NUMBERS - NUM_COMPONENTS + 1;
-         index++)
+    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType original;
       VectorType raiseresult;
-      for (vtkm::IdComponent componentIndex = 0;
-           componentIndex < NUM_COMPONENTS;
-           componentIndex++)
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        ComponentType x =
-            static_cast<ComponentType>(NumberList[componentIndex + index]);
+        ComponentType x = static_cast<ComponentType>(NumberList[componentIndex + index]);
         Traits::SetComponent(original, componentIndex, x);
         Traits::SetComponent(raiseresult, componentIndex, vtkm::Pow(x, exponent));
       }
 
       VectorType mathresult = function(original);
 
-      VTKM_MATH_ASSERT(test_equal(mathresult, raiseresult),
-                      "Exponent functions do not agree.");
+      VTKM_MATH_ASSERT(test_equal(mathresult, raiseresult), "Exponent functions do not agree.");
     }
   }
 
-  struct SqrtFunctor {
+  struct SqrtFunctor
+  {
     VTKM_EXEC
     VectorType operator()(VectorType x) const { return vtkm::Sqrt(x); }
   };
   VTKM_EXEC
   void TestSqrt() const
   {
-//    std::cout << "  Testing Sqrt" << std::endl;
+    //    std::cout << "  Testing Sqrt" << std::endl;
     RaiseToTest(SqrtFunctor(), 0.5);
   }
 
-  struct RSqrtFunctor {
+  struct RSqrtFunctor
+  {
     VTKM_EXEC
-    VectorType operator()(VectorType x) const {return vtkm::RSqrt(x);}
+    VectorType operator()(VectorType x) const { return vtkm::RSqrt(x); }
   };
   VTKM_EXEC
   void TestRSqrt() const
   {
-//    std::cout << "  Testing RSqrt"<< std::endl;
+    //    std::cout << "  Testing RSqrt"<< std::endl;
     RaiseToTest(RSqrtFunctor(), -0.5);
   }
 
-  struct CbrtFunctor {
+  struct CbrtFunctor
+  {
     VTKM_EXEC
     VectorType operator()(VectorType x) const { return vtkm::Cbrt(x); }
   };
   VTKM_EXEC
   void TestCbrt() const
   {
-//    std::cout << "  Testing Cbrt" << std::endl;
-    RaiseToTest(CbrtFunctor(), vtkm::Float32(1.0/3.0));
+    //    std::cout << "  Testing Cbrt" << std::endl;
+    RaiseToTest(CbrtFunctor(), vtkm::Float32(1.0 / 3.0));
   }
 
-  struct RCbrtFunctor {
+  struct RCbrtFunctor
+  {
     VTKM_EXEC
-    VectorType operator()(VectorType x) const {return vtkm::RCbrt(x);}
+    VectorType operator()(VectorType x) const { return vtkm::RCbrt(x); }
   };
   VTKM_EXEC
   void TestRCbrt() const
   {
-//    std::cout << "  Testing RCbrt" << std::endl;
-    RaiseToTest(RCbrtFunctor(), vtkm::Float32(-1.0/3.0));
+    //    std::cout << "  Testing RCbrt" << std::endl;
+    RaiseToTest(RCbrtFunctor(), vtkm::Float32(-1.0 / 3.0));
   }
 
-  template<typename FunctionType>
-  VTKM_EXEC
-  void RaiseByTest(FunctionType function,
-                   ComponentType base,
-                   ComponentType exponentbias = 0.0,
-                   ComponentType resultbias = 0.0) const
+  template <typename FunctionType>
+  VTKM_EXEC void RaiseByTest(FunctionType function, ComponentType base,
+                             ComponentType exponentbias = 0.0, ComponentType resultbias = 0.0) const
   {
-    for (vtkm::IdComponent index = 0;
-         index < NUM_NUMBERS - NUM_COMPONENTS + 1;
-         index++)
+    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType original;
       VectorType raiseresult;
-      for (vtkm::IdComponent componentIndex = 0;
-           componentIndex < NUM_COMPONENTS;
-           componentIndex++)
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        ComponentType x =
-            static_cast<ComponentType>(NumberList[componentIndex + index]);
+        ComponentType x = static_cast<ComponentType>(NumberList[componentIndex + index]);
         Traits::SetComponent(original, componentIndex, x);
-        Traits::SetComponent(raiseresult,
-                             componentIndex,
+        Traits::SetComponent(raiseresult, componentIndex,
                              vtkm::Pow(base, x + exponentbias) + resultbias);
       }
 
       VectorType mathresult = function(original);
 
-      VTKM_MATH_ASSERT(test_equal(mathresult, raiseresult),
-                      "Exponent functions do not agree.");
+      VTKM_MATH_ASSERT(test_equal(mathresult, raiseresult), "Exponent functions do not agree.");
     }
   }
 
-  struct ExpFunctor {
+  struct ExpFunctor
+  {
     VTKM_EXEC
-    VectorType operator()(VectorType x) const {return vtkm::Exp(x);}
+    VectorType operator()(VectorType x) const { return vtkm::Exp(x); }
   };
   VTKM_EXEC
   void TestExp() const
   {
-//    std::cout << "  Testing Exp" << std::endl;
+    //    std::cout << "  Testing Exp" << std::endl;
     RaiseByTest(ExpFunctor(), vtkm::Float32(2.71828183));
   }
 
-  struct Exp2Functor {
+  struct Exp2Functor
+  {
     VTKM_EXEC
-    VectorType operator()(VectorType x) const {return vtkm::Exp2(x);}
+    VectorType operator()(VectorType x) const { return vtkm::Exp2(x); }
   };
   VTKM_EXEC
   void TestExp2() const
   {
-//    std::cout << "  Testing Exp2" << std::endl;
+    //    std::cout << "  Testing Exp2" << std::endl;
     RaiseByTest(Exp2Functor(), 2.0);
   }
 
-  struct ExpM1Functor {
+  struct ExpM1Functor
+  {
     VTKM_EXEC
-    VectorType operator()(VectorType x) const {return vtkm::ExpM1(x);}
+    VectorType operator()(VectorType x) const { return vtkm::ExpM1(x); }
   };
   VTKM_EXEC
   void TestExpM1() const
   {
-//    std::cout << "  Testing ExpM1" << std::endl;
-    RaiseByTest(ExpM1Functor(),
-                ComponentType(2.71828183),
-                0.0,
-                -1.0);
+    //    std::cout << "  Testing ExpM1" << std::endl;
+    RaiseByTest(ExpM1Functor(), ComponentType(2.71828183), 0.0, -1.0);
   }
 
-  struct Exp10Functor {
+  struct Exp10Functor
+  {
     VTKM_EXEC
-    VectorType operator()(VectorType x) const {return vtkm::Exp10(x);}
+    VectorType operator()(VectorType x) const { return vtkm::Exp10(x); }
   };
   VTKM_EXEC
   void TestExp10() const
   {
-//    std::cout << "  Testing Exp10" << std::endl;
+    //    std::cout << "  Testing Exp10" << std::endl;
     RaiseByTest(Exp10Functor(), 10.0);
   }
 
-  template<typename FunctionType>
-  VTKM_EXEC
-  void LogBaseTest(FunctionType function,
-                   ComponentType base,
-                   ComponentType bias=0.0) const
+  template <typename FunctionType>
+  VTKM_EXEC void LogBaseTest(FunctionType function, ComponentType base,
+                             ComponentType bias = 0.0) const
   {
-    for (vtkm::IdComponent index = 0;
-         index < NUM_NUMBERS - NUM_COMPONENTS + 1;
-         index++)
+    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType basevector(base);
       VectorType original;
       VectorType biased;
-      for (vtkm::IdComponent componentIndex = 0;
-           componentIndex < NUM_COMPONENTS;
-           componentIndex++)
+      for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        ComponentType x =
-            static_cast<ComponentType>(NumberList[componentIndex + index]);
+        ComponentType x = static_cast<ComponentType>(NumberList[componentIndex + index]);
         Traits::SetComponent(original, componentIndex, x);
         Traits::SetComponent(biased, componentIndex, x + bias);
       }
 
-      VectorType logresult = vtkm::Log2(biased)/vtkm::Log2(basevector);
+      VectorType logresult = vtkm::Log2(biased) / vtkm::Log2(basevector);
 
       VectorType mathresult = function(original);
 
-      VTKM_MATH_ASSERT(test_equal(mathresult, logresult),
-                      "Exponent functions do not agree.");
+      VTKM_MATH_ASSERT(test_equal(mathresult, logresult), "Exponent functions do not agree.");
     }
   }
 
-  struct LogFunctor {
+  struct LogFunctor
+  {
     VTKM_EXEC
-    VectorType operator()(VectorType x) const {return vtkm::Log(x);}
+    VectorType operator()(VectorType x) const { return vtkm::Log(x); }
   };
   VTKM_EXEC
   void TestLog() const
   {
-//    std::cout << "  Testing Log" << std::endl;
+    //    std::cout << "  Testing Log" << std::endl;
     LogBaseTest(LogFunctor(), vtkm::Float32(2.71828183));
   }
 
-  struct Log10Functor {
+  struct Log10Functor
+  {
     VTKM_EXEC
-    VectorType operator()(VectorType x) const {return vtkm::Log10(x);}
+    VectorType operator()(VectorType x) const { return vtkm::Log10(x); }
   };
   VTKM_EXEC
   void TestLog10() const
   {
-//    std::cout << "  Testing Log10" << std::endl;
+    //    std::cout << "  Testing Log10" << std::endl;
     LogBaseTest(Log10Functor(), 10.0);
   }
 
-  struct Log1PFunctor {
+  struct Log1PFunctor
+  {
     VTKM_EXEC
-    VectorType operator()(VectorType x) const {return vtkm::Log1P(x);}
+    VectorType operator()(VectorType x) const { return vtkm::Log1P(x); }
   };
   VTKM_EXEC
   void TestLog1P() const
   {
-//    std::cout << "  Testing Log1P" << std::endl;
-    LogBaseTest(Log1PFunctor(),
-                ComponentType(2.71828183),
-                1.0);
+    //    std::cout << "  Testing Log1P" << std::endl;
+    LogBaseTest(Log1PFunctor(), ComponentType(2.71828183), 1.0);
   }
 
   VTKM_EXEC
   void TestCopySign() const
   {
-//    std::cout << "Testing CopySign." << std::endl;
+    //    std::cout << "Testing CopySign." << std::endl;
     // Assuming all TestValues positive.
     VectorType positive1 = TestValue(1, VectorType());
     VectorType positive2 = TestValue(2, VectorType());
@@ -673,19 +614,18 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename Device>
+template <typename Device>
 struct TryScalarVectorFieldTests
 {
-  template<typename VectorType>
+  template <typename VectorType>
   void operator()(const VectorType&) const
   {
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-          ScalarVectorFieldTests<VectorType>(), 1);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(ScalarVectorFieldTests<VectorType>(), 1);
   }
 };
 
 //-----------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 struct AllTypesTests : public vtkm::exec::FunctorBase
 {
   VTKM_EXEC
@@ -693,7 +633,7 @@ struct AllTypesTests : public vtkm::exec::FunctorBase
   {
     T low = TestValue(2, T());
     T high = TestValue(10, T());
-//    std::cout << "Testing min/max " << low << " " << high << std::endl;
+    //    std::cout << "Testing min/max " << low << " " << high << std::endl;
     VTKM_MATH_ASSERT(test_equal(vtkm::Min(low, high), low), "Wrong min.");
     VTKM_MATH_ASSERT(test_equal(vtkm::Min(high, low), low), "Wrong min.");
     VTKM_MATH_ASSERT(test_equal(vtkm::Max(low, high), high), "Wrong max.");
@@ -711,73 +651,64 @@ struct AllTypesTests : public vtkm::exec::FunctorBase
   }
 
   VTKM_EXEC
-  void operator()(vtkm::Id) const
-  {
-    this->TestMinMax();
-  }
+  void operator()(vtkm::Id) const { this->TestMinMax(); }
 };
 
-template<typename Device>
+template <typename Device>
 struct TryAllTypesTests
 {
-  template<typename T>
+  template <typename T>
   void operator()(const T&) const
   {
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-          AllTypesTests<T>(), 1);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(AllTypesTests<T>(), 1);
   }
 };
 
 //-----------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 struct AbsTests : public vtkm::exec::FunctorBase
 {
   VTKM_EXEC
-  void operator()(vtkm::Id index) const {
-//    std::cout << "Testing Abs." << std::endl;
-    T positive = TestValue(index, T());  // Assuming all TestValues positive.
+  void operator()(vtkm::Id index) const
+  {
+    //    std::cout << "Testing Abs." << std::endl;
+    T positive = TestValue(index, T()); // Assuming all TestValues positive.
     T negative = -positive;
 
-    VTKM_MATH_ASSERT(test_equal(vtkm::Abs(positive), positive),
-                     "Abs returned wrong value.");
-    VTKM_MATH_ASSERT(test_equal(vtkm::Abs(negative), positive),
-                     "Abs returned wrong value.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Abs(positive), positive), "Abs returned wrong value.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Abs(negative), positive), "Abs returned wrong value.");
   }
 };
 
-template<typename Device>
+template <typename Device>
 struct TryAbsTests
 {
-  template<typename T>
+  template <typename T>
   void operator()(const T&) const
   {
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(
-          AbsTests<T>(), 10);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(AbsTests<T>(), 10);
   }
 };
 
 struct TypeListTagAbs
-    : vtkm::ListTagJoin<
-        vtkm::ListTagJoin<
-          vtkm::ListTagBase<vtkm::Int32, vtkm::Int64>,
-          vtkm::TypeListTagIndex>,
-        vtkm::TypeListTagField> {  };
+  : vtkm::ListTagJoin<
+      vtkm::ListTagJoin<vtkm::ListTagBase<vtkm::Int32, vtkm::Int64>, vtkm::TypeListTagIndex>,
+      vtkm::TypeListTagField>
+{
+};
 
 //-----------------------------------------------------------------------------
-template<typename Device>
+template <typename Device>
 void RunMathTests()
 {
   std::cout << "Tests for scalar types." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryScalarFieldTests<Device>(),
-                                   vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryScalarFieldTests<Device>(), vtkm::TypeListTagFieldScalar());
   std::cout << "Test for scalar and vector types." << std::endl;
-  vtkm::testing::Testing::TryTypes(TryScalarVectorFieldTests<Device>(),
-                                   vtkm::TypeListTagField());
+  vtkm::testing::Testing::TryTypes(TryScalarVectorFieldTests<Device>(), vtkm::TypeListTagField());
   std::cout << "Test for exemplar types." << std::endl;
   vtkm::testing::Testing::TryTypes(TryAllTypesTests<Device>());
   std::cout << "Test all Abs types" << std::endl;
-  vtkm::testing::Testing::TryTypes(TryAbsTests<Device>(),
-                                   TypeListTagAbs());
+  vtkm::testing::Testing::TryTypes(TryAbsTests<Device>(), TypeListTagAbs());
 }
 
 } // namespace UnitTestMathNamespace

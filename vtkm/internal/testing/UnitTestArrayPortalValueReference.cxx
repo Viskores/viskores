@@ -24,47 +24,39 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-template<typename ArrayPortalType>
-void SetReference(
-    vtkm::Id index,
-    vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref)
+template <typename ArrayPortalType>
+void SetReference(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref)
 {
   using ValueType = typename ArrayPortalType::ValueType;
   ref = TestValue(index, ValueType());
 }
 
-template<typename ArrayPortalType>
-void CheckReference(
-    vtkm::Id index,
-    vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref)
+template <typename ArrayPortalType>
+void CheckReference(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<ArrayPortalType> ref)
 {
   using ValueType = typename ArrayPortalType::ValueType;
-  VTKM_TEST_ASSERT(test_equal(ref, TestValue(index, ValueType())),
-                   "Got bad value from reference.");
+  VTKM_TEST_ASSERT(test_equal(ref, TestValue(index, ValueType())), "Got bad value from reference.");
 }
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
 struct DoTestForType
 {
-  template<typename ValueType>
-  VTKM_CONT
-  void operator()(const ValueType &) const
+  template <typename ValueType>
+  VTKM_CONT void operator()(const ValueType&) const
   {
     vtkm::cont::ArrayHandle<ValueType> array;
     array.Allocate(ARRAY_SIZE);
 
     std::cout << "Set array using reference" << std::endl;
-    using PortalType =
-        typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
+    using PortalType = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
     PortalType portal = array.GetPortalControl();
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      SetReference(
-            index,
-            vtkm::internal::ArrayPortalValueReference<PortalType>(portal,index));
+      SetReference(index, vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index));
     }
 
     std::cout << "Check values" << std::endl;
@@ -73,9 +65,7 @@ struct DoTestForType
     std::cout << "Check references in set array." << std::endl;
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
-      CheckReference(
-            index,
-            vtkm::internal::ArrayPortalValueReference<PortalType>(portal,index));
+      CheckReference(index, vtkm::internal::ArrayPortalValueReference<PortalType>(portal, index));
     }
   }
 };
@@ -87,7 +77,7 @@ void DoTest()
 
 } // anonymous namespace
 
-int UnitTestArrayPortalValueReference(int, char *[])
+int UnitTestArrayPortalValueReference(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(DoTest);
 }

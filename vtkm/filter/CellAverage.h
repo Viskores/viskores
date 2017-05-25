@@ -24,8 +24,10 @@
 #include <vtkm/filter/FilterCell.h>
 #include <vtkm/worklet/CellAverage.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 class CellAverage : public vtkm::filter::FilterCell<CellAverage>
 {
@@ -33,22 +35,17 @@ public:
   VTKM_CONT
   CellAverage();
 
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
-                                      const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                      const vtkm::filter::FieldMetadata& fieldMeta,
-                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                      const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultField DoExecute(
+    const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& tag);
 
 private:
   vtkm::worklet::CellAverage Worklet;
-
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/CellAverage.hxx>
 

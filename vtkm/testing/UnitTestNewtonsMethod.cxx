@@ -22,7 +22,8 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 // We will test Newton's method with the following three functions:
 //
@@ -32,66 +33,68 @@ namespace {
 //
 // If we want the result of all three equations to be 1, then there are two
 // valid solutions: (2/3, -1/3, -2/3) and (2/3, 2/3, 1/3).
-template<typename T>
+template <typename T>
 struct EvaluateFunctions
 {
-  typedef vtkm::Vec<T,3> Vector3;
+  typedef vtkm::Vec<T, 3> Vector3;
 
   VTKM_EXEC_CONT
   Vector3 operator()(Vector3 x) const
   {
     Vector3 fx;
-    fx[0] = x[0]*x[0] + x[1]*x[1] + x[2]*x[2];
-    fx[1] = 2*x[0] - x[1] + x[2];
+    fx[0] = x[0] * x[0] + x[1] * x[1] + x[2] * x[2];
+    fx[1] = 2 * x[0] - x[1] + x[2];
     fx[2] = x[0] + x[1] - x[2];
     return fx;
   }
 };
-template<typename T>
+template <typename T>
 struct EvaluateJacobian
 {
-  typedef vtkm::Vec<T,3> Vector3;
-  typedef vtkm::Matrix<T,3,3> Matrix3x3;
+  typedef vtkm::Vec<T, 3> Vector3;
+  typedef vtkm::Matrix<T, 3, 3> Matrix3x3;
 
   VTKM_EXEC_CONT
-  Matrix3x3 operator()(Vector3 x) const {
+  Matrix3x3 operator()(Vector3 x) const
+  {
     Matrix3x3 jacobian;
-    jacobian(0,0) = 2*x[0];  jacobian(0,1) = 2*x[1];  jacobian(0,2) = 2*x[2];
-    jacobian(1,0) = 2;       jacobian(1,1) = -1;      jacobian(1,2) = 1;
-    jacobian(2,0) = 1;       jacobian(2,1) = 1;       jacobian(2,2) = -1;
+    jacobian(0, 0) = 2 * x[0];
+    jacobian(0, 1) = 2 * x[1];
+    jacobian(0, 2) = 2 * x[2];
+    jacobian(1, 0) = 2;
+    jacobian(1, 1) = -1;
+    jacobian(1, 2) = 1;
+    jacobian(2, 0) = 1;
+    jacobian(2, 1) = 1;
+    jacobian(2, 2) = -1;
     return jacobian;
   }
 };
 
-template<typename T>
+template <typename T>
 void TestNewtonsMethodTemplate()
 {
   std::cout << "Testing Newton's Method." << std::endl;
 
-  typedef vtkm::Vec<T,3> Vector3;
+  typedef vtkm::Vec<T, 3> Vector3;
 
   Vector3 desiredOutput(1, 1, 1);
-  Vector3 expected1(2.0f/3.0f, -1.0f/3.0f, -2.0f/3.0f);
-  Vector3 expected2(2.0f/3.0f, 2.0f/3.0f, 1.0f/3.0f);
+  Vector3 expected1(2.0f / 3.0f, -1.0f / 3.0f, -2.0f / 3.0f);
+  Vector3 expected2(2.0f / 3.0f, 2.0f / 3.0f, 1.0f / 3.0f);
 
   Vector3 initialGuess;
   for (initialGuess[0] = 0.25f; initialGuess[0] <= 1; initialGuess[0] += 0.25f)
   {
     for (initialGuess[1] = 0.25f; initialGuess[1] <= 1; initialGuess[1] += 0.25f)
     {
-      for (initialGuess[2] = 0.25f; initialGuess[2] <= 1; initialGuess[2] +=0.25f)
+      for (initialGuess[2] = 0.25f; initialGuess[2] <= 1; initialGuess[2] += 0.25f)
       {
         std::cout << "   " << initialGuess << std::endl;
 
-        Vector3 solution =
-            vtkm::NewtonsMethod(EvaluateJacobian<T>(),
-                                EvaluateFunctions<T>(),
-                                desiredOutput,
-                                initialGuess,
-                                T(1e-6));
+        Vector3 solution = vtkm::NewtonsMethod(EvaluateJacobian<T>(), EvaluateFunctions<T>(),
+                                               desiredOutput, initialGuess, T(1e-6));
 
-        VTKM_TEST_ASSERT(test_equal(solution, expected1)
-                         || test_equal(solution, expected2),
+        VTKM_TEST_ASSERT(test_equal(solution, expected1) || test_equal(solution, expected2),
                          "Newton's method did not converge to expected result.");
       }
     }
@@ -108,7 +111,7 @@ void TestNewtonsMethod()
 
 } // anonymous namespace
 
-int UnitTestNewtonsMethod(int, char *[])
+int UnitTestNewtonsMethod(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestNewtonsMethod);
 }

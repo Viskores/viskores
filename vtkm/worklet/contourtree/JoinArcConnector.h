@@ -86,40 +86,44 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
 class JoinArcConnector : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertex,            // (input) index into sorted edges
+  typedef void ControlSignature(FieldIn<IdType> vertex, // (input) index into sorted edges
                                 WholeArrayIn<IdType> vertexSorter, // (input) sorting indices
                                 WholeArrayIn<IdType> extrema,      // (input) maxima
                                 WholeArrayIn<IdType> saddles,      // (input) saddles
                                 WholeArrayOut<IdType> mergeArcs);  // (output) target for write back
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   JoinArcConnector() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertex,
-                  const InFieldPortalType& vertexSorter,
-                  const InFieldPortalType& extrema,
-                  const InFieldPortalType& saddles,
-                  const OutFieldPortalType& mergeArcs) const
+  VTKM_EXEC void operator()(const vtkm::Id& vertex, const InFieldPortalType& vertexSorter,
+                            const InFieldPortalType& extrema, const InFieldPortalType& saddles,
+                            const OutFieldPortalType& mergeArcs) const
   {
     // work out whether we have the low element on the join arc
     bool joinToSaddle = false;
-    if (vertex == 0) {
+    if (vertex == 0)
+    {
       joinToSaddle = true;
-    } else {
-      joinToSaddle = (extrema.Get(vertexSorter.Get(vertex)) != extrema.Get(vertexSorter.Get(vertex-1)));
+    }
+    else
+    {
+      joinToSaddle =
+        (extrema.Get(vertexSorter.Get(vertex)) != extrema.Get(vertexSorter.Get(vertex - 1)));
     }
 
     // now set the join arcs for everybody
@@ -129,7 +133,6 @@ public:
       mergeArcs.Set(vertexSorter.Get(vertex), vertexSorter.Get(vertex - 1));
   }
 }; // JoinArcConnector
-
 }
 }
 }

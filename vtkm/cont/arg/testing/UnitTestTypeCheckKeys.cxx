@@ -26,9 +26,12 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-struct TestNotKeys {  };
+struct TestNotKeys
+{
+};
 
 void TestCheckKeys()
 {
@@ -37,30 +40,22 @@ void TestCheckKeys()
   using vtkm::cont::arg::TypeCheck;
   using vtkm::cont::arg::TypeCheckTagKeys;
 
-  VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagKeys, vtkm::worklet::Keys<vtkm::Id> >::value),
-        "Type check failed.");
-  VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagKeys, vtkm::worklet::Keys<vtkm::Float32> >::value),
-        "Type check failed.");
-  VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagKeys, vtkm::worklet::Keys<vtkm::Id3> >::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagKeys, vtkm::worklet::Keys<vtkm::Id>>::value),
+                   "Type check failed.");
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagKeys, vtkm::worklet::Keys<vtkm::Float32>>::value),
+                   "Type check failed.");
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagKeys, vtkm::worklet::Keys<vtkm::Id3>>::value),
+                   "Type check failed.");
 
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagKeys, TestNotKeys>::value),
-        "Type check failed.");
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagKeys, vtkm::Id>::value),
-        "Type check failed.");
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagKeys, vtkm::cont::ArrayHandle<vtkm::Id> >::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagKeys, TestNotKeys>::value), "Type check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagKeys, vtkm::Id>::value), "Type check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagKeys, vtkm::cont::ArrayHandle<vtkm::Id>>::value),
+                   "Type check failed.");
 }
 
 } // anonymous namespace
 
-int UnitTestTypeCheckKeys(int, char*[])
+int UnitTestTypeCheckKeys(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestCheckKeys);
 }

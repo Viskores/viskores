@@ -22,18 +22,22 @@
 
 #include <vtkm/io/reader/VTKDataSetReaderBase.h>
 
-namespace vtkm {
-namespace io {
-namespace reader {
+namespace vtkm
+{
+namespace io
+{
+namespace reader
+{
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
 class VTKRectilinearGridReader : public VTKDataSetReaderBase
 {
 public:
-  explicit VTKRectilinearGridReader(const char *fileName)
+  explicit VTKRectilinearGridReader(const char* fileName)
     : VTKDataSetReaderBase(fileName)
-  { }
+  {
+  }
 
 private:
   virtual void Read()
@@ -45,7 +49,7 @@ private:
     //at the top of a VTK file
     std::string tag;
     this->DataFile->Stream >> tag;
-    if(tag == "FIELD")
+    if (tag == "FIELD")
     {
       std::string name;
       this->ReadFields(name);
@@ -60,38 +64,40 @@ private:
     //Read the points.
     std::string dataType;
     std::size_t numPoints[3];
-    vtkm::cont::DynamicArrayHandle X,Y,Z;
-    
+    vtkm::cont::DynamicArrayHandle X, Y, Z;
+
+    // Always read coordinates as vtkm::FloatDefault
+    std::string readDataType = vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name();
+
     this->DataFile->Stream >> tag >> numPoints[0] >> dataType >> std::ws;
     if (tag != "X_COORDINATES")
       throw vtkm::io::ErrorIO("X_COORDINATES tag not found");
-    this->DoReadDynamicArray(dataType, numPoints[0], 1, X);
-    
+    this->DoReadDynamicArray(readDataType, numPoints[0], 1, X);
+
     this->DataFile->Stream >> tag >> numPoints[1] >> dataType >> std::ws;
     if (tag != "Y_COORDINATES")
       throw vtkm::io::ErrorIO("Y_COORDINATES tag not found");
-    this->DoReadDynamicArray(dataType, numPoints[1], 1, Y);
-    
+    this->DoReadDynamicArray(readDataType, numPoints[1], 1, Y);
+
     this->DataFile->Stream >> tag >> numPoints[2] >> dataType >> std::ws;
     if (tag != "Z_COORDINATES")
       throw vtkm::io::ErrorIO("Z_COORDINATES tag not found");
-    this->DoReadDynamicArray(dataType, numPoints[2], 1, Z);
+    this->DoReadDynamicArray(readDataType, numPoints[2], 1, Z);
 
-    if (dim != vtkm::Id3(static_cast<vtkm::Id>(numPoints[0]),
-                         static_cast<vtkm::Id>(numPoints[1]),
+    if (dim != vtkm::Id3(static_cast<vtkm::Id>(numPoints[0]), static_cast<vtkm::Id>(numPoints[1]),
                          static_cast<vtkm::Id>(numPoints[2])))
       throw vtkm::io::ErrorIO("DIMENSIONS not equal to number of points");
-    
-    vtkm::cont::ArrayHandleCartesianProduct<
-        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-        vtkm::cont::ArrayHandle<vtkm::FloatDefault> > coords;
-    
+
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>
+      coords;
+
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
     X.CopyTo(Xc);
     Y.CopyTo(Yc);
     Z.CopyTo(Zc);
-    coords = vtkm::cont::make_ArrayHandleCartesianProduct(Xc,Yc,Zc);
+    coords = vtkm::cont::make_ArrayHandleCartesianProduct(Xc, Yc, Zc);
     vtkm::cont::CoordinateSystem coordSys("coordinates", coords);
     this->DataSet.AddCoordinateSystem(coordSys);
 
@@ -103,7 +109,6 @@ private:
 };
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
-
 }
 }
 } // namespace vtkm::io:reader

@@ -28,19 +28,22 @@
 
 #include <set>
 
-namespace vtkm {
-namespace cont {
-namespace testing {
+namespace vtkm
+{
+namespace cont
+{
+namespace testing
+{
 
 /// This class has a single static member, Run, that tests DataSetExplicit
 /// with the given DeviceAdapter
 ///
-template<class DeviceAdapterTag>
+template <class DeviceAdapterTag>
 class TestingDataSetExplicit
 {
 private:
-  template<typename T, typename Storage>
-  static bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *expected,
+  template <typename T, typename Storage>
+  static bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah, const T* expected,
                               vtkm::Id size)
   {
     if (size != ah.GetNumberOfValues())
@@ -64,16 +67,14 @@ private:
     vtkm::cont::testing::MakeTestDataSet tds;
     vtkm::cont::DataSet ds = tds.Make3DExplicitDataSet0();
 
-    VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1,
-                       "Incorrect number of cell sets");
+    VTKM_TEST_ASSERT(ds.GetNumberOfCellSets() == 1, "Incorrect number of cell sets");
 
-    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2,
-                       "Incorrect number of fields");
+    VTKM_TEST_ASSERT(ds.GetNumberOfFields() == 2, "Incorrect number of fields");
 
     // test various field-getting methods and associations
-    const vtkm::cont::Field &f1 = ds.GetField("pointvar");
+    const vtkm::cont::Field& f1 = ds.GetField("pointvar");
     VTKM_TEST_ASSERT(f1.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                       "Association of 'pointvar' was not ASSOC_POINTS");
+                     "Association of 'pointvar' was not ASSOC_POINTS");
     try
     {
       //const vtkm::cont::Field &f2 =
@@ -90,45 +91,39 @@ private:
       ds.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
       VTKM_TEST_FAIL("Failed to get expected error for association mismatch.");
     }
-    catch (vtkm::cont::ErrorBadValue &error)
+    catch (vtkm::cont::ErrorBadValue& error)
     {
-      std::cout << "Caught expected error for association mismatch: "
-                << std::endl << "    " << error.GetMessage() << std::endl;
+      std::cout << "Caught expected error for association mismatch: " << std::endl
+                << "    " << error.GetMessage() << std::endl;
     }
 
     VTKM_TEST_ASSERT(ds.GetNumberOfCoordinateSystems() == 1,
-                   "Incorrect number of coordinate systems");
+                     "Incorrect number of coordinate systems");
 
     // test cell-to-point connectivity
     vtkm::cont::CellSetExplicit<> cellset;
     ds.GetCellSet(0).CopyTo(cellset);
 
-    cellset.BuildConnectivity(DeviceAdapterTag(),
-                              vtkm::TopologyElementTagCell(),
+    cellset.BuildConnectivity(DeviceAdapterTag(), vtkm::TopologyElementTagCell(),
                               vtkm::TopologyElementTagPoint());
 
     vtkm::Id connectivitySize = 7;
     vtkm::Id numPoints = 5;
 
-    vtkm::UInt8 correctShapes[] = {1, 1, 1, 1, 1};
-    vtkm::IdComponent correctNumIndices[] = {1, 2, 2, 1, 1};
-    vtkm::Id correctConnectivity[] = {0, 0, 1, 0, 1, 1, 1};
+    vtkm::UInt8 correctShapes[] = { 1, 1, 1, 1, 1 };
+    vtkm::IdComponent correctNumIndices[] = { 1, 2, 2, 1, 1 };
+    vtkm::Id correctConnectivity[] = { 0, 0, 1, 0, 1, 1, 1 };
 
-    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes = cellset.GetShapesArray(
-      vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
-    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices = cellset.GetNumIndicesArray(
-      vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
-    vtkm::cont::ArrayHandle<vtkm::Id> conn = cellset.GetConnectivityArray(
-      vtkm::TopologyElementTagCell(),vtkm::TopologyElementTagPoint());
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
+      cellset.GetShapesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+    vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndices =
+      cellset.GetNumIndicesArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
+    vtkm::cont::ArrayHandle<vtkm::Id> conn =
+      cellset.GetConnectivityArray(vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
-    VTKM_TEST_ASSERT(TestArrayHandle(shapes,
-          correctShapes,
-          numPoints),
-        "Got incorrect shapes");
-    VTKM_TEST_ASSERT(TestArrayHandle(numIndices,
-          correctNumIndices,
-          numPoints),
-        "Got incorrect shapes");
+    VTKM_TEST_ASSERT(TestArrayHandle(shapes, correctShapes, numPoints), "Got incorrect shapes");
+    VTKM_TEST_ASSERT(TestArrayHandle(numIndices, correctNumIndices, numPoints),
+                     "Got incorrect shapes");
 
     // Some device adapters have unstable sorts, which may cause the order of
     // the indices for each point to be different but still correct. Iterate
@@ -140,56 +135,40 @@ private:
     {
       vtkm::IdComponent numIncidentCells = correctNumIndices[pointIndex];
       std::set<vtkm::Id> correctIncidentCells;
-      for (vtkm::IdComponent cellIndex = 0;
-           cellIndex < numIncidentCells;
-           cellIndex++)
+      for (vtkm::IdComponent cellIndex = 0; cellIndex < numIncidentCells; cellIndex++)
       {
-        correctIncidentCells.insert(
-              correctConnectivity[connectivityIndex+cellIndex]);
+        correctIncidentCells.insert(correctConnectivity[connectivityIndex + cellIndex]);
       }
-      for (vtkm::IdComponent cellIndex = 0;
-           cellIndex < numIncidentCells;
-           cellIndex++)
+      for (vtkm::IdComponent cellIndex = 0; cellIndex < numIncidentCells; cellIndex++)
       {
-        vtkm::Id expectedCell =
-            conn.GetPortalConstControl().Get(connectivityIndex+cellIndex);
-        std::set<vtkm::Id>::iterator foundCell =
-            correctIncidentCells.find(expectedCell);
-        VTKM_TEST_ASSERT(
-              foundCell != correctIncidentCells.end(),
-              "An incident cell in the connectivity list is wrong or repeated.");
+        vtkm::Id expectedCell = conn.GetPortalConstControl().Get(connectivityIndex + cellIndex);
+        std::set<vtkm::Id>::iterator foundCell = correctIncidentCells.find(expectedCell);
+        VTKM_TEST_ASSERT(foundCell != correctIncidentCells.end(),
+                         "An incident cell in the connectivity list is wrong or repeated.");
         correctIncidentCells.erase(foundCell);
       }
       connectivityIndex += numIncidentCells;
     }
 
     //verify that GetIndices works properly
-    vtkm::Id expectedPointIds[4] = {2,1,3,4};
-    vtkm::Vec<vtkm::Id,4> retrievedPointIds;
+    vtkm::Id expectedPointIds[4] = { 2, 1, 3, 4 };
+    vtkm::Vec<vtkm::Id, 4> retrievedPointIds;
     cellset.GetIndices(1, retrievedPointIds);
     for (vtkm::IdComponent i = 0; i < 4; i++)
     {
-      VTKM_TEST_ASSERT(
-            retrievedPointIds[i] == expectedPointIds[i],
-            "Incorrect point ID for quad cell");
+      VTKM_TEST_ASSERT(retrievedPointIds[i] == expectedPointIds[i],
+                       "Incorrect point ID for quad cell");
     }
   }
 
   struct TestAll
   {
-    VTKM_CONT void operator()() const
-    {
-      TestingDataSetExplicit::TestDataSet_Explicit();
-    }
+    VTKM_CONT void operator()() const { TestingDataSetExplicit::TestDataSet_Explicit(); }
   };
 
 public:
-  static VTKM_CONT int Run()
-  {
-    return vtkm::cont::testing::Testing::Run(TestAll());
-  }
+  static VTKM_CONT int Run() { return vtkm::cont::testing::Testing::Run(TestAll()); }
 };
-
 }
 }
 } // namespace vtkm::cont::testing

@@ -37,12 +37,11 @@ public:
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-  
+
     // Points to extract
     const int nPoints = 13;
-    vtkm::Id pointids[nPoints] = {0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 50, 75, 100};
-    vtkm::cont::ArrayHandle<vtkm::Id> pointIds =
-                            vtkm::cont::make_ArrayHandle(pointids, nPoints);
+    vtkm::Id pointids[nPoints] = { 0, 1, 2, 3, 4, 5, 10, 15, 20, 25, 50, 75, 100 };
+    vtkm::cont::ArrayHandle<vtkm::Id> pointIds = vtkm::cont::make_ArrayHandle(pointids, nPoints);
 
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
@@ -50,13 +49,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet = 
-        extractPoints.Run(dataset.GetCellSet(0),
-                          pointIds,
-                          DeviceAdapter());
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0), pointIds, DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints), "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints),
+                     "Wrong result for ExtractPoints");
   }
 
   void TestUniformByBox0() const
@@ -67,28 +64,26 @@ public:
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-  
+
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.f, 3.f, 3.f);
     vtkm::cont::Box box(minPoint, maxPoint);
     bool extractInside = true;
-  
+
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet = 
-        extractPoints.Run(dataset.GetCellSet(0),
-                          dataset.GetCoordinateSystem("coords"),
-                          box,
-                          extractInside,
-                          DeviceAdapter());
+    OutCellSetType outCellSet =
+      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coords"), box,
+                        extractInside, DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
+                     "Wrong result for ExtractPoints");
   }
 
   void TestUniformByBox1() const
@@ -99,28 +94,26 @@ public:
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-  
+
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.f, 3.f, 3.f);
     vtkm::cont::Box box(minPoint, maxPoint);
     bool extractInside = false;
-  
+
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet = 
-        extractPoints.Run(dataset.GetCellSet(0),
-                          dataset.GetCoordinateSystem("coords"),
-                          box,
-                          extractInside,
-                          DeviceAdapter());
+    OutCellSetType outCellSet =
+      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coords"), box,
+                        extractInside, DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 98), "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 98),
+                     "Wrong result for ExtractPoints");
   }
 
   void TestUniformBySphere() const
@@ -131,28 +124,26 @@ public:
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-  
+
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
     vtkm::FloatDefault radius(1.8f);
     vtkm::cont::Sphere sphere(center, radius);
     bool extractInside = true;
-  
+
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet = 
-        extractPoints.Run(dataset.GetCellSet(0),
-                          dataset.GetCoordinateSystem("coords"),
-                          sphere,
-                          extractInside,
-                          DeviceAdapter());
+    OutCellSetType outCellSet =
+      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coords"), sphere,
+                        extractInside, DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27), "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
+                     "Wrong result for ExtractPoints");
   }
 
   void TestExplicitByBox0() const
@@ -163,28 +154,26 @@ public:
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-  
+
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.f, 0.f, 0.f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(1.f, 1.f, 1.f);
     vtkm::cont::Box box(minPoint, maxPoint);
     bool extractInside = true;
-  
+
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet = 
-        extractPoints.Run(dataset.GetCellSet(0),
-                          dataset.GetCoordinateSystem("coordinates"),
-                          box,
-                          extractInside,
-                          DeviceAdapter());
+    OutCellSetType outCellSet =
+      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coordinates"), box,
+                        extractInside, DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8),
+                     "Wrong result for ExtractPoints");
   }
 
   void TestExplicitByBox1() const
@@ -195,28 +184,26 @@ public:
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-  
+
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.f, 0.f, 0.f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(1.f, 1.f, 1.f);
     vtkm::cont::Box box(minPoint, maxPoint);
     bool extractInside = false;
-  
+
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet = 
-        extractPoints.Run(dataset.GetCellSet(0),
-                          dataset.GetCoordinateSystem("coordinates"),
-                          box,
-                          extractInside,
-                          DeviceAdapter());
+    OutCellSetType outCellSet =
+      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coordinates"), box,
+                        extractInside, DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 3), "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 3),
+                     "Wrong result for ExtractPoints");
   }
 
   void TestExplicitById() const
@@ -230,23 +217,20 @@ public:
 
     // Points to extract
     const int nPoints = 6;
-    vtkm::Id pointids[nPoints] = {0, 4,5, 7, 9, 10};
-    vtkm::cont::ArrayHandle<vtkm::Id> pointIds =
-                            vtkm::cont::make_ArrayHandle(pointids, nPoints);
-  
+    vtkm::Id pointids[nPoints] = { 0, 4, 5, 7, 9, 10 };
+    vtkm::cont::ArrayHandle<vtkm::Id> pointIds = vtkm::cont::make_ArrayHandle(pointids, nPoints);
+
     // Output dataset contains input coordinate system and point data
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataset.GetCoordinateSystem(0));
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet = 
-        extractPoints.Run(dataset.GetCellSet(0),
-                          pointIds,
-                          DeviceAdapter());
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0), pointIds, DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints), "Wrong result for ExtractPoints");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nPoints),
+                     "Wrong result for ExtractPoints");
   }
 
   void operator()() const
@@ -261,8 +245,7 @@ public:
   }
 };
 
-int UnitTestExtractPoints(int, char *[])
+int UnitTestExtractPoints(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(
-      TestingExtractPoints<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingExtractPoints<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
 }

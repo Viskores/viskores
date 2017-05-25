@@ -40,17 +40,21 @@ VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <limits>
 
-namespace vtkm {
-namespace cont {
-namespace cuda {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace cuda
+{
+namespace internal
+{
 
 /// \c ArrayManagerExecutionThrustDevice provides an implementation for a \c
 /// ArrayManagerExecution class for a thrust device adapter that is designed
 /// for the cuda backend which has separate memory spaces for host and device.
 /// This implementation contains a thrust::system::cuda::pointer to contain the
 /// data.
-template<typename T, class StorageTag>
+template <typename T, class StorageTag>
 class ArrayManagerExecutionThrustDevice
 {
 public:
@@ -60,28 +64,26 @@ public:
 
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
-  typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust< T > PortalType;
-  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust< T > PortalConstType;
+  typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust<T> PortalType;
+  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T> PortalConstType;
 
   VTKM_CONT
-  ArrayManagerExecutionThrustDevice(StorageType *storage)
-    : Storage(storage),
-      Begin(static_cast<ValueType*>(nullptr)),
-      End(static_cast<ValueType*>(nullptr)),
-      Capacity(static_cast<ValueType*>(nullptr))
+  ArrayManagerExecutionThrustDevice(StorageType* storage)
+    : Storage(storage)
+    , Begin(static_cast<ValueType*>(nullptr))
+    , End(static_cast<ValueType*>(nullptr))
+    , Capacity(static_cast<ValueType*>(nullptr))
   {
   }
 
   VTKM_CONT
-  ~ArrayManagerExecutionThrustDevice()
-  {
-    this->ReleaseResources();
-  }
+  ~ArrayManagerExecutionThrustDevice() { this->ReleaseResources(); }
 
   /// Returns the size of the array.
   ///
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const {
+  vtkm::Id GetNumberOfValues() const
+  {
     return static_cast<vtkm::Id>(this->End.get() - this->Begin.get());
   }
 
@@ -104,11 +106,10 @@ public:
   }
 
   /// Workaround for nvcc 7.5 compiler warning bug.
-  template<typename DummyType>
-  VTKM_CONT
-  PortalConstType _PrepareForInput(bool updateData)
+  template <typename DummyType>
+  VTKM_CONT PortalConstType _PrepareForInput(bool updateData)
   {
-      return this->PrepareForInput(updateData);
+    return this->PrepareForInput(updateData);
   }
 
   /// Allocates the appropriate size of the array and copies the given data
@@ -130,9 +131,8 @@ public:
   }
 
   /// Workaround for nvcc 7.5 compiler warning bug.
-  template<typename DummyType>
-  VTKM_CONT
-  PortalType _PrepareForInPlace(bool updateData)
+  template <typename DummyType>
+  VTKM_CONT PortalType _PrepareForInPlace(bool updateData)
   {
     return this->PrepareForInPlace(updateData);
   }
@@ -144,20 +144,18 @@ public:
   {
     // Can we reuse the existing buffer?
     vtkm::Id curCapacity = this->Begin.get() != nullptr
-        ? static_cast<vtkm::Id>(this->Capacity.get() - this->Begin.get())
-        : 0;
+      ? static_cast<vtkm::Id>(this->Capacity.get() - this->Begin.get())
+      : 0;
 
     // Just mark a new end if we don't need to increase the allocation:
     if (curCapacity >= numberOfValues)
     {
-      this->End = PointerType(this->Begin.get() +
-                              static_cast<difference_type>(numberOfValues));
+      this->End = PointerType(this->Begin.get() + static_cast<difference_type>(numberOfValues));
 
       return PortalType(this->Begin, this->End);
     }
 
-    const std::size_t maxNumVals = (std::numeric_limits<std::size_t>::max() /
-                                    sizeof(ValueType));
+    const std::size_t maxNumVals = (std::numeric_limits<std::size_t>::max() / sizeof(ValueType));
 
     if (static_cast<size_t>(numberOfValues) > maxNumVals)
     {
@@ -173,38 +171,34 @@ public:
 
     // Attempt to allocate:
     try
-      {
-      ValueType *tmp;
+    {
+      ValueType* tmp;
 #ifdef VTKM_USE_UNIFIED_MEMORY
       VTKM_CUDA_CALL(cudaMallocManaged(&tmp, bufferSize));
-      VTKM_CUDA_CALL(cudaMemAdvise(tmp, bufferSize,
-                                   cudaMemAdviseSetPreferredLocation, 0));
+      VTKM_CUDA_CALL(cudaMemAdvise(tmp, bufferSize, cudaMemAdviseSetPreferredLocation, 0));
       VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, bufferSize, 0, 0));
       VTKM_CUDA_CALL(cudaStreamSynchronize(0));
 #else
       VTKM_CUDA_CALL(cudaMalloc(&tmp, bufferSize));
 #endif
       this->Begin = PointerType(tmp);
-      }
-    catch (const std::exception &error)
-      {
+    }
+    catch (const std::exception& error)
+    {
       std::ostringstream err;
-      err << "Failed to allocate " << bufferSize << " bytes on device: "
-          << error.what();
+      err << "Failed to allocate " << bufferSize << " bytes on device: " << error.what();
       throw vtkm::cont::ErrorBadAllocation(err.str());
-      }
+    }
 
-    this->Capacity = PointerType(this->Begin.get() +
-                                 static_cast<difference_type>(numberOfValues));
+    this->Capacity = PointerType(this->Begin.get() + static_cast<difference_type>(numberOfValues));
     this->End = this->Capacity;
 
     return PortalType(this->Begin, this->End);
   }
 
   /// Workaround for nvcc 7.5 compiler warning bug.
-  template<typename DummyType>
-  VTKM_CONT
-  PortalType _PrepareForOutput(vtkm::Id numberOfValues)
+  template <typename DummyType>
+  VTKM_CONT PortalType _PrepareForOutput(vtkm::Id numberOfValues)
   {
     return this->PrepareForOutput(numberOfValues);
   }
@@ -213,17 +207,17 @@ public:
   /// device vector into it.
   ///
   VTKM_CONT
-  void RetrieveOutputData(StorageType *storage) const
+  void RetrieveOutputData(StorageType* storage) const
   {
     storage->Allocate(this->GetNumberOfValues());
     try
-      {
+    {
 #ifdef VTKM_USE_UNIFIED_MEMORY
       cudaDeviceSynchronize();
 #endif
       ::thrust::copy(this->Begin, this->End,
-          vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
-      }
+                     vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
+    }
     catch (...)
     {
       vtkm::cont::cuda::internal::throwAsVTKmException();
@@ -249,8 +243,7 @@ public:
     VTKM_ASSERT(this->Begin.get() != nullptr &&
                 this->Begin.get() + numberOfValues <= this->End.get());
 
-    this->End = PointerType(this->Begin.get() +
-                            static_cast<difference_type>(numberOfValues));
+    this->End = PointerType(this->Begin.get() + static_cast<difference_type>(numberOfValues));
   }
 
   /// Frees all memory.
@@ -267,17 +260,14 @@ public:
   }
 
 private:
-  ArrayManagerExecutionThrustDevice(
-      ArrayManagerExecutionThrustDevice<T, StorageTag> &) = delete;
-  void operator=(
-      ArrayManagerExecutionThrustDevice<T, StorageTag> &) = delete;
+  ArrayManagerExecutionThrustDevice(ArrayManagerExecutionThrustDevice<T, StorageTag>&) = delete;
+  void operator=(ArrayManagerExecutionThrustDevice<T, StorageTag>&) = delete;
 
-  StorageType *Storage;
+  StorageType* Storage;
 
   PointerType Begin;
   PointerType End;
   PointerType Capacity;
-
 
   VTKM_CONT
   void CopyToExecution()
@@ -295,8 +285,6 @@ private:
     }
   }
 };
-
-
 }
 }
 }

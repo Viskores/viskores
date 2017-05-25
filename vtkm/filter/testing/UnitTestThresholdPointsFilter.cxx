@@ -25,8 +25,8 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-namespace {
-
+namespace
+{
 
 class TestingThresholdPoints
 {
@@ -42,10 +42,10 @@ public:
 
     result = thresholdPoints.Execute(dataset, dataset.GetField("pointvar"));
 
-    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
+    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11),
                      "Wrong result for ThresholdPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 25),
                      "Wrong number of points for ThresholdPoints");
@@ -69,10 +69,10 @@ public:
 
     result = thresholdPoints.Execute(dataset, std::string("pointvar"));
 
-    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
+    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27),
                      "Wrong result for ThresholdPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 27),
                      "Wrong number of points for ThresholdPoints");
@@ -96,10 +96,10 @@ public:
 
     result = thresholdPoints.Execute(dataset, std::string("pointvar"));
 
-    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
+    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 6), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 6),
                      "Wrong result for ThresholdPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 6),
                      "Wrong number of points for ThresholdPoints");
@@ -124,12 +124,12 @@ public:
 
     VTKM_TEST_ASSERT(result.IsValid(), "threshold algorithm should return true");
 
-    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar") );
+    thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
-    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 0), 
+    VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 0),
                      "Wrong result for ThresholdPoints");
   }
 
@@ -141,10 +141,9 @@ public:
     this->TestExplicit3DZeroResults();
   }
 };
-
 }
 
-int UnitTestThresholdPointsFilter(int, char *[])
+int UnitTestThresholdPointsFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestingThresholdPoints());
 }

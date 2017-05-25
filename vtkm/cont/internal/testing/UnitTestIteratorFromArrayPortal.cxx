@@ -25,9 +25,10 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-template<typename T>
+template <typename T>
 struct TemplatedTests
 {
   static const vtkm::Id ARRAY_SIZE = 10;
@@ -37,10 +38,10 @@ struct TemplatedTests
 
   ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {
-    return ValueType(static_cast<ComponentType>(index+static_cast<vtkm::Id>(value)));
+    return ValueType(static_cast<ComponentType>(index + static_cast<vtkm::Id>(value)));
   }
 
-  template<class IteratorType>
+  template <class IteratorType>
   void FillIterator(IteratorType begin, IteratorType end, ComponentType value)
   {
     vtkm::Id index = 0;
@@ -51,22 +52,23 @@ struct TemplatedTests
     }
   }
 
-  template<class IteratorType>
-  bool CheckIterator(IteratorType begin,
-                     IteratorType end,
-                     ComponentType value)
+  template <class IteratorType>
+  bool CheckIterator(IteratorType begin, IteratorType end, ComponentType value)
   {
     vtkm::Id index = 0;
     for (IteratorType iter = begin; iter != end; iter++)
     {
-      if (ValueType(*iter) != ExpectedValue(index, value)) { return false; }
+      if (ValueType(*iter) != ExpectedValue(index, value))
+      {
+        return false;
+      }
       index++;
     }
     return true;
   }
 
-  template<class PortalType>
-  bool CheckPortal(const PortalType &portal, const ComponentType &value)
+  template <class PortalType>
+  bool CheckPortal(const PortalType& portal, const ComponentType& value)
   {
     vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
     return CheckIterator(iterators.GetBegin(), iterators.GetEnd(), value);
@@ -74,7 +76,7 @@ struct TemplatedTests
 
   ComponentType ORIGINAL_VALUE() { return 39; }
 
-  template<class ArrayPortalType>
+  template <class ArrayPortalType>
   void TestIteratorRead(ArrayPortalType portal)
   {
     typedef vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalType> IteratorType;
@@ -87,29 +89,25 @@ struct TemplatedTests
                      "Distance between begin and end incorrect.");
 
     std::cout << "    Check forward iteration." << std::endl;
-    VTKM_TEST_ASSERT(CheckIterator(begin, end, ORIGINAL_VALUE()),
-                     "Forward iteration wrong");
+    VTKM_TEST_ASSERT(CheckIterator(begin, end, ORIGINAL_VALUE()), "Forward iteration wrong");
 
     std::cout << "    Check backward iteration." << std::endl;
     IteratorType middle = end;
-    for (vtkm::Id index = portal.GetNumberOfValues()-1; index >= 0; index--)
+    for (vtkm::Id index = portal.GetNumberOfValues() - 1; index >= 0; index--)
     {
       middle--;
       ValueType value = *middle;
-      VTKM_TEST_ASSERT(value == ExpectedValue(index, ORIGINAL_VALUE()),
-                       "Backward iteration wrong");
+      VTKM_TEST_ASSERT(value == ExpectedValue(index, ORIGINAL_VALUE()), "Backward iteration wrong");
     }
 
     std::cout << "    Check advance" << std::endl;
-    middle = begin + ARRAY_SIZE/2;
-    VTKM_TEST_ASSERT(std::distance(begin, middle) == ARRAY_SIZE/2,
-                     "Bad distance to middle.");
-    VTKM_TEST_ASSERT(
-      ValueType(*middle) == ExpectedValue(ARRAY_SIZE/2, ORIGINAL_VALUE()),
-      "Bad value at middle.");
+    middle = begin + ARRAY_SIZE / 2;
+    VTKM_TEST_ASSERT(std::distance(begin, middle) == ARRAY_SIZE / 2, "Bad distance to middle.");
+    VTKM_TEST_ASSERT(ValueType(*middle) == ExpectedValue(ARRAY_SIZE / 2, ORIGINAL_VALUE()),
+                     "Bad value at middle.");
   }
 
-  template<class ArrayPortalType>
+  template <class ArrayPortalType>
   void TestIteratorWrite(ArrayPortalType portal)
   {
     typedef vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalType> IteratorType;
@@ -131,12 +129,11 @@ struct TemplatedTests
   {
     ValueType array[ARRAY_SIZE];
 
-    FillIterator(array, array+ARRAY_SIZE, ORIGINAL_VALUE());
+    FillIterator(array, array + ARRAY_SIZE, ORIGINAL_VALUE());
 
-    ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType *>
-        portal(array, array+ARRAY_SIZE);
-    ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType *>
-        const_portal(array, array+ARRAY_SIZE);
+    ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType*> portal(array, array + ARRAY_SIZE);
+    ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*> const_portal(array, array +
+                                                                                      ARRAY_SIZE);
 
     std::cout << "  Test read from iterator." << std::endl;
     TestIteratorRead(portal);
@@ -151,7 +148,7 @@ struct TemplatedTests
 
 struct TestFunctor
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     TemplatedTests<T> tests;
@@ -166,7 +163,7 @@ void TestArrayIteratorFromArrayPortal()
 
 } // Anonymous namespace
 
-int UnitTestIteratorFromArrayPortal(int, char *[])
+int UnitTestIteratorFromArrayPortal(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestArrayIteratorFromArrayPortal);
 }

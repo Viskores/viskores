@@ -22,37 +22,40 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-template<typename T>
-void CheckTypeSame(T, T) {
+template <typename T>
+void CheckTypeSame(T, T)
+{
   std::cout << "  Success" << std::endl;
 }
 
-template<typename T1, typename T2>
-void CheckTypeSame(T1, T2) {
+template <typename T1, typename T2>
+void CheckTypeSame(T1, T2)
+{
   VTKM_TEST_FAIL("Got unexpected types.");
 }
 
 struct CellShapeTestFunctor
 {
-  template<typename ShapeTag>
-  void operator()(ShapeTag) const {
+  template <typename ShapeTag>
+  void operator()(ShapeTag) const
+  {
     VTKM_IS_CELL_SHAPE_TAG(ShapeTag);
 
     const vtkm::IdComponent cellShapeId = ShapeTag::Id;
     std::cout << "Cell shape id: " << cellShapeId << std::endl;
 
-    std::cout << "Check conversion between id and tag is consistent."
-              << std::endl;
-    CheckTypeSame(ShapeTag(),
-                  typename vtkm::CellShapeIdToTag<cellShapeId>::Tag());
+    std::cout << "Check conversion between id and tag is consistent." << std::endl;
+    CheckTypeSame(ShapeTag(), typename vtkm::CellShapeIdToTag<cellShapeId>::Tag());
 
     std::cout << "Check vtkmGenericCellShapeMacro." << std::endl;
-    switch (cellShapeId) {
-    vtkmGenericCellShapeMacro(CheckTypeSame(ShapeTag(), CellShapeTag()));
-    default:
-      VTKM_TEST_FAIL("Generic shape switch not working.");
+    switch (cellShapeId)
+    {
+      vtkmGenericCellShapeMacro(CheckTypeSame(ShapeTag(), CellShapeTag()));
+      default:
+        VTKM_TEST_FAIL("Generic shape switch not working.");
     }
   }
 };
@@ -64,7 +67,7 @@ void CellShapeTest()
 
 } // anonymous namespace
 
-int UnitTestCellShape(int, char *[])
+int UnitTestCellShape(int, char* [])
 {
   return vtkm::testing::Testing::Run(CellShapeTest);
 }

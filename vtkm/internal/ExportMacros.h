@@ -30,9 +30,9 @@
 #define VTKM_EXEC __device__ __host__
 #define VTKM_EXEC_CONT __device__ __host__
 #if __CUDAVER__ >= 75000
-#  define VTKM_SUPPRESS_EXEC_WARNINGS #pragma nv_exec_check_disable
+#define VTKM_SUPPRESS_EXEC_WARNINGS #pragma nv_exec_check_disable
 #else
-#  define VTKM_SUPPRESS_EXEC_WARNINGS #pragma hd_warning_disable
+#define VTKM_SUPPRESS_EXEC_WARNINGS #pragma hd_warning_disable
 #endif
 #define VTKM_EXEC_CONSTANT __device__ __constant__
 #else
@@ -72,11 +72,11 @@
 //  - Be a type ( or component of a types signature ) that can be passed between
 //    dynamic libraries and requires RTTI support ( dynamic_cast ).
 #if defined(VTKM_MSVC)
-#   define VTKM_ALWAYS_EXPORT
-#   define VTKM_NEVER_EXPORT
+#define VTKM_ALWAYS_EXPORT
+#define VTKM_NEVER_EXPORT
 #else
-#   define VTKM_ALWAYS_EXPORT __attribute__((visibility("default")))
-#   define VTKM_NEVER_EXPORT __attribute__((visibility("hidden")))
+#define VTKM_ALWAYS_EXPORT __attribute__((visibility("default")))
+#define VTKM_NEVER_EXPORT __attribute__((visibility("hidden")))
 #endif
 
 // constexpr support was added to VisualStudio 2015 and above. So this makes
@@ -96,11 +96,9 @@
 // http://stackoverflow.com/questions/24511376). These macros will silence the
 // warning for classes defined within them.
 #ifdef VTKM_CLANG
-#define VTKM_SILENCE_WEAK_VTABLE_WARNING_START \
-  _Pragma("clang diagnostic push") \
-  _Pragma("clang diagnostic ignored \"-Wweak-vtables\"")
-#define VTKM_SILENCE_WEAK_VTABLE_WARNING_END \
-  _Pragma("clang diagnostic pop")
+#define VTKM_SILENCE_WEAK_VTABLE_WARNING_START                                                     \
+  _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wweak-vtables\"")
+#define VTKM_SILENCE_WEAK_VTABLE_WARNING_END _Pragma("clang diagnostic pop")
 #else // VTKM_CLANG
 #define VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 #define VTKM_SILENCE_WEAK_VTABLE_WARNING_END
