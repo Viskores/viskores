@@ -8,7 +8,7 @@ def mkSeeds(N) :
           n = n+1
     return seeds
 
-params = {'files':['astro.bov','fusion.bov','fishtank.bov'],
+params = {'files':['astro.bov','fusion.bov','fishtank.bov','astro512.bov','fusion512.bov','fishtank512.bov'],
           'term': ['short','med','long', 'long2', 'long5', 'long10', 'long20', 'long100'],
           'ptype' : ['particle', 'streamline -1', 'streamline 100', 'streamline 1000'],
           'alg' : ['GPU', 'TBB_16', 'TBB_28', 'TBB_20'],
@@ -157,6 +157,35 @@ def printCompare(tD, sD, rcD, rgD, ptype, fname) :
         fp.write('\n')
     fp.close()
 
+def printMachineFile(db, alg, ptype, fname) :
+    fp = open(fname, 'w')
+    fp.write('ALG,FILE,DIST,SEEDS,STYPE,TIME\n')
+    
+    if type(alg) == str :
+        alg = [alg]
+    
+    for f in [params['files'][0]] :
+        for t in params['term'] :
+            for st in params['sType'] :
+                for s in params['seeds'] :
+                    for a in alg :
+                        key = (f,a,s,t,ptype,st)
+                        if key in db.keys() :
+                            val = db[key]
+                            algID = -1
+                            if 'TBB' in a :
+                                algID = 0
+                            elif 'GPU' in a :
+                                algID = 1
+                                
+                            fp.write('%d,%d,%d,%d,%d,%d\n'%(algID,
+                                                            params['files'].index(f),
+                                                            params['term'].index(t),
+                                                            s, ##params['seeds'].index(s),
+                                                            params['sType'].index(st),
+                                                            val))
+    fp.close()
+
             
 titanRaw = rawData('titan.pickle')
 summitRaw = rawData('summit.pickle')
@@ -167,6 +196,11 @@ printCompare(titanRaw, summitRaw, rheaCRaw, rheaGRaw, 'particle', 'particle.txt'
 printCompare(titanRaw, summitRaw, rheaCRaw, rheaGRaw, 'streamline -1', 'streamline.txt')
 printCompare(titanRaw, summitRaw, rheaCRaw, rheaGRaw, 'streamline 100', 'streamline_100.txt')
 printCompare(titanRaw, summitRaw, rheaCRaw, rheaGRaw, 'streamline 1000', 'streamline_1000.txt')
+
+printMachineFile(titanRaw, 'TBB_16', 'particle', 'titanTBB.csv')
+printMachineFile(titanRaw, 'GPU', 'particle', 'titanGPU.csv')
+printMachineFile(summitRaw, 'GPU', 'particle', 'summitGPU.csv')
+printMachineFile(summitRaw, 'TBB_20', 'particle', 'summitTBB.csv')
 sys.exit()
 
 key = ('astro.bov', 'TBB_16', 100000, 'short', 'particle')

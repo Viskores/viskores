@@ -105,8 +105,9 @@ public:
     ParticleAdvectionFilter(const IntegratorType &it,
                             const std::vector<vtkm::Vec<FieldType,3> > &pts,
                             const vtkm::cont::DataSet &_ds,
-                            const vtkm::Id &nSteps) :
-        integrator(it), seeds(pts), maxSteps(nSteps), ds(_ds)
+                            const vtkm::Id &nSteps,
+                            const vtkm::Id &particlesPerRound=-1) :
+        integrator(it), seeds(pts), maxSteps(nSteps), ParticlesPerRound(particlesPerRound), ds(_ds)
     {
         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
         ds.GetField(0).GetData().CopyTo(fieldArray);
@@ -121,7 +122,18 @@ public:
         typedef typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType> ParticleWorkletDispatchType;
         typedef vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag> ParticleType;
 
-        vtkm::Id numSeeds = seeds.size();
+        vtkm::Id totNumSeeds = seeds.size();
+        vtkm::Id numSeeds = totNumSeeds;
+        bool NeedParticleRounds = false;
+        
+        if (ParticlesPerRound == -1 || ParticlesPerRound > totNumSeeds)
+            numSeeds = totNumSeeds;
+        else
+        {
+            numSeeds = ParticlesPerRound;
+            NeedParticleRounds = true;
+        }
+
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > posArray = vtkm::cont::make_ArrayHandle(&seeds[0], numSeeds);
         std::vector<vtkm::Id> steps(numSeeds, 0), status(numSeeds,ParticleStatus::OK);
         vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], numSeeds);
@@ -151,6 +163,7 @@ private:
     IntegratorType integrator;
     std::vector<vtkm::Vec<FieldType,3> > seeds;
     vtkm::cont::DataSet ds;
+    vtkm::Id ParticlesPerRound;
 };
 
 
@@ -170,8 +183,9 @@ public:
                      const std::vector<vtkm::Vec<FieldType,3> > &pts,
                      const vtkm::cont::DataSet &_ds,
                      const vtkm::Id &nSteps,
-                     const vtkm::Id stepsPerRound=-1) :
-        integrator(it), seeds(pts), maxSteps(nSteps), ds(_ds), StepsPerRound(stepsPerRound)
+                     const vtkm::Id stepsPerRound=-1,
+                     const vtkm::Id particlesPerRound=-1) :
+        integrator(it), seeds(pts), maxSteps(nSteps), ds(_ds), StepsPerRound(stepsPerRound), ParticlesPerRound(particlesPerRound)
     {
         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
         ds.GetField(0).GetData().CopyTo(fieldArray);
@@ -186,74 +200,115 @@ public:
         typedef vtkm::worklet::particleadvection::StateRecordingParticles<FieldType, DeviceAdapterTag> StreamlineType;
         typedef vtkm::worklet::particleadvection::StateRecordingParticlesRound<FieldType, DeviceAdapterTag> StreamlineRoundType;
 
-        vtkm::Id numSeeds = seeds.size();
+        vtkm::Id totNumSeeds = seeds.size();
 
-        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > posArray = vtkm::cont::make_ArrayHandle(&seeds[0], numSeeds);
-        std::vector<vtkm::Id> steps(numSeeds, 0), status(numSeeds,ParticleStatus::OK);        
-        vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], numSeeds);
-        vtkm::cont::ArrayHandle<vtkm::Id> statusArray = vtkm::cont::make_ArrayHandle(&status[0], numSeeds);
-        vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
+        vtkm::Id numSeeds = totNumSeeds;
+        bool NeedParticleRounds = false;
+        
+        if (ParticlesPerRound == -1 || ParticlesPerRound > totNumSeeds)
+            numSeeds = totNumSeeds;
+        else
+        {
+            numSeeds = ParticlesPerRound;
+            NeedParticleRounds = true;
+        }
 
-        ParticleAdvectWorkletType particleWorklet(integrator, field);        
+        ParticleAdvectWorkletType particleWorklet(integrator, field);
         ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
 
         //Brute force method, or rounds.
         if (StepsPerRound == -1)
         {
-            StreamlineType streamlines(posArray, stepArray, statusArray, maxSteps);
-            particleWorkletDispatch.Invoke(idxArray, streamlines);
+            bool particlesDone = false;
+            vtkm::Id particleOffset = 0;
             
-            if (dumpOutput)
+            while (!particlesDone)
             {
-                for (vtkm::Id i = 0; i < numSeeds; i++)
-                {
-                    vtkm::Id ns = streamlines.GetStep(i);
-                    for (vtkm::Id j = 0; j < ns; j++)
-                    {
-                        vtkm::Vec<FieldType,3> p = streamlines.GetHistory(i,j);
-                        std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
-                    }
-                }
-            }
-        }
-        else
-        {
-            vtkm::Id numRounds = maxSteps / StepsPerRound;
-            if (numRounds * StepsPerRound < maxSteps)
-                numRounds++;
-            
-            vtkm::Id numSteps = 0, stepOffset = 0; 
-            bool done = false;
-            int round = 0;
-            while (!done)
-            {
-                numSteps += StepsPerRound;
-                if (numSteps >= maxSteps)
-                {
-                    numSteps = maxSteps;
-                    done = true;
-                }
-                
-                StreamlineRoundType streamlines(posArray, stepArray, statusArray,
-                                                numSteps, StepsPerRound, stepOffset, maxSteps);
-                particleWorkletDispatch.Invoke(idxArray, streamlines);
+                vtkm::Id num = totNumSeeds - particleOffset;
+                if (num <= 0)
+                    break;
+                if (NeedParticleRounds && num > ParticlesPerRound)
+                    num = ParticlesPerRound;
 
-                auto historyPortal = streamlines.historyArray.GetPortalConstControl();
+                vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > posArray = vtkm::cont::make_ArrayHandle(&seeds[particleOffset], num);
+                std::vector<vtkm::Id> steps(num, 0), status(num,ParticleStatus::OK);
+                vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], num);
+                vtkm::cont::ArrayHandle<vtkm::Id> statusArray = vtkm::cont::make_ArrayHandle(&status[0], num);
+                vtkm::cont::ArrayHandleIndex idxArray(num);
+            
+                StreamlineType streamlines(posArray, stepArray, statusArray, maxSteps);
+                particleWorkletDispatch.Invoke(idxArray, streamlines);
+            
                 if (dumpOutput)
                 {
-                    for (vtkm::Id i = 0; i < numSeeds; i++)
+                    for (vtkm::Id i = 0; i < num; i++)
                     {
                         vtkm::Id ns = streamlines.GetStep(i);
-                        for (vtkm::Id j = stepOffset; j < ns; j++)
+                        for (vtkm::Id j = 0; j < ns; j++)
                         {
-                            vtkm::Vec<FieldType,3> p = historyPortal.Get(i*StepsPerRound+(j-stepOffset));
+                            vtkm::Vec<FieldType,3> p = streamlines.GetHistory(i,j);
                             std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
                         }
                     }
                 }
-                round++;
-                stepOffset += StepsPerRound;
+                
+                particleOffset += ParticlesPerRound;
+                if (!NeedParticleRounds)
+                    particlesDone = true;
+            }
+        }
+        else
+        {
+            bool particlesDone = false;
+            vtkm::Id particleOffset = 0;
+            
+            while (!particlesDone)
+            {
+                vtkm::Id num = totNumSeeds - particleOffset;
+                if (num <= 0)
+                    break;
+                if (NeedParticleRounds && num > ParticlesPerRound)
+                    num = ParticlesPerRound;
 
+                vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > posArray = vtkm::cont::make_ArrayHandle(&seeds[particleOffset], num);
+                std::vector<vtkm::Id> steps(num, 0), status(num,ParticleStatus::OK);
+                vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], num);
+                vtkm::cont::ArrayHandle<vtkm::Id> statusArray = vtkm::cont::make_ArrayHandle(&status[0], num);
+                vtkm::cont::ArrayHandleIndex idxArray(num);
+
+                vtkm::Id numSteps = 0, stepOffset = 0; 
+                bool stepsDone = false;
+                while (!stepsDone)
+                {
+                    numSteps += StepsPerRound;
+                    if (numSteps >= maxSteps)
+                    {
+                        numSteps = maxSteps;
+                        stepsDone = true;
+                    }
+
+                    StreamlineRoundType streamlines(posArray, stepArray, statusArray,
+                                                    numSteps, StepsPerRound, stepOffset, maxSteps);
+                    particleWorkletDispatch.Invoke(idxArray, streamlines);
+                    
+                    auto historyPortal = streamlines.historyArray.GetPortalConstControl();
+                    if (dumpOutput)
+                    {
+                        for (vtkm::Id i = 0; i < num; i++)
+                        {
+                            vtkm::Id ns = streamlines.GetStep(i);
+                            for (vtkm::Id j = stepOffset; j < ns; j++)
+                            {
+                                vtkm::Vec<FieldType,3> p = historyPortal.Get(i*StepsPerRound+(j-stepOffset));
+                                std::cout<<p[0]<<" "<<p[1]<<" "<<p[2]<<std::endl;
+                            }
+                        }
+                    }
+                    stepOffset += StepsPerRound;
+                }
+                particleOffset += ParticlesPerRound;
+                if (!NeedParticleRounds)
+                    particlesDone = true;
             }
         }
     }
@@ -263,7 +318,7 @@ private:
     vtkm::Id maxSteps;
     IntegratorType integrator;
     std::vector<vtkm::Vec<FieldType,3> > seeds;
-    vtkm::Id StepsPerRound;
+    vtkm::Id StepsPerRound, ParticlesPerRound;
 
     vtkm::cont::DataSet ds;    
 };

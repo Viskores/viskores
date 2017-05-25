@@ -53,6 +53,7 @@ void RunTest(const std::string &fname,
              vtkm::Id numThreads,
              vtkm::Id advectType,
              vtkm::Id stepsPerRound,
+             vtkm::Id particlesPerRound,
              bool dumpOutput,
              vtkm::Id seeding)
 {
@@ -154,7 +155,7 @@ void RunTest(const std::string &fname,
   {
       vtkm::worklet::particleadvection::StreamlineFilter<RK4RGType,
                                                          FieldType,
-                                                         DeviceAdapter> sl(rk4,seeds,ds,numSteps,stepsPerRound);
+                                                         DeviceAdapter> sl(rk4,seeds,ds,numSteps,stepsPerRound,particlesPerRound);
       sl.run(dumpOutput);
   }
   auto t1 = std::chrono::high_resolution_clock::now() - t0;
@@ -164,7 +165,8 @@ void RunTest(const std::string &fname,
 
 bool ParseArgs(int argc, char **argv,
                vtkm::Id &numSeeds, vtkm::Id &numSteps, vtkm::Float32 &stepSize,
-               vtkm::Id &advectType, vtkm::Id &stepsPerRound, vtkm::Id &numThreads, std::string &dataFile,
+               vtkm::Id &advectType, vtkm::Id &stepsPerRound, vtkm::Id &particlesPerRound,
+               vtkm::Id &numThreads, std::string &dataFile,
                std::string &pgmType, bool &dumpOutput, vtkm::Id &seeding)
 {
     numSeeds = 100;
@@ -172,6 +174,7 @@ bool ParseArgs(int argc, char **argv,
     stepSize = 0.1f;
     advectType = 0;
     stepsPerRound = -1;
+    particlesPerRound = -1;
     numThreads = -1;
     dataFile = "";
     pgmType = "UNKNOWN";
@@ -214,8 +217,23 @@ bool ParseArgs(int argc, char **argv,
         else if (arg == "-streamline")
         {
             advectType = 1;
+        }
+        else if (arg == "-streamlineS")
+        {
+            advectType = 1;
             stepsPerRound = static_cast<vtkm::Id>(atoi(argv[++i]));
         }
+        else if (arg == "-streamlineP")
+        {
+            advectType = 1;
+            particlesPerRound = static_cast<vtkm::Id>(atoi(argv[++i]));            
+        }
+        else if (arg == "-streamlineSP")
+        {
+            advectType = 1;
+            stepsPerRound = static_cast<vtkm::Id>(atoi(argv[++i]));
+            particlesPerRound = static_cast<vtkm::Id>(atoi(argv[++i]));
+        }                
         else if (arg == "-file")
             dataFile = argv[++i];
         else if (arg == "-t")
@@ -250,7 +268,7 @@ bool ParseArgs(int argc, char **argv,
 int
 main(int argc, char **argv)
 {
-    vtkm::Id numSeeds = 100, numSteps = 100, advectType = 0, numThreads=-1, stepsPerRound=-1;
+    vtkm::Id numSeeds = 100, numSteps = 100, advectType = 0, numThreads=-1, stepsPerRound=-1, particlesPerRound=-1;
     vtkm::Float32 stepSize = 0.1f;
     std::string dataFile, pgmType;
     vtkm::Id seeding = SPARSE;
@@ -258,11 +276,12 @@ main(int argc, char **argv)
     
     if (!ParseArgs(argc, argv,
                    numSeeds, numSteps, stepSize,
-                   advectType, stepsPerRound, numThreads, dataFile, pgmType, dumpOutput, seeding))
+                   advectType, stepsPerRound, particlesPerRound,
+                   numThreads, dataFile, pgmType, dumpOutput, seeding))
     {
         return -1;
     }
     
-    RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType, stepsPerRound, dumpOutput, seeding);
+    RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType, stepsPerRound, particlesPerRound, dumpOutput, seeding);
     return 0;
 }
