@@ -75,6 +75,12 @@ namespace cont
 namespace tbb
 {
 
+namespace internal
+{
+template <typename ResultType, typename Function>
+using WrappedBinaryOperator = vtkm::cont::internal::WrappedBinaryOperator<ResultType, Function>;
+}
+
 // The "grain size" of scheduling with TBB.  Not a lot of thought has gone
 // into picking this size.
 static const vtkm::Id TBB_GRAIN_SIZE = 1024;
@@ -422,113 +428,6 @@ ScanExclusivePortals(
   // array rather than the sum, but that is how the function is specified.
   return body.Sum;
 }
-
-template <class FunctorType>
-class ScheduleKernel
-{
-public:
-  VTKM_CONT ScheduleKernel(const FunctorType& functor)
-    : Functor(functor)
-  {
-  }
-
-  VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer& errorMessage)
-  {
-    this->ErrorMessage = errorMessage;
-    this->Functor.SetErrorMessageBuffer(errorMessage);
-  }
-
-  VTKM_CONT
-  void operator()(const ::tbb::blocked_range<vtkm::Id>& range) const
-  {
-    // The TBB device adapter causes array classes to be shared between
-    // control and execution environment. This means that it is possible for
-    // an exception to be thrown even though this is typically not allowed.
-    // Throwing an exception from here is bad because there are several
-    // simultaneous threads running. Get around the problem by catching the
-    // error and setting the message buffer as expected.
-    try
-    {
-      const vtkm::Id start = range.begin();
-      const vtkm::Id end = range.end();
-      VTKM_VECTORIZATION_PRE_LOOP
-      for (vtkm::Id index = start; index != end; index++)
-      {
-        VTKM_VECTORIZATION_IN_LOOP
-        this->Functor(index);
-      }
-    }
-    catch (vtkm::cont::Error& error)
-    {
-      this->ErrorMessage.RaiseError(error.GetMessage().c_str());
-    }
-    catch (...)
-    {
-      this->ErrorMessage.RaiseError("Unexpected error in execution environment.");
-    }
-  }
-
-private:
-  FunctorType Functor;
-  vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
-};
-
-template <class FunctorType>
-class ScheduleKernelId3
-{
-public:
-  VTKM_CONT ScheduleKernelId3(const FunctorType& functor)
-    : Functor(functor)
-  {
-  }
-
-  VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer& errorMessage)
-  {
-    this->ErrorMessage = errorMessage;
-    this->Functor.SetErrorMessageBuffer(errorMessage);
-  }
-
-  VTKM_CONT
-  void operator()(const ::tbb::blocked_range3d<vtkm::Id>& range) const
-  {
-    try
-    {
-      const vtkm::Id kstart = range.pages().begin();
-      const vtkm::Id kend = range.pages().end();
-      const vtkm::Id jstart = range.rows().begin();
-      const vtkm::Id jend = range.rows().end();
-      const vtkm::Id istart = range.cols().begin();
-      const vtkm::Id iend = range.cols().end();
-
-      vtkm::Id3 index;
-      for (vtkm::Id k = kstart; k != kend; ++k)
-      {
-        index[2] = k;
-        for (vtkm::Id j = jstart; j != jend; ++j)
-        {
-          index[1] = j;
-          for (vtkm::Id i = istart; i != iend; ++i)
-          {
-            index[0] = i;
-            this->Functor(index);
-          }
-        }
-      }
-    }
-    catch (vtkm::cont::Error& error)
-    {
-      this->ErrorMessage.RaiseError(error.GetMessage().c_str());
-    }
-    catch (...)
-    {
-      this->ErrorMessage.RaiseError("Unexpected error in execution environment.");
-    }
-  }
-
-private:
-  FunctorType Functor;
-  vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
-};
 
 template <typename InputPortalType, typename IndexPortalType, typename OutputPortalType>
 class ScatterKernel

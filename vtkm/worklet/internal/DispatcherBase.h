@@ -26,6 +26,7 @@
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/cont/DeviceAdapter.h>
+
 #include <vtkm/cont/ErrorBadType.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
@@ -34,7 +35,6 @@
 #include <vtkm/cont/internal/DynamicTransform.h>
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
-#include <vtkm/exec/internal/TaskSingular.h>
 
 #include <vtkm/internal/IntegerSequence.h>
 #include <vtkm/internal/brigand.hpp>
@@ -476,15 +476,18 @@ private:
   template <typename Invocation, typename RangeType, typename DeviceAdapter>
   VTKM_CONT void InvokeSchedule(const Invocation& invocation, RangeType range, DeviceAdapter) const
   {
-    // The TaskSingular class handles the magic of fetching values
-    // for each instance and calling the worklet's function. So just create
-    // a TaskSingular and schedule it with the device adapter.
-    typedef vtkm::exec::internal::TaskSingular<WorkletType, Invocation> WorkletInvokeFunctorType;
-    WorkletInvokeFunctorType workletFunctor = WorkletInvokeFunctorType(this->Worklet, invocation);
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
 
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
-
-    Algorithm::Schedule(workletFunctor, range);
+    // The TaskType class handles the magic of fetching values
+    // for each instance and calling the worklet's function.
+    // The TaskType will evaluate to one of the following classes:
+    //
+    // vtkm::exec::internal::TaskSingular
+    // vtkm::exec::internal::TaskTiling1D
+    // vtkm::exec::internal::TaskTiling3D
+    auto task = TaskTypes::MakeTask(this->Worklet, invocation, range);
+    Algorithm::ScheduleTask(task, range);
   }
 };
 }

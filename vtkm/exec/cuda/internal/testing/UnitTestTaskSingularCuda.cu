@@ -18,18 +18,19 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/exec/internal/TaskSingular.h>
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
+#include <vtkm/exec/internal/TaskSingular.h>
 
 #include <vtkm/StaticAssert.h>
 
 #include <vtkm/internal/FunctionInterface.h>
 #include <vtkm/internal/Invocation.h>
 
-#include <vtkm/testing/Testing.h>
+#include <vtkm/cont/testing/Testing.h>
 
 namespace
 {
@@ -38,17 +39,17 @@ struct TestExecObject
 {
   VTKM_EXEC_CONT
   TestExecObject()
-    : Value(NULL)
+    : Portal()
   {
   }
 
   VTKM_EXEC_CONT
-  TestExecObject(vtkm::Id* value)
-    : Value(value)
+  TestExecObject(vtkm::exec::cuda::internal::ArrayPortalFromThrust<vtkm::Id> portal)
+    : Portal(portal)
   {
   }
 
-  vtkm::Id* Value;
+  vtkm::exec::cuda::internal::ArrayPortalFromThrust<vtkm::Id> Portal;
 };
 
 struct MyOutputToInputMapPortal
@@ -100,7 +101,7 @@ struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault,
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic& indices,
                  const TestExecObject& execObject) const
   {
-    return *execObject.Value + 10 * indices.GetInputIndex();
+    return execObject.Portal.Get(indices.GetInputIndex()) + 10 * indices.GetInputIndex();
   }
 
   VTKM_EXEC
@@ -127,7 +128,7 @@ struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault,
   void Store(const vtkm::exec::arg::ThreadIndicesBasic& indices, const TestExecObject& execObject,
              ValueType value) const
   {
-    *execObject.Value = value + 20 * indices.GetOutputIndex();
+    execObject.Portal.Set(indices.GetOutputIndex(), value + 20 * indices.GetOutputIndex());
   }
 };
 }
@@ -158,6 +159,18 @@ typedef vtkm::internal::Invocation<ExecutionParameterInterface, TestControlInter
                                    TestExecutionInterface2, 1, MyOutputToInputMapPortal,
                                    MyVisitArrayPortal>
   InvocationType2;
+
+template <typename TaskType>
+static __global__ void ScheduleTaskSingular(TaskType task, vtkm::Id start, vtkm::Id end)
+{
+
+  const vtkm::Id index = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (index >= start && index < end)
+  {
+    task(index);
+  }
+}
 
 // Not a full worklet, but provides operators that we expect in a worklet.
 struct TestWorkletProxy : vtkm::exec::FunctorBase
@@ -221,74 +234,117 @@ VTKM_STATIC_ASSERT(
     vtkm::exec::arg::Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault,
                            vtkm::exec::arg::ThreadIndicesBasic, TestExecObject>>::type::value));
 
+template <typename DeviceAdapter>
 void TestNormalFunctorInvoke()
 {
   std::cout << "Testing normal worklet invoke." << std::endl;
 
-  vtkm::Id inputTestValue;
-  vtkm::Id outputTestValue;
+  vtkm::Id inputTestValues[3] = { 5, 5, 6 };
+  vtkm::Id outputTestValues[3] = { static_cast<vtkm::Id>(0xDEADDEAD),
+                                   static_cast<vtkm::Id>(0xDEADDEAD),
+                                   static_cast<vtkm::Id>(0xDEADDEAD) };
+
+  vtkm::cont::ArrayHandle<vtkm::Id> input = vtkm::cont::make_ArrayHandle(inputTestValues, 3);
+  vtkm::cont::ArrayHandle<vtkm::Id> output;
+
   vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
-    vtkm::internal::make_FunctionInterface<void>(TestExecObject(&inputTestValue),
-                                                 TestExecObject(&outputTestValue));
+    vtkm::internal::make_FunctionInterface<void>(
+      TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
+      TestExecObject(output.PrepareForOutput(3, DeviceAdapter())));
 
   std::cout << "  Try void return." << std::endl;
-  inputTestValue = 5;
-  outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
   typedef vtkm::exec::internal::TaskSingular<TestWorkletProxy, InvocationType1> TaskSingular1;
   TestWorkletProxy worklet;
   InvocationType1 invocation1(execObjects);
-  TaskSingular1 taskInvokeWorklet1(worklet, invocation1);
 
-  taskInvokeWorklet1(1);
-  VTKM_TEST_ASSERT(inputTestValue == 5, "Input value changed.");
-  VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 100 + 30, "Output value not set right.");
+  using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
+  auto task1 = TaskTypes::MakeTask(worklet, invocation1, vtkm::Id());
+
+  ScheduleTaskSingular<decltype(task1)><<<32, 256>>>(task1, 1, 2);
+  cudaDeviceSynchronize();
+  input.SyncControlArray();
+  output.SyncControlArray();
+
+  output.CopyInto(outputTestValues, DeviceAdapter());
+
+  VTKM_TEST_ASSERT(inputTestValues[1] == 5, "Input value changed.");
+  VTKM_TEST_ASSERT(outputTestValues[1] == inputTestValues[1] + 100 + 30,
+                   "Output value not set right.");
 
   std::cout << "  Try return value." << std::endl;
-  inputTestValue = 6;
-  outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
+
+  execObjects = vtkm::internal::make_FunctionInterface<void>(
+    TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
+    TestExecObject(output.PrepareForOutput(3, DeviceAdapter())));
+
   typedef vtkm::exec::internal::TaskSingular<TestWorkletProxy, InvocationType2> TaskSingular2;
   InvocationType2 invocation2(execObjects);
-  TaskSingular2 taskInvokeWorklet2(worklet, invocation2);
 
-  taskInvokeWorklet2(2);
-  VTKM_TEST_ASSERT(inputTestValue == 6, "Input value changed.");
-  VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 200 + 30 * 2, "Output value not set right.");
+  using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
+  auto task2 = TaskTypes::MakeTask(worklet, invocation2, vtkm::Id());
+
+  ScheduleTaskSingular<decltype(task2)><<<32, 256>>>(task2, 2, 3);
+  cudaDeviceSynchronize();
+  input.SyncControlArray();
+  output.SyncControlArray();
+
+  output.CopyInto(outputTestValues, DeviceAdapter());
+
+  VTKM_TEST_ASSERT(inputTestValues[2] == 6, "Input value changed.");
+  VTKM_TEST_ASSERT(outputTestValues[2] == inputTestValues[2] + 200 + 30 * 2,
+                   "Output value not set right.");
 }
 
+template <typename DeviceAdapter>
 void TestErrorFunctorInvoke()
 {
   std::cout << "Testing invoke with an error raised in the worklet." << std::endl;
 
   vtkm::Id inputTestValue = 5;
   vtkm::Id outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
+
+  vtkm::cont::ArrayHandle<vtkm::Id> input = vtkm::cont::make_ArrayHandle(&inputTestValue, 1);
+  vtkm::cont::ArrayHandle<vtkm::Id> output = vtkm::cont::make_ArrayHandle(&outputTestValue, 1);
+
   vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
-    vtkm::internal::make_FunctionInterface<void>(TestExecObject(&inputTestValue),
-                                                 TestExecObject(&outputTestValue));
+    vtkm::internal::make_FunctionInterface<void>(
+      TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
+      TestExecObject(output.PrepareForInPlace(DeviceAdapter())));
 
   typedef vtkm::exec::internal::TaskSingular<TestWorkletErrorProxy, InvocationType1> TaskSingular1;
   TestWorkletErrorProxy worklet;
   InvocationType1 invocation(execObjects);
-  TaskSingular1 taskInvokeWorklet1 = TaskSingular1(worklet, invocation);
 
-  char message[1024];
-  message[0] = '\0';
-  vtkm::exec::internal::ErrorMessageBuffer errorMessage(message, 1024);
-  taskInvokeWorklet1.SetErrorMessageBuffer(errorMessage);
-  taskInvokeWorklet1(1);
+  using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+
+  auto task = TaskTypes::MakeTask(worklet, invocation, vtkm::Id());
+
+  vtkm::Id errorArraySize = 0;
+  char* hostErrorPtr = nullptr;
+  char* deviceErrorPtr = Algorithm::GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
+
+  hostErrorPtr[0] = '\0';
+  vtkm::exec::internal::ErrorMessageBuffer errorMessage(deviceErrorPtr, errorArraySize);
+  task.SetErrorMessageBuffer(errorMessage);
+
+  ScheduleTaskSingular<decltype(task)><<<32, 256>>>(task, 1, 2);
+  cudaDeviceSynchronize();
 
   VTKM_TEST_ASSERT(errorMessage.IsErrorRaised(), "Error not raised correctly.");
-  VTKM_TEST_ASSERT(message == std::string(ERROR_MESSAGE), "Got wrong error message.");
+  VTKM_TEST_ASSERT(hostErrorPtr == std::string(ERROR_MESSAGE), "Got wrong error message.");
 }
 
+template <typename DeviceAdapter>
 void TestTaskSingular()
 {
-  TestNormalFunctorInvoke();
-  TestErrorFunctorInvoke();
+  TestNormalFunctorInvoke<DeviceAdapter>();
+  TestErrorFunctorInvoke<DeviceAdapter>();
 }
 
 } // anonymous namespace
 
-int UnitTestTaskSingular(int, char* [])
+int UnitTestTaskSingularCuda(int, char* [])
 {
-  return vtkm::testing::Testing::Run(TestTaskSingular);
+  return vtkm::cont::testing::Testing::Run(TestTaskSingular<vtkm::cont::DeviceAdapterTagCuda>);
 }

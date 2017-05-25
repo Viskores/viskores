@@ -1187,6 +1187,14 @@ private:
   }
 
 public:
+  template <class TaskType, typename RangeType>
+  VTKM_CONT static void ScheduleTask(TaskType task, RangeType size)
+  { //for now defer to the schedule api, we need to do a significant
+    //amount of build infrastructure work to implement type erasure tasks
+    //for cuda
+    Schedule(task, size);
+  }
+
   template <class Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
   {

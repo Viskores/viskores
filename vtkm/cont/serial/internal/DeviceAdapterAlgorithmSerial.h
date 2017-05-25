@@ -30,7 +30,7 @@
 
 #include <vtkm/BinaryOperators.h>
 
-#include <vtkm/exec/internal/ErrorMessageBuffer.h>
+#include <vtkm/exec/serial/internal/TaskTiling.h>
 
 #include <algorithm>
 #include <numeric>
@@ -237,86 +237,23 @@ public:
     return ScanExclusive(input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
-private:
-  // This runs in the execution environment.
+  VTKM_CONT_EXPORT static void ScheduleTask(vtkm::exec::serial::internal::TaskTiling1D& functor,
+                                            vtkm::Id size);
+  VTKM_CONT_EXPORT static void ScheduleTask(vtkm::exec::serial::internal::TaskTiling3D& functor,
+                                            vtkm::Id3 size);
+
   template <class FunctorType>
-  class ScheduleKernel
+  VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id size)
   {
-  public:
-    ScheduleKernel(const FunctorType& functor)
-      : Functor(functor)
-    {
-    }
-
-    //needed for when calling from schedule on a range
-    template <typename T>
-    VTKM_EXEC void operator()(const T& index) const
-    {
-      this->Functor(index);
-    }
-
-  private:
-    const FunctorType Functor;
-
-    void operator=(const ScheduleKernel<FunctorType>&) = delete;
-  };
-
-public:
-  template <class Functor>
-  VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
-  {
-    const vtkm::Id MESSAGE_SIZE = 1024;
-    char errorString[MESSAGE_SIZE];
-    errorString[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorString, MESSAGE_SIZE);
-
-    functor.SetErrorMessageBuffer(errorMessage);
-
-    DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
-
-    const vtkm::Id size = numInstances;
-
-    VTKM_VECTORIZATION_PRE_LOOP
-    for (vtkm::Id i = 0; i < size; ++i)
-    {
-      VTKM_VECTORIZATION_IN_LOOP
-      kernel(i);
-    }
-
-    if (errorMessage.IsErrorRaised())
-    {
-      throw vtkm::cont::ErrorExecution(errorString);
-    }
+    vtkm::exec::serial::internal::TaskTiling1D kernel(functor);
+    ScheduleTask(kernel, size);
   }
 
-  template <class Functor>
-  VTKM_CONT static void Schedule(Functor functor, vtkm::Id3 rangeMax)
+  template <class FunctorType>
+  VTKM_CONT static inline void Schedule(FunctorType functor, vtkm::Id3 size)
   {
-    const vtkm::Id MESSAGE_SIZE = 1024;
-    char errorString[MESSAGE_SIZE];
-    errorString[0] = '\0';
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorString, MESSAGE_SIZE);
-
-    functor.SetErrorMessageBuffer(errorMessage);
-
-    DeviceAdapterAlgorithm<Device>::ScheduleKernel<Functor> kernel(functor);
-    for (vtkm::Id k = 0; k < rangeMax[2]; ++k)
-    {
-      for (vtkm::Id j = 0; j < rangeMax[1]; ++j)
-      {
-        VTKM_VECTORIZATION_PRE_LOOP
-        for (vtkm::Id i = 0; i < rangeMax[0]; ++i)
-        {
-          VTKM_VECTORIZATION_IN_LOOP
-          kernel(vtkm::Id3(i, j, k));
-        }
-      }
-    }
-
-    if (errorMessage.IsErrorRaised())
-    {
-      throw vtkm::cont::ErrorExecution(errorString);
-    }
+    vtkm::exec::serial::internal::TaskTiling3D kernel(functor);
+    ScheduleTask(kernel, size);
   }
 
 private:
@@ -425,6 +362,29 @@ public:
   VTKM_CONT static void Synchronize()
   {
     // Nothing to do. This device is serial and has no asynchronous operations.
+  }
+};
+
+template <>
+class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagSerial>
+{
+public:
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
+                                                             const InvocationType& invocation,
+                                                             vtkm::Id,
+                                                             vtkm::Id globalIndexOffset = 0)
+  {
+    return vtkm::exec::serial::internal::TaskTiling1D(worklet, invocation, globalIndexOffset);
+  }
+
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
+                                                             const InvocationType& invocation,
+                                                             vtkm::Id3,
+                                                             vtkm::Id globalIndexOffset = 0)
+  {
+    return vtkm::exec::serial::internal::TaskTiling3D(worklet, invocation, globalIndexOffset);
   }
 };
 }

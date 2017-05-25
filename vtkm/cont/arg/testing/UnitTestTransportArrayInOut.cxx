@@ -33,7 +33,7 @@ namespace
 static const vtkm::Id ARRAY_SIZE = 10;
 
 template <typename PortalType>
-struct TestKernel : public vtkm::exec::FunctorBase
+struct TestKernelInOut : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
 
@@ -66,7 +66,7 @@ struct TryArrayInOutType
     vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayInOut, ArrayHandleType, Device>
       transport;
 
-    TestKernel<PortalType> kernel;
+    TestKernelInOut<PortalType> kernel;
     kernel.Portal = transport(handle, handle, ARRAY_SIZE, ARRAY_SIZE);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);

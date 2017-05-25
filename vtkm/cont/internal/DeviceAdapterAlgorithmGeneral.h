@@ -29,6 +29,7 @@
 #include <vtkm/cont/internal/FunctorsGeneral.h>
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
+#include <vtkm/exec/internal/TaskSingular.h>
 
 #include <vtkm/TypeTraits.h>
 
@@ -1028,6 +1029,39 @@ private:
   }
 
 #endif
+};
+
+/// \brief Class providing a device-specific support for selecting the optimal
+/// Task type for a given worklet.
+///
+/// When worklets are launched inside the execution enviornment we need to
+/// ask the device adapter what is the preferred execution style, be it
+/// a tiled iteration pattern, or strided. This class
+///
+/// By default if not specialized for a device adapter the default
+/// is to use vtkm::exec::internal::TaskSingular
+///
+template <typename DeviceTag>
+class DeviceTaskTypes
+{
+public:
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
+    const WorkletType& worklet, const InvocationType& invocation, vtkm::Id,
+    vtkm::Id globalIndexOffset = 0)
+  {
+    using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
+    return Task(worklet, invocation, globalIndexOffset);
+  }
+
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
+    const WorkletType& worklet, const InvocationType& invocation, vtkm::Id3,
+    vtkm::Id globalIndexOffset = 0)
+  {
+    using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
+    return Task(worklet, invocation, globalIndexOffset);
+  }
 };
 }
 } // namespace vtkm::cont

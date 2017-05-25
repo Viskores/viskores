@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
-//  Copyright 2014 UT-Battelle, LLC.
-//  Copyright 2014 Los Alamos National Security.
+//  Copyright 2017 Sandia Corporation.
+//  Copyright 2017 UT-Battelle, LLC.
+//  Copyright 2017 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -17,24 +17,25 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_TaskBase_h
-#define vtk_m_exec_TaskBase_h
+#ifndef vtk_m_exec_tbb_internal_TaskTiling_h
+#define vtk_m_exec_tbb_internal_TaskTiling_h
 
-#include <vtkm/Types.h>
-
-#include <vtkm/exec/internal/ErrorMessageBuffer.h>
+#include <vtkm/exec/serial/internal/TaskTiling.h>
 
 namespace vtkm
 {
 namespace exec
 {
-
-/// Base class for all classes that are used to marshal data from the invocation
-/// parameters to the user worklets when invoked in the execution environment.
-class TaskBase
+namespace tbb
 {
-};
-}
-} // namespace vtkm::exec
+namespace internal
+{
 
-#endif //vtk_m_exec_TaskBase_h
+using TaskTiling1D = vtkm::exec::serial::internal::TaskTiling1D;
+using TaskTiling3D = vtkm::exec::serial::internal::TaskTiling3D;
+}
+}
+}
+} // namespace vtkm::exec::tbb::internal
+
+#endif //vtk_m_exec_tbb_internal_TaskTiling_h
