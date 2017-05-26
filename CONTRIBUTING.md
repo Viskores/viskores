@@ -26,7 +26,15 @@ Before you begin, perform initial setup:
         $ cd vtk-m
     The main repository will be configured as your `origin` remote.
 
-4.  (Optional but highly recommended.)
+4.  Run the [developer setup script] to prepare your VTK-m work tree and
+    create Git command aliases used below:
+
+        $ ./Utilities/SetupForDevelopment.sh
+
+    This will prompt for your GitLab user name and configure a remote
+    called `gitlab` to refer to it.
+
+5.  (Optional but highly recommended.)
     [Register](https://open.cdash.org/register.php) with the VTK-m project
     on Kitware's CDash instance to better know how your code performs in
     regression tests.  After registering and signing in, click on
@@ -50,6 +58,7 @@ Our collaboration workflow consists of three main steps:
     * [Share a Topic](#share-a-topic)
     * [Create a Merge Request](#create-a-merge-request)
     * [Review a Merge Request](#review-a-merge-request)
+    * [Reformat a Topic](#reformat-a-topic)
     * [Revise a Topic](#revise-a-topic)
 
 3.  Integrate Changes:
@@ -142,11 +151,13 @@ signed in for [GitLab Access][] and created your fork by visiting the main
 
 2.  Push commits in your topic branch to your fork in GitLab:
 
-        $ git push gitlab HEAD
+        $ git gitlab-push
 
     Notes:
     * If you are revising a previously pushed topic and have rewritten the
       topic history, add `-f` or `--force` to overwrite the destination.
+    * The `gitlab-push` script also pushes the `master` branch to your
+      fork in GitLab to keep it in sync with the upstream `master`.
 
     The output will include a link to the topic branch in your fork in GitLab
     and a link to a page for creating a Merge Request.
@@ -341,12 +352,47 @@ Builder names always follow this pattern:
   * feature: alphabetical list of features enabled for the build
 
 
+Reformat a Topic
+----------------
+
+The "Kitware Robot" automatically performs basic code formatting on the commits
+and adds a comment acknowledging or rejecting a merge request based on the
+format. You may request "Kitware Robot" to automatically reformat the
+remote copy of your branch by issuing the command:
+
+    Do: reformat
+
+This reformatting of the topic rewrites the commits to fix the formatting
+errors, and causes the version on the developers machine to differ from
+version on the gitlab server. To resolve this issue you must update
+the local version to match the reformatted one on the server if you wish
+to extend or revise the topic.
+
+1.  Checkout the topic if it is not your current branch:
+        $ git checkout my-topic
+
+2.  Get the new version from gitlab
+
+        $ git gitlab-sync -f
+
+
+If you do not wish to have the "Kitware Robot" automatically reformat your
+branch you can do so manually by running [clang-format][https://clang.llvm.org/docs/ClangFormat.html]
+manually on each commit of your branch. This must be done by [revising each commit](#revise-a-topic)
+not as new commits onto the end of the branch.
+
 Revise a Topic
 --------------
 
-If a topic is approved during GitLab review, skip to the
-[next step](#merge-a-topic).  Otherwise, revise the topic
-and push it back to GitLab for another review as follows:
+Revising a topic is a special way to modify the commits within a topic. Normally
+during a review of a merge request a developer will resolve issues brought
+up during review by adding more commits to the topic. While this is sufficient
+for most issues, some issues can only be resolved by rewriting the history
+of the topic.
+
+If a reviewer has asked explicitly for certain commits to be rewritten, you will
+need to revise the commits and force push it back to GitLab for another review.
+To revise a topic for another review as follows:
 
 1.  Checkout the topic if it is not your current branch:
 
@@ -359,7 +405,14 @@ and push it back to GitLab for another review as follows:
     (Substitute the correct number of commits back, as low as `1`.)
     Follow Git's interactive instructions.
 
-3.  Return to the [above step](#share-a-topic) to share the revised topic.
+3.  Push commits in your topic branch to your fork in GitLab:
+
+        $ git gitlab-push -f
+
+    Notes:
+    * You need to add `-f` or `--force` to overwrite the destination as you
+      are revising a previously pushed topic and have rewritten the
+      topic history.
 
 Merge a Topic
 -------------
