@@ -30,6 +30,8 @@ add_library(vtkm_cont_serial OBJECT
   DeviceAdapterAlgorithmSerial.cxx
   )
 
+vtkm_declare_headers(${headers})
+
 target_compile_features(vtkm_cont_serial PRIVATE cxx_auto_type)
 target_compile_definitions(vtkm_cont_serial PRIVATE vtkm_cont_EXPORTS)
 if(BUILD_SHARED_LIBS)
