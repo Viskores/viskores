@@ -46,7 +46,8 @@ void MakeEdgeCononical(EdgeType& edge)
 struct TestCellFacesFunctor
 {
   template <typename CellShapeTag>
-  void DoTest(vtkm::IdComponent numPoints, CellShapeTag shape,
+  void DoTest(vtkm::IdComponent numPoints,
+              CellShapeTag shape,
               vtkm::CellTopologicalDimensionsTag<3>) const
   {
     // Stuff to fake running in the execution environment.
@@ -109,7 +110,8 @@ struct TestCellFacesFunctor
 
   // Case of cells that have 2 dimensions (no faces)
   template <typename CellShapeTag>
-  void DoTest(vtkm::IdComponent numPoints, CellShapeTag shape,
+  void DoTest(vtkm::IdComponent numPoints,
+              CellShapeTag shape,
               vtkm::CellTopologicalDimensionsTag<2>) const
   {
     // Stuff to fake running in the execution environment.
@@ -144,7 +146,8 @@ struct TestCellFacesFunctor
   // Less important case of cells that have less than 2 dimensions
   // (no faces or edges)
   template <typename CellShapeTag, vtkm::IdComponent NumDimensions>
-  void DoTest(vtkm::IdComponent numPoints, CellShapeTag shape,
+  void DoTest(vtkm::IdComponent numPoints,
+              CellShapeTag shape,
               vtkm::CellTopologicalDimensionsTag<NumDimensions>) const
   {
     // Stuff to fake running in the execution environment.
@@ -166,12 +169,14 @@ struct TestCellFacesFunctor
   {
     std::cout << "--- Test shape tag directly"
               << " (" << numPoints << " points)" << std::endl;
-    this->DoTest(numPoints, CellShapeTag(),
+    this->DoTest(numPoints,
+                 CellShapeTag(),
                  typename vtkm::CellTraits<CellShapeTag>::TopologicalDimensionsTag());
 
     std::cout << "--- Test generic shape tag"
               << " (" << numPoints << " points)" << std::endl;
-    this->DoTest(numPoints, vtkm::CellShapeTagGeneric(CellShapeTag::Id),
+    this->DoTest(numPoints,
+                 vtkm::CellShapeTagGeneric(CellShapeTag::Id),
                  typename vtkm::CellTraits<CellShapeTag>::TopologicalDimensionsTag());
   }
 

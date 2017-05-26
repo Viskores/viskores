@@ -51,7 +51,8 @@ inline vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>> GetCellSet
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
 {
   //1. extract the cell set
@@ -82,9 +83,11 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExternalFaces::DoMapField(
-  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  vtkm::filter::ResultDataSet& result,
+  const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter&)
 {
   if (fieldMeta.IsPointField())
   {

@@ -131,7 +131,8 @@ public:
   }
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& vertex, const InFieldPortalType& values,
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
+                            const InFieldPortalType& values,
                             const OutFieldPortalType& saddles,
                             const OutFieldPortalType& extrema) const
   {

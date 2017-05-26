@@ -79,7 +79,8 @@ public:
   class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset, ExecObject tables,
+    typedef void ControlSignature(CellSetIn cellset,
+                                  ExecObject tables,
                                   FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(CellShape, PointIndices, _2, _3, VisitIndex);
     typedef _1 InputDomain;
@@ -97,9 +98,11 @@ public:
     // Each cell produces tetrahedra and write result at the offset
     template <typename CellShapeTag, typename ConnectivityInVec, typename ConnectivityOutVec>
     VTKM_EXEC void operator()(
-      CellShapeTag shape, const ConnectivityInVec& connectivityIn,
+      CellShapeTag shape,
+      const ConnectivityInVec& connectivityIn,
       const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter>& tables,
-      ConnectivityOutVec& connectivityOut, vtkm::IdComponent visitIndex) const
+      ConnectivityOutVec& connectivityOut,
+      vtkm::IdComponent visitIndex) const
     {
       vtkm::Vec<vtkm::IdComponent, 4> tetIndices = tables.GetIndices(shape, visitIndex);
       connectivityOut[0] = connectivityIn[tetIndices[0]];
@@ -137,7 +140,8 @@ public:
     TetrahedralizeCell tetrahedralizeWorklet(outCellsPerCell);
     vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell, DeviceAdapter>
       tetrahedralizeDispatcher(tetrahedralizeWorklet);
-    tetrahedralizeDispatcher.Invoke(cellSet, tables.PrepareForInput(DeviceAdapter()),
+    tetrahedralizeDispatcher.Invoke(cellSet,
+                                    tables.PrepareForInput(DeviceAdapter()),
                                     vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
 
     // Add cells to output cellset

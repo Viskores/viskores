@@ -118,8 +118,10 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(dataset.GetCellSet(0), dataset.GetField("pointvar").GetData(),
-                               ValuesBetween(40.0f, 71.0f), DeviceAdapter());
+    outCellSet = threshold.Run(dataset.GetCellSet(0),
+                               dataset.GetField("pointvar").GetData(),
+                               ValuesBetween(40.0f, 71.0f),
+                               DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11),
@@ -148,8 +150,10 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(dataset.GetCellSet(0), dataset.GetField("pointvar").GetData(),
-                               ValuesAbove(1.0f), DeviceAdapter());
+    outCellSet = threshold.Run(dataset.GetCellSet(0),
+                               dataset.GetField("pointvar").GetData(),
+                               ValuesAbove(1.0f),
+                               DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -171,8 +175,10 @@ public:
     // Output dataset gets new cell set of points that meet threshold predicate
     vtkm::worklet::ThresholdPoints threshold;
     OutCellSetType outCellSet;
-    outCellSet = threshold.Run(dataset.GetCellSet(0), dataset.GetField("pointvar").GetData(),
-                               ValuesBelow(50.0f), DeviceAdapter());
+    outCellSet = threshold.Run(dataset.GetCellSet(0),
+                               dataset.GetField("pointvar").GetData(),
+                               ValuesBelow(50.0f),
+                               DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 6),

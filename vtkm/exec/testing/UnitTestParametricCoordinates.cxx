@@ -38,7 +38,9 @@ std::mt19937 g_RandomGenerator;
 static const vtkm::IdComponent MAX_POINTS = 8;
 
 template <typename CellShapeTag>
-void GetMinMaxPoints(CellShapeTag, vtkm::CellTraitsTagSizeFixed, vtkm::IdComponent& minPoints,
+void GetMinMaxPoints(CellShapeTag,
+                     vtkm::CellTraitsTagSizeFixed,
+                     vtkm::IdComponent& minPoints,
                      vtkm::IdComponent& maxPoints)
 {
   // If this line fails, then MAX_POINTS is not large enough to support all
@@ -48,7 +50,9 @@ void GetMinMaxPoints(CellShapeTag, vtkm::CellTraitsTagSizeFixed, vtkm::IdCompone
 }
 
 template <typename CellShapeTag>
-void GetMinMaxPoints(CellShapeTag, vtkm::CellTraitsTagSizeVariable, vtkm::IdComponent& minPoints,
+void GetMinMaxPoints(CellShapeTag,
+                     vtkm::CellTraitsTagSizeVariable,
+                     vtkm::IdComponent& minPoints,
                      vtkm::IdComponent& maxPoints)
 {
   minPoints = 1;
@@ -56,8 +60,10 @@ void GetMinMaxPoints(CellShapeTag, vtkm::CellTraitsTagSizeVariable, vtkm::IdComp
 }
 
 template <typename PointWCoordsType, typename T, typename CellShapeTag>
-static void CompareCoordinates(const PointWCoordsType& pointWCoords, vtkm::Vec<T, 3> truePCoords,
-                               vtkm::Vec<T, 3> trueWCoords, CellShapeTag shape)
+static void CompareCoordinates(const PointWCoordsType& pointWCoords,
+                               vtkm::Vec<T, 3> truePCoords,
+                               vtkm::Vec<T, 3> trueWCoords,
+                               CellShapeTag shape)
 {
   typedef vtkm::Vec<T, 3> Vector3;
 
@@ -157,8 +163,8 @@ void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
 
     // If you convert to world coordinates and back, you should get the
     // same value.
-    Vector3 wcoords = vtkm::exec::ParametricCoordinatesToWorldCoordinates(pointWCoords, pcoords,
-                                                                          shape, workletProxy);
+    Vector3 wcoords = vtkm::exec::ParametricCoordinatesToWorldCoordinates(
+      pointWCoords, pcoords, shape, workletProxy);
     VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
     Vector3 computedPCoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
       pointWCoords, wcoords, shape, workletProxy);
@@ -200,8 +206,8 @@ struct TestPCoordsFunctor
     for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
     {
       Vector3 pcoords;
-      vtkm::exec::ParametricCoordinatesPoint(numPoints, pointIndex, pcoords, CellShapeTag(),
-                                             workletProxy);
+      vtkm::exec::ParametricCoordinatesPoint(
+        numPoints, pointIndex, pcoords, CellShapeTag(), workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
 
       Vector3 wCoords = Vector3(pcoords[0], pcoords[1], pcoords[2] + vtkm::dot(pcoords, sheerVec));
@@ -216,8 +222,8 @@ struct TestPCoordsFunctor
   {
     vtkm::IdComponent minPoints;
     vtkm::IdComponent maxPoints;
-    GetMinMaxPoints(CellShapeTag(), typename vtkm::CellTraits<CellShapeTag>::IsSizeFixed(),
-                    minPoints, maxPoints);
+    GetMinMaxPoints(
+      CellShapeTag(), typename vtkm::CellTraits<CellShapeTag>::IsSizeFixed(), minPoints, maxPoints);
 
     std::cout << "--- Test shape tag directly" << std::endl;
     for (vtkm::IdComponent numPoints = minPoints; numPoints <= maxPoints; numPoints++)

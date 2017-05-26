@@ -198,18 +198,22 @@ inline void FixupCellSet(vtkm::cont::ArrayHandle<vtkm::Id>& connectivity,
   else
   {
     permutation.Allocate(static_cast<vtkm::Id>(permutationVec.size()));
-    std::copy(permutationVec.begin(), permutationVec.end(),
+    std::copy(permutationVec.begin(),
+              permutationVec.end(),
               vtkm::cont::ArrayPortalToIteratorBegin(permutation.GetPortalControl()));
   }
 
   shapes.Allocate(static_cast<vtkm::Id>(newShapes.size()));
-  std::copy(newShapes.begin(), newShapes.end(),
+  std::copy(newShapes.begin(),
+            newShapes.end(),
             vtkm::cont::ArrayPortalToIteratorBegin(shapes.GetPortalControl()));
   numIndices.Allocate(static_cast<vtkm::Id>(newNumIndices.size()));
-  std::copy(newNumIndices.begin(), newNumIndices.end(),
+  std::copy(newNumIndices.begin(),
+            newNumIndices.end(),
             vtkm::cont::ArrayPortalToIteratorBegin(numIndices.GetPortalControl()));
   connectivity.Allocate(static_cast<vtkm::Id>(newConnectivity.size()));
-  std::copy(newConnectivity.begin(), newConnectivity.end(),
+  std::copy(newConnectivity.begin(),
+            newConnectivity.end(),
             vtkm::cont::ArrayPortalToIteratorBegin(connectivity.GetPortalControl()));
 }
 

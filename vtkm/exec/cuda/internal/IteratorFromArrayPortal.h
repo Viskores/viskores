@@ -86,10 +86,12 @@ struct PortalValue
 
 template <class ArrayPortalType>
 class IteratorFromArrayPortal
-  : public ::thrust::iterator_facade<
-      IteratorFromArrayPortal<ArrayPortalType>, typename ArrayPortalType::ValueType,
-      ::thrust::system::cuda::tag, ::thrust::random_access_traversal_tag,
-      PortalValue<ArrayPortalType>, std::ptrdiff_t>
+  : public ::thrust::iterator_facade<IteratorFromArrayPortal<ArrayPortalType>,
+                                     typename ArrayPortalType::ValueType,
+                                     ::thrust::system::cuda::tag,
+                                     ::thrust::random_access_traversal_tag,
+                                     PortalValue<ArrayPortalType>,
+                                     std::ptrdiff_t>
 {
 public:
   VTKM_EXEC_CONT

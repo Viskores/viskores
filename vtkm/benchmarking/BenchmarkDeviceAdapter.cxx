@@ -604,10 +604,16 @@ private:
   VTKM_MAKE_BENCHMARK(UpperBounds30, BenchUpperBounds, 30);
 
 public:
-  struct ValueTypes
-    : vtkm::ListTagBase<vtkm::UInt8, vtkm::UInt32, vtkm::Int32, vtkm::Int64,
-                        vtkm::Vec<vtkm::Int32, 2>, vtkm::Vec<vtkm::UInt8, 4>, vtkm::Float32,
-                        vtkm::Float64, vtkm::Vec<vtkm::Float64, 3>, vtkm::Vec<vtkm::Float32, 4>>
+  struct ValueTypes : vtkm::ListTagBase<vtkm::UInt8,
+                                        vtkm::UInt32,
+                                        vtkm::Int32,
+                                        vtkm::Int64,
+                                        vtkm::Vec<vtkm::Int32, 2>,
+                                        vtkm::Vec<vtkm::UInt8, 4>,
+                                        vtkm::Float32,
+                                        vtkm::Float64,
+                                        vtkm::Vec<vtkm::Float64, 3>,
+                                        vtkm::Vec<vtkm::Float32, 4>>
   {
   };
 

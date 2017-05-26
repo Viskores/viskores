@@ -42,9 +42,11 @@ inline VTKM_CONT ClipWithField::ClipWithField()
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultDataSet ClipWithField::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter& device)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -79,8 +81,10 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ClipWithField::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ClipWithField::DoMapField(
-  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  vtkm::filter::ResultDataSet& result,
+  const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
   if (fieldMeta.IsPointField() == false)

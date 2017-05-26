@@ -114,7 +114,8 @@ public:
   JoinTreeTransferrer() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& vertex, const vtkm::Id& prunesTo,
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
+                            const vtkm::Id& prunesTo,
                             const InFieldPortalType& valueIndex,
                             const InFieldPortalType& chainExtremum,
                             const OutFieldPortalType& saddles,

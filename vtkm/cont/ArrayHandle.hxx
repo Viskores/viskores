@@ -186,7 +186,8 @@ void ArrayHandle<T, S>::CopyInto(IteratorType dest, DeviceAdapterTag) const
   {
     PortalConstControl portal = this->GetPortalConstControl();
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-              vtkm::cont::ArrayPortalToIteratorEnd(portal), dest);
+              vtkm::cont::ArrayPortalToIteratorEnd(portal),
+              dest);
   }
 }
 

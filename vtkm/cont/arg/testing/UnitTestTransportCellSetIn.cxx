@@ -72,11 +72,12 @@ void TransportWholeCellSetIn(Device)
   typedef vtkm::TopologyElementTagPoint FromType;
   typedef vtkm::TopologyElementTagCell ToType;
 
-  typedef typename vtkm::cont::CellSetExplicit<>::template ExecutionTypes<
-    Device, FromType, ToType>::ExecObjectType ExecObjectType;
+  typedef typename vtkm::cont::CellSetExplicit<>::
+    template ExecutionTypes<Device, FromType, ToType>::ExecObjectType ExecObjectType;
 
   vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagCellSetIn<FromType, ToType>,
-                             vtkm::cont::CellSetExplicit<>, Device>
+                             vtkm::cont::CellSetExplicit<>,
+                             Device>
     transport;
 
   TestKernel<ExecObjectType> kernel;

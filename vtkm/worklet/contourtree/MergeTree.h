@@ -155,8 +155,11 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Id> saddles;
 
   // merge tree constructor
-  MergeTree(const vtkm::cont::ArrayHandle<T, StorageType>& Values, vtkm::Id NRows, vtkm::Id NCols,
-            vtkm::Id NSlices, bool IsJoinTree);
+  MergeTree(const vtkm::cont::ArrayHandle<T, StorageType>& Values,
+            vtkm::Id NRows,
+            vtkm::Id NCols,
+            vtkm::Id NSlices,
+            bool IsJoinTree);
 
   // routine that does pointer-doubling in the mergeArc array
   void BuildRegularChains();
@@ -177,8 +180,11 @@ public:
 // creates merge tree
 template <typename T, typename StorageType, typename DeviceAdapter>
 MergeTree<T, StorageType, DeviceAdapter>::MergeTree(
-  const vtkm::cont::ArrayHandle<T, StorageType>& Values, vtkm::Id NRows, vtkm::Id NCols,
-  vtkm::Id NSlices, bool IsJoinTree)
+  const vtkm::cont::ArrayHandle<T, StorageType>& Values,
+  vtkm::Id NRows,
+  vtkm::Id NCols,
+  vtkm::Id NSlices,
+  bool IsJoinTree)
   : values(Values)
   , nRows(NRows)
   , nCols(NCols)
@@ -287,9 +293,11 @@ void MergeTree<T, StorageType, DeviceAdapter>::ComputeAugmentedArcs(
   DeviceAlgorithm::Copy(vertices, vertexSorter);
 
   // We sort by pseudo-maximum to establish the extents
-  DeviceAlgorithm::Sort(vertexSorter, VertexMergeComparator<T, StorageType, DeviceAdapter>(
-                                        values.PrepareForInput(DeviceAdapter()),
-                                        extrema.PrepareForInput(DeviceAdapter()), isJoinTree));
+  DeviceAlgorithm::Sort(
+    vertexSorter,
+    VertexMergeComparator<T, StorageType, DeviceAdapter>(values.PrepareForInput(DeviceAdapter()),
+                                                         extrema.PrepareForInput(DeviceAdapter()),
+                                                         isJoinTree));
 #ifdef DEBUG_PRINT
   DebugPrint("Sorting Complete");
 #endif

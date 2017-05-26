@@ -121,7 +121,8 @@ public:
   vtkm::cont::ArrayHandle<vtkm::Id> neighbourhoodMask;
 
   // constructor
-  Mesh2D_DEM_Triangulation(const vtkm::cont::ArrayHandle<T, StorageType>& Values, vtkm::Id NRows,
+  Mesh2D_DEM_Triangulation(const vtkm::cont::ArrayHandle<T, StorageType>& Values,
+                           vtkm::Id NRows,
                            vtkm::Id NCols);
 
   // sets all vertices to point along an outgoing edge (except extrema)
@@ -134,7 +135,8 @@ public:
 // sets outgoing paths for saddles
 template <typename T, typename StorageType, typename DeviceAdapter>
 void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetStarts(
-  vtkm::cont::ArrayHandle<vtkm::Id>& chains, bool ascending)
+  vtkm::cont::ArrayHandle<vtkm::Id>& chains,
+  bool ascending)
 {
   // create the neighbourhood mask
   neighbourhoodMask.Allocate(nVertices);
@@ -154,7 +156,9 @@ void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetStarts(
 // creates input mesh
 template <typename T, typename StorageType, typename DeviceAdapter>
 Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::Mesh2D_DEM_Triangulation(
-  const vtkm::cont::ArrayHandle<T, StorageType>& Values, vtkm::Id NRows, vtkm::Id NCols)
+  const vtkm::cont::ArrayHandle<T, StorageType>& Values,
+  vtkm::Id NRows,
+  vtkm::Id NCols)
   : values(Values)
   , nRows(NRows)
   , nCols(NCols)
@@ -170,7 +174,8 @@ Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::Mesh2D_DEM_Triangulatio
 // sets outgoing paths for saddles
 template <typename T, typename StorageType, typename DeviceAdapter>
 void Mesh2D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
-  ChainGraph<T, StorageType, DeviceAdapter>& mergeGraph, bool ascending)
+  ChainGraph<T, StorageType, DeviceAdapter>& mergeGraph,
+  bool ascending)
 {
   // we need a temporary inverse index to change vertex IDs
   vtkm::cont::ArrayHandle<vtkm::Id> inverseIndex;

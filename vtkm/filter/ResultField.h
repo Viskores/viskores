@@ -49,7 +49,8 @@ public:
   /// association).
   ///
   VTKM_CONT
-  ResultField(const vtkm::cont::DataSet& dataSet, const std::string& fieldName,
+  ResultField(const vtkm::cont::DataSet& dataSet,
+              const std::string& fieldName,
               vtkm::cont::Field::AssociationEnum fieldAssociation = vtkm::cont::Field::ASSOC_ANY)
     : ResultBase(dataSet)
     , FieldName(fieldName)
@@ -126,7 +127,8 @@ public:
   ///
   VTKM_CONT
   ResultField(const vtkm::cont::DataSet& inDataSet,
-              const vtkm::cont::DynamicArrayHandle& fieldArray, const std::string& fieldName,
+              const vtkm::cont::DynamicArrayHandle& fieldArray,
+              const std::string& fieldName,
               vtkm::cont::Field::AssociationEnum fieldAssociation,
               const std::string& elementSetName = "")
     : FieldName(fieldName)

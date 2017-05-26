@@ -202,7 +202,8 @@ public:
 
     //Perhaps a direct call to thrust copy should be wrapped in a vtkm
     //compatble function
-    ::thrust::copy(thrust::cuda::par, vtkm::cont::cuda::internal::IteratorBegin(portal),
+    ::thrust::copy(thrust::cuda::par,
+                   vtkm::cont::cuda::internal::IteratorBegin(portal),
                    vtkm::cont::cuda::internal::IteratorEnd(portal),
                    thrust::cuda::pointer<ValueType>(beginPointer));
 

@@ -64,7 +64,8 @@ inline VTKM_CONT ExtractPoints::ExtractPoints()
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline vtkm::filter::ResultDataSet ExtractPoints::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
 {
   // extract the input cell set and coordinates
@@ -76,9 +77,11 @@ inline vtkm::filter::ResultDataSet ExtractPoints::DoExecute(
   vtkm::cont::CellSetSingleType<> outCellSet(cells.GetName());
   vtkm::worklet::ExtractPoints worklet;
 
-  outCellSet =
-    worklet.Run(vtkm::filter::ApplyPolicy(cells, policy), vtkm::filter::ApplyPolicy(coords, policy),
-                *this->Function, this->ExtractInside, device);
+  outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                           vtkm::filter::ApplyPolicy(coords, policy),
+                           *this->Function,
+                           this->ExtractInside,
+                           device);
 
   // create the output dataset
   vtkm::cont::DataSet output;
@@ -100,9 +103,11 @@ inline vtkm::filter::ResultDataSet ExtractPoints::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExtractPoints::DoMapField(
-  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  vtkm::filter::ResultDataSet& result,
+  const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter&)
 {
   // point data is copied as is because it was not collapsed
   if (fieldMeta.IsPointField())

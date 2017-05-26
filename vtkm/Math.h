@@ -1738,8 +1738,8 @@ static inline VTKM_EXEC_CONT T Max(const T& x, const T& y, vtkm::TypeTraitsVecto
   T result;
   for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
   {
-    Traits::SetComponent(result, index,
-                         vtkm::Max(Traits::GetComponent(x, index), Traits::GetComponent(y, index)));
+    Traits::SetComponent(
+      result, index, vtkm::Max(Traits::GetComponent(x, index), Traits::GetComponent(y, index)));
   }
   return result;
 }
@@ -1757,8 +1757,8 @@ static inline VTKM_EXEC_CONT T Min(const T& x, const T& y, vtkm::TypeTraitsVecto
   T result;
   for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
   {
-    Traits::SetComponent(result, index,
-                         vtkm::Min(Traits::GetComponent(x, index), Traits::GetComponent(y, index)));
+    Traits::SetComponent(
+      result, index, vtkm::Min(Traits::GetComponent(x, index), Traits::GetComponent(y, index)));
   }
   return result;
 }

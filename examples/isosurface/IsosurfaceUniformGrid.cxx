@@ -116,8 +116,8 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::Float32 maxs[3] = { 1.0f, 1.0f, 1.0f };
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, 1, vdims[0] * vdims[1] *
-                                                                       vdims[2]);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(
+    0, 1, vdims[0] * vdims[1] * vdims[2]);
   vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(
     TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);

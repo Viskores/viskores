@@ -37,9 +37,11 @@ inline VTKM_CONT PointAverage::PointAverage()
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultField PointAverage::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& inField,
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter&)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter&)
 {
   if (!fieldMetadata.IsCellField())
   {
@@ -64,8 +66,8 @@ inline VTKM_CONT vtkm::filter::ResultField PointAverage::DoExecute(
     outputName = fieldMetadata.GetName();
   }
 
-  return vtkm::filter::ResultField(input, outArray, outputName, vtkm::cont::Field::ASSOC_POINTS,
-                                   cellSet.GetName());
+  return vtkm::filter::ResultField(
+    input, outArray, outputName, vtkm::cont::Field::ASSOC_POINTS, cellSet.GetName());
 }
 }
 } // namespace vtkm::filter

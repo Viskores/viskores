@@ -59,7 +59,8 @@ inline VTKM_CONT Triangulate::Triangulate()
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultDataSet Triangulate::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
 {
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());

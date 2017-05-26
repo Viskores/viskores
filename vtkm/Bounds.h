@@ -54,8 +54,12 @@ struct Bounds
   }
 
   template <typename T1, typename T2, typename T3, typename T4, typename T5, typename T6>
-  VTKM_EXEC_CONT Bounds(const T1& minX, const T2& maxX, const T3& minY, const T4& maxY,
-                        const T5& minZ, const T6& maxZ)
+  VTKM_EXEC_CONT Bounds(const T1& minX,
+                        const T2& maxX,
+                        const T3& minY,
+                        const T4& maxY,
+                        const T5& minZ,
+                        const T6& maxZ)
     : X(vtkm::Range(minX, maxX))
     , Y(vtkm::Range(minY, maxY))
     , Z(vtkm::Range(minZ, maxZ))

@@ -538,7 +538,8 @@ private:
 
   virtual void Read() = 0;
 
-  void ReadScalars(std::size_t numElements, std::string& dataName,
+  void ReadScalars(std::size_t numElements,
+                   std::string& dataName,
                    vtkm::cont::DynamicArrayHandle& data)
   {
     std::string dataType, lookupTableName;
@@ -583,7 +584,8 @@ private:
     this->SkipArray(numEntries, vtkm::Vec<vtkm::io::internal::ColorChannel8, 4>());
   }
 
-  void ReadTextureCoordinates(std::size_t numElements, std::string& dataName,
+  void ReadTextureCoordinates(std::size_t numElements,
+                              std::string& dataName,
                               vtkm::cont::DynamicArrayHandle& data)
   {
     vtkm::IdComponent numComponents;
@@ -593,7 +595,8 @@ private:
     this->DoReadDynamicArray(dataType, numElements, numComponents, data);
   }
 
-  void ReadVectors(std::size_t numElements, std::string& dataName,
+  void ReadVectors(std::size_t numElements,
+                   std::string& dataName,
                    vtkm::cont::DynamicArrayHandle& data)
   {
     std::string dataType;
@@ -602,7 +605,8 @@ private:
     this->DoReadDynamicArray(dataType, numElements, 3, data);
   }
 
-  void ReadTensors(std::size_t numElements, std::string& dataName,
+  void ReadTensors(std::size_t numElements,
+                   std::string& dataName,
                    vtkm::cont::DynamicArrayHandle& data)
   {
     std::string dataType;
@@ -670,7 +674,8 @@ private:
   class ReadDynamicArray : public SkipDynamicArray
   {
   public:
-    ReadDynamicArray(VTKDataSetReaderBase* reader, std::size_t numElements,
+    ReadDynamicArray(VTKDataSetReaderBase* reader,
+                     std::size_t numElements,
                      vtkm::cont::DynamicArrayHandle& data)
       : SkipDynamicArray(reader, numElements)
       , Data(&data)
@@ -700,7 +705,8 @@ private:
   //Make the Array parsing methods protected so that derived classes
   //can call the methods.
 protected:
-  void DoSkipDynamicArray(std::string dataType, std::size_t numElements,
+  void DoSkipDynamicArray(std::string dataType,
+                          std::size_t numElements,
                           vtkm::IdComponent numComponents)
   {
     // string is unsupported for SkipDynamicArray, so it requires some
@@ -717,17 +723,19 @@ protected:
     else
     {
       vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
-      vtkm::io::internal::SelectTypeAndCall(typeId, numComponents,
-                                            SkipDynamicArray(this, numElements));
+      vtkm::io::internal::SelectTypeAndCall(
+        typeId, numComponents, SkipDynamicArray(this, numElements));
     }
   }
 
-  void DoReadDynamicArray(std::string dataType, std::size_t numElements,
-                          vtkm::IdComponent numComponents, vtkm::cont::DynamicArrayHandle& data)
+  void DoReadDynamicArray(std::string dataType,
+                          std::size_t numElements,
+                          vtkm::IdComponent numComponents,
+                          vtkm::cont::DynamicArrayHandle& data)
   {
     vtkm::io::internal::DataType typeId = vtkm::io::internal::DataTypeId(dataType);
-    vtkm::io::internal::SelectTypeAndCall(typeId, numComponents,
-                                          ReadDynamicArray(this, numElements, data));
+    vtkm::io::internal::SelectTypeAndCall(
+      typeId, numComponents, ReadDynamicArray(this, numElements, data));
   }
 
   template <typename T>

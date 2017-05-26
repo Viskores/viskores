@@ -49,17 +49,26 @@ static const vtkm::Id NUM_UNIQUE = ARRAY_SIZE / GROUP_SIZE;
 
 struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn keys, ValuesIn<> keyMirror, ValuesIn<> indexValues,
-                                ValuesInOut<> valuesToModify, ValuesOut<> writeKey);
+  typedef void ControlSignature(KeysIn keys,
+                                ValuesIn<> keyMirror,
+                                ValuesIn<> indexValues,
+                                ValuesInOut<> valuesToModify,
+                                ValuesOut<> writeKey);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex, ValueCount);
   typedef _1 InputDomain;
 
-  template <typename T, typename KeyMirrorVecType, typename IndexValuesVecType,
-            typename ValuesToModifyVecType, typename WriteKeysVecType>
-  VTKM_EXEC void operator()(const T& key, const KeyMirrorVecType& keyMirror,
+  template <typename T,
+            typename KeyMirrorVecType,
+            typename IndexValuesVecType,
+            typename ValuesToModifyVecType,
+            typename WriteKeysVecType>
+  VTKM_EXEC void operator()(const T& key,
+                            const KeyMirrorVecType& keyMirror,
                             const IndexValuesVecType& valueIndices,
-                            ValuesToModifyVecType& valuesToModify, WriteKeysVecType& writeKey,
-                            vtkm::Id workIndex, vtkm::IdComponent numValues) const
+                            ValuesToModifyVecType& valuesToModify,
+                            WriteKeysVecType& writeKey,
+                            vtkm::Id workIndex,
+                            vtkm::IdComponent numValues) const
   {
     // These tests only work if keys are in sorted order, which is how we group
     // them.
@@ -87,13 +96,18 @@ struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 
 struct CheckReducedValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn, ReducedValuesOut<> extractKeys,
-                                ReducedValuesIn<> indexReference, ReducedValuesInOut<> copyKeyPair);
+  typedef void ControlSignature(KeysIn,
+                                ReducedValuesOut<> extractKeys,
+                                ReducedValuesIn<> indexReference,
+                                ReducedValuesInOut<> copyKeyPair);
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
 
   template <typename T>
-  VTKM_EXEC void operator()(const T& key, T& reducedValueOut, vtkm::Id indexReference,
-                            vtkm::Pair<T, T>& copyKeyPair, vtkm::Id workIndex) const
+  VTKM_EXEC void operator()(const T& key,
+                            T& reducedValueOut,
+                            vtkm::Id indexReference,
+                            vtkm::Pair<T, T>& copyKeyPair,
+                            vtkm::Id workIndex) const
   {
     // This check only work if keys are in sorted order, which is how we group
     // them.
@@ -131,8 +145,8 @@ void TryKeyType(KeyType)
   vtkm::cont::ArrayHandle<KeyType> writeKey;
 
   vtkm::worklet::DispatcherReduceByKey<CheckKeyValuesWorklet> dispatcherCheckKeyValues;
-  dispatcherCheckKeyValues.Invoke(keys, keyArray, vtkm::cont::ArrayHandleIndex(ARRAY_SIZE),
-                                  valuesToModify, writeKey);
+  dispatcherCheckKeyValues.Invoke(
+    keys, keyArray, vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), valuesToModify, writeKey);
 
   VTKM_TEST_ASSERT(valuesToModify.GetNumberOfValues() == ARRAY_SIZE, "Bad array size.");
   VTKM_TEST_ASSERT(writeKey.GetNumberOfValues() == ARRAY_SIZE, "Bad array size.");
@@ -157,7 +171,9 @@ void TryKeyType(KeyType)
   keyPairOut.Allocate(NUM_UNIQUE);
 
   vtkm::worklet::DispatcherReduceByKey<CheckReducedValuesWorklet> dispatcherCheckReducedValues;
-  dispatcherCheckReducedValues.Invoke(keys, writeKey, vtkm::cont::ArrayHandleIndex(NUM_UNIQUE),
+  dispatcherCheckReducedValues.Invoke(keys,
+                                      writeKey,
+                                      vtkm::cont::ArrayHandleIndex(NUM_UNIQUE),
                                       vtkm::cont::make_ArrayHandleZip(keyPairIn, keyPairOut));
 
   VTKM_TEST_ASSERT(writeKey.GetNumberOfValues() == NUM_UNIQUE,

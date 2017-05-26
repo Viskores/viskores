@@ -112,8 +112,10 @@ TestScatterArrays MakeScatterArraysZero()
 
 struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> inputIndices, FieldOut<> copyIndices,
-                                FieldOut<> recordVisit, FieldOut<> recordWorkId);
+  typedef void ControlSignature(FieldIn<> inputIndices,
+                                FieldOut<> copyIndices,
+                                FieldOut<> recordVisit,
+                                FieldOut<> recordWorkId);
   typedef void ExecutionSignature(_1, _2, _3, _4, VisitIndex, WorkIndex);
 
   typedef vtkm::worklet::ScatterCounting ScatterType;
@@ -140,8 +142,12 @@ struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
   }
 
   VTKM_EXEC
-  void operator()(vtkm::Id inputIndex, vtkm::Id& indexCopy, vtkm::IdComponent& writeVisit,
-                  vtkm::Float32& captureWorkId, vtkm::IdComponent visitIndex, vtkm::Id workId) const
+  void operator()(vtkm::Id inputIndex,
+                  vtkm::Id& indexCopy,
+                  vtkm::IdComponent& writeVisit,
+                  vtkm::Float32& captureWorkId,
+                  vtkm::IdComponent visitIndex,
+                  vtkm::Id workId) const
   {
     indexCopy = inputIndex;
     writeVisit = visitIndex;
@@ -176,8 +182,8 @@ void TestScatterArrayGeneration(const TestScatterArrays& arrays)
 {
   std::cout << "  Testing array generation" << std::endl;
 
-  vtkm::worklet::ScatterCounting scatter(arrays.CountArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG(),
-                                         true);
+  vtkm::worklet::ScatterCounting scatter(
+    arrays.CountArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG(), true);
 
   vtkm::Id inputSize = arrays.CountArray.GetNumberOfValues();
 

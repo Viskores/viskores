@@ -70,7 +70,8 @@ template <typename DerivedPolicy, typename FilterType>
 VTKM_CONT vtkm::cont::DynamicArrayHandleBase<
   typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType>::TypeList,
   typename DerivedPolicy::FieldStorageList>
-ApplyPolicy(const vtkm::cont::Field& field, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+ApplyPolicy(const vtkm::cont::Field& field,
+            const vtkm::filter::PolicyBase<DerivedPolicy>&,
             const vtkm::filter::FilterTraits<FilterType>&)
 {
   typedef
@@ -110,7 +111,8 @@ ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy>
 VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::AllCellSetList> ApplyPolicy(
-  const vtkm::cont::DynamicCellSet& cellset, const vtkm::filter::PolicyBase<DerivedPolicy>&)
+  const vtkm::cont::DynamicCellSet& cellset,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   typedef typename DerivedPolicy::AllCellSetList CellSetList;
   return cellset.ResetCellSetList(CellSetList());

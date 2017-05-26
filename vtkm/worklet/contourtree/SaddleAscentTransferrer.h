@@ -109,8 +109,10 @@ public:
   SaddleAscentTransferrer() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& vertexID, const vtkm::Id& newOutdegree,
-                            const vtkm::Id& newFirstEdge, const InFieldPortalType& activeEdges,
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID,
+                            const vtkm::Id& newOutdegree,
+                            const vtkm::Id& newFirstEdge,
+                            const InFieldPortalType& activeEdges,
                             const InFieldPortalType& firstEdge,
                             const OutFieldPortalType& edgeSorter) const
   {

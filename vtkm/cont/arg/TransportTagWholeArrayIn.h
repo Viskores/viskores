@@ -60,8 +60,8 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayIn, ContObjectType, Devi
   typedef vtkm::exec::ExecutionWholeArrayConst<ValueType, StorageTag, Device> ExecObjectType;
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType operator()(ContObjectType array, const InputDomainType&, vtkm::Id,
-                                      vtkm::Id) const
+  VTKM_CONT ExecObjectType
+  operator()(ContObjectType array, const InputDomainType&, vtkm::Id, vtkm::Id) const
   {
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using

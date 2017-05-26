@@ -51,7 +51,9 @@ template <typename RandomAccessIterator, typename Compare>
 class quick_sort_range : private no_assign
 {
 
-  inline size_t median_of_three(const RandomAccessIterator& array, size_t l, size_t m,
+  inline size_t median_of_three(const RandomAccessIterator& array,
+                                size_t l,
+                                size_t m,
                                 size_t r) const
   {
     return comp(array[l], array[m])
@@ -63,7 +65,8 @@ class quick_sort_range : private no_assign
                                       const quick_sort_range& range) const
   {
     size_t offset = range.size / 8u;
-    return median_of_three(array, median_of_three(array, 0, offset, offset * 2),
+    return median_of_three(array,
+                           median_of_three(array, 0, offset, offset * 2),
                            median_of_three(array, offset * 3, offset * 4, offset * 5),
                            median_of_three(array, offset * 6, offset * 7, range.size - 1));
   }
@@ -198,14 +201,16 @@ void parallel_quick_sort(RandomAccessIterator begin, RandomAccessIterator end, c
   }
 
   parallel_for(blocked_range<RandomAccessIterator>(k + 1, end),
-               quick_sort_pretest_body<RandomAccessIterator, Compare>(comp), auto_partitioner(),
+               quick_sort_pretest_body<RandomAccessIterator, Compare>(comp),
+               auto_partitioner(),
                my_context);
 
   if (my_context.is_group_execution_cancelled())
   do_parallel_quick_sort:
 #endif /* __TBB_TASK_GROUP_CONTEXT */
   parallel_for(quick_sort_range<RandomAccessIterator, Compare>(begin, end - begin, comp),
-               quick_sort_body<RandomAccessIterator, Compare>(), auto_partitioner());
+               quick_sort_body<RandomAccessIterator, Compare>(),
+               auto_partitioner());
 }
 
 } // namespace internal
@@ -248,8 +253,8 @@ void parallel_sort(RandomAccessIterator begin, RandomAccessIterator end, const C
 template <typename RandomAccessIterator>
 inline void parallel_sort(RandomAccessIterator begin, RandomAccessIterator end)
 {
-  parallel_sort(begin, end,
-                std::less<typename std::iterator_traits<RandomAccessIterator>::value_type>());
+  parallel_sort(
+    begin, end, std::less<typename std::iterator_traits<RandomAccessIterator>::value_type>());
 }
 
 //! Sorts the data in the range \c [begin,end) with a default comparator \c std::less<T>

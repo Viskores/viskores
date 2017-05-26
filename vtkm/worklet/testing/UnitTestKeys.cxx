@@ -31,8 +31,10 @@ static const vtkm::Id ARRAY_SIZE = 1033;
 static const vtkm::Id NUM_UNIQUE = ARRAY_SIZE / 10;
 
 template <typename KeyPortal, typename IdPortal, typename IdComponentPortal>
-void CheckKeyReduce(const KeyPortal& originalKeys, const KeyPortal& uniqueKeys,
-                    const IdPortal& sortedValuesMap, const IdPortal& offsets,
+void CheckKeyReduce(const KeyPortal& originalKeys,
+                    const KeyPortal& uniqueKeys,
+                    const IdPortal& sortedValuesMap,
+                    const IdPortal& offsets,
                     const IdComponentPortal& counts)
 {
   using KeyType = typename KeyPortal::ValueType;
@@ -73,7 +75,8 @@ void TryKeyType(KeyType)
   vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   VTKM_TEST_ASSERT(keys.GetInputRange() == NUM_UNIQUE, "Keys has bad input range.");
 
-  CheckKeyReduce(keyArray.GetPortalConstControl(), keys.GetUniqueKeys().GetPortalConstControl(),
+  CheckKeyReduce(keyArray.GetPortalConstControl(),
+                 keys.GetUniqueKeys().GetPortalConstControl(),
                  keys.GetSortedValuesMap().GetPortalConstControl(),
                  keys.GetOffsets().GetPortalConstControl(),
                  keys.GetCounts().GetPortalConstControl());

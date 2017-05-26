@@ -65,8 +65,11 @@ public:
   class CalculatePowers : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> value, FieldOut<> pow1Array, FieldOut<> pow2Array,
-                                  FieldOut<> pow3Array, FieldOut<> pow4Array);
+    typedef void ControlSignature(FieldIn<> value,
+                                  FieldOut<> pow1Array,
+                                  FieldOut<> pow2Array,
+                                  FieldOut<> pow3Array,
+                                  FieldOut<> pow4Array);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5);
     typedef _1 InputDomain;
 
@@ -79,7 +82,10 @@ public:
     }
 
     VTKM_EXEC
-    void operator()(const FieldType& value, FieldType& pow1, FieldType& pow2, FieldType& pow3,
+    void operator()(const FieldType& value,
+                    FieldType& pow1,
+                    FieldType& pow2,
+                    FieldType& pow3,
                     FieldType& pow4) const
     {
       pow1 = value;

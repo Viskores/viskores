@@ -42,7 +42,8 @@ namespace testing
 template <typename ViewType>
 inline void SetCamera(vtkm::rendering::Camera& camera, const vtkm::Bounds& coordBounds);
 template <typename ViewType>
-inline void SetCamera(vtkm::rendering::Camera& camera, const vtkm::Bounds& coordBounds,
+inline void SetCamera(vtkm::rendering::Camera& camera,
+                      const vtkm::Bounds& coordBounds,
                       const vtkm::cont::Field& field);
 
 template <>
@@ -89,15 +90,17 @@ void Render(ViewType& view, const std::string& outputFile)
 }
 
 template <typename MapperType, typename CanvasType, typename ViewType>
-void Render(const vtkm::cont::DataSet& ds, const std::string& fieldNm,
-            const vtkm::rendering::ColorTable& colorTable, const std::string& outputFile)
+void Render(const vtkm::cont::DataSet& ds,
+            const std::string& fieldNm,
+            const vtkm::rendering::ColorTable& colorTable,
+            const std::string& outputFile)
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
   vtkm::rendering::Scene scene;
 
-  scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(), ds.GetCoordinateSystem(),
-                                        ds.GetField(fieldNm), colorTable));
+  scene.AddActor(vtkm::rendering::Actor(
+    ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm), colorTable));
   vtkm::rendering::Camera camera;
   SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds());
   ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
@@ -106,7 +109,8 @@ void Render(const vtkm::cont::DataSet& ds, const std::string& fieldNm,
 }
 
 template <typename MapperType, typename CanvasType, typename ViewType>
-void Render(const vtkm::cont::DataSet& ds, const std::string& fieldNm,
+void Render(const vtkm::cont::DataSet& ds,
+            const std::string& fieldNm,
             const std::string& outputFile)
 {
   MapperType mapper;

@@ -47,10 +47,12 @@ struct ResolveFieldTypeAndExecute
   vtkm::cont::RuntimeDeviceTracker Tracker;
   ResultType& Result;
 
-  ResolveFieldTypeAndExecute(Derived* derivedClass, const vtkm::cont::DataSet& inputData,
+  ResolveFieldTypeAndExecute(Derived* derivedClass,
+                             const vtkm::cont::DataSet& inputData,
                              const vtkm::filter::FieldMetadata& fieldMeta,
                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                             const vtkm::cont::RuntimeDeviceTracker& tracker, ResultType& result)
+                             const vtkm::cont::RuntimeDeviceTracker& tracker,
+                             ResultType& result)
     : DerivedClass(derivedClass)
     , InputData(inputData)
     , Metadata(fieldMeta)

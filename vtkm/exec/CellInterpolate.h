@@ -40,7 +40,8 @@ namespace internal
 // polygon, which is divided into triangles.
 template <typename WorldCoordVector>
 VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
-  const WorldCoordVector& pointWCoords, const typename WorldCoordVector::ComponentType& wcoords)
+  const WorldCoordVector& pointWCoords,
+  const typename WorldCoordVector::ComponentType& wcoords)
 {
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 3);
 
@@ -132,8 +133,10 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
 ///
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& pointFieldValues, const vtkm::Vec<ParametricCoordType, 3>& parametricCoords,
-  vtkm::CellShapeTagGeneric shape, const vtkm::exec::FunctorBase& worklet)
+  const FieldVecType& pointFieldValues,
+  const vtkm::Vec<ParametricCoordType, 3>& parametricCoords,
+  vtkm::CellShapeTagGeneric shape,
+  const vtkm::exec::FunctorBase& worklet)
 {
   typename FieldVecType::ComponentType result;
   switch (shape.Id)
@@ -150,7 +153,9 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType&, const vtkm::Vec<ParametricCoordType, 3>&, vtkm::CellShapeTagEmpty,
+  const FieldVecType&,
+  const vtkm::Vec<ParametricCoordType, 3>&,
+  vtkm::CellShapeTagEmpty,
   const vtkm::exec::FunctorBase& worklet)
 {
   worklet.RaiseError("Attempted to interpolate an empty cell.");
@@ -160,8 +165,10 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& pointFieldValues, const vtkm::Vec<ParametricCoordType, 3>,
-  vtkm::CellShapeTagVertex, const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
+  const FieldVecType& pointFieldValues,
+  const vtkm::Vec<ParametricCoordType, 3>,
+  vtkm::CellShapeTagVertex,
+  const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(pointFieldValues.GetNumberOfComponents() == 1);
   return pointFieldValues[0];
@@ -170,8 +177,10 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& pointFieldValues, const vtkm::Vec<ParametricCoordType, 3>& parametricCoords,
-  vtkm::CellShapeTagLine, const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
+  const FieldVecType& pointFieldValues,
+  const vtkm::Vec<ParametricCoordType, 3>& parametricCoords,
+  vtkm::CellShapeTagLine,
+  const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(pointFieldValues.GetNumberOfComponents() == 2);
   return vtkm::Lerp(pointFieldValues[0], pointFieldValues[1], parametricCoords[0]);
@@ -180,7 +189,8 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 template <typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
   const vtkm::VecRectilinearPointCoordinates<1>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords, vtkm::CellShapeTagLine,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagLine,
   const vtkm::exec::FunctorBase&)
 {
   typedef vtkm::Vec<vtkm::FloatDefault, 3> T;
@@ -188,15 +198,17 @@ VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
   const T& origin = field.GetOrigin();
   const T& spacing = field.GetSpacing();
 
-  return T(origin[0] + static_cast<vtkm::FloatDefault>(pcoords[0]) * spacing[0], origin[1],
-           origin[2]);
+  return T(
+    origin[0] + static_cast<vtkm::FloatDefault>(pcoords[0]) * spacing[0], origin[1], origin[2]);
 }
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& field, const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagTriangle, const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagTriangle,
+  const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 3);
   typedef typename FieldVecType::ComponentType T;
@@ -207,8 +219,10 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& field, const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagPolygon, const vtkm::exec::FunctorBase& worklet)
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPolygon,
+  const vtkm::exec::FunctorBase& worklet)
 {
   const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   VTKM_ASSERT(numPoints > 0);
@@ -293,15 +307,17 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   triangleField[2] = field[secondPointIndex];
 
   // Now use the triangle interpolate
-  return vtkm::exec::CellInterpolate(triangleField, trianglePCoords, vtkm::CellShapeTagTriangle(),
-                                     worklet);
+  return vtkm::exec::CellInterpolate(
+    triangleField, trianglePCoords, vtkm::CellShapeTagTriangle(), worklet);
 }
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& field, const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagQuad, const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagQuad,
+  const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 4);
 
@@ -316,7 +332,8 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 template <typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
   const vtkm::VecRectilinearPointCoordinates<2>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords, vtkm::CellShapeTagQuad,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagQuad,
   const vtkm::exec::FunctorBase&)
 {
   typedef vtkm::Vec<vtkm::FloatDefault, 3> T;
@@ -325,14 +342,17 @@ VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
   const T& spacing = field.GetSpacing();
 
   return T(origin[0] + static_cast<vtkm::FloatDefault>(pcoords[0]) * spacing[0],
-           origin[1] + static_cast<vtkm::FloatDefault>(pcoords[1]) * spacing[1], origin[2]);
+           origin[1] + static_cast<vtkm::FloatDefault>(pcoords[1]) * spacing[1],
+           origin[2]);
 }
 
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& field, const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagTetra, const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagTetra,
+  const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 4);
   typedef typename FieldVecType::ComponentType T;
@@ -344,8 +364,10 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& field, const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagHexahedron, const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagHexahedron,
+  const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 8);
 
@@ -365,7 +387,8 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 template <typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
   const vtkm::VecRectilinearPointCoordinates<3>& field,
-  const vtkm::Vec<ParametricCoordType, 3>& pcoords, vtkm::CellShapeTagHexahedron,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagHexahedron,
   const vtkm::exec::FunctorBase&)
 {
   vtkm::Vec<vtkm::FloatDefault, 3> pcoordsCast(static_cast<vtkm::FloatDefault>(pcoords[0]),
@@ -378,8 +401,10 @@ VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& field, const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagWedge, const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagWedge,
+  const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 6);
 
@@ -397,8 +422,10 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 //-----------------------------------------------------------------------------
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
-  const FieldVecType& field, const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  vtkm::CellShapeTagPyramid, const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
+  const FieldVecType& field,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  vtkm::CellShapeTagPyramid,
+  const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 5);
 

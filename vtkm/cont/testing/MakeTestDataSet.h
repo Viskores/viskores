@@ -528,8 +528,11 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet1()
   coords[2] = CoordType(1, 1, 0);
   coords[3] = CoordType(2, 1, 0);
   coords[4] = CoordType(2, 2, 0);
-  CoordType coordinates[nVerts] = { CoordType(0, 0, 0), CoordType(1, 0, 0), CoordType(1, 1, 0),
-                                    CoordType(2, 1, 0), CoordType(2, 2, 0) };
+  CoordType coordinates[nVerts] = { CoordType(0, 0, 0),
+                                    CoordType(1, 0, 0),
+                                    CoordType(1, 1, 0),
+                                    CoordType(2, 1, 0),
+                                    CoordType(2, 2, 0) };
   vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
 
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
@@ -666,8 +669,9 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet3()
 
   const int nVerts = 4;
   typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
-  CoordType coordinates[nVerts] = { CoordType(0, 0, 0), CoordType(1, 0, 0), CoordType(1, 0, 1),
-                                    CoordType(0, 1, 0) };
+  CoordType coordinates[nVerts] = {
+    CoordType(0, 0, 0), CoordType(1, 0, 0), CoordType(1, 0, 1), CoordType(0, 1, 0)
+  };
   vtkm::Float32 vars[nVerts] = { 10.1f, 10.1f, 10.2f, 30.2f };
 
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));

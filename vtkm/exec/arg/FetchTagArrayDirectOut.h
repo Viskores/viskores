@@ -41,8 +41,10 @@ struct FetchTagArrayDirectOut
 };
 
 template <typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<vtkm::exec::arg::FetchTagArrayDirectOut, vtkm::exec::arg::AspectTagDefault,
-             ThreadIndicesType, ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagArrayDirectOut,
+             vtkm::exec::arg::AspectTagDefault,
+             ThreadIndicesType,
+             ExecObjectType>
 {
   typedef typename ExecObjectType::ValueType ValueType;
 
@@ -56,7 +58,8 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayDirectOut, vtkm::exec::arg::AspectTag
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void Store(const ThreadIndicesType& indices, const ExecObjectType& arrayPortal,
+  void Store(const ThreadIndicesType& indices,
+             const ExecObjectType& arrayPortal,
              const ValueType& value) const
   {
     arrayPortal.Set(indices.GetOutputIndex(), value);

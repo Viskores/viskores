@@ -82,8 +82,10 @@ private:
     if (vtkm::io::internal::IsSingleShape(shapes))
     {
       vtkm::cont::CellSetSingleType<> cellSet("cells");
-      cellSet.Fill(numPoints, shapes.GetPortalConstControl().Get(0),
-                   numIndices.GetPortalConstControl().Get(0), connectivity);
+      cellSet.Fill(numPoints,
+                   shapes.GetPortalConstControl().Get(0),
+                   numIndices.GetPortalConstControl().Get(0),
+                   connectivity);
       this->DataSet.AddCellSet(cellSet);
     }
     else

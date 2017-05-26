@@ -41,8 +41,12 @@ inline Box::Box(vtkm::Vec<FloatDefault, 3> minPoint, vtkm::Vec<FloatDefault, 3> 
 {
 }
 
-inline Box::Box(FloatDefault xmin, FloatDefault xmax, FloatDefault ymin, FloatDefault ymax,
-                FloatDefault zmin, FloatDefault zmax)
+inline Box::Box(FloatDefault xmin,
+                FloatDefault xmax,
+                FloatDefault ymin,
+                FloatDefault ymax,
+                FloatDefault zmin,
+                FloatDefault zmax)
 {
   MinPoint[0] = xmin;
   MaxPoint[0] = xmax;
@@ -81,7 +85,8 @@ inline FloatDefault Box::Value(FloatDefault x, FloatDefault y, FloatDefault z) c
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3> Box::Gradient(FloatDefault x, FloatDefault y,
+inline vtkm::Vec<FloatDefault, 3> Box::Gradient(FloatDefault x,
+                                                FloatDefault y,
                                                 FloatDefault z) const
 {
   return this->Gradient(vtkm::Vec<FloatDefault, 3>(x, y, z));
@@ -295,7 +300,8 @@ inline Cylinder::Cylinder(const vtkm::Vec<FloatDefault, 3>& axis, FloatDefault r
 }
 
 inline Cylinder::Cylinder(const vtkm::Vec<FloatDefault, 3>& center,
-                          const vtkm::Vec<FloatDefault, 3>& axis, FloatDefault radius)
+                          const vtkm::Vec<FloatDefault, 3>& axis,
+                          FloatDefault radius)
   : Center(center)
   , Axis(vtkm::Normal(axis))
   , Radius(radius)
@@ -359,7 +365,8 @@ inline vtkm::Vec<FloatDefault, 3> Cylinder::Gradient(const vtkm::Vec<FloatDefaul
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3> Cylinder::Gradient(FloatDefault x, FloatDefault y,
+inline vtkm::Vec<FloatDefault, 3> Cylinder::Gradient(FloatDefault x,
+                                                     FloatDefault y,
                                                      FloatDefault z) const
 {
   return this->Gradient(vtkm::Vec<FloatDefault, 3>(x, y, z));
@@ -409,7 +416,8 @@ inline const vtkm::Vec<FloatDefault, 3>* Frustum::GetNormals() const
   return this->Normals;
 }
 
-inline void Frustum::SetPlane(int idx, vtkm::Vec<FloatDefault, 3>& point,
+inline void Frustum::SetPlane(int idx,
+                              vtkm::Vec<FloatDefault, 3>& point,
                               vtkm::Vec<FloatDefault, 3>& normal)
 {
   if (idx < 0 || idx >= 6)
@@ -466,7 +474,8 @@ inline FloatDefault Frustum::Value(const vtkm::Vec<FloatDefault, 3>& x) const
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3> Frustum::Gradient(FloatDefault x, FloatDefault y,
+inline vtkm::Vec<FloatDefault, 3> Frustum::Gradient(FloatDefault x,
+                                                    FloatDefault y,
                                                     FloatDefault z) const
 {
   FloatDefault maxVal = -std::numeric_limits<FloatDefault>::max();
@@ -615,7 +624,8 @@ inline FloatDefault Sphere::Value(const vtkm::Vec<FloatDefault, 3>& x) const
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3> Sphere::Gradient(FloatDefault x, FloatDefault y,
+inline vtkm::Vec<FloatDefault, 3> Sphere::Gradient(FloatDefault x,
+                                                   FloatDefault y,
                                                    FloatDefault z) const
 {
   return this->Gradient(vtkm::Vec<FloatDefault, 3>(x, y, z));

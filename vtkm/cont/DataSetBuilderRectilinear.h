@@ -68,12 +68,14 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT static vtkm::cont::DataSet Create(vtkm::Id nx, T* xvals, std::string coordNm = "coords",
+  VTKM_CONT static vtkm::cont::DataSet Create(vtkm::Id nx,
+                                              T* xvals,
+                                              std::string coordNm = "coords",
                                               std::string cellNm = "cells")
   {
     T yvals = 0, zvals = 0;
-    return DataSetBuilderRectilinear::BuildDataSet(nx, 1, 1, xvals, &yvals, &zvals, coordNm,
-                                                   cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(
+      nx, 1, 1, xvals, &yvals, &zvals, coordNm, cellNm);
   }
 
   template <typename T>
@@ -101,13 +103,16 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT static vtkm::cont::DataSet Create(vtkm::Id nx, vtkm::Id ny, T* xvals, T* yvals,
+  VTKM_CONT static vtkm::cont::DataSet Create(vtkm::Id nx,
+                                              vtkm::Id ny,
+                                              T* xvals,
+                                              T* yvals,
                                               std::string coordNm = "coords",
                                               std::string cellNm = "cells")
   {
     T zvals = 0;
-    return DataSetBuilderRectilinear::BuildDataSet(nx, ny, 1, xvals, yvals, &zvals, coordNm,
-                                                   cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(
+      nx, ny, 1, xvals, yvals, &zvals, coordNm, cellNm);
   }
 
   template <typename T>
@@ -124,12 +129,17 @@ public:
 
   //3D grids.
   template <typename T>
-  VTKM_CONT static vtkm::cont::DataSet Create(vtkm::Id nx, vtkm::Id ny, vtkm::Id nz, T* xvals,
-                                              T* yvals, T* zvals, std::string coordNm = "coords",
+  VTKM_CONT static vtkm::cont::DataSet Create(vtkm::Id nx,
+                                              vtkm::Id ny,
+                                              vtkm::Id nz,
+                                              T* xvals,
+                                              T* yvals,
+                                              T* zvals,
+                                              std::string coordNm = "coords",
                                               std::string cellNm = "cells")
   {
-    return DataSetBuilderRectilinear::BuildDataSet(nx, ny, nz, xvals, yvals, zvals, coordNm,
-                                                   cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(
+      nx, ny, nz, xvals, yvals, zvals, coordNm, cellNm);
   }
 
   template <typename T>
@@ -157,7 +167,8 @@ private:
   VTKM_CONT static vtkm::cont::DataSet BuildDataSet(const std::vector<T>& xvals,
                                                     const std::vector<T>& yvals,
                                                     const std::vector<T>& zvals,
-                                                    std::string coordNm, std::string cellNm)
+                                                    std::string coordNm,
+                                                    std::string cellNm)
   {
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
     DataSetBuilderRectilinear::CopyInto(xvals, Xc);
@@ -168,9 +179,14 @@ private:
   }
 
   template <typename T>
-  VTKM_CONT static vtkm::cont::DataSet BuildDataSet(vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
-                                                    const T* xvals, const T* yvals, const T* zvals,
-                                                    std::string coordNm, std::string cellNm)
+  VTKM_CONT static vtkm::cont::DataSet BuildDataSet(vtkm::Id nx,
+                                                    vtkm::Id ny,
+                                                    vtkm::Id nz,
+                                                    const T* xvals,
+                                                    const T* yvals,
+                                                    const T* zvals,
+                                                    std::string coordNm,
+                                                    std::string cellNm)
   {
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
     DataSetBuilderRectilinear::CopyInto(xvals, nx, Xc);
@@ -184,7 +200,8 @@ private:
   VTKM_CONT static vtkm::cont::DataSet BuildDataSet(const vtkm::cont::ArrayHandle<T>& X,
                                                     const vtkm::cont::ArrayHandle<T>& Y,
                                                     const vtkm::cont::ArrayHandle<T>& Z,
-                                                    std::string coordNm, std::string cellNm)
+                                                    std::string coordNm,
+                                                    std::string cellNm)
   {
     vtkm::cont::DataSet dataSet;
 

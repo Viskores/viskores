@@ -55,7 +55,9 @@ public:
   class TrianglesPerCell : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> shapes, FieldIn<> numPoints, ExecObject tables,
+    typedef void ControlSignature(FieldIn<> shapes,
+                                  FieldIn<> numPoints,
+                                  ExecObject tables,
                                   FieldOut<> triangleCount);
     typedef _4 ExecutionSignature(_1, _2, _3);
     typedef _1 InputDomain;
@@ -65,7 +67,8 @@ public:
 
     VTKM_EXEC
     vtkm::IdComponent operator()(
-      vtkm::UInt8 shape, vtkm::IdComponent numPoints,
+      vtkm::UInt8 shape,
+      vtkm::IdComponent numPoints,
       const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter>& tables) const
     {
       return tables.GetCount(vtkm::CellShapeTagGeneric(shape), numPoints);
@@ -79,7 +82,8 @@ public:
   class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset, ExecObject tables,
+    typedef void ControlSignature(CellSetIn cellset,
+                                  ExecObject tables,
                                   FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(CellShape, PointIndices, _2, _3, VisitIndex);
     typedef _1 InputDomain;
@@ -97,9 +101,11 @@ public:
     // Each cell produces triangles and write result at the offset
     template <typename CellShapeTag, typename ConnectivityInVec, typename ConnectivityOutVec>
     VTKM_EXEC void operator()(
-      CellShapeTag shape, const ConnectivityInVec& connectivityIn,
+      CellShapeTag shape,
+      const ConnectivityInVec& connectivityIn,
       const vtkm::worklet::internal::TriangulateTablesExecutionObject<DeviceAdapter>& tables,
-      ConnectivityOutVec& connectivityOut, vtkm::IdComponent visitIndex) const
+      ConnectivityOutVec& connectivityOut,
+      vtkm::IdComponent visitIndex) const
     {
       vtkm::Vec<vtkm::IdComponent, 3> triIndices = tables.GetIndices(shape, visitIndex);
       connectivityOut[0] = connectivityIn[triIndices[0]];
@@ -130,19 +136,20 @@ public:
 
     // Determine the number of output cells each input cell will generate
     vtkm::worklet::DispatcherMapField<TrianglesPerCell, DeviceAdapter> triPerCellDispatcher;
-    triPerCellDispatcher.Invoke(inShapes, inNumIndices, tables.PrepareForInput(DeviceAdapter()),
-                                outCellsPerCell);
+    triPerCellDispatcher.Invoke(
+      inShapes, inNumIndices, tables.PrepareForInput(DeviceAdapter()), outCellsPerCell);
 
     // Build new cells
     TriangulateCell triangulateWorklet(outCellsPerCell);
     vtkm::worklet::DispatcherMapTopology<TriangulateCell, DeviceAdapter> triangulateDispatcher(
       triangulateWorklet);
-    triangulateDispatcher.Invoke(cellSet, tables.PrepareForInput(DeviceAdapter()),
+    triangulateDispatcher.Invoke(cellSet,
+                                 tables.PrepareForInput(DeviceAdapter()),
                                  vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
 
     // Add cells to output cellset
-    outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagTriangle::Id, 3,
-                    outConnectivity);
+    outCellSet.Fill(
+      cellSet.GetNumberOfPoints(), vtkm::CellShapeTagTriangle::Id, 3, outConnectivity);
     return outCellSet;
   }
 };

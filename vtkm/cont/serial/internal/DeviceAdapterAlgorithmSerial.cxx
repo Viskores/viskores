@@ -26,7 +26,8 @@ namespace cont
 {
 
 void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::ScheduleTask(
-  vtkm::exec::serial::internal::TaskTiling1D& functor, vtkm::Id size)
+  vtkm::exec::serial::internal::TaskTiling1D& functor,
+  vtkm::Id size)
 {
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];
@@ -50,7 +51,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::ScheduleTask(
 }
 
 void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::ScheduleTask(
-  vtkm::exec::serial::internal::TaskTiling3D& functor, vtkm::Id3 size)
+  vtkm::exec::serial::internal::TaskTiling3D& functor,
+  vtkm::Id3 size)
 {
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];

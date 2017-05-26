@@ -98,13 +98,23 @@ public:
   public:
     VTKM_CONT
     FindAABBs() {}
-    typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>,
-                                  FieldOut<>, FieldOut<>, WholeArrayIn<Vec3RenderingTypes>);
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  WholeArrayIn<Vec3RenderingTypes>);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
     template <typename PointPortalType>
-    VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 4> indices, vtkm::Float32& xmin,
-                              vtkm::Float32& ymin, vtkm::Float32& zmin, vtkm::Float32& xmax,
-                              vtkm::Float32& ymax, vtkm::Float32& zmax,
+    VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Id, 4> indices,
+                              vtkm::Float32& xmin,
+                              vtkm::Float32& ymin,
+                              vtkm::Float32& zmin,
+                              vtkm::Float32& xmax,
+                              vtkm::Float32& ymax,
+                              vtkm::Float32& zmax,
                               const PointPortalType& points) const
     {
       // cast to Float32
@@ -146,7 +156,8 @@ public:
 
   public:
     VTKM_CONT
-    GatherFloat32(const FloatArrayHandle& inputPortal, FloatArrayHandle& outputPortal,
+    GatherFloat32(const FloatArrayHandle& inputPortal,
+                  FloatArrayHandle& outputPortal,
                   const vtkm::Id& size)
       : InputPortal(inputPortal.PrepareForInput(DeviceAdapter()))
     {
@@ -175,7 +186,8 @@ public:
 
   public:
     VTKM_CONT
-    GatherVecCast(const Vec4IdArrayHandle& inputPortal, Vec4IntArrayHandle& outputPortal,
+    GatherVecCast(const Vec4IdArrayHandle& inputPortal,
+                  Vec4IntArrayHandle& outputPortal,
                   const vtkm::Id& size)
       : InputPortal(inputPortal.PrepareForInput(DeviceAdapter()))
     {
@@ -272,8 +284,11 @@ public:
 
   public:
     VTKM_CONT
-    PropagateAABBs(IdArrayHandle& parents, IdArrayHandle& leftChildren,
-                   IdArrayHandle& rightChildren, vtkm::Int32 leafCount, Float4ArrayHandle flatBVH,
+    PropagateAABBs(IdArrayHandle& parents,
+                   IdArrayHandle& leftChildren,
+                   IdArrayHandle& rightChildren,
+                   vtkm::Int32 leafCount,
+                   Float4ArrayHandle flatBVH,
                    const vtkm::exec::AtomicArray<vtkm::Int32, DeviceAdapter>& counters)
       : Parents(parents.PrepareForInput(DeviceAdapter()))
       , LeftChildren(leftChildren.PrepareForInput(DeviceAdapter()))
@@ -284,7 +299,11 @@ public:
     {
       this->FlatBVH = flatBVH.PrepareForOutput((LeafCount - 1) * 4, DeviceAdapter());
     }
-    typedef void ControlSignature(ExecObject, ExecObject, ExecObject, ExecObject, ExecObject,
+    typedef void ControlSignature(ExecObject,
+                                  ExecObject,
+                                  ExecObject,
+                                  ExecObject,
+                                  ExecObject,
                                   ExecObject);
     typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4, _5, _6);
     template <typename StrorageType>
@@ -444,14 +463,23 @@ public:
     {
     }
 
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>,
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
                                   FieldOut<>);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
     typedef _7 InputDomain;
 
     VTKM_EXEC
-    void operator()(const vtkm::Float32& xmin, const vtkm::Float32& ymin, const vtkm::Float32& zmin,
-                    const vtkm::Float32& xmax, const vtkm::Float32& ymax, const vtkm::Float32& zmax,
+    void operator()(const vtkm::Float32& xmin,
+                    const vtkm::Float32& ymin,
+                    const vtkm::Float32& zmin,
+                    const vtkm::Float32& xmax,
+                    const vtkm::Float32& ymax,
+                    const vtkm::Float32& zmax,
                     vtkm::UInt32& mortonCode) const
     {
       vtkm::Vec<vtkm::Float32, 3> direction(xmax - xmin, ymax - ymin, zmax - zmin);
@@ -546,7 +574,8 @@ public:
 
   public:
     VTKM_CONT
-    TreeBuilder(const UIntArrayHandle& mortonCodesHandle, IdArrayHandle& parentHandle,
+    TreeBuilder(const UIntArrayHandle& mortonCodesHandle,
+                IdArrayHandle& parentHandle,
                 const vtkm::Id& leafCount)
       : MortonCodePortal(mortonCodesHandle.PrepareForInput(DeviceAdapter()))
       , LeafCount(leafCount)
@@ -629,7 +658,8 @@ public:
   LinearBVHBuilder() {}
 
   VTKM_CONT
-  void SortAABBS(BVHData& bvh, vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& triangleIndices,
+  void SortAABBS(BVHData& bvh,
+                 vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& triangleIndices,
                  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>& outputTriangleIndices)
   {
     //create array of indexes to be sorted with morton codes
@@ -722,19 +752,26 @@ public:
   VTKM_CONT
   void run(vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& triangleIndices,
-           const vtkm::Id& numberOfTriangles, LinearBVH& linearBVH)
+           const vtkm::Id& numberOfTriangles,
+           LinearBVH& linearBVH)
   {
     const vtkm::Id numBBoxes = numberOfTriangles;
     BVHData bvh(numBBoxes);
 
     vtkm::worklet::DispatcherMapField<FindAABBs>(FindAABBs())
-      .Invoke(triangleIndices, *bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs,
-              *bvh.zmaxs, coordsHandle);
+      .Invoke(triangleIndices,
+              *bvh.xmins,
+              *bvh.ymins,
+              *bvh.zmins,
+              *bvh.xmaxs,
+              *bvh.ymaxs,
+              *bvh.zmaxs,
+              coordsHandle);
     // Find the extent of all bounding boxes to generate normalization for morton codes
-    vtkm::Vec<vtkm::Float32, 3> minExtent(vtkm::Infinity32(), vtkm::Infinity32(),
-                                          vtkm::Infinity32());
-    vtkm::Vec<vtkm::Float32, 3> maxExtent(vtkm::NegativeInfinity32(), vtkm::NegativeInfinity32(),
-                                          vtkm::NegativeInfinity32());
+    vtkm::Vec<vtkm::Float32, 3> minExtent(
+      vtkm::Infinity32(), vtkm::Infinity32(), vtkm::Infinity32());
+    vtkm::Vec<vtkm::Float32, 3> maxExtent(
+      vtkm::NegativeInfinity32(), vtkm::NegativeInfinity32(), vtkm::NegativeInfinity32());
     maxExtent[0] = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Reduce(
       *bvh.xmaxs, maxExtent[0], MaxValue());
     maxExtent[1] = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Reduce(
@@ -757,8 +794,8 @@ public:
 
     //Generate the morton codes
     vtkm::worklet::DispatcherMapField<MortonCodeAABB>(MortonCodeAABB(inverseExtent, minExtent))
-      .Invoke(*bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs, *bvh.zmaxs,
-              bvh.mortonCodes);
+      .Invoke(
+        *bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs, *bvh.zmaxs, bvh.mortonCodes);
     linearBVH.Allocate(bvh.GetNumberOfPrimitives(), DeviceAdapter());
     SortAABBS(bvh, triangleIndices, linearBVH.LeafNodes);
 
@@ -775,9 +812,12 @@ public:
       .Invoke(counters);
     vtkm::exec::AtomicArray<vtkm::Int32, DeviceAdapter> atomicCounters(counters);
 
-    vtkm::worklet::DispatcherMapField<PropagateAABBs>(
-      PropagateAABBs(bvh.parent, bvh.leftChild, bvh.rightChild, primitiveCount, linearBVH.FlatBVH,
-                     atomicCounters))
+    vtkm::worklet::DispatcherMapField<PropagateAABBs>(PropagateAABBs(bvh.parent,
+                                                                     bvh.leftChild,
+                                                                     bvh.rightChild,
+                                                                     primitiveCount,
+                                                                     linearBVH.FlatBVH,
+                                                                     atomicCounters))
       .Invoke(vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(*bvh.xmins),
               vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(*bvh.ymins),
               vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(*bvh.zmins),

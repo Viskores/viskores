@@ -85,7 +85,8 @@ class TestingVirtualObjectCache
 {
 private:
   using FloatArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using ArrayTransform = vtkm::cont::ArrayHandleTransform<vtkm::FloatDefault, FloatArrayHandle,
+  using ArrayTransform = vtkm::cont::ArrayHandleTransform<vtkm::FloatDefault,
+                                                          FloatArrayHandle,
                                                           virtual_object_detail::Transformer>;
   using TransformerCache = vtkm::cont::VirtualObjectCache<virtual_object_detail::Transformer>;
 
@@ -133,7 +134,8 @@ private:
   class TestStage2
   {
   public:
-    TestStage2(const FloatArrayHandle& input, virtual_object_detail::Multiply& mul,
+    TestStage2(const FloatArrayHandle& input,
+               virtual_object_detail::Multiply& mul,
                TransformerCache& manager)
       : Input(&input)
       , Mul(&mul)

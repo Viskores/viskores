@@ -37,7 +37,8 @@ public:
   template <typename T, typename StorageTag>
   VTKM_EXEC void operator()(const vtkm::Id& index,
                             const vtkm::exec::ExecutionWholeArrayConst<T, StorageTag>& execIn,
-                            vtkm::exec::ExecutionWholeArray<T, StorageTag>& execOut, T& out) const
+                            vtkm::exec::ExecutionWholeArray<T, StorageTag>& execOut,
+                            T& out) const
   {
     if (!test_equal(execIn.Get(index), TestValue(index, T()) + T(100)))
     {
@@ -80,7 +81,8 @@ struct DoTestWorklet
 
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(counting, vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
+    dispatcher.Invoke(counting,
+                      vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
                       vtkm::exec::ExecutionWholeArray<T>(outputHandle, ARRAY_SIZE),
                       outputFieldArray);
 
@@ -94,7 +96,8 @@ struct DoTestWorklet
     outputHandle = vtkm::cont::ArrayHandle<T>();
 
     vtkm::cont::DynamicArrayHandle outputFieldDynamic(outputFieldArray);
-    dispatcher.Invoke(counting, vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
+    dispatcher.Invoke(counting,
+                      vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
                       vtkm::exec::ExecutionWholeArray<T>(outputHandle, ARRAY_SIZE),
                       outputFieldDynamic);
 

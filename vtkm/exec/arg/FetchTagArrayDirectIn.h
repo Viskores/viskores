@@ -41,8 +41,10 @@ struct FetchTagArrayDirectIn
 };
 
 template <typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn, vtkm::exec::arg::AspectTagDefault,
-             ThreadIndicesType, ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
+             vtkm::exec::arg::AspectTagDefault,
+             ThreadIndicesType,
+             ExecObjectType>
 {
   typedef typename ExecObjectType::ValueType ValueType;
 

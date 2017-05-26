@@ -37,8 +37,8 @@ void TestCellGradientUniform2D()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellGradient> dispatcher;
-  dispatcher.Invoke(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(),
-                    dataSet.GetField("pointvar"), result);
+  dispatcher.Invoke(
+    dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("pointvar"), result);
 
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10, 30, 0 }, { 10, 30, 0 } };
   for (int i = 0; i < 2; ++i)
@@ -58,8 +58,8 @@ void TestCellGradientUniform3D()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellGradient> dispatcher;
-  dispatcher.Invoke(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(),
-                    dataSet.GetField("pointvar"), result);
+  dispatcher.Invoke(
+    dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("pointvar"), result);
 
   vtkm::Vec<vtkm::Float64, 3> expected[4] = {
     { 10.025, 30.075, 60.125 },
@@ -127,8 +127,8 @@ void TestCellGradientExplicit()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellGradient> dispatcher;
-  dispatcher.Invoke(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(),
-                    dataSet.GetField("pointvar"), result);
+  dispatcher.Invoke(
+    dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), dataSet.GetField("pointvar"), result);
 
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, -0.0f } };
   for (int i = 0; i < 2; ++i)

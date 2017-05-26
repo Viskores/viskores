@@ -121,7 +121,11 @@ class VTKM_ALWAYS_EXPORT Box : public ImplicitFunctionImpl<Box>
 public:
   Box();
   Box(vtkm::Vec<FloatDefault, 3> minPoint, vtkm::Vec<FloatDefault, 3> maxPoint);
-  Box(FloatDefault xmin, FloatDefault xmax, FloatDefault ymin, FloatDefault ymax, FloatDefault zmin,
+  Box(FloatDefault xmin,
+      FloatDefault xmax,
+      FloatDefault ymin,
+      FloatDefault ymax,
+      FloatDefault zmin,
       FloatDefault zmax);
 
   void SetMinPoint(const vtkm::Vec<FloatDefault, 3>& point);
@@ -152,7 +156,8 @@ class VTKM_ALWAYS_EXPORT Cylinder : public ImplicitFunctionImpl<Cylinder>
 public:
   Cylinder();
   Cylinder(const vtkm::Vec<FloatDefault, 3>& axis, FloatDefault radius);
-  Cylinder(const vtkm::Vec<FloatDefault, 3>& center, const vtkm::Vec<FloatDefault, 3>& axis,
+  Cylinder(const vtkm::Vec<FloatDefault, 3>& center,
+           const vtkm::Vec<FloatDefault, 3>& axis,
            FloatDefault radius);
 
   void SetCenter(const vtkm::Vec<FloatDefault, 3>& center);

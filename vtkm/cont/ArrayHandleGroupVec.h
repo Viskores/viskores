@@ -136,9 +136,9 @@ public:
   typedef vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::PortalControl,
                                                     NUM_COMPONENTS>
     PortalType;
-  typedef vtkm::exec::internal::ArrayPortalGroupVec<
-    typename SourceArrayHandleType::PortalConstControl, NUM_COMPONENTS>
-    PortalConstType;
+  typedef vtkm::exec::internal::
+    ArrayPortalGroupVec<typename SourceArrayHandleType::PortalConstControl, NUM_COMPONENTS>
+      PortalConstType;
 
   VTKM_CONT
   Storage()
@@ -235,10 +235,12 @@ public:
   typedef typename StorageType::PortalConstType PortalConstControl;
 
   typedef vtkm::exec::internal::ArrayPortalGroupVec<
-    typename SourceArrayHandleType::template ExecutionTypes<Device>::Portal, NUM_COMPONENTS>
+    typename SourceArrayHandleType::template ExecutionTypes<Device>::Portal,
+    NUM_COMPONENTS>
     PortalExecution;
   typedef vtkm::exec::internal::ArrayPortalGroupVec<
-    typename SourceArrayHandleType::template ExecutionTypes<Device>::PortalConst, NUM_COMPONENTS>
+    typename SourceArrayHandleType::template ExecutionTypes<Device>::PortalConst,
+    NUM_COMPONENTS>
     PortalConstExecution;
 
   VTKM_CONT
@@ -333,7 +335,8 @@ class ArrayHandleGroupVec
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-    ArrayHandleGroupVec, (ArrayHandleGroupVec<SourceArrayHandleType, NUM_COMPONENTS>),
+    ArrayHandleGroupVec,
+    (ArrayHandleGroupVec<SourceArrayHandleType, NUM_COMPONENTS>),
     (vtkm::cont::ArrayHandle<
       vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
       vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>>));

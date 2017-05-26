@@ -88,7 +88,8 @@ struct FetchArrayTopologyMapInImplementation
 };
 
 static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<1> make_VecRectilinearPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin, const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
+  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
+  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
   const vtkm::Vec<vtkm::Id, 1>& logicalId)
 {
   vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
@@ -97,24 +98,28 @@ static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<1> make_VecRectilin
 }
 
 static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<1> make_VecRectilinearPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin, const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
+  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
+  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
   vtkm::Id logicalId)
 {
   return make_VecRectilinearPointCoordinates(origin, spacing, vtkm::Vec<vtkm::Id, 1>(logicalId));
 }
 
 static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<2> make_VecRectilinearPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin, const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
+  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
+  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
   const vtkm::Vec<vtkm::Id, 2>& logicalId)
 {
   vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
     origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
-    origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]), origin[2]);
+    origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
+    origin[2]);
   return vtkm::VecRectilinearPointCoordinates<2>(offsetOrigin, spacing);
 }
 
 static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<3> make_VecRectilinearPointCoordinates(
-  const vtkm::Vec<vtkm::FloatDefault, 3>& origin, const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
+  const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
+  const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
   const vtkm::Vec<vtkm::Id, 3>& logicalId)
 {
   vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
@@ -126,13 +131,15 @@ static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<3> make_VecRectilin
 
 template <vtkm::IdComponent NumDimensions>
 struct FetchArrayTopologyMapInImplementation<
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell,
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                     vtkm::TopologyElementTagCell,
                                      NumDimensions>,
   vtkm::internal::ArrayPortalUniformPointCoordinates>
 
 {
   typedef vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                             vtkm::TopologyElementTagCell, NumDimensions>
+                                             vtkm::TopologyElementTagCell,
+                                             NumDimensions>
     ConnectivityType;
   typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
 
@@ -152,16 +159,17 @@ struct FetchArrayTopologyMapInImplementation<
 
 template <typename PermutationPortal, vtkm::IdComponent NumDimensions>
 struct FetchArrayTopologyMapInImplementation<
-  vtkm::exec::ConnectivityPermuted<
-    PermutationPortal,
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell,
-                                       NumDimensions>>,
+  vtkm::exec::ConnectivityPermuted<PermutationPortal,
+                                   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                                                      vtkm::TopologyElementTagCell,
+                                                                      NumDimensions>>,
   vtkm::internal::ArrayPortalUniformPointCoordinates>
 
 {
   typedef vtkm::exec::ConnectivityPermuted<
     PermutationPortal,
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                       vtkm::TopologyElementTagCell,
                                        NumDimensions>>
     ConnectivityType;
   typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
@@ -186,8 +194,10 @@ struct FetchArrayTopologyMapInImplementation<
 } // namespace detail
 
 template <typename ConnectivityType, typename ExecObjectType>
-struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn, vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>, ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
+             ExecObjectType>
 {
   typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
 

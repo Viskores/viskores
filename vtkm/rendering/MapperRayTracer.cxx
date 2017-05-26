@@ -116,8 +116,10 @@ struct MapperRayTracer::RenderFunctor
   VTKM_CONT
   RenderFunctor(vtkm::rendering::MapperRayTracer* self,
                 const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
-                vtkm::Id numberOfTriangles, const vtkm::cont::CoordinateSystem& coordinates,
-                const vtkm::cont::Field& scalarField, const vtkm::rendering::Camera& camera,
+                vtkm::Id numberOfTriangles,
+                const vtkm::cont::CoordinateSystem& coordinates,
+                const vtkm::cont::Field& scalarField,
+                const vtkm::rendering::Camera& camera,
                 const vtkm::Range& scalarRange)
     : Self(self)
     , TriangleIndices(indices)
@@ -141,8 +143,12 @@ struct MapperRayTracer::RenderFunctor
 
     vtkm::Bounds dataBounds = this->Coordinates.GetBounds();
 
-    tracer->SetData(this->Coordinates.GetData(), this->TriangleIndices, this->ScalarField,
-                    this->NumberOfTriangles, this->ScalarRange, dataBounds);
+    tracer->SetData(this->Coordinates.GetData(),
+                    this->TriangleIndices,
+                    this->ScalarField,
+                    this->NumberOfTriangles,
+                    this->ScalarRange,
+                    dataBounds);
     tracer->SetColorMap(this->Self->ColorMap);
     tracer->SetBackgroundColor(this->Self->Internals->Canvas->GetBackgroundColor().Components);
     tracer->Render(this->Self->Internals->Canvas);

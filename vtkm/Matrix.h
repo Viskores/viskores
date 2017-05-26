@@ -115,7 +115,8 @@ private:
 ///
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 VTKM_EXEC_CONT const vtkm::Vec<T, NumCol>& MatrixGetRow(
-  const vtkm::Matrix<T, NumRow, NumCol>& matrix, vtkm::IdComponent rowIndex)
+  const vtkm::Matrix<T, NumRow, NumCol>& matrix,
+  vtkm::IdComponent rowIndex)
 {
   return matrix[rowIndex];
 }
@@ -139,7 +140,8 @@ VTKM_EXEC_CONT vtkm::Vec<T, NumRow> MatrixGetColumn(const vtkm::Matrix<T, NumRow
 ///
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 VTKM_EXEC_CONT void MatrixSetRow(vtkm::Matrix<T, NumRow, NumCol>& matrix,
-                                 vtkm::IdComponent rowIndex, const vtkm::Vec<T, NumCol>& rowValues)
+                                 vtkm::IdComponent rowIndex,
+                                 const vtkm::Vec<T, NumCol>& rowValues)
 {
   matrix[rowIndex] = rowValues;
 }
@@ -159,7 +161,9 @@ VTKM_EXEC_CONT void MatrixSetColumn(vtkm::Matrix<T, NumRow, NumCol>& matrix,
 
 /// Standard matrix multiplication.
 ///
-template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol,
+template <typename T,
+          vtkm::IdComponent NumRow,
+          vtkm::IdComponent NumCol,
           vtkm::IdComponent NumInternal>
 VTKM_EXEC_CONT vtkm::Matrix<T, NumRow, NumCol> MatrixMultiply(
   const vtkm::Matrix<T, NumRow, NumInternal>& leftFactor,
@@ -185,7 +189,8 @@ VTKM_EXEC_CONT vtkm::Matrix<T, NumRow, NumCol> MatrixMultiply(
 ///
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 VTKM_EXEC_CONT vtkm::Vec<T, NumRow> MatrixMultiply(
-  const vtkm::Matrix<T, NumRow, NumCol>& leftFactor, const vtkm::Vec<T, NumCol>& rightFactor)
+  const vtkm::Matrix<T, NumRow, NumCol>& leftFactor,
+  const vtkm::Vec<T, NumCol>& rightFactor)
 {
   vtkm::Vec<T, NumRow> product;
   for (vtkm::IdComponent rowIndex = 0; rowIndex < NumRow; rowIndex++)
@@ -199,7 +204,8 @@ VTKM_EXEC_CONT vtkm::Vec<T, NumRow> MatrixMultiply(
 ///
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 VTKM_EXEC_CONT vtkm::Vec<T, NumCol> MatrixMultiply(
-  const vtkm::Vec<T, NumRow>& leftFactor, const vtkm::Matrix<T, NumRow, NumCol>& rightFactor)
+  const vtkm::Vec<T, NumRow>& leftFactor,
+  const vtkm::Matrix<T, NumRow, NumCol>& rightFactor)
 {
   vtkm::Vec<T, NumCol> product;
   for (vtkm::IdComponent colIndex = 0; colIndex < NumCol; colIndex++)
@@ -260,7 +266,8 @@ namespace detail
 template <typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT void MatrixLUPFactorFindPivot(vtkm::Matrix<T, Size, Size>& A,
                                              vtkm::Vec<vtkm::IdComponent, Size>& permutation,
-                                             vtkm::IdComponent topCornerIndex, T& inversionParity,
+                                             vtkm::IdComponent topCornerIndex,
+                                             T& inversionParity,
                                              bool& valid)
 {
   vtkm::IdComponent maxRowIndex = topCornerIndex;
@@ -351,7 +358,8 @@ VTKM_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(vtkm::Matrix<T, Siz
 template <typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT void MatrixLUPFactor(vtkm::Matrix<T, Size, Size>& A,
                                     vtkm::Vec<vtkm::IdComponent, Size>& permutation,
-                                    T& inversionParity, bool& valid)
+                                    T& inversionParity,
+                                    bool& valid)
 {
   // Initialize permutation.
   for (vtkm::IdComponent index = 0; index < Size; index++)
@@ -374,7 +382,8 @@ VTKM_EXEC_CONT void MatrixLUPFactor(vtkm::Matrix<T, Size, Size>& A,
 ///
 template <typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT vtkm::Vec<T, Size> MatrixLUPSolve(
-  const vtkm::Matrix<T, Size, Size>& LU, const vtkm::Vec<vtkm::IdComponent, Size>& permutation,
+  const vtkm::Matrix<T, Size, Size>& LU,
+  const vtkm::Vec<vtkm::IdComponent, Size>& permutation,
   const vtkm::Vec<T, Size>& b)
 {
   // The LUP-factorization gives us PA = LU or equivalently A = inv(P)LU.
@@ -418,7 +427,8 @@ VTKM_EXEC_CONT vtkm::Vec<T, Size> MatrixLUPSolve(
 ///
 template <typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT vtkm::Vec<T, Size> SolveLinearSystem(const vtkm::Matrix<T, Size, Size>& A,
-                                                    const vtkm::Vec<T, Size>& b, bool& valid)
+                                                    const vtkm::Vec<T, Size>& b,
+                                                    bool& valid)
 {
   // First, we will make an LUP-factorization to help us.
   vtkm::Matrix<T, Size, Size> LU = A;

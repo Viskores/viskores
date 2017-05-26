@@ -52,7 +52,8 @@ vtkm::IdComponent Scene::GetNumberOfActors() const
   return static_cast<vtkm::IdComponent>(this->Internals->Actors.size());
 }
 
-void Scene::Render(vtkm::rendering::Mapper& mapper, vtkm::rendering::Canvas& canvas,
+void Scene::Render(vtkm::rendering::Mapper& mapper,
+                   vtkm::rendering::Canvas& canvas,
                    const vtkm::rendering::Camera& camera) const
 {
   mapper.StartScene();

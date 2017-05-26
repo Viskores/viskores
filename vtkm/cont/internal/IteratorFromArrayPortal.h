@@ -172,18 +172,20 @@ std::ptrdiff_t operator-(vtkm::cont::internal::IteratorFromArrayPortal<PortalTyp
 
 template <typename PortalType>
 vtkm::cont::internal::IteratorFromArrayPortal<PortalType> operator+(
-  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& iter, std::ptrdiff_t n)
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& iter,
+  std::ptrdiff_t n)
 {
-  return vtkm::cont::internal::IteratorFromArrayPortal<PortalType>(iter.Portal, iter.Index +
-                                                                     static_cast<vtkm::Id>(n));
+  return vtkm::cont::internal::IteratorFromArrayPortal<PortalType>(
+    iter.Portal, iter.Index + static_cast<vtkm::Id>(n));
 }
 
 template <typename PortalType>
 vtkm::cont::internal::IteratorFromArrayPortal<PortalType> operator+(
-  std::ptrdiff_t n, vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& iter)
+  std::ptrdiff_t n,
+  vtkm::cont::internal::IteratorFromArrayPortal<PortalType> const& iter)
 {
-  return vtkm::cont::internal::IteratorFromArrayPortal<PortalType>(iter.Portal, iter.Index +
-                                                                     static_cast<vtkm::Id>(n));
+  return vtkm::cont::internal::IteratorFromArrayPortal<PortalType>(
+    iter.Portal, iter.Index + static_cast<vtkm::Id>(n));
 }
 }
 }

@@ -46,7 +46,9 @@ vtkm::Bounds ComputeBounds(std::size_t numPoints, const T* coords)
   return bounds;
 }
 
-void ValidateDataSet(const vtkm::cont::DataSet& ds, vtkm::Id numPoints, vtkm::Id numCells,
+void ValidateDataSet(const vtkm::cont::DataSet& ds,
+                     vtkm::Id numPoints,
+                     vtkm::Id numCells,
                      const vtkm::Bounds& bounds)
 {
   //Verify basics..
@@ -101,9 +103,13 @@ vtkm::cont::ArrayHandle<T> createAH(std::size_t n, const T* data)
 }
 
 template <typename T>
-vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords, std::size_t numPoints,
-                                     const T* coords, std::size_t numCells, std::size_t numConn,
-                                     const vtkm::Id* conn, const vtkm::IdComponent* indices,
+vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
+                                     std::size_t numPoints,
+                                     const T* coords,
+                                     std::size_t numCells,
+                                     std::size_t numConn,
+                                     const vtkm::Id* conn,
+                                     const vtkm::IdComponent* indices,
                                      const vtkm::UInt8* shape)
 {
   vtkm::cont::DataSet dataSet;
@@ -130,8 +136,8 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords, std::size_t numPoi
     DFA::Copy(vtkm::cont::make_ArrayHandle(zvals), Z);
     DFA::Copy(vtkm::cont::make_ArrayHandle(varP), P);
     DFA::Copy(vtkm::cont::make_ArrayHandle(varC), C);
-    dataSet = dsb.Create(X, Y, Z, createAH(numCells, shape), createAH(numCells, indices),
-                         createAH(numConn, conn));
+    dataSet = dsb.Create(
+      X, Y, Z, createAH(numCells, shape), createAH(numCells, indices), createAH(numConn, conn));
     dsf.AddPointField(dataSet, "pointvar", P);
     dsf.AddCellField(dataSet, "cellvar", C);
     return dataSet;
@@ -153,8 +159,8 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords, std::size_t numPoi
     }
     vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> pts;
     DFA::Copy(vtkm::cont::make_ArrayHandle(tmp), pts);
-    dataSet = dsb.Create(pts, createAH(numCells, shape), createAH(numCells, indices),
-                         createAH(numConn, conn));
+    dataSet = dsb.Create(
+      pts, createAH(numCells, shape), createAH(numCells, indices), createAH(numConn, conn));
     dsf.AddPointField(dataSet, "pointvar", varP);
     dsf.AddCellField(dataSet, "cellvar", varC);
     return dataSet;
@@ -162,9 +168,13 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords, std::size_t numPoi
 }
 
 template <typename T>
-vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords, std::size_t numPoints,
-                                     const T* coords, std::size_t numCells, std::size_t numConn,
-                                     const vtkm::Id* conn, const vtkm::IdComponent* indices,
+vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
+                                     std::size_t numPoints,
+                                     const T* coords,
+                                     std::size_t numCells,
+                                     std::size_t numConn,
+                                     const vtkm::Id* conn,
+                                     const vtkm::IdComponent* indices,
                                      const vtkm::UInt8* shape)
 {
   vtkm::cont::DataSet dataSet;
@@ -185,8 +195,8 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords, std::size_t numPoi
     {
       varC[i] = static_cast<T>(i * 1.1f);
     }
-    dataSet = dsb.Create(X, Y, Z, createVec(numCells, shape), createVec(numCells, indices),
-                         createVec(numConn, conn));
+    dataSet = dsb.Create(
+      X, Y, Z, createVec(numCells, shape), createVec(numCells, indices), createVec(numConn, conn));
     dsf.AddPointField(dataSet, "pointvar", varP);
     dsf.AddCellField(dataSet, "cellvar", varC);
     return dataSet;
@@ -206,8 +216,8 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords, std::size_t numPoi
     {
       varC[i][0] = static_cast<T>(i * 1.1f);
     }
-    dataSet = dsb.Create(pts, createVec(numCells, shape), createVec(numCells, indices),
-                         createVec(numConn, conn));
+    dataSet = dsb.Create(
+      pts, createVec(numCells, shape), createVec(numCells, indices), createVec(numConn, conn));
     dsf.AddPointField(dataSet, "pointvar", varP);
     dsf.AddCellField(dataSet, "cellvar", varC);
     return dataSet;

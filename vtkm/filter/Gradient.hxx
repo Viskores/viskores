@@ -31,7 +31,8 @@ namespace
 template <typename DerivedPolicy, typename Device, typename T, typename S>
 struct PointGrad
 {
-  PointGrad(const vtkm::cont::CoordinateSystem& coords, const vtkm::cont::ArrayHandle<T, S>& field,
+  PointGrad(const vtkm::cont::CoordinateSystem& coords,
+            const vtkm::cont::ArrayHandle<T, S>& field,
             vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>* result)
     : Points(&coords)
     , InField(&field)
@@ -45,7 +46,8 @@ struct PointGrad
     vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointGradient, Device> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       cellset, //whole cellset in
-                      vtkm::filter::ApplyPolicy(*this->Points, this->Policy), *this->InField,
+                      vtkm::filter::ApplyPolicy(*this->Points, this->Policy),
+                      *this->InField,
                       *this->Result);
   }
 
@@ -60,7 +62,8 @@ private:
 
 //-----------------------------------------------------------------------------
 template <typename HandleType>
-inline void add_field(vtkm::filter::ResultField& result, const HandleType& handle,
+inline void add_field(vtkm::filter::ResultField& result,
+                      const HandleType& handle,
                       const std::string name)
 {
   const vtkm::cont::Field::AssociationEnum assoc = result.GetField().GetAssociation();
@@ -80,7 +83,8 @@ inline void add_field(vtkm::filter::ResultField& result, const HandleType& handl
 template <typename T, typename S, typename DeviceAdapter>
 inline void add_extra_vec_fields(
   const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& inField,
-  const vtkm::filter::Gradient* const filter, vtkm::filter::ResultField& result,
+  const vtkm::filter::Gradient* const filter,
+  vtkm::filter::ResultField& result,
   const DeviceAdapter&)
 {
   if (filter->GetComputeDivergence())
@@ -113,7 +117,8 @@ inline void add_extra_vec_fields(
 
 template <typename T, typename S, typename DeviceAdapter>
 inline void add_extra_vec_fields(const vtkm::cont::ArrayHandle<T, S>&,
-                                 const vtkm::filter::Gradient* const, vtkm::filter::ResultField&,
+                                 const vtkm::filter::Gradient* const,
+                                 vtkm::filter::ResultField&,
                                  const DeviceAdapter&)
 {
   //not a vector array handle so add nothing
@@ -140,9 +145,11 @@ Gradient::Gradient()
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline vtkm::filter::ResultField Gradient::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& inField,
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& adapter)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter& adapter)
 {
   if (!fieldMetadata.IsPointField())
   {
@@ -176,7 +183,9 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
   {
     vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellGradient, DeviceAdapter> dispatcher;
     dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy),
-                      vtkm::filter::ApplyPolicy(coords, policy), inField, outArray);
+                      vtkm::filter::ApplyPolicy(coords, policy),
+                      inField,
+                      outArray);
     fieldAssociation = vtkm::cont::Field::ASSOC_CELL_SET;
   }
 

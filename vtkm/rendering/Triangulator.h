@@ -269,7 +269,8 @@ public:
   public:
     VTKM_CONT
     Trianglulate(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& outputIndices,
-                 const vtkm::cont::ArrayHandle<vtkm::Id>& indices, const vtkm::Id& size)
+                 const vtkm::cont::ArrayHandle<vtkm::Id>& indices,
+                 const vtkm::Id& size)
       : Indices(indices.PrepareForInput(DeviceAdapter()))
     {
       this->OutputIndices = outputIndices.PrepareForOutput(size, DeviceAdapter());
@@ -283,8 +284,10 @@ public:
     typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>);
     typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
     VTKM_EXEC
-    void operator()(const vtkm::Id& shapeType, const vtkm::Id& indexOffset,
-                    const vtkm::Id& triangleOffset, const vtkm::Id& cellId) const
+    void operator()(const vtkm::Id& shapeType,
+                    const vtkm::Id& indexOffset,
+                    const vtkm::Id& triangleOffset,
+                    const vtkm::Id& cellId) const
     {
       vtkm::Vec<vtkm::Id, 4> triangle;
       if (shapeType == vtkm::CELL_SHAPE_TRIANGLE)
@@ -540,10 +543,12 @@ public:
 
         outputIndices.Allocate(totalTriangles);
         vtkm::worklet::DispatcherMapField<Trianglulate>(
-          Trianglulate(outputIndices, cellSetSingleType.GetConnectivityArray(PointTag(), CellTag()),
+          Trianglulate(outputIndices,
+                       cellSetSingleType.GetConnectivityArray(PointTag(), CellTag()),
                        totalTriangles))
           .Invoke(cellSetSingleType.GetShapesArray(PointTag(), CellTag()),
-                  cellSetSingleType.GetIndexOffsetArray(PointTag(), CellTag()), cellIdxs);
+                  cellSetSingleType.GetIndexOffsetArray(PointTag(), CellTag()),
+                  cellIdxs);
 
         outputTriangles = totalTriangles;
       }

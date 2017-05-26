@@ -44,18 +44,20 @@ struct TransportTagCellSetIn
 };
 
 template <typename FromTopology, typename ToTopology, typename ContObjectType, typename Device>
-struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology, ToTopology>, ContObjectType,
+struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology, ToTopology>,
+                 ContObjectType,
                  Device>
 {
   VTKM_IS_CELL_SET(ContObjectType);
 
   typedef
-    typename ContObjectType::template ExecutionTypes<Device, FromTopology,
+    typename ContObjectType::template ExecutionTypes<Device,
+                                                     FromTopology,
                                                      ToTopology>::ExecObjectType ExecObjectType;
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType operator()(const ContObjectType& object, const InputDomainType&,
-                                      vtkm::Id, vtkm::Id) const
+  VTKM_CONT ExecObjectType
+  operator()(const ContObjectType& object, const InputDomainType&, vtkm::Id, vtkm::Id) const
   {
     return object.PrepareForInput(Device(), FromTopology(), ToTopology());
   }

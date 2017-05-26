@@ -79,11 +79,14 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename OutToInArrayType, typename VisitArrayType>
-  VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex, const OutToInArrayType& outToIn,
+  VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                                     const OutToInArrayType& outToIn,
                                      const VisitArrayType& visit,
                                      const ConnectivityType& connectivity,
                                      vtkm::Id globalThreadIndexOffset = 0)
-    : Superclass(threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex),
+    : Superclass(threadIndex,
+                 outToIn.Get(threadIndex),
+                 visit.Get(threadIndex),
                  globalThreadIndexOffset)
     , CellShape(detail::CellShapeInitializer<CellShapeTag>::GetDefault())
   {
@@ -98,7 +101,9 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex, vtkm::Id inIndex, vtkm::IdComponent visitIndex,
+  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                           vtkm::Id inIndex,
+                           vtkm::IdComponent visitIndex,
                            const ConnectivityType& connectivity,
                            vtkm::Id globalThreadIndexOffset = 0)
     : Superclass(threadIndex, inIndex, visitIndex, globalThreadIndexOffset)
@@ -199,7 +204,8 @@ public:
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
   template <typename OutToInArrayType, typename VisitArrayType>
-  VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex, const OutToInArrayType& outToIn,
+  VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                                     const OutToInArrayType& outToIn,
                                      const VisitArrayType& visit,
                                      const ConnectivityType& connectivity,
                                      vtkm::Id globalThreadIndexOffset = 0)
@@ -215,7 +221,8 @@ public:
   }
 
   template <typename OutToInArrayType, typename VisitArrayType>
-  VTKM_EXEC ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex, const OutToInArrayType&,
+  VTKM_EXEC ThreadIndicesTopologyMap(const vtkm::Id3& threadIndex,
+                                     const OutToInArrayType&,
                                      const VisitArrayType& visit,
                                      const ConnectivityType& connectivity,
                                      const vtkm::Id globalThreadIndexOffset = 0)
@@ -237,8 +244,10 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex, vtkm::Id vtkmNotUsed(inIndex),
-                           vtkm::IdComponent visitIndex, const ConnectivityType& connectivity,
+  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                           vtkm::Id vtkmNotUsed(inIndex),
+                           vtkm::IdComponent visitIndex,
+                           const ConnectivityType& connectivity,
                            vtkm::Id globalThreadIndexOffset = 0)
   {
     this->InputIndex = threadIndex;
@@ -338,13 +347,17 @@ private:
 };
 
 // Specialization for permuted structured connectivity types.
-template <typename PermutationPortal, typename FromTopology, typename ToTopology,
+template <typename PermutationPortal,
+          typename FromTopology,
+          typename ToTopology,
           vtkm::IdComponent Dimension>
 class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityPermuted<
-  PermutationPortal, vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>>>
+  PermutationPortal,
+  vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>>>
 {
   using PermutedConnectivityType = vtkm::exec::ConnectivityPermuted<
-    PermutationPortal, vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>>;
+    PermutationPortal,
+    vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>>;
   using ConnectivityType = vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>;
 
 public:
@@ -353,7 +366,8 @@ public:
   using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
   template <typename OutToInArrayType, typename VisitArrayType>
-  VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex, const OutToInArrayType& outToIn,
+  VTKM_EXEC ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                                     const OutToInArrayType& outToIn,
                                      const VisitArrayType& visit,
                                      const PermutedConnectivityType& permutation,
                                      vtkm::Id globalThreadIndexOffset = 0)
@@ -371,7 +385,8 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ThreadIndicesTopologyMap(vtkm::Id threadIndex, vtkm::Id vtkmNotUsed(inIndex),
+  ThreadIndicesTopologyMap(vtkm::Id threadIndex,
+                           vtkm::Id vtkmNotUsed(inIndex),
                            vtkm::IdComponent visitIndex,
                            const PermutedConnectivityType& permutation,
                            vtkm::Id globalThreadIndexOffset = 0)

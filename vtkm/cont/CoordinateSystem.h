@@ -44,13 +44,15 @@ namespace cont
 namespace detail
 {
 
-typedef vtkm::cont::ArrayHandleCompositeVectorType<
-  vtkm::cont::ArrayHandle<vtkm::Float32>, vtkm::cont::ArrayHandle<vtkm::Float32>,
-  vtkm::cont::ArrayHandle<vtkm::Float32>>::type ArrayHandleCompositeVectorFloat32_3Default;
+typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                                   vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                                   vtkm::cont::ArrayHandle<vtkm::Float32>>::type
+  ArrayHandleCompositeVectorFloat32_3Default;
 
-typedef vtkm::cont::ArrayHandleCompositeVectorType<
-  vtkm::cont::ArrayHandle<vtkm::Float64>, vtkm::cont::ArrayHandle<vtkm::Float64>,
-  vtkm::cont::ArrayHandle<vtkm::Float64>>::type ArrayHandleCompositeVectorFloat64_3Default;
+typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                                   vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                                   vtkm::cont::ArrayHandle<vtkm::Float64>>::type
+  ArrayHandleCompositeVectorFloat64_3Default;
 
 } // namespace detail
 
@@ -60,13 +62,14 @@ typedef vtkm::cont::ArrayHandleCompositeVectorType<
 /// by default (unless it is defined before including VTK-m headers.
 ///
 struct StorageListTagCoordinateSystemDefault
-  : vtkm::ListTagBase<
-      vtkm::cont::StorageTagBasic, vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-      detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
-      detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag,
-      vtkm::cont::ArrayHandleCartesianProduct<
-        vtkm::cont::ArrayHandle<vtkm::FloatDefault>, vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-        vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::StorageTag>
+  : vtkm::ListTagBase<vtkm::cont::StorageTagBasic,
+                      vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
+                      detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
+                      detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag,
+                      vtkm::cont::ArrayHandleCartesianProduct<
+                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::StorageTag>
 {
 };
 
@@ -113,10 +116,12 @@ public:
   ///
   VTKM_CONT
   CoordinateSystem(
-    std::string name, vtkm::Id3 dimensions,
+    std::string name,
+    vtkm::Id3 dimensions,
     vtkm::Vec<vtkm::FloatDefault, 3> origin = vtkm::Vec<vtkm::FloatDefault, 3>(0.0f, 0.0f, 0.0f),
     vtkm::Vec<vtkm::FloatDefault, 3> spacing = vtkm::Vec<vtkm::FloatDefault, 3>(1.0f, 1.0f, 1.0f))
-    : Superclass(name, ASSOC_POINTS,
+    : Superclass(name,
+                 ASSOC_POINTS,
                  vtkm::cont::DynamicArrayHandle(
                    vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing)))
   {
@@ -145,8 +150,8 @@ public:
   {
     VTKM_IS_LIST_TAG(TypeList);
 
-    this->Superclass::GetRange(range, TypeList(),
-                               VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
+    this->Superclass::GetRange(
+      range, TypeList(), VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
   }
 
   template <typename TypeList, typename StorageList>

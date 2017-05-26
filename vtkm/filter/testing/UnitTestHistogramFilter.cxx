@@ -240,8 +240,8 @@ vtkm::cont::DataSet MakeTestDataSet()
     vtkm::cont::Field("c_poisson", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
   dataSet.AddField(
     vtkm::cont::Field("c_normal", vtkm::cont::Field::ASSOC_CELL_SET, "cells", normal, nCells));
-  dataSet.AddField(vtkm::cont::Field("c_chiSquare", vtkm::cont::Field::ASSOC_CELL_SET, "cells",
-                                     chiSquare, nCells));
+  dataSet.AddField(vtkm::cont::Field(
+    "c_chiSquare", vtkm::cont::Field::ASSOC_CELL_SET, "cells", chiSquare, nCells));
   dataSet.AddField(
     vtkm::cont::Field("c_uniform", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
 
@@ -257,8 +257,11 @@ vtkm::cont::DataSet MakeTestDataSet()
 //
 // Verify the histogram result and tally
 //
-void VerifyHistogram(const vtkm::filter::ResultField& result, vtkm::Id numberOfBins,
-                     const vtkm::Range& range, vtkm::Float64 delta, bool output = true)
+void VerifyHistogram(const vtkm::filter::ResultField& result,
+                     vtkm::Id numberOfBins,
+                     const vtkm::Range& range,
+                     vtkm::Float64 delta,
+                     bool output = true)
 {
   VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
   VTKM_TEST_ASSERT(result.GetField().GetName() == "histogram", "Output field has wrong name.");

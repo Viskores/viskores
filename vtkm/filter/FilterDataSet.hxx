@@ -63,8 +63,9 @@ inline VTKM_CONT ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont:
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultDataSet FilterDataSet<Derived>::Execute(
-  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+inline VTKM_CONT ResultDataSet
+FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet& input,
+                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   return this->PrepareForExecution(input, policy);
 }
@@ -81,7 +82,8 @@ struct FilterDataSetPrepareForExecutionFunctor
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
 
   VTKM_CONT
-  FilterDataSetPrepareForExecutionFunctor(Derived* self, const vtkm::cont::DataSet& input,
+  FilterDataSetPrepareForExecutionFunctor(Derived* self,
+                                          const vtkm::cont::DataSet& input,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
     : Self(self)
     , Input(input)
@@ -103,8 +105,9 @@ private:
 
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultDataSet FilterDataSet<Derived>::PrepareForExecution(
-  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+inline VTKM_CONT ResultDataSet
+FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
+                                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   // When we move to C++11, this could probably be an anonymous class
   detail::FilterDataSetPrepareForExecutionFunctor<Derived, DerivedPolicy> functor(
@@ -127,7 +130,8 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& 
 template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
-  ResultDataSet& result, const vtkm::cont::Field& field,
+  ResultDataSet& result,
+  const vtkm::cont::Field& field,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   bool valid = false;
@@ -135,8 +139,8 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   {
     vtkm::filter::FieldMetadata metaData(field);
     typedef internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy> FunctorType;
-    FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, this->Tracker,
-                        valid);
+    FunctorType functor(
+      static_cast<Derived*>(this), result, metaData, policy, this->Tracker, valid);
 
     typedef vtkm::filter::FilterTraits<Derived> Traits;
     vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy, Traits()), functor);

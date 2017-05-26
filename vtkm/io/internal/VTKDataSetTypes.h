@@ -201,7 +201,8 @@ inline void SelectVecTypeAndCall(T, vtkm::IdComponent numComponents, const Funct
 }
 
 template <typename Functor>
-inline void SelectTypeAndCall(DataType dtype, vtkm::IdComponent numComponents,
+inline void SelectTypeAndCall(DataType dtype,
+                              vtkm::IdComponent numComponents,
                               const Functor& functor)
 {
   switch (dtype)

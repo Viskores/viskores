@@ -146,11 +146,12 @@ private:
 
     vtkm::cont::Box box({ 0.0f, -0.5f, -0.5f }, { 1.5f, 1.5f, 0.5f });
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
-    implicit_function_detail::EvaluateOnCoordinates(this->Input.GetCoordinateSystem(0), box, values,
-                                                    device);
+    implicit_function_detail::EvaluateOnCoordinates(
+      this->Input.GetCoordinateSystem(0), box, values, device);
 
-    std::array<vtkm::FloatDefault, 8> expected = { { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f,
-                                                     0.5f } };
+    std::array<vtkm::FloatDefault, 8> expected = {
+      { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
   }
@@ -167,11 +168,12 @@ private:
     cylinder.SetRadius(1.0f);
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
-    implicit_function_detail::EvaluateOnCoordinates(this->Input.GetCoordinateSystem(0), cylinder,
-                                                    values, device);
+    implicit_function_detail::EvaluateOnCoordinates(
+      this->Input.GetCoordinateSystem(0), cylinder, values, device);
 
-    std::array<vtkm::FloatDefault, 8> expected = { { 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f,
-                                                     -1.0f } };
+    std::array<vtkm::FloatDefault, 8> expected = {
+      { 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
   }
@@ -196,11 +198,12 @@ private:
     frustum.CreateFromPoints(points);
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
-    implicit_function_detail::EvaluateOnCoordinates(this->Input.GetCoordinateSystem(0), frustum,
-                                                    values, device);
+    implicit_function_detail::EvaluateOnCoordinates(
+      this->Input.GetCoordinateSystem(0), frustum, values, device);
 
-    std::array<vtkm::FloatDefault, 8> expected = { { 0.0f, 0.0f, 0.0f, 0.0f, 0.316228f, 0.316228f,
-                                                     -0.316228f, 0.316228f } };
+    std::array<vtkm::FloatDefault, 8> expected = {
+      { 0.0f, 0.0f, 0.0f, 0.0f, 0.316228f, 0.316228f, -0.316228f, 0.316228f }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
   }
@@ -214,18 +217,20 @@ private:
     vtkm::cont::Plane plane({ 0.5f, 0.5f, 0.5f }, { 1.0f, 0.0f, 1.0f });
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
 
-    implicit_function_detail::EvaluateOnCoordinates(this->Input.GetCoordinateSystem(0), plane,
-                                                    values, device);
-    std::array<vtkm::FloatDefault, 8> expected1 = { { -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f,
-                                                      0.0f } };
+    implicit_function_detail::EvaluateOnCoordinates(
+      this->Input.GetCoordinateSystem(0), plane, values, device);
+    std::array<vtkm::FloatDefault, 8> expected1 = {
+      { -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected1),
                      "Result does not match expected values");
 
     plane.SetNormal({ -1.0f, 0.0f, -1.0f });
-    implicit_function_detail::EvaluateOnCoordinates(this->Input.GetCoordinateSystem(0), plane,
-                                                    values, device);
-    std::array<vtkm::FloatDefault, 8> expected2 = { { 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f,
-                                                      0.0f } };
+    implicit_function_detail::EvaluateOnCoordinates(
+      this->Input.GetCoordinateSystem(0), plane, values, device);
+    std::array<vtkm::FloatDefault, 8> expected2 = {
+      { 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected2),
                      "Result does not match expected values");
   }
@@ -238,11 +243,12 @@ private:
 
     vtkm::cont::Sphere sphere({ 0.0f, 0.0f, 0.0f }, 1.0f);
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
-    implicit_function_detail::EvaluateOnCoordinates(this->Input.GetCoordinateSystem(0), sphere,
-                                                    values, device);
+    implicit_function_detail::EvaluateOnCoordinates(
+      this->Input.GetCoordinateSystem(0), sphere, values, device);
 
-    std::array<vtkm::FloatDefault, 8> expected = { { -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 2.0f,
-                                                     1.0f } };
+    std::array<vtkm::FloatDefault, 8> expected = {
+      { -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 2.0f, 1.0f }
+    };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected),
                      "Result does not match expected values");
   }

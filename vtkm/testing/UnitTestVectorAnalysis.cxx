@@ -105,7 +105,9 @@ void TestVector(const VectorType& vector)
 }
 
 template <typename VectorType>
-void TestLerp(const VectorType& a, const VectorType& b, const VectorType& w,
+void TestLerp(const VectorType& a,
+              const VectorType& b,
+              const VectorType& w,
               const typename vtkm::VecTraits<VectorType>::ComponentType& wS)
 {
   std::cout << "Linear interpolation: " << a << "-" << b << ": " << w << std::endl;

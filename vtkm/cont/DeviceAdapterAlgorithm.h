@@ -112,7 +112,8 @@ struct DeviceAdapterAlgorithm
   ///
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                     vtkm::Id inputStartIndex, vtkm::Id numberOfElementsToCopy,
+                                     vtkm::Id inputStartIndex,
+                                     vtkm::Id numberOfElementsToCopy,
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0);
 
@@ -180,7 +181,8 @@ struct DeviceAdapterAlgorithm
   ///
   /// \return The total sum.
   template <typename T, typename U, class CIn, class BinaryFunctor>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue,
+  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                            U initialValue,
                             BinaryFunctor binary_functor);
 
   /// \brief Compute a accumulated sum operation on the input key value pairs
@@ -191,7 +193,12 @@ struct DeviceAdapterAlgorithm
   /// values inside that range. Once finished a single key and value is created
   /// for each segment.
   ///
-  template <typename T, typename U, class CKeyIn, class CValIn, class CKeyOut, class CValOut,
+  template <typename T,
+            typename U,
+            class CKeyIn,
+            class CValIn,
+            class CKeyOut,
+            class CValOut,
             class BinaryFunctor>
   VTKM_CONT static void ReduceByKey(const vtkm::cont::ArrayHandle<T, CKeyIn>& keys,
                                     const vtkm::cont::ArrayHandle<U, CValIn>& values,
@@ -251,7 +258,11 @@ struct DeviceAdapterAlgorithm
   /// applied to all values inside that range. Once finished the result is
   /// stored in \c values_output ArrayHandle.
   ///
-  template <typename T, typename U, typename KIn, typename VIn, typename VOut,
+  template <typename T,
+            typename U,
+            typename KIn,
+            typename VIn,
+            typename VOut,
             typename BinaryFunctor>
   VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
@@ -310,7 +321,8 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output,
-                                           const U& initialValue, BinaryFunctor binaryFunctor);
+                                           const U& initialValue,
+                                           BinaryFunctor binaryFunctor);
 
   /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
   ///

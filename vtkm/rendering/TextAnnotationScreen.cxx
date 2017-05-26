@@ -26,7 +26,8 @@ namespace rendering
 {
 
 TextAnnotationScreen::TextAnnotationScreen(const std::string& text,
-                                           const vtkm::rendering::Color& color, vtkm::Float32 scale,
+                                           const vtkm::rendering::Color& color,
+                                           vtkm::Float32 scale,
                                            const vtkm::Vec<vtkm::Float32, 2>& position,
                                            vtkm::Float32 angleDegrees)
   : TextAnnotation(text, color, scale)
@@ -55,8 +56,13 @@ void TextAnnotationScreen::Render(const vtkm::rendering::Camera& vtkmNotUsed(cam
 {
   vtkm::Float32 windowAspect = vtkm::Float32(canvas.GetWidth()) / vtkm::Float32(canvas.GetHeight());
 
-  canvas.AddText(this->Position, this->Scale, this->Angle, windowAspect, this->Anchor,
-                 this->TextColor, this->Text);
+  canvas.AddText(this->Position,
+                 this->Scale,
+                 this->Angle,
+                 windowAspect,
+                 this->Anchor,
+                 this->TextColor,
+                 this->Text);
 }
 }
 } // namespace vtkm::rendering

@@ -52,7 +52,8 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(const ContObjectType& object,
                                       const InputDomainType& vtkmNotUsed(inputDomain),
-                                      vtkm::Id inputRange, vtkm::Id vtkmNotUsed(outputRange)) const
+                                      vtkm::Id inputRange,
+                                      vtkm::Id vtkmNotUsed(outputRange)) const
   {
     if (object.GetNumberOfValues() != inputRange)
     {

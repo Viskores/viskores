@@ -178,7 +178,8 @@ public:
 
   // constructor takes necessary references
   ChainGraph(const vtkm::cont::ArrayHandle<T, StorageType>& Values,
-             vtkm::cont::ArrayHandle<vtkm::Id>& ArcArray, bool IsJoinGraph)
+             vtkm::cont::ArrayHandle<vtkm::Id>& ArcArray,
+             bool IsJoinGraph)
     : values(Values)
     , arcArray(ArcArray)
     , isJoinGraph(IsJoinGraph)
@@ -317,12 +318,14 @@ void ChainGraph<T, StorageType, DeviceAdapter>::FindGoverningSaddles()
 #endif
 
   // sort with the comparator
-  DeviceAlgorithm::Sort(edgeSorter, EdgePeakComparator<T, StorageType, DeviceAdapter>(
-                                      values.PrepareForInput(DeviceAdapter()),
-                                      valueIndex.PrepareForInput(DeviceAdapter()),
-                                      edgeFar.PrepareForInput(DeviceAdapter()),
-                                      edgeNear.PrepareForInput(DeviceAdapter()),
-                                      arcArray.PrepareForInput(DeviceAdapter()), isJoinGraph));
+  DeviceAlgorithm::Sort(
+    edgeSorter,
+    EdgePeakComparator<T, StorageType, DeviceAdapter>(values.PrepareForInput(DeviceAdapter()),
+                                                      valueIndex.PrepareForInput(DeviceAdapter()),
+                                                      edgeFar.PrepareForInput(DeviceAdapter()),
+                                                      edgeNear.PrepareForInput(DeviceAdapter()),
+                                                      arcArray.PrepareForInput(DeviceAdapter()),
+                                                      isJoinGraph));
 
 #ifdef DEBUG_PRINT
   DebugPrint("After Sorting");

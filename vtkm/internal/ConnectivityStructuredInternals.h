@@ -402,7 +402,8 @@ public:
     const vtkm::Id pointDims01 = this->PointDimensions[0] * this->PointDimensions[1];
     const vtkm::Id indexij = flatPointIndex % pointDims01;
 
-    return vtkm::Id3(indexij % this->PointDimensions[0], indexij / this->PointDimensions[0],
+    return vtkm::Id3(indexij % this->PointDimensions[0],
+                     indexij / this->PointDimensions[0],
                      flatPointIndex / pointDims01);
   }
 
@@ -418,7 +419,8 @@ public:
   vtkm::Id3 FlatToLogicalCellIndex(vtkm::Id flatCellIndex) const
   {
     const vtkm::Id indexij = flatCellIndex % this->CellDim01;
-    return vtkm::Id3(indexij % this->CellDimensions[0], indexij / this->CellDimensions[0],
+    return vtkm::Id3(indexij % this->CellDimensions[0],
+                     indexij / this->CellDimensions[0],
                      flatCellIndex / this->CellDim01);
   }
 
@@ -452,7 +454,8 @@ struct ConnectivityStructuredIndexHelper
 
 template <vtkm::IdComponent Dimension>
 struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
-                                         vtkm::TopologyElementTagCell, Dimension>
+                                         vtkm::TopologyElementTagCell,
+                                         Dimension>
 {
   typedef vtkm::internal::ConnectivityStructuredInternals<Dimension> ConnectivityType;
   typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;
@@ -497,7 +500,8 @@ struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
 
 template <vtkm::IdComponent Dimension>
 struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagCell,
-                                         vtkm::TopologyElementTagPoint, Dimension>
+                                         vtkm::TopologyElementTagPoint,
+                                         Dimension>
 {
   typedef vtkm::internal::ConnectivityStructuredInternals<Dimension> ConnectivityType;
   typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;

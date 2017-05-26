@@ -32,7 +32,8 @@ namespace filter
 //-----------------------------------------------------------------------------
 template <typename ImplicitFunctionType, typename DerivedPolicy>
 inline void ClipWithImplicitFunction::SetImplicitFunction(
-  const std::shared_ptr<ImplicitFunctionType>& func, const vtkm::filter::PolicyBase<DerivedPolicy>&)
+  const std::shared_ptr<ImplicitFunctionType>& func,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   func->ResetDevices(DerivedPolicy::DeviceAdapterList);
   this->Function = func;
@@ -41,7 +42,8 @@ inline void ClipWithImplicitFunction::SetImplicitFunction(
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline vtkm::filter::ResultDataSet ClipWithImplicitFunction::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
 {
   //get the cells and coordinates of the dataset
@@ -69,8 +71,10 @@ inline vtkm::filter::ResultDataSet ClipWithImplicitFunction::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline bool ClipWithImplicitFunction::DoMapField(
-  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  vtkm::filter::ResultDataSet& result,
+  const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
   if (fieldMeta.IsPointField() == false)

@@ -162,11 +162,17 @@ public:
   /// Topology map worklets use topology map indices.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename T, typename OutToInArrayType, typename VisitArrayType,
-            typename InputDomainType, typename G>
+  template <typename T,
+            typename OutToInArrayType,
+            typename VisitArrayType,
+            typename InputDomainType,
+            typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType> GetThreadIndices(
-    const T& threadIndex, const OutToInArrayType& outToIn, const VisitArrayType& visit,
-    const InputDomainType& connectivity, const G& globalThreadIndexOffset) const
+    const T& threadIndex,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const InputDomainType& connectivity,
+    const G& globalThreadIndexOffset) const
   {
     return vtkm::exec::arg::ThreadIndicesTopologyMap<InputDomainType>(
       threadIndex, outToIn, visit, connectivity, globalThreadIndexOffset);

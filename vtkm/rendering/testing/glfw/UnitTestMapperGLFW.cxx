@@ -45,8 +45,11 @@ static vtkm::Id which = 0, NUM_DATASETS = 4;
 static bool done = false;
 static bool batch = false;
 
-static void keyCallback(GLFWwindow* vtkmNotUsed(window), int key, int vtkmNotUsed(scancode),
-                        int action, int vtkmNotUsed(mods))
+static void keyCallback(GLFWwindow* vtkmNotUsed(window),
+                        int key,
+                        int vtkmNotUsed(scancode),
+                        int action,
+                        int vtkmNotUsed(mods))
 {
   if (key == GLFW_KEY_ESCAPE)
     done = true;
@@ -71,8 +74,9 @@ void RenderTests()
   glfwMakeContextCurrent(window);
   glfwSetKeyCallback(window, keyCallback);
 
-  CanvasType canvas[4] = { CanvasType(512, 512), CanvasType(512, 512), CanvasType(512, 512),
-                           CanvasType(512, 512) };
+  CanvasType canvas[4] = {
+    CanvasType(512, 512), CanvasType(512, 512), CanvasType(512, 512), CanvasType(512, 512)
+  };
   vtkm::rendering::Scene scene[4];
   vtkm::cont::DataSet ds[4];
   MapperType mapper[4];
@@ -91,21 +95,23 @@ void RenderTests()
 
   for (int i = 0; i < NUM_DATASETS; i++)
   {
-    scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(), ds[i].GetCoordinateSystem(),
-                                             ds[i].GetField(fldNames[i].c_str()), colorTable));
+    scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                             ds[i].GetCoordinateSystem(),
+                                             ds[i].GetField(fldNames[i].c_str()),
+                                             colorTable));
     vtkm::rendering::testing::SetCamera<View3DType>(camera[i],
                                                     ds[i].GetCoordinateSystem().GetBounds());
   }
 
-  View3DType view3d0(scene[0], mapper[0], canvas[0], camera[0],
-                     vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
-  View3DType view3d1(scene[1], mapper[1], canvas[1], camera[1],
-                     vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
-  View3DType view3d2(scene[2], mapper[2], canvas[2], camera[2],
-                     vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+  View3DType view3d0(
+    scene[0], mapper[0], canvas[0], camera[0], vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+  View3DType view3d1(
+    scene[1], mapper[1], canvas[1], camera[1], vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+  View3DType view3d2(
+    scene[2], mapper[2], canvas[2], camera[2], vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
 
-  View2DType view2d(scene[3], mapper[3], canvas[3], camera[3],
-                    vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+  View2DType view2d(
+    scene[3], mapper[3], canvas[3], camera[3], vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
 
   while (!glfwWindowShouldClose(window) && !done)
   {

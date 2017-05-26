@@ -115,7 +115,8 @@ private:
   typedef typename detail::ArrayHandleImplicitTraits<T, FunctorType> ArrayTraits;
 
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleImplicit, (ArrayHandleImplicit<T, FunctorType>),
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleImplicit,
+                             (ArrayHandleImplicit<T, FunctorType>),
                              (typename ArrayTraits::Superclass));
 
   VTKM_CONT
@@ -131,7 +132,8 @@ public:
 
 template <typename T, typename FunctorType>
 VTKM_CONT vtkm::cont::ArrayHandleImplicit<T, FunctorType> make_ArrayHandleImplicit(
-  FunctorType functor, vtkm::Id length)
+  FunctorType functor,
+  vtkm::Id length)
 {
   return ArrayHandleImplicit<T, FunctorType>(functor, length);
 }

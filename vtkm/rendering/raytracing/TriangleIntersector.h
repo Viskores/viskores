@@ -71,13 +71,21 @@ public:
       , Leafs(bvh.LeafNodes.PrepareForInput(DeviceAdapter()))
     {
     }
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>, FieldOut<>, FieldOut<>,
-                                  FieldOut<>, WholeArrayIn<Vec3RenderingTypes>);
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldIn<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  WholeArrayIn<Vec3RenderingTypes>);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
     template <typename PointPortalType>
     VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& rayDir,
-                              const vtkm::Vec<vtkm::Float32, 3>& rayOrigin, vtkm::Float32& distance,
-                              vtkm::Float32& minU, vtkm::Float32& minV, vtkm::Id& hitIndex,
+                              const vtkm::Vec<vtkm::Float32, 3>& rayOrigin,
+                              vtkm::Float32& distance,
+                              vtkm::Float32& minU,
+                              vtkm::Float32& minV,
+                              vtkm::Id& hitIndex,
                               const PointPortalType& points) const
     {
       float minDistance = MaxDistance;
@@ -241,7 +249,8 @@ public:
   };
 
   VTKM_CONT
-  void run(Ray<DeviceAdapter>& rays, LinearBVH& bvh,
+  void run(Ray<DeviceAdapter>& rays,
+           LinearBVH& bvh,
            vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle)
   {
     vtkm::worklet::DispatcherMapField<Intersector>(Intersector(false, 10000000.f, bvh))

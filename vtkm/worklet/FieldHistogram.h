@@ -98,13 +98,15 @@ public:
   class AdjacentDifference : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> inputIndex, WholeArrayIn<IdType> counts,
+    typedef void ControlSignature(FieldIn<IdType> inputIndex,
+                                  WholeArrayIn<IdType> counts,
                                   FieldOut<IdType> outputCount);
     typedef void ExecutionSignature(_1, _2, _3);
     typedef _1 InputDomain;
 
     template <typename WholeArrayType>
-    VTKM_EXEC void operator()(const vtkm::Id& index, const WholeArrayType& counts,
+    VTKM_EXEC void operator()(const vtkm::Id& index,
+                              const WholeArrayType& counts,
                               vtkm::Id& difference) const
     {
       if (index == 0)
@@ -120,9 +122,12 @@ public:
   // delta/range of each bin
   // number of values in each bin
   template <typename FieldType, typename Storage, typename DeviceAdapter>
-  void Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray, vtkm::Id numberOfBins,
-           vtkm::Range& rangeOfValues, FieldType& binDelta,
-           vtkm::cont::ArrayHandle<vtkm::Id>& binArray, DeviceAdapter vtkmNotUsed(device))
+  void Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray,
+           vtkm::Id numberOfBins,
+           vtkm::Range& rangeOfValues,
+           FieldType& binDelta,
+           vtkm::cont::ArrayHandle<vtkm::Id>& binArray,
+           DeviceAdapter vtkmNotUsed(device))
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
 

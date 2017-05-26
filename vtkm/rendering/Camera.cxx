@@ -31,7 +31,10 @@ vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera3DStruct::CreateViewMatrix() con
 }
 
 vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera3DStruct::CreateProjectionMatrix(
-  vtkm::Id width, vtkm::Id height, vtkm::Float32 nearPlane, vtkm::Float32 farPlane) const
+  vtkm::Id width,
+  vtkm::Id height,
+  vtkm::Float32 nearPlane,
+  vtkm::Float32 farPlane) const
 {
   vtkm::Matrix<vtkm::Float32, 4, 4> matrix;
   vtkm::MatrixIdentity(matrix);
@@ -65,8 +68,8 @@ vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera3DStruct::CreateProjectionMatrix
 
 vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera2DStruct::CreateViewMatrix() const
 {
-  vtkm::Vec<vtkm::Float32, 3> lookAt((this->Left + this->Right) / 2.f,
-                                     (this->Top + this->Bottom) / 2.f, 0.f);
+  vtkm::Vec<vtkm::Float32, 3> lookAt(
+    (this->Left + this->Right) / 2.f, (this->Top + this->Bottom) / 2.f, 0.f);
   vtkm::Vec<vtkm::Float32, 3> position = lookAt;
   position[2] = 1.f;
   vtkm::Vec<vtkm::Float32, 3> up(0, 1, 0);
@@ -74,7 +77,10 @@ vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera2DStruct::CreateViewMatrix() con
 }
 
 vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera2DStruct::CreateProjectionMatrix(
-  vtkm::Float32 size, vtkm::Float32 znear, vtkm::Float32 zfar, vtkm::Float32 aspect) const
+  vtkm::Float32 size,
+  vtkm::Float32 znear,
+  vtkm::Float32 zfar,
+  vtkm::Float32 aspect) const
 {
   vtkm::Matrix<vtkm::Float32, 4, 4> matrix(0.f);
   vtkm::Float32 left = -size / 2.f * aspect;
@@ -116,8 +122,8 @@ vtkm::Matrix<vtkm::Float32, 4, 4> Camera::CreateProjectionMatrix(vtkm::Id screen
 {
   if (this->Mode == Camera::MODE_3D)
   {
-    return this->Camera3D.CreateProjectionMatrix(screenWidth, screenHeight, this->NearPlane,
-                                                 this->FarPlane);
+    return this->Camera3D.CreateProjectionMatrix(
+      screenWidth, screenHeight, this->NearPlane, this->FarPlane);
   }
   else
   {
@@ -131,8 +137,12 @@ vtkm::Matrix<vtkm::Float32, 4, 4> Camera::CreateProjectionMatrix(vtkm::Id screen
   }
 }
 
-void Camera::GetRealViewport(vtkm::Id screenWidth, vtkm::Id screenHeight, vtkm::Float32& left,
-                             vtkm::Float32& right, vtkm::Float32& bottom, vtkm::Float32& top) const
+void Camera::GetRealViewport(vtkm::Id screenWidth,
+                             vtkm::Id screenHeight,
+                             vtkm::Float32& left,
+                             vtkm::Float32& right,
+                             vtkm::Float32& bottom,
+                             vtkm::Float32& top) const
 {
   if (this->Mode == Camera::MODE_3D)
   {
@@ -207,7 +217,9 @@ void Camera::Zoom(vtkm::Float32 zoom)
   this->Camera2D.YPan *= factor;
 }
 
-void Camera::TrackballRotate(vtkm::Float32 startX, vtkm::Float32 startY, vtkm::Float32 endX,
+void Camera::TrackballRotate(vtkm::Float32 startX,
+                             vtkm::Float32 startY,
+                             vtkm::Float32 endX,
                              vtkm::Float32 endY)
 {
   vtkm::Matrix<vtkm::Float32, 4, 4> rotate =

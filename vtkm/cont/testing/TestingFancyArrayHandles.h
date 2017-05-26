@@ -157,7 +157,8 @@ private:
       //for each ValueType.
 
       typedef typename vtkm::cont::ArrayHandleCompositeVectorType<
-        vtkm::cont::ArrayHandle<ValueType>, vtkm::cont::ArrayHandle<ValueType>,
+        vtkm::cont::ArrayHandle<ValueType>,
+        vtkm::cont::ArrayHandle<ValueType>,
         vtkm::cont::ArrayHandle<ValueType>>::type CompositeHandleType;
 
       const ValueType value = TestValue(13, ValueType());
@@ -455,7 +456,8 @@ private:
 
       vtkm::cont::ArrayHandleCounting<ValueType> counting(start, ValueType(1), length);
 
-      vtkm::cont::ArrayHandleTransform<OutputValueType, vtkm::cont::ArrayHandleCounting<ValueType>,
+      vtkm::cont::ArrayHandleTransform<OutputValueType,
+                                       vtkm::cont::ArrayHandleCounting<ValueType>,
                                        FunctorType>
         countingTransformed =
           vtkm::cont::make_ArrayHandleTransform<OutputValueType>(counting, functor);
@@ -916,8 +918,10 @@ private:
   {
   };
 
-  struct HandleTypesToTest : vtkm::ListTagBase<vtkm::Id, vtkm::Vec<vtkm::Int32, 2>,
-                                               vtkm::FloatDefault, vtkm::Vec<vtkm::Float64, 3>>
+  struct HandleTypesToTest : vtkm::ListTagBase<vtkm::Id,
+                                               vtkm::Vec<vtkm::Int32, 2>,
+                                               vtkm::FloatDefault,
+                                               vtkm::Vec<vtkm::Float64, 3>>
   {
   };
 

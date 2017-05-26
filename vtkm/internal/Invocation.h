@@ -33,7 +33,9 @@ namespace internal
 /// track of the types of all parameters and the associated features of the
 /// worklet. \c Invocation is a class that manages all these types.
 ///
-template <typename _ParameterInterface, typename _ControlInterface, typename _ExecutionInterface,
+template <typename _ParameterInterface,
+          typename _ControlInterface,
+          typename _ExecutionInterface,
           vtkm::IdComponent _InputDomainIndex,
           typename _OutputToInputMapType = vtkm::internal::NullType,
           typename _VisitArrayType = vtkm::internal::NullType>
@@ -106,8 +108,12 @@ struct Invocation
   template <typename NewParameterInterface>
   struct ChangeParametersType
   {
-    typedef Invocation<NewParameterInterface, ControlInterface, ExecutionInterface,
-                       InputDomainIndex, OutputToInputMapType, VisitArrayType>
+    typedef Invocation<NewParameterInterface,
+                       ControlInterface,
+                       ExecutionInterface,
+                       InputDomainIndex,
+                       OutputToInputMapType,
+                       VisitArrayType>
       type;
   };
 
@@ -128,7 +134,9 @@ struct Invocation
   template <typename NewControlInterface>
   struct ChangeControlInterfaceType
   {
-    typedef Invocation<ParameterInterface, NewControlInterface, ExecutionInterface,
+    typedef Invocation<ParameterInterface,
+                       NewControlInterface,
+                       ExecutionInterface,
                        InputDomainIndex>
       type;
   };
@@ -150,7 +158,9 @@ struct Invocation
   template <typename NewExecutionInterface>
   struct ChangeExecutionInterfaceType
   {
-    typedef Invocation<ParameterInterface, NewExecutionInterface, ExecutionInterface,
+    typedef Invocation<ParameterInterface,
+                       NewExecutionInterface,
+                       ExecutionInterface,
                        InputDomainIndex>
       type;
   };
@@ -172,7 +182,9 @@ struct Invocation
   template <vtkm::IdComponent NewInputDomainIndex>
   struct ChangeInputDomainIndexType
   {
-    typedef Invocation<ParameterInterface, ControlInterface, ExecutionInterface,
+    typedef Invocation<ParameterInterface,
+                       ControlInterface,
+                       ExecutionInterface,
                        NewInputDomainIndex>
       type;
   };
@@ -194,8 +206,12 @@ struct Invocation
   template <typename NewOutputToInputMapType>
   struct ChangeOutputToInputMapType
   {
-    typedef Invocation<ParameterInterface, ControlInterface, ExecutionInterface, InputDomainIndex,
-                       NewOutputToInputMapType, VisitArrayType>
+    typedef Invocation<ParameterInterface,
+                       ControlInterface,
+                       ExecutionInterface,
+                       InputDomainIndex,
+                       NewOutputToInputMapType,
+                       VisitArrayType>
       type;
   };
 
@@ -216,8 +232,12 @@ struct Invocation
   template <typename NewVisitArrayType>
   struct ChangeVisitArrayType
   {
-    typedef Invocation<ParameterInterface, ControlInterface, ExecutionInterface, InputDomainIndex,
-                       OutputToInputMapType, NewVisitArrayType>
+    typedef Invocation<ParameterInterface,
+                       ControlInterface,
+                       ExecutionInterface,
+                       InputDomainIndex,
+                       OutputToInputMapType,
+                       NewVisitArrayType>
       type;
   };
 
@@ -263,35 +283,56 @@ struct Invocation
 
 private:
   // Do not allow assignment of one Invocation to another. It is too expensive.
-  void operator=(const Invocation<ParameterInterface, ControlInterface, ExecutionInterface,
-                                  InputDomainIndex, OutputToInputMapType, VisitArrayType>&) =
-    delete;
+  void operator=(const Invocation<ParameterInterface,
+                                  ControlInterface,
+                                  ExecutionInterface,
+                                  InputDomainIndex,
+                                  OutputToInputMapType,
+                                  VisitArrayType>&) = delete;
 };
 
 /// Convenience function for creating an Invocation object.
 ///
-template <vtkm::IdComponent InputDomainIndex, typename ControlInterface,
-          typename ExecutionInterface, typename ParameterInterface, typename OutputToInputMapType,
+template <vtkm::IdComponent InputDomainIndex,
+          typename ControlInterface,
+          typename ExecutionInterface,
+          typename ParameterInterface,
+          typename OutputToInputMapType,
           typename VisitArrayType>
-VTKM_CONT vtkm::internal::Invocation<ParameterInterface, ControlInterface, ExecutionInterface,
-                                     InputDomainIndex, OutputToInputMapType, VisitArrayType>
-make_Invocation(const ParameterInterface& params, ControlInterface, ExecutionInterface,
-                OutputToInputMapType outputToInputMap, VisitArrayType visitArray)
+VTKM_CONT vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     ExecutionInterface,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
+make_Invocation(const ParameterInterface& params,
+                ControlInterface,
+                ExecutionInterface,
+                OutputToInputMapType outputToInputMap,
+                VisitArrayType visitArray)
 {
-  return vtkm::internal::Invocation<ParameterInterface, ControlInterface, ExecutionInterface,
-                                    InputDomainIndex, OutputToInputMapType, VisitArrayType>(
-    params, outputToInputMap, visitArray);
+  return vtkm::internal::Invocation<ParameterInterface,
+                                    ControlInterface,
+                                    ExecutionInterface,
+                                    InputDomainIndex,
+                                    OutputToInputMapType,
+                                    VisitArrayType>(params, outputToInputMap, visitArray);
 }
-template <vtkm::IdComponent InputDomainIndex, typename ControlInterface,
-          typename ExecutionInterface, typename ParameterInterface>
-VTKM_CONT vtkm::internal::Invocation<ParameterInterface, ControlInterface, ExecutionInterface,
-                                     InputDomainIndex>
-make_Invocation(const ParameterInterface& params, ControlInterface = ControlInterface(),
-                ExecutionInterface = ExecutionInterface())
+template <vtkm::IdComponent InputDomainIndex,
+          typename ControlInterface,
+          typename ExecutionInterface,
+          typename ParameterInterface>
+VTKM_CONT vtkm::internal::
+  Invocation<ParameterInterface, ControlInterface, ExecutionInterface, InputDomainIndex>
+  make_Invocation(const ParameterInterface& params,
+                  ControlInterface = ControlInterface(),
+                  ExecutionInterface = ExecutionInterface())
 {
-  return vtkm::internal::make_Invocation<InputDomainIndex>(
-    params, ControlInterface(), ExecutionInterface(), vtkm::internal::NullType(),
-    vtkm::internal::NullType());
+  return vtkm::internal::make_Invocation<InputDomainIndex>(params,
+                                                           ControlInterface(),
+                                                           ExecutionInterface(),
+                                                           vtkm::internal::NullType(),
+                                                           vtkm::internal::NullType());
 }
 }
 } // namespace vtkm::internal

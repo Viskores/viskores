@@ -46,7 +46,8 @@ struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
   typedef void ExecutionSignature(_1, _2, _3);
 
   template <typename T>
-  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& input, vtkm::Vec<T, 3>& output,
+  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& input,
+                            vtkm::Vec<T, 3>& output,
                             vtkm::Vec<vtkm::UInt8, 4>& color) const
   {
     output[0] = input[0];
@@ -93,8 +94,8 @@ std::vector<vtkm::Vec<T, 3>> make_testData(int size)
   {
     for (int j = 0; j < size; ++j)
     {
-      data.push_back(vtkm::Vec<T, 3>(2.f * static_cast<T>(i / size) - 1.f, 0.f,
-                                     2.f * static_cast<T>(j / size) - 1.f));
+      data.push_back(vtkm::Vec<T, 3>(
+        2.f * static_cast<T>(i / size) - 1.f, 0.f, 2.f * static_cast<T>(j / size) - 1.f));
     }
   }
   return data;
@@ -102,9 +103,9 @@ std::vector<vtkm::Vec<T, 3>> make_testData(int size)
 
 //This is the list of devices to compile in support for. The order of the
 //devices determines the runtime preference.
-struct DevicesToTry
-  : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda, vtkm::cont::DeviceAdapterTagTBB,
-                      vtkm::cont::DeviceAdapterTagSerial>
+struct DevicesToTry : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
+                                        vtkm::cont::DeviceAdapterTagTBB,
+                                        vtkm::cont::DeviceAdapterTagSerial>
 {
 };
 

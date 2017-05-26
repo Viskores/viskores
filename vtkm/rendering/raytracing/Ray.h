@@ -43,9 +43,10 @@ class Ray : public RayBase
 {
 public:
   // composite vectors to hold array handles
-  vtkm::cont::ArrayHandleCompositeVectorType<
-    vtkm::cont::ArrayHandle<vtkm::Float32>, vtkm::cont::ArrayHandle<vtkm::Float32>,
-    vtkm::cont::ArrayHandle<vtkm::Float32>>::type Intersection;
+  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                             vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                             vtkm::cont::ArrayHandle<vtkm::Float32>>::type
+    Intersection;
 
   vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
                                              vtkm::cont::ArrayHandle<vtkm::Float32>,
@@ -96,14 +97,14 @@ public:
     Intersection = vtkm::cont::make_ArrayHandleCompositeVector(
       IntersectionX, inComp[0], IntersectionY, inComp[1], IntersectionZ, inComp[2]);
 
-    Normal = vtkm::cont::make_ArrayHandleCompositeVector(NormalX, inComp[0], NormalY, inComp[1],
-                                                         NormalZ, inComp[2]);
+    Normal = vtkm::cont::make_ArrayHandleCompositeVector(
+      NormalX, inComp[0], NormalY, inComp[1], NormalZ, inComp[2]);
 
-    Origin = vtkm::cont::make_ArrayHandleCompositeVector(OriginX, inComp[0], OriginY, inComp[1],
-                                                         OriginZ, inComp[2]);
+    Origin = vtkm::cont::make_ArrayHandleCompositeVector(
+      OriginX, inComp[0], OriginY, inComp[1], OriginZ, inComp[2]);
 
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, inComp[0], DirY, inComp[1], DirZ,
-                                                      inComp[2]);
+    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
+      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
   }
   VTKM_CONT
   Ray(const vtkm::Int32 size)
@@ -141,14 +142,14 @@ public:
     Intersection = vtkm::cont::make_ArrayHandleCompositeVector(
       IntersectionX, inComp[0], IntersectionY, inComp[1], IntersectionZ, inComp[2]);
 
-    Normal = vtkm::cont::make_ArrayHandleCompositeVector(NormalX, inComp[0], NormalY, inComp[1],
-                                                         NormalZ, inComp[2]);
+    Normal = vtkm::cont::make_ArrayHandleCompositeVector(
+      NormalX, inComp[0], NormalY, inComp[1], NormalZ, inComp[2]);
 
-    Origin = vtkm::cont::make_ArrayHandleCompositeVector(OriginX, inComp[0], OriginY, inComp[1],
-                                                         OriginZ, inComp[2]);
+    Origin = vtkm::cont::make_ArrayHandleCompositeVector(
+      OriginX, inComp[0], OriginY, inComp[1], OriginZ, inComp[2]);
 
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, inComp[0], DirY, inComp[1], DirZ,
-                                                      inComp[2]);
+    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
+      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
   }
   VTKM_CONT
   virtual void resize(const vtkm::Int32 newSize)
@@ -208,8 +209,8 @@ public:
     inComp[1] = 1;
     inComp[2] = 2;
 
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, inComp[0], DirY, inComp[1], DirZ,
-                                                      inComp[2]);
+    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
+      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
   }
   VTKM_CONT
   VolumeRay(const vtkm::Int32 size)
@@ -229,8 +230,8 @@ public:
     inComp[1] = 1;
     inComp[2] = 2;
 
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, inComp[0], DirY, inComp[1], DirZ,
-                                                      inComp[2]);
+    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
+      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
   }
   VTKM_CONT
   virtual void resize(const vtkm::Int32 newSize)

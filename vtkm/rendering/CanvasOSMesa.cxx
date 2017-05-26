@@ -73,8 +73,10 @@ void CanvasOSMesa::Initialize()
     throw vtkm::cont::ErrorBadValue("OSMesa context creation failed.");
   }
   vtkm::Vec<vtkm::Float32, 4>* colorBuffer = this->GetColorBuffer().GetStorage().GetArray();
-  if (!OSMesaMakeCurrent(this->Internals->Context, reinterpret_cast<vtkm::Float32*>(colorBuffer),
-                         GL_FLOAT, static_cast<GLsizei>(this->GetWidth()),
+  if (!OSMesaMakeCurrent(this->Internals->Context,
+                         reinterpret_cast<vtkm::Float32*>(colorBuffer),
+                         GL_FLOAT,
+                         static_cast<GLsizei>(this->GetWidth()),
                          static_cast<GLsizei>(this->GetHeight())))
   {
     throw vtkm::cont::ErrorBadValue("OSMesa context activation failed.");

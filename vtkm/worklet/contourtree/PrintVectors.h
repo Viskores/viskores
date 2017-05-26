@@ -104,15 +104,19 @@ void printHeader(vtkm::Id howMany);
 
 // base routines for reading & writing host vectors
 template <typename T, typename StorageType>
-void printValues(std::string label, vtkm::cont::ArrayHandle<T, StorageType>& dVec,
+void printValues(std::string label,
+                 vtkm::cont::ArrayHandle<T, StorageType>& dVec,
                  vtkm::Id nValues = -1);
-void printIndices(std::string label, vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
+void printIndices(std::string label,
+                  vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
                   vtkm::Id nIndices = -1);
 
 // routines for printing indices & data in blocks
 template <typename T, typename StorageType>
-void printLabelledBlock(std::string label, const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
-                        vtkm::Id nRows, vtkm::Id nColumns);
+void printLabelledBlock(std::string label,
+                        const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
+                        vtkm::Id nRows,
+                        vtkm::Id nColumns);
 
 // utility routine to convert number to a string
 inline std::string NumString(vtkm::Id number)
@@ -197,7 +201,8 @@ void printValues(std::string label, vtkm::cont::ArrayHandle<T, StorageType>& dVe
 } // printValues()
 
 // base routines for reading & writing host vectors
-inline void printIndices(std::string label, vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
+inline void printIndices(std::string label,
+                         vtkm::cont::ArrayHandle<vtkm::Id>& iVec,
                          vtkm::Id nIndices)
 {
   // -1 means full size
@@ -219,8 +224,10 @@ inline void printIndices(std::string label, vtkm::cont::ArrayHandle<vtkm::Id>& i
 } // printIndices()
 
 template <typename T, typename StorageType>
-void printLabelledBlock(std::string label, const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
-                        vtkm::Id nRows, vtkm::Id nColumns)
+void printLabelledBlock(std::string label,
+                        const vtkm::cont::ArrayHandle<T, StorageType>& dVec,
+                        vtkm::Id nRows,
+                        vtkm::Id nColumns)
 {
   if (nRows > PRINT_COLS)
     nRows = PRINT_COLS;

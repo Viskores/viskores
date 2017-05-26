@@ -35,7 +35,8 @@ class MaskPoints
 {
 public:
   template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet, const vtkm::Id stride,
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      const vtkm::Id stride,
                                       DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;

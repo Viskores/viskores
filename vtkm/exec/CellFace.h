@@ -196,7 +196,9 @@ static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfFaces(CellShapeTag sha
 
 template <typename CellShapeTag>
 static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfPoints(
-  vtkm::IdComponent faceIndex, CellShapeTag shape, const vtkm::exec::FunctorBase& worklet)
+  vtkm::IdComponent faceIndex,
+  CellShapeTag shape,
+  const vtkm::exec::FunctorBase& worklet)
 {
   VTKM_ASSUME(faceIndex >= 0);
   VTKM_ASSUME(faceIndex < detail::MAX_NUM_FACES);
@@ -210,7 +212,8 @@ static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfPoints(
 }
 
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::UInt8 CellFaceShape(vtkm::IdComponent faceIndex, CellShapeTag shape,
+static inline VTKM_EXEC vtkm::UInt8 CellFaceShape(vtkm::IdComponent faceIndex,
+                                                  CellShapeTag shape,
                                                   const vtkm::exec::FunctorBase& worklet)
 {
   VTKM_ASSUME(faceIndex >= 0);
@@ -228,7 +231,9 @@ static inline VTKM_EXEC vtkm::UInt8 CellFaceShape(vtkm::IdComponent faceIndex, C
 
 template <typename CellShapeTag>
 static inline VTKM_EXEC vtkm::VecCConst<vtkm::IdComponent> CellFaceLocalIndices(
-  vtkm::IdComponent faceIndex, CellShapeTag shape, const vtkm::exec::FunctorBase& worklet)
+  vtkm::IdComponent faceIndex,
+  CellShapeTag shape,
+  const vtkm::exec::FunctorBase& worklet)
 {
   vtkm::IdComponent numPointsInFace = vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, worklet);
   if (numPointsInFace < 1)

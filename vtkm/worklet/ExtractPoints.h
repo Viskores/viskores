@@ -45,7 +45,8 @@ public:
   class ExtractPointsByVOI : public vtkm::worklet::WorkletMapCellToPoint
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInPoint<Vec3> coordinates,
+    typedef void ControlSignature(CellSetIn cellset,
+                                  FieldInPoint<Vec3> coordinates,
                                   FieldOutPoint<BoolType> passFlags);
     typedef _3 ExecutionSignature(_2);
 
@@ -85,8 +86,8 @@ public:
 
     // Make CellSetSingleType with VERTEX at each point id
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
-    outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1,
-                    this->ValidPointIds);
+    outCellSet.Fill(
+      cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, this->ValidPointIds);
 
     return outCellSet;
   }
@@ -94,9 +95,11 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract points by implicit function
   template <typename CellSetType, typename CoordinateType, typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet, const CoordinateType& coordinates,
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      const CoordinateType& coordinates,
                                       const vtkm::cont::ImplicitFunction& implicitFunction,
-                                      bool extractInside, DeviceAdapter device)
+                                      bool extractInside,
+                                      DeviceAdapter device)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
@@ -113,8 +116,8 @@ public:
 
     // Make CellSetSingleType with VERTEX at each point id
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
-    outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1,
-                    this->ValidPointIds);
+    outCellSet.Fill(
+      cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, this->ValidPointIds);
 
     return outCellSet;
   }

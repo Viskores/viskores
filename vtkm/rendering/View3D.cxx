@@ -25,14 +25,18 @@ namespace vtkm
 namespace rendering
 {
 
-View3D::View3D(const vtkm::rendering::Scene& scene, const vtkm::rendering::Mapper& mapper,
-               const vtkm::rendering::Canvas& canvas, const vtkm::rendering::Color& backgroundColor)
+View3D::View3D(const vtkm::rendering::Scene& scene,
+               const vtkm::rendering::Mapper& mapper,
+               const vtkm::rendering::Canvas& canvas,
+               const vtkm::rendering::Color& backgroundColor)
   : View(scene, mapper, canvas, backgroundColor)
 {
 }
 
-View3D::View3D(const vtkm::rendering::Scene& scene, const vtkm::rendering::Mapper& mapper,
-               const vtkm::rendering::Canvas& canvas, const vtkm::rendering::Camera& camera,
+View3D::View3D(const vtkm::rendering::Scene& scene,
+               const vtkm::rendering::Mapper& mapper,
+               const vtkm::rendering::Canvas& canvas,
+               const vtkm::rendering::Camera& camera,
                const vtkm::rendering::Color& backgroundColor)
   : View(scene, mapper, canvas, camera, backgroundColor)
 {
@@ -63,8 +67,8 @@ void View3D::RenderScreenAnnotations()
     //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
     this->ColorBarAnnotation.SetRange(this->GetScene().GetActor(0).GetScalarRange(), 5);
     this->ColorBarAnnotation.SetColorTable(this->GetScene().GetActor(0).GetColorTable());
-    this->ColorBarAnnotation.Render(this->GetCamera(), this->GetWorldAnnotator(),
-                                    this->GetCanvas());
+    this->ColorBarAnnotation.Render(
+      this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
   }
 }
 
@@ -101,8 +105,8 @@ void View3D::RenderWorldAnnotations()
   this->XAxisAnnotation.SetAxis(0);
   this->XAxisAnnotation.SetColor(Color(1, 1, 1));
   this->XAxisAnnotation.SetTickInvert(xtest, ytest, ztest);
-  this->XAxisAnnotation.SetWorldPosition(xmin, ytest ? ymin : ymax, ztest ? zmin : zmax, xmax,
-                                         ytest ? ymin : ymax, ztest ? zmin : zmax);
+  this->XAxisAnnotation.SetWorldPosition(
+    xmin, ytest ? ymin : ymax, ztest ? zmin : zmax, xmax, ytest ? ymin : ymax, ztest ? zmin : zmax);
   this->XAxisAnnotation.SetRange(xmin, xmax);
   this->XAxisAnnotation.SetMajorTickSize(size / 40.f, 0);
   this->XAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
@@ -113,8 +117,8 @@ void View3D::RenderWorldAnnotations()
   this->YAxisAnnotation.SetAxis(1);
   this->YAxisAnnotation.SetColor(Color(1, 1, 1));
   this->YAxisAnnotation.SetTickInvert(xtest, ytest, ztest);
-  this->YAxisAnnotation.SetWorldPosition(xtest ? xmin : xmax, ymin, ztest ? zmin : zmax,
-                                         xtest ? xmin : xmax, ymax, ztest ? zmin : zmax);
+  this->YAxisAnnotation.SetWorldPosition(
+    xtest ? xmin : xmax, ymin, ztest ? zmin : zmax, xtest ? xmin : xmax, ymax, ztest ? zmin : zmax);
   this->YAxisAnnotation.SetRange(ymin, ymax);
   this->YAxisAnnotation.SetMajorTickSize(size / 40.f, 0);
   this->YAxisAnnotation.SetMinorTickSize(size / 80.f, 0);
@@ -125,8 +129,8 @@ void View3D::RenderWorldAnnotations()
   this->ZAxisAnnotation.SetAxis(2);
   this->ZAxisAnnotation.SetColor(Color(1, 1, 1));
   this->ZAxisAnnotation.SetTickInvert(xtest, ytest, ztest);
-  this->ZAxisAnnotation.SetWorldPosition(xtest ? xmin : xmax, ytest ? ymin : ymax, zmin,
-                                         xtest ? xmin : xmax, ytest ? ymin : ymax, zmax);
+  this->ZAxisAnnotation.SetWorldPosition(
+    xtest ? xmin : xmax, ytest ? ymin : ymax, zmin, xtest ? xmin : xmax, ytest ? ymin : ymax, zmax);
   this->ZAxisAnnotation.SetRange(zmin, zmax);
   this->ZAxisAnnotation.SetMajorTickSize(size / 40.f, 0);
   this->ZAxisAnnotation.SetMinorTickSize(size / 80.f, 0);

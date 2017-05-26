@@ -110,8 +110,10 @@ public:
   JoinArcConnector() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& vertex, const InFieldPortalType& vertexSorter,
-                            const InFieldPortalType& extrema, const InFieldPortalType& saddles,
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
+                            const InFieldPortalType& vertexSorter,
+                            const InFieldPortalType& extrema,
+                            const InFieldPortalType& saddles,
                             const OutFieldPortalType& mergeArcs) const
   {
     // work out whether we have the low element on the join arc

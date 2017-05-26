@@ -34,11 +34,15 @@
 
 #include <iostream>
 
-void makeScene(const vtkm::cont::DataSet& inputData, const vtkm::rendering::ColorTable& colorTable,
-               const std::string& fieldName, vtkm::rendering::Scene& scene)
+void makeScene(const vtkm::cont::DataSet& inputData,
+               const vtkm::rendering::ColorTable& colorTable,
+               const std::string& fieldName,
+               vtkm::rendering::Scene& scene)
 {
-  scene.AddActor(vtkm::rendering::Actor(inputData.GetCellSet(), inputData.GetCoordinateSystem(),
-                                        inputData.GetField(fieldName), colorTable));
+  scene.AddActor(vtkm::rendering::Actor(inputData.GetCellSet(),
+                                        inputData.GetCoordinateSystem(),
+                                        inputData.GetField(fieldName),
+                                        colorTable));
 }
 
 // This example reads an input vtk file specified on the command-line (or generates a default

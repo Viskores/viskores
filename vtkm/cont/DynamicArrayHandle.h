@@ -342,7 +342,8 @@ public:
   ///
   template <typename NewTypeList, typename NewStorageList>
   VTKM_CONT DynamicArrayHandleBase<NewTypeList, NewStorageList> ResetTypeAndStorageLists(
-    NewTypeList = NewTypeList(), NewStorageList = NewStorageList()) const
+    NewTypeList = NewTypeList(),
+    NewStorageList = NewStorageList()) const
   {
     VTKM_IS_LIST_TAG(NewTypeList);
     VTKM_IS_LIST_TAG(NewStorageList);
@@ -519,8 +520,9 @@ VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const 
 
 template <>
 template <typename Functor>
-VTKM_CONT void DynamicArrayHandleBase<
-  VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG>::CastAndCall(const Functor& f) const
+VTKM_CONT void
+DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG>::CastAndCall(
+  const Functor& f) const
 {
 
   typedef detail::DynamicArrayHandleTryType<Functor, VTKM_DEFAULT_STORAGE_LIST_TAG> TryTypeType;

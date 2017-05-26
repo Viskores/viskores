@@ -131,7 +131,10 @@ struct ThreeArgFunctorWithReturn
 
 struct FiveArgFunctor
 {
-  void operator()(const Type1& a1, const Type2& a2, const Type3& a3, const Type4& a4,
+  void operator()(const Type1& a1,
+                  const Type2& a2,
+                  const Type3& a3,
+                  const Type4& a4,
                   const Type5& a5) const
   {
     std::cout << "In 5 arg functor." << std::endl;
@@ -146,7 +149,10 @@ struct FiveArgFunctor
 
 struct FiveArgSwizzledFunctor
 {
-  void operator()(const Type5& a5, const Type1& a1, const Type3& a3, const Type4& a4,
+  void operator()(const Type5& a5,
+                  const Type1& a1,
+                  const Type3& a3,
+                  const Type4& a4,
                   const Type2& a2) const
   {
     std::cout << "In 5 arg functor." << std::endl;
@@ -167,9 +173,15 @@ struct LotsOfArgsFunctor
   {
   }
 
-  void operator()(vtkm::FloatDefault arg1, vtkm::FloatDefault arg2, vtkm::FloatDefault arg3,
-                  vtkm::FloatDefault arg4, vtkm::FloatDefault arg5, vtkm::FloatDefault arg6,
-                  vtkm::FloatDefault arg7, vtkm::FloatDefault arg8, vtkm::FloatDefault arg9,
+  void operator()(vtkm::FloatDefault arg1,
+                  vtkm::FloatDefault arg2,
+                  vtkm::FloatDefault arg3,
+                  vtkm::FloatDefault arg4,
+                  vtkm::FloatDefault arg5,
+                  vtkm::FloatDefault arg6,
+                  vtkm::FloatDefault arg7,
+                  vtkm::FloatDefault arg8,
+                  vtkm::FloatDefault arg9,
                   vtkm::FloatDefault arg10)
   {
     VTKM_TEST_ASSERT(arg1 == 1.0, "Got bad argument");
@@ -222,7 +234,8 @@ struct ThreeArgStringFunctorWithReturn
 struct DynamicTransformFunctor
 {
   template <typename T, typename ContinueFunctor, vtkm::IdComponent Index>
-  void operator()(const T& input, const ContinueFunctor continueFunc,
+  void operator()(const T& input,
+                  const ContinueFunctor continueFunc,
                   vtkm::internal::IndexTag<Index>) const
   {
     continueFunc(input + T(Index));
@@ -230,7 +243,8 @@ struct DynamicTransformFunctor
   }
 
   template <typename ContinueFunctor, vtkm::IdComponent Index>
-  void operator()(const std::string& input, const ContinueFunctor continueFunc,
+  void operator()(const std::string& input,
+                  const ContinueFunctor continueFunc,
                   vtkm::internal::IndexTag<Index>) const
   {
     continueFunc(input);
@@ -457,14 +471,26 @@ void TestInvokeTime()
   vtkm::Float64 directCallTime = timer.GetElapsedTime();
   std::cout << "Time for direct call: " << directCallTime << " seconds" << std::endl;
 
-  vtkm::internal::FunctionInterface<void(vtkm::FloatDefault, vtkm::FloatDefault, vtkm::FloatDefault,
-                                         vtkm::FloatDefault, vtkm::FloatDefault, vtkm::FloatDefault,
-                                         vtkm::FloatDefault, vtkm::FloatDefault, vtkm::FloatDefault,
+  vtkm::internal::FunctionInterface<void(vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
+                                         vtkm::FloatDefault,
                                          vtkm::FloatDefault)>
-    funcInterface = vtkm::internal::make_FunctionInterface<void>(
-      vtkm::FloatDefault(1), vtkm::FloatDefault(2), vtkm::FloatDefault(3), vtkm::FloatDefault(4),
-      vtkm::FloatDefault(5), vtkm::FloatDefault(6), vtkm::FloatDefault(7), vtkm::FloatDefault(8),
-      vtkm::FloatDefault(9), vtkm::FloatDefault(10));
+    funcInterface = vtkm::internal::make_FunctionInterface<void>(vtkm::FloatDefault(1),
+                                                                 vtkm::FloatDefault(2),
+                                                                 vtkm::FloatDefault(3),
+                                                                 vtkm::FloatDefault(4),
+                                                                 vtkm::FloatDefault(5),
+                                                                 vtkm::FloatDefault(6),
+                                                                 vtkm::FloatDefault(7),
+                                                                 vtkm::FloatDefault(8),
+                                                                 vtkm::FloatDefault(9),
+                                                                 vtkm::FloatDefault(10));
 
   timer.Reset();
   for (vtkm::Id trial = 0; trial < NUM_TRIALS; trial++)

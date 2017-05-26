@@ -110,7 +110,9 @@ void CanvasEGL::Initialize()
   {
     throw vtkm::cont::ErrorBadValue("Failed to create EGL context");
   }
-  if (!(eglMakeCurrent(this->Internals->Display, this->Internals->Surface, this->Internals->Surface,
+  if (!(eglMakeCurrent(this->Internals->Display,
+                       this->Internals->Surface,
+                       this->Internals->Surface,
                        this->Internals->Context)))
   {
     throw vtkm::cont::ErrorBadValue("Failed to create EGL context current");

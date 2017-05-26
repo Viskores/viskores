@@ -67,8 +67,9 @@ public:
   }
 
   VTKM_CONT
-  vtkm::Id GetFieldIndex(const std::string& name, vtkm::cont::Field::AssociationEnum assoc =
-                                                    vtkm::cont::Field::ASSOC_ANY) const
+  vtkm::Id GetFieldIndex(
+    const std::string& name,
+    vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY) const
   {
     bool found;
     vtkm::Id index = this->FindFieldIndex(name, assoc, found);
@@ -234,7 +235,8 @@ private:
   std::vector<vtkm::cont::DynamicCellSet> CellSets;
 
   VTKM_CONT
-  vtkm::Id FindFieldIndex(const std::string& name, vtkm::cont::Field::AssociationEnum association,
+  vtkm::Id FindFieldIndex(const std::string& name,
+                          vtkm::cont::Field::AssociationEnum association,
                           bool& found) const
   {
     for (std::size_t index = 0; index < this->Fields.size(); ++index)

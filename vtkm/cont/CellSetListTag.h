@@ -55,8 +55,10 @@ template <typename ShapeStorageTag = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
           typename ConnectivityStorageTag = VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
           typename OffsetsStorageTag = VTKM_DEFAULT_OFFSETS_STORAGE_TAG>
 struct VTKM_ALWAYS_EXPORT CellSetListTagExplicit
-  : vtkm::ListTagBase<vtkm::cont::CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag,
-                                                  ConnectivityStorageTag, OffsetsStorageTag>>
+  : vtkm::ListTagBase<vtkm::cont::CellSetExplicit<ShapeStorageTag,
+                                                  NumIndicesStorageTag,
+                                                  ConnectivityStorageTag,
+                                                  OffsetsStorageTag>>
 {
 };
 
@@ -64,9 +66,10 @@ struct VTKM_ALWAYS_EXPORT CellSetListTagExplicitDefault : CellSetListTagExplicit
 {
 };
 
-struct VTKM_ALWAYS_EXPORT CellSetListTagCommon
-  : vtkm::ListTagBase<vtkm::cont::CellSetStructured<2>, vtkm::cont::CellSetStructured<3>,
-                      vtkm::cont::CellSetExplicit<>, vtkm::cont::CellSetSingleType<>>
+struct VTKM_ALWAYS_EXPORT CellSetListTagCommon : vtkm::ListTagBase<vtkm::cont::CellSetStructured<2>,
+                                                                   vtkm::cont::CellSetStructured<3>,
+                                                                   vtkm::cont::CellSetExplicit<>,
+                                                                   vtkm::cont::CellSetSingleType<>>
 {
 };
 

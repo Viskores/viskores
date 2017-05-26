@@ -71,7 +71,8 @@ VTKM_CONT CheckTransformFunctor<
   typename OriginalArrayHandleType::template ExecutionTypes<Device>::PortalConst,
   typename TransformedArrayHandleType::template ExecutionTypes<Device>::PortalConst>
 make_CheckTransformFunctor(const OriginalArrayHandleType& originalArray,
-                           const TransformedArrayHandleType& transformedArray, Device)
+                           const TransformedArrayHandleType& transformedArray,
+                           Device)
 {
   typedef typename OriginalArrayHandleType::template ExecutionTypes<Device>::PortalConst
     OriginalPortalType;
@@ -116,12 +117,14 @@ struct TransformTests
   typedef typename vtkm::VecTraits<InputValueType>::ComponentType OutputValueType;
   typedef MySquare<OutputValueType> FunctorType;
 
-  typedef vtkm::cont::ArrayHandleTransform<OutputValueType, vtkm::cont::ArrayHandle<InputValueType>,
+  typedef vtkm::cont::ArrayHandleTransform<OutputValueType,
+                                           vtkm::cont::ArrayHandle<InputValueType>,
                                            FunctorType>
     TransformHandle;
 
-  typedef vtkm::cont::ArrayHandleTransform<
-    OutputValueType, vtkm::cont::ArrayHandleCounting<InputValueType>, FunctorType>
+  typedef vtkm::cont::ArrayHandleTransform<OutputValueType,
+                                           vtkm::cont::ArrayHandleCounting<InputValueType>,
+                                           FunctorType>
     CountingTransformHandle;
 
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG Device;

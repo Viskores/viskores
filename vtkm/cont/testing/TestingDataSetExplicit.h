@@ -43,7 +43,8 @@ class TestingDataSetExplicit
 {
 private:
   template <typename T, typename Storage>
-  static bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah, const T* expected,
+  static bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
+                              const T* expected,
                               vtkm::Id size)
   {
     if (size != ah.GetNumberOfValues())
@@ -104,8 +105,8 @@ private:
     vtkm::cont::CellSetExplicit<> cellset;
     ds.GetCellSet(0).CopyTo(cellset);
 
-    cellset.BuildConnectivity(DeviceAdapterTag(), vtkm::TopologyElementTagCell(),
-                              vtkm::TopologyElementTagPoint());
+    cellset.BuildConnectivity(
+      DeviceAdapterTag(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
     vtkm::Id connectivitySize = 7;
     vtkm::Id numPoints = 5;

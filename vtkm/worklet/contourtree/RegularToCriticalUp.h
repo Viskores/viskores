@@ -92,7 +92,8 @@ public:
   RegularToCriticalUp() {}
 
   template <typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& index, const vtkm::Id& candidate,
+  VTKM_EXEC void operator()(const vtkm::Id& index,
+                            const vtkm::Id& candidate,
                             const OutFieldPortalType& critical) const
   {
     critical.Set(candidate, index);

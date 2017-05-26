@@ -420,7 +420,8 @@ public:
   ///
   template <typename DeviceAdapterTag>
   VTKM_CONT typename ExecutionTypes<DeviceAdapterTag>::Portal PrepareForOutput(
-    vtkm::Id numberOfValues, DeviceAdapterTag);
+    vtkm::Id numberOfValues,
+    DeviceAdapterTag);
 
   /// Prepares this array to be used in an in-place operation (both as input
   /// and output) in the execution environment. If necessary, copies data to
@@ -508,15 +509,17 @@ namespace detail
 {
 
 template <typename T>
-VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
-  const T& value, std::ostream& out, vtkm::VecTraitsTagSingleComponent)
+VTKM_NEVER_EXPORT VTKM_CONT inline void
+printSummary_ArrayHandle_Value(const T& value, std::ostream& out, vtkm::VecTraitsTagSingleComponent)
 {
   out << value;
 }
 
 template <typename T>
 VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
-  const T& value, std::ostream& out, vtkm::VecTraitsTagMultipleComponents)
+  const T& value,
+  std::ostream& out,
+  vtkm::VecTraitsTagMultipleComponents)
 {
   using Traits = vtkm::VecTraits<T>;
   using ComponentType = typename Traits::ComponentType;
@@ -534,7 +537,8 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
 
 VTKM_NEVER_EXPORT
 VTKM_CONT
-inline void printSummary_ArrayHandle_Value(UInt8 value, std::ostream& out,
+inline void printSummary_ArrayHandle_Value(UInt8 value,
+                                           std::ostream& out,
                                            vtkm::VecTraitsTagSingleComponent)
 {
   out << static_cast<int>(value);
@@ -542,7 +546,8 @@ inline void printSummary_ArrayHandle_Value(UInt8 value, std::ostream& out,
 
 VTKM_NEVER_EXPORT
 VTKM_CONT
-inline void printSummary_ArrayHandle_Value(Int8 value, std::ostream& out,
+inline void printSummary_ArrayHandle_Value(Int8 value,
+                                           std::ostream& out,
                                            vtkm::VecTraitsTagSingleComponent)
 {
   out << static_cast<int>(value);
@@ -550,14 +555,16 @@ inline void printSummary_ArrayHandle_Value(Int8 value, std::ostream& out,
 
 template <typename T1, typename T2>
 VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
-  const vtkm::Pair<T1, T2>& value, std::ostream& out, vtkm::VecTraitsTagSingleComponent)
+  const vtkm::Pair<T1, T2>& value,
+  std::ostream& out,
+  vtkm::VecTraitsTagSingleComponent)
 {
   out << "{";
-  printSummary_ArrayHandle_Value(value.first, out,
-                                 typename vtkm::VecTraits<T1>::HasMultipleComponents());
+  printSummary_ArrayHandle_Value(
+    value.first, out, typename vtkm::VecTraits<T1>::HasMultipleComponents());
   out << ",";
-  printSummary_ArrayHandle_Value(value.second, out,
-                                 typename vtkm::VecTraits<T2>::HasMultipleComponents());
+  printSummary_ArrayHandle_Value(
+    value.second, out, typename vtkm::VecTraits<T2>::HasMultipleComponents());
   out << "}";
 }
 
@@ -565,7 +572,8 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
 
 template <typename T, typename StorageT>
 VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
-  const vtkm::cont::ArrayHandle<T, StorageT>& array, std::ostream& out)
+  const vtkm::cont::ArrayHandle<T, StorageT>& array,
+  std::ostream& out)
 {
   using ArrayType = vtkm::cont::ArrayHandle<T, StorageT>;
   using PortalType = typename ArrayType::PortalConstControl;

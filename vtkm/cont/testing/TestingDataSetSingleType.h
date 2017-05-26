@@ -46,7 +46,8 @@ class TestingDataSetSingleType
 {
 private:
   template <typename T, typename Storage>
-  static bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah, const T* expected,
+  static bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
+                              const T* expected,
                               vtkm::Id size)
   {
     if (size != ah.GetNumberOfValues())
@@ -112,8 +113,8 @@ private:
     dataSet.GetCellSet(0).CopyTo(cellset);
 
     //verify that we can compute the cell to point connectivity
-    cellset.BuildConnectivity(DeviceAdapterTag(), vtkm::TopologyElementTagCell(),
-                              vtkm::TopologyElementTagPoint());
+    cellset.BuildConnectivity(
+      DeviceAdapterTag(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
 
     dataSet.PrintSummary(std::cout);
 

@@ -52,7 +52,8 @@ struct MatrixHelpers
   }
 
   static VTKM_CONT vtkm::Matrix<vtkm::Float32, 4, 4> ViewMatrix(
-    const vtkm::Vec<vtkm::Float32, 3>& position, const vtkm::Vec<vtkm::Float32, 3>& lookAt,
+    const vtkm::Vec<vtkm::Float32, 3>& position,
+    const vtkm::Vec<vtkm::Float32, 3>& lookAt,
     const vtkm::Vec<vtkm::Float32, 3>& up)
   {
     vtkm::Vec<vtkm::Float32, 3> viewDir = position - lookAt;
@@ -84,8 +85,10 @@ struct MatrixHelpers
   }
 
   static VTKM_CONT vtkm::Matrix<vtkm::Float32, 4, 4> WorldMatrix(
-    const vtkm::Vec<vtkm::Float32, 3>& neworigin, const vtkm::Vec<vtkm::Float32, 3>& newx,
-    const vtkm::Vec<vtkm::Float32, 3>& newy, const vtkm::Vec<vtkm::Float32, 3>& newz)
+    const vtkm::Vec<vtkm::Float32, 3>& neworigin,
+    const vtkm::Vec<vtkm::Float32, 3>& newx,
+    const vtkm::Vec<vtkm::Float32, 3>& newy,
+    const vtkm::Vec<vtkm::Float32, 3>& newz)
   {
     vtkm::Matrix<vtkm::Float32, 4, 4> matrix;
     vtkm::MatrixIdentity(matrix);

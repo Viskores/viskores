@@ -34,7 +34,8 @@ namespace
 {
 
 template <typename T, typename Storage>
-bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah, const T* expected,
+bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
+                     const T* expected,
                      vtkm::Id size)
 {
   if (size != ah.GetNumberOfValues())
@@ -118,9 +119,9 @@ void TestDataSet_Explicit()
                                      vtkm::TopologyElementTagCell>::ExecObjectType ExecObjectType;
 
   ExecObjectType execConnectivity;
-  execConnectivity =
-    subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(), vtkm::TopologyElementTagPoint(),
-                           vtkm::TopologyElementTagCell());
+  execConnectivity = subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
+                                            vtkm::TopologyElementTagPoint(),
+                                            vtkm::TopologyElementTagCell());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
@@ -162,8 +163,8 @@ void TestDataSet_Structured2D()
   typedef vtkm::cont::DeviceAdapterTagSerial DeviceAdapterTag;
 
   //verify that PrepareForInput exists
-  subset.PrepareForInput(DeviceAdapterTag(), vtkm::TopologyElementTagPoint(),
-                         vtkm::TopologyElementTagCell());
+  subset.PrepareForInput(
+    DeviceAdapterTag(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
@@ -201,7 +202,8 @@ void TestDataSet_Structured3D()
   subset.PrintSummary(std::cout);
 
   //verify that PrepareForInput exists
-  subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(), vtkm::TopologyElementTagPoint(),
+  subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
+                         vtkm::TopologyElementTagPoint(),
                          vtkm::TopologyElementTagCell());
 
   //run a basic for-each topology algorithm on this

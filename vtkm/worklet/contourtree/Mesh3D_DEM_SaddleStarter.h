@@ -131,8 +131,12 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT
-  Mesh3D_DEM_SaddleStarter(vtkm::Id NRows, vtkm::Id NCols, vtkm::Id NSlices, bool Ascending,
-                           IdComponentPortalType NeighbourTable, IdPortalType CaseTable)
+  Mesh3D_DEM_SaddleStarter(vtkm::Id NRows,
+                           vtkm::Id NCols,
+                           vtkm::Id NSlices,
+                           bool Ascending,
+                           IdComponentPortalType NeighbourTable,
+                           IdPortalType CaseTable)
     : nRows(NRows)
     , nCols(NCols)
     , nSlices(NSlices)
@@ -146,10 +150,12 @@ public:
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertex,
                             const vtkm::Pair<vtkm::Id, vtkm::Id>& outDegFirstEdge,
-                            const vtkm::Id& valueIndex, const InFieldPortalType& linkMask,
+                            const vtkm::Id& valueIndex,
+                            const InFieldPortalType& linkMask,
                             const InFieldPortalType& arcArray,
                             const InFieldPortalType& inverseIndex,
-                            const OutFieldPortalType& edgeNear, const OutFieldPortalType& edgeFar,
+                            const OutFieldPortalType& edgeNear,
+                            const OutFieldPortalType& edgeFar,
                             const OutFieldPortalType& activeEdges) const
   {
     vtkm::Id outdegree = outDegFirstEdge.first;

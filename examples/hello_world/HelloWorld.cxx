@@ -86,8 +86,8 @@ struct HelloVTKMInterop
     {
       for (int j = 0; j < dim; ++j)
       {
-        this->InputData.push_back(vtkm::Vec<T, 3>(2.f * static_cast<T>(i / dim) - 1.f, 0.f,
-                                                  2.f * static_cast<T>(j / dim) - 1.f));
+        this->InputData.push_back(vtkm::Vec<T, 3>(
+          2.f * static_cast<T>(i / dim) - 1.f, 0.f, 2.f * static_cast<T>(j / dim) - 1.f));
       }
     }
 
@@ -143,7 +143,8 @@ struct HelloVTKMInterop
     typedef void ExecutionSignature(_1, _2, _3);
 
     VTKM_EXEC
-    void operator()(const vtkm::Vec<T, 3>& input, vtkm::Vec<T, 3>& output,
+    void operator()(const vtkm::Vec<T, 3>& input,
+                    vtkm::Vec<T, 3>& output,
                     vtkm::Vec<vtkm::UInt8, 4>& color) const
     {
       output[0] = input[0];

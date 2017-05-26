@@ -35,11 +35,13 @@ namespace ArrayHandleCartesianProductNamespace
 typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
 
 template <typename T>
-void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x, vtkm::cont::ArrayHandle<T> y,
+void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x,
+                        vtkm::cont::ArrayHandle<T> y,
                         vtkm::cont::ArrayHandle<T> z)
 
 {
-  vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T>, vtkm::cont::ArrayHandle<T>,
+  vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T>,
+                                          vtkm::cont::ArrayHandle<T>,
                                           vtkm::cont::ArrayHandle<T>>
     cpArray;
 
@@ -62,7 +64,8 @@ void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x, vtkm::cont::ArrayHandle<T>
     vtkm::Id idx1 = (i % (nx * ny)) / nx;
     vtkm::Id idx2 = i / (nx * ny);
 
-    val = vtkm::Vec<T, 3>(x.GetPortalConstControl().Get(idx0), y.GetPortalConstControl().Get(idx1),
+    val = vtkm::Vec<T, 3>(x.GetPortalConstControl().Get(idx0),
+                          y.GetPortalConstControl().Get(idx1),
                           z.GetPortalConstControl().Get(idx2));
     VTKM_TEST_ASSERT(test_equal(cpArray.GetPortalConstControl().Get(i), val),
                      "Wrong value in array");
@@ -93,7 +96,8 @@ void RunTest()
         createArr(Y, nY);
         createArr(Z, nZ);
 
-        ArrayHandleCPBasic(vtkm::cont::make_ArrayHandle(X), vtkm::cont::make_ArrayHandle(Y),
+        ArrayHandleCPBasic(vtkm::cont::make_ArrayHandle(X),
+                           vtkm::cont::make_ArrayHandle(Y),
                            vtkm::cont::make_ArrayHandle(Z));
       }
     }

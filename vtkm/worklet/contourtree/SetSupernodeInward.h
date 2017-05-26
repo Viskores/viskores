@@ -96,8 +96,10 @@ public:
   SetSupernodeInward() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& superID, const InFieldPortalType& inbound,
-                            const InFieldPortalType& outbound, const InFieldPortalType& indegree,
+  VTKM_EXEC void operator()(const vtkm::Id& superID,
+                            const InFieldPortalType& inbound,
+                            const InFieldPortalType& outbound,
+                            const InFieldPortalType& indegree,
                             const InFieldPortalType& outdegree,
                             const OutFieldPortalType& superarcs) const
   {

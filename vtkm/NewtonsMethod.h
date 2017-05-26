@@ -37,13 +37,17 @@ namespace vtkm
 /// returned.
 ///
 VTKM_SUPPRESS_EXEC_WARNINGS
-template <typename ScalarType, vtkm::IdComponent Size, typename JacobianFunctor,
+template <typename ScalarType,
+          vtkm::IdComponent Size,
+          typename JacobianFunctor,
           typename FunctionFunctor>
 VTKM_EXEC_CONT vtkm::Vec<ScalarType, Size> NewtonsMethod(
-  JacobianFunctor jacobianEvaluator, FunctionFunctor functionEvaluator,
+  JacobianFunctor jacobianEvaluator,
+  FunctionFunctor functionEvaluator,
   vtkm::Vec<ScalarType, Size> desiredFunctionOutput,
   vtkm::Vec<ScalarType, Size> initialGuess = vtkm::Vec<ScalarType, Size>(ScalarType(0)),
-  ScalarType convergeDifference = ScalarType(1e-3), vtkm::IdComponent maxIterations = 10)
+  ScalarType convergeDifference = ScalarType(1e-3),
+  vtkm::IdComponent maxIterations = 10)
 {
   typedef vtkm::Vec<ScalarType, Size> VectorType;
   typedef vtkm::Matrix<ScalarType, Size, Size> MatrixType;

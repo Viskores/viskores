@@ -71,7 +71,9 @@ struct VecIsWritable<vtkm::VecCConst<ComponentType>>
 
 // Part of TestVecTypeImpl that writes to the Vec type
 template <vtkm::IdComponent NUM_COMPONENTS, typename T, typename VecCopyType>
-static void TestVecTypeWritableImpl(const T& inVector, const VecCopyType& vectorCopy, T& outVector,
+static void TestVecTypeWritableImpl(const T& inVector,
+                                    const VecCopyType& vectorCopy,
+                                    T& outVector,
                                     std::true_type)
 {
   using Traits = vtkm::VecTraits<T>;
@@ -81,8 +83,8 @@ static void TestVecTypeWritableImpl(const T& inVector, const VecCopyType& vector
     const ComponentType multiplier = 4;
     for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {
-      Traits::SetComponent(outVector, i,
-                           ComponentType(multiplier * Traits::GetComponent(inVector, i)));
+      Traits::SetComponent(
+        outVector, i, ComponentType(multiplier * Traits::GetComponent(inVector, i)));
     }
     vtkm::Vec<ComponentType, NUM_COMPONENTS> resultCopy;
     Traits::CopyInto(outVector, resultCopy);
@@ -107,7 +109,8 @@ static void TestVecTypeWritableImpl(const T& inVector, const VecCopyType& vector
 template <vtkm::IdComponent NUM_COMPONENTS, typename T, typename VecCopyType>
 static void TestVecTypeWritableImpl(const T& vtkmNotUsed(inVector),
                                     const VecCopyType& vtkmNotUsed(vectorCopy),
-                                    T& vtkmNotUsed(outVector), std::false_type)
+                                    T& vtkmNotUsed(outVector),
+                                    std::false_type)
 {
   // Skip writable functionality.
 }
@@ -146,8 +149,8 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
   detail::CompareDimensionalityTags(typename vtkm::TypeTraits<T>::DimensionalityTag(),
                                     typename vtkm::VecTraits<T>::HasMultipleComponents());
 
-  TestVecTypeWritableImpl<NUM_COMPONENTS, NonConstT>(inVector, vectorCopy, outVector,
-                                                     typename VecIsWritable<NonConstT>::type());
+  TestVecTypeWritableImpl<NUM_COMPONENTS, NonConstT>(
+    inVector, vectorCopy, outVector, typename VecIsWritable<NonConstT>::type());
 }
 
 inline void CheckVecComponentsTag(vtkm::VecTraitsTagMultipleComponents)

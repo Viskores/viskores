@@ -257,7 +257,8 @@ private:
     }
   }
 
-  static void WriteCellFields(std::ostream& out, vtkm::cont::DataSet dataSet,
+  static void WriteCellFields(std::ostream& out,
+                              vtkm::cont::DataSet dataSet,
                               vtkm::cont::DynamicCellSet cellSet)
   {
     bool wrote_header = false;
@@ -303,7 +304,8 @@ private:
   }
 
   template <class CellSetType>
-  static void WriteDataSetAsUnstructured(std::ostream& out, vtkm::cont::DataSet dataSet,
+  static void WriteDataSetAsUnstructured(std::ostream& out,
+                                         vtkm::cont::DataSet dataSet,
                                          CellSetType cellSet)
   {
     out << "DATASET UNSTRUCTURED_GRID" << std::endl;
@@ -312,7 +314,8 @@ private:
   }
 
   template <vtkm::IdComponent DIM>
-  static void WriteDataSetAsStructured(std::ostream& out, vtkm::cont::DataSet dataSet,
+  static void WriteDataSetAsStructured(std::ostream& out,
+                                       vtkm::cont::DataSet dataSet,
                                        vtkm::cont::CellSetStructured<DIM> cellSet)
   {
     ///\todo: support uniform/rectilinear

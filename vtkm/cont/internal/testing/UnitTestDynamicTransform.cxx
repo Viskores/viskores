@@ -113,9 +113,10 @@ struct FunctionInterfaceFunctor
     VTKM_TEST_FAIL("Called wrong form of functor operator.");
   }
   void operator()(
-    const vtkm::internal::FunctionInterface<
-      void(vtkm::cont::ArrayHandle<vtkm::FloatDefault>, vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-           vtkm::cont::ArrayHandle<std::string>, vtkm::cont::CellSetStructured<3>)>&) const
+    const vtkm::internal::FunctionInterface<void(vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                                 vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                                 vtkm::cont::ArrayHandle<std::string>,
+                                                 vtkm::cont::CellSetStructured<3>)>&) const
   {
     std::cout << "    In FunctionInterface<...> functor." << std::endl;
     g_FunctionCalls++;
@@ -142,8 +143,8 @@ void TestBasicTransform()
 
   std::cout << "  Trying with unusual (string) dynamic array." << std::endl;
   dynamicArray = vtkm::cont::ArrayHandle<std::string>();
-  TRY_TRANSFORM(transform(dynamicArray.ResetTypeList(TypeListTagString()),
-                          ArrayHandleStringFunctor(), indexTag));
+  TRY_TRANSFORM(transform(
+    dynamicArray.ResetTypeList(TypeListTagString()), ArrayHandleStringFunctor(), indexTag));
 
   std::cout << "  Trying with structured cell set." << std::endl;
   vtkm::cont::CellSetStructured<3> concreteCellSet;
@@ -169,7 +170,8 @@ void TestFunctionTransform()
   std::cout << "  Trying dynamic cast" << std::endl;
   TRY_TRANSFORM(
     vtkm::internal::make_FunctionInterface<void>(
-      scalarArray, vtkm::cont::DynamicArrayHandle(scalarArray),
+      scalarArray,
+      vtkm::cont::DynamicArrayHandle(scalarArray),
       vtkm::cont::DynamicArrayHandle(stringArray).ResetTypeList(TypeListTagString()),
       vtkm::cont::DynamicCellSet(structuredCellSet))
       .DynamicTransformCont(vtkm::cont::internal::DynamicTransform(), FunctionInterfaceFunctor()));

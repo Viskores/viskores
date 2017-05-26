@@ -139,7 +139,8 @@ class Storage<T, StorageTagZip<FirstHandleType, SecondHandleType>>
 public:
   typedef T ValueType;
 
-  typedef vtkm::exec::internal::ArrayPortalZip<ValueType, typename FirstHandleType::PortalControl,
+  typedef vtkm::exec::internal::ArrayPortalZip<ValueType,
+                                               typename FirstHandleType::PortalControl,
                                                typename SecondHandleType::PortalControl>
     PortalType;
   typedef vtkm::exec::internal::ArrayPortalZip<ValueType,
@@ -226,12 +227,14 @@ public:
   typedef typename StorageType::PortalConstType PortalConstControl;
 
   typedef vtkm::exec::internal::ArrayPortalZip<
-    ValueType, typename FirstHandleType::template ExecutionTypes<Device>::Portal,
+    ValueType,
+    typename FirstHandleType::template ExecutionTypes<Device>::Portal,
     typename SecondHandleType::template ExecutionTypes<Device>::Portal>
     PortalExecution;
 
   typedef vtkm::exec::internal::ArrayPortalZip<
-    ValueType, typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
+    ValueType,
+    typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
     typename SecondHandleType::template ExecutionTypes<Device>::PortalConst>
     PortalConstExecution;
 
@@ -316,7 +319,8 @@ class ArrayHandleZip
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-    ArrayHandleZip, (ArrayHandleZip<FirstHandleType, SecondHandleType>),
+    ArrayHandleZip,
+    (ArrayHandleZip<FirstHandleType, SecondHandleType>),
     (typename internal::ArrayHandleZipTraits<FirstHandleType, SecondHandleType>::Superclass));
 
 private:
@@ -335,7 +339,8 @@ public:
 ///
 template <typename FirstHandleType, typename SecondHandleType>
 VTKM_CONT vtkm::cont::ArrayHandleZip<FirstHandleType, SecondHandleType> make_ArrayHandleZip(
-  const FirstHandleType& first, const SecondHandleType& second)
+  const FirstHandleType& first,
+  const SecondHandleType& second)
 {
   return ArrayHandleZip<FirstHandleType, SecondHandleType>(first, second);
 }

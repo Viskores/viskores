@@ -35,8 +35,11 @@ namespace rendering
 class VTKM_RENDERING_EXPORT AxisAnnotation
 {
 protected:
-  void CalculateTicks(const vtkm::Range& range, bool minor, std::vector<vtkm::Float64>& positions,
-                      std::vector<vtkm::Float64>& proportions, int modifyTickQuantity) const;
+  void CalculateTicks(const vtkm::Range& range,
+                      bool minor,
+                      std::vector<vtkm::Float64>& positions,
+                      std::vector<vtkm::Float64>& proportions,
+                      int modifyTickQuantity) const;
 
 public:
   AxisAnnotation();

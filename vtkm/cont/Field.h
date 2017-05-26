@@ -88,7 +88,8 @@ public:
   }
 
   template <typename T, typename Storage>
-  VTKM_CONT Field(std::string name, AssociationEnum association,
+  VTKM_CONT Field(std::string name,
+                  AssociationEnum association,
                   const ArrayHandle<T, Storage>& data)
     : Name(name)
     , Association(association)
@@ -129,7 +130,9 @@ public:
 
   /// constructors for cell set associations
   VTKM_CONT
-  Field(std::string name, AssociationEnum association, const std::string& cellSetName,
+  Field(std::string name,
+        AssociationEnum association,
+        const std::string& cellSetName,
         const vtkm::cont::DynamicArrayHandle& data)
     : Name(name)
     , Association(association)
@@ -143,7 +146,9 @@ public:
   }
 
   template <typename T, typename Storage>
-  VTKM_CONT Field(std::string name, AssociationEnum association, const std::string& cellSetName,
+  VTKM_CONT Field(std::string name,
+                  AssociationEnum association,
+                  const std::string& cellSetName,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
     : Name(name)
     , Association(association)
@@ -157,7 +162,9 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT Field(std::string name, AssociationEnum association, const std::string& cellSetName,
+  VTKM_CONT Field(std::string name,
+                  AssociationEnum association,
+                  const std::string& cellSetName,
                   const std::vector<T>& data)
     : Name(name)
     , Association(association)
@@ -171,8 +178,11 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT Field(std::string name, AssociationEnum association, const std::string& cellSetName,
-                  const T* data, vtkm::Id nvals)
+  VTKM_CONT Field(std::string name,
+                  AssociationEnum association,
+                  const std::string& cellSetName,
+                  const T* data,
+                  vtkm::Id nvals)
     : Name(name)
     , Association(association)
     , AssocCellSetName(cellSetName)
@@ -186,7 +196,9 @@ public:
 
   /// constructors for logical dimension associations
   VTKM_CONT
-  Field(std::string name, AssociationEnum association, vtkm::IdComponent logicalDim,
+  Field(std::string name,
+        AssociationEnum association,
+        vtkm::IdComponent logicalDim,
         const vtkm::cont::DynamicArrayHandle& data)
     : Name(name)
     , Association(association)
@@ -200,7 +212,9 @@ public:
   }
 
   template <typename T, typename Storage>
-  VTKM_CONT Field(std::string name, AssociationEnum association, vtkm::IdComponent logicalDim,
+  VTKM_CONT Field(std::string name,
+                  AssociationEnum association,
+                  vtkm::IdComponent logicalDim,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
     : Name(name)
     , Association(association)
@@ -213,7 +227,9 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT Field(std::string name, AssociationEnum association, vtkm::IdComponent logicalDim,
+  VTKM_CONT Field(std::string name,
+                  AssociationEnum association,
+                  vtkm::IdComponent logicalDim,
                   const std::vector<T>& data)
     : Name(name)
     , Association(association)
@@ -226,8 +242,11 @@ public:
   }
 
   template <typename T>
-  VTKM_CONT Field(std::string name, AssociationEnum association, vtkm::IdComponent logicalDim,
-                  const T* data, vtkm::Id nvals)
+  VTKM_CONT Field(std::string name,
+                  AssociationEnum association,
+                  vtkm::IdComponent logicalDim,
+                  const T* data,
+                  vtkm::Id nvals)
     : Name(name)
     , Association(association)
     , AssocLogicalDim(logicalDim)
@@ -342,7 +361,8 @@ public:
     tmp.Allocate(nvals);
 
     //copy into the memory owned by the array handle
-    std::copy(ptr, ptr + static_cast<std::size_t>(nvals),
+    std::copy(ptr,
+              ptr + static_cast<std::size_t>(nvals),
               vtkm::cont::ArrayPortalToIteratorBegin(tmp.GetPortalControl()));
 
     //assign to the dynamic array handle

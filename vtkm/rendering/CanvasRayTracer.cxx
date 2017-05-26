@@ -66,7 +66,8 @@ struct ClearBuffersInvokeFunctor
 
   VTKM_CONT
   ClearBuffersInvokeFunctor(const vtkm::rendering::Color& backgroundColor,
-                            const ColorBufferType& colorBuffer, const DepthBufferType& depthBuffer)
+                            const ColorBufferType& colorBuffer,
+                            const DepthBufferType& depthBuffer)
     : Worklet(backgroundColor)
     , ColorBuffer(colorBuffer)
     , DepthBuffer(depthBuffer)
@@ -124,21 +125,27 @@ vtkm::rendering::Canvas* CanvasRayTracer::NewCopy() const
 }
 
 void CanvasRayTracer::AddLine(const vtkm::Vec<vtkm::Float64, 2>&,
-                              const vtkm::Vec<vtkm::Float64, 2>&, vtkm::Float32,
+                              const vtkm::Vec<vtkm::Float64, 2>&,
+                              vtkm::Float32,
                               const vtkm::rendering::Color&) const
 {
   // Not implemented
 }
 
-void CanvasRayTracer::AddColorBar(const vtkm::Bounds&, const vtkm::rendering::ColorTable&,
+void CanvasRayTracer::AddColorBar(const vtkm::Bounds&,
+                                  const vtkm::rendering::ColorTable&,
                                   bool) const
 {
   // Not implemented
 }
 
-void CanvasRayTracer::AddText(const vtkm::Vec<vtkm::Float32, 2>&, vtkm::Float32, vtkm::Float32,
-                              vtkm::Float32, const vtkm::Vec<vtkm::Float32, 2>&,
-                              const vtkm::rendering::Color&, const std::string&) const
+void CanvasRayTracer::AddText(const vtkm::Vec<vtkm::Float32, 2>&,
+                              vtkm::Float32,
+                              vtkm::Float32,
+                              vtkm::Float32,
+                              const vtkm::Vec<vtkm::Float32, 2>&,
+                              const vtkm::rendering::Color&,
+                              const std::string&) const
 {
   // Not implemented
 }

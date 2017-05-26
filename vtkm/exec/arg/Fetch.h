@@ -55,7 +55,9 @@ namespace arg
 /// ExecutionSignature with a particular aspect is pointing to the wrong
 /// argument or an invalid argument in the ControlSignature.
 ///
-template <typename FetchTag, typename AspectTag, typename ThreadIndicesType,
+template <typename FetchTag,
+          typename AspectTag,
+          typename ThreadIndicesType,
           typename ExecObjectType>
 struct Fetch
 #ifdef VTKM_DOXYGEN_ONLY
@@ -89,7 +91,8 @@ struct Fetch
   /// fetch), this method can be a no-op.
   ///
   VTKM_EXEC
-  void Store(const ThreadIndicesType& indices, const ExecObjectType& execObject,
+  void Store(const ThreadIndicesType& indices,
+             const ExecObjectType& execObject,
              const ValueType& value) const;
 };
 #else  // VTKM_DOXYGEN_ONLY

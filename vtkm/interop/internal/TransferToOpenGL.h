@@ -39,7 +39,8 @@ namespace detail
 
 template <class ValueType, class StorageTag, class DeviceAdapterTag>
 VTKM_CONT void CopyFromHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>& handle,
-                              vtkm::interop::BufferState& state, DeviceAdapterTag)
+                              vtkm::interop::BufferState& state,
+                              DeviceAdapterTag)
 {
   //Generic implementation that will work no matter what. We copy the data
   //in the given handle to a temporary handle using the basic storage tag.
@@ -83,7 +84,8 @@ VTKM_CONT void CopyFromHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>& ha
 template <class ValueType, class DeviceAdapterTag>
 VTKM_CONT void CopyFromHandle(
   vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>& handle,
-  vtkm::interop::BufferState& state, DeviceAdapterTag)
+  vtkm::interop::BufferState& state,
+  DeviceAdapterTag)
 {
   //Specialization given that we are use an C allocated array storage tag
   //that allows us to directly hook into the data. We pull the data

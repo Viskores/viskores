@@ -33,8 +33,10 @@ namespace internal
 {
 
 template <typename NumIndicesArrayType, typename IndexOffsetArrayType, typename DeviceAdapterTag>
-void buildIndexOffsets(const NumIndicesArrayType& numIndices, IndexOffsetArrayType& offsets,
-                       DeviceAdapterTag, std::true_type)
+void buildIndexOffsets(const NumIndicesArrayType& numIndices,
+                       IndexOffsetArrayType& offsets,
+                       DeviceAdapterTag,
+                       std::true_type)
 {
   //We first need to make sure that NumIndices and IndexOffsetArrayType
   //have the same type so we can call scane exclusive
@@ -48,7 +50,9 @@ void buildIndexOffsets(const NumIndicesArrayType& numIndices, IndexOffsetArrayTy
 }
 
 template <typename NumIndicesArrayType, typename IndexOffsetArrayType, typename DeviceAdapterTag>
-void buildIndexOffsets(const NumIndicesArrayType&, IndexOffsetArrayType&, DeviceAdapterTag,
+void buildIndexOffsets(const NumIndicesArrayType&,
+                       IndexOffsetArrayType&,
+                       DeviceAdapterTag,
                        std::false_type)
 {
   //this is a no-op as the storage for the offsets is an implicit handle
@@ -59,7 +63,8 @@ void buildIndexOffsets(const NumIndicesArrayType&, IndexOffsetArrayType&, Device
 }
 
 template <typename ArrayHandleIndices, typename ArrayHandleOffsets, typename DeviceAdapterTag>
-void buildIndexOffsets(const ArrayHandleIndices& numIndices, ArrayHandleOffsets offsets,
+void buildIndexOffsets(const ArrayHandleIndices& numIndices,
+                       ArrayHandleOffsets offsets,
                        DeviceAdapterTag tag)
 {
   typedef vtkm::cont::internal::IsWriteableArrayHandle<ArrayHandleOffsets, DeviceAdapterTag>

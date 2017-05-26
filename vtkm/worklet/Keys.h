@@ -118,9 +118,10 @@ public:
   template <typename Device>
   VTKM_CONT typename ExecutionTypes<Device>::Lookup PrepareForInput(Device) const
   {
-    return typename ExecutionTypes<Device>::Lookup(
-      this->UniqueKeys.PrepareForInput(Device()), this->SortedValuesMap.PrepareForInput(Device()),
-      this->Offsets.PrepareForInput(Device()), this->Counts.PrepareForInput(Device()));
+    return typename ExecutionTypes<Device>::Lookup(this->UniqueKeys.PrepareForInput(Device()),
+                                                   this->SortedValuesMap.PrepareForInput(Device()),
+                                                   this->Offsets.PrepareForInput(Device()),
+                                                   this->Counts.PrepareForInput(Device()));
   }
 
   VTKM_CONT
@@ -153,8 +154,11 @@ private:
     Algorithm::SortByKey(keys, this->SortedValuesMap);
 
     // Find the unique keys and the number of values per key.
-    Algorithm::ReduceByKey(keys, vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
-                           this->UniqueKeys, this->Counts, vtkm::Sum());
+    Algorithm::ReduceByKey(keys,
+                           vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
+                           this->UniqueKeys,
+                           this->Counts,
+                           vtkm::Sum());
 
     // Get the offsets from the counts with a scan.
     vtkm::Id offsetsTotal = Algorithm::ScanExclusive(
@@ -191,8 +195,10 @@ struct Transport<vtkm::cont::arg::TransportTagKeysIn, vtkm::worklet::Keys<KeyTyp
   using ExecObjectType = typename ContObjectType::template ExecutionTypes<Device>::Lookup;
 
   VTKM_CONT
-  ExecObjectType operator()(const ContObjectType& object, const ContObjectType& inputDomain,
-                            vtkm::Id, vtkm::Id) const
+  ExecObjectType operator()(const ContObjectType& object,
+                            const ContObjectType& inputDomain,
+                            vtkm::Id,
+                            vtkm::Id) const
   {
     if (object != inputDomain)
     {
@@ -205,8 +211,8 @@ struct Transport<vtkm::cont::arg::TransportTagKeysIn, vtkm::worklet::Keys<KeyTyp
   // If you get a compile error here, it means that you have used a KeysIn
   // tag in your ControlSignature that was not marked as the InputDomain.
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType operator()(const ContObjectType&, const InputDomainType&, vtkm::Id,
-                                      vtkm::Id) const = delete;
+  VTKM_CONT ExecObjectType
+  operator()(const ContObjectType&, const InputDomainType&, vtkm::Id, vtkm::Id) const = delete;
 };
 
 template <typename ArrayHandleType, typename Device>
@@ -224,7 +230,8 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesIn, ArrayHandleType, De
 
   template <typename KeyType>
   VTKM_CONT ExecObjectType operator()(const ContObjectType& object,
-                                      const vtkm::worklet::Keys<KeyType>& keys, vtkm::Id,
+                                      const vtkm::worklet::Keys<KeyType>& keys,
+                                      vtkm::Id,
                                       vtkm::Id) const
   {
     if (object.GetNumberOfValues() != keys.GetNumberOfValues())
@@ -258,7 +265,8 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesInOut, ArrayHandleType,
 
   template <typename KeyType>
   VTKM_CONT ExecObjectType operator()(ContObjectType object,
-                                      const vtkm::worklet::Keys<KeyType>& keys, vtkm::Id,
+                                      const vtkm::worklet::Keys<KeyType>& keys,
+                                      vtkm::Id,
                                       vtkm::Id) const
   {
     if (object.GetNumberOfValues() != keys.GetNumberOfValues())
@@ -292,7 +300,8 @@ struct Transport<vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, D
 
   template <typename KeyType>
   VTKM_CONT ExecObjectType operator()(ContObjectType object,
-                                      const vtkm::worklet::Keys<KeyType>& keys, vtkm::Id,
+                                      const vtkm::worklet::Keys<KeyType>& keys,
+                                      vtkm::Id,
                                       vtkm::Id) const
   {
     // The PrepareForOutput for ArrayHandleGroupVecVariable and

@@ -213,8 +213,8 @@ VTKM_EXEC void JacobianFor3DCell(const WorldCoordType& wCoords,
   jacobian = vtkm::Matrix<JacobianType,3,3>(0);
   VTKM_DERIVATIVE_WEIGHTS_WEDGE(pc, rc, VTKM_ACCUM_JACOBIAN_3D);
 #else
-  JacobianFor3DCell(internal::PermuteWedgeToHex(wCoords), pcoords, jacobian,
-                    vtkm::CellShapeTagHexahedron());
+  JacobianFor3DCell(
+    internal::PermuteWedgeToHex(wCoords), pcoords, jacobian, vtkm::CellShapeTagHexahedron());
 #endif
 }
 
@@ -232,8 +232,8 @@ VTKM_EXEC void JacobianFor3DCell(const WorldCoordType& wCoords,
   jacobian = vtkm::Matrix<JacobianType,3,3>(0);
   VTKM_DERIVATIVE_WEIGHTS_PYRAMID(pc, rc, VTKM_ACCUM_JACOBIAN_3D);
 #else
-  JacobianFor3DCell(internal::PermutePyramidToHex(wCoords), pcoords, jacobian,
-                    vtkm::CellShapeTagHexahedron());
+  JacobianFor3DCell(
+    internal::PermutePyramidToHex(wCoords), pcoords, jacobian, vtkm::CellShapeTagHexahedron());
 #endif
 }
 
@@ -249,12 +249,15 @@ VTKM_EXEC void JacobianFor3DCell(const WorldCoordType& wCoords,
   jacobian(0, 1) += wcoords2d[0] * (weight1);                                                      \
   jacobian(1, 1) += wcoords2d[1] * (weight1)
 
-template <typename WorldCoordType, typename ParametricCoordType, typename SpaceType,
+template <typename WorldCoordType,
+          typename ParametricCoordType,
+          typename SpaceType,
           typename JacobianType>
 VTKM_EXEC void JacobianFor2DCell(const WorldCoordType& wCoords,
                                  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
                                  const vtkm::exec::internal::Space2D<SpaceType>& space,
-                                 vtkm::Matrix<JacobianType, 2, 2>& jacobian, vtkm::CellShapeTagQuad)
+                                 vtkm::Matrix<JacobianType, 2, 2>& jacobian,
+                                 vtkm::CellShapeTagQuad)
 {
   vtkm::Vec<JacobianType, 2> pc(static_cast<JacobianType>(pcoords[0]),
                                 static_cast<JacobianType>(pcoords[1]));

@@ -95,8 +95,10 @@ public:
   CopyJoinSplit() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& superID, const InFieldPortalType& inbound,
-                            const InFieldPortalType& indegree, const InFieldPortalType& outdegree,
+  VTKM_EXEC void operator()(const vtkm::Id& superID,
+                            const InFieldPortalType& inbound,
+                            const InFieldPortalType& indegree,
+                            const InFieldPortalType& outdegree,
                             const OutFieldPortalType& outbound) const
   {
     // if the vertex is critical, set it to -1

@@ -46,8 +46,10 @@ struct FetchTagExecObject
 };
 
 template <typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<vtkm::exec::arg::FetchTagExecObject, vtkm::exec::arg::AspectTagDefault,
-             ThreadIndicesType, ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagExecObject,
+             vtkm::exec::arg::AspectTagDefault,
+             ThreadIndicesType,
+             ExecObjectType>
 {
   // If you get a compile error here, it means you tried to use an object that
   // is not an execution object as an argument that is expected to be one. All

@@ -50,8 +50,8 @@ typename CellSetStructured<DIMENSION>::SchedulingRangeType
 
 template <vtkm::IdComponent DIMENSION>
 template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
-typename CellSetStructured<DIMENSION>::template ExecutionTypes<DeviceAdapter, FromTopology,
-                                                               ToTopology>::ExecObjectType
+typename CellSetStructured<
+  DIMENSION>::template ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType
   CellSetStructured<DIMENSION>::PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const
 {
   typedef typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType

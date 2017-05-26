@@ -68,7 +68,8 @@ struct FetchArrayDirectInTests
 
     typedef vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayDirectInOut,
                                    vtkm::exec::arg::AspectTagDefault,
-                                   vtkm::exec::arg::ThreadIndicesTesting, TestPortal<T>>
+                                   vtkm::exec::arg::ThreadIndicesTesting,
+                                   TestPortal<T>>
       FetchType;
 
     FetchType fetch;

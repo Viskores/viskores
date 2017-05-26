@@ -204,7 +204,8 @@ public:
     return vtkmAtomicAdd(lockedValue, value);
   }
 
-  inline __device__ T CompareAndSwap(vtkm::Id index, const vtkm::Int64& newValue,
+  inline __device__ T CompareAndSwap(vtkm::Id index,
+                                     const vtkm::Int64& newValue,
                                      const vtkm::Int64& oldValue) const
   {
     T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
@@ -237,7 +238,8 @@ private:
                                                    const vtkm::Int64& newValue,
                                                    const vtkm::Int64& oldValue) const
   {
-    return atomicCAS((unsigned long long int*)address, (unsigned long long int)oldValue,
+    return atomicCAS((unsigned long long int*)address,
+                     (unsigned long long int)oldValue,
                      (unsigned long long int)newValue);
   }
 };
@@ -248,7 +250,9 @@ class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagCuda>
 public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet, const InvocationType& invocation, vtkm::Id,
+    const WorkletType& worklet,
+    const InvocationType& invocation,
+    vtkm::Id,
     vtkm::Id globalIndexOffset = 0)
   {
     using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
@@ -257,7 +261,9 @@ public:
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet, const InvocationType& invocation, vtkm::Id3,
+    const WorkletType& worklet,
+    const InvocationType& invocation,
+    vtkm::Id3,
     vtkm::Id globalIndexOffset = 0)
   {
     using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;

@@ -98,8 +98,10 @@ public:
   CopySupernodes() {}
 
   template <typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& isSupernode, const vtkm::Id& regularID,
-                            const vtkm::Id& superID, const vtkm::Id& upCandidate,
+  VTKM_EXEC void operator()(const vtkm::Id& isSupernode,
+                            const vtkm::Id& regularID,
+                            const vtkm::Id& superID,
+                            const vtkm::Id& upCandidate,
                             const vtkm::Id& downCandidate,
                             const OutFieldPortalType& regularToCritical,
                             const OutFieldPortalType& supernodes,

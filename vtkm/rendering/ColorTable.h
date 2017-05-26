@@ -74,7 +74,8 @@ public:
 
   void AddControlPoint(vtkm::Float32 position, const vtkm::rendering::Color& color);
 
-  void AddControlPoint(vtkm::Float32 position, const vtkm::rendering::Color& color,
+  void AddControlPoint(vtkm::Float32 position,
+                       const vtkm::rendering::Color& color,
                        vtkm::Float32 alpha);
 
   void AddAlphaControlPoint(vtkm::Float32 position, vtkm::Float32 alpha);

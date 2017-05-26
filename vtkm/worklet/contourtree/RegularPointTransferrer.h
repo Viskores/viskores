@@ -123,10 +123,14 @@ public:
   {
   }
 
-  template <typename InFieldPortalType, typename InIndexPortalType, typename InOutFieldPortalType,
+  template <typename InFieldPortalType,
+            typename InIndexPortalType,
+            typename InOutFieldPortalType,
             typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& vertexID, const InIndexPortalType& chainExtremum,
-                            const InFieldPortalType& values, const InIndexPortalType& valueIndex,
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID,
+                            const InIndexPortalType& chainExtremum,
+                            const InFieldPortalType& values,
+                            const InIndexPortalType& valueIndex,
                             const InOutFieldPortalType& prunesTo,
                             const OutFieldPortalType& outdegree) const
   {

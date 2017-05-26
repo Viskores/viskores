@@ -84,7 +84,8 @@ private:
       throw vtkm::io::ErrorIO("Z_COORDINATES tag not found");
     this->DoReadDynamicArray(readDataType, numPoints[2], 1, Z);
 
-    if (dim != vtkm::Id3(static_cast<vtkm::Id>(numPoints[0]), static_cast<vtkm::Id>(numPoints[1]),
+    if (dim != vtkm::Id3(static_cast<vtkm::Id>(numPoints[0]),
+                         static_cast<vtkm::Id>(numPoints[1]),
                          static_cast<vtkm::Id>(numPoints[2])))
       throw vtkm::io::ErrorIO("DIMENSIONS not equal to number of points");
 

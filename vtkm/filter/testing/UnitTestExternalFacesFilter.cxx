@@ -49,8 +49,10 @@ vtkm::cont::DataSet MakeDataTestSet2()
   return MakeTestDataSet().Make3DExplicitDataSet5();
 }
 
-void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds, bool compactPoints,
-                                   vtkm::Id numExpectedExtFaces, vtkm::Id numExpectedPoints = 0)
+void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
+                                   bool compactPoints,
+                                   vtkm::Id numExpectedExtFaces,
+                                   vtkm::Id numExpectedPoints = 0)
 {
   //Run the External Faces filter
   vtkm::filter::ExternalFaces externalFaces;

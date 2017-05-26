@@ -54,8 +54,10 @@ struct ValueCount : vtkm::exec::arg::ExecutionSignatureTagBase
 };
 
 template <typename FetchTag, typename ExecObjectType>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagValueCount,
-             vtkm::exec::arg::ThreadIndicesReduceByKey, ExecObjectType>
+struct Fetch<FetchTag,
+             vtkm::exec::arg::AspectTagValueCount,
+             vtkm::exec::arg::ThreadIndicesReduceByKey,
+             ExecObjectType>
 {
   using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesReduceByKey;
 

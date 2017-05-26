@@ -142,7 +142,8 @@ struct VecTraits<vtkm::VecVariable<T, MaxSize>>
   }
 
   VTKM_EXEC_CONT
-  static void SetComponent(VecType& vector, vtkm::IdComponent componentIndex,
+  static void SetComponent(VecType& vector,
+                           vtkm::IdComponent componentIndex,
                            const ComponentType& value)
   {
     vector[componentIndex] = value;

@@ -54,13 +54,22 @@ const vtkm::Float64 AngleList[NUM_NUMBERS] = { 0.643501108793284, // angle for 3
                                                1.0471975511966,   // pi/3
                                                0.0 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 OppositeList[NUM_NUMBERS] = { 3.0, 1.0, 1.0, 1.732050807568877 /*sqrt(3)*/,
+const vtkm::Float64 OppositeList[NUM_NUMBERS] = { 3.0,
+                                                  1.0,
+                                                  1.0,
+                                                  1.732050807568877 /*sqrt(3)*/,
                                                   0.0 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 AdjacentList[NUM_NUMBERS] = { 4.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 1.0,
+const vtkm::Float64 AdjacentList[NUM_NUMBERS] = { 4.0,
+                                                  1.0,
+                                                  1.732050807568877 /*sqrt(3)*/,
+                                                  1.0,
                                                   1.0 };
 VTKM_EXEC_CONSTANT
-const vtkm::Float64 HypotenuseList[NUM_NUMBERS] = { 5.0, 1.414213562373095 /*sqrt(2)*/, 2.0, 2.0,
+const vtkm::Float64 HypotenuseList[NUM_NUMBERS] = { 5.0,
+                                                    1.414213562373095 /*sqrt(2)*/,
+                                                    2.0,
+                                                    2.0,
                                                     1.0 };
 
 VTKM_EXEC_CONSTANT
@@ -311,13 +320,16 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
       VectorType hypotenuse;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        Traits::SetComponent(angle, componentIndex,
-                             static_cast<ComponentType>(AngleList[componentIndex + index]));
-        Traits::SetComponent(opposite, componentIndex,
+        Traits::SetComponent(
+          angle, componentIndex, static_cast<ComponentType>(AngleList[componentIndex + index]));
+        Traits::SetComponent(opposite,
+                             componentIndex,
                              static_cast<ComponentType>(OppositeList[componentIndex + index]));
-        Traits::SetComponent(adjacent, componentIndex,
+        Traits::SetComponent(adjacent,
+                             componentIndex,
                              static_cast<ComponentType>(AdjacentList[componentIndex + index]));
-        Traits::SetComponent(hypotenuse, componentIndex,
+        Traits::SetComponent(hypotenuse,
+                             componentIndex,
                              static_cast<ComponentType>(HypotenuseList[componentIndex + index]));
       }
 
@@ -357,8 +369,8 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
       VectorType x;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        Traits::SetComponent(x, componentIndex,
-                             static_cast<ComponentType>(AngleList[componentIndex + index]));
+        Traits::SetComponent(
+          x, componentIndex, static_cast<ComponentType>(AngleList[componentIndex + index]));
       }
 
       const VectorType minusX = zero - x;
@@ -445,8 +457,10 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   template <typename FunctionType>
-  VTKM_EXEC void RaiseByTest(FunctionType function, ComponentType base,
-                             ComponentType exponentbias = 0.0, ComponentType resultbias = 0.0) const
+  VTKM_EXEC void RaiseByTest(FunctionType function,
+                             ComponentType base,
+                             ComponentType exponentbias = 0.0,
+                             ComponentType resultbias = 0.0) const
   {
     for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
@@ -456,8 +470,8 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
       {
         ComponentType x = static_cast<ComponentType>(NumberList[componentIndex + index]);
         Traits::SetComponent(original, componentIndex, x);
-        Traits::SetComponent(raiseresult, componentIndex,
-                             vtkm::Pow(base, x + exponentbias) + resultbias);
+        Traits::SetComponent(
+          raiseresult, componentIndex, vtkm::Pow(base, x + exponentbias) + resultbias);
       }
 
       VectorType mathresult = function(original);
@@ -515,7 +529,8 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   }
 
   template <typename FunctionType>
-  VTKM_EXEC void LogBaseTest(FunctionType function, ComponentType base,
+  VTKM_EXEC void LogBaseTest(FunctionType function,
+                             ComponentType base,
                              ComponentType bias = 0.0) const
   {
     for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)

@@ -55,9 +55,12 @@ public:
 
   public:
     VTKM_CONT
-    SurfaceConverter(const vtkm::Int32& width, const vtkm::Int32& subsetWidth,
-                     const vtkm::Int32& xmin, const vtkm::Int32& ymin,
-                     const vtkm::Matrix<vtkm::Float32, 4, 4> projMat, const vtkm::Int32& numPixels)
+    SurfaceConverter(const vtkm::Int32& width,
+                     const vtkm::Int32& subsetWidth,
+                     const vtkm::Int32& xmin,
+                     const vtkm::Int32& ymin,
+                     const vtkm::Matrix<vtkm::Float32, 4, 4> projMat,
+                     const vtkm::Int32& numPixels)
     {
       Width = width;
       SubsetWidth = subsetWidth;
@@ -71,7 +74,8 @@ public:
     typedef void ControlSignature(FieldIn<>, FieldIn<>, ExecObject, ExecObject);
     typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
     VTKM_EXEC
-    void operator()(const vtkm::Vec<vtkm::Float32, 4>& inColor, const vtkm::Float32& inDepth,
+    void operator()(const vtkm::Vec<vtkm::Float32, 4>& inColor,
+                    const vtkm::Float32& inDepth,
                     vtkm::exec::ExecutionWholeArray<vtkm::Float32>& depthBuffer,
                     vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32, 4>>& colorBuffer,
                     const vtkm::Id& index) const
@@ -103,9 +107,15 @@ public:
     vtkm::Vec<vtkm::Float32, 3> delta_x;
     vtkm::Vec<vtkm::Float32, 3> delta_y;
     VTKM_CONT
-    PerspectiveRayGen(vtkm::Int32 width, vtkm::Int32 height, vtkm::Float32 fovX, vtkm::Float32 fovY,
-                      vtkm::Vec<vtkm::Float32, 3> look, vtkm::Vec<vtkm::Float32, 3> up,
-                      vtkm::Float32 _zoom, vtkm::Int32 subsetWidth, vtkm::Int32 minx,
+    PerspectiveRayGen(vtkm::Int32 width,
+                      vtkm::Int32 height,
+                      vtkm::Float32 fovX,
+                      vtkm::Float32 fovY,
+                      vtkm::Vec<vtkm::Float32, 3> look,
+                      vtkm::Vec<vtkm::Float32, 3> up,
+                      vtkm::Float32 _zoom,
+                      vtkm::Int32 subsetWidth,
+                      vtkm::Int32 minx,
                       vtkm::Int32 miny)
       : w(width)
       , h(height)
@@ -140,7 +150,9 @@ public:
 
     typedef void ExecutionSignature(WorkIndex, _1, _2, _3);
     VTKM_EXEC
-    void operator()(vtkm::Id idx, vtkm::Float32& rayDirX, vtkm::Float32& rayDirY,
+    void operator()(vtkm::Id idx,
+                    vtkm::Float32& rayDirX,
+                    vtkm::Float32& rayDirY,
                     vtkm::Float32& rayDirZ) const
     {
       vtkm::Vec<vtkm::Float32, 3> ray_dir(rayDirX, rayDirY, rayDirZ);
@@ -377,11 +389,15 @@ public:
     }
     vtkm::worklet::DispatcherMapField<SurfaceConverter>(
       SurfaceConverter(
-        this->Width, this->SubsetWidth, this->SubsetMinX, this->SubsetMinY,
+        this->Width,
+        this->SubsetWidth,
+        this->SubsetMinX,
+        this->SubsetMinY,
         this->CameraView.CreateProjectionMatrix(canvas->GetWidth(), canvas->GetHeight()),
         this->SubsetWidth * this->SubsetHeight))
       .Invoke(
-        this->FrameBuffer, distances,
+        this->FrameBuffer,
+        distances,
         vtkm::exec::ExecutionWholeArray<vtkm::Float32>(canvas->GetDepthBuffer()),
         vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32, 4>>(canvas->GetColorBuffer()));
 
@@ -411,10 +427,18 @@ public:
     this->Look = this->LookAt - this->Position;
     vtkm::Normalize(this->Look);
     //Create the ray direction
-    vtkm::worklet::DispatcherMapField<PerspectiveRayGen>(
-      PerspectiveRayGen(this->Width, this->Height, this->FovX, this->FovY, this->Look, this->Up,
-                        this->Zoom, this->SubsetWidth, this->SubsetMinX, this->SubsetMinY))
-      .Invoke(rays.DirX, rays.DirY,
+    vtkm::worklet::DispatcherMapField<PerspectiveRayGen>(PerspectiveRayGen(this->Width,
+                                                                           this->Height,
+                                                                           this->FovX,
+                                                                           this->FovY,
+                                                                           this->Look,
+                                                                           this->Up,
+                                                                           this->Zoom,
+                                                                           this->SubsetWidth,
+                                                                           this->SubsetMinX,
+                                                                           this->SubsetMinY))
+      .Invoke(rays.DirX,
+              rays.DirY,
               rays.DirZ); //X Y Z
 
     vtkm::worklet::DispatcherMapField<MemSet<vtkm::Float32>>(MemSet<vtkm::Float32>(1e12f))
@@ -435,10 +459,18 @@ public:
     this->Look = this->LookAt - this->Position;
     vtkm::Normalize(this->Look);
     //Create the ray direction
-    vtkm::worklet::DispatcherMapField<PerspectiveRayGen>(
-      PerspectiveRayGen(this->Width, this->Height, this->FovX, this->FovY, this->Look, this->Up,
-                        this->Zoom, this->SubsetWidth, this->SubsetMinX, this->SubsetMinY))
-      .Invoke(rays.DirX, rays.DirY,
+    vtkm::worklet::DispatcherMapField<PerspectiveRayGen>(PerspectiveRayGen(this->Width,
+                                                                           this->Height,
+                                                                           this->FovX,
+                                                                           this->FovY,
+                                                                           this->Look,
+                                                                           this->Up,
+                                                                           this->Zoom,
+                                                                           this->SubsetWidth,
+                                                                           this->SubsetMinX,
+                                                                           this->SubsetMinY))
+      .Invoke(rays.DirX,
+              rays.DirY,
               rays.DirZ); //X Y Z
 
   } //create rays

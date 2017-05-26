@@ -112,8 +112,10 @@ public:
   GoverningSaddleFinder() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& edgeNo, const InFieldPortalType& edgeSorter,
-                            const InFieldPortalType& edgeFar, const InFieldPortalType& edgeNear,
+  VTKM_EXEC void operator()(const vtkm::Id& edgeNo,
+                            const InFieldPortalType& edgeSorter,
+                            const InFieldPortalType& edgeFar,
+                            const InFieldPortalType& edgeNear,
                             const OutFieldPortalType& prunesTo,
                             const OutFieldPortalType& outdegree) const
   {

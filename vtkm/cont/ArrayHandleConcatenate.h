@@ -200,7 +200,8 @@ private:
 
 template <typename ArrayHandleType1, typename ArrayHandleType2, typename Device>
 class ArrayTransfer<typename ArrayHandleType1::ValueType,
-                    StorageTagConcatenate<ArrayHandleType1, ArrayHandleType2>, Device>
+                    StorageTagConcatenate<ArrayHandleType1, ArrayHandleType2>,
+                    Device>
 {
 public:
   typedef typename ArrayHandleType1::ValueType ValueType;
@@ -299,7 +300,8 @@ class ArrayHandleConcatenate
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-    ArrayHandleConcatenate, (ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2>),
+    ArrayHandleConcatenate,
+    (ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2>),
     (vtkm::cont::ArrayHandle<typename ArrayHandleType1::ValueType,
                              StorageTagConcatenate<ArrayHandleType1, ArrayHandleType2>>));
 
@@ -316,7 +318,8 @@ public:
 
 template <typename ArrayHandleType1, typename ArrayHandleType2>
 VTKM_CONT ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2> make_ArrayHandleConcatenate(
-  const ArrayHandleType1& array1, const ArrayHandleType2& array2)
+  const ArrayHandleType1& array1,
+  const ArrayHandleType2& array2)
 {
   return ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2>(array1, array2);
 }

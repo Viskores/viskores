@@ -59,8 +59,10 @@ int main(int argc, char* argv[])
   vtkm::cont::Timer<DeviceAdapter> total;
   vtkm::cont::Timer<DeviceAdapter> timer;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(input.GetCellSet(0), scalarField.GetData().ResetTypeList(vtkm::TypeListTagScalarAll()),
-             clipValue, DeviceAdapter());
+    clip.Run(input.GetCellSet(0),
+             scalarField.GetData().ResetTypeList(vtkm::TypeListTagScalarAll()),
+             clipValue,
+             DeviceAdapter());
   vtkm::Float64 clipTime = timer.GetElapsedTime();
 
   vtkm::cont::DataSet output;

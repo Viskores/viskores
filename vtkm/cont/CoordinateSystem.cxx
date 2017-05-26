@@ -35,7 +35,8 @@ void CoordinateSystem::PrintSummary(std::ostream& out) const
 VTKM_CONT
 void CoordinateSystem::GetRange(vtkm::Range* range) const
 {
-  this->Superclass::GetRange(range, VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
+  this->Superclass::GetRange(range,
+                             VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
                              VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
 }
 

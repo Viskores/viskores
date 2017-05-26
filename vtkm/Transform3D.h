@@ -93,7 +93,8 @@ VTKM_EXEC_CONT vtkm::Vec<T, 3> Transform3DVector(const vtkm::Matrix<T, 4, 4>& ma
 /// transformation matrix for those scales.
 ///
 template <typename T>
-VTKM_EXEC_CONT vtkm::Matrix<T, 4, 4> Transform3DScale(const T& scaleX, const T& scaleY,
+VTKM_EXEC_CONT vtkm::Matrix<T, 4, 4> Transform3DScale(const T& scaleX,
+                                                      const T& scaleY,
                                                       const T& scaleZ)
 {
   vtkm::Matrix<T, 4, 4> scaleMatrix(T(0));

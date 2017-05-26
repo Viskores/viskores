@@ -55,8 +55,10 @@ struct ReduceByKeyLookup : vtkm::exec::ExecutionObjectBase
   IdComponentPortalType Counts;
 
   VTKM_EXEC_CONT
-  ReduceByKeyLookup(const KeyPortalType& uniqueKeys, const IdPortalType& sortedValuesMap,
-                    const IdPortalType& offsets, const IdComponentPortalType& counts)
+  ReduceByKeyLookup(const KeyPortalType& uniqueKeys,
+                    const IdPortalType& sortedValuesMap,
+                    const IdPortalType& offsets,
+                    const IdComponentPortalType& counts)
     : UniqueKeys(uniqueKeys)
     , SortedValuesMap(sortedValuesMap)
     , Offsets(offsets)

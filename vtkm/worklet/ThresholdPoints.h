@@ -43,7 +43,8 @@ public:
   class ThresholdPointField : public vtkm::worklet::WorkletMapCellToPoint
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInPoint<ScalarAll> scalars,
+    typedef void ControlSignature(CellSetIn cellset,
+                                  FieldInPoint<ScalarAll> scalars,
                                   FieldOutPoint<BoolType> passFlags);
     typedef _3 ExecutionSignature(_2);
 
@@ -69,10 +70,14 @@ public:
     UnaryPredicate Predicate;
   };
 
-  template <typename CellSetType, typename ScalarsArrayHandle, typename UnaryPredicate,
+  template <typename CellSetType,
+            typename ScalarsArrayHandle,
+            typename UnaryPredicate,
             typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet, const ScalarsArrayHandle& scalars,
-                                      const UnaryPredicate& predicate, DeviceAdapter)
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      const ScalarsArrayHandle& scalars,
+                                      const UnaryPredicate& predicate,
+                                      DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 

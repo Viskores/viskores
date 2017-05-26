@@ -244,7 +244,8 @@ public:
 struct VertexAssigned : vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> supernode, WholeArrayIn<IdType> superarcs,
+  typedef void ControlSignature(FieldIn<IdType> supernode,
+                                WholeArrayIn<IdType> superarcs,
                                 FieldOut<IdType> hasSuperArc);
   typedef _3 ExecutionSignature(_1, _2);
   typedef _1 InputDomain;

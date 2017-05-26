@@ -171,13 +171,15 @@ struct DispatcherBaseDynamicTransform
   vtkm::cont::internal::DynamicTransform BasicDynamicTransform;
 
   template <typename InputType, typename ContinueFunctor, vtkm::IdComponent Index>
-  VTKM_CONT void operator()(const InputType& input, const ContinueFunctor& continueFunc,
+  VTKM_CONT void operator()(const InputType& input,
+                            const ContinueFunctor& continueFunc,
                             const vtkm::internal::IndexTag<Index>& indexTag) const
   {
     typedef typename ControlInterface::template ParameterType<Index>::type ControlSignatureTag;
 
     typedef DispatcherBaseTypeCheckFunctor<ContinueFunctor,
-                                           typename ControlSignatureTag::TypeCheckTag, Index>
+                                           typename ControlSignatureTag::TypeCheckTag,
+                                           Index>
       TypeCheckFunctor;
 
     this->BasicDynamicTransform(input, TypeCheckFunctor(continueFunc), indexTag);
@@ -261,7 +263,8 @@ struct DispatcherBaseTransportFunctor
 
   template <typename ControlParameter, vtkm::IdComponent Index>
   VTKM_CONT typename ReturnType<ControlParameter, Index>::type operator()(
-    const ControlParameter& invokeData, vtkm::internal::IndexTag<Index>) const
+    const ControlParameter& invokeData,
+    vtkm::internal::IndexTag<Index>) const
   {
     using TransportTag =
       typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
@@ -322,7 +325,8 @@ private:
     //in smaller executables and libraries.
     using ParamTypes = typename ParameterInterface::ParameterSig;
     using HasDynamicTypes =
-      brigand::fold<ParamTypes, std::false_type,
+      brigand::fold<ParamTypes,
+                    std::false_type,
                     detail::DetermineIfHasDynamicParameter<brigand::_element, brigand::_state>>;
 
     this->StartInvokeDynamic(parameters, HasDynamicTypes());
@@ -360,7 +364,8 @@ private:
     using NumParams = vtkm::internal::MakeIntegerSequence<ParameterInterface::ARITY>;
 
     using isAllValid = brigand::fold<
-      NumParams, std::true_type,
+      NumParams,
+      std::true_type,
       detail::DetermineHasInCorrectParameters<brigand::_element, ParamTypes, ContSigTypes>>;
     //When isAllValid is false we produce a second static_assert
     //stating that the static transform is not possible
@@ -371,13 +376,14 @@ private:
 
   template <typename Signature>
   VTKM_CONT void DynamicTransformInvoke(
-    const vtkm::internal::FunctionInterface<Signature>& parameters, std::true_type) const
+    const vtkm::internal::FunctionInterface<Signature>& parameters,
+    std::true_type) const
   {
     // TODO: Check parameters
     static const vtkm::IdComponent INPUT_DOMAIN_INDEX = WorkletType::InputDomain::INDEX;
     reinterpret_cast<const DerivedClass*>(this)->DoInvoke(
-      vtkm::internal::make_Invocation<INPUT_DOMAIN_INDEX>(parameters, ControlInterface(),
-                                                          ExecutionInterface()));
+      vtkm::internal::make_Invocation<INPUT_DOMAIN_INDEX>(
+        parameters, ControlInterface(), ExecutionInterface()));
   }
 
   template <typename Signature>
@@ -401,7 +407,8 @@ protected:
   }
 
   template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(const Invocation& invocation, vtkm::Id numInstances,
+  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+                             vtkm::Id numInstances,
                              DeviceAdapter device) const
   {
     this->InvokeTransportParameters(
@@ -409,18 +416,20 @@ protected:
   }
 
   template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(const Invocation& invocation, vtkm::Id2 dimensions,
+  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+                             vtkm::Id2 dimensions,
                              DeviceAdapter device) const
   {
     this->BasicInvoke(invocation, vtkm::Id3(dimensions[0], dimensions[1], 1), device);
   }
 
   template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(const Invocation& invocation, vtkm::Id3 dimensions,
+  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+                             vtkm::Id3 dimensions,
                              DeviceAdapter device) const
   {
-    this->InvokeTransportParameters(invocation, dimensions,
-                                    this->Worklet.GetScatter().GetOutputRange(dimensions), device);
+    this->InvokeTransportParameters(
+      invocation, dimensions, this->Worklet.GetScatter().GetOutputRange(dimensions), device);
   }
 
   WorkletType Worklet;
@@ -430,7 +439,9 @@ private:
   DispatcherBase(const MyType&) = delete;
   void operator=(const MyType&) = delete;
 
-  template <typename Invocation, typename InputRangeType, typename OutputRangeType,
+  template <typename Invocation,
+            typename InputRangeType,
+            typename OutputRangeType,
             typename DeviceAdapter>
   VTKM_CONT void InvokeTransportParameters(const Invocation& invocation,
                                            const InputRangeType& inputRange,
@@ -449,8 +460,9 @@ private:
     typedef typename Invocation::ParameterInterface ParameterInterfaceType;
     const ParameterInterfaceType& parameters = invocation.Parameters;
 
-    typedef detail::DispatcherBaseTransportFunctor<
-      typename Invocation::ControlInterface, typename Invocation::InputDomainType, DeviceAdapter>
+    typedef detail::DispatcherBaseTransportFunctor<typename Invocation::ControlInterface,
+                                                   typename Invocation::InputDomainType,
+                                                   DeviceAdapter>
       TransportFunctorType;
     typedef
       typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type
@@ -470,7 +482,8 @@ private:
     this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
                            .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
                            .ChangeVisitArray(visitArray.PrepareForInput(device)),
-                         outputRange, device);
+                         outputRange,
+                         device);
   }
 
   template <typename Invocation, typename RangeType, typename DeviceAdapter>

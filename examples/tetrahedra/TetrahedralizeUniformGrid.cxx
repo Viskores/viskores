@@ -70,9 +70,10 @@ vtkm::cont::DataSet MakeTetrahedralizeTestDataSet(vtkm::Id3 dim)
   // Place uniform grid on a set physical space so OpenGL drawing is easier
   const vtkm::Id3 vdims(dim[0] + 1, dim[1] + 1, dim[2] + 1);
   const vtkm::Vec<vtkm::Float32, 3> origin = vtkm::make_Vec(0.0f, 0.0f, 0.0f);
-  const vtkm::Vec<vtkm::Float32, 3> spacing = vtkm::make_Vec(
-    1.0f / static_cast<vtkm::Float32>(dim[0]), 1.0f / static_cast<vtkm::Float32>(dim[1]),
-    1.0f / static_cast<vtkm::Float32>(dim[2]));
+  const vtkm::Vec<vtkm::Float32, 3> spacing =
+    vtkm::make_Vec(1.0f / static_cast<vtkm::Float32>(dim[0]),
+                   1.0f / static_cast<vtkm::Float32>(dim[1]),
+                   1.0f / static_cast<vtkm::Float32>(dim[2]));
 
   // Generate coordinate system
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);

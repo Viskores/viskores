@@ -58,15 +58,21 @@ public:
 
   virtual void RefreshDepthBuffer() const VTKM_OVERRIDE;
 
-  void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0, const vtkm::Vec<vtkm::Float64, 2>& point1,
-               vtkm::Float32 linewidth, const vtkm::rendering::Color& color) const VTKM_OVERRIDE;
+  void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
+               const vtkm::Vec<vtkm::Float64, 2>& point1,
+               vtkm::Float32 linewidth,
+               const vtkm::rendering::Color& color) const VTKM_OVERRIDE;
 
-  void AddColorBar(const vtkm::Bounds& bounds, const vtkm::rendering::ColorTable& colorTable,
+  void AddColorBar(const vtkm::Bounds& bounds,
+                   const vtkm::rendering::ColorTable& colorTable,
                    bool horizontal) const VTKM_OVERRIDE;
 
-  void AddText(const vtkm::Vec<vtkm::Float32, 2>& position, vtkm::Float32 scale,
-               vtkm::Float32 angle, vtkm::Float32 windowAspect,
-               const vtkm::Vec<vtkm::Float32, 2>& anchor, const vtkm::rendering::Color& color,
+  void AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
+               vtkm::Float32 scale,
+               vtkm::Float32 angle,
+               vtkm::Float32 windowAspect,
+               const vtkm::Vec<vtkm::Float32, 2>& anchor,
+               const vtkm::rendering::Color& color,
                const std::string& text) const VTKM_OVERRIDE;
 
   vtkm::rendering::WorldAnnotator* CreateWorldAnnotator() const VTKM_OVERRIDE;
@@ -75,7 +81,8 @@ private:
   vtkm::rendering::BitmapFont Font;
   vtkm::rendering::TextureGL FontTexture;
 
-  void RenderText(vtkm::Float32 scale, const vtkm::Vec<vtkm::Float32, 2>& anchor,
+  void RenderText(vtkm::Float32 scale,
+                  const vtkm::Vec<vtkm::Float32, 2>& anchor,
                   const std::string& text) const;
 };
 }

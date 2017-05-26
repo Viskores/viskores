@@ -137,8 +137,10 @@ public:
   //		the same is true of firstEdge and updegree
 
   template <typename InOutFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& vertexID, const vtkm::Id& newPosition,
-                            const vtkm::Id& newOutdegree, const InOutFieldPortalType& firstEdge,
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID,
+                            const vtkm::Id& newPosition,
+                            const vtkm::Id& newOutdegree,
+                            const InOutFieldPortalType& firstEdge,
                             const InOutFieldPortalType& outdegree,
                             const InOutFieldPortalType& chainExtremum,
                             const InOutFieldPortalType& edgeFar,

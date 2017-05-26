@@ -76,9 +76,16 @@ static vtkm::IdComponent TriangleOffsetData[vtkm::NUMBER_OF_CELL_SHAPES] = {
 
 static vtkm::IdComponent TriangleIndexData[] = {
   // vtkm::CELL_SHAPE_TRIANGLE
-  0, 1, 2,
+  0,
+  1,
+  2,
   // vtkm::CELL_SHAPE_QUAD
-  0, 1, 2, 0, 2, 3
+  0,
+  1,
+  2,
+  0,
+  2,
+  3
 };
 
 template <typename Device>
@@ -205,13 +212,53 @@ static vtkm::IdComponent TetrahedronOffsetData[vtkm::NUMBER_OF_CELL_SHAPES] = {
 
 static vtkm::IdComponent TetrahedronIndexData[] = {
   // vtkm::CELL_SHAPE_TETRA
-  0, 1, 2, 3,
+  0,
+  1,
+  2,
+  3,
   // vtkm::CELL_SHAPE_HEXAHEDRON
-  0, 1, 3, 4, 1, 4, 5, 6, 1, 4, 6, 3, 1, 3, 6, 2, 3, 6, 7, 4,
+  0,
+  1,
+  3,
+  4,
+  1,
+  4,
+  5,
+  6,
+  1,
+  4,
+  6,
+  3,
+  1,
+  3,
+  6,
+  2,
+  3,
+  6,
+  7,
+  4,
   // vtkm::CELL_SHAPE_WEDGE
-  0, 1, 2, 4, 3, 4, 5, 2, 0, 2, 3, 4,
+  0,
+  1,
+  2,
+  4,
+  3,
+  4,
+  5,
+  2,
+  0,
+  2,
+  3,
+  4,
   // vtkm::CELL_SHAPE_PYRAMID
-  0, 1, 2, 4, 0, 2, 3, 4
+  0,
+  1,
+  2,
+  4,
+  0,
+  2,
+  3,
+  4
 };
 
 template <typename Device>

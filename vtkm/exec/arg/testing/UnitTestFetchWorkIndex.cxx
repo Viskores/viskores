@@ -35,7 +35,8 @@ void TestWorkIndexFetch()
 
   typedef vtkm::exec::arg::Fetch<
     vtkm::exec::arg::FetchTagArrayDirectIn, // Not used but probably common.
-    vtkm::exec::arg::AspectTagWorkIndex, vtkm::exec::arg::ThreadIndicesTesting,
+    vtkm::exec::arg::AspectTagWorkIndex,
+    vtkm::exec::arg::ThreadIndicesTesting,
     vtkm::internal::NullType>
     FetchType;
 

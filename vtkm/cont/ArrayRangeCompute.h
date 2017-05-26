@@ -93,7 +93,8 @@ VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::UInt8, 4, vtkm::cont::StorageTagBasic)
 VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float32, 4, vtkm::cont::StorageTagBasic);
 VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasic);
 
-VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::FloatDefault, 3,
+VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::FloatDefault,
+                                    3,
                                     vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag);
 
 #undef VTKM_ARRAY_RANGE_COMPUTE_EXPORT_T
@@ -105,9 +106,10 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const vtkm::cont::ArrayHandle<
     vtkm::Vec<vtkm::Float32, 3>,
-    typename vtkm::cont::ArrayHandleCompositeVector<vtkm::Vec<vtkm::Float32, 3>(
-      vtkm::cont::ArrayHandle<vtkm::Float32>, vtkm::cont::ArrayHandle<vtkm::Float32>,
-      vtkm::cont::ArrayHandle<vtkm::Float32>)>::StorageTag>& input,
+    typename vtkm::cont::ArrayHandleCompositeVector<
+      vtkm::Vec<vtkm::Float32, 3>(vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float32>)>::StorageTag>& input,
   vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
 
 VTKM_CONT_EXPORT
@@ -115,16 +117,18 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const vtkm::cont::ArrayHandle<
     vtkm::Vec<vtkm::Float64, 3>,
-    typename vtkm::cont::ArrayHandleCompositeVector<vtkm::Vec<vtkm::Float64, 3>(
-      vtkm::cont::ArrayHandle<vtkm::Float64>, vtkm::cont::ArrayHandle<vtkm::Float64>,
-      vtkm::cont::ArrayHandle<vtkm::Float64>)>::StorageTag>& input,
+    typename vtkm::cont::ArrayHandleCompositeVector<
+      vtkm::Vec<vtkm::Float64, 3>(vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float64>)>::StorageTag>& input,
   vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
 
 // Implementation of cartesian products
 template <typename T, typename ArrayType1, typename ArrayType2, typename ArrayType3>
 VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   const vtkm::cont::ArrayHandle<
-    T, vtkm::cont::internal::StorageTagCartesianProduct<ArrayType1, ArrayType2, ArrayType3>>& input,
+    T,
+    vtkm::cont::internal::StorageTagCartesianProduct<ArrayType1, ArrayType2, ArrayType3>>& input,
   vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
   vtkm::cont::ArrayHandle<vtkm::Range> result;

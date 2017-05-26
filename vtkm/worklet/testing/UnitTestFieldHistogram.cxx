@@ -240,8 +240,8 @@ vtkm::cont::DataSet MakeTestDataSet()
     vtkm::cont::Field("c_poisson", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
   dataSet.AddField(
     vtkm::cont::Field("c_normal", vtkm::cont::Field::ASSOC_CELL_SET, "cells", normal, nCells));
-  dataSet.AddField(vtkm::cont::Field("c_chiSquare", vtkm::cont::Field::ASSOC_CELL_SET, "cells",
-                                     chiSquare, nCells));
+  dataSet.AddField(vtkm::cont::Field(
+    "c_chiSquare", vtkm::cont::Field::ASSOC_CELL_SET, "cells", chiSquare, nCells));
   dataSet.AddField(
     vtkm::cont::Field("c_uniform", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
 
@@ -257,8 +257,10 @@ vtkm::cont::DataSet MakeTestDataSet()
 //
 // Print the histogram result and tally
 //
-void PrintHistogram(vtkm::cont::ArrayHandle<vtkm::Id> bins, vtkm::Id numberOfBins,
-                    const vtkm::Range& range, vtkm::Float32 delta)
+void PrintHistogram(vtkm::cont::ArrayHandle<vtkm::Id> bins,
+                    vtkm::Id numberOfBins,
+                    const vtkm::Range& range,
+                    vtkm::Float32 delta)
 {
   vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl binPortal = bins.GetPortalConstControl();
 

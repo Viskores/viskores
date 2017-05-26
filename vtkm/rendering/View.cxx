@@ -25,8 +25,10 @@ namespace vtkm
 namespace rendering
 {
 
-View::View(const vtkm::rendering::Scene& scene, const vtkm::rendering::Mapper& mapper,
-           const vtkm::rendering::Canvas& canvas, const vtkm::rendering::Color& backgroundColor)
+View::View(const vtkm::rendering::Scene& scene,
+           const vtkm::rendering::Mapper& mapper,
+           const vtkm::rendering::Canvas& canvas,
+           const vtkm::rendering::Color& backgroundColor)
   : Scene(scene)
   , MapperPointer(mapper.NewCopy())
   , CanvasPointer(canvas.NewCopy())
@@ -46,8 +48,10 @@ View::View(const vtkm::rendering::Scene& scene, const vtkm::rendering::Mapper& m
   }
 }
 
-View::View(const vtkm::rendering::Scene& scene, const vtkm::rendering::Mapper& mapper,
-           const vtkm::rendering::Canvas& canvas, const vtkm::rendering::Camera& camera,
+View::View(const vtkm::rendering::Scene& scene,
+           const vtkm::rendering::Mapper& mapper,
+           const vtkm::rendering::Canvas& canvas,
+           const vtkm::rendering::Camera& camera,
            const vtkm::rendering::Color& backgroundColor)
   : Scene(scene)
   , MapperPointer(mapper.NewCopy())

@@ -38,15 +38,16 @@ inline VTKM_CONT ExtractStructured::ExtractStructured()
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultDataSet ExtractStructured::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter&)
 {
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
   const vtkm::cont::CoordinateSystem& coordinates =
     input.GetCoordinateSystem(this->GetActiveCellSetIndex());
 
-  vtkm::cont::DataSet output = this->Worklet.Run(cells, coordinates, this->VOI, this->SampleRate,
-                                                 this->IncludeBoundary, DeviceAdapter());
+  vtkm::cont::DataSet output = this->Worklet.Run(
+    cells, coordinates, this->VOI, this->SampleRate, this->IncludeBoundary, DeviceAdapter());
 
   return vtkm::filter::ResultDataSet(output);
 }
@@ -54,8 +55,10 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExtractStructured::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExtractStructured::DoMapField(
-  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  vtkm::filter::ResultDataSet& result,
+  const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
   // point data is copied as is because it was not collapsed

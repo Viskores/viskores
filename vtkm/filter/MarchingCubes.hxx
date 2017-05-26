@@ -82,9 +82,11 @@ inline vtkm::Float64 MarchingCubes::GetIsoValue(vtkm::Id index) const
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter& device)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -123,15 +125,24 @@ inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
   //a more efficient api
   if (this->GenerateNormals)
   {
-    outputCells = this->Worklet.Run(
-      &ivalues[0], static_cast<vtkm::Id>(ivalues.size()), vtkm::filter::ApplyPolicy(cells, policy),
-      vtkm::filter::ApplyPolicy(coords, policy), field, vertices, normals, device);
+    outputCells = this->Worklet.Run(&ivalues[0],
+                                    static_cast<vtkm::Id>(ivalues.size()),
+                                    vtkm::filter::ApplyPolicy(cells, policy),
+                                    vtkm::filter::ApplyPolicy(coords, policy),
+                                    field,
+                                    vertices,
+                                    normals,
+                                    device);
   }
   else
   {
-    outputCells = this->Worklet.Run(
-      &ivalues[0], static_cast<vtkm::Id>(ivalues.size()), vtkm::filter::ApplyPolicy(cells, policy),
-      vtkm::filter::ApplyPolicy(coords, policy), field, vertices, device);
+    outputCells = this->Worklet.Run(&ivalues[0],
+                                    static_cast<vtkm::Id>(ivalues.size()),
+                                    vtkm::filter::ApplyPolicy(cells, policy),
+                                    vtkm::filter::ApplyPolicy(coords, policy),
+                                    field,
+                                    vertices,
+                                    device);
   }
 
   if (this->GenerateNormals)
@@ -153,8 +164,10 @@ inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool MarchingCubes::DoMapField(
-  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  vtkm::filter::ResultDataSet& result,
+  const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
   if (fieldMeta.IsPointField() == false)

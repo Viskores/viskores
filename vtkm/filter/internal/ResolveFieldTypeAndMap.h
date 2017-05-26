@@ -56,10 +56,12 @@ struct ResolveFieldTypeAndMap
   vtkm::cont::RuntimeDeviceTracker Tracker;
   bool& RanProperly;
 
-  ResolveFieldTypeAndMap(Derived* derivedClass, vtkm::filter::ResultDataSet& inResult,
+  ResolveFieldTypeAndMap(Derived* derivedClass,
+                         vtkm::filter::ResultDataSet& inResult,
                          const vtkm::filter::FieldMetadata& fieldMeta,
                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                         const vtkm::cont::RuntimeDeviceTracker& tracker, bool& ran)
+                         const vtkm::cont::RuntimeDeviceTracker& tracker,
+                         bool& ran)
     : DerivedClass(derivedClass)
     , InputResult(inResult)
     , Metadata(fieldMeta)
@@ -88,9 +90,11 @@ private:
     template <typename DeviceAdapterTag>
     bool operator()(DeviceAdapterTag tag) const
     {
-      this->Valid = this->Instance.DerivedClass->DoMapField(this->Instance.InputResult, this->Field,
+      this->Valid = this->Instance.DerivedClass->DoMapField(this->Instance.InputResult,
+                                                            this->Field,
                                                             this->Instance.Metadata,
-                                                            this->Instance.Policy, tag);
+                                                            this->Instance.Policy,
+                                                            tag);
 
       return this->Valid;
     }
