@@ -33,7 +33,8 @@ public:
   typedef void ExecutionSignature(WorkIndex, _1, _2, _3);
 
   template <typename InPortalType, typename InOutPortalType, typename OutPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& index, const InPortalType& inPortal,
+  VTKM_EXEC void operator()(const vtkm::Id& index,
+                            const InPortalType& inPortal,
                             const InOutPortalType& inOutPortal,
                             const OutPortalType& outPortal) const
   {

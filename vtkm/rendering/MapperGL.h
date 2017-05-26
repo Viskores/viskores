@@ -41,8 +41,10 @@ public:
   ~MapperGL();
 
   void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
-                   const vtkm::cont::CoordinateSystem& coords, const vtkm::cont::Field& scalarField,
-                   const vtkm::rendering::ColorTable& colorTable, const vtkm::rendering::Camera&,
+                   const vtkm::cont::CoordinateSystem& coords,
+                   const vtkm::cont::Field& scalarField,
+                   const vtkm::rendering::ColorTable& colorTable,
+                   const vtkm::rendering::Camera&,
                    const vtkm::Range& scalarRange) VTKM_OVERRIDE;
 
   void StartScene() VTKM_OVERRIDE;

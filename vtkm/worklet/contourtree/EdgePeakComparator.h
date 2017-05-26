@@ -110,8 +110,12 @@ public:
   bool isJoinGraph;
 
   VTKM_CONT
-  EdgePeakComparator(ValuePortalType Values, IdPortalType ValueIndex, IdPortalType EdgeFar,
-                     IdPortalType EdgeNear, IdPortalType ArcArray, bool IsJoinGraph)
+  EdgePeakComparator(ValuePortalType Values,
+                     IdPortalType ValueIndex,
+                     IdPortalType EdgeFar,
+                     IdPortalType EdgeNear,
+                     IdPortalType ArcArray,
+                     bool IsJoinGraph)
     : values(Values)
     , valueIndex(ValueIndex)
     , edgeFar(EdgeFar)

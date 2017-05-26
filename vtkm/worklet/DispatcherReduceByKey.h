@@ -36,10 +36,12 @@ namespace worklet
 template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class DispatcherReduceByKey
   : public vtkm::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType, Device>,
-                                                   WorkletType, vtkm::worklet::WorkletReduceByKey>
+                                                   WorkletType,
+                                                   vtkm::worklet::WorkletReduceByKey>
 {
   using Superclass =
-    vtkm::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType, Device>, WorkletType,
+    vtkm::worklet::internal::DispatcherBase<DispatcherReduceByKey<WorkletType, Device>,
+                                            WorkletType,
                                             vtkm::worklet::WorkletReduceByKey>;
 
 public:

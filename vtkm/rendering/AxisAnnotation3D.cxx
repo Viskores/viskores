@@ -66,7 +66,8 @@ void AxisAnnotation3D::SetLabelFontScale(Float64 s)
   }
 }
 
-void AxisAnnotation3D::Render(const Camera& camera, const WorldAnnotator& worldAnnotator,
+void AxisAnnotation3D::Render(const Camera& camera,
+                              const WorldAnnotator& worldAnnotator,
                               Canvas& canvas)
 {
   bool infront = true;
@@ -79,9 +80,11 @@ void AxisAnnotation3D::Render(const Camera& camera, const WorldAnnotator& worldA
   unsigned int nmajor = (unsigned int)proportions.size();
   while (this->Labels.size() < nmajor)
   {
-    this->Labels.push_back(new TextAnnotationBillboard("test", this->Color,
+    this->Labels.push_back(new TextAnnotationBillboard("test",
+                                                       this->Color,
                                                        vtkm::Float32(this->FontScale),
-                                                       vtkm::Vec<vtkm::Float32, 3>(0, 0, 0), 0));
+                                                       vtkm::Vec<vtkm::Float32, 3>(0, 0, 0),
+                                                       0));
   }
 
   std::stringstream numberToString;

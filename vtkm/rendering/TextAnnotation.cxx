@@ -25,7 +25,8 @@ namespace vtkm
 namespace rendering
 {
 
-TextAnnotation::TextAnnotation(const std::string& text, const vtkm::rendering::Color& color,
+TextAnnotation::TextAnnotation(const std::string& text,
+                               const vtkm::rendering::Color& color,
                                vtkm::Float32 scale)
   : Text(text)
   , TextColor(color)

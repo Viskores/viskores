@@ -259,7 +259,8 @@ void ColorTable::AddControlPoint(vtkm::Float32 position, const vtkm::rendering::
   this->Internals->RGBPoints.push_back(detail::ColorControlPoint(position, color));
 }
 
-void ColorTable::AddControlPoint(vtkm::Float32 position, const vtkm::rendering::Color& color,
+void ColorTable::AddControlPoint(vtkm::Float32 position,
+                                 const vtkm::rendering::Color& color,
                                  vtkm::Float32 alpha)
 {
   this->Internals->RGBPoints.push_back(detail::ColorControlPoint(position, color));

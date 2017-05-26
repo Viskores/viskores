@@ -121,7 +121,8 @@ public:
   VertexDegreeUpdater() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID, const InFieldPortalType& activeEdges,
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID,
+                                const InFieldPortalType& activeEdges,
                                 const InFieldPortalType& edgeFar,
                                 const InFieldPortalType& firstEdge,
                                 const InFieldPortalType& prunesTo,

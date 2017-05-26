@@ -54,7 +54,8 @@ protected:
   vtkm::Vec<vtkm::Float32, 2> Anchor;
 
 public:
-  TextAnnotation(const std::string& text, const vtkm::rendering::Color& color,
+  TextAnnotation(const std::string& text,
+                 const vtkm::rendering::Color& color,
                  vtkm::Float32 scalar);
 
   virtual ~TextAnnotation();

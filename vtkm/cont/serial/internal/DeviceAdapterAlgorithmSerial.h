@@ -57,7 +57,8 @@ public:
   }
 
   template <typename T, typename U, class CIn, class BinaryFunctor>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue,
+  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                            U initialValue,
                             BinaryFunctor binary_functor)
   {
     typedef typename vtkm::cont::ArrayHandle<T, CIn>::template ExecutionTypes<Device>::PortalConst
@@ -66,11 +67,17 @@ public:
     internal::WrappedBinaryOperator<U, BinaryFunctor> wrappedOp(binary_functor);
     PortalIn inputPortal = input.PrepareForInput(Device());
     return std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
-                           vtkm::cont::ArrayPortalToIteratorEnd(inputPortal), initialValue,
+                           vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+                           initialValue,
                            wrappedOp);
   }
 
-  template <typename T, typename U, class KIn, class VIn, class KOut, class VOut,
+  template <typename T,
+            typename U,
+            class KIn,
+            class VIn,
+            class KOut,
+            class VOut,
             class BinaryFunctor>
   VTKM_CONT static void ReduceByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
                                     const vtkm::cont::ArrayHandle<U, VIn>& values,
@@ -181,7 +188,8 @@ public:
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
-                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal), wrappedBinaryOp);
+                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+                     wrappedBinaryOp);
 
     // Return the value at the last index in the array, which is the full sum.
     return outputPortal.Get(numberOfValues - 1);
@@ -190,7 +198,8 @@ public:
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output,
-                                   BinaryFunctor binaryFunctor, const T& initialValue)
+                                   BinaryFunctor binaryFunctor,
+                                   const T& initialValue)
   {
     typedef
       typename vtkm::cont::ArrayHandle<T, COut>::template ExecutionTypes<Device>::Portal PortalOut;
@@ -225,7 +234,8 @@ public:
 
     std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
                      vtkm::cont::ArrayPortalToIteratorEnd(outputPortal),
-                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal), wrappedBinaryOp);
+                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+                     wrappedBinaryOp);
 
     return wrappedBinaryOp(outputPortal.Get(numberOfValues - 1), lastValue);
   }
@@ -257,7 +267,11 @@ public:
   }
 
 private:
-  template <typename Vin, typename I, typename Vout, class StorageVin, class StorageI,
+  template <typename Vin,
+            typename I,
+            typename Vout,
+            class StorageVin,
+            class StorageI,
             class StorageVout>
   VTKM_CONT static void Scatter(vtkm::cont::ArrayHandle<Vin, StorageVin>& values,
                                 vtkm::cont::ArrayHandle<I, StorageI>& index,

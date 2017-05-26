@@ -196,7 +196,8 @@ struct load_through_texture<T, typename std::enable_if<UseVecTextureLoads<const 
 //this T type is valid to be loaded through multiple texture memory fetches
 template <typename T>
 struct load_through_texture<
-  T, typename std::enable_if<UseMultipleScalarTextureLoads<const T>::value>::type>
+  T,
+  typename std::enable_if<UseMultipleScalarTextureLoads<const T>::value>::type>
 {
   static const vtkm::IdComponent WillUseTexture = 1;
 

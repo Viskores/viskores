@@ -43,7 +43,8 @@ public:
   const vtkm::Id cellsPerLayer;
 
   VTKM_CONT
-  TangleField(const vtkm::Id3 dims, const vtkm::FloatDefault mins[3],
+  TangleField(const vtkm::Id3 dims,
+              const vtkm::FloatDefault mins[3],
               const vtkm::FloatDefault maxs[3])
     : xdim(dims[0])
     , ydim(dims[1])
@@ -133,8 +134,8 @@ public:
   VTKM_EXEC_CONT
   vtkm::Float32 operator()(vtkm::Vec<vtkm::Float32, 3> v) const
   {
-    vtkm::Vec<vtkm::Float32, 3> d(v[0] - this->Reference[0], v[1] - this->Reference[1],
-                                  v[2] - this->Reference[2]);
+    vtkm::Vec<vtkm::Float32, 3> d(
+      v[0] - this->Reference[0], v[1] - this->Reference[1], v[2] - this->Reference[2]);
     return vtkm::Magnitude(d);
   }
 
@@ -205,15 +206,19 @@ class MakeRadiantDataSet
 {
 public:
   typedef vtkm::cont::ArrayHandleUniformPointCoordinates CoordinateArrayHandle;
-  typedef vtkm::cont::ArrayHandleTransform<
-    vtkm::Float32, vtkm::cont::ArrayHandleUniformPointCoordinates, EuclideanNorm>
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::Float32,
+                                           vtkm::cont::ArrayHandleUniformPointCoordinates,
+                                           EuclideanNorm>
     DataArrayHandle;
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::Id, vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::Id,
+                                           vtkm::cont::ArrayHandleCounting<vtkm::Id>,
                                            CubeGridConnectivity>
     ConnectivityArrayHandle;
 
-  typedef vtkm::cont::CellSetSingleType<vtkm::cont::ArrayHandleTransform<
-    vtkm::Id, vtkm::cont::ArrayHandleCounting<vtkm::Id>, CubeGridConnectivity>::StorageTag>
+  typedef vtkm::cont::CellSetSingleType<
+    vtkm::cont::ArrayHandleTransform<vtkm::Id,
+                                     vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+                                     CubeGridConnectivity>::StorageTag>
     CellSet;
 
   vtkm::cont::DataSet Make3DRadiantDataSet(vtkm::IdComponent dim = 5);
@@ -234,7 +239,8 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   const vtkm::IdComponent nCells = dim * dim * dim;
 
   vtkm::Float32 spacing = vtkm::Float32(1. / dim);
-  CoordinateArrayHandle coordinates(vtkm::Id3(dim + 1, dim + 1, dim + 1), CoordType(-.5, -.5, -.5),
+  CoordinateArrayHandle coordinates(vtkm::Id3(dim + 1, dim + 1, dim + 1),
+                                    CoordType(-.5, -.5, -.5),
                                     CoordType(spacing, spacing, spacing));
 
   DataArrayHandle distanceToOrigin(coordinates);
@@ -247,9 +253,11 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   //Set point scalar
-  dataSet.AddField(vtkm::cont::Field("distanceToOrigin", vtkm::cont::Field::ASSOC_POINTS,
+  dataSet.AddField(vtkm::cont::Field("distanceToOrigin",
+                                     vtkm::cont::Field::ASSOC_POINTS,
                                      vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
-  dataSet.AddField(vtkm::cont::Field("distanceToOther", vtkm::cont::Field::ASSOC_POINTS,
+  dataSet.AddField(vtkm::cont::Field("distanceToOther",
+                                     vtkm::cont::Field::ASSOC_POINTS,
                                      vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
   CellSet cellSet("cells");
@@ -282,8 +290,14 @@ void TestMarchingCubesUniformGrid()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-  isosurfaceFilter.Run(&contourValue, 1, cellSet, dataSet.GetCoordinateSystem(), fieldArray,
-                       verticesArray, normalsArray, DeviceAdapter());
+  isosurfaceFilter.Run(&contourValue,
+                       1,
+                       cellSet,
+                       dataSet.GetCoordinateSystem(),
+                       fieldArray,
+                       verticesArray,
+                       normalsArray,
+                       DeviceAdapter());
 
   isosurfaceFilter.MapFieldOntoIsosurface(fieldArray, scalarsArray, DeviceAdapter());
 
@@ -329,8 +343,14 @@ void TestMarchingCubesExplicit()
   vtkm::worklet::MarchingCubes marchingCubes;
   marchingCubes.SetMergeDuplicatePoints(false);
 
-  marchingCubes.Run(&contourValue, 1, cellSet, dataSet.GetCoordinateSystem(), contourArray,
-                    vertices, normals, DeviceAdapter());
+  marchingCubes.Run(&contourValue,
+                    1,
+                    cellSet,
+                    dataSet.GetCoordinateSystem(),
+                    contourArray,
+                    vertices,
+                    normals,
+                    DeviceAdapter());
 
   DataHandle scalars;
 

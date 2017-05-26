@@ -33,7 +33,8 @@ inline VTKM_CONT VertexClustering::VertexClustering()
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultDataSet VertexClustering::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& tag)
 {
   // todo this code needs to obey the policy for what storage types
@@ -46,8 +47,10 @@ inline VTKM_CONT vtkm::filter::ResultDataSet VertexClustering::DoExecute(
 
   vtkm::cont::DataSet outDataSet =
     clustering.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
-                   vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy), bounds,
-                   this->GetNumberOfDivisions(), tag);
+                   vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy),
+                   bounds,
+                   this->GetNumberOfDivisions(),
+                   tag);
 
   return vtkm::filter::ResultDataSet(outDataSet);
 }

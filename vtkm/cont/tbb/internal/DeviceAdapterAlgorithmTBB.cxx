@@ -26,7 +26,8 @@ namespace cont
 {
 
 void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::ScheduleTask(
-  vtkm::exec::tbb::internal::TaskTiling1D& functor, vtkm::Id size)
+  vtkm::exec::tbb::internal::TaskTiling1D& functor,
+  vtkm::Id size)
 {
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];
@@ -46,7 +47,8 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::ScheduleTask(
 }
 
 void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::ScheduleTask(
-  vtkm::exec::tbb::internal::TaskTiling3D& functor, vtkm::Id3 size)
+  vtkm::exec::tbb::internal::TaskTiling3D& functor,
+  vtkm::Id3 size)
 {
   static const vtkm::UInt32 TBB_GRAIN_SIZE_3D[3] = { 1, 4, 256 };
   const vtkm::Id MESSAGE_SIZE = 1024;
@@ -57,8 +59,15 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::ScheduleTask(
 
   //memory is generally setup in a way that iterating the first range
   //in the tightest loop has the best cache coherence.
-  ::tbb::blocked_range3d<vtkm::Id> range(0, size[2], TBB_GRAIN_SIZE_3D[0], 0, size[1],
-                                         TBB_GRAIN_SIZE_3D[1], 0, size[0], TBB_GRAIN_SIZE_3D[2]);
+  ::tbb::blocked_range3d<vtkm::Id> range(0,
+                                         size[2],
+                                         TBB_GRAIN_SIZE_3D[0],
+                                         0,
+                                         size[1],
+                                         TBB_GRAIN_SIZE_3D[1],
+                                         0,
+                                         size[0],
+                                         TBB_GRAIN_SIZE_3D[2]);
   ::tbb::parallel_for(range, [&](const ::tbb::blocked_range3d<vtkm::Id>& r) {
     for (vtkm::Id k = r.pages().begin(); k != r.pages().end(); ++k)
     {

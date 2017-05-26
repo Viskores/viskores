@@ -30,7 +30,9 @@ namespace vtkm
 namespace exec
 {
 
-template <typename ShapePortalType, typename NumIndicesPortalType, typename ConnectivityPortalType,
+template <typename ShapePortalType,
+          typename NumIndicesPortalType,
+          typename ConnectivityPortalType,
           typename IndexOffsetPortalType>
 class ConnectivityExplicit
 {

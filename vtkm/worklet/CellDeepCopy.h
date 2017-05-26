@@ -49,13 +49,16 @@ struct CellDeepCopy
 
   struct PassCellStructure : vtkm::worklet::WorkletMapPointToCell
   {
-    typedef void ControlSignature(CellSetIn inputTopology, FieldOut<> shapes,
+    typedef void ControlSignature(CellSetIn inputTopology,
+                                  FieldOut<> shapes,
                                   FieldOut<> pointIndices);
     typedef void ExecutionSignature(CellShape, PointIndices, _2, _3);
 
     template <typename CellShape, typename InPointIndexType, typename OutPointIndexType>
-    VTKM_EXEC void operator()(const CellShape& inShape, const InPointIndexType& inPoints,
-                              vtkm::UInt8& outShape, OutPointIndexType& outPoints) const
+    VTKM_EXEC void operator()(const CellShape& inShape,
+                              const InPointIndexType& inPoints,
+                              vtkm::UInt8& outShape,
+                              OutPointIndexType& outPoints) const
     {
       outShape = inShape.Id;
 
@@ -68,13 +71,18 @@ struct CellDeepCopy
     }
   };
 
-  template <typename InCellSetType, typename ShapeStorage, typename NumIndicesStorage,
-            typename ConnectivityStorage, typename OffsetsStorage, typename Device>
-  VTKM_CONT static void Run(
-    const InCellSetType& inCellSet,
-    vtkm::cont::CellSetExplicit<ShapeStorage, NumIndicesStorage, ConnectivityStorage,
-                                OffsetsStorage>& outCellSet,
-    Device)
+  template <typename InCellSetType,
+            typename ShapeStorage,
+            typename NumIndicesStorage,
+            typename ConnectivityStorage,
+            typename OffsetsStorage,
+            typename Device>
+  VTKM_CONT static void Run(const InCellSetType& inCellSet,
+                            vtkm::cont::CellSetExplicit<ShapeStorage,
+                                                        NumIndicesStorage,
+                                                        ConnectivityStorage,
+                                                        OffsetsStorage>& outCellSet,
+                            Device)
   {
     VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(InCellSetType);
 
@@ -92,12 +100,12 @@ struct CellDeepCopy
     connectivity.Allocate(connectivitySize);
 
     vtkm::worklet::DispatcherMapTopology<PassCellStructure, Device> passDispatcher;
-    passDispatcher.Invoke(inCellSet, shapes,
-                          vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
+    passDispatcher.Invoke(
+      inCellSet, shapes, vtkm::cont::make_ArrayHandleGroupVecVariable(connectivity, offsets));
 
-    vtkm::cont::CellSetExplicit<ShapeStorage, NumIndicesStorage, ConnectivityStorage,
-                                OffsetsStorage>
-      newCellSet(inCellSet.GetName());
+    vtkm::cont::
+      CellSetExplicit<ShapeStorage, NumIndicesStorage, ConnectivityStorage, OffsetsStorage>
+        newCellSet(inCellSet.GetName());
     newCellSet.Fill(inCellSet.GetNumberOfPoints(), shapes, numIndices, connectivity, offsets);
     outCellSet = newCellSet;
   }

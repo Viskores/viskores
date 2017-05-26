@@ -105,12 +105,13 @@ void OutputArrayDebug(const vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>& outputArra
 }
 //----------------------------------------------------------------------------
 template <typename I, typename T, int S>
-void OutputArrayDebug(const vtkm::cont::ArrayHandlePermutation<
-                        I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>& outputArray,
-                      const std::string& name)
+void OutputArrayDebug(
+  const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>&
+    outputArray,
+  const std::string& name)
 {
-  typedef typename vtkm::cont::ArrayHandlePermutation<
-    I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>::PortalConstControl PortalConstType;
+  typedef typename vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>::
+    PortalConstControl PortalConstType;
   PortalConstType readPortal = outputArray.GetPortalConstControl();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
@@ -135,9 +136,10 @@ void OutputArrayDebug(const vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>& vtkmNotUse
 }
 //----------------------------------------------------------------------------
 template <typename I, typename T, int S>
-void OutputArrayDebug(const vtkm::cont::ArrayHandlePermutation<
-                        I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>& vtkmNotUsed(outputArray),
-                      const std::string& vtkmNotUsed(name))
+void OutputArrayDebug(
+  const vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>&
+    vtkmNotUsed(outputArray),
+  const std::string& vtkmNotUsed(name))
 {
 }
 #endif
@@ -175,7 +177,8 @@ struct KernelSplatterFilterUniformGrid
     zero_voxel() {}
 
     template <typename T>
-    VTKM_EXEC_CONT void operator()(const vtkm::Id&, const vtkm::Id& vtkmNotUsed(index),
+    VTKM_EXEC_CONT void operator()(const vtkm::Id&,
+                                   const vtkm::Id& vtkmNotUsed(index),
                                    T& voxel_value) const
     {
       voxel_value = T(0);
@@ -197,13 +200,21 @@ struct KernelSplatterFilterUniformGrid
     Kernel kernel_;
 
   public:
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>,
-                                  FieldOut<>, FieldOut<>, FieldOut<>);
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  FieldOut<>);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
-    GetFootprint(const vtkm::Vec<vtkm::Float64, 3>& o, const vtkm::Vec<vtkm::Float64, 3>& s,
-                 const vtkm::Id3& dim, const Kernel& kernel)
+    GetFootprint(const vtkm::Vec<vtkm::Float64, 3>& o,
+                 const vtkm::Vec<vtkm::Float64, 3>& s,
+                 const vtkm::Id3& dim,
+                 const Kernel& kernel)
       : origin_(o)
       , spacing_(s)
       , VolumeDimensions(dim)
@@ -212,9 +223,14 @@ struct KernelSplatterFilterUniformGrid
     }
 
     template <typename T, typename T2>
-    VTKM_EXEC_CONT void operator()(const T& x, const T& y, const T& z, const T2& h,
-                                   vtkm::Vec<vtkm::Float64, 3>& splatPoint, vtkm::Id3& minFootprint,
-                                   vtkm::Id3& maxFootprint, vtkm::Id& footprintSize) const
+    VTKM_EXEC_CONT void operator()(const T& x,
+                                   const T& y,
+                                   const T& z,
+                                   const T2& h,
+                                   vtkm::Vec<vtkm::Float64, 3>& splatPoint,
+                                   vtkm::Id3& minFootprint,
+                                   vtkm::Id3& maxFootprint,
+                                   vtkm::Id& footprintSize) const
     {
       PointType splat, min, max;
       vtkm::Vec<vtkm::Float64, 3> sample = vtkm::make_Vec(x, y, z);
@@ -257,7 +273,9 @@ struct KernelSplatterFilterUniformGrid
     ComputeLocalNeighborId() {}
 
     template <typename T>
-    VTKM_EXEC_CONT void operator()(const T& modulus, const T& offset, const vtkm::Id& index,
+    VTKM_EXEC_CONT void operator()(const T& modulus,
+                                   const T& offset,
+                                   const vtkm::Id& index,
                                    T& localId) const
     {
       localId = (index - offset) % modulus;
@@ -280,13 +298,21 @@ struct KernelSplatterFilterUniformGrid
     Kernel kernel;
 
   public:
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>,
-                                  FieldOut<>, FieldOut<>);
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldOut<>,
+                                  FieldOut<>);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
-    GetSplatValue(const vtkm::Vec<vtkm::Float64, 3>& orig, const vtkm::Vec<vtkm::Float64, 3>& s,
-                  const vtkm::Id3& dim, const Kernel& k)
+    GetSplatValue(const vtkm::Vec<vtkm::Float64, 3>& orig,
+                  const vtkm::Vec<vtkm::Float64, 3>& s,
+                  const vtkm::Id3& dim,
+                  const Kernel& k)
       : spacing_(s)
       , origin_(orig)
       , VolumeDim(dim)
@@ -295,9 +321,13 @@ struct KernelSplatterFilterUniformGrid
     }
 
     template <typename T, typename T2, typename P>
-    VTKM_EXEC_CONT void operator()(const vtkm::Vec<P, 3>& splatPoint, const T& minBound,
-                                   const T& maxBound, const T2& kernel_H, const T2& scale,
-                                   const vtkm::Id localNeighborId, vtkm::Id& neighborVoxelId,
+    VTKM_EXEC_CONT void operator()(const vtkm::Vec<P, 3>& splatPoint,
+                                   const T& minBound,
+                                   const T& maxBound,
+                                   const T2& kernel_H,
+                                   const T2& scale,
+                                   const vtkm::Id localNeighborId,
+                                   vtkm::Id& neighborVoxelId,
                                    vtkm::Float32& splatValue) const
     {
       vtkm::Id yRange = 1 + maxBound[1] - minBound[1];
@@ -340,7 +370,8 @@ struct KernelSplatterFilterUniformGrid
     UpdateVoxelSplats() {}
 
     VTKM_EXEC_CONT
-    void operator()(const vtkm::Id& voxelIndex, const vtkm::Float64& splatValue,
+    void operator()(const vtkm::Id& voxelIndex,
+                    const vtkm::Float64& splatValue,
                     vtkm::exec::ExecutionWholeArray<vtkm::Float32>& execArg) const
     {
       execArg.Set(voxelIndex, static_cast<vtkm::Float32>(splatValue));
@@ -353,9 +384,11 @@ struct KernelSplatterFilterUniformGrid
   // @TODO, get the origin_ and spacing_ from the dataset coordinates
   // instead of requiring them to be passed as parameters.
   //-----------------------------------------------------------------------
-  KernelSplatterFilterUniformGrid(const vtkm::Id3& dims, vtkm::Vec<vtkm::FloatDefault, 3> origin,
+  KernelSplatterFilterUniformGrid(const vtkm::Id3& dims,
+                                  vtkm::Vec<vtkm::FloatDefault, 3> origin,
                                   vtkm::Vec<vtkm::FloatDefault, 3> spacing,
-                                  const vtkm::cont::DataSet& dataset, const Kernel& kernel)
+                                  const vtkm::cont::DataSet& dataset,
+                                  const Kernel& kernel)
     : dims_(dims)
     , origin_(origin)
     , spacing_(spacing)
@@ -403,8 +436,8 @@ struct KernelSplatterFilterUniformGrid
     vtkm::worklet::DispatcherMapField<GetFootprint> footprintDispatcher(footprint_worklet);
 
     START_TIMER_BLOCK(GetFootprint)
-    footprintDispatcher.Invoke(xValues, yValues, zValues, rValues, splatPoints, footprintMin,
-                               footprintMax, numNeighbors);
+    footprintDispatcher.Invoke(
+      xValues, yValues, zValues, rValues, splatPoints, footprintMin, footprintMax, numNeighbors);
     END_TIMER_BLOCK(GetFootprint)
 
     debug::OutputArrayDebug(numNeighbors, "numNeighbours");
@@ -446,8 +479,8 @@ struct KernelSplatterFilterUniformGrid
     IdHandleType neighbor2SplatId;
     IdCountingType countingArray(vtkm::Id(0), 1, vtkm::Id(totalSplatSize));
     START_TIMER_BLOCK(Upper_bounds)
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::UpperBounds(numNeighborsPrefixSum,
-                                                                   countingArray, neighbor2SplatId);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::UpperBounds(
+      numNeighborsPrefixSum, countingArray, neighbor2SplatId);
     END_TIMER_BLOCK(Upper_bounds)
     countingArray.ReleaseResources();
     debug::OutputArrayDebug(neighbor2SplatId, "neighbor2SplatId");
@@ -499,8 +532,14 @@ struct KernelSplatterFilterUniformGrid
     vtkm::worklet::DispatcherMapField<GetSplatValue> splatterDispatcher(splatterDispatcher_worklet);
 
     START_TIMER_BLOCK(GetSplatValue)
-    splatterDispatcher.Invoke(ptSplatPoints, ptFootprintMins, ptFootprintMaxs, radii, scale,
-                              localNeighborIds, neighborVoxelIds, splatValues);
+    splatterDispatcher.Invoke(ptSplatPoints,
+                              ptFootprintMins,
+                              ptFootprintMaxs,
+                              radii,
+                              scale,
+                              localNeighborIds,
+                              neighborVoxelIds,
+                              splatValues);
     END_TIMER_BLOCK(GetSplatValue)
 
     debug::OutputArrayDebug(splatValues, "splatValues");
@@ -555,7 +594,8 @@ struct KernelSplatterFilterUniformGrid
     vtkm::worklet::DispatcherMapField<UpdateVoxelSplats> scatterDispatcher;
 
     START_TIMER_BLOCK(UpdateVoxelSplats)
-    scatterDispatcher.Invoke(uniqueVoxelIds, voxelSplatSums,
+    scatterDispatcher.Invoke(uniqueVoxelIds,
+                             voxelSplatSums,
                              vtkm::exec::ExecutionWholeArray<vtkm::Float32>(scalarSplatOutput));
     END_TIMER_BLOCK(UpdateVoxelSplats)
     debug::OutputArrayDebug(scalarSplatOutput, "scalarSplatOutput");

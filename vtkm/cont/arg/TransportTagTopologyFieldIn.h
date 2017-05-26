@@ -81,7 +81,8 @@ inline static vtkm::Id TopologyDomainSize(const vtkm::cont::CellSet& cellSet,
 } // namespace detail
 
 template <typename TopologyElementTag, typename ContObjectType, typename Device>
-struct Transport<vtkm::cont::arg::TransportTagTopologyFieldIn<TopologyElementTag>, ContObjectType,
+struct Transport<vtkm::cont::arg::TransportTagTopologyFieldIn<TopologyElementTag>,
+                 ContObjectType,
                  Device>
 {
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
@@ -89,8 +90,10 @@ struct Transport<vtkm::cont::arg::TransportTagTopologyFieldIn<TopologyElementTag
   typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst ExecObjectType;
 
   VTKM_CONT
-  ExecObjectType operator()(const ContObjectType& object, const vtkm::cont::CellSet& inputDomain,
-                            vtkm::Id, vtkm::Id) const
+  ExecObjectType operator()(const ContObjectType& object,
+                            const vtkm::cont::CellSet& inputDomain,
+                            vtkm::Id,
+                            vtkm::Id) const
   {
     if (object.GetNumberOfValues() != detail::TopologyDomainSize(inputDomain, TopologyElementTag()))
     {

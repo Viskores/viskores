@@ -46,7 +46,14 @@ public:
     int adv;
     int kern[256];
     Character() { ResetKerning(); }
-    Character(const std::string& id_, char c_, int offx_, int offy_, int x_, int y_, int w_, int h_,
+    Character(const std::string& id_,
+              char c_,
+              int offx_,
+              int offy_,
+              int x_,
+              int y_,
+              int w_,
+              int h_,
               int adv_)
       : id(id_)
       , c(c_)
@@ -104,9 +111,17 @@ public:
 
   vtkm::Float32 GetTextWidth(const std::string& text) const;
 
-  void GetCharPolygon(char character, vtkm::Float32& x, vtkm::Float32& y, vtkm::Float32& vl,
-                      vtkm::Float32& vr, vtkm::Float32& vt, vtkm::Float32& vb, vtkm::Float32& tl,
-                      vtkm::Float32& tr, vtkm::Float32& tt, vtkm::Float32& tb,
+  void GetCharPolygon(char character,
+                      vtkm::Float32& x,
+                      vtkm::Float32& y,
+                      vtkm::Float32& vl,
+                      vtkm::Float32& vr,
+                      vtkm::Float32& vt,
+                      vtkm::Float32& vb,
+                      vtkm::Float32& tl,
+                      vtkm::Float32& tr,
+                      vtkm::Float32& tt,
+                      vtkm::Float32& tb,
                       char nextchar = 0) const;
 };
 }

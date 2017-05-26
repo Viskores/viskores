@@ -54,14 +54,16 @@ enum BenchmarkName
 class AveragePointToCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(FieldInPoint<> inPoints, CellSetIn cellset,
+  typedef void ControlSignature(FieldInPoint<> inPoints,
+                                CellSetIn cellset,
                                 FieldOutCell<> outCells);
   typedef void ExecutionSignature(_1, PointCount, _3);
   typedef _2 InputDomain;
 
   template <typename PointValueVecType, typename OutType>
   VTKM_EXEC void operator()(const PointValueVecType& pointValues,
-                            const vtkm::IdComponent& numPoints, OutType& average) const
+                            const vtkm::IdComponent& numPoints,
+                            OutType& average) const
   {
     OutType sum = static_cast<OutType>(pointValues[0]);
     for (vtkm::IdComponent pointIndex = 1; pointIndex < numPoints; ++pointIndex)
@@ -81,7 +83,8 @@ public:
   typedef _2 InputDomain;
 
   template <typename CellVecType, typename OutType>
-  VTKM_EXEC void operator()(const CellVecType& cellValues, OutType& avgVal,
+  VTKM_EXEC void operator()(const CellVecType& cellValues,
+                            OutType& avgVal,
                             const vtkm::IdComponent& numCellIDs) const
   {
     //simple functor that returns the average cell Value.
@@ -99,7 +102,8 @@ template <typename T>
 class Classification : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(FieldInPoint<> inNodes, CellSetIn cellset,
+  typedef void ControlSignature(FieldInPoint<> inNodes,
+                                CellSetIn cellset,
                                 FieldOutCell<IdComponentType> outCaseId);
   typedef void ExecutionSignature(_1, _3);
   typedef _2 InputDomain;

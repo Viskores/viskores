@@ -64,7 +64,10 @@ class BlackScholes : public vtkm::worklet::WorkletMapField
   T Volatility;
 
 public:
-  typedef void ControlSignature(FieldIn<Scalar>, FieldIn<Scalar>, FieldIn<Scalar>, FieldOut<Scalar>,
+  typedef void ControlSignature(FieldIn<Scalar>,
+                                FieldIn<Scalar>,
+                                FieldIn<Scalar>,
+                                FieldOut<Scalar>,
                                 FieldOut<Scalar>);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
 
@@ -99,8 +102,8 @@ public:
   }
 
   template <typename U, typename V, typename W>
-  VTKM_EXEC void operator()(const U& sp, const V& os, const W& oy, T& callResult,
-                            T& putResult) const
+  VTKM_EXEC void operator()(const U& sp, const V& os, const W& oy, T& callResult, T& putResult)
+    const
   {
     const T stockPrice = static_cast<T>(sp);
     const T optionStrike = static_cast<T>(os);
@@ -226,13 +229,15 @@ class InterpolateField : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn<Id2Type> interpolation_ids,
-                                FieldIn<Scalar> interpolation_weights, WholeArrayIn<> inputField,
+                                FieldIn<Scalar> interpolation_weights,
+                                WholeArrayIn<> inputField,
                                 FieldOut<> output);
   typedef void ExecutionSignature(_1, _2, _3, _4);
   typedef _1 InputDomain;
 
   template <typename WeightType, typename T, typename S, typename D>
-  VTKM_EXEC void operator()(const vtkm::Id2& low_high, const WeightType& weight,
+  VTKM_EXEC void operator()(const vtkm::Id2& low_high,
+                            const WeightType& weight,
                             const vtkm::exec::ExecutionWholeArrayConst<T, S, D>& inPortal,
                             T& result) const
   {
@@ -241,8 +246,10 @@ public:
   }
 
   template <typename WeightType, typename T, typename S, typename D, typename U>
-  VTKM_EXEC void operator()(const vtkm::Id2&, const WeightType&,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, S, D>&, U&) const
+  VTKM_EXEC void operator()(const vtkm::Id2&,
+                            const WeightType&,
+                            const vtkm::exec::ExecutionWholeArrayConst<T, S, D>&,
+                            U&) const
   {
     //the inPortal and result need to be the same type so this version only
     //exists to generate code when using dynamic arrays
@@ -300,9 +307,10 @@ struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>
 {
 };
 
-struct InterpValueTypes
-  : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64, vtkm::Vec<vtkm::Float32, 3>,
-                      vtkm::Vec<vtkm::Float64, 3>>
+struct InterpValueTypes : vtkm::ListTagBase<vtkm::Float32,
+                                            vtkm::Float64,
+                                            vtkm::Vec<vtkm::Float32, 3>,
+                                            vtkm::Vec<vtkm::Float64, 3>>
 {
 };
 using StorageListTag = ::vtkm::cont::StorageListTagBasic;
@@ -371,8 +379,8 @@ private:
       BlackScholes<Value> worklet(RISKFREE, VOLATILITY);
       vtkm::worklet::DispatcherMapField<BlackScholes<Value>> dispatcher(worklet);
 
-      dispatcher.Invoke(this->StockPrice, this->OptionStrike, this->OptionYears, callResultHandle,
-                        putResultHandle);
+      dispatcher.Invoke(
+        this->StockPrice, this->OptionStrike, this->OptionYears, callResultHandle, putResultHandle);
 
       return timer.GetElapsedTime();
     }

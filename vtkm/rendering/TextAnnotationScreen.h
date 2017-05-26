@@ -34,8 +34,10 @@ protected:
   vtkm::Float32 Angle;
 
 public:
-  TextAnnotationScreen(const std::string& text, const vtkm::rendering::Color& color,
-                       vtkm::Float32 scale, const vtkm::Vec<vtkm::Float32, 2>& position,
+  TextAnnotationScreen(const std::string& text,
+                       const vtkm::rendering::Color& color,
+                       vtkm::Float32 scale,
+                       const vtkm::Vec<vtkm::Float32, 2>& position,
                        vtkm::Float32 angleDegrees = 0);
 
   ~TextAnnotationScreen();

@@ -41,7 +41,8 @@ struct Actor::InternalsType
   VTKM_CONT
   InternalsType(const vtkm::cont::DynamicCellSet& cells,
                 const vtkm::cont::CoordinateSystem& coordinates,
-                const vtkm::cont::Field& scalarField, const vtkm::rendering::ColorTable& colorTable)
+                const vtkm::cont::Field& scalarField,
+                const vtkm::rendering::ColorTable& colorTable)
     : Cells(cells)
     , Coordinates(coordinates)
     , ScalarField(scalarField)
@@ -51,7 +52,8 @@ struct Actor::InternalsType
 };
 
 Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
-             const vtkm::cont::CoordinateSystem& coordinates, const vtkm::cont::Field& scalarField,
+             const vtkm::cont::CoordinateSystem& coordinates,
+             const vtkm::cont::Field& scalarField,
              const vtkm::rendering::ColorTable& colorTable)
   : Internals(new InternalsType(cells, coordinates, scalarField, colorTable))
 {
@@ -61,13 +63,17 @@ Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
   this->Internals->SpatialBounds = coordinates.GetBounds();
 }
 
-void Actor::Render(vtkm::rendering::Mapper& mapper, vtkm::rendering::Canvas& canvas,
+void Actor::Render(vtkm::rendering::Mapper& mapper,
+                   vtkm::rendering::Canvas& canvas,
                    const vtkm::rendering::Camera& camera) const
 {
   mapper.SetCanvas(&canvas);
   mapper.SetActiveColorTable(this->Internals->ColorTable);
-  mapper.RenderCells(this->Internals->Cells, this->Internals->Coordinates,
-                     this->Internals->ScalarField, this->Internals->ColorTable, camera,
+  mapper.RenderCells(this->Internals->Cells,
+                     this->Internals->Coordinates,
+                     this->Internals->ScalarField,
+                     this->Internals->ColorTable,
+                     camera,
                      this->Internals->ScalarRange);
 }
 

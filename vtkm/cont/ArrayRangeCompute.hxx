@@ -90,7 +90,8 @@ struct ArrayRangeComputeFunctor
 
 template <typename ArrayHandleType>
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
-  const ArrayHandleType& input, vtkm::cont::RuntimeDeviceTracker tracker)
+  const ArrayHandleType& input,
+  vtkm::cont::RuntimeDeviceTracker tracker)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
@@ -108,7 +109,8 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
 
 template <typename ArrayHandleType>
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const ArrayHandleType& input, vtkm::cont::RuntimeDeviceTracker tracker)
+  const ArrayHandleType& input,
+  vtkm::cont::RuntimeDeviceTracker tracker)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 

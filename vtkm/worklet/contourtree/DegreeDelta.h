@@ -98,7 +98,8 @@ public:
   }
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& sortID, const InFieldPortalType& sortVector,
+  VTKM_EXEC void operator()(const vtkm::Id& sortID,
+                            const InFieldPortalType& sortVector,
                             const OutFieldPortalType& candidate) const
   {
     vtkm::Id iCandidate = sortVector.Get(sortID);

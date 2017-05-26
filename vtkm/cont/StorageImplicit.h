@@ -151,7 +151,8 @@ public:
     PortalType portal = this->Storage->GetPortalConst();
 
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-              vtkm::cont::ArrayPortalToIteratorEnd(portal), dest);
+              vtkm::cont::ArrayPortalToIteratorEnd(portal),
+              dest);
   }
 
   VTKM_CONT

@@ -678,11 +678,12 @@ struct TypeTestFunctor
   }
 };
 
-struct TypesToTest
-  : vtkm::ListTagJoin<vtkm::testing::Testing::TypeListTagExemplarTypes,
-                      vtkm::ListTagBase<vtkm::Vec<vtkm::FloatDefault, 6>, vtkm::Vec<vtkm::Id, 4>,
-                                        vtkm::Vec<unsigned char, 4>, vtkm::Vec<vtkm::Id, 1>,
-                                        vtkm::Vec<vtkm::Float64, 1>>>
+struct TypesToTest : vtkm::ListTagJoin<vtkm::testing::Testing::TypeListTagExemplarTypes,
+                                       vtkm::ListTagBase<vtkm::Vec<vtkm::FloatDefault, 6>,
+                                                         vtkm::Vec<vtkm::Id, 4>,
+                                                         vtkm::Vec<unsigned char, 4>,
+                                                         vtkm::Vec<vtkm::Id, 1>,
+                                                         vtkm::Vec<vtkm::Float64, 1>>>
 {
 };
 

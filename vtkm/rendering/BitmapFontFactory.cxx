@@ -5989,7 +5989,8 @@ vtkm::rendering::BitmapFont BitmapFontFactory::CreateLiberation2Sans()
   font.PadR = 16;
   font.PadT = 14;
   font.PadB = 14;
-  font.RawImageFileData.insert(font.RawImageFileData.begin(), Liberation2Sans_rawimage,
+  font.RawImageFileData.insert(font.RawImageFileData.begin(),
+                               Liberation2Sans_rawimage,
                                Liberation2Sans_rawimage + Liberation2Sans_imagelength);
   for (int i = 0; i < 95; i++)
   {

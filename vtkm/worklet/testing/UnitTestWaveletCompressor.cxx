@@ -41,8 +41,13 @@ public:
   typedef void ExecutionSignature(_1, WorkIndex);
 
   VTKM_EXEC
-  GaussianWorklet2D(vtkm::Id dx, vtkm::Id dy, vtkm::Float64 a, vtkm::Float64 x, vtkm::Float64 y,
-                    vtkm::Float64 sx, vtkm::Float64 xy)
+  GaussianWorklet2D(vtkm::Id dx,
+                    vtkm::Id dy,
+                    vtkm::Float64 a,
+                    vtkm::Float64 x,
+                    vtkm::Float64 y,
+                    vtkm::Float64 sx,
+                    vtkm::Float64 xy)
     : dimX(dx)
     , dimY(dy)
     , amp(a)
@@ -148,7 +153,9 @@ template <typename ArrayType>
 void FillArray2D(ArrayType& array, vtkm::Id dimX, vtkm::Id dimY)
 {
   typedef vtkm::worklet::wavelets::GaussianWorklet2D WorkletType;
-  WorkletType worklet(dimX, dimY, 100.0,
+  WorkletType worklet(dimX,
+                      dimY,
+                      100.0,
                       static_cast<vtkm::Float64>(dimX) / 2.0,  // center
                       static_cast<vtkm::Float64>(dimY) / 2.0,  // center
                       static_cast<vtkm::Float64>(dimX) / 4.0,  // spread
@@ -202,8 +209,8 @@ void TestDecomposeReconstruct3D(vtkm::Float64 cratio)
 
   // Decompose
   vtkm::cont::Timer<> timer;
-  computationTime = compressor.WaveDecompose3D(inputArray, nLevels, sigX, sigY, sigZ, outputArray,
-                                               false, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  computationTime = compressor.WaveDecompose3D(
+    inputArray, nLevels, sigX, sigY, sigZ, outputArray, false, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Decompose time         = " << elapsedTime1 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
@@ -217,9 +224,14 @@ void TestDecomposeReconstruct3D(vtkm::Float64 cratio)
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float32> reconstructArray;
   timer.Reset();
-  computationTime =
-    compressor.WaveReconstruct3D(outputArray, nLevels, sigX, sigY, sigZ, reconstructArray, false,
-                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  computationTime = compressor.WaveReconstruct3D(outputArray,
+                                                 nLevels,
+                                                 sigX,
+                                                 sigY,
+                                                 sigZ,
+                                                 reconstructArray,
+                                                 false,
+                                                 VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   elapsedTime3 = timer.GetElapsedTime();
   std::cout << "Reconstruction time    = " << elapsedTime3 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
@@ -228,8 +240,8 @@ void TestDecomposeReconstruct3D(vtkm::Float64 cratio)
 
   outputArray.ReleaseResources();
 
-  compressor.EvaluateReconstruction(inputArray, reconstructArray,
-                                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  compressor.EvaluateReconstruction(
+    inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   timer.Reset();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
@@ -271,8 +283,8 @@ void TestDecomposeReconstruct2D(vtkm::Float64 cratio)
 
   // Decompose
   vtkm::cont::Timer<> timer;
-  computationTime = compressor.WaveDecompose2D(inputArray, nLevels, sigX, sigY, outputArray, L,
-                                               VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  computationTime = compressor.WaveDecompose2D(
+    inputArray, nLevels, sigX, sigY, outputArray, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   elapsedTime1 = timer.GetElapsedTime();
   std::cout << "Decompose time         = " << elapsedTime1 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
@@ -286,8 +298,8 @@ void TestDecomposeReconstruct2D(vtkm::Float64 cratio)
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
-  computationTime = compressor.WaveReconstruct2D(outputArray, nLevels, sigX, sigY, reconstructArray,
-                                                 L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  computationTime = compressor.WaveReconstruct2D(
+    outputArray, nLevels, sigX, sigY, reconstructArray, L, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   elapsedTime3 = timer.GetElapsedTime();
   std::cout << "Reconstruction time    = " << elapsedTime3 << std::endl;
   std::cout << "  ->computation time   = " << computationTime << std::endl;
@@ -296,8 +308,8 @@ void TestDecomposeReconstruct2D(vtkm::Float64 cratio)
 
   outputArray.ReleaseResources();
 
-  compressor.EvaluateReconstruction(inputArray, reconstructArray,
-                                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  compressor.EvaluateReconstruction(
+    inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   timer.Reset();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)
@@ -353,13 +365,13 @@ void TestDecomposeReconstruct1D(vtkm::Float64 cratio)
   // Reconstruct
   vtkm::cont::ArrayHandle<vtkm::Float64> reconstructArray;
   timer.Reset();
-  compressor.WaveReconstruct(outputArray, nLevels, L, reconstructArray,
-                             VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  compressor.WaveReconstruct(
+    outputArray, nLevels, L, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   elapsedTime = timer.GetElapsedTime();
   std::cout << "Reconstruction time    = " << elapsedTime << std::endl;
 
-  compressor.EvaluateReconstruction(inputArray, reconstructArray,
-                                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  compressor.EvaluateReconstruction(
+    inputArray, reconstructArray, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   timer.Reset();
   for (vtkm::Id i = 0; i < reconstructArray.GetNumberOfValues(); i++)

@@ -257,7 +257,8 @@ public:
   VTKM_CONT
   PortalConstType PrepareForInput(bool)
   {
-    return PortalConstType(this->Storage->GetDevicePointer(), this->Storage->GetDevicePointer() +
+    return PortalConstType(this->Storage->GetDevicePointer(),
+                           this->Storage->GetDevicePointer() +
                              static_cast<difference_type>(Storage->GetNumberOfValues()));
   }
 
@@ -266,7 +267,8 @@ public:
   VTKM_CONT
   PortalType PrepareForInPlace(bool)
   {
-    return PortalType(this->Storage->GetDevicePointer(), this->Storage->GetDevicePointer() +
+    return PortalType(this->Storage->GetDevicePointer(),
+                      this->Storage->GetDevicePointer() +
                         static_cast<difference_type>(Storage->GetNumberOfValues()));
   }
 
@@ -279,7 +281,8 @@ public:
       this->Storage->ReleaseResources();
     this->Storage->Allocate(numberOfValues);
 
-    return PortalType(this->Storage->GetDevicePointer(), this->Storage->GetDevicePointer() +
+    return PortalType(this->Storage->GetDevicePointer(),
+                      this->Storage->GetDevicePointer() +
                         static_cast<difference_type>(Storage->GetNumberOfValues()));
   }
 
@@ -326,7 +329,8 @@ template <typename T>
 class ArrayHandleCuda : public vtkm::cont::ArrayHandle<T, vtkm::cont::cuda::StorageTagCuda>
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleCuda, (ArrayHandleCuda<T>),
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleCuda,
+                             (ArrayHandleCuda<T>),
                              (vtkm::cont::ArrayHandle<T, vtkm::cont::cuda::StorageTagCuda>));
 
   VTKM_CONT
@@ -340,7 +344,8 @@ public:
 ///
 template <typename T>
 VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::cuda::StorageTagCuda> make_ArrayHandleCuda(
-  T* array, vtkm::Id length)
+  T* array,
+  vtkm::Id length)
 {
   typedef vtkm::cont::cuda::StorageTagCuda StorageTag;
   typedef vtkm::cont::ArrayHandle<T, StorageTag> ArrayHandleType;
@@ -349,7 +354,8 @@ VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::cuda::StorageTagCuda> make_Arra
 
 template <typename T>
 VTKM_CONT void printSummary_ArrayHandle(
-  const vtkm::cont::ArrayHandle<T, vtkm::cont::cuda::StorageTagCuda>& array, std::ostream& out)
+  const vtkm::cont::ArrayHandle<T, vtkm::cont::cuda::StorageTagCuda>& array,
+  std::ostream& out)
 {
   vtkm::Id sz = array.GetNumberOfValues();
   out << "sz= " << sz << " [(on device)]";

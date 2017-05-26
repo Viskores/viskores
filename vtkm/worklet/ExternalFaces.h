@@ -112,7 +112,9 @@ struct ExternalFaces
   class FaceHash : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldOut<> faceHashes, FieldOut<> originCells,
+    typedef void ControlSignature(CellSetIn cellset,
+                                  FieldOut<> faceHashes,
+                                  FieldOut<> originCells,
                                   FieldOut<> originFaces);
     typedef void ExecutionSignature(_2, _3, _4, CellShape, FromIndices, InputIndex, VisitIndex);
     typedef _1 InputDomain;
@@ -136,9 +138,12 @@ struct ExternalFaces
     }
 
     template <typename CellShapeTag, typename CellNodeVecType>
-    VTKM_EXEC void operator()(vtkm::Id3& faceHash, vtkm::Id& cellIndex,
-                              vtkm::IdComponent& faceIndex, CellShapeTag shape,
-                              const CellNodeVecType& cellNodeIds, vtkm::Id inputIndex,
+    VTKM_EXEC void operator()(vtkm::Id3& faceHash,
+                              vtkm::Id& cellIndex,
+                              vtkm::IdComponent& faceIndex,
+                              CellShapeTag shape,
+                              const CellNodeVecType& cellNodeIds,
+                              vtkm::Id inputIndex,
                               vtkm::IdComponent visitIndex) const
     {
       vtkm::VecCConst<vtkm::IdComponent> localFaceIndices =
@@ -244,8 +249,11 @@ struct ExternalFaces
   class NumPointsPerFace : public vtkm::worklet::WorkletReduceByKey
   {
   public:
-    typedef void ControlSignature(KeysIn keys, WholeCellSetIn<> inputCells, ValuesIn<> originCells,
-                                  ValuesIn<> originFaces, ReducedValuesOut<> numPointsInFace);
+    typedef void ControlSignature(KeysIn keys,
+                                  WholeCellSetIn<> inputCells,
+                                  ValuesIn<> originCells,
+                                  ValuesIn<> originFaces,
+                                  ReducedValuesOut<> numPointsInFace);
     typedef _5 ExecutionSignature(_2, _3, _4);
     using InputDomain = _1;
 
@@ -274,8 +282,8 @@ struct ExternalFaces
     {
       VTKM_ASSERT(originCells.GetNumberOfComponents() == 1);
       VTKM_ASSERT(originFaces.GetNumberOfComponents() == 1);
-      return vtkm::exec::CellFaceNumberOfPoints(originFaces[0],
-                                                cellSet.GetCellShape(originCells[0]), *this);
+      return vtkm::exec::CellFaceNumberOfPoints(
+        originFaces[0], cellSet.GetCellShape(originCells[0]), *this);
     }
 
   private:
@@ -286,8 +294,11 @@ struct ExternalFaces
   class BuildConnectivity : public vtkm::worklet::WorkletReduceByKey
   {
   public:
-    typedef void ControlSignature(KeysIn keys, WholeCellSetIn<> inputCells, ValuesIn<> originCells,
-                                  ValuesIn<> originFaces, ReducedValuesOut<> shapesOut,
+    typedef void ControlSignature(KeysIn keys,
+                                  WholeCellSetIn<> inputCells,
+                                  ValuesIn<> originCells,
+                                  ValuesIn<> originFaces,
+                                  ReducedValuesOut<> shapesOut,
                                   ReducedValuesOut<> connectivityOut);
     typedef void ExecutionSignature(_2, _3, _4, _5, _6);
     using InputDomain = _1;
@@ -310,10 +321,14 @@ struct ExternalFaces
     {
     }
 
-    template <typename CellSetType, typename OriginCellsType, typename OriginFacesType,
+    template <typename CellSetType,
+              typename OriginCellsType,
+              typename OriginFacesType,
               typename ConnectivityType>
-    VTKM_EXEC void operator()(const CellSetType& cellSet, const OriginCellsType& originCells,
-                              const OriginFacesType& originFaces, vtkm::UInt8& shapeOut,
+    VTKM_EXEC void operator()(const CellSetType& cellSet,
+                              const OriginCellsType& originCells,
+                              const OriginFacesType& originFaces,
+                              vtkm::UInt8& shapeOut,
                               ConnectivityType& connectivityOut) const
     {
       VTKM_ASSERT(originCells.GetNumberOfComponents() == 1);
@@ -342,11 +357,17 @@ struct ExternalFaces
 public:
   ///////////////////////////////////////////////////
   /// \brief ExternalFaces: Extract Faces on outside of geometry
-  template <typename InCellSetType, typename ShapeStorage, typename NumIndicesStorage,
-            typename ConnectivityStorage, typename OffsetsStorage, typename DeviceAdapter>
+  template <typename InCellSetType,
+            typename ShapeStorage,
+            typename NumIndicesStorage,
+            typename ConnectivityStorage,
+            typename OffsetsStorage,
+            typename DeviceAdapter>
   VTKM_CONT void Run(const InCellSetType& inCellSet,
-                     vtkm::cont::CellSetExplicit<ShapeStorage, NumIndicesStorage,
-                                                 ConnectivityStorage, OffsetsStorage>& outCellSet,
+                     vtkm::cont::CellSetExplicit<ShapeStorage,
+                                                 NumIndicesStorage,
+                                                 ConnectivityStorage,
+                                                 OffsetsStorage>& outCellSet,
                      DeviceAdapter)
   {
     //Create a worklet to map the number of faces to each cell
@@ -455,14 +476,18 @@ public:
     timer.Reset();
 #endif
     buildConnectivityDispatcher.Invoke(
-      faceKeys, inCellSet, originCells, originFaces, faceShapes,
+      faceKeys,
+      inCellSet,
+      originCells,
+      originFaces,
+      faceShapes,
       vtkm::cont::make_ArrayHandleGroupVecVariable(faceConnectivity, faceOffsets));
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     std::cout << "BuildConnectivity_Worklet," << timer.GetElapsedTime() << "\n";
 #endif
 
-    outCellSet.Fill(inCellSet.GetNumberOfPoints(), faceShapes, facePointCount, faceConnectivity,
-                    faceOffsets);
+    outCellSet.Fill(
+      inCellSet.GetNumberOfPoints(), faceShapes, facePointCount, faceConnectivity, faceOffsets);
 
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     std::cout << "Total External Faces = " << outCellSet.GetNumberOfCells() << std::endl;

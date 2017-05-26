@@ -134,7 +134,8 @@ struct TemplatedTests
 
     std::cout << "  Testing read-only iterators with convenience functions." << std::endl;
     CheckIterator(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-                  vtkm::cont::ArrayPortalToIteratorEnd(portal), READ_VALUE);
+                  vtkm::cont::ArrayPortalToIteratorEnd(portal),
+                  READ_VALUE);
   }
 
   void TestIteratorWrite()
@@ -151,7 +152,8 @@ struct TemplatedTests
 
     std::cout << "  Testing write-only iterators with convenience functions." << std::endl;
     FillIterator(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-                 vtkm::cont::ArrayPortalToIteratorEnd(portal), WRITE_VALUE);
+                 vtkm::cont::ArrayPortalToIteratorEnd(portal),
+                 WRITE_VALUE);
   }
 
   void operator()()

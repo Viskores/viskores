@@ -113,15 +113,17 @@ struct ArrayHandleCountingTraits
 /// contains a increment value, that is increment for each step between zero
 /// and the passed in length
 template <typename CountingValueType>
-class ArrayHandleCounting
-  : public vtkm::cont::ArrayHandle<
-      CountingValueType, typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>
+class ArrayHandleCounting : public vtkm::cont::ArrayHandle<
+                              CountingValueType,
+                              typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-    ArrayHandleCounting, (ArrayHandleCounting<CountingValueType>),
+    ArrayHandleCounting,
+    (ArrayHandleCounting<CountingValueType>),
     (vtkm::cont::ArrayHandle<
-      CountingValueType, typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>));
+      CountingValueType,
+      typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>));
 
   VTKM_CONT
   ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::Id length)
@@ -133,8 +135,8 @@ public:
 /// A convenience function for creating an ArrayHandleCounting. It takes the
 /// value to start counting from and and the number of times to increment.
 template <typename CountingValueType>
-VTKM_CONT vtkm::cont::ArrayHandleCounting<CountingValueType> make_ArrayHandleCounting(
-  CountingValueType start, CountingValueType step, vtkm::Id length)
+VTKM_CONT vtkm::cont::ArrayHandleCounting<CountingValueType>
+make_ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::Id length)
 {
   return vtkm::cont::ArrayHandleCounting<CountingValueType>(start, step, length);
 }

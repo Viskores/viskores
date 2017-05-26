@@ -77,9 +77,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coords"), box,
-                        extractInside, DeviceAdapter());
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0),
+                                                  dataset.GetCoordinateSystem("coords"),
+                                                  box,
+                                                  extractInside,
+                                                  DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -107,9 +109,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coords"), box,
-                        extractInside, DeviceAdapter());
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0),
+                                                  dataset.GetCoordinateSystem("coords"),
+                                                  box,
+                                                  extractInside,
+                                                  DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 98),
@@ -137,9 +141,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coords"), sphere,
-                        extractInside, DeviceAdapter());
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0),
+                                                  dataset.GetCoordinateSystem("coords"),
+                                                  sphere,
+                                                  extractInside,
+                                                  DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
@@ -167,9 +173,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coordinates"), box,
-                        extractInside, DeviceAdapter());
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0),
+                                                  dataset.GetCoordinateSystem("coordinates"),
+                                                  box,
+                                                  extractInside,
+                                                  DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8),
@@ -197,9 +205,11 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractPoints extractPoints;
-    OutCellSetType outCellSet =
-      extractPoints.Run(dataset.GetCellSet(0), dataset.GetCoordinateSystem("coordinates"), box,
-                        extractInside, DeviceAdapter());
+    OutCellSetType outCellSet = extractPoints.Run(dataset.GetCellSet(0),
+                                                  dataset.GetCoordinateSystem("coordinates"),
+                                                  box,
+                                                  extractInside,
+                                                  DeviceAdapter());
     outDataSet.AddCellSet(outCellSet);
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 3),

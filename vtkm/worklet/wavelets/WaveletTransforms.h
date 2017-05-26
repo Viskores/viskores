@@ -63,12 +63,21 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT
-  ExtensionWorklet3D(vtkm::Id extdimX, vtkm::Id extdimY, vtkm::Id extdimZ, vtkm::Id sigdimX,
-                     vtkm::Id sigdimY, vtkm::Id sigdimZ, vtkm::Id sigstartX, vtkm::Id sigstartY,
-                     vtkm::Id sigstartZ, vtkm::Id sigpretendX, vtkm::Id sigpretendY,
+  ExtensionWorklet3D(vtkm::Id extdimX,
+                     vtkm::Id extdimY,
+                     vtkm::Id extdimZ,
+                     vtkm::Id sigdimX,
+                     vtkm::Id sigdimY,
+                     vtkm::Id sigdimZ,
+                     vtkm::Id sigstartX,
+                     vtkm::Id sigstartY,
+                     vtkm::Id sigstartZ,
+                     vtkm::Id sigpretendX,
+                     vtkm::Id sigpretendY,
                      vtkm::Id sigpretendZ,
                      DWTMode m, // SYMH, SYMW, etc.
-                     ExtensionDirection dir, bool pad_zero)
+                     ExtensionDirection dir,
+                     bool pad_zero)
     : extDimX(extdimX)
     , extDimY(extdimY)
     , extDimZ(extdimZ)
@@ -112,7 +121,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC void operator()(PortalOutType& portalOut,
+                            const PortalInType& portalIn,
                             const vtkm::Id& workIndex) const
   {
     vtkm::Id extX, extY, extZ;
@@ -220,7 +230,8 @@ public:
     }
 
     if (sigPretendX == sigPretendDimX || // decides to pad a zero
-        sigPretendY == sigPretendDimY || sigPretendZ == sigPretendDimZ)
+        sigPretendY == sigPretendDimY ||
+        sigPretendZ == sigPretendDimZ)
     {
       portalOut.Set(workIndex, 0.0);
     }
@@ -256,10 +267,21 @@ private:
 class IndexTranslator3CubesLeftRight
 {
 public:
-  IndexTranslator3CubesLeftRight(vtkm::Id x_1, vtkm::Id y_1, vtkm::Id z_1, vtkm::Id x_2,
-                                 vtkm::Id y_2, vtkm::Id z_2, vtkm::Id startx_2, vtkm::Id starty_2,
-                                 vtkm::Id startz_2, vtkm::Id pretendx_2, vtkm::Id pretendy_2,
-                                 vtkm::Id pretendz_2, vtkm::Id x_3, vtkm::Id y_3, vtkm::Id z_3)
+  IndexTranslator3CubesLeftRight(vtkm::Id x_1,
+                                 vtkm::Id y_1,
+                                 vtkm::Id z_1,
+                                 vtkm::Id x_2,
+                                 vtkm::Id y_2,
+                                 vtkm::Id z_2,
+                                 vtkm::Id startx_2,
+                                 vtkm::Id starty_2,
+                                 vtkm::Id startz_2,
+                                 vtkm::Id pretendx_2,
+                                 vtkm::Id pretendy_2,
+                                 vtkm::Id pretendz_2,
+                                 vtkm::Id x_3,
+                                 vtkm::Id y_3,
+                                 vtkm::Id z_3)
     : dimX1(x_1)
     , dimY1(y_1)
     , dimZ1(z_1)
@@ -284,8 +306,11 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D(vtkm::Id inX, vtkm::Id inY, vtkm::Id inZ, // 3D indices as input
-                       vtkm::Id& cube, vtkm::Id& idx) const      // which cube, and idx of that cube
+  void Translate3Dto1D(vtkm::Id inX,
+                       vtkm::Id inY,
+                       vtkm::Id inZ, // 3D indices as input
+                       vtkm::Id& cube,
+                       vtkm::Id& idx) const // which cube, and idx of that cube
   {
     if (dimX1 <= inX && inX < (dimX1 + pretendDimX2))
     {
@@ -320,10 +345,21 @@ private:
 class IndexTranslator3CubesTopDown
 {
 public:
-  IndexTranslator3CubesTopDown(vtkm::Id x_1, vtkm::Id y_1, vtkm::Id z_1, vtkm::Id x_2, vtkm::Id y_2,
-                               vtkm::Id z_2, vtkm::Id startx_2, vtkm::Id starty_2,
-                               vtkm::Id startz_2, vtkm::Id pretendx_2, vtkm::Id pretendy_2,
-                               vtkm::Id pretendz_2, vtkm::Id x_3, vtkm::Id y_3, vtkm::Id z_3)
+  IndexTranslator3CubesTopDown(vtkm::Id x_1,
+                               vtkm::Id y_1,
+                               vtkm::Id z_1,
+                               vtkm::Id x_2,
+                               vtkm::Id y_2,
+                               vtkm::Id z_2,
+                               vtkm::Id startx_2,
+                               vtkm::Id starty_2,
+                               vtkm::Id startz_2,
+                               vtkm::Id pretendx_2,
+                               vtkm::Id pretendy_2,
+                               vtkm::Id pretendz_2,
+                               vtkm::Id x_3,
+                               vtkm::Id y_3,
+                               vtkm::Id z_3)
     : dimX1(x_1)
     , dimY1(y_1)
     , dimZ1(z_1)
@@ -348,8 +384,11 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D(vtkm::Id inX, vtkm::Id inY, vtkm::Id inZ, // 3D indices as input
-                       vtkm::Id& cube, vtkm::Id& idx) const      // which cube, and idx of that cube
+  void Translate3Dto1D(vtkm::Id inX,
+                       vtkm::Id inY,
+                       vtkm::Id inZ, // 3D indices as input
+                       vtkm::Id& cube,
+                       vtkm::Id& idx) const // which cube, and idx of that cube
   {
     if (dimY1 <= inY && inY < (dimY1 + pretendDimY2))
     {
@@ -384,10 +423,21 @@ private:
 class IndexTranslator3CubesFrontBack
 {
 public:
-  IndexTranslator3CubesFrontBack(vtkm::Id x_1, vtkm::Id y_1, vtkm::Id z_1, vtkm::Id x_2,
-                                 vtkm::Id y_2, vtkm::Id z_2, vtkm::Id startx_2, vtkm::Id starty_2,
-                                 vtkm::Id startz_2, vtkm::Id pretendx_2, vtkm::Id pretendy_2,
-                                 vtkm::Id pretendz_2, vtkm::Id x_3, vtkm::Id y_3, vtkm::Id z_3)
+  IndexTranslator3CubesFrontBack(vtkm::Id x_1,
+                                 vtkm::Id y_1,
+                                 vtkm::Id z_1,
+                                 vtkm::Id x_2,
+                                 vtkm::Id y_2,
+                                 vtkm::Id z_2,
+                                 vtkm::Id startx_2,
+                                 vtkm::Id starty_2,
+                                 vtkm::Id startz_2,
+                                 vtkm::Id pretendx_2,
+                                 vtkm::Id pretendy_2,
+                                 vtkm::Id pretendz_2,
+                                 vtkm::Id x_3,
+                                 vtkm::Id y_3,
+                                 vtkm::Id z_3)
     : dimX1(x_1)
     , dimY1(y_1)
     , dimZ1(z_1)
@@ -410,8 +460,11 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D(vtkm::Id inX, vtkm::Id inY, vtkm::Id inZ, // 3D indices as input
-                       vtkm::Id& cube, vtkm::Id& idx) const      // which cube, and idx of that cube
+  void Translate3Dto1D(vtkm::Id inX,
+                       vtkm::Id inY,
+                       vtkm::Id inZ, // 3D indices as input
+                       vtkm::Id& cube,
+                       vtkm::Id& idx) const // which cube, and idx of that cube
   {
     if (dimZ1 <= inZ && inZ < (dimZ1 + pretendDimZ2))
     {
@@ -457,12 +510,29 @@ private:
 class IndexTranslator6CubesLeftRight
 {
 public:
-  IndexTranslator6CubesLeftRight(vtkm::Id x_1, vtkm::Id y_1, vtkm::Id z_1, vtkm::Id x_2,
-                                 vtkm::Id y_2, vtkm::Id z_2, vtkm::Id x_3, vtkm::Id y_3,
-                                 vtkm::Id z_3, vtkm::Id x_4, vtkm::Id y_4, vtkm::Id z_4,
-                                 vtkm::Id x_a, vtkm::Id y_a, vtkm::Id z_a, vtkm::Id x_d,
-                                 vtkm::Id y_d, vtkm::Id z_d, vtkm::Id x_5, vtkm::Id y_5,
-                                 vtkm::Id z_5, vtkm::Id start_x5, vtkm::Id start_y5,
+  IndexTranslator6CubesLeftRight(vtkm::Id x_1,
+                                 vtkm::Id y_1,
+                                 vtkm::Id z_1,
+                                 vtkm::Id x_2,
+                                 vtkm::Id y_2,
+                                 vtkm::Id z_2,
+                                 vtkm::Id x_3,
+                                 vtkm::Id y_3,
+                                 vtkm::Id z_3,
+                                 vtkm::Id x_4,
+                                 vtkm::Id y_4,
+                                 vtkm::Id z_4,
+                                 vtkm::Id x_a,
+                                 vtkm::Id y_a,
+                                 vtkm::Id z_a,
+                                 vtkm::Id x_d,
+                                 vtkm::Id y_d,
+                                 vtkm::Id z_d,
+                                 vtkm::Id x_5,
+                                 vtkm::Id y_5,
+                                 vtkm::Id z_5,
+                                 vtkm::Id start_x5,
+                                 vtkm::Id start_y5,
                                  vtkm::Id start_z5)
     : dimX1(x_1)
     , dimY1(y_1)
@@ -501,8 +571,11 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D(vtkm::Id inX, vtkm::Id inY, vtkm::Id inZ, // 3D indices as input
-                       vtkm::Id& cube, vtkm::Id& idx) const      // which cube, and idx of that cube
+  void Translate3Dto1D(vtkm::Id inX,
+                       vtkm::Id inY,
+                       vtkm::Id inZ, // 3D indices as input
+                       vtkm::Id& cube,
+                       vtkm::Id& idx) const // which cube, and idx of that cube
   {
     if (dimX1 <= inX && inX < (dimX1 + dimXa))
     {
@@ -557,11 +630,29 @@ private:
 class IndexTranslator6CubesTopDown
 {
 public:
-  IndexTranslator6CubesTopDown(vtkm::Id x_1, vtkm::Id y_1, vtkm::Id z_1, vtkm::Id x_2, vtkm::Id y_2,
-                               vtkm::Id z_2, vtkm::Id x_3, vtkm::Id y_3, vtkm::Id z_3, vtkm::Id x_4,
-                               vtkm::Id y_4, vtkm::Id z_4, vtkm::Id x_a, vtkm::Id y_a, vtkm::Id z_a,
-                               vtkm::Id x_d, vtkm::Id y_d, vtkm::Id z_d, vtkm::Id x_5, vtkm::Id y_5,
-                               vtkm::Id z_5, vtkm::Id start_x5, vtkm::Id start_y5,
+  IndexTranslator6CubesTopDown(vtkm::Id x_1,
+                               vtkm::Id y_1,
+                               vtkm::Id z_1,
+                               vtkm::Id x_2,
+                               vtkm::Id y_2,
+                               vtkm::Id z_2,
+                               vtkm::Id x_3,
+                               vtkm::Id y_3,
+                               vtkm::Id z_3,
+                               vtkm::Id x_4,
+                               vtkm::Id y_4,
+                               vtkm::Id z_4,
+                               vtkm::Id x_a,
+                               vtkm::Id y_a,
+                               vtkm::Id z_a,
+                               vtkm::Id x_d,
+                               vtkm::Id y_d,
+                               vtkm::Id z_d,
+                               vtkm::Id x_5,
+                               vtkm::Id y_5,
+                               vtkm::Id z_5,
+                               vtkm::Id start_x5,
+                               vtkm::Id start_y5,
                                vtkm::Id start_z5)
     : dimX1(x_1)
     , dimY1(y_1)
@@ -600,8 +691,11 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D(vtkm::Id inX, vtkm::Id inY, vtkm::Id inZ, // 3D indices as input
-                       vtkm::Id& cube, vtkm::Id& idx) const      // which cube, and idx of that cube
+  void Translate3Dto1D(vtkm::Id inX,
+                       vtkm::Id inY,
+                       vtkm::Id inZ, // 3D indices as input
+                       vtkm::Id& cube,
+                       vtkm::Id& idx) const // which cube, and idx of that cube
   {
     if (dimY1 <= inY && inY < (dimY1 + dimYa))
     {
@@ -657,12 +751,29 @@ class IndexTranslator6CubesFrontBack
 {
 public:
   VTKM_EXEC_CONT
-  IndexTranslator6CubesFrontBack(vtkm::Id x_1, vtkm::Id y_1, vtkm::Id z_1, vtkm::Id x_2,
-                                 vtkm::Id y_2, vtkm::Id z_2, vtkm::Id x_3, vtkm::Id y_3,
-                                 vtkm::Id z_3, vtkm::Id x_4, vtkm::Id y_4, vtkm::Id z_4,
-                                 vtkm::Id x_a, vtkm::Id y_a, vtkm::Id z_a, vtkm::Id x_d,
-                                 vtkm::Id y_d, vtkm::Id z_d, vtkm::Id x_5, vtkm::Id y_5,
-                                 vtkm::Id z_5, vtkm::Id start_x5, vtkm::Id start_y5,
+  IndexTranslator6CubesFrontBack(vtkm::Id x_1,
+                                 vtkm::Id y_1,
+                                 vtkm::Id z_1,
+                                 vtkm::Id x_2,
+                                 vtkm::Id y_2,
+                                 vtkm::Id z_2,
+                                 vtkm::Id x_3,
+                                 vtkm::Id y_3,
+                                 vtkm::Id z_3,
+                                 vtkm::Id x_4,
+                                 vtkm::Id y_4,
+                                 vtkm::Id z_4,
+                                 vtkm::Id x_a,
+                                 vtkm::Id y_a,
+                                 vtkm::Id z_a,
+                                 vtkm::Id x_d,
+                                 vtkm::Id y_d,
+                                 vtkm::Id z_d,
+                                 vtkm::Id x_5,
+                                 vtkm::Id y_5,
+                                 vtkm::Id z_5,
+                                 vtkm::Id start_x5,
+                                 vtkm::Id start_y5,
                                  vtkm::Id start_z5)
     : dimX1(x_1)
     , dimY1(y_1)
@@ -697,8 +808,11 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void Translate3Dto1D(vtkm::Id inX, vtkm::Id inY, vtkm::Id inZ, // 3D indices as input
-                       vtkm::Id& cube, vtkm::Id& idx) const      // which cube, and idx of that cube
+  void Translate3Dto1D(vtkm::Id inX,
+                       vtkm::Id inY,
+                       vtkm::Id inZ, // 3D indices as input
+                       vtkm::Id& cube,
+                       vtkm::Id& idx) const // which cube, and idx of that cube
   {
     if (dimZ1 <= inZ && inZ < (dimZ1 + dimZa))
     {
@@ -767,11 +881,24 @@ public:
   VTKM_EXEC_CONT
   ForwardTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                              vtkm::Id filter_len, vtkm::Id approx_len, bool odd_low,
-                              vtkm::Id dimX1, vtkm::Id dimY1, vtkm::Id dimZ1, vtkm::Id dimX2,
-                              vtkm::Id dimY2, vtkm::Id dimZ2, vtkm::Id startX2, vtkm::Id startY2,
-                              vtkm::Id startZ2, vtkm::Id pretendX2, vtkm::Id pretendY2,
-                              vtkm::Id pretendZ2, vtkm::Id dimX3, vtkm::Id dimY3, vtkm::Id dimZ3)
+                              vtkm::Id filter_len,
+                              vtkm::Id approx_len,
+                              bool odd_low,
+                              vtkm::Id dimX1,
+                              vtkm::Id dimY1,
+                              vtkm::Id dimZ1,
+                              vtkm::Id dimX2,
+                              vtkm::Id dimY2,
+                              vtkm::Id dimZ2,
+                              vtkm::Id startX2,
+                              vtkm::Id startY2,
+                              vtkm::Id startZ2,
+                              vtkm::Id pretendX2,
+                              vtkm::Id pretendY2,
+                              vtkm::Id pretendZ2,
+                              vtkm::Id dimX3,
+                              vtkm::Id dimY3,
+                              vtkm::Id dimZ3)
     : lowFilter(loFilter.PrepareForInput(DeviceTag()))
     , highFilter(hiFilter.PrepareForInput(DeviceTag()))
     , filterLen(filter_len)
@@ -779,8 +906,21 @@ public:
     , outDimX(pretendX2)
     , outDimY(pretendY2)
     , outDimZ(pretendZ2)
-    , translator(dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, startX2, startY2, startZ2, pretendX2,
-                 pretendY2, pretendZ2, dimX3, dimY3, dimZ3)
+    , translator(dimX1,
+                 dimY1,
+                 dimZ1,
+                 dimX2,
+                 dimY2,
+                 dimZ2,
+                 startX2,
+                 startY2,
+                 startZ2,
+                 pretendX2,
+                 pretendY2,
+                 pretendZ2,
+                 dimX3,
+                 dimY3,
+                 dimZ3)
   {
     this->lstart = odd_low ? 1 : 0;
     this->hstart = 1;
@@ -803,8 +943,11 @@ public:
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3>
-  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& portal1, const InPortalType2& portal2,
-                            const InPortalType3& portal3, vtkm::Id inCube, vtkm::Id inIdx) const
+  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& portal1,
+                            const InPortalType2& portal2,
+                            const InPortalType3& portal3,
+                            vtkm::Id inCube,
+                            vtkm::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -825,12 +968,15 @@ public:
     }
   }
 
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
             typename OutputPortalType>
   VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1, // left extension
                                  const InPortalType2& inPortal2, // signal
                                  const InPortalType3& inPortal3, // right extension
-                                 OutputPortalType& coeffOut, const vtkm::Id& workIndex) const
+                                 OutputPortalType& coeffOut,
+                                 const vtkm::Id& workIndex) const
   {
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
@@ -891,11 +1037,24 @@ public:
   VTKM_EXEC_CONT
   ForwardTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                             const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                            vtkm::Id filter_len, vtkm::Id approx_len, bool odd_low, vtkm::Id dimX1,
-                            vtkm::Id dimY1, vtkm::Id dimZ1, vtkm::Id dimX2, vtkm::Id dimY2,
-                            vtkm::Id dimZ2, vtkm::Id startX2, vtkm::Id startY2, vtkm::Id startZ2,
-                            vtkm::Id pretendX2, vtkm::Id pretendY2, vtkm::Id pretendZ2,
-                            vtkm::Id dimX3, vtkm::Id dimY3, vtkm::Id dimZ3)
+                            vtkm::Id filter_len,
+                            vtkm::Id approx_len,
+                            bool odd_low,
+                            vtkm::Id dimX1,
+                            vtkm::Id dimY1,
+                            vtkm::Id dimZ1,
+                            vtkm::Id dimX2,
+                            vtkm::Id dimY2,
+                            vtkm::Id dimZ2,
+                            vtkm::Id startX2,
+                            vtkm::Id startY2,
+                            vtkm::Id startZ2,
+                            vtkm::Id pretendX2,
+                            vtkm::Id pretendY2,
+                            vtkm::Id pretendZ2,
+                            vtkm::Id dimX3,
+                            vtkm::Id dimY3,
+                            vtkm::Id dimZ3)
     : lowFilter(loFilter.PrepareForInput(DeviceTag()))
     , highFilter(hiFilter.PrepareForInput(DeviceTag()))
     , filterLen(filter_len)
@@ -903,8 +1062,21 @@ public:
     , outDimX(pretendX2)
     , outDimY(pretendY2)
     , outDimZ(pretendZ2)
-    , translator(dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, startX2, startY2, startZ2, pretendX2,
-                 pretendY2, pretendZ2, dimX3, dimY3, dimZ3)
+    , translator(dimX1,
+                 dimY1,
+                 dimZ1,
+                 dimX2,
+                 dimY2,
+                 dimZ2,
+                 startX2,
+                 startY2,
+                 startZ2,
+                 pretendX2,
+                 pretendY2,
+                 pretendZ2,
+                 dimX3,
+                 dimY3,
+                 dimZ3)
   {
     this->lstart = odd_low ? 1 : 0;
     this->hstart = 1;
@@ -927,8 +1099,11 @@ public:
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3>
-  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& portal1, const InPortalType2& portal2,
-                            const InPortalType3& portal3, vtkm::Id inCube, vtkm::Id inIdx) const
+  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& portal1,
+                            const InPortalType2& portal2,
+                            const InPortalType3& portal3,
+                            vtkm::Id inCube,
+                            vtkm::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -949,12 +1124,15 @@ public:
     }
   }
 
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
             typename OutputPortalType>
   VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1, // top extension
                                  const InPortalType2& inPortal2, // signal
                                  const InPortalType3& inPortal3, // down extension
-                                 OutputPortalType& coeffOut, const vtkm::Id& workIndex) const
+                                 OutputPortalType& coeffOut,
+                                 const vtkm::Id& workIndex) const
   {
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
@@ -1015,11 +1193,24 @@ public:
   VTKM_EXEC_CONT
   ForwardTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
-                              vtkm::Id filter_len, vtkm::Id approx_len, bool odd_low,
-                              vtkm::Id dimX1, vtkm::Id dimY1, vtkm::Id dimZ1, vtkm::Id dimX2,
-                              vtkm::Id dimY2, vtkm::Id dimZ2, vtkm::Id startX2, vtkm::Id startY2,
-                              vtkm::Id startZ2, vtkm::Id pretendX2, vtkm::Id pretendY2,
-                              vtkm::Id pretendZ2, vtkm::Id dimX3, vtkm::Id dimY3, vtkm::Id dimZ3)
+                              vtkm::Id filter_len,
+                              vtkm::Id approx_len,
+                              bool odd_low,
+                              vtkm::Id dimX1,
+                              vtkm::Id dimY1,
+                              vtkm::Id dimZ1,
+                              vtkm::Id dimX2,
+                              vtkm::Id dimY2,
+                              vtkm::Id dimZ2,
+                              vtkm::Id startX2,
+                              vtkm::Id startY2,
+                              vtkm::Id startZ2,
+                              vtkm::Id pretendX2,
+                              vtkm::Id pretendY2,
+                              vtkm::Id pretendZ2,
+                              vtkm::Id dimX3,
+                              vtkm::Id dimY3,
+                              vtkm::Id dimZ3)
     : lowFilter(loFilter.PrepareForInput(DeviceTag()))
     , highFilter(hiFilter.PrepareForInput(DeviceTag()))
     , filterLen(filter_len)
@@ -1027,8 +1218,21 @@ public:
     , outDimX(pretendX2)
     , outDimY(pretendY2)
     , outDimZ(pretendZ2)
-    , translator(dimX1, dimY1, dimZ1, dimX2, dimY2, dimZ2, startX2, startY2, startZ2, pretendX2,
-                 pretendY2, pretendZ2, dimX3, dimY3, dimZ3)
+    , translator(dimX1,
+                 dimY1,
+                 dimZ1,
+                 dimX2,
+                 dimY2,
+                 dimZ2,
+                 startX2,
+                 startY2,
+                 startZ2,
+                 pretendX2,
+                 pretendY2,
+                 pretendZ2,
+                 dimX3,
+                 dimY3,
+                 dimZ3)
   {
     this->lstart = odd_low ? 1 : 0;
     this->hstart = 1;
@@ -1051,8 +1255,11 @@ public:
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3>
-  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& portal1, const InPortalType2& portal2,
-                            const InPortalType3& portal3, vtkm::Id inCube, vtkm::Id inIdx) const
+  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& portal1,
+                            const InPortalType2& portal2,
+                            const InPortalType3& portal3,
+                            vtkm::Id inCube,
+                            vtkm::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -1073,12 +1280,15 @@ public:
     }
   }
 
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
             typename OutputPortalType>
   VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1, // top extension
                                  const InPortalType2& inPortal2, // signal
                                  const InPortalType3& inPortal3, // down extension
-                                 OutputPortalType& coeffOut, const vtkm::Id& workIndex) const
+                                 OutputPortalType& coeffOut,
+                                 const vtkm::Id& workIndex) const
   {
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
@@ -1155,14 +1365,31 @@ public:
   VTKM_EXEC_CONT
   InverseTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
-                              vtkm::Id fil_len, vtkm::Id x_1, vtkm::Id y_1, vtkm::Id z_1, // ext1
-                              vtkm::Id x_2, vtkm::Id y_2, vtkm::Id z_2,                   // ext2
-                              vtkm::Id x_3, vtkm::Id y_3, vtkm::Id z_3,                   // ext3
-                              vtkm::Id x_4, vtkm::Id y_4, vtkm::Id z_4,                   // ext4
-                              vtkm::Id x_a, vtkm::Id y_a, vtkm::Id z_a,                   // cA
-                              vtkm::Id x_d, vtkm::Id y_d, vtkm::Id z_d,                   // cD
-                              vtkm::Id x_5, vtkm::Id y_5, vtkm::Id z_5, // signal, actual dims
-                              vtkm::Id startX5, vtkm::Id startY5, vtkm::Id startZ5)
+                              vtkm::Id fil_len,
+                              vtkm::Id x_1,
+                              vtkm::Id y_1,
+                              vtkm::Id z_1, // ext1
+                              vtkm::Id x_2,
+                              vtkm::Id y_2,
+                              vtkm::Id z_2, // ext2
+                              vtkm::Id x_3,
+                              vtkm::Id y_3,
+                              vtkm::Id z_3, // ext3
+                              vtkm::Id x_4,
+                              vtkm::Id y_4,
+                              vtkm::Id z_4, // ext4
+                              vtkm::Id x_a,
+                              vtkm::Id y_a,
+                              vtkm::Id z_a, // cA
+                              vtkm::Id x_d,
+                              vtkm::Id y_d,
+                              vtkm::Id z_d, // cD
+                              vtkm::Id x_5,
+                              vtkm::Id y_5,
+                              vtkm::Id z_5, // signal, actual dims
+                              vtkm::Id startX5,
+                              vtkm::Id startY5,
+                              vtkm::Id startZ5)
     : lowFilter(lo_fil.PrepareForInput(DeviceTag()))
     , highFilter(hi_fil.PrepareForInput(DeviceTag()))
     , filterLen(fil_len)
@@ -1170,8 +1397,30 @@ public:
     , outDimY(y_a)
     , outDimZ(z_a)
     , cALenExtended(x_1 + x_a + x_2)
-    , translator(x_1, y_1, z_1, x_2, y_2, z_2, x_3, y_3, z_3, x_4, y_4, z_4, x_a, y_a, z_a, x_d,
-                 y_d, z_d, x_5, y_5, z_5, startX5, startY5, startZ5)
+    , translator(x_1,
+                 y_1,
+                 z_1,
+                 x_2,
+                 y_2,
+                 z_2,
+                 x_3,
+                 y_3,
+                 z_3,
+                 x_4,
+                 y_4,
+                 z_4,
+                 x_a,
+                 y_a,
+                 z_a,
+                 x_d,
+                 y_d,
+                 z_d,
+                 x_5,
+                 y_5,
+                 z_5,
+                 startX5,
+                 startY5,
+                 startZ5)
   {
   }
 
@@ -1186,11 +1435,18 @@ public:
 // Use 64-bit float for convolution calculation
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
-            typename InPortalType4, typename InPortalType5>
-  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& ext1, const InPortalType2& ext2,
-                            const InPortalType3& ext3, const InPortalType4& ext4,
-                            const InPortalType5& sig5, vtkm::Id inCube, vtkm::Id inIdx) const
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
+            typename InPortalType4,
+            typename InPortalType5>
+  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& ext1,
+                            const InPortalType2& ext2,
+                            const InPortalType3& ext3,
+                            const InPortalType4& ext4,
+                            const InPortalType5& sig5,
+                            vtkm::Id inCube,
+                            vtkm::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -1219,11 +1475,18 @@ public:
     }
   }
 
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
-            typename InPortalType4, typename InPortalType5, typename OutputValueType>
-  VTKM_EXEC void operator()(const InPortalType1& portal1, const InPortalType2& portal2,
-                            const InPortalType3& portal3, const InPortalType4& portal4,
-                            const InPortalType5& portal5, OutputValueType& coeffOut,
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
+            typename InPortalType4,
+            typename InPortalType5,
+            typename OutputValueType>
+  VTKM_EXEC void operator()(const InPortalType1& portal1,
+                            const InPortalType2& portal2,
+                            const InPortalType3& portal3,
+                            const InPortalType4& portal4,
+                            const InPortalType5& portal5,
+                            OutputValueType& coeffOut,
                             const vtkm::Id& workIdx) const
   {
     vtkm::Id workX, workY, workZ;
@@ -1335,15 +1598,32 @@ public:
   // Constructor
   VTKM_EXEC_CONT
   InverseTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
-                            const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil, vtkm::Id fil_len,
-                            vtkm::Id x_1, vtkm::Id y_1, vtkm::Id z_1, // ext1
-                            vtkm::Id x_2, vtkm::Id y_2, vtkm::Id z_2, // ext2
-                            vtkm::Id x_3, vtkm::Id y_3, vtkm::Id z_3, // ext3
-                            vtkm::Id x_4, vtkm::Id y_4, vtkm::Id z_4, // ext4
-                            vtkm::Id x_a, vtkm::Id y_a, vtkm::Id z_a, // cA
-                            vtkm::Id x_d, vtkm::Id y_d, vtkm::Id z_d, // cD
-                            vtkm::Id x_5, vtkm::Id y_5, vtkm::Id z_5, // signal, actual dims
-                            vtkm::Id startX5, vtkm::Id startY5, vtkm::Id startZ5)
+                            const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
+                            vtkm::Id fil_len,
+                            vtkm::Id x_1,
+                            vtkm::Id y_1,
+                            vtkm::Id z_1, // ext1
+                            vtkm::Id x_2,
+                            vtkm::Id y_2,
+                            vtkm::Id z_2, // ext2
+                            vtkm::Id x_3,
+                            vtkm::Id y_3,
+                            vtkm::Id z_3, // ext3
+                            vtkm::Id x_4,
+                            vtkm::Id y_4,
+                            vtkm::Id z_4, // ext4
+                            vtkm::Id x_a,
+                            vtkm::Id y_a,
+                            vtkm::Id z_a, // cA
+                            vtkm::Id x_d,
+                            vtkm::Id y_d,
+                            vtkm::Id z_d, // cD
+                            vtkm::Id x_5,
+                            vtkm::Id y_5,
+                            vtkm::Id z_5, // signal, actual dims
+                            vtkm::Id startX5,
+                            vtkm::Id startY5,
+                            vtkm::Id startZ5)
     : lowFilter(lo_fil.PrepareForInput(DeviceTag()))
     , highFilter(hi_fil.PrepareForInput(DeviceTag()))
     , filterLen(fil_len)
@@ -1351,8 +1631,30 @@ public:
     , outDimY(y_a + y_d)
     , outDimZ(z_a)
     , cALenExtended(y_1 + y_a + y_2)
-    , translator(x_1, y_1, z_1, x_2, y_2, z_2, x_3, y_3, z_3, x_4, y_4, z_4, x_a, y_a, z_a, x_d,
-                 y_d, z_d, x_5, y_5, z_5, startX5, startY5, startZ5)
+    , translator(x_1,
+                 y_1,
+                 z_1,
+                 x_2,
+                 y_2,
+                 z_2,
+                 x_3,
+                 y_3,
+                 z_3,
+                 x_4,
+                 y_4,
+                 z_4,
+                 x_a,
+                 y_a,
+                 z_a,
+                 x_d,
+                 y_d,
+                 z_d,
+                 x_5,
+                 y_5,
+                 z_5,
+                 startX5,
+                 startY5,
+                 startZ5)
   {
   }
 
@@ -1367,11 +1669,18 @@ public:
 // Use 64-bit float for convolution calculation
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
-            typename InPortalType4, typename InPortalType5>
-  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& ext1, const InPortalType2& ext2,
-                            const InPortalType3& ext3, const InPortalType4& ext4,
-                            const InPortalType5& sig5, vtkm::Id inCube, vtkm::Id inIdx) const
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
+            typename InPortalType4,
+            typename InPortalType5>
+  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& ext1,
+                            const InPortalType2& ext2,
+                            const InPortalType3& ext3,
+                            const InPortalType4& ext4,
+                            const InPortalType5& sig5,
+                            vtkm::Id inCube,
+                            vtkm::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -1400,11 +1709,18 @@ public:
     }
   }
 
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
-            typename InPortalType4, typename InPortalType5, typename OutputValueType>
-  VTKM_EXEC void operator()(const InPortalType1& portal1, const InPortalType2& portal2,
-                            const InPortalType3& portal3, const InPortalType4& portal4,
-                            const InPortalType5& portal5, OutputValueType& coeffOut,
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
+            typename InPortalType4,
+            typename InPortalType5,
+            typename OutputValueType>
+  VTKM_EXEC void operator()(const InPortalType1& portal1,
+                            const InPortalType2& portal2,
+                            const InPortalType3& portal3,
+                            const InPortalType4& portal4,
+                            const InPortalType5& portal5,
+                            OutputValueType& coeffOut,
                             const vtkm::Id& workIdx) const
   {
     vtkm::Id workX, workY, workZ;
@@ -1517,14 +1833,31 @@ public:
   VTKM_EXEC_CONT
   InverseTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
-                              vtkm::Id fil_len, vtkm::Id x_1, vtkm::Id y_1, vtkm::Id z_1, // ext1
-                              vtkm::Id x_2, vtkm::Id y_2, vtkm::Id z_2,                   // ext2
-                              vtkm::Id x_3, vtkm::Id y_3, vtkm::Id z_3,                   // ext3
-                              vtkm::Id x_4, vtkm::Id y_4, vtkm::Id z_4,                   // ext4
-                              vtkm::Id x_a, vtkm::Id y_a, vtkm::Id z_a,                   // cA
-                              vtkm::Id x_d, vtkm::Id y_d, vtkm::Id z_d,                   // cD
-                              vtkm::Id x_5, vtkm::Id y_5, vtkm::Id z_5, // signal, actual dims
-                              vtkm::Id startX5, vtkm::Id startY5, vtkm::Id startZ5)
+                              vtkm::Id fil_len,
+                              vtkm::Id x_1,
+                              vtkm::Id y_1,
+                              vtkm::Id z_1, // ext1
+                              vtkm::Id x_2,
+                              vtkm::Id y_2,
+                              vtkm::Id z_2, // ext2
+                              vtkm::Id x_3,
+                              vtkm::Id y_3,
+                              vtkm::Id z_3, // ext3
+                              vtkm::Id x_4,
+                              vtkm::Id y_4,
+                              vtkm::Id z_4, // ext4
+                              vtkm::Id x_a,
+                              vtkm::Id y_a,
+                              vtkm::Id z_a, // cA
+                              vtkm::Id x_d,
+                              vtkm::Id y_d,
+                              vtkm::Id z_d, // cD
+                              vtkm::Id x_5,
+                              vtkm::Id y_5,
+                              vtkm::Id z_5, // signal, actual dims
+                              vtkm::Id startX5,
+                              vtkm::Id startY5,
+                              vtkm::Id startZ5)
     : lowFilter(lo_fil.PrepareForInput(DeviceTag()))
     , highFilter(hi_fil.PrepareForInput(DeviceTag()))
     , filterLen(fil_len)
@@ -1532,8 +1865,30 @@ public:
     , outDimY(y_a)
     , outDimZ(z_a + z_d)
     , cALenExtended(z_1 + z_a + z_2)
-    , translator(x_1, y_1, z_1, x_2, y_2, z_2, x_3, y_3, z_3, x_4, y_4, z_4, x_a, y_a, z_a, x_d,
-                 y_d, z_d, x_5, y_5, z_5, startX5, startY5, startZ5)
+    , translator(x_1,
+                 y_1,
+                 z_1,
+                 x_2,
+                 y_2,
+                 z_2,
+                 x_3,
+                 y_3,
+                 z_3,
+                 x_4,
+                 y_4,
+                 z_4,
+                 x_a,
+                 y_a,
+                 z_a,
+                 x_d,
+                 y_d,
+                 z_d,
+                 x_5,
+                 y_5,
+                 z_5,
+                 startX5,
+                 startY5,
+                 startZ5)
   {
     /* printf("InverseTransform3DFrontBack: \n");
     printf("  output dims: (%lld, %lld, %lld)\n", outDimX, outDimY, outDimZ ); */
@@ -1550,11 +1905,18 @@ public:
 // Use 64-bit float for convolution calculation
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
-            typename InPortalType4, typename InPortalType5>
-  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& ext1, const InPortalType2& ext2,
-                            const InPortalType3& ext3, const InPortalType4& ext4,
-                            const InPortalType5& sig5, vtkm::Id inCube, vtkm::Id inIdx) const
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
+            typename InPortalType4,
+            typename InPortalType5>
+  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& ext1,
+                            const InPortalType2& ext2,
+                            const InPortalType3& ext3,
+                            const InPortalType4& ext4,
+                            const InPortalType5& sig5,
+                            vtkm::Id inCube,
+                            vtkm::Id inIdx) const
   {
     if (inCube == 2)
     {
@@ -1583,11 +1945,18 @@ public:
     }
   }
 
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
-            typename InPortalType4, typename InPortalType5, typename OutputValueType>
-  VTKM_EXEC void operator()(const InPortalType1& portal1, const InPortalType2& portal2,
-                            const InPortalType3& portal3, const InPortalType4& portal4,
-                            const InPortalType5& portal5, OutputValueType& coeffOut,
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
+            typename InPortalType4,
+            typename InPortalType5,
+            typename OutputValueType>
+  VTKM_EXEC void operator()(const InPortalType1& portal1,
+                            const InPortalType2& portal2,
+                            const InPortalType3& portal3,
+                            const InPortalType4& portal4,
+                            const InPortalType5& portal5,
+                            OutputValueType& coeffOut,
                             const vtkm::Id& workIdx) const
   {
     vtkm::Id workX, workY, workZ;
@@ -1700,11 +2069,22 @@ private:
 class IndexTranslator6Matrices
 {
 public:
-  IndexTranslator6Matrices(vtkm::Id x_1, vtkm::Id y_1, vtkm::Id x_a, vtkm::Id y_a, vtkm::Id x_2,
-                           vtkm::Id y_2, vtkm::Id x_3, vtkm::Id y_3, vtkm::Id x_d, vtkm::Id y_d,
-                           vtkm::Id x_4, vtkm::Id y_4, vtkm::Id x_5,
-                           vtkm::Id y_5,                         // actual size of matrix5
-                           vtkm::Id start_x5, vtkm::Id start_y5, // start indices of pretend matrix
+  IndexTranslator6Matrices(vtkm::Id x_1,
+                           vtkm::Id y_1,
+                           vtkm::Id x_a,
+                           vtkm::Id y_a,
+                           vtkm::Id x_2,
+                           vtkm::Id y_2,
+                           vtkm::Id x_3,
+                           vtkm::Id y_3,
+                           vtkm::Id x_d,
+                           vtkm::Id y_d,
+                           vtkm::Id x_4,
+                           vtkm::Id y_4,
+                           vtkm::Id x_5,
+                           vtkm::Id y_5, // actual size of matrix5
+                           vtkm::Id start_x5,
+                           vtkm::Id start_y5, // start indices of pretend matrix
                            bool mode)
     : x1(x_1)
     , y1(y_1)
@@ -1739,8 +2119,10 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void Translate2Dto1D(vtkm::Id inX, vtkm::Id inY,         // 2D indices as input
-                       vtkm::Id& mat, vtkm::Id& idx) const // which matrix, and idx of that matrix
+  void Translate2Dto1D(vtkm::Id inX,
+                       vtkm::Id inY, // 2D indices as input
+                       vtkm::Id& mat,
+                       vtkm::Id& idx) const // which matrix, and idx of that matrix
   {
     if (modeLR) // left-right mode
     {
@@ -1837,11 +2219,17 @@ private:
 class IndexTranslator3Matrices
 {
 public:
-  IndexTranslator3Matrices(vtkm::Id x_1, vtkm::Id y_1, vtkm::Id x_2,
-                           vtkm::Id y_2,                             // actual dims of mat2
-                           vtkm::Id startx_2, vtkm::Id starty_2,     // start idx of pretend
-                           vtkm::Id pretendx_2, vtkm::Id pretendy_2, // pretend dims
-                           vtkm::Id x_3, vtkm::Id y_3, bool mode)
+  IndexTranslator3Matrices(vtkm::Id x_1,
+                           vtkm::Id y_1,
+                           vtkm::Id x_2,
+                           vtkm::Id y_2, // actual dims of mat2
+                           vtkm::Id startx_2,
+                           vtkm::Id starty_2, // start idx of pretend
+                           vtkm::Id pretendx_2,
+                           vtkm::Id pretendy_2, // pretend dims
+                           vtkm::Id x_3,
+                           vtkm::Id y_3,
+                           bool mode)
     : dimX1(x_1)
     , dimY1(y_1)
     , dimX2(x_2)
@@ -1858,8 +2246,10 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void Translate2Dto1D(vtkm::Id inX, vtkm::Id inY,         // 2D indices as input
-                       vtkm::Id& mat, vtkm::Id& idx) const // which matrix, and idx of that matrix
+  void Translate2Dto1D(vtkm::Id inX,
+                       vtkm::Id inY, // 2D indices as input
+                       vtkm::Id& mat,
+                       vtkm::Id& idx) const // which matrix, and idx of that matrix
   {
     if (mode_lr) // left-right mode
     {
@@ -1926,9 +2316,17 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT
-  ExtensionWorklet2D(vtkm::Id extdimX, vtkm::Id extdimY, vtkm::Id sigdimX, vtkm::Id sigdimY,
-                     vtkm::Id sigstartX, vtkm::Id sigstartY, vtkm::Id sigpretendX,
-                     vtkm::Id sigpretendY, DWTMode m, ExtensionDirection dir, bool pad_zero)
+  ExtensionWorklet2D(vtkm::Id extdimX,
+                     vtkm::Id extdimY,
+                     vtkm::Id sigdimX,
+                     vtkm::Id sigdimY,
+                     vtkm::Id sigstartX,
+                     vtkm::Id sigstartY,
+                     vtkm::Id sigpretendX,
+                     vtkm::Id sigpretendY,
+                     DWTMode m,
+                     ExtensionDirection dir,
+                     bool pad_zero)
     : extDimX(extdimX)
     , extDimY(extdimY)
     , sigDimX(sigdimX)
@@ -1964,7 +2362,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC void operator()(PortalOutType& portalOut,
+                            const PortalInType& portalIn,
                             const vtkm::Id& workIndex) const
   {
     vtkm::Id extX, extY, sigPretendX, sigPretendY;
@@ -2069,13 +2468,21 @@ public:
   // Constructor
   VTKM_EXEC_CONT
   ForwardTransform2D(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                     const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter, vtkm::Id filter_len,
-                     vtkm::Id approx_len, bool odd_low, bool mode_lr, vtkm::Id x1,
-                     vtkm::Id y1,                            // dims of left/top extension
-                     vtkm::Id x2, vtkm::Id y2,               // dims of signal
-                     vtkm::Id startx2, vtkm::Id starty2,     // start idx of signal
-                     vtkm::Id pretendx2, vtkm::Id pretendy2, // pretend dims of signal
-                     vtkm::Id x3, vtkm::Id y3)               // dims of right/bottom extension
+                     const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
+                     vtkm::Id filter_len,
+                     vtkm::Id approx_len,
+                     bool odd_low,
+                     bool mode_lr,
+                     vtkm::Id x1,
+                     vtkm::Id y1, // dims of left/top extension
+                     vtkm::Id x2,
+                     vtkm::Id y2, // dims of signal
+                     vtkm::Id startx2,
+                     vtkm::Id starty2, // start idx of signal
+                     vtkm::Id pretendx2,
+                     vtkm::Id pretendy2, // pretend dims of signal
+                     vtkm::Id x3,
+                     vtkm::Id y3) // dims of right/bottom extension
     : lowFilter(loFilter.PrepareForInput(DeviceTag())),
       highFilter(hiFilter.PrepareForInput(DeviceTag())),
       filterLen(filter_len),
@@ -2102,8 +2509,11 @@ public:
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InPortalType1, typename InPortalType2, typename InPortalType3>
-  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& portal1, const InPortalType2& portal2,
-                            const InPortalType3& portal3, vtkm::Id inMatrix, vtkm::Id inIdx) const
+  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& portal1,
+                            const InPortalType2& portal2,
+                            const InPortalType3& portal3,
+                            vtkm::Id inMatrix,
+                            vtkm::Id inIdx) const
   {
     if (inMatrix == 1)
     {
@@ -2124,12 +2534,15 @@ public:
     }
   }
 
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
             typename OutputPortalType>
   VTKM_EXEC_CONT void operator()(const InPortalType1& inPortal1, // left/top extension
                                  const InPortalType2& inPortal2, // signal
                                  const InPortalType3& inPortal3, // right/bottom extension
-                                 OutputPortalType& coeffOut, const vtkm::Id& workIndex) const
+                                 OutputPortalType& coeffOut,
+                                 const vtkm::Id& workIndex) const
   {
     vtkm::Id workX, workY, output1D;
     Output1Dto2D(workIndex, workX, workY);
@@ -2246,19 +2659,45 @@ public:
   // Constructor
   VTKM_EXEC_CONT
   InverseTransform2D(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
-                     const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil, vtkm::Id fil_len,
-                     vtkm::Id x_1, vtkm::Id y_1, // ext1
-                     vtkm::Id x_a, vtkm::Id y_a, // cA
-                     vtkm::Id x_2, vtkm::Id y_2, // ext2
-                     vtkm::Id x_3, vtkm::Id y_3, // ext3
-                     vtkm::Id x_d, vtkm::Id y_d, // cD
-                     vtkm::Id x_4, vtkm::Id y_4, // ext4
-                     vtkm::Id x_5, vtkm::Id y_5, vtkm::Id startX5, vtkm::Id startY5, bool mode_lr)
+                     const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
+                     vtkm::Id fil_len,
+                     vtkm::Id x_1,
+                     vtkm::Id y_1, // ext1
+                     vtkm::Id x_a,
+                     vtkm::Id y_a, // cA
+                     vtkm::Id x_2,
+                     vtkm::Id y_2, // ext2
+                     vtkm::Id x_3,
+                     vtkm::Id y_3, // ext3
+                     vtkm::Id x_d,
+                     vtkm::Id y_d, // cD
+                     vtkm::Id x_4,
+                     vtkm::Id y_4, // ext4
+                     vtkm::Id x_5,
+                     vtkm::Id y_5,
+                     vtkm::Id startX5,
+                     vtkm::Id startY5,
+                     bool mode_lr)
     : lowFilter(lo_fil.PrepareForInput(DeviceTag()))
     , highFilter(hi_fil.PrepareForInput(DeviceTag()))
     , filterLen(fil_len)
-    , translator(x_1, y_1, x_a, y_a, x_2, y_2, x_3, y_3, x_d, y_d, x_4, y_4, x_5, y_5, startX5,
-                 startY5, mode_lr)
+    , translator(x_1,
+                 y_1,
+                 x_a,
+                 y_a,
+                 x_2,
+                 y_2,
+                 x_3,
+                 y_3,
+                 x_d,
+                 y_d,
+                 x_4,
+                 y_4,
+                 x_5,
+                 y_5,
+                 startX5,
+                 startY5,
+                 mode_lr)
     , modeLR(mode_lr)
   {
     if (modeLR)
@@ -2285,11 +2724,18 @@ public:
 // Use 64-bit float for convolution calculation
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
-            typename InPortalType4, typename InPortalTypecAcD>
-  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& ext1, const InPortalType2& ext2,
-                            const InPortalType3& ext3, const InPortalType4& ext4,
-                            const InPortalTypecAcD& cAcD, vtkm::Id inMatrix, vtkm::Id inIdx) const
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
+            typename InPortalType4,
+            typename InPortalTypecAcD>
+  VTKM_EXEC_CONT VAL GetVal(const InPortalType1& ext1,
+                            const InPortalType2& ext2,
+                            const InPortalType3& ext3,
+                            const InPortalType4& ext4,
+                            const InPortalTypecAcD& cAcD,
+                            vtkm::Id inMatrix,
+                            vtkm::Id inIdx) const
   {
     if (inMatrix == 1)
     {
@@ -2318,11 +2764,18 @@ public:
     }
   }
 
-  template <typename InPortalType1, typename InPortalType2, typename InPortalType3,
-            typename InPortalType4, typename InPortalTypecAcD, typename OutputValueType>
-  VTKM_EXEC void operator()(const InPortalType1& portal1, const InPortalType2& portal2,
-                            const InPortalType3& portal3, const InPortalType4& portal4,
-                            const InPortalTypecAcD& portalcAcD, OutputValueType& coeffOut,
+  template <typename InPortalType1,
+            typename InPortalType2,
+            typename InPortalType3,
+            typename InPortalType4,
+            typename InPortalTypecAcD,
+            typename OutputValueType>
+  VTKM_EXEC void operator()(const InPortalType1& portal1,
+                            const InPortalType2& portal2,
+                            const InPortalType3& portal3,
+                            const InPortalType4& portal4,
+                            const InPortalTypecAcD& portalcAcD,
+                            OutputValueType& coeffOut,
                             const vtkm::Id& workIdx) const
   {
     vtkm::Id workX, workY;
@@ -2512,8 +2965,12 @@ public:
   // Constructor
   VTKM_EXEC_CONT
   ForwardTransform(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                   const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter, vtkm::Id filLen,
-                   vtkm::Id approx_len, vtkm::Id detail_len, bool odd_low, bool odd_high)
+                   const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
+                   vtkm::Id filLen,
+                   vtkm::Id approx_len,
+                   vtkm::Id detail_len,
+                   bool odd_low,
+                   bool odd_high)
     : lowFilter(loFilter.PrepareForInput(DeviceTag()))
     , highFilter(hiFilter.PrepareForInput(DeviceTag()))
     , filterLen(filLen)
@@ -2529,7 +2986,8 @@ public:
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InputPortalType, typename OutputPortalType>
-  VTKM_EXEC void operator()(const InputPortalType& signalIn, OutputPortalType& coeffOut,
+  VTKM_EXEC void operator()(const InputPortalType& signalIn,
+                            OutputPortalType& coeffOut,
                             const vtkm::Id& workIndex) const
   {
     typedef typename OutputPortalType::ValueType OutputValueType;
@@ -2592,8 +3050,10 @@ public:
   // Constructor
   VTKM_EXEC_CONT
   InverseTransformOdd(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                      const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter, vtkm::Id filLen,
-                      vtkm::Id ca_len, vtkm::Id ext_len)
+                      const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
+                      vtkm::Id filLen,
+                      vtkm::Id ca_len,
+                      vtkm::Id ext_len)
     : lowFilter(loFilter.PrepareForInput(DeviceTag()))
     , highFilter(hiFilter.PrepareForInput(DeviceTag()))
     , filterLen(filLen)
@@ -2607,7 +3067,8 @@ public:
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InputPortalType, typename OutputPortalType>
-  VTKM_EXEC void operator()(const InputPortalType& coeffs, OutputPortalType& sigOut,
+  VTKM_EXEC void operator()(const InputPortalType& coeffs,
+                            OutputPortalType& sigOut,
                             const vtkm::Id& workIndex) const
   {
     if (workIndex < cALen2) // valid calculation region
@@ -2671,8 +3132,11 @@ public:
   // Constructor
   VTKM_EXEC_CONT
   InverseTransformEven(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
-                       const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter, vtkm::Id filtL,
-                       vtkm::Id cAL, vtkm::Id cALExt, bool m)
+                       const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
+                       vtkm::Id filtL,
+                       vtkm::Id cAL,
+                       vtkm::Id cALExt,
+                       bool m)
     : lowFilter(loFilter.PrepareForInput(DeviceTag()))
     , highFilter(hiFilter.PrepareForInput(DeviceTag()))
     , filterLen(filtL)
@@ -2687,7 +3151,8 @@ public:
 #define VAL vtkm::Float64
 #define MAKEVAL(a) (static_cast<VAL>(a))
   template <typename InputPortalType, typename OutputPortalType>
-  VTKM_EXEC void operator()(const InputPortalType& coeffs, OutputPortalType& sigOut,
+  VTKM_EXEC void operator()(const InputPortalType& coeffs,
+                            OutputPortalType& sigOut,
                             const vtkm::Id& workIndex) const
   {
     if (workIndex < cALen2) // valid calculation region
@@ -2842,7 +3307,8 @@ public:
   CopyWorklet(vtkm::Id idx) { this->startIdx = idx; }
 
   template <typename PortalInType, typename PortalOutType>
-  VTKM_EXEC void operator()(const PortalInType& portalIn, PortalOutType& portalOut,
+  VTKM_EXEC void operator()(const PortalInType& portalIn,
+                            PortalOutType& portalOut,
                             const vtkm::Id& workIndex) const
   {
     portalOut.Set((startIdx + workIndex), portalIn.Get(workIndex));
@@ -2869,7 +3335,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC void operator()(PortalOutType& portalOut,
+                            const PortalInType& portalIn,
                             const vtkm::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(this->addLen - workIndex - 1));
@@ -2896,7 +3363,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC void operator()(PortalOutType& portalOut,
+                            const PortalInType& portalIn,
                             const vtkm::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(this->addLen - workIndex));
@@ -2923,7 +3391,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC_CONT void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC_CONT void operator()(PortalOutType& portalOut,
+                                 const PortalInType& portalIn,
                                  const vtkm::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(addLen - workIndex - 1) * (-1.0));
@@ -2950,7 +3419,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC_CONT void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC_CONT void operator()(PortalOutType& portalOut,
+                                 const PortalInType& portalIn,
                                  const vtkm::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(addLen - workIndex) * (-1.0));
@@ -2977,7 +3447,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC void operator()(PortalOutType& portalOut,
+                            const PortalInType& portalIn,
                             const vtkm::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(this->sigInLen - workIndex - 1));
@@ -3004,7 +3475,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC void operator()(PortalOutType& portalOut,
+                            const PortalInType& portalIn,
                             const vtkm::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(this->sigInLen - workIndex - 2));
@@ -3031,7 +3503,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC_CONT void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC_CONT void operator()(PortalOutType& portalOut,
+                                 const PortalInType& portalIn,
                                  const vtkm::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(sigInLen - workIndex - 1) * (-1.0));
@@ -3058,7 +3531,8 @@ public:
   }
 
   template <typename PortalOutType, typename PortalInType>
-  VTKM_EXEC_CONT void operator()(PortalOutType& portalOut, const PortalInType& portalIn,
+  VTKM_EXEC_CONT void operator()(PortalOutType& portalOut,
+                                 const PortalInType& portalIn,
                                  const vtkm::Id& workIndex) const
   {
     portalOut.Set(workIndex, portalIn.Get(sigInLen - workIndex - 2) * (-1.0));
@@ -3153,7 +3627,11 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT
-  AssignZero3DWorklet(vtkm::Id x, vtkm::Id y, vtkm::Id z, vtkm::Id zero_x, vtkm::Id zero_y,
+  AssignZero3DWorklet(vtkm::Id x,
+                      vtkm::Id y,
+                      vtkm::Id z,
+                      vtkm::Id zero_x,
+                      vtkm::Id zero_y,
                       vtkm::Id zero_z)
     : dimX(x)
     , dimY(y)
@@ -3209,7 +3687,11 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT
-  RectangleCopyTo(vtkm::Id inx, vtkm::Id iny, vtkm::Id outx, vtkm::Id outy, vtkm::Id xStart,
+  RectangleCopyTo(vtkm::Id inx,
+                  vtkm::Id iny,
+                  vtkm::Id outx,
+                  vtkm::Id outy,
+                  vtkm::Id xStart,
                   vtkm::Id yStart)
     : inXLen(inx)
     , inYLen(iny)
@@ -3233,7 +3715,8 @@ public:
   vtkm::Id Get1DIdxOfOutputRect(vtkm::Id x, vtkm::Id y) const { return y * outXLen + x; }
 
   template <typename ValueInType, typename PortalOutType>
-  VTKM_EXEC void operator()(const ValueInType& valueIn, PortalOutType& arrayOut,
+  VTKM_EXEC void operator()(const ValueInType& valueIn,
+                            PortalOutType& arrayOut,
                             const vtkm::Id& workIdx) const
   {
     vtkm::Id xOfIn, yOfIn;
@@ -3258,8 +3741,15 @@ public:
 
   // Constructor
   VTKM_EXEC_CONT
-  CubeCopyTo(vtkm::Id inx, vtkm::Id iny, vtkm::Id inz, vtkm::Id outx, vtkm::Id outy, vtkm::Id outz,
-             vtkm::Id xStart, vtkm::Id yStart, vtkm::Id zStart)
+  CubeCopyTo(vtkm::Id inx,
+             vtkm::Id iny,
+             vtkm::Id inz,
+             vtkm::Id outx,
+             vtkm::Id outy,
+             vtkm::Id outz,
+             vtkm::Id xStart,
+             vtkm::Id yStart,
+             vtkm::Id zStart)
     : inDimX(inx)
     , inDimY(iny)
     , inDimZ(inz)
@@ -3289,7 +3779,8 @@ public:
   }
 
   template <typename ValueInType, typename PortalOutType>
-  VTKM_EXEC void operator()(const ValueInType& valueIn, PortalOutType& arrayOut,
+  VTKM_EXEC void operator()(const ValueInType& valueIn,
+                            PortalOutType& arrayOut,
                             const vtkm::Id& workIdx) const
   {
     vtkm::Id inX, inY, inZ;

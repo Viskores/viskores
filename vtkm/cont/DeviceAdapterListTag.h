@@ -35,9 +35,9 @@ namespace vtkm
 namespace cont
 {
 
-struct DeviceAdapterListTagCommon
-  : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda, vtkm::cont::DeviceAdapterTagTBB,
-                      vtkm::cont::DeviceAdapterTagSerial>
+struct DeviceAdapterListTagCommon : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
+                                                      vtkm::cont::DeviceAdapterTagTBB,
+                                                      vtkm::cont::DeviceAdapterTagSerial>
 {
 };
 }

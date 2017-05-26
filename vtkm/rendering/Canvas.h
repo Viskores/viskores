@@ -109,12 +109,17 @@ public:
   virtual void SaveAs(const std::string& fileName) const;
 
   virtual void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                       const vtkm::Vec<vtkm::Float64, 2>& point1, vtkm::Float32 linewidth,
+                       const vtkm::Vec<vtkm::Float64, 2>& point1,
+                       vtkm::Float32 linewidth,
                        const vtkm::rendering::Color& color) const = 0;
 
   VTKM_CONT
-  void AddLine(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 x1, vtkm::Float64 y1,
-               vtkm::Float32 linewidth, const vtkm::rendering::Color& color) const
+  void AddLine(vtkm::Float64 x0,
+               vtkm::Float64 y0,
+               vtkm::Float64 x1,
+               vtkm::Float64 y1,
+               vtkm::Float32 linewidth,
+               const vtkm::rendering::Color& color) const
   {
     this->AddLine(vtkm::make_Vec(x0, y0), vtkm::make_Vec(x1, y1), linewidth, color);
   }
@@ -124,26 +129,45 @@ public:
                            bool horizontal) const = 0;
 
   VTKM_CONT
-  void AddColorBar(vtkm::Float32 x, vtkm::Float32 y, vtkm::Float32 width, vtkm::Float32 height,
-                   const vtkm::rendering::ColorTable& colorTable, bool horizontal) const
+  void AddColorBar(vtkm::Float32 x,
+                   vtkm::Float32 y,
+                   vtkm::Float32 width,
+                   vtkm::Float32 height,
+                   const vtkm::rendering::ColorTable& colorTable,
+                   bool horizontal) const
   {
     this->AddColorBar(
       vtkm::Bounds(vtkm::Range(x, x + width), vtkm::Range(y, y + height), vtkm::Range(0, 0)),
-      colorTable, horizontal);
+      colorTable,
+      horizontal);
   }
 
-  virtual void AddText(const vtkm::Vec<vtkm::Float32, 2>& position, vtkm::Float32 scale,
-                       vtkm::Float32 angle, vtkm::Float32 windowAspect,
+  virtual void AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
+                       vtkm::Float32 scale,
+                       vtkm::Float32 angle,
+                       vtkm::Float32 windowAspect,
                        const vtkm::Vec<vtkm::Float32, 2>& anchor,
-                       const vtkm::rendering::Color& color, const std::string& text) const = 0;
+                       const vtkm::rendering::Color& color,
+                       const std::string& text) const = 0;
 
   VTKM_CONT
-  void AddText(vtkm::Float32 x, vtkm::Float32 y, vtkm::Float32 scale, vtkm::Float32 angle,
-               vtkm::Float32 windowAspect, vtkm::Float32 anchorX, vtkm::Float32 anchorY,
-               const vtkm::rendering::Color& color, const std::string& text) const
+  void AddText(vtkm::Float32 x,
+               vtkm::Float32 y,
+               vtkm::Float32 scale,
+               vtkm::Float32 angle,
+               vtkm::Float32 windowAspect,
+               vtkm::Float32 anchorX,
+               vtkm::Float32 anchorY,
+               const vtkm::rendering::Color& color,
+               const std::string& text) const
   {
-    this->AddText(vtkm::make_Vec(x, y), scale, angle, windowAspect,
-                  vtkm::make_Vec(anchorX, anchorY), color, text);
+    this->AddText(vtkm::make_Vec(x, y),
+                  scale,
+                  angle,
+                  windowAspect,
+                  vtkm::make_Vec(anchorX, anchorY),
+                  color,
+                  text);
   }
 
   /// Creates a WorldAnnotator of a type that is paired with this Canvas. Other

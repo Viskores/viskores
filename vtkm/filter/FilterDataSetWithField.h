@@ -77,11 +77,13 @@ public:
                         const vtkm::cont::CoordinateSystem& field);
 
   template <typename DerivedPolicy>
-  VTKM_CONT ResultDataSet Execute(const vtkm::cont::DataSet& input, const std::string& inFieldName,
+  VTKM_CONT ResultDataSet Execute(const vtkm::cont::DataSet& input,
+                                  const std::string& inFieldName,
                                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT ResultDataSet Execute(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field,
+  VTKM_CONT ResultDataSet Execute(const vtkm::cont::DataSet& input,
+                                  const vtkm::cont::Field& field,
                                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
@@ -99,19 +101,22 @@ public:
   bool MapFieldOntoOutput(ResultDataSet& result, const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(ResultDataSet& result, const vtkm::cont::Field& field,
+  VTKM_CONT bool MapFieldOntoOutput(ResultDataSet& result,
+                                    const vtkm::cont::Field& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   template <typename DerivedPolicy>
   VTKM_CONT ResultDataSet
-  PrepareForExecution(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field,
+  PrepareForExecution(const vtkm::cont::DataSet& input,
+                      const vtkm::cont::Field& field,
                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //How do we specify float/double coordinate types?
   template <typename DerivedPolicy>
   VTKM_CONT ResultDataSet
-  PrepareForExecution(const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field,
+  PrepareForExecution(const vtkm::cont::DataSet& input,
+                      const vtkm::cont::CoordinateSystem& field,
                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;

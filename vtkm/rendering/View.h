@@ -38,12 +38,15 @@ namespace rendering
 class VTKM_RENDERING_EXPORT View
 {
 public:
-  View(const vtkm::rendering::Scene& scene, const vtkm::rendering::Mapper& mapper,
+  View(const vtkm::rendering::Scene& scene,
+       const vtkm::rendering::Mapper& mapper,
        const vtkm::rendering::Canvas& canvas,
        const vtkm::rendering::Color& backgroundColor = vtkm::rendering::Color(0, 0, 0, 1));
 
-  View(const vtkm::rendering::Scene& scene, const vtkm::rendering::Mapper& mapper,
-       const vtkm::rendering::Canvas& canvas, const vtkm::rendering::Camera& camera,
+  View(const vtkm::rendering::Scene& scene,
+       const vtkm::rendering::Mapper& mapper,
+       const vtkm::rendering::Canvas& canvas,
+       const vtkm::rendering::Camera& camera,
        const vtkm::rendering::Color& backgroundColor = vtkm::rendering::Color(0, 0, 0, 1));
 
   virtual ~View();

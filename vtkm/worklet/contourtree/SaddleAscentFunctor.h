@@ -111,7 +111,8 @@ public:
   SaddleAscentFunctor() {}
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
-  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID, const InFieldPortalType& firstEdge,
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID,
+                                const InFieldPortalType& firstEdge,
                                 const InFieldPortalType& outdegree,
                                 const InFieldPortalType& activeEdges,
                                 const InFieldPortalType& chainExtremum,

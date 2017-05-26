@@ -62,7 +62,8 @@ template <typename T>
 class ArrayHandleConstant : public vtkm::cont::ArrayHandleImplicit<T, detail::ConstantFunctor<T>>
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleConstant, (ArrayHandleConstant<T>),
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleConstant,
+                             (ArrayHandleConstant<T>),
                              (vtkm::cont::ArrayHandleImplicit<T, detail::ConstantFunctor<T>>));
 
   VTKM_CONT

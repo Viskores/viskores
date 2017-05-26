@@ -67,8 +67,9 @@ inline VTKM_CONT ResultField FilterField<Derived>::Execute(const vtkm::cont::Dat
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT ResultField FilterField<Derived>::Execute(
-  const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field)
+inline VTKM_CONT ResultField
+FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                              const vtkm::cont::CoordinateSystem& field)
 {
   return this->Execute(input, field, vtkm::filter::PolicyDefault());
 }
@@ -77,7 +78,8 @@ inline VTKM_CONT ResultField FilterField<Derived>::Execute(
 template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT ResultField
-FilterField<Derived>::Execute(const vtkm::cont::DataSet& input, const std::string& inFieldName,
+FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                              const std::string& inFieldName,
                               const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   return this->Execute(input, input.GetField(inFieldName), policy);
@@ -87,7 +89,8 @@ FilterField<Derived>::Execute(const vtkm::cont::DataSet& input, const std::strin
 template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT ResultField
-FilterField<Derived>::Execute(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field,
+FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                              const vtkm::cont::Field& field,
                               const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   return this->PrepareForExecution(input, field, policy);
@@ -96,9 +99,10 @@ FilterField<Derived>::Execute(const vtkm::cont::DataSet& input, const vtkm::cont
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultField FilterField<Derived>::Execute(
-  const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+inline VTKM_CONT ResultField
+FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                              const vtkm::cont::CoordinateSystem& field,
+                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   //we need to state that the field is actually a coordinate system, so that
   //the filter uses the proper policy to convert the types.
@@ -108,9 +112,10 @@ inline VTKM_CONT ResultField FilterField<Derived>::Execute(
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultField FilterField<Derived>::PrepareForExecution(
-  const vtkm::cont::DataSet& input, const vtkm::cont::Field& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+inline VTKM_CONT ResultField
+FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::Field& field,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   vtkm::filter::FieldMetadata metaData(field);
   ResultField result;
@@ -126,9 +131,10 @@ inline VTKM_CONT ResultField FilterField<Derived>::PrepareForExecution(
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultField FilterField<Derived>::PrepareForExecution(
-  const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+inline VTKM_CONT ResultField
+FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::CoordinateSystem& field,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems

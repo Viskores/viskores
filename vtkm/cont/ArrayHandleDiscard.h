@@ -221,7 +221,8 @@ template <typename ValueType_>
 class ArrayHandleDiscard : public internal::ArrayHandleDiscardTraits<ValueType_>::Superclass
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleDiscard, (ArrayHandleDiscard<ValueType_>),
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleDiscard,
+                             (ArrayHandleDiscard<ValueType_>),
                              (typename internal::ArrayHandleDiscardTraits<ValueType_>::Superclass));
 };
 

@@ -44,7 +44,8 @@ namespace interop
 ///
 template <typename ValueType, class StorageTag, class DeviceAdapterTag>
 VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
-                                BufferState& state, DeviceAdapterTag)
+                                BufferState& state,
+                                DeviceAdapterTag)
 {
   vtkm::interop::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
   return toGL.Transfer(handle);

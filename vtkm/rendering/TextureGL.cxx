@@ -144,7 +144,8 @@ void TextureGL::Disable() const
   }
 }
 
-void TextureGL::CreateAlphaFromRGBA(vtkm::Id width, vtkm::Id height,
+void TextureGL::CreateAlphaFromRGBA(vtkm::Id width,
+                                    vtkm::Id height,
                                     const std::vector<unsigned char>& rgba)
 {
   this->Internals->Dimension = 2;
@@ -172,8 +173,15 @@ void TextureGL::CreateAlphaFromRGBA(vtkm::Id width, vtkm::Id height,
     mpimap = true;
     glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
 #endif
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, static_cast<GLsizei>(width),
-                 static_cast<GLsizei>(height), 0, GL_ALPHA, GL_UNSIGNED_BYTE, (void*)(&(alpha[0])));
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 GL_ALPHA,
+                 static_cast<GLsizei>(width),
+                 static_cast<GLsizei>(height),
+                 0,
+                 GL_ALPHA,
+                 GL_UNSIGNED_BYTE,
+                 (void*)(&(alpha[0])));
   }
 }
 }

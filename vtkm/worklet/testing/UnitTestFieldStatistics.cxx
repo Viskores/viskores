@@ -275,8 +275,8 @@ vtkm::cont::DataSet Make2DUniformStatDataSet1()
     vtkm::cont::Field("c_poisson", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
   dataSet.AddField(
     vtkm::cont::Field("c_normal", vtkm::cont::Field::ASSOC_CELL_SET, "cells", normal, nCells));
-  dataSet.AddField(vtkm::cont::Field("c_chiSquare", vtkm::cont::Field::ASSOC_CELL_SET, "cells",
-                                     chiSquare, nCells));
+  dataSet.AddField(vtkm::cont::Field(
+    "c_chiSquare", vtkm::cont::Field::ASSOC_CELL_SET, "cells", chiSquare, nCells));
   dataSet.AddField(
     vtkm::cont::Field("c_uniform", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
 

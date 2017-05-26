@@ -34,10 +34,12 @@ namespace worklet
 template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class DispatcherMapField
   : public vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType, Device>,
-                                                   WorkletType, vtkm::worklet::WorkletMapField>
+                                                   WorkletType,
+                                                   vtkm::worklet::WorkletMapField>
 {
   typedef vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType, Device>,
-                                                  WorkletType, vtkm::worklet::WorkletMapField>
+                                                  WorkletType,
+                                                  vtkm::worklet::WorkletMapField>
     Superclass;
 
 public:

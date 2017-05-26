@@ -42,14 +42,22 @@ class IntersectionPoint : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   IntersectionPoint() {}
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>, FieldOut<>,
+  typedef void ControlSignature(FieldIn<>,
+                                FieldIn<>,
+                                FieldIn<>,
+                                FieldIn<>,
+                                FieldOut<>,
+                                FieldOut<>,
                                 FieldOut<>);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   VTKM_EXEC
-  void operator()(const vtkm::Id& hitIndex, const vtkm::Float32& distance,
+  void operator()(const vtkm::Id& hitIndex,
+                  const vtkm::Float32& distance,
                   const vtkm::Vec<vtkm::Float32, 3>& rayDir,
-                  const vtkm::Vec<vtkm::Float32, 3>& rayOrigin, vtkm::Float32& intersectionX,
-                  vtkm::Float32& intersectionY, vtkm::Float32& intersectionZ) const
+                  const vtkm::Vec<vtkm::Float32, 3>& rayOrigin,
+                  vtkm::Float32& intersectionX,
+                  vtkm::Float32& intersectionY,
+                  vtkm::Float32& intersectionZ) const
   {
     if (hitIndex < 0)
       return;
@@ -81,13 +89,20 @@ public:
       : IndicesPortal(indices.PrepareForInput(DeviceAdapter()))
     {
     }
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>, FieldOut<>, FieldOut<>,
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldIn<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
+                                  FieldOut<>,
                                   WholeArrayIn<Vec3RenderingTypes>);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
     template <typename PointPortalType>
-    VTKM_EXEC void operator()(const vtkm::Id& hitIndex, const vtkm::Vec<vtkm::Float32, 3>& rayDir,
-                              vtkm::Float32& normalX, vtkm::Float32& normalY,
-                              vtkm::Float32& normalZ, const PointPortalType& points) const
+    VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
+                              const vtkm::Vec<vtkm::Float32, 3>& rayDir,
+                              vtkm::Float32& normalX,
+                              vtkm::Float32& normalY,
+                              vtkm::Float32& normalZ,
+                              const PointPortalType& points) const
     {
       if (hitIndex < 0)
         return;
@@ -121,7 +136,8 @@ public:
 
   public:
     VTKM_CONT
-    LerpScalar(const Vec4IntArrayHandle& indices, const vtkm::Float32& minScalar,
+    LerpScalar(const Vec4IntArrayHandle& indices,
+               const vtkm::Float32& minScalar,
                const vtkm::Float32& maxScalar)
       : IndicesPortal(indices.PrepareForInput(DeviceAdapter()))
       , MinScalar(minScalar)
@@ -133,12 +149,17 @@ public:
       else
         invDeltaScalar = 1.f / minScalar;
     }
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>,
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
+                                  FieldOut<>,
                                   WholeArrayIn<ScalarRenderingTypes>);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5);
     template <typename ScalarPortalType>
-    VTKM_EXEC void operator()(const vtkm::Id& hitIndex, const vtkm::Float32& u,
-                              const vtkm::Float32& v, vtkm::Float32& lerpedScalar,
+    VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
+                              const vtkm::Float32& u,
+                              const vtkm::Float32& v,
+                              vtkm::Float32& lerpedScalar,
                               const ScalarPortalType& scalars) const
     {
       if (hitIndex < 0)
@@ -169,7 +190,8 @@ public:
 
   public:
     VTKM_CONT
-    NodalScalar(const Vec4IntArrayHandle& indices, const vtkm::Float32& minScalar,
+    NodalScalar(const Vec4IntArrayHandle& indices,
+                const vtkm::Float32& minScalar,
                 const vtkm::Float32& maxScalar)
       : IndicesPortal(indices.PrepareForInput(DeviceAdapter()))
       , MinScalar(minScalar)
@@ -184,7 +206,8 @@ public:
     typedef void ControlSignature(FieldIn<>, FieldOut<>, WholeArrayIn<ScalarRenderingTypes>);
     typedef void ExecutionSignature(_1, _2, _3);
     template <typename ScalarPortalType>
-    VTKM_EXEC void operator()(const vtkm::Id& hitIndex, vtkm::Float32& scalar,
+    VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
+                              vtkm::Float32& scalar,
                               const ScalarPortalType& scalars) const
     {
       if (hitIndex < 0)
@@ -201,9 +224,11 @@ public:
   }; //class LerpScalar
 
   VTKM_CONT
-  void run(Ray<DeviceAdapter>& rays, LinearBVH& bvh,
+  void run(Ray<DeviceAdapter>& rays,
+           LinearBVH& bvh,
            vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
-           const vtkm::cont::Field* scalarField, const vtkm::Range& scalarRange)
+           const vtkm::cont::Field* scalarField,
+           const vtkm::Range& scalarRange)
   {
     bool isSupportedField = (scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
                              scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
@@ -252,7 +277,8 @@ public:
 
   public:
     VTKM_CONT
-    MapScalarToColor(const ColorArrayHandle& colorMap, const vtkm::Int32& colorMapSize,
+    MapScalarToColor(const ColorArrayHandle& colorMap,
+                     const vtkm::Int32& colorMapSize,
                      const vtkm::Vec<vtkm::Float32, 3>& lightPosition,
                      const vtkm::Vec<vtkm::Float32, 3>& cameraPosition,
                      const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
@@ -277,7 +303,8 @@ public:
     typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5);
     VTKM_EXEC
-    void operator()(const vtkm::Id& hitIdx, const vtkm::Float32& scalar,
+    void operator()(const vtkm::Id& hitIdx,
+                    const vtkm::Float32& scalar,
                     const vtkm::Vec<vtkm::Float32, 3>& normal,
                     const vtkm::Vec<vtkm::Float32, 3>& intersection,
                     vtkm::Vec<vtkm::Float32, 4>& color) const
@@ -323,8 +350,10 @@ public:
   }; //class MapScalarToColor
 
   VTKM_CONT
-  void run(Ray<DeviceAdapter>& rays, vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap,
-           ColorBuffer4f& colorBuffer, const vtkm::Vec<vtkm::Float32, 3> cameraPosition,
+  void run(Ray<DeviceAdapter>& rays,
+           vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap,
+           ColorBuffer4f& colorBuffer,
+           const vtkm::Vec<vtkm::Float32, 3> cameraPosition,
            const vtkm::Vec<vtkm::Float32, 4> backgroundColor)
   {
     vtkm::Vec<vtkm::Float32, 3> lightPosition = cameraPosition;
@@ -373,8 +402,10 @@ public:
   VTKM_CONT
   void SetData(const vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
                const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
-               const vtkm::cont::Field& scalarField, const vtkm::Id& numberOfTriangles,
-               const vtkm::Range& scalarRange, const vtkm::Bounds& dataBounds)
+               const vtkm::cont::Field& scalarField,
+               const vtkm::Id& numberOfTriangles,
+               const vtkm::Range& scalarRange,
+               const vtkm::Bounds& dataBounds)
   {
     IsSceneDirty = true;
     CoordsHandle = coordsHandle;
@@ -412,8 +443,13 @@ public:
     Reflector<DeviceAdapter> reflector;
     reflector.run(Rays, Bvh, CoordsHandle, ScalarField, ScalarRange);
     vtkm::worklet::DispatcherMapField<IntersectionPoint>(IntersectionPoint())
-      .Invoke(Rays.HitIdx, Rays.Distance, Rays.Dir, Rays.Origin, Rays.IntersectionX,
-              Rays.IntersectionY, Rays.IntersectionZ);
+      .Invoke(Rays.HitIdx,
+              Rays.Distance,
+              Rays.Dir,
+              Rays.Origin,
+              Rays.IntersectionX,
+              Rays.IntersectionY,
+              Rays.IntersectionZ);
 
     SurfaceColor<DeviceAdapter> surfaceColor;
     surfaceColor.run(Rays, ColorMap, camera.FrameBuffer, camera.GetPosition(), BackgroundColor);

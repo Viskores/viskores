@@ -105,7 +105,9 @@ public:
 
   // perform a device copy. The whole 1st array to a certain start location of the 2nd array
   template <typename ArrayType1, typename ArrayType2, typename DeviceTag>
-  void DeviceCopyStartX(const ArrayType1& srcArray, ArrayType2& dstArray, vtkm::Id startIdx,
+  void DeviceCopyStartX(const ArrayType1& srcArray,
+                        ArrayType2& dstArray,
+                        vtkm::Id startIdx,
                         DeviceTag)
   {
     typedef vtkm::worklet::wavelets::CopyWorklet CopyType;
@@ -126,8 +128,11 @@ public:
 
   // Assign zeros to a certain row to a matrix
   template <typename ArrayType, typename DeviceTag>
-  void DeviceAssignZero2DRow(ArrayType& array, vtkm::Id dimX, vtkm::Id dimY, // input
-                             vtkm::Id rowIdx, DeviceTag)
+  void DeviceAssignZero2DRow(ArrayType& array,
+                             vtkm::Id dimX,
+                             vtkm::Id dimY, // input
+                             vtkm::Id rowIdx,
+                             DeviceTag)
   {
     typedef vtkm::worklet::wavelets::AssignZero2DWorklet AssignZero2DType;
     AssignZero2DType zeroWorklet(dimX, dimY, -1, rowIdx);
@@ -137,8 +142,11 @@ public:
 
   // Assign zeros to a certain column to a matrix
   template <typename ArrayType, typename DeviceTag>
-  void DeviceAssignZero2DColumn(ArrayType& array, vtkm::Id dimX, vtkm::Id dimY, // input
-                                vtkm::Id colIdx, DeviceTag)
+  void DeviceAssignZero2DColumn(ArrayType& array,
+                                vtkm::Id dimX,
+                                vtkm::Id dimY, // input
+                                vtkm::Id colIdx,
+                                DeviceTag)
   {
     typedef vtkm::worklet::wavelets::AssignZero2DWorklet AssignZero2DType;
     AssignZero2DType zeroWorklet(dimX, dimY, colIdx, -1);
@@ -148,9 +156,11 @@ public:
 
   // Assign zeros to a plane that's perpendicular to the X axis (Left-Right direction)
   template <typename ArrayType, typename DeviceTag>
-  void DeviceAssignZero3DPlaneX(ArrayType& array,                            // input array
-                                vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ, // dims of input
-                                vtkm::Id zeroX,                              // X idx to set zero
+  void DeviceAssignZero3DPlaneX(ArrayType& array, // input array
+                                vtkm::Id dimX,
+                                vtkm::Id dimY,
+                                vtkm::Id dimZ,  // dims of input
+                                vtkm::Id zeroX, // X idx to set zero
                                 DeviceTag)
   {
     typedef vtkm::worklet::wavelets::AssignZero3DWorklet AssignZero3DType;
@@ -161,9 +171,11 @@ public:
 
   // Assign zeros to a plane that's perpendicular to the Y axis (Top-Down direction)
   template <typename ArrayType, typename DeviceTag>
-  void DeviceAssignZero3DPlaneY(ArrayType& array,                            // input array
-                                vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ, // dims of input
-                                vtkm::Id zeroY,                              // Y idx to set zero
+  void DeviceAssignZero3DPlaneY(ArrayType& array, // input array
+                                vtkm::Id dimX,
+                                vtkm::Id dimY,
+                                vtkm::Id dimZ,  // dims of input
+                                vtkm::Id zeroY, // Y idx to set zero
                                 DeviceTag)
   {
     typedef vtkm::worklet::wavelets::AssignZero3DWorklet AssignZero3DType;
@@ -174,9 +186,11 @@ public:
 
   // Assign zeros to a plane that's perpendicular to the Z axis (Front-Back direction)
   template <typename ArrayType, typename DeviceTag>
-  void DeviceAssignZero3DPlaneZ(ArrayType& array,                            // input array
-                                vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ, // dims of input
-                                vtkm::Id zeroZ,                              // Y idx to set zero
+  void DeviceAssignZero3DPlaneZ(ArrayType& array, // input array
+                                vtkm::Id dimX,
+                                vtkm::Id dimY,
+                                vtkm::Id dimZ,  // dims of input
+                                vtkm::Id zeroZ, // Y idx to set zero
                                 DeviceTag)
   {
     typedef vtkm::worklet::wavelets::AssignZero3DWorklet AssignZero3DType;
@@ -279,9 +293,15 @@ public:
 
   // Copy a small rectangle to a big rectangle
   template <typename SmallArrayType, typename BigArrayType, typename DeviceTag>
-  void DeviceRectangleCopyTo(const SmallArrayType& smallRect, vtkm::Id smallX, vtkm::Id smallY,
-                             BigArrayType& bigRect, vtkm::Id bigX, vtkm::Id bigY, vtkm::Id startX,
-                             vtkm::Id startY, DeviceTag)
+  void DeviceRectangleCopyTo(const SmallArrayType& smallRect,
+                             vtkm::Id smallX,
+                             vtkm::Id smallY,
+                             BigArrayType& bigRect,
+                             vtkm::Id bigX,
+                             vtkm::Id bigY,
+                             vtkm::Id startX,
+                             vtkm::Id startY,
+                             DeviceTag)
   {
     typedef vtkm::worklet::wavelets::RectangleCopyTo CopyToWorklet;
     CopyToWorklet cp(smallX, smallY, bigX, bigY, startX, startY);
@@ -291,9 +311,18 @@ public:
 
   // Copy a small cube to a big cube
   template <typename SmallArrayType, typename BigArrayType, typename DeviceTag>
-  void DeviceCubeCopyTo(const SmallArrayType& smallCube, vtkm::Id smallX, vtkm::Id smallY,
-                        vtkm::Id smallZ, BigArrayType& bigCube, vtkm::Id bigX, vtkm::Id bigY,
-                        vtkm::Id bigZ, vtkm::Id startX, vtkm::Id startY, vtkm::Id startZ, DeviceTag)
+  void DeviceCubeCopyTo(const SmallArrayType& smallCube,
+                        vtkm::Id smallX,
+                        vtkm::Id smallY,
+                        vtkm::Id smallZ,
+                        BigArrayType& bigCube,
+                        vtkm::Id bigX,
+                        vtkm::Id bigY,
+                        vtkm::Id bigZ,
+                        vtkm::Id startX,
+                        vtkm::Id startY,
+                        vtkm::Id startZ,
+                        DeviceTag)
   {
     typedef vtkm::worklet::wavelets::CubeCopyTo CopyToWorklet;
     CopyToWorklet cp(smallX, smallY, smallZ, bigX, bigY, bigZ, startX, startY, startZ);

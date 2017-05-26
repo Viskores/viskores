@@ -94,7 +94,8 @@ public:
   SkipVertex() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& superID, const InFieldPortalType& superarcs,
+  VTKM_EXEC void operator()(const vtkm::Id& superID,
+                            const InFieldPortalType& superarcs,
                             const OutFieldPortalType& joinArcs,
                             const OutFieldPortalType& splitArcs) const
   {

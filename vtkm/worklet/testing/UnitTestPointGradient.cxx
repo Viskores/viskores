@@ -30,7 +30,8 @@ namespace
 template <typename T>
 struct PointGrad
 {
-  PointGrad(const vtkm::cont::DataSet& data, const std::string& fieldName,
+  PointGrad(const vtkm::cont::DataSet& data,
+            const std::string& fieldName,
             vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& result)
     : Data(data)
     , FieldName(fieldName)
@@ -44,7 +45,8 @@ struct PointGrad
     vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointGradient> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       cellset, //whole cellset in
-                      this->Data.GetCoordinateSystem(), this->Data.GetField(this->FieldName),
+                      this->Data.GetCoordinateSystem(),
+                      this->Data.GetField(this->FieldName),
                       this->Result);
   }
 

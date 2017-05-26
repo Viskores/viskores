@@ -37,15 +37,17 @@ namespace vtkm
 namespace worklet
 {
 
-struct GradientInTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64,
-                                           vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
+struct GradientInTypes : vtkm::ListTagBase<vtkm::Float32,
+                                           vtkm::Float64,
+                                           vtkm::Vec<vtkm::Float32, 3>,
+                                           vtkm::Vec<vtkm::Float64, 3>>
 {
 };
 
-struct GradientOutTypes
-  : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>,
-                      vtkm::Vec<vtkm::Vec<vtkm::Float32, 3>, 3>,
-                      vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3>>
+struct GradientOutTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>,
+                                            vtkm::Vec<vtkm::Float64, 3>,
+                                            vtkm::Vec<vtkm::Vec<vtkm::Float32, 3>, 3>,
+                                            vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3>>
 {
 };
 
@@ -56,18 +58,23 @@ struct GradientVecOutTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<vtkm::Float32
 
 struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn, FieldInPoint<Vec3> pointCoordinates,
+  typedef void ControlSignature(CellSetIn,
+                                FieldInPoint<Vec3> pointCoordinates,
                                 FieldInPoint<GradientInTypes> inputField,
                                 FieldOutCell<GradientOutTypes> outputField);
 
   typedef void ExecutionSignature(CellShape, PointCount, _2, _3, _4);
   typedef _1 InputDomain;
 
-  template <typename CellTagType, typename PointCoordVecType, typename FieldInVecType,
+  template <typename CellTagType,
+            typename PointCoordVecType,
+            typename FieldInVecType,
             typename FieldOutType>
-  VTKM_EXEC void operator()(CellTagType shape, vtkm::IdComponent pointCount,
+  VTKM_EXEC void operator()(CellTagType shape,
+                            vtkm::IdComponent pointCount,
                             const PointCoordVecType& pointCoordinates,
-                            const FieldInVecType& inputField, FieldOutType& outputField) const
+                            const FieldInVecType& inputField,
+                            FieldOutType& outputField) const
   {
     //To confirm that we have the proper input and output types we need
     //to verify that input type matches the output vtkm::Vec<T> 'T' type.
@@ -89,11 +96,16 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
     this->Compute(shape, pointCount, pointCoordinates, inputField, outputField, Matches());
   }
 
-  template <typename CellShapeTag, typename PointCoordVecType, typename FieldInVecType,
+  template <typename CellShapeTag,
+            typename PointCoordVecType,
+            typename FieldInVecType,
             typename FieldOutType>
-  VTKM_EXEC void Compute(CellShapeTag shape, vtkm::IdComponent pointCount,
-                         const PointCoordVecType& wCoords, const FieldInVecType& field,
-                         FieldOutType& outputField, std::true_type) const
+  VTKM_EXEC void Compute(CellShapeTag shape,
+                         vtkm::IdComponent pointCount,
+                         const PointCoordVecType& wCoords,
+                         const FieldInVecType& field,
+                         FieldOutType& outputField,
+                         std::true_type) const
   {
     vtkm::Vec<vtkm::FloatDefault, 3> center =
       vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, *this);
@@ -101,10 +113,16 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
     outputField = vtkm::exec::CellDerivative(field, wCoords, center, shape, *this);
   }
 
-  template <typename CellShapeTag, typename PointCoordVecType, typename FieldInVecType,
+  template <typename CellShapeTag,
+            typename PointCoordVecType,
+            typename FieldInVecType,
             typename FieldOutType>
-  VTKM_EXEC void Compute(CellShapeTag, vtkm::IdComponent, const PointCoordVecType&,
-                         const FieldInVecType&, FieldOutType&, std::false_type) const
+  VTKM_EXEC void Compute(CellShapeTag,
+                         vtkm::IdComponent,
+                         const PointCoordVecType&,
+                         const FieldInVecType&,
+                         FieldOutType&,
+                         std::false_type) const
   {
     //this is invalid
   }
@@ -112,7 +130,8 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 
 struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
 {
-  typedef void ControlSignature(CellSetIn, WholeCellSetIn<Point, Cell>,
+  typedef void ControlSignature(CellSetIn,
+                                WholeCellSetIn<Point, Cell>,
                                 WholeArrayIn<Vec3> pointCoordinates,
                                 WholeArrayIn<GradientInTypes> inputField,
                                 FieldOutPoint<GradientOutTypes> outputField);
@@ -120,12 +139,18 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
   typedef void ExecutionSignature(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
   typedef _1 InputDomain;
 
-  template <typename FromIndexType, typename CellSetInType, typename WholeCoordinatesIn,
-            typename WholeFieldIn, typename FieldOutType>
-  VTKM_EXEC void operator()(const vtkm::IdComponent& numCells, const FromIndexType& cellIds,
-                            const vtkm::Id& pointId, const CellSetInType& geometry,
+  template <typename FromIndexType,
+            typename CellSetInType,
+            typename WholeCoordinatesIn,
+            typename WholeFieldIn,
+            typename FieldOutType>
+  VTKM_EXEC void operator()(const vtkm::IdComponent& numCells,
+                            const FromIndexType& cellIds,
+                            const vtkm::Id& pointId,
+                            const CellSetInType& geometry,
                             const WholeCoordinatesIn& pointCoordinates,
-                            const WholeFieldIn& inputField, FieldOutType& outputField) const
+                            const WholeFieldIn& inputField,
+                            FieldOutType& outputField) const
   {
     //To confirm that we have the proper input and output types we need
     //to verify that input type matches the output vtkm::Vec<T> 'T' type.
@@ -143,16 +168,23 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
 
     //Verify that input and output dimension tags match
     using Matches = typename std::is_same<InDimensionTag, OutDimensionTag>::type;
-    this->Compute(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, outputField,
-                  Matches());
+    this->Compute(
+      numCells, cellIds, pointId, geometry, pointCoordinates, inputField, outputField, Matches());
   }
 
-  template <typename FromIndexType, typename CellSetInType, typename WholeCoordinatesIn,
-            typename WholeFieldIn, typename FieldOutType>
-  VTKM_EXEC void Compute(const vtkm::IdComponent& numCells, const FromIndexType& cellIds,
-                         const vtkm::Id& pointId, const CellSetInType& geometry,
-                         const WholeCoordinatesIn& pointCoordinates, const WholeFieldIn& inputField,
-                         FieldOutType& outputField, std::true_type) const
+  template <typename FromIndexType,
+            typename CellSetInType,
+            typename WholeCoordinatesIn,
+            typename WholeFieldIn,
+            typename FieldOutType>
+  VTKM_EXEC void Compute(const vtkm::IdComponent& numCells,
+                         const FromIndexType& cellIds,
+                         const vtkm::Id& pointId,
+                         const CellSetInType& geometry,
+                         const WholeCoordinatesIn& pointCoordinates,
+                         const WholeFieldIn& inputField,
+                         FieldOutType& outputField,
+                         std::true_type) const
   {
     using ThreadIndices = vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>;
     using ValueType = typename WholeFieldIn::ValueType;
@@ -184,18 +216,28 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
     outputField[2] = static_cast<OutValueType>(gradient[2] * invNumCells);
   }
 
-  template <typename FromIndexType, typename CellSetInType, typename WholeCoordinatesIn,
-            typename WholeFieldIn, typename FieldOutType>
-  VTKM_EXEC void Compute(const vtkm::IdComponent&, const FromIndexType&, const vtkm::Id&,
-                         const CellSetInType&, const WholeCoordinatesIn&, const WholeFieldIn&,
-                         FieldOutType&, std::false_type) const
+  template <typename FromIndexType,
+            typename CellSetInType,
+            typename WholeCoordinatesIn,
+            typename WholeFieldIn,
+            typename FieldOutType>
+  VTKM_EXEC void Compute(const vtkm::IdComponent&,
+                         const FromIndexType&,
+                         const vtkm::Id&,
+                         const CellSetInType&,
+                         const WholeCoordinatesIn&,
+                         const WholeFieldIn&,
+                         FieldOutType&,
+                         std::false_type) const
   {
     //this is invalid, as the input and output types don't match.
     //e.g input is float => output is vtkm::Vec< vtkm::Vec< float > >
   }
 
 private:
-  template <typename CellShapeTag, typename PointCoordVecType, typename FieldInVecType,
+  template <typename CellShapeTag,
+            typename PointCoordVecType,
+            typename FieldInVecType,
             typename OutValueType>
   inline VTKM_EXEC void ComputeGradient(CellShapeTag cellShape,
                                         const vtkm::IdComponent& pointIndexForCell,
@@ -204,8 +246,8 @@ private:
                                         vtkm::Vec<OutValueType, 3>& gradient) const
   {
     vtkm::Vec<vtkm::FloatDefault, 3> pCoords;
-    vtkm::exec::ParametricCoordinatesPoint(wCoords.GetNumberOfComponents(), pointIndexForCell,
-                                           pCoords, cellShape, *this);
+    vtkm::exec::ParametricCoordinatesPoint(
+      wCoords.GetNumberOfComponents(), pointIndexForCell, pCoords, cellShape, *this);
 
     //we need to add this to a return value
     gradient += vtkm::exec::CellDerivative(field, wCoords, pCoords, cellShape, *this);
@@ -213,7 +255,8 @@ private:
 
   template <typename CellSetInType>
   VTKM_EXEC vtkm::IdComponent GetPointIndexForCell(
-    const vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>& indices, vtkm::Id pointId) const
+    const vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>& indices,
+    vtkm::Id pointId) const
   {
     vtkm::IdComponent result = 0;
     const auto& topo = indices.GetIndicesFrom();
@@ -244,9 +287,10 @@ private:
     //we are passing in an vtkm::Id when it wants a Id2 or an Id3 that
     //represents the flat index of the topology
     using ExecObjectType = typename WholeFieldIn::PortalType;
-    using Fetch = vtkm::exec::arg::Fetch<
-      vtkm::exec::arg::FetchTagArrayTopologyMapIn, vtkm::exec::arg::AspectTagDefault,
-      vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>, ExecObjectType>;
+    using Fetch = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
+                                         vtkm::exec::arg::AspectTagDefault,
+                                         vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>,
+                                         ExecObjectType>;
     Fetch fetch;
     return fetch.Load(indices, in.GetPortal());
   }

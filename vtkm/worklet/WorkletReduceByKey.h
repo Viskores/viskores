@@ -179,14 +179,21 @@ public:
   /// Reduce by key worklets use the related thread indices class.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename T, typename OutToInArrayType, typename VisitArrayType,
+  template <typename T,
+            typename OutToInArrayType,
+            typename VisitArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesReduceByKey GetThreadIndices(
-    const T& threadIndex, const OutToInArrayType& outToIn, const VisitArrayType& visit,
-    const InputDomainType& inputDomain, const T& globalThreadIndexOffset = 0) const
+    const T& threadIndex,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const InputDomainType& inputDomain,
+    const T& globalThreadIndexOffset = 0) const
   {
-    return vtkm::exec::arg::ThreadIndicesReduceByKey(threadIndex, outToIn.Get(threadIndex),
-                                                     visit.Get(threadIndex), inputDomain,
+    return vtkm::exec::arg::ThreadIndicesReduceByKey(threadIndex,
+                                                     outToIn.Get(threadIndex),
+                                                     visit.Get(threadIndex),
+                                                     inputDomain,
                                                      globalThreadIndexOffset);
   }
 };

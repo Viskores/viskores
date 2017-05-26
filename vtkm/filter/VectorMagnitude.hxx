@@ -36,8 +36,10 @@ inline VTKM_CONT VectorMagnitude::VectorMagnitude()
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultField VectorMagnitude::DoExecute(
-  const vtkm::cont::DataSet& inDataSet, const vtkm::cont::ArrayHandle<T, StorageType>& field,
-  const vtkm::filter::FieldMetadata& fieldMetadata, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  const vtkm::cont::DataSet& inDataSet,
+  const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::filter::FieldMetadata& fieldMetadata,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter&)
 {
   typedef typename detail::FloatingPointReturnType<T>::Type ReturnType;
@@ -48,8 +50,11 @@ inline VTKM_CONT vtkm::filter::ResultField VectorMagnitude::DoExecute(
 
   dispatcher.Invoke(field, outArray);
 
-  return vtkm::filter::ResultField(inDataSet, outArray, this->GetOutputFieldName(),
-                                   fieldMetadata.GetAssociation(), fieldMetadata.GetCellSetName());
+  return vtkm::filter::ResultField(inDataSet,
+                                   outArray,
+                                   this->GetOutputFieldName(),
+                                   fieldMetadata.GetAssociation(),
+                                   fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

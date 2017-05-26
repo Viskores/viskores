@@ -47,7 +47,8 @@ public:
   class ThresholdByPointField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInPoint<ScalarAll> scalars,
+    typedef void ControlSignature(CellSetIn cellset,
+                                  FieldInPoint<ScalarAll> scalars,
                                   FieldOutCell<BoolType> passFlags);
 
     typedef _3 ExecutionSignature(_2, PointCount);
@@ -83,7 +84,8 @@ public:
   class ThresholdByCellField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInTo<Scalar> scalars,
+    typedef void ControlSignature(CellSetIn cellset,
+                                  FieldInTo<Scalar> scalars,
                                   FieldOut<BoolType> passFlags);
 
     typedef _3 ExecutionSignature(_2);
@@ -148,8 +150,8 @@ public:
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
       vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::CopyIf(indices, passFlags,
-                                                              this->ValidCellIds);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::CopyIf(
+      indices, passFlags, this->ValidCellIds);
 
     return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
   }
@@ -186,8 +188,8 @@ public:
     vtkm::cont::DynamicArrayHandle data;
     CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
 
-    return vtkm::cont::Field(field.GetName(), field.GetAssociation(), field.GetAssocCellSet(),
-                             data);
+    return vtkm::cont::Field(
+      field.GetName(), field.GetAssociation(), field.GetAssocCellSet(), data);
   }
 
 private:

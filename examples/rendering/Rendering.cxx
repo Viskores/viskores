@@ -138,7 +138,8 @@ int main(int argc, char* argv[])
   vtkm::rendering::MapperGL mapper;
 
   vtkm::rendering::Scene scene;
-  scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(), ds.GetCoordinateSystem(),
+  scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
+                                        ds.GetCoordinateSystem(),
                                         ds.GetField("pointvar"),
                                         vtkm::rendering::ColorTable("thermal")));
 

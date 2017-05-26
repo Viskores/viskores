@@ -100,8 +100,12 @@ public:
   }
 
   VTKM_CONT
-  void SetWorldPosition(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 z0, vtkm::Float64 x1,
-                        vtkm::Float64 y1, vtkm::Float64 z1)
+  void SetWorldPosition(vtkm::Float64 x0,
+                        vtkm::Float64 y0,
+                        vtkm::Float64 z0,
+                        vtkm::Float64 x1,
+                        vtkm::Float64 y1,
+                        vtkm::Float64 z1)
   {
     this->SetWorldPosition(vtkm::make_Vec(x0, y0, z0), vtkm::make_Vec(x1, y1, z1));
   }

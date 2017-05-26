@@ -35,13 +35,15 @@ namespace worklet
 class PointAverage : public vtkm::worklet::WorkletMapCellToPoint
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset, FieldInCell<> inCellField,
+  typedef void ControlSignature(CellSetIn cellset,
+                                FieldInCell<> inCellField,
                                 FieldOutPoint<> outPointField);
   typedef void ExecutionSignature(CellCount, _2, _3);
   typedef _1 InputDomain;
 
   template <typename CellValueVecType, typename OutType>
-  VTKM_EXEC void operator()(const vtkm::IdComponent& numCells, const CellValueVecType& cellValues,
+  VTKM_EXEC void operator()(const vtkm::IdComponent& numCells,
+                            const CellValueVecType& cellValues,
                             OutType& average) const
   {
     using CellValueType = typename CellValueVecType::ComponentType;
@@ -56,8 +58,10 @@ public:
 
 private:
   template <typename CellValueVecType, typename OutType>
-  VTKM_EXEC void DoAverage(const vtkm::IdComponent& numCells, const CellValueVecType& cellValues,
-                           OutType& average, std::true_type) const
+  VTKM_EXEC void DoAverage(const vtkm::IdComponent& numCells,
+                           const CellValueVecType& cellValues,
+                           OutType& average,
+                           std::true_type) const
   {
     using OutComponentType = typename vtkm::VecTraits<OutType>::ComponentType;
     OutType sum = OutType(cellValues[0]);
@@ -72,7 +76,8 @@ private:
   template <typename CellValueVecType, typename OutType>
   VTKM_EXEC void DoAverage(const vtkm::IdComponent& vtkmNotUsed(numCells),
                            const CellValueVecType& vtkmNotUsed(cellValues),
-                           OutType& vtkmNotUsed(average), std::false_type) const
+                           OutType& vtkmNotUsed(average),
+                           std::false_type) const
   {
     this->RaiseError("PointAverage called with mismatched Vec sizes for PointAverage.");
   }

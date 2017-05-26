@@ -109,13 +109,16 @@ struct VecTraits
   /// Returns the value in a given component of the vector.
   ///
   VTKM_EXEC_CONT static const ComponentType& GetComponent(
-    const typename std::remove_const<VecType>::type& vector, vtkm::IdComponent component);
+    const typename std::remove_const<VecType>::type& vector,
+    vtkm::IdComponent component);
   VTKM_EXEC_CONT static ComponentType& GetComponent(
-    typename std::remove_const<VecType>::type& vector, vtkm::IdComponent component);
+    typename std::remove_const<VecType>::type& vector,
+    vtkm::IdComponent component);
 
   /// Changes the value in a given component of the vector.
   ///
-  VTKM_EXEC_CONT static void SetComponent(VecType& vector, vtkm::IdComponent component,
+  VTKM_EXEC_CONT static void SetComponent(VecType& vector,
+                                          vtkm::IdComponent component,
                                           ComponentType value);
 
   /// Copies the components in the given vector into a given Vec object.
@@ -183,7 +186,8 @@ struct VecTraits<vtkm::Vec<T, Size>>
 
   /// Changes the value in a given component of the vector.
   ///
-  VTKM_EXEC_CONT static void SetComponent(VecType& vector, vtkm::IdComponent component,
+  VTKM_EXEC_CONT static void SetComponent(VecType& vector,
+                                          vtkm::IdComponent component,
                                           ComponentType value)
   {
     vector[component] = value;
@@ -346,7 +350,8 @@ struct VecTraitsBasic
   VTKM_EXEC_CONT
   static ComponentType& GetComponent(ScalarType& vector, vtkm::IdComponent) { return vector; }
 
-  VTKM_EXEC_CONT static void SetComponent(ScalarType& vector, vtkm::IdComponent,
+  VTKM_EXEC_CONT static void SetComponent(ScalarType& vector,
+                                          vtkm::IdComponent,
                                           ComponentType value)
   {
     vector = value;

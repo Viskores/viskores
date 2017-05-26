@@ -42,8 +42,10 @@ struct DispatcherStreamingMapFieldTransformFunctor
   vtkm::Id FullSize;
 
   VTKM_CONT
-  DispatcherStreamingMapFieldTransformFunctor(vtkm::Id blockIndex, vtkm::Id blockSize,
-                                              vtkm::Id curBlockSize, vtkm::Id fullSize)
+  DispatcherStreamingMapFieldTransformFunctor(vtkm::Id blockIndex,
+                                              vtkm::Id blockSize,
+                                              vtkm::Id curBlockSize,
+                                              vtkm::Id fullSize)
     : BlockIndex(blockIndex)
     , BlockSize(blockSize)
     , CurBlockSize(curBlockSize)
@@ -70,7 +72,8 @@ struct DispatcherStreamingMapFieldTransformFunctor
   struct ReturnType
   {
     typedef typename DetermineReturnType<
-      ParameterType, vtkm::cont::internal::ArrayHandleCheck<ParameterType>::type::value>::type type;
+      ParameterType,
+      vtkm::cont::internal::ArrayHandleCheck<ParameterType>::type::value>::type type;
   };
 
   template <typename ParameterType, bool IsArrayHandle>
@@ -87,8 +90,8 @@ struct DispatcherStreamingMapFieldTransformFunctor
                                                                  vtkm::Id fullSize) const
     {
       vtkm::cont::ArrayHandleStreaming<ArrayHandleType> result =
-        vtkm::cont::ArrayHandleStreaming<ArrayHandleType>(array, blockIndex, blockSize,
-                                                          curBlockSize);
+        vtkm::cont::ArrayHandleStreaming<ArrayHandleType>(
+          array, blockIndex, blockSize, curBlockSize);
       if (blockIndex == 0)
         result.AllocateFullArray(fullSize);
       return result;
@@ -104,7 +107,8 @@ struct DispatcherStreamingMapFieldTransformFunctor
 
   template <typename ParameterType, vtkm::IdComponent Index>
   VTKM_CONT typename ReturnType<ParameterType, Index>::type operator()(
-    const ParameterType& invokeData, vtkm::internal::IndexTag<Index>) const
+    const ParameterType& invokeData,
+    vtkm::internal::IndexTag<Index>) const
   {
     return TransformImpl<ParameterType,
                          vtkm::cont::internal::ArrayHandleCheck<ParameterType>::type::value>()(
@@ -147,7 +151,8 @@ struct DispatcherStreamingMapFieldTransferFunctor
 
   template <typename ParameterType, vtkm::IdComponent Index>
   VTKM_CONT typename ReturnType<ParameterType, Index>::type operator()(
-    const ParameterType& invokeData, vtkm::internal::IndexTag<Index>) const
+    const ParameterType& invokeData,
+    vtkm::internal::IndexTag<Index>) const
   {
     return TransformImpl<ParameterType,
                          vtkm::cont::internal::ArrayHandleCheck<ParameterType>::type::value>()(
@@ -161,10 +166,12 @@ struct DispatcherStreamingMapFieldTransferFunctor
 template <typename WorkletType, typename Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class DispatcherStreamingMapField
   : public vtkm::worklet::internal::DispatcherBase<DispatcherStreamingMapField<WorkletType, Device>,
-                                                   WorkletType, vtkm::worklet::WorkletMapField>
+                                                   WorkletType,
+                                                   vtkm::worklet::WorkletMapField>
 {
   typedef vtkm::worklet::internal::DispatcherBase<DispatcherStreamingMapField<WorkletType, Device>,
-                                                  WorkletType, vtkm::worklet::WorkletMapField>
+                                                  WorkletType,
+                                                  vtkm::worklet::WorkletMapField>
     Superclass;
 
 public:
@@ -179,10 +186,14 @@ public:
   void SetNumberOfBlocks(vtkm::Id numberOfBlocks) { NumberOfBlocks = numberOfBlocks; }
 
   template <typename Invocation, typename DeviceAdapter>
-  VTKM_CONT void BasicInvoke(const Invocation& invocation, vtkm::Id numInstances,
-                             vtkm::Id globalIndexOffset, DeviceAdapter device) const
+  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+                             vtkm::Id numInstances,
+                             vtkm::Id globalIndexOffset,
+                             DeviceAdapter device) const
   {
-    this->InvokeTransportParameters(invocation, numInstances, globalIndexOffset,
+    this->InvokeTransportParameters(invocation,
+                                    numInstances,
+                                    globalIndexOffset,
                                     this->Worklet.GetScatter().GetOutputRange(numInstances),
                                     device);
   }
@@ -206,12 +217,12 @@ public:
     if (fullSize % NumberOfBlocks != 0)
       blockSize += 1;
 
-    typedef detail::DispatcherStreamingMapFieldTransformFunctor<
-      typename Invocation::ControlInterface, Device>
-      TransformFunctorType;
-    typedef detail::DispatcherStreamingMapFieldTransferFunctor<
-      typename Invocation::ControlInterface, Device>
-      TransferFunctorType;
+    typedef detail::
+      DispatcherStreamingMapFieldTransformFunctor<typename Invocation::ControlInterface, Device>
+        TransformFunctorType;
+    typedef detail::
+      DispatcherStreamingMapFieldTransferFunctor<typename Invocation::ControlInterface, Device>
+        TransferFunctorType;
 
     for (vtkm::Id block = 0; block < NumberOfBlocks; block++)
     {
@@ -241,7 +252,9 @@ public:
   }
 
 private:
-  template <typename Invocation, typename InputRangeType, typename OutputRangeType,
+  template <typename Invocation,
+            typename InputRangeType,
+            typename OutputRangeType,
             typename DeviceAdapter>
   VTKM_CONT void InvokeTransportParameters(const Invocation& invocation,
                                            const InputRangeType& inputRange,
@@ -253,7 +266,9 @@ private:
     const ParameterInterfaceType& parameters = invocation.Parameters;
 
     typedef vtkm::worklet::internal::detail::DispatcherBaseTransportFunctor<
-      typename Invocation::ControlInterface, typename Invocation::InputDomainType, DeviceAdapter>
+      typename Invocation::ControlInterface,
+      typename Invocation::InputDomainType,
+      DeviceAdapter>
       TransportFunctorType;
     typedef
       typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type
@@ -273,12 +288,16 @@ private:
     this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
                            .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
                            .ChangeVisitArray(visitArray.PrepareForInput(device)),
-                         outputRange, globalIndexOffset, device);
+                         outputRange,
+                         globalIndexOffset,
+                         device);
   }
 
   template <typename Invocation, typename RangeType, typename DeviceAdapter>
-  VTKM_CONT void InvokeSchedule(const Invocation& invocation, RangeType range,
-                                RangeType globalIndexOffset, DeviceAdapter) const
+  VTKM_CONT void InvokeSchedule(const Invocation& invocation,
+                                RangeType range,
+                                RangeType globalIndexOffset,
+                                DeviceAdapter) const
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;

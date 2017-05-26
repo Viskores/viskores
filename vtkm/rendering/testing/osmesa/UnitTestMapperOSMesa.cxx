@@ -43,18 +43,18 @@ void RenderTests()
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
 
-  vtkm::rendering::testing::Render<M, C, V3>(maker.Make3DRegularDataSet0(), "pointvar", colorTable,
-                                             "reg3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(maker.Make3DRectilinearDataSet0(), "pointvar",
-                                             colorTable, "rect3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(maker.Make3DExplicitDataSet4(), "pointvar", colorTable,
-                                             "expl3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V2>(maker.Make2DRectilinearDataSet0(), "pointvar",
-                                             colorTable, "rect2D.pnm");
-  vtkm::rendering::testing::Render<M, C, V1>(maker.Make1DUniformDataSet0(), "pointvar",
-                                             "uniform1D.pnm");
-  vtkm::rendering::testing::Render<M, C, V1>(maker.Make1DExplicitDataSet0(), "pointvar",
-                                             "expl1D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V2>(
+    maker.Make2DRectilinearDataSet0(), "pointvar", colorTable, "rect2D.pnm");
+  vtkm::rendering::testing::Render<M, C, V1>(
+    maker.Make1DUniformDataSet0(), "pointvar", "uniform1D.pnm");
+  vtkm::rendering::testing::Render<M, C, V1>(
+    maker.Make1DExplicitDataSet0(), "pointvar", "expl1D.pnm");
 }
 
 } //namespace

@@ -68,8 +68,9 @@ struct WrappedBinaryOperator
   }
 
   template <typename Argument1, typename Argument2>
-  VTKM_CONT ResultType operator()(
-    const Argument1& x, const vtkm::internal::ArrayPortalValueReference<Argument2>& y) const
+  VTKM_CONT ResultType
+  operator()(const Argument1& x,
+             const vtkm::internal::ArrayPortalValueReference<Argument2>& y) const
   {
     using ValueTypeY = typename vtkm::internal::ArrayPortalValueReference<Argument2>::ValueType;
     return m_f(x, (ValueTypeY)y);
@@ -296,7 +297,9 @@ struct ReduceByKeyUnaryStencilOp
   bool operator()(ReduceKeySeriesStates keySeriesState) const { return keySeriesState.fEnd; }
 };
 
-template <typename T, typename InputPortalType, typename KeyStatePortalType,
+template <typename T,
+          typename InputPortalType,
+          typename KeyStatePortalType,
           typename OutputPortalType>
 struct ShiftCopyAndInit : vtkm::exec::FunctorBase
 {
@@ -305,8 +308,10 @@ struct ShiftCopyAndInit : vtkm::exec::FunctorBase
   OutputPortalType Output;
   T initValue;
 
-  ShiftCopyAndInit(const InputPortalType& _input, const KeyStatePortalType& kstate,
-                   OutputPortalType& _output, T _init)
+  ShiftCopyAndInit(const InputPortalType& _input,
+                   const KeyStatePortalType& kstate,
+                   OutputPortalType& _output,
+                   T _init)
     : Input(_input)
     , KeyState(kstate)
     , Output(_output)
@@ -336,7 +341,9 @@ struct CopyKernel
   vtkm::Id OutputOffset;
 
   VTKM_CONT
-  CopyKernel(InputPortalType inputPortal, OutputPortalType outputPortal, vtkm::Id inputOffset = 0,
+  CopyKernel(InputPortalType inputPortal,
+             OutputPortalType outputPortal,
+             vtkm::Id inputOffset = 0,
              vtkm::Id outputOffset = 0)
     : InputPortal(inputPortal)
     , OutputPortal(outputPortal)
@@ -350,8 +357,9 @@ struct CopyKernel
   void operator()(vtkm::Id index) const
   {
     typedef typename OutputPortalType::ValueType ValueType;
-    this->OutputPortal.Set(index + this->OutputOffset, static_cast<ValueType>(this->InputPortal.Get(
-                                                         index + this->InputOffset)));
+    this->OutputPortal.Set(
+      index + this->OutputOffset,
+      static_cast<ValueType>(this->InputPortal.Get(index + this->InputOffset)));
   }
 
   VTKM_CONT
@@ -366,7 +374,8 @@ struct LowerBoundsKernel
   OutputPortalType OutputPortal;
 
   VTKM_CONT
-  LowerBoundsKernel(InputPortalType inputPortal, ValuesPortalType valuesPortal,
+  LowerBoundsKernel(InputPortalType inputPortal,
+                    ValuesPortalType valuesPortal,
                     OutputPortalType outputPortal)
     : InputPortal(inputPortal)
     , ValuesPortal(valuesPortal)
@@ -399,7 +408,9 @@ struct LowerBoundsKernel
   void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 };
 
-template <class InputPortalType, class ValuesPortalType, class OutputPortalType,
+template <class InputPortalType,
+          class ValuesPortalType,
+          class OutputPortalType,
           class BinaryCompare>
 struct LowerBoundsComparisonKernel
 {
@@ -409,8 +420,10 @@ struct LowerBoundsComparisonKernel
   BinaryCompare CompareFunctor;
 
   VTKM_CONT
-  LowerBoundsComparisonKernel(InputPortalType inputPortal, ValuesPortalType valuesPortal,
-                              OutputPortalType outputPortal, BinaryCompare binary_compare)
+  LowerBoundsComparisonKernel(InputPortalType inputPortal,
+                              ValuesPortalType valuesPortal,
+                              OutputPortalType outputPortal,
+                              BinaryCompare binary_compare)
     : InputPortal(inputPortal)
     , ValuesPortal(valuesPortal)
     , OutputPortal(outputPortal)
@@ -432,8 +445,10 @@ struct LowerBoundsComparisonKernel
     typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
     InputIteratorsType inputIterators(this->InputPortal);
     typename InputIteratorsType::IteratorType resultPos =
-      std::lower_bound(inputIterators.GetBegin(), inputIterators.GetEnd(),
-                       this->ValuesPortal.Get(index), this->CompareFunctor);
+      std::lower_bound(inputIterators.GetBegin(),
+                       inputIterators.GetEnd(),
+                       this->ValuesPortal.Get(index),
+                       this->CompareFunctor);
 
     vtkm::Id resultIndex =
       static_cast<vtkm::Id>(std::distance(inputIterators.GetBegin(), resultPos));
@@ -515,7 +530,8 @@ struct BitonicSortCrossoverKernel : vtkm::exec::FunctorBase
   vtkm::Id GroupSize;
 
   VTKM_CONT
-  BitonicSortCrossoverKernel(const PortalType& portal, const BinaryCompare& compare,
+  BitonicSortCrossoverKernel(const PortalType& portal,
+                             const BinaryCompare& compare,
                              vtkm::Id groupSize)
     : Portal(portal)
     , Compare(compare)
@@ -558,7 +574,8 @@ struct StencilToIndexFlagKernel
   UnaryPredicate Predicate;
 
   VTKM_CONT
-  StencilToIndexFlagKernel(StencilPortalType stencilPortal, OutputPortalType outputPortal,
+  StencilToIndexFlagKernel(StencilPortalType stencilPortal,
+                           OutputPortalType outputPortal,
                            UnaryPredicate unary_predicate)
     : StencilPortal(stencilPortal)
     , OutputPortal(outputPortal)
@@ -578,8 +595,11 @@ struct StencilToIndexFlagKernel
   void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 };
 
-template <class InputPortalType, class StencilPortalType, class IndexPortalType,
-          class OutputPortalType, class PredicateOperator>
+template <class InputPortalType,
+          class StencilPortalType,
+          class IndexPortalType,
+          class OutputPortalType,
+          class PredicateOperator>
 struct CopyIfKernel
 {
   InputPortalType InputPortal;
@@ -589,8 +609,10 @@ struct CopyIfKernel
   PredicateOperator Predicate;
 
   VTKM_CONT
-  CopyIfKernel(InputPortalType inputPortal, StencilPortalType stencilPortal,
-               IndexPortalType indexPortal, OutputPortalType outputPortal,
+  CopyIfKernel(InputPortalType inputPortal,
+               StencilPortalType stencilPortal,
+               IndexPortalType indexPortal,
+               OutputPortalType outputPortal,
                PredicateOperator unary_predicate)
     : InputPortal(inputPortal)
     , StencilPortal(stencilPortal)
@@ -663,7 +685,8 @@ struct ClassifyUniqueComparisonKernel
   BinaryCompare CompareFunctor;
 
   VTKM_CONT
-  ClassifyUniqueComparisonKernel(InputPortalType inputPortal, StencilPortalType stencilPortal,
+  ClassifyUniqueComparisonKernel(InputPortalType inputPortal,
+                                 StencilPortalType stencilPortal,
                                  BinaryCompare binary_compare)
     : InputPortal(inputPortal)
     , StencilPortal(stencilPortal)
@@ -703,7 +726,8 @@ struct UpperBoundsKernel
   OutputPortalType OutputPortal;
 
   VTKM_CONT
-  UpperBoundsKernel(InputPortalType inputPortal, ValuesPortalType valuesPortal,
+  UpperBoundsKernel(InputPortalType inputPortal,
+                    ValuesPortalType valuesPortal,
                     OutputPortalType outputPortal)
     : InputPortal(inputPortal)
     , ValuesPortal(valuesPortal)
@@ -736,7 +760,9 @@ struct UpperBoundsKernel
   void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 };
 
-template <class InputPortalType, class ValuesPortalType, class OutputPortalType,
+template <class InputPortalType,
+          class ValuesPortalType,
+          class OutputPortalType,
           class BinaryCompare>
 struct UpperBoundsKernelComparisonKernel
 {
@@ -746,8 +772,10 @@ struct UpperBoundsKernelComparisonKernel
   BinaryCompare CompareFunctor;
 
   VTKM_CONT
-  UpperBoundsKernelComparisonKernel(InputPortalType inputPortal, ValuesPortalType valuesPortal,
-                                    OutputPortalType outputPortal, BinaryCompare binary_compare)
+  UpperBoundsKernelComparisonKernel(InputPortalType inputPortal,
+                                    ValuesPortalType valuesPortal,
+                                    OutputPortalType outputPortal,
+                                    BinaryCompare binary_compare)
     : InputPortal(inputPortal)
     , ValuesPortal(valuesPortal)
     , OutputPortal(outputPortal)
@@ -769,8 +797,10 @@ struct UpperBoundsKernelComparisonKernel
     typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
     InputIteratorsType inputIterators(this->InputPortal);
     typename InputIteratorsType::IteratorType resultPos =
-      std::upper_bound(inputIterators.GetBegin(), inputIterators.GetEnd(),
-                       this->ValuesPortal.Get(index), this->CompareFunctor);
+      std::upper_bound(inputIterators.GetBegin(),
+                       inputIterators.GetEnd(),
+                       this->ValuesPortal.Get(index),
+                       this->CompareFunctor);
 
     vtkm::Id resultIndex =
       static_cast<vtkm::Id>(std::distance(inputIterators.GetBegin(), resultPos));
@@ -792,8 +822,10 @@ struct InclusiveToExclusiveKernel : vtkm::exec::FunctorBase
   ValueType InitialValue;
 
   VTKM_CONT
-  InclusiveToExclusiveKernel(const InPortalType& inPortal, const OutPortalType& outPortal,
-                             BinaryFunctor& binaryOperator, ValueType initialValue)
+  InclusiveToExclusiveKernel(const InPortalType& inPortal,
+                             const OutPortalType& outPortal,
+                             BinaryFunctor& binaryOperator,
+                             ValueType initialValue)
     : InPortal(inPortal)
     , OutPortal(outPortal)
     , BinaryOperator(binaryOperator)
@@ -822,7 +854,9 @@ struct ScanKernel : vtkm::exec::FunctorBase
   vtkm::Id Distance;
 
   VTKM_CONT
-  ScanKernel(const PortalType& portal, BinaryFunctor binary_functor, vtkm::Id stride,
+  ScanKernel(const PortalType& portal,
+             BinaryFunctor binary_functor,
+             vtkm::Id stride,
              vtkm::Id offset)
     : Portal(portal)
     , BinaryOperator(binary_functor)

@@ -45,7 +45,8 @@ public:
 
   vtkm::IdComponent GetNumberOfActors() const;
 
-  void Render(vtkm::rendering::Mapper& mapper, vtkm::rendering::Canvas& canvas,
+  void Render(vtkm::rendering::Mapper& mapper,
+              vtkm::rendering::Canvas& canvas,
               const vtkm::rendering::Camera& camera) const;
 
   vtkm::Bounds GetSpatialBounds() const;

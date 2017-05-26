@@ -96,8 +96,10 @@ public:
   FindLeaves() {}
 
   template <typename InPortalFieldType, typename OutPortalFieldType>
-  VTKM_EXEC void operator()(const vtkm::Id& superID, const InPortalFieldType& updegree,
-                            const InPortalFieldType& downdegree, const InPortalFieldType& joinArc,
+  VTKM_EXEC void operator()(const vtkm::Id& superID,
+                            const InPortalFieldType& updegree,
+                            const InPortalFieldType& downdegree,
+                            const InPortalFieldType& joinArc,
                             const InPortalFieldType& splitArc,
                             const OutPortalFieldType& superarc) const
   {

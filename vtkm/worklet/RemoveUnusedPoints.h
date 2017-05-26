@@ -68,7 +68,8 @@ public:
   ///
   struct TransformPointIndices : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<IdType> pointIndex, WholeArrayIn<IdType> indexMap,
+    typedef void ControlSignature(FieldIn<IdType> pointIndex,
+                                  WholeArrayIn<IdType> indexMap,
                                   FieldOut<IdType> mappedPoints);
     typedef _3 ExecutionSignature(_1, _2);
 
@@ -83,12 +84,16 @@ public:
   VTKM_CONT
   RemoveUnusedPoints() {}
 
-  template <typename ShapeStorage, typename NumIndicesStorage, typename ConnectivityStorage,
-            typename OffsetsStorage, typename Device>
-  VTKM_CONT RemoveUnusedPoints(
-    const vtkm::cont::CellSetExplicit<ShapeStorage, NumIndicesStorage, ConnectivityStorage,
-                                      OffsetsStorage>& inCellSet,
-    Device)
+  template <typename ShapeStorage,
+            typename NumIndicesStorage,
+            typename ConnectivityStorage,
+            typename OffsetsStorage,
+            typename Device>
+  VTKM_CONT RemoveUnusedPoints(const vtkm::cont::CellSetExplicit<ShapeStorage,
+                                                                 NumIndicesStorage,
+                                                                 ConnectivityStorage,
+                                                                 OffsetsStorage>& inCellSet,
+                               Device)
   {
     this->FindPointsStart(Device());
     this->FindPoints(inCellSet, Device());
@@ -107,12 +112,16 @@ public:
   /// points are those that are not found in any cell sets passed to this
   /// method.
   ///
-  template <typename ShapeStorage, typename NumIndicesStorage, typename ConnectivityStorage,
-            typename OffsetsStorage, typename Device>
-  VTKM_CONT void FindPoints(
-    const vtkm::cont::CellSetExplicit<ShapeStorage, NumIndicesStorage, ConnectivityStorage,
-                                      OffsetsStorage>& inCellSet,
-    Device)
+  template <typename ShapeStorage,
+            typename NumIndicesStorage,
+            typename ConnectivityStorage,
+            typename OffsetsStorage,
+            typename Device>
+  VTKM_CONT void FindPoints(const vtkm::cont::CellSetExplicit<ShapeStorage,
+                                                              NumIndicesStorage,
+                                                              ConnectivityStorage,
+                                                              OffsetsStorage>& inCellSet,
+                            Device)
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
@@ -148,11 +157,18 @@ public:
   /// returns a new cell set with cell points transformed to use the indices of
   /// the new reduced point arrays.
   ///
-  template <typename ShapeStorage, typename NumIndicesStorage, typename ConnectivityStorage,
-            typename OffsetsStorage, typename Device>
-  VTKM_CONT vtkm::cont::CellSetExplicit<ShapeStorage, NumIndicesStorage,
-                                        VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG, OffsetsStorage>
-  MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage, NumIndicesStorage, ConnectivityStorage,
+  template <typename ShapeStorage,
+            typename NumIndicesStorage,
+            typename ConnectivityStorage,
+            typename OffsetsStorage,
+            typename Device>
+  VTKM_CONT vtkm::cont::CellSetExplicit<ShapeStorage,
+                                        NumIndicesStorage,
+                                        VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
+                                        OffsetsStorage>
+  MapCellSet(const vtkm::cont::CellSetExplicit<ShapeStorage,
+                                               NumIndicesStorage,
+                                               ConnectivityStorage,
                                                OffsetsStorage>& inCellSet,
              Device) const
   {
@@ -167,13 +183,15 @@ public:
 
     vtkm::worklet::DispatcherMapField<TransformPointIndices, Device> dispatcher;
     dispatcher.Invoke(inCellSet.GetConnectivityArray(FromTopology(), ToTopology()),
-                      this->PointScatter->GetInputToOutputMap(), newConnectivityArray);
+                      this->PointScatter->GetInputToOutputMap(),
+                      newConnectivityArray);
 
     vtkm::Id numberOfPoints = this->PointScatter->GetOutputToInputMap().GetNumberOfValues();
-    vtkm::cont::CellSetExplicit<ShapeStorage, NumIndicesStorage, NewConnectivityStorage,
-                                OffsetsStorage>
-      outCellSet(inCellSet.GetName());
-    outCellSet.Fill(numberOfPoints, inCellSet.GetShapesArray(FromTopology(), ToTopology()),
+    vtkm::cont::
+      CellSetExplicit<ShapeStorage, NumIndicesStorage, NewConnectivityStorage, OffsetsStorage>
+        outCellSet(inCellSet.GetName());
+    outCellSet.Fill(numberOfPoints,
+                    inCellSet.GetShapesArray(FromTopology(), ToTopology()),
                     inCellSet.GetNumIndicesArray(FromTopology(), ToTopology()),
                     newConnectivityArray,
                     inCellSet.GetIndexOffsetArray(FromTopology(), ToTopology()));
@@ -210,7 +228,8 @@ public:
   /// array provided.
   ///
   template <typename InArrayHandle, typename OutArrayHandle, typename Device>
-  VTKM_CONT void MapPointFieldDeep(const InArrayHandle& inArray, OutArrayHandle& outArray,
+  VTKM_CONT void MapPointFieldDeep(const InArrayHandle& inArray,
+                                   OutArrayHandle& outArray,
                                    Device) const
   {
     VTKM_IS_ARRAY_HANDLE(InArrayHandle);
@@ -233,7 +252,8 @@ public:
   ///
   template <typename InArrayHandle, typename Device>
   vtkm::cont::ArrayHandle<typename InArrayHandle::ValueType> MapPointFieldDeep(
-    const InArrayHandle& inArray, Device) const
+    const InArrayHandle& inArray,
+    Device) const
   {
     VTKM_IS_ARRAY_HANDLE(InArrayHandle);
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);

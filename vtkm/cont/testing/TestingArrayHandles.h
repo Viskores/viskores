@@ -257,8 +257,9 @@ private:
         {
           gotException = true;
         }
-        VTKM_TEST_ASSERT(gotException, "PrepareForOutput should fail when asked to "
-                                       "re-allocate user provided memory.");
+        VTKM_TEST_ASSERT(gotException,
+                         "PrepareForOutput should fail when asked to "
+                         "re-allocate user provided memory.");
       }
     }
   };

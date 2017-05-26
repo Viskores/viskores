@@ -344,14 +344,19 @@ public:
   /// types.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template <typename T, typename OutToInArrayType, typename VisitArrayType,
+  template <typename T,
+            typename OutToInArrayType,
+            typename VisitArrayType,
             typename InputDomainType>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
-    const T& threadIndex, const OutToInArrayType& outToIn, const VisitArrayType& visit,
-    const InputDomainType&, const T& globalThreadIndexOffset = 0) const
+    const T& threadIndex,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const InputDomainType&,
+    const T& globalThreadIndexOffset = 0) const
   {
-    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, outToIn.Get(threadIndex),
-                                               visit.Get(threadIndex), globalThreadIndexOffset);
+    return vtkm::exec::arg::ThreadIndicesBasic(
+      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
   }
 };
 }

@@ -127,8 +127,10 @@ public:
   vtkm::cont::ArrayHandle<vtkm::UInt16> linkComponentCaseTable3D;
 
   // constructor
-  Mesh3D_DEM_Triangulation(const vtkm::cont::ArrayHandle<T, StorageType>& Values, vtkm::Id NRows,
-                           vtkm::Id NCols, vtkm::Id NSlices);
+  Mesh3D_DEM_Triangulation(const vtkm::cont::ArrayHandle<T, StorageType>& Values,
+                           vtkm::Id NRows,
+                           vtkm::Id NCols,
+                           vtkm::Id NSlices);
 
   // sets all vertices to point along an outgoing edge (except extrema)
   void SetStarts(vtkm::cont::ArrayHandle<vtkm::Id>& chains, bool descending);
@@ -140,7 +142,9 @@ public:
 // creates input mesh
 template <typename T, typename StorageType, typename DeviceAdapter>
 Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::Mesh3D_DEM_Triangulation(
-  const vtkm::cont::ArrayHandle<T, StorageType>& Values, vtkm::Id NRows, vtkm::Id NCols,
+  const vtkm::cont::ArrayHandle<T, StorageType>& Values,
+  vtkm::Id NRows,
+  vtkm::Id NCols,
   vtkm::Id NSlices)
   : values(Values)
   , nRows(NRows)
@@ -165,7 +169,8 @@ Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::Mesh3D_DEM_Triangulatio
 // sets outgoing paths for saddles
 template <typename T, typename StorageType, typename DeviceAdapter>
 void Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetStarts(
-  vtkm::cont::ArrayHandle<vtkm::Id>& chains, bool ascending)
+  vtkm::cont::ArrayHandle<vtkm::Id>& chains,
+  bool ascending)
 {
   // create the neighbourhood mask
   neighbourhoodMask.Allocate(nVertices);
@@ -185,7 +190,8 @@ void Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetStarts(
 // sets outgoing paths for saddles
 template <typename T, typename StorageType, typename DeviceAdapter>
 void Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
-  ChainGraph<T, StorageType, DeviceAdapter>& mergeGraph, bool ascending)
+  ChainGraph<T, StorageType, DeviceAdapter>& mergeGraph,
+  bool ascending)
 {
   // we need a temporary inverse index to change vertex IDs
   vtkm::cont::ArrayHandle<vtkm::Id> inverseIndex;
@@ -197,7 +203,11 @@ void Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
 
   vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
   Mesh3D_DEM_VertexOutdegreeStarter<DeviceAdapter> vertexOutdegreeStarter(
-    nRows, nCols, nSlices, ascending, neighbourOffsets3D.PrepareForInput(DeviceAdapter()),
+    nRows,
+    nCols,
+    nSlices,
+    ascending,
+    neighbourOffsets3D.PrepareForInput(DeviceAdapter()),
     linkComponentCaseTable3D.PrepareForInput(DeviceAdapter()));
   vtkm::worklet::DispatcherMapField<Mesh3D_DEM_VertexOutdegreeStarter<DeviceAdapter>>
     vertexOutdegreeStarterDispatcher(vertexOutdegreeStarter);

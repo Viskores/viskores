@@ -186,12 +186,14 @@ private:
   VTKM_CONT_EXPORT
   VTKM_CONT
   void SetDeviceState(vtkm::cont::DeviceAdapterId deviceId,
-                      const vtkm::cont::DeviceAdapterNameType& deviceName, bool state);
+                      const vtkm::cont::DeviceAdapterNameType& deviceName,
+                      bool state);
 
   VTKM_CONT_EXPORT
   VTKM_CONT
   void ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
-                       const vtkm::cont::DeviceAdapterNameType& deviceName, bool runtimeExists);
+                       const vtkm::cont::DeviceAdapterNameType& deviceName,
+                       bool runtimeExists);
 };
 
 /// \brief Get the global \c RuntimeDeviceTracker.

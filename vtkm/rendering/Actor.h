@@ -36,11 +36,13 @@ namespace rendering
 class VTKM_RENDERING_EXPORT Actor
 {
 public:
-  Actor(const vtkm::cont::DynamicCellSet& cells, const vtkm::cont::CoordinateSystem& coordinates,
+  Actor(const vtkm::cont::DynamicCellSet& cells,
+        const vtkm::cont::CoordinateSystem& coordinates,
         const vtkm::cont::Field& scalarField,
         const vtkm::rendering::ColorTable& colorTable = vtkm::rendering::ColorTable("default"));
 
-  void Render(vtkm::rendering::Mapper& mapper, vtkm::rendering::Canvas& canvas,
+  void Render(vtkm::rendering::Mapper& mapper,
+              vtkm::rendering::Canvas& canvas,
               const vtkm::rendering::Camera& camera) const;
 
   const vtkm::cont::DynamicCellSet& GetCells() const;

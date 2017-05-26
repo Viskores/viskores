@@ -58,10 +58,16 @@ namespace accumulate_detail
 //
 //This specialization needs to be included before ANY thrust includes otherwise
 //other device code inside thrust that calls it will not see it
-template <typename ConcurrentGroup, typename RandomAccessIterator, typename Size, typename T,
+template <typename ConcurrentGroup,
+          typename RandomAccessIterator,
+          typename Size,
+          typename T,
           typename F>
 __device__ T
-destructive_accumulate_n(ConcurrentGroup& g, RandomAccessIterator first, Size n, T init,
+destructive_accumulate_n(ConcurrentGroup& g,
+                         RandomAccessIterator first,
+                         Size n,
+                         T init,
                          vtkm::exec::cuda::internal::WrappedBinaryOperator<T, F> binary_op)
 {
   typedef typename ConcurrentGroup::size_type size_type;

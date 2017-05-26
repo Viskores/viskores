@@ -44,7 +44,8 @@ class CellSetGeneralPermutation : public CellSet
 public:
   VTKM_CONT
   CellSetGeneralPermutation(const PermutationArrayHandleType& validCellIds,
-                            const OriginalCellSet& cellset, const std::string& name)
+                            const OriginalCellSet& cellset,
+                            const std::string& name)
     : CellSet(name)
     , ValidCellIds(validCellIds)
     , FullCellSet(cellset)
@@ -94,15 +95,15 @@ public:
     typedef typename PermutationArrayHandleType::template ExecutionTypes<Device>::PortalConst
       ExecPortalType;
 
-    typedef typename OriginalCellSet::template ExecutionTypes<
-      Device, FromTopology, ToTopology>::ExecObjectType OrigExecObjectType;
+    typedef typename OriginalCellSet::template ExecutionTypes<Device, FromTopology, ToTopology>::
+      ExecObjectType OrigExecObjectType;
 
     typedef vtkm::exec::ConnectivityPermuted<ExecPortalType, OrigExecObjectType> ExecObjectType;
   };
 
   template <typename Device, typename FromTopology, typename ToTopology>
-  typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType PrepareForInput(
-    Device d, FromTopology f, ToTopology t) const
+  typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType
+  PrepareForInput(Device d, FromTopology f, ToTopology t) const
   {
     typedef
       typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType ConnectivityType;
@@ -143,7 +144,8 @@ class CellSetPermutation
 
 public:
   VTKM_CONT
-  CellSetPermutation(const PermutationArrayHandleType& validCellIds, const OriginalCellSet& cellset,
+  CellSetPermutation(const PermutationArrayHandleType& validCellIds,
+                     const OriginalCellSet& cellset,
                      const std::string& name = std::string())
     : ParentType(validCellIds, cellset, name)
   {
@@ -166,19 +168,21 @@ public:
 
 template <typename OriginalCellSet, typename PermutationArrayHandleType>
 vtkm::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType> make_CellSetPermutation(
-  const PermutationArrayHandleType& cellIndexMap, const OriginalCellSet& cellSet,
+  const PermutationArrayHandleType& cellIndexMap,
+  const OriginalCellSet& cellSet,
   const std::string& name)
 {
   VTKM_IS_CELL_SET(OriginalCellSet);
   VTKM_IS_ARRAY_HANDLE(PermutationArrayHandleType);
 
-  return vtkm::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType>(cellIndexMap,
-                                                                                     cellSet, name);
+  return vtkm::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType>(
+    cellIndexMap, cellSet, name);
 }
 
 template <typename OriginalCellSet, typename PermutationArrayHandleType>
 vtkm::cont::CellSetPermutation<OriginalCellSet, PermutationArrayHandleType> make_CellSetPermutation(
-  const PermutationArrayHandleType& cellIndexMap, const OriginalCellSet& cellSet)
+  const PermutationArrayHandleType& cellIndexMap,
+  const OriginalCellSet& cellSet)
 {
   VTKM_IS_CELL_SET(OriginalCellSet);
   VTKM_IS_ARRAY_HANDLE(PermutationArrayHandleType);

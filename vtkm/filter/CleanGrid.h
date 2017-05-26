@@ -59,17 +59,20 @@ public:
 
   template <typename Policy, typename Device>
   VTKM_CONT vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& inData,
-                                                  vtkm::filter::PolicyBase<Policy> policy, Device);
+                                                  vtkm::filter::PolicyBase<Policy> policy,
+                                                  Device);
 
   template <typename ValueType, typename Storage, typename Policy, typename Device>
   VTKM_CONT bool DoMapField(vtkm::filter::ResultDataSet& result,
                             const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
-                            vtkm::filter::PolicyBase<Policy>, Device);
+                            vtkm::filter::PolicyBase<Policy>,
+                            Device);
 
   template <typename ValueType, typename Storage, typename Device>
   VTKM_CONT vtkm::cont::ArrayHandle<ValueType> CompactPointArray(
-    const vtkm::cont::ArrayHandle<ValueType, Storage>& inArray, Device) const;
+    const vtkm::cont::ArrayHandle<ValueType, Storage>& inArray,
+    Device) const;
 
 private:
   bool CompactPointFields;

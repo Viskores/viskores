@@ -215,8 +215,8 @@ public:
 #ifdef VTKM_USE_UNIFIED_MEMORY
       cudaDeviceSynchronize();
 #endif
-      ::thrust::copy(this->Begin, this->End,
-                     vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
+      ::thrust::copy(
+        this->Begin, this->End, vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
     }
     catch (...)
     {

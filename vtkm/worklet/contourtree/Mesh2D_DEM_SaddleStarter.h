@@ -132,10 +132,12 @@ public:
   template <typename InFieldPortalType, typename OutFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertex,
                             const vtkm::Pair<vtkm::Id, vtkm::Id>& outDegFirstEdge,
-                            const vtkm::Id& valueIndex, const InFieldPortalType& linkMask,
+                            const vtkm::Id& valueIndex,
+                            const InFieldPortalType& linkMask,
                             const InFieldPortalType& arcArray,
                             const InFieldPortalType& inverseIndex,
-                            const OutFieldPortalType& edgeNear, const OutFieldPortalType& edgeFar,
+                            const OutFieldPortalType& edgeNear,
+                            const OutFieldPortalType& edgeFar,
                             const OutFieldPortalType& activeEdges) const
   {
     vtkm::Id outdegree = outDegFirstEdge.first;

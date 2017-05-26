@@ -79,7 +79,8 @@ inline VTKM_CONT ExtractGeometry::ExtractGeometry()
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultDataSet ExtractGeometry::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
 {
   // extract the input cell set and coordinates
@@ -91,12 +92,14 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExtractGeometry::DoExecute(
   vtkm::cont::ArrayHandle<bool> passFlags;
 
   typedef vtkm::worklet::ExtractGeometry::ExtractCellsByVOI ExtractCellsWorklet;
-  ExtractCellsWorklet worklet((*this->Function).PrepareForExecution(device), this->ExtractInside,
-                              this->ExtractBoundaryCells, this->ExtractOnlyBoundaryCells);
+  ExtractCellsWorklet worklet((*this->Function).PrepareForExecution(device),
+                              this->ExtractInside,
+                              this->ExtractBoundaryCells,
+                              this->ExtractOnlyBoundaryCells);
 
   vtkm::worklet::DispatcherMapTopology<ExtractCellsWorklet, DeviceAdapter> dispatcher(worklet);
-  dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy),
-                    vtkm::filter::ApplyPolicy(coords, policy), passFlags);
+  dispatcher.Invoke(
+    vtkm::filter::ApplyPolicy(cells, policy), vtkm::filter::ApplyPolicy(coords, policy), passFlags);
 
   vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
     vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
@@ -116,8 +119,10 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExtractGeometry::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExtractGeometry::DoMapField(
-  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<T, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta, const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  vtkm::filter::ResultDataSet& result,
+  const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter&)
 {
   // point data is copied as is because it was not collapsed

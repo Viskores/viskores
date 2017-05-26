@@ -50,7 +50,8 @@ class VTKM_ALWAYS_EXPORT CellSetSingleType
   typedef vtkm::cont::CellSetSingleType<ConnectivityStorageTag> Thisclass;
   typedef vtkm::cont::CellSetExplicit<
     typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
-    typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag, ConnectivityStorageTag,
+    typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag,
+    ConnectivityStorageTag,
     typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>
     Superclass;
 
@@ -178,7 +179,9 @@ public:
 
   //This is the way you can fill the memory from another system without copying
   VTKM_CONT
-  void Fill(vtkm::Id numPoints, vtkm::UInt8 shapeId, vtkm::IdComponent numberOfPointsPerCell,
+  void Fill(vtkm::Id numPoints,
+            vtkm::UInt8 shapeId,
+            vtkm::IdComponent numberOfPointsPerCell,
             const vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag>& connectivity)
   {
     this->NumberOfPoints = numPoints;
@@ -218,7 +221,8 @@ public:
 
 private:
   template <typename CellShapeTag>
-  void CheckNumberOfPointsPerCell(CellShapeTag, vtkm::CellTraitsTagSizeFixed,
+  void CheckNumberOfPointsPerCell(CellShapeTag,
+                                  vtkm::CellTraitsTagSizeFixed,
                                   vtkm::IdComponent numVertices) const
   {
     if (numVertices != vtkm::CellTraits<CellShapeTag>::NUM_POINTS)
@@ -228,7 +232,8 @@ private:
   }
 
   template <typename CellShapeTag>
-  void CheckNumberOfPointsPerCell(CellShapeTag, vtkm::CellTraitsTagSizeVariable,
+  void CheckNumberOfPointsPerCell(CellShapeTag,
+                                  vtkm::CellTraitsTagSizeVariable,
                                   vtkm::IdComponent vtkmNotUsed(numVertices)) const
   {
     // Technically, a shape with a variable number of points probably has a

@@ -109,8 +109,9 @@ struct TryExecuteImpl
   bool Success;
 
   VTKM_CONT
-  TryExecuteImpl(FunctorType& functor, vtkm::cont::RuntimeDeviceTracker tracker =
-                                         vtkm::cont::GetGlobalRuntimeDeviceTracker())
+  TryExecuteImpl(
+    FunctorType& functor,
+    vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
     : Functor(functor)
     , Tracker(tracker)
     , Success(false)
@@ -159,7 +160,8 @@ private:
 /// is used.
 ///
 template <typename Functor, typename DeviceList>
-VTKM_CONT bool TryExecute(const Functor& functor, vtkm::cont::RuntimeDeviceTracker tracker,
+VTKM_CONT bool TryExecute(const Functor& functor,
+                          vtkm::cont::RuntimeDeviceTracker tracker,
                           DeviceList)
 {
   detail::TryExecuteImpl<const Functor> internals(functor, tracker);
@@ -184,14 +186,16 @@ VTKM_CONT bool TryExecute(Functor& functor, DeviceList)
   return vtkm::cont::TryExecute(functor, vtkm::cont::GetGlobalRuntimeDeviceTracker(), DeviceList());
 }
 template <typename Functor>
-VTKM_CONT bool TryExecute(const Functor& functor, vtkm::cont::RuntimeDeviceTracker tracker =
-                                                    vtkm::cont::GetGlobalRuntimeDeviceTracker())
+VTKM_CONT bool TryExecute(
+  const Functor& functor,
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
   return vtkm::cont::TryExecute(functor, tracker, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
 }
 template <typename Functor>
-VTKM_CONT bool TryExecute(Functor& functor, vtkm::cont::RuntimeDeviceTracker tracker =
-                                              vtkm::cont::GetGlobalRuntimeDeviceTracker())
+VTKM_CONT bool TryExecute(
+  Functor& functor,
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
   return vtkm::cont::TryExecute(functor, tracker, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
 }

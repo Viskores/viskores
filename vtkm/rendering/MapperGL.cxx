@@ -49,24 +49,32 @@ public:
   const vtkm::Float32 SMin, SDiff;
 
   VTKM_CONT
-  MapColorAndVertices(const vtkm::rendering::ColorTable& colorTable, vtkm::Float32 sMin,
+  MapColorAndVertices(const vtkm::rendering::ColorTable& colorTable,
+                      vtkm::Float32 sMin,
                       vtkm::Float32 sDiff)
     : ColorTable(colorTable)
     , SMin(sMin)
     , SDiff(sDiff)
   {
   }
-  typedef void ControlSignature(FieldIn<IdType> vertexId, WholeArrayIn<Id4Type> indices,
-                                WholeArrayIn<Scalar> scalar, WholeArrayIn<Vec3> verts,
+  typedef void ControlSignature(FieldIn<IdType> vertexId,
+                                WholeArrayIn<Id4Type> indices,
+                                WholeArrayIn<Scalar> scalar,
+                                WholeArrayIn<Vec3> verts,
                                 WholeArrayOut<Scalar> out_color,
                                 WholeArrayOut<Scalar> out_vertices);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
 
-  template <typename InputArrayIndexPortalType, typename InputArrayPortalType,
-            typename InputArrayV3PortalType, typename OutputArrayPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& i, InputArrayIndexPortalType& indices,
-                            const InputArrayPortalType& scalar, const InputArrayV3PortalType& verts,
-                            OutputArrayPortalType& c_array, OutputArrayPortalType& v_array) const
+  template <typename InputArrayIndexPortalType,
+            typename InputArrayPortalType,
+            typename InputArrayV3PortalType,
+            typename OutputArrayPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& i,
+                            InputArrayIndexPortalType& indices,
+                            const InputArrayPortalType& scalar,
+                            const InputArrayV3PortalType& verts,
+                            OutputArrayPortalType& c_array,
+                            OutputArrayPortalType& v_array) const
   {
     vtkm::Vec<vtkm::Id, 4> idx = indices.Get(i);
     vtkm::Id i1 = idx[1];
@@ -130,8 +138,10 @@ struct MapColorAndVerticesInvokeFunctor
   MapColorAndVerticesInvokeFunctor(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
                                    const vtkm::rendering::ColorTable& colorTable,
                                    const vtkm::cont::ArrayHandle<Float32>& scalar,
-                                   const vtkm::Range& scalarRange, const PtType& vertices,
-                                   vtkm::Float32 s_min, vtkm::Float32 s_max,
+                                   const vtkm::Range& scalarRange,
+                                   const PtType& vertices,
+                                   vtkm::Float32 s_min,
+                                   vtkm::Float32 s_max,
                                    vtkm::cont::ArrayHandle<Float32>& out_color,
                                    vtkm::cont::ArrayHandle<Float32>& out_vertices)
     : TriangleIndices(indices)
@@ -155,14 +165,19 @@ struct MapColorAndVerticesInvokeFunctor
     vtkm::worklet::DispatcherMapField<MapColorAndVertices, Device> dispatcher(this->Worklet);
 
     vtkm::cont::ArrayHandleIndex indexArray(this->TriangleIndices.GetNumberOfValues());
-    dispatcher.Invoke(indexArray, this->TriangleIndices, this->Scalar, this->Vertices,
-                      this->OutColor, this->OutVertices);
+    dispatcher.Invoke(indexArray,
+                      this->TriangleIndices,
+                      this->Scalar,
+                      this->Vertices,
+                      this->OutColor,
+                      this->OutVertices);
     return true;
   }
 };
 
 template <typename PtType>
-VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts, const PtType& verts,
+VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
+                                            const PtType& verts,
                                             const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar)
 {
   glDisable(GL_DEPTH_TEST);
@@ -181,7 +196,8 @@ VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts, const PtType& ver
 }
 
 template <typename PtType>
-VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts, const PtType& verts,
+VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts,
+                                          const PtType& verts,
                                           const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar)
 {
   glDisable(GL_DEPTH_TEST);
@@ -200,7 +216,9 @@ VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts, const PtType& verts
 }
 
 template <typename PtType>
-VTKM_CONT void RenderTriangles(MapperGL& mapper, vtkm::Id numTri, const PtType& verts,
+VTKM_CONT void RenderTriangles(MapperGL& mapper,
+                               vtkm::Id numTri,
+                               const PtType& verts,
                                const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
                                const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
                                const vtkm::rendering::ColorTable& ct,
@@ -381,7 +399,8 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,
                            const vtkm::cont::Field& scalarField,
                            const vtkm::rendering::ColorTable& colorTable,
-                           const vtkm::rendering::Camera& camera, const vtkm::Range& scalarRange)
+                           const vtkm::rendering::Camera& camera,
+                           const vtkm::Range& scalarRange)
 {
   vtkm::cont::ArrayHandle<vtkm::Float32> sf;
   sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
@@ -431,9 +450,10 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>>
         rVerts;
-      rVerts = dcoords.Cast<vtkm::cont::ArrayHandleCartesianProduct<
-        vtkm::cont::ArrayHandle<vtkm::FloatDefault>, vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-        vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>();
+      rVerts = dcoords.Cast<
+        vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>();
       RenderTriangles(*this, numTri, rVerts, indices, sf, colorTable, scalarRange, camera);
     }
   }

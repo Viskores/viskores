@@ -93,7 +93,8 @@ public:
   DegreeSubrangeOffset() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& sortID, const InFieldPortalType& sortVector,
+  VTKM_EXEC void operator()(const vtkm::Id& sortID,
+                            const InFieldPortalType& sortVector,
                             const OutFieldPortalType& degree) const
   {
     vtkm::Id superID = sortVector.Get(sortID);

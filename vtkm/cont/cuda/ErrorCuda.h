@@ -36,8 +36,8 @@
     const cudaError_t vtkm_cuda_check_async_error = cudaGetLastError();                            \
     if (vtkm_cuda_check_async_error != cudaSuccess)                                                \
     {                                                                                              \
-      throw ::vtkm::cont::cuda::ErrorCuda(vtkm_cuda_check_async_error, __FILE__, __LINE__,         \
-                                          "Unchecked asynchronous error");                         \
+      throw ::vtkm::cont::cuda::ErrorCuda(                                                         \
+        vtkm_cuda_check_async_error, __FILE__, __LINE__, "Unchecked asynchronous error");          \
     }                                                                                              \
   }                                                                                                \
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
@@ -79,7 +79,9 @@ public:
     this->SetMessage(message.str());
   }
 
-  ErrorCuda(cudaError_t error, const std::string& file, vtkm::Id line,
+  ErrorCuda(cudaError_t error,
+            const std::string& file,
+            vtkm::Id line,
             const std::string& description)
   {
     std::stringstream message;

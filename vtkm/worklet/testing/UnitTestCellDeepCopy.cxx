@@ -47,8 +47,8 @@ CreatePermutedCellSet()
 
   vtkm::cont::CellSetExplicit<> cellSet = CreateCellSet();
   return vtkm::cont::make_CellSetPermutation(
-    vtkm::cont::ArrayHandleCounting<vtkm::Id>(cellSet.GetNumberOfCells() - 1, -1,
-                                              cellSet.GetNumberOfCells()),
+    vtkm::cont::ArrayHandleCounting<vtkm::Id>(
+      cellSet.GetNumberOfCells() - 1, -1, cellSet.GetNumberOfCells()),
     cellSet);
 }
 

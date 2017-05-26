@@ -54,7 +54,8 @@ class VTKM_RENDERING_EXPORT Camera
 
     vtkm::Matrix<vtkm::Float32, 4, 4> CreateViewMatrix() const;
 
-    vtkm::Matrix<vtkm::Float32, 4, 4> CreateProjectionMatrix(vtkm::Id width, vtkm::Id height,
+    vtkm::Matrix<vtkm::Float32, 4, 4> CreateProjectionMatrix(vtkm::Id width,
+                                                             vtkm::Id height,
                                                              vtkm::Float32 nearPlane,
                                                              vtkm::Float32 farPlane) const;
 
@@ -123,8 +124,12 @@ public:
   vtkm::Matrix<vtkm::Float32, 4, 4> CreateProjectionMatrix(vtkm::Id screenWidth,
                                                            vtkm::Id screenHeight) const;
 
-  void GetRealViewport(vtkm::Id screenWidth, vtkm::Id screenHeight, vtkm::Float32& left,
-                       vtkm::Float32& right, vtkm::Float32& bottom, vtkm::Float32& top) const;
+  void GetRealViewport(vtkm::Id screenWidth,
+                       vtkm::Id screenHeight,
+                       vtkm::Float32& left,
+                       vtkm::Float32& right,
+                       vtkm::Float32& bottom,
+                       vtkm::Float32& top) const;
 
   /// \brief The mode of the camera (2D or 3D).
   ///
@@ -183,7 +188,9 @@ public:
   /// bottom of the image are at -1 and the right and top are at 1.
   ///
   VTKM_CONT
-  void GetViewport(vtkm::Float32& left, vtkm::Float32& right, vtkm::Float32& bottom,
+  void GetViewport(vtkm::Float32& left,
+                   vtkm::Float32& right,
+                   vtkm::Float32& bottom,
                    vtkm::Float32& top) const
   {
     left = this->ViewportLeft;
@@ -192,7 +199,9 @@ public:
     top = this->ViewportTop;
   }
   VTKM_CONT
-  void GetViewport(vtkm::Float64& left, vtkm::Float64& right, vtkm::Float64& bottom,
+  void GetViewport(vtkm::Float64& left,
+                   vtkm::Float64& right,
+                   vtkm::Float64& bottom,
                    vtkm::Float64& top) const
   {
     left = this->ViewportLeft;
@@ -203,8 +212,8 @@ public:
   VTKM_CONT
   vtkm::Bounds GetViewport() const
   {
-    return vtkm::Bounds(this->ViewportLeft, this->ViewportRight, this->ViewportBottom,
-                        this->ViewportTop, 0.0, 0.0);
+    return vtkm::Bounds(
+      this->ViewportLeft, this->ViewportRight, this->ViewportBottom, this->ViewportTop, 0.0, 0.0);
   }
   VTKM_CONT
   void SetViewport(vtkm::Float32 left, vtkm::Float32 right, vtkm::Float32 bottom, vtkm::Float32 top)
@@ -217,14 +226,16 @@ public:
   VTKM_CONT
   void SetViewport(vtkm::Float64 left, vtkm::Float64 right, vtkm::Float64 bottom, vtkm::Float64 top)
   {
-    this->SetViewport(static_cast<vtkm::Float32>(left), static_cast<vtkm::Float32>(right),
-                      static_cast<vtkm::Float32>(bottom), static_cast<vtkm::Float32>(top));
+    this->SetViewport(static_cast<vtkm::Float32>(left),
+                      static_cast<vtkm::Float32>(right),
+                      static_cast<vtkm::Float32>(bottom),
+                      static_cast<vtkm::Float32>(top));
   }
   VTKM_CONT
   void SetViewport(const vtkm::Bounds& viewportBounds)
   {
-    this->SetViewport(viewportBounds.X.Min, viewportBounds.X.Max, viewportBounds.Y.Min,
-                      viewportBounds.Y.Max);
+    this->SetViewport(
+      viewportBounds.X.Min, viewportBounds.X.Max, viewportBounds.Y.Min, viewportBounds.Y.Max);
   }
 
   /// \brief The focal point the camera is looking at in 3D mode
@@ -341,15 +352,21 @@ public:
   ///
   /// \c TrackballRotate changes the mode to 3D.
   ///
-  void TrackballRotate(vtkm::Float32 startX, vtkm::Float32 startY, vtkm::Float32 endX,
+  void TrackballRotate(vtkm::Float32 startX,
+                       vtkm::Float32 startY,
+                       vtkm::Float32 endX,
                        vtkm::Float32 endY);
 
   VTKM_CONT
-  void TrackballRotate(vtkm::Float64 startX, vtkm::Float64 startY, vtkm::Float64 endX,
+  void TrackballRotate(vtkm::Float64 startX,
+                       vtkm::Float64 startY,
+                       vtkm::Float64 endX,
                        vtkm::Float64 endY)
   {
-    this->TrackballRotate(static_cast<vtkm::Float32>(startX), static_cast<vtkm::Float32>(startY),
-                          static_cast<vtkm::Float32>(endX), static_cast<vtkm::Float32>(endY));
+    this->TrackballRotate(static_cast<vtkm::Float32>(startX),
+                          static_cast<vtkm::Float32>(startY),
+                          static_cast<vtkm::Float32>(endX),
+                          static_cast<vtkm::Float32>(endY));
   }
 
   /// \brief Set up the camera to look at geometry
@@ -433,7 +450,9 @@ public:
   /// \c SetViewRange2D changes the camera mode to 2D.
   ///
   VTKM_CONT
-  void GetViewRange2D(vtkm::Float32& left, vtkm::Float32& right, vtkm::Float32& bottom,
+  void GetViewRange2D(vtkm::Float32& left,
+                      vtkm::Float32& right,
+                      vtkm::Float32& bottom,
                       vtkm::Float32& top) const
   {
     left = this->Camera2D.Left;
@@ -444,11 +463,17 @@ public:
   VTKM_CONT
   vtkm::Bounds GetViewRange2D() const
   {
-    return vtkm::Bounds(this->Camera2D.Left, this->Camera2D.Right, this->Camera2D.Bottom,
-                        this->Camera2D.Top, 0.0, 0.0);
+    return vtkm::Bounds(this->Camera2D.Left,
+                        this->Camera2D.Right,
+                        this->Camera2D.Bottom,
+                        this->Camera2D.Top,
+                        0.0,
+                        0.0);
   }
   VTKM_CONT
-  void SetViewRange2D(vtkm::Float32 left, vtkm::Float32 right, vtkm::Float32 bottom,
+  void SetViewRange2D(vtkm::Float32 left,
+                      vtkm::Float32 right,
+                      vtkm::Float32 bottom,
                       vtkm::Float32 top)
   {
     this->SetModeTo2D();
@@ -462,11 +487,15 @@ public:
     this->Camera2D.Zoom = 1;
   }
   VTKM_CONT
-  void SetViewRange2D(vtkm::Float64 left, vtkm::Float64 right, vtkm::Float64 bottom,
+  void SetViewRange2D(vtkm::Float64 left,
+                      vtkm::Float64 right,
+                      vtkm::Float64 bottom,
                       vtkm::Float64 top)
   {
-    this->SetViewRange2D(static_cast<vtkm::Float32>(left), static_cast<vtkm::Float32>(right),
-                         static_cast<vtkm::Float32>(bottom), static_cast<vtkm::Float32>(top));
+    this->SetViewRange2D(static_cast<vtkm::Float32>(left),
+                         static_cast<vtkm::Float32>(right),
+                         static_cast<vtkm::Float32>(bottom),
+                         static_cast<vtkm::Float32>(top));
   }
   VTKM_CONT
   void SetViewRange2D(const vtkm::Range& xRange, const vtkm::Range& yRange)

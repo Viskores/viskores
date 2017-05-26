@@ -926,7 +926,11 @@ struct Stats
    * The calls to Stats methods must match the later calls to Parser methods.
    * See Parser::parse() for the meaning of the arguments.
    */
-  Stats(bool gnu, const Descriptor usage[], int argc, const char** argv, int min_abbr_len = 0, //
+  Stats(bool gnu,
+        const Descriptor usage[],
+        int argc,
+        const char** argv,
+        int min_abbr_len = 0, //
         bool single_minus_longopt = false)
     : buffer_max(1)
     , options_max(1) // 1 more than necessary as sentinel
@@ -935,7 +939,11 @@ struct Stats
   }
 
   //! @brief Stats(...) with non-const argv.
-  Stats(bool gnu, const Descriptor usage[], int argc, char** argv, int min_abbr_len = 0, //
+  Stats(bool gnu,
+        const Descriptor usage[],
+        int argc,
+        char** argv,
+        int min_abbr_len = 0, //
         bool single_minus_longopt = false)
     : buffer_max(1)
     , options_max(1) // 1 more than necessary as sentinel
@@ -944,7 +952,10 @@ struct Stats
   }
 
   //! @brief POSIX Stats(...) (gnu==false).
-  Stats(const Descriptor usage[], int argc, const char** argv, int min_abbr_len = 0, //
+  Stats(const Descriptor usage[],
+        int argc,
+        const char** argv,
+        int min_abbr_len = 0, //
         bool single_minus_longopt = false)
     : buffer_max(1)
     , options_max(1) // 1 more than necessary as sentinel
@@ -953,7 +964,10 @@ struct Stats
   }
 
   //! @brief POSIX Stats(...) (gnu==false) with non-const argv.
-  Stats(const Descriptor usage[], int argc, char** argv, int min_abbr_len = 0, //
+  Stats(const Descriptor usage[],
+        int argc,
+        char** argv,
+        int min_abbr_len = 0, //
         bool single_minus_longopt = false)
     : buffer_max(1)
     , options_max(1) // 1 more than necessary as sentinel
@@ -970,25 +984,39 @@ struct Stats
    * The calls to Stats methods must match the later calls to Parser methods.
    * See Parser::parse() for the meaning of the arguments.
    */
-  void add(bool gnu, const Descriptor usage[], int argc, const char** argv, int min_abbr_len = 0, //
+  void add(bool gnu,
+           const Descriptor usage[],
+           int argc,
+           const char** argv,
+           int min_abbr_len = 0, //
            bool single_minus_longopt = false);
 
   //! @brief add() with non-const argv.
-  void add(bool gnu, const Descriptor usage[], int argc, char** argv, int min_abbr_len = 0, //
+  void add(bool gnu,
+           const Descriptor usage[],
+           int argc,
+           char** argv,
+           int min_abbr_len = 0, //
            bool single_minus_longopt = false)
   {
     add(gnu, usage, argc, (const char**)argv, min_abbr_len, single_minus_longopt);
   }
 
   //! @brief POSIX add() (gnu==false).
-  void add(const Descriptor usage[], int argc, const char** argv, int min_abbr_len = 0, //
+  void add(const Descriptor usage[],
+           int argc,
+           const char** argv,
+           int min_abbr_len = 0, //
            bool single_minus_longopt = false)
   {
     add(false, usage, argc, argv, min_abbr_len, single_minus_longopt);
   }
 
   //! @brief POSIX add() (gnu==false) with non-const argv.
-  void add(const Descriptor usage[], int argc, char** argv, int min_abbr_len = 0, //
+  void add(const Descriptor usage[],
+           int argc,
+           char** argv,
+           int min_abbr_len = 0, //
            bool single_minus_longopt = false)
   {
     add(false, usage, argc, (const char**)argv, min_abbr_len, single_minus_longopt);
@@ -1040,8 +1068,15 @@ public:
    * @brief Creates a new Parser and immediately parses the given argument vector.
    * @copydetails parse()
    */
-  Parser(bool gnu, const Descriptor usage[], int argc, const char** argv, Option options[],
-         Option buffer[], int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1)
+  Parser(bool gnu,
+         const Descriptor usage[],
+         int argc,
+         const char** argv,
+         Option options[],
+         Option buffer[],
+         int min_abbr_len = 0,
+         bool single_minus_longopt = false,
+         int bufmax = -1)
     : op_count(0)
     , nonop_count(0)
     , nonop_args(0)
@@ -1051,20 +1086,40 @@ public:
   }
 
   //! @brief Parser(...) with non-const argv.
-  Parser(bool gnu, const Descriptor usage[], int argc, char** argv, Option options[],
-         Option buffer[], int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1)
+  Parser(bool gnu,
+         const Descriptor usage[],
+         int argc,
+         char** argv,
+         Option options[],
+         Option buffer[],
+         int min_abbr_len = 0,
+         bool single_minus_longopt = false,
+         int bufmax = -1)
     : op_count(0)
     , nonop_count(0)
     , nonop_args(0)
     , err(false)
   {
-    parse(gnu, usage, argc, (const char**)argv, options, buffer, min_abbr_len, single_minus_longopt,
+    parse(gnu,
+          usage,
+          argc,
+          (const char**)argv,
+          options,
+          buffer,
+          min_abbr_len,
+          single_minus_longopt,
           bufmax);
   }
 
   //! @brief POSIX Parser(...) (gnu==false).
-  Parser(const Descriptor usage[], int argc, const char** argv, Option options[], Option buffer[],
-         int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1)
+  Parser(const Descriptor usage[],
+         int argc,
+         const char** argv,
+         Option options[],
+         Option buffer[],
+         int min_abbr_len = 0,
+         bool single_minus_longopt = false,
+         int bufmax = -1)
     : op_count(0)
     , nonop_count(0)
     , nonop_args(0)
@@ -1074,15 +1129,28 @@ public:
   }
 
   //! @brief POSIX Parser(...) (gnu==false) with non-const argv.
-  Parser(const Descriptor usage[], int argc, char** argv, Option options[], Option buffer[],
-         int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1)
+  Parser(const Descriptor usage[],
+         int argc,
+         char** argv,
+         Option options[],
+         Option buffer[],
+         int min_abbr_len = 0,
+         bool single_minus_longopt = false,
+         int bufmax = -1)
     : op_count(0)
     , nonop_count(0)
     , nonop_args(0)
     , err(false)
   {
-    parse(false, usage, argc, (const char**)argv, options, buffer, min_abbr_len,
-          single_minus_longopt, bufmax);
+    parse(false,
+          usage,
+          argc,
+          (const char**)argv,
+          options,
+          buffer,
+          min_abbr_len,
+          single_minus_longopt,
+          bufmax);
   }
 
   /**
@@ -1141,33 +1209,70 @@ public:
    * @c options[]. You can get the linked list in options from a buffer object via something like
    * @c options[buffer[i].index()].
    */
-  void parse(bool gnu, const Descriptor usage[], int argc, const char** argv, Option options[],
-             Option buffer[], int min_abbr_len = 0, bool single_minus_longopt = false,
+  void parse(bool gnu,
+             const Descriptor usage[],
+             int argc,
+             const char** argv,
+             Option options[],
+             Option buffer[],
+             int min_abbr_len = 0,
+             bool single_minus_longopt = false,
              int bufmax = -1);
 
   //! @brief parse() with non-const argv.
-  void parse(bool gnu, const Descriptor usage[], int argc, char** argv, Option options[],
-             Option buffer[], int min_abbr_len = 0, bool single_minus_longopt = false,
+  void parse(bool gnu,
+             const Descriptor usage[],
+             int argc,
+             char** argv,
+             Option options[],
+             Option buffer[],
+             int min_abbr_len = 0,
+             bool single_minus_longopt = false,
              int bufmax = -1)
   {
-    parse(gnu, usage, argc, (const char**)argv, options, buffer, min_abbr_len, single_minus_longopt,
+    parse(gnu,
+          usage,
+          argc,
+          (const char**)argv,
+          options,
+          buffer,
+          min_abbr_len,
+          single_minus_longopt,
           bufmax);
   }
 
   //! @brief POSIX parse() (gnu==false).
-  void parse(const Descriptor usage[], int argc, const char** argv, Option options[],
-             Option buffer[], int min_abbr_len = 0, bool single_minus_longopt = false,
+  void parse(const Descriptor usage[],
+             int argc,
+             const char** argv,
+             Option options[],
+             Option buffer[],
+             int min_abbr_len = 0,
+             bool single_minus_longopt = false,
              int bufmax = -1)
   {
     parse(false, usage, argc, argv, options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
 
   //! @brief POSIX parse() (gnu==false) with non-const argv.
-  void parse(const Descriptor usage[], int argc, char** argv, Option options[], Option buffer[],
-             int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1)
+  void parse(const Descriptor usage[],
+             int argc,
+             char** argv,
+             Option options[],
+             Option buffer[],
+             int min_abbr_len = 0,
+             bool single_minus_longopt = false,
+             int bufmax = -1)
   {
-    parse(false, usage, argc, (const char**)argv, options, buffer, min_abbr_len,
-          single_minus_longopt, bufmax);
+    parse(false,
+          usage,
+          argc,
+          (const char**)argv,
+          options,
+          buffer,
+          min_abbr_len,
+          single_minus_longopt,
+          bufmax);
   }
 
   /**
@@ -1242,8 +1347,13 @@ private:
    * @brief This is the core function that does all the parsing.
    * @retval false iff an unrecoverable error occurred.
    */
-  static bool workhorse(bool gnu, const Descriptor usage[], int numargs, const char** args,
-                        Action& action, bool single_minus_longopt, bool print_errors,
+  static bool workhorse(bool gnu,
+                        const Descriptor usage[],
+                        int numargs,
+                        const char** args,
+                        Action& action,
+                        bool single_minus_longopt,
+                        bool print_errors,
                         int min_abbr_len);
 
   /**
@@ -1481,16 +1591,26 @@ public:
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 
-inline void Parser::parse(bool gnu, const Descriptor usage[], int argc, const char** argv,
-                          Option options[], Option buffer[], int min_abbr_len,
-                          bool single_minus_longopt, int bufmax)
+inline void Parser::parse(bool gnu,
+                          const Descriptor usage[],
+                          int argc,
+                          const char** argv,
+                          Option options[],
+                          Option buffer[],
+                          int min_abbr_len,
+                          bool single_minus_longopt,
+                          int bufmax)
 {
   StoreOptionAction action(*this, options, buffer, bufmax);
   err = !workhorse(gnu, usage, argc, argv, action, single_minus_longopt, true, min_abbr_len);
 }
 
-inline void Stats::add(bool gnu, const Descriptor usage[], int argc, const char** argv,
-                       int min_abbr_len, bool single_minus_longopt)
+inline void Stats::add(bool gnu,
+                       const Descriptor usage[],
+                       int argc,
+                       const char** argv,
+                       int min_abbr_len,
+                       bool single_minus_longopt)
 {
   // determine size of options array. This is the greatest index used in the usage + 1
   int i = 0;
@@ -1508,8 +1628,13 @@ inline void Stats::add(bool gnu, const Descriptor usage[], int argc, const char*
   Parser::workhorse(gnu, usage, argc, argv, action, single_minus_longopt, false, min_abbr_len);
 }
 
-inline bool Parser::workhorse(bool gnu, const Descriptor usage[], int numargs, const char** args,
-                              Action& action, bool single_minus_longopt, bool print_errors,
+inline bool Parser::workhorse(bool gnu,
+                              const Descriptor usage[],
+                              int numargs,
+                              const char** args,
+                              Action& action,
+                              bool single_minus_longopt,
+                              bool print_errors,
                               int min_abbr_len)
 {
   // protect against nullptr pointer
@@ -2491,7 +2616,9 @@ struct PrintUsageImplementation
    * @brief This is the implementation that is shared between all printUsage() templates.
    * Because all printUsage() templates share this implementation, there is no template bloat.
    */
-  static void printUsage(IStringWriter& write, const Descriptor usage[], int width = 80, //
+  static void printUsage(IStringWriter& write,
+                         const Descriptor usage[],
+                         int width = 80, //
                          int last_column_min_percent = 50,
                          int last_column_own_line_max_percent = 75)
   {
@@ -2875,48 +3002,65 @@ struct PrintUsageImplementation
  * @endcode
  */
 template <typename OStream>
-void printUsage(OStream& prn, const Descriptor descriptors[], int width = 80,
-                int last_column_min_percent = 50, int last_column_own_line_max_percent = 75)
+void printUsage(OStream& prn,
+                const Descriptor descriptors[],
+                int width = 80,
+                int last_column_min_percent = 50,
+                int last_column_own_line_max_percent = 75)
 {
   PrintUsageImplementation::OStreamWriter<OStream> write(prn);
-  PrintUsageImplementation::printUsage(write, descriptors, width, last_column_min_percent,
-                                       last_column_own_line_max_percent);
+  PrintUsageImplementation::printUsage(
+    write, descriptors, width, last_column_min_percent, last_column_own_line_max_percent);
 }
 
 template <typename Function>
-void printUsage(Function* prn, const Descriptor descriptors[], int width = 80,
-                int last_column_min_percent = 50, int last_column_own_line_max_percent = 75)
+void printUsage(Function* prn,
+                const Descriptor descriptors[],
+                int width = 80,
+                int last_column_min_percent = 50,
+                int last_column_own_line_max_percent = 75)
 {
   PrintUsageImplementation::FunctionWriter<Function> write(prn);
-  PrintUsageImplementation::printUsage(write, descriptors, width, last_column_min_percent,
-                                       last_column_own_line_max_percent);
+  PrintUsageImplementation::printUsage(
+    write, descriptors, width, last_column_min_percent, last_column_own_line_max_percent);
 }
 
 template <typename Temporary>
-void printUsage(const Temporary& prn, const Descriptor descriptors[], int width = 80,
-                int last_column_min_percent = 50, int last_column_own_line_max_percent = 75)
+void printUsage(const Temporary& prn,
+                const Descriptor descriptors[],
+                int width = 80,
+                int last_column_min_percent = 50,
+                int last_column_own_line_max_percent = 75)
 {
   PrintUsageImplementation::TemporaryWriter<Temporary> write(prn);
-  PrintUsageImplementation::printUsage(write, descriptors, width, last_column_min_percent,
-                                       last_column_own_line_max_percent);
+  PrintUsageImplementation::printUsage(
+    write, descriptors, width, last_column_min_percent, last_column_own_line_max_percent);
 }
 
 template <typename Syscall>
-void printUsage(Syscall* prn, int fd, const Descriptor descriptors[], int width = 80,
-                int last_column_min_percent = 50, int last_column_own_line_max_percent = 75)
+void printUsage(Syscall* prn,
+                int fd,
+                const Descriptor descriptors[],
+                int width = 80,
+                int last_column_min_percent = 50,
+                int last_column_own_line_max_percent = 75)
 {
   PrintUsageImplementation::SyscallWriter<Syscall> write(prn, fd);
-  PrintUsageImplementation::printUsage(write, descriptors, width, last_column_min_percent,
-                                       last_column_own_line_max_percent);
+  PrintUsageImplementation::printUsage(
+    write, descriptors, width, last_column_min_percent, last_column_own_line_max_percent);
 }
 
 template <typename Function, typename Stream>
-void printUsage(Function* prn, Stream* stream, const Descriptor descriptors[], int width = 80,
-                int last_column_min_percent = 50, int last_column_own_line_max_percent = 75)
+void printUsage(Function* prn,
+                Stream* stream,
+                const Descriptor descriptors[],
+                int width = 80,
+                int last_column_min_percent = 50,
+                int last_column_own_line_max_percent = 75)
 {
   PrintUsageImplementation::StreamWriter<Function, Stream> write(prn, stream);
-  PrintUsageImplementation::printUsage(write, descriptors, width, last_column_min_percent,
-                                       last_column_own_line_max_percent);
+  PrintUsageImplementation::printUsage(
+    write, descriptors, width, last_column_min_percent, last_column_own_line_max_percent);
 }
 }
 // namespace option

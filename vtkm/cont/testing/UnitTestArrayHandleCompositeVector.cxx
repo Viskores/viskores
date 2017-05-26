@@ -61,8 +61,8 @@ vtkm::cont::ArrayHandle<ValueType, StorageTag> MakeInputArray(int arrayId)
     for (vtkm::IdComponent componentIndex = 0; componentIndex < VTraits::NUM_COMPONENTS;
          componentIndex++)
     {
-      VTraits::SetComponent(buffer[index], componentIndex,
-                            TestValue3Ids(index, componentIndex, arrayId));
+      VTraits::SetComponent(
+        buffer[index], componentIndex, TestValue3Ids(index, componentIndex, arrayId));
     }
   }
 
@@ -82,7 +82,8 @@ vtkm::cont::ArrayHandle<ValueType, StorageTag> MakeInputArray(int arrayId)
 
 template <typename ValueType, typename C>
 void CheckArray(const vtkm::cont::ArrayHandle<ValueType, C>& outArray,
-                const vtkm::IdComponent* inComponents, const int* inArrayIds)
+                const vtkm::IdComponent* inComponents,
+                const int* inArrayIds)
 {
   // ArrayHandleCompositeVector currently does not implement the ability to
   // get to values on the control side, so copy to an array that is accessible.
@@ -146,10 +147,16 @@ void TryVector4(vtkm::cont::ArrayHandle<T1, StorageTag> array1,
         for (inComponents[3] = 0; inComponents[3] < vtkm::VecTraits<T4>::NUM_COMPONENTS;
              inComponents[3]++)
         {
-          CheckArray(vtkm::cont::make_ArrayHandleCompositeVector(
-                       array1, inComponents[0], array2, inComponents[1], array3, inComponents[2],
-                       array4, inComponents[3]),
-                     inComponents, arrayIds);
+          CheckArray(vtkm::cont::make_ArrayHandleCompositeVector(array1,
+                                                                 inComponents[0],
+                                                                 array2,
+                                                                 inComponents[1],
+                                                                 array3,
+                                                                 inComponents[2],
+                                                                 array4,
+                                                                 inComponents[3]),
+                     inComponents,
+                     arrayIds);
         }
       }
     }
@@ -175,7 +182,8 @@ void TryVector3(vtkm::cont::ArrayHandle<T1, StorageTag> array1,
       {
         CheckArray(vtkm::cont::make_ArrayHandleCompositeVector(
                      array1, inComponents[0], array2, inComponents[1], array3, inComponents[2]),
-                   inComponents, arrayIds);
+                   inComponents,
+                   arrayIds);
       }
     }
   }
@@ -199,9 +207,10 @@ void TryVector2(vtkm::cont::ArrayHandle<T1, StorageTag> array1,
     for (inComponents[1] = 0; inComponents[1] < vtkm::VecTraits<T2>::NUM_COMPONENTS;
          inComponents[1]++)
     {
-      CheckArray(vtkm::cont::make_ArrayHandleCompositeVector(array1, inComponents[0], array2,
-                                                             inComponents[1]),
-                 inComponents, arrayIds);
+      CheckArray(vtkm::cont::make_ArrayHandleCompositeVector(
+                   array1, inComponents[0], array2, inComponents[1]),
+                 inComponents,
+                 arrayIds);
     }
   }
 
@@ -220,8 +229,8 @@ void TryVector1(vtkm::cont::ArrayHandle<T1, StorageTag> array1)
   for (inComponents[0] = 0; inComponents[0] < vtkm::VecTraits<T1>::NUM_COMPONENTS;
        inComponents[0]++)
   {
-    CheckArray(vtkm::cont::make_ArrayHandleCompositeVector(array1, inComponents[0]), inComponents,
-               arrayIds);
+    CheckArray(
+      vtkm::cont::make_ArrayHandleCompositeVector(array1, inComponents[0]), inComponents, arrayIds);
   }
 
   std::cout << "    Second component from Scalar." << std::endl;

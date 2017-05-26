@@ -55,8 +55,10 @@ struct FromIndices : vtkm::exec::arg::ExecutionSignatureTagBase
 };
 
 template <typename FetchTag, typename ConnectivityType, typename ExecObjectType>
-struct Fetch<FetchTag, vtkm::exec::arg::AspectTagFromIndices,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>, ExecObjectType>
+struct Fetch<FetchTag,
+             vtkm::exec::arg::AspectTagFromIndices,
+             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
+             ExecObjectType>
 {
   typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
 

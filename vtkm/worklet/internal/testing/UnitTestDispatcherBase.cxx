@@ -96,7 +96,9 @@ struct Transport<TestTransportTag, vtkm::Id*, Device>
   typedef TestExecObject ExecObjectType;
 
   VTKM_CONT
-  ExecObjectType operator()(vtkm::Id* contData, vtkm::Id*, vtkm::Id inputRange,
+  ExecObjectType operator()(vtkm::Id* contData,
+                            vtkm::Id*,
+                            vtkm::Id inputRange,
                             vtkm::Id outputRange) const
   {
     VTKM_TEST_ASSERT(inputRange == ARRAY_SIZE, "Got unexpected size in test transport.");
@@ -132,8 +134,10 @@ namespace arg
 {
 
 template <>
-struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic, TestExecObject>
+struct Fetch<TestFetchTagInput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
@@ -152,8 +156,10 @@ struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault,
 };
 
 template <>
-struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic, TestExecObject>
+struct Fetch<TestFetchTagOutput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
@@ -165,7 +171,8 @@ struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault,
   }
 
   VTKM_EXEC
-  void Store(const vtkm::exec::arg::ThreadIndicesBasic& indices, const TestExecObject& execObject,
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic& indices,
+             const TestExecObject& execObject,
              ValueType value) const
   {
     execObject.Array[indices.GetOutputIndex()] = value;
@@ -227,15 +234,19 @@ public:
 
 template <typename WorkletType>
 class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
-                                                                      WorkletType, TestWorkletBase>
+                                                                      WorkletType,
+                                                                      TestWorkletBase>
 {
-  typedef vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>, WorkletType,
+  typedef vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
+                                                  WorkletType,
                                                   TestWorkletBase>
     Superclass;
   typedef vtkm::internal::FunctionInterface<void(vtkm::Id*, TestExecObjectType, vtkm::Id*)>
     ParameterInterface;
-  typedef vtkm::internal::Invocation<ParameterInterface, typename Superclass::ControlInterface,
-                                     typename Superclass::ExecutionInterface, 1>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     typename Superclass::ControlInterface,
+                                     typename Superclass::ExecutionInterface,
+                                     1>
     Invocation;
 
 public:

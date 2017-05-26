@@ -92,8 +92,8 @@ public:
   };
 
   template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
-  typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType PrepareForInput(
-    DeviceAdapter, FromTopology, ToTopology) const;
+  typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType
+    PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const;
 
   virtual void PrintSummary(std::ostream& out) const;
 

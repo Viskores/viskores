@@ -93,8 +93,10 @@ public:
     bool IncludeBoundary;
 
     VTKM_CONT
-    CreatePointMap(const vtkm::Id3& inDimension, const vtkm::Bounds& outBounds,
-                   const vtkm::Id3& sample, bool includeBoundary)
+    CreatePointMap(const vtkm::Id3& inDimension,
+                   const vtkm::Bounds& outBounds,
+                   const vtkm::Id3& sample,
+                   bool includeBoundary)
       : RowSize(inDimension[0])
       , PlaneSize(inDimension[0] * inDimension[1])
       , OutBounds(outBounds)
@@ -122,8 +124,8 @@ public:
 
       // Turn off points not within subsampling
       vtkm::Id3 minPt = vtkm::make_Vec(OutBounds.X.Min, OutBounds.Y.Min, OutBounds.Z.Min);
-      vtkm::Id3 value = vtkm::make_Vec((i - minPt[0]) % Sample[0], (j - minPt[1]) % Sample[1],
-                                       (k - minPt[2]) % Sample[2]);
+      vtkm::Id3 value = vtkm::make_Vec(
+        (i - minPt[0]) % Sample[0], (j - minPt[1]) % Sample[1], (k - minPt[2]) % Sample[2]);
 
       // If include boundary then max boundary is also within subsampling
       if (IncludeBoundary)
@@ -151,7 +153,8 @@ public:
   class CreateCellMap : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset, WholeArrayIn<IdComponentType> pointMap,
+    typedef void ControlSignature(CellSetIn cellset,
+                                  WholeArrayIn<IdComponentType> pointMap,
                                   FieldOutCell<IdComponentType> passValue);
     typedef _3 ExecutionSignature(PointCount, PointIndices, _2);
 
@@ -236,10 +239,13 @@ public:
   // Uniform Structured
   //
   template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::DataSet ExtractUniform(vtkm::IdComponent outDim, const CellSetType& cellSet,
+  vtkm::cont::DataSet ExtractUniform(vtkm::IdComponent outDim,
+                                     const CellSetType& cellSet,
                                      const vtkm::cont::CoordinateSystem& coordinates,
-                                     const vtkm::Bounds& outBounds, const vtkm::Id3& sample,
-                                     bool includeBoundary, DeviceAdapter)
+                                     const vtkm::Bounds& outBounds,
+                                     const vtkm::Id3& sample,
+                                     bool includeBoundary,
+                                     DeviceAdapter)
   {
     typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;
     typedef
@@ -261,9 +267,9 @@ public:
     // maxBound is the same if no sampling, or if sample point lands on boundary,
     //          or if include boundary is set
     // Otherwise maxBound will be the last stride point
-    vtkm::Id3 lastIndex =
-      vtkm::make_Vec(outBounds.X.Max - outBounds.X.Min, outBounds.Y.Max - outBounds.Y.Min,
-                     outBounds.Z.Max - outBounds.Z.Min);
+    vtkm::Id3 lastIndex = vtkm::make_Vec(outBounds.X.Max - outBounds.X.Min,
+                                         outBounds.Y.Max - outBounds.Y.Min,
+                                         outBounds.Z.Max - outBounds.Z.Min);
     vtkm::Id3 outDimension = lastIndex + vtkm::Id3(1, 1, 1);
 
     // Adjust for sampling and include boundary
@@ -357,10 +363,13 @@ public:
   // Rectilinear Structured
   //
   template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::DataSet ExtractRectilinear(vtkm::IdComponent outDim, const CellSetType& cellSet,
+  vtkm::cont::DataSet ExtractRectilinear(vtkm::IdComponent outDim,
+                                         const CellSetType& cellSet,
                                          const vtkm::cont::CoordinateSystem& coordinates,
-                                         const vtkm::Bounds& outBounds, const vtkm::Id3& sample,
-                                         bool includeBoundary, DeviceAdapter)
+                                         const vtkm::Bounds& outBounds,
+                                         const vtkm::Id3& sample,
+                                         bool includeBoundary,
+                                         DeviceAdapter)
   {
     typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
     typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>
@@ -382,9 +391,9 @@ public:
     vtkm::Id3 inDimension(X.GetNumberOfValues(), Y.GetNumberOfValues(), Z.GetNumberOfValues());
 
     // Calculate output subset dimension
-    vtkm::Id3 lastIndex =
-      vtkm::make_Vec(outBounds.X.Max - outBounds.X.Min, outBounds.Y.Max - outBounds.Y.Min,
-                     outBounds.Z.Max - outBounds.Z.Min);
+    vtkm::Id3 lastIndex = vtkm::make_Vec(outBounds.X.Max - outBounds.X.Min,
+                                         outBounds.Y.Max - outBounds.Y.Min,
+                                         outBounds.Z.Max - outBounds.Z.Min);
     vtkm::Id3 outDimension = lastIndex + vtkm::Id3(1, 1, 1);
 
     // Adjust for sampling and include boundary
@@ -510,8 +519,10 @@ public:
   template <typename DeviceAdapter>
   vtkm::cont::DataSet Run(const vtkm::cont::DynamicCellSet& cellSet,
                           const vtkm::cont::CoordinateSystem& coordinates,
-                          const vtkm::Bounds& boundingBox, const vtkm::Id3& sample,
-                          bool includeBoundary, DeviceAdapter)
+                          const vtkm::Bounds& boundingBox,
+                          const vtkm::Id3& sample,
+                          bool includeBoundary,
+                          DeviceAdapter)
   {
     // Check legality of input cellset and set input dimension
     vtkm::IdComponent inDim = 0;
@@ -591,13 +602,13 @@ public:
     }
     if (IsUniformDataSet)
     {
-      return ExtractUniform(outDim, cellSet, coordinates, outBounds, sample, includeBoundary,
-                            DeviceAdapter());
+      return ExtractUniform(
+        outDim, cellSet, coordinates, outBounds, sample, includeBoundary, DeviceAdapter());
     }
     else
     {
-      return ExtractRectilinear(outDim, cellSet, coordinates, outBounds, sample, includeBoundary,
-                                DeviceAdapter());
+      return ExtractRectilinear(
+        outDim, cellSet, coordinates, outBounds, sample, includeBoundary, DeviceAdapter());
     }
   }
 
@@ -606,7 +617,8 @@ public:
   //
   template <typename T, typename StorageType, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T, StorageType> ProcessPointField(
-    const vtkm::cont::ArrayHandle<T, StorageType>& input, DeviceAdapter device)
+    const vtkm::cont::ArrayHandle<T, StorageType>& input,
+    DeviceAdapter device)
   {
     vtkm::cont::ArrayHandle<T, StorageType> output;
 
@@ -621,7 +633,8 @@ public:
   //
   template <typename T, typename StorageType, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T, StorageType> ProcessCellField(
-    const vtkm::cont::ArrayHandle<T, StorageType>& input, DeviceAdapter device)
+    const vtkm::cont::ArrayHandle<T, StorageType>& input,
+    DeviceAdapter device)
   {
     vtkm::cont::ArrayHandle<T, StorageType> output;
 

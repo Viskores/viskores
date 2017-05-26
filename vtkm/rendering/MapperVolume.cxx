@@ -125,9 +125,11 @@ struct MapperVolume::RenderFunctor
   vtkm::Range ScalarRange;
 
   VTKM_CONT
-  RenderFunctor(vtkm::rendering::MapperVolume* self, const vtkm::cont::CellSetStructured<3> cellSet,
+  RenderFunctor(vtkm::rendering::MapperVolume* self,
+                const vtkm::cont::CellSetStructured<3> cellSet,
                 const vtkm::cont::CoordinateSystem& coordinates,
-                const vtkm::cont::Field& scalarField, const vtkm::rendering::Camera& camera,
+                const vtkm::cont::Field& scalarField,
+                const vtkm::rendering::Camera& camera,
                 const vtkm::Range& scalarRange)
     : Self(self)
     , CellSet(cellSet)
@@ -156,8 +158,8 @@ struct MapperVolume::RenderFunctor
     tracer->SetCompositeBackground(this->Self->Internals->CompositeBackground);
     vtkm::Bounds dataBounds = this->Coordinates.GetBounds();
 
-    tracer->SetData(this->Coordinates, this->ScalarField, dataBounds, this->CellSet,
-                    this->ScalarRange);
+    tracer->SetData(
+      this->Coordinates, this->ScalarField, dataBounds, this->CellSet, this->ScalarRange);
     tracer->SetColorMap(this->Self->ColorMap);
     tracer->SetBackgroundColor(this->Self->Internals->Canvas->GetBackgroundColor().Components);
     tracer->Render(this->Self->Internals->Canvas);
@@ -181,10 +183,14 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   }
   else
   {
-    RenderFunctor functor(this, cellset.Cast<vtkm::cont::CellSetStructured<3>>(), coords,
-                          scalarField, camera, scalarRange);
-    vtkm::cont::TryExecute(functor, this->Internals->DeviceTracker,
-                           VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+    RenderFunctor functor(this,
+                          cellset.Cast<vtkm::cont::CellSetStructured<3>>(),
+                          coords,
+                          scalarField,
+                          camera,
+                          scalarRange);
+    vtkm::cont::TryExecute(
+      functor, this->Internals->DeviceTracker, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
   }
 }
 

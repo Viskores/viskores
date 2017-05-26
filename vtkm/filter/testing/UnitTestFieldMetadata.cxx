@@ -27,13 +27,15 @@ namespace
 
 vtkm::cont::Field makeCellField()
 {
-  return vtkm::cont::Field("foo", vtkm::cont::Field::ASSOC_CELL_SET, std::string(),
+  return vtkm::cont::Field("foo",
+                           vtkm::cont::Field::ASSOC_CELL_SET,
+                           std::string(),
                            vtkm::cont::ArrayHandle<vtkm::Float32>());
 }
 vtkm::cont::Field makePointField()
 {
-  return vtkm::cont::Field("foo", vtkm::cont::Field::ASSOC_POINTS,
-                           vtkm::cont::ArrayHandle<vtkm::Float32>());
+  return vtkm::cont::Field(
+    "foo", vtkm::cont::Field::ASSOC_POINTS, vtkm::cont::ArrayHandle<vtkm::Float32>());
 }
 
 void TestFieldTypesUnknown()

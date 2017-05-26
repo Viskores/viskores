@@ -47,7 +47,8 @@ void TextAnnotationBillboard::SetPosition(const vtkm::Vec<vtkm::Float32, 3>& pos
   this->Position = position;
 }
 
-void TextAnnotationBillboard::SetPosition(vtkm::Float32 xpos, vtkm::Float32 ypos,
+void TextAnnotationBillboard::SetPosition(vtkm::Float32 xpos,
+                                          vtkm::Float32 ypos,
                                           vtkm::Float32 zpos)
 {
   this->SetPosition(vtkm::make_Vec(xpos, ypos, zpos));

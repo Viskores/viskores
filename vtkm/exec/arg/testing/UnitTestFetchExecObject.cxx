@@ -50,7 +50,8 @@ void TryInvocation()
 
   typedef vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagExecObject,
                                  vtkm::exec::arg::AspectTagDefault,
-                                 vtkm::exec::arg::ThreadIndicesTesting, TestExecutionObject>
+                                 vtkm::exec::arg::ThreadIndicesTesting,
+                                 TestExecutionObject>
     FetchType;
 
   FetchType fetch;

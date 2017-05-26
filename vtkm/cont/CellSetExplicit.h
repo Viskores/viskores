@@ -73,15 +73,18 @@ template <typename ShapeStorageTag = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
           typename OffsetsStorageTag = VTKM_DEFAULT_OFFSETS_STORAGE_TAG>
 class VTKM_ALWAYS_EXPORT CellSetExplicit : public CellSet
 {
-  typedef CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag,
+  typedef CellSetExplicit<ShapeStorageTag,
+                          NumIndicesStorageTag,
+                          ConnectivityStorageTag,
                           OffsetsStorageTag>
     Thisclass;
 
   template <typename FromTopology, typename ToTopology>
   struct ConnectivityChooser
   {
-    typedef typename detail::CellSetExplicitConnectivityChooser<
-      Thisclass, FromTopology, ToTopology>::ConnectivityType ConnectivityType;
+    typedef
+      typename detail::CellSetExplicitConnectivityChooser<Thisclass, FromTopology, ToTopology>::
+        ConnectivityType ConnectivityType;
 
     typedef typename ConnectivityType::ShapeArrayType ShapeArrayType;
     typedef typename ConnectivityType::NumIndicesArrayType NumIndicesArrayType;
@@ -296,14 +299,16 @@ public:
     typedef typename ConnectivityTypes::IndexOffsetArrayType::template ExecutionTypes<
       DeviceAdapter>::PortalConst IndexOffsetPortalType;
 
-    typedef vtkm::exec::ConnectivityExplicit<ShapePortalType, IndicePortalType,
-                                             ConnectivityPortalType, IndexOffsetPortalType>
+    typedef vtkm::exec::ConnectivityExplicit<ShapePortalType,
+                                             IndicePortalType,
+                                             ConnectivityPortalType,
+                                             IndexOffsetPortalType>
       ExecObjectType;
   };
 
   template <typename Device, typename FromTopology, typename ToTopology>
-  typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType PrepareForInput(
-    Device, FromTopology, ToTopology) const
+  typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType
+    PrepareForInput(Device, FromTopology, ToTopology) const
   {
     this->BuildConnectivity(Device(), FromTopology(), ToTopology());
 
@@ -322,7 +327,9 @@ public:
   template <typename Device, typename FromTopology, typename ToTopology>
   VTKM_CONT void BuildConnectivity(Device, FromTopology, ToTopology) const
   {
-    typedef CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag,
+    typedef CellSetExplicit<ShapeStorageTag,
+                            NumIndicesStorageTag,
+                            ConnectivityStorageTag,
                             OffsetsStorageTag>
       CSE;
 
@@ -334,7 +341,8 @@ public:
   }
 
   template <typename Device>
-  VTKM_CONT void CreateConnectivity(Device, vtkm::TopologyElementTagPoint,
+  VTKM_CONT void CreateConnectivity(Device,
+                                    vtkm::TopologyElementTagPoint,
                                     vtkm::TopologyElementTagCell)
   {
     // nothing to do
@@ -344,7 +352,9 @@ public:
   class ExpandIndices : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> cellIndex, FieldIn<> offset, FieldIn<> numIndices,
+    typedef void ControlSignature(FieldIn<> cellIndex,
+                                  FieldIn<> offset,
+                                  FieldIn<> numIndices,
                                   WholeArrayOut<> cellIndices);
     typedef void ExecutionSignature(_1, _2, _3, _4);
     typedef _1 InputDomain;
@@ -353,8 +363,10 @@ public:
     ExpandIndices() {}
 
     template <typename PortalType>
-    VTKM_EXEC void operator()(const vtkm::Id& cellIndex, const vtkm::Id& offset,
-                              const vtkm::Id& numIndices, const PortalType& cellIndices) const
+    VTKM_EXEC void operator()(const vtkm::Id& cellIndex,
+                              const vtkm::Id& offset,
+                              const vtkm::Id& numIndices,
+                              const PortalType& cellIndices) const
     {
       VTKM_ASSERT(cellIndices.GetNumberOfValues() >= offset + numIndices);
       vtkm::Id startIndex = offset;
@@ -366,7 +378,8 @@ public:
   };
 
   template <typename Device>
-  VTKM_CONT void CreateConnectivity(Device, vtkm::TopologyElementTagCell,
+  VTKM_CONT void CreateConnectivity(Device,
+                                    vtkm::TopologyElementTagCell,
                                     vtkm::TopologyElementTagPoint)
   {
     // PointToCell connectivity array (point indices) will be
@@ -397,7 +410,9 @@ public:
 
     this->PointToCell.BuildIndexOffsets(Device());
     vtkm::worklet::DispatcherMapField<ExpandIndices, Device> expandDispatcher;
-    expandDispatcher.Invoke(index, this->PointToCell.IndexOffsets, this->PointToCell.NumIndices,
+    expandDispatcher.Invoke(index,
+                            this->PointToCell.IndexOffsets,
+                            this->PointToCell.NumIndices,
                             this->CellToPoint.Connectivity);
 
     // SortByKey where key is PointToCell connectivity and value is the expanded cellIndex
@@ -490,9 +505,11 @@ private:
     return this->Ivar;                                                                             \
   }
 
-  VTKM_GET_CONNECTIVITY_METHOD(vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell,
+  VTKM_GET_CONNECTIVITY_METHOD(vtkm::TopologyElementTagPoint,
+                               vtkm::TopologyElementTagCell,
                                PointToCell)
-  VTKM_GET_CONNECTIVITY_METHOD(vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint,
+  VTKM_GET_CONNECTIVITY_METHOD(vtkm::TopologyElementTagCell,
+                               vtkm::TopologyElementTagPoint,
                                CellToPoint)
 
 #undef VTKM_GET_CONNECTIVITY_METHOD
@@ -512,15 +529,17 @@ namespace detail
 template <typename Storage1, typename Storage2, typename Storage3, typename Storage4>
 struct CellSetExplicitConnectivityChooser<
   vtkm::cont::CellSetExplicit<Storage1, Storage2, Storage3, Storage4>,
-  vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
+  vtkm::TopologyElementTagPoint,
+  vtkm::TopologyElementTagCell>
 {
-  typedef vtkm::cont::internal::ConnectivityExplicitInternals<Storage1, Storage2, Storage3,
-                                                              Storage4>
-    ConnectivityType;
+  typedef vtkm::cont::internal::
+    ConnectivityExplicitInternals<Storage1, Storage2, Storage3, Storage4>
+      ConnectivityType;
 };
 
 template <typename CellSetType>
-struct CellSetExplicitConnectivityChooser<CellSetType, vtkm::TopologyElementTagCell,
+struct CellSetExplicitConnectivityChooser<CellSetType,
+                                          vtkm::TopologyElementTagCell,
                                           vtkm::TopologyElementTagPoint>
 {
   //only specify the shape type as it will be constant as everything

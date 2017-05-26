@@ -142,7 +142,8 @@ template <typename ListTag1, typename ListTag2>
 struct ListIntersect
 {
   using type =
-    brigand::fold<ListTag1, brigand::list<>,
+    brigand::fold<ListTag1,
+                  brigand::list<>,
                   intersect_tags<brigand::_state, brigand::_element, brigand::pin<ListTag2>>>;
 };
 
@@ -191,7 +192,11 @@ VTKM_CONT void ListForEachImpl(const Functor& f, brigand::list<T1, T2, T3>)
   f(T3());
 }
 
-template <typename Functor, typename T1, typename T2, typename T3, typename T4,
+template <typename Functor,
+          typename T1,
+          typename T2,
+          typename T3,
+          typename T4,
           typename... ArgTypes>
 VTKM_CONT void ListForEachImpl(const Functor& f, brigand::list<T1, T2, T3, T4, ArgTypes...>)
 {
@@ -228,7 +233,11 @@ VTKM_CONT void ListForEachImpl(Functor& f, brigand::list<T1, T2, T3>)
   f(T3());
 }
 
-template <typename Functor, typename T1, typename T2, typename T3, typename T4,
+template <typename Functor,
+          typename T1,
+          typename T2,
+          typename T3,
+          typename T4,
           typename... ArgTypes>
 VTKM_CONT void ListForEachImpl(Functor& f, brigand::list<T1, T2, T3, T4, ArgTypes...>)
 {

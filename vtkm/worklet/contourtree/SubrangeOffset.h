@@ -93,7 +93,8 @@ public:
   SubrangeOffset() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& sortID, const InFieldPortalType& sortVector,
+  VTKM_EXEC void operator()(const vtkm::Id& sortID,
+                            const InFieldPortalType& sortVector,
                             const OutFieldPortalType& candidate) const
   {
     if (sortVector.Get(sortID) != sortVector.Get(sortID - 1))

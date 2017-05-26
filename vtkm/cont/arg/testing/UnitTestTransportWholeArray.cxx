@@ -119,13 +119,16 @@ struct TryWholeArrayType
   {
     typedef vtkm::cont::ArrayHandle<T> ArrayHandleType;
 
-    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayIn, ArrayHandleType,
+    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayIn,
+                                       ArrayHandleType,
                                        Device>
       InTransportType;
     typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayInOut,
-                                       ArrayHandleType, Device>
+                                       ArrayHandleType,
+                                       Device>
       InOutTransportType;
-    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayOut, ArrayHandleType,
+    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayOut,
+                                       ArrayHandleType,
                                        Device>
       OutTransportType;
 
@@ -171,7 +174,8 @@ struct TryAtomicArrayType
   {
     typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> ArrayHandleType;
 
-    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagAtomicArray, ArrayHandleType,
+    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagAtomicArray,
+                                       ArrayHandleType,
                                        Device>
       TransportType;
 

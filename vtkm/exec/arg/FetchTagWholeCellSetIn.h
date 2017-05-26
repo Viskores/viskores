@@ -42,8 +42,10 @@ struct FetchTagWholeCellSetIn
 };
 
 template <typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<vtkm::exec::arg::FetchTagWholeCellSetIn, vtkm::exec::arg::AspectTagDefault,
-             ThreadIndicesType, ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagWholeCellSetIn,
+             vtkm::exec::arg::AspectTagDefault,
+             ThreadIndicesType,
+             ExecObjectType>
 {
   typedef ExecObjectType ValueType;
 

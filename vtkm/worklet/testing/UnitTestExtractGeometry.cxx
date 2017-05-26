@@ -92,9 +92,13 @@ public:
 
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet =
-      extractGeometry.Run(cellSet, dataset.GetCoordinateSystem("coordinates"), box, extractInside,
-                          extractBoundaryCells, extractOnlyBoundaryCells, DeviceAdapter());
+    OutCellSetType outCellSet = extractGeometry.Run(cellSet,
+                                                    dataset.GetCoordinateSystem("coordinates"),
+                                                    box,
+                                                    extractInside,
+                                                    extractBoundaryCells,
+                                                    extractOnlyBoundaryCells,
+                                                    DeviceAdapter());
 
     vtkm::cont::Field cellField = extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
     OutCellFieldArrayHandleType cellFieldArray;
@@ -205,9 +209,13 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet =
-      extractGeometry.Run(cellSet, dataset.GetCoordinateSystem("coords"), box, extractInside,
-                          extractBoundaryCells, extractOnlyBoundaryCells, DeviceAdapter());
+    OutCellSetType outCellSet = extractGeometry.Run(cellSet,
+                                                    dataset.GetCoordinateSystem("coords"),
+                                                    box,
+                                                    extractInside,
+                                                    extractBoundaryCells,
+                                                    extractOnlyBoundaryCells,
+                                                    DeviceAdapter());
 
     vtkm::cont::Field cellField = extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
     OutCellFieldArrayHandleType cellFieldArray;
@@ -246,9 +254,13 @@ public:
 
     // Output data set with cell set containing extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet =
-      extractGeometry.Run(cellSet, dataset.GetCoordinateSystem("coords"), sphere, extractInside,
-                          extractBoundaryCells, extractOnlyBoundaryCells, DeviceAdapter());
+    OutCellSetType outCellSet = extractGeometry.Run(cellSet,
+                                                    dataset.GetCoordinateSystem("coords"),
+                                                    sphere,
+                                                    extractInside,
+                                                    extractBoundaryCells,
+                                                    extractOnlyBoundaryCells,
+                                                    DeviceAdapter());
 
     vtkm::cont::Field cellField = extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
     OutCellFieldArrayHandleType cellFieldArray;

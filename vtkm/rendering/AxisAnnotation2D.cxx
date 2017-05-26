@@ -68,9 +68,15 @@ void AxisAnnotation2D::SetRangeForAutoTicks(const Range& range)
   else
 #endif
   {
-    CalculateTicks(this->TickRange, false, this->PositionsMajor, this->ProportionsMajor,
+    CalculateTicks(this->TickRange,
+                   false,
+                   this->PositionsMajor,
+                   this->ProportionsMajor,
                    this->MoreOrLessTickAdjustment);
-    CalculateTicks(this->TickRange, true, this->PositionsMinor, this->ProportionsMinor,
+    CalculateTicks(this->TickRange,
+                   true,
+                   this->PositionsMinor,
+                   this->ProportionsMinor,
                    this->MoreOrLessTickAdjustment);
   }
 }

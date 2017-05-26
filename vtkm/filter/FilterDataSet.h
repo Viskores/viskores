@@ -83,13 +83,15 @@ public:
   bool MapFieldOntoOutput(ResultDataSet& result, const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(ResultDataSet& result, const vtkm::cont::Field& field,
+  VTKM_CONT bool MapFieldOntoOutput(ResultDataSet& result,
+                                    const vtkm::cont::Field& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   template <typename DerivedPolicy>
-  VTKM_CONT ResultDataSet PrepareForExecution(
-    const vtkm::cont::DataSet& input, const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT ResultDataSet
+  PrepareForExecution(const vtkm::cont::DataSet& input,
+                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
   vtkm::Id CellSetIndex;

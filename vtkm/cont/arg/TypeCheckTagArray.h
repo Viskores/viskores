@@ -66,7 +66,9 @@ template <typename TypeList, typename ArrayType>
 struct TypeCheck<TypeCheckTagArray<TypeList>, ArrayType>
 {
   static const bool value = detail::TypeCheckArrayValueType<
-    TypeList, ArrayType, vtkm::cont::internal::ArrayHandleCheck<ArrayType>::type::value>::value;
+    TypeList,
+    ArrayType,
+    vtkm::cont::internal::ArrayHandleCheck<ArrayType>::type::value>::value;
 };
 }
 }

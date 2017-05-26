@@ -90,9 +90,9 @@ struct TemplatedTests
 {
   typedef vtkm::cont::ArrayHandleCounting<ValueType> ArrayHandleType;
 
-  typedef vtkm::cont::ArrayHandle<
-    ValueType, typename vtkm::cont::internal::ArrayHandleCountingTraits<ValueType>::Tag>
-    ArrayHandleType2;
+  typedef vtkm::cont::
+    ArrayHandle<ValueType, typename vtkm::cont::internal::ArrayHandleCountingTraits<ValueType>::Tag>
+      ArrayHandleType2;
 
   typedef typename ArrayHandleType::PortalConstControl PortalType;
 

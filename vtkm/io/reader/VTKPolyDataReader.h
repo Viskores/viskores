@@ -55,7 +55,8 @@ inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
   for (std::size_t i = 0; i < arrays.size(); ++i)
   {
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(arrays[i].GetPortalConstControl()),
-              vtkm::cont::ArrayPortalToIteratorEnd(arrays[i].GetPortalConstControl()), outp);
+              vtkm::cont::ArrayPortalToIteratorEnd(arrays[i].GetPortalConstControl()),
+              outp);
     typedef typename std::iterator_traits<IteratorType>::difference_type DifferenceType;
     std::advance(outp, static_cast<DifferenceType>(arrays[i].GetNumberOfValues()));
   }
@@ -137,8 +138,8 @@ private:
 
       connectivityArrays.push_back(cellConnectivity);
       numIndicesArrays.push_back(cellNumIndices);
-      shapesBuffer.insert(shapesBuffer.end(),
-                          static_cast<std::size_t>(cellNumIndices.GetNumberOfValues()), shape);
+      shapesBuffer.insert(
+        shapesBuffer.end(), static_cast<std::size_t>(cellNumIndices.GetNumberOfValues()), shape);
     }
 
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity =
@@ -147,7 +148,8 @@ private:
       internal::ConcatinateArrayHandles(numIndicesArrays);
     vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
     shapes.Allocate(static_cast<vtkm::Id>(shapesBuffer.size()));
-    std::copy(shapesBuffer.begin(), shapesBuffer.end(),
+    std::copy(shapesBuffer.begin(),
+              shapesBuffer.end(),
               vtkm::cont::ArrayPortalToIteratorBegin(shapes.GetPortalControl()));
 
     vtkm::cont::ArrayHandle<vtkm::Id> permutation;
@@ -157,8 +159,10 @@ private:
     if (vtkm::io::internal::IsSingleShape(shapes))
     {
       vtkm::cont::CellSetSingleType<> cellSet("cells");
-      cellSet.Fill(numPoints, shapes.GetPortalConstControl().Get(0),
-                   numIndices.GetPortalConstControl().Get(0), connectivity);
+      cellSet.Fill(numPoints,
+                   shapes.GetPortalConstControl().Get(0),
+                   numIndices.GetPortalConstControl().Get(0),
+                   connectivity);
       this->DataSet.AddCellSet(cellSet);
     }
     else

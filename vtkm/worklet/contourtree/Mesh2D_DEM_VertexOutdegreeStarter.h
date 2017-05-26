@@ -121,8 +121,10 @@ public:
 
   //template<typename InFieldPortalType>
   template <typename InFieldPortalType /*, typename InOutFieldPortalType*/>
-  VTKM_EXEC void operator()(const vtkm::Id& vertex, const vtkm::Id& nbrMask,
-                            const InFieldPortalType& arcArray, vtkm::Id& outdegree,
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
+                            const vtkm::Id& nbrMask,
+                            const InFieldPortalType& arcArray,
+                            vtkm::Id& outdegree,
                             vtkm::Id& isCritical) const
   {
     // get the row and column

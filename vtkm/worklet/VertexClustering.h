@@ -65,7 +65,8 @@ private:
 
 public:
   VTKM_CONT
-  AverageByKeyDynamicValue(const KeyArrayIn& inputKeys, KeyArrayOut& outputKeys,
+  AverageByKeyDynamicValue(const KeyArrayIn& inputKeys,
+                           KeyArrayOut& outputKeys,
                            vtkm::cont::DynamicArrayHandle& outputValues)
     : InputKeys(inputKeys)
     , OutputKeys(&outputKeys)
@@ -79,8 +80,8 @@ public:
     typedef typename ValueArrayIn::ValueType ValueType;
 
     vtkm::cont::ArrayHandle<ValueType> outArray;
-    vtkm::worklet::AverageByKey(InputKeys, coordinates, *(this->OutputKeys), outArray,
-                                DeviceAdapter());
+    vtkm::worklet::AverageByKey(
+      InputKeys, coordinates, *(this->OutputKeys), outArray, DeviceAdapter());
     *(this->OutputValues) = vtkm::cont::DynamicArrayHandle(outArray);
   }
 
@@ -145,7 +146,8 @@ struct VertexClustering
   class MapCellsWorklet : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInPoint<IdType> pointClusterIds,
+    typedef void ControlSignature(CellSetIn cellset,
+                                  FieldInPoint<IdType> pointClusterIds,
                                   FieldOutCell<Id3Type> cellClusterIds);
     typedef void ExecutionSignature(_2, _3);
 
@@ -171,7 +173,8 @@ struct VertexClustering
     typedef void ExecutionSignature(WorkIndex, _1, _2); // WorkIndex: use vtkm indexing
 
     template <typename OutPortalType>
-    VTKM_EXEC void operator()(const vtkm::Id& counter, const vtkm::Id& cid,
+    VTKM_EXEC void operator()(const vtkm::Id& counter,
+                              const vtkm::Id& cid,
                               const OutPortalType& outPortal) const
     {
       outPortal.Set(cid, counter);
@@ -202,7 +205,8 @@ struct VertexClustering
     }
 
     template <typename InPortalType>
-    VTKM_EXEC void operator()(const vtkm::Id3& cid3, vtkm::Id3& pointId3,
+    VTKM_EXEC void operator()(const vtkm::Id3& cid3,
+                              vtkm::Id3& pointId3,
                               const InPortalType& inPortal) const
     {
       if (cid3[0] == cid3[1] || cid3[0] == cid3[2] || cid3[1] == cid3[2])
@@ -302,11 +306,14 @@ public:
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
   ///
-  template <typename DynamicCellSetType, typename DynamicCoordinateHandleType,
+  template <typename DynamicCellSetType,
+            typename DynamicCoordinateHandleType,
             typename DeviceAdapter>
   vtkm::cont::DataSet Run(const DynamicCellSetType& cellSet,
                           const DynamicCoordinateHandleType& coordinates,
-                          const vtkm::Bounds& bounds, const vtkm::Id3& nDivisions, DeviceAdapter)
+                          const vtkm::Bounds& bounds,
+                          const vtkm::Id3& nDivisions,
+                          DeviceAdapter)
   {
 
     /// determine grid resolution for clustering
@@ -366,7 +373,8 @@ public:
     vtkm::cont::DynamicArrayHandle repPointArray; // representative point
 
     internal::AverageByKeyDynamicValue<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                       vtkm::cont::ArrayHandle<vtkm::Id>, DeviceAdapter>
+                                       vtkm::cont::ArrayHandle<vtkm::Id>,
+                                       DeviceAdapter>
       averageByKey(pointCidArray, pointCidArrayReduced, repPointArray);
     CastAndCall(coordinates, averageByKey);
 
@@ -473,7 +481,9 @@ public:
     output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
 
     vtkm::cont::CellSetSingleType<> triangles("cells");
-    triangles.Fill(repPointArray.GetNumberOfValues(), vtkm::CellShapeTagTriangle::Id, 3,
+    triangles.Fill(repPointArray.GetNumberOfValues(),
+                   vtkm::CellShapeTagTriangle::Id,
+                   3,
                    internal::copyFromVec(pointId3Array, DeviceAdapter()));
     output.AddCellSet(triangles);
 

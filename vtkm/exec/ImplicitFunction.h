@@ -75,7 +75,9 @@ public:
 
 private:
   using ValueCallerSig = FloatDefault(const void*, FloatDefault, FloatDefault, FloatDefault);
-  using GradientCallerSig = vtkm::Vec<FloatDefault, 3>(const void*, FloatDefault, FloatDefault,
+  using GradientCallerSig = vtkm::Vec<FloatDefault, 3>(const void*,
+                                                       FloatDefault,
+                                                       FloatDefault,
                                                        FloatDefault);
 
   const void* Function;

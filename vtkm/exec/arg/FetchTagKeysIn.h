@@ -44,7 +44,8 @@ struct FetchTagKeysIn
 
 template <typename KeyPortalType, typename IdPortalType, typename IdComponentPortalType>
 struct Fetch<
-  vtkm::exec::arg::FetchTagKeysIn, vtkm::exec::arg::AspectTagDefault,
+  vtkm::exec::arg::FetchTagKeysIn,
+  vtkm::exec::arg::AspectTagDefault,
   vtkm::exec::arg::ThreadIndicesReduceByKey,
   vtkm::exec::internal::ReduceByKeyLookup<KeyPortalType, IdPortalType, IdComponentPortalType>>
 {

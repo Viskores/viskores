@@ -110,7 +110,8 @@ private:
     CopyKernel<typename InputArrayType::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
                typename OutputArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal>
       kernel(input.PrepareForInput(DeviceAdapterTag()),
-             output.PrepareForOutput(1, DeviceAdapterTag()), index);
+             output.PrepareForOutput(1, DeviceAdapterTag()),
+             index);
 
     DerivedAlgorithm::Schedule(kernel, 1);
 
@@ -174,7 +175,10 @@ public:
         OutputPortalType;
     OutputPortalType outputPortal = output.PrepareForOutput(outArrayLength, DeviceAdapterTag());
 
-    CopyIfKernel<InputPortalType, StencilPortalType, IndexPortalType, OutputPortalType,
+    CopyIfKernel<InputPortalType,
+                 StencilPortalType,
+                 IndexPortalType,
+                 OutputPortalType,
                  UnaryPredicate>
       copyKernel(inputPortal, stencilPortal, indexPortal, outputPortal, unary_predicate);
     DerivedAlgorithm::Schedule(copyKernel, arrayLength);
@@ -193,7 +197,8 @@ public:
   // CopySubRange
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                     vtkm::Id inputStartIndex, vtkm::Id numberOfElementsToCopy,
+                                     vtkm::Id inputStartIndex,
+                                     vtkm::Id numberOfElementsToCopy,
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0)
   {
@@ -235,7 +240,9 @@ public:
     }
 
     CopyKernel kernel(input.PrepareForInput(DeviceAdapterTag()),
-                      output.PrepareForInPlace(DeviceAdapterTag()), inputStartIndex, outputIndex);
+                      output.PrepareForInPlace(DeviceAdapterTag()),
+                      inputStartIndex,
+                      outputIndex);
     DerivedAlgorithm::Schedule(kernel, numberOfElementsToCopy);
     return true;
   }
@@ -255,7 +262,8 @@ public:
                         DeviceAdapterTag>::PortalConst,
                       typename vtkm::cont::ArrayHandle<vtkm::Id, COut>::template ExecutionTypes<
                         DeviceAdapterTag>::Portal>
-      kernel(input.PrepareForInput(DeviceAdapterTag()), values.PrepareForInput(DeviceAdapterTag()),
+      kernel(input.PrepareForInput(DeviceAdapterTag()),
+             values.PrepareForInput(DeviceAdapterTag()),
              output.PrepareForOutput(arraySize, DeviceAdapterTag()));
 
     DerivedAlgorithm::Schedule(kernel, arraySize);
@@ -277,8 +285,10 @@ public:
       typename vtkm::cont::ArrayHandle<vtkm::Id,
                                        COut>::template ExecutionTypes<DeviceAdapterTag>::Portal,
       BinaryCompare>
-      kernel(input.PrepareForInput(DeviceAdapterTag()), values.PrepareForInput(DeviceAdapterTag()),
-             output.PrepareForOutput(arraySize, DeviceAdapterTag()), binary_compare);
+      kernel(input.PrepareForInput(DeviceAdapterTag()),
+             values.PrepareForInput(DeviceAdapterTag()),
+             output.PrepareForOutput(arraySize, DeviceAdapterTag()),
+             binary_compare);
 
     DerivedAlgorithm::Schedule(kernel, arraySize);
   }
@@ -300,7 +310,8 @@ public:
   }
 
   template <typename T, typename U, class CIn, class BinaryFunctor>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue,
+  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                            U initialValue,
                             BinaryFunctor binary_functor)
   {
     //Crazy Idea:
@@ -320,8 +331,8 @@ public:
     typedef vtkm::cont::ArrayHandleImplicit<U, ReduceKernelType> ReduceHandleType;
     typedef vtkm::cont::ArrayHandle<U, vtkm::cont::StorageTagBasic> TempArrayType;
 
-    ReduceKernelType kernel(input.PrepareForInput(DeviceAdapterTag()), initialValue,
-                            binary_functor);
+    ReduceKernelType kernel(
+      input.PrepareForInput(DeviceAdapterTag()), initialValue, binary_functor);
 
     vtkm::Id length = (input.GetNumberOfValues() / 16);
     length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
@@ -337,14 +348,16 @@ public:
   // Streaming Reduce
   template <typename T, typename U, class CIn>
   VTKM_CONT static U StreamingReduce(const vtkm::Id numBlocks,
-                                     const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
+                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     U initialValue)
   {
     return DerivedAlgorithm::StreamingReduce(numBlocks, input, initialValue, vtkm::Add());
   }
 
   template <typename T, typename U, class CIn, class BinaryFunctor>
   VTKM_CONT static U StreamingReduce(const vtkm::Id numBlocks,
-                                     const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue,
+                                     const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     U initialValue,
                                      BinaryFunctor binary_functor)
   {
     vtkm::Id fullSize = input.GetNumberOfValues();
@@ -360,8 +373,8 @@ public:
         numberOfInstances = fullSize - blockSize * block;
 
       vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, CIn>> streamIn =
-        vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, CIn>>(input, block, blockSize,
-                                                                          numberOfInstances);
+        vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, CIn>>(
+          input, block, blockSize, numberOfInstances);
 
       if (block == 0)
         lastResult = DerivedAlgorithm::Reduce(streamIn, initialValue, binary_functor);
@@ -373,7 +386,12 @@ public:
 
   //--------------------------------------------------------------------------
   // Reduce By Key
-  template <typename T, typename U, class KIn, class VIn, class KOut, class VOut,
+  template <typename T,
+            typename U,
+            class KIn,
+            class VIn,
+            class KOut,
+            class VOut,
             class BinaryFunctor>
   VTKM_CONT static void ReduceByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
                                     const vtkm::cont::ArrayHandle<U, VIn>& values,
@@ -430,8 +448,8 @@ public:
       ZipInHandleType scanInput(values, keystate);
       ZipOutHandleType scanOutput(reducedValues, stencil);
 
-      DerivedAlgorithm::ScanInclusive(scanInput, scanOutput,
-                                      ReduceByKeyAdd<BinaryFunctor>(binary_functor));
+      DerivedAlgorithm::ScanInclusive(
+        scanInput, scanOutput, ReduceByKeyAdd<BinaryFunctor>(binary_functor));
 
       //at this point we are done with keystate, so free the memory
       keystate.ReleaseResources();
@@ -453,7 +471,8 @@ public:
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output,
-                                   BinaryFunctor binaryFunctor, const T& initialValue)
+                                   BinaryFunctor binaryFunctor,
+                                   const T& initialValue)
   {
     typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> TempArrayType;
     typedef vtkm::cont::ArrayHandle<T, COut> OutputArrayType;
@@ -474,7 +493,9 @@ public:
 
     InclusiveToExclusiveKernel<SrcPortalType, DestPortalType, BinaryFunctor> inclusiveToExclusive(
       inclusiveScan.PrepareForInput(DeviceAdapterTag()),
-      output.PrepareForOutput(numValues, DeviceAdapterTag()), binaryFunctor, initialValue);
+      output.PrepareForOutput(numValues, DeviceAdapterTag()),
+      binaryFunctor,
+      initialValue);
 
     DerivedAlgorithm::Schedule(inclusiveToExclusive, numValues);
 
@@ -485,8 +506,8 @@ public:
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    return DerivedAlgorithm::ScanExclusive(input, output, vtkm::Sum(),
-                                           vtkm::TypeTraits<T>::ZeroInitialization());
+    return DerivedAlgorithm::ScanExclusive(
+      input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
   //--------------------------------------------------------------------------
@@ -495,7 +516,8 @@ public:
   VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output,
-                                           const U& initialValue, BinaryFunctor binaryFunctor)
+                                           const U& initialValue,
+                                           BinaryFunctor binaryFunctor)
   {
     VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
 
@@ -564,8 +586,8 @@ public:
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output)
   {
-    DerivedAlgorithm::ScanExclusiveByKey(keys, values, output,
-                                         vtkm::TypeTraits<U>::ZeroInitialization(), vtkm::Sum());
+    DerivedAlgorithm::ScanExclusiveByKey(
+      keys, values, output, vtkm::TypeTraits<U>::ZeroInitialization(), vtkm::Sum());
   }
 
   //--------------------------------------------------------------------------
@@ -575,15 +597,16 @@ public:
                                             const vtkm::cont::ArrayHandle<T, CIn>& input,
                                             vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    return DerivedAlgorithm::StreamingScanExclusive(numBlocks, input, output, vtkm::Sum(),
-                                                    vtkm::TypeTraits<T>::ZeroInitialization());
+    return DerivedAlgorithm::StreamingScanExclusive(
+      numBlocks, input, output, vtkm::Sum(), vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
                                             const vtkm::cont::ArrayHandle<T, CIn>& input,
                                             vtkm::cont::ArrayHandle<T, COut>& output,
-                                            BinaryFunctor binary_functor, const T& initialValue)
+                                            BinaryFunctor binary_functor,
+                                            const T& initialValue)
   {
     vtkm::Id fullSize = input.GetNumberOfValues();
     vtkm::Id blockSize = fullSize / numBlocks;
@@ -598,12 +621,12 @@ public:
         numberOfInstances = fullSize - blockSize * block;
 
       vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, CIn>> streamIn =
-        vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, CIn>>(input, block, blockSize,
-                                                                          numberOfInstances);
+        vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, CIn>>(
+          input, block, blockSize, numberOfInstances);
 
       vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, COut>> streamOut =
-        vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, COut>>(output, block, blockSize,
-                                                                           numberOfInstances);
+        vtkm::cont::ArrayHandleStreaming<vtkm::cont::ArrayHandle<T, COut>>(
+          output, block, blockSize, numberOfInstances);
 
       if (block == 0)
       {
@@ -733,8 +756,8 @@ public:
       ZipInHandleType scanInput(values, keystate);
       ZipOutHandleType scanOutput(reducedValues, stencil);
 
-      DerivedAlgorithm::ScanInclusive(scanInput, scanOutput,
-                                      ReduceByKeyAdd<BinaryFunctor>(binary_functor));
+      DerivedAlgorithm::ScanInclusive(
+        scanInput, scanOutput, ReduceByKeyAdd<BinaryFunctor>(binary_functor));
       //at this point we are done with keystate, so free the memory
       keystate.ReleaseResources();
       DerivedAlgorithm::Copy(reducedValues, values_output);
@@ -841,11 +864,12 @@ public:
     ClassifyUniqueComparisonKernel<
       typename vtkm::cont::ArrayHandle<T, Storage>::template ExecutionTypes<
         DeviceAdapterTag>::PortalConst,
-      typename vtkm::cont::ArrayHandle<
-        vtkm::Id, vtkm::cont::StorageTagBasic>::template ExecutionTypes<DeviceAdapterTag>::Portal,
+      typename vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>::
+        template ExecutionTypes<DeviceAdapterTag>::Portal,
       WrappedBOpType>
       classifyKernel(values.PrepareForInput(DeviceAdapterTag()),
-                     stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag()), wrappedCompare);
+                     stencilArray.PrepareForOutput(inputSize, DeviceAdapterTag()),
+                     wrappedCompare);
 
     DerivedAlgorithm::Schedule(classifyKernel, inputSize);
 
@@ -872,7 +896,8 @@ public:
                         DeviceAdapterTag>::PortalConst,
                       typename vtkm::cont::ArrayHandle<vtkm::Id, COut>::template ExecutionTypes<
                         DeviceAdapterTag>::Portal>
-      kernel(input.PrepareForInput(DeviceAdapterTag()), values.PrepareForInput(DeviceAdapterTag()),
+      kernel(input.PrepareForInput(DeviceAdapterTag()),
+             values.PrepareForInput(DeviceAdapterTag()),
              output.PrepareForOutput(arraySize, DeviceAdapterTag()));
 
     DerivedAlgorithm::Schedule(kernel, arraySize);
@@ -894,8 +919,10 @@ public:
       typename vtkm::cont::ArrayHandle<vtkm::Id,
                                        COut>::template ExecutionTypes<DeviceAdapterTag>::Portal,
       BinaryCompare>
-      kernel(input.PrepareForInput(DeviceAdapterTag()), values.PrepareForInput(DeviceAdapterTag()),
-             output.PrepareForOutput(arraySize, DeviceAdapterTag()), binary_compare);
+      kernel(input.PrepareForInput(DeviceAdapterTag()),
+             values.PrepareForInput(DeviceAdapterTag()),
+             output.PrepareForOutput(arraySize, DeviceAdapterTag()),
+             binary_compare);
 
     DerivedAlgorithm::Schedule(kernel, arraySize);
   }
@@ -987,19 +1014,21 @@ private:
   }
 
   VTKM_EXEC
-  vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address, const vtkm::Int32& newValue,
+  vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
+                                 const vtkm::Int32& newValue,
                                  const vtkm::Int32& oldValue) const
   {
-    return InterlockedCompareExchange(reinterpret_cast<volatile long*>(address), newValue,
-                                      oldValue);
+    return InterlockedCompareExchange(
+      reinterpret_cast<volatile long*>(address), newValue, oldValue);
   }
 
   VTKM_EXEC
-  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address, const vtkm::Int64& newValue,
+  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
+                                 const vtkm::Int64& newValue,
                                  const vtkm::Int64& oldValue) const
   {
-    return InterlockedCompareExchange64(reinterpret_cast<volatile long long*>(address), newValue,
-                                        oldValue);
+    return InterlockedCompareExchange64(
+      reinterpret_cast<volatile long long*>(address), newValue, oldValue);
   }
 
 #else //gcc built-in atomics
@@ -1017,14 +1046,16 @@ private:
   }
 
   VTKM_EXEC
-  vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address, const vtkm::Int32& newValue,
+  vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
+                                 const vtkm::Int32& newValue,
                                  const vtkm::Int32& oldValue) const
   {
     return __sync_val_compare_and_swap(address, oldValue, newValue);
   }
 
   VTKM_EXEC
-  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address, const vtkm::Int64& newValue,
+  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
+                                 const vtkm::Int64& newValue,
                                  const vtkm::Int64& oldValue) const
   {
     return __sync_val_compare_and_swap(address, oldValue, newValue);
@@ -1049,7 +1080,9 @@ class DeviceTaskTypes
 public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet, const InvocationType& invocation, vtkm::Id,
+    const WorkletType& worklet,
+    const InvocationType& invocation,
+    vtkm::Id,
     vtkm::Id globalIndexOffset = 0)
   {
     using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
@@ -1058,7 +1091,9 @@ public:
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet, const InvocationType& invocation, vtkm::Id3,
+    const WorkletType& worklet,
+    const InvocationType& invocation,
+    vtkm::Id3,
     vtkm::Id globalIndexOffset = 0)
   {
     using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;

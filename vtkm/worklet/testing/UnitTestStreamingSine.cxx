@@ -104,8 +104,8 @@ void TestStreamingSine()
     DeviceAlgorithms::StreamingScanExclusive(4, input, output, vtkm::Maximum(), initValue);
   VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f),
                    "Wrong sum for streaming exclusive scan with binary operator");
-  compareArrays(input, output, summation,
-                "Wrong result for streaming exclusive scan with binary operator");
+  compareArrays(
+    input, output, summation, "Wrong result for streaming exclusive scan with binary operator");
 
   // Test the streaming reduce
   std::cout << "Testing streaming reduce: " << std::endl;

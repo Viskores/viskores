@@ -123,7 +123,8 @@ struct CompositeVectorArrayToPortalCont
 
   template <typename ArrayHandleType, vtkm::IdComponent Index>
   VTKM_CONT typename ReturnType<ArrayHandleType, Index>::type operator()(
-    const ArrayHandleType& array, vtkm::internal::IndexTag<Index>) const
+    const ArrayHandleType& array,
+    vtkm::internal::IndexTag<Index>) const
   {
     return array.GetPortalConstControl();
   }
@@ -140,7 +141,8 @@ struct CompositeVectorArrayToPortalExec
 
   template <typename ArrayHandleType, vtkm::IdComponent Index>
   VTKM_CONT typename ReturnType<ArrayHandleType, Index>::type operator()(
-    const ArrayHandleType& array, vtkm::internal::IndexTag<Index>) const
+    const ArrayHandleType& array,
+    vtkm::internal::IndexTag<Index>) const
   {
     return array.PrepareForInput(DeviceAdapterTag());
   }
@@ -464,7 +466,8 @@ class ArrayHandleCompositeVector
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-    ArrayHandleCompositeVector, (ArrayHandleCompositeVector<Signature>),
+    ArrayHandleCompositeVector,
+    (ArrayHandleCompositeVector<Signature>),
     (typename internal::ArrayHandleCompositeVectorTraits<Signature>::Superclass));
 
   VTKM_CONT
@@ -506,13 +509,18 @@ public:
                     ComponentMapType(sourceComponent1, sourceComponent2, sourceComponent3)))
   {
   }
-  template <typename ArrayHandleType1, typename ArrayHandleType2, typename ArrayHandleType3,
+  template <typename ArrayHandleType1,
+            typename ArrayHandleType2,
+            typename ArrayHandleType3,
             typename ArrayHandleType4>
-  VTKM_CONT ArrayHandleCompositeVector(
-    const ArrayHandleType1& array1, vtkm::IdComponent sourceComponent1,
-    const ArrayHandleType2& array2, vtkm::IdComponent sourceComponent2,
-    const ArrayHandleType3& array3, vtkm::IdComponent sourceComponent3,
-    const ArrayHandleType4& array4, vtkm::IdComponent sourceComponent4)
+  VTKM_CONT ArrayHandleCompositeVector(const ArrayHandleType1& array1,
+                                       vtkm::IdComponent sourceComponent1,
+                                       const ArrayHandleType2& array2,
+                                       vtkm::IdComponent sourceComponent2,
+                                       const ArrayHandleType3& array3,
+                                       vtkm::IdComponent sourceComponent3,
+                                       const ArrayHandleType4& array4,
+                                       vtkm::IdComponent sourceComponent4)
     : Superclass(StorageType(
         vtkm::internal::make_FunctionInterface<ValueType>(array1, array2, array3, array4),
         ComponentMapType(sourceComponent1, sourceComponent2, sourceComponent3, sourceComponent4)))
@@ -533,8 +541,10 @@ public:
 /// OutArrayType outArray = vtkm::cont::make_ArrayHandleCompositeVector(a1,a2);
 /// \endcode
 ///
-template <typename ArrayHandleType1, typename ArrayHandleType2 = void,
-          typename ArrayHandleType3 = void, typename ArrayHandleType4 = void>
+template <typename ArrayHandleType1,
+          typename ArrayHandleType2 = void,
+          typename ArrayHandleType3 = void,
+          typename ArrayHandleType4 = void>
 struct ArrayHandleCompositeVectorType
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
@@ -545,8 +555,10 @@ struct ArrayHandleCompositeVectorType
 private:
   typedef
     typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType ComponentType;
-  typedef vtkm::Vec<ComponentType, 4> Signature(ArrayHandleType1, ArrayHandleType2,
-                                                ArrayHandleType3, ArrayHandleType4);
+  typedef vtkm::Vec<ComponentType, 4> Signature(ArrayHandleType1,
+                                                ArrayHandleType2,
+                                                ArrayHandleType3,
+                                                ArrayHandleType4);
 
 public:
   typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
@@ -562,7 +574,8 @@ struct ArrayHandleCompositeVectorType<ArrayHandleType1, ArrayHandleType2, ArrayH
 private:
   typedef
     typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType ComponentType;
-  typedef vtkm::Vec<ComponentType, 3> Signature(ArrayHandleType1, ArrayHandleType2,
+  typedef vtkm::Vec<ComponentType, 3> Signature(ArrayHandleType1,
+                                                ArrayHandleType2,
                                                 ArrayHandleType3);
 
 public:
@@ -622,8 +635,10 @@ make_ArrayHandleCompositeVector(const ArrayHandleType1& array1, vtkm::IdComponen
 }
 template <typename ArrayHandleType1, typename ArrayHandleType2>
 VTKM_CONT typename ArrayHandleCompositeVectorType<ArrayHandleType1, ArrayHandleType2>::type
-make_ArrayHandleCompositeVector(const ArrayHandleType1& array1, vtkm::IdComponent sourceComponent1,
-                                const ArrayHandleType2& array2, vtkm::IdComponent sourceComponent2)
+make_ArrayHandleCompositeVector(const ArrayHandleType1& array1,
+                                vtkm::IdComponent sourceComponent1,
+                                const ArrayHandleType2& array2,
+                                vtkm::IdComponent sourceComponent2)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
@@ -631,39 +646,55 @@ make_ArrayHandleCompositeVector(const ArrayHandleType1& array1, vtkm::IdComponen
     array1, sourceComponent1, array2, sourceComponent2);
 }
 template <typename ArrayHandleType1, typename ArrayHandleType2, typename ArrayHandleType3>
-VTKM_CONT typename ArrayHandleCompositeVectorType<ArrayHandleType1, ArrayHandleType2,
+VTKM_CONT typename ArrayHandleCompositeVectorType<ArrayHandleType1,
+                                                  ArrayHandleType2,
                                                   ArrayHandleType3>::type
-make_ArrayHandleCompositeVector(const ArrayHandleType1& array1, vtkm::IdComponent sourceComponent1,
-                                const ArrayHandleType2& array2, vtkm::IdComponent sourceComponent2,
-                                const ArrayHandleType3& array3, vtkm::IdComponent sourceComponent3)
+make_ArrayHandleCompositeVector(const ArrayHandleType1& array1,
+                                vtkm::IdComponent sourceComponent1,
+                                const ArrayHandleType2& array2,
+                                vtkm::IdComponent sourceComponent2,
+                                const ArrayHandleType3& array3,
+                                vtkm::IdComponent sourceComponent3)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType3);
-  return typename ArrayHandleCompositeVectorType<ArrayHandleType1, ArrayHandleType2,
-                                                 ArrayHandleType3>::type(array1, sourceComponent1,
-                                                                         array2, sourceComponent2,
-                                                                         array3, sourceComponent3);
+  return
+    typename ArrayHandleCompositeVectorType<ArrayHandleType1, ArrayHandleType2, ArrayHandleType3>::
+      type(array1, sourceComponent1, array2, sourceComponent2, array3, sourceComponent3);
 }
-template <typename ArrayHandleType1, typename ArrayHandleType2, typename ArrayHandleType3,
+template <typename ArrayHandleType1,
+          typename ArrayHandleType2,
+          typename ArrayHandleType3,
           typename ArrayHandleType4>
-VTKM_CONT typename ArrayHandleCompositeVectorType<ArrayHandleType1, ArrayHandleType2,
-                                                  ArrayHandleType3, ArrayHandleType4>::type
-make_ArrayHandleCompositeVector(const ArrayHandleType1& array1, vtkm::IdComponent sourceComponent1,
-                                const ArrayHandleType2& array2, vtkm::IdComponent sourceComponent2,
-                                const ArrayHandleType3& array3, vtkm::IdComponent sourceComponent3,
-                                const ArrayHandleType4& array4, vtkm::IdComponent sourceComponent4)
+VTKM_CONT typename ArrayHandleCompositeVectorType<ArrayHandleType1,
+                                                  ArrayHandleType2,
+                                                  ArrayHandleType3,
+                                                  ArrayHandleType4>::type
+make_ArrayHandleCompositeVector(const ArrayHandleType1& array1,
+                                vtkm::IdComponent sourceComponent1,
+                                const ArrayHandleType2& array2,
+                                vtkm::IdComponent sourceComponent2,
+                                const ArrayHandleType3& array3,
+                                vtkm::IdComponent sourceComponent3,
+                                const ArrayHandleType4& array4,
+                                vtkm::IdComponent sourceComponent4)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType3);
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType4);
-  return
-    typename ArrayHandleCompositeVectorType<ArrayHandleType1, ArrayHandleType2, ArrayHandleType3,
-                                            ArrayHandleType4>::type(array1, sourceComponent1,
-                                                                    array2, sourceComponent2,
-                                                                    array3, sourceComponent3,
-                                                                    array4, sourceComponent4);
+  return typename ArrayHandleCompositeVectorType<ArrayHandleType1,
+                                                 ArrayHandleType2,
+                                                 ArrayHandleType3,
+                                                 ArrayHandleType4>::type(array1,
+                                                                         sourceComponent1,
+                                                                         array2,
+                                                                         sourceComponent2,
+                                                                         array3,
+                                                                         sourceComponent3,
+                                                                         array4,
+                                                                         sourceComponent4);
 }
 }
 } // namespace vtkm::cont

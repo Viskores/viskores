@@ -69,11 +69,13 @@ public:
   ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field);
 
   template <typename DerivedPolicy>
-  VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input, const std::string& inFieldName,
+  VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input,
+                                const std::string& inFieldName,
                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field,
+  VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input,
+                                const vtkm::cont::Field& field,
                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>

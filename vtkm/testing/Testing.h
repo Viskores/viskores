@@ -175,7 +175,9 @@ public:
     {
     }
 
-    VTKM_CONT TestFailure(const std::string& file, vtkm::Id line, const std::string& message,
+    VTKM_CONT TestFailure(const std::string& file,
+                          vtkm::Id line,
+                          const std::string& message,
                           const std::string& condition)
       : File(file)
       , Line(line)
@@ -195,8 +197,11 @@ public:
     std::string Message;
   };
 
-  static VTKM_CONT void Assert(bool condition, const std::string& file, vtkm::Id line,
-                               const std::string& message, const std::string& conditionString)
+  static VTKM_CONT void Assert(bool condition,
+                               const std::string& file,
+                               vtkm::Id line,
+                               const std::string& message,
+                               const std::string& conditionString)
   {
     if (condition)
     {
@@ -327,14 +332,16 @@ public:
 
 // Prototype declaration
 template <typename VectorType1, typename VectorType2>
-static inline VTKM_EXEC_CONT bool test_equal(VectorType1 vector1, VectorType2 vector2,
+static inline VTKM_EXEC_CONT bool test_equal(VectorType1 vector1,
+                                             VectorType2 vector2,
                                              vtkm::Float64 tolerance = 0.00001);
 
 namespace detail
 {
 
 template <typename VectorType1, typename VectorType2>
-static inline VTKM_EXEC_CONT bool test_equal_impl(VectorType1 vector1, VectorType2 vector2,
+static inline VTKM_EXEC_CONT bool test_equal_impl(VectorType1 vector1,
+                                                  VectorType2 vector2,
                                                   vtkm::Float64 tolerance,
                                                   vtkm::TypeTraitsVectorTag)
 {
@@ -357,7 +364,8 @@ static inline VTKM_EXEC_CONT bool test_equal_impl(VectorType1 vector1, VectorTyp
        component++)
   {
     bool componentEqual = test_equal(Traits1::GetComponent(vector1, component),
-                                     Traits2::GetComponent(vector2, component), tolerance);
+                                     Traits2::GetComponent(vector2, component),
+                                     tolerance);
     if (!componentEqual)
     {
       return false;
@@ -368,7 +376,8 @@ static inline VTKM_EXEC_CONT bool test_equal_impl(VectorType1 vector1, VectorTyp
 }
 
 template <typename MatrixType1, typename MatrixType2>
-static inline VTKM_EXEC_CONT bool test_equal_impl(MatrixType1 matrix1, MatrixType2 matrix2,
+static inline VTKM_EXEC_CONT bool test_equal_impl(MatrixType1 matrix1,
+                                                  MatrixType2 matrix2,
                                                   vtkm::Float64 tolerance,
                                                   vtkm::TypeTraitsMatrixTag)
 {
@@ -377,7 +386,8 @@ static inline VTKM_EXEC_CONT bool test_equal_impl(MatrixType1 matrix1, MatrixTyp
 }
 
 template <typename ScalarType1, typename ScalarType2>
-static inline VTKM_EXEC_CONT bool test_equal_impl(ScalarType1 scalar1, ScalarType2 scalar2,
+static inline VTKM_EXEC_CONT bool test_equal_impl(ScalarType1 scalar1,
+                                                  ScalarType2 scalar2,
                                                   vtkm::Float64 tolerance,
                                                   vtkm::TypeTraitsScalarTag)
 {
@@ -427,14 +437,16 @@ static inline VTKM_EXEC_CONT bool test_equal_impl(ScalarType1 scalar1, ScalarTyp
 // Special cases of test equal where a scalar is compared with a Vec of size 1,
 // which we will allow.
 template <typename T>
-static inline VTKM_EXEC_CONT bool test_equal_impl(vtkm::Vec<T, 1> value1, T value2,
+static inline VTKM_EXEC_CONT bool test_equal_impl(vtkm::Vec<T, 1> value1,
+                                                  T value2,
                                                   vtkm::Float64 tolerance,
                                                   vtkm::TypeTraitsVectorTag)
 {
   return test_equal(value1[0], value2, tolerance);
 }
 template <typename T>
-static inline VTKM_EXEC_CONT bool test_equal_impl(T value1, vtkm::Vec<T, 1> value2,
+static inline VTKM_EXEC_CONT bool test_equal_impl(T value1,
+                                                  vtkm::Vec<T, 1> value2,
                                                   vtkm::Float64 tolerance,
                                                   vtkm::TypeTraitsScalarTag)
 {
@@ -447,11 +459,12 @@ static inline VTKM_EXEC_CONT bool test_equal_impl(T value1, vtkm::Vec<T, 1> valu
 /// variance due to floating point numerical inaccuracies.
 ///
 template <typename VectorType1, typename VectorType2>
-static inline VTKM_EXEC_CONT bool test_equal(VectorType1 vector1, VectorType2 vector2,
+static inline VTKM_EXEC_CONT bool test_equal(VectorType1 vector1,
+                                             VectorType2 vector2,
                                              vtkm::Float64 tolerance /*= 0.00001*/)
 {
-  return detail::test_equal_impl(vector1, vector2, tolerance,
-                                 typename vtkm::TypeTraits<VectorType1>::DimensionalityTag());
+  return detail::test_equal_impl(
+    vector1, vector2, tolerance, typename vtkm::TypeTraits<VectorType1>::DimensionalityTag());
 }
 
 /// Special implementation of test_equal for strings, which don't fit a model
@@ -476,7 +489,8 @@ static inline VTKM_CONT bool test_equal(const vtkm::Pair<T1, T2>& pair1,
 
 /// Special implementation of test_equal for Ranges.
 ///
-static inline VTKM_EXEC_CONT bool test_equal(const vtkm::Range& range1, const vtkm::Range& range2,
+static inline VTKM_EXEC_CONT bool test_equal(const vtkm::Range& range1,
+                                             const vtkm::Range& range2,
                                              vtkm::Float64 tolerance = 0.0001)
 {
   return (test_equal(range1.Min, range2.Min, tolerance) &&

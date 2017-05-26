@@ -34,7 +34,9 @@ namespace internal
 
 /// \brief An array portal that acts as a 3D cartesian product of 3 arrays.
 ///
-template <typename ValueType_, typename PortalTypeFirst_, typename PortalTypeSecond_,
+template <typename ValueType_,
+          typename PortalTypeFirst_,
+          typename PortalTypeSecond_,
           typename PortalTypeThird_>
 class VTKM_ALWAYS_EXPORT ArrayPortalCartesianProduct
 {
@@ -101,8 +103,8 @@ public:
     vtkm::Id i2 = idx12 / dim1;
     vtkm::Id i3 = index / dim12;
 
-    return vtkm::make_Vec(this->PortalFirst.Get(i1), this->PortalSecond.Get(i2),
-                          this->PortalThird.Get(i3));
+    return vtkm::make_Vec(
+      this->PortalFirst.Get(i1), this->PortalSecond.Get(i2), this->PortalThird.Get(i3));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -190,12 +192,16 @@ public:
   typedef T ValueType;
 
   typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
-    ValueType, typename FirstHandleType::PortalControl, typename SecondHandleType::PortalControl,
+    ValueType,
+    typename FirstHandleType::PortalControl,
+    typename SecondHandleType::PortalControl,
     typename ThirdHandleType::PortalControl>
     PortalType;
   typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
-    ValueType, typename FirstHandleType::PortalConstControl,
-    typename SecondHandleType::PortalConstControl, typename ThirdHandleType::PortalConstControl>
+    ValueType,
+    typename FirstHandleType::PortalConstControl,
+    typename SecondHandleType::PortalConstControl,
+    typename ThirdHandleType::PortalConstControl>
     PortalConstType;
 
   VTKM_CONT
@@ -207,7 +213,8 @@ public:
   }
 
   VTKM_CONT
-  Storage(const FirstHandleType& array1, const SecondHandleType& array2,
+  Storage(const FirstHandleType& array1,
+          const SecondHandleType& array2,
           const ThirdHandleType& array3)
     : FirstArray(array1)
     , SecondArray(array2)
@@ -218,7 +225,8 @@ public:
   VTKM_CONT
   PortalType GetPortal()
   {
-    return PortalType(this->FirstArray.GetPortalControl(), this->SecondArray.GetPortalControl(),
+    return PortalType(this->FirstArray.GetPortalControl(),
+                      this->SecondArray.GetPortalControl(),
                       this->ThirdArray.GetPortalControl());
   }
 
@@ -271,10 +279,14 @@ private:
   ThirdHandleType ThirdArray;
 };
 
-template <typename T, typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType,
+template <typename T,
+          typename FirstHandleType,
+          typename SecondHandleType,
+          typename ThirdHandleType,
           typename Device>
-class ArrayTransfer<
-  T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>, Device>
+class ArrayTransfer<T,
+                    StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>,
+                    Device>
 {
   typedef StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType> StorageTag;
   typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
@@ -286,13 +298,15 @@ public:
   typedef typename StorageType::PortalConstType PortalConstControl;
 
   typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
-    ValueType, typename FirstHandleType::template ExecutionTypes<Device>::Portal,
+    ValueType,
+    typename FirstHandleType::template ExecutionTypes<Device>::Portal,
     typename SecondHandleType::template ExecutionTypes<Device>::Portal,
     typename ThirdHandleType::template ExecutionTypes<Device>::Portal>
     PortalExecution;
 
   typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
-    ValueType, typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
+    ValueType,
+    typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
     typename SecondHandleType::template ExecutionTypes<Device>::PortalConst,
     typename ThirdHandleType::template ExecutionTypes<Device>::PortalConst>
     PortalConstExecution;
@@ -371,7 +385,8 @@ private:
 ///
 template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
 class ArrayHandleCartesianProduct
-  : public internal::ArrayHandleCartesianProductTraits<FirstHandleType, SecondHandleType,
+  : public internal::ArrayHandleCartesianProductTraits<FirstHandleType,
+                                                       SecondHandleType,
                                                        ThirdHandleType>::Superclass
 {
   // If the following line gives a compile error, then the FirstHandleType
@@ -384,7 +399,8 @@ public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleCartesianProduct,
     (ArrayHandleCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>),
-    (typename internal::ArrayHandleCartesianProductTraits<FirstHandleType, SecondHandleType,
+    (typename internal::ArrayHandleCartesianProductTraits<FirstHandleType,
+                                                          SecondHandleType,
                                                           ThirdHandleType>::Superclass));
 
 private:
@@ -406,7 +422,8 @@ public:
 template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
 VTKM_CONT
   vtkm::cont::ArrayHandleCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>
-  make_ArrayHandleCartesianProduct(const FirstHandleType& first, const SecondHandleType& second,
+  make_ArrayHandleCartesianProduct(const FirstHandleType& first,
+                                   const SecondHandleType& second,
                                    const ThirdHandleType& third)
 {
   return ArrayHandleCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>(

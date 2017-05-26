@@ -37,18 +37,25 @@ namespace test_explicit
 class MaxPointOrCellValue : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(FieldInCell<Scalar> inCells, FieldInPoint<Scalar> inPoints,
-                                CellSetIn topology, FieldOutCell<Scalar> outCells);
+  typedef void ControlSignature(FieldInCell<Scalar> inCells,
+                                FieldInPoint<Scalar> inPoints,
+                                CellSetIn topology,
+                                FieldOutCell<Scalar> outCells);
   typedef void ExecutionSignature(_1, _4, _2, PointCount, CellShape, PointIndices);
   typedef _3 InputDomain;
 
   VTKM_CONT
   MaxPointOrCellValue() {}
 
-  template <typename InCellType, typename OutCellType, typename InPointVecType,
-            typename CellShapeTag, typename PointIndexType>
-  VTKM_EXEC void operator()(const InCellType& cellValue, OutCellType& maxValue,
-                            const InPointVecType& pointValues, const vtkm::IdComponent& numPoints,
+  template <typename InCellType,
+            typename OutCellType,
+            typename InPointVecType,
+            typename CellShapeTag,
+            typename PointIndexType>
+  VTKM_EXEC void operator()(const InCellType& cellValue,
+                            OutCellType& maxValue,
+                            const InPointVecType& pointValues,
+                            const vtkm::IdComponent& numPoints,
                             const CellShapeTag& vtkmNotUsed(type),
                             const PointIndexType& vtkmNotUsed(pointIDs)) const
   {
@@ -89,8 +96,8 @@ static void TestMaxPointOrCell()
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
 
   vtkm::worklet::DispatcherMapTopology<::test_explicit::MaxPointOrCellValue> dispatcher;
-  dispatcher.Invoke(dataSet.GetField("cellvar"), dataSet.GetField("pointvar"),
-                    dataSet.GetCellSet(0), result);
+  dispatcher.Invoke(
+    dataSet.GetField("cellvar"), dataSet.GetField("pointvar"), dataSet.GetCellSet(0), result);
 
   std::cout << "Make sure we got the right answer." << std::endl;
   VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(0), 100.1f),

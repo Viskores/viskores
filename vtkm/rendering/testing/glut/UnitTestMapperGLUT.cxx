@@ -64,17 +64,17 @@ static void displayCall()
   typedef vtkm::rendering::View2D V2;
 
   if (which == 0)
-    vtkm::rendering::testing::Render<M, C, V3>(maker.Make3DRegularDataSet0(), "pointvar",
-                                               colorTable, "reg3D.pnm");
+    vtkm::rendering::testing::Render<M, C, V3>(
+      maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
   else if (which == 1)
-    vtkm::rendering::testing::Render<M, C, V3>(maker.Make3DRectilinearDataSet0(), "pointvar",
-                                               colorTable, "rect3D.pnm");
+    vtkm::rendering::testing::Render<M, C, V3>(
+      maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
   else if (which == 2)
-    vtkm::rendering::testing::Render<M, C, V3>(maker.Make3DExplicitDataSet4(), "pointvar",
-                                               colorTable, "expl3D.pnm");
+    vtkm::rendering::testing::Render<M, C, V3>(
+      maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
   else if (which == 3)
-    vtkm::rendering::testing::Render<M, C, V2>(maker.Make2DRectilinearDataSet0(), "pointvar",
-                                               colorTable, "rect2D.pnm");
+    vtkm::rendering::testing::Render<M, C, V2>(
+      maker.Make2DRectilinearDataSet0(), "pointvar", colorTable, "rect2D.pnm");
   glutSwapBuffers();
 }
 

@@ -59,10 +59,18 @@ vtkm::Float32 BitmapFont::GetTextWidth(const std::string& text) const
   return width;
 }
 
-void BitmapFont::GetCharPolygon(char character, vtkm::Float32& x, vtkm::Float32& y,
-                                vtkm::Float32& vl, vtkm::Float32& vr, vtkm::Float32& vt,
-                                vtkm::Float32& vb, vtkm::Float32& tl, vtkm::Float32& tr,
-                                vtkm::Float32& tt, vtkm::Float32& tb, char nextchar) const
+void BitmapFont::GetCharPolygon(char character,
+                                vtkm::Float32& x,
+                                vtkm::Float32& y,
+                                vtkm::Float32& vl,
+                                vtkm::Float32& vr,
+                                vtkm::Float32& vt,
+                                vtkm::Float32& vb,
+                                vtkm::Float32& tl,
+                                vtkm::Float32& tr,
+                                vtkm::Float32& tt,
+                                vtkm::Float32& tb,
+                                char nextchar) const
 {
   Character c = this->GetChar(character);
 

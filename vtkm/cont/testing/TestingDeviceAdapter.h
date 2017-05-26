@@ -448,7 +448,8 @@ private:
     {
       std::cout << "Do array allocation that should fail." << std::endl;
       vtkm::cont::internal::Storage<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic> supportArray;
-      vtkm::cont::internal::ArrayManagerExecution<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic,
+      vtkm::cont::internal::ArrayManagerExecution<vtkm::Vec<vtkm::Float32, 4>,
+                                                  StorageTagBasic,
                                                   DeviceAdapterTag>
         bigManager(&supportArray);
 
@@ -755,7 +756,8 @@ private:
                      "LowerBounds returned incorrect size");
 
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalConstControl()),
-              vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalConstControl()), randomData);
+              vtkm::cont::ArrayPortalToIteratorEnd(handle.GetPortalConstControl()),
+              randomData);
     VTKM_TEST_ASSERT(randomData[0] == 2, "Got bad value - LowerBounds");
     VTKM_TEST_ASSERT(randomData[1] == 3, "Got bad value - LowerBounds");
     VTKM_TEST_ASSERT(randomData[2] == 3, "Got bad value - LowerBounds");
@@ -767,7 +769,8 @@ private:
                      "UppererBounds returned incorrect size");
 
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(handle1.GetPortalConstControl()),
-              vtkm::cont::ArrayPortalToIteratorEnd(handle1.GetPortalConstControl()), randomData);
+              vtkm::cont::ArrayPortalToIteratorEnd(handle1.GetPortalConstControl()),
+              randomData);
     VTKM_TEST_ASSERT(randomData[0] == 3, "Got bad value - UpperBound");
     VTKM_TEST_ASSERT(randomData[1] == 4, "Got bad value - UpperBound");
     VTKM_TEST_ASSERT(randomData[2] == 4, "Got bad value - UpperBound");

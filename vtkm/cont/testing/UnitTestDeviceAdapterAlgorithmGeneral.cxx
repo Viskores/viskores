@@ -72,11 +72,13 @@ namespace internal
 
 template <typename T, class StorageTag>
 class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
-  : public vtkm::cont::internal::ArrayManagerExecution<T, StorageTag,
+  : public vtkm::cont::internal::ArrayManagerExecution<T,
+                                                       StorageTag,
                                                        vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
-  typedef vtkm::cont::internal::ArrayManagerExecution<T, StorageTag,
+  typedef vtkm::cont::internal::ArrayManagerExecution<T,
+                                                      StorageTag,
                                                       vtkm::cont::DeviceAdapterTagSerial>
     Superclass;
   typedef typename Superclass::ValueType ValueType;
@@ -90,7 +92,8 @@ public:
 };
 
 template <typename VirtualObject, typename TargetClass>
-struct VirtualObjectTransfer<VirtualObject, TargetClass,
+struct VirtualObjectTransfer<VirtualObject,
+                             TargetClass,
                              vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
   : public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
 {

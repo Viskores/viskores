@@ -205,7 +205,8 @@ private:
 
 template <typename IndexArrayType, typename ValueArrayType, typename Device>
 class ArrayTransfer<typename ValueArrayType::ValueType,
-                    StorageTagPermutation<IndexArrayType, ValueArrayType>, Device>
+                    StorageTagPermutation<IndexArrayType, ValueArrayType>,
+                    Device>
 {
 public:
   typedef typename ValueArrayType::ValueType ValueType;
@@ -342,7 +343,8 @@ class ArrayHandlePermutation
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-    ArrayHandlePermutation, (ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>),
+    ArrayHandlePermutation,
+    (ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>),
     (vtkm::cont::ArrayHandle<
       typename ValueArrayHandleType::ValueType,
       internal::StorageTagPermutation<IndexArrayHandleType, ValueArrayHandleType>>));

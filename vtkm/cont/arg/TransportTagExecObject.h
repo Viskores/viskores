@@ -56,8 +56,8 @@ struct Transport<vtkm::cont::arg::TransportTagExecObject, ContObjectType, Device
   typedef ContObjectType ExecObjectType;
 
   template <typename InputDomainType>
-  VTKM_CONT ExecObjectType operator()(const ContObjectType& object, const InputDomainType&,
-                                      vtkm::Id, vtkm::Id) const
+  VTKM_CONT ExecObjectType
+  operator()(const ContObjectType& object, const InputDomainType&, vtkm::Id, vtkm::Id) const
   {
     return object;
   }

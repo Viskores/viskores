@@ -35,7 +35,10 @@ namespace DataSetBuilderRectilinearNamespace
 
 std::mt19937 g_RandomGenerator;
 
-void ValidateDataSet(const vtkm::cont::DataSet& ds, int dim, vtkm::Id numPoints, vtkm::Id numCells,
+void ValidateDataSet(const vtkm::cont::DataSet& ds,
+                     int dim,
+                     vtkm::Id numPoints,
+                     vtkm::Id numCells,
                      const vtkm::Bounds& bounds)
 {
   //Verify basics..
@@ -141,8 +144,8 @@ void RectilinearTests()
   {
     std::cout << "Trial " << trial << std::endl;
 
-    vtkm::Id3 dimensions(randomDim(g_RandomGenerator), randomDim(g_RandomGenerator),
-                         randomDim(g_RandomGenerator));
+    vtkm::Id3 dimensions(
+      randomDim(g_RandomGenerator), randomDim(g_RandomGenerator), randomDim(g_RandomGenerator));
     std::cout << "Dimensions: " << dimensions << std::endl;
 
     vtkm::IdComponent fillMethodX = randomFill(g_RandomGenerator);
@@ -216,8 +219,8 @@ void RectilinearTests()
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
 
       std::cout << "  Create with C array" << std::endl;
-      dataSet = dataSetBuilder.Create(dimensions[0], dimensions[1], &xCoordinates.front(),
-                                      &yCoordinates.front());
+      dataSet = dataSetBuilder.Create(
+        dimensions[0], dimensions[1], &xCoordinates.front(), &yCoordinates.front());
       dsf.AddPointField(dataSet, "pointvar", &varP2D.front(), numPoints);
       dsf.AddCellField(dataSet, "cellvar", &varC2D.front(), numCells);
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
@@ -258,9 +261,12 @@ void RectilinearTests()
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
 
       std::cout << "  Create with C array" << std::endl;
-      dataSet =
-        dataSetBuilder.Create(dimensions[0], dimensions[1], dimensions[2], &xCoordinates.front(),
-                              &yCoordinates.front(), &zCoordinates.front());
+      dataSet = dataSetBuilder.Create(dimensions[0],
+                                      dimensions[1],
+                                      dimensions[2],
+                                      &xCoordinates.front(),
+                                      &yCoordinates.front(),
+                                      &zCoordinates.front());
       dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP3D));
       dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC3D));
       ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);

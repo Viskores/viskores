@@ -38,17 +38,23 @@ public:
 
   //1D uniform grid
   template <typename T>
-  VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::Id& dimension, const T& origin,
-                                              const T& spacing, std::string coordNm = "coords",
+  VTKM_CONT static vtkm::cont::DataSet Create(const vtkm::Id& dimension,
+                                              const T& origin,
+                                              const T& spacing,
+                                              std::string coordNm = "coords",
                                               std::string cellNm = "cells")
   {
     return DataSetBuilderUniform::CreateDataSet(
-      vtkm::Id3(dimension, 1, 1), VecType(static_cast<vtkm::FloatDefault>(origin), 0, 0),
-      VecType(static_cast<vtkm::FloatDefault>(spacing), 1, 1), coordNm, cellNm);
+      vtkm::Id3(dimension, 1, 1),
+      VecType(static_cast<vtkm::FloatDefault>(origin), 0, 0),
+      VecType(static_cast<vtkm::FloatDefault>(spacing), 1, 1),
+      coordNm,
+      cellNm);
   }
 
   VTKM_CONT
-  static vtkm::cont::DataSet Create(const vtkm::Id& dimension, std::string coordNm = "coords",
+  static vtkm::cont::DataSet Create(const vtkm::Id& dimension,
+                                    std::string coordNm = "coords",
                                     std::string cellNm = "cells")
   {
     return CreateDataSet(vtkm::Id3(dimension, 1, 1), VecType(0), VecType(1), coordNm, cellNm);
@@ -62,21 +68,24 @@ public:
                                               std::string coordNm = "coords",
                                               std::string cellNm = "cells")
   {
-    return DataSetBuilderUniform::CreateDataSet(
-      vtkm::Id3(dimensions[0], dimensions[1], 1),
-      VecType(static_cast<vtkm::FloatDefault>(origin[0]),
-              static_cast<vtkm::FloatDefault>(origin[1]), 0),
-      VecType(static_cast<vtkm::FloatDefault>(spacing[0]),
-              static_cast<vtkm::FloatDefault>(spacing[1]), 1),
-      coordNm, cellNm);
+    return DataSetBuilderUniform::CreateDataSet(vtkm::Id3(dimensions[0], dimensions[1], 1),
+                                                VecType(static_cast<vtkm::FloatDefault>(origin[0]),
+                                                        static_cast<vtkm::FloatDefault>(origin[1]),
+                                                        0),
+                                                VecType(static_cast<vtkm::FloatDefault>(spacing[0]),
+                                                        static_cast<vtkm::FloatDefault>(spacing[1]),
+                                                        1),
+                                                coordNm,
+                                                cellNm);
   }
 
   VTKM_CONT
-  static vtkm::cont::DataSet Create(const vtkm::Id2& dimensions, std::string coordNm = "coords",
+  static vtkm::cont::DataSet Create(const vtkm::Id2& dimensions,
+                                    std::string coordNm = "coords",
                                     std::string cellNm = "cells")
   {
-    return CreateDataSet(vtkm::Id3(dimensions[0], dimensions[1], 1), VecType(0), VecType(1),
-                         coordNm, cellNm);
+    return CreateDataSet(
+      vtkm::Id3(dimensions[0], dimensions[1], 1), VecType(0), VecType(1), coordNm, cellNm);
   }
 
   //3D uniform grids.
@@ -95,15 +104,20 @@ public:
       VecType(static_cast<vtkm::FloatDefault>(spacing[0]),
               static_cast<vtkm::FloatDefault>(spacing[1]),
               static_cast<vtkm::FloatDefault>(spacing[2])),
-      coordNm, cellNm);
+      coordNm,
+      cellNm);
   }
 
   VTKM_CONT
-  static vtkm::cont::DataSet Create(const vtkm::Id3& dimensions, std::string coordNm = "coords",
+  static vtkm::cont::DataSet Create(const vtkm::Id3& dimensions,
+                                    std::string coordNm = "coords",
                                     std::string cellNm = "cells")
   {
-    return CreateDataSet(vtkm::Id3(dimensions[0], dimensions[1], dimensions[2]), VecType(0),
-                         VecType(1), coordNm, cellNm);
+    return CreateDataSet(vtkm::Id3(dimensions[0], dimensions[1], dimensions[2]),
+                         VecType(0),
+                         VecType(1),
+                         coordNm,
+                         cellNm);
   }
 
 private:
@@ -111,7 +125,8 @@ private:
   static vtkm::cont::DataSet CreateDataSet(const vtkm::Id3& dimensions,
                                            const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
                                            const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
-                                           std::string coordNm, std::string cellNm)
+                                           std::string coordNm,
+                                           std::string cellNm)
   {
     vtkm::Id dims[3];
     int ndims = 0;

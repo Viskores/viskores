@@ -34,8 +34,10 @@ protected:
   vtkm::Float32 Angle;
 
 public:
-  TextAnnotationBillboard(const std::string& text, const vtkm::rendering::Color& color,
-                          vtkm::Float32 scalar, const vtkm::Vec<vtkm::Float32, 3>& position,
+  TextAnnotationBillboard(const std::string& text,
+                          const vtkm::rendering::Color& color,
+                          vtkm::Float32 scalar,
+                          const vtkm::Vec<vtkm::Float32, 3>& position,
                           vtkm::Float32 angleDegrees = 0);
 
   ~TextAnnotationBillboard();

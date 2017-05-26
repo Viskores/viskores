@@ -85,7 +85,9 @@ struct FunctionInterfaceMoveParameters<0, ParameterIndex>
 template <typename OriginalSignature, typename Transform>
 struct FunctionInterfaceStaticTransformType;
 
-template <typename OriginalFunction, typename NewFunction, typename TransformFunctor,
+template <typename OriginalFunction,
+          typename NewFunction,
+          typename TransformFunctor,
           typename FinishFunctor>
 class FunctionInterfaceDynamicTransformContContinue;
 
@@ -686,8 +688,10 @@ public:
   VTKM_CONT void DynamicTransformCont(const TransformFunctor& transform,
                                       const FinishFunctor& finish) const
   {
-    typedef detail::FunctionInterfaceDynamicTransformContContinue<FunctionSignature, ResultType(),
-                                                                  TransformFunctor, FinishFunctor>
+    typedef detail::FunctionInterfaceDynamicTransformContContinue<FunctionSignature,
+                                                                  ResultType(),
+                                                                  TransformFunctor,
+                                                                  FinishFunctor>
       ContinueFunctorType;
 
     FunctionInterface<ResultType()> emptyInterface;
@@ -735,14 +739,17 @@ private:
 namespace detail
 {
 
-template <typename OriginalFunction, typename NewFunction, typename TransformFunctor,
+template <typename OriginalFunction,
+          typename NewFunction,
+          typename TransformFunctor,
           typename FinishFunctor>
 class FunctionInterfaceDynamicTransformContContinue
 {
 public:
   FunctionInterfaceDynamicTransformContContinue(
     const vtkm::internal::FunctionInterface<OriginalFunction>& originalInterface,
-    vtkm::internal::FunctionInterface<NewFunction>& newInterface, const TransformFunctor& transform,
+    vtkm::internal::FunctionInterface<NewFunction>& newInterface,
+    const TransformFunctor& transform,
     const FinishFunctor& finish)
     : OriginalInterface(originalInterface)
     , NewInterface(newInterface)
@@ -774,8 +781,10 @@ public:
   template <typename NextFunction>
   void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface) const
   {
-    typedef FunctionInterfaceDynamicTransformContContinue<OriginalFunction, NextFunction,
-                                                          TransformFunctor, FinishFunctor>
+    typedef FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
+                                                          NextFunction,
+                                                          TransformFunctor,
+                                                          FinishFunctor>
       NextContinueType;
     NextContinueType nextContinue =
       NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
@@ -790,8 +799,10 @@ private:
   void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface,
                        std::true_type) const
   {
-    typedef FunctionInterfaceDynamicTransformContContinue<OriginalFunction, NextFunction,
-                                                          TransformFunctor, FinishFunctor>
+    typedef FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
+                                                          NextFunction,
+                                                          TransformFunctor,
+                                                          FinishFunctor>
       NextContinueType;
     NextContinueType nextContinue =
       NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
@@ -814,8 +825,10 @@ private:
   const TransformFunctor& Transform;
   const FinishFunctor& Finish;
 
-  void operator=(const FunctionInterfaceDynamicTransformContContinue<
-                 OriginalFunction, NewFunction, TransformFunctor, FinishFunctor>&) = delete;
+  void operator=(const FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
+                                                                     NewFunction,
+                                                                     TransformFunctor,
+                                                                     FinishFunctor>&) = delete;
 };
 
 } // namespace detail

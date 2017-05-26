@@ -80,9 +80,11 @@ ContourTreeMesh2D::ContourTreeMesh2D()
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 vtkm::filter::ResultField ContourTreeMesh2D::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter& device)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -106,8 +108,11 @@ vtkm::filter::ResultField ContourTreeMesh2D::DoExecute(
   vtkm::worklet::ContourTreeMesh2D worklet;
   worklet.Run(field, nRows, nCols, saddlePeak, device);
 
-  return vtkm::filter::ResultField(input, saddlePeak, this->GetOutputFieldName(),
-                                   fieldMeta.GetAssociation(), fieldMeta.GetCellSetName());
+  return vtkm::filter::ResultField(input,
+                                   saddlePeak,
+                                   this->GetOutputFieldName(),
+                                   fieldMeta.GetAssociation(),
+                                   fieldMeta.GetCellSetName());
 }
 //-----------------------------------------------------------------------------
 ContourTreeMesh3D::ContourTreeMesh3D()
@@ -118,9 +123,11 @@ ContourTreeMesh3D::ContourTreeMesh3D()
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 vtkm::filter::ResultField ContourTreeMesh3D::DoExecute(
-  const vtkm::cont::DataSet& input, const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& device)
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter& device)
 {
   if (fieldMeta.IsPointField() == false)
   {
@@ -145,8 +152,11 @@ vtkm::filter::ResultField ContourTreeMesh3D::DoExecute(
   vtkm::worklet::ContourTreeMesh3D worklet;
   worklet.Run(field, nRows, nCols, nSlices, saddlePeak, device);
 
-  return vtkm::filter::ResultField(input, saddlePeak, this->GetOutputFieldName(),
-                                   fieldMeta.GetAssociation(), fieldMeta.GetCellSetName());
+  return vtkm::filter::ResultField(input,
+                                   saddlePeak,
+                                   this->GetOutputFieldName(),
+                                   fieldMeta.GetAssociation(),
+                                   fieldMeta.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

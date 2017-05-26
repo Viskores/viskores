@@ -45,9 +45,9 @@ class ArrayPortalFromIterators;
 /// of begin/end iterators to an ArrayPortal interface.
 ///
 template <class IteratorT>
-class ArrayPortalFromIterators<
-  IteratorT, typename std::enable_if<
-               !std::is_const<typename std::remove_pointer<IteratorT>::type>::value>::type>
+class ArrayPortalFromIterators<IteratorT,
+                               typename std::enable_if<!std::is_const<
+                                 typename std::remove_pointer<IteratorT>::type>::value>::type>
 {
 public:
   typedef typename std::iterator_traits<IteratorT>::value_type ValueType;
@@ -119,9 +119,9 @@ private:
 };
 
 template <class IteratorT>
-class ArrayPortalFromIterators<
-  IteratorT, typename std::enable_if<
-               std::is_const<typename std::remove_pointer<IteratorT>::type>::value>::type>
+class ArrayPortalFromIterators<IteratorT,
+                               typename std::enable_if<std::is_const<
+                                 typename std::remove_pointer<IteratorT>::type>::value>::type>
 {
 public:
   typedef typename std::iterator_traits<IteratorT>::value_type ValueType;

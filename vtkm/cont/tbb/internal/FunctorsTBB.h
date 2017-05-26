@@ -95,7 +95,8 @@ struct ReduceBody
   BinaryOperationType BinaryOperation;
 
   VTKM_CONT
-  ReduceBody(const InputPortalType& inputPortal, T initialValue,
+  ReduceBody(const InputPortalType& inputPortal,
+             T initialValue,
              BinaryOperationType binaryOperation)
     : Sum(vtkm::TypeTraits<T>::ZeroInitialization())
     , InitialValue(initialValue)
@@ -166,7 +167,8 @@ struct ReduceBody
 
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <class InputPortalType, typename T, class BinaryOperationType>
-VTKM_CONT static T ReducePortals(InputPortalType inputPortal, T initialValue,
+VTKM_CONT static T ReducePortals(InputPortalType inputPortal,
+                                 T initialValue,
                                  BinaryOperationType binaryOperation)
 {
   typedef internal::WrappedBinaryOperator<T, BinaryOperationType> WrappedBinaryOp;
@@ -204,7 +206,8 @@ struct ScanInclusiveBody
   BinaryOperationType BinaryOperation;
 
   VTKM_CONT
-  ScanInclusiveBody(const InputPortalType& inputPortal, const OutputPortalType& outputPortal,
+  ScanInclusiveBody(const InputPortalType& inputPortal,
+                    const OutputPortalType& outputPortal,
                     BinaryOperationType binaryOperation)
     : Sum(vtkm::TypeTraits<ValueType>::ZeroInitialization())
     , FirstCall(true)
@@ -292,8 +295,10 @@ struct ScanExclusiveBody
   BinaryOperationType BinaryOperation;
 
   VTKM_CONT
-  ScanExclusiveBody(const InputPortalType& inputPortal, const OutputPortalType& outputPortal,
-                    BinaryOperationType binaryOperation, const ValueType& initialValue)
+  ScanExclusiveBody(const InputPortalType& inputPortal,
+                    const OutputPortalType& outputPortal,
+                    BinaryOperationType binaryOperation,
+                    const ValueType& initialValue)
     : Sum(initialValue)
     , FirstCall(true)
     , InputPortal(inputPortal)
@@ -388,7 +393,8 @@ struct ScanExclusiveBody
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <class InputPortalType, class OutputPortalType, class BinaryOperationType>
 VTKM_CONT static typename std::remove_reference<typename OutputPortalType::ValueType>::type
-ScanInclusivePortals(InputPortalType inputPortal, OutputPortalType outputPortal,
+ScanInclusivePortals(InputPortalType inputPortal,
+                     OutputPortalType outputPortal,
                      BinaryOperationType binaryOperation)
 {
   using ValueType = typename std::remove_reference<typename OutputPortalType::ValueType>::type;
@@ -409,7 +415,9 @@ VTKM_SUPPRESS_EXEC_WARNINGS
 template <class InputPortalType, class OutputPortalType, class BinaryOperationType>
 VTKM_CONT static typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanExclusivePortals(
-  InputPortalType inputPortal, OutputPortalType outputPortal, BinaryOperationType binaryOperation,
+  InputPortalType inputPortal,
+  OutputPortalType outputPortal,
+  BinaryOperationType binaryOperation,
   typename std::remove_reference<typename OutputPortalType::ValueType>::type initialValue)
 {
   using ValueType = typename std::remove_reference<typename OutputPortalType::ValueType>::type;
@@ -433,7 +441,8 @@ template <typename InputPortalType, typename IndexPortalType, typename OutputPor
 class ScatterKernel
 {
 public:
-  VTKM_CONT ScatterKernel(InputPortalType inputPortal, IndexPortalType indexPortal,
+  VTKM_CONT ScatterKernel(InputPortalType inputPortal,
+                          IndexPortalType indexPortal,
                           OutputPortalType outputPortal)
     : ValuesPortal(inputPortal)
     , IndexPortal(indexPortal)
@@ -478,7 +487,8 @@ private:
 
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename InputPortalType, typename IndexPortalType, typename OutputPortalType>
-VTKM_CONT static void ScatterPortal(InputPortalType inputPortal, IndexPortalType indexPortal,
+VTKM_CONT static void ScatterPortal(InputPortalType inputPortal,
+                                    IndexPortalType indexPortal,
                                     OutputPortalType outputPortal)
 {
   const vtkm::Id size = inputPortal.GetNumberOfValues();

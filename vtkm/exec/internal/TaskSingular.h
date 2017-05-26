@@ -46,7 +46,8 @@ class TaskSingular : public vtkm::exec::TaskBase
 {
 public:
   VTKM_CONT
-  TaskSingular(const WorkletType& worklet, const InvocationType& invocation,
+  TaskSingular(const WorkletType& worklet,
+               const InvocationType& invocation,
                const vtkm::Id& globalIndexOffset = 0)
     : Worklet(worklet)
     , Invocation(invocation)
@@ -64,11 +65,13 @@ public:
   VTKM_EXEC void operator()(T index) const
   {
     //Todo: rename this function to DoTaskSingular
-    detail::DoWorkletInvokeFunctor(
-      this->Worklet, this->Invocation,
-      this->Worklet.GetThreadIndices(index, this->Invocation.OutputToInputMap,
-                                     this->Invocation.VisitArray, this->Invocation.GetInputDomain(),
-                                     GlobalIndexOffset));
+    detail::DoWorkletInvokeFunctor(this->Worklet,
+                                   this->Invocation,
+                                   this->Worklet.GetThreadIndices(index,
+                                                                  this->Invocation.OutputToInputMap,
+                                                                  this->Invocation.VisitArray,
+                                                                  this->Invocation.GetInputDomain(),
+                                                                  GlobalIndexOffset));
   }
 
 private:

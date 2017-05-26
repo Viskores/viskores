@@ -89,7 +89,8 @@ public:
   bool DoMapField(vtkm::filter::ResultDataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy, const DeviceAdapter& tag);
+                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                  const DeviceAdapter& tag);
 
 private:
   bool ExtractInside;

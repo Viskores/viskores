@@ -238,7 +238,8 @@ class ArrayHandleReverse : public vtkm::cont::ArrayHandle<typename ArrayHandleTy
 
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleReverse, (ArrayHandleReverse<ArrayHandleType>),
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleReverse,
+                             (ArrayHandleReverse<ArrayHandleType>),
                              (vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType,
                                                       StorageTagReverse<ArrayHandleType>>));
 

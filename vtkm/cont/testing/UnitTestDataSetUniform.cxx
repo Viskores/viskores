@@ -91,13 +91,13 @@ static void TwoDimUniformTest()
   }
 
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 2>
-    pointToCell =
-      cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(), vtkm::TopologyElementTagPoint(),
-                              vtkm::TopologyElementTagCell());
+    pointToCell = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
+                                          vtkm::TopologyElementTagPoint(),
+                                          vtkm::TopologyElementTagCell());
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 2>
-    cellToPoint =
-      cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(), vtkm::TopologyElementTagCell(),
-                              vtkm::TopologyElementTagPoint());
+    cellToPoint = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
+                                          vtkm::TopologyElementTagCell(),
+                                          vtkm::TopologyElementTagPoint());
 
   vtkm::Id cells[2][4] = { { 0, 1, 4, 3 }, { 1, 2, 5, 4 } };
   for (vtkm::Id cellIndex = 0; cellIndex < 2; cellIndex++)
@@ -186,9 +186,9 @@ static void ThreeDimUniformTest()
 
   //Test uniform connectivity.
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
-    pointToCell =
-      cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(), vtkm::TopologyElementTagPoint(),
-                              vtkm::TopologyElementTagCell());
+    pointToCell = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
+                                          vtkm::TopologyElementTagPoint(),
+                                          vtkm::TopologyElementTagCell());
   vtkm::Id expectedPointIds[8] = { 0, 1, 4, 3, 6, 7, 10, 9 };
   vtkm::Vec<vtkm::Id, 8> retrievedPointIds = pointToCell.GetIndices(vtkm::Id3(0));
   for (vtkm::IdComponent localPointIndex = 0; localPointIndex < 8; localPointIndex++)
@@ -198,15 +198,16 @@ static void ThreeDimUniformTest()
   }
 
   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell, vtkm::TopologyElementTagPoint, 3>
-    cellToPoint =
-      cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(), vtkm::TopologyElementTagCell(),
-                              vtkm::TopologyElementTagPoint());
+    cellToPoint = cellSet.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
+                                          vtkm::TopologyElementTagCell(),
+                                          vtkm::TopologyElementTagPoint());
   vtkm::Id retrievedCellIds[6] = { 0, -1, -1, -1, -1, -1 };
   vtkm::VecVariable<vtkm::Id, 6> expectedCellIds = cellToPoint.GetIndices(vtkm::Id3(0));
   VTKM_TEST_ASSERT(expectedCellIds.GetNumberOfComponents() <= 6,
                    "Got unexpected number of cell ids");
   for (vtkm::IdComponent localPointIndex = 0;
-       localPointIndex < expectedCellIds.GetNumberOfComponents(); localPointIndex++)
+       localPointIndex < expectedCellIds.GetNumberOfComponents();
+       localPointIndex++)
   {
     VTKM_TEST_ASSERT(expectedCellIds[localPointIndex] == retrievedCellIds[localPointIndex],
                      "Incorrect cell ID for point");

@@ -36,7 +36,9 @@ namespace
 static const vtkm::IdComponent MAX_POINTS = 8;
 
 template <typename CellShapeTag>
-void GetMinMaxPoints(CellShapeTag, vtkm::CellTraitsTagSizeFixed, vtkm::IdComponent& minPoints,
+void GetMinMaxPoints(CellShapeTag,
+                     vtkm::CellTraitsTagSizeFixed,
+                     vtkm::IdComponent& minPoints,
                      vtkm::IdComponent& maxPoints)
 {
   // If this line fails, then MAX_POINTS is not large enough to support all
@@ -46,7 +48,9 @@ void GetMinMaxPoints(CellShapeTag, vtkm::CellTraitsTagSizeFixed, vtkm::IdCompone
 }
 
 template <typename CellShapeTag>
-void GetMinMaxPoints(CellShapeTag, vtkm::CellTraitsTagSizeVariable, vtkm::IdComponent& minPoints,
+void GetMinMaxPoints(CellShapeTag,
+                     vtkm::CellTraitsTagSizeVariable,
+                     vtkm::IdComponent& minPoints,
                      vtkm::IdComponent& maxPoints)
 {
   minPoints = 1;
@@ -123,8 +127,8 @@ struct TestInterpolateFunctor
   {
     vtkm::IdComponent minPoints;
     vtkm::IdComponent maxPoints;
-    GetMinMaxPoints(CellShapeTag(), typename vtkm::CellTraits<CellShapeTag>::IsSizeFixed(),
-                    minPoints, maxPoints);
+    GetMinMaxPoints(
+      CellShapeTag(), typename vtkm::CellTraits<CellShapeTag>::IsSizeFixed(), minPoints, maxPoints);
 
     std::cout << "--- Test shape tag directly" << std::endl;
     for (vtkm::IdComponent numPoints = minPoints; numPoints <= maxPoints; numPoints++)

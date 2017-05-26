@@ -42,8 +42,10 @@ struct FetchTagCellSetIn
 };
 
 template <typename ConnectivityType, typename ExecObjectType>
-struct Fetch<vtkm::exec::arg::FetchTagCellSetIn, vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>, ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagCellSetIn,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
+             ExecObjectType>
 {
   typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
 

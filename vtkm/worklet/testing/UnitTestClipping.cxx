@@ -40,7 +40,8 @@ typedef vtkm::Vec<vtkm::FloatDefault, 3> Coord3D;
 const vtkm::Float32 clipValue = 0.5;
 
 template <typename T, typename Storage>
-bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah, const T* expected,
+bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
+                     const T* expected,
                      vtkm::Id size)
 {
   if (size != ah.GetNumberOfValues())
@@ -143,16 +144,19 @@ void TestClippingExplicit()
   VTKM_TEST_ASSERT(
     TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
                                                        vtkm::TopologyElementTagCell()),
-                    expectedConnectivity, connectivitySize),
+                    expectedConnectivity,
+                    connectivitySize),
     "Got incorrect conectivity");
 
   VTKM_TEST_ASSERT(TestArrayHandle(coords.CastToTypeStorage<Coord3D, VTKM_DEFAULT_STORAGE_TAG>(),
-                                   expectedCoords, fieldSize),
+                                   expectedCoords,
+                                   fieldSize),
                    "Got incorrect coordinates");
 
   VTKM_TEST_ASSERT(
     TestArrayHandle(scalars.CastToTypeStorage<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>(),
-                    expectedScalars, fieldSize),
+                    expectedScalars,
+                    fieldSize),
     "Got incorrect scalars");
 }
 
@@ -190,16 +194,19 @@ void TestClippingStrucutred()
   VTKM_TEST_ASSERT(
     TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
                                                        vtkm::TopologyElementTagCell()),
-                    expectedConnectivity, connectivitySize),
+                    expectedConnectivity,
+                    connectivitySize),
     "Got incorrect conectivity");
 
   VTKM_TEST_ASSERT(TestArrayHandle(coords.CastToTypeStorage<Coord3D, VTKM_DEFAULT_STORAGE_TAG>(),
-                                   expectedCoords, fieldSize),
+                                   expectedCoords,
+                                   fieldSize),
                    "Got incorrect coordinates");
 
   VTKM_TEST_ASSERT(
     TestArrayHandle(scalars.CastToTypeStorage<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>(),
-                    expectedScalars, fieldSize),
+                    expectedScalars,
+                    fieldSize),
     "Got incorrect scalars");
 }
 
@@ -238,16 +245,19 @@ void TestClippingWithImplicitFunction()
   VTKM_TEST_ASSERT(
     TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
                                                        vtkm::TopologyElementTagCell()),
-                    expectedConnectivity, connectivitySize),
+                    expectedConnectivity,
+                    connectivitySize),
     "Got incorrect conectivity");
 
   VTKM_TEST_ASSERT(TestArrayHandle(coords.CastToTypeStorage<Coord3D, VTKM_DEFAULT_STORAGE_TAG>(),
-                                   expectedCoords, fieldSize),
+                                   expectedCoords,
+                                   fieldSize),
                    "Got incorrect coordinates");
 
   VTKM_TEST_ASSERT(
     TestArrayHandle(scalars.CastToTypeStorage<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>(),
-                    expectedScalars, fieldSize),
+                    expectedScalars,
+                    fieldSize),
     "Got incorrect scalars");
 }
 

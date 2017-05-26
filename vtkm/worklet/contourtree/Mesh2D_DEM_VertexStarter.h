@@ -126,8 +126,10 @@ public:
 
   // Locate the next vertex in direction indicated
   template <typename InFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& vertex, const InFieldPortalType& values,
-                            vtkm::Id& chain, vtkm::Id& linkMask) const
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
+                            const InFieldPortalType& values,
+                            vtkm::Id& chain,
+                            vtkm::Id& linkMask) const
   {
     VertexValueComparator<InFieldPortalType> lessThan(values);
     vtkm::Id row = VERTEX_ROW(vertex, nCols);

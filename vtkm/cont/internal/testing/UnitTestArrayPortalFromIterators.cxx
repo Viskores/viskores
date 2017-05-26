@@ -80,8 +80,8 @@ struct TemplatedTests
     FillIterator(array, array + ARRAY_SIZE, ORIGINAL_VALUE);
 
     ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType*> portal(array, array + ARRAY_SIZE);
-    ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*> const_portal(array, array +
-                                                                                      ARRAY_SIZE);
+    ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*> const_portal(
+      array, array + ARRAY_SIZE);
 
     std::cout << "  Check that ArrayPortalToIterators is not doing indirection." << std::endl;
 // If you get a compile error here about mismatched types, it might be

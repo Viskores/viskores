@@ -129,8 +129,8 @@ vtkm::cont::RuntimeDeviceTracker RuntimeDeviceTracker::DeepCopy() const
 VTKM_CONT
 void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker& src)
 {
-  std::copy_n(src.Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID,
-              this->Internals->RuntimeValid);
+  std::copy_n(
+    src.Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->RuntimeValid);
 }
 
 VTKM_CONT

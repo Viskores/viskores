@@ -92,7 +92,8 @@ public:
   ResetDegrees() {}
 
   template <typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& superId, const OutFieldPortalType& updegree,
+  VTKM_EXEC void operator()(const vtkm::Id& superId,
+                            const OutFieldPortalType& updegree,
                             const OutFieldPortalType& downdegree) const
   {
     updegree.Set(superId, 0);

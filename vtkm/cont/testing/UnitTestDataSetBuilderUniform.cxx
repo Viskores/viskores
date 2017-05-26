@@ -36,7 +36,10 @@ namespace DataSetBuilderUniformNamespace
 
 std::mt19937 g_RandomGenerator;
 
-void ValidateDataSet(const vtkm::cont::DataSet& ds, int dim, vtkm::Id numPoints, vtkm::Id numCells,
+void ValidateDataSet(const vtkm::cont::DataSet& ds,
+                     int dim,
+                     vtkm::Id numPoints,
+                     vtkm::Id numCells,
                      vtkm::Bounds bounds)
 {
   //Verify basics..
@@ -158,8 +161,8 @@ void UniformTests()
   {
     std::cout << "Trial " << trial << std::endl;
 
-    vtkm::Id3 dimensions(randomDim(g_RandomGenerator), randomDim(g_RandomGenerator),
-                         randomDim(g_RandomGenerator));
+    vtkm::Id3 dimensions(
+      randomDim(g_RandomGenerator), randomDim(g_RandomGenerator), randomDim(g_RandomGenerator));
 
     vtkm::IdComponent fillMethodX = randomFill(g_RandomGenerator);
     vtkm::IdComponent fillMethodY = randomFill(g_RandomGenerator);

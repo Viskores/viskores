@@ -96,9 +96,11 @@ public:
   SetJoinAndSplitArcs() {}
 
   template <typename InFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& regularID, const InFieldPortalType& joinMergeArcs,
+  VTKM_EXEC void operator()(const vtkm::Id& regularID,
+                            const InFieldPortalType& joinMergeArcs,
                             const InFieldPortalType& splitMergeArcs,
-                            const InFieldPortalType& regularToCritical, vtkm::Id& joinArc,
+                            const InFieldPortalType& regularToCritical,
+                            vtkm::Id& joinArc,
                             vtkm::Id& splitArc) const
   {
     // use it to grab join arc target

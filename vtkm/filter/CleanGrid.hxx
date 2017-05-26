@@ -38,7 +38,8 @@ struct CleanCompactPointArrayFunctor
   std::string Name;
   const vtkm::filter::CleanGrid* Self;
 
-  CleanCompactPointArrayFunctor(vtkm::cont::DataSet& outDataSet, const std::string& name,
+  CleanCompactPointArrayFunctor(vtkm::cont::DataSet& outDataSet,
+                                const std::string& name,
                                 const vtkm::filter::CleanGrid* self)
     : OutDataSet(outDataSet)
     , Name(name)
@@ -66,7 +67,9 @@ inline VTKM_CONT CleanGrid::CleanGrid()
 
 template <typename Policy, typename Device>
 inline VTKM_CONT vtkm::filter::ResultDataSet CleanGrid::DoExecute(
-  const vtkm::cont::DataSet& inData, vtkm::filter::PolicyBase<Policy> policy, Device)
+  const vtkm::cont::DataSet& inData,
+  vtkm::filter::PolicyBase<Policy> policy,
+  Device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
@@ -83,8 +86,8 @@ inline VTKM_CONT vtkm::filter::ResultDataSet CleanGrid::DoExecute(
     vtkm::cont::DynamicCellSet inCellSet =
       inData.GetCellSet(static_cast<vtkm::IdComponent>(cellSetIndex));
 
-    vtkm::worklet::CellDeepCopy::Run(vtkm::filter::ApplyPolicy(inCellSet, policy),
-                                     outputCellSets[cellSetIndex], Device());
+    vtkm::worklet::CellDeepCopy::Run(
+      vtkm::filter::ApplyPolicy(inCellSet, policy), outputCellSets[cellSetIndex], Device());
   }
 
   // Optionally adjust the cell set indices to remove all unused points
@@ -119,7 +122,8 @@ inline VTKM_CONT vtkm::filter::ResultDataSet CleanGrid::DoExecute(
   // but other fields are not? Why shouldn't the Execute of a filter also set
   // up all the fields of the output data set?
   for (vtkm::IdComponent coordSystemIndex = 0;
-       coordSystemIndex < inData.GetNumberOfCoordinateSystems(); coordSystemIndex++)
+       coordSystemIndex < inData.GetNumberOfCoordinateSystems();
+       coordSystemIndex++)
   {
     vtkm::cont::CoordinateSystem coordSystem = inData.GetCoordinateSystem(coordSystemIndex);
 
@@ -140,8 +144,11 @@ inline VTKM_CONT vtkm::filter::ResultDataSet CleanGrid::DoExecute(
 
 template <typename ValueType, typename Storage, typename Policy, typename Device>
 inline VTKM_CONT bool CleanGrid::DoMapField(
-  vtkm::filter::ResultDataSet& result, const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta, vtkm::filter::PolicyBase<Policy>, Device)
+  vtkm::filter::ResultDataSet& result,
+  const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  vtkm::filter::PolicyBase<Policy>,
+  Device)
 {
   if (this->GetCompactPointFields() && fieldMeta.IsPointField())
   {
@@ -158,7 +165,8 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
 
 template <typename ValueType, typename Storage, typename Device>
 inline VTKM_CONT vtkm::cont::ArrayHandle<ValueType> CleanGrid::CompactPointArray(
-  const vtkm::cont::ArrayHandle<ValueType, Storage>& inArray, Device) const
+  const vtkm::cont::ArrayHandle<ValueType, Storage>& inArray,
+  Device) const
 {
   VTKM_ASSERT(this->GetCompactPointFields());
 

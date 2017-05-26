@@ -96,7 +96,8 @@ public:
     }
 
     return ValueType(this->SourcePortal,
-                     static_cast<vtkm::IdComponent>(nextOffsetIndex - offsetIndex), offsetIndex);
+                     static_cast<vtkm::IdComponent>(nextOffsetIndex - offsetIndex),
+                     offsetIndex);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -135,7 +136,8 @@ namespace arg
 // can also ignore the Store because the data is already set in the array at
 // that point.
 template <typename ThreadIndicesType, typename SourcePortalType, typename OffsetsPortalType>
-struct Fetch<vtkm::exec::arg::FetchTagArrayDirectOut, vtkm::exec::arg::AspectTagDefault,
+struct Fetch<vtkm::exec::arg::FetchTagArrayDirectOut,
+             vtkm::exec::arg::AspectTagDefault,
              ThreadIndicesType,
              vtkm::exec::internal::ArrayPortalGroupVecVariable<SourcePortalType, OffsetsPortalType>>
 {
@@ -187,7 +189,8 @@ public:
   using ValueType = vtkm::VecFromPortal<typename SourceArrayHandleType::PortalControl>;
 
   using PortalType = vtkm::exec::internal::ArrayPortalGroupVecVariable<
-    typename SourceArrayHandleType::PortalControl, typename OffsetsArrayHandleType::PortalControl>;
+    typename SourceArrayHandleType::PortalControl,
+    typename OffsetsArrayHandleType::PortalControl>;
   using PortalConstType = vtkm::exec::internal::ArrayPortalGroupVecVariable<
     typename SourceArrayHandleType::PortalConstControl,
     typename OffsetsArrayHandleType::PortalConstControl>;
@@ -402,9 +405,10 @@ public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleGroupVecVariable,
     (ArrayHandleGroupVecVariable<SourceArrayHandleType, OffsetsArrayHandleType>),
-    (vtkm::cont::ArrayHandle<vtkm::VecFromPortal<typename SourceArrayHandleType::PortalControl>,
-                             vtkm::cont::internal::StorageTagGroupVecVariable<
-                               SourceArrayHandleType, OffsetsArrayHandleType>>));
+    (vtkm::cont::ArrayHandle<
+      vtkm::VecFromPortal<typename SourceArrayHandleType::PortalControl>,
+      vtkm::cont::internal::StorageTagGroupVecVariable<SourceArrayHandleType,
+                                                       OffsetsArrayHandleType>>));
 
   using ComponentType = typename SourceArrayHandleType::ValueType;
 
@@ -496,7 +500,8 @@ VTKM_CONT void DoConvertNumComponentsToOffsets(const NumComponentsArrayType& num
 template <typename NumComponentsArrayType, typename OffsetsStorage>
 VTKM_CONT void ConvertNumComponentsToOffsets(
   const NumComponentsArrayType& numComponentsArray,
-  vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray, vtkm::Id& sourceArraySize)
+  vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray,
+  vtkm::Id& sourceArraySize)
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
@@ -513,7 +518,8 @@ VTKM_CONT void ConvertNumComponentsToOffsets(
 }
 template <typename NumComponentsArrayType>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
-  const NumComponentsArrayType& numComponentsArray, vtkm::Id& sourceArraySize)
+  const NumComponentsArrayType& numComponentsArray,
+  vtkm::Id& sourceArraySize)
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 

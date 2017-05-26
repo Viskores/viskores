@@ -44,7 +44,8 @@ public:
   };
 
   template <typename CellSetType, typename DeviceAdapter>
-  vtkm::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet, const vtkm::Id stride,
+  vtkm::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet,
+                                                  const vtkm::Id stride,
                                                   DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
@@ -92,8 +93,8 @@ public:
     vtkm::cont::DynamicArrayHandle data;
     CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
 
-    return vtkm::cont::Field(field.GetName(), field.GetAssociation(), field.GetAssocCellSet(),
-                             data);
+    return vtkm::cont::Field(
+      field.GetName(), field.GetAssociation(), field.GetAssocCellSet(), data);
   }
 
 private:

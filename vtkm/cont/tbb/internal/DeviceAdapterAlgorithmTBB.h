@@ -41,7 +41,8 @@ namespace cont
 template <>
 struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>
   : vtkm::cont::internal::DeviceAdapterAlgorithmGeneral<
-      DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>, vtkm::cont::DeviceAdapterTagTBB>
+      DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>,
+      vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
   template <typename T, typename U, class CIn>
@@ -51,11 +52,12 @@ public:
   }
 
   template <typename T, typename U, class CIn, class BinaryFunctor>
-  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue,
+  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                            U initialValue,
                             BinaryFunctor binary_functor)
   {
-    return tbb::ReducePortals(input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-                              initialValue, binary_functor);
+    return tbb::ReducePortals(
+      input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()), initialValue, binary_functor);
   }
 
   template <typename T, class CIn, class COut>
@@ -86,18 +88,21 @@ public:
     return tbb::ScanExclusivePortals(
       input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
       output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
-      vtkm::Add(), vtkm::TypeTraits<T>::ZeroInitialization());
+      vtkm::Add(),
+      vtkm::TypeTraits<T>::ZeroInitialization());
   }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output,
-                                   BinaryFunctor binary_functor, const T& initialValue)
+                                   BinaryFunctor binary_functor,
+                                   const T& initialValue)
   {
     return tbb::ScanExclusivePortals(
       input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
       output.PrepareForOutput(input.GetNumberOfValues(), vtkm::cont::DeviceAdapterTagTBB()),
-      binary_functor, initialValue);
+      binary_functor,
+      initialValue);
   }
 
   VTKM_CONT_EXPORT static void ScheduleTask(vtkm::exec::tbb::internal::TaskTiling1D& functor,
@@ -151,7 +156,8 @@ public:
 
   template <typename T, typename U, class StorageT, class StorageU, class Compare>
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
-                                  vtkm::cont::ArrayHandle<U, StorageU>& values, Compare comp)
+                                  vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                  Compare comp)
   {
     typedef vtkm::cont::ArrayHandle<T, StorageT> KeyType;
     if (sizeof(U) > sizeof(vtkm::Id))

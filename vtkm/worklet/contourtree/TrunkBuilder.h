@@ -111,7 +111,8 @@ public:
   TrunkBuilder() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC void operator()(const vtkm::Id& vertexID, const InFieldPortalType& chainExtremum,
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID,
+                            const InFieldPortalType& chainExtremum,
                             const OutFieldPortalType& prunesTo) const
   {
     // the chain max of everyone prunes to the global minimum

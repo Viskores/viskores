@@ -34,7 +34,8 @@ namespace exec
 /// function. This can be used to allow worklets to have a shared search
 /// structure
 ///
-template <typename T, typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
+template <typename T,
+          typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
           typename DeviceAdapterTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class ExecutionWholeArray : public vtkm::exec::ExecutionObjectBase
 {
@@ -85,7 +86,8 @@ private:
 /// function. This can be used to allow worklets to have a shared search
 /// structure
 ///
-template <typename T, typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
+template <typename T,
+          typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
           typename DeviceAdapterTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class ExecutionWholeArrayConst : public vtkm::exec::ExecutionObjectBase
 {

@@ -94,7 +94,8 @@ public:
   RegularToCriticalDown() {}
 
   template <typename InFieldPortalType>
-  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID, const InFieldPortalType& mergeArcs,
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID,
+                                const InFieldPortalType& mergeArcs,
                                 const InFieldPortalType& regularToCritical) const
   {
     vtkm::Id sortVector;
