@@ -68,7 +68,14 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds, int dim, vtkm::Id numPoints,
   //Make sure the bounds are correct.
   vtkm::Bounds res = ds.GetCoordinateSystem().GetBounds();
   VTKM_TEST_ASSERT(test_equal(bounds, res), "Bounds of coordinates do not match");
-  if (dim == 2)
+  if (dim == 1)
+  {
+    vtkm::cont::CellSetStructured<1> cellSet;
+    ds.GetCellSet(0).CopyTo(cellSet);
+    vtkm::IdComponent shape = cellSet.GetCellShape();
+    VTKM_TEST_ASSERT(shape == vtkm::CELL_SHAPE_LINE, "Wrong element type");
+  }
+  else if (dim == 2)
   {
     vtkm::cont::CellSetStructured<2> cellSet;
     ds.GetCellSet(0).CopyTo(cellSet);
@@ -88,7 +95,8 @@ template <typename T>
 void FillArray(std::vector<T>& arr, vtkm::Id size, vtkm::IdComponent fillMethod)
 {
   arr.resize(static_cast<std::size_t>(size));
-  for (size_t i = 0; i < static_cast<std::size_t>(size); i++)
+  arr[0] = T(0);
+  for (size_t i = 1; i < static_cast<std::size_t>(size); i++)
   {
     T xi = static_cast<T>(i);
 
@@ -126,7 +134,7 @@ void RectilinearTests()
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetFieldAdd dsf;
 
-  std::uniform_int_distribution<vtkm::Id> randomDim(2, MAX_DIM_SIZE);
+  std::uniform_int_distribution<vtkm::Id> randomDim(1, MAX_DIM_SIZE);
   std::uniform_int_distribution<vtkm::IdComponent> randomFill(0, NUM_FILL_METHODS - 1);
 
   for (vtkm::Id trial = 0; trial < NUM_TRIALS; trial++)
@@ -150,100 +158,121 @@ void RectilinearTests()
     FillArray(yCoordinates, dimensions[1], fillMethodY);
     FillArray(zCoordinates, dimensions[2], fillMethodZ);
 
-    vtkm::Id numPoints, numCells;
+    vtkm::Id numPoints = 1, numCells = 1;
     vtkm::Bounds bounds(0, 0, 0, 0, 0, 0);
+    int ndims = 0;
 
-    std::cout << "1D cases" << std::endl;
-    numPoints = dimensions[0];
-    numCells = dimensions[0] - 1;
-    std::vector<T> varP1D(static_cast<unsigned long>(numPoints));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
-    {
-      varP1D[i] = static_cast<T>(i * 1.1f);
-    }
-    std::vector<T> varC1D(static_cast<unsigned long>(numCells));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
-    {
-      varC1D[i] = static_cast<T>(i * 1.1f);
-    }
+    std::cout << "1D parameters" << std::endl;
     bounds.X = vtkm::Range(xCoordinates.front(), xCoordinates.back());
-    std::cout << "  Create with std::vector" << std::endl;
-    dataSet = dataSetBuilder.Create(xCoordinates);
-    dsf.AddPointField(dataSet, "pointvar", varP1D);
-    dsf.AddCellField(dataSet, "cellvar", varC1D);
-    ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
+    numPoints *= dimensions[0];
+    if (dimensions[0] > 1)
+    {
+      numCells = dimensions[0] - 1;
+      ndims += 1;
+    }
+    if (ndims)
+    {
+      std::vector<T> varP1D(static_cast<unsigned long>(numPoints));
+      for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
+      {
+        varP1D[i] = static_cast<T>(i * 1.1f);
+      }
+      std::vector<T> varC1D(static_cast<unsigned long>(numCells));
+      for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
+      {
+        varC1D[i] = static_cast<T>(i * 1.1f);
+      }
+      std::cout << "  Create with std::vector" << std::endl;
+      dataSet = dataSetBuilder.Create(xCoordinates);
+      dsf.AddPointField(dataSet, "pointvar", varP1D);
+      dsf.AddCellField(dataSet, "cellvar", varC1D);
+      ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
+    }
 
-    std::cout << "2D cases" << std::endl;
-    numPoints = dimensions[0] * dimensions[1];
-    numCells = (dimensions[0] - 1) * (dimensions[1] - 1);
-    std::vector<T> varP2D(static_cast<unsigned long>(numPoints));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
-    {
-      varP2D[i] = static_cast<T>(i * 1.1f);
-    }
-    std::vector<T> varC2D(static_cast<unsigned long>(numCells));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
-    {
-      varC2D[i] = static_cast<T>(i * 1.1f);
-    }
+    std::cout << "2D parameters" << std::endl;
     bounds.Y = vtkm::Range(yCoordinates.front(), yCoordinates.back());
-    std::cout << "  Create with std::vector" << std::endl;
-    dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates);
-    dsf.AddPointField(dataSet, "pointvar", varP2D);
-    dsf.AddCellField(dataSet, "cellvar", varC2D);
-    ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
-
-    std::cout << "  Create with C array" << std::endl;
-    dataSet = dataSetBuilder.Create(dimensions[0], dimensions[1], &xCoordinates.front(),
-                                    &yCoordinates.front());
-    dsf.AddPointField(dataSet, "pointvar", &varP2D.front(), numPoints);
-    dsf.AddCellField(dataSet, "cellvar", &varC2D.front(), numCells);
-    ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
-
-    std::cout << "  Create with ArrayHandle" << std::endl;
-    dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
-                                    vtkm::cont::make_ArrayHandle(yCoordinates));
-    dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP2D));
-    dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC2D));
-    ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
-
-    std::cout << "3D cases" << std::endl;
-    numPoints *= dimensions[2];
-    numCells *= dimensions[2] - 1;
-    std::vector<T> varP3D(static_cast<unsigned long>(numPoints));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
+    numPoints *= dimensions[1];
+    if (dimensions[1] > 1)
     {
-      varP3D[i] = static_cast<T>(i * 1.1f);
-      ;
+      numCells *= dimensions[1] - 1;
+      ndims += 1;
     }
-    std::vector<T> varC3D(static_cast<unsigned long>(numCells));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
+    if (ndims)
     {
-      varC3D[i] = static_cast<T>(i * 1.1f);
+      std::vector<T> varP2D(static_cast<unsigned long>(numPoints));
+      for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
+      {
+        varP2D[i] = static_cast<T>(i * 1.1f);
+      }
+      std::vector<T> varC2D(static_cast<unsigned long>(numCells));
+      for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
+      {
+        varC2D[i] = static_cast<T>(i * 1.1f);
+      }
+      std::cout << "  Create with std::vector" << std::endl;
+      dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates);
+      dsf.AddPointField(dataSet, "pointvar", varP2D);
+      dsf.AddCellField(dataSet, "cellvar", varC2D);
+      ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
+
+      std::cout << "  Create with C array" << std::endl;
+      dataSet = dataSetBuilder.Create(dimensions[0], dimensions[1], &xCoordinates.front(),
+                                      &yCoordinates.front());
+      dsf.AddPointField(dataSet, "pointvar", &varP2D.front(), numPoints);
+      dsf.AddCellField(dataSet, "cellvar", &varC2D.front(), numCells);
+      ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
+
+      std::cout << "  Create with ArrayHandle" << std::endl;
+      dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
+                                      vtkm::cont::make_ArrayHandle(yCoordinates));
+      dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP2D));
+      dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC2D));
+      ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
     }
+
+    std::cout << "3D parameters" << std::endl;
     bounds.Z = vtkm::Range(zCoordinates.front(), zCoordinates.back());
+    numPoints *= dimensions[2];
+    if (dimensions[2] > 1)
+    {
+      numCells *= dimensions[2] - 1;
+      ndims += 1;
+    }
+    if (ndims)
+    {
+      std::vector<T> varP3D(static_cast<unsigned long>(numPoints));
+      for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
+      {
+        varP3D[i] = static_cast<T>(i * 1.1f);
+      }
+      std::vector<T> varC3D(static_cast<unsigned long>(numCells));
+      for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
+      {
+        varC3D[i] = static_cast<T>(i * 1.1f);
+      }
 
-    std::cout << "  Create with std::vector" << std::endl;
-    dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates, zCoordinates);
-    dsf.AddPointField(dataSet, "pointvar", varP3D);
-    dsf.AddCellField(dataSet, "cellvar", varC3D);
-    ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
+      std::cout << "  Create with std::vector" << std::endl;
+      dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates, zCoordinates);
+      dsf.AddPointField(dataSet, "pointvar", varP3D);
+      dsf.AddCellField(dataSet, "cellvar", varC3D);
+      ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
 
-    std::cout << "  Create with C array" << std::endl;
-    dataSet =
-      dataSetBuilder.Create(dimensions[0], dimensions[1], dimensions[2], &xCoordinates.front(),
-                            &yCoordinates.front(), &zCoordinates.front());
-    dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP3D));
-    dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC3D));
-    ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
+      std::cout << "  Create with C array" << std::endl;
+      dataSet =
+        dataSetBuilder.Create(dimensions[0], dimensions[1], dimensions[2], &xCoordinates.front(),
+                              &yCoordinates.front(), &zCoordinates.front());
+      dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP3D));
+      dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC3D));
+      ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
 
-    std::cout << "  Create with ArrayHandle" << std::endl;
-    dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
-                                    vtkm::cont::make_ArrayHandle(yCoordinates),
-                                    vtkm::cont::make_ArrayHandle(zCoordinates));
-    dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP3D));
-    dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC3D));
-    ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
+      std::cout << "  Create with ArrayHandle" << std::endl;
+      dataSet = dataSetBuilder.Create(vtkm::cont::make_ArrayHandle(xCoordinates),
+                                      vtkm::cont::make_ArrayHandle(yCoordinates),
+                                      vtkm::cont::make_ArrayHandle(zCoordinates));
+      dsf.AddPointField(dataSet, "pointvar", vtkm::cont::make_ArrayHandle(varP3D));
+      dsf.AddCellField(dataSet, "cellvar", vtkm::cont::make_ArrayHandle(varC3D));
+      ValidateDataSet(dataSet, ndims, numPoints, numCells, bounds);
+    }
   }
 }
 

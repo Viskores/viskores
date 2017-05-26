@@ -26,6 +26,7 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <algorithm>
 #include <random>
 #include <time.h>
 #include <vector>
@@ -125,6 +126,20 @@ vtkm::Range FillMethod(vtkm::IdComponent method, vtkm::Id dimensionSize, T& orig
   return vtkm::Range(origin, origin + static_cast<T>(dimensionSize - 1) * spacing);
 }
 
+vtkm::Range& GetRangeByIndex(vtkm::Bounds& bounds, int comp)
+{
+  VTKM_ASSERT(comp >= 0 && comp < 3);
+  switch (comp)
+  {
+    case 0:
+      return bounds.X;
+    case 1:
+      return bounds.Y;
+    default:
+      return bounds.Z;
+  }
+}
+
 template <typename T>
 void UniformTests()
 {
@@ -133,11 +148,11 @@ void UniformTests()
   const vtkm::Id NUM_FILL_METHODS = 5;
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
-  vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetFieldAdd dsf;
 
   std::uniform_int_distribution<vtkm::Id> randomDim(2, MAX_DIM_SIZE);
   std::uniform_int_distribution<vtkm::IdComponent> randomFill(0, NUM_FILL_METHODS - 1);
+  std::uniform_int_distribution<vtkm::IdComponent> randomAxis(0, 2);
 
   for (vtkm::Id trial = 0; trial < NUM_TRIALS; trial++)
   {
@@ -145,7 +160,6 @@ void UniformTests()
 
     vtkm::Id3 dimensions(randomDim(g_RandomGenerator), randomDim(g_RandomGenerator),
                          randomDim(g_RandomGenerator));
-    std::cout << "Dimensions: " << dimensions << std::endl;
 
     vtkm::IdComponent fillMethodX = randomFill(g_RandomGenerator);
     vtkm::IdComponent fillMethodY = randomFill(g_RandomGenerator);
@@ -155,69 +169,184 @@ void UniformTests()
 
     vtkm::Vec<T, 3> origin;
     vtkm::Vec<T, 3> spacing;
-    vtkm::Bounds bounds;
-    bounds.X = FillMethod(fillMethodX, dimensions[0], origin[0], spacing[0]);
-    bounds.Y = FillMethod(fillMethodY, dimensions[1], origin[1], spacing[1]);
-    bounds.Z = FillMethod(fillMethodZ, dimensions[2], origin[2], spacing[2]);
+    vtkm::Range ranges[3];
+    ranges[0] = FillMethod(fillMethodX, dimensions[0], origin[0], spacing[0]);
+    ranges[1] = FillMethod(fillMethodY, dimensions[1], origin[1], spacing[1]);
+    ranges[2] = FillMethod(fillMethodZ, dimensions[2], origin[2], spacing[2]);
 
-    std::cout << "3D case" << std::endl;
-    vtkm::Id numPoints = dimensions[0] * dimensions[1] * dimensions[2];
-    vtkm::Id numCells = (dimensions[0] - 1) * (dimensions[1] - 1) * (dimensions[2] - 1);
-    std::vector<T> varP3D(static_cast<unsigned long>(numPoints));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
+    std::cout << "3D cellset" << std::endl;
     {
-      varP3D[i] = static_cast<T>(i * 1.1f);
-    }
-    std::vector<T> varC3D(static_cast<unsigned long>(numCells));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
-    {
-      varC3D[i] = static_cast<T>(i * 1.1f);
-    }
-    dataSet = dataSetBuilder.Create(dimensions, origin, spacing);
-    dsf.AddPointField(dataSet, "pointvar", varP3D);
-    dsf.AddCellField(dataSet, "cellvar", varC3D);
-    ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
+      vtkm::Id3 dims = dimensions;
+      vtkm::Bounds bounds(ranges[0], ranges[1], ranges[2]);
 
-    std::cout << "2D case" << std::endl;
-    numPoints = dimensions[0] * dimensions[1];
-    numCells = (dimensions[0] - 1) * (dimensions[1] - 1);
-    bounds.Z = vtkm::Range(0, 0);
-    std::vector<T> varP2D(static_cast<unsigned long>(numPoints));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
-    {
-      varP2D[i] = static_cast<T>(i * 1.1f);
-    }
-    std::vector<T> varC2D(static_cast<unsigned long>(numCells));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
-    {
-      varC2D[i] = static_cast<T>(i * 1.1f);
-    }
-    dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
-                                    vtkm::Vec<T, 2>(origin[0], origin[1]),
-                                    vtkm::Vec<T, 2>(spacing[0], spacing[1]));
-    dsf.AddPointField(dataSet, "pointvar", varP2D);
-    dsf.AddCellField(dataSet, "cellvar", varC2D);
-    ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
+      std::cout << "\tdimensions: " << dims << std::endl;
+      std::cout << "\toriging: " << origin << std::endl;
+      std::cout << "\tspacing: " << spacing << std::endl;
+      std::cout << "\tbounds: " << bounds << std::endl;
 
-    std::cout << "1D case" << std::endl;
-    numPoints = dimensions[0];
-    numCells = dimensions[0] - 1;
-    bounds.Y = vtkm::Range(0, 0);
-    bounds.Z = vtkm::Range(0, 0);
-    std::vector<T> varP1D(static_cast<unsigned long>(numPoints));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
-    {
-      varP1D[i] = static_cast<T>(i * 1.1f);
+      vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
+      vtkm::Id numCells = (dims[0] - 1) * (dims[1] - 1) * (dims[2] - 1);
+
+      std::vector<T> pointvar(static_cast<unsigned long>(numPoints));
+      std::iota(pointvar.begin(), pointvar.end(), T(1.1));
+      std::vector<T> cellvar(static_cast<unsigned long>(numCells));
+      std::iota(cellvar.begin(), cellvar.end(), T(1.1));
+
+      vtkm::cont::DataSet dataSet;
+      dataSet = dataSetBuilder.Create(dims, origin, spacing);
+      dsf.AddPointField(dataSet, "pointvar", pointvar);
+      dsf.AddCellField(dataSet, "cellvar", cellvar);
+
+      ValidateDataSet(dataSet, 3, numPoints, numCells, bounds);
     }
-    std::vector<T> varC1D(static_cast<unsigned long>(numCells));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
+
+    std::cout << "2D cellset, 2D parameters" << std::endl;
     {
-      varC1D[i] = static_cast<T>(i * 1.1f);
+      vtkm::Id2 dims(dimensions[0], dimensions[1]);
+      vtkm::Bounds bounds(ranges[0], ranges[1], vtkm::Range(0, 0));
+      vtkm::Vec<T, 2> org(origin[0], origin[1]);
+      vtkm::Vec<T, 2> spc(spacing[0], spacing[1]);
+
+      std::cout << "\tdimensions: " << dims << std::endl;
+      std::cout << "\toriging: " << org << std::endl;
+      std::cout << "\tspacing: " << spc << std::endl;
+      std::cout << "\tbounds: " << bounds << std::endl;
+
+      vtkm::Id numPoints = dims[0] * dims[1];
+      vtkm::Id numCells = (dims[0] - 1) * (dims[1] - 1);
+
+      std::vector<T> pointvar(static_cast<unsigned long>(numPoints));
+      std::iota(pointvar.begin(), pointvar.end(), T(1.1));
+      std::vector<T> cellvar(static_cast<unsigned long>(numCells));
+      std::iota(cellvar.begin(), cellvar.end(), T(1.1));
+
+      vtkm::cont::DataSet dataSet;
+      dataSet = dataSetBuilder.Create(dims, org, spc);
+      dsf.AddPointField(dataSet, "pointvar", pointvar);
+      dsf.AddCellField(dataSet, "cellvar", cellvar);
+
+      ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
     }
-    dataSet = dataSetBuilder.Create(dimensions[0], origin[0], spacing[0]);
-    dsf.AddPointField(dataSet, "pointvar", varP1D);
-    dsf.AddCellField(dataSet, "cellvar", varC1D);
-    ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
+
+    std::cout << "2D cellset, 3D parameters" << std::endl;
+    {
+      vtkm::Id3 dims = dimensions;
+      vtkm::Bounds bounds(ranges[0], ranges[1], ranges[2]);
+
+      int x = randomAxis(g_RandomGenerator);
+      dims[x] = 1;
+      GetRangeByIndex(bounds, x).Max = ranges[x].Min;
+
+      std::cout << "\tdimensions: " << dims << std::endl;
+      std::cout << "\toriging: " << origin << std::endl;
+      std::cout << "\tspacing: " << spacing << std::endl;
+      std::cout << "\tbounds: " << bounds << std::endl;
+
+      vtkm::Id numPoints = dims[(x + 1) % 3] * dims[(x + 2) % 3];
+      vtkm::Id numCells = (dims[(x + 1) % 3] - 1) * (dims[(x + 2) % 3] - 1);
+
+      std::vector<T> pointvar(static_cast<unsigned long>(numPoints));
+      std::iota(pointvar.begin(), pointvar.end(), T(1.1));
+      std::vector<T> cellvar(static_cast<unsigned long>(numCells));
+      std::iota(cellvar.begin(), cellvar.end(), T(1.1));
+
+      vtkm::cont::DataSet dataSet;
+      dataSet = dataSetBuilder.Create(dims, origin, spacing);
+      dsf.AddPointField(dataSet, "pointvar", pointvar);
+      dsf.AddCellField(dataSet, "cellvar", cellvar);
+
+      ValidateDataSet(dataSet, 2, numPoints, numCells, bounds);
+    }
+
+    std::cout << "1D cellset, 1D parameters" << std::endl;
+    {
+      vtkm::Bounds bounds(ranges[0], vtkm::Range(0, 0), vtkm::Range(0, 0));
+
+      std::cout << "\tdimensions: " << dimensions[0] << std::endl;
+      std::cout << "\toriging: " << origin[0] << std::endl;
+      std::cout << "\tspacing: " << spacing[0] << std::endl;
+      std::cout << "\tbounds: " << bounds << std::endl;
+
+      vtkm::Id numPoints = dimensions[0];
+      vtkm::Id numCells = dimensions[0] - 1;
+
+      std::vector<T> pointvar(static_cast<unsigned long>(numPoints));
+      std::iota(pointvar.begin(), pointvar.end(), T(1.1));
+      std::vector<T> cellvar(static_cast<unsigned long>(numCells));
+      std::iota(cellvar.begin(), cellvar.end(), T(1.1));
+
+      vtkm::cont::DataSet dataSet;
+      dataSet = dataSetBuilder.Create(dimensions[0], origin[0], spacing[0]);
+      dsf.AddPointField(dataSet, "pointvar", pointvar);
+      dsf.AddCellField(dataSet, "cellvar", cellvar);
+
+      ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
+    }
+
+    std::cout << "1D cellset, 2D parameters" << std::endl;
+    {
+      vtkm::Id2 dims(dimensions[0], dimensions[1]);
+      vtkm::Bounds bounds(ranges[0], ranges[1], vtkm::Range(0, 0));
+      vtkm::Vec<T, 2> org(origin[0], origin[1]);
+      vtkm::Vec<T, 2> spc(spacing[0], spacing[1]);
+
+      int x = randomAxis(g_RandomGenerator) % 2;
+      dims[x] = 1;
+      GetRangeByIndex(bounds, x).Max = ranges[x].Min;
+
+      std::cout << "\tdimensions: " << dims << std::endl;
+      std::cout << "\toriging: " << org << std::endl;
+      std::cout << "\tspacing: " << spc << std::endl;
+      std::cout << "\tbounds: " << bounds << std::endl;
+
+      vtkm::Id numPoints = dims[(x + 1) % 2];
+      vtkm::Id numCells = dims[(x + 1) % 2] - 1;
+
+      std::vector<T> pointvar(static_cast<unsigned long>(numPoints));
+      std::iota(pointvar.begin(), pointvar.end(), T(1.1));
+      std::vector<T> cellvar(static_cast<unsigned long>(numCells));
+      std::iota(cellvar.begin(), cellvar.end(), T(1.1));
+
+      vtkm::cont::DataSet dataSet;
+      dataSet = dataSetBuilder.Create(dims, org, spc);
+      dsf.AddPointField(dataSet, "pointvar", pointvar);
+      dsf.AddCellField(dataSet, "cellvar", cellvar);
+
+      ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
+    }
+
+    std::cout << "1D cellset, 3D parameters" << std::endl;
+    {
+      vtkm::Id3 dims = dimensions;
+      vtkm::Bounds bounds(ranges[0], ranges[1], ranges[2]);
+
+      int x = randomAxis(g_RandomGenerator);
+      int x1 = (x + 1) % 3;
+      int x2 = (x + 2) % 3;
+      dims[x1] = dims[x2] = 1;
+      GetRangeByIndex(bounds, x1).Max = ranges[x1].Min;
+      GetRangeByIndex(bounds, x2).Max = ranges[x2].Min;
+
+      std::cout << "\tdimensions: " << dims << std::endl;
+      std::cout << "\toriging: " << origin << std::endl;
+      std::cout << "\tspacing: " << spacing << std::endl;
+      std::cout << "\tbounds: " << bounds << std::endl;
+
+      vtkm::Id numPoints = dims[x];
+      vtkm::Id numCells = dims[x] - 1;
+
+      std::vector<T> pointvar(static_cast<unsigned long>(numPoints));
+      std::iota(pointvar.begin(), pointvar.end(), T(1.1));
+      std::vector<T> cellvar(static_cast<unsigned long>(numCells));
+      std::iota(cellvar.begin(), cellvar.end(), T(1.1));
+
+      vtkm::cont::DataSet dataSet;
+      dataSet = dataSetBuilder.Create(dims, origin, spacing);
+      dsf.AddPointField(dataSet, "pointvar", pointvar);
+      dsf.AddCellField(dataSet, "cellvar", cellvar);
+
+      ValidateDataSet(dataSet, 1, numPoints, numCells, bounds);
+    }
   }
 }
 

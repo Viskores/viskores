@@ -64,7 +64,7 @@ public:
                                               std::string cellNm = "cells")
   {
     std::vector<T> yvals(1, 0), zvals(1, 0);
-    return DataSetBuilderRectilinear::BuildDataSet(1, xvals, yvals, zvals, coordNm, cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm, cellNm);
   }
 
   template <typename T>
@@ -72,7 +72,7 @@ public:
                                               std::string cellNm = "cells")
   {
     T yvals = 0, zvals = 0;
-    return DataSetBuilderRectilinear::BuildDataSet(1, nx, 1, 1, xvals, &yvals, &zvals, coordNm,
+    return DataSetBuilderRectilinear::BuildDataSet(nx, 1, 1, xvals, &yvals, &zvals, coordNm,
                                                    cellNm);
   }
 
@@ -86,7 +86,7 @@ public:
     yvals.GetPortalControl().Set(0, 0.0);
     zvals.Allocate(1);
     zvals.GetPortalControl().Set(0, 0.0);
-    return DataSetBuilderRectilinear::BuildDataSet(1, xvals, yvals, zvals, coordNm, cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm, cellNm);
   }
 
   //2D grids.
@@ -97,7 +97,7 @@ public:
                                               std::string cellNm = "cells")
   {
     std::vector<T> zvals(1, 0);
-    return DataSetBuilderRectilinear::BuildDataSet(2, xvals, yvals, zvals, coordNm, cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm, cellNm);
   }
 
   template <typename T>
@@ -106,7 +106,7 @@ public:
                                               std::string cellNm = "cells")
   {
     T zvals = 0;
-    return DataSetBuilderRectilinear::BuildDataSet(2, nx, ny, 1, xvals, yvals, &zvals, coordNm,
+    return DataSetBuilderRectilinear::BuildDataSet(nx, ny, 1, xvals, yvals, &zvals, coordNm,
                                                    cellNm);
   }
 
@@ -119,7 +119,7 @@ public:
     vtkm::cont::ArrayHandle<T> zvals;
     zvals.Allocate(1);
     zvals.GetPortalControl().Set(0, 0.0);
-    return DataSetBuilderRectilinear::BuildDataSet(2, xvals, yvals, zvals, coordNm, cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm, cellNm);
   }
 
   //3D grids.
@@ -128,7 +128,7 @@ public:
                                               T* yvals, T* zvals, std::string coordNm = "coords",
                                               std::string cellNm = "cells")
   {
-    return DataSetBuilderRectilinear::BuildDataSet(3, nx, ny, nz, xvals, yvals, zvals, coordNm,
+    return DataSetBuilderRectilinear::BuildDataSet(nx, ny, nz, xvals, yvals, zvals, coordNm,
                                                    cellNm);
   }
 
@@ -139,7 +139,7 @@ public:
                                               std::string coordNm = "coords",
                                               std::string cellNm = "cells")
   {
-    return DataSetBuilderRectilinear::BuildDataSet(3, xvals, yvals, zvals, coordNm, cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm, cellNm);
   }
 
   template <typename T>
@@ -149,47 +149,39 @@ public:
                                               std::string coordNm = "coords",
                                               std::string cellNm = "cells")
   {
-    return DataSetBuilderRectilinear::BuildDataSet(3, xvals, yvals, zvals, coordNm, cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(xvals, yvals, zvals, coordNm, cellNm);
   }
 
 private:
   template <typename T>
-  VTKM_CONT static vtkm::cont::DataSet BuildDataSet(int dim, const std::vector<T>& xvals,
+  VTKM_CONT static vtkm::cont::DataSet BuildDataSet(const std::vector<T>& xvals,
                                                     const std::vector<T>& yvals,
                                                     const std::vector<T>& zvals,
                                                     std::string coordNm, std::string cellNm)
   {
-    VTKM_ASSERT((dim == 1 && xvals.size() > 1 && yvals.size() == 1 && zvals.size() == 1) ||
-                (dim == 2 && xvals.size() > 1 && yvals.size() > 1 && zvals.size() == 1) ||
-                (dim == 3 && xvals.size() > 1 && yvals.size() > 1 && zvals.size() > 1));
-
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
     DataSetBuilderRectilinear::CopyInto(xvals, Xc);
     DataSetBuilderRectilinear::CopyInto(yvals, Yc);
     DataSetBuilderRectilinear::CopyInto(zvals, Zc);
 
-    return DataSetBuilderRectilinear::BuildDataSet(dim, Xc, Yc, Zc, coordNm, cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(Xc, Yc, Zc, coordNm, cellNm);
   }
 
   template <typename T>
-  VTKM_CONT static vtkm::cont::DataSet BuildDataSet(int dim, vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
+  VTKM_CONT static vtkm::cont::DataSet BuildDataSet(vtkm::Id nx, vtkm::Id ny, vtkm::Id nz,
                                                     const T* xvals, const T* yvals, const T* zvals,
                                                     std::string coordNm, std::string cellNm)
   {
-    VTKM_ASSERT((dim == 1 && nx > 1 && ny == 1 && nz == 1) ||
-                (dim == 2 && nx > 1 && ny > 1 && nz == 1) ||
-                (dim == 3 && nx > 1 && ny > 1 && nz > 1));
-
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Xc, Yc, Zc;
     DataSetBuilderRectilinear::CopyInto(xvals, nx, Xc);
     DataSetBuilderRectilinear::CopyInto(yvals, ny, Yc);
     DataSetBuilderRectilinear::CopyInto(zvals, nz, Zc);
 
-    return DataSetBuilderRectilinear::BuildDataSet(dim, Xc, Yc, Zc, coordNm, cellNm);
+    return DataSetBuilderRectilinear::BuildDataSet(Xc, Yc, Zc, coordNm, cellNm);
   }
 
   template <typename T>
-  VTKM_CONT static vtkm::cont::DataSet BuildDataSet(int dim, const vtkm::cont::ArrayHandle<T>& X,
+  VTKM_CONT static vtkm::cont::DataSet BuildDataSet(const vtkm::cont::ArrayHandle<T>& X,
                                                     const vtkm::cont::ArrayHandle<T>& Y,
                                                     const vtkm::cont::ArrayHandle<T>& Z,
                                                     std::string coordNm, std::string cellNm)
@@ -211,27 +203,45 @@ private:
     vtkm::cont::CoordinateSystem cs(coordNm, coords);
     dataSet.AddCoordinateSystem(cs);
 
-    if (dim == 1)
+    // compute the dimensions of the cellset by counting the number of axises
+    // with >1 dimension
+    int ndims = 0;
+    vtkm::Id dims[3];
+    if (Xc.GetNumberOfValues() > 1)
+    {
+      dims[ndims++] = Xc.GetNumberOfValues();
+    }
+    if (Yc.GetNumberOfValues() > 1)
+    {
+      dims[ndims++] = Yc.GetNumberOfValues();
+    }
+    if (Zc.GetNumberOfValues() > 1)
+    {
+      dims[ndims++] = Zc.GetNumberOfValues();
+    }
+
+    if (ndims == 1)
     {
       vtkm::cont::CellSetStructured<1> cellSet(cellNm);
-      cellSet.SetPointDimensions(Xc.GetNumberOfValues());
+      cellSet.SetPointDimensions(dims[0]);
       dataSet.AddCellSet(cellSet);
     }
-    else if (dim == 2)
+    else if (ndims == 2)
     {
       vtkm::cont::CellSetStructured<2> cellSet(cellNm);
-      cellSet.SetPointDimensions(vtkm::make_Vec(Xc.GetNumberOfValues(), Yc.GetNumberOfValues()));
+      cellSet.SetPointDimensions(vtkm::make_Vec(dims[0], dims[1]));
       dataSet.AddCellSet(cellSet);
     }
-    else if (dim == 3)
+    else if (ndims == 3)
     {
       vtkm::cont::CellSetStructured<3> cellSet(cellNm);
-      cellSet.SetPointDimensions(
-        vtkm::make_Vec(Xc.GetNumberOfValues(), Yc.GetNumberOfValues(), Zc.GetNumberOfValues()));
+      cellSet.SetPointDimensions(vtkm::make_Vec(dims[0], dims[1], dims[2]));
       dataSet.AddCellSet(cellSet);
     }
     else
+    {
       throw vtkm::cont::ErrorBadValue("Invalid cell set dimension");
+    }
 
     return dataSet;
   }
