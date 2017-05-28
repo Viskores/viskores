@@ -108,7 +108,7 @@ struct FloatingPointReturnType<T, typename FloatingPointReturnCondition<T>::type
 {
   typedef vtkm::Float32 Type;
 };
-}
+} // namespace detail
 
 /// Compute the sine of \p x.
 ///
@@ -1361,18 +1361,15 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Exp10(T x)
 static inline VTKM_EXEC_CONT vtkm::Float32 Exp10(vtkm::Float32 x)
 {
   return vtkm::Pow(10, x);
-  ;
 }
 static inline VTKM_EXEC_CONT vtkm::Float64 Exp10(vtkm::Float64 x)
 {
   return vtkm::Pow(10, x);
-  ;
 }
 template <typename T>
 static inline VTKM_EXEC_CONT vtkm::Float64 Exp10(T x)
 {
   return vtkm::Pow(10, static_cast<vtkm::Float64>(x));
-  ;
 }
 #endif // !VTKM_CUDA
 
