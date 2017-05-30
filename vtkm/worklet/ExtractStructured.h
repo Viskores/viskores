@@ -469,7 +469,7 @@ private:
     using namespace extractstructured::internal;
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
-    auto validPointsFlat = vtkm::cont::make_ArrayHandleTransform<vtkm::Id>(
+    auto validPointsFlat = vtkm::cont::make_ArrayHandleTransform(
       this->ValidPoints, LogicalToFlatIndex<Dimensionality>(this->InputDimensions));
     Algorithm::Copy(make_ArrayHandlePermutation(validPointsFlat, in), out);
   }
@@ -483,7 +483,7 @@ private:
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     auto inputCellDimensions = this->InputDimensions - vtkm::Id3(1);
-    auto validCellsFlat = vtkm::cont::make_ArrayHandleTransform<vtkm::Id>(
+    auto validCellsFlat = vtkm::cont::make_ArrayHandleTransform(
       this->ValidCells, LogicalToFlatIndex<Dimensionality>(inputCellDimensions));
     Algorithm::Copy(make_ArrayHandlePermutation(validCellsFlat, in), out);
   }

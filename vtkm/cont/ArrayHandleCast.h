@@ -49,8 +49,7 @@ struct VTKM_ALWAYS_EXPORT Cast
 ///
 template <typename T, typename ArrayHandleType>
 class ArrayHandleCast
-  : public vtkm::cont::ArrayHandleTransform<T,
-                                            ArrayHandleType,
+  : public vtkm::cont::ArrayHandleTransform<ArrayHandleType,
                                             internal::Cast<typename ArrayHandleType::ValueType, T>,
                                             internal::Cast<T, typename ArrayHandleType::ValueType>>
 {
@@ -58,8 +57,7 @@ public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleCast,
     (ArrayHandleCast<T, ArrayHandleType>),
-    (vtkm::cont::ArrayHandleTransform<T,
-                                      ArrayHandleType,
+    (vtkm::cont::ArrayHandleTransform<ArrayHandleType,
                                       internal::Cast<typename ArrayHandleType::ValueType, T>,
                                       internal::Cast<T, typename ArrayHandleType::ValueType>>));
 

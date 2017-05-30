@@ -411,8 +411,8 @@ private:
       FunctorType functor(2.0);
 
       vtkm::cont::ArrayHandle<ValueType> input;
-      vtkm::cont::ArrayHandleTransform<ValueType, vtkm::cont::ArrayHandle<ValueType>, FunctorType>
-        transformed = vtkm::cont::make_ArrayHandleTransform<ValueType>(input, functor);
+      vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<ValueType>, FunctorType>
+        transformed = vtkm::cont::make_ArrayHandleTransform(input, functor);
 
       input.Allocate(length);
       SetPortal(input.GetPortalControl());
@@ -456,11 +456,8 @@ private:
 
       vtkm::cont::ArrayHandleCounting<ValueType> counting(start, ValueType(1), length);
 
-      vtkm::cont::ArrayHandleTransform<OutputValueType,
-                                       vtkm::cont::ArrayHandleCounting<ValueType>,
-                                       FunctorType>
-        countingTransformed =
-          vtkm::cont::make_ArrayHandleTransform<OutputValueType>(counting, functor);
+      vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<ValueType>, FunctorType>
+        countingTransformed = vtkm::cont::make_ArrayHandleTransform(counting, functor);
 
       vtkm::cont::printSummary_ArrayHandle(countingTransformed, std::cout);
       std::cout << std::endl;

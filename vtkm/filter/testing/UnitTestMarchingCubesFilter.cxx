@@ -206,18 +206,15 @@ class MakeRadiantDataSet
 {
 public:
   typedef vtkm::cont::ArrayHandleUniformPointCoordinates CoordinateArrayHandle;
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::Float32,
-                                           vtkm::cont::ArrayHandleUniformPointCoordinates,
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleUniformPointCoordinates,
                                            EuclideanNorm>
     DataArrayHandle;
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::Id,
-                                           vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
                                            CubeGridConnectivity>
     ConnectivityArrayHandle;
 
   typedef vtkm::cont::CellSetSingleType<
-    vtkm::cont::ArrayHandleTransform<vtkm::Id,
-                                     vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
                                      CubeGridConnectivity>::StorageTag>
     CellSet;
 
@@ -229,8 +226,7 @@ class PolicyRadiantDataSet : public vtkm::filter::PolicyBase<PolicyRadiantDataSe
   typedef MakeRadiantDataSet::DataArrayHandle DataHandleType;
   typedef MakeRadiantDataSet::ConnectivityArrayHandle CountingHandleType;
 
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::Id,
-                                           vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
                                            CubeGridConnectivity>
     TransformHandleType;
 

@@ -178,19 +178,28 @@ namespace cont
 namespace internal
 {
 
-template <typename ValueType,
-          typename ArrayHandleType,
+template <typename ArrayHandleType,
           typename FunctorType,
           typename InverseFunctorType = NullFunctorType>
 struct VTKM_ALWAYS_EXPORT StorageTagTransform
 {
+#if defined(VTKM_MSVC) && (_MSC_VER == 1800) // workaround for VS2013
+private:
+  using ArrayHandleValueType = typename ArrayHandleType::ValueType;
+
+public:
+  using ValueType = decltype(FunctorType{}(ArrayHandleValueType{}));
+#else
+  using ValueType = decltype(FunctorType{}(typename ArrayHandleType::ValueType{}));
+#endif
 };
 
-template <typename T, typename ArrayHandleType, typename FunctorType>
-class Storage<T, StorageTagTransform<T, ArrayHandleType, FunctorType, NullFunctorType>>
+template <typename ArrayHandleType, typename FunctorType>
+class Storage<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
+              StorageTagTransform<ArrayHandleType, FunctorType>>
 {
 public:
-  typedef T ValueType;
+  typedef typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType ValueType;
 
   // This is meant to be invalid. Because Transform arrays are read only, you
   // should only be able to use the const version.
@@ -276,11 +285,14 @@ private:
   bool Valid;
 };
 
-template <typename T, typename ArrayHandleType, typename FunctorType, typename InverseFunctorType>
-class Storage<T, StorageTagTransform<T, ArrayHandleType, FunctorType, InverseFunctorType>>
+template <typename ArrayHandleType, typename FunctorType, typename InverseFunctorType>
+class Storage<
+  typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType,
+  StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>
 {
 public:
-  typedef T ValueType;
+  typedef typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType
+    ValueType;
 
   typedef vtkm::exec::internal::ArrayPortalTransform<ValueType,
                                                      typename ArrayHandleType::PortalControl,
@@ -369,14 +381,16 @@ private:
   bool Valid;
 };
 
-template <typename T, typename ArrayHandleType, typename FunctorType, typename Device>
-class ArrayTransfer<T, StorageTagTransform<T, ArrayHandleType, FunctorType>, Device>
+template <typename ArrayHandleType, typename FunctorType, typename Device>
+class ArrayTransfer<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
+                    StorageTagTransform<ArrayHandleType, FunctorType>,
+                    Device>
 {
-  typedef StorageTagTransform<T, ArrayHandleType, FunctorType> StorageTag;
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  typedef StorageTagTransform<ArrayHandleType, FunctorType> StorageTag;
 
 public:
-  typedef T ValueType;
+  typedef typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType ValueType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
@@ -441,20 +455,20 @@ private:
   FunctorType Functor;
 };
 
-template <typename T,
-          typename ArrayHandleType,
+template <typename ArrayHandleType,
           typename FunctorType,
           typename InverseFunctorType,
           typename Device>
-class ArrayTransfer<T,
-                    StorageTagTransform<T, ArrayHandleType, FunctorType, InverseFunctorType>,
-                    Device>
+class ArrayTransfer<
+  typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType,
+  StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>,
+  Device>
 {
-  typedef StorageTagTransform<T, ArrayHandleType, FunctorType, InverseFunctorType> StorageTag;
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  typedef StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType> StorageTag;
 
 public:
-  typedef T ValueType;
+  typedef typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType ValueType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
@@ -536,16 +550,16 @@ private:
 /// the functor operator should work in both the control and execution
 /// environments.
 ///
-template <typename T,
-          typename ArrayHandleType,
+template <typename ArrayHandleType,
           typename FunctorType,
           typename InverseFunctorType = internal::NullFunctorType>
 class ArrayHandleTransform;
 
-template <typename T, typename ArrayHandleType, typename FunctorType>
-class ArrayHandleTransform<T, ArrayHandleType, FunctorType, internal::NullFunctorType>
-  : public vtkm::cont::ArrayHandle<T,
-                                   internal::StorageTagTransform<T, ArrayHandleType, FunctorType>>
+template <typename ArrayHandleType, typename FunctorType>
+class ArrayHandleTransform<ArrayHandleType, FunctorType, internal::NullFunctorType>
+  : public vtkm::cont::ArrayHandle<
+      typename internal::StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
+      internal::StorageTagTransform<ArrayHandleType, FunctorType>>
 {
   // If the following line gives a compile error, then the ArrayHandleType
   // template argument is not a valid ArrayHandle type.
@@ -554,11 +568,13 @@ class ArrayHandleTransform<T, ArrayHandleType, FunctorType, internal::NullFuncto
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleTransform,
-    (ArrayHandleTransform<T, ArrayHandleType, FunctorType>),
-    (vtkm::cont::ArrayHandle<T, internal::StorageTagTransform<T, ArrayHandleType, FunctorType>>));
+    (ArrayHandleTransform<ArrayHandleType, FunctorType>),
+    (vtkm::cont::ArrayHandle<
+      typename internal::StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
+      internal::StorageTagTransform<ArrayHandleType, FunctorType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
   VTKM_CONT
@@ -571,35 +587,36 @@ public:
 /// make_ArrayHandleTransform is convenience function to generate an
 /// ArrayHandleTransform.  It takes in an ArrayHandle and a functor
 /// to apply to each element of the Handle.
-
-template <typename T, typename HandleType, typename FunctorType>
-VTKM_CONT vtkm::cont::ArrayHandleTransform<T, HandleType, FunctorType> make_ArrayHandleTransform(
+template <typename HandleType, typename FunctorType>
+VTKM_CONT vtkm::cont::ArrayHandleTransform<HandleType, FunctorType> make_ArrayHandleTransform(
   HandleType handle,
   FunctorType functor)
 {
-  return ArrayHandleTransform<T, HandleType, FunctorType>(handle, functor);
+  return ArrayHandleTransform<HandleType, FunctorType>(handle, functor);
 }
 
 // ArrayHandleTransform with inverse functors enabled (no need to subclass from
 // ArrayHandleTransform without inverse functors: nothing to inherit).
-template <typename T, typename ArrayHandleType, typename FunctorType, typename InverseFunctorType>
+template <typename ArrayHandleType, typename FunctorType, typename InverseFunctorType>
 class ArrayHandleTransform
   : public vtkm::cont::ArrayHandle<
-      T,
-      internal::StorageTagTransform<T, ArrayHandleType, FunctorType, InverseFunctorType>>
+      typename internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::
+        ValueType,
+      internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleTransform,
-    (ArrayHandleTransform<T, ArrayHandleType, FunctorType, InverseFunctorType>),
+    (ArrayHandleTransform<ArrayHandleType, FunctorType, InverseFunctorType>),
     (vtkm::cont::ArrayHandle<
-      T,
-      internal::StorageTagTransform<T, ArrayHandleType, FunctorType, InverseFunctorType>>));
+      typename internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::
+        ValueType,
+      internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
   ArrayHandleTransform(const ArrayHandleType& handle,
@@ -610,14 +627,15 @@ public:
   }
 };
 
-template <typename T, typename HandleType, typename FunctorType, typename InverseFunctorType>
-VTKM_CONT vtkm::cont::ArrayHandleTransform<T, HandleType, FunctorType, InverseFunctorType>
+template <typename HandleType, typename FunctorType, typename InverseFunctorType>
+VTKM_CONT vtkm::cont::ArrayHandleTransform<HandleType, FunctorType, InverseFunctorType>
 make_ArrayHandleTransform(HandleType handle, FunctorType functor, InverseFunctorType inverseFunctor)
 {
-  return ArrayHandleTransform<T, HandleType, FunctorType, InverseFunctorType>(
+  return ArrayHandleTransform<HandleType, FunctorType, InverseFunctorType>(
     handle, functor, inverseFunctor);
 }
 }
+
 } // namespace vtkm::cont
 
 #endif //vtk_m_cont_ArrayHandleTransform_h

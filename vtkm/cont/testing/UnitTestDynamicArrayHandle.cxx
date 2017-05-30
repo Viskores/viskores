@@ -389,8 +389,8 @@ void TryCastToArrayHandle()
   CheckCastToArrayHandle(vtkm::cont::make_ArrayHandlePermutation(countingArray, array));
 
   std::cout << "  Transform array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleTransform<vtkm::FloatDefault>(
-    countingArray, TestValueFunctor<vtkm::FloatDefault>()));
+  CheckCastToArrayHandle(
+    vtkm::cont::make_ArrayHandleTransform(countingArray, TestValueFunctor<vtkm::FloatDefault>()));
 
   std::cout << "  Uniform point coordinates array handle." << std::endl;
   CheckCastToArrayHandle(vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(ARRAY_SIZE)));
