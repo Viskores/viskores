@@ -31,29 +31,24 @@
 
 #include <vtkm/cont/Field.h>
 
-
 //simple test to verify the array handle cuda compiles
 void TestCudaHandle()
 {
   //Verify that we can construct a cuda array handle using the class inside
   //the vtkm::cont::cuda namespace
-  vtkm::cont::cuda::ArrayHandle<vtkm::Id> handleFoo(nullptr,0);
-  vtkm::cont::Field foo("foo", vtkm::cont::Field::ASSOC_CELL_SET , "cellset", handleFoo);
+  vtkm::cont::cuda::ArrayHandle<vtkm::Id> handleFoo(nullptr, 0);
+  vtkm::cont::Field foo("foo", vtkm::cont::Field::ASSOC_CELL_SET, "cellset", handleFoo);
 
   //Verify that we can construct a cuda array handle using the class inside
   //the vtkm::cont namespace
-  vtkm::cont::ArrayHandleCuda< vtkm::Vec< vtkm::Float32, 3> > handleBar(nullptr,0);
+  vtkm::cont::ArrayHandleCuda<vtkm::Vec<vtkm::Float32, 3>> handleBar(nullptr, 0);
   vtkm::cont::Field bar("bar", vtkm::cont::Field::ASSOC_CELL_SET, "cellset", handleBar);
 }
 
-
-int UnitTestCudaArrayHandle(int, char *[])
+int UnitTestCudaArrayHandle(int, char* [])
 {
   TestCudaHandle();
 
-  int result = vtkm::cont::testing::TestingArrayHandles
-      <vtkm::cont::DeviceAdapterTagCuda>::Run();
+  int result = vtkm::cont::testing::TestingArrayHandles<vtkm::cont::DeviceAdapterTagCuda>::Run();
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
-
-
 }

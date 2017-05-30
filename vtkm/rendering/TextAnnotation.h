@@ -26,47 +26,49 @@
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT TextAnnotation
 {
 public:
   enum HorizontalAlignment
-    {
-      Left,
-      HCenter,
-      Right
-    };
+  {
+    Left,
+    HCenter,
+    Right
+  };
   enum VerticalAlignment
-    {
-      Bottom,
-      VCenter,
-      Top
-    };
+  {
+    Bottom,
+    VCenter,
+    Top
+  };
 
 protected:
-  std::string                Text;
-  Color                      TextColor;
-  vtkm::Float32              Scale;
-  vtkm::Vec<vtkm::Float32,2> Anchor;
+  std::string Text;
+  Color TextColor;
+  vtkm::Float32 Scale;
+  vtkm::Vec<vtkm::Float32, 2> Anchor;
 
 public:
-  TextAnnotation(const std::string &text,
-                 const vtkm::rendering::Color &color,
+  TextAnnotation(const std::string& text,
+                 const vtkm::rendering::Color& color,
                  vtkm::Float32 scalar);
 
   virtual ~TextAnnotation();
 
-  void SetText(const std::string &text);
+  void SetText(const std::string& text);
 
-  const std::string &GetText() const;
+  const std::string& GetText() const;
 
   /// Set the anchor point relative to the box containing the text. The anchor
   /// is scaled in both directions to the range [-1,1] with -1 at the lower
   /// left and 1 at the upper right.
   ///
-  void SetRawAnchor(const vtkm::Vec<vtkm::Float32,2> &anchor);
+  void SetRawAnchor(const vtkm::Vec<vtkm::Float32, 2>& anchor);
 
   void SetRawAnchor(vtkm::Float32 h, vtkm::Float32 v);
 
@@ -74,12 +76,10 @@ public:
 
   void SetScale(vtkm::Float32 scale);
 
-  virtual void Render(const vtkm::rendering::Camera &camera,
-                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::Canvas &canvas) const = 0;
+  virtual void Render(const vtkm::rendering::Camera& camera,
+                      const vtkm::rendering::WorldAnnotator& worldAnnotator,
+                      vtkm::rendering::Canvas& canvas) const = 0;
 };
-
-
 }
 } //namespace vtkm::rendering
 

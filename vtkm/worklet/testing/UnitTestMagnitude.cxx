@@ -23,7 +23,8 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void TestMagnitude()
 {
@@ -32,7 +33,7 @@ void TestMagnitude()
   vtkm::worklet::Magnitude magnitudeWorklet;
 
   typedef vtkm::cont::ArrayHandle<vtkm::Float64> ArrayReturnType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4> > ArrayVectorType;
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> ArrayVectorType;
   typedef ArrayVectorType::PortalControl PortalType;
 
   ArrayVectorType pythagoreanTriples;
@@ -44,29 +45,25 @@ void TestMagnitude()
   pt.Set(2, vtkm::make_Vec(8, 15, 17, 0));
   pt.Set(3, vtkm::make_Vec(7, 24, 25, 0));
   pt.Set(4, vtkm::make_Vec(9, 40, 41, 0));
-  
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude>
-      dispatcher(magnitudeWorklet);
+
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude> dispatcher(magnitudeWorklet);
 
   ArrayReturnType result;
 
-  dispatcher.Invoke(pythagoreanTriples,
-                    result);
+  dispatcher.Invoke(pythagoreanTriples, result);
 
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
     VTKM_TEST_ASSERT(
-          test_equal(std::sqrt(pt.Get(i)[0]*pt.Get(i)[0] +
-                               pt.Get(i)[1]*pt.Get(i)[1] +
-                               pt.Get(i)[2]*pt.Get(i)[2]),
-                     result.GetPortalConstControl().Get(i)),
-          "Wrong result for Magnitude worklet");
+      test_equal(std::sqrt(pt.Get(i)[0] * pt.Get(i)[0] + pt.Get(i)[1] * pt.Get(i)[1] +
+                           pt.Get(i)[2] * pt.Get(i)[2]),
+                 result.GetPortalConstControl().Get(i)),
+      "Wrong result for Magnitude worklet");
   }
 }
-
 }
 
-int UnitTestMagnitude(int, char *[])
+int UnitTestMagnitude(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestMagnitude);
 }

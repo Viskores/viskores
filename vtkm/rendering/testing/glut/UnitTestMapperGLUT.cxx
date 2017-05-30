@@ -20,10 +20,10 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
-#if defined (__APPLE__)
-# include <GLUT/glut.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
 #else
-# include <GL/glut.h>
+#include <GL/glut.h>
 #endif
 #include <string.h>
 #include <vtkm/cont/DeviceAdapter.h>
@@ -35,26 +35,25 @@
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 
-namespace {
+namespace
+{
 static const vtkm::Id WIDTH = 512, HEIGHT = 512;
 static vtkm::Id windowID, which = 0, NUM_DATASETS = 4;
 static bool done = false;
 static bool batch = false;
 
-static void
-keyboardCall(unsigned char key, int vtkmNotUsed(x), int vtkmNotUsed(y))
+static void keyboardCall(unsigned char key, int vtkmNotUsed(x), int vtkmNotUsed(y))
 {
   if (key == 27)
     glutDestroyWindow(windowID);
   else
   {
-    which = (which+1) % NUM_DATASETS;
+    which = (which + 1) % NUM_DATASETS;
     glutPostRedisplay();
   }
 }
 
-static void
-displayCall()
+static void displayCall()
 {
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
@@ -65,39 +64,39 @@ displayCall()
   typedef vtkm::rendering::View2D V2;
 
   if (which == 0)
-    vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRegularDataSet0(),
-                                             "pointvar", colorTable, "reg3D.pnm");
+    vtkm::rendering::testing::Render<M, C, V3>(
+      maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
   else if (which == 1)
-    vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRectilinearDataSet0(),
-                                             "pointvar", colorTable, "rect3D.pnm");
+    vtkm::rendering::testing::Render<M, C, V3>(
+      maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
   else if (which == 2)
-    vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DExplicitDataSet4(),
-                                             "pointvar", colorTable, "expl3D.pnm");
+    vtkm::rendering::testing::Render<M, C, V3>(
+      maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
   else if (which == 3)
-    vtkm::rendering::testing::Render<M,C,V2>(maker.Make2DRectilinearDataSet0(),
-                                             "pointvar", colorTable, "rect2D.pnm");
+    vtkm::rendering::testing::Render<M, C, V2>(
+      maker.Make2DRectilinearDataSet0(), "pointvar", colorTable, "rect2D.pnm");
   glutSwapBuffers();
 }
 
 void batchIdle()
 {
-    which++;
-    if (which >= NUM_DATASETS)
-        glutDestroyWindow(windowID);
-    else
-        glutPostRedisplay();
+  which++;
+  if (which >= NUM_DATASETS)
+    glutDestroyWindow(windowID);
+  else
+    glutPostRedisplay();
 }
 
 void RenderTests()
 {
   if (!batch)
-    std::cout<<"Press any key to cycle through datasets. ESC to quit."<<std::endl;
+    std::cout << "Press any key to cycle through datasets. ESC to quit." << std::endl;
 
   int argc = 0;
-  char *argv = nullptr;
+  char* argv = nullptr;
   glutInit(&argc, &argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-  glutInitWindowSize(WIDTH,HEIGHT);
+  glutInitWindowSize(WIDTH, HEIGHT);
   windowID = glutCreateWindow("GLUT test");
   glutDisplayFunc(displayCall);
   glutKeyboardFunc(keyboardCall);
@@ -109,7 +108,7 @@ void RenderTests()
 
 } //namespace
 
-int UnitTestMapperGLUT(int argc, char *argv[])
+int UnitTestMapperGLUT(int argc, char* argv[])
 {
   if (argc > 1)
   {

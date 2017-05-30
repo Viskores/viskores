@@ -22,5 +22,6 @@
 
 set(unit_tests
   UnitTestTextureMemorySupport.cu
+  UnitTestTaskSingularCuda.cu
   )
 vtkm_unit_tests(CUDA SOURCES ${unit_tests})

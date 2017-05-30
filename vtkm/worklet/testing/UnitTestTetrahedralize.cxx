@@ -42,22 +42,21 @@ public:
     std::cout << "Testing TetrahedralizeStructured" << std::endl;
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
     typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
-  
+
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet0();
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
-  
+
     // Convert uniform hexahedra to tetrahedra
     vtkm::worklet::Tetrahedralize tetrahedralize;
-    OutCellSetType outCellSet = tetrahedralize.Run(cellSet,
-                                                   DeviceAdapter());
-  
+    OutCellSetType outCellSet = tetrahedralize.Run(cellSet, DeviceAdapter());
+
     // Create the output dataset with same coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataSet.GetCoordinateSystem(0));
     outDataSet.AddCellSet(outCellSet);
-  
+
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), cellSet.GetNumberOfCells() * 5),
                      "Wrong result for Tetrahedralize filter");
   }
@@ -71,24 +70,23 @@ public:
     std::cout << "Testing TetrahedralizeExplicit" << std::endl;
     typedef vtkm::cont::CellSetExplicit<> CellSetType;
     typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
-  
+
     // Create the input explicit cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DExplicitDataSet5();
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
-  
+
     // Convert explicit cells to tetrahedra
     vtkm::worklet::Tetrahedralize tetrahedralize;
-    OutCellSetType outCellSet = tetrahedralize.Run(cellSet,
-                                                   DeviceAdapter());
-  
+    OutCellSetType outCellSet = tetrahedralize.Run(cellSet, DeviceAdapter());
+
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataSet.GetCoordinateSystem(0));
     outDataSet.AddCellSet(outCellSet);
-  
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11), 
+
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 11),
                      "Wrong result for Tetrahedralize filter");
   }
 
@@ -99,7 +97,7 @@ public:
   }
 };
 
-int UnitTestTetrahedralize(int, char *[])
+int UnitTestTetrahedralize(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(
     TestingTetrahedralize<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());

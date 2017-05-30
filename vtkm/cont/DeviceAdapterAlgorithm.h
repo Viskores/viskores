@@ -34,8 +34,10 @@
 #include <unistd.h>
 #endif
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 /// \brief Struct containing device adapter algorithms.
 ///
@@ -44,7 +46,7 @@ namespace cont {
 /// struct is not implemented. Device adapter implementations must specialize
 /// the template.
 ///
-template<class DeviceAdapterTag>
+template <class DeviceAdapterTag>
 struct DeviceAdapterAlgorithm
 #ifdef VTKM_DOXYGEN_ONLY
 {
@@ -54,9 +56,9 @@ struct DeviceAdapterAlgorithm
   /// allocated to the same size of \c input. If output has already been
   /// allocated we will reallocate and clear any current values.
   ///
-  template<typename T, typename U, class CIn, class COut>
-  VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T,CIn> &input,
-                                    vtkm::cont::ArrayHandle<U, COut> &output);
+  template <typename T, typename U, class CIn, class COut>
+  VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                             vtkm::cont::ArrayHandle<U, COut>& output);
 
   /// \brief Conditionally copy elements in the input array to the output array.
   ///
@@ -69,11 +71,10 @@ struct DeviceAdapterAlgorithm
   /// the number of elements that will be removed by the stream compaction
   /// algorithm.
   ///
-  template<typename T, typename U, class CIn, class CStencil, class COut>
-  VTKM_CONT static void CopyIf(
-    const vtkm::cont::ArrayHandle<T,CIn> &input,
-    const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
-    vtkm::cont::ArrayHandle<T,COut> &output);
+  template <typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output);
 
   /// \brief Conditionally copy elements in the input array to the output array.
   ///
@@ -86,13 +87,11 @@ struct DeviceAdapterAlgorithm
   /// the number of elements that will be removed by the stream compaction
   /// algorithm.
   ///
-  template<typename T, typename U, class CIn, class CStencil,
-  class COut, class UnaryPredicate>
-  VTKM_CONT static void CopyIf(
-    const vtkm::cont::ArrayHandle<T,CIn> &input,
-    const vtkm::cont::ArrayHandle<U,CStencil> &stencil,
-    vtkm::cont::ArrayHandle<T,COut> &output,
-    UnaryPredicate unary_predicate);
+  template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output,
+                               UnaryPredicate unary_predicate);
 
   /// \brief Copy the contents of a section of one ArrayHandle to another
   ///
@@ -111,12 +110,12 @@ struct DeviceAdapterAlgorithm
   /// \par Requirements:
   /// \arg \c input must already be sorted
   ///
-  template<typename T, typename U, class CIn, class COut>
-  VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T,CIn> &input,
-                                            vtkm::Id inputStartIndex,
-                                            vtkm::Id numberOfElementsToCopy,
-                                            vtkm::cont::ArrayHandle<U, COut> &output,
-                                            vtkm::Id outputIndex = 0);
+  template <typename T, typename U, class CIn, class COut>
+  VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::Id inputStartIndex,
+                                     vtkm::Id numberOfElementsToCopy,
+                                     vtkm::cont::ArrayHandle<U, COut>& output,
+                                     vtkm::Id outputIndex = 0);
 
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -127,11 +126,10 @@ struct DeviceAdapterAlgorithm
   /// \par Requirements:
   /// \arg \c input must already be sorted
   ///
-  template<typename T, class CIn, class CVal, class COut>
-  VTKM_CONT static void LowerBounds(
-      const vtkm::cont::ArrayHandle<T,CIn>& input,
-      const vtkm::cont::ArrayHandle<T,CVal>& values,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut>& output);
+  template <typename T, class CIn, class CVal, class COut>
+  VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                    const vtkm::cont::ArrayHandle<T, CVal>& values,
+                                    vtkm::cont::ArrayHandle<vtkm::Id, COut>& output);
 
   /// \brief Output is the first index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -143,12 +141,11 @@ struct DeviceAdapterAlgorithm
   /// \par Requirements:
   /// \arg \c input must already be sorted
   ///
-  template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
-  VTKM_CONT static void LowerBounds(
-      const vtkm::cont::ArrayHandle<T,CIn>& input,
-      const vtkm::cont::ArrayHandle<T,CVal>& values,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut>& output,
-      BinaryCompare binary_compare);
+  template <typename T, class CIn, class CVal, class COut, class BinaryCompare>
+  VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                    const vtkm::cont::ArrayHandle<T, CVal>& values,
+                                    vtkm::cont::ArrayHandle<vtkm::Id, COut>& output,
+                                    BinaryCompare binary_compare);
 
   /// \brief A special version of LowerBounds that does an in place operation.
   ///
@@ -157,10 +154,9 @@ struct DeviceAdapterAlgorithm
   /// where it occurs. Because this is an in place operation, the type of the
   /// arrays is limited to vtkm::Id.
   ///
-  template<class CIn, class COut>
-  VTKM_CONT static void LowerBounds(
-      const vtkm::cont::ArrayHandle<vtkm::Id,CIn>& input,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut>& values_output);
+  template <class CIn, class COut>
+  VTKM_CONT static void LowerBounds(const vtkm::cont::ArrayHandle<vtkm::Id, CIn>& input,
+                                    vtkm::cont::ArrayHandle<vtkm::Id, COut>& values_output);
 
   /// \brief Compute a accumulated sum operation on the input ArrayHandle
   ///
@@ -171,10 +167,8 @@ struct DeviceAdapterAlgorithm
   /// or you will get inconsistent results.
   ///
   /// \return The total sum.
-  template<typename T, typename U, class CIn>
-  VTKM_CONT static U Reduce(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      U initialValue);
+  template <typename T, typename U, class CIn>
+  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue);
 
   /// \brief Compute a accumulated sum operation on the input ArrayHandle
   ///
@@ -186,11 +180,10 @@ struct DeviceAdapterAlgorithm
   /// inconsistent results.
   ///
   /// \return The total sum.
-  template<typename T, typename U, class CIn, class BinaryFunctor>
-  VTKM_CONT static U Reduce(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      U initialValue,
-      BinaryFunctor binary_functor);
+  template <typename T, typename U, class CIn, class BinaryFunctor>
+  VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                            U initialValue,
+                            BinaryFunctor binary_functor);
 
   /// \brief Compute a accumulated sum operation on the input key value pairs
   ///
@@ -200,16 +193,18 @@ struct DeviceAdapterAlgorithm
   /// values inside that range. Once finished a single key and value is created
   /// for each segment.
   ///
-  template<typename T, typename U,
-           class CKeyIn,  class CValIn,
-           class CKeyOut, class CValOut,
-           class BinaryFunctor >
-  VTKM_CONT static void ReduceByKey(
-      const vtkm::cont::ArrayHandle<T,CKeyIn> &keys,
-      const vtkm::cont::ArrayHandle<U,CValIn> &values,
-      vtkm::cont::ArrayHandle<T,CKeyOut>& keys_output,
-      vtkm::cont::ArrayHandle<T,CValOut>& values_output,
-      BinaryFunctor binary_functor);
+  template <typename T,
+            typename U,
+            class CKeyIn,
+            class CValIn,
+            class CKeyOut,
+            class CValOut,
+            class BinaryFunctor>
+  VTKM_CONT static void ReduceByKey(const vtkm::cont::ArrayHandle<T, CKeyIn>& keys,
+                                    const vtkm::cont::ArrayHandle<U, CValIn>& values,
+                                    vtkm::cont::ArrayHandle<T, CKeyOut>& keys_output,
+                                    vtkm::cont::ArrayHandle<T, CValOut>& values_output,
+                                    BinaryFunctor binary_functor);
 
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -223,10 +218,9 @@ struct DeviceAdapterAlgorithm
   ///
   /// \return The total sum.
   ///
-  template<typename T, class CIn, class COut>
-  VTKM_CONT static T ScanInclusive(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      vtkm::cont::ArrayHandle<T,COut>& output);
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                   vtkm::cont::ArrayHandle<T, COut>& output);
 
   /// \brief Streaming version of scan inclusive
   ///
@@ -234,11 +228,10 @@ struct DeviceAdapterAlgorithm
   ///
   /// \return The total sum.
   ///
-  template<typename T, class CIn, class COut>
-  VTKM_CONT static T StreamingScanInclusive(
-      const vtkm::Id numBlocks,
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      vtkm::cont::ArrayHandle<T,COut>& output);
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static T StreamingScanInclusive(const vtkm::Id numBlocks,
+                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                            vtkm::cont::ArrayHandle<T, COut>& output);
 
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -252,11 +245,10 @@ struct DeviceAdapterAlgorithm
   ///
   /// \return The total sum.
   ///
-  template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT static T ScanInclusive(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      vtkm::cont::ArrayHandle<T,COut>& output,
-      BinaryFunctor binary_functor);
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                   vtkm::cont::ArrayHandle<T, COut>& output,
+                                   BinaryFunctor binary_functor);
 
   /// \brief Compute a segmented inclusive prefix sum operation on the input key value pairs.
   ///
@@ -266,14 +258,16 @@ struct DeviceAdapterAlgorithm
   /// applied to all values inside that range. Once finished the result is
   /// stored in \c values_output ArrayHandle.
   ///
-  template<typename T, typename U,
-           typename KIn, typename VIn,
-           typename VOut, typename BinaryFunctor>
-  VTKM_CONT static void ScanInclusiveByKey(
-      const vtkm::cont::ArrayHandle<T, KIn> &keys,
-      const vtkm::cont::ArrayHandle<U, VIn> &values,
-      vtkm::cont::ArrayHandle<U, VOut> &values_output,
-      BinaryFunctor binary_functor);
+  template <typename T,
+            typename U,
+            typename KIn,
+            typename VIn,
+            typename VOut,
+            typename BinaryFunctor>
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                           vtkm::cont::ArrayHandle<U, VOut>& values_output,
+                                           BinaryFunctor binary_functor);
 
   /// \brief Compute a segmented inclusive prefix sum operation on the input key value pairs.
   ///
@@ -282,13 +276,10 @@ struct DeviceAdapterAlgorithm
   /// equal keys with the binary operation vtkm::Add applied to all values inside
   /// that range. Once finished the result is stored in \c values_output ArrayHandle.
   ///
-  template<typename T, typename U,
-           typename KIn, typename VIn,
-           typename VOut>
-  VTKM_CONT static void ScanInclusiveByKey(
-      const vtkm::cont::ArrayHandle<T, KIn> &keys,
-      const vtkm::cont::ArrayHandle<U, VIn> &values,
-      vtkm::cont::ArrayHandle<U, VOut> &values_output);
+  template <typename T, typename U, typename KIn, typename VIn, typename VOut>
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                           vtkm::cont::ArrayHandle<U, VOut>& values_output);
 
   /// \brief Streaming version of scan inclusive
   ///
@@ -296,12 +287,11 @@ struct DeviceAdapterAlgorithm
   ///
   /// \return The total sum.
   ///
-  template<typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT static T StreamingScanInclusive(
-      const vtkm::Id numBlocks,
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      vtkm::cont::ArrayHandle<T,COut>& output,
-      BinaryFunctor binary_functor);
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static T StreamingScanInclusive(const vtkm::Id numBlocks,
+                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                            vtkm::cont::ArrayHandle<T, COut>& output,
+                                            BinaryFunctor binary_functor);
 
   /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
@@ -315,10 +305,9 @@ struct DeviceAdapterAlgorithm
   ///
   /// \return The total sum.
   ///
-  template<typename T, class CIn, class COut>
-  VTKM_CONT static T ScanExclusive(
-      const vtkm::cont::ArrayHandle<T,CIn> &input,
-      vtkm::cont::ArrayHandle<T,COut>& output);
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                   vtkm::cont::ArrayHandle<T, COut>& output);
 
   /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
   ///
@@ -328,15 +317,12 @@ struct DeviceAdapterAlgorithm
   /// applied to all values inside that range. Once finished the result is
   /// stored in \c values_output ArrayHandle.
   ///
-  template<typename T, typename U,
-           typename KIn, typename VIn,
-           typename VOut, class BinaryFunctor>
-  VTKM_CONT static void ScanExclusiveByKey(
-    const vtkm::cont::ArrayHandle<T, KIn>& keys,
-    const vtkm::cont::ArrayHandle<U, VIn>& values,
-    vtkm::cont::ArrayHandle<U ,VOut>& output,
-    const U& initialValue,
-    BinaryFunctor binaryFunctor);
+  template <typename T, typename U, typename KIn, typename VIn, typename VOut, class BinaryFunctor>
+  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                           vtkm::cont::ArrayHandle<U, VOut>& output,
+                                           const U& initialValue,
+                                           BinaryFunctor binaryFunctor);
 
   /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
   ///
@@ -345,11 +331,10 @@ struct DeviceAdapterAlgorithm
   /// equal keys with the binary operation vtkm::Add applied to all values inside
   /// that range. Once finished the result is stored in \c values_output ArrayHandle.
   ///
-  template<typename T, typename U, class KIn, typename VIn, typename VOut>
-  VTKM_CONT static void ScanExclusiveByKey(
-    const vtkm::cont::ArrayHandle<T, KIn>& keys,
-    const vtkm::cont::ArrayHandle<U, VIn>& values,
-    vtkm::cont::ArrayHandle<U, VOut>& output);
+  template <typename T, typename U, class KIn, typename VIn, typename VOut>
+  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                           vtkm::cont::ArrayHandle<U, VOut>& output);
 
   /// \brief Schedule many instances of a function to run on concurrent threads.
   ///
@@ -368,9 +353,8 @@ struct DeviceAdapterAlgorithm
   /// instance of the invocation. There should be one invocation for each index
   /// in the range [0, \c numInstances].
   ///
-  template<class Functor>
-  VTKM_CONT static void Schedule(Functor functor,
-                                        vtkm::Id numInstances);
+  template <class Functor>
+  VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances);
 
   /// \brief Schedule many instances of a function to run on concurrent threads.
   ///
@@ -394,17 +378,16 @@ struct DeviceAdapterAlgorithm
   /// If 1D indices are used, this Schedule behaves as if <tt>Schedule(functor,
   /// rangeMax[0]*rangeMax[1]*rangeMax[2])</tt> were called.
   ///
-  template<class Functor, class IndiceType>
-  VTKM_CONT static void Schedule(Functor functor,
-                                        vtkm::Id3 rangeMax);
+  template <class Functor, class IndiceType>
+  VTKM_CONT static void Schedule(Functor functor, vtkm::Id3 rangeMax);
 
   /// \brief Unstable ascending sort of input array.
   ///
   /// Sorts the contents of \c values so that they in ascending value. Doesn't
   /// guarantee stability
   ///
-  template<typename T, class Storage>
-  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T,Storage> &values);
+  template <typename T, class Storage>
+  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values);
 
   /// \brief Unstable ascending sort of input array.
   ///
@@ -413,19 +396,18 @@ struct DeviceAdapterAlgorithm
   ///
   /// BinaryCompare should be a strict weak ordering comparison operator
   ///
-  template<typename T, class Storage, class BinaryCompare>
-  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T,Storage> &values,
-                                    BinaryCompare binary_compare);
+  template <typename T, class Storage, class BinaryCompare>
+  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
+                             BinaryCompare binary_compare);
 
   /// \brief Unstable ascending sort of keys and values.
   ///
   /// Sorts the contents of \c keys and \c values so that they in ascending value based
   /// on the values of keys.
   ///
-  template<typename T, typename U, class StorageT,  class StorageU>
-  VTKM_CONT static void SortByKey(
-      vtkm::cont::ArrayHandle<T,StorageT> &keys,
-      vtkm::cont::ArrayHandle<U,StorageU> &values);
+  template <typename T, typename U, class StorageT, class StorageU>
+  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                  vtkm::cont::ArrayHandle<U, StorageU>& values);
 
   /// \brief Unstable ascending sort of keys and values.
   ///
@@ -434,17 +416,16 @@ struct DeviceAdapterAlgorithm
   ///
   /// BinaryCompare should be a strict weak ordering comparison operator
   ///
-  template<typename T, typename U, class StorageT,  class StorageU, class BinaryCompare>
-  VTKM_CONT static void SortByKey(
-      vtkm::cont::ArrayHandle<T,StorageT> &keys,
-      vtkm::cont::ArrayHandle<U,StorageU> &values,
-      BinaryCompare binary_compare)
+  template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
+  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                  vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                  BinaryCompare binary_compare)
 
-  /// \brief Completes any asynchronous operations running on the device.
-  ///
-  /// Waits for any asynchronous operations running on the device to complete.
-  ///
-  VTKM_CONT static void Synchronize();
+    /// \brief Completes any asynchronous operations running on the device.
+    ///
+    /// Waits for any asynchronous operations running on the device to complete.
+    ///
+    VTKM_CONT static void Synchronize();
 
   /// \brief Reduce an array to only the unique values it contains
   ///
@@ -453,9 +434,8 @@ struct DeviceAdapterAlgorithm
   /// duplicate values that aren't adjacent. Note the values array size might
   /// be modified by this operation.
   ///
-  template<typename T, class Storage>
-  VTKM_CONT static void Unique(
-      vtkm::cont::ArrayHandle<T,Storage>& values);
+  template <typename T, class Storage>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values);
 
   /// \brief Reduce an array to only the unique values it contains
   ///
@@ -467,10 +447,9 @@ struct DeviceAdapterAlgorithm
   /// Uses the custom binary predicate Comparison to determine if something
   /// is unique. The predicate must return true if the two items are the same.
   ///
-  template<typename T, class Storage, class BinaryCompare>
-  VTKM_CONT static void Unique(
-      vtkm::cont::ArrayHandle<T,Storage>& values,
-      BinaryCompare binary_compare);
+  template <typename T, class Storage, class BinaryCompare>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
+                               BinaryCompare binary_compare);
 
   /// \brief Output is the last index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -481,11 +460,10 @@ struct DeviceAdapterAlgorithm
   /// \par Requirements:
   /// \arg \c input must already be sorted
   ///
-  template<typename T, class CIn, class CVal, class COut>
-  VTKM_CONT static void UpperBounds(
-      const vtkm::cont::ArrayHandle<T,CIn>& input,
-      const vtkm::cont::ArrayHandle<T,CVal>& values,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut>& output);
+  template <typename T, class CIn, class CVal, class COut>
+  VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                    const vtkm::cont::ArrayHandle<T, CVal>& values,
+                                    vtkm::cont::ArrayHandle<vtkm::Id, COut>& output);
 
   /// \brief Output is the last index in input for each item in values that wouldn't alter the ordering of input
   ///
@@ -497,12 +475,11 @@ struct DeviceAdapterAlgorithm
   /// \par Requirements:
   /// \arg \c input must already be sorted
   ///
-  template<typename T, class CIn, class CVal, class COut, class BinaryCompare>
-  VTKM_CONT static void UpperBounds(
-      const vtkm::cont::ArrayHandle<T,CIn>& input,
-      const vtkm::cont::ArrayHandle<T,CVal>& values,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut>& output,
-      BinaryCompare binary_compare);
+  template <typename T, class CIn, class CVal, class COut, class BinaryCompare>
+  VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                    const vtkm::cont::ArrayHandle<T, CVal>& values,
+                                    vtkm::cont::ArrayHandle<vtkm::Id, COut>& output,
+                                    BinaryCompare binary_compare);
 
   /// \brief A special version of UpperBounds that does an in place operation.
   ///
@@ -511,13 +488,12 @@ struct DeviceAdapterAlgorithm
   /// \c input where it occurs. Because this is an in place operation, the type
   /// of the arrays is limited to vtkm::Id.
   ///
-  template<class CIn, class COut>
-  VTKM_CONT static void UpperBounds(
-      const vtkm::cont::ArrayHandle<vtkm::Id,CIn>& input,
-      vtkm::cont::ArrayHandle<vtkm::Id,COut>& values_output);
+  template <class CIn, class COut>
+  VTKM_CONT static void UpperBounds(const vtkm::cont::ArrayHandle<vtkm::Id, CIn>& input,
+                                    vtkm::cont::ArrayHandle<vtkm::Id, COut>& values_output);
 };
-#else // VTKM_DOXYGEN_ONLY
-    ;
+#else  // VTKM_DOXYGEN_ONLY
+  ;
 #endif //VTKM_DOXYGEN_ONLY
 
 /// \brief Class providing a device-specific timer.
@@ -527,26 +503,20 @@ struct DeviceAdapterAlgorithm
 /// one (in conjunction with DeviceAdapterAlgorithm) where appropriate.  The
 /// interface for this class is exactly the same as vtkm::cont::Timer.
 ///
-template<class DeviceAdapterTag>
+template <class DeviceAdapterTag>
 class DeviceAdapterTimerImplementation
 {
 public:
   /// When a timer is constructed, all threads are synchronized and the
   /// current time is marked so that GetElapsedTime returns the number of
   /// seconds elapsed since the construction.
-  VTKM_CONT DeviceAdapterTimerImplementation()
-  {
-    this->Reset();
-  }
+  VTKM_CONT DeviceAdapterTimerImplementation() { this->Reset(); }
 
   /// Resets the timer. All further calls to GetElapsedTime will report the
   /// number of seconds elapsed since the call to this. This method
   /// synchronizes all asynchronous operations.
   ///
-  VTKM_CONT void Reset()
-  {
-    this->StartTime = this->GetCurrentTime();
-  }
+  VTKM_CONT void Reset() { this->StartTime = this->GetCurrentTime(); }
 
   /// Returns the elapsed time in seconds between the construction of this
   /// class or the last call to Reset and the time this function is called. The
@@ -560,9 +530,8 @@ public:
 
     vtkm::Float64 elapsedTime;
     elapsedTime = vtkm::Float64(currentTime.Seconds - this->StartTime.Seconds);
-    elapsedTime +=
-      (vtkm::Float64(currentTime.Microseconds - this->StartTime.Microseconds)
-       /vtkm::Float64(1000000));
+    elapsedTime += (vtkm::Float64(currentTime.Microseconds - this->StartTime.Microseconds) /
+                    vtkm::Float64(1000000));
 
     return elapsedTime;
   }
@@ -575,15 +544,14 @@ public:
 
   VTKM_CONT TimeStamp GetCurrentTime()
   {
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>
-        ::Synchronize();
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Synchronize();
 
     TimeStamp retval;
 #ifdef _WIN32
     timeb currentTime;
     ::ftime(&currentTime);
     retval.Seconds = currentTime.time;
-    retval.Microseconds = 1000*currentTime.millitm;
+    retval.Microseconds = 1000 * currentTime.millitm;
 #else
     timeval currentTime;
     gettimeofday(&currentTime, nullptr);
@@ -603,11 +571,10 @@ public:
 /// physical hardware or other special runtime requirements should provide
 /// one (in conjunction with DeviceAdapterAlgorithm) where appropriate.
 ///
-template<class DeviceAdapterTag>
+template <class DeviceAdapterTag>
 class DeviceAdapterRuntimeDetector
 {
 public:
-
   /// Returns true if the given device adapter is supported on the current
   /// machine.
   ///
@@ -626,9 +593,24 @@ public:
 /// The class provide the actual implementation used by
 /// vtkm::cont::DeviceAdapterAtomicArrayImplementation.
 ///
-template<typename T, typename DeviceTag>
+template <typename T, typename DeviceTag>
 class DeviceAdapterAtomicArrayImplementation;
 
+/// \brief Class providing a device-specific support for selecting the optimal
+/// Task type for a given worklet.
+///
+/// When worklets are launched inside the execution enviornment we need to
+/// ask the device adapter what is the preferred execution style, be it
+/// a tiled iteration pattern, or strided. This class
+///
+/// By default if not specialized for a device adapter the default
+/// is to use vtkm::exec::internal::TaskSingular
+///
+/// The class provide the actual implementation used by
+/// vtkm::cont::DeviceTaskTypes.
+///
+template <typename DeviceTag>
+class DeviceTaskTypes;
 }
 } // namespace vtkm::cont
 

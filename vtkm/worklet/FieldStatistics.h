@@ -31,15 +31,16 @@
 
 #include <stdio.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 //simple functor that prints basic statistics
-template<typename FieldType, typename DeviceAdapter>
+template <typename FieldType, typename DeviceAdapter>
 class FieldStatistics
 {
 public:
-
   // For moments readability
   static const vtkm::Id FIRST = 0;
   static const vtkm::Id SECOND = 1;
@@ -69,20 +70,23 @@ public:
                                   FieldOut<> pow2Array,
                                   FieldOut<> pow3Array,
                                   FieldOut<> pow4Array);
-    typedef void ExecutionSignature(_1,_2,_3,_4,_5);
+    typedef void ExecutionSignature(_1, _2, _3, _4, _5);
     typedef _1 InputDomain;
 
     vtkm::Id numPowers;
 
     VTKM_CONT
-    CalculatePowers(vtkm::Id num) : numPowers(num) {}
+    CalculatePowers(vtkm::Id num)
+      : numPowers(num)
+    {
+    }
 
     VTKM_EXEC
     void operator()(const FieldType& value,
-                    FieldType &pow1,
-                    FieldType &pow2,
-                    FieldType &pow3,
-                    FieldType &pow4) const
+                    FieldType& pow1,
+                    FieldType& pow2,
+                    FieldType& pow3,
+                    FieldType& pow4) const
     {
       pow1 = value;
       pow2 = pow1 * value;
@@ -94,29 +98,27 @@ public:
   class SubtractConst : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> value,
-                                  FieldOut<> diff);
+    typedef void ControlSignature(FieldIn<> value, FieldOut<> diff);
     typedef _2 ExecutionSignature(_1);
     typedef _1 InputDomain;
 
     FieldType constant;
 
     VTKM_CONT
-    SubtractConst(const FieldType& constant0) : constant(constant0) {}
+    SubtractConst(const FieldType& constant0)
+      : constant(constant0)
+    {
+    }
 
     VTKM_EXEC
-    FieldType operator()(const FieldType& value) const
-    {
-      return(value - constant);
-    }
+    FieldType operator()(const FieldType& value) const { return (value - constant); }
   };
 
-  template<typename Storage>
-  void Run(vtkm::cont::ArrayHandle<FieldType,Storage> fieldArray,
-           StatInfo& statinfo)
+  template <typename Storage>
+  void Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray, StatInfo& statinfo)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
-    typedef typename vtkm::cont::ArrayHandle<FieldType,Storage>::PortalConstControl FieldPortal;
+    typedef typename vtkm::cont::ArrayHandle<FieldType, Storage>::PortalConstControl FieldPortal;
 
     // Copy original data to array for sorting
     vtkm::cont::ArrayHandle<FieldType> tempArray;
@@ -131,9 +133,9 @@ public:
     statinfo.median = tempPortal.Get(dataSize / 2);
 
     // Minimum and maximum
-    const vtkm::Vec<FieldType,2> initValue(tempPortal.Get(0));
-    vtkm::Vec<FieldType,2> result =
-          DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
+    const vtkm::Vec<FieldType, 2> initValue(tempPortal.Get(0));
+    vtkm::Vec<FieldType, 2> result =
+      DeviceAlgorithms::Reduce(fieldArray, initValue, vtkm::MinAndMax<FieldType>());
     statinfo.minimum = result[0];
     statinfo.maximum = result[1];
 
@@ -150,8 +152,8 @@ public:
     pow4Array.Allocate(dataSize);
 
     // Raw moments via Worklet
-    vtkm::worklet::DispatcherMapField<CalculatePowers>
-            calculatePowersDispatcher(CalculatePowers(4));
+    vtkm::worklet::DispatcherMapField<CalculatePowers> calculatePowersDispatcher(
+      CalculatePowers(4));
     calculatePowersDispatcher.Invoke(fieldArray, pow1Array, pow2Array, pow3Array, pow4Array);
 
     // Accumulate the results using ScanInclusive
@@ -161,27 +163,32 @@ public:
     statinfo.rawMoment[FOURTH] = DeviceAlgorithms::ScanInclusive(pow4Array, pow4Array) / numValues;
 
     // Subtract the mean from every value and leave in tempArray
-    vtkm::worklet::DispatcherMapField<SubtractConst>
-            subtractConstDispatcher(SubtractConst(statinfo.mean));
+    vtkm::worklet::DispatcherMapField<SubtractConst> subtractConstDispatcher(
+      SubtractConst(statinfo.mean));
     subtractConstDispatcher.Invoke(fieldArray, tempArray);
 
     // Calculate sums of powers on the (value - mean) array
     calculatePowersDispatcher.Invoke(tempArray, pow1Array, pow2Array, pow3Array, pow4Array);
 
     // Accumulate the results using ScanInclusive
-    statinfo.centralMoment[FIRST] = DeviceAlgorithms::ScanInclusive(pow1Array, pow1Array) / numValues;
-    statinfo.centralMoment[SECOND] = DeviceAlgorithms::ScanInclusive(pow2Array, pow2Array) / numValues;
-    statinfo.centralMoment[THIRD] = DeviceAlgorithms::ScanInclusive(pow3Array, pow3Array) / numValues;
-    statinfo.centralMoment[FOURTH] = DeviceAlgorithms::ScanInclusive(pow4Array, pow4Array) / numValues;
+    statinfo.centralMoment[FIRST] =
+      DeviceAlgorithms::ScanInclusive(pow1Array, pow1Array) / numValues;
+    statinfo.centralMoment[SECOND] =
+      DeviceAlgorithms::ScanInclusive(pow2Array, pow2Array) / numValues;
+    statinfo.centralMoment[THIRD] =
+      DeviceAlgorithms::ScanInclusive(pow3Array, pow3Array) / numValues;
+    statinfo.centralMoment[FOURTH] =
+      DeviceAlgorithms::ScanInclusive(pow4Array, pow4Array) / numValues;
 
     // Statistics from the moments
     statinfo.variance = statinfo.centralMoment[SECOND];
     statinfo.stddev = Sqrt(statinfo.variance);
-    statinfo.skewness = statinfo.centralMoment[THIRD] / Pow(statinfo.stddev, static_cast<FieldType>(3.0));
-    statinfo.kurtosis = statinfo.centralMoment[FOURTH] / Pow(statinfo.stddev, static_cast<FieldType>(4.0));
+    statinfo.skewness =
+      statinfo.centralMoment[THIRD] / Pow(statinfo.stddev, static_cast<FieldType>(3.0));
+    statinfo.kurtosis =
+      statinfo.centralMoment[FOURTH] / Pow(statinfo.stddev, static_cast<FieldType>(4.0));
   }
 };
-
 }
 } // namespace vtkm::worklet
 

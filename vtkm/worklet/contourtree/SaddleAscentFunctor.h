@@ -84,21 +84,25 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
 class SaddleAscentFunctor : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexID,             // (input) index into active vertices
-                                WholeArrayIn<IdType> firstEdge,       // (input) first edge for each active vertex
-                                WholeArrayIn<IdType> outdegree,       // (input) updegree of vertex
-                                WholeArrayIn<IdType> activeEdges,     // (input) active edges
-                                WholeArrayIn<IdType> chainExtemum,    // (input) chain extemum for vertices
-                                WholeArrayInOut<IdType> edgeFar,      // (input) high ends of edges
-                                FieldOut<IdType> newOutdegree);       // (output) new updegree of vertex
+  typedef void ControlSignature(
+    FieldIn<IdType> vertexID,          // (input) index into active vertices
+    WholeArrayIn<IdType> firstEdge,    // (input) first edge for each active vertex
+    WholeArrayIn<IdType> outdegree,    // (input) updegree of vertex
+    WholeArrayIn<IdType> activeEdges,  // (input) active edges
+    WholeArrayIn<IdType> chainExtemum, // (input) chain extemum for vertices
+    WholeArrayInOut<IdType> edgeFar,   // (input) high ends of edges
+    FieldOut<IdType> newOutdegree);    // (output) new updegree of vertex
   typedef _7 ExecutionSignature(_1, _2, _3, _4, _5, _6);
   typedef _1 InputDomain;
 
@@ -107,13 +111,12 @@ public:
   SaddleAscentFunctor() {}
 
   template <typename InFieldPortalType, typename InOutFieldPortalType>
-  VTKM_EXEC
-  vtkm::Id operator()(const vtkm::Id& vertexID,
-                      const InFieldPortalType& firstEdge,
-                      const InFieldPortalType& outdegree,
-                      const InFieldPortalType& activeEdges,
-                      const InFieldPortalType& chainExtremum,
-                      const InOutFieldPortalType& edgeFar) const
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID,
+                                const InFieldPortalType& firstEdge,
+                                const InFieldPortalType& outdegree,
+                                const InFieldPortalType& activeEdges,
+                                const InFieldPortalType& chainExtremum,
+                                const InOutFieldPortalType& edgeFar) const
   {
     vtkm::Id newOutdegree;
 
@@ -134,10 +137,10 @@ public:
         firstMax = nbrHigh;
       else // otherwise, check for whether we have an actual join saddle
         if (firstMax != nbrHigh)
-          { // first non-matching
-            isGenuineSaddle = true;
-          } // first non-matching
-    } // per edge
+      { // first non-matching
+        isGenuineSaddle = true;
+      } // first non-matching
+    }   // per edge
 
     // if it's not a genuine saddle, ignore the edges by setting updegree to 0
     if (!isGenuineSaddle)
@@ -147,7 +150,6 @@ public:
     return newOutdegree;
   }
 }; // SaddleAscentFunctor
-
 }
 }
 }

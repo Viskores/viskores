@@ -24,13 +24,14 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
 static vtkm::Id g_NumSets;
 
-template<typename T>
+template <typename T>
 struct TestPortal
 {
   typedef T ValueType;
@@ -39,24 +40,25 @@ struct TestPortal
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
   VTKM_EXEC_CONT
-  ValueType Get(vtkm::Id index) const {
+  ValueType Get(vtkm::Id index) const
+  {
     VTKM_TEST_ASSERT(index >= 0, "Bad portal index.");
     VTKM_TEST_ASSERT(index < this->GetNumberOfValues(), "Bad portal index.");
     return TestValue(index, ValueType());
   }
 
   VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType &value) const {
+  void Set(vtkm::Id index, const ValueType& value) const
+  {
     VTKM_TEST_ASSERT(index >= 0, "Bad portal index.");
     VTKM_TEST_ASSERT(index < this->GetNumberOfValues(), "Bad portal index.");
-    VTKM_TEST_ASSERT(
-          test_equal(value, ValueType(2)*TestValue(index, ValueType())),
-          "Tried to set invalid value.");
+    VTKM_TEST_ASSERT(test_equal(value, ValueType(2) * TestValue(index, ValueType())),
+                     "Tried to set invalid value.");
     g_NumSets++;
   }
 };
 
-template<typename T>
+template <typename T>
 struct FetchArrayDirectInTests
 {
 
@@ -64,11 +66,11 @@ struct FetchArrayDirectInTests
   {
     TestPortal<T> execObject;
 
-    typedef vtkm::exec::arg::Fetch<
-        vtkm::exec::arg::FetchTagArrayDirectInOut,
-        vtkm::exec::arg::AspectTagDefault,
-        vtkm::exec::arg::ThreadIndicesTesting,
-        TestPortal<T> > FetchType;
+    typedef vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayDirectInOut,
+                                   vtkm::exec::arg::AspectTagDefault,
+                                   vtkm::exec::arg::ThreadIndicesTesting,
+                                   TestPortal<T>>
+      FetchType;
 
     FetchType fetch;
 
@@ -79,10 +81,9 @@ struct FetchArrayDirectInTests
       vtkm::exec::arg::ThreadIndicesTesting indices(index);
 
       T value = fetch.Load(indices, execObject);
-      VTKM_TEST_ASSERT(test_equal(value, TestValue(index, T())),
-                       "Got invalid value from Load.");
+      VTKM_TEST_ASSERT(test_equal(value, TestValue(index, T())), "Got invalid value from Load.");
 
-      value = T(T(2)*value);
+      value = T(T(2) * value);
 
       fetch.Store(indices, execObject, value);
     }
@@ -91,12 +92,11 @@ struct FetchArrayDirectInTests
                      "Array portal's set not called correct number of times."
                      "Store method must be wrong.");
   }
-
 };
 
 struct TryType
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     FetchArrayDirectInTests<T>()();
@@ -110,7 +110,7 @@ void TestExecObjectFetch()
 
 } // anonymous namespace
 
-int UnitTestFetchArrayDirectInOut(int, char *[])
+int UnitTestFetchArrayDirectInOut(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestExecObjectFetch);
 }

@@ -27,8 +27,7 @@
 
 #include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestSerialComputeRange(int, char *[])
+int UnitTestSerialComputeRange(int, char* [])
 {
-  return vtkm::cont::testing::TestingComputeRange
-      <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingComputeRange<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

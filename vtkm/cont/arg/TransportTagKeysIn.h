@@ -22,9 +22,12 @@
 
 #include <vtkm/cont/arg/Transport.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief \c Transport tag for keys in a reduce by key.
 ///
@@ -32,12 +35,13 @@ namespace arg {
 /// transport vtkm::worklet::Keys objects for the input domain of a
 /// reduce by keys worklet.
 ///
-struct TransportTagKeysIn {  };
+struct TransportTagKeysIn
+{
+};
 
 // Specialization of Transport class for TransportTagKeysIn is implemented in
 // vtkm/worklet/Keys.h. That class is not accessible from here due to VTK-m
 // package dependencies.
-
 }
 }
 } // namespace vtkm::cont::arg

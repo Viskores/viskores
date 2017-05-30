@@ -27,38 +27,37 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 struct TryArraysOfType
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     using vtkm::cont::arg::TypeCheck;
-    typedef vtkm::cont::arg::TypeCheckTagArray<vtkm::TypeListTagAll>
-        TypeCheckTagArray;
+    typedef vtkm::cont::arg::TypeCheckTagArray<vtkm::TypeListTagAll> TypeCheckTagArray;
 
     typedef vtkm::cont::ArrayHandle<T> StandardArray;
-    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray,StandardArray>::value),
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray, StandardArray>::value),
                      "Standard array type check failed.");
 
     typedef vtkm::cont::ArrayHandleCounting<T> CountingArray;
-    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray,CountingArray>::value),
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray, CountingArray>::value),
                      "Counting array type check failed.");
 
-    typedef typename vtkm::cont::ArrayHandleCompositeVectorType<
-        StandardArray,CountingArray>::type CompositeArray;
-    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray,CompositeArray>::value),
+    typedef typename vtkm::cont::ArrayHandleCompositeVectorType<StandardArray, CountingArray>::type
+      CompositeArray;
+    VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray, CompositeArray>::value),
                      "Composite array type check failed.");
 
     // Just some type that is not a valid array.
     typedef typename StandardArray::PortalControl NotAnArray;
-    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray,NotAnArray>::value),
+    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray, NotAnArray>::value),
                      "Not an array type check failed.");
 
     // Another type that is not a valid array.
-    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray,T>::value),
-                     "Not an array type check failed.");
+    VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray, T>::value), "Not an array type check failed.");
   }
 };
 
@@ -77,57 +76,49 @@ void TestCheckAtomicArray()
                    "Check for 32-bit int failed.");
   VTKM_TEST_ASSERT((TypeCheck<DefaultTypeCheck, Int64Array>::value),
                    "Check for 64-bit int failed.");
-  VTKM_TEST_ASSERT(!(TypeCheck<DefaultTypeCheck, FloatArray>::value),
-                   "Check for float failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<DefaultTypeCheck, FloatArray>::value), "Check for float failed.");
 
   typedef TypeCheckTagAtomicArray<vtkm::TypeListTagAll> ExpandedTypeCheck;
   VTKM_TEST_ASSERT((TypeCheck<ExpandedTypeCheck, Int32Array>::value),
                    "Check for 32-bit int failed.");
   VTKM_TEST_ASSERT((TypeCheck<ExpandedTypeCheck, Int64Array>::value),
                    "Check for 64-bit int failed.");
-  VTKM_TEST_ASSERT(!(TypeCheck<ExpandedTypeCheck, FloatArray>::value),
-                   "Check for float failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<ExpandedTypeCheck, FloatArray>::value), "Check for float failed.");
 
-  typedef TypeCheckTagAtomicArray<vtkm::ListTagBase<vtkm::Int32> > RestrictedTypeCheck;
+  typedef TypeCheckTagAtomicArray<vtkm::ListTagBase<vtkm::Int32>> RestrictedTypeCheck;
   VTKM_TEST_ASSERT((TypeCheck<RestrictedTypeCheck, Int32Array>::value),
                    "Check for 32-bit int failed.");
   VTKM_TEST_ASSERT(!(TypeCheck<RestrictedTypeCheck, Int64Array>::value),
                    "Check for 64-bit int failed.");
-  VTKM_TEST_ASSERT(!(TypeCheck<RestrictedTypeCheck, FloatArray>::value),
-                   "Check for float failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<RestrictedTypeCheck, FloatArray>::value), "Check for float failed.");
 }
 
 void TestCheckArray()
 {
   vtkm::testing::Testing::TryTypes(TryArraysOfType());
 
-  std::cout << "Trying some arrays with types that do not match the list."
-            << std::endl;
+  std::cout << "Trying some arrays with types that do not match the list." << std::endl;
   using vtkm::cont::arg::TypeCheck;
   using vtkm::cont::arg::TypeCheckTagArray;
 
   typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> ScalarArray;
-  VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldScalar>,ScalarArray>::value),
-        "Scalar for scalar check failed.");
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldVec3>,ScalarArray>::value),
-        "Scalar for vector check failed.");
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldScalar>, ScalarArray>::value),
+                   "Scalar for scalar check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldVec3>, ScalarArray>::value),
+                   "Scalar for vector check failed.");
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault,3> > VecArray;
-  VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldVec3>,VecArray>::value),
-        "Vector for vector check failed.");
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldScalar>,VecArray>::value),
-        "Vector for scalar check failed.");
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> VecArray;
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldVec3>, VecArray>::value),
+                   "Vector for vector check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagArray<vtkm::TypeListTagFieldScalar>, VecArray>::value),
+                   "Vector for scalar check failed.");
 
   TestCheckAtomicArray();
 }
 
 } // anonymous namespace
 
-int UnitTestTypeCheckArray(int, char *[])
+int UnitTestTypeCheckArray(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestCheckArray);
 }

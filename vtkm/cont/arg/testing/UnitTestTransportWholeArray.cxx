@@ -31,13 +31,14 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
 #define OFFSET 10
 
-template<typename PortalType>
+template <typename PortalType>
 struct TestOutKernel : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
@@ -54,7 +55,7 @@ struct TestOutKernel : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename PortalType>
+template <typename PortalType>
 struct TestInKernel : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
@@ -74,7 +75,7 @@ struct TestInKernel : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename PortalType>
+template <typename PortalType>
 struct TestInOutKernel : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
@@ -91,12 +92,14 @@ struct TestInOutKernel : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename AtomicType>
+template <typename AtomicType>
 struct TestAtomicKernel : public vtkm::exec::FunctorBase
 {
   VTKM_CONT
-  TestAtomicKernel(const AtomicType &atomicArray)
-    : AtomicArray(atomicArray) {  }
+  TestAtomicKernel(const AtomicType& atomicArray)
+    : AtomicArray(atomicArray)
+  {
+  }
 
   AtomicType AtomicArray;
 
@@ -108,23 +111,26 @@ struct TestAtomicKernel : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename Device>
+template <typename Device>
 struct TryWholeArrayType
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     typedef vtkm::cont::ArrayHandle<T> ArrayHandleType;
 
-    typedef vtkm::cont::arg::Transport<
-        vtkm::cont::arg::TransportTagWholeArrayIn, ArrayHandleType, Device>
-        InTransportType;
-    typedef vtkm::cont::arg::Transport<
-        vtkm::cont::arg::TransportTagWholeArrayInOut, ArrayHandleType, Device>
-        InOutTransportType;
-    typedef vtkm::cont::arg::Transport<
-        vtkm::cont::arg::TransportTagWholeArrayOut, ArrayHandleType, Device>
-        OutTransportType;
+    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayIn,
+                                       ArrayHandleType,
+                                       Device>
+      InTransportType;
+    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayInOut,
+                                       ArrayHandleType,
+                                       Device>
+      InOutTransportType;
+    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayOut,
+                                       ArrayHandleType,
+                                       Device>
+      OutTransportType;
 
     ArrayHandleType array;
     array.Allocate(ARRAY_SIZE);
@@ -149,8 +155,7 @@ struct TryWholeArrayType
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(inOutKernel, ARRAY_SIZE);
 
-    VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE,
-                     "Array size wrong?");
+    VTKM_TEST_ASSERT(array.GetNumberOfValues() == ARRAY_SIZE, "Array size wrong?");
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
     {
       T expectedValue = TestValue(index, T()) + T(OFFSET);
@@ -161,40 +166,39 @@ struct TryWholeArrayType
   }
 };
 
-template<typename Device>
+template <typename Device>
 struct TryAtomicArrayType
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
-    typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
-        ArrayHandleType;
+    typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> ArrayHandleType;
 
-    typedef vtkm::cont::arg::Transport<
-        vtkm::cont::arg::TransportTagAtomicArray, ArrayHandleType, Device>
-        TransportType;
+    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagAtomicArray,
+                                       ArrayHandleType,
+                                       Device>
+      TransportType;
 
     ArrayHandleType array;
     array.Allocate(1);
     array.GetPortalControl().Set(0, 0);
 
     std::cout << "Check Transport AtomicArray" << std::endl;
-    TestAtomicKernel<typename TransportType::ExecObjectType>
-        kernel(TransportType()(array, nullptr, -1, -1));
+    TestAtomicKernel<typename TransportType::ExecObjectType> kernel(
+      TransportType()(array, nullptr, -1, -1));
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
 
     T result = array.GetPortalConstControl().Get(0);
-    VTKM_TEST_ASSERT(result == ((ARRAY_SIZE-1)*ARRAY_SIZE)/2,
+    VTKM_TEST_ASSERT(result == ((ARRAY_SIZE - 1) * ARRAY_SIZE) / 2,
                      "Got wrong summation in atomic array.");
   }
 };
 
-template<typename Device>
+template <typename Device>
 void TryArrayOutTransport(Device)
 {
-  vtkm::testing::Testing::TryTypes(TryWholeArrayType<Device>(),
-                                   vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(TryWholeArrayType<Device>(), vtkm::TypeListTagCommon());
   vtkm::testing::Testing::TryTypes(TryAtomicArrayType<Device>(),
                                    vtkm::exec::AtomicArrayTypeListTag());
 }
@@ -207,7 +211,7 @@ void TestWholeArrayTransport()
 
 } // Anonymous namespace
 
-int UnitTestTransportWholeArray(int, char *[])
+int UnitTestTransportWholeArray(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestWholeArrayTransport);
 }

@@ -31,13 +31,17 @@
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/Field.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 class Threshold
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool> { };
+  struct BoolType : vtkm::ListTagBase<bool>
+  {
+  };
 
   template <typename UnaryPredicate>
   class ThresholdByPointField : public vtkm::worklet::WorkletMapPointToCell
@@ -50,16 +54,19 @@ public:
     typedef _3 ExecutionSignature(_2, PointCount);
 
     VTKM_CONT
-    ThresholdByPointField() : Predicate() { }
+    ThresholdByPointField()
+      : Predicate()
+    {
+    }
 
     VTKM_CONT
-    explicit ThresholdByPointField(const UnaryPredicate &predicate)
+    explicit ThresholdByPointField(const UnaryPredicate& predicate)
       : Predicate(predicate)
-    { }
+    {
+    }
 
-    template<typename ScalarsVecType>
-    VTKM_EXEC
-    bool operator()(const ScalarsVecType &scalars, vtkm::Id count) const
+    template <typename ScalarsVecType>
+    VTKM_EXEC bool operator()(const ScalarsVecType& scalars, vtkm::Id count) const
     {
       bool pass = false;
       for (vtkm::IdComponent i = 0; i < count; ++i)
@@ -84,16 +91,19 @@ public:
     typedef _3 ExecutionSignature(_2);
 
     VTKM_CONT
-    ThresholdByCellField() : Predicate() { }
+    ThresholdByCellField()
+      : Predicate()
+    {
+    }
 
     VTKM_CONT
-    explicit ThresholdByCellField(const UnaryPredicate &predicate)
+    explicit ThresholdByCellField(const UnaryPredicate& predicate)
       : Predicate(predicate)
-    { }
+    {
+    }
 
-    template<typename ScalarType>
-    VTKM_EXEC
-    bool operator()(const ScalarType &scalar) const
+    template <typename ScalarType>
+    VTKM_EXEC bool operator()(const ScalarType& scalar) const
     {
       return this->Predicate(scalar);
     }
@@ -103,46 +113,45 @@ public:
   };
 
   template <typename CellSetType, typename UnaryPredicate, typename DeviceAdapter>
-  vtkm::cont::CellSetPermutation< CellSetType >
-  Run(const CellSetType &cellSet,
-      const vtkm::cont::Field &field,
-      const UnaryPredicate &predicate,
-      DeviceAdapter device)
+  vtkm::cont::CellSetPermutation<CellSetType> Run(const CellSetType& cellSet,
+                                                  const vtkm::cont::Field& field,
+                                                  const UnaryPredicate& predicate,
+                                                  DeviceAdapter device)
   {
-    (void) device;
-    typedef vtkm::cont::CellSetPermutation< CellSetType > OutputType;
+    (void)device;
+    typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
 
     vtkm::cont::ArrayHandle<bool> passFlags;
-    switch(field.GetAssociation())
+    switch (field.GetAssociation())
     {
-    case vtkm::cont::Field::ASSOC_POINTS:
+      case vtkm::cont::Field::ASSOC_POINTS:
       {
-      typedef ThresholdByPointField<UnaryPredicate> ThresholdWorklet;
+        typedef ThresholdByPointField<UnaryPredicate> ThresholdWorklet;
 
-      ThresholdWorklet worklet(predicate);
-      DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-      dispatcher.Invoke(cellSet, field, passFlags);
-      break;
+        ThresholdWorklet worklet(predicate);
+        DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
+        dispatcher.Invoke(cellSet, field, passFlags);
+        break;
       }
 
-    case vtkm::cont::Field::ASSOC_CELL_SET:
+      case vtkm::cont::Field::ASSOC_CELL_SET:
       {
-      typedef ThresholdByCellField<UnaryPredicate> ThresholdWorklet;
+        typedef ThresholdByCellField<UnaryPredicate> ThresholdWorklet;
 
-      ThresholdWorklet worklet(predicate);
-      DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-      dispatcher.Invoke(cellSet, field, passFlags);
-      break;
+        ThresholdWorklet worklet(predicate);
+        DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
+        dispatcher.Invoke(cellSet, field, passFlags);
+        break;
       }
 
-    default:
-      throw vtkm::cont::ErrorBadValue("Expecting point or cell field.");
+      default:
+        throw vtkm::cont::ErrorBadValue("Expecting point or cell field.");
     }
 
     vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
       vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>
-        ::CopyIf(indices, passFlags, this->ValidCellIds);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::CopyIf(
+      indices, passFlags, this->ValidCellIds);
 
     return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
   }
@@ -151,12 +160,14 @@ public:
   {
   public:
     PermuteCellData(const vtkm::cont::ArrayHandle<vtkm::Id> validCellIds,
-                    vtkm::cont::DynamicArrayHandle &data)
-      : ValidCellIds(validCellIds), Data(&data)
-    { }
+                    vtkm::cont::DynamicArrayHandle& data)
+      : ValidCellIds(validCellIds)
+      , Data(&data)
+    {
+    }
 
     template <typename ArrayHandleType>
-    void operator()(const ArrayHandleType &input) const
+    void operator()(const ArrayHandleType& input) const
     {
       *(this->Data) = vtkm::cont::DynamicArrayHandle(
         vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input));
@@ -164,7 +175,7 @@ public:
 
   private:
     vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
-    vtkm::cont::DynamicArrayHandle *Data;
+    vtkm::cont::DynamicArrayHandle* Data;
   };
 
   vtkm::cont::Field ProcessCellField(const vtkm::cont::Field field) const
@@ -177,14 +188,13 @@ public:
     vtkm::cont::DynamicArrayHandle data;
     CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
 
-    return vtkm::cont::Field(field.GetName(), field.GetAssociation(),
-                             field.GetAssocCellSet(), data);
+    return vtkm::cont::Field(
+      field.GetName(), field.GetAssociation(), field.GetAssocCellSet(), data);
   }
 
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
 };
-
 }
 } // namespace vtkm::worklet
 

@@ -32,45 +32,46 @@
 #include <algorithm>
 #include <vector>
 
-namespace vtkm {
-namespace cont {
-namespace testing {
+namespace vtkm
+{
+namespace cont
+{
+namespace testing
+{
 
 namespace array_handle_testing
 {
-  template<class IteratorType, typename T>
-  void CheckValues(IteratorType begin, IteratorType end, T)
-  {
+template <class IteratorType, typename T>
+void CheckValues(IteratorType begin, IteratorType end, T)
+{
 
-    vtkm::Id index = 0;
-    for (IteratorType iter = begin; iter != end; iter++)
+  vtkm::Id index = 0;
+  for (IteratorType iter = begin; iter != end; iter++)
+  {
+    T expectedValue = TestValue(index, T());
+    if (!test_equal(*iter, expectedValue))
     {
-      T expectedValue = TestValue(index, T());
-      if (!test_equal(*iter, expectedValue))
-      {
-        std::stringstream message;
-        message << "Got unexpected value in array." << std::endl
-                << "Expected: " << expectedValue
-                << ", Found: " << *iter << std::endl;
-        VTKM_TEST_FAIL(message.str().c_str());
-      }
-
-      index++;
+      std::stringstream message;
+      message << "Got unexpected value in array." << std::endl
+              << "Expected: " << expectedValue << ", Found: " << *iter << std::endl;
+      VTKM_TEST_FAIL(message.str().c_str());
     }
-  }
 
-  template<typename T>
-  void CheckArray(const vtkm::cont::ArrayHandle<T> &handle)
-  {
-    CheckPortal(handle.GetPortalConstControl());
+    index++;
   }
+}
 
+template <typename T>
+void CheckArray(const vtkm::cont::ArrayHandle<T>& handle)
+{
+  CheckPortal(handle.GetPortalConstControl());
+}
 }
 
 /// This class has a single static member, Run, that tests that all Fancy Array
 /// Handles work with the given DeviceAdapter
 ///
-template<class DeviceAdapterTag>
+template <class DeviceAdapterTag>
 struct TestingArrayHandles
 {
 
@@ -79,33 +80,36 @@ struct TestingArrayHandles
     typedef void ControlSignature(FieldIn<>, FieldOut<>);
     typedef _2 ExecutionSignature(_1);
 
-    template<class ValueType>
-    VTKM_EXEC
-    ValueType operator()(const ValueType &inValue) const
-    { return inValue; }
-
+    template <class ValueType>
+    VTKM_EXEC ValueType operator()(const ValueType& inValue) const
+    {
+      return inValue;
+    }
   };
 
-  template<typename T, typename ExecutionPortalType>
+  template <typename T, typename ExecutionPortalType>
   struct AssignTestValue : public vtkm::exec::FunctorBase
   {
     ExecutionPortalType Portal;
     VTKM_CONT
-    AssignTestValue(ExecutionPortalType p): Portal(p) {}
+    AssignTestValue(ExecutionPortalType p)
+      : Portal(p)
+    {
+    }
 
     VTKM_EXEC
-    void operator()(vtkm::Id index) const
-    {
-      this->Portal.Set(index, TestValue(index, T()) );
-    }
+    void operator()(vtkm::Id index) const { this->Portal.Set(index, TestValue(index, T())); }
   };
 
-  template<typename T, typename ExecutionPortalType>
+  template <typename T, typename ExecutionPortalType>
   struct InplaceFunctor : public vtkm::exec::FunctorBase
   {
     ExecutionPortalType Portal;
     VTKM_CONT
-    InplaceFunctor(const ExecutionPortalType &p): Portal(p) {}
+    InplaceFunctor(const ExecutionPortalType& p)
+      : Portal(p)
+    {
+    }
 
     VTKM_EXEC
     void operator()(vtkm::Id index) const
@@ -119,11 +123,10 @@ private:
 
   typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
 
-  typedef vtkm::worklet::DispatcherMapField<PassThrough,
-                                            DeviceAdapterTag> DispatcherPassThrough;
+  typedef vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag> DispatcherPassThrough;
   struct VerifyEmptyArrays
   {
-    template<typename T>
+    template <typename T>
     VTKM_CONT void operator()(T) const
     {
       std::cout << "Try operations on empty arrays." << std::endl;
@@ -133,9 +136,8 @@ private:
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
                        "Uninitialized array does not report zero values.");
       arrayHandle = vtkm::cont::ArrayHandle<T>();
-      VTKM_TEST_ASSERT(
-            arrayHandle.GetPortalConstControl().GetNumberOfValues() == 0,
-            "Uninitialized array does not give portal with zero values.");
+      VTKM_TEST_ASSERT(arrayHandle.GetPortalConstControl().GetNumberOfValues() == 0,
+                       "Uninitialized array does not give portal with zero values.");
       arrayHandle = vtkm::cont::ArrayHandle<T>();
       arrayHandle.Shrink(0);
       arrayHandle = vtkm::cont::ArrayHandle<T>();
@@ -153,17 +155,16 @@ private:
 
   struct VerifyUserAllocatedHandle
   {
-    template<typename T>
+    template <typename T>
     VTKM_CONT void operator()(T) const
     {
       std::vector<T> buffer(ARRAY_SIZE);
-	  for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+      for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
         buffer[static_cast<std::size_t>(index)] = TestValue(index, T());
       }
 
-      vtkm::cont::ArrayHandle<T> arrayHandle =
-          vtkm::cont::make_ArrayHandle(buffer);
+      vtkm::cont::ArrayHandle<T> arrayHandle = vtkm::cont::make_ArrayHandle(buffer);
 
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
                        "ArrayHandle has wrong number of entries.");
@@ -173,11 +174,9 @@ private:
 
       std::cout << "Check out execution array behavior." << std::endl;
       { //as input
-        typename vtkm::cont::ArrayHandle<T>::template
-            ExecutionTypes<DeviceAdapterTag>::PortalConst
-            executionPortal;
-        executionPortal =
-            arrayHandle.PrepareForInput(DeviceAdapterTag());
+        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
+          executionPortal;
+        executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag());
 
         //use a worklet to verify the input transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
@@ -187,11 +186,9 @@ private:
 
       std::cout << "Check out inplace." << std::endl;
       { //as inplace
-        typename vtkm::cont::ArrayHandle<T>::template
-            ExecutionTypes<DeviceAdapterTag>::Portal
-            executionPortal;
-        executionPortal =
-            arrayHandle.PrepareForInPlace(DeviceAdapterTag());
+        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
+          executionPortal;
+        executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag());
 
         //use a worklet to verify the inplace transfer worked properly
         vtkm::cont::ArrayHandle<T> result;
@@ -202,12 +199,9 @@ private:
       std::cout << "Check out output." << std::endl;
       { //as output with same length as user provided. This should work
         //as no new memory needs to be allocated
-        typename vtkm::cont::ArrayHandle<T>::template
-            ExecutionTypes<DeviceAdapterTag>::Portal
-            executionPortal;
-        executionPortal =
-            arrayHandle.PrepareForOutput(ARRAY_SIZE,
-                                        DeviceAdapterTag());
+        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
+          executionPortal;
+        executionPortal = arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
 
         //we can't verify output contents as those aren't fetched, we
         //can just make sure the allocation didn't throw an exception
@@ -221,7 +215,7 @@ private:
         //Copy data from handle into iterator
         T array[ARRAY_SIZE];
         arrayHandle.CopyInto(array, DeviceAdapterTag());
-        array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
+        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
       }
 
       std::cout << "Check CopyInto from execution array" << std::endl;
@@ -232,7 +226,7 @@ private:
         //Copy data from handle into iterator
         T array[ARRAY_SIZE];
         result.CopyInto(array, DeviceAdapterTag());
-        array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
+        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
       }
 
       if (!std::is_same<DeviceAdapterTag, vtkm::cont::DeviceAdapterTagSerial>::value)
@@ -246,7 +240,7 @@ private:
         //if you request it from a different device adapter
         T array[ARRAY_SIZE];
         result.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
-        array_handle_testing::CheckValues(array, array+ARRAY_SIZE, T());
+        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
       }
 
       { //as output with a length larger than the memory provided by the user
@@ -256,15 +250,15 @@ private:
         {
           //you should not be able to allocate a size larger than the
           //user provided and get the results
-          arrayHandle.PrepareForOutput(ARRAY_SIZE*2,DeviceAdapterTag());
+          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag());
           arrayHandle.GetPortalControl();
         }
-        catch (vtkm::cont::Error &)
+        catch (vtkm::cont::Error&)
         {
           gotException = true;
         }
         VTKM_TEST_ASSERT(gotException,
-                         "PrepareForOutput should fail when asked to "\
+                         "PrepareForOutput should fail when asked to "
                          "re-allocate user provided memory.");
       }
     }
@@ -272,7 +266,7 @@ private:
 
   struct VerifyVTKMAllocatedHandle
   {
-    template<typename T>
+    template <typename T>
     VTKM_CONT void operator()(T) const
     {
       vtkm::cont::ArrayHandle<T> arrayHandle;
@@ -280,20 +274,19 @@ private:
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
                        "ArrayHandle has wrong number of entries.");
       {
-        typedef typename vtkm::cont::ArrayHandle<T>::template
-            ExecutionTypes<DeviceAdapterTag>::Portal
-              ExecutionPortalType;
-          ExecutionPortalType executionPortal =
-              arrayHandle.PrepareForOutput(ARRAY_SIZE*2,
-                                           DeviceAdapterTag());
+        typedef
+          typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
+            ExecutionPortalType;
+        ExecutionPortalType executionPortal =
+          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag());
 
         //we drop down to manually scheduling so that we don't need
         //need to bring in array handle counting
         AssignTestValue<T, ExecutionPortalType> functor(executionPortal);
-        Algorithm::Schedule(functor, ARRAY_SIZE*2);
+        Algorithm::Schedule(functor, ARRAY_SIZE * 2);
       }
 
-      VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE*2,
+      VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE * 2,
                        "Array not allocated correctly.");
       array_handle_testing::CheckArray(arrayHandle);
 
@@ -304,57 +297,50 @@ private:
       array_handle_testing::CheckArray(arrayHandle);
 
       std::cout << "Try reallocating array." << std::endl;
-      arrayHandle.Allocate(ARRAY_SIZE*2);
-      VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE*2,
+      arrayHandle.Allocate(ARRAY_SIZE * 2);
+      VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE * 2,
                        "Array size did not allocate correctly.");
       // No point in checking values. This method can invalidate them.
 
       std::cout << "Try in place operation." << std::endl;
       {
-        typedef typename vtkm::cont::ArrayHandle<T>::template
-          ExecutionTypes<DeviceAdapterTag>::Portal
+        typedef
+          typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
             ExecutionPortalType;
-        ExecutionPortalType executionPortal =
-            arrayHandle.PrepareForInPlace(DeviceAdapterTag());
+        ExecutionPortalType executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag());
 
         //in place can't be done through the dispatcher
         //instead we have to drop down to manually scheduling
         InplaceFunctor<T, ExecutionPortalType> functor(executionPortal);
-        Algorithm::Schedule(functor,ARRAY_SIZE*2);
+        Algorithm::Schedule(functor, ARRAY_SIZE * 2);
       }
       typename vtkm::cont::ArrayHandle<T>::PortalConstControl controlPortal =
-          arrayHandle.GetPortalConstControl();
+        arrayHandle.GetPortalConstControl();
       for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
       {
-        VTKM_TEST_ASSERT(test_equal(controlPortal.Get(index),
-                                    TestValue(index, T()) + T(1)),
+        VTKM_TEST_ASSERT(test_equal(controlPortal.Get(index), TestValue(index, T()) + T(1)),
                          "Did not get result from in place operation.");
       }
 
-      VTKM_TEST_ASSERT(arrayHandle == arrayHandle,
-                       "Array handle does not equal itself.");
+      VTKM_TEST_ASSERT(arrayHandle == arrayHandle, "Array handle does not equal itself.");
       VTKM_TEST_ASSERT(arrayHandle != vtkm::cont::ArrayHandle<T>(),
                        "Array handle equals different array.");
     }
   };
 
   struct TryArrayHandleType
-    {
+  {
     void operator()() const
-      {
+    {
       vtkm::testing::Testing::TryTypes(VerifyEmptyArrays());
       vtkm::testing::Testing::TryTypes(VerifyUserAllocatedHandle());
       vtkm::testing::Testing::TryTypes(VerifyVTKMAllocatedHandle());
-      }
-    };
+    }
+  };
 
 public:
-  static VTKM_CONT int Run()
-  {
-    return vtkm::cont::testing::Testing::Run(TryArrayHandleType());
-  }
+  static VTKM_CONT int Run() { return vtkm::cont::testing::Testing::Run(TryArrayHandleType()); }
 };
-
 }
 }
 } // namespace vtkm::cont::testing

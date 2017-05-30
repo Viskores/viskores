@@ -23,8 +23,7 @@
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 #include <vtkm/cont/testing/TestingArrayHandles.h>
 
-int UnitTestTBBArrayHandle(int, char *[])
+int UnitTestTBBArrayHandle(int, char* [])
 {
-  return vtkm::cont::testing::TestingArrayHandles
-    <vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingArrayHandles<vtkm::cont::DeviceAdapterTagTBB>::Run();
 }

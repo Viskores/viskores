@@ -30,10 +30,12 @@
 #include <vtkm/worklet/CellAverage.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
-namespace {
+namespace
+{
 
-template<typename T, typename Storage>
-bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *expected,
+template <typename T, typename Storage>
+bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
+                     const T* expected,
                      vtkm::Id size)
 {
   if (size != ah.GetNumberOfValues())
@@ -54,13 +56,13 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage> &ah, const T *exp
 
 inline vtkm::cont::DataSet make_SingleTypeDataSet()
 {
-  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
-  std::vector< CoordType > coordinates;
-  coordinates.push_back( CoordType(0, 0, 0) );
-  coordinates.push_back( CoordType(1, 0, 0) );
-  coordinates.push_back( CoordType(1, 1, 0) );
-  coordinates.push_back( CoordType(2, 1, 0) );
-  coordinates.push_back( CoordType(2, 2, 0) );
+  typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
+  std::vector<CoordType> coordinates;
+  coordinates.push_back(CoordType(0, 0, 0));
+  coordinates.push_back(CoordType(1, 0, 0));
+  coordinates.push_back(CoordType(1, 1, 0));
+  coordinates.push_back(CoordType(2, 1, 0));
+  coordinates.push_back(CoordType(2, 2, 0));
 
   std::vector<vtkm::Id> conn;
   // First Cell
@@ -82,7 +84,7 @@ inline vtkm::cont::DataSet make_SingleTypeDataSet()
 
   //Set point scalar
   const int nVerts = 5;
-  vtkm::Float32 vars[nVerts] = {10.1f, 20.1f, 30.2f, 40.2f, 50.3f};
+  vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
 
   vtkm::cont::DataSetFieldAdd::AddPointField(ds, "pointvar", vars, nVerts);
 
@@ -99,17 +101,16 @@ void TestDataSet_Explicit()
   validIds.push_back(1);
   validIds.push_back(1);
   validIds.push_back(1);
-  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds =
-                                      vtkm::cont::make_ArrayHandle(validIds);
+  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds = vtkm::cont::make_ArrayHandle(validIds);
 
   //get the cellset single type from the dataset
   vtkm::cont::CellSetSingleType<> cellSet;
   dataSet.GetCellSet(0).CopyTo(cellSet);
 
   //verify that we can create a subset of a singlset
-  typedef vtkm::cont::CellSetPermutation< vtkm::cont::CellSetSingleType<> > SubsetType;
+  typedef vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>> SubsetType;
   SubsetType subset;
-  subset.Fill(validCellIds,cellSet);
+  subset.Fill(validCellIds, cellSet);
 
   subset.PrintSummary(std::cout);
 
@@ -125,16 +126,14 @@ void TestDataSet_Explicit()
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(subset,
-                    dataSet.GetField("pointvar"),
-                    result);
+  dispatcher.Invoke(subset, dataSet.GetField("pointvar"), result);
 
   //iterate same cell 4 times
   vtkm::Float32 expected[4] = { 30.1667f, 30.1667f, 30.1667f, 30.1667f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for CellAverage worklet on explicit subset data");
+    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+                     "Wrong result for CellAverage worklet on explicit subset data");
   }
 }
 
@@ -149,16 +148,14 @@ void TestDataSet_Structured2D()
   validIds.push_back(1);
   validIds.push_back(1);
   validIds.push_back(1);
-  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds =
-                                      vtkm::cont::make_ArrayHandle(validIds);
-
+  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds = vtkm::cont::make_ArrayHandle(validIds);
 
   vtkm::cont::CellSetStructured<2> cellSet;
   dataSet.GetCellSet(0).CopyTo(cellSet);
 
   //verify that we can create a subset of a 2d UniformDataSet
-  vtkm::cont::CellSetPermutation< vtkm::cont::CellSetStructured<2> > subset;
-  subset.Fill(validCellIds,cellSet);
+  vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>> subset;
+  subset.Fill(validCellIds, cellSet);
 
   subset.PrintSummary(std::cout);
 
@@ -166,22 +163,19 @@ void TestDataSet_Structured2D()
   typedef vtkm::cont::DeviceAdapterTagSerial DeviceAdapterTag;
 
   //verify that PrepareForInput exists
-  subset.PrepareForInput(DeviceAdapterTag(),
-                          vtkm::TopologyElementTagPoint(),
-                          vtkm::TopologyElementTagCell());
+  subset.PrepareForInput(
+    DeviceAdapterTag(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(subset,
-                    dataSet.GetField("pointvar"),
-                    result);
+  dispatcher.Invoke(subset, dataSet.GetField("pointvar"), result);
 
   vtkm::Float32 expected[4] = { 40.1f, 40.1f, 40.1f, 40.1f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for CellAverage worklet on 2d structured subset data");
+    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+                     "Wrong result for CellAverage worklet on 2d structured subset data");
   }
 }
 
@@ -196,39 +190,33 @@ void TestDataSet_Structured3D()
   validIds.push_back(1);
   validIds.push_back(1);
   validIds.push_back(1);
-  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds =
-                                      vtkm::cont::make_ArrayHandle(validIds);
+  vtkm::cont::ArrayHandle<vtkm::Id> validCellIds = vtkm::cont::make_ArrayHandle(validIds);
 
   vtkm::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet(0).CopyTo(cellSet);
 
   //verify that we can create a subset of a 2d UniformDataSet
-  vtkm::cont::CellSetPermutation< vtkm::cont::CellSetStructured<3> > subset;
-  subset.Fill(validCellIds,cellSet);
+  vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>> subset;
+  subset.Fill(validCellIds, cellSet);
 
   subset.PrintSummary(std::cout);
 
-
   //verify that PrepareForInput exists
-  subset.PrepareForInput(
-        vtkm::cont::DeviceAdapterTagSerial(),
-        vtkm::TopologyElementTagPoint(),
-        vtkm::TopologyElementTagCell());
+  subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
+                         vtkm::TopologyElementTagPoint(),
+                         vtkm::TopologyElementTagCell());
 
   //run a basic for-each topology algorithm on this
   vtkm::cont::ArrayHandle<vtkm::Float32> result;
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage> dispatcher;
-  dispatcher.Invoke(subset,
-                    dataSet.GetField("pointvar"),
-                    result);
+  dispatcher.Invoke(subset, dataSet.GetField("pointvar"), result);
 
-vtkm::Float32 expected[4] = { 70.2125f, 70.2125f, 70.2125f, 70.2125f };
+  vtkm::Float32 expected[4] = { 70.2125f, 70.2125f, 70.2125f, 70.2125f };
   for (int i = 0; i < 4; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for CellAverage worklet on 2d structured subset data");
+    VTKM_TEST_ASSERT(test_equal(result.GetPortalConstControl().Get(i), expected[i]),
+                     "Wrong result for CellAverage worklet on 2d structured subset data");
   }
-
 }
 
 void TestDataSet_Permutation()
@@ -240,11 +228,9 @@ void TestDataSet_Permutation()
   TestDataSet_Structured2D();
   TestDataSet_Structured3D();
 }
-
 }
 
-
-int UnitTestDataSetPermutation(int, char *[])
+int UnitTestDataSetPermutation(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestDataSet_Permutation);
 }

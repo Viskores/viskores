@@ -26,9 +26,12 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
-namespace vtkm {
-namespace rendering {
-namespace internal {
+namespace vtkm
+{
+namespace rendering
+{
+namespace internal
+{
 
 /// This is a wrapper around the Triangulator worklet so that the
 /// implementation of the triangulator only gets compiled once. This function
@@ -36,12 +39,11 @@ namespace internal {
 /// filters, and filters should be compiled in a library (for the same reason).
 ///
 VTKM_RENDERING_EXPORT
-void RunTriangulator(const vtkm::cont::DynamicCellSet &cellSet,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > &indices,
-                     vtkm::Id &numberOfTriangles,
-                     const vtkm::cont::RuntimeDeviceTracker &tracker =
-                       vtkm::cont::GetGlobalRuntimeDeviceTracker());
-
+void RunTriangulator(
+  const vtkm::cont::DynamicCellSet& cellSet,
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
+  vtkm::Id& numberOfTriangles,
+  const vtkm::cont::RuntimeDeviceTracker& tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
 }
 }
 } // namespace vtkm::rendering::internal

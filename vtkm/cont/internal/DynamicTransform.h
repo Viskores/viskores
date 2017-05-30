@@ -22,20 +22,27 @@
 
 #include "vtkm/internal/IndexTag.h"
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-template<typename T, typename S> class ArrayHandle;
-template<vtkm::IdComponent> class CellSetStructured;
-template<typename T> class CellSetSingleType;
-template<typename T, typename S, typename U, typename V> class CellSetExplicit;
-template<typename T, typename S> class CellSetPermutation;
+template <typename T, typename S>
+class ArrayHandle;
+template <vtkm::IdComponent>
+class CellSetStructured;
+template <typename T>
+class CellSetSingleType;
+template <typename T, typename S, typename U, typename V>
+class CellSetExplicit;
+template <typename T, typename S>
+class CellSetPermutation;
 
 /// A Generic interface to CastAndCall. The default implementation simply calls
 /// DynamicObject's CastAndCall, but specializations of this function exist for
 /// other classes (e.g. Field, CoordinateSystem, ArrayHandle).
-template<typename DynamicObject, typename Functor>
-void CastAndCall(const DynamicObject& dynamicObject, const Functor &f)
+template <typename DynamicObject, typename Functor>
+void CastAndCall(const DynamicObject& dynamicObject, const Functor& f)
 {
   dynamicObject.CastAndCall(f);
 }
@@ -43,8 +50,8 @@ void CastAndCall(const DynamicObject& dynamicObject, const Functor &f)
 /// A specialization of CastAndCall for basic ArrayHandle types,
 /// Since the type is already known no deduction is needed.
 /// This specialization is used to simplify numerous worklet algorithms
-template<typename T, typename U, typename Functor>
-void CastAndCall(const vtkm::cont::ArrayHandle<T,U>& handle, const Functor &f)
+template <typename T, typename U, typename Functor>
+void CastAndCall(const vtkm::cont::ArrayHandle<T, U>& handle, const Functor& f)
 {
   f(handle);
 }
@@ -52,8 +59,8 @@ void CastAndCall(const vtkm::cont::ArrayHandle<T,U>& handle, const Functor &f)
 /// A specialization of CastAndCall for basic CellSetStructured types,
 /// Since the type is already known no deduction is needed.
 /// This specialization is used to simplify numerous worklet algorithms
-template<vtkm::IdComponent Dim, typename Functor>
-void CastAndCall(const vtkm::cont::CellSetStructured<Dim>& cellset, const Functor &f)
+template <vtkm::IdComponent Dim, typename Functor>
+void CastAndCall(const vtkm::cont::CellSetStructured<Dim>& cellset, const Functor& f)
 {
   f(cellset);
 }
@@ -61,8 +68,9 @@ void CastAndCall(const vtkm::cont::CellSetStructured<Dim>& cellset, const Functo
 /// A specialization of CastAndCall for basic CellSetSingleType types,
 /// Since the type is already known no deduction is needed.
 /// This specialization is used to simplify numerous worklet algorithms
-template<typename ConnectivityStorageTag, typename Functor>
-void CastAndCall(const vtkm::cont::CellSetSingleType<ConnectivityStorageTag>& cellset, const Functor &f)
+template <typename ConnectivityStorageTag, typename Functor>
+void CastAndCall(const vtkm::cont::CellSetSingleType<ConnectivityStorageTag>& cellset,
+                 const Functor& f)
 {
   f(cellset);
 }
@@ -70,8 +78,8 @@ void CastAndCall(const vtkm::cont::CellSetSingleType<ConnectivityStorageTag>& ce
 /// A specialization of CastAndCall for basic CellSetExplicit types,
 /// Since the type is already known no deduction is needed.
 /// This specialization is used to simplify numerous worklet algorithms
-template<typename T, typename S, typename U, typename V, typename Functor>
-void CastAndCall(const vtkm::cont::CellSetExplicit<T,S,U,V>& cellset, const Functor &f)
+template <typename T, typename S, typename U, typename V, typename Functor>
+void CastAndCall(const vtkm::cont::CellSetExplicit<T, S, U, V>& cellset, const Functor& f)
 {
   f(cellset);
 }
@@ -79,25 +87,30 @@ void CastAndCall(const vtkm::cont::CellSetExplicit<T,S,U,V>& cellset, const Func
 /// A specialization of CastAndCall for basic CellSetPermutation types,
 /// Since the type is already known no deduction is needed.
 /// This specialization is used to simplify numerous worklet algorithms
-template<typename PermutationType, typename CellSetType, typename Functor>
-void CastAndCall(const vtkm::cont::CellSetPermutation<PermutationType,CellSetType>& cellset, const Functor &f)
+template <typename PermutationType, typename CellSetType, typename Functor>
+void CastAndCall(const vtkm::cont::CellSetPermutation<PermutationType, CellSetType>& cellset,
+                 const Functor& f)
 {
   f(cellset);
 }
 
-
-namespace internal {
+namespace internal
+{
 
 /// Tag used to identify an object that is a dynamic object that contains a
 /// CastAndCall method that iterates over all possible dynamic choices to run
 /// templated code.
 ///
-struct DynamicTransformTagCastAndCall {  };
+struct DynamicTransformTagCastAndCall
+{
+};
 
 /// Tag used to identify an object that is a static object that, when used with
 /// a \c DynamicTransform should just pass itself as a concrete object.
 ///
-struct DynamicTransformTagStatic {  };
+struct DynamicTransformTagStatic
+{
+};
 
 /// A traits class that identifies whether an object used in a \c
 /// DynamicTransform should use a \c CastAndCall functionality or treated as a
@@ -107,8 +120,9 @@ struct DynamicTransformTagStatic {  };
 /// to identify the object as dynamic. VTK-m classes like \c DynamicArray are
 /// already specialized.
 ///
-template<typename T>
-struct DynamicTransformTraits {
+template <typename T>
+struct DynamicTransformTraits
+{
   /// A type set to either \c DynamicTransformTagStatic or \c
   /// DynamicTransformTagCastAndCall. The default implementation is set to \c
   /// DynamicTransformTagStatic. Dynamic objects that implement \c CastAndCall
@@ -124,40 +138,34 @@ struct DynamicTransformTraits {
 ///
 struct DynamicTransform
 {
-  template<typename InputType,
-           typename ContinueFunctor,
-           vtkm::IdComponent Index>
-  VTKM_CONT
-  void operator()(const InputType &input,
-                  const ContinueFunctor &continueFunc,
-                  vtkm::internal::IndexTag<Index>) const
+  template <typename InputType, typename ContinueFunctor, vtkm::IdComponent Index>
+  VTKM_CONT void operator()(const InputType& input,
+                            const ContinueFunctor& continueFunc,
+                            vtkm::internal::IndexTag<Index>) const
   {
     this->DoTransform(
-          input,
-          continueFunc,
-          typename vtkm::cont::internal::DynamicTransformTraits<InputType>::DynamicTag());
+      input,
+      continueFunc,
+      typename vtkm::cont::internal::DynamicTransformTraits<InputType>::DynamicTag());
   }
 
 private:
-  template<typename InputType, typename ContinueFunctor>
-  VTKM_CONT
-  void DoTransform(const InputType &input,
-                   const ContinueFunctor &continueFunc,
-                   vtkm::cont::internal::DynamicTransformTagStatic) const
+  template <typename InputType, typename ContinueFunctor>
+  VTKM_CONT void DoTransform(const InputType& input,
+                             const ContinueFunctor& continueFunc,
+                             vtkm::cont::internal::DynamicTransformTagStatic) const
   {
     continueFunc(input);
   }
 
-  template<typename InputType, typename ContinueFunctor>
-  VTKM_CONT
-  void DoTransform(const InputType &dynamicInput,
-                   const ContinueFunctor &continueFunc,
-                   vtkm::cont::internal::DynamicTransformTagCastAndCall) const
+  template <typename InputType, typename ContinueFunctor>
+  VTKM_CONT void DoTransform(const InputType& dynamicInput,
+                             const ContinueFunctor& continueFunc,
+                             vtkm::cont::internal::DynamicTransformTagCastAndCall) const
   {
     CastAndCall(dynamicInput, continueFunc);
   }
 };
-
 }
 }
 } // namespace vtkm::cont::internal

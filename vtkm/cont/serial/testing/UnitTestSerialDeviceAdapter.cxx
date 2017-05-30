@@ -27,8 +27,7 @@
 
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-int UnitTestSerialDeviceAdapter(int, char *[])
+int UnitTestSerialDeviceAdapter(int, char* [])
 {
-  return vtkm::cont::testing::TestingDeviceAdapter
-      <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingDeviceAdapter<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

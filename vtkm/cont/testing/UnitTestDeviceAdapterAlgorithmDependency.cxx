@@ -34,12 +34,15 @@
 //This file must be included after ArrayHandle.h
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
-namespace {
+namespace
+{
 
 struct ExampleWorklet
 {
   template <typename T>
-  void operator()(T vtkmNotUsed(v)) const {  }
+  void operator()(T vtkmNotUsed(v)) const
+  {
+  }
 };
 
 void CheckPostDefinedDeviceAdapter()
@@ -51,7 +54,7 @@ void CheckPostDefinedDeviceAdapter()
 
 } // anonymous namespace
 
-int UnitTestDeviceAdapterAlgorithmDependency(int, char *[])
+int UnitTestDeviceAdapterAlgorithmDependency(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(CheckPostDefinedDeviceAdapter);
 }

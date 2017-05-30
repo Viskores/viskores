@@ -24,33 +24,34 @@
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace detail
+{
 
-namespace detail {
-
-template<typename VirtualObject, typename TargetClass>
-__global__
-void CreateKernel(VirtualObject *object, const TargetClass *target)
+template <typename VirtualObject, typename TargetClass>
+__global__ void CreateKernel(VirtualObject* object, const TargetClass* target)
 {
   object->Bind(target);
 }
 
 } // detail
 
-template<typename VirtualObject, typename TargetClass>
-struct VirtualObjectTransfer<VirtualObject, TargetClass,
-                             vtkm::cont::DeviceAdapterTagCuda>
+template <typename VirtualObject, typename TargetClass>
+struct VirtualObjectTransfer<VirtualObject, TargetClass, vtkm::cont::DeviceAdapterTagCuda>
 {
-  static void* Create(VirtualObject &object, const void *target)
+  static void* Create(VirtualObject& object, const void* target)
   {
-    TargetClass *cutarget;
+    TargetClass* cutarget;
     VTKM_CUDA_CALL(cudaMalloc(&cutarget, sizeof(TargetClass)));
     VTKM_CUDA_CALL(cudaMemcpy(cutarget, target, sizeof(TargetClass), cudaMemcpyHostToDevice));
 
-    VirtualObject *cuobject;
+    VirtualObject* cuobject;
     VTKM_CUDA_CALL(cudaMalloc(&cuobject, sizeof(VirtualObject)));
     detail::CreateKernel<<<1, 1>>>(cuobject, cutarget);
     VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
@@ -60,17 +61,13 @@ struct VirtualObjectTransfer<VirtualObject, TargetClass,
     return cutarget;
   }
 
-  static void Update(void *deviceState, const void *target)
+  static void Update(void* deviceState, const void* target)
   {
     VTKM_CUDA_CALL(cudaMemcpy(deviceState, target, sizeof(TargetClass), cudaMemcpyHostToDevice));
   }
 
-  static void Cleanup(void *deviceState)
-  {
-    VTKM_CUDA_CALL(cudaFree(deviceState));
-  }
+  static void Cleanup(void* deviceState) { VTKM_CUDA_CALL(cudaFree(deviceState)); }
 };
-
 }
 }
 } // vtkm::cont::internal

@@ -21,14 +21,16 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 static const vtkm::Id MAX_VECTOR_SIZE = 5;
 static const vtkm::Id VecInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
 
 struct TestVecTypeFunctor
 {
-  template <typename T> void operator()(const T&) const
+  template <typename T>
+  void operator()(const T&) const
   {
     typedef vtkm::VecTraits<T> Traits;
     typedef typename Traits::ComponentType ComponentType;
@@ -42,11 +44,11 @@ struct TestVecTypeFunctor
     T outVector;
     vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(inVector, outVector);
     vtkm::VecC<ComponentType> outVecC(outVector);
-    vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(
-          vtkm::VecC<ComponentType>(inVector), outVecC);
+    vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(vtkm::VecC<ComponentType>(inVector),
+                                                       outVecC);
     vtkm::VecCConst<ComponentType> outVecCConst(outVector);
-    vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(
-          vtkm::VecCConst<ComponentType>(inVector), outVecCConst);
+    vtkm::testing::TestVecType<Traits::NUM_COMPONENTS>(vtkm::VecCConst<ComponentType>(inVector),
+                                                       outVecCConst);
   }
 };
 
@@ -55,20 +57,20 @@ void TestVecTraits()
   TestVecTypeFunctor test;
   vtkm::testing::Testing::TryTypes(test);
   std::cout << "vtkm::Vec<vtkm::FloatDefault, 5>" << std::endl;
-  test(vtkm::Vec<vtkm::FloatDefault,5>());
+  test(vtkm::Vec<vtkm::FloatDefault, 5>());
 
   vtkm::testing::TestVecComponentsTag<vtkm::Id3>();
-  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault,3> >();
-  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault,4> >();
-  vtkm::testing::TestVecComponentsTag<vtkm::VecC<vtkm::FloatDefault> >();
-  vtkm::testing::TestVecComponentsTag<vtkm::VecCConst<vtkm::Id> >();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault, 3>>();
+  vtkm::testing::TestVecComponentsTag<vtkm::Vec<vtkm::FloatDefault, 4>>();
+  vtkm::testing::TestVecComponentsTag<vtkm::VecC<vtkm::FloatDefault>>();
+  vtkm::testing::TestVecComponentsTag<vtkm::VecCConst<vtkm::Id>>();
   vtkm::testing::TestScalarComponentsTag<vtkm::Id>();
   vtkm::testing::TestScalarComponentsTag<vtkm::FloatDefault>();
 }
 
 } // anonymous namespace
 
-int UnitTestVecTraits(int, char *[])
+int UnitTestVecTraits(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestVecTraits);
 }

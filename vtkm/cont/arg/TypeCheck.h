@@ -20,9 +20,12 @@
 #ifndef vtk_m_cont_arg_TypeCheck_h
 #define vtk_m_cont_arg_TypeCheck_h
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief Class for checking that a type matches the semantics for an argument.
 ///
@@ -37,7 +40,7 @@ namespace arg {
 /// a new type check tag is defined, along with it should be partial
 /// specializations that find valid types.
 ///
-template<typename TypeCheckTag, typename Type>
+template <typename TypeCheckTag, typename Type>
 struct TypeCheck
 {
   /// The static constant boolean \c value is set to \c true if the type is
@@ -45,7 +48,6 @@ struct TypeCheck
   ///
   static const bool value = false;
 };
-
 }
 }
 } // namespace vtkm::cont::arg

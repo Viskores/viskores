@@ -25,49 +25,52 @@
 
 #include <vtkm/VecTraits.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-namespace internal {
+namespace internal
+{
 
 /// \brief An implicit array portal that returns an counting value.
 template <class CountingValueType>
 class VTKM_ALWAYS_EXPORT ArrayPortalCounting
 {
-  typedef typename vtkm::VecTraits<CountingValueType>::ComponentType
-      ComponentType;
+  typedef typename vtkm::VecTraits<CountingValueType>::ComponentType ComponentType;
 
 public:
   typedef CountingValueType ValueType;
 
   VTKM_EXEC_CONT
-  ArrayPortalCounting() :
-    Start(0),
-    Step(1),
-    NumberOfValues(0)
-  {  }
-
-  VTKM_EXEC_CONT
-  ArrayPortalCounting(ValueType start, ValueType step, vtkm::Id numValues) :
-    Start(start),
-    Step(step),
-    NumberOfValues(numValues)
-  {  }
-
-  template<typename OtherValueType>
-  VTKM_EXEC_CONT
-  ArrayPortalCounting(const ArrayPortalCounting<OtherValueType> &src)
-    : Start(src.Start),
-      Step(src.Step),
-      NumberOfValues(src.NumberOfValues)
-  {  }
-
-  template<typename OtherValueType>
-  VTKM_EXEC_CONT
-  ArrayPortalCounting<ValueType> &operator=(
-    const ArrayPortalCounting<OtherValueType> &src)
+  ArrayPortalCounting()
+    : Start(0)
+    , Step(1)
+    , NumberOfValues(0)
   {
-    this->Start= src.Start;
+  }
+
+  VTKM_EXEC_CONT
+  ArrayPortalCounting(ValueType start, ValueType step, vtkm::Id numValues)
+    : Start(start)
+    , Step(step)
+    , NumberOfValues(numValues)
+  {
+  }
+
+  template <typename OtherValueType>
+  VTKM_EXEC_CONT ArrayPortalCounting(const ArrayPortalCounting<OtherValueType>& src)
+    : Start(src.Start)
+    , Step(src.Step)
+    , NumberOfValues(src.NumberOfValues)
+  {
+  }
+
+  template <typename OtherValueType>
+  VTKM_EXEC_CONT ArrayPortalCounting<ValueType>& operator=(
+    const ArrayPortalCounting<OtherValueType>& src)
+  {
+    this->Start = src.Start;
     this->Step = src.Step;
     this->NumberOfValues = src.NumberOfValues;
     return *this;
@@ -77,14 +80,13 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_EXEC_CONT
-  ValueType Get(vtkm::Id index) const {
-    return ValueType(this->Start +
-                     this->Step*ValueType(static_cast<ComponentType>(index)));
+  ValueType Get(vtkm::Id index) const
+  {
+    return ValueType(this->Start + this->Step * ValueType(static_cast<ComponentType>(index)));
   }
 
   VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index),
-           const ValueType &vtkmNotUsed(value)) const
+  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
   {
     VTKM_ASSERT(false && "Cannot write to read-only counting array.");
   }
@@ -97,11 +99,12 @@ private:
 
 /// A convenience class that provides a typedef to the appropriate tag for
 /// a counting storage.
-template<typename ConstantValueType>
+template <typename ConstantValueType>
 struct ArrayHandleCountingTraits
 {
   typedef vtkm::cont::StorageTagImplicit<
-      vtkm::cont::internal::ArrayPortalCounting<ConstantValueType> > Tag;
+    vtkm::cont::internal::ArrayPortalCounting<ConstantValueType>>
+    Tag;
 };
 
 } // namespace internal
@@ -110,44 +113,33 @@ struct ArrayHandleCountingTraits
 /// contains a increment value, that is increment for each step between zero
 /// and the passed in length
 template <typename CountingValueType>
-class ArrayHandleCounting
-    : public vtkm::cont::ArrayHandle <
-          CountingValueType,
-          typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag
-          >
+class ArrayHandleCounting : public vtkm::cont::ArrayHandle<
+                              CountingValueType,
+                              typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-      ArrayHandleCounting,
-      (ArrayHandleCounting<CountingValueType>),
-      (vtkm::cont::ArrayHandle<
-         CountingValueType,
-         typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag
-         >));
+    ArrayHandleCounting,
+    (ArrayHandleCounting<CountingValueType>),
+    (vtkm::cont::ArrayHandle<
+      CountingValueType,
+      typename internal::ArrayHandleCountingTraits<CountingValueType>::Tag>));
 
   VTKM_CONT
-  ArrayHandleCounting(CountingValueType start,
-                      CountingValueType step,
-                      vtkm::Id length)
-    :Superclass(typename Superclass::PortalConstControl(start, step, length))
+  ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::Id length)
+    : Superclass(typename Superclass::PortalConstControl(start, step, length))
   {
   }
 };
 
 /// A convenience function for creating an ArrayHandleCounting. It takes the
 /// value to start counting from and and the number of times to increment.
-template<typename CountingValueType>
-VTKM_CONT
-vtkm::cont::ArrayHandleCounting<CountingValueType>
-make_ArrayHandleCounting(CountingValueType start,
-                         CountingValueType step,
-                         vtkm::Id length)
+template <typename CountingValueType>
+VTKM_CONT vtkm::cont::ArrayHandleCounting<CountingValueType>
+make_ArrayHandleCounting(CountingValueType start, CountingValueType step, vtkm::Id length)
 {
-  return vtkm::cont::ArrayHandleCounting<CountingValueType>(start,
-                                                            step,
-                                                            length);
+  return vtkm::cont::ArrayHandleCounting<CountingValueType>(start, step, length);
 }
-
 }
 } // namespace vtkm::cont
 

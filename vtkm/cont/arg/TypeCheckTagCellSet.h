@@ -24,9 +24,12 @@
 
 #include <vtkm/cont/CellSet.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// Check for a CellSet-like object.
 ///
@@ -34,13 +37,11 @@ struct TypeCheckTagCellSet
 {
 };
 
-template<typename CellSetType>
+template <typename CellSetType>
 struct TypeCheck<TypeCheckTagCellSet, CellSetType>
 {
-  static const bool value =
-      vtkm::cont::internal::CellSetCheck<CellSetType>::type::value;
+  static const bool value = vtkm::cont::internal::CellSetCheck<CellSetType>::type::value;
 };
-
 }
 }
 } // namespace vtkm::cont::arg

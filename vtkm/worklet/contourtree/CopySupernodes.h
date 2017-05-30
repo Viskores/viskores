@@ -70,41 +70,43 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class CopySupernodes : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> isSupernode,             // (input) is this a supernode
-                                FieldIn<IdType> regularID,               // (input) candidate ID
-                                FieldIn<IdType> superID,                 // (input) supernode ID
-                                FieldIn<IdType> upCandidate,             // (input)
-                                FieldIn<IdType> downCandidate,           // (input)
+  typedef void ControlSignature(FieldIn<IdType> isSupernode,   // (input) is this a supernode
+                                FieldIn<IdType> regularID,     // (input) candidate ID
+                                FieldIn<IdType> superID,       // (input) supernode ID
+                                FieldIn<IdType> upCandidate,   // (input)
+                                FieldIn<IdType> downCandidate, // (input)
                                 WholeArrayOut<IdType> regularToCritical, // (output)
-                                WholeArrayOut<IdType> supernodes,        // (output) compacted supernodes
-                                WholeArrayOut<IdType> updegree,          // (output) compacted updegree
-                                WholeArrayOut<IdType> downdegree);       // (output) compacted downdegree
+                                WholeArrayOut<IdType> supernodes,  // (output) compacted supernodes
+                                WholeArrayOut<IdType> updegree,    // (output) compacted updegree
+                                WholeArrayOut<IdType> downdegree); // (output) compacted downdegree
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   CopySupernodes() {}
 
   template <typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& isSupernode,
-                  const vtkm::Id& regularID,
-                  const vtkm::Id& superID,
-                  const vtkm::Id& upCandidate,
-                  const vtkm::Id& downCandidate,
-                  const OutFieldPortalType& regularToCritical,
-                  const OutFieldPortalType& supernodes,
-                  const OutFieldPortalType& updegree,
-                  const OutFieldPortalType& downdegree) const
+  VTKM_EXEC void operator()(const vtkm::Id& isSupernode,
+                            const vtkm::Id& regularID,
+                            const vtkm::Id& superID,
+                            const vtkm::Id& upCandidate,
+                            const vtkm::Id& downCandidate,
+                            const OutFieldPortalType& regularToCritical,
+                            const OutFieldPortalType& supernodes,
+                            const OutFieldPortalType& updegree,
+                            const OutFieldPortalType& downdegree) const
   {
     if (isSupernode)
     { // supernode
@@ -116,7 +118,6 @@ public:
     }
   }
 }; // CopySupernodes
-
 }
 }
 }

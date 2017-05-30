@@ -20,17 +20,19 @@
 
 #include <vtkm/rendering/View.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-View::View(const vtkm::rendering::Scene &scene,
-           const vtkm::rendering::Mapper &mapper,
-           const vtkm::rendering::Canvas &canvas,
-           const vtkm::rendering::Color &backgroundColor)
-  : Scene(scene),
-    MapperPointer(mapper.NewCopy()),
-    CanvasPointer(canvas.NewCopy()),
-    WorldAnnotatorPointer(canvas.CreateWorldAnnotator())
+View::View(const vtkm::rendering::Scene& scene,
+           const vtkm::rendering::Mapper& mapper,
+           const vtkm::rendering::Canvas& canvas,
+           const vtkm::rendering::Color& backgroundColor)
+  : Scene(scene)
+  , MapperPointer(mapper.NewCopy())
+  , CanvasPointer(canvas.NewCopy())
+  , WorldAnnotatorPointer(canvas.CreateWorldAnnotator())
 {
   this->CanvasPointer->SetBackgroundColor(backgroundColor);
 
@@ -46,29 +48,30 @@ View::View(const vtkm::rendering::Scene &scene,
   }
 }
 
-View::View(const vtkm::rendering::Scene &scene,
-           const vtkm::rendering::Mapper &mapper,
-           const vtkm::rendering::Canvas &canvas,
-           const vtkm::rendering::Camera &camera,
-           const vtkm::rendering::Color &backgroundColor)
-  : Scene(scene),
-    MapperPointer(mapper.NewCopy()),
-    CanvasPointer(canvas.NewCopy()),
-    WorldAnnotatorPointer(canvas.CreateWorldAnnotator()),
-    Camera(camera)
+View::View(const vtkm::rendering::Scene& scene,
+           const vtkm::rendering::Mapper& mapper,
+           const vtkm::rendering::Canvas& canvas,
+           const vtkm::rendering::Camera& camera,
+           const vtkm::rendering::Color& backgroundColor)
+  : Scene(scene)
+  , MapperPointer(mapper.NewCopy())
+  , CanvasPointer(canvas.NewCopy())
+  , WorldAnnotatorPointer(canvas.CreateWorldAnnotator())
+  , Camera(camera)
 {
   this->CanvasPointer->SetBackgroundColor(backgroundColor);
 }
 
 View::~View()
-{   }
+{
+}
 
 void View::Initialize()
 {
   this->GetCanvas().Initialize();
 }
 
-void View::SaveAs(const std::string &fileName) const
+void View::SaveAs(const std::string& fileName) const
 {
   this->GetCanvas().SaveAs(fileName);
 }
@@ -76,14 +79,13 @@ void View::SaveAs(const std::string &fileName) const
 void View::SetupForWorldSpace(bool viewportClip)
 {
   //this->Camera.SetupMatrices();
-  this->GetCanvas().SetViewToWorldSpace(this->Camera ,viewportClip);
+  this->GetCanvas().SetViewToWorldSpace(this->Camera, viewportClip);
 }
 
 void View::SetupForScreenSpace(bool viewportClip)
 {
   //this->Camera.SetupMatrices();
-  this->GetCanvas().SetViewToScreenSpace(this->Camera,viewportClip);
+  this->GetCanvas().SetViewToScreenSpace(this->Camera, viewportClip);
 }
-
 }
 } // namespace vtkm::rendering

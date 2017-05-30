@@ -24,16 +24,21 @@
 #include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ThreadIndicesTopologyMap.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief Aspect tag to use for getting the from count.
 ///
 /// The \c AspectTagFromCount aspect tag causes the \c Fetch class to obtain
 /// the number of indices that map to the current topology element.
 ///
-struct AspectTagFromCount {  };
+struct AspectTagFromCount
+{
+};
 
 /// \brief The \c ExecutionSignature tag to get the number of from elements.
 ///
@@ -49,35 +54,29 @@ struct FromCount : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagFromCount AspectTag;
 };
 
-template<typename FetchTag,
-         typename ConnectivityType,
-         typename ExecObjectType>
+template <typename FetchTag, typename ConnectivityType, typename ExecObjectType>
 struct Fetch<FetchTag,
              vtkm::exec::arg::AspectTagFromCount,
              vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
              ExecObjectType>
 {
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>
-      ThreadIndicesType;
+  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
 
   typedef vtkm::IdComponent ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Load(const ThreadIndicesType &indices, const ExecObjectType &) const
+  ValueType Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
     return indices.GetIndicesFrom().GetNumberOfComponents();
   }
 
   VTKM_EXEC
-  void Store(const ThreadIndicesType &,
-             const ExecObjectType &,
-             const ValueType &) const
+  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op.
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

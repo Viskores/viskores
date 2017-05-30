@@ -89,40 +89,50 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
-template<typename T>
+template <typename T>
 class RegularPointTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T> {};
+  struct TagType : vtkm::ListTagBase<T>
+  {
+  };
 
-  typedef void ControlSignature(FieldIn<IdType> vertexID,             // (input) vertex ID
-                                WholeArrayIn<IdType> chainExtremum,   // (input) chain extremum
-                                WholeArrayIn<TagType> values,         // (input) values array
-                                WholeArrayIn<IdType> valueIndex,      // (input) index into value array
-                                WholeArrayInOut<IdType> prunesTo,     // (i/o) where vertex is pruned to
-                                WholeArrayOut<IdType> outdegree);     // (output) updegree of vertex
+  typedef void ControlSignature(FieldIn<IdType> vertexID,           // (input) vertex ID
+                                WholeArrayIn<IdType> chainExtremum, // (input) chain extremum
+                                WholeArrayIn<TagType> values,       // (input) values array
+                                WholeArrayIn<IdType> valueIndex,  // (input) index into value array
+                                WholeArrayInOut<IdType> prunesTo, // (i/o) where vertex is pruned to
+                                WholeArrayOut<IdType> outdegree); // (output) updegree of vertex
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   bool isJoinGraph;
 
   // Constructor
   VTKM_EXEC_CONT
-  RegularPointTransferrer(bool IsJoinGraph) : isJoinGraph(IsJoinGraph) {}
+  RegularPointTransferrer(bool IsJoinGraph)
+    : isJoinGraph(IsJoinGraph)
+  {
+  }
 
-  template <typename InFieldPortalType, typename InIndexPortalType, typename InOutFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertexID,
-                  const InIndexPortalType& chainExtremum,
-                  const InFieldPortalType &values,
-                  const InIndexPortalType &valueIndex,
-                  const InOutFieldPortalType &prunesTo,
-                  const OutFieldPortalType &outdegree) const
+  template <typename InFieldPortalType,
+            typename InIndexPortalType,
+            typename InOutFieldPortalType,
+            typename OutFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID,
+                            const InIndexPortalType& chainExtremum,
+                            const InFieldPortalType& values,
+                            const InIndexPortalType& valueIndex,
+                            const InOutFieldPortalType& prunesTo,
+                            const OutFieldPortalType& outdegree) const
   {
     VertexValueComparator<InFieldPortalType> lessThan(values);
 
@@ -143,10 +153,8 @@ public:
       // and reset the outdegree to zero
       outdegree.Set(vertexID, 0);
     } // regular point to be pruned
-
   }
 }; // RegularPointTransferrer
-
 }
 }
 }

@@ -31,25 +31,27 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-typedef vtkm::Vec< vtkm::Float32, 3 > FloatVec3;
-typedef vtkm::Vec< vtkm::UInt8, 4 > Uint8Vec4;
+typedef vtkm::Vec<vtkm::Float32, 3> FloatVec3;
+typedef vtkm::Vec<vtkm::UInt8, 4> Uint8Vec4;
 
 struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
 {
   vtkm::Float32 t;
-  GenerateSurfaceWorklet(vtkm::Float32 st) : t(st) {}
+  GenerateSurfaceWorklet(vtkm::Float32 st)
+    : t(st)
+  {
+  }
 
-  typedef void ControlSignature( FieldIn<>, FieldOut<>, FieldOut<> );
-  typedef void ExecutionSignature( _1, _2, _3 );
+  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldOut<>);
+  typedef void ExecutionSignature(_1, _2, _3);
 
-  template<typename T>
-  VTKM_EXEC
-  void operator()( const vtkm::Vec< T, 3 > & input,
-                   vtkm::Vec<T, 3> & output,
-                   vtkm::Vec<vtkm::UInt8, 4>& color ) const
+  template <typename T>
+  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& input,
+                            vtkm::Vec<T, 3>& output,
+                            vtkm::Vec<vtkm::UInt8, 4>& color) const
   {
     output[0] = input[0];
-    output[1] = 0.25f * vtkm::Sin( input[0] * 10.f + t ) * vtkm::Cos( input[2] * 10.f + t );
+    output[1] = 0.25f * vtkm::Sin(input[0] * 10.f + t) * vtkm::Cos(input[2] * 10.f + t);
     output[2] = input[2];
 
     color[0] = 0;
@@ -61,64 +63,57 @@ struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
 
 struct RunGenerateSurfaceWorklet
 {
-  template<typename DeviceAdapterTag>
-  bool operator()(DeviceAdapterTag ) const
+  template <typename DeviceAdapterTag>
+  bool operator()(DeviceAdapterTag) const
   {
     //At this point we know we have runtime support
     typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> DeviceTraits;
 
-    typedef vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet,
-                                              DeviceAdapterTag> DispatcherType;
+    typedef vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet, DeviceAdapterTag>
+      DispatcherType;
 
-    std::cout << "Running a worklet on device adapter: "
-              << DeviceTraits::GetName() << std::endl;
+    std::cout << "Running a worklet on device adapter: " << DeviceTraits::GetName() << std::endl;
 
-     GenerateSurfaceWorklet worklet( 0.05f );
-     DispatcherType(worklet).Invoke( this->In,
-                                     this->Out,
-                                     this->Color);
+    GenerateSurfaceWorklet worklet(0.05f);
+    DispatcherType(worklet).Invoke(this->In, this->Out, this->Color);
 
-     return true;
+    return true;
   }
 
-  vtkm::cont::ArrayHandle< FloatVec3 > In;
-  vtkm::cont::ArrayHandle< FloatVec3 > Out;
-  vtkm::cont::ArrayHandle< Uint8Vec4 > Color;
+  vtkm::cont::ArrayHandle<FloatVec3> In;
+  vtkm::cont::ArrayHandle<FloatVec3> Out;
+  vtkm::cont::ArrayHandle<Uint8Vec4> Color;
 };
 
-
-template<typename T>
-std::vector< vtkm::Vec<T, 3> > make_testData(int size)
+template <typename T>
+std::vector<vtkm::Vec<T, 3>> make_testData(int size)
 {
-  std::vector< vtkm::Vec< T, 3 > > data;
-  data.reserve( static_cast<std::size_t>(size*size) );
-  for (int i = 0; i < size; ++i )
+  std::vector<vtkm::Vec<T, 3>> data;
+  data.reserve(static_cast<std::size_t>(size * size));
+  for (int i = 0; i < size; ++i)
+  {
+    for (int j = 0; j < size; ++j)
     {
-    for (int j = 0; j < size; ++j )
-      {
-        data.push_back( vtkm::Vec<T,3>(2.f*static_cast<T>(i/size)-1.f,
-                                       0.f,
-                                       2.f*static_cast<T>(j/size)-1.f));
-      }
+      data.push_back(vtkm::Vec<T, 3>(
+        2.f * static_cast<T>(i / size) - 1.f, 0.f, 2.f * static_cast<T>(j / size) - 1.f));
     }
+  }
   return data;
 }
 
 //This is the list of devices to compile in support for. The order of the
 //devices determines the runtime preference.
-struct DevicesToTry
-    : vtkm::ListTagBase<
-        vtkm::cont::DeviceAdapterTagCuda,
-        vtkm::cont::DeviceAdapterTagTBB,
-        vtkm::cont::DeviceAdapterTagSerial> {  };
-
+struct DevicesToTry : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
+                                        vtkm::cont::DeviceAdapterTagTBB,
+                                        vtkm::cont::DeviceAdapterTagSerial>
+{
+};
 
 int main(int, char**)
 {
-  std::vector< FloatVec3 > data = make_testData<vtkm::Float32>(1024);
+  std::vector<FloatVec3> data = make_testData<vtkm::Float32>(1024);
 
   //make array handles for the data
-
 
   // TryExecutes takes a functor and a list of devices. It then tries to run
   // the functor for each device (in the order given in the list) until the
@@ -136,7 +131,4 @@ int main(int, char**)
   RunGenerateSurfaceWorklet task;
   task.In = vtkm::cont::make_ArrayHandle(data);
   vtkm::cont::TryExecute(task, DevicesToTry());
-
 }
-
-

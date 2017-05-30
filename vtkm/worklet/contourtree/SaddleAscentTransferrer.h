@@ -83,35 +83,38 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
 class SaddleAscentTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexID,             // (input) active vertex
-                                FieldIn<IdType> newOutdegree,         // (input) updated updegree
-                                FieldIn<IdType> newFirstEdge,         // (input) updated first edge of vertex
-                                WholeArrayIn<IdType> activeEdges,     // (input) active edges
-                                WholeArrayIn<IdType> firstEdge,       // (input) first edges
-                                WholeArrayOut<IdType> edgeSorter);    // (output) edge sorter
+  typedef void ControlSignature(
+    FieldIn<IdType> vertexID,          // (input) active vertex
+    FieldIn<IdType> newOutdegree,      // (input) updated updegree
+    FieldIn<IdType> newFirstEdge,      // (input) updated first edge of vertex
+    WholeArrayIn<IdType> activeEdges,  // (input) active edges
+    WholeArrayIn<IdType> firstEdge,    // (input) first edges
+    WholeArrayOut<IdType> edgeSorter); // (output) edge sorter
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   SaddleAscentTransferrer() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertexID,
-                  const vtkm::Id& newOutdegree,
-                  const vtkm::Id& newFirstEdge,
-                  const InFieldPortalType& activeEdges,
-                  const InFieldPortalType& firstEdge,
-                  const OutFieldPortalType& edgeSorter) const
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID,
+                            const vtkm::Id& newOutdegree,
+                            const vtkm::Id& newFirstEdge,
+                            const InFieldPortalType& activeEdges,
+                            const InFieldPortalType& firstEdge,
+                            const OutFieldPortalType& edgeSorter) const
   {
     // loop through the edges from the vertex
     for (vtkm::Id edge = 0; edge < newOutdegree; edge++)
@@ -126,7 +129,6 @@ public:
   }
 
 }; // SaddleAscentTransferrer
-
 }
 }
 }

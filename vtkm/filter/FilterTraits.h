@@ -23,9 +23,11 @@
 
 #include <vtkm/TypeListTag.h>
 
-namespace vtkm {
-namespace filter {
-template<typename Filter>
+namespace vtkm
+{
+namespace filter
+{
+template <typename Filter>
 class FilterTraits
 {
 public:
@@ -35,7 +37,7 @@ public:
   typedef vtkm::ListTagUniversal InputFieldTypeList;
 };
 
-template<typename DerivedPolicy, typename FilterType>
+template <typename DerivedPolicy, typename FilterType>
 struct DeduceFilterFieldTypes
 {
   using FList = typename vtkm::filter::FilterTraits<FilterType>::InputFieldTypeList;
@@ -43,7 +45,6 @@ struct DeduceFilterFieldTypes
 
   using TypeList = vtkm::ListTagIntersect<FList, PList>;
 };
-
 }
 }
 

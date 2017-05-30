@@ -26,42 +26,43 @@
 
 #include <vtkm/cont/arg/Transport.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief \c Transport tag for input arrays.
 ///
 /// \c TransportTagArrayIn is a tag used with the \c Transport class to
 /// transport \c ArrayHandle objects for input data.
 ///
-struct TransportTagArrayIn {  };
+struct TransportTagArrayIn
+{
+};
 
-template<typename ContObjectType, typename Device>
+template <typename ContObjectType, typename Device>
 struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
 {
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
-      ExecObjectType;
+  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst ExecObjectType;
 
-  template<typename InputDomainType>
-  VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object,
-                            const InputDomainType &vtkmNotUsed(inputDomain),
-                            vtkm::Id inputRange,
-                            vtkm::Id vtkmNotUsed(outputRange)) const
+  template <typename InputDomainType>
+  VTKM_CONT ExecObjectType operator()(const ContObjectType& object,
+                                      const InputDomainType& vtkmNotUsed(inputDomain),
+                                      vtkm::Id inputRange,
+                                      vtkm::Id vtkmNotUsed(outputRange)) const
   {
     if (object.GetNumberOfValues() != inputRange)
     {
-      throw vtkm::cont::ErrorBadValue(
-            "Input array to worklet invocation the wrong size.");
+      throw vtkm::cont::ErrorBadValue("Input array to worklet invocation the wrong size.");
     }
 
     return object.PrepareForInput(Device());
   }
 };
-
 }
 }
 } // namespace vtkm::cont::arg

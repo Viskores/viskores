@@ -24,48 +24,47 @@ class AddPermutationCellSet
 {
   vtkm::cont::DataSet* Output;
   vtkm::cont::ArrayHandle<vtkm::Id>* ValidIds;
-public:
-  AddPermutationCellSet(vtkm::cont::DataSet& data,
-                        vtkm::cont::ArrayHandle<vtkm::Id>& validIds):
-    Output(&data),
-    ValidIds(&validIds)
-  { }
 
-  template<typename CellSetType>
-  void operator()(const CellSetType& cellset ) const
+public:
+  AddPermutationCellSet(vtkm::cont::DataSet& data, vtkm::cont::ArrayHandle<vtkm::Id>& validIds)
+    : Output(&data)
+    , ValidIds(&validIds)
+  {
+  }
+
+  template <typename CellSetType>
+  void operator()(const CellSetType& cellset) const
   {
     typedef vtkm::cont::CellSetPermutation<CellSetType> PermutationCellSetType;
 
-    PermutationCellSetType permCellSet(*this->ValidIds, cellset,
-                                       cellset.GetName());
+    PermutationCellSetType permCellSet(*this->ValidIds, cellset, cellset.GetName());
 
     this->Output->AddCellSet(permCellSet);
   }
 };
 }
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT
-Mask::Mask():
-  vtkm::filter::FilterDataSet<Mask>(),
-  Stride(1),
-  CompactPoints(false)
+inline VTKM_CONT Mask::Mask()
+  : vtkm::filter::FilterDataSet<Mask>()
+  , Stride(1)
+  , CompactPoints(false)
 {
 }
 
 //-----------------------------------------------------------------------------
-template<typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-vtkm::filter::ResultDataSet Mask::DoExecute(const vtkm::cont::DataSet& input,
-                                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                            const DeviceAdapter&)
+template <typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT vtkm::filter::ResultDataSet Mask::DoExecute(
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter&)
 {
-  const vtkm::cont::DynamicCellSet& cells =
-                  input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
   typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
@@ -80,50 +79,44 @@ vtkm::filter::ResultDataSet Mask::DoExecute(const vtkm::cont::DataSet& input,
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
   AddPermutationCellSet addCellSet(output, this->ValidCellIds);
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy),
-                          addCellSet);
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy), addCellSet);
 
   return output;
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-bool Mask::DoMapField(vtkm::filter::ResultDataSet& result,
-                      const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                      const vtkm::filter::FieldMetadata& fieldMeta,
-                      const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                      const DeviceAdapter&)
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool Mask::DoMapField(vtkm::filter::ResultDataSet& result,
+                                       const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                                       const vtkm::filter::FieldMetadata& fieldMeta,
+                                       const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                                       const DeviceAdapter&)
 {
   // point data is copied as is because it was not collapsed
-  if(fieldMeta.IsPointField())
+  if (fieldMeta.IsPointField())
   {
     result.GetDataSet().AddField(fieldMeta.AsField(input));
     return true;
   }
 
-  if(fieldMeta.IsCellField())
+  if (fieldMeta.IsCellField())
   {
     //todo: We need to generate a new output policy that replaces
     //the original storage tag with a new storage tag where everything is
     //wrapped in ArrayHandlePermutation.
-    typedef vtkm::cont::ArrayHandlePermutation<
-                    vtkm::cont::ArrayHandle<vtkm::Id>,
-                    vtkm::cont::ArrayHandle<T, StorageType> > PermutationType;
+    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                               vtkm::cont::ArrayHandle<T, StorageType>>
+      PermutationType;
 
     PermutationType permutation =
-          vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input);
+      vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input);
 
-    result.GetDataSet().AddField( fieldMeta.AsField(permutation) );
+    result.GetDataSet().AddField(fieldMeta.AsField(permutation));
     return true;
   }
 
   // cell data does not apply
   return false;
 }
-
 }
 }

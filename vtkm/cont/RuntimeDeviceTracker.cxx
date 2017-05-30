@@ -33,16 +33,18 @@
 
 #define VTKM_MAX_DEVICE_ADAPTER_ID 8
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-namespace detail {
+namespace detail
+{
 
 struct RuntimeDeviceTrackerInternals
 {
   bool RuntimeValid[VTKM_MAX_DEVICE_ADAPTER_ID];
 };
-
 }
 
 VTKM_CONT
@@ -54,12 +56,12 @@ RuntimeDeviceTracker::RuntimeDeviceTracker()
 
 VTKM_CONT
 RuntimeDeviceTracker::~RuntimeDeviceTracker()
-{  }
+{
+}
 
 VTKM_CONT
-void RuntimeDeviceTracker::CheckDevice(
-    vtkm::cont::DeviceAdapterId deviceId,
-    const vtkm::cont::DeviceAdapterNameType &deviceName) const
+void RuntimeDeviceTracker::CheckDevice(vtkm::cont::DeviceAdapterId deviceId,
+                                       const vtkm::cont::DeviceAdapterNameType& deviceName) const
 {
   if ((deviceId < 0) || (deviceId >= VTKM_MAX_DEVICE_ADAPTER_ID))
   {
@@ -70,44 +72,41 @@ void RuntimeDeviceTracker::CheckDevice(
 }
 
 VTKM_CONT
-bool RuntimeDeviceTracker::CanRunOnImpl(
-    vtkm::cont::DeviceAdapterId deviceId,
-    const vtkm::cont::DeviceAdapterNameType &deviceName) const
+bool RuntimeDeviceTracker::CanRunOnImpl(vtkm::cont::DeviceAdapterId deviceId,
+                                        const vtkm::cont::DeviceAdapterNameType& deviceName) const
 {
   this->CheckDevice(deviceId, deviceName);
   return this->Internals->RuntimeValid[deviceId];
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::SetDeviceState(
-    vtkm::cont::DeviceAdapterId deviceId,
-    const vtkm::cont::DeviceAdapterNameType &deviceName,
-    bool state)
+void RuntimeDeviceTracker::SetDeviceState(vtkm::cont::DeviceAdapterId deviceId,
+                                          const vtkm::cont::DeviceAdapterNameType& deviceName,
+                                          bool state)
 {
   this->CheckDevice(deviceId, deviceName);
   this->Internals->RuntimeValid[deviceId] = state;
 }
 
-namespace {
+namespace
+{
 
 struct VTKM_NEVER_EXPORT RuntimeDeviceTrackerResetFunctor
 {
   vtkm::cont::RuntimeDeviceTracker Tracker;
 
   VTKM_CONT
-  RuntimeDeviceTrackerResetFunctor(
-      const vtkm::cont::RuntimeDeviceTracker &tracker)
+  RuntimeDeviceTrackerResetFunctor(const vtkm::cont::RuntimeDeviceTracker& tracker)
     : Tracker(tracker)
-  {  }
+  {
+  }
 
-  template<typename Device>
-  VTKM_CONT
-  void operator()(Device)
+  template <typename Device>
+  VTKM_CONT void operator()(Device)
   {
     this->Tracker.ResetDevice(Device());
   }
 };
-
 }
 
 VTKM_CONT
@@ -120,8 +119,7 @@ void RuntimeDeviceTracker::Reset()
 }
 
 VTKM_CONT
-vtkm::cont::RuntimeDeviceTracker
-RuntimeDeviceTracker::DeepCopy() const
+vtkm::cont::RuntimeDeviceTracker RuntimeDeviceTracker::DeepCopy() const
 {
   vtkm::cont::RuntimeDeviceTracker dest;
   dest.DeepCopy(*this);
@@ -129,18 +127,16 @@ RuntimeDeviceTracker::DeepCopy() const
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker &src)
+void RuntimeDeviceTracker::DeepCopy(const vtkm::cont::RuntimeDeviceTracker& src)
 {
-  std::copy_n(src.Internals->RuntimeValid,
-              VTKM_MAX_DEVICE_ADAPTER_ID,
-              this->Internals->RuntimeValid);
+  std::copy_n(
+    src.Internals->RuntimeValid, VTKM_MAX_DEVICE_ADAPTER_ID, this->Internals->RuntimeValid);
 }
 
 VTKM_CONT
-void RuntimeDeviceTracker::ForceDeviceImpl(
-    vtkm::cont::DeviceAdapterId deviceId,
-    const vtkm::cont::DeviceAdapterNameType &deviceName,
-    bool runtimeExists)
+void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
+                                           const vtkm::cont::DeviceAdapterNameType& deviceName,
+                                           bool runtimeExists)
 {
   if (!runtimeExists)
   {
@@ -162,6 +158,5 @@ vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker()
   static vtkm::cont::RuntimeDeviceTracker globalTracker;
   return globalTracker;
 }
-
 }
 } // namespace vtkm::cont

@@ -27,26 +27,29 @@
 #include <ctime>
 #include <random>
 
-namespace {
+namespace
+{
 
 std::mt19937 g_RandomGenerator;
 
-template<typename T>
+template <typename T>
 struct TransformTests
 {
   std::uniform_real_distribution<T> RandomDistribution;
   TransformTests()
-    : RandomDistribution(0.0f, 1.0f) {  }
+    : RandomDistribution(0.0f, 1.0f)
+  {
+  }
 
   T RandomNum() { return this->RandomDistribution(g_RandomGenerator); }
 
-  typedef vtkm::Vec<T,3> Vec;
-  typedef vtkm::Matrix<T,4,4> Transform;
+  typedef vtkm::Vec<T, 3> Vec;
+  typedef vtkm::Matrix<T, 4, 4> Transform;
 
   Vec RandomVector()
   {
     Vec vec(this->RandomNum(), this->RandomNum(), this->RandomNum());
-    return T(2)*vec - Vec(1);
+    return T(2) * vec - Vec(1);
   }
 
   void CheckTranslate()
@@ -63,12 +66,11 @@ struct TransformTests
 
     Vec translated1 = vtkm::Transform3DPoint(translate, startPoint);
     std::cout << " First translation: " << translated1 << std::endl;
-    VTKM_TEST_ASSERT(test_equal(translated1, startPoint+translateAmount),
-                     "Bad translation.");
+    VTKM_TEST_ASSERT(test_equal(translated1, startPoint + translateAmount), "Bad translation.");
 
     Vec translated2 = vtkm::Transform3DPoint(translate, translated1);
     std::cout << " Second translation: " << translated2 << std::endl;
-    VTKM_TEST_ASSERT(test_equal(translated2, startPoint+T(2)*translateAmount),
+    VTKM_TEST_ASSERT(test_equal(translated2, startPoint + T(2) * translateAmount),
                      "Bad translation.");
 
     // Vectors should be invarient to translation.
@@ -91,19 +93,16 @@ struct TransformTests
 
     Vec scaled1 = vtkm::Transform3DPoint(scale, startPoint);
     std::cout << " First scale: " << scaled1 << std::endl;
-    VTKM_TEST_ASSERT(test_equal(scaled1, startPoint*scaleAmount),
-                     "Bad scale.");
+    VTKM_TEST_ASSERT(test_equal(scaled1, startPoint * scaleAmount), "Bad scale.");
 
     Vec scaled2 = vtkm::Transform3DPoint(scale, scaled1);
     std::cout << " Second scale: " << scaled2 << std::endl;
-    VTKM_TEST_ASSERT(test_equal(scaled2, startPoint*scaleAmount*scaleAmount),
-                     "Bad scale.");
+    VTKM_TEST_ASSERT(test_equal(scaled2, startPoint * scaleAmount * scaleAmount), "Bad scale.");
 
     // Vectors should scale the same as points.
     scaled1 = vtkm::Transform3DVector(scale, startPoint);
     std::cout << " Scaled vector: " << scaled1 << std::endl;
-    VTKM_TEST_ASSERT(test_equal(scaled1, startPoint*scaleAmount),
-                     "Bad scale.");
+    VTKM_TEST_ASSERT(test_equal(scaled1, startPoint * scaleAmount), "Bad scale.");
   }
 
   void CheckRotate()
@@ -120,66 +119,57 @@ struct TransformTests
 
     Vec rotated1 = vtkm::Transform3DPoint(rotateX, startPoint);
     std::cout << " First rotate: " << rotated1 << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(rotated1, Vec(startPoint[0],-startPoint[2],startPoint[1])),
-          "Bad rotate.");
+    VTKM_TEST_ASSERT(test_equal(rotated1, Vec(startPoint[0], -startPoint[2], startPoint[1])),
+                     "Bad rotate.");
 
     Vec rotated2 = vtkm::Transform3DPoint(rotateX, rotated1);
     std::cout << " Second rotate: " << rotated2 << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(rotated2, Vec(startPoint[0],-startPoint[1],-startPoint[2])),
-          "Bad rotate.");
+    VTKM_TEST_ASSERT(test_equal(rotated2, Vec(startPoint[0], -startPoint[1], -startPoint[2])),
+                     "Bad rotate.");
 
     // Vectors should rotate the same as points.
     rotated1 = vtkm::Transform3DVector(rotateX, startPoint);
     std::cout << " Vector rotate: " << rotated1 << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(rotated1, Vec(startPoint[0],-startPoint[2],startPoint[1])),
-          "Bad rotate.");
+    VTKM_TEST_ASSERT(test_equal(rotated1, Vec(startPoint[0], -startPoint[2], startPoint[1])),
+                     "Bad rotate.");
 
     std::cout << "--Rotate 90 degrees around Y" << std::endl;
     Transform rotateY = vtkm::Transform3DRotateY(ninetyDegrees);
 
     rotated1 = vtkm::Transform3DPoint(rotateY, startPoint);
     std::cout << " First rotate: " << rotated1 << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(rotated1, Vec(startPoint[2],startPoint[1],-startPoint[0])),
-          "Bad rotate.");
+    VTKM_TEST_ASSERT(test_equal(rotated1, Vec(startPoint[2], startPoint[1], -startPoint[0])),
+                     "Bad rotate.");
 
     rotated2 = vtkm::Transform3DPoint(rotateY, rotated1);
     std::cout << " Second rotate: " << rotated2 << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(rotated2, Vec(-startPoint[0],startPoint[1],-startPoint[2])),
-          "Bad rotate.");
+    VTKM_TEST_ASSERT(test_equal(rotated2, Vec(-startPoint[0], startPoint[1], -startPoint[2])),
+                     "Bad rotate.");
 
     // Vectors should rotate the same as points.
     rotated1 = vtkm::Transform3DVector(rotateY, startPoint);
     std::cout << " Vector rotate: " << rotated1 << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(rotated1, Vec(startPoint[2],startPoint[1],-startPoint[0])),
-          "Bad rotate.");
+    VTKM_TEST_ASSERT(test_equal(rotated1, Vec(startPoint[2], startPoint[1], -startPoint[0])),
+                     "Bad rotate.");
 
     std::cout << "--Rotate 90 degrees around Z" << std::endl;
     Transform rotateZ = vtkm::Transform3DRotateZ(ninetyDegrees);
 
     rotated1 = vtkm::Transform3DPoint(rotateZ, startPoint);
     std::cout << " First rotate: " << rotated1 << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(rotated1, Vec(-startPoint[1],startPoint[0],startPoint[2])),
-          "Bad rotate.");
+    VTKM_TEST_ASSERT(test_equal(rotated1, Vec(-startPoint[1], startPoint[0], startPoint[2])),
+                     "Bad rotate.");
 
     rotated2 = vtkm::Transform3DPoint(rotateZ, rotated1);
     std::cout << " Second rotate: " << rotated2 << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(rotated2, Vec(-startPoint[0],-startPoint[1],startPoint[2])),
-          "Bad rotate.");
+    VTKM_TEST_ASSERT(test_equal(rotated2, Vec(-startPoint[0], -startPoint[1], startPoint[2])),
+                     "Bad rotate.");
 
     // Vectors should rotate the same as points.
     rotated1 = vtkm::Transform3DVector(rotateZ, startPoint);
     std::cout << " Vector rotate: " << rotated1 << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(rotated1, Vec(-startPoint[1],startPoint[0],startPoint[2])),
-          "Bad rotate.");
+    VTKM_TEST_ASSERT(test_equal(rotated1, Vec(-startPoint[1], startPoint[0], startPoint[2])),
+                     "Bad rotate.");
   }
 
   void CheckPerspective()
@@ -197,15 +187,13 @@ struct TransformTests
 
     Vec projected = vtkm::Transform3DPointPerspective(perspective, startPoint);
     std::cout << " Projected: " << projected << std::endl;
-    VTKM_TEST_ASSERT(
-          test_equal(projected, startPoint/startPoint[2]),
-          "Bad perspective.");
+    VTKM_TEST_ASSERT(test_equal(projected, startPoint / startPoint[2]), "Bad perspective.");
   }
 };
 
 struct TryTransformsFunctor
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     TransformTests<T> tests;
@@ -221,13 +209,12 @@ void TestTransforms()
   std::cout << "Seed: " << seed << std::endl;
   g_RandomGenerator.seed(seed);
 
-  vtkm::testing::Testing::TryTypes(TryTransformsFunctor(),
-                                   vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(TryTransformsFunctor(), vtkm::TypeListTagFieldScalar());
 }
 
 } // anonymous namespace
 
-int UnitTestTransform3D(int, char *[])
+int UnitTestTransform3D(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestTransforms);
 }

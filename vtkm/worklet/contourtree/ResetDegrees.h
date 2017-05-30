@@ -70,35 +70,36 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class ResetDegrees : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> superID,                   // input
-                                WholeArrayOut<IdType> updegree,            // output
-                                WholeArrayOut<IdType> downdegree);         // output
+  typedef void ControlSignature(FieldIn<IdType> superID,           // input
+                                WholeArrayOut<IdType> updegree,    // output
+                                WholeArrayOut<IdType> downdegree); // output
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   ResetDegrees() {}
 
   template <typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& superId,
-                  const OutFieldPortalType& updegree,
-                  const OutFieldPortalType& downdegree) const
+  VTKM_EXEC void operator()(const vtkm::Id& superId,
+                            const OutFieldPortalType& updegree,
+                            const OutFieldPortalType& downdegree) const
   {
     updegree.Set(superId, 0);
     downdegree.Set(superId, 0);
   }
 }; // ResetDegrees
-
 }
 }
 }

@@ -24,14 +24,15 @@
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 //-----------------------------------------------------------------------------
 template <typename ImplicitFunctionType, typename DerivedPolicy>
-inline
-void ClipWithImplicitFunction::SetImplicitFunction(
-  const std::shared_ptr<ImplicitFunctionType> &func,
+inline void ClipWithImplicitFunction::SetImplicitFunction(
+  const std::shared_ptr<ImplicitFunctionType>& func,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   func->ResetDevices(DerivedPolicy::DeviceAdapterList);
@@ -39,27 +40,20 @@ void ClipWithImplicitFunction::SetImplicitFunction(
 }
 
 //-----------------------------------------------------------------------------
-template<typename DerivedPolicy,
-         typename DeviceAdapter>
+template <typename DerivedPolicy, typename DeviceAdapter>
 inline vtkm::filter::ResultDataSet ClipWithImplicitFunction::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
 {
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells =
-                  input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
   const vtkm::cont::CoordinateSystem& inputCoords =
-                      input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-          this->Worklet.Run( vtkm::filter::ApplyPolicy(cells, policy),
-                             *this->Function,
-                             inputCoords,
-                             device
-                           );
+  vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
+    vtkm::filter::ApplyPolicy(cells, policy), *this->Function, inputCoords, device);
 
   // compute output coordinates
   vtkm::cont::CoordinateSystem outputCoords;
@@ -67,18 +61,15 @@ inline vtkm::filter::ResultDataSet ClipWithImplicitFunction::DoExecute(
 
   //create the output data
   vtkm::cont::DataSet output;
-  output.AddCellSet( outputCellSet );
-  output.AddCoordinateSystem( outputCoords );
+  output.AddCellSet(outputCellSet);
+  output.AddCoordinateSystem(outputCoords);
 
   vtkm::filter::ResultDataSet result(output);
   return result;
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline bool ClipWithImplicitFunction::DoMapField(
   vtkm::filter::ResultDataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
@@ -86,19 +77,17 @@ inline bool ClipWithImplicitFunction::DoMapField(
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
-  if(fieldMeta.IsPointField() == false)
+  if (fieldMeta.IsPointField() == false)
   {
     //not a point field, we can't map it
     return false;
   }
 
-  vtkm::cont::DynamicArrayHandle output =
-                          this->Worklet.ProcessField( input, device);
+  vtkm::cont::DynamicArrayHandle output = this->Worklet.ProcessField(input, device);
 
   //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField( fieldMeta.AsField(output) );
+  result.GetDataSet().AddField(fieldMeta.AsField(output));
   return true;
 }
-
 }
 }

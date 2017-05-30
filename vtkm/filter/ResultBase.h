@@ -23,8 +23,10 @@
 
 #include <vtkm/cont/DataSet.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 /// \brief Base class for result returned from a filter.
 ///
@@ -48,28 +50,31 @@ public:
   /// Returns the results of the filter in terms of a \c DataSet.
   ///
   VTKM_CONT
-  const vtkm::cont::DataSet &GetDataSet() const { return this->Data; }
+  const vtkm::cont::DataSet& GetDataSet() const { return this->Data; }
 
   /// Returns the results of the filter in terms of a writable \c DataSet.
   VTKM_CONT
-  vtkm::cont::DataSet &GetDataSet() { return this->Data; }
+  vtkm::cont::DataSet& GetDataSet() { return this->Data; }
 
 protected:
   VTKM_CONT
-  ResultBase(): Valid(false) {  }
-
-  VTKM_CONT
-  ResultBase(const vtkm::cont::DataSet &dataSet)
-    : Valid(true), Data(dataSet) {  }
-
-  VTKM_CONT
-  void SetValid(bool valid)
+  ResultBase()
+    : Valid(false)
   {
-    this->Valid = valid;
   }
 
   VTKM_CONT
-  void SetDataSet(const vtkm::cont::DataSet &dataSet)
+  ResultBase(const vtkm::cont::DataSet& dataSet)
+    : Valid(true)
+    , Data(dataSet)
+  {
+  }
+
+  VTKM_CONT
+  void SetValid(bool valid) { this->Valid = valid; }
+
+  VTKM_CONT
+  void SetDataSet(const vtkm::cont::DataSet& dataSet)
   {
     this->Data = dataSet;
     this->SetValid(true);
@@ -79,7 +84,6 @@ private:
   bool Valid;
   vtkm::cont::DataSet Data;
 };
-
 }
 } // namespace vtkm::filter
 

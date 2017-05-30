@@ -88,43 +88,48 @@
 #include <vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation_Macros.h>
 #include <vtkm/worklet/contourtree/VertexValueComparator.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
-template<typename T>
+template <typename T>
 class Mesh2D_DEM_VertexStarter : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T> {};
+  struct TagType : vtkm::ListTagBase<T>
+  {
+  };
 
-  typedef void ControlSignature(FieldIn<IdType> vertex,          // (input) index of vertex
-                                WholeArrayIn<TagType> values,    // (input) values within mesh
-                                FieldOut<IdType> chain,          // (output) modify the chains
-                                FieldOut<IdType> linkMask);      // (output) modify the mask
+  typedef void ControlSignature(FieldIn<IdType> vertex,       // (input) index of vertex
+                                WholeArrayIn<TagType> values, // (input) values within mesh
+                                FieldOut<IdType> chain,       // (output) modify the chains
+                                FieldOut<IdType> linkMask);   // (output) modify the mask
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
-  vtkm::Id nRows;     // (input) number of rows in 2D
-  vtkm::Id nCols;     // (input) number of cols in 2D
-  bool ascending;     // ascending or descending (join or split tree)
+  vtkm::Id nRows; // (input) number of rows in 2D
+  vtkm::Id nCols; // (input) number of cols in 2D
+  bool ascending; // ascending or descending (join or split tree)
 
   // Constructor
   VTKM_EXEC_CONT
-  Mesh2D_DEM_VertexStarter(vtkm::Id NRows,
-                           vtkm::Id NCols,
-                           bool Ascending) : nRows(NRows),
-                                             nCols(NCols),
-                                             ascending(Ascending) {}
+  Mesh2D_DEM_VertexStarter(vtkm::Id NRows, vtkm::Id NCols, bool Ascending)
+    : nRows(NRows)
+    , nCols(NCols)
+    , ascending(Ascending)
+  {
+  }
 
   // Locate the next vertex in direction indicated
   template <typename InFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertex,
-                  const InFieldPortalType& values,
-                        vtkm::Id& chain,
-                        vtkm::Id& linkMask) const
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
+                            const InFieldPortalType& values,
+                            vtkm::Id& chain,
+                            vtkm::Id& linkMask) const
   {
     VertexValueComparator<InFieldPortalType> lessThan(values);
     vtkm::Id row = VERTEX_ROW(vertex, nCols);
@@ -136,7 +141,7 @@ public:
     bool isLeft = (col == 0);
     bool isRight = (col == nCols - 1);
     bool isTop = (row == 0);
-    bool isBottom = (row  == nRows - 1);
+    bool isBottom = (row == nRows - 1);
 
     for (vtkm::Id edgeNo = 0; edgeNo < N_INCIDENT_EDGES; edgeNo++)
     { // per edge
@@ -144,73 +149,72 @@ public:
 
       switch (edgeNo)
       {
-      case 5:         // up
-        if (isTop)
+        case 5: // up
+          if (isTop)
+            break;
+          nbr = vertex - nCols;
+          if (lessThan(vertex, nbr, ascending))
+            break;
+          mask |= 0x20;
+          destination = nbr;
           break;
-        nbr = vertex - nCols;
-        if (lessThan(vertex, nbr, ascending))
-          break;
-        mask |= 0x20;
-        destination = nbr;
-        break;
 
-      case 4:         // up left
-        if (isLeft || isTop)
+        case 4: // up left
+          if (isLeft || isTop)
+            break;
+          nbr = vertex - nCols - 1;
+          if (lessThan(vertex, nbr, ascending))
+            break;
+          mask |= 0x10;
+          destination = nbr;
           break;
-        nbr = vertex - nCols - 1;
-        if (lessThan(vertex, nbr, ascending))
-          break;
-        mask |= 0x10;
-        destination = nbr;
-        break;
 
-      case 3:         // left
-        if (isLeft)
+        case 3: // left
+          if (isLeft)
+            break;
+          nbr = vertex - 1;
+          if (lessThan(vertex, nbr, ascending))
+            break;
+          mask |= 0x08;
+          destination = nbr;
           break;
-        nbr = vertex - 1;
-        if (lessThan(vertex, nbr, ascending))
-          break;
-        mask |= 0x08;
-        destination = nbr;
-        break;
 
-      case 2:         // down
-        if (isBottom)
+        case 2: // down
+          if (isBottom)
+            break;
+          nbr = vertex + nCols;
+          if (lessThan(vertex, nbr, ascending))
+            break;
+          mask |= 0x04;
+          destination = nbr;
           break;
-        nbr = vertex + nCols;
-        if (lessThan(vertex, nbr, ascending))
-          break;
-        mask |= 0x04;
-        destination = nbr;
-        break;
 
-      case 1:         // down right
-        if (isBottom || isRight)
+        case 1: // down right
+          if (isBottom || isRight)
+            break;
+          nbr = vertex + nCols + 1;
+          if (lessThan(vertex, nbr, ascending))
+            break;
+          mask |= 0x02;
+          destination = nbr;
           break;
-        nbr = vertex + nCols + 1;
-        if (lessThan(vertex, nbr, ascending))
-          break;
-        mask |= 0x02;
-        destination = nbr;
-        break;
 
-      case 0:         // right
-        if (isRight)
+        case 0: // right
+          if (isRight)
+            break;
+          nbr = vertex + 1;
+          if (lessThan(vertex, nbr, ascending))
+            break;
+          mask |= 0x01;
+          destination = nbr;
           break;
-        nbr = vertex + 1;
-        if (lessThan(vertex, nbr, ascending))
-          break;
-        mask |= 0x01;
-        destination = nbr;
-        break;
       } // switch on edgeNo
-    } // per edge
+    }   // per edge
 
     linkMask = mask;
     chain = destination;
   } // operator()
-}; // Mesh2D_DEM_VertexStarter
-
+};  // Mesh2D_DEM_VertexStarter
 }
 }
 }

@@ -71,9 +71,12 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class SetSupernodeInward : public vtkm::worklet::WorkletMapField
@@ -86,20 +89,19 @@ public:
                                 WholeArrayIn<IdType> outdegree,     // (input)
                                 WholeArrayInOut<IdType> superarcs); // (in out)
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   SetSupernodeInward() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& superID,
-                  const InFieldPortalType& inbound,
-                  const InFieldPortalType& outbound,
-                  const InFieldPortalType& indegree,
-                  const InFieldPortalType& outdegree,
-                  const OutFieldPortalType& superarcs) const
+  VTKM_EXEC void operator()(const vtkm::Id& superID,
+                            const InFieldPortalType& inbound,
+                            const InFieldPortalType& outbound,
+                            const InFieldPortalType& indegree,
+                            const InFieldPortalType& outdegree,
+                            const OutFieldPortalType& superarcs) const
   {
     // test for criticality
     vtkm::Id outNeighbour = outbound.Get(superID);
@@ -119,7 +121,6 @@ public:
     superarcs.Set(superID, inNeighbour);
   }
 }; // SetSupernodeInward
-
 }
 }
 }

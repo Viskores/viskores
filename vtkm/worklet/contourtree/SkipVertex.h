@@ -71,9 +71,12 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class SkipVertex : public vtkm::worklet::WorkletMapField
@@ -84,24 +87,24 @@ public:
                                 WholeArrayInOut<IdType> joinArcs,   // (i/o)
                                 WholeArrayInOut<IdType> splitArcs); // (i/o)
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   SkipVertex() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& superID,
-                  const InFieldPortalType& superarcs,
-                  const OutFieldPortalType& joinArcs,
-                  const OutFieldPortalType& splitArcs) const
+  VTKM_EXEC void operator()(const vtkm::Id& superID,
+                            const InFieldPortalType& superarcs,
+                            const OutFieldPortalType& joinArcs,
+                            const OutFieldPortalType& splitArcs) const
   {
     //  retrieve it's join neighbour j
     vtkm::Id joinNeighbour = joinArcs.Get(superID);
 
     // if v has a join neighbour (i.e. j == -1) and j has a contour arc
-    if ((joinNeighbour != NO_VERTEX_ASSIGNED) && (superarcs.Get(joinNeighbour) != NO_VERTEX_ASSIGNED))
+    if ((joinNeighbour != NO_VERTEX_ASSIGNED) &&
+        (superarcs.Get(joinNeighbour) != NO_VERTEX_ASSIGNED))
       // reset the vertex' join neighbour
       joinArcs.Set(superID, joinArcs.Get(joinNeighbour));
 
@@ -109,12 +112,12 @@ public:
     vtkm::Id splitNeighbour = splitArcs.Get(superID);
 
     // if v has a split neighbour (i.e. s == -1) and s has a contour arc
-    if ((splitNeighbour != NO_VERTEX_ASSIGNED) && (superarcs.Get(splitNeighbour) != NO_VERTEX_ASSIGNED))
+    if ((splitNeighbour != NO_VERTEX_ASSIGNED) &&
+        (superarcs.Get(splitNeighbour) != NO_VERTEX_ASSIGNED))
       // reset the vertex' split neighbour
       splitArcs.Set(superID, splitArcs.Get(splitNeighbour));
   }
 }; // SkipVertex
-
 }
 }
 }

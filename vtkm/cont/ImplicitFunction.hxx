@@ -23,37 +23,46 @@
 #include <algorithm>
 #include <limits>
 
-
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 //============================================================================
 inline Box::Box()
-  : MinPoint(vtkm::Vec<FloatDefault,3>(FloatDefault(0))),
-    MaxPoint(vtkm::Vec<FloatDefault,3>(FloatDefault(1)))
-{ }
-
-inline Box::Box(vtkm::Vec<FloatDefault, 3> minPoint,
-                vtkm::Vec<FloatDefault, 3> maxPoint)
-  : MinPoint(minPoint), MaxPoint(maxPoint)
-{ }
-
-inline Box::Box(FloatDefault xmin, FloatDefault xmax,
-                FloatDefault ymin, FloatDefault ymax,
-                FloatDefault zmin, FloatDefault zmax)
+  : MinPoint(vtkm::Vec<FloatDefault, 3>(FloatDefault(0)))
+  , MaxPoint(vtkm::Vec<FloatDefault, 3>(FloatDefault(1)))
 {
-  MinPoint[0] = xmin;  MaxPoint[0] = xmax;
-  MinPoint[1] = ymin;  MaxPoint[1] = ymax;
-  MinPoint[2] = zmin;  MaxPoint[2] = zmax;
 }
 
-inline void Box::SetMinPoint(const vtkm::Vec<FloatDefault, 3> &point)
+inline Box::Box(vtkm::Vec<FloatDefault, 3> minPoint, vtkm::Vec<FloatDefault, 3> maxPoint)
+  : MinPoint(minPoint)
+  , MaxPoint(maxPoint)
+{
+}
+
+inline Box::Box(FloatDefault xmin,
+                FloatDefault xmax,
+                FloatDefault ymin,
+                FloatDefault ymax,
+                FloatDefault zmin,
+                FloatDefault zmax)
+{
+  MinPoint[0] = xmin;
+  MaxPoint[0] = xmax;
+  MinPoint[1] = ymin;
+  MaxPoint[1] = ymax;
+  MinPoint[2] = zmin;
+  MaxPoint[2] = zmax;
+}
+
+inline void Box::SetMinPoint(const vtkm::Vec<FloatDefault, 3>& point)
 {
   this->MinPoint = point;
   this->Modified();
 }
 
-inline void Box::SetMaxPoint(const vtkm::Vec<FloatDefault, 3> &point)
+inline void Box::SetMaxPoint(const vtkm::Vec<FloatDefault, 3>& point)
 {
   this->MaxPoint = point;
   this->Modified();
@@ -70,22 +79,21 @@ inline const vtkm::Vec<FloatDefault, 3>& Box::GetMaxPoint() const
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault
-Box::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
+inline FloatDefault Box::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
 {
-  return this->Value(vtkm::Vec<vtkm::FloatDefault,3>(x, y, z));
+  return this->Value(vtkm::Vec<vtkm::FloatDefault, 3>(x, y, z));
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Box::Gradient(FloatDefault x, FloatDefault y, FloatDefault z) const
+inline vtkm::Vec<FloatDefault, 3> Box::Gradient(FloatDefault x,
+                                                FloatDefault y,
+                                                FloatDefault z) const
 {
   return this->Gradient(vtkm::Vec<FloatDefault, 3>(x, y, z));
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault
-Box::Value(const vtkm::Vec<FloatDefault, 3> &x) const
+inline FloatDefault Box::Value(const vtkm::Vec<FloatDefault, 3>& x) const
 {
   FloatDefault minDistance = vtkm::NegativeInfinity32();
   FloatDefault diff, t, dist;
@@ -138,7 +146,7 @@ Box::Value(const vtkm::Vec<FloatDefault, 3> &x) const
     }
     if (dist > FloatDefault(0.0))
     {
-      distance += dist*dist;
+      distance += dist * dist;
     }
   }
 
@@ -154,17 +162,16 @@ Box::Value(const vtkm::Vec<FloatDefault, 3> &x) const
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Box::Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
+inline vtkm::Vec<FloatDefault, 3> Box::Gradient(const vtkm::Vec<FloatDefault, 3>& x) const
 {
   vtkm::IdComponent minAxis = 0;
   FloatDefault dist = 0.0;
   FloatDefault minDist = vtkm::Infinity32();
-  vtkm::Vec<vtkm::IdComponent,3> location;
-  vtkm::Vec<FloatDefault,3> normal;
-  vtkm::Vec<FloatDefault,3> inside(FloatDefault(0));
-  vtkm::Vec<FloatDefault,3> outside(FloatDefault(0));
-  vtkm::Vec<FloatDefault,3> center((this->MaxPoint + this->MinPoint) * FloatDefault(0.5));
+  vtkm::Vec<vtkm::IdComponent, 3> location;
+  vtkm::Vec<FloatDefault, 3> normal;
+  vtkm::Vec<FloatDefault, 3> inside(FloatDefault(0));
+  vtkm::Vec<FloatDefault, 3> outside(FloatDefault(0));
+  vtkm::Vec<FloatDefault, 3> center((this->MaxPoint + this->MinPoint) * FloatDefault(0.5));
 
   // Compute the location of the point with respect to the box
   // Point will lie in one of 27 separate regions around or within the box
@@ -206,11 +213,18 @@ Box::Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
     }
   }
 
-  vtkm::Id indx = location[0] + 3*location[1] + 9*location[2];
+  vtkm::Id indx = location[0] + 3 * location[1] + 9 * location[2];
   switch (indx)
   {
     // verts - gradient points away from center point
-    case 0: case 2: case 6: case 8: case 18: case 20: case 24: case 26:
+    case 0:
+    case 2:
+    case 6:
+    case 8:
+    case 18:
+    case 20:
+    case 24:
+    case 26:
       for (vtkm::IdComponent d = 0; d < 3; d++)
       {
         normal[d] = x[d] - center[d];
@@ -219,9 +233,18 @@ Box::Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
       break;
 
     // edges - gradient points out from axis of cube
-    case 1: case 3: case 5: case 7:
-    case 9: case 11: case 15: case 17:
-    case 19: case 21: case 23: case 25:
+    case 1:
+    case 3:
+    case 5:
+    case 7:
+    case 9:
+    case 11:
+    case 15:
+    case 17:
+    case 19:
+    case 21:
+    case 23:
+    case 25:
       for (vtkm::IdComponent d = 0; d < 3; d++)
       {
         if (outside[d] != 0.0)
@@ -237,7 +260,12 @@ Box::Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
       break;
 
     // faces - gradient points perpendicular to face
-    case 4: case 10: case 12: case 14: case 16: case 22:
+    case 4:
+    case 10:
+    case 12:
+    case 14:
+    case 16:
+    case 22:
       for (vtkm::IdComponent d = 0; d < 3; d++)
       {
         normal[d] = outside[d];
@@ -256,32 +284,37 @@ Box::Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
   return normal;
 }
 
-
 //============================================================================
 inline Cylinder::Cylinder()
-  : Center(FloatDefault(0)),
-    Axis(vtkm::make_Vec(FloatDefault(1), FloatDefault(0), FloatDefault(0))),
-    Radius(FloatDefault(0.2))
-{ }
+  : Center(FloatDefault(0))
+  , Axis(vtkm::make_Vec(FloatDefault(1), FloatDefault(0), FloatDefault(0)))
+  , Radius(FloatDefault(0.2))
+{
+}
 
-inline Cylinder::Cylinder(const vtkm::Vec<FloatDefault, 3> &axis,
+inline Cylinder::Cylinder(const vtkm::Vec<FloatDefault, 3>& axis, FloatDefault radius)
+  : Center(FloatDefault(0))
+  , Axis(vtkm::Normal(axis))
+  , Radius(radius)
+{
+}
+
+inline Cylinder::Cylinder(const vtkm::Vec<FloatDefault, 3>& center,
+                          const vtkm::Vec<FloatDefault, 3>& axis,
                           FloatDefault radius)
-  : Center(FloatDefault(0)), Axis(vtkm::Normal(axis)), Radius(radius)
-{ }
+  : Center(center)
+  , Axis(vtkm::Normal(axis))
+  , Radius(radius)
+{
+}
 
-inline Cylinder::Cylinder(const vtkm::Vec<FloatDefault, 3> &center,
-                          const vtkm::Vec<FloatDefault, 3> &axis,
-                          FloatDefault radius)
-  : Center(center), Axis(vtkm::Normal(axis)), Radius(radius)
-{ }
-
-inline void Cylinder::SetCenter(const vtkm::Vec<FloatDefault, 3> &center)
+inline void Cylinder::SetCenter(const vtkm::Vec<FloatDefault, 3>& center)
 {
   this->Center = center;
   this->Modified();
 }
 
-inline void Cylinder::SetAxis(const vtkm::Vec<FloatDefault, 3> &axis)
+inline void Cylinder::SetAxis(const vtkm::Vec<FloatDefault, 3>& axis)
 {
   this->Axis = vtkm::Normal(axis);
   this->Modified();
@@ -309,7 +342,7 @@ inline FloatDefault Cylinder::GetRadius() const
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault Cylinder::Value(const vtkm::Vec<FloatDefault, 3> &x) const
+inline FloatDefault Cylinder::Value(const vtkm::Vec<FloatDefault, 3>& x) const
 {
   vtkm::Vec<FloatDefault, 3> x2c = x - this->Center;
   FloatDefault proj = vtkm::dot(this->Axis, x2c);
@@ -317,31 +350,27 @@ inline FloatDefault Cylinder::Value(const vtkm::Vec<FloatDefault, 3> &x) const
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault
-Cylinder::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
+inline FloatDefault Cylinder::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
 {
-  return this->Value(vtkm::Vec<vtkm::FloatDefault,3>(x, y, z));
+  return this->Value(vtkm::Vec<vtkm::FloatDefault, 3>(x, y, z));
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Cylinder::Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
+inline vtkm::Vec<FloatDefault, 3> Cylinder::Gradient(const vtkm::Vec<FloatDefault, 3>& x) const
 {
   vtkm::Vec<FloatDefault, 3> x2c = x - this->Center;
-  FloatDefault t = this->Axis[0] * x2c[0] +
-                    this->Axis[1] * x2c[1] +
-                    this->Axis[2] * x2c[2];
+  FloatDefault t = this->Axis[0] * x2c[0] + this->Axis[1] * x2c[1] + this->Axis[2] * x2c[2];
   vtkm::Vec<FloatDefault, 3> closestPoint = this->Center + (this->Axis * t);
   return (x - closestPoint) * FloatDefault(2);
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Cylinder::Gradient(FloatDefault x, FloatDefault y, FloatDefault z) const
+inline vtkm::Vec<FloatDefault, 3> Cylinder::Gradient(FloatDefault x,
+                                                     FloatDefault y,
+                                                     FloatDefault z) const
 {
   return this->Gradient(vtkm::Vec<FloatDefault, 3>(x, y, z));
 }
-
 
 //============================================================================
 inline Frustum::Frustum()
@@ -387,8 +416,9 @@ inline const vtkm::Vec<FloatDefault, 3>* Frustum::GetNormals() const
   return this->Normals;
 }
 
-inline void Frustum::SetPlane(int idx, vtkm::Vec<FloatDefault, 3> &point,
-                              vtkm::Vec<FloatDefault, 3> &normal)
+inline void Frustum::SetPlane(int idx,
+                              vtkm::Vec<FloatDefault, 3>& point,
+                              vtkm::Vec<FloatDefault, 3>& normal)
 {
   if (idx < 0 || idx >= 6)
   {
@@ -404,14 +434,18 @@ inline void Frustum::SetPlane(int idx, vtkm::Vec<FloatDefault, 3> &point,
 
 inline void Frustum::CreateFromPoints(const vtkm::Vec<FloatDefault, 3> points[8])
 {
-  int planes[6][3] = {{3, 2, 0}, {4, 5, 7}, {0, 1, 4},
-                      {1, 2, 5}, {2, 3, 6}, {3, 0, 7}};
+  // XXX(clang-format-3.9): 3.8 is silly. 3.9 makes it look like this.
+  // clang-format off
+  int planes[6][3] = {
+    { 3, 2, 0 }, { 4, 5, 7 }, { 0, 1, 4 }, { 1, 2, 5 }, { 2, 3, 6 }, { 3, 0, 7 }
+  };
+  // clang-format on
 
   for (int i = 0; i < 6; ++i)
   {
-    auto &v0 = points[planes[i][0]];
-    auto &v1 = points[planes[i][1]];
-    auto &v2 = points[planes[i][2]];
+    auto& v0 = points[planes[i][0]];
+    auto& v1 = points[planes[i][1]];
+    auto& v2 = points[planes[i][2]];
 
     this->Points[i] = v0;
     this->Normals[i] = vtkm::Normal(vtkm::Cross(v2 - v0, v1 - v0));
@@ -420,14 +454,13 @@ inline void Frustum::CreateFromPoints(const vtkm::Vec<FloatDefault, 3> points[8]
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault
-Frustum::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
+inline FloatDefault Frustum::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
 {
   FloatDefault maxVal = -std::numeric_limits<FloatDefault>::max();
   for (int i = 0; i < 6; ++i)
   {
-    auto &p = this->Points[i];
-    auto &n = this->Normals[i];
+    auto& p = this->Points[i];
+    auto& n = this->Normals[i];
     FloatDefault val = ((x - p[0]) * n[0]) + ((y - p[1]) * n[1]) + ((z - p[2]) * n[2]);
     maxVal = vtkm::Max(maxVal, val);
   }
@@ -435,21 +468,22 @@ Frustum::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault Frustum::Value(const vtkm::Vec<FloatDefault, 3> &x) const
+inline FloatDefault Frustum::Value(const vtkm::Vec<FloatDefault, 3>& x) const
 {
   return this->Value(x[0], x[1], x[2]);
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Frustum::Gradient(FloatDefault x, FloatDefault y, FloatDefault z) const
+inline vtkm::Vec<FloatDefault, 3> Frustum::Gradient(FloatDefault x,
+                                                    FloatDefault y,
+                                                    FloatDefault z) const
 {
   FloatDefault maxVal = -std::numeric_limits<FloatDefault>::max();
   int maxValIdx = 0;
   for (int i = 0; i < 6; ++i)
   {
-    auto &p = this->Points[i];
-    auto &n = this->Normals[i];
+    auto& p = this->Points[i];
+    auto& n = this->Normals[i];
     FloatDefault val = ((x - p[0]) * n[0]) + ((y - p[1]) * n[1]) + ((z - p[2]) * n[2]);
     if (val > maxVal)
     {
@@ -461,36 +495,38 @@ Frustum::Gradient(FloatDefault x, FloatDefault y, FloatDefault z) const
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Frustum::Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
+inline vtkm::Vec<FloatDefault, 3> Frustum::Gradient(const vtkm::Vec<FloatDefault, 3>& x) const
 {
   return this->Gradient(x[0], x[1], x[2]);
 }
 
-
 //============================================================================
 inline Plane::Plane()
-  : Origin(FloatDefault(0)),
-    Normal(FloatDefault(0), FloatDefault(0), FloatDefault(1))
-{ }
+  : Origin(FloatDefault(0))
+  , Normal(FloatDefault(0), FloatDefault(0), FloatDefault(1))
+{
+}
 
-inline Plane::Plane(const vtkm::Vec<FloatDefault, 3> &normal)
-  : Origin(FloatDefault(0)),
-    Normal(normal)
-{ }
+inline Plane::Plane(const vtkm::Vec<FloatDefault, 3>& normal)
+  : Origin(FloatDefault(0))
+  , Normal(normal)
+{
+}
 
-inline Plane::Plane(const vtkm::Vec<FloatDefault, 3> &origin,
-                    const vtkm::Vec<FloatDefault, 3> &normal)
-  : Origin(origin), Normal(normal)
-{ }
+inline Plane::Plane(const vtkm::Vec<FloatDefault, 3>& origin,
+                    const vtkm::Vec<FloatDefault, 3>& normal)
+  : Origin(origin)
+  , Normal(normal)
+{
+}
 
-inline void Plane::SetOrigin(const vtkm::Vec<FloatDefault, 3> &origin)
+inline void Plane::SetOrigin(const vtkm::Vec<FloatDefault, 3>& origin)
 {
   this->Origin = origin;
   this->Modified();
 }
 
-inline void Plane::SetNormal(const vtkm::Vec<FloatDefault, 3> &normal)
+inline void Plane::SetNormal(const vtkm::Vec<FloatDefault, 3>& normal)
 {
   this->Normal = normal;
   this->Modified();
@@ -507,47 +543,48 @@ inline const vtkm::Vec<FloatDefault, 3>& Plane::GetNormal() const
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault
-Plane::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
+inline FloatDefault Plane::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
 {
-  return ((x - this->Origin[0]) * this->Normal[0]) +
-         ((y - this->Origin[1]) * this->Normal[1]) +
-         ((z - this->Origin[2]) * this->Normal[2]);
+  return ((x - this->Origin[0]) * this->Normal[0]) + ((y - this->Origin[1]) * this->Normal[1]) +
+    ((z - this->Origin[2]) * this->Normal[2]);
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault Plane::Value(const vtkm::Vec<FloatDefault, 3> &x) const
+inline FloatDefault Plane::Value(const vtkm::Vec<FloatDefault, 3>& x) const
 {
   return this->Value(x[0], x[1], x[2]);
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Plane::Gradient(FloatDefault, FloatDefault, FloatDefault) const
+inline vtkm::Vec<FloatDefault, 3> Plane::Gradient(FloatDefault, FloatDefault, FloatDefault) const
 {
   return this->Normal;
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Plane::Gradient(const vtkm::Vec<FloatDefault, 3>&) const
+inline vtkm::Vec<FloatDefault, 3> Plane::Gradient(const vtkm::Vec<FloatDefault, 3>&) const
 {
   return this->Normal;
 }
 
-
 //============================================================================
 inline Sphere::Sphere()
-  : Radius(FloatDefault(0.2)), Center(FloatDefault(0))
-{ }
+  : Radius(FloatDefault(0.2))
+  , Center(FloatDefault(0))
+{
+}
 
 inline Sphere::Sphere(FloatDefault radius)
-  : Radius(radius), Center(FloatDefault(0))
-{ }
+  : Radius(radius)
+  , Center(FloatDefault(0))
+{
+}
 
 inline Sphere::Sphere(vtkm::Vec<FloatDefault, 3> center, FloatDefault radius)
-  : Radius(radius), Center(center)
-{ }
+  : Radius(radius)
+  , Center(center)
+{
+}
 
 inline void Sphere::SetRadius(FloatDefault radius)
 {
@@ -555,7 +592,7 @@ inline void Sphere::SetRadius(FloatDefault radius)
   this->Modified();
 }
 
-inline void Sphere::SetCenter(const vtkm::Vec<FloatDefault, 3> &center)
+inline void Sphere::SetCenter(const vtkm::Vec<FloatDefault, 3>& center)
 {
   this->Center = center;
   this->Modified();
@@ -572,35 +609,32 @@ inline const vtkm::Vec<FloatDefault, 3>& Sphere::GetCenter() const
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault
-Sphere::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
+inline FloatDefault Sphere::Value(FloatDefault x, FloatDefault y, FloatDefault z) const
 {
   return ((x - this->Center[0]) * (x - this->Center[0]) +
           (y - this->Center[1]) * (y - this->Center[1]) +
           (z - this->Center[2]) * (z - this->Center[2])) -
-          (this->Radius * this->Radius);
+    (this->Radius * this->Radius);
 }
 
 VTKM_EXEC_CONT
-inline FloatDefault Sphere::Value(const vtkm::Vec<FloatDefault, 3> &x) const
+inline FloatDefault Sphere::Value(const vtkm::Vec<FloatDefault, 3>& x) const
 {
   return this->Value(x[0], x[1], x[2]);
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Sphere::Gradient(FloatDefault x, FloatDefault y, FloatDefault z)
-  const
+inline vtkm::Vec<FloatDefault, 3> Sphere::Gradient(FloatDefault x,
+                                                   FloatDefault y,
+                                                   FloatDefault z) const
 {
   return this->Gradient(vtkm::Vec<FloatDefault, 3>(x, y, z));
 }
 
 VTKM_EXEC_CONT
-inline vtkm::Vec<FloatDefault, 3>
-Sphere::Gradient(const vtkm::Vec<FloatDefault, 3> &x) const
+inline vtkm::Vec<FloatDefault, 3> Sphere::Gradient(const vtkm::Vec<FloatDefault, 3>& x) const
 {
   return FloatDefault(2) * (x - this->Center);
 }
-
 }
 } // vtkm::cont

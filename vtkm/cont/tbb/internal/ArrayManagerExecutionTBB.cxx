@@ -22,10 +22,11 @@
 
 #include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagTBB)
-
 }
 } // end vtkm::cont

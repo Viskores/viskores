@@ -24,10 +24,14 @@
 
 #include <cuda.h>
 
-namespace vtkm {
-namespace cont {
-namespace cuda {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace cuda
+{
+namespace internal
+{
 
 struct Testing
 {
@@ -36,26 +40,25 @@ public:
   {
     cudaError_t cudaError = cudaPeekAtLastError();
     if (cudaError != cudaSuccess)
-      {
+    {
       std::cout << "***** Unchecked Cuda error." << std::endl
                 << cudaGetErrorString(cudaError) << std::endl;
       return 1;
-      }
+    }
     else
-      {
+    {
       std::cout << "No Cuda error detected." << std::endl;
-      }
+    }
     return result;
   }
 
-  template<class Func>
+  template <class Func>
   static VTKM_CONT int Run(Func function)
   {
     int result = vtkm::cont::testing::Testing::Run(function);
     return CheckCudaBeforeExit(result);
   }
 };
-
 }
 }
 }

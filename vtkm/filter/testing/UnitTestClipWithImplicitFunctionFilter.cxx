@@ -24,10 +24,10 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 typedef vtkm::Vec<vtkm::FloatDefault, 3> Coord3D;
-
 
 vtkm::cont::DataSet MakeTestDatasetStructured()
 {
@@ -54,8 +54,7 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
 
 void TestClipStructured()
 {
-  std::cout << "Testing ClipWithImplicitFunction Filter on Structured data"
-            << std::endl;
+  std::cout << "Testing ClipWithImplicitFunction Filter on Structured data" << std::endl;
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
@@ -69,7 +68,6 @@ void TestClipStructured()
 
   result = clip.Execute(ds);
   clip.MapFieldOntoOutput(result, ds.GetField("scalars"));
-
 
   const vtkm::cont::DataSet& outputData = result.GetDataSet();
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
@@ -88,13 +86,11 @@ void TestClipStructured()
   VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 13,
                    "Wrong number of points in the output dataset");
 
-  vtkm::Float32 expected[13] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0.25, 0.25, 0.25,
-                                 0.25 };
+  vtkm::Float32 expected[13] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0.25, 0.25, 0.25, 0.25 };
   for (int i = 0; i < 13; ++i)
   {
-    VTKM_TEST_ASSERT(
-      test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
-      "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+                     "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
   }
 }
 
@@ -106,7 +102,7 @@ void TestClip()
 
 } // anonymous namespace
 
-int UnitTestClipWithImplicitFunctionFilter(int, char *[])
+int UnitTestClipWithImplicitFunctionFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestClip);
 }

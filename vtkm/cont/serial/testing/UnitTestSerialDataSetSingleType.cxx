@@ -26,9 +26,7 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/TestingDataSetSingleType.h>
 
-int UnitTestSerialDataSetSingleType(int, char *[])
+int UnitTestSerialDataSetSingleType(int, char* [])
 {
-  return vtkm::cont::testing::TestingDataSetSingleType
-         <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }
-

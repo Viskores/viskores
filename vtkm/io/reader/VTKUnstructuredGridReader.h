@@ -22,18 +22,22 @@
 
 #include <vtkm/io/reader/VTKDataSetReaderBase.h>
 
-namespace vtkm {
-namespace io {
-namespace reader {
+namespace vtkm
+{
+namespace io
+{
+namespace reader
+{
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
 class VTKUnstructuredGridReader : public VTKDataSetReaderBase
 {
 public:
-  explicit VTKUnstructuredGridReader(const char *fileName)
+  explicit VTKUnstructuredGridReader(const char* fileName)
     : VTKDataSetReaderBase(fileName)
-  { }
+  {
+  }
 
 private:
   virtual void Read()
@@ -47,7 +51,7 @@ private:
     //at the top of a VTK file
     std::string tag;
     this->DataFile->Stream >> tag;
-    if(tag == "FIELD")
+    if (tag == "FIELD")
     {
       std::string name;
       this->ReadFields(name);
@@ -58,8 +62,7 @@ private:
     internal::parseAssert(tag == "POINTS");
     this->ReadPoints();
 
-    vtkm::Id numPoints =
-        this->DataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
+    vtkm::Id numPoints = this->DataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
 
     // Read the cellset
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
@@ -80,9 +83,9 @@ private:
     {
       vtkm::cont::CellSetSingleType<> cellSet("cells");
       cellSet.Fill(numPoints,
-              shapes.GetPortalConstControl().Get(0),
-              numIndices.GetPortalConstControl().Get(0),
-              connectivity);
+                   shapes.GetPortalConstControl().Get(0),
+                   numIndices.GetPortalConstControl().Get(0),
+                   connectivity);
       this->DataSet.AddCellSet(cellSet);
     }
     else
@@ -98,7 +101,6 @@ private:
 };
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
-
 }
 }
 } // namespace vtkm::io:reader

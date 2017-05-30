@@ -33,43 +33,42 @@
 
 #include <cuda.h>
 
-namespace vtkm {
-namespace cont {
-namespace cuda {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace cuda
+{
+namespace internal
+{
 
-static
-__global__
-void DetermineIfValidCudaDevice()
+static __global__ void DetermineIfValidCudaDevice()
 {
   //used only to see if we can launch kernels. It is possible to have a
   //CUDA capable device, but still fail to have CUDA support.
 }
-
 }
 }
 }
 }
 
-namespace vtkm {
-namespace cont {
-
-template<>
-struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
-    : public vtkm::cont::cuda::internal::DeviceAdapterAlgorithmThrust<
-          vtkm::cont::DeviceAdapterTagCuda>
+namespace vtkm
+{
+namespace cont
 {
 
-  VTKM_CONT static void Synchronize()
-  {
-    VTKM_CUDA_CALL(cudaDeviceSynchronize());
-  }
+template <>
+struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
+  : public vtkm::cont::cuda::internal::DeviceAdapterAlgorithmThrust<
+      vtkm::cont::DeviceAdapterTagCuda>
+{
 
+  VTKM_CONT static void Synchronize() { VTKM_CUDA_CALL(cudaDeviceSynchronize()); }
 };
 
 /// CUDA contains its own high resolution timer.
 ///
-template<>
+template <>
 class DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>
 {
 public:
@@ -96,16 +95,17 @@ public:
     VTKM_CUDA_CALL(cudaEventRecord(this->EndEvent, 0));
     VTKM_CUDA_CALL(cudaEventSynchronize(this->EndEvent));
     float elapsedTimeMilliseconds;
-    VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds,
-                                        this->StartEvent,
-                                        this->EndEvent));
-    return static_cast<vtkm::Float64>(0.001f*elapsedTimeMilliseconds);
+    VTKM_CUDA_CALL(
+      cudaEventElapsedTime(&elapsedTimeMilliseconds, this->StartEvent, this->EndEvent));
+    return static_cast<vtkm::Float64>(0.001f * elapsedTimeMilliseconds);
   }
 
 private:
   // Copying CUDA events is problematic.
-  DeviceAdapterTimerImplementation(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &) = delete;
-  void operator=(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda> &) = delete;
+  DeviceAdapterTimerImplementation(
+    const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>&) = delete;
+  void operator=(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>&) =
+    delete;
 
   cudaEvent_t StartEvent;
   cudaEvent_t EndEvent;
@@ -120,20 +120,20 @@ private:
 /// capable device, and said device is from the 'fermi' (SM_20) generation
 /// or newer.
 ///
-template<>
+template <>
 class DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>
 {
 public:
-  VTKM_CONT DeviceAdapterRuntimeDetector():
-    NumberOfDevices(0),
-    HighestArchSupported(0)
+  VTKM_CONT DeviceAdapterRuntimeDetector()
+    : NumberOfDevices(0)
+    , HighestArchSupported(0)
   {
     static bool deviceQueryInit = false;
     static int numDevices = 0;
     static int archVersion = 0;
 
-    if(!deviceQueryInit)
-      {
+    if (!deviceQueryInit)
+    {
       deviceQueryInit = true;
 
       //first query for the number of devices
@@ -156,13 +156,13 @@ public:
       // 3. cudaErrorNoKernelImageForDevice we built for a compute version
       //    greater than the device we are running on
       // Most likely others that I don't even know about
-      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice <<<1,1>>> ();
-      if(cudaSuccess != cudaGetLastError())
-        {
+      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice<<<1, 1>>>();
+      if (cudaSuccess != cudaGetLastError())
+      {
         numDevices = 0;
         archVersion = 0;
-        }
       }
+    }
 
     this->NumberOfDevices = numDevices;
     this->HighestArchSupported = archVersion;
@@ -187,63 +187,89 @@ private:
 
 /// CUDA contains its own atomic operations
 ///
-template<typename T>
-class DeviceAdapterAtomicArrayImplementation<T,vtkm::cont::DeviceAdapterTagCuda>
+template <typename T>
+class DeviceAdapterAtomicArrayImplementation<T, vtkm::cont::DeviceAdapterTagCuda>
 {
 public:
   VTKM_CONT
   DeviceAdapterAtomicArrayImplementation(
-             vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle):
-    Portal( handle.PrepareForInPlace( vtkm::cont::DeviceAdapterTagCuda()) )
+    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle)
+    : Portal(handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda()))
   {
   }
 
-  inline __device__
-  T Add(vtkm::Id index, const T& value) const
+  inline __device__ T Add(vtkm::Id index, const T& value) const
   {
-    T *lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
+    T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return vtkmAtomicAdd(lockedValue, value);
   }
 
-  inline __device__
-  T CompareAndSwap(vtkm::Id index, const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
+  inline __device__ T CompareAndSwap(vtkm::Id index,
+                                     const vtkm::Int64& newValue,
+                                     const vtkm::Int64& oldValue) const
   {
-    T *lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
+    T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
     return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
   }
 
 private:
-  typedef typename vtkm::cont::ArrayHandle<T,vtkm::cont::StorageTagBasic>
-        ::template ExecutionTypes<vtkm::cont::DeviceAdapterTagCuda>::Portal PortalType;
+  typedef typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
+    vtkm::cont::DeviceAdapterTagCuda>::Portal PortalType;
   PortalType Portal;
 
-  inline __device__
-  vtkm::Int64 vtkmAtomicAdd(vtkm::Int64 *address, const vtkm::Int64 &value) const
+  inline __device__ vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const
   {
-    return atomicAdd((unsigned long long *)address,(unsigned long long) value);
+    return atomicAdd((unsigned long long*)address, (unsigned long long)value);
   }
 
-  inline __device__
-  vtkm::Int32 vtkmAtomicAdd(vtkm::Int32 *address, const vtkm::Int32 &value) const
+  inline __device__ vtkm::Int32 vtkmAtomicAdd(vtkm::Int32* address, const vtkm::Int32& value) const
   {
-    return atomicAdd(address,value);
+    return atomicAdd(address, value);
   }
 
-  inline __device__
-  vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32 *address, const vtkm::Int32 &newValue, const vtkm::Int32 &oldValue) const
+  inline __device__ vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
+                                                   const vtkm::Int32& newValue,
+                                                   const vtkm::Int32& oldValue) const
   {
-    return atomicCAS(address,oldValue,newValue);
+    return atomicCAS(address, oldValue, newValue);
   }
 
-  inline __device__
-  vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64 *address, const vtkm::Int64 &newValue, const vtkm::Int64 &oldValue) const
+  inline __device__ vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
+                                                   const vtkm::Int64& newValue,
+                                                   const vtkm::Int64& oldValue) const
   {
-    return atomicCAS((unsigned long long int*) address,
-                     (unsigned long long int ) oldValue,
-                     (unsigned long long int ) newValue);
-  }  
+    return atomicCAS((unsigned long long int*)address,
+                     (unsigned long long int)oldValue,
+                     (unsigned long long int)newValue);
+  }
 };
 
+template <>
+class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagCuda>
+{
+public:
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
+    const WorkletType& worklet,
+    const InvocationType& invocation,
+    vtkm::Id,
+    vtkm::Id globalIndexOffset = 0)
+  {
+    using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
+    return Task(worklet, invocation, globalIndexOffset);
+  }
+
+  template <typename WorkletType, typename InvocationType>
+  static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
+    const WorkletType& worklet,
+    const InvocationType& invocation,
+    vtkm::Id3,
+    vtkm::Id globalIndexOffset = 0)
+  {
+    using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
+    return Task(worklet, invocation, globalIndexOffset);
+  }
+};
 }
 } // namespace vtkm::cont
 

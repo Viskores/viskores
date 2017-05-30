@@ -20,26 +20,27 @@
 
 #include <vtkm/cont/ArrayRangeCompute.hxx>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(T, Storage) \
-  VTKM_CONT \
-  vtkm::cont::ArrayHandle<vtkm::Range> \
-  ArrayRangeCompute(const vtkm::cont::ArrayHandle<T, Storage> &input, \
-                    vtkm::cont::RuntimeDeviceTracker tracker) \
-  { \
-    return detail::ArrayRangeComputeImpl(input,tracker); \
-  } \
+#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(T, Storage)                                                \
+  VTKM_CONT                                                                                        \
+  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \
+    const vtkm::cont::ArrayHandle<T, Storage>& input, vtkm::cont::RuntimeDeviceTracker tracker)    \
+  {                                                                                                \
+    return detail::ArrayRangeComputeImpl(input, tracker);                                          \
+  }                                                                                                \
   struct SwallowSemicolon
-#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(T, N, Storage) \
-  VTKM_CONT \
-  vtkm::cont::ArrayHandle<vtkm::Range> \
-  ArrayRangeCompute(const vtkm::cont::ArrayHandle<vtkm::Vec<T,N>, Storage> &input, \
-                    vtkm::cont::RuntimeDeviceTracker tracker) \
-  { \
-    return detail::ArrayRangeComputeImpl(input,tracker); \
-  } \
+#define VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(T, N, Storage)                                           \
+  VTKM_CONT                                                                                        \
+  vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \
+    const vtkm::cont::ArrayHandle<vtkm::Vec<T, N>, Storage>& input,                                \
+    vtkm::cont::RuntimeDeviceTracker tracker)                                                      \
+  {                                                                                                \
+    return detail::ArrayRangeComputeImpl(input, tracker);                                          \
+  }                                                                                                \
   struct SwallowSemicolon
 
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(char, vtkm::cont::StorageTagBasic);
@@ -73,30 +74,24 @@ VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasic)
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_T
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC
 
-
 // Special implementation for regular point coordinates, which are easy
 // to determine.
 VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range>
-ArrayRangeCompute(const vtkm::cont::ArrayHandle<
-                      vtkm::Vec<vtkm::FloatDefault,3>,
-                      vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>
-                    &array,
-                  vtkm::cont::RuntimeDeviceTracker)
+vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>,
+                                vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag>& array,
+  vtkm::cont::RuntimeDeviceTracker)
 {
-  vtkm::internal::ArrayPortalUniformPointCoordinates portal =
-      array.GetPortalConstControl();
+  vtkm::internal::ArrayPortalUniformPointCoordinates portal = array.GetPortalConstControl();
 
   // In this portal we know that the min value is the first entry and the
   // max value is the last entry.
-  vtkm::Vec<vtkm::FloatDefault,3> minimum = portal.Get(0);
-  vtkm::Vec<vtkm::FloatDefault,3> maximum =
-      portal.Get(portal.GetNumberOfValues()-1);
+  vtkm::Vec<vtkm::FloatDefault, 3> minimum = portal.Get(0);
+  vtkm::Vec<vtkm::FloatDefault, 3> maximum = portal.Get(portal.GetNumberOfValues() - 1);
 
   vtkm::cont::ArrayHandle<vtkm::Range> rangeArray;
   rangeArray.Allocate(3);
-  vtkm::cont::ArrayHandle<vtkm::Range>::PortalControl outPortal =
-      rangeArray.GetPortalControl();
+  vtkm::cont::ArrayHandle<vtkm::Range>::PortalControl outPortal = rangeArray.GetPortalControl();
   outPortal.Set(0, vtkm::Range(minimum[0], maximum[0]));
   outPortal.Set(1, vtkm::Range(minimum[1], maximum[1]));
   outPortal.Set(2, vtkm::Range(minimum[2], maximum[2]));
@@ -106,36 +101,29 @@ ArrayRangeCompute(const vtkm::cont::ArrayHandle<
 
 // Special implementation for composite vectors.
 VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range>
-ArrayRangeCompute(const vtkm::cont::ArrayHandle<
-                    vtkm::Vec<vtkm::Float32,3>,
-                    typename vtkm::cont::ArrayHandleCompositeVector<
-                      vtkm::Vec<vtkm::Float32,3>(
-                        vtkm::cont::ArrayHandle<vtkm::Float32>,
-                        vtkm::cont::ArrayHandle<vtkm::Float32>,
-                        vtkm::cont::ArrayHandle<vtkm::Float32>)
-                      >::StorageTag
-                    > &input,
-                  vtkm::cont::RuntimeDeviceTracker tracker)
+vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const vtkm::cont::ArrayHandle<
+    vtkm::Vec<vtkm::Float32, 3>,
+    typename vtkm::cont::ArrayHandleCompositeVector<
+      vtkm::Vec<vtkm::Float32, 3>(vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float32>)>::StorageTag>& input,
+  vtkm::cont::RuntimeDeviceTracker tracker)
 {
-  return detail::ArrayRangeComputeImpl(input,tracker);
+  return detail::ArrayRangeComputeImpl(input, tracker);
 }
 
 VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range>
-ArrayRangeCompute(const vtkm::cont::ArrayHandle<
-                    vtkm::Vec<vtkm::Float64,3>,
-                    typename vtkm::cont::ArrayHandleCompositeVector<
-                      vtkm::Vec<vtkm::Float64,3>(
-                        vtkm::cont::ArrayHandle<vtkm::Float64>,
-                        vtkm::cont::ArrayHandle<vtkm::Float64>,
-                        vtkm::cont::ArrayHandle<vtkm::Float64>)
-                      >::StorageTag
-                    > &input,
-                  vtkm::cont::RuntimeDeviceTracker tracker)
+vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
+  const vtkm::cont::ArrayHandle<
+    vtkm::Vec<vtkm::Float64, 3>,
+    typename vtkm::cont::ArrayHandleCompositeVector<
+      vtkm::Vec<vtkm::Float64, 3>(vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float64>)>::StorageTag>& input,
+  vtkm::cont::RuntimeDeviceTracker tracker)
 {
-  return detail::ArrayRangeComputeImpl(input,tracker);
+  return detail::ArrayRangeComputeImpl(input, tracker);
 }
-
 }
 } // namespace vtkm::cont

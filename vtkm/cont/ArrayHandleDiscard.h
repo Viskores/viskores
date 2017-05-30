@@ -23,9 +23,12 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
 
-namespace vtkm {
-namespace exec {
-namespace internal {
+namespace vtkm
+{
+namespace exec
+{
+namespace internal
+{
 
 /// \brief An output-only array portal with no storage. All written values are
 /// discarded.
@@ -39,30 +42,30 @@ public:
   VTKM_EXEC_CONT
   ArrayPortalDiscard()
     : NumberOfValues(0)
-  {  } // needs to be host and device so that cuda can create lvalue of these
+  {
+  } // needs to be host and device so that cuda can create lvalue of these
 
   VTKM_CONT
   explicit ArrayPortalDiscard(vtkm::Id numValues)
     : NumberOfValues(numValues)
-  {  }
+  {
+  }
 
   /// Copy constructor for any other ArrayPortalDiscard with an iterator
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
-  template<class OtherV>
-  VTKM_CONT
-  ArrayPortalDiscard(const ArrayPortalDiscard<OtherV> &src)
+  template <class OtherV>
+  VTKM_CONT ArrayPortalDiscard(const ArrayPortalDiscard<OtherV>& src)
     : NumberOfValues(src.NumberOfValues)
-  {  }
-
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfValues() const
   {
-    return this->NumberOfValues;
   }
 
-  ValueType Get(vtkm::Id index) const {
+  VTKM_EXEC_CONT
+  vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
+
+  ValueType Get(vtkm::Id index) const
+  {
     VTKM_ASSERT(index < this->GetNumberOfValues());
     VTKM_ASSERT("Method not supported for ArrayPortalDiscard." && false);
     (void)index;
@@ -70,7 +73,7 @@ public:
   }
 
   VTKM_EXEC
-  void Set(vtkm::Id index, const ValueType &) const
+  void Set(vtkm::Id index, const ValueType&) const
   {
     VTKM_ASSERT(index < this->GetNumberOfValues());
     (void)index;
@@ -84,11 +87,15 @@ private:
 } // end namespace internal
 } // end namespace exec
 
-namespace cont {
+namespace cont
+{
 
-namespace internal {
+namespace internal
+{
 
-struct VTKM_ALWAYS_EXPORT StorageTagDiscard { };
+struct VTKM_ALWAYS_EXPORT StorageTagDiscard
+{
+};
 
 template <typename ValueType_>
 class Storage<ValueType_, StorageTagDiscard>
@@ -99,43 +106,25 @@ public:
   using PortalConstType = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
 
   VTKM_CONT
-  Storage() { }
+  Storage() {}
 
   VTKM_CONT
-  PortalType GetPortal()
-  {
-    return PortalType(this->NumberOfValues);
-  }
+  PortalType GetPortal() { return PortalType(this->NumberOfValues); }
 
   VTKM_CONT
-  PortalConstType GetPortalConst()
-  {
-    return PortalConstType(this->NumberOfValues);
-  }
+  PortalConstType GetPortalConst() { return PortalConstType(this->NumberOfValues); }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return this->NumberOfValues;
-  }
+  vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_CONT
-  void Allocate(vtkm::Id numValues)
-  {
-    this->NumberOfValues = numValues;
-  }
+  void Allocate(vtkm::Id numValues) { this->NumberOfValues = numValues; }
 
   VTKM_CONT
-  void Shrink(vtkm::Id numValues)
-  {
-    this->NumberOfValues = numValues;
-  }
+  void Shrink(vtkm::Id numValues) { this->NumberOfValues = numValues; }
 
   VTKM_CONT
-  void ReleaseResources()
-  {
-    this->NumberOfValues = 0;
-  }
+  void ReleaseResources() { this->NumberOfValues = 0; }
 
 private:
   vtkm::Id NumberOfValues;
@@ -155,9 +144,10 @@ public:
   using PortalConstExecution = vtkm::exec::internal::ArrayPortalDiscard<ValueType>;
 
   VTKM_CONT
-  ArrayTransfer(StorageType *storage)
+  ArrayTransfer(StorageType* storage)
     : Internal(storage)
-  {  }
+  {
+  }
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const
@@ -169,17 +159,15 @@ public:
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    throw vtkm::cont::ErrorBadValue(
-          "Input access not supported: "
-          "Cannot read from an ArrayHandleDiscard.");
+    throw vtkm::cont::ErrorBadValue("Input access not supported: "
+                                    "Cannot read from an ArrayHandleDiscard.");
   }
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    throw vtkm::cont::ErrorBadValue(
-          "InPlace access not supported: "
-          "Cannot read from an ArrayHandleDiscard.");
+    throw vtkm::cont::ErrorBadValue("InPlace access not supported: "
+                                    "Cannot read from an ArrayHandleDiscard.");
   }
 
   VTKM_CONT
@@ -191,7 +179,7 @@ public:
   }
 
   VTKM_CONT
-  void RetrieveOutputData(StorageType *storage) const
+  void RetrieveOutputData(StorageType* storage) const
   {
     VTKM_ASSERT(storage == this->Internal);
     (void)storage;
@@ -213,7 +201,7 @@ public:
   }
 
 private:
-  StorageType *Internal;
+  StorageType* Internal;
 };
 
 template <typename ValueType_>
@@ -230,14 +218,12 @@ struct ArrayHandleDiscardTraits
 /// it. This can be used to save memory when a filter provides optional outputs
 /// that are not needed.
 template <typename ValueType_>
-class ArrayHandleDiscard
-    : public internal::ArrayHandleDiscardTraits<ValueType_>::Superclass
+class ArrayHandleDiscard : public internal::ArrayHandleDiscardTraits<ValueType_>::Superclass
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS(
-      ArrayHandleDiscard,
-      (ArrayHandleDiscard<ValueType_>),
-      (typename internal::ArrayHandleDiscardTraits<ValueType_>::Superclass));
+  VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleDiscard,
+                             (ArrayHandleDiscard<ValueType_>),
+                             (typename internal::ArrayHandleDiscardTraits<ValueType_>::Superclass));
 };
 
 } // end namespace cont

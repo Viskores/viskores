@@ -41,8 +41,10 @@
 #include <vtkm/exec/arg/ThreadIndicesReduceByKey.h>
 #include <vtkm/exec/arg/ValueCount.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 class WorkletReduceByKey : public vtkm::worklet::internal::WorkletBase
 {
@@ -70,7 +72,7 @@ public:
   /// all values with a matching key. This tag specifies an \c ArrayHandle
   /// object that holds the values.
   ///
-  template<typename TypeList = AllTypes>
+  template <typename TypeList = AllTypes>
   struct ValuesIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
@@ -87,7 +89,7 @@ public:
   ///
   /// This tag might not work with scatter operations.
   ///
-  template<typename TypeList = AllTypes>
+  template <typename TypeList = AllTypes>
   struct ValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
@@ -104,7 +106,7 @@ public:
   ///
   /// This tag might not work with scatter operations.
   ///
-  template<typename TypeList = AllTypes>
+  template <typename TypeList = AllTypes>
   struct ValuesOut : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
@@ -122,7 +124,7 @@ public:
   /// an input array with entries for each reduced value. This could be useful
   /// to access values from a previous run of WorkletReduceByKey.
   ///
-  template<typename TypeList = AllTypes>
+  template <typename TypeList = AllTypes>
   struct ReducedValuesIn : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
@@ -140,7 +142,7 @@ public:
   /// an input/output array with entries for each reduced value. This could be
   /// useful to access values from a previous run of WorkletReduceByKey.
   ///
-  template<typename TypeList = AllTypes>
+  template <typename TypeList = AllTypes>
   struct ReducedValuesInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
@@ -155,7 +157,7 @@ public:
   /// then produces a "reduced" value per key. This tag specifies an \c
   /// ArrayHandle object that holds the values.
   ///
-  template<typename TypeList = AllTypes>
+  template <typename TypeList = AllTypes>
   struct ReducedValuesOut : vtkm::cont::arg::ControlSignatureTagBase
   {
     using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
@@ -170,32 +172,31 @@ public:
   /// values with a matching key. This \c ExecutionSignature tag provides the
   /// number of values associated with the key and given in the Vec-like objects.
   ///
-  struct ValueCount : vtkm::exec::arg::ValueCount {  };
+  struct ValueCount : vtkm::exec::arg::ValueCount
+  {
+  };
 
   /// Reduce by key worklets use the related thread indices class.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template<typename T,
-           typename OutToInArrayType,
-           typename VisitArrayType,
-           typename InputDomainType>
-  VTKM_EXEC
-  vtkm::exec::arg::ThreadIndicesReduceByKey
-  GetThreadIndices(const T& threadIndex,
-                   const OutToInArrayType& outToIn,
-                   const VisitArrayType& visit,
-                   const InputDomainType &inputDomain,
-                   const T& globalThreadIndexOffset=0) const
+  template <typename T,
+            typename OutToInArrayType,
+            typename VisitArrayType,
+            typename InputDomainType>
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesReduceByKey GetThreadIndices(
+    const T& threadIndex,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const InputDomainType& inputDomain,
+    const T& globalThreadIndexOffset = 0) const
   {
-    return vtkm::exec::arg::ThreadIndicesReduceByKey(
-          threadIndex,
-          outToIn.Get(threadIndex),
-          visit.Get(threadIndex),
-          inputDomain,
-          globalThreadIndexOffset);
+    return vtkm::exec::arg::ThreadIndicesReduceByKey(threadIndex,
+                                                     outToIn.Get(threadIndex),
+                                                     visit.Get(threadIndex),
+                                                     inputDomain,
+                                                     globalThreadIndexOffset);
   }
 };
-
 }
 } // namespace vtkm::worklet
 

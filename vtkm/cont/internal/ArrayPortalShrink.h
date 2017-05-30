@@ -27,14 +27,17 @@
 
 #include <iterator>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 /// This ArrayPortal adapter is a utility that allows you to shrink the
 /// (reported) array size without actually modifying the underlying allocation.
 ///
-template<class PortalT>
+template <class PortalT>
 class ArrayPortalShrink
 {
 public:
@@ -42,16 +45,20 @@ public:
 
   typedef typename DelegatePortalType::ValueType ValueType;
 
-  VTKM_CONT ArrayPortalShrink() : NumberOfValues(0) {  }
+  VTKM_CONT ArrayPortalShrink()
+    : NumberOfValues(0)
+  {
+  }
 
-  VTKM_CONT ArrayPortalShrink(const DelegatePortalType &delegatePortal)
-    : DelegatePortal(delegatePortal),
-      NumberOfValues(delegatePortal.GetNumberOfValues())
-  {  }
+  VTKM_CONT ArrayPortalShrink(const DelegatePortalType& delegatePortal)
+    : DelegatePortal(delegatePortal)
+    , NumberOfValues(delegatePortal.GetNumberOfValues())
+  {
+  }
 
-  VTKM_CONT ArrayPortalShrink(const DelegatePortalType &delegatePortal,
-                                     vtkm::Id numberOfValues)
-    : DelegatePortal(delegatePortal), NumberOfValues(numberOfValues)
+  VTKM_CONT ArrayPortalShrink(const DelegatePortalType& delegatePortal, vtkm::Id numberOfValues)
+    : DelegatePortal(delegatePortal)
+    , NumberOfValues(numberOfValues)
   {
     VTKM_ASSERT(numberOfValues <= delegatePortal.GetNumberOfValues());
   }
@@ -60,12 +67,12 @@ public:
   /// that can be copied to this type. This allows us to do any type casting
   /// the delegates can do (like the non-const to const cast).
   ///
-  template<class OtherDelegateType>
-  VTKM_CONT
-  ArrayPortalShrink(const ArrayPortalShrink<OtherDelegateType> &src)
-    : DelegatePortal(src.GetDelegatePortal()),
-      NumberOfValues(src.GetNumberOfValues())
-  {  }
+  template <class OtherDelegateType>
+  VTKM_CONT ArrayPortalShrink(const ArrayPortalShrink<OtherDelegateType>& src)
+    : DelegatePortal(src.GetDelegatePortal())
+    , NumberOfValues(src.GetNumberOfValues())
+  {
+  }
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
@@ -106,42 +113,40 @@ private:
   DelegatePortalType DelegatePortal;
   vtkm::Id NumberOfValues;
 };
-
 }
 }
 } // namespace vtkm::cont::internal
 
-namespace vtkm {
-namespace cont {
-
-template<typename DelegatePortalType>
-class ArrayPortalToIterators<
-    vtkm::cont::internal::ArrayPortalShrink<DelegatePortalType> >
+namespace vtkm
 {
-  typedef vtkm::cont::internal::ArrayPortalShrink<DelegatePortalType>
-      PortalType;
-  typedef vtkm::cont::ArrayPortalToIterators<DelegatePortalType>
-      DelegateArrayPortalToIterators;
+namespace cont
+{
+
+template <typename DelegatePortalType>
+class ArrayPortalToIterators<vtkm::cont::internal::ArrayPortalShrink<DelegatePortalType>>
+{
+  typedef vtkm::cont::internal::ArrayPortalShrink<DelegatePortalType> PortalType;
+  typedef vtkm::cont::ArrayPortalToIterators<DelegatePortalType> DelegateArrayPortalToIterators;
 
 public:
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalToIterators(const PortalType &portal)
-    : DelegateIterators(portal.GetDelegatePortal()),
-      NumberOfValues(portal.GetNumberOfValues())
-  {  }
+  ArrayPortalToIterators(const PortalType& portal)
+    : DelegateIterators(portal.GetDelegatePortal())
+    , NumberOfValues(portal.GetNumberOfValues())
+  {
+  }
 
   typedef typename DelegateArrayPortalToIterators::IteratorType IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  IteratorType GetBegin() const {
-    return this->DelegateIterators.GetBegin();
-  }
+  IteratorType GetBegin() const { return this->DelegateIterators.GetBegin(); }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  IteratorType GetEnd() const {
+  IteratorType GetEnd() const
+  {
     IteratorType iterator = this->GetBegin();
     std::advance(iterator, this->NumberOfValues);
     return iterator;
@@ -151,7 +156,6 @@ private:
   DelegateArrayPortalToIterators DelegateIterators;
   vtkm::Id NumberOfValues;
 };
-
 }
 } // namespace vtkm::cont
 

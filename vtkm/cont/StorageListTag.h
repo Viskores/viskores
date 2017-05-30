@@ -29,12 +29,14 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-struct VTKM_ALWAYS_EXPORT StorageListTagBasic
-    : vtkm::ListTagBase<vtkm::cont::StorageTagBasic> { };
-
+struct VTKM_ALWAYS_EXPORT StorageListTagBasic : vtkm::ListTagBase<vtkm::cont::StorageTagBasic>
+{
+};
 }
 } // namespace vtkm::cont
 

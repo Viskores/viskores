@@ -36,88 +36,96 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/memory.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
-namespace vtkm {
-namespace cont {
-namespace cuda {
-namespace internal {
-namespace detail {
+namespace vtkm
+{
+namespace cont
+{
+namespace cuda
+{
+namespace internal
+{
+namespace detail
+{
 
 // Tags to specify what type of thrust iterator to use.
-struct ThrustIteratorFromArrayPortalTag {  };
-struct ThrustIteratorDevicePtrTag {  };
+struct ThrustIteratorFromArrayPortalTag
+{
+};
+struct ThrustIteratorDevicePtrTag
+{
+};
 
 // Traits to help classify what thrust iterators will be used.
-template<typename IteratorType>
-struct ThrustIteratorTag {
+template <typename IteratorType>
+struct ThrustIteratorTag
+{
   typedef ThrustIteratorFromArrayPortalTag Type;
 };
-template<typename T>
-struct ThrustIteratorTag< thrust::system::cuda::pointer<T> > {
+template <typename T>
+struct ThrustIteratorTag<thrust::system::cuda::pointer<T>>
+{
   typedef ThrustIteratorDevicePtrTag Type;
 };
-template<typename T>
-struct ThrustIteratorTag< thrust::system::cuda::pointer<const T> > {
+template <typename T>
+struct ThrustIteratorTag<thrust::system::cuda::pointer<const T>>
+{
   typedef ThrustIteratorDevicePtrTag Type;
 };
 
-template<typename PortalType, typename Tag> struct IteratorChooser;
-template<typename PortalType>
-struct IteratorChooser<PortalType, detail::ThrustIteratorFromArrayPortalTag> {
+template <typename PortalType, typename Tag>
+struct IteratorChooser;
+template <typename PortalType>
+struct IteratorChooser<PortalType, detail::ThrustIteratorFromArrayPortalTag>
+{
   typedef vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType> Type;
 };
-template<typename PortalType>
-struct IteratorChooser<PortalType, detail::ThrustIteratorDevicePtrTag> {
+template <typename PortalType>
+struct IteratorChooser<PortalType, detail::ThrustIteratorDevicePtrTag>
+{
   typedef vtkm::cont::ArrayPortalToIterators<PortalType> PortalToIteratorType;
 
   typedef typename PortalToIteratorType::IteratorType Type;
-
 };
 
-template<typename PortalType>
+template <typename PortalType>
 struct IteratorTraits
 {
   typedef vtkm::cont::ArrayPortalToIterators<PortalType> PortalToIteratorType;
-  typedef typename detail::ThrustIteratorTag<
-                  typename PortalToIteratorType::IteratorType>::Type Tag;
-  typedef typename IteratorChooser<
-                                PortalType,
-                                Tag
-                                >::Type IteratorType;
+  typedef typename detail::ThrustIteratorTag<typename PortalToIteratorType::IteratorType>::Type Tag;
+  typedef typename IteratorChooser<PortalType, Tag>::Type IteratorType;
 };
 
-template<typename PortalType>
-VTKM_CONT
-typename IteratorTraits<PortalType>::IteratorType
-MakeIteratorBegin(PortalType portal, detail::ThrustIteratorFromArrayPortalTag)
+template <typename PortalType>
+VTKM_CONT typename IteratorTraits<PortalType>::IteratorType MakeIteratorBegin(
+  PortalType portal,
+  detail::ThrustIteratorFromArrayPortalTag)
 {
   return vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType>(portal);
 }
 
-template<typename PortalType>
-VTKM_CONT
-typename IteratorTraits<PortalType>::IteratorType
-MakeIteratorBegin(PortalType portal, detail::ThrustIteratorDevicePtrTag)
+template <typename PortalType>
+VTKM_CONT typename IteratorTraits<PortalType>::IteratorType MakeIteratorBegin(
+  PortalType portal,
+  detail::ThrustIteratorDevicePtrTag)
 {
   vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
   return iterators.GetBegin();
 }
 
-template<typename PortalType>
-VTKM_CONT
-typename IteratorTraits<PortalType>::IteratorType
-MakeIteratorEnd(PortalType portal, detail::ThrustIteratorFromArrayPortalTag)
+template <typename PortalType>
+VTKM_CONT typename IteratorTraits<PortalType>::IteratorType MakeIteratorEnd(
+  PortalType portal,
+  detail::ThrustIteratorFromArrayPortalTag)
 {
-  vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType>
-      iterator(portal);
-  ::thrust::advance(iterator,
-                    static_cast<std::size_t>(portal.GetNumberOfValues()));
+  vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType> iterator(portal);
+  ::thrust::advance(iterator, static_cast<std::size_t>(portal.GetNumberOfValues()));
   return iterator;
 }
 
-template<typename PortalType>
-VTKM_CONT
-typename IteratorTraits<PortalType>::IteratorType
-MakeIteratorEnd(PortalType portal, detail::ThrustIteratorDevicePtrTag)
+template <typename PortalType>
+VTKM_CONT typename IteratorTraits<PortalType>::IteratorType MakeIteratorEnd(
+  PortalType portal,
+  detail::ThrustIteratorDevicePtrTag)
 {
   vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
   return iterators.GetEnd();
@@ -125,30 +133,22 @@ MakeIteratorEnd(PortalType portal, detail::ThrustIteratorDevicePtrTag)
 
 } // namespace detail
 
-
-
-template<typename PortalType>
-VTKM_CONT
-typename detail::IteratorTraits<PortalType>::IteratorType
-IteratorBegin(PortalType portal)
+template <typename PortalType>
+VTKM_CONT typename detail::IteratorTraits<PortalType>::IteratorType IteratorBegin(PortalType portal)
 {
   typedef typename detail::IteratorTraits<PortalType>::Tag IteratorTag;
   return detail::MakeIteratorBegin(portal, IteratorTag());
 }
 
-template<typename PortalType>
-VTKM_CONT
-typename detail::IteratorTraits<PortalType>::IteratorType
-IteratorEnd(PortalType portal)
+template <typename PortalType>
+VTKM_CONT typename detail::IteratorTraits<PortalType>::IteratorType IteratorEnd(PortalType portal)
 {
   typedef typename detail::IteratorTraits<PortalType>::Tag IteratorTag;
   return detail::MakeIteratorEnd(portal, IteratorTag());
 }
-
 }
 }
 }
-
 
 } //namespace vtkm::cont::cuda::internal
 

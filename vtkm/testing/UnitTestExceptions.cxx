@@ -26,11 +26,12 @@
 //------------------------------------------------------------------------------
 // This test ensures that exceptions thrown internally by the vtkm_cont library
 // can be correctly caught across library boundaries.
-int UnitTestExceptions(int, char *[])
+int UnitTestExceptions(int, char* [])
 {
   vtkm::cont::RuntimeDeviceTracker tracker;
 
-  try {
+  try
+  {
     // This throws a ErrorBadValue from RuntimeDeviceTracker::CheckDevice,
     // which is compiled into the vtkm_cont library:
     tracker.ResetDevice(vtkm::cont::DeviceAdapterTagError());

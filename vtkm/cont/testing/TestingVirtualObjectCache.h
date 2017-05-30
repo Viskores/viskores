@@ -27,12 +27,14 @@
 #include <vtkm/cont/VirtualObjectCache.h>
 #include <vtkm/cont/testing/Testing.h>
 
-
 #define ARRAY_LEN 8
 
-namespace vtkm {
-namespace cont {
-namespace testing {
+namespace vtkm
+{
+namespace cont
+{
+namespace testing
+{
 
 namespace virtual_object_detail
 {
@@ -40,14 +42,13 @@ namespace virtual_object_detail
 class Transformer
 {
 public:
-  template<typename T>
-  VTKM_EXEC void Bind(const T *target)
+  template <typename T>
+  VTKM_EXEC void Bind(const T* target)
   {
     this->Concrete = target;
-    this->Caller =
-      [](const void *concrete, vtkm::FloatDefault val) {
-        return static_cast<const T*>(concrete)->operator()(val);
-      };
+    this->Caller = [](const void* concrete, vtkm::FloatDefault val) {
+      return static_cast<const T*>(concrete)->operator()(val);
+    };
   }
 
   VTKM_EXEC
@@ -57,60 +58,52 @@ public:
   }
 
 private:
-  using Signature = vtkm::FloatDefault (const void*, vtkm::FloatDefault);
+  using Signature = vtkm::FloatDefault(const void*, vtkm::FloatDefault);
 
-  const void *Concrete;
-  Signature *Caller;
+  const void* Concrete;
+  Signature* Caller;
 };
 
 struct Square
 {
   VTKM_EXEC
-  vtkm::FloatDefault operator()(vtkm::FloatDefault val) const
-  {
-    return val * val;
-  }
+  vtkm::FloatDefault operator()(vtkm::FloatDefault val) const { return val * val; }
 };
 
 struct Multiply
 {
   VTKM_EXEC
-  vtkm::FloatDefault operator()(vtkm::FloatDefault val) const
-  {
-    return val * this->Multiplicand;
-  }
+  vtkm::FloatDefault operator()(vtkm::FloatDefault val) const { return val * this->Multiplicand; }
 
   vtkm::FloatDefault Multiplicand;
 };
 
 } // virtual_object_detail
 
-template<typename DeviceAdapterList>
+template <typename DeviceAdapterList>
 class TestingVirtualObjectCache
 {
 private:
   using FloatArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
-  using ArrayTransform =
-      vtkm::cont::ArrayHandleTransform<vtkm::FloatDefault,
-                                       FloatArrayHandle,
-                                       virtual_object_detail::Transformer>;
-  using TransformerCache =
-    vtkm::cont::VirtualObjectCache<virtual_object_detail::Transformer>;
-
+  using ArrayTransform = vtkm::cont::ArrayHandleTransform<vtkm::FloatDefault,
+                                                          FloatArrayHandle,
+                                                          virtual_object_detail::Transformer>;
+  using TransformerCache = vtkm::cont::VirtualObjectCache<virtual_object_detail::Transformer>;
 
   class TestStage1
   {
   public:
-    TestStage1(const FloatArrayHandle &input, TransformerCache &manager)
-      : Input(&input), Manager(&manager)
-    { }
+    TestStage1(const FloatArrayHandle& input, TransformerCache& manager)
+      : Input(&input)
+      , Manager(&manager)
+    {
+    }
 
-    template<typename DeviceAdapter>
+    template <typename DeviceAdapter>
     void operator()(DeviceAdapter device) const
     {
       using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-      std::cout << "\tDeviceAdapter: "
-                << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName()
+      std::cout << "\tDeviceAdapter: " << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName()
                 << std::endl;
 
       for (int n = 0; n < 2; ++n)
@@ -121,8 +114,7 @@ private:
         auto portal = output.GetPortalConstControl();
         for (vtkm::Id i = 0; i < ARRAY_LEN; ++i)
         {
-          VTKM_TEST_ASSERT(portal.Get(i) == FloatDefault(i*i),
-                           "\tIncorrect result");
+          VTKM_TEST_ASSERT(portal.Get(i) == FloatDefault(i * i), "\tIncorrect result");
         }
         std::cout << "\tSuccess." << std::endl;
 
@@ -135,24 +127,27 @@ private:
     }
 
   private:
-    const FloatArrayHandle *Input;
-    TransformerCache *Manager;
+    const FloatArrayHandle* Input;
+    TransformerCache* Manager;
   };
 
   class TestStage2
   {
   public:
-    TestStage2(const FloatArrayHandle &input, virtual_object_detail::Multiply &mul,
-               TransformerCache &manager)
-      : Input(&input), Mul(&mul), Manager(&manager)
-    { }
+    TestStage2(const FloatArrayHandle& input,
+               virtual_object_detail::Multiply& mul,
+               TransformerCache& manager)
+      : Input(&input)
+      , Mul(&mul)
+      , Manager(&manager)
+    {
+    }
 
-    template<typename DeviceAdapter>
+    template <typename DeviceAdapter>
     void operator()(DeviceAdapter device) const
     {
       using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-      std::cout << "\tDeviceAdapter: "
-                << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName()
+      std::cout << "\tDeviceAdapter: " << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName()
                 << std::endl;
 
       this->Mul->Multiplicand = 2;
@@ -180,9 +175,9 @@ private:
     }
 
   private:
-    const FloatArrayHandle *Input;
-    virtual_object_detail::Multiply *Mul;
-    TransformerCache *Manager;
+    const FloatArrayHandle* Input;
+    virtual_object_detail::Multiply* Mul;
+    TransformerCache* Manager;
   };
 
 public:
@@ -212,7 +207,6 @@ public:
     vtkm::ListForEach(TestStage2(input, mul, manager), DeviceAdapterList());
   }
 };
-
 }
 }
 } // vtkm::cont::testing

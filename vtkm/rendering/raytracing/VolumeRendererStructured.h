@@ -37,72 +37,84 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace rendering{
-namespace raytracing{
+namespace vtkm
+{
+namespace rendering
+{
+namespace raytracing
+{
 
-namespace {
+namespace
+{
 
-template<typename Device> 
+template <typename Device>
 class RectilinearLocator
 {
 protected:
   typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
-  typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle,DefaultHandle,DefaultHandle> CartesianArrayHandle;
+  typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>
+    CartesianArrayHandle;
   typedef typename DefaultHandle::ExecutionTypes<Device>::PortalConst DefaultConstHandle;
   typedef typename CartesianArrayHandle::ExecutionTypes<Device>::PortalConst CartesianConstPortal;
 
   vtkm::Float32 InverseDeltaScalar;
   DefaultConstHandle CoordPortals[3];
   CartesianConstPortal Coordinates;
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                     vtkm::TopologyElementTagCell,3> Conn;
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
+    Conn;
   vtkm::Id3 PointDimensions;
-  vtkm::Vec<vtkm::Float32,3> MinPoint;
-  vtkm::Vec<vtkm::Float32,3> MaxPoint;
-public:
+  vtkm::Vec<vtkm::Float32, 3> MinPoint;
+  vtkm::Vec<vtkm::Float32, 3> MaxPoint;
 
-  RectilinearLocator(const CartesianArrayHandle &coordinates,
-                     vtkm::cont::CellSetStructured<3> &cellset)
-    : Coordinates(coordinates.PrepareForInput( Device() )),
-      Conn( cellset.PrepareForInput( Device(),
-                                     vtkm::TopologyElementTagPoint(),
-                                     vtkm::TopologyElementTagCell() ))
+public:
+  RectilinearLocator(const CartesianArrayHandle& coordinates,
+                     vtkm::cont::CellSetStructured<3>& cellset)
+    : Coordinates(coordinates.PrepareForInput(Device()))
+    , Conn(cellset.PrepareForInput(Device(),
+                                   vtkm::TopologyElementTagPoint(),
+                                   vtkm::TopologyElementTagCell()))
   {
     CoordPortals[0] = Coordinates.GetFirstPortal();
     CoordPortals[1] = Coordinates.GetSecondPortal();
     CoordPortals[2] = Coordinates.GetThirdPortal();
     PointDimensions = Conn.GetPointDimensions();
-    MinPoint[0] = static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetFirstPortal().Get(0));
-    MinPoint[1] = static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetSecondPortal().Get(0));
-    MinPoint[2] = static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetThirdPortal().Get(0));
+    MinPoint[0] =
+      static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetFirstPortal().Get(0));
+    MinPoint[1] =
+      static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetSecondPortal().Get(0));
+    MinPoint[2] =
+      static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetThirdPortal().Get(0));
 
-    MaxPoint[0] = static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1));
-    MaxPoint[1] = static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1));
-    MaxPoint[2] = static_cast<vtkm::Float32>(coordinates.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1));
+    MaxPoint[0] = static_cast<vtkm::Float32>(
+      coordinates.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1));
+    MaxPoint[1] = static_cast<vtkm::Float32>(
+      coordinates.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1));
+    MaxPoint[2] = static_cast<vtkm::Float32>(
+      coordinates.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1));
   }
 
   VTKM_EXEC
-  inline bool
-  IsInside(const vtkm::Vec<vtkm::Float32,3> &point) const
+  inline bool IsInside(const vtkm::Vec<vtkm::Float32, 3>& point) const
   {
     bool inside = true;
-    if(point[0] < MinPoint[0] || point[0] > MaxPoint[0]) inside = false;
-    if(point[1] < MinPoint[1] || point[1] > MaxPoint[1]) inside = false;
-    if(point[2] < MinPoint[2] || point[2] > MaxPoint[2]) inside = false;
+    if (point[0] < MinPoint[0] || point[0] > MaxPoint[0])
+      inside = false;
+    if (point[1] < MinPoint[1] || point[1] > MaxPoint[1])
+      inside = false;
+    if (point[2] < MinPoint[2] || point[2] > MaxPoint[2])
+      inside = false;
     return inside;
   }
 
   VTKM_EXEC
-  inline void
-  GetCellIndices(const vtkm::Vec<vtkm::Id,3> &cell,
-             vtkm::Vec<vtkm::Id,8> &cellIndices) const
+  inline void GetCellIndices(const vtkm::Vec<vtkm::Id, 3>& cell,
+                             vtkm::Vec<vtkm::Id, 8>& cellIndices) const
   {
     cellIndices[0] = (cell[2] * PointDimensions[1] + cell[1]) * PointDimensions[0] + cell[0];
     cellIndices[1] = cellIndices[0] + 1;
     cellIndices[2] = cellIndices[1] + PointDimensions[0];
     cellIndices[3] = cellIndices[2] - 1;
-    cellIndices[4] = cellIndices[0] + PointDimensions[0]*PointDimensions[1];
+    cellIndices[4] = cellIndices[0] + PointDimensions[0] * PointDimensions[1];
     cellIndices[5] = cellIndices[4] + 1;
     cellIndices[6] = cellIndices[5] + PointDimensions[0];
     cellIndices[7] = cellIndices[6] - 1;
@@ -112,80 +124,77 @@ public:
   // Assumes point inside the data set
   //
   VTKM_EXEC
-  inline void
-  LocateCell(vtkm::Vec<vtkm::Id,3> &cell,
-             const vtkm::Vec<vtkm::Float32,3> &point,
-             vtkm::Vec<vtkm::Float32,3> &invSpacing) const
+  inline void LocateCell(vtkm::Vec<vtkm::Id, 3>& cell,
+                         const vtkm::Vec<vtkm::Float32, 3>& point,
+                         vtkm::Vec<vtkm::Float32, 3>& invSpacing) const
+  {
+    for (vtkm::Int32 dim = 0; dim < 3; ++dim)
     {
-      for(vtkm::Int32 dim = 0; dim < 3; ++dim)
+      //
+      // When searching for points, we consider the max value of the cell
+      // to be apart of the next cell. If the point falls on the boundry of the
+      // data set, then it is technically inside a cell. This checks for that case
+      //
+      if (point[dim] == MaxPoint[dim])
       {
-        // 
-        // When searching for points, we consider the max value of the cell
-        // to be apart of the next cell. If the point falls on the boundry of the
-        // data set, then it is technically inside a cell. This checks for that case
-        //
-        if(point[dim] == MaxPoint[dim])
+        cell[dim] = PointDimensions[dim] - 2;
+        continue;
+      }
+
+      bool found = false;
+      vtkm::Float32 minVal = static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim]));
+      const vtkm::Id searchDir = (point[dim] - minVal >= 0.f) ? 1 : -1;
+      vtkm::Float32 maxVal = static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim] + 1));
+
+      while (!found)
+      {
+        if (point[dim] >= minVal && point[dim] < maxVal)
         {
-          cell[dim] = PointDimensions[dim] - 2;
+          found = true;
           continue;
         }
 
-        bool found = false;
-        vtkm::Float32 minVal = static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim]));
-        const vtkm::Id searchDir = (point[dim] - minVal >= 0.f) ? 1 : -1;
-        vtkm::Float32 maxVal = static_cast<vtkm::Float32>(CoordPortals[dim].Get(cell[dim] + 1));
-         
-        while(!found)
+        cell[dim] += searchDir;
+        vtkm::Id nextCellId = searchDir == 1 ? cell[dim] + 1 : cell[dim];
+        vtkm::Float32 next = static_cast<vtkm::Float32>(CoordPortals[dim].Get(nextCellId));
+        if (searchDir == 1)
         {
-          if(point[dim] >= minVal && point[dim] < maxVal)
-          {
-            found = true;
-            continue;
-          }
-        
-          cell[dim] += searchDir; 
-          vtkm::Id nextCellId = searchDir == 1 ? cell[dim] + 1 : cell[dim];
-vtkm::Float32 next = static_cast<vtkm::Float32>(CoordPortals[dim].Get(nextCellId));
-                    if(searchDir == 1)
-          {
-            minVal = maxVal;
-            maxVal = next;
-          }
-          else
-          {
-            maxVal = minVal;
-            minVal = next;
-          }
-
+          minVal = maxVal;
+          maxVal = next;
         }
-        invSpacing[dim] = 1.f / (maxVal - minVal);
+        else
+        {
+          maxVal = minVal;
+          minVal = next;
+        }
+      }
+      invSpacing[dim] = 1.f / (maxVal - minVal);
     }
   } // LocateCell
 
   VTKM_EXEC
-  inline vtkm::Id
-  GetCellIndex(const vtkm::Vec<vtkm::Id,3> &cell) const
+  inline vtkm::Id GetCellIndex(const vtkm::Vec<vtkm::Id, 3>& cell) const
   {
     return (cell[2] * (PointDimensions[1] - 1) + cell[1]) * (PointDimensions[0] - 1) + cell[0];
   }
 
   VTKM_EXEC
-  inline void 
-  GetPoint(const vtkm::Id &index, vtkm::Vec<vtkm::Float32,3> &point) const
+  inline void GetPoint(const vtkm::Id& index, vtkm::Vec<vtkm::Float32, 3>& point) const
   {
     point = Coordinates.Get(index);
   }
 
   VTKM_EXEC
-  inline void 
-  GetMinPoint(const vtkm::Vec<vtkm::Id,3> &cell, vtkm::Vec<vtkm::Float32,3> &point) const
+  inline void GetMinPoint(const vtkm::Vec<vtkm::Id, 3>& cell,
+                          vtkm::Vec<vtkm::Float32, 3>& point) const
   {
-    const vtkm::Id pointIndex = (cell[2] * PointDimensions[1] + cell[1]) * PointDimensions[0] + cell[0];
+    const vtkm::Id pointIndex =
+      (cell[2] * PointDimensions[1] + cell[1]) * PointDimensions[0] + cell[0];
     point = Coordinates.Get(pointIndex);
   }
 }; // class RectilinearLocator
 
-template<typename Device>
+template <typename Device>
 class UniformLocator
 {
 protected:
@@ -193,78 +202,80 @@ protected:
   typedef typename UniformArrayHandle::ExecutionTypes<Device>::PortalConst UniformConstPortal;
 
   vtkm::Id3 PointDimensions;
-  vtkm::Vec<vtkm::Float32,3> Origin;
-  vtkm::Vec<vtkm::Float32,3> InvSpacing;
-  vtkm::Vec<vtkm::Float32,3> MaxPoint;
+  vtkm::Vec<vtkm::Float32, 3> Origin;
+  vtkm::Vec<vtkm::Float32, 3> InvSpacing;
+  vtkm::Vec<vtkm::Float32, 3> MaxPoint;
   UniformConstPortal Coordinates;
-  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                     vtkm::TopologyElementTagCell,3> Conn;
-public:
-  UniformLocator(const UniformArrayHandle &coordinates,
-                 vtkm::cont::CellSetStructured<3> &cellset)
-    : Coordinates(coordinates.PrepareForInput( Device() )),
-      Conn( cellset.PrepareForInput( Device(),
-                                     vtkm::TopologyElementTagPoint(),
-                                     vtkm::TopologyElementTagCell() ))
-    {
-      Origin = Coordinates.GetOrigin();
-      PointDimensions = Conn.GetPointDimensions();
-      vtkm::Vec<vtkm::Float32,3> spacing = Coordinates.GetSpacing();
+  vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, 3>
+    Conn;
 
-      vtkm::Vec<vtkm::Float32,3> unitLength;
-      unitLength[0] = static_cast<vtkm::Float32>(PointDimensions[0] - 1);
-      unitLength[1] = static_cast<vtkm::Float32>(PointDimensions[1] - 1);
-      unitLength[2] = static_cast<vtkm::Float32>(PointDimensions[2] - 1);
-      MaxPoint = Origin + spacing * unitLength;
-      InvSpacing[0] = 1.f / spacing[0];
-      InvSpacing[1] = 1.f / spacing[1];
-      InvSpacing[2] = 1.f / spacing[2];
-    }
+public:
+  UniformLocator(const UniformArrayHandle& coordinates, vtkm::cont::CellSetStructured<3>& cellset)
+    : Coordinates(coordinates.PrepareForInput(Device()))
+    , Conn(cellset.PrepareForInput(Device(),
+                                   vtkm::TopologyElementTagPoint(),
+                                   vtkm::TopologyElementTagCell()))
+  {
+    Origin = Coordinates.GetOrigin();
+    PointDimensions = Conn.GetPointDimensions();
+    vtkm::Vec<vtkm::Float32, 3> spacing = Coordinates.GetSpacing();
+
+    vtkm::Vec<vtkm::Float32, 3> unitLength;
+    unitLength[0] = static_cast<vtkm::Float32>(PointDimensions[0] - 1);
+    unitLength[1] = static_cast<vtkm::Float32>(PointDimensions[1] - 1);
+    unitLength[2] = static_cast<vtkm::Float32>(PointDimensions[2] - 1);
+    MaxPoint = Origin + spacing * unitLength;
+    InvSpacing[0] = 1.f / spacing[0];
+    InvSpacing[1] = 1.f / spacing[1];
+    InvSpacing[2] = 1.f / spacing[2];
+  }
 
   VTKM_EXEC
-  inline bool
-  IsInside(const vtkm::Vec<vtkm::Float32,3> &point) const
+  inline bool IsInside(const vtkm::Vec<vtkm::Float32, 3>& point) const
   {
     bool inside = true;
-    if(point[0] < Origin[0] || point[0] > MaxPoint[0]) inside = false;
-    if(point[1] < Origin[1] || point[1] > MaxPoint[1]) inside = false;
-    if(point[2] < Origin[2] || point[2] > MaxPoint[2]) inside = false;
+    if (point[0] < Origin[0] || point[0] > MaxPoint[0])
+      inside = false;
+    if (point[1] < Origin[1] || point[1] > MaxPoint[1])
+      inside = false;
+    if (point[2] < Origin[2] || point[2] > MaxPoint[2])
+      inside = false;
     return inside;
   }
 
   VTKM_EXEC
-  inline void
-  GetCellIndices(const vtkm::Vec<vtkm::Id,3> &cell,
-                 vtkm::Vec<vtkm::Id,8> &cellIndices) const
+  inline void GetCellIndices(const vtkm::Vec<vtkm::Id, 3>& cell,
+                             vtkm::Vec<vtkm::Id, 8>& cellIndices) const
   {
     cellIndices[0] = (cell[2] * PointDimensions[1] + cell[1]) * PointDimensions[0] + cell[0];
     cellIndices[1] = cellIndices[0] + 1;
     cellIndices[2] = cellIndices[1] + PointDimensions[0];
     cellIndices[3] = cellIndices[2] - 1;
-    cellIndices[4] = cellIndices[0] + PointDimensions[0]*PointDimensions[1];
+    cellIndices[4] = cellIndices[0] + PointDimensions[0] * PointDimensions[1];
     cellIndices[5] = cellIndices[4] + 1;
     cellIndices[6] = cellIndices[5] + PointDimensions[0];
     cellIndices[7] = cellIndices[6] - 1;
   } // GetCellIndices
 
   VTKM_EXEC
-  inline vtkm::Id
-  GetCellIndex(const vtkm::Vec<vtkm::Id,3> &cell) const
+  inline vtkm::Id GetCellIndex(const vtkm::Vec<vtkm::Id, 3>& cell) const
   {
     return (cell[2] * (PointDimensions[1] - 1) + cell[1]) * (PointDimensions[0] - 1) + cell[0];
   }
 
   VTKM_EXEC
-  inline void
-  LocateCell(vtkm::Vec<vtkm::Id,3> &cell,
-             const vtkm::Vec<vtkm::Float32,3> &point,
-             vtkm::Vec<vtkm::Float32,3> &invSpacing) const
+  inline void LocateCell(vtkm::Vec<vtkm::Id, 3>& cell,
+                         const vtkm::Vec<vtkm::Float32, 3>& point,
+                         vtkm::Vec<vtkm::Float32, 3>& invSpacing) const
   {
-    vtkm::Vec<vtkm::Float32,3> temp = point;
+    vtkm::Vec<vtkm::Float32, 3> temp = point;
     //make sure that if we border the upper edge, we sample the correct cell
-    if(temp[0] == vtkm::Float32(PointDimensions[0] - 1)) temp[0] = vtkm::Float32(PointDimensions[0] - 2);
-    if(temp[1] == vtkm::Float32(PointDimensions[1] - 1)) temp[0] = vtkm::Float32(PointDimensions[1] - 2);
-    if(temp[2] == vtkm::Float32(PointDimensions[2] - 1)) temp[0] = vtkm::Float32(PointDimensions[2] - 2);
+    if (temp[0] == vtkm::Float32(PointDimensions[0] - 1))
+      temp[0] = vtkm::Float32(PointDimensions[0] - 2);
+    if (temp[1] == vtkm::Float32(PointDimensions[1] - 1))
+      temp[0] = vtkm::Float32(PointDimensions[1] - 2);
+    if (temp[2] == vtkm::Float32(PointDimensions[2] - 1))
+      temp[0] = vtkm::Float32(PointDimensions[2] - 2);
     temp = temp - Origin;
     temp = temp * InvSpacing;
     cell = temp;
@@ -272,85 +283,85 @@ public:
   }
 
   VTKM_EXEC
-  inline void 
-  GetPoint(const vtkm::Id &index, vtkm::Vec<vtkm::Float32,3> &point) const
+  inline void GetPoint(const vtkm::Id& index, vtkm::Vec<vtkm::Float32, 3>& point) const
   {
     point = Coordinates.Get(index);
   }
 
   VTKM_EXEC
-  inline void 
-  GetMinPoint(const vtkm::Vec<vtkm::Id,3> &cell, vtkm::Vec<vtkm::Float32,3> &point) const
+  inline void GetMinPoint(const vtkm::Vec<vtkm::Id, 3>& cell,
+                          vtkm::Vec<vtkm::Float32, 3>& point) const
   {
-    const vtkm::Id pointIndex = (cell[2] * PointDimensions[1] + cell[1]) * PointDimensions[0] + cell[0];
+    const vtkm::Id pointIndex =
+      (cell[2] * PointDimensions[1] + cell[1]) * PointDimensions[0] + cell[0];
     point = Coordinates.Get(pointIndex);
   }
 
 }; // class UniformLocator
 
-
 } //namespace
-template<typename Device>
+template <typename Device>
 class VolumeRendererStructured
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
-  typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle,DefaultHandle,DefaultHandle> CartesianArrayHandle;
+  typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>
+    CartesianArrayHandle;
 
-  template<typename LocatorType>
+  template <typename LocatorType>
   class Sampler : public vtkm::worklet::WorkletMapField
   {
   private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> >  ColorArrayHandle;
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorArrayHandle;
     typedef typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst ColorArrayPortal;
-    vtkm::Vec<vtkm::Float32,3> CameraPosition;
+    vtkm::Vec<vtkm::Float32, 3> CameraPosition;
     ColorArrayPortal ColorMap;
     vtkm::Id ColorMapSize;
     vtkm::Float32 MinScalar;
     vtkm::Float32 SampleDistance;
     vtkm::Float32 InverseDeltaScalar;
     LocatorType Locator;
+
   public:
     VTKM_CONT
-    Sampler(vtkm::Vec<vtkm::Float32,3> cameraPosition,
-            const ColorArrayHandle &colorMap,
-            const vtkm::Float32 &minScalar,
-            const vtkm::Float32 &maxScalar,
-            const vtkm::Float32 &sampleDistance,
-            const LocatorType &locator)
-      : CameraPosition(cameraPosition),
-        ColorMap( colorMap.PrepareForInput( Device() )),
-        MinScalar(minScalar),
-        SampleDistance(sampleDistance),
-        Locator(locator)
+    Sampler(vtkm::Vec<vtkm::Float32, 3> cameraPosition,
+            const ColorArrayHandle& colorMap,
+            const vtkm::Float32& minScalar,
+            const vtkm::Float32& maxScalar,
+            const vtkm::Float32& sampleDistance,
+            const LocatorType& locator)
+      : CameraPosition(cameraPosition)
+      , ColorMap(colorMap.PrepareForInput(Device()))
+      , MinScalar(minScalar)
+      , SampleDistance(sampleDistance)
+      , Locator(locator)
     {
       ColorMapSize = colorMap.GetNumberOfValues() - 1;
-      if((maxScalar - minScalar) != 0.f) InverseDeltaScalar = 1.f / (maxScalar - minScalar);
-      else InverseDeltaScalar = minScalar;
+      if ((maxScalar - minScalar) != 0.f)
+        InverseDeltaScalar = 1.f / (maxScalar - minScalar);
+      else
+        InverseDeltaScalar = minScalar;
     }
     typedef void ControlSignature(FieldIn<>,
                                   FieldIn<>,
                                   FieldOut<>,
                                   WholeArrayIn<ScalarRenderingTypes>);
-    typedef void ExecutionSignature(_1,
-                                    _2,
-                                    _3,
-                                    _4);
-    
-    template<typename ScalarPortalType>
-    VTKM_EXEC
-    void operator()(const vtkm::Vec<vtkm::Float32,3> &rayDir,
-                    const vtkm::Float32 &minDistance,
-                    vtkm::Vec<vtkm::Float32,4> &color,
-                    ScalarPortalType &scalars) const
+    typedef void ExecutionSignature(_1, _2, _3, _4);
+
+    template <typename ScalarPortalType>
+    VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& rayDir,
+                              const vtkm::Float32& minDistance,
+                              vtkm::Vec<vtkm::Float32, 4>& color,
+                              ScalarPortalType& scalars) const
     {
       color[0] = 0.f;
       color[1] = 0.f;
       color[2] = 0.f;
       color[3] = 0.f;
-      if(minDistance == -1.f) return; //TODO: Compact? or just image subset...
+      if (minDistance == -1.f)
+        return; //TODO: Compact? or just image subset...
       //get the initial sample position;
-      vtkm::Vec<vtkm::Float32,3> sampleLocation;
+      vtkm::Vec<vtkm::Float32, 3> sampleLocation;
       sampleLocation = CameraPosition + (0.0001f + minDistance) * rayDir;
       /*
               7----------6
@@ -361,7 +372,7 @@ public:
             |/         |/     |/
             0----------1      |__ x
       */
-      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
+      vtkm::Vec<vtkm::Float32, 3> bottomLeft(0, 0, 0);
       bool newCell = true;
       //check to see if we left the cell
       vtkm::Float32 tx = 0.f;
@@ -375,20 +386,21 @@ public:
       vtkm::Float32 scalar5minus4 = 0.f;
       vtkm::Float32 scalar6minus7 = 0.f;
       vtkm::Float32 scalar7 = 0.f;
-      
-      vtkm::Vec<vtkm::Id,3> cell(0,0,0);
-      vtkm::Vec<vtkm::Float32,3> invSpacing;
 
-      while(Locator.IsInside(sampleLocation))
+      vtkm::Vec<vtkm::Id, 3> cell(0, 0, 0);
+      vtkm::Vec<vtkm::Float32, 3> invSpacing;
+
+      while (Locator.IsInside(sampleLocation))
       {
         vtkm::Float32 mint = vtkm::Min(tx, vtkm::Min(ty, tz));
         vtkm::Float32 maxt = vtkm::Max(tx, vtkm::Max(ty, tz));
-        if( maxt > 1.f || mint < 0.f) newCell = true;
+        if (maxt > 1.f || mint < 0.f)
+          newCell = true;
 
-        if(newCell)
+        if (newCell)
         {
-          
-          vtkm::Vec<vtkm::Id,8> cellIndices;
+
+          vtkm::Vec<vtkm::Id, 8> cellIndices;
           Locator.LocateCell(cell, sampleLocation, invSpacing);
           Locator.GetCellIndices(cell, cellIndices);
           Locator.GetPoint(cellIndices[0], bottomLeft);
@@ -423,16 +435,18 @@ public:
         vtkm::Float32 lerped32 = scalar3 + tx * scalar2minus3;
         vtkm::Float32 lerpedBottom = lerped01 + ty * (lerped32 - lerped01);
 
-        vtkm::Float32 finalScalar = lerpedBottom + tz *(lerpedTop - lerpedBottom);
+        vtkm::Float32 finalScalar = lerpedBottom + tz * (lerpedTop - lerpedBottom);
         //normalize scalar
         finalScalar = (finalScalar - MinScalar) * InverseDeltaScalar;
 
-        vtkm::Id colorIndex = static_cast<vtkm::Id>(
-              finalScalar * static_cast<vtkm::Float32>(ColorMapSize));
-        if(colorIndex < 0) colorIndex = 0;
-        if(colorIndex > ColorMapSize) colorIndex = ColorMapSize;
+        vtkm::Id colorIndex =
+          static_cast<vtkm::Id>(finalScalar * static_cast<vtkm::Float32>(ColorMapSize));
+        if (colorIndex < 0)
+          colorIndex = 0;
+        if (colorIndex > ColorMapSize)
+          colorIndex = ColorMapSize;
 
-        vtkm::Vec<vtkm::Float32,4> sampleColor = ColorMap.Get(colorIndex);
+        vtkm::Vec<vtkm::Float32, 4> sampleColor = ColorMap.Get(colorIndex);
 
         //composite
         sampleColor[3] *= (1.f - color[3]);
@@ -448,69 +462,70 @@ public:
         ty = (sampleLocation[1] - bottomLeft[1]) * invSpacing[1];
         tz = (sampleLocation[2] - bottomLeft[2]) * invSpacing[2];
 
-        if(color[3] >= 1.f) break;
+        if (color[3] >= 1.f)
+          break;
       }
-      color[0] = vtkm::Min(color[0],1.f);
-      color[1] = vtkm::Min(color[1],1.f);
-      color[2] = vtkm::Min(color[2],1.f);
-      color[3] = vtkm::Min(color[3],1.f);
+      color[0] = vtkm::Min(color[0], 1.f);
+      color[1] = vtkm::Min(color[1], 1.f);
+      color[2] = vtkm::Min(color[2], 1.f);
+      color[3] = vtkm::Min(color[3], 1.f);
     }
   }; //Sampler
 
-  template<typename LocatorType>
+  template <typename LocatorType>
   class SamplerCellAssoc : public vtkm::worklet::WorkletMapField
   {
   private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> >  ColorArrayHandle;
+    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorArrayHandle;
     typedef typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst ColorArrayPortal;
-    vtkm::Vec<vtkm::Float32,3> CameraPosition;
+    vtkm::Vec<vtkm::Float32, 3> CameraPosition;
     ColorArrayPortal ColorMap;
     vtkm::Id ColorMapSize;
     vtkm::Float32 MinScalar;
     vtkm::Float32 SampleDistance;
     vtkm::Float32 InverseDeltaScalar;
     LocatorType Locator;
+
   public:
     VTKM_CONT
-    SamplerCellAssoc(vtkm::Vec<vtkm::Float32,3> cameraPosition,
-                     const ColorArrayHandle &colorMap,
-                     const vtkm::Float32 &minScalar,
-                     const vtkm::Float32 &maxScalar,
-                     const vtkm::Float32 &sampleDistance,
-                     const LocatorType &locator)
-      : CameraPosition(cameraPosition),
-        ColorMap( colorMap.PrepareForInput( Device() )),
-        MinScalar(minScalar),
-        SampleDistance(sampleDistance),
-        Locator(locator)
+    SamplerCellAssoc(vtkm::Vec<vtkm::Float32, 3> cameraPosition,
+                     const ColorArrayHandle& colorMap,
+                     const vtkm::Float32& minScalar,
+                     const vtkm::Float32& maxScalar,
+                     const vtkm::Float32& sampleDistance,
+                     const LocatorType& locator)
+      : CameraPosition(cameraPosition)
+      , ColorMap(colorMap.PrepareForInput(Device()))
+      , MinScalar(minScalar)
+      , SampleDistance(sampleDistance)
+      , Locator(locator)
     {
       ColorMapSize = colorMap.GetNumberOfValues() - 1;
-      if((maxScalar - minScalar) != 0.f) InverseDeltaScalar = 1.f / (maxScalar - minScalar);
-      else InverseDeltaScalar = minScalar;
+      if ((maxScalar - minScalar) != 0.f)
+        InverseDeltaScalar = 1.f / (maxScalar - minScalar);
+      else
+        InverseDeltaScalar = minScalar;
     }
     typedef void ControlSignature(FieldIn<>,
                                   FieldIn<>,
                                   FieldOut<>,
                                   WholeArrayIn<ScalarRenderingTypes>);
-    typedef void ExecutionSignature(_1,
-                                    _2,
-                                    _3,
-                                    _4);
-    
-    template<typename ScalarPortalType>
-    VTKM_EXEC
-    void operator()(const vtkm::Vec<vtkm::Float32,3> &rayDir,
-                    const vtkm::Float32 &minDistance,
-                    vtkm::Vec<vtkm::Float32,4> &color,
-                    const ScalarPortalType &scalars) const
+    typedef void ExecutionSignature(_1, _2, _3, _4);
+
+    template <typename ScalarPortalType>
+    VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& rayDir,
+                              const vtkm::Float32& minDistance,
+                              vtkm::Vec<vtkm::Float32, 4>& color,
+                              const ScalarPortalType& scalars) const
     {
       color[0] = 0.f;
       color[1] = 0.f;
       color[2] = 0.f;
       color[3] = 0.f;
-      if(minDistance == -1.f) return; //TODO: Compact? or just image subset...
+      if (minDistance == -1.f)
+        return; //TODO: Compact? or just image subset...
       //get the initial sample position;
-      vtkm::Vec<vtkm::Float32,3> sampleLocation;
+      vtkm::Vec<vtkm::Float32, 3> sampleLocation;
       sampleLocation = CameraPosition + (0.0001f + minDistance) * rayDir;
 
       /*
@@ -527,26 +542,29 @@ public:
       vtkm::Float32 ty = 2.f;
       vtkm::Float32 tz = 2.f;
       vtkm::Float32 scalar0 = 0.f;
-      vtkm::Vec<vtkm::Float32,4> sampleColor(0,0,0,0);
-      vtkm::Vec<vtkm::Float32,3> bottomLeft(0,0,0);
-      vtkm::Vec<vtkm::Float32,3> invSpacing;
-      vtkm::Vec<vtkm::Id,3> cell(0,0,0);
-      while(Locator.IsInside(sampleLocation))
+      vtkm::Vec<vtkm::Float32, 4> sampleColor(0, 0, 0, 0);
+      vtkm::Vec<vtkm::Float32, 3> bottomLeft(0, 0, 0);
+      vtkm::Vec<vtkm::Float32, 3> invSpacing;
+      vtkm::Vec<vtkm::Id, 3> cell(0, 0, 0);
+      while (Locator.IsInside(sampleLocation))
       {
         vtkm::Float32 mint = vtkm::Min(tx, vtkm::Min(ty, tz));
         vtkm::Float32 maxt = vtkm::Max(tx, vtkm::Max(ty, tz));
-        if( maxt > 1.f || mint < 0.f) newCell = true;
-        if(newCell)
+        if (maxt > 1.f || mint < 0.f)
+          newCell = true;
+        if (newCell)
         {
           Locator.LocateCell(cell, sampleLocation, invSpacing);
           vtkm::Id cellId = Locator.GetCellIndex(cell);
 
           scalar0 = vtkm::Float32(scalars.Get(cellId));
           vtkm::Float32 normalizedScalar = (scalar0 - MinScalar) * InverseDeltaScalar;
-          vtkm::Id colorIndex = static_cast<vtkm::Id>(
-                normalizedScalar * static_cast<vtkm::Float32>(ColorMapSize));
-          if(colorIndex < 0) colorIndex = 0;
-          if(colorIndex > ColorMapSize) colorIndex = ColorMapSize;
+          vtkm::Id colorIndex =
+            static_cast<vtkm::Id>(normalizedScalar * static_cast<vtkm::Float32>(ColorMapSize));
+          if (colorIndex < 0)
+            colorIndex = 0;
+          if (colorIndex > ColorMapSize)
+            colorIndex = ColorMapSize;
           sampleColor = ColorMap.Get(colorIndex);
           Locator.GetMinPoint(cell, bottomLeft);
           tx = (sampleLocation[0] - bottomLeft[0]) * invSpacing[0];
@@ -564,33 +582,34 @@ public:
         //advance
         sampleLocation = sampleLocation + SampleDistance * rayDir;
 
-        if(color[3] >= 1.f) break;
+        if (color[3] >= 1.f)
+          break;
         tx = (sampleLocation[0] - bottomLeft[0]) * invSpacing[0];
         ty = (sampleLocation[1] - bottomLeft[1]) * invSpacing[1];
         tz = (sampleLocation[2] - bottomLeft[2]) * invSpacing[2];
       }
 
-      color[0] = vtkm::Min(color[0],1.f);
-      color[1] = vtkm::Min(color[1],1.f);
-      color[2] = vtkm::Min(color[2],1.f);
-      color[3] = vtkm::Min(color[3],1.f);
+      color[0] = vtkm::Min(color[0], 1.f);
+      color[1] = vtkm::Min(color[1], 1.f);
+      color[2] = vtkm::Min(color[2], 1.f);
+      color[3] = vtkm::Min(color[3], 1.f);
     }
   }; //SamplerCell
 
   class CalcRayStart : public vtkm::worklet::WorkletMapField
   {
-   vtkm::Float32 Xmin;
-   vtkm::Float32 Ymin;
-   vtkm::Float32 Zmin;
-   vtkm::Float32 Xmax;
-   vtkm::Float32 Ymax;
-   vtkm::Float32 Zmax;
-   vtkm::Vec<vtkm::Float32,3> CameraPosition;
+    vtkm::Float32 Xmin;
+    vtkm::Float32 Ymin;
+    vtkm::Float32 Zmin;
+    vtkm::Float32 Xmax;
+    vtkm::Float32 Ymax;
+    vtkm::Float32 Zmax;
+    vtkm::Vec<vtkm::Float32, 3> CameraPosition;
+
   public:
     VTKM_CONT
-    CalcRayStart(vtkm::Vec<vtkm::Float32,3> cameraPosition,
-                 const vtkm::Bounds boundingBox)
-     : CameraPosition(cameraPosition)
+    CalcRayStart(vtkm::Vec<vtkm::Float32, 3> cameraPosition, const vtkm::Bounds boundingBox)
+      : CameraPosition(cameraPosition)
     {
       Xmin = static_cast<vtkm::Float32>(boundingBox.X.Min);
       Xmax = static_cast<vtkm::Float32>(boundingBox.X.Max);
@@ -601,21 +620,17 @@ public:
     }
 
     VTKM_EXEC
-    vtkm::Float32 rcp(vtkm::Float32 f)  const { return 1.0f/f;}
+    vtkm::Float32 rcp(vtkm::Float32 f) const { return 1.0f / f; }
 
     VTKM_EXEC
     vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
 
-    typedef void ControlSignature(FieldIn<>,
-                                  FieldOut<>,
-                                  FieldOut<>);
-    typedef void ExecutionSignature(_1,
-                                    _2,
-                                    _3);
+    typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldOut<>);
+    typedef void ExecutionSignature(_1, _2, _3);
     VTKM_EXEC
-    void operator()(const vtkm::Vec<vtkm::Float32,3> &rayDir,
-                    vtkm::Float32 &minDistance,
-                    vtkm::Float32 &maxDistance) const
+    void operator()(const vtkm::Vec<vtkm::Float32, 3>& rayDir,
+                    vtkm::Float32& minDistance,
+                    vtkm::Float32& maxDistance) const
     {
       vtkm::Float32 dirx = rayDir[0];
       vtkm::Float32 diry = rayDir[1];
@@ -636,39 +651,42 @@ public:
       vtkm::Float32 ymax = Ymax * invDiry - odiry;
       vtkm::Float32 zmax = Zmax * invDirz - odirz;
 
-
-      minDistance = vtkm::Max(vtkm::Max(vtkm::Max(vtkm::Min(ymin,ymax),vtkm::Min(xmin,xmax)),vtkm::Min(zmin,zmax)), 0.f);
-      maxDistance = vtkm::Min(vtkm::Min(vtkm::Max(ymin,ymax),vtkm::Max(xmin,xmax)),vtkm::Max(zmin,zmax));
-      if(maxDistance < minDistance)
+      minDistance = vtkm::Max(
+        vtkm::Max(vtkm::Max(vtkm::Min(ymin, ymax), vtkm::Min(xmin, xmax)), vtkm::Min(zmin, zmax)),
+        0.f);
+      maxDistance =
+        vtkm::Min(vtkm::Min(vtkm::Max(ymin, ymax), vtkm::Max(xmin, xmax)), vtkm::Max(zmin, zmax));
+      if (maxDistance < minDistance)
       {
         minDistance = -1.f; //flag for miss
       }
-
-
     }
   }; //class CalcRayStart
 
   class CompositeBackground : public vtkm::worklet::WorkletMapField
   {
-   vtkm::Vec<vtkm::Float32,4> BackgroundColor;
+    vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
+
   public:
     VTKM_CONT
-    CompositeBackground(const vtkm::Vec<vtkm::Float32,4> &backgroundColor)
-     : BackgroundColor(backgroundColor)
-    {}
+    CompositeBackground(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
+      : BackgroundColor(backgroundColor)
+    {
+    }
 
     typedef void ControlSignature(FieldInOut<>);
     typedef void ExecutionSignature(_1);
     VTKM_EXEC
-    void operator()(vtkm::Vec<vtkm::Float32,4> &color) const
+    void operator()(vtkm::Vec<vtkm::Float32, 4>& color) const
     {
 
-        if(color[3] >= 1.f) return;
-        vtkm::Float32 alpha = BackgroundColor[3] * (1.f - color[3]);
-        color[0] = color[0] + BackgroundColor[0] * alpha;
-        color[1] = color[1] + BackgroundColor[1] * alpha;
-        color[2] = color[2] + BackgroundColor[2] * alpha;
-        color[3] = alpha + color[3];
+      if (color[3] >= 1.f)
+        return;
+      vtkm::Float32 alpha = BackgroundColor[3] * (1.f - color[3]);
+      color[0] = color[0] + BackgroundColor[0] * alpha;
+      color[1] = color[1] + BackgroundColor[1] * alpha;
+      color[2] = color[2] + BackgroundColor[2] * alpha;
+      color[3] = alpha + color[3];
     }
   }; //class CompositeBackground
 
@@ -682,13 +700,10 @@ public:
   }
 
   VTKM_CONT
-  Camera<Device>& GetCamera()
-  {
-    return camera;
-  }
+  Camera<Device>& GetCamera() { return camera; }
 
   VTKM_CONT
-  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > &colorMap)
+  void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap)
   {
     ColorMap = colorMap;
   }
@@ -701,13 +716,14 @@ public:
   }
 
   VTKM_CONT
-  void SetData(const vtkm::cont::CoordinateSystem &coords,
-               const vtkm::cont::Field &scalarField,
-               const vtkm::Bounds &coordsBounds,
-               const vtkm::cont::CellSetStructured<3> &cellset,
-               const vtkm::Range &scalarRange)
+  void SetData(const vtkm::cont::CoordinateSystem& coords,
+               const vtkm::cont::Field& scalarField,
+               const vtkm::Bounds& coordsBounds,
+               const vtkm::cont::CellSetStructured<3>& cellset,
+               const vtkm::Range& scalarRange)
   {
-    if(coords.GetData().IsSameType(CartesianArrayHandle())) IsUniformDataSet = false;
+    if (coords.GetData().IsSameType(CartesianArrayHandle()))
+      IsUniformDataSet = false;
     IsSceneDirty = true;
     Coordinates = coords.GetData();
     ScalarField = &scalarField;
@@ -716,17 +732,16 @@ public:
     ScalarRange = scalarRange;
   }
 
-
   VTKM_CONT
-  void Render(CanvasRayTracer *canvas)
+  void Render(CanvasRayTracer* canvas)
   {
-    if(IsSceneDirty)
+    if (IsSceneDirty)
     {
       Init();
     }
-    if(SampleDistance <= 0.f)
+    if (SampleDistance <= 0.f)
     {
-      vtkm::Vec<vtkm::Float32,3> extent;
+      vtkm::Vec<vtkm::Float32, 3> extent;
       extent[0] = static_cast<vtkm::Float32>(this->DataBounds.X.Length());
       extent[1] = static_cast<vtkm::Float32>(this->DataBounds.Y.Length());
       extent[2] = static_cast<vtkm::Float32>(this->DataBounds.Z.Length());
@@ -734,105 +749,92 @@ public:
       SampleDistance = vtkm::Magnitude(extent) / defaultNumberOfSamples;
     }
 
-    vtkm::worklet::DispatcherMapField< CalcRayStart, Device >( CalcRayStart( camera.GetPosition(), this->DataBounds ))
-      .Invoke( Rays.Dir,
-               Rays.MinDistance,
-               Rays.MaxDistance);
+    vtkm::worklet::DispatcherMapField<CalcRayStart, Device>(
+      CalcRayStart(camera.GetPosition(), this->DataBounds))
+      .Invoke(Rays.Dir, Rays.MinDistance, Rays.MaxDistance);
     bool isSupportedField = (ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
-                             ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET );
-    if(!isSupportedField) throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
+                             ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+    if (!isSupportedField)
+      throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
     bool isAssocPoints = ScalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
 
-    if(IsUniformDataSet)
+    if (IsUniformDataSet)
     {
 
       vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
       vertices = Coordinates.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       UniformLocator<Device> locator(vertices, Cellset);
 
-      if(isAssocPoints)
+      if (isAssocPoints)
       {
-        vtkm::worklet::DispatcherMapField< Sampler<UniformLocator<Device>>, Device >
-          ( Sampler<UniformLocator<Device>>( camera.GetPosition(),
-                                             ColorMap,
-                                             vtkm::Float32(ScalarRange.Min),
-                                             vtkm::Float32(ScalarRange.Max),
-                                             SampleDistance,
-                                             locator))
-          .Invoke( Rays.Dir,
-                   Rays.MinDistance,
-                   camera.FrameBuffer,
-                   *ScalarField);
+        vtkm::worklet::DispatcherMapField<Sampler<UniformLocator<Device>>, Device>(
+          Sampler<UniformLocator<Device>>(camera.GetPosition(),
+                                          ColorMap,
+                                          vtkm::Float32(ScalarRange.Min),
+                                          vtkm::Float32(ScalarRange.Max),
+                                          SampleDistance,
+                                          locator))
+          .Invoke(Rays.Dir, Rays.MinDistance, camera.FrameBuffer, *ScalarField);
       }
       else
       {
-        vtkm::worklet::DispatcherMapField< SamplerCellAssoc<UniformLocator<Device>>>
-          ( SamplerCellAssoc<UniformLocator<Device>>( camera.GetPosition(),
-                                                      ColorMap,
-                                                      vtkm::Float32(ScalarRange.Min),
-                                                      vtkm::Float32(ScalarRange.Max),
-                                                      SampleDistance,
-                                                      locator))
-          .Invoke( Rays.Dir,
-                   Rays.MinDistance,
-                   camera.FrameBuffer,
-                   *ScalarField);
-
-      }
-     }
-     else
-     {
-        CartesianArrayHandle vertices;
-        vertices = Coordinates.Cast<CartesianArrayHandle>();
-        RectilinearLocator<Device> locator(vertices, Cellset);
-        if(isAssocPoints)
-        {
-          vtkm::worklet::DispatcherMapField< Sampler<RectilinearLocator<Device>>, Device >
-            ( Sampler<RectilinearLocator<Device>>( camera.GetPosition(),
+        vtkm::worklet::DispatcherMapField<SamplerCellAssoc<UniformLocator<Device>>>(
+          SamplerCellAssoc<UniformLocator<Device>>(camera.GetPosition(),
                                                    ColorMap,
                                                    vtkm::Float32(ScalarRange.Min),
                                                    vtkm::Float32(ScalarRange.Max),
                                                    SampleDistance,
                                                    locator))
-            .Invoke( Rays.Dir,
-                     Rays.MinDistance,
-                     camera.FrameBuffer,
-                     *ScalarField);
-        }
-        else
-        {
-          vtkm::worklet::DispatcherMapField< SamplerCellAssoc<RectilinearLocator<Device>>, Device >
-            ( SamplerCellAssoc<RectilinearLocator<Device>>( camera.GetPosition(),
-                                                            ColorMap,
-                                                            vtkm::Float32(ScalarRange.Min),
-                                                            vtkm::Float32(ScalarRange.Max),
-                                                            SampleDistance,
-                                                            locator))
-            .Invoke( Rays.Dir,
-                     Rays.MinDistance,
-                     camera.FrameBuffer,
-                     *ScalarField);
-        }
-     }
-
-    if(DoCompositeBackground)
+          .Invoke(Rays.Dir, Rays.MinDistance, camera.FrameBuffer, *ScalarField);
+      }
+    }
+    else
     {
-      vtkm::worklet::DispatcherMapField< CompositeBackground >( CompositeBackground( BackgroundColor ) )
-        .Invoke( camera.FrameBuffer );
+      CartesianArrayHandle vertices;
+      vertices = Coordinates.Cast<CartesianArrayHandle>();
+      RectilinearLocator<Device> locator(vertices, Cellset);
+      if (isAssocPoints)
+      {
+        vtkm::worklet::DispatcherMapField<Sampler<RectilinearLocator<Device>>, Device>(
+          Sampler<RectilinearLocator<Device>>(camera.GetPosition(),
+                                              ColorMap,
+                                              vtkm::Float32(ScalarRange.Min),
+                                              vtkm::Float32(ScalarRange.Max),
+                                              SampleDistance,
+                                              locator))
+          .Invoke(Rays.Dir, Rays.MinDistance, camera.FrameBuffer, *ScalarField);
+      }
+      else
+      {
+        vtkm::worklet::DispatcherMapField<SamplerCellAssoc<RectilinearLocator<Device>>, Device>(
+          SamplerCellAssoc<RectilinearLocator<Device>>(camera.GetPosition(),
+                                                       ColorMap,
+                                                       vtkm::Float32(ScalarRange.Min),
+                                                       vtkm::Float32(ScalarRange.Max),
+                                                       SampleDistance,
+                                                       locator))
+          .Invoke(Rays.Dir, Rays.MinDistance, camera.FrameBuffer, *ScalarField);
+      }
+    }
+
+    if (DoCompositeBackground)
+    {
+      vtkm::worklet::DispatcherMapField<CompositeBackground>(CompositeBackground(BackgroundColor))
+        .Invoke(camera.FrameBuffer);
     }
     camera.WriteToSurface(canvas, Rays.MinDistance);
   } //Render
 
   VTKM_CONT
-  void SetSampleDistance(const vtkm::Float32 & distance)
+  void SetSampleDistance(const vtkm::Float32& distance)
   {
-    if(distance <= 0.f)
-        throw vtkm::cont::ErrorBadValue("Sample distance must be positive.");
+    if (distance <= 0.f)
+      throw vtkm::cont::ErrorBadValue("Sample distance must be positive.");
     SampleDistance = distance;
   }
 
   VTKM_CONT
-  void SetBackgroundColor(const vtkm::Vec<vtkm::Float32,4> &backgroundColor)
+  void SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
   {
     BackgroundColor = backgroundColor;
   }
@@ -841,7 +843,7 @@ public:
   {
     DoCompositeBackground = compositeBackground;
   }
-  
+
 protected:
   bool IsSceneDirty;
   bool IsUniformDataSet;
@@ -850,13 +852,14 @@ protected:
   Camera<Device> camera;
   vtkm::cont::DynamicArrayHandleCoordinateSystem Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;
-  const vtkm::cont::Field *ScalarField;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
+  const vtkm::cont::Field* ScalarField;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
   vtkm::Float32 SampleDistance;
-  vtkm::Vec<vtkm::Float32,4> BackgroundColor;
+  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
   vtkm::Range ScalarRange;
   vtkm::Bounds DataBounds;
-
 };
-}}} //namespace vtkm::rendering::raytracing
+}
+}
+} //namespace vtkm::rendering::raytracing
 #endif

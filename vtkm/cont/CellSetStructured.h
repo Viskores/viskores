@@ -28,40 +28,36 @@
 #include <vtkm/exec/ConnectivityStructured.h>
 #include <vtkm/internal/ConnectivityStructuredInternals.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-template<vtkm::IdComponent DIMENSION>
+template <vtkm::IdComponent DIMENSION>
 class VTKM_ALWAYS_EXPORT CellSetStructured : public CellSet
 {
 private:
   typedef vtkm::cont::CellSetStructured<DIMENSION> Thisclass;
-  typedef vtkm::internal::ConnectivityStructuredInternals<DIMENSION>
-      InternalsType;
+  typedef vtkm::internal::ConnectivityStructuredInternals<DIMENSION> InternalsType;
 
 public:
-  static const vtkm::IdComponent Dimension=DIMENSION;
+  static const vtkm::IdComponent Dimension = DIMENSION;
 
   typedef typename InternalsType::SchedulingRangeType SchedulingRangeType;
 
-  CellSetStructured(const std::string &name = std::string())
-    : CellSet(name), Structure()
+  CellSetStructured(const std::string& name = std::string())
+    : CellSet(name)
+    , Structure()
   {
   }
 
-  CellSetStructured(const Thisclass &src);
+  CellSetStructured(const Thisclass& src);
 
-  Thisclass &operator=(const Thisclass &src);
+  Thisclass& operator=(const Thisclass& src);
 
-  virtual vtkm::Id GetNumberOfCells() const
-  {
-    return this->Structure.GetNumberOfCells();
-  }
+  virtual vtkm::Id GetNumberOfCells() const { return this->Structure.GetNumberOfCells(); }
 
-  virtual vtkm::Id GetNumberOfPoints() const
-  {
-    return this->Structure.GetNumberOfPoints();
-  }
+  virtual vtkm::Id GetNumberOfPoints() const { return this->Structure.GetNumberOfPoints(); }
 
   virtual vtkm::Id GetNumberOfFaces() const { return -1; }
 
@@ -72,43 +68,34 @@ public:
     this->Structure.SetPointDimensions(dimensions);
   }
 
-  SchedulingRangeType GetPointDimensions()
-  {
-    return this->Structure.GetPointDimensions();
-  }
+  SchedulingRangeType GetPointDimensions() { return this->Structure.GetPointDimensions(); }
 
-  SchedulingRangeType GetCellDimensions()
-  {
-    return this->Structure.GetCellDimensions();
-  }
+  SchedulingRangeType GetCellDimensions() { return this->Structure.GetCellDimensions(); }
 
-  vtkm::IdComponent
-  GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex)=0) const
+  vtkm::IdComponent GetNumberOfPointsInCell(vtkm::Id vtkmNotUsed(cellIndex) = 0) const
   {
     return this->Structure.GetNumberOfPointsInCell();
   }
 
-  vtkm::IdComponent GetCellShape() const
-  {
-    return this->Structure.GetCellShape();
-  }
+  vtkm::IdComponent GetCellShape() const { return this->Structure.GetCellShape(); }
 
-  template<typename TopologyElement>
+  template <typename TopologyElement>
   SchedulingRangeType GetSchedulingRange(TopologyElement) const;
 
-  template<typename DeviceAdapter, typename FromTopology, typename ToTopology>
-  struct ExecutionTypes {
+  template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
+  struct ExecutionTypes
+  {
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
-    typedef vtkm::exec::ConnectivityStructured<FromTopology,ToTopology,Dimension> ExecObjectType;
+    typedef vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension> ExecObjectType;
   };
 
-  template<typename DeviceAdapter, typename FromTopology, typename ToTopology>
-  typename ExecutionTypes<DeviceAdapter,FromTopology,ToTopology>::ExecObjectType
-  PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const;
+  template <typename DeviceAdapter, typename FromTopology, typename ToTopology>
+  typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType
+    PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const;
 
-  virtual void PrintSummary(std::ostream &out) const;
+  virtual void PrintSummary(std::ostream& out) const;
 
 private:
   InternalsType Structure;
@@ -119,7 +106,6 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetStructured<1>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetStructured<2>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetStructured<3>;
 #endif
-
 }
 } // namespace vtkm::cont
 

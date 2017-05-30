@@ -25,8 +25,10 @@
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/MaskPoints.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 class MaskPoints : public vtkm::filter::FilterDataSet<MaskPoints>
 {
@@ -37,29 +39,28 @@ public:
   // When CompactPoints is set, instead of copying the points and point fields
   // from the input, the filter will create new compact fields without the unused elements
   VTKM_CONT
-  bool GetCompactPoints() const     { return this->CompactPoints; }
+  bool GetCompactPoints() const { return this->CompactPoints; }
   VTKM_CONT
   void SetCompactPoints(bool value) { this->CompactPoints = value; }
 
   VTKM_CONT
-  vtkm::Id GetStride() const      { return this->Stride; }
+  vtkm::Id GetStride() const { return this->Stride; }
   VTKM_CONT
   void SetStride(vtkm::Id stride) { this->Stride = stride; }
 
-  template<typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
-                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                        const DeviceAdapter& tag);
+  template <typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultDataSet DoExecute(
+    const vtkm::cont::DataSet& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+    const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  bool DoMapField(vtkm::filter::ResultDataSet& result,
-                  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                  const vtkm::filter::FieldMetadata& fieldMeta,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                  const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT bool DoMapField(vtkm::filter::ResultDataSet& result,
+                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                            const vtkm::filter::FieldMetadata& fieldMeta,
+                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                            const DeviceAdapter& tag);
 
 private:
   vtkm::Id Stride;
@@ -68,7 +69,6 @@ private:
 };
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/MaskPoints.hxx>
 

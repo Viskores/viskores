@@ -44,8 +44,9 @@ vtkm_declare_headers(${impl_headers} ${headers})
 
 
 #-----------------------------------------------------------------------------
+add_subdirectory(serial)
+add_subdirectory(tbb)
 add_subdirectory(cuda)
-
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

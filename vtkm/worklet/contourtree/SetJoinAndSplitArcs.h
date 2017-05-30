@@ -71,9 +71,12 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class SetJoinAndSplitArcs : public vtkm::worklet::WorkletMapField
@@ -86,20 +89,19 @@ public:
                                 FieldOut<IdType> joinArc,               // (output)
                                 FieldOut<IdType> splitArc);             // (output)
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   SetJoinAndSplitArcs() {}
 
   template <typename InFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& regularID,
-                  const InFieldPortalType& joinMergeArcs,
-                  const InFieldPortalType& splitMergeArcs,
-                  const InFieldPortalType& regularToCritical,
-                        vtkm::Id &joinArc,
-                        vtkm::Id &splitArc) const
+  VTKM_EXEC void operator()(const vtkm::Id& regularID,
+                            const InFieldPortalType& joinMergeArcs,
+                            const InFieldPortalType& splitMergeArcs,
+                            const InFieldPortalType& regularToCritical,
+                            vtkm::Id& joinArc,
+                            vtkm::Id& splitArc) const
   {
     // use it to grab join arc target
     vtkm::Id joinTo = joinMergeArcs.Get(regularID);
@@ -117,7 +119,6 @@ public:
       splitArc = regularToCritical.Get(splitTo);
   }
 }; // SetJoinAndSplitArcs
-
 }
 }
 }

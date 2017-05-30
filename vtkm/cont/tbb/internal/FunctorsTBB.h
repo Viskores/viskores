@@ -27,10 +27,9 @@
 #include <vtkm/cont/internal/FunctorsGeneral.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
-
 VTKM_THIRDPARTY_PRE_INCLUDE
 
-#if  defined(VTKM_MSVC)
+#if defined(VTKM_MSVC)
 
 // TBB's header include a #pragma comment(lib,"tbb.lib") line to make all
 // consuming libraries link to tbb, this is bad behavior in a header
@@ -69,16 +68,24 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 
 VTKM_THIRDPARTY_POST_INCLUDE
 
-namespace vtkm {
-namespace cont {
-namespace tbb {
+namespace vtkm
+{
+namespace cont
+{
+namespace tbb
+{
+
+namespace internal
+{
+template <typename ResultType, typename Function>
+using WrappedBinaryOperator = vtkm::cont::internal::WrappedBinaryOperator<ResultType, Function>;
+}
 
 // The "grain size" of scheduling with TBB.  Not a lot of thought has gone
 // into picking this size.
 static const vtkm::Id TBB_GRAIN_SIZE = 1024;
 
-
-template<class InputPortalType, class T, class BinaryOperationType>
+template <class InputPortalType, class T, class BinaryOperationType>
 struct ReduceBody
 {
   T Sum;
@@ -88,59 +95,62 @@ struct ReduceBody
   BinaryOperationType BinaryOperation;
 
   VTKM_CONT
-  ReduceBody(const InputPortalType &inputPortal,
+  ReduceBody(const InputPortalType& inputPortal,
              T initialValue,
              BinaryOperationType binaryOperation)
-    : Sum(vtkm::TypeTraits<T>::ZeroInitialization()),
-      InitialValue(initialValue),
-      FirstCall(true),
-      InputPortal(inputPortal),
-      BinaryOperation(binaryOperation)
-  {  }
+    : Sum(vtkm::TypeTraits<T>::ZeroInitialization())
+    , InitialValue(initialValue)
+    , FirstCall(true)
+    , InputPortal(inputPortal)
+    , BinaryOperation(binaryOperation)
+  {
+  }
 
   VTKM_EXEC_CONT
-  ReduceBody(const ReduceBody &body, ::tbb::split)
-    : Sum(vtkm::TypeTraits<T>::ZeroInitialization()),
-      InitialValue(body.InitialValue),
-      FirstCall(true),
-      InputPortal(body.InputPortal),
-      BinaryOperation(body.BinaryOperation) {  }
+  ReduceBody(const ReduceBody& body, ::tbb::split)
+    : Sum(vtkm::TypeTraits<T>::ZeroInitialization())
+    , InitialValue(body.InitialValue)
+    , FirstCall(true)
+    , InputPortal(body.InputPortal)
+    , BinaryOperation(body.BinaryOperation)
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void operator()(const ::tbb::blocked_range<vtkm::Id> &range)
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
-      InputIteratorsType;
+    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
     InputIteratorsType inputIterators(this->InputPortal);
 
     //use temp, and iterators instead of member variable to reduce false sharing
     typename InputIteratorsType::IteratorType inIter =
       inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
 
-    T temp = this->BinaryOperation(*inIter, *(inIter+1));
-    ++inIter; ++inIter;
-    for (vtkm::Id index = range.begin()+2; index != range.end(); ++index, ++inIter)
-      {
+    T temp = this->BinaryOperation(*inIter, *(inIter + 1));
+    ++inIter;
+    ++inIter;
+    for (vtkm::Id index = range.begin() + 2; index != range.end(); ++index, ++inIter)
+    {
       temp = this->BinaryOperation(temp, *inIter);
-      }
+    }
 
     //determine if we also have to add the initial value to temp
-    if(range.begin() == 0)
+    if (range.begin() == 0)
     {
-      temp = this->BinaryOperation(temp,this->InitialValue);
+      temp = this->BinaryOperation(temp, this->InitialValue);
     }
 
     //Now we can save temp back to sum, taking into account if
     //this task has been called before, and the sum value needs
     //to also be reduced.
-    if(this->FirstCall)
+    if (this->FirstCall)
     {
       this->Sum = temp;
     }
     else
     {
-      this->Sum = this->BinaryOperation(this->Sum,temp);
+      this->Sum = this->BinaryOperation(this->Sum, temp);
     }
 
     this->FirstCall = false;
@@ -148,7 +158,7 @@ struct ReduceBody
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void join(const ReduceBody &left)
+  void join(const ReduceBody& left)
   {
     // std::cout << "join" << std::endl;
     this->Sum = this->BinaryOperation(left.Sum, this->Sum);
@@ -156,25 +166,21 @@ struct ReduceBody
 };
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template<class InputPortalType, typename T, class BinaryOperationType>
-VTKM_CONT static
-T ReducePortals(InputPortalType inputPortal,
-                T initialValue,
-                BinaryOperationType binaryOperation)
+template <class InputPortalType, typename T, class BinaryOperationType>
+VTKM_CONT static T ReducePortals(InputPortalType inputPortal,
+                                 T initialValue,
+                                 BinaryOperationType binaryOperation)
 {
-  typedef internal::WrappedBinaryOperator<T, BinaryOperationType>
-      WrappedBinaryOp;
+  typedef internal::WrappedBinaryOperator<T, BinaryOperationType> WrappedBinaryOp;
 
   WrappedBinaryOp wrappedBinaryOp(binaryOperation);
-  ReduceBody<InputPortalType, T, WrappedBinaryOp>body(inputPortal,
-                                                      initialValue,
-                                                      wrappedBinaryOp);
+  ReduceBody<InputPortalType, T, WrappedBinaryOp> body(inputPortal, initialValue, wrappedBinaryOp);
   vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
 
   if (arrayLength > 1)
   {
     ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
-    ::tbb::parallel_reduce( range, body );
+    ::tbb::parallel_reduce(range, body);
     return body.Sum;
   }
   else if (arrayLength == 1)
@@ -189,12 +195,10 @@ T ReducePortals(InputPortalType inputPortal,
   }
 }
 
-template<class InputPortalType, class OutputPortalType,
-    class BinaryOperationType>
+template <class InputPortalType, class OutputPortalType, class BinaryOperationType>
 struct ScanInclusiveBody
 {
-  using ValueType = typename std::remove_reference<
-                        typename OutputPortalType::ValueType>::type;
+  using ValueType = typename std::remove_reference<typename OutputPortalType::ValueType>::type;
   ValueType Sum;
   bool FirstCall;
   InputPortalType InputPortal;
@@ -202,54 +206,52 @@ struct ScanInclusiveBody
   BinaryOperationType BinaryOperation;
 
   VTKM_CONT
-  ScanInclusiveBody(const InputPortalType &inputPortal,
-                    const OutputPortalType &outputPortal,
+  ScanInclusiveBody(const InputPortalType& inputPortal,
+                    const OutputPortalType& outputPortal,
                     BinaryOperationType binaryOperation)
-    : Sum( vtkm::TypeTraits<ValueType>::ZeroInitialization() ),
-      FirstCall(true),
-      InputPortal(inputPortal),
-      OutputPortal(outputPortal),
-      BinaryOperation(binaryOperation)
-  {  }
+    : Sum(vtkm::TypeTraits<ValueType>::ZeroInitialization())
+    , FirstCall(true)
+    , InputPortal(inputPortal)
+    , OutputPortal(outputPortal)
+    , BinaryOperation(binaryOperation)
+  {
+  }
 
   VTKM_EXEC_CONT
-  ScanInclusiveBody(const ScanInclusiveBody &body, ::tbb::split)
-    : Sum( vtkm::TypeTraits<ValueType>::ZeroInitialization() ),
-      FirstCall(true),
-      InputPortal(body.InputPortal),
-      OutputPortal(body.OutputPortal),
-      BinaryOperation(body.BinaryOperation) {  }
+  ScanInclusiveBody(const ScanInclusiveBody& body, ::tbb::split)
+    : Sum(vtkm::TypeTraits<ValueType>::ZeroInitialization())
+    , FirstCall(true)
+    , InputPortal(body.InputPortal)
+    , OutputPortal(body.OutputPortal)
+    , BinaryOperation(body.BinaryOperation)
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::pre_scan_tag)
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::pre_scan_tag)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
-      InputIteratorsType;
+    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
     InputIteratorsType inputIterators(this->InputPortal);
 
     //use temp, and iterators instead of member variable to reduce false sharing
     typename InputIteratorsType::IteratorType inIter =
       inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
-    ValueType temp = this->FirstCall ? *inIter++ :
-                     this->BinaryOperation(this->Sum, *inIter++);
+    ValueType temp = this->FirstCall ? *inIter++ : this->BinaryOperation(this->Sum, *inIter++);
     this->FirstCall = false;
-    for (vtkm::Id index = range.begin() + 1; index != range.end();
-         ++index, ++inIter)
-      {
+    for (vtkm::Id index = range.begin() + 1; index != range.end(); ++index, ++inIter)
+    {
       temp = this->BinaryOperation(temp, *inIter);
-      }
+    }
     this->Sum = temp;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::final_scan_tag)
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::final_scan_tag)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
-      InputIteratorsType;
-    typedef vtkm::cont::ArrayPortalToIterators<OutputPortalType>
-      OutputIteratorsType;
+    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
+    typedef vtkm::cont::ArrayPortalToIterators<OutputPortalType> OutputIteratorsType;
 
     InputIteratorsType inputIterators(this->InputPortal);
     OutputIteratorsType outputIterators(this->OutputPortal);
@@ -259,40 +261,32 @@ struct ScanInclusiveBody
       inputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
     typename OutputIteratorsType::IteratorType outIter =
       outputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
-    ValueType temp = this->FirstCall ? *inIter++ :
-                     this->BinaryOperation(this->Sum, *inIter++);
+    ValueType temp = this->FirstCall ? *inIter++ : this->BinaryOperation(this->Sum, *inIter++);
     this->FirstCall = false;
     *outIter++ = temp;
-    for (vtkm::Id index = range.begin() + 1; index != range.end();
-         ++index, ++inIter, ++outIter)
-      {
+    for (vtkm::Id index = range.begin() + 1; index != range.end(); ++index, ++inIter, ++outIter)
+    {
       *outIter = temp = this->BinaryOperation(temp, *inIter);
-      }
+    }
     this->Sum = temp;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void reverse_join(const ScanInclusiveBody &left)
+  void reverse_join(const ScanInclusiveBody& left)
   {
     this->Sum = this->BinaryOperation(left.Sum, this->Sum);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void assign(const ScanInclusiveBody &src)
-  {
-    this->Sum = src.Sum;
-  }
+  void assign(const ScanInclusiveBody& src) { this->Sum = src.Sum; }
 };
 
-
-template<class InputPortalType, class OutputPortalType,
-    class BinaryOperationType>
+template <class InputPortalType, class OutputPortalType, class BinaryOperationType>
 struct ScanExclusiveBody
 {
-  using ValueType = typename std::remove_reference<
-                        typename OutputPortalType::ValueType>::type;
+  using ValueType = typename std::remove_reference<typename OutputPortalType::ValueType>::type;
 
   ValueType Sum;
   bool FirstCall;
@@ -301,32 +295,33 @@ struct ScanExclusiveBody
   BinaryOperationType BinaryOperation;
 
   VTKM_CONT
-  ScanExclusiveBody(const InputPortalType &inputPortal,
-                    const OutputPortalType &outputPortal,
+  ScanExclusiveBody(const InputPortalType& inputPortal,
+                    const OutputPortalType& outputPortal,
                     BinaryOperationType binaryOperation,
                     const ValueType& initialValue)
-    : Sum(initialValue),
-      FirstCall(true),
-      InputPortal(inputPortal),
-      OutputPortal(outputPortal),
-      BinaryOperation(binaryOperation)
-  {  }
+    : Sum(initialValue)
+    , FirstCall(true)
+    , InputPortal(inputPortal)
+    , OutputPortal(outputPortal)
+    , BinaryOperation(binaryOperation)
+  {
+  }
 
   VTKM_EXEC_CONT
-  ScanExclusiveBody(const ScanExclusiveBody &body, ::tbb::split)
-    : Sum(body.Sum),
-      FirstCall(true),
-      InputPortal(body.InputPortal),
-      OutputPortal(body.OutputPortal),
-      BinaryOperation(body.BinaryOperation)
-  {  }
+  ScanExclusiveBody(const ScanExclusiveBody& body, ::tbb::split)
+    : Sum(body.Sum)
+    , FirstCall(true)
+    , InputPortal(body.InputPortal)
+    , OutputPortal(body.OutputPortal)
+    , BinaryOperation(body.BinaryOperation)
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::pre_scan_tag)
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::pre_scan_tag)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
-      InputIteratorsType;
+    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
     InputIteratorsType inputIterators(this->InputPortal);
 
     //move the iterator to the first item
@@ -335,24 +330,24 @@ struct ScanExclusiveBody
 
     ValueType temp = *iter;
     ++iter;
-    if(! (this->FirstCall && range.begin() > 0) )
-      { temp = this->BinaryOperation(this->Sum, temp); }
-    for (vtkm::Id index = range.begin()+1; index != range.end(); ++index, ++iter)
-      {
+    if (!(this->FirstCall && range.begin() > 0))
+    {
+      temp = this->BinaryOperation(this->Sum, temp);
+    }
+    for (vtkm::Id index = range.begin() + 1; index != range.end(); ++index, ++iter)
+    {
       temp = this->BinaryOperation(temp, *iter);
-      }
+    }
     this->Sum = temp;
     this->FirstCall = false;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void operator()(const ::tbb::blocked_range<vtkm::Id> &range, ::tbb::final_scan_tag)
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::final_scan_tag)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType>
-      InputIteratorsType;
-    typedef vtkm::cont::ArrayPortalToIterators<OutputPortalType>
-      OutputIteratorsType;
+    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
+    typedef vtkm::cont::ArrayPortalToIterators<OutputPortalType> OutputIteratorsType;
 
     InputIteratorsType inputIterators(this->InputPortal);
     OutputIteratorsType outputIterators(this->OutputPortal);
@@ -364,28 +359,27 @@ struct ScanExclusiveBody
       outputIterators.GetBegin() + static_cast<std::ptrdiff_t>(range.begin());
 
     ValueType temp = this->Sum;
-    for (vtkm::Id index = range.begin(); index != range.end();
-         ++index, ++inIter, ++outIter)
-      {
+    for (vtkm::Id index = range.begin(); index != range.end(); ++index, ++inIter, ++outIter)
+    {
       //copy into a local reference since Input and Output portal
       //could point to the same memory location
       ValueType v = *inIter;
       *outIter = temp;
       temp = this->BinaryOperation(temp, v);
-      }
+    }
     this->Sum = temp;
     this->FirstCall = false;
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void reverse_join(const ScanExclusiveBody &left)
+  void reverse_join(const ScanExclusiveBody& left)
   {
     //The contract we have with TBB is that they will only join
     //two objects that have been scanned, or two objects which
     //haven't been scanned
     VTKM_ASSERT(left.FirstCall == this->FirstCall);
-    if(!left.FirstCall && !this->FirstCall)
+    if (!left.FirstCall && !this->FirstCall)
     {
       this->Sum = this->BinaryOperation(left.Sum, this->Sum);
     }
@@ -393,189 +387,71 @@ struct ScanExclusiveBody
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void assign(const ScanExclusiveBody &src)
-  {
-    this->Sum = src.Sum;
-  }
+  void assign(const ScanExclusiveBody& src) { this->Sum = src.Sum; }
 };
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template<class InputPortalType, class OutputPortalType,
-    class BinaryOperationType>
-VTKM_CONT static
-typename std::remove_reference<typename OutputPortalType::ValueType>::type
+template <class InputPortalType, class OutputPortalType, class BinaryOperationType>
+VTKM_CONT static typename std::remove_reference<typename OutputPortalType::ValueType>::type
 ScanInclusivePortals(InputPortalType inputPortal,
                      OutputPortalType outputPortal,
                      BinaryOperationType binaryOperation)
 {
-  using ValueType = typename std::remove_reference<
-                        typename OutputPortalType::ValueType>::type;
+  using ValueType = typename std::remove_reference<typename OutputPortalType::ValueType>::type;
 
-  typedef internal::WrappedBinaryOperator<ValueType, BinaryOperationType>
-      WrappedBinaryOp;
+  typedef internal::WrappedBinaryOperator<ValueType, BinaryOperationType> WrappedBinaryOp;
 
   WrappedBinaryOp wrappedBinaryOp(binaryOperation);
-  ScanInclusiveBody<InputPortalType, OutputPortalType, WrappedBinaryOp>
-      body(inputPortal, outputPortal, wrappedBinaryOp);
+  ScanInclusiveBody<InputPortalType, OutputPortalType, WrappedBinaryOp> body(
+    inputPortal, outputPortal, wrappedBinaryOp);
   vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
 
   ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
-  ::tbb::parallel_scan( range, body );
+  ::tbb::parallel_scan(range, body);
   return body.Sum;
 }
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template<class InputPortalType, class OutputPortalType,
-    class BinaryOperationType>
-VTKM_CONT static
-typename std::remove_reference<typename OutputPortalType::ValueType>::type
-ScanExclusivePortals(InputPortalType inputPortal,
-                     OutputPortalType outputPortal,
-                     BinaryOperationType binaryOperation,
-                     typename std::remove_reference<
-                         typename OutputPortalType::ValueType>::type initialValue)
+template <class InputPortalType, class OutputPortalType, class BinaryOperationType>
+VTKM_CONT static typename std::remove_reference<typename OutputPortalType::ValueType>::type
+ScanExclusivePortals(
+  InputPortalType inputPortal,
+  OutputPortalType outputPortal,
+  BinaryOperationType binaryOperation,
+  typename std::remove_reference<typename OutputPortalType::ValueType>::type initialValue)
 {
-  using ValueType = typename std::remove_reference<
-                        typename OutputPortalType::ValueType>::type;
+  using ValueType = typename std::remove_reference<typename OutputPortalType::ValueType>::type;
 
-  typedef internal::WrappedBinaryOperator<ValueType, BinaryOperationType>
-      WrappedBinaryOp;
+  typedef internal::WrappedBinaryOperator<ValueType, BinaryOperationType> WrappedBinaryOp;
 
   WrappedBinaryOp wrappedBinaryOp(binaryOperation);
-  ScanExclusiveBody<InputPortalType, OutputPortalType, WrappedBinaryOp>
-      body(inputPortal, outputPortal, wrappedBinaryOp, initialValue);
+  ScanExclusiveBody<InputPortalType, OutputPortalType, WrappedBinaryOp> body(
+    inputPortal, outputPortal, wrappedBinaryOp, initialValue);
   vtkm::Id arrayLength = inputPortal.GetNumberOfValues();
 
   ::tbb::blocked_range<vtkm::Id> range(0, arrayLength, TBB_GRAIN_SIZE);
-  ::tbb::parallel_scan( range, body );
+  ::tbb::parallel_scan(range, body);
 
   // Seems a little weird to me that we would return the last value in the
   // array rather than the sum, but that is how the function is specified.
   return body.Sum;
 }
 
-template<class FunctorType>
-class ScheduleKernel
-{
-public:
-  VTKM_CONT ScheduleKernel(const FunctorType &functor)
-    : Functor(functor)
-  {  }
-
-  VTKM_CONT void SetErrorMessageBuffer(
-      const vtkm::exec::internal::ErrorMessageBuffer &errorMessage)
-  {
-    this->ErrorMessage = errorMessage;
-    this->Functor.SetErrorMessageBuffer(errorMessage);
-  }
-
-  VTKM_CONT
-  void operator()(const ::tbb::blocked_range<vtkm::Id> &range) const {
-    // The TBB device adapter causes array classes to be shared between
-    // control and execution environment. This means that it is possible for
-    // an exception to be thrown even though this is typically not allowed.
-    // Throwing an exception from here is bad because there are several
-    // simultaneous threads running. Get around the problem by catching the
-    // error and setting the message buffer as expected.
-    try
-      {
-      const vtkm::Id start = range.begin();
-      const vtkm::Id end = range.end();
-VTKM_VECTORIZATION_PRE_LOOP
-      for (vtkm::Id index = start; index != end; index++)
-        {
-VTKM_VECTORIZATION_IN_LOOP
-        this->Functor(index);
-        }
-      }
-    catch (vtkm::cont::Error &error)
-      {
-      this->ErrorMessage.RaiseError(error.GetMessage().c_str());
-      }
-    catch (...)
-      {
-      this->ErrorMessage.RaiseError(
-          "Unexpected error in execution environment.");
-      }
-  }
-private:
-  FunctorType Functor;
-  vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
-};
-
-
-template<class FunctorType>
-class ScheduleKernelId3
-{
-public:
-  VTKM_CONT ScheduleKernelId3(const FunctorType &functor)
-    : Functor(functor)
-    {  }
-
-  VTKM_CONT void SetErrorMessageBuffer(
-      const vtkm::exec::internal::ErrorMessageBuffer &errorMessage)
-  {
-    this->ErrorMessage = errorMessage;
-    this->Functor.SetErrorMessageBuffer(errorMessage);
-  }
-
-  VTKM_CONT
-  void operator()(const ::tbb::blocked_range3d<vtkm::Id> &range) const {
-    try
-      {
-      const vtkm::Id kstart = range.pages().begin();
-      const vtkm::Id kend = range.pages().end();
-      const vtkm::Id jstart =range.rows().begin();
-      const vtkm::Id jend = range.rows().end();
-      const vtkm::Id istart =range.cols().begin();
-      const vtkm::Id iend = range.cols().end();
-
-      vtkm::Id3 index;
-      for( vtkm::Id k=kstart; k!=kend; ++k)
-        {
-        index[2]=k;
-        for( vtkm::Id j=jstart; j!=jend; ++j)
-          {
-          index[1]=j;
-          for( vtkm::Id i=istart; i != iend; ++i)
-            {
-            index[0]=i;
-            this->Functor(index);
-            }
-          }
-        }
-      }
-    catch (vtkm::cont::Error &error)
-      {
-      this->ErrorMessage.RaiseError(error.GetMessage().c_str());
-      }
-    catch (...)
-      {
-      this->ErrorMessage.RaiseError(
-          "Unexpected error in execution environment.");
-      }
-  }
-private:
-  FunctorType Functor;
-  vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
-};
-
-template<typename InputPortalType,
-         typename IndexPortalType,
-         typename OutputPortalType>
+template <typename InputPortalType, typename IndexPortalType, typename OutputPortalType>
 class ScatterKernel
 {
 public:
-  VTKM_CONT ScatterKernel(InputPortalType  inputPortal,
-                                 IndexPortalType  indexPortal,
-                                 OutputPortalType outputPortal)
-    : ValuesPortal(inputPortal),
-      IndexPortal(indexPortal),
-      OutputPortal(outputPortal)
-  {  }
+  VTKM_CONT ScatterKernel(InputPortalType inputPortal,
+                          IndexPortalType indexPortal,
+                          OutputPortalType outputPortal)
+    : ValuesPortal(inputPortal)
+    , IndexPortal(indexPortal)
+    , OutputPortal(outputPortal)
+  {
+  }
 
   VTKM_CONT
-  void operator()(const ::tbb::blocked_range<vtkm::Id> &range) const
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range) const
   {
     // The TBB device adapter causes array classes to be shared between
     // control and execution environment. This means that it is possible for
@@ -584,24 +460,24 @@ public:
     // simultaneous threads running. Get around the problem by catching the
     // error and setting the message buffer as expected.
     try
-      {
-VTKM_VECTORIZATION_PRE_LOOP
+    {
+      VTKM_VECTORIZATION_PRE_LOOP
       for (vtkm::Id i = range.begin(); i < range.end(); i++)
-        {
-VTKM_VECTORIZATION_IN_LOOP
-        OutputPortal.Set( i, ValuesPortal.Get(IndexPortal.Get(i)) );
-        }
-      }
-    catch (vtkm::cont::Error &error)
       {
+        VTKM_VECTORIZATION_IN_LOOP
+        OutputPortal.Set(i, ValuesPortal.Get(IndexPortal.Get(i)));
+      }
+    }
+    catch (vtkm::cont::Error& error)
+    {
       this->ErrorMessage.RaiseError(error.GetMessage().c_str());
-      }
+    }
     catch (...)
-      {
-      this->ErrorMessage.RaiseError(
-          "Unexpected error in execution environment.");
-      }
+    {
+      this->ErrorMessage.RaiseError("Unexpected error in execution environment.");
+    }
   }
+
 private:
   InputPortalType ValuesPortal;
   IndexPortalType IndexPortal;
@@ -610,26 +486,20 @@ private:
 };
 
 VTKM_SUPPRESS_EXEC_WARNINGS
-template<typename InputPortalType,
-         typename IndexPortalType,
-         typename OutputPortalType>
-VTKM_CONT static void ScatterPortal(InputPortalType  inputPortal,
-                                           IndexPortalType  indexPortal,
-                                           OutputPortalType outputPortal)
+template <typename InputPortalType, typename IndexPortalType, typename OutputPortalType>
+VTKM_CONT static void ScatterPortal(InputPortalType inputPortal,
+                                    IndexPortalType indexPortal,
+                                    OutputPortalType outputPortal)
 {
   const vtkm::Id size = inputPortal.GetNumberOfValues();
-  VTKM_ASSERT(size == indexPortal.GetNumberOfValues() );
+  VTKM_ASSERT(size == indexPortal.GetNumberOfValues());
 
-  ScatterKernel<InputPortalType,
-                IndexPortalType,
-                OutputPortalType> scatter(inputPortal,
-                                          indexPortal,
-                                          outputPortal);
+  ScatterKernel<InputPortalType, IndexPortalType, OutputPortalType> scatter(
+    inputPortal, indexPortal, outputPortal);
 
   ::tbb::blocked_range<vtkm::Id> range(0, size, TBB_GRAIN_SIZE);
   ::tbb::parallel_for(range, scatter);
 }
-
 }
 }
 }

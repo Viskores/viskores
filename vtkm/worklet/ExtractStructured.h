@@ -35,16 +35,17 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 //
 // Distribute input point/cell data to subset/subsample output data
 //
 struct DistributeData : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> inIndices,
-                                FieldOut<> outIndices);
+  typedef void ControlSignature(FieldIn<> inIndices, FieldOut<> outIndices);
   typedef void ExecutionSignature(_1, _2);
 
   typedef vtkm::worklet::ScatterCounting ScatterType;
@@ -53,18 +54,17 @@ struct DistributeData : public vtkm::worklet::WorkletMapField
   ScatterType GetScatter() const { return this->Scatter; }
 
   template <typename CountArrayType, typename DeviceAdapter>
-  VTKM_CONT
-  DistributeData(const CountArrayType &countArray,
-                 DeviceAdapter device) :
-                         Scatter(countArray, device) {  }
+  VTKM_CONT DistributeData(const CountArrayType& countArray, DeviceAdapter device)
+    : Scatter(countArray, device)
+  {
+  }
 
   template <typename T>
-  VTKM_EXEC
-  void operator()(T inputIndex,
-                  T &outputIndex) const
+  VTKM_EXEC void operator()(T inputIndex, T& outputIndex) const
   {
     outputIndex = inputIndex;
   }
+
 private:
   ScatterType Scatter;
 };
@@ -83,9 +83,8 @@ public:
   class CreatePointMap : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> index,
-                                  FieldOut<IdComponentType> passValue);
-    typedef   _2 ExecutionSignature(_1);
+    typedef void ControlSignature(FieldIn<IdType> index, FieldOut<IdComponentType> passValue);
+    typedef _2 ExecutionSignature(_1);
 
     vtkm::Id RowSize;
     vtkm::Id PlaneSize;
@@ -94,15 +93,17 @@ public:
     bool IncludeBoundary;
 
     VTKM_CONT
-    CreatePointMap(const vtkm::Id3 &inDimension,
-                   const vtkm::Bounds &outBounds,
-                   const vtkm::Id3 &sample,
-                         bool includeBoundary) :
-                            RowSize(inDimension[0]),
-                            PlaneSize(inDimension[0] * inDimension[1]),
-                            OutBounds(outBounds),
-                            Sample(sample),
-                            IncludeBoundary(includeBoundary) {}
+    CreatePointMap(const vtkm::Id3& inDimension,
+                   const vtkm::Bounds& outBounds,
+                   const vtkm::Id3& sample,
+                   bool includeBoundary)
+      : RowSize(inDimension[0])
+      , PlaneSize(inDimension[0] * inDimension[1])
+      , OutBounds(outBounds)
+      , Sample(sample)
+      , IncludeBoundary(includeBoundary)
+    {
+    }
 
     VTKM_EXEC
     vtkm::IdComponent operator()(vtkm::Id index) const
@@ -111,7 +112,7 @@ public:
 
       // Position of this point in the grid
       vtkm::Id k = index / PlaneSize;
-      vtkm::Id j = (index % PlaneSize) / RowSize; 
+      vtkm::Id j = (index % PlaneSize) / RowSize;
       vtkm::Id i = index % RowSize;
 
       // Turn on points if within the subset bounding box
@@ -123,20 +124,22 @@ public:
 
       // Turn off points not within subsampling
       vtkm::Id3 minPt = vtkm::make_Vec(OutBounds.X.Min, OutBounds.Y.Min, OutBounds.Z.Min);
-      vtkm::Id3 value = vtkm::make_Vec((i - minPt[0]) % Sample[0],
-                                       (j - minPt[1]) % Sample[1],
-                                       (k - minPt[2]) % Sample[2]);
+      vtkm::Id3 value = vtkm::make_Vec(
+        (i - minPt[0]) % Sample[0], (j - minPt[1]) % Sample[1], (k - minPt[2]) % Sample[2]);
 
       // If include boundary then max boundary is also within subsampling
       if (IncludeBoundary)
       {
-        if (i == OutBounds.X.Max) value[0] = 0;
-        if (j == OutBounds.Y.Max) value[1] = 0;
-        if (k == OutBounds.Z.Max) value[2] = 0;
+        if (i == OutBounds.X.Max)
+          value[0] = 0;
+        if (j == OutBounds.Y.Max)
+          value[1] = 0;
+        if (k == OutBounds.Z.Max)
+          value[2] = 0;
       }
 
       // If the value for the point is not 0 in all dimensions it is not in sample
-      if (value != vtkm::Id3(0,0,0))
+      if (value != vtkm::Id3(0, 0, 0))
       {
         passValue = 0;
       }
@@ -153,7 +156,7 @@ public:
     typedef void ControlSignature(CellSetIn cellset,
                                   WholeArrayIn<IdComponentType> pointMap,
                                   FieldOutCell<IdComponentType> passValue);
-    typedef   _3 ExecutionSignature(PointCount, PointIndices, _2);
+    typedef _3 ExecutionSignature(PointCount, PointIndices, _2);
 
     vtkm::Id3 InDimension;
     vtkm::Id3 OutDimension;
@@ -161,18 +164,18 @@ public:
     vtkm::Id PlaneSize;
 
     VTKM_CONT
-    CreateCellMap(const vtkm::Id3 &inDimension,
-                  const vtkm::Id3 &outDimension) :
-                         InDimension(inDimension),
-                         OutDimension(outDimension),
-                         RowSize(inDimension[0]),
-                         PlaneSize(inDimension[0] * inDimension[1]) {}
+    CreateCellMap(const vtkm::Id3& inDimension, const vtkm::Id3& outDimension)
+      : InDimension(inDimension)
+      , OutDimension(outDimension)
+      , RowSize(inDimension[0])
+      , PlaneSize(inDimension[0] * inDimension[1])
+    {
+    }
 
     template <typename ConnectivityInVec, typename InPointMap>
-    VTKM_EXEC
-    vtkm::IdComponent operator()(      vtkm::Id numIndices,
-                                 const ConnectivityInVec &connectivityIn,
-                                 const InPointMap &pointMap) const
+    VTKM_EXEC vtkm::IdComponent operator()(vtkm::Id numIndices,
+                                           const ConnectivityInVec& connectivityIn,
+                                           const InPointMap& pointMap) const
     {
       // If all surrounding points are in the subset, cell will be also
       vtkm::IdComponent passValue = 1;
@@ -193,7 +196,7 @@ public:
         {
           vtkm::Id3 position((ptId % RowSize), ((ptId % PlaneSize) / RowSize), (ptId / PlaneSize));
           vtkm::Id newPtId;
-          vtkm::Id3 foundValidPoint(0,0,0);
+          vtkm::Id3 foundValidPoint(0, 0, 0);
           vtkm::Id3 offset(1, RowSize, PlaneSize);
 
           for (vtkm::IdComponent dim = 0; dim < 3; dim++)
@@ -220,9 +223,9 @@ public:
               }
             }
           }
-       
+
           // If there is a valid point in all dimensions cell is in sample
-          if (foundValidPoint == vtkm::Id3(1,1,1))
+          if (foundValidPoint == vtkm::Id3(1, 1, 1))
           {
             passValue = 1;
           }
@@ -235,19 +238,18 @@ public:
   //
   // Uniform Structured
   //
-  template <typename CellSetType,
-            typename DeviceAdapter>
-  vtkm::cont::DataSet ExtractUniform(
-                                vtkm::IdComponent outDim,
-                          const CellSetType &cellSet,
-                          const vtkm::cont::CoordinateSystem &coordinates,
-                          const vtkm::Bounds &outBounds,
-                          const vtkm::Id3 &sample,
-                                bool includeBoundary,
-                                DeviceAdapter)
+  template <typename CellSetType, typename DeviceAdapter>
+  vtkm::cont::DataSet ExtractUniform(vtkm::IdComponent outDim,
+                                     const CellSetType& cellSet,
+                                     const vtkm::cont::CoordinateSystem& coordinates,
+                                     const vtkm::Bounds& outBounds,
+                                     const vtkm::Id3& sample,
+                                     bool includeBoundary,
+                                     DeviceAdapter)
   {
     typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;
-    typedef typename UniformArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst UniformConstPortal;
+    typedef
+      typename UniformArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst UniformConstPortal;
 
     // Cast dynamic coordinate data to Uniform type
     vtkm::cont::DynamicArrayHandleCoordinateSystem coordinateData = coordinates.GetData();
@@ -268,7 +270,7 @@ public:
     vtkm::Id3 lastIndex = vtkm::make_Vec(outBounds.X.Max - outBounds.X.Min,
                                          outBounds.Y.Max - outBounds.Y.Min,
                                          outBounds.Z.Max - outBounds.Z.Min);
-    vtkm::Id3 outDimension = lastIndex + vtkm::Id3(1,1,1);
+    vtkm::Id3 outDimension = lastIndex + vtkm::Id3(1, 1, 1);
 
     // Adjust for sampling and include boundary
     for (vtkm::IdComponent dim = 0; dim < outDim; dim++)
@@ -283,8 +285,8 @@ public:
       }
     }
 
-    vtkm::Vec<vtkm::FloatDefault,3> outOrigin = vtkm::make_Vec(0,0,0);
-    vtkm::Vec<vtkm::FloatDefault,3> outSpacing = vtkm::make_Vec(1,1,1);
+    vtkm::Vec<vtkm::FloatDefault, 3> outOrigin = vtkm::make_Vec(0, 0, 0);
+    vtkm::Vec<vtkm::FloatDefault, 3> outSpacing = vtkm::make_Vec(1, 1, 1);
 
     // Create output dataset which needs modified coordinate system and cellset
     vtkm::cont::DataSet output;
@@ -298,31 +300,27 @@ public:
     if (outDim == 3)
     {
       vtkm::cont::CellSetStructured<3> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], 
-                                                   outDimension[1], 
-                                                   outDimension[2]));
+      outCellSet.SetPointDimensions(
+        vtkm::make_Vec(outDimension[0], outDimension[1], outDimension[2]));
       output.AddCellSet(outCellSet);
     }
 
     else if (outDim == 2)
     {
       vtkm::cont::CellSetStructured<2> outCellSet(cellSet.GetName());
-      if (outDimension[2] == 1)      // XY plane
+      if (outDimension[2] == 1) // XY plane
       {
-        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], 
-                                                     outDimension[1]));
+        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], outDimension[1]));
         output.AddCellSet(outCellSet);
       }
       else if (outDimension[1] == 1) // XZ plane
       {
-        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], 
-                                                     outDimension[2]));
+        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], outDimension[2]));
         output.AddCellSet(outCellSet);
       }
       else if (outDimension[0] == 1) // YZ plane
       {
-        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[1], 
-                                                     outDimension[2]));
+        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[1], outDimension[2]));
         output.AddCellSet(outCellSet);
       }
     }
@@ -349,21 +347,14 @@ public:
 
     // Create the map for the input point data to output
     vtkm::cont::ArrayHandleIndex pointIndices(cellSet.GetNumberOfPoints());
-    CreatePointMap pointMap(inDimension, 
-                            outBounds, 
-                            sample, 
-                            includeBoundary);
+    CreatePointMap pointMap(inDimension, outBounds, sample, includeBoundary);
     vtkm::worklet::DispatcherMapField<CreatePointMap> pointDispatcher(pointMap);
-    pointDispatcher.Invoke(pointIndices,
-                           this->PointMap);
+    pointDispatcher.Invoke(pointIndices, this->PointMap);
 
     // Create the map for the input cell data to output
-    CreateCellMap cellMap(inDimension, 
-                          outDimension);
+    CreateCellMap cellMap(inDimension, outDimension);
     vtkm::worklet::DispatcherMapTopology<CreateCellMap> cellDispatcher(cellMap);
-    cellDispatcher.Invoke(cellSet,
-                          this->PointMap,
-                          this->CellMap);
+    cellDispatcher.Invoke(cellSet, this->PointMap, this->CellMap);
 
     return output;
   }
@@ -371,21 +362,21 @@ public:
   //
   // Rectilinear Structured
   //
-  template <typename CellSetType,
-            typename DeviceAdapter>
-  vtkm::cont::DataSet ExtractRectilinear(
-                                vtkm::IdComponent outDim,
-                          const CellSetType &cellSet,
-                          const vtkm::cont::CoordinateSystem &coordinates,
-                          const vtkm::Bounds &outBounds,
-                          const vtkm::Id3 &sample,
-                                bool includeBoundary,
-                                DeviceAdapter)
+  template <typename CellSetType, typename DeviceAdapter>
+  vtkm::cont::DataSet ExtractRectilinear(vtkm::IdComponent outDim,
+                                         const CellSetType& cellSet,
+                                         const vtkm::cont::CoordinateSystem& coordinates,
+                                         const vtkm::Bounds& outBounds,
+                                         const vtkm::Id3& sample,
+                                         bool includeBoundary,
+                                         DeviceAdapter)
   {
     typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
-    typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle,DefaultHandle,DefaultHandle> CartesianArrayHandle;
+    typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>
+      CartesianArrayHandle;
     typedef typename DefaultHandle::ExecutionTypes<DeviceAdapter>::PortalConst DefaultConstHandle;
-    typedef typename CartesianArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst CartesianConstPortal;
+    typedef typename CartesianArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst
+      CartesianConstPortal;
 
     // Cast dynamic coordinate data to Rectilinear type
     vtkm::cont::DynamicArrayHandleCoordinateSystem coordinateData = coordinates.GetData();
@@ -397,15 +388,13 @@ public:
     DefaultConstHandle Y = Coordinates.GetSecondPortal();
     DefaultConstHandle Z = Coordinates.GetThirdPortal();
 
-    vtkm::Id3 inDimension(X.GetNumberOfValues(), 
-                          Y.GetNumberOfValues(), 
-                          Z.GetNumberOfValues());
+    vtkm::Id3 inDimension(X.GetNumberOfValues(), Y.GetNumberOfValues(), Z.GetNumberOfValues());
 
     // Calculate output subset dimension
     vtkm::Id3 lastIndex = vtkm::make_Vec(outBounds.X.Max - outBounds.X.Min,
                                          outBounds.Y.Max - outBounds.Y.Min,
                                          outBounds.Z.Max - outBounds.Z.Min);
-    vtkm::Id3 outDimension = lastIndex + vtkm::Id3(1,1,1);
+    vtkm::Id3 outDimension = lastIndex + vtkm::Id3(1, 1, 1);
 
     // Adjust for sampling and include boundary
     for (vtkm::IdComponent dim = 0; dim < outDim; dim++)
@@ -465,31 +454,27 @@ public:
     if (outDim == 3)
     {
       vtkm::cont::CellSetStructured<3> outCellSet(cellSet.GetName());
-      outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0],
-                                                   outDimension[1],
-                                                   outDimension[2]));
+      outCellSet.SetPointDimensions(
+        vtkm::make_Vec(outDimension[0], outDimension[1], outDimension[2]));
       output.AddCellSet(outCellSet);
     }
 
     else if (outDim == 2)
     {
       vtkm::cont::CellSetStructured<2> outCellSet(cellSet.GetName());
-      if (outDimension[2] == 1)      // XY plane
+      if (outDimension[2] == 1) // XY plane
       {
-        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0],
-                                                     outDimension[1]));
+        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], outDimension[1]));
         output.AddCellSet(outCellSet);
       }
       else if (outDimension[1] == 1) // XZ plane
       {
-        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0],
-                                                     outDimension[2]));
+        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[0], outDimension[2]));
         output.AddCellSet(outCellSet);
       }
       else if (outDimension[0] == 1) // YZ plane
       {
-        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[1],
-                                                     outDimension[2]));
+        outCellSet.SetPointDimensions(vtkm::make_Vec(outDimension[1], outDimension[2]));
         output.AddCellSet(outCellSet);
       }
     }
@@ -516,21 +501,14 @@ public:
 
     // Create the map for the input point data to output
     vtkm::cont::ArrayHandleIndex pointIndices(cellSet.GetNumberOfPoints());
-    CreatePointMap pointMap(inDimension, 
-                            outBounds, 
-                            sample, 
-                            includeBoundary);
+    CreatePointMap pointMap(inDimension, outBounds, sample, includeBoundary);
     vtkm::worklet::DispatcherMapField<CreatePointMap> pointDispatcher(pointMap);
-    pointDispatcher.Invoke(pointIndices,
-                           this->PointMap);
+    pointDispatcher.Invoke(pointIndices, this->PointMap);
 
     // Create the map for the input cell data to output
-    CreateCellMap cellMap(inDimension, 
-                          outDimension);
+    CreateCellMap cellMap(inDimension, outDimension);
     vtkm::worklet::DispatcherMapTopology<CreateCellMap> cellDispatcher(cellMap);
-    cellDispatcher.Invoke(cellSet,
-                          this->PointMap,
-                          this->CellMap);
+    cellDispatcher.Invoke(cellSet, this->PointMap, this->CellMap);
 
     return output;
   }
@@ -539,12 +517,12 @@ public:
   // Run extract structured on uniform or rectilinear, subset and/or subsample
   //
   template <typename DeviceAdapter>
-  vtkm::cont::DataSet Run(const vtkm::cont::DynamicCellSet &cellSet,
-                          const vtkm::cont::CoordinateSystem &coordinates,
-                          const vtkm::Bounds &boundingBox,
-                          const vtkm::Id3 &sample,
-                                bool includeBoundary,
-                                DeviceAdapter)
+  vtkm::cont::DataSet Run(const vtkm::cont::DynamicCellSet& cellSet,
+                          const vtkm::cont::CoordinateSystem& coordinates,
+                          const vtkm::Bounds& boundingBox,
+                          const vtkm::Id3& sample,
+                          bool includeBoundary,
+                          DeviceAdapter)
   {
     // Check legality of input cellset and set input dimension
     vtkm::IdComponent inDim = 0;
@@ -624,35 +602,23 @@ public:
     }
     if (IsUniformDataSet)
     {
-      return ExtractUniform(outDim,
-                            cellSet,
-                            coordinates,
-                            outBounds,
-                            sample,
-                            includeBoundary,
-                            DeviceAdapter());
+      return ExtractUniform(
+        outDim, cellSet, coordinates, outBounds, sample, includeBoundary, DeviceAdapter());
     }
     else
     {
-      return ExtractRectilinear(outDim,
-                                cellSet,
-                                coordinates,
-                                outBounds,
-                                sample,
-                                includeBoundary,
-                                DeviceAdapter());
+      return ExtractRectilinear(
+        outDim, cellSet, coordinates, outBounds, sample, includeBoundary, DeviceAdapter());
     }
   }
 
   //
   // Subset and/or subsampling of Point Data
   //
-  template <typename T,
-            typename StorageType,
-            typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T, StorageType> ProcessPointField(
-                                            const vtkm::cont::ArrayHandle<T, StorageType> &input,
-                                                  DeviceAdapter device)
+    const vtkm::cont::ArrayHandle<T, StorageType>& input,
+    DeviceAdapter device)
   {
     vtkm::cont::ArrayHandle<T, StorageType> output;
 
@@ -665,12 +631,10 @@ public:
   //
   // Subset and/or subsampling of Cell Data
   //
-  template <typename T,
-            typename StorageType,
-            typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T, StorageType> ProcessCellField(
-                                            const vtkm::cont::ArrayHandle<T, StorageType> &input,
-                                                  DeviceAdapter device)
+    const vtkm::cont::ArrayHandle<T, StorageType>& input,
+    DeviceAdapter device)
   {
     vtkm::cont::ArrayHandle<T, StorageType> output;
 
@@ -684,7 +648,6 @@ private:
   vtkm::cont::ArrayHandle<vtkm::IdComponent> PointMap;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> CellMap;
 };
-
 }
 } // namespace vtkm::worklet
 

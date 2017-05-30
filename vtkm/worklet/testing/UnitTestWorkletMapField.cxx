@@ -31,9 +31,8 @@ public:
   typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldInOut<>);
   typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
 
-  template<typename T>
-  VTKM_EXEC
-  void operator()(const T &in, T &out, T &inout, vtkm::Id workIndex) const
+  template <typename T>
+  VTKM_EXEC void operator()(const T& in, T& out, T& inout, vtkm::Id workIndex) const
   {
     if (!test_equal(in, TestValue(workIndex, T()) + T(100)))
     {
@@ -47,9 +46,8 @@ public:
     inout = inout - T(100);
   }
 
-  template<typename T1, typename T2, typename T3>
-  VTKM_EXEC
-  void operator()(const T1 &, const T2 &, const T3 &, vtkm::Id) const
+  template <typename T1, typename T2, typename T3>
+  VTKM_EXEC void operator()(const T1&, const T2&, const T3&, vtkm::Id) const
   {
     this->RaiseError("Cannot call this worklet with different types.");
   }
@@ -58,14 +56,11 @@ public:
 class TestMapFieldWorkletLimitedTypes : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<ScalarAll>,
-                                FieldOut<ScalarAll>,
-                                FieldInOut<ScalarAll>);
+  typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>, FieldInOut<ScalarAll>);
   typedef _2 ExecutionSignature(_1, _3, WorkIndex);
 
-  template<typename T1, typename T3>
-  VTKM_EXEC
-  T1 operator()(const T1 &in, T3 &inout, vtkm::Id workIndex) const
+  template <typename T1, typename T3>
+  VTKM_EXEC T1 operator()(const T1& in, T3& inout, vtkm::Id workIndex) const
   {
     if (!test_equal(in, TestValue(workIndex, T1()) + T1(100)))
     {
@@ -82,16 +77,15 @@ public:
   }
 };
 
-
-namespace mapfield {
+namespace mapfield
+{
 static const vtkm::Id ARRAY_SIZE = 10;
 
-template<typename WorkletType>
+template <typename WorkletType>
 struct DoStaticTestWorklet
 {
-  template<typename T>
-  VTKM_CONT
-  void operator()(T) const
+  template <typename T>
+  VTKM_CONT void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;
     T inputArray[ARRAY_SIZE];
@@ -101,13 +95,12 @@ struct DoStaticTestWorklet
       inputArray[index] = TestValue(index, T()) + T(100);
     }
 
-    vtkm::cont::ArrayHandle<T> inputHandle =
-        vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
-        Copy(inputHandle, inoutHandle);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(inputHandle,
+                                                                              inoutHandle);
 
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
@@ -117,31 +110,27 @@ struct DoStaticTestWorklet
     CheckPortal(outputHandle.GetPortalConstControl());
     CheckPortal(inoutHandle.GetPortalConstControl());
 
-    std::cout << "Try to invoke with an input array of the wrong size."
-              << std::endl;
-    inputHandle.Shrink(ARRAY_SIZE/2);
+    std::cout << "Try to invoke with an input array of the wrong size." << std::endl;
+    inputHandle.Shrink(ARRAY_SIZE / 2);
     bool exceptionThrown = false;
     try
     {
       dispatcher.Invoke(inputHandle, outputHandle, inoutHandle);
     }
-    catch (vtkm::cont::ErrorBadValue &error)
+    catch (vtkm::cont::ErrorBadValue& error)
     {
-      std::cout << "  Caught expected error: " << error.GetMessage()
-                << std::endl;
+      std::cout << "  Caught expected error: " << error.GetMessage() << std::endl;
       exceptionThrown = true;
     }
-    VTKM_TEST_ASSERT(exceptionThrown,
-                     "Dispatcher did not throw expected exception.");
+    VTKM_TEST_ASSERT(exceptionThrown, "Dispatcher did not throw expected exception.");
   }
 };
 
-template<typename WorkletType>
+template <typename WorkletType>
 struct DoDynamicTestWorklet
 {
-  template<typename T>
-  VTKM_CONT
-  void operator()(T) const
+  template <typename T>
+  VTKM_CONT void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;
     T inputArray[ARRAY_SIZE];
@@ -151,13 +140,12 @@ struct DoDynamicTestWorklet
       inputArray[index] = TestValue(index, T()) + T(100);
     }
 
-    vtkm::cont::ArrayHandle<T> inputHandle =
-        vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::
-        Copy(inputHandle, inoutHandle);
+    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(inputHandle,
+                                                                              inoutHandle);
 
     std::cout << "Create and run dispatcher with dynamic arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
@@ -173,44 +161,42 @@ struct DoDynamicTestWorklet
   }
 };
 
-template<typename WorkletType>
+template <typename WorkletType>
 struct DoTestWorklet
 {
-  template<typename T>
-  VTKM_CONT
-  void operator()(T t) const
+  template <typename T>
+  VTKM_CONT void operator()(T t) const
   {
-    DoStaticTestWorklet<WorkletType>  sw; sw(t);
-    DoDynamicTestWorklet<WorkletType> dw; dw(t);
+    DoStaticTestWorklet<WorkletType> sw;
+    sw(t);
+    DoDynamicTestWorklet<WorkletType> dw;
+    dw(t);
   }
 };
 
 void TestWorkletMapField()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<
-                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
-  std::cout << "Testing Map Field on device adapter: "
-            << DeviceAdapterTraits::GetName() << std::endl;
+  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  std::cout << "Testing Map Field on device adapter: " << DeviceAdapterTraits::GetName()
+            << std::endl;
 
   std::cout << "--- Worklet accepting all types." << std::endl;
-  vtkm::testing::Testing::TryTypes(
-                         mapfield::DoTestWorklet< TestMapFieldWorklet >(),
-                         vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorklet>(),
+                                   vtkm::TypeListTagCommon());
 
   std::cout << "--- Worklet accepting some types." << std::endl;
-  vtkm::testing::Testing::TryTypes(
-                         mapfield::DoTestWorklet< TestMapFieldWorkletLimitedTypes >(),
-                         vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(mapfield::DoTestWorklet<TestMapFieldWorkletLimitedTypes>(),
+                                   vtkm::TypeListTagFieldScalar());
 
   std::cout << "--- Sending bad type to worklet." << std::endl;
   try
   {
     //can only test with dynamic arrays, as static arrays will fail to compile
-    DoDynamicTestWorklet< TestMapFieldWorkletLimitedTypes > badWorkletTest;
-    badWorkletTest( vtkm::Vec<vtkm::Float32,3>() );
+    DoDynamicTestWorklet<TestMapFieldWorkletLimitedTypes> badWorkletTest;
+    badWorkletTest(vtkm::Vec<vtkm::Float32, 3>());
     VTKM_TEST_FAIL("Did not throw expected error.");
   }
-  catch (vtkm::cont::ErrorBadType &error)
+  catch (vtkm::cont::ErrorBadType& error)
   {
     std::cout << "Got expected error: " << error.GetMessage() << std::endl;
   }
@@ -218,7 +204,7 @@ void TestWorkletMapField()
 
 } // mapfield namespace
 
-int UnitTestWorkletMapField(int, char *[])
+int UnitTestWorkletMapField(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(mapfield::TestWorkletMapField);
 }

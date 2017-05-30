@@ -28,11 +28,15 @@
 #include <cuda.h>
 #include <vector>
 
-namespace vtkm{
-namespace cont {
-namespace cuda{
+namespace vtkm
+{
+namespace cont
+{
+namespace cuda
+{
 
-namespace {
+namespace
+{
 struct compute_info
 {
   compute_info(cudaDeviceProp prop, int index)
@@ -41,12 +45,11 @@ struct compute_info
     this->Major = prop.major;
 
     this->MemorySize = prop.totalGlobalMem;
-    this->Performance = prop.multiProcessorCount *
-        prop.maxThreadsPerMultiProcessor *
-        (prop.clockRate / 100000.0);
+    this->Performance =
+      prop.multiProcessorCount * prop.maxThreadsPerMultiProcessor * (prop.clockRate / 100000.0);
 
     //9999 is equal to emulation make sure it is a super bad device
-    if(this->Major >= 9999)
+    if (this->Major >= 9999)
     {
       this->Major = -1;
       this->Performance = -1;
@@ -58,8 +61,7 @@ struct compute_info
   {
     //if we are both SM3 or greater check performance
     //if we both the same SM level check performance
-    if( (this->Major >= 3 && other.Major >= 3) ||
-        (this->Major == other.Major) )
+    if ((this->Major >= 3 && other.Major >= 3) || (this->Major == other.Major))
     {
       return betterPerfomance(other);
     }
@@ -69,9 +71,9 @@ struct compute_info
 
   bool betterPerfomance(const compute_info other) const
   {
-    if ( this->Performance == other.Performance)
+    if (this->Performance == other.Performance)
     {
-      if( this->MemorySize == other.MemorySize )
+      if (this->MemorySize == other.MemorySize)
       {
         //prefer first device over second device
         //this will be subjective I bet
@@ -90,7 +92,6 @@ private:
   size_t MemorySize;
   double Performance;
 };
-
 }
 
 ///Returns the fastest cuda device id that the current system has
@@ -98,48 +99,44 @@ private:
 static int FindFastestDeviceId()
 {
   //get the number of devices and store information
-  int numberOfDevices=0;
+  int numberOfDevices = 0;
   VTKM_CUDA_CALL(cudaGetDeviceCount(&numberOfDevices));
 
   std::vector<compute_info> devices;
-  for(int i=0; i < numberOfDevices; ++i)
+  for (int i = 0; i < numberOfDevices; ++i)
   {
     cudaDeviceProp properties;
     VTKM_CUDA_CALL(cudaGetDeviceProperties(&properties, i));
-    if(properties.computeMode != cudaComputeModeProhibited)
+    if (properties.computeMode != cudaComputeModeProhibited)
     {
       //only add devices that have compute mode allowed
-      devices.push_back( compute_info(properties,i) );
+      devices.push_back(compute_info(properties, i));
     }
   }
 
   //sort from fastest to slowest
-  std::sort(devices.begin(),devices.end());
+  std::sort(devices.begin(), devices.end());
 
-  int device=0;
-  if(devices.size()> 0)
-    {
+  int device = 0;
+  if (devices.size() > 0)
+  {
     device = devices.front().GetIndex();
-    }
+  }
   return device;
 }
-
 
 //choose a cuda compute device. This can't be used if you are setting
 //up open gl interop
 static void SetCudaDevice(int id)
 {
   cudaError_t cError = cudaSetDevice(id);
-  if(cError != cudaSuccess)
-    {
-    std::string cuda_error_msg(
-                 "Unable to bind to the given cuda device. Error: ");
+  if (cError != cudaSuccess)
+  {
+    std::string cuda_error_msg("Unable to bind to the given cuda device. Error: ");
     cuda_error_msg.append(cudaGetErrorString(cError));
     throw vtkm::cont::ErrorExecution(cuda_error_msg);
-    }
+  }
 }
-
-
 }
 }
 } //namespace

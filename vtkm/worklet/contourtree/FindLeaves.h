@@ -71,35 +71,37 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class FindLeaves : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> superID,                  // (input) super nodes
-                                WholeArrayIn<IdType> updegree,            // (input)
-                                WholeArrayIn<IdType> downdegree,          // (input)
-                                WholeArrayIn<IdType> joinArc,             // (input)
-                                WholeArrayIn<IdType> splitArc,            // (input)
-                                WholeArrayInOut<IdType> superarc);        // (i/o)
+  typedef void ControlSignature(FieldIn<IdType> superID,           // (input) super nodes
+                                WholeArrayIn<IdType> updegree,     // (input)
+                                WholeArrayIn<IdType> downdegree,   // (input)
+                                WholeArrayIn<IdType> joinArc,      // (input)
+                                WholeArrayIn<IdType> splitArc,     // (input)
+                                WholeArrayInOut<IdType> superarc); // (i/o)
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   FindLeaves() {}
 
   template <typename InPortalFieldType, typename OutPortalFieldType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& superID,
-                  const InPortalFieldType& updegree,
-                  const InPortalFieldType& downdegree,
-                  const InPortalFieldType& joinArc,
-                  const InPortalFieldType& splitArc,
-                  const OutPortalFieldType& superarc) const
+  VTKM_EXEC void operator()(const vtkm::Id& superID,
+                            const InPortalFieldType& updegree,
+                            const InPortalFieldType& downdegree,
+                            const InPortalFieldType& joinArc,
+                            const InPortalFieldType& splitArc,
+                            const OutPortalFieldType& superarc) const
   {
     // omit previously processed vertices
     if (superarc.Get(superID) != NO_VERTEX_ASSIGNED)
@@ -116,7 +118,6 @@ public:
     } // minimum
   }
 }; // FindLeaves
-
 }
 }
 }

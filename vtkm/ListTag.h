@@ -27,15 +27,16 @@
 
 #include <type_traits>
 
-namespace vtkm {
-
-namespace internal {
-
-template<typename ListTag>
-struct ListTagCheck : std::is_base_of<vtkm::detail::ListRoot,ListTag>
+namespace vtkm
 {
-  static VTKM_CONSTEXPR bool Valid = std::is_base_of<vtkm::detail::ListRoot,
-                                                     ListTag>::value;
+
+namespace internal
+{
+
+template <typename ListTag>
+struct ListTagCheck : std::is_base_of<vtkm::detail::ListRoot, ListTag>
+{
+  static VTKM_CONSTEXPR bool Valid = std::is_base_of<vtkm::detail::ListRoot, ListTag>::value;
 };
 
 } // namespace internal
@@ -45,49 +46,47 @@ struct ListTagCheck : std::is_base_of<vtkm::detail::ListRoot,ListTag>
 /// actually a device adapter tag. (You can get weird errors elsewhere in the
 /// code when a mistake is made.)
 ///
-#define VTKM_IS_LIST_TAG(tag) \
-  VTKM_STATIC_ASSERT_MSG( \
-    (::vtkm::internal::ListTagCheck<tag>::value), \
-    "Provided type is not a valid VTK-m list tag.")
-
+#define VTKM_IS_LIST_TAG(tag)                                                                      \
+  VTKM_STATIC_ASSERT_MSG((::vtkm::internal::ListTagCheck<tag>::value),                             \
+                         "Provided type is not a valid VTK-m list tag.")
 
 /// A special tag for a list that represents holding all potential values
 ///
 /// Note: Can not be used with ForEach for obvious reasons.
-struct ListTagUniversal : detail::ListRoot {
+struct ListTagUniversal : detail::ListRoot
+{
   using list = vtkm::detail::ListBase<vtkm::detail::UniversalTag>;
 };
 
 /// A special tag for an empty list.
 ///
-struct ListTagEmpty : detail::ListRoot {
+struct ListTagEmpty : detail::ListRoot
+{
   using list = vtkm::detail::ListBase<>;
 };
 
 /// A tag that is a construction of two other tags joined together. This struct
 /// can be subclassed and still behave like a list tag.
-template<typename ListTag1, typename ListTag2>
-struct ListTagJoin : detail::ListRoot {
-  using list = typename detail::ListJoin<
-                  typename ListTag1::list,
-                  typename ListTag2::list>::type;
+template <typename ListTag1, typename ListTag2>
+struct ListTagJoin : detail::ListRoot
+{
+  using list = typename detail::ListJoin<typename ListTag1::list, typename ListTag2::list>::type;
 };
 
 /// A tag that consits of elements that are found in both tags. This struct
 /// can be subclassed and still behave like a list tag.
-template<typename ListTag1, typename ListTag2>
-struct ListTagIntersect : detail::ListRoot {
-  using list = typename detail::ListIntersect<
-                  typename ListTag1::list,
-                  typename ListTag2::list>::type;
+template <typename ListTag1, typename ListTag2>
+struct ListTagIntersect : detail::ListRoot
+{
+  using list =
+    typename detail::ListIntersect<typename ListTag1::list, typename ListTag2::list>::type;
 };
 
 /// For each typename represented by the list tag, call the functor with a
 /// default instance of that type.
 ///
-template<typename Functor, typename ListTag>
-VTKM_CONT
-void ListForEach(Functor &f, ListTag)
+template <typename Functor, typename ListTag>
+VTKM_CONT void ListForEach(Functor& f, ListTag)
 {
   VTKM_IS_LIST_TAG(ListTag);
   detail::ListForEachImpl(f, typename ListTag::list());
@@ -96,9 +95,8 @@ void ListForEach(Functor &f, ListTag)
 /// For each typename represented by the list tag, call the functor with a
 /// default instance of that type.
 ///
-template<typename Functor, typename ListTag>
-VTKM_CONT
-void ListForEach(const Functor &f, ListTag)
+template <typename Functor, typename ListTag>
+VTKM_CONT void ListForEach(const Functor& f, ListTag)
 {
   VTKM_IS_LIST_TAG(ListTag);
   detail::ListForEachImpl(f, typename ListTag::list());
@@ -108,12 +106,11 @@ void ListForEach(const Functor &f, ListTag)
 /// There is a static boolean named \c value that is set to true if the type is
 /// contained in the list and false otherwise.
 ///
-template<typename ListTag, typename Type>
+template <typename ListTag, typename Type>
 struct ListContains
 {
   VTKM_IS_LIST_TAG(ListTag);
-  static VTKM_CONSTEXPR bool value =
-      detail::ListContainsImpl<Type,typename ListTag::list>::value;
+  static VTKM_CONSTEXPR bool value = detail::ListContainsImpl<Type, typename ListTag::list>::value;
 };
 
 } // namespace vtkm

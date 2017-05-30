@@ -88,34 +88,37 @@
 #include <vtkm/worklet/contourtree/LinkComponentCaseTable3D.h>
 #include <vtkm/worklet/contourtree/Mesh3D_DEM_Triangulation_Macros.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
-template<typename DeviceAdapter>
+template <typename DeviceAdapter>
 class Mesh3D_DEM_VertexOutdegreeStarter : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertex,           // (input) index into active vertices
-                                FieldIn<IdType> nbrMask,          // (input) neighbor mask
-                                WholeArrayIn<IdType> arcArray,    // (input) chain extrema
-                                FieldOut<IdType> outdegree,       // (output) outdegree
-                                FieldOut<IdType> isCritical);     // (output) whether critical
+  typedef void ControlSignature(FieldIn<IdType> vertex,        // (input) index into active vertices
+                                FieldIn<IdType> nbrMask,       // (input) neighbor mask
+                                WholeArrayIn<IdType> arcArray, // (input) chain extrema
+                                FieldOut<IdType> outdegree,    // (output) outdegree
+                                FieldOut<IdType> isCritical);  // (output) whether critical
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
-  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template
-    ExecutionTypes<DeviceAdapter>::PortalConst IdComponentPortalType;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template
-    ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst IdComponentPortalType;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst IdPortalType;
 
-  vtkm::Id nRows;                          // (input) number of rows in 3D
-  vtkm::Id nCols;                          // (input) number of cols in 3D
-  vtkm::Id nSlices;                        // (input) number of cols in 3D
-  bool ascending;                          // (input) ascending or descending (join or split tree)
-  IdComponentPortalType neighbourTable;    // (input) table for neighbour offsets
-  IdPortalType caseTable;                  // (input) case table for neighbours
+  vtkm::Id nRows;                       // (input) number of rows in 3D
+  vtkm::Id nCols;                       // (input) number of cols in 3D
+  vtkm::Id nSlices;                     // (input) number of cols in 3D
+  bool ascending;                       // (input) ascending or descending (join or split tree)
+  IdComponentPortalType neighbourTable; // (input) table for neighbour offsets
+  IdPortalType caseTable;               // (input) case table for neighbours
 
   // Constructor
   VTKM_EXEC_CONT
@@ -124,22 +127,23 @@ public:
                                     vtkm::Id NSlices,
                                     bool Ascending,
                                     IdComponentPortalType NeighbourTable,
-                                    IdPortalType CaseTable) :
-                                                      nRows(NRows),
-                                                      nCols(NCols),
-                                                      nSlices(NSlices),
-                                                      ascending(Ascending),
-                                                      neighbourTable(NeighbourTable),
-                                                      caseTable(CaseTable) {}
+                                    IdPortalType CaseTable)
+    : nRows(NRows)
+    , nCols(NCols)
+    , nSlices(NSlices)
+    , ascending(Ascending)
+    , neighbourTable(NeighbourTable)
+    , caseTable(CaseTable)
+  {
+  }
 
   //template<typename InFieldPortalType>
-  template<typename InFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertex,
-                  const vtkm::Id& nbrMask,
-                  const InFieldPortalType& arcArray,
-                        vtkm::Id& outdegree,
-                        vtkm::Id& isCritical) const
+  template <typename InFieldPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
+                            const vtkm::Id& nbrMask,
+                            const InFieldPortalType& arcArray,
+                            vtkm::Id& outdegree,
+                            vtkm::Id& isCritical) const
   {
     // get the row and column
     vtkm::Id row = VERTEX_ROW_3D(vertex, nRows, nCols);
@@ -156,8 +160,8 @@ public:
       {
         vtkm::Id indx = edgeNo * 3;
         vtkm::Id nbrSlice = slice + neighbourTable.Get(indx);
-        vtkm::Id nbrRow   = row   + neighbourTable.Get(indx + 1);
-        vtkm::Id nbrCol   = col   + neighbourTable.Get(indx + 2);
+        vtkm::Id nbrRow = row + neighbourTable.Get(indx + 1);
+        vtkm::Id nbrCol = col + neighbourTable.Get(indx + 2);
         vtkm::Id nbr = VERTEX_ID_3D(nbrSlice, nbrRow, nbrCol, nRows, nCols);
 
         farEnds[outDegree++] = arcArray.Get(nbr);
@@ -186,13 +190,13 @@ public:
           // and reset the count
           outDegree = 2;
         } //
-      } // first two match
+      }   // first two match
       else if ((farEnds[0] == farEnds[2]) || (farEnds[1] == farEnds[2]))
       { // second one matches either of the first two
         // decrease the count, keeping 0 & 1
         outDegree = 2;
       } // second one matches either of the first two
-    } // outDegree 3
+    }   // outDegree 3
 
     // now store the outDegree
     outdegree = outDegree;

@@ -25,19 +25,19 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 // Subselect points using stride for now, creating new cellset of vertices
 class MaskPoints
 {
 public:
-  template <typename CellSetType, 
-            typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(
-                          const CellSetType &cellSet,
-                          const vtkm::Id stride,
-                          DeviceAdapter)
+  template <typename CellSetType, typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      const vtkm::Id stride,
+                                      DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
@@ -49,16 +49,12 @@ public:
     DeviceAlgorithm::Copy(strideArray, pointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType< > outCellSet("cells");
-    outCellSet.Fill(numberOfInputPoints,
-                    vtkm::CellShapeTagVertex::Id,
-                    1,
-                    pointIds);
+    vtkm::cont::CellSetSingleType<> outCellSet("cells");
+    outCellSet.Fill(numberOfInputPoints, vtkm::CellShapeTagVertex::Id, 1, pointIds);
 
     return outCellSet;
   }
 };
-
 }
 } // namespace vtkm::worklet
 

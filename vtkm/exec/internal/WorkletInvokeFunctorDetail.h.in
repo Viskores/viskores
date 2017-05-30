@@ -40,8 +40,10 @@ $# Ignore the following comment. It is meant for the generated file.
 #ifndef vtk_m_exec_internal_WorkletInvokeFunctorDetail_h
 #define vtk_m_exec_internal_WorkletInvokeFunctorDetail_h
 
-#if !defined(vtk_m_exec_internal_TaskSingular_h) && !defined(VTKM_TEST_HEADER_BUILD)
-#error WorkletInvokeFunctorDetail.h must be included from TaskSingular.h
+#if !defined(vtk_m_exec_internal_TaskSingular_h) && \\
+    !defined(vtk_m_exec_internal_TaskTiling_h) && \\
+    !defined(VTKM_TEST_HEADER_BUILD)
+#error WorkletInvokeFunctorDetail.h must be included from TaskSingular.h or TaskTiling.h
 #endif
 
 #include <vtkm/internal/FunctionInterface.h>

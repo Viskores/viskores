@@ -19,7 +19,8 @@
 //============================================================================
 #include <vtkm/cont/testing/TestingVirtualObjectCache.h>
 
-namespace {
+namespace
+{
 
 void TestVirtualObjectCache()
 {
@@ -30,8 +31,7 @@ void TestVirtualObjectCache()
 
 } // anonymous namespace
 
-
-int UnitTestSerialVirtualObjectCache(int, char *[])
+int UnitTestSerialVirtualObjectCache(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestVirtualObjectCache);
 }

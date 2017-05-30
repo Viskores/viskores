@@ -71,33 +71,35 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class CopyJoinSplit : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> superID,             // (input) index into super nodes
-                                WholeArrayIn<IdType> inbound,        // (input) join or split arcs
-                                WholeArrayIn<IdType> indegree,       // (input)
-                                WholeArrayIn<IdType> outdegree,      // (input)
-                                WholeArrayOut<IdType> outbound);     // (output) join or split arcs
+  typedef void ControlSignature(FieldIn<IdType> superID,         // (input) index into super nodes
+                                WholeArrayIn<IdType> inbound,    // (input) join or split arcs
+                                WholeArrayIn<IdType> indegree,   // (input)
+                                WholeArrayIn<IdType> outdegree,  // (input)
+                                WholeArrayOut<IdType> outbound); // (output) join or split arcs
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   CopyJoinSplit() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& superID,
-                  const InFieldPortalType& inbound,
-                  const InFieldPortalType& indegree,
-                  const InFieldPortalType& outdegree,
-                  const OutFieldPortalType& outbound) const
+  VTKM_EXEC void operator()(const vtkm::Id& superID,
+                            const InFieldPortalType& inbound,
+                            const InFieldPortalType& indegree,
+                            const InFieldPortalType& outdegree,
+                            const OutFieldPortalType& outbound) const
   {
     // if the vertex is critical, set it to -1
     if ((outdegree.Get(superID) != 1) || (indegree.Get(superID) != 1))
@@ -113,7 +115,6 @@ public:
     } // inbound exists
   }
 }; // CopyJoinSplit
-
 }
 }
 }

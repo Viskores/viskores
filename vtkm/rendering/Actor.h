@@ -28,35 +28,36 @@
 
 #include <memory>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT Actor
 {
 public:
-  Actor(const vtkm::cont::DynamicCellSet &cells,
-        const vtkm::cont::CoordinateSystem &coordinates,
-        const vtkm::cont::Field &scalarField,
-        const vtkm::rendering::ColorTable &colorTable =
-          vtkm::rendering::ColorTable("default"));
+  Actor(const vtkm::cont::DynamicCellSet& cells,
+        const vtkm::cont::CoordinateSystem& coordinates,
+        const vtkm::cont::Field& scalarField,
+        const vtkm::rendering::ColorTable& colorTable = vtkm::rendering::ColorTable("default"));
 
-  void Render(vtkm::rendering::Mapper &mapper,
-              vtkm::rendering::Canvas &canvas,
-              const vtkm::rendering::Camera &camera) const;
+  void Render(vtkm::rendering::Mapper& mapper,
+              vtkm::rendering::Canvas& canvas,
+              const vtkm::rendering::Camera& camera) const;
 
-  const vtkm::cont::DynamicCellSet &GetCells() const;
+  const vtkm::cont::DynamicCellSet& GetCells() const;
 
-  const vtkm::cont::CoordinateSystem &GetCoordinates() const;
+  const vtkm::cont::CoordinateSystem& GetCoordinates() const;
 
-  const vtkm::cont::Field &GetScalarField() const;
+  const vtkm::cont::Field& GetScalarField() const;
 
-  const vtkm::rendering::ColorTable &GetColorTable() const;
+  const vtkm::rendering::ColorTable& GetColorTable() const;
 
-  const vtkm::Range &GetScalarRange() const;
+  const vtkm::Range& GetScalarRange() const;
 
-  const vtkm::Bounds &GetSpatialBounds() const;
+  const vtkm::Bounds& GetSpatialBounds() const;
 
-  void SetScalarRange(const vtkm::Range &scalarRange);
+  void SetScalarRange(const vtkm::Range& scalarRange);
 
 private:
   struct InternalsType;
@@ -64,7 +65,7 @@ private:
 
   struct RangeFunctor;
 };
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif //vtk_m_rendering_Actor_h

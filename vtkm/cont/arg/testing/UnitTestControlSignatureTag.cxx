@@ -22,37 +22,32 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void TestControlSignatures()
 {
-  VTKM_IS_CONTROL_SIGNATURE_TAG(
-        vtkm::worklet::WorkletMapField::FieldIn<vtkm::Float32>);
+  VTKM_IS_CONTROL_SIGNATURE_TAG(vtkm::worklet::WorkletMapField::FieldIn<vtkm::Float32>);
+
+  VTKM_TEST_ASSERT(vtkm::cont::arg::internal::ControlSignatureTagCheck<
+                     vtkm::worklet::WorkletMapField::FieldIn<vtkm::Id>>::Valid,
+                   "Bad check for FieldIn");
+
+  VTKM_TEST_ASSERT(vtkm::cont::arg::internal::ControlSignatureTagCheck<
+                     vtkm::worklet::WorkletMapField::FieldOut<vtkm::Id>>::Valid,
+                   "Bad check for FieldOut");
 
   VTKM_TEST_ASSERT(
-        vtkm::cont::arg::internal::ControlSignatureTagCheck<
-          vtkm::worklet::WorkletMapField::FieldIn<vtkm::Id> >::Valid,
-        "Bad check for FieldIn");
+    !vtkm::cont::arg::internal::ControlSignatureTagCheck<vtkm::exec::arg::WorkIndex>::Valid,
+    "Bad check for WorkIndex");
 
-  VTKM_TEST_ASSERT(
-        vtkm::cont::arg::internal::ControlSignatureTagCheck<
-          vtkm::worklet::WorkletMapField::FieldOut<vtkm::Id> >::Valid,
-        "Bad check for FieldOut");
-
-  VTKM_TEST_ASSERT(
-        !vtkm::cont::arg::internal::ControlSignatureTagCheck<
-          vtkm::exec::arg::WorkIndex >::Valid,
-        "Bad check for WorkIndex");
-
-  VTKM_TEST_ASSERT(
-        !vtkm::cont::arg::internal::ControlSignatureTagCheck<vtkm::Id>::Valid,
-        "Bad check for vtkm::Id");
+  VTKM_TEST_ASSERT(!vtkm::cont::arg::internal::ControlSignatureTagCheck<vtkm::Id>::Valid,
+                   "Bad check for vtkm::Id");
 }
 
 } // anonymous namespace
 
-int UnitTestControlSignatureTag(int, char *[])
+int UnitTestControlSignatureTag(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestControlSignatures);
 }
-

@@ -23,9 +23,12 @@
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief \c Fetch tag for setting array values with direct indexing.
 ///
@@ -33,21 +36,21 @@ namespace arg {
 /// values in an array portal. The fetch uses direct indexing, so the thread
 /// index given to \c Store is used as the index into the array.
 ///
-struct FetchTagArrayDirectOut {  };
+struct FetchTagArrayDirectOut
+{
+};
 
-
-template<typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<
-    vtkm::exec::arg::FetchTagArrayDirectOut,
-    vtkm::exec::arg::AspectTagDefault,
-    ThreadIndicesType,
-    ExecObjectType>
+template <typename ThreadIndicesType, typename ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagArrayDirectOut,
+             vtkm::exec::arg::AspectTagDefault,
+             ThreadIndicesType,
+             ExecObjectType>
 {
   typedef typename ExecObjectType::ValueType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Load(const ThreadIndicesType &, const ExecObjectType &) const
+  ValueType Load(const ThreadIndicesType&, const ExecObjectType&) const
   {
     // Load is a no-op for this fetch.
     return ValueType();
@@ -55,14 +58,13 @@ struct Fetch<
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void Store(const ThreadIndicesType &indices,
-             const ExecObjectType &arrayPortal,
-             const ValueType &value) const
+  void Store(const ThreadIndicesType& indices,
+             const ExecObjectType& arrayPortal,
+             const ValueType& value) const
   {
     arrayPortal.Set(indices.GetOutputIndex(), value);
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

@@ -29,27 +29,29 @@
 // These must be placed in the vtkm::cont::internal namespace so that
 // the template can be found.
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 template <typename T, class StorageTag>
-class ArrayManagerExecution
-    <T, StorageTag, vtkm::cont::DeviceAdapterTagTBB>
-    : public vtkm::cont::internal::ArrayManagerExecutionShareWithControl
-        <T, StorageTag>
+class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTBB>
+  : public vtkm::cont::internal::ArrayManagerExecutionShareWithControl<T, StorageTag>
 {
 public:
-  typedef vtkm::cont::internal::ArrayManagerExecutionShareWithControl
-    <T, StorageTag> Superclass;
+  typedef vtkm::cont::internal::ArrayManagerExecutionShareWithControl<T, StorageTag> Superclass;
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
   typedef typename Superclass::StorageType StorageType;
 
   VTKM_CONT
-  ArrayManagerExecution(StorageType *storage)
-    : Superclass(storage) {  }
+  ArrayManagerExecution(StorageType* storage)
+    : Superclass(storage)
+  {
+  }
 
   VTKM_CONT
   PortalConstType PrepareForInput(bool updateData)
@@ -74,7 +76,6 @@ public:
 #ifndef vtk_m_cont_tbb_internal_ArrayManagerExecutionTBB_cxx
 VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagTBB)
 #endif // !vtk_m_cont_tbb_internal_ArrayManagerExecutionTBB_cxx
-
 }
 } // namespace vtkm::cont
 

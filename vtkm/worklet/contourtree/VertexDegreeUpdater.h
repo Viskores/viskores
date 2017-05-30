@@ -87,22 +87,26 @@
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
 class VertexDegreeUpdater : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexID,             // (input) active vertices
-                                WholeArrayIn<IdType> activeEdges,     // (input) active edges
-                                WholeArrayIn<IdType> edgeFar,         // (input) high ends of edges
-                                WholeArrayIn<IdType> firstEdge,       // (input) first edge for each active vertex
-                                WholeArrayIn<IdType> prunesTo,        // (input) where vertex is pruned to
-                                WholeArrayIn<IdType> outdegree,       // (input) updegree of vertex
-                                WholeArrayInOut<IdType> chainExtemum, // (i/o) chain extemum for vertices
-                                FieldOut<IdType> newOutdegree);       // (output) new updegree of vertex
+  typedef void ControlSignature(
+    FieldIn<IdType> vertexID,             // (input) active vertices
+    WholeArrayIn<IdType> activeEdges,     // (input) active edges
+    WholeArrayIn<IdType> edgeFar,         // (input) high ends of edges
+    WholeArrayIn<IdType> firstEdge,       // (input) first edge for each active vertex
+    WholeArrayIn<IdType> prunesTo,        // (input) where vertex is pruned to
+    WholeArrayIn<IdType> outdegree,       // (input) updegree of vertex
+    WholeArrayInOut<IdType> chainExtemum, // (i/o) chain extemum for vertices
+    FieldOut<IdType> newOutdegree);       // (output) new updegree of vertex
   typedef _8 ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   typedef _1 InputDomain;
 
@@ -117,14 +121,13 @@ public:
   VertexDegreeUpdater() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  vtkm::Id operator()(const vtkm::Id &vertexID,
-                      const InFieldPortalType &activeEdges,
-                      const InFieldPortalType &edgeFar,
-                      const InFieldPortalType &firstEdge,
-                      const InFieldPortalType &prunesTo,
-                      const InFieldPortalType &outdegree,
-                      const OutFieldPortalType &chainExtremum) const
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID,
+                                const InFieldPortalType& activeEdges,
+                                const InFieldPortalType& edgeFar,
+                                const InFieldPortalType& firstEdge,
+                                const InFieldPortalType& prunesTo,
+                                const InFieldPortalType& outdegree,
+                                const OutFieldPortalType& chainExtremum) const
   {
     vtkm::Id newOutdegree = 0;
 
@@ -153,7 +156,6 @@ public:
     return newOutdegree;
   }
 }; // VertexDegreeUpdater
-
 }
 }
 }

@@ -22,10 +22,13 @@
 
 #include <vtkm/cont/ErrorBadType.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-namespace {
+namespace
+{
 
 inline vtkm::Float64 ffix(vtkm::Float64 value)
 {
@@ -40,16 +43,19 @@ inline vtkm::Float64 ffix(vtkm::Float64 value)
 
 } // anonymous namespace
 
-void AxisAnnotation::CalculateTicks(const vtkm::Range &range,
+void AxisAnnotation::CalculateTicks(const vtkm::Range& range,
                                     bool minor,
-                                    std::vector<vtkm::Float64> &positions,
-                                    std::vector<vtkm::Float64> &proportions,
+                                    std::vector<vtkm::Float64>& positions,
+                                    std::vector<vtkm::Float64>& proportions,
                                     int modifyTickQuantity) const
 {
   positions.clear();
   proportions.clear();
 
-  if (!range.IsNonEmpty()) { return; }
+  if (!range.IsNonEmpty())
+  {
+    return;
+  }
 
   vtkm::Float64 length = range.Length();
 
@@ -60,7 +66,6 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range &range,
   vtkm::Float64 eps = 10.0e-10;
   pow10 += eps;
 
-
   // ffix moves you in the wrong direction if pow10 is negative.
   if (pow10 < 0.)
   {
@@ -70,7 +75,7 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range &range,
   vtkm::Float64 fxt = pow(10., ffix(pow10));
 
   // Find the number of integral points in the interval.
-  int numTicks = int(ffix(length/fxt) + 1);
+  int numTicks = int(ffix(length / fxt) + 1);
 
   // We should get about major 10 ticks on a length that's near
   // the power of 10.  (e.g. length=1000).  If the length is small
@@ -94,7 +99,7 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range &range,
   // If there aren't enough major tick points in this decade, use the next
   // decade.
   vtkm::Float64 majorStep = fxt / div;
-  vtkm::Float64 minorStep = (fxt/div) / 10.;
+  vtkm::Float64 minorStep = (fxt / div) / 10.;
 
   // When we get too close, we lose the tickmarks. Run some special case code.
   if (numTicks <= 1)
@@ -123,13 +128,13 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range &range,
   vtkm::Float64 majorStart, minorStart;
   if (range.Min < 0.)
   {
-    majorStart = majorStep*(ffix(range.Min*(1./majorStep)));
-    minorStart = minorStep*(ffix(range.Min*(1./minorStep)));
+    majorStart = majorStep * (ffix(range.Min * (1. / majorStep)));
+    minorStart = minorStep * (ffix(range.Min * (1. / minorStep)));
   }
   else
   {
-    majorStart = majorStep*(ffix(range.Min*(1./majorStep) + .999));
-    minorStart = minorStep*(ffix(range.Min*(1./minorStep) + .999));
+    majorStart = majorStep * (ffix(range.Min * (1. / majorStep) + .999));
+    minorStart = minorStep * (ffix(range.Min * (1. / minorStep) + .999));
   }
 
   // Create all of the minor ticks
@@ -147,10 +152,11 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range &range,
 }
 
 AxisAnnotation::AxisAnnotation()
-{  }
+{
+}
 
 AxisAnnotation::~AxisAnnotation()
-{  }
-
+{
+}
 }
 } // namespace vtkm::rendering
