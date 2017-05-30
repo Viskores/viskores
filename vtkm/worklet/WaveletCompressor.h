@@ -483,6 +483,7 @@ public:
       {
         nthVal *= -1.0;
       }
+
       typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
       ThresholdType thresholdWorklet(nthVal);
       vtkm::worklet::DispatcherMapField<ThresholdType, DeviceTag> dispatcher(thresholdWorklet);

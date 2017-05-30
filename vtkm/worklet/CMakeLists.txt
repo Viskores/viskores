@@ -32,6 +32,7 @@ set(headers
   ExtractGeometry.h
   ExtractPoints.h
   ExtractStructured.h
+  FieldEntropy.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
