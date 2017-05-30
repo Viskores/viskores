@@ -140,7 +140,7 @@ public:
 
 private:
   using AxisIndexArrayPoints =
-    vtkm::cont::ArrayHandleImplicit<vtkm::Id, extractstructured::internal::SubArrayPermutePoints>;
+    vtkm::cont::ArrayHandleImplicit<extractstructured::internal::SubArrayPermutePoints>;
   using PointIndexArray = vtkm::cont::ArrayHandleCartesianProduct<AxisIndexArrayPoints,
                                                                   AxisIndexArrayPoints,
                                                                   AxisIndexArrayPoints>;
@@ -158,7 +158,7 @@ private:
   {
     auto fnctr = extractstructured::internal::SubArrayPermutePoints(
       count, first, last, stride, includeBoundary);
-    return vtkm::cont::make_ArrayHandleImplicit<vtkm::Id>(fnctr, count);
+    return vtkm::cont::make_ArrayHandleImplicit(fnctr, count);
   }
 
   static AxisIndexArrayCells MakeAxisIndexArrayCells(vtkm::Id count,

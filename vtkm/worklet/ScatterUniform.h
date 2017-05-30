@@ -93,7 +93,7 @@ struct ScatterUniform
     return this->GetOutputRange(inputRange[0] * inputRange[1] * inputRange[2]);
   }
 
-  typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::FunctorDiv> OutputToInputMapType;
+  typedef vtkm::cont::ArrayHandleImplicit<detail::FunctorDiv> OutputToInputMapType;
   template <typename RangeType>
   VTKM_CONT OutputToInputMapType GetOutputToInputMap(RangeType inputRange) const
   {
@@ -101,7 +101,7 @@ struct ScatterUniform
                                 this->GetOutputRange(inputRange));
   }
 
-  typedef vtkm::cont::ArrayHandleImplicit<vtkm::IdComponent, detail::FunctorModulus> VisitArrayType;
+  typedef vtkm::cont::ArrayHandleImplicit<detail::FunctorModulus> VisitArrayType;
   template <typename RangeType>
   VTKM_CONT VisitArrayType GetVisitArray(RangeType inputRange) const
   {

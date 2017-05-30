@@ -59,12 +59,12 @@ private:
 /// takes (almost) no memory.
 ///
 template <typename T>
-class ArrayHandleConstant : public vtkm::cont::ArrayHandleImplicit<T, detail::ConstantFunctor<T>>
+class ArrayHandleConstant : public vtkm::cont::ArrayHandleImplicit<detail::ConstantFunctor<T>>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleConstant,
                              (ArrayHandleConstant<T>),
-                             (vtkm::cont::ArrayHandleImplicit<T, detail::ConstantFunctor<T>>));
+                             (vtkm::cont::ArrayHandleImplicit<detail::ConstantFunctor<T>>));
 
   VTKM_CONT
   ArrayHandleConstant(T value, vtkm::Id numberOfValues = 0)

@@ -44,7 +44,7 @@ struct DoubleIndexFunctor
   vtkm::Id operator()(vtkm::Id index) const { return 2 * index; }
 };
 
-typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, DoubleIndexFunctor> DoubleIndexArrayType;
+typedef vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor> DoubleIndexArrayType;
 
 template <typename PermutedPortalType>
 struct CheckPermutationFunctor : vtkm::exec::FunctorBase
@@ -185,7 +185,7 @@ VTKM_CONT void CheckOutputResult(PortalType portal)
 template <typename ValueType>
 struct PermutationTests
 {
-  typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, DoubleIndexFunctor> IndexArrayType;
+  typedef vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor> IndexArrayType;
   typedef vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic> ValueArrayType;
   typedef vtkm::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType> PermutationArrayType;
 

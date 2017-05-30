@@ -52,9 +52,9 @@ struct ImplicitTests
     typedef IndexSquared<ValueType> FunctorType;
     FunctorType functor;
 
-    typedef vtkm::cont::ArrayHandleImplicit<ValueType, FunctorType> ImplicitHandle;
+    typedef vtkm::cont::ArrayHandleImplicit<FunctorType> ImplicitHandle;
 
-    ImplicitHandle implict = vtkm::cont::make_ArrayHandleImplicit<ValueType>(functor, ARRAY_SIZE);
+    ImplicitHandle implict = vtkm::cont::make_ArrayHandleImplicit(functor, ARRAY_SIZE);
 
     //verify that the control portal works
     for (int i = 0; i < ARRAY_SIZE; ++i)

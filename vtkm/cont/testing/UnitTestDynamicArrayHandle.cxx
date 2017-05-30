@@ -379,8 +379,8 @@ void TryCastToArrayHandle()
   CheckCastToArrayHandle(groupVecArray);
 
   std::cout << "  Implicit array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleImplicit<vtkm::FloatDefault>(
-    TestValueFunctor<vtkm::FloatDefault>(), ARRAY_SIZE));
+  CheckCastToArrayHandle(
+    vtkm::cont::make_ArrayHandleImplicit(TestValueFunctor<vtkm::FloatDefault>(), ARRAY_SIZE));
 
   std::cout << "  Index array handle." << std::endl;
   CheckCastToArrayHandle(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE));
