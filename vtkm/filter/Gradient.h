@@ -68,6 +68,13 @@ public:
   void SetComputeQCriterion(bool enable) { ComputeQCriterion = enable; }
   bool GetComputeQCriterion() const { return ComputeQCriterion; }
 
+  /// Add gradient field to the output data.  The name of the array
+  /// will be Gradients and will be a cell field unless \c ComputePointGradient
+  /// is enabled. It is useful to turn this off when you are only interested
+  /// in the results of Divergence, Vorticity, or QCriterion. The default is on.
+  void SetComputeGradient(bool enable) { StoreGradient = enable; }
+  bool GetComputeGradient() const { return StoreGradient; }
+
   void SetDivergenceName(const std::string& name) { this->DivergenceName = name; }
   const std::string& GetDivergenceName() const { return this->DivergenceName; }
 
@@ -89,7 +96,9 @@ private:
   bool ComputeDivergence;
   bool ComputeVorticity;
   bool ComputeQCriterion;
+  bool StoreGradient;
 
+  std::string GradientsName;
   std::string DivergenceName;
   std::string VorticityName;
   std::string QCriterionName;

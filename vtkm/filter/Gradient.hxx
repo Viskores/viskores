@@ -23,7 +23,6 @@
 
 namespace
 {
-
 //-----------------------------------------------------------------------------
 template <typename HandleType>
 inline void add_field(vtkm::filter::ResultField& result,
@@ -43,51 +42,6 @@ inline void add_field(vtkm::filter::ResultField& result,
   }
 }
 
-//-----------------------------------------------------------------------------
-template <typename T, typename S, typename DeviceAdapter>
-inline void add_extra_vec_fields(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& inField,
-  const vtkm::filter::Gradient* const filter,
-  vtkm::filter::ResultField& result,
-  const DeviceAdapter&)
-{
-  if (filter->GetComputeDivergence())
-  {
-    vtkm::cont::ArrayHandle<T> divergence;
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::Divergence, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(inField, divergence);
-
-    add_field(result, divergence, filter->GetDivergenceName());
-  }
-
-  if (filter->GetComputeVorticity())
-  {
-    vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> vorticity;
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::Vorticity, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(inField, vorticity);
-
-    add_field(result, vorticity, filter->GetVorticityName());
-  }
-
-  if (filter->GetComputeQCriterion())
-  {
-    vtkm::cont::ArrayHandle<T> qc;
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::QCriterion, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(inField, qc);
-
-    add_field(result, qc, filter->GetQCriterionName());
-  }
-}
-
-template <typename T, typename S, typename DeviceAdapter>
-inline void add_extra_vec_fields(const vtkm::cont::ArrayHandle<T, S>&,
-                                 const vtkm::filter::Gradient* const,
-                                 vtkm::filter::ResultField&,
-                                 const DeviceAdapter&)
-{
-  //not a vector array handle so add nothing
-}
-
 } //namespace
 
 namespace vtkm
@@ -100,6 +54,8 @@ Gradient::Gradient()
   : ComputePointGradient(false)
   , ComputeVorticity(false)
   , ComputeQCriterion(false)
+  , StoreGradient(true)
+  , GradientsName("Gradients")
   , DivergenceName("Divergence")
   , VorticityName("Vorticity")
   , QCriterionName("QCriterion")
@@ -130,11 +86,16 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
   std::string outputName = this->GetOutputFieldName();
   if (outputName.empty())
   {
-    outputName = "Gradients";
+    outputName = this->GradientsName;
   }
 
   //todo: we need to ask the policy what storage type we should be using
   //If the input is implicit, we should know what to fall back to
+  vtkm::worklet::GradientOutputFields<T> gradientfields(this->GetComputeGradient(),
+                                                        this->GetComputeDivergence(),
+                                                        this->GetComputeVorticity(),
+                                                        this->GetComputeQCriterion());
+
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> outArray;
   if (this->ComputePointGradient)
   {
@@ -142,6 +103,7 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
     outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
                             vtkm::filter::ApplyPolicy(coords, policy),
                             inField,
+                            gradientfields,
                             adapter);
   }
   else
@@ -150,17 +112,29 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
     outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
                             vtkm::filter::ApplyPolicy(coords, policy),
                             inField,
+                            gradientfields,
                             adapter);
   }
+  VTKM_CONSTEXPR bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
+                                              vtkm::VecTraitsTagMultipleComponents>::value;
 
   vtkm::cont::Field::AssociationEnum fieldAssociation(this->ComputePointGradient
                                                         ? vtkm::cont::Field::ASSOC_POINTS
                                                         : vtkm::cont::Field::ASSOC_CELL_SET);
   vtkm::filter::ResultField result(input, outArray, outputName, fieldAssociation, cells.GetName());
 
-  //Add the vorticity and qcriterion fields if they are enabled to the result
-  add_extra_vec_fields(outArray, this, result, adapter);
-
+  if (this->GetComputeDivergence() && isVector)
+  {
+    add_field(result, gradientfields.Divergence, this->GetDivergenceName());
+  }
+  if (this->GetComputeVorticity() && isVector)
+  {
+    add_field(result, gradientfields.Vorticity, this->GetVorticityName());
+  }
+  if (this->GetComputeQCriterion() && isVector)
+  {
+    add_field(result, gradientfields.QCriterion, this->GetQCriterionName());
+  }
   return result;
 }
 }
