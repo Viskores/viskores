@@ -27,6 +27,7 @@
 #include <vtkm/exec/CellDerivative.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/exec/ParametricCoordinates.h>
+#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
@@ -36,18 +37,16 @@ namespace vtkm
 {
 namespace worklet
 {
+namespace gradient
+{
 
-struct GradientInTypes : vtkm::ListTagBase<vtkm::Float32,
-                                           vtkm::Float64,
-                                           vtkm::Vec<vtkm::Float32, 3>,
-                                           vtkm::Vec<vtkm::Float64, 3>>
+template <typename T>
+struct GradientInType : vtkm::ListTagBase<T>
 {
 };
 
-struct GradientOutTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>,
-                                            vtkm::Vec<vtkm::Float64, 3>,
-                                            vtkm::Vec<vtkm::Vec<vtkm::Float32, 3>, 3>,
-                                            vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3>>
+template <typename T>
+struct GradientOutType : vtkm::ListTagBase<vtkm::Vec<T, 3>>
 {
 };
 
@@ -56,12 +55,13 @@ struct GradientVecOutTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<vtkm::Float32
 {
 };
 
+template <typename T>
 struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 {
   typedef void ControlSignature(CellSetIn,
                                 FieldInPoint<Vec3> pointCoordinates,
-                                FieldInPoint<GradientInTypes> inputField,
-                                FieldOutCell<GradientOutTypes> outputField);
+                                FieldInPoint<GradientInType<T>> inputField,
+                                FieldOutCell<GradientOutType<T>> outputField);
 
   typedef void ExecutionSignature(CellShape, PointCount, _2, _3, _4);
   typedef _1 InputDomain;
@@ -72,69 +72,25 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
             typename FieldOutType>
   VTKM_EXEC void operator()(CellTagType shape,
                             vtkm::IdComponent pointCount,
-                            const PointCoordVecType& pointCoordinates,
-                            const FieldInVecType& inputField,
+                            const PointCoordVecType& wCoords,
+                            const FieldInVecType& field,
                             FieldOutType& outputField) const
-  {
-    //To confirm that we have the proper input and output types we need
-    //to verify that input type matches the output vtkm::Vec<T> 'T' type.
-    //For example:
-    // input is float => output is vtkm::Vec<float>
-    // input is vtkm::Vec<float> => output is vtkm::Vec< vtkm::Vec< float > >
-
-    //Grab the dimension tag for the input
-    using InValueType = typename FieldInVecType::ComponentType;
-    using InDimensionTag = typename TypeTraits<InValueType>::DimensionalityTag;
-
-    //grab the dimension tag for the output component type
-    using OutValueType = typename FieldOutType::ComponentType;
-    using OutDimensionTag = typename TypeTraits<OutValueType>::DimensionalityTag;
-
-    //Verify that input and output dimension tags match
-    using Matches = typename std::is_same<InDimensionTag, OutDimensionTag>::type;
-
-    this->Compute(shape, pointCount, pointCoordinates, inputField, outputField, Matches());
-  }
-
-  template <typename CellShapeTag,
-            typename PointCoordVecType,
-            typename FieldInVecType,
-            typename FieldOutType>
-  VTKM_EXEC void Compute(CellShapeTag shape,
-                         vtkm::IdComponent pointCount,
-                         const PointCoordVecType& wCoords,
-                         const FieldInVecType& field,
-                         FieldOutType& outputField,
-                         std::true_type) const
   {
     vtkm::Vec<vtkm::FloatDefault, 3> center =
       vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, *this);
 
     outputField = vtkm::exec::CellDerivative(field, wCoords, center, shape, *this);
   }
-
-  template <typename CellShapeTag,
-            typename PointCoordVecType,
-            typename FieldInVecType,
-            typename FieldOutType>
-  VTKM_EXEC void Compute(CellShapeTag,
-                         vtkm::IdComponent,
-                         const PointCoordVecType&,
-                         const FieldInVecType&,
-                         FieldOutType&,
-                         std::false_type) const
-  {
-    //this is invalid
-  }
 };
 
+template <typename T>
 struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
 {
   typedef void ControlSignature(CellSetIn,
                                 WholeCellSetIn<Point, Cell>,
                                 WholeArrayIn<Vec3> pointCoordinates,
-                                WholeArrayIn<GradientInTypes> inputField,
-                                FieldOutPoint<GradientOutTypes> outputField);
+                                WholeArrayIn<GradientInType<T>> inputField,
+                                FieldOutPoint<GradientOutType<T>> outputField);
 
   typedef void ExecutionSignature(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
   typedef _1 InputDomain;
@@ -151,40 +107,6 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
                             const WholeCoordinatesIn& pointCoordinates,
                             const WholeFieldIn& inputField,
                             FieldOutType& outputField) const
-  {
-    //To confirm that we have the proper input and output types we need
-    //to verify that input type matches the output vtkm::Vec<T> 'T' type.
-    //For example:
-    // input is float => output is vtkm::Vec<float>
-    // input is vtkm::Vec<float> => output is vtkm::Vec< vtkm::Vec< float > >
-
-    //Grab the dimension tag for the input
-    using InValueType = typename WholeFieldIn::ValueType;
-    using InDimensionTag = typename TypeTraits<InValueType>::DimensionalityTag;
-
-    //grab the dimension tag for the output component type
-    using OutValueType = typename FieldOutType::ComponentType;
-    using OutDimensionTag = typename TypeTraits<OutValueType>::DimensionalityTag;
-
-    //Verify that input and output dimension tags match
-    using Matches = typename std::is_same<InDimensionTag, OutDimensionTag>::type;
-    this->Compute(
-      numCells, cellIds, pointId, geometry, pointCoordinates, inputField, outputField, Matches());
-  }
-
-  template <typename FromIndexType,
-            typename CellSetInType,
-            typename WholeCoordinatesIn,
-            typename WholeFieldIn,
-            typename FieldOutType>
-  VTKM_EXEC void Compute(const vtkm::IdComponent& numCells,
-                         const FromIndexType& cellIds,
-                         const vtkm::Id& pointId,
-                         const CellSetInType& geometry,
-                         const WholeCoordinatesIn& pointCoordinates,
-                         const WholeFieldIn& inputField,
-                         FieldOutType& outputField,
-                         std::true_type) const
   {
     using ThreadIndices = vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>;
     using ValueType = typename WholeFieldIn::ValueType;
@@ -214,24 +136,6 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
     outputField[0] = static_cast<OutValueType>(gradient[0] * invNumCells);
     outputField[1] = static_cast<OutValueType>(gradient[1] * invNumCells);
     outputField[2] = static_cast<OutValueType>(gradient[2] * invNumCells);
-  }
-
-  template <typename FromIndexType,
-            typename CellSetInType,
-            typename WholeCoordinatesIn,
-            typename WholeFieldIn,
-            typename FieldOutType>
-  VTKM_EXEC void Compute(const vtkm::IdComponent&,
-                         const FromIndexType&,
-                         const vtkm::Id&,
-                         const CellSetInType&,
-                         const WholeCoordinatesIn&,
-                         const WholeFieldIn&,
-                         FieldOutType&,
-                         std::false_type) const
-  {
-    //this is invalid, as the input and output types don't match.
-    //e.g input is float => output is vtkm::Vec< vtkm::Vec< float > >
   }
 
 private:
@@ -296,9 +200,89 @@ private:
   }
 };
 
+//-----------------------------------------------------------------------------
+template <typename CoordinateSystem, typename T, typename S, typename Device>
+struct DeducedPointGrad
+{
+  DeducedPointGrad(const CoordinateSystem& coords,
+                   const vtkm::cont::ArrayHandle<T, S>& field,
+                   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>* result)
+    : Points(&coords)
+    , Field(&field)
+    , Result(result)
+  {
+  }
+
+  template <typename CellSetType>
+  void operator()(const CellSetType& cellset) const
+  {
+    vtkm::worklet::DispatcherMapTopology<PointGradient<T>, Device> dispatcher;
+    dispatcher.Invoke(cellset, //topology to iterate on a per point basis
+                      cellset, //whole cellset in
+                      *this->Points,
+                      *this->Field,
+                      *this->Result);
+  }
+
+  const CoordinateSystem* const Points;
+  const vtkm::cont::ArrayHandle<T, S>* const Field;
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>* Result;
+
+private:
+  void operator=(const DeducedPointGrad<CoordinateSystem, T, S, Device>&) = delete;
+};
+
+} //namespace gradient
+
+class PointGradient
+{
+public:
+  template <typename CellSetType,
+            typename CoordinateSystem,
+            typename T,
+            typename S,
+            typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
+                                               const CoordinateSystem& coords,
+                                               const vtkm::cont::ArrayHandle<T, S>& field,
+                                               DeviceAdapter device)
+  {
+    //we are using cast and call here as we pass the cells twice to the invoke
+    //and want the type resolved once before hand instead of twice
+    //by the dispatcher ( that will cost more in time and binary size )
+
+    vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> output;
+    gradient::DeducedPointGrad<CoordinateSystem, T, S, DeviceAdapter> func(coords, field, &output);
+    vtkm::cont::CastAndCall(cells, func);
+    return output;
+  }
+};
+
+class CellGradient
+{
+public:
+  template <typename CellSetType,
+            typename CoordinateSystem,
+            typename T,
+            typename S,
+            typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
+                                               const CoordinateSystem& coords,
+                                               const vtkm::cont::ArrayHandle<T, S>& field,
+                                               DeviceAdapter device)
+  {
+    vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> output;
+    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient<T>, DeviceAdapter>
+      dispatcher;
+    dispatcher.Invoke(cells, coords, field, output);
+    return output;
+  }
+};
+
 struct Divergence : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input, FieldOut<Scalar> output);
+  typedef void ControlSignature(FieldIn<gradient::GradientVecOutTypes> input,
+                                FieldOut<Scalar> output);
   typedef void ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
 
@@ -311,7 +295,8 @@ struct Divergence : public vtkm::worklet::WorkletMapField
 
 struct Vorticity : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input, FieldOut<Vec3> output);
+  typedef void ControlSignature(FieldIn<gradient::GradientVecOutTypes> input,
+                                FieldOut<Vec3> output);
   typedef void ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
 
@@ -326,7 +311,8 @@ struct Vorticity : public vtkm::worklet::WorkletMapField
 
 struct QCriterion : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input, FieldOut<Scalar> output);
+  typedef void ControlSignature(FieldIn<gradient::GradientVecOutTypes> input,
+                                FieldOut<Scalar> output);
   typedef void ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
 
@@ -349,5 +335,4 @@ struct QCriterion : public vtkm::worklet::WorkletMapField
 };
 }
 } // namespace vtkm::worklet
-
 #endif

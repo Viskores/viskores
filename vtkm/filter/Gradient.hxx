@@ -19,46 +19,10 @@
 //============================================================================
 
 #include <vtkm/cont/DynamicCellSet.h>
-
-#include <vtkm/worklet/DispatcherMapTopology.h>
-
 #include <vtkm/worklet/Gradient.h>
 
 namespace
 {
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename Device, typename T, typename S>
-struct PointGrad
-{
-  PointGrad(const vtkm::cont::CoordinateSystem& coords,
-            const vtkm::cont::ArrayHandle<T, S>& field,
-            vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>* result)
-    : Points(&coords)
-    , InField(&field)
-    , Result(result)
-  {
-  }
-
-  template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
-  {
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointGradient, Device> dispatcher;
-    dispatcher.Invoke(cellset, //topology to iterate on a per point basis
-                      cellset, //whole cellset in
-                      vtkm::filter::ApplyPolicy(*this->Points, this->Policy),
-                      *this->InField,
-                      *this->Result);
-  }
-
-  vtkm::filter::PolicyBase<DerivedPolicy> Policy;
-  const vtkm::cont::CoordinateSystem* const Points;
-  const vtkm::cont::ArrayHandle<T, S>* const InField;
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>* Result;
-
-private:
-  void operator=(const PointGrad<DerivedPolicy, Device, T, S>&) = delete;
-};
 
 //-----------------------------------------------------------------------------
 template <typename HandleType>
@@ -163,7 +127,6 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  vtkm::cont::Field::AssociationEnum fieldAssociation;
   std::string outputName = this->GetOutputFieldName();
   if (outputName.empty())
   {
@@ -175,20 +138,24 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> outArray;
   if (this->ComputePointGradient)
   {
-    PointGrad<DerivedPolicy, DeviceAdapter, T, StorageType> func(coords, inField, &outArray);
-    vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy), func);
-    fieldAssociation = vtkm::cont::Field::ASSOC_POINTS;
+    vtkm::worklet::PointGradient gradient;
+    outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                            vtkm::filter::ApplyPolicy(coords, policy),
+                            inField,
+                            adapter);
   }
   else
   {
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellGradient, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy),
-                      vtkm::filter::ApplyPolicy(coords, policy),
-                      inField,
-                      outArray);
-    fieldAssociation = vtkm::cont::Field::ASSOC_CELL_SET;
+    vtkm::worklet::CellGradient gradient;
+    outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                            vtkm::filter::ApplyPolicy(coords, policy),
+                            inField,
+                            adapter);
   }
 
+  vtkm::cont::Field::AssociationEnum fieldAssociation(this->ComputePointGradient
+                                                        ? vtkm::cont::Field::ASSOC_POINTS
+                                                        : vtkm::cont::Field::ASSOC_CELL_SET);
   vtkm::filter::ResultField result(input, outArray, outputName, fieldAssociation, cells.GetName());
 
   //Add the vorticity and qcriterion fields if they are enabled to the result

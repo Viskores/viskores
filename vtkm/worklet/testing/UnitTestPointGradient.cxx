@@ -27,34 +27,7 @@
 namespace
 {
 
-template <typename T>
-struct PointGrad
-{
-  PointGrad(const vtkm::cont::DataSet& data,
-            const std::string& fieldName,
-            vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& result)
-    : Data(data)
-    , FieldName(fieldName)
-    , Result(result)
-  {
-  }
-
-  template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
-  {
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointGradient> dispatcher;
-    dispatcher.Invoke(cellset, //topology to iterate on a per point basis
-                      cellset, //whole cellset in
-                      this->Data.GetCoordinateSystem(),
-                      this->Data.GetField(this->FieldName),
-                      this->Result);
-  }
-
-  vtkm::cont::DataSet Data;
-  std::string FieldName;
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Result;
-};
-
+template <typename DeviceAdapter>
 void TestPointGradientUniform2D()
 {
   std::cout << "Testing PointGradient Worklet on 2D structured data" << std::endl;
@@ -62,10 +35,12 @@ void TestPointGradientUniform2D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> result;
+  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
+  dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
 
-  PointGrad<vtkm::Float32> func(dataSet, "pointvar", result);
-  vtkm::cont::CastAndCall(dataSet.GetCellSet(), func);
+  vtkm::worklet::PointGradient gradient;
+  auto result =
+    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray, DeviceAdapter());
 
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10, 30, 0 }, { 10, 30, 0 } };
   for (int i = 0; i < 2; ++i)
@@ -75,6 +50,7 @@ void TestPointGradientUniform2D()
   }
 }
 
+template <typename DeviceAdapter>
 void TestPointGradientUniform3D()
 {
   std::cout << "Testing PointGradient Worklet on 3D strucutred data" << std::endl;
@@ -82,12 +58,14 @@ void TestPointGradientUniform3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> result;
+  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
+  dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
 
-  PointGrad<vtkm::Float64> func(dataSet, "pointvar", result);
-  vtkm::cont::CastAndCall(dataSet.GetCellSet(), func);
+  vtkm::worklet::PointGradient gradient;
+  auto result =
+    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray, DeviceAdapter());
 
-  vtkm::Vec<vtkm::Float64, 3> expected[4] = {
+  vtkm::Vec<vtkm::Float32, 3> expected[4] = {
     { 10.0, 30, 60.1 }, { 10.0, 30.1, 60.1 }, { 10.0, 30.1, 60.2 }, { 10.1, 30, 60.2 },
   };
   for (int i = 0; i < 4; ++i)
@@ -97,6 +75,7 @@ void TestPointGradientUniform3D()
   }
 }
 
+template <typename DeviceAdapter>
 void TestPointGradientUniform3DWithVectorField()
 {
   std::cout << "Testing PointGradient Worklet with a vector field on 3D strucutred data"
@@ -114,12 +93,11 @@ void TestPointGradientUniform3DWithVectorField()
     vec[i] = vtkm::make_Vec(vars[i], vars[i], vars[i]);
   }
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> input = vtkm::cont::make_ArrayHandle(vec);
-  //we need to add Vec3 array to the dataset
-  vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec_pointvar", input);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3>> result;
-  PointGrad<vtkm::Vec<vtkm::Float64, 3>> func(dataSet, "vec_pointvar", result);
-  vtkm::cont::CastAndCall(dataSet.GetCellSet(), func);
+  vtkm::worklet::PointGradient gradient;
+  auto result =
+    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), input, DeviceAdapter());
+
 
   vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> expected[4] = {
     { { 10.0, 10.0, 10.0 }, { 30.0, 30.0, 30.0 }, { 60.1, 60.1, 60.1 } },
@@ -141,6 +119,7 @@ void TestPointGradientUniform3DWithVectorField()
   }
 }
 
+template <typename DeviceAdapter>
 void TestPointGradientExplicit()
 {
   std::cout << "Testing PointGradient Worklet on Explicit data" << std::endl;
@@ -148,10 +127,12 @@ void TestPointGradientExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> result;
+  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
+  dataSet.GetField("pointvar").GetData().CopyTo(fieldArray);
 
-  PointGrad<vtkm::Float32> func(dataSet, "pointvar", result);
-  vtkm::cont::CastAndCall(dataSet.GetCellSet(), func);
+  vtkm::worklet::PointGradient gradient;
+  auto result =
+    gradient.Run(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), fieldArray, DeviceAdapter());
 
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
   for (int i = 0; i < 2; ++i)
@@ -163,10 +144,11 @@ void TestPointGradientExplicit()
 
 void TestPointGradient()
 {
-  TestPointGradientUniform2D();
-  TestPointGradientUniform3D();
-  TestPointGradientUniform3DWithVectorField();
-  TestPointGradientExplicit();
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  TestPointGradientUniform2D<DeviceAdapter>();
+  TestPointGradientUniform3D<DeviceAdapter>();
+  TestPointGradientUniform3DWithVectorField<DeviceAdapter>();
+  TestPointGradientExplicit<DeviceAdapter>();
 }
 }
 
