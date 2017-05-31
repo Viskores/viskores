@@ -84,6 +84,7 @@ public:
 
 }
 }
+
 const std::vector<vtkm::filter::ResultField> MultiBlock_WorkletTest();
 
 void TestMultiBlock_Worklet()
@@ -100,7 +101,7 @@ void TestMultiBlock_Worklet()
       results[j].GetField().GetData().CopyTo(array);
       VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == vtkm::Float64(j/2.0), "result incorrect");
     }
-    std::cout<<"\n"<< std::endl;
+
   }
 }
 
@@ -142,13 +143,13 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder()
     vtkm::Id3 dimensions(10, 10, 10);
     vtkm::Id numPoints = dimensions[0] * dimensions[1];
     vtkm::Id numCells = (dimensions[0]-1) * (dimensions[1]-1);
-    std::vector<T> varP2D(static_cast<unsigned long>(numPoints));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
+    std::vector<T> varP2D(static_cast<std::size_t>(numPoints));
+    for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
     {
       varP2D[i] = static_cast<T>(trial);
     }
-    std::vector<T> varC2D(static_cast<unsigned long>(numCells));
-    for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
+    std::vector<T> varC2D(static_cast<std::size_t>(numCells));
+    for (std::size_t i = 0; i < static_cast<std::size_t>(numCells); i++)
     {
       varC2D[i] = static_cast<T>(trial);
     }
@@ -162,6 +163,20 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder()
   return Blocks;
 }
 
+template<typename FilterType, typename SpecsType>
+std::vector<vtkm::filter::ResultField> Apply(vtkm::cont::MultiBlock MB, FilterType filter, SpecsType specs)
+{
+  std::vector<vtkm::filter::ResultField> results;
+  for(std::size_t j=0; j<MB.GetNumberOfBlocks(); j++)
+  {
+    vtkm::filter::ResultField result = filter.Execute(MB.GetBlock(j), std::string(specs));
+    results.push_back(result);
+  }
+
+  return results;
+}
+
+
 const std::vector<vtkm::filter::ResultField> MultiBlock_WorkletTest()
 {
   vtkm::cont::DynamicArrayHandle output;
@@ -171,12 +186,14 @@ const std::vector<vtkm::filter::ResultField> MultiBlock_WorkletTest()
   std::vector<vtkm::filter::ResultField> results;
 
   vtkm::filter::DivideField divider;
-  for(std::size_t j=0; j<Blocks.GetNumberOfBlocks(); j++)
+  divider.SetDividerValue(2);
+  results=Apply(Blocks,divider,"pointvar");
+  /*for(std::size_t j=100; j<Blocks.GetNumberOfBlocks(); j++)
   {   
     divider.SetDividerValue(2);
     vtkm::filter::ResultField result = divider.Execute(Blocks.GetBlock(j), std::string("pointvar"));
     results.push_back(result); 
-  }
+  }*/
 
   return results;
 }
