@@ -42,6 +42,7 @@
 #error Mismatch of maximum parameters between FunctionInterfaceDatailPre.h.in and WorkletInvokeFunctorDetail.h.in
 #endif
 
+
 namespace vtkm
 {
 namespace exec
@@ -82,6 +83,8 @@ struct InvocationToFetch
 
   typedef vtkm::exec::arg::Fetch<FetchTag, AspectTag, ThreadIndicesType, ExecObjectType> type;
 };
+
+// clang-format off
 
 template <typename WorkletType,
           typename ParameterInterface,
@@ -980,13 +983,12 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
     Invocation;
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
@@ -1087,13 +1089,12 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
     Invocation;
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
@@ -1204,22 +1205,20 @@ template <typename WorkletType,
           typename P7>
 VTKM_EXEC void DoWorkletInvokeFunctor(
   const WorkletType& worklet,
-  const vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>& invocation,
+  const vtkm::internal::Invocation<ParameterInterface,
+                                   ControlInterface,
+                                   vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7)>,
+                                   InputDomainIndex,
+                                   OutputToInputMapType,
+                                   VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
     Invocation;
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
@@ -1323,22 +1322,20 @@ template <typename WorkletType,
           typename P8>
 VTKM_EXEC void DoWorkletInvokeFunctor(
   const WorkletType& worklet,
-  const vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>& invocation,
+  const vtkm::internal::Invocation<ParameterInterface,
+                                   ControlInterface,
+                                   vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8)>,
+                                   InputDomainIndex,
+                                   OutputToInputMapType,
+                                   VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
     Invocation;
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
@@ -1460,22 +1457,20 @@ template <typename WorkletType,
           typename P8>
 VTKM_EXEC void DoWorkletInvokeFunctor(
   const WorkletType& worklet,
-  const vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>& invocation,
+  const vtkm::internal::Invocation<ParameterInterface,
+                                   ControlInterface,
+                                   vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8)>,
+                                   InputDomainIndex,
+                                   OutputToInputMapType,
+                                   VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
     Invocation;
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
@@ -1590,22 +1585,20 @@ template <typename WorkletType,
           typename P9>
 VTKM_EXEC void DoWorkletInvokeFunctor(
   const WorkletType& worklet,
-  const vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>& invocation,
+  const vtkm::internal::Invocation<ParameterInterface,
+                                   ControlInterface,
+                                   vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
+                                   InputDomainIndex,
+                                   OutputToInputMapType,
+                                   VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
     Invocation;
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
@@ -1738,22 +1731,20 @@ template <typename WorkletType,
           typename P9>
 VTKM_EXEC void DoWorkletInvokeFunctor(
   const WorkletType& worklet,
-  const vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>& invocation,
+  const vtkm::internal::Invocation<ParameterInterface,
+                                   ControlInterface,
+                                   vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
+                                   InputDomainIndex,
+                                   OutputToInputMapType,
+                                   VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
     Invocation;
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
@@ -1879,22 +1870,20 @@ template <typename WorkletType,
           typename P10>
 VTKM_EXEC void DoWorkletInvokeFunctor(
   const WorkletType& worklet,
-  const vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>& invocation,
+  const vtkm::internal::Invocation<ParameterInterface,
+                                   ControlInterface,
+                                   vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
+                                   InputDomainIndex,
+                                   OutputToInputMapType,
+                                   VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
     Invocation;
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
@@ -1965,7 +1954,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   FetchType10 fetch10;
   typename FetchType10::ValueType p10 =
     fetch10.Load(threadIndices,
-                 invocation.Parameters.template GetParameter<FetchInfo10::ControlParameterIndex>());
+                invocation.Parameters.template GetParameter<FetchInfo10::ControlParameterIndex>());
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
   typedef typename FetchInfo0::type ReturnFetchType;
@@ -2015,8 +2004,8 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                invocation.Parameters.template GetParameter<FetchInfo9::ControlParameterIndex>(),
                p9);
   fetch10.Store(threadIndices,
-                invocation.Parameters.template GetParameter<FetchInfo10::ControlParameterIndex>(),
-                p10);
+               invocation.Parameters.template GetParameter<FetchInfo10::ControlParameterIndex>(),
+               p10);
 }
 
 template <typename WorkletType,
@@ -2038,22 +2027,20 @@ template <typename WorkletType,
           typename P10>
 VTKM_EXEC void DoWorkletInvokeFunctor(
   const WorkletType& worklet,
-  const vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>& invocation,
+  const vtkm::internal::Invocation<ParameterInterface,
+                                   ControlInterface,
+                                   vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
+                                   InputDomainIndex,
+                                   OutputToInputMapType,
+                                   VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-    ParameterInterface,
-    ControlInterface,
-    vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
-    InputDomainIndex,
-    OutputToInputMapType,
-    VisitArrayType>
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
     Invocation;
 
   typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
@@ -2124,7 +2111,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   FetchType10 fetch10;
   typename FetchType10::ValueType p10 =
     fetch10.Load(threadIndices,
-                 invocation.Parameters.template GetParameter<FetchInfo10::ControlParameterIndex>());
+                invocation.Parameters.template GetParameter<FetchInfo10::ControlParameterIndex>());
 
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -2165,9 +2152,11 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                invocation.Parameters.template GetParameter<FetchInfo9::ControlParameterIndex>(),
                p9);
   fetch10.Store(threadIndices,
-                invocation.Parameters.template GetParameter<FetchInfo10::ControlParameterIndex>(),
-                p10);
+               invocation.Parameters.template GetParameter<FetchInfo10::ControlParameterIndex>(),
+               p10);
 }
+
+// clang-format on
 }
 }
 }
