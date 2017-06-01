@@ -42,7 +42,8 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/AverageByKey.h>
 #include <vtkm/filter/FilterField.h>
-namespace vtkm {
+#include <vtkm/filter/Histogram.h>
+/*namespace vtkm {
 namespace filter {
 
 class DivideField : public vtkm::filter::FilterField<DivideField>
@@ -86,7 +87,7 @@ public:
 
 
 }
-}
+}*/
 
 const std::vector<vtkm::filter::ResultField> MultiBlock_WorkletTest();
 
@@ -96,12 +97,11 @@ void TestMultiBlock_Worklet()
   std::cout << "--TestDataSet Uniform and Rectilinear--" << std::endl << std::endl;
   std::vector<vtkm::filter::ResultField> results=MultiBlock_WorkletTest();
   for(std::size_t j=0; j<results.size(); j++)
-  {
+  { std::cout<<"dataset "<<j<<" \n";
     results[j].GetField().PrintSummary(std::cout);
     for(std::size_t i=0; i<results[j].GetField().GetData().GetNumberOfValues(); i++)
     { 
-      vtkm::cont::ArrayHandle<vtkm::Float64, vtkm::cont::StorageTagBasic> array;
-      results[j].GetField().GetData().CopyTo(array);
+      //results[j].GetField().GetData().CopyTo(array);
       //VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == vtkm::Float64(j/2.0), "result incorrect");
     }
 
@@ -149,12 +149,12 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder()
     std::vector<T> varP2D(static_cast<std::size_t>(numPoints));
     for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
     {
-      varP2D[i] = static_cast<T>(trial);
+      varP2D[i] = static_cast<T>((trial-1)*i);
     }
     std::vector<T> varC2D(static_cast<std::size_t>(numCells));
     for (std::size_t i = 0; i < static_cast<std::size_t>(numCells); i++)
     {
-      varC2D[i] = static_cast<T>(trial);
+      varC2D[i] = static_cast<T>(trial*i);
     }
     dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
                                     vtkm::Vec<T,2>(origin[0], origin[1]),
@@ -188,10 +188,10 @@ const std::vector<vtkm::filter::ResultField> MultiBlock_WorkletTest()
   vtkm::cont::MultiBlock Blocks=UniformMultiBlockBuilder<vtkm::Float64>();
   std::vector<vtkm::filter::ResultField> results;
 
-  vtkm::filter::DivideField divider;
-  divider.SetDividerValue(2);
+  vtkm::filter::Histogram histogram;
+  histogram.SetNumberOfBins(10);
   //results = Apply(Blocks,divider,"pointvar");
-  results = divider.Execute(Blocks, std::string("pointvar"));
+  results = histogram.Execute(Blocks, std::string("pointvar"));
   /*for(std::size_t j=100; j<Blocks.GetNumberOfBlocks(); j++)
   {   
     divider.SetDividerValue(2);
