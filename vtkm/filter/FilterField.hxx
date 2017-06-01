@@ -27,6 +27,7 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/cont/MultiBlock.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
@@ -61,6 +62,25 @@ ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
   return this->Execute(input,
                        input.GetField(inFieldName),
                        vtkm::filter::PolicyDefault());
+}
+
+//-----------------------------------------------------------------------------
+template<typename Derived>
+inline VTKM_CONT
+std::vector<vtkm::filter::ResultField> FilterField<Derived>::Execute(const vtkm::cont::MultiBlock &input,
+                                          const std::string &inFieldName)
+{
+  std::vector<vtkm::filter::ResultField> results;
+
+  for(std::size_t j=0; j<input.GetNumberOfBlocks(); j++)
+  { 
+    vtkm::filter::ResultField result = this->Execute(input.GetBlock(j),
+                       input.GetBlock(j).GetField(inFieldName),
+                     vtkm::filter::PolicyDefault());
+    results.push_back(result);
+  }
+  
+  return results;
 }
 
 //-----------------------------------------------------------------------------

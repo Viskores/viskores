@@ -24,6 +24,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/MultiBlock.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/PolicyBase.h>
@@ -60,6 +61,10 @@ public:
 
   VTKM_CONT
   ResultField Execute(const vtkm::cont::DataSet &input, const std::string &inFieldName);
+
+  VTKM_CONT
+  std::vector<vtkm::filter::ResultField> Execute(const vtkm::cont::MultiBlock &input,
+                      const std::string &inFieldName);
 
   VTKM_CONT
   ResultField Execute(const vtkm::cont::DataSet &input, const vtkm::cont::Field &field);
