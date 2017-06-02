@@ -50,7 +50,10 @@ int main()
         continue;
       }
       prev_arch = arch;
-      printf(" --generate-code=arch=compute_%d,code=sm_%d", compute_level, arch);
+
+      //we need to print out a semi-colon as this needs to be output
+      //as a CMake list which is separated by semicolons
+      printf("--generate-code=arch=compute_%d,code=sm_%d;", compute_level, arch);
     }
   }
   return 0;
