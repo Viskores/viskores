@@ -37,11 +37,11 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
     vtkm::filter::ResultDataSet result;
 
-    vtkm::Bounds bounds(1, 3, 1, 3, 0, 0);
+    vtkm::RangeId3 range(1, 4, 1, 4, 0, 1);
     vtkm::Id3 sample(1, 1, 1);
 
     vtkm::filter::ExtractStructured extract;
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
     result = extract.Execute(dataset);
@@ -86,7 +86,7 @@ public:
     vtkm::filter::ExtractStructured extract;
 
     // VOI within dataset
-    extract.SetVOI(1, 3, 1, 3, 1, 3);
+    extract.SetVOI(1, 4, 1, 4, 1, 4);
     extract.SetSampleRate(1, 1, 1);
 
     result = extract.Execute(dataset);
@@ -132,7 +132,7 @@ public:
 
     // VOI surrounds dataset
     vtkm::Id3 minPoint(-1, -1, -1);
-    vtkm::Id3 maxPoint(7, 7, 7);
+    vtkm::Id3 maxPoint(8, 8, 8);
     extract.SetVOI(minPoint, maxPoint);
     extract.SetSampleRate(1, 1, 1);
 
@@ -178,9 +178,9 @@ public:
     vtkm::filter::ExtractStructured extract;
 
     // VOI surrounds dataset
-    vtkm::Bounds bounds(-1, 2, -1, 2, -1, 2);
+    vtkm::RangeId3 range(-1, 3, -1, 3, -1, 3);
     vtkm::Id3 sample(1, 1, 1);
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
     result = extract.Execute(dataset);
@@ -223,10 +223,10 @@ public:
 
     vtkm::filter::ExtractStructured extract;
 
-    // Bounding box intersects dataset on far boundary
-    vtkm::Bounds bounds(1, 7, 1, 7, 1, 7);
+    // RangeId3 intersects dataset on far boundary
+    vtkm::RangeId3 range(1, 8, 1, 8, 1, 8);
     vtkm::Id3 sample(1, 1, 1);
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
     result = extract.Execute(dataset);
@@ -270,10 +270,10 @@ public:
 
     vtkm::filter::ExtractStructured extract;
 
-    // Bounding box intersects dataset without corner
-    vtkm::Bounds bounds(2, 7, 1, 3, 1, 3);
+    // RangeId3 intersects dataset without corner
+    vtkm::RangeId3 range(2, 8, 1, 4, 1, 4);
     vtkm::Id3 sample(1, 1, 1);
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
     result = extract.Execute(dataset);
@@ -317,10 +317,10 @@ public:
 
     vtkm::filter::ExtractStructured extract;
 
-    // Bounding box intersects dataset with plane
-    vtkm::Bounds bounds(2, 7, 1, 1, 1, 3);
+    // RangeId3 intersects dataset with plane
+    vtkm::RangeId3 range(2, 8, 1, 2, 1, 4);
     vtkm::Id3 sample(1, 1, 1);
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
     result = extract.Execute(dataset);
@@ -363,10 +363,10 @@ public:
 
     vtkm::filter::ExtractStructured extract;
 
-    // Bounding box within data set with sampling
-    vtkm::Bounds bounds(0, 4, 0, 4, 1, 3);
+    // RangeId3 within data set with sampling
+    vtkm::RangeId3 range(0, 5, 0, 5, 1, 4);
     vtkm::Id3 sample(2, 2, 1);
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
     result = extract.Execute(dataset);
@@ -409,10 +409,10 @@ public:
 
     vtkm::filter::ExtractStructured extract;
 
-    // Bounding box within data set with sampling
-    vtkm::Bounds bounds(0, 4, 0, 4, 1, 3);
+    // RangeId3 within data set with sampling
+    vtkm::RangeId3 range(0, 5, 0, 5, 1, 4);
     vtkm::Id3 sample(3, 3, 2);
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
     result = extract.Execute(dataset);
@@ -454,10 +454,10 @@ public:
 
     vtkm::filter::ExtractStructured extract;
 
-    // Bounding box within data set with sampling
-    vtkm::Bounds bounds(0, 4, 0, 4, 1, 3);
+    // RangeId3 within data set with sampling
+    vtkm::RangeId3 range(0, 5, 0, 5, 1, 4);
     vtkm::Id3 sample(3, 3, 2);
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
     extract.SetIncludeBoundary(true);
 
@@ -503,10 +503,10 @@ public:
 
     vtkm::filter::ExtractStructured extract;
 
-    // Bounds
-    vtkm::Bounds bounds(0, 1, 0, 1, 0, 0);
+    // RangeId3
+    vtkm::RangeId3 range(0, 2, 0, 2, 0, 1);
     vtkm::Id3 sample(1, 1, 1);
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
     result = extract.Execute(dataset);
@@ -547,11 +547,10 @@ public:
 
     vtkm::filter::ExtractStructured extract;
 
-    // Bounds and subsample
-    vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
+    // RangeId3 and subsample
+    vtkm::RangeId3 range(0, 2, 0, 2, 0, 2);
     vtkm::Id3 sample(1, 1, 1);
-
-    extract.SetVOI(bounds);
+    extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
     result = extract.Execute(dataset);

@@ -40,6 +40,8 @@ set(headers
   NewtonsMethod.h
   Pair.h
   Range.h
+  RangeId.h
+  RangeId3.h
   StaticAssert.h
   TopologyElementTag.h
   Transform3D.h

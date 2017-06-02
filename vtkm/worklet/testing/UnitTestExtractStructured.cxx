@@ -20,7 +20,6 @@
 
 #include <vtkm/worklet/ExtractStructured.h>
 
-#include <vtkm/Bounds.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -33,7 +32,7 @@ class TestingExtractStructured
 public:
   void TestUniform2D() const
   {
-    std::cout << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform 2D" << std::endl;
     typedef vtkm::cont::CellSetStructured<2> CellSetType;
 
     // Create the input uniform cell set
@@ -41,24 +40,23 @@ public:
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
-    // Bounds and subsample
-    vtkm::Bounds bounds(1, 3, 1, 3, 0, 0);
+    // RangeId3 and subsample
+    vtkm::RangeId3 range(1, 4, 1, 4, 0, 1);
     vtkm::Id3 sample(1, 1, 1);
     bool includeBoundary = false;
 
     vtkm::worklet::ExtractStructured worklet;
-    vtkm::cont::DataSet outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds, sample, includeBoundary, DeviceAdapter());
+    auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, DeviceAdapter());
 
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 9),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 9),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 4),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
   }
 
   void TestUniform3D() const
   {
-    std::cout << "Testing extract structured uniform" << std::endl;
+    std::cout << "Testing extract structured uniform 3D" << std::endl;
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
 
     // Create the input uniform cell set
@@ -67,63 +65,57 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     vtkm::worklet::ExtractStructured worklet;
-    vtkm::cont::DataSet outDataSet;
+    vtkm::worklet::ExtractStructured::DynamicCellSetStructured outCellSet;
 
-    // Bounding box within dataset
-    vtkm::Bounds bounds0(1, 3, 1, 3, 1, 3);
+    // RangeId3 within dataset
+    vtkm::RangeId3 range0(1, 4, 1, 4, 1, 4);
     vtkm::Id3 sample(1, 1, 1);
     bool includeBoundary = false;
 
-    outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds0, sample, includeBoundary, DeviceAdapter());
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 27),
+    outCellSet = worklet.Run(cellSet, range0, sample, includeBoundary, DeviceAdapter());
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 8),
-                     "Wrong result for ExtractStructured worklet");
-
-    // Bounding box surrounds dataset
-    vtkm::Bounds bounds1(-1, 7, -1, 7, -1, 7);
-    outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds1, sample, includeBoundary, DeviceAdapter());
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 125),
-                     "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 64),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
-    // Bounding box intersects dataset on near boundary
-    vtkm::Bounds bounds2(-1, 2, -1, 2, -1, 2);
-    outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds2, sample, includeBoundary, DeviceAdapter());
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 27),
+    // RangeId3 surrounds dataset
+    vtkm::RangeId3 range1(-1, 8, -1, 8, -1, 8);
+    outCellSet = worklet.Run(cellSet, range1, sample, includeBoundary, DeviceAdapter());
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 125),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 8),
-                     "Wrong result for ExtractStructured worklet");
-
-    // Bounding box intersects dataset on far boundary
-    vtkm::Bounds bounds3(1, 7, 1, 7, 1, 7);
-    outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds3, sample, includeBoundary, DeviceAdapter());
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 64),
-                     "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 27),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 64),
                      "Wrong result for ExtractStructured worklet");
 
-    // Bounding box intersects dataset without corner
-    vtkm::Bounds bounds4(2, 7, 1, 3, 1, 3);
-    outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds4, sample, includeBoundary, DeviceAdapter());
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 27),
+    // RangeId3 intersects dataset on near boundary
+    vtkm::RangeId3 range2(-1, 3, -1, 3, -1, 3);
+    outCellSet = worklet.Run(cellSet, range2, sample, includeBoundary, DeviceAdapter());
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 8),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
-    // Bounding box intersects dataset with plane
-    vtkm::Bounds bounds5(2, 7, 1, 1, 1, 3);
-    outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds5, sample, includeBoundary, DeviceAdapter());
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 9),
+    // RangeId3 intersects dataset on far boundary
+    vtkm::RangeId3 range3(1, 8, 1, 8, 1, 8);
+    outCellSet = worklet.Run(cellSet, range3, sample, includeBoundary, DeviceAdapter());
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 64),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 4),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 27),
+                     "Wrong result for ExtractStructured worklet");
+
+    // RangeId3 intersects dataset without corner
+    vtkm::RangeId3 range4(2, 8, 1, 4, 1, 4);
+    outCellSet = worklet.Run(cellSet, range4, sample, includeBoundary, DeviceAdapter());
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 27),
+                     "Wrong result for ExtractStructured worklet");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8),
+                     "Wrong result for ExtractStructured worklet");
+
+    // RangeId3 intersects dataset with plane
+    vtkm::RangeId3 range5(2, 8, 1, 2, 1, 4);
+    outCellSet = worklet.Run(cellSet, range5, sample, includeBoundary, DeviceAdapter());
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 9),
+                     "Wrong result for ExtractStructured worklet");
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
   }
 
@@ -138,45 +130,42 @@ public:
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
     vtkm::worklet::ExtractStructured worklet;
-    vtkm::cont::DataSet outDataSet;
+    vtkm::worklet::ExtractStructured::DynamicCellSetStructured outCellSet;
 
-    // Bounding box within data set with sampling
-    vtkm::Bounds bounds0(0, 4, 0, 4, 1, 3);
+    // RangeId3 within data set with sampling
+    vtkm::RangeId3 range0(0, 5, 0, 5, 1, 4);
     vtkm::Id3 sample0(2, 2, 1);
     bool includeBoundary0 = false;
 
-    outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds0, sample0, includeBoundary0, DeviceAdapter());
+    outCellSet = worklet.Run(cellSet, range0, sample0, includeBoundary0, DeviceAdapter());
 
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 27),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 8),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8),
                      "Wrong result for ExtractStructured worklet");
 
-    // Bounds and subsample
-    vtkm::Bounds bounds1(0, 4, 0, 4, 1, 3);
+    // RangeId3 and subsample
+    vtkm::RangeId3 range1(0, 5, 0, 5, 1, 4);
     vtkm::Id3 sample1(3, 3, 2);
     bool includeBoundary1 = false;
 
-    outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds1, sample1, includeBoundary1, DeviceAdapter());
+    outCellSet = worklet.Run(cellSet, range1, sample1, includeBoundary1, DeviceAdapter());
 
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 8),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 8),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 1),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 1),
                      "Wrong result for ExtractStructured worklet");
 
-    // Bounds and subsample
-    vtkm::Bounds bounds2(0, 4, 0, 4, 1, 3);
+    // RangeId3 and subsample
+    vtkm::RangeId3 range2(0, 5, 0, 5, 1, 4);
     vtkm::Id3 sample2(3, 3, 2);
     bool includeBoundary2 = true;
 
-    outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds2, sample2, includeBoundary2, DeviceAdapter());
+    outCellSet = worklet.Run(cellSet, range2, sample2, includeBoundary2, DeviceAdapter());
 
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 18),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 18),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 4),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 4),
                      "Wrong result for ExtractStructured worklet");
   }
 
@@ -190,19 +179,18 @@ public:
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
-    // Bounds and subsample
-    vtkm::Bounds bounds(0, 1, 0, 1, 0, 0);
+    // RangeId3 and subsample
+    vtkm::RangeId3 range(0, 2, 0, 2, 0, 1);
     vtkm::Id3 sample(1, 1, 1);
     bool includeBoundary = false;
 
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
-    vtkm::cont::DataSet outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds, sample, includeBoundary, DeviceAdapter());
+    auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, DeviceAdapter());
 
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 4),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 4),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 1),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 1),
                      "Wrong result for ExtractStructured worklet");
   }
 
@@ -216,19 +204,18 @@ public:
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
 
-    // Bounds and subsample
-    vtkm::Bounds bounds(0, 1, 0, 1, 0, 1);
+    // RangeId3 and subsample
+    vtkm::RangeId3 range(0, 2, 0, 2, 0, 2);
     vtkm::Id3 sample(1, 1, 1);
     bool includeBoundary = false;
 
     // Extract subset
     vtkm::worklet::ExtractStructured worklet;
-    vtkm::cont::DataSet outDataSet = worklet.Run(
-      cellSet, dataSet.GetCoordinateSystem(0), bounds, sample, includeBoundary, DeviceAdapter());
+    auto outCellSet = worklet.Run(cellSet, range, sample, includeBoundary, DeviceAdapter());
 
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfPoints(), 8),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfPoints(), 8),
                      "Wrong result for ExtractStructured worklet");
-    VTKM_TEST_ASSERT(test_equal(outDataSet.GetCellSet(0).GetNumberOfCells(), 1),
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 1),
                      "Wrong result for ExtractStructured worklet");
   }
 
