@@ -128,34 +128,90 @@ def getValue(key, db) :
     #print key, val
     return ',%d'%val
 
+def getFactor(key, key0, db) :
+    val = -1
+    if key in db.keys() and key0 in db.keys() :
+        v = db[key]
+        v0 = db[key0]
+        if v0 > 0 :
+            val = float(db[key]) / float(db[key0])
+    return ',%4.2f'%val
+
+def findSID(k0, db) :
+    sid = 0
+    for s in params['seeds'] :
+        k = (k0[0],k0[1],s,k0[3],k0[4],k0[5])
+        if k in db.keys() and db[k] > 0 :
+            return sid
+        else:
+            sid = sid+1
+    return 0
+
 def printCompare(tD, sD, rcD, rgD, ptype, fname) :
     fp = open(fname, 'w')
-    fp.write('FILE,DIST,SEEDS,STYPE,,TGPU,TCPU,SGPU,SCPU,R1GPU,R1CPU,R2CPU\n')
+    header = 'FILE,DIST,SEEDS,STYPE,,TGPU,FAC,TCPU,FAC,SGPU,FAC,SCPU,FAC,R1GPU,FAC,R1CPU,FAC,R2CPU,FAC\n'
     for f in params['files'] :
         for t in params['term'] :
             for st in params['sType'] :
+                fp.write(header)
                 for s in params['seeds'] :
                     data = '%s,%s,%d,%s,' % (f[:-4], t,s,st)
                     
                     ##Titan
-                    data = data + getValue((f,'GPU',s,t,ptype, st),tD)
-                    data = data + getValue((f,'TBB_16',s,t,ptype, st),tD)
+                    for a in ['GPU', 'TBB_16'] :
+                        data = data + getValue((f,a,s,t,ptype, st),tD)
+                        sid = findSID((f,a,s,t,ptype, st),tD)
+                        data = data + getFactor((f,a,s,t,ptype, st),(f,a,params['seeds'][sid],t,ptype, st),tD)
 
                     ##Summit
-                    data = data + getValue((f,'GPU',s,t,ptype, st),sD)
-                    data = data + getValue((f,'TBB_20',s,t,ptype, st),sD)
+                    for a in ['GPU', 'TBB_20'] :
+                        data = data + getValue((f,a,s,t,ptype, st),sD)
+                        sid = findSID((f,a,s,t,ptype, st),sD)                        
+                        data = data + getFactor((f,a,s,t,ptype, st),(f,a,params['seeds'][sid],t,ptype, st),sD)
 
                     ##RheaG
-                    data = data + getValue((f,'GPU',s,t,ptype, st),rgD)
-                    data = data + getValue((f,'TBB_28',s,t,ptype, st),rgD)
+                    for a in ['GPU', 'TBB_28']:
+                        data = data + getValue((f,a,s,t,ptype, st),rgD)
+                        sid = findSID((f,a,s,t,ptype, st),rgD)
+                        data = data + getFactor((f,a,s,t,ptype, st),(f,a,params['seeds'][sid],t,ptype, st),rgD)
+
 
                     ##RheaC
-                    data = data + getValue((f,'TBB_16',s,t,ptype, st),rcD)
+                    for a in ['TBB_16'] :
+                        data = data + getValue((f,a,s,t,ptype, st),rcD)
+                        sid = findSID((f,a,s,t,ptype, st),rcD)                        
+                        data = data + getFactor((f,a,s,t,ptype, st),(f,a,params['seeds'][sid],t,ptype, st),rcD)
 
                     fp.write('%s\n'%data)
             fp.write('\n')
         fp.write('\n')
     fp.close()
+
+def printTBBScaling(db, N, ptype, fname) :
+    fp = open(fname, 'w')
+    header = 'FILE,DIST,SEEDS,LOG(S),STYPE,NTHREADS,TIME,SCALING,EFFICIENCY\n'
+    fp.write(header)
+    for f in params['files'] :
+        for t in params['term'] :
+            for st in params['sType'] :
+                for s in params['seeds'] :
+                    if s < 1000 : continue
+                    t_n1 = -1
+                    for n in range(N+1) :
+                        key = (f,'TBB_%d'%n,s,t,ptype,st)
+                        if key in db.keys() :
+                            val = db[key]
+                            if n == 1 :
+                                t_n1 = val
+                            if t_n1 > 0 : scaling = float(t_n1) / float(val)
+                            else: scaling = 0.0
+                            eff = scaling/float(n)
+                                
+                            fp.write('%s,%s,%d,%d,%s,%d,%d,%6.4f,%6.4f\n'%(f[:-4],t,s,math.log10(s),st,n,val,scaling,eff))
+#                    fp.write(header)
+                    fp.write('\n')
+
+
 
 def printMachineFile(db, alg, ptype, fname) :
     fp = open(fname, 'w')
@@ -192,6 +248,12 @@ summitRaw = rawData('summit.pickle')
 rheaCRaw = rawData('rhea.pickle')
 rheaGRaw = rawData('rheaGPU.pickle')
 
+printTBBScaling(rheaCRaw, 16, 'particle', 'rheaCTBBScale.txt')
+printTBBScaling(rheaGRaw, 28, 'particle', 'rheaGTBBScale.txt')
+printTBBScaling(titanRaw, 16, 'particle', 'titanTBBScale.txt')
+printTBBScaling(summitRaw, 20, 'particle', 'summitTBBScale.txt')
+sys.exit()
+
 printCompare(titanRaw, summitRaw, rheaCRaw, rheaGRaw, 'particle', 'particle.txt')
 printCompare(titanRaw, summitRaw, rheaCRaw, rheaGRaw, 'streamline -1', 'streamline.txt')
 printCompare(titanRaw, summitRaw, rheaCRaw, rheaGRaw, 'streamline 100', 'streamline_100.txt')
@@ -201,6 +263,7 @@ printMachineFile(titanRaw, 'TBB_16', 'particle', 'titanTBB.csv')
 printMachineFile(titanRaw, 'GPU', 'particle', 'titanGPU.csv')
 printMachineFile(summitRaw, 'GPU', 'particle', 'summitGPU.csv')
 printMachineFile(summitRaw, 'TBB_20', 'particle', 'summitTBB.csv')
+
 sys.exit()
 
 key = ('astro.bov', 'TBB_16', 100000, 'short', 'particle')
