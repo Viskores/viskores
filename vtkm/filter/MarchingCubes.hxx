@@ -20,6 +20,7 @@
 
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetSingleType.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -170,17 +171,24 @@ inline VTKM_CONT bool MarchingCubes::DoMapField(
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
-  if (fieldMeta.IsPointField() == false)
+  vtkm::cont::ArrayHandle<T> fieldArray;
+
+  if (fieldMeta.IsPointField())
   {
-    //not a point field, we can't map it
+    fieldArray = this->Worklet.ProcessPointField(input, device);
+  }
+  else if (fieldMeta.IsCellField())
+  {
+    fieldArray = this->Worklet.ProcessCellField(input, device);
+  }
+  else
+  {
     return false;
   }
 
-  vtkm::cont::ArrayHandle<T> output;
-  this->Worklet.MapFieldOntoIsosurface(input, output, device);
-
   //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField(fieldMeta.AsField(output));
+  result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
+
   return true;
 }
 }
