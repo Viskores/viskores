@@ -50,6 +50,7 @@ set(headers
   ScatterIdentity.h
   ScatterUniform.h
   StreamLineUniformGrid.h
+  SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h

@@ -37,6 +37,7 @@ set(unit_tests
   UnitTestMaskPointsFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
+  UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx
   UnitTestThresholdPointsFilter.cxx

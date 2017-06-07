@@ -42,6 +42,7 @@ set(unit_tests
   UnitTestSplatKernels.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
+  UnitTestSurfaceNormals.cxx
   UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
   UnitTestThresholdPoints.cxx
