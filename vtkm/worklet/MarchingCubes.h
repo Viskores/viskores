@@ -798,7 +798,6 @@ private:
       contourIds.ReleaseResources();
     }
 
-    vtkm::cont::DataSet output;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     if (this->MergeDuplicatePoints)
     {
