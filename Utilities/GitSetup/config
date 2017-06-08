@@ -1,0 +1,10 @@
+[hooks]
+	url = https://gitlab.kitware.com/utils/gitsetup.git
+[upstream]
+	url = https://gitlab.kitware.com/vtk/vtk-m.git
+[gitlab]
+	host = gitlab.kitware.com
+	group-path = vtk
+	group-name = VTK
+	project-path = vtk-m
+	project-name = VTK-m
