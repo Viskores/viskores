@@ -715,6 +715,9 @@ public:
     return result;
   }
 
+  //----------------------------------------------------------------------------
+  void ReleaseCellMapArrays() { this->CellIdMap.ReleaseResources(); }
+
 private:
   //----------------------------------------------------------------------------
   template <typename ValueType,
@@ -870,10 +873,11 @@ private:
   vtkm::cont::ArrayHandle<vtkm::IdComponent> EdgeTable;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> NumTrianglesTable;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> TriangleTable;
-  vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> InterpolationWeights;
   vtkm::cont::ArrayHandle<vtkm::Id2> InterpolationEdgeIds;
+
+  vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
 };
 }
 } // namespace vtkm::worklet
