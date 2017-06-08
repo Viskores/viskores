@@ -47,6 +47,7 @@ set(headers
   ResultBase.h
   ResultDataSet.h
   ResultField.h
+  SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
   ThresholdPoints.h
@@ -77,6 +78,7 @@ set(header_template_sources
   MaskPoints.hxx
   PointAverage.hxx
   PointElevation.hxx
+  SurfaceNormals.h
   Tetrahedralize.hxx
   Threshold.hxx
   ThresholdPoints.hxx
