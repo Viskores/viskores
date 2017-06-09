@@ -353,7 +353,7 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-class ApplyToField : public vtkm::worklet::WorkletMapField
+class MapPointField : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn<Id2Type> interpolation_ids,
@@ -364,7 +364,7 @@ public:
   typedef _1 InputDomain;
 
   VTKM_CONT
-  ApplyToField() {}
+  MapPointField() {}
 
   template <typename WeightType, typename InFieldPortalType, typename OutFieldType>
   VTKM_EXEC void operator()(const vtkm::Id2& low_high,
@@ -681,20 +681,42 @@ public:
   }
 
   //----------------------------------------------------------------------------
-  template <typename ArrayHandleIn, typename ArrayHandleOut, typename DeviceAdapter>
-  void MapFieldOntoIsosurface(const ArrayHandleIn& input,
-                              ArrayHandleOut& output,
-                              const DeviceAdapter&)
+  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input,
+    const DeviceAdapter&) const
   {
-    using vtkm::worklet::marchingcubes::ApplyToField;
-    ApplyToField applyToField;
-    vtkm::worklet::DispatcherMapField<ApplyToField, DeviceAdapter> applyFieldDispatcher(
+    using vtkm::worklet::marchingcubes::MapPointField;
+    MapPointField applyToField;
+    vtkm::worklet::DispatcherMapField<MapPointField, DeviceAdapter> applyFieldDispatcher(
       applyToField);
 
-    //todo: need to use the policy to get the correct storage tag for output
+    vtkm::cont::ArrayHandle<ValueType> output;
     applyFieldDispatcher.Invoke(
       this->InterpolationEdgeIds, this->InterpolationWeights, input, output);
+    return output;
   }
+
+  //----------------------------------------------------------------------------
+  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& in,
+    const DeviceAdapter&) const
+  {
+    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+
+    // Use a temporary permutation array to simplify the mapping:
+    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->CellIdMap, in);
+
+    // Copy into an array with default storage:
+    vtkm::cont::ArrayHandle<ValueType> result;
+    Algo::Copy(tmp, result);
+
+    return result;
+  }
+
+  //----------------------------------------------------------------------------
+  void ReleaseCellMapArrays() { this->CellIdMap.ReleaseResources(); }
 
 private:
   //----------------------------------------------------------------------------
@@ -718,7 +740,7 @@ private:
     bool withNormals,
     const DeviceAdapter&)
   {
-    using vtkm::worklet::marchingcubes::ApplyToField;
+    using vtkm::worklet::marchingcubes::MapPointField;
     using vtkm::worklet::marchingcubes::EdgeWeightGenerate;
     using vtkm::worklet::marchingcubes::EdgeWeightGenerateMetaData;
     using vtkm::worklet::marchingcubes::ClassifyCell;
@@ -747,15 +769,18 @@ private:
 
     //Pass 2 Generate the edges
     vtkm::cont::ArrayHandle<vtkm::UInt8> contourIds;
-    vtkm::cont::ArrayHandle<vtkm::Id> originalCellIds;
+    vtkm::cont::ArrayHandle<vtkm::Id> originalCellIdsForPoints;
     {
       vtkm::worklet::ScatterCounting scatter(numOutputTrisPerCell, DeviceAdapter());
+
+      // Maps output cells to input cells. Store this for cell field mapping.
+      this->CellIdMap = scatter.GetOutputToInputMap();
 
       EdgeWeightGenerateMetaData<DeviceAdapter> metaData(
         scatter.GetOutputRange(numOutputTrisPerCell.GetNumberOfValues()),
         this->InterpolationWeights,
         this->InterpolationEdgeIds,
-        originalCellIds,
+        originalCellIdsForPoints,
         contourIds,
         this->EdgeTable,
         this->NumTrianglesTable,
@@ -776,7 +801,6 @@ private:
       contourIds.ReleaseResources();
     }
 
-    vtkm::cont::DataSet output;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
     if (this->MergeDuplicatePoints)
     {
@@ -789,7 +813,7 @@ private:
         marchingcubes::MergeDuplicates(this->InterpolationEdgeIds, //keys
                                        this->InterpolationWeights, //values
                                        this->InterpolationEdgeIds, //values
-                                       originalCellIds,            //values
+                                       originalCellIdsForPoints,   //values
                                        connectivity,               // computed using lower bounds
                                        DeviceAdapter());
       }
@@ -799,7 +823,7 @@ private:
           vtkm::cont::make_ArrayHandleZip(contourIds, this->InterpolationEdgeIds), //keys
           this->InterpolationWeights,                                              //values
           this->InterpolationEdgeIds,                                              //values
-          originalCellIds,                                                         //values
+          originalCellIdsForPoints,                                                //values
           connectivity, // computed using lower bounds
           DeviceAdapter());
       }
@@ -815,8 +839,8 @@ private:
     }
 
     //generate the vertices's
-    ApplyToField applyToField;
-    vtkm::worklet::DispatcherMapField<ApplyToField, DeviceAdapter> applyFieldDispatcher(
+    MapPointField applyToField;
+    vtkm::worklet::DispatcherMapField<MapPointField, DeviceAdapter> applyFieldDispatcher(
       applyToField);
 
     applyFieldDispatcher.Invoke(
@@ -834,7 +858,7 @@ private:
       GenNormals gen(normals,
                      inputField,
                      coordinateSystem,
-                     originalCellIds,
+                     originalCellIdsForPoints,
                      this->InterpolationEdgeIds,
                      this->InterpolationWeights);
 
@@ -852,6 +876,8 @@ private:
 
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> InterpolationWeights;
   vtkm::cont::ArrayHandle<vtkm::Id2> InterpolationEdgeIds;
+
+  vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
 };
 }
 } // namespace vtkm::worklet

@@ -20,6 +20,7 @@
 
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetSingleType.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -100,6 +101,20 @@ inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
     return vtkm::filter::ResultDataSet();
   }
 
+  // Check the fields of the dataset to see what kinds of fields are present so
+  // we can free the mapping arrays that won't be needed. A point field must
+  // exist for this algorithm, so just check cells.
+  const vtkm::Id numFields = input.GetNumberOfFields();
+  bool hasCellFields = false;
+  for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
+  {
+    auto f = input.GetField(fieldIdx);
+    if (f.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET)
+    {
+      hasCellFields = true;
+    }
+  }
+
   //get the cells and coordinates of the dataset
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
@@ -158,6 +173,11 @@ inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
   vtkm::cont::CoordinateSystem outputCoords("coordinates", vertices);
   output.AddCoordinateSystem(outputCoords);
 
+  if (!hasCellFields)
+  {
+    this->Worklet.ReleaseCellMapArrays();
+  }
+
   return vtkm::filter::ResultDataSet(output);
 }
 
@@ -170,17 +190,24 @@ inline VTKM_CONT bool MarchingCubes::DoMapField(
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
-  if (fieldMeta.IsPointField() == false)
+  vtkm::cont::ArrayHandle<T> fieldArray;
+
+  if (fieldMeta.IsPointField())
   {
-    //not a point field, we can't map it
+    fieldArray = this->Worklet.ProcessPointField(input, device);
+  }
+  else if (fieldMeta.IsCellField())
+  {
+    fieldArray = this->Worklet.ProcessCellField(input, device);
+  }
+  else
+  {
     return false;
   }
 
-  vtkm::cont::ArrayHandle<T> output;
-  this->Worklet.MapFieldOntoIsosurface(input, output, device);
-
   //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField(fieldMeta.AsField(output));
+  result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
+
   return true;
 }
 }

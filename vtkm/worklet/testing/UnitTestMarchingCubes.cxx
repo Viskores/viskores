@@ -93,11 +93,14 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::FloatDefault mins[3] = { -1.0f, -1.0f, -1.0f };
   vtkm::FloatDefault maxs[3] = { 1.0f, 1.0f, 1.0f };
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
+  vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
   vtkm::cont::ArrayHandleIndex vertexCountImplicitArray(vdims[0] * vdims[1] * vdims[2]);
   vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(
     TangleField(vdims, mins, maxs));
-  tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
+  tangleFieldDispatcher.Invoke(vertexCountImplicitArray, pointFieldArray);
+
+  vtkm::Id numCells = dims[0] * dims[1] * dims[2];
+  auto cellFieldArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numCells);
 
   vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
   vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
@@ -107,12 +110,14 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
-  dataSet.AddField(vtkm::cont::Field("nodevar", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
-
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
   cellSet.SetPointDimensions(vdims);
   dataSet.AddCellSet(cellSet);
+
+  dataSet.AddField(vtkm::cont::Field("nodevar", vtkm::cont::Field::ASSOC_POINTS, pointFieldArray));
+  dataSet.AddField(
+    vtkm::cont::Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellFieldArray));
 
   return dataSet;
 }
@@ -243,6 +248,8 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   DataArrayHandle distanceToOrigin(coordinates);
   DataArrayHandle distanceToOther(coordinates, EuclideanNorm(CoordType(1., 1., 1.)));
 
+  auto cellFieldArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, nCells);
+
   ConnectivityArrayHandle connectivity(
     vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, nCells * HexTraits::NUM_POINTS),
     CubeGridConnectivity(dim));
@@ -262,6 +269,9 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
   dataSet.AddCellSet(cellSet);
 
+  dataSet.AddField(
+    vtkm::cont::Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellFieldArray));
+
   return dataSet;
 }
 
@@ -277,8 +287,10 @@ void TestMarchingCubesUniformGrid()
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
   vtkm::cont::CellSetStructured<3> cellSet;
   dataSet.GetCellSet().CopyTo(cellSet);
-  vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  dataSet.GetField("nodevar").GetData().CopyTo(fieldArray);
+  vtkm::cont::ArrayHandle<vtkm::Float32> pointFieldArray;
+  dataSet.GetField("nodevar").GetData().CopyTo(pointFieldArray);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> cellFieldArray;
+  dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
   vtkm::worklet::MarchingCubes isosurfaceFilter;
   isosurfaceFilter.SetMergeDuplicatePoints(false);
@@ -287,16 +299,20 @@ void TestMarchingCubesUniformGrid()
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verticesArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> normalsArray;
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
-  isosurfaceFilter.Run(&contourValue,
-                       1,
-                       cellSet,
-                       dataSet.GetCoordinateSystem(),
-                       fieldArray,
-                       verticesArray,
-                       normalsArray,
-                       DeviceAdapter());
 
-  isosurfaceFilter.MapFieldOntoIsosurface(fieldArray, scalarsArray, DeviceAdapter());
+  auto result = isosurfaceFilter.Run(&contourValue,
+                                     1,
+                                     cellSet,
+                                     dataSet.GetCoordinateSystem(),
+                                     pointFieldArray,
+                                     verticesArray,
+                                     normalsArray,
+                                     DeviceAdapter());
+
+  scalarsArray = isosurfaceFilter.ProcessPointField(pointFieldArray, DeviceAdapter());
+
+  vtkm::cont::ArrayHandle<vtkm::Id> cellFieldArrayOut;
+  cellFieldArrayOut = isosurfaceFilter.ProcessCellField(cellFieldArray, DeviceAdapter());
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(verticesArray, std::cout);
@@ -307,6 +323,12 @@ void TestMarchingCubesUniformGrid()
   std::cout << "scalars: ";
   vtkm::cont::printSummary_ArrayHandle(scalarsArray, std::cout);
   std::cout << std::endl;
+  std::cout << "cell field: ";
+  vtkm::cont::printSummary_ArrayHandle(cellFieldArrayOut, std::cout);
+  std::cout << std::endl;
+
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues(),
+                   "Output cell data invalid");
 
   VTKM_TEST_ASSERT(test_equal(verticesArray.GetNumberOfValues(), 480),
                    "Wrong result for Isosurface filter");
@@ -340,14 +362,14 @@ void TestMarchingCubesExplicit()
   vtkm::worklet::MarchingCubes marchingCubes;
   marchingCubes.SetMergeDuplicatePoints(false);
 
-  marchingCubes.Run(&contourValue,
-                    1,
-                    cellSet,
-                    dataSet.GetCoordinateSystem(),
-                    contourArray,
-                    vertices,
-                    normals,
-                    DeviceAdapter());
+  auto result = marchingCubes.Run(&contourValue,
+                                  1,
+                                  cellSet,
+                                  dataSet.GetCoordinateSystem(),
+                                  contourArray,
+                                  vertices,
+                                  normals,
+                                  DeviceAdapter());
 
   DataHandle scalars;
 
@@ -356,7 +378,13 @@ void TestMarchingCubesExplicit()
   DataSetGenerator::DataArrayHandle projectedArray;
   projectedField.GetData().CopyTo(projectedArray);
 
-  marchingCubes.MapFieldOntoIsosurface(projectedArray, scalars, DeviceAdapter());
+  scalars = marchingCubes.ProcessPointField(projectedArray, DeviceAdapter());
+
+  vtkm::cont::ArrayHandle<vtkm::Id> cellFieldArray;
+  dataSet.GetField("cellvar").GetData().CopyTo(cellFieldArray);
+
+  vtkm::cont::ArrayHandle<vtkm::Id> cellFieldArrayOut;
+  cellFieldArrayOut = marchingCubes.ProcessCellField(cellFieldArray, DeviceAdapter());
 
   std::cout << "vertices: ";
   vtkm::cont::printSummary_ArrayHandle(vertices, std::cout);
@@ -367,7 +395,12 @@ void TestMarchingCubesExplicit()
   std::cout << "scalars: ";
   vtkm::cont::printSummary_ArrayHandle(scalars, std::cout);
   std::cout << std::endl;
+  std::cout << "cell field: ";
+  vtkm::cont::printSummary_ArrayHandle(cellFieldArrayOut, std::cout);
+  std::cout << std::endl;
 
+  VTKM_TEST_ASSERT(result.GetNumberOfCells() == cellFieldArrayOut.GetNumberOfValues(),
+                   "Output cell data invalid");
   VTKM_TEST_ASSERT(test_equal(vertices.GetNumberOfValues(), 2472),
                    "Wrong vertices result for MarchingCubes filter");
   VTKM_TEST_ASSERT(test_equal(normals.GetNumberOfValues(), 2472),
