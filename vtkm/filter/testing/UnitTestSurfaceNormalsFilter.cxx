@@ -25,21 +25,12 @@
 namespace
 {
 
-void TestSurfaceNormals()
+void VerifyCellNormalValues(const vtkm::cont::DataSet& ds)
 {
-  vtkm::cont::DataSet ds = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
-
-  vtkm::filter::SurfaceNormals filter;
-  auto result = filter.Execute(ds);
-
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "normals", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
-                   "Field was given the wrong association.");
-
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
-  result.FieldAs(normals);
+  ds.GetField("Normals", vtkm::cont::Field::ASSOC_CELL_SET).GetData().CopyTo(normals);
 
-  vtkm::Vec<vtkm::FloatDefault, 3> expNormals[8] = {
+  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
     { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f }, { 0.707f, 0.500f, -0.500f },
     { 0.000f, -0.707f, -0.707f }, { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
     { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f }
@@ -49,9 +40,63 @@ void TestSurfaceNormals()
   VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
   for (vtkm::Id i = 0; i < 8; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(portal.Get(i), expNormals[i], 0.001),
+    VTKM_TEST_ASSERT(test_equal(portal.Get(i), expected[i], 0.001),
                      "result does not match expected value");
   }
+}
+
+void VerifyPointNormalValues(const vtkm::cont::DataSet& ds)
+{
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
+  ds.GetField("Normals", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(normals);
+
+  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
+    { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
+    { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
+    { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
+    { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f }
+  };
+
+  auto portal = normals.GetPortalConstControl();
+  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
+  for (vtkm::Id i = 0; i < 8; ++i)
+  {
+    VTKM_TEST_ASSERT(test_equal(portal.Get(i), expected[i], 0.001),
+                     "result does not match expected value");
+  }
+}
+
+void TestSurfaceNormals()
+{
+  vtkm::cont::DataSet ds = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
+
+  vtkm::filter::SurfaceNormals filter;
+  vtkm::filter::ResultField result;
+
+  std::cout << "testing default output (generate only point normals):\n";
+  result = filter.Execute(ds);
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "Normals", "Field was given the wrong name.");
+  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
+                   "Field was given the wrong association.");
+
+  std::cout << "generate only cell normals:\n";
+  filter.SetGenerateCellNormals(true);
+  filter.SetGeneratePointNormals(false);
+  result = filter.Execute(ds);
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "Normals", "Field was given the wrong name.");
+  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
+                   "Field was given the wrong association.");
+
+  std::cout << "generate both cell and point normals:\n";
+  filter.SetGeneratePointNormals(true);
+  result = filter.Execute(ds);
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "Normals", "Field was given the wrong name.");
+  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
+                   "Field was given the wrong association.");
+
+  std::cout << "test result values:\n";
+  VerifyPointNormalValues(result.GetDataSet());
+  VerifyCellNormalValues(result.GetDataSet());
 }
 
 } // anonymous namespace

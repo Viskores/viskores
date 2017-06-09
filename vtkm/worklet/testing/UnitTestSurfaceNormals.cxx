@@ -26,34 +26,68 @@
 namespace
 {
 
-void TestFacetedSurfaceNormals()
+using NormalsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+
+void TestFacetedSurfaceNormals(const vtkm::cont::DataSet& dataset, NormalsArrayHandle& normals)
 {
-  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  vtkm::cont::DataSet ds = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
+  std::cout << "Testing FacetedSurfaceNormals:\n";
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
+  vtkm::worklet::FacetedSurfaceNormals faceted;
+  faceted.Run(
+    dataset.GetCellSet(), dataset.GetCoordinateSystem().GetData(), normals, DeviceAdapter());
 
-  vtkm::worklet::FacetedSurfaceNormals worklet;
-  worklet.Run(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), normals, DeviceAdapter());
-
-  vtkm::Vec<vtkm::FloatDefault, 3> expNormals[8] = {
+  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
     { -0.707f, -0.500f, 0.500f }, { -0.707f, -0.500f, 0.500f }, { 0.707f, 0.500f, -0.500f },
     { 0.000f, -0.707f, -0.707f }, { 0.000f, -0.707f, -0.707f }, { 0.000f, 0.707f, 0.707f },
     { -0.707f, 0.500f, -0.500f }, { 0.707f, -0.500f, 0.500f }
   };
-
   auto portal = normals.GetPortalConstControl();
-  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect normals array length");
+  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect faceNormals array length");
   for (vtkm::Id i = 0; i < 8; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(portal.Get(i), expNormals[i], 0.001),
+    VTKM_TEST_ASSERT(test_equal(portal.Get(i), expected[i], 0.001),
                      "result does not match expected value");
   }
+}
+
+void TestSmoothSurfaceNormals(const vtkm::cont::DataSet& dataset,
+                              const NormalsArrayHandle& faceNormals)
+{
+  std::cout << "Testing SmoothSurfaceNormals:\n";
+
+  NormalsArrayHandle pointNormals;
+  vtkm::worklet::SmoothSurfaceNormals smooth;
+  smooth.Run(dataset.GetCellSet(), faceNormals, pointNormals, DeviceAdapter());
+
+  vtkm::Vec<vtkm::FloatDefault, 3> expected[8] = {
+    { -0.8165f, -0.4082f, -0.4082f }, { -0.2357f, -0.9714f, 0.0286f },
+    { 0.0000f, -0.1691f, 0.9856f },   { -0.8660f, 0.0846f, 0.4928f },
+    { 0.0000f, -0.1691f, -0.9856f },  { 0.0000f, 0.9856f, -0.1691f },
+    { 0.8165f, 0.4082f, 0.4082f },    { 0.8165f, -0.4082f, -0.4082f }
+  };
+  auto portal = pointNormals.GetPortalConstControl();
+  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 8, "incorrect pointNormals array length");
+  for (vtkm::Id i = 0; i < 8; ++i)
+  {
+    VTKM_TEST_ASSERT(test_equal(portal.Get(i), expected[i], 0.001),
+                     "result does not match expected value");
+  }
+}
+
+void TestSurfaceNormals()
+{
+  vtkm::cont::DataSet dataset =
+    vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
+  NormalsArrayHandle faceNormals;
+
+  TestFacetedSurfaceNormals(dataset, faceNormals);
+  TestSmoothSurfaceNormals(dataset, faceNormals);
 }
 
 } // anonymous namespace
 
 int UnitTestSurfaceNormals(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestFacetedSurfaceNormals);
+  return vtkm::cont::testing::Testing::Run(TestSurfaceNormals);
 }
