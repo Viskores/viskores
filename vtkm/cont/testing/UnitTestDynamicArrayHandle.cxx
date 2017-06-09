@@ -379,8 +379,8 @@ void TryCastToArrayHandle()
   CheckCastToArrayHandle(groupVecArray);
 
   std::cout << "  Implicit array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleImplicit<vtkm::FloatDefault>(
-    TestValueFunctor<vtkm::FloatDefault>(), ARRAY_SIZE));
+  CheckCastToArrayHandle(
+    vtkm::cont::make_ArrayHandleImplicit(TestValueFunctor<vtkm::FloatDefault>(), ARRAY_SIZE));
 
   std::cout << "  Index array handle." << std::endl;
   CheckCastToArrayHandle(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE));
@@ -389,8 +389,8 @@ void TryCastToArrayHandle()
   CheckCastToArrayHandle(vtkm::cont::make_ArrayHandlePermutation(countingArray, array));
 
   std::cout << "  Transform array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleTransform<vtkm::FloatDefault>(
-    countingArray, TestValueFunctor<vtkm::FloatDefault>()));
+  CheckCastToArrayHandle(
+    vtkm::cont::make_ArrayHandleTransform(countingArray, TestValueFunctor<vtkm::FloatDefault>()));
 
   std::cout << "  Uniform point coordinates array handle." << std::endl;
   CheckCastToArrayHandle(vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(ARRAY_SIZE)));

@@ -265,8 +265,8 @@ private:
       typedef ::fancy_array_detail::IndexSquared<ValueType> FunctorType;
       FunctorType functor;
 
-      vtkm::cont::ArrayHandleImplicit<ValueType, FunctorType> implicit =
-        vtkm::cont::make_ArrayHandleImplicit<ValueType>(functor, length);
+      vtkm::cont::ArrayHandleImplicit<FunctorType> implicit =
+        vtkm::cont::make_ArrayHandleImplicit(functor, length);
 
       vtkm::cont::printSummary_ArrayHandle(implicit, std::cout);
       std::cout << std::endl;
@@ -298,7 +298,7 @@ private:
       typedef ::fancy_array_detail::IndexSquared<ValueType> FunctorType;
       typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
 
-      typedef vtkm::cont::ArrayHandleImplicit<ValueType, FunctorType> ValueHandleType;
+      typedef vtkm::cont::ArrayHandleImplicit<FunctorType> ValueHandleType;
       typedef vtkm::cont::ArrayHandle<ValueType> BasicArrayType;
       typedef vtkm::cont::ArrayHandleConcatenate<ValueHandleType, BasicArrayType> ConcatenateType;
 
@@ -309,8 +309,7 @@ private:
         vtkm::Id basicLen = start_pos;
 
         // make an implicit array
-        ValueHandleType implicit =
-          vtkm::cont::make_ArrayHandleImplicit<ValueType>(functor, implicitLen);
+        ValueHandleType implicit = vtkm::cont::make_ArrayHandleImplicit(functor, implicitLen);
         // make a basic array
         std::vector<ValueType> basicVec;
         for (vtkm::Id i = 0; i < basicLen; i++)
@@ -359,7 +358,7 @@ private:
       typedef ::fancy_array_detail::IndexSquared<ValueType> FunctorType;
 
       typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> KeyHandleType;
-      typedef vtkm::cont::ArrayHandleImplicit<ValueType, FunctorType> ValueHandleType;
+      typedef vtkm::cont::ArrayHandleImplicit<FunctorType> ValueHandleType;
       typedef vtkm::cont::ArrayHandlePermutation<KeyHandleType, ValueHandleType>
         PermutationHandleType;
 
@@ -371,7 +370,7 @@ private:
         KeyHandleType counting =
           vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(start_pos, 1, counting_length);
 
-        ValueHandleType implicit = vtkm::cont::make_ArrayHandleImplicit<ValueType>(functor, length);
+        ValueHandleType implicit = vtkm::cont::make_ArrayHandleImplicit(functor, length);
 
         PermutationHandleType permutation =
           vtkm::cont::make_ArrayHandlePermutation(counting, implicit);
@@ -411,8 +410,8 @@ private:
       FunctorType functor(2.0);
 
       vtkm::cont::ArrayHandle<ValueType> input;
-      vtkm::cont::ArrayHandleTransform<ValueType, vtkm::cont::ArrayHandle<ValueType>, FunctorType>
-        transformed = vtkm::cont::make_ArrayHandleTransform<ValueType>(input, functor);
+      vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<ValueType>, FunctorType>
+        transformed = vtkm::cont::make_ArrayHandleTransform(input, functor);
 
       input.Allocate(length);
       SetPortal(input.GetPortalControl());
@@ -456,11 +455,8 @@ private:
 
       vtkm::cont::ArrayHandleCounting<ValueType> counting(start, ValueType(1), length);
 
-      vtkm::cont::ArrayHandleTransform<OutputValueType,
-                                       vtkm::cont::ArrayHandleCounting<ValueType>,
-                                       FunctorType>
-        countingTransformed =
-          vtkm::cont::make_ArrayHandleTransform<OutputValueType>(counting, functor);
+      vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<ValueType>, FunctorType>
+        countingTransformed = vtkm::cont::make_ArrayHandleTransform(counting, functor);
 
       vtkm::cont::printSummary_ArrayHandle(countingTransformed, std::cout);
       std::cout << std::endl;

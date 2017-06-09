@@ -328,7 +328,7 @@ public:
 
     typedef ReduceKernel<InputPortalType, U, BinaryFunctor> ReduceKernelType;
 
-    typedef vtkm::cont::ArrayHandleImplicit<U, ReduceKernelType> ReduceHandleType;
+    typedef vtkm::cont::ArrayHandleImplicit<ReduceKernelType> ReduceHandleType;
     typedef vtkm::cont::ArrayHandle<U, vtkm::cont::StorageTagBasic> TempArrayType;
 
     ReduceKernelType kernel(
@@ -336,7 +336,7 @@ public:
 
     vtkm::Id length = (input.GetNumberOfValues() / 16);
     length += (input.GetNumberOfValues() % 16 == 0) ? 0 : 1;
-    ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit<U>(kernel, length);
+    ReduceHandleType reduced = vtkm::cont::make_ArrayHandleImplicit(kernel, length);
 
     TempArrayType inclusiveScanStorage;
     const U scanResult =

@@ -523,9 +523,7 @@ public:
     {
       // Evaluate the implicit function on the input coordinates using
       // ArrayHandleTransform
-      vtkm::cont::ArrayHandleTransform<vtkm::FloatDefault,
-                                       ArrayHandleType,
-                                       vtkm::exec::ImplicitFunctionValue>
+      vtkm::cont::ArrayHandleTransform<ArrayHandleType, vtkm::exec::ImplicitFunctionValue>
         clipScalars(handle, this->Function);
 
       // Clip at locations where the implicit function evaluates to 0

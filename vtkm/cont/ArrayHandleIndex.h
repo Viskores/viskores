@@ -46,11 +46,11 @@ struct VTKM_ALWAYS_EXPORT IndexFunctor
 /// 0, 1, 2, 3,... to a specified size. Every value in the array is the same
 /// as the index to that value.
 ///
-class ArrayHandleIndex : public vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::IndexFunctor>
+class ArrayHandleIndex : public vtkm::cont::ArrayHandleImplicit<detail::IndexFunctor>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleIndex,
-                                (vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::IndexFunctor>));
+                                (vtkm::cont::ArrayHandleImplicit<detail::IndexFunctor>));
 
   VTKM_CONT
   ArrayHandleIndex(vtkm::Id length)

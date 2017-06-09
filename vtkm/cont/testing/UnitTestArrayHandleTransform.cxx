@@ -117,13 +117,10 @@ struct TransformTests
   typedef typename vtkm::VecTraits<InputValueType>::ComponentType OutputValueType;
   typedef MySquare<OutputValueType> FunctorType;
 
-  typedef vtkm::cont::ArrayHandleTransform<OutputValueType,
-                                           vtkm::cont::ArrayHandle<InputValueType>,
-                                           FunctorType>
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<InputValueType>, FunctorType>
     TransformHandle;
 
-  typedef vtkm::cont::ArrayHandleTransform<OutputValueType,
-                                           vtkm::cont::ArrayHandleCounting<InputValueType>,
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<InputValueType>,
                                            FunctorType>
     CountingTransformHandle;
 
@@ -138,7 +135,7 @@ struct TransformTests
     vtkm::cont::ArrayHandleCounting<InputValueType> counting = vtkm::cont::make_ArrayHandleCounting(
       InputValueType(OutputValueType(0)), InputValueType(1), ARRAY_SIZE);
     CountingTransformHandle countingTransformed =
-      vtkm::cont::make_ArrayHandleTransform<OutputValueType>(counting, functor);
+      vtkm::cont::make_ArrayHandleTransform(counting, functor);
 
     CheckControlPortals(counting, countingTransformed);
 
