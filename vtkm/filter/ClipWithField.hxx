@@ -31,6 +31,30 @@ namespace vtkm
 namespace filter
 {
 
+namespace clipwithfield
+{
+
+template <typename Device>
+struct PointMapHelper
+{
+  PointMapHelper(const vtkm::worklet::Clip& worklet, vtkm::cont::DynamicArrayHandle& output)
+    : Worklet(worklet)
+    , Output(output)
+  {
+  }
+
+  template <typename ArrayType>
+  void operator()(const ArrayType& array) const
+  {
+    this->Output = this->Worklet.ProcessPointField(array, Device());
+  }
+
+  const vtkm::worklet::Clip& Worklet;
+  vtkm::cont::DynamicArrayHandle& Output;
+};
+
+} // end namespace clipwithfield
+
 //-----------------------------------------------------------------------------
 inline VTKM_CONT ClipWithField::ClipWithField()
   : vtkm::filter::FilterDataSetWithField<ClipWithField>()
@@ -48,6 +72,8 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ClipWithField::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
 {
+  using namespace clipwithfield;
+
   if (fieldMeta.IsPointField() == false)
   {
     //todo: we need to mark this as a failure of input, not a failure
@@ -69,8 +95,9 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ClipWithField::DoExecute(
   output.AddCellSet(outputCellSet);
 
   // Compute the new boundary points and add them to the output:
-  vtkm::cont::DynamicArrayHandle outputCoordsArray =
-    this->Worklet.ProcessField(vtkm::filter::ApplyPolicy(inputCoords, policy), device);
+  vtkm::cont::DynamicArrayHandle outputCoordsArray;
+  PointMapHelper<DeviceAdapter> pointMapper(this->Worklet, outputCoordsArray);
+  vtkm::filter::ApplyPolicy(inputCoords, policy).CastAndCall(pointMapper);
   vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(), outputCoordsArray);
   output.AddCoordinateSystem(outputCoords);
   vtkm::filter::ResultDataSet result(output);
@@ -87,17 +114,25 @@ inline VTKM_CONT bool ClipWithField::DoMapField(
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
-  if (fieldMeta.IsPointField() == false)
+  vtkm::cont::ArrayHandle<T> output;
+
+  if (fieldMeta.IsPointField())
   {
-    //not a point field, we can't map it
+    output = this->Worklet.ProcessPointField(input, device);
+  }
+  else if (fieldMeta.IsCellField())
+  {
+    output = this->Worklet.ProcessCellField(input, device);
+  }
+  else
+  {
     return false;
   }
 
-  vtkm::cont::DynamicArrayHandle output = this->Worklet.ProcessField(input, device);
-
   //use the same meta data as the input so we get the same field name, etc.
   result.GetDataSet().AddField(fieldMeta.AsField(output));
+
   return true;
 }
 }
-}
+} // end namespace vtkm::filter
