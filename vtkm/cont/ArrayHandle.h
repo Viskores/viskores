@@ -573,7 +573,8 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
 template <typename T, typename StorageT>
 VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
   const vtkm::cont::ArrayHandle<T, StorageT>& array,
-  std::ostream& out)
+  std::ostream& out,
+  bool full = false)
 {
   using ArrayType = vtkm::cont::ArrayHandle<T, StorageT>;
   using PortalType = typename ArrayType::PortalConstControl;
@@ -585,7 +586,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
       << " numValues=" << sz << " [";
 
   PortalType portal = array.GetPortalConstControl();
-  if (sz <= 7)
+  if (full || sz <= 7)
   {
     for (vtkm::Id i = 0; i < sz; i++)
     {
