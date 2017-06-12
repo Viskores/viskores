@@ -37,10 +37,13 @@
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/FieldStatistics.h>
-
+#include <vtkm/worklet/WorkletMapMultiBlock.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/DispatcherMapMultiBlock.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/AverageByKey.h>
+#include <vtkm/worklet/ScatterCounting.h>
+#include <vtkm/worklet/ScatterUniform.h>
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/Histogram.h>
 /*namespace vtkm {
@@ -108,30 +111,46 @@ void TestMultiBlock_Worklet()
   }
 }
 
-/*namespace vtkm {
+namespace vtkm {
 namespace worklet {
 
-class Threshold : public vtkm::worklet::WorkletMapField
+class Threshold : public vtkm::worklet::WorkletMapMultiBlock
 {
 public:
-  typedef void ControlSignature(FieldIn<Scalar> InputField, FieldOut<Scalar> FilterResult);
-  typedef void ExecutionSignature (_1 , _2);
-  //typedef _1 InputDomain;
+  typedef void ControlSignature(WholeArrayIn<> inputdata, MultiBlockOut<> filterresult, WholeArrayIn<> fieldname);
+  typedef void ExecutionSignature (_1 , _2, OutputIndex, _3);
+  typedef _1 InputDomain;
+  
+  //using ScatterType = vtkm::worklet::ScatterUniform ;
+  
+ // VTKM_CONT
+  //ScatterType GetScatter () const { return vtkm::worklet::ScatterUniform(2); }
 
-  template <typename T,typename H>
+  template <typename T,typename H, typename Index, typename FieldName>
   VTKM_EXEC
-  void operator()( const T Input,  H Out) const
+  void operator()( const T Input,  H Out, Index index, FieldName fieldname) const
   {  
-    if(Input > 5)
-    {   Out=1 ; }
-    else
-    {   Out=0 ;}
+    
+    if(Input.GetNumberOfValues())
+    {  
+      vtkm::Id FiledLength= Input.Get(0).GetField(fieldname.Get(0)).GetData().GetNumberOfValues();
+
+      vtkm::cont::ArrayHandle<vtkm::Float64> concreteHandle; 
+      Input.Get(index/FiledLength).GetField(fieldname.Get(0)).GetData().CopyTo(concreteHandle);
+      
+      vtkm::Id FiledValue=concreteHandle.GetPortalConstControl().Get(index%FiledLength);
+      std::cout<<index<<" "<<index/FiledLength<<" "<<index%FiledLength<<"value"<<FiledValue<<"\n";
+      //Out=1 ; 
+    }
+    
     return ;
   }
 };
 
 }
-}*/
+}
+
+
 template <typename T>
 vtkm::cont::MultiBlock UniformMultiBlockBuilder()
 {
@@ -149,7 +168,8 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder()
     std::vector<T> varP2D(static_cast<std::size_t>(numPoints));
     for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
     {
-      varP2D[i] = static_cast<T>((trial-1)*i);
+      //varP2D[i] = static_cast<T>((trial-1)*i);
+      varP2D[i] = static_cast<T>(trial);
     }
     std::vector<T> varC2D(static_cast<std::size_t>(numCells));
     for (std::size_t i = 0; i < static_cast<std::size_t>(numCells); i++)
@@ -179,15 +199,34 @@ std::vector<vtkm::filter::ResultField> Apply(vtkm::cont::MultiBlock MB, FilterTy
   return results;
 }
 
+template<typename T>
+vtkm::cont::DynamicArrayHandle CreateDynamicArray()
+{
+  // Declared static to prevent going out of scope.
+  static T buffer[700];
+  for (vtkm::Id index = 0; index < 700; index++)
+  {
+    buffer[index] = (vtkm::Id)1;
+  }
+
+  return vtkm::cont::DynamicArrayHandle(
+        vtkm::cont::make_ArrayHandle(buffer, 700));
+}
 
 const std::vector<vtkm::filter::ResultField> MultiBlock_WorkletTest()
 {
-  vtkm::cont::DynamicArrayHandle output;
+ 
+  vtkm::cont::DynamicArrayHandle array = CreateDynamicArray<vtkm::Id>();
   
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::MultiBlock Blocks=UniformMultiBlockBuilder<vtkm::Float64>();
-  std::vector<vtkm::filter::ResultField> results;
+  vtkm::worklet::DispatcherMapMultiBlock<vtkm::worklet::Threshold> dispatcher;
+  std::string fieldname[1]={"pointvar"};
+   
+  dispatcher.Invoke(make_ArrayHandle(Blocks.GetBlocks()),array,vtkm::cont::make_ArrayHandle(fieldname, 1));
 
+  std::vector<vtkm::filter::ResultField> results;
+  //printSummary_ArrayHandle(make_ArrayHandle(Blocks.GetBlocks()),std::cout);
   vtkm::filter::Histogram histogram;
   histogram.SetNumberOfBins(10);
   //results = Apply(Blocks,divider,"pointvar");

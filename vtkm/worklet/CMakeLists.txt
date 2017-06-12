@@ -26,6 +26,7 @@ set(headers
   ContourTreeUniform.h
   DispatcherMapField.h
   DispatcherMapTopology.h
+  DispatcherMapMultiBlock.h
   DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
   ExternalFaces.h
@@ -57,6 +58,7 @@ set(headers
   WaveletCompressor.h
   WorkletMapField.h
   WorkletMapTopology.h
+  WorkletMapMultiBlock.h
   WorkletReduceByKey.h
   )
 

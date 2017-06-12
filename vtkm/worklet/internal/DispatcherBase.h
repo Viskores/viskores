@@ -340,7 +340,7 @@ private:
                                                              brigand::_state
                                                            >
                      >;
-
+   
     this->StartInvokeDynamic(parameters, HasDynamicTypes() );
   }
 
@@ -494,7 +494,7 @@ private:
     // argument and return the corresponding execution environment object.
     typedef typename Invocation::ParameterInterface ParameterInterfaceType;
     const ParameterInterfaceType &parameters = invocation.Parameters;
-
+    
     typedef detail::DispatcherBaseTransportFunctor<
         typename Invocation::ControlInterface,
         typename Invocation::InputDomainType,
@@ -540,7 +540,7 @@ private:
         WorkletInvokeFunctorType(this->Worklet, invocation);
 
     typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
-
+  
     Algorithm::Schedule(workletFunctor, range);
   }
 };
