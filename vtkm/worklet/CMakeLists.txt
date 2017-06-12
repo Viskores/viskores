@@ -66,6 +66,7 @@ set(headers
 add_subdirectory(internal)
 add_subdirectory(contourtree)
 add_subdirectory(splatkernels)
+add_subdirectory(spatialstructure)
 add_subdirectory(tetrahedralize)
 add_subdirectory(triangulate)
 add_subdirectory(wavelets)
