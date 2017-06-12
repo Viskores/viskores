@@ -75,11 +75,11 @@ public:
   template <typename CellSetType,
             typename CoordsCompType,
             typename CoordsStorageType,
-            typename NormalsCompType,
+            typename NormalCompType,
             typename DeviceAdapter>
   void Run(const CellSetType& cellset,
            const vtkm::cont::ArrayHandle<vtkm::Vec<CoordsCompType, 3>, CoordsStorageType>& points,
-           vtkm::cont::ArrayHandle<vtkm::Vec<NormalsCompType, 3>>& normals,
+           vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals,
            DeviceAdapter)
   {
     vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher(Worklet{});
@@ -88,16 +88,73 @@ public:
 
   template <typename CellSetType,
             typename CoordsStorageList,
-            typename NormalsCompType,
+            typename NormalCompType,
             typename DeviceAdapter>
   void Run(
     const CellSetType& cellset,
     const vtkm::cont::DynamicArrayHandleBase<vtkm::TypeListTagFieldVec3, CoordsStorageList>& points,
-    vtkm::cont::ArrayHandle<vtkm::Vec<NormalsCompType, 3>>& normals,
+    vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals,
     DeviceAdapter)
   {
     vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher(Worklet{});
     dispatcher.Invoke(cellset, points, normals);
+  }
+};
+
+class SmoothSurfaceNormals
+{
+public:
+  class Worklet : public vtkm::worklet::WorkletMapCellToPoint
+  {
+  public:
+    typedef void ControlSignature(CellSetIn cellset,
+                                  FieldInCell<Vec3> faceNormals,
+                                  FieldOutPoint<Vec3> pointNormals);
+    typedef void ExecutionSignature(CellCount, _2, _3);
+
+    using InputDomain = _1;
+
+    template <typename FaceNormalsVecType, typename T>
+    VTKM_EXEC void operator()(vtkm::IdComponent numCells,
+                              const FaceNormalsVecType& faceNormals,
+                              vtkm::Vec<T, 3>& pointNormal) const
+    {
+      auto result = faceNormals[0];
+      for (vtkm::IdComponent i = 1; i < numCells; ++i)
+      {
+        result += faceNormals[i];
+      }
+      pointNormal = vtkm::Normal(result / static_cast<T>(numCells));
+    }
+  };
+
+  template <typename CellSetType,
+            typename NormalCompType,
+            typename FaceNormalStorageType,
+            typename DeviceAdapter>
+  void Run(
+    const CellSetType& cellset,
+    const vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>, FaceNormalStorageType>& faceNormals,
+    vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals,
+    DeviceAdapter)
+  {
+    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher(Worklet{});
+    dispatcher.Invoke(cellset, faceNormals, pointNormals);
+  }
+
+  template <typename CellSetType,
+            typename FaceNormalTypeList,
+            typename FaceNormalStorageList,
+            typename NormalCompType,
+            typename DeviceAdapter>
+  void Run(const CellSetType& cellset,
+           const vtkm::cont::DynamicArrayHandleBase<FaceNormalTypeList, FaceNormalStorageList>&
+             faceNormals,
+           vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals,
+           DeviceAdapter)
+  {
+    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher(Worklet{});
+    dispatcher.Invoke(cellset, faceNormals, pointNormals);
   }
 };
 }
