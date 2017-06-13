@@ -80,13 +80,19 @@ vtkm::cont::DataSet MakeTestDatasetExplicit()
   vtkm::cont::DataSetBuilderExplicit builder;
   ds = builder.Create(coords, vtkm::CellShapeTagTriangle(), 3, connectivity, "coords");
 
+  vtkm::cont::DataSetFieldAdd fieldAdder;
+
   std::vector<vtkm::Float32> values;
   values.push_back(1.0);
   values.push_back(2.0);
   values.push_back(1.0);
   values.push_back(0.0);
-  vtkm::cont::DataSetFieldAdd fieldAdder;
   fieldAdder.AddPointField(ds, "scalars", values);
+
+  values.clear();
+  values.push_back(100.f);
+  values.push_back(-100.f);
+  fieldAdder.AddCellField(ds, "cellvar", values);
 
   return ds;
 }
@@ -111,6 +117,9 @@ vtkm::cont::DataSet MakeTestDatasetStructured()
   vtkm::cont::DataSetFieldAdd fieldAdder;
   fieldAdder.AddPointField(ds, "scalars", scalars, numVerts);
 
+  std::vector<vtkm::Float32> cellvar = { -100.f, 100.f, 30.f, -30.f };
+  fieldAdder.AddCellField(ds, "cellvar", cellvar);
+
   return ds;
 }
 
@@ -123,10 +132,19 @@ void TestClippingExplicit()
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, DeviceAdapter());
 
-  vtkm::cont::DynamicArrayHandle coords =
-    clip.ProcessField(ds.GetCoordinateSystem("coords"), DeviceAdapter());
-  vtkm::cont::DynamicArrayHandle scalars =
-    clip.ProcessField(ds.GetField("scalars"), DeviceAdapter());
+  vtkm::cont::ArrayHandle<Coord3D> coordsIn;
+  ds.GetCoordinateSystem("coords").GetData().CopyTo(coordsIn);
+  vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
+
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
+  ds.GetField("scalars").GetData().CopyTo(scalarsIn);
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalars =
+    clip.ProcessPointField(scalarsIn, DeviceAdapter());
+
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
+  ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar =
+    clip.ProcessCellField(cellvarIn, DeviceAdapter());
 
   vtkm::Id connectivitySize = 12;
   vtkm::Id fieldSize = 7;
@@ -137,6 +155,7 @@ void TestClippingExplicit()
     Coord3D(0.50f, 1.00f, 0.0f),
   };
   vtkm::Float32 expectedScalars[] = { 1, 2, 1, 0, 0.5, 0.5, 0.5 };
+  std::vector<vtkm::Float32> expectedCellvar = { 100.f, 100.f, -100.f, -100.f };
 
   VTKM_TEST_ASSERT(outputCellSet.GetNumberOfPoints() == fieldSize,
                    "Wrong number of points in cell set.");
@@ -148,31 +167,41 @@ void TestClippingExplicit()
                     connectivitySize),
     "Got incorrect conectivity");
 
-  VTKM_TEST_ASSERT(TestArrayHandle(coords.CastToTypeStorage<Coord3D, VTKM_DEFAULT_STORAGE_TAG>(),
-                                   expectedCoords,
-                                   fieldSize),
-                   "Got incorrect coordinates");
+  VTKM_TEST_ASSERT(TestArrayHandle(coords, expectedCoords, fieldSize), "Got incorrect coordinates");
+
+  VTKM_TEST_ASSERT(TestArrayHandle(scalars, expectedScalars, fieldSize), "Got incorrect scalars");
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(scalars.CastToTypeStorage<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>(),
-                    expectedScalars,
-                    fieldSize),
-    "Got incorrect scalars");
+    TestArrayHandle(cellvar, expectedCellvar.data(), static_cast<vtkm::Id>(expectedCellvar.size())),
+    "Got incorrect cellvar");
 }
 
 template <typename DeviceAdapter>
 void TestClippingStrucutred()
 {
+  using CoordsValueType = vtkm::cont::ArrayHandleUniformPointCoordinates::ValueType;
+  using CoordsOutType = vtkm::cont::ArrayHandle<CoordsValueType>;
+
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, DeviceAdapter());
 
-  vtkm::cont::DynamicArrayHandle coords =
-    clip.ProcessField(ds.GetCoordinateSystem("coords"), DeviceAdapter());
-  vtkm::cont::DynamicArrayHandle scalars =
-    clip.ProcessField(ds.GetField("scalars"), DeviceAdapter());
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordsIn;
+  ds.GetCoordinateSystem("coords").GetData().CopyTo(coordsIn);
+  CoordsOutType coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
+
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
+  ds.GetField("scalars").GetData().CopyTo(scalarsIn);
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalars =
+    clip.ProcessPointField(scalarsIn, DeviceAdapter());
+
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
+  ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar =
+    clip.ProcessCellField(cellvarIn, DeviceAdapter());
+
 
   vtkm::Id connectivitySize = 36;
   vtkm::Id fieldSize = 13;
@@ -187,6 +216,8 @@ void TestClippingStrucutred()
     Coord3D(1.0f, 1.5f, 0.0f),
   };
   vtkm::Float32 expectedScalars[] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5 };
+  std::vector<vtkm::Float32> expectedCellvar = { -100.f, -100.f, -100.f, 100.f, 100.f, 100.f,
+                                                 30.f,   30.f,   30.f,   -30.f, -30.f, -30.f };
 
   VTKM_TEST_ASSERT(outputCellSet.GetNumberOfPoints() == fieldSize,
                    "Wrong number of points in cell set.");
@@ -198,16 +229,13 @@ void TestClippingStrucutred()
                     connectivitySize),
     "Got incorrect conectivity");
 
-  VTKM_TEST_ASSERT(TestArrayHandle(coords.CastToTypeStorage<Coord3D, VTKM_DEFAULT_STORAGE_TAG>(),
-                                   expectedCoords,
-                                   fieldSize),
-                   "Got incorrect coordinates");
+  VTKM_TEST_ASSERT(TestArrayHandle(coords, expectedCoords, fieldSize), "Got incorrect coordinates");
+
+  VTKM_TEST_ASSERT(TestArrayHandle(scalars, expectedScalars, fieldSize), "Got incorrect scalars");
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(scalars.CastToTypeStorage<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>(),
-                    expectedScalars,
-                    fieldSize),
-    "Got incorrect scalars");
+    TestArrayHandle(cellvar, expectedCellvar.data(), static_cast<vtkm::Id>(expectedCellvar.size())),
+    "Got incorrect cellvar");
 }
 
 template <typename DeviceAdapter>
@@ -223,10 +251,19 @@ void TestClippingWithImplicitFunction()
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(0), sphere, ds.GetCoordinateSystem("coords"), DeviceAdapter());
 
-  vtkm::cont::DynamicArrayHandle coords =
-    clip.ProcessField(ds.GetCoordinateSystem("coords"), DeviceAdapter());
-  vtkm::cont::DynamicArrayHandle scalars =
-    clip.ProcessField(ds.GetField("scalars"), DeviceAdapter());
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordsIn;
+  ds.GetCoordinateSystem("coords").GetData().CopyTo(coordsIn);
+  vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
+
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
+  ds.GetField("scalars").GetData().CopyTo(scalarsIn);
+  vtkm::cont::ArrayHandle<vtkm::Float32> scalars =
+    clip.ProcessPointField(scalarsIn, DeviceAdapter());
+
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvarIn;
+  ds.GetField("cellvar").GetData().CopyTo(cellvarIn);
+  vtkm::cont::ArrayHandle<vtkm::Float32> cellvar =
+    clip.ProcessCellField(cellvarIn, DeviceAdapter());
 
   vtkm::Id connectivitySize = 36;
   vtkm::Id fieldSize = 13;
@@ -241,6 +278,9 @@ void TestClippingWithImplicitFunction()
     Coord3D(1.0f, 1.25f, 0.0f),
   };
   vtkm::Float32 expectedScalars[] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0.25, 0.25, 0.25, 0.25 };
+  std::vector<vtkm::Float32> expectedCellvar = { -100.f, -100.f, -100.f, 100.f, 100.f, 100.f,
+                                                 30.f,   30.f,   30.f,   -30.f, -30.f, -30.f };
+
 
   VTKM_TEST_ASSERT(
     TestArrayHandle(outputCellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(),
@@ -249,16 +289,13 @@ void TestClippingWithImplicitFunction()
                     connectivitySize),
     "Got incorrect conectivity");
 
-  VTKM_TEST_ASSERT(TestArrayHandle(coords.CastToTypeStorage<Coord3D, VTKM_DEFAULT_STORAGE_TAG>(),
-                                   expectedCoords,
-                                   fieldSize),
-                   "Got incorrect coordinates");
+  VTKM_TEST_ASSERT(TestArrayHandle(coords, expectedCoords, fieldSize), "Got incorrect coordinates");
+
+  VTKM_TEST_ASSERT(TestArrayHandle(scalars, expectedScalars, fieldSize), "Got incorrect scalars");
 
   VTKM_TEST_ASSERT(
-    TestArrayHandle(scalars.CastToTypeStorage<vtkm::Float32, VTKM_DEFAULT_STORAGE_TAG>(),
-                    expectedScalars,
-                    fieldSize),
-    "Got incorrect scalars");
+    TestArrayHandle(cellvar, expectedCellvar.data(), static_cast<vtkm::Id>(expectedCellvar.size())),
+    "Got incorrect cellvar");
 }
 
 template <typename DeviceAdapter>
