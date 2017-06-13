@@ -112,6 +112,28 @@ public:
     bool ExtractOnlyBoundaryCells;
   };
 
+  class AddPermutationCellSet
+  {
+    vtkm::cont::DynamicCellSet* Output;
+    vtkm::cont::ArrayHandle<vtkm::Id>* ValidIds;
+
+  public:
+    AddPermutationCellSet(vtkm::cont::DynamicCellSet& cellOut,
+                          vtkm::cont::ArrayHandle<vtkm::Id>& validIds)
+      : Output(&cellOut)
+      , ValidIds(&validIds)
+    {
+    }
+
+    template <typename CellSetType>
+    void operator()(const CellSetType& cellset) const
+    {
+      vtkm::cont::CellSetPermutation<CellSetType> permCellSet(
+        *this->ValidIds, cellset, cellset.GetName());
+      *this->Output = permCellSet;
+    }
+  };
+
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract cells by ids permutes input data
   template <typename CellSetType, typename DeviceAdapter>
@@ -139,8 +161,6 @@ public:
     bool extractOnlyBoundaryCells,
     DeviceAdapter device)
   {
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
-
     // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;
 
@@ -156,45 +176,26 @@ public:
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::CopyIf(
       indices, passFlags, this->ValidCellIds);
 
-    return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
+    // generate the cellset
+    return vtkm::cont::CellSetPermutation<CellSetType>(
+      this->ValidCellIds, cellSet, cellSet.GetName());
   }
 
-  ////////////////////////////////////////////////////////////////////////////////////
-  // Permute cell data to match permuted cells
-  class PermuteCellData
+  template <typename ValueType, typename StorageTagIn, typename DeviceTag>
+  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageTagIn>& input,
+    const DeviceTag&)
   {
-  public:
-    PermuteCellData(const vtkm::cont::ArrayHandle<vtkm::Id> validCellIds,
-                    vtkm::cont::DynamicArrayHandle& data)
-      : ValidCellIds(validCellIds)
-      , Data(&data)
-    {
-    }
+    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
 
-    template <typename ArrayHandleType>
-    void operator()(const ArrayHandleType& input) const
-    {
-      *(this->Data) = vtkm::cont::DynamicArrayHandle(
-        vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input));
-    }
+    // Use a temporary permutation array to simplify the mapping:
+    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input);
 
-  private:
-    vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
-    vtkm::cont::DynamicArrayHandle* Data;
-  };
+    // Copy into an array with default storage:
+    vtkm::cont::ArrayHandle<ValueType> result;
+    Algo::Copy(tmp, result);
 
-  vtkm::cont::Field ProcessCellField(const vtkm::cont::Field field) const
-  {
-    if (field.GetAssociation() != vtkm::cont::Field::ASSOC_CELL_SET)
-    {
-      throw vtkm::cont::ErrorBadValue("Expecting cell field.");
-    }
-
-    vtkm::cont::DynamicArrayHandle data;
-    CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
-
-    return vtkm::cont::Field(
-      field.GetName(), field.GetAssociation(), field.GetAssocCellSet(), data);
+    return result;
   }
 
 private:
