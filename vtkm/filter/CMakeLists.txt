@@ -78,7 +78,7 @@ set(header_template_sources
   MaskPoints.hxx
   PointAverage.hxx
   PointElevation.hxx
-  SurfaceNormals.h
+  SurfaceNormals.hxx
   Tetrahedralize.hxx
   Threshold.hxx
   ThresholdPoints.hxx
