@@ -54,11 +54,8 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for Mask");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
 
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
@@ -89,11 +86,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 7),
                      "Wrong result for Mask");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 7 &&
@@ -124,11 +117,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 2),
                      "Wrong result for Mask");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
