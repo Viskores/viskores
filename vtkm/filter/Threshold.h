@@ -65,7 +65,7 @@ public:
 private:
   double LowerValue;
   double UpperValue;
-  vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
+  vtkm::worklet::Threshold Worklet;
 };
 
 template <>

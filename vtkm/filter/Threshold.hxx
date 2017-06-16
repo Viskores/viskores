@@ -49,29 +49,37 @@ private:
   vtkm::Float64 Upper;
 };
 
-class AddPermutationCellSet
+template <typename ValueType, typename StorageTag, typename DeviceTag>
+struct CallWorklet
 {
-  vtkm::cont::DataSet* Output;
-  vtkm::cont::ArrayHandle<vtkm::Id>* ValidIds;
+  vtkm::cont::DynamicCellSet& Output;
+  vtkm::worklet::Threshold& Worklet;
+  const vtkm::cont::ArrayHandle<ValueType, StorageTag>& Field;
+  const vtkm::cont::Field::AssociationEnum FieldType;
+  const ThresholdRange& Predicate;
 
-public:
-  AddPermutationCellSet(vtkm::cont::DataSet& data, vtkm::cont::ArrayHandle<vtkm::Id>& validIds)
-    : Output(&data)
-    , ValidIds(&validIds)
+  CallWorklet(vtkm::cont::DynamicCellSet& output,
+              vtkm::worklet::Threshold& worklet,
+              const vtkm::cont::ArrayHandle<ValueType, StorageTag>& field,
+              const vtkm::cont::Field::AssociationEnum fieldType,
+              const ThresholdRange& predicate)
+    : Output(output)
+    , Worklet(worklet)
+    , Field(field)
+    , FieldType(fieldType)
+    , Predicate(predicate)
   {
   }
 
   template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
+  void operator()(const CellSetType& cellSet) const
   {
-    typedef vtkm::cont::CellSetPermutation<CellSetType> PermutationCellSetType;
-
-    PermutationCellSetType permCellSet(*this->ValidIds, cellset, cellset.GetName());
-
-    this->Output->AddCellSet(permCellSet);
+    this->Output =
+      this->Worklet.Run(cellSet, this->Field, this->FieldType, this->Predicate, DeviceTag());
   }
 };
-}
+
+} // end anon namespace
 
 namespace vtkm
 {
@@ -83,7 +91,6 @@ inline VTKM_CONT Threshold::Threshold()
   : vtkm::filter::FilterDataSetWithField<Threshold>()
   , LowerValue(0)
   , UpperValue(0)
-  , ValidCellIds()
 {
 }
 
@@ -96,54 +103,21 @@ inline VTKM_CONT vtkm::filter::ResultDataSet Threshold::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
 {
+  using Worker = CallWorklet<T, StorageType, DeviceAdapter>;
+
   //get the cells and coordinates of the dataset
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
+
+  vtkm::cont::DynamicCellSet cellOut;
   ThresholdRange predicate(this->GetLowerThreshold(), this->GetUpperThreshold());
-  vtkm::cont::ArrayHandle<bool> passFlags;
-  if (fieldMeta.IsPointField())
-  {
-    typedef vtkm::worklet::Threshold Worklets;
-    typedef Worklets::ThresholdByPointField<ThresholdRange> ThresholdWorklet;
-    ThresholdWorklet worklet(predicate);
-    vtkm::worklet::DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-    dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy), field, passFlags);
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    typedef vtkm::worklet::Threshold Worklets;
-    typedef Worklets::ThresholdByCellField<ThresholdRange> ThresholdWorklet;
-    ThresholdWorklet worklet(predicate);
-    vtkm::worklet::DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
-    dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy), field, passFlags);
-  }
-  else
-  {
-    //todo: we need to mark this as a failure of input, not a failure
-    //of the algorithm
-    return vtkm::filter::ResultDataSet();
-  }
-
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
-
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
-    vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
-  Algorithm::CopyIf(indices, passFlags, this->ValidCellIds);
+  Worker worker(cellOut, this->Worklet, field, fieldMeta.GetAssociation(), predicate);
+  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(worker);
 
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
+  output.AddCellSet(worker.Output);
 
-  //now generate the output cellset. We are going to need to do a cast
-  //and call to generate the correct form of output.
-  //todo: see if we can make this into a helper class that other filters
-  //can use to reduce code duplication, and make it easier to write filters
-  //that return complex dataset types.
-  AddPermutationCellSet addCellSet(output, this->ValidCellIds);
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy), addCellSet);
-
-  //todo: We need to generate a new output policy that replaces
-  //the original storage tag with a new storage tag where everything is
-  //wrapped in CellSetPermutation.
   return output;
 }
 
@@ -153,7 +127,7 @@ inline VTKM_CONT bool Threshold::DoMapField(vtkm::filter::ResultDataSet& result,
                                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                             const vtkm::filter::FieldMetadata& fieldMeta,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                            const DeviceAdapter&)
+                                            const DeviceAdapter& device)
 {
   if (fieldMeta.IsPointField())
   {
@@ -161,24 +135,16 @@ inline VTKM_CONT bool Threshold::DoMapField(vtkm::filter::ResultDataSet& result,
     result.GetDataSet().AddField(fieldMeta.AsField(input));
     return true;
   }
-
-  if (fieldMeta.IsCellField())
+  else if (fieldMeta.IsCellField())
   {
-    //todo: We need to generate a new output policy that replaces
-    //the original storage tag with a new storage tag where everything is
-    //wrapped in ArrayHandlePermutation.
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<T, StorageType>>
-      PermutationType;
-
-    PermutationType permutation =
-      vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input);
-
-    result.GetDataSet().AddField(fieldMeta.AsField(permutation));
+    vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input, device);
+    result.GetDataSet().AddField(fieldMeta.AsField(out));
     return true;
   }
-
-  return false;
+  else
+  {
+    return false;
+  }
 }
 }
 }

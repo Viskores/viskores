@@ -50,11 +50,7 @@ public:
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
@@ -80,11 +76,7 @@ public:
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
@@ -111,11 +103,7 @@ public:
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
@@ -144,11 +132,7 @@ public:
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 0, "field should be empty");
