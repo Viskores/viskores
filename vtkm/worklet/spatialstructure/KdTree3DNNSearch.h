@@ -42,8 +42,6 @@ namespace worklet
 namespace spatialstructure
 {
 
-typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> Algorithm;
-
 class KdTree3DNNSearch
 {
 public:
