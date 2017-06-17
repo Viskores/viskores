@@ -19,9 +19,25 @@
 //============================================================================
 #ifndef vtk_m_rendering_raytracing_Ray_h
 #define vtk_m_rendering_raytracing_Ray_h
+
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/rendering/raytracing/ChannelBuffer.h>
+#include <vtkm/rendering/raytracing/Worklets.h>
+
+#include <vector>
+
+#define RAY_ACTIVE 0
+#define RAY_COMPLETE 1
+#define RAY_TERMINATED 2
+#define RAY_EXITED_MESH 3
+#define RAY_EXITED_DOMAIN 4
+#define RAY_LOST 5
+#define RAY_ABANDONED 6
+#define RAY_TUG_EPSILON 0.001
+
 namespace vtkm
 {
 namespace rendering
@@ -29,66 +45,73 @@ namespace rendering
 namespace raytracing
 {
 
-class RayBase
+template <typename Precision>
+class Ray
 {
-public:
-  RayBase() {}
+protected:
+  bool IntersectionDataEnabled;
 
-  virtual ~RayBase();
-
-  virtual void resize(const vtkm::Int32 vtkmNotUsed(newSize)) {}
-};
-template <typename DeviceAdapter>
-class Ray : public RayBase
-{
 public:
   // composite vectors to hold array handles
-  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>>::type
-    Intersection;
+  typename //tell the compiler we have a dependent type
+    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
+                                               vtkm::cont::ArrayHandle<Precision>,
+                                               vtkm::cont::ArrayHandle<Precision>>::type
+      Intersection;
 
-  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>>::type Normal;
+  typename //tell the compiler we have a dependent type
+    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
+                                               vtkm::cont::ArrayHandle<Precision>,
+                                               vtkm::cont::ArrayHandle<Precision>>::type Normal;
 
-  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>>::type Origin;
+  typename //tell the compiler we have a dependent type
+    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
+                                               vtkm::cont::ArrayHandle<Precision>,
+                                               vtkm::cont::ArrayHandle<Precision>>::type Origin;
 
-  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>>::type Dir;
+  typename //tell the compiler we have a dependent type
+    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
+                                               vtkm::cont::ArrayHandle<Precision>,
+                                               vtkm::cont::ArrayHandle<Precision>>::type Dir;
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> IntersectionX; //ray Normal
-  vtkm::cont::ArrayHandle<vtkm::Float32> IntersectionY;
-  vtkm::cont::ArrayHandle<vtkm::Float32> IntersectionZ;
+  vtkm::cont::ArrayHandle<Precision> IntersectionX; //ray Intersection
+  vtkm::cont::ArrayHandle<Precision> IntersectionY;
+  vtkm::cont::ArrayHandle<Precision> IntersectionZ;
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> NormalX; //ray Normal
-  vtkm::cont::ArrayHandle<vtkm::Float32> NormalY;
-  vtkm::cont::ArrayHandle<vtkm::Float32> NormalZ;
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> OriginX; //ray Origin
-  vtkm::cont::ArrayHandle<vtkm::Float32> OriginY;
-  vtkm::cont::ArrayHandle<vtkm::Float32> OriginZ;
+  vtkm::cont::ArrayHandle<Precision> OriginX; //ray Origin
+  vtkm::cont::ArrayHandle<Precision> OriginY;
+  vtkm::cont::ArrayHandle<Precision> OriginZ;
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> DirX; //ray Dir
-  vtkm::cont::ArrayHandle<vtkm::Float32> DirY;
-  vtkm::cont::ArrayHandle<vtkm::Float32> DirZ;
+  vtkm::cont::ArrayHandle<Precision> DirX; //ray Dir
+  vtkm::cont::ArrayHandle<Precision> DirY;
+  vtkm::cont::ArrayHandle<Precision> DirZ;
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> U; //barycentric coordinates
-  vtkm::cont::ArrayHandle<vtkm::Float32> V;
+  vtkm::cont::ArrayHandle<Precision> U; //barycentric coordinates
+  vtkm::cont::ArrayHandle<Precision> V;
+  vtkm::cont::ArrayHandle<Precision> NormalX; //ray Normal
+  vtkm::cont::ArrayHandle<Precision> NormalY;
+  vtkm::cont::ArrayHandle<Precision> NormalZ;
+  vtkm::cont::ArrayHandle<Precision> Scalar; //scalar
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> Distance; //distance to hit
-
-  vtkm::cont::ArrayHandle<vtkm::Float32> Scalar; //scalar
+  vtkm::cont::ArrayHandle<Precision> Distance; //distance to hit
 
   vtkm::cont::ArrayHandle<vtkm::Id> HitIdx;
+  vtkm::cont::ArrayHandle<vtkm::Id> PixelIdx;
 
-  vtkm::Int32 NumRays;
+  vtkm::cont::ArrayHandle<Precision> MinDistance; // distance to hit
+  vtkm::cont::ArrayHandle<Precision> MaxDistance; // distance to hit
+  vtkm::cont::ArrayHandle<vtkm::UInt8> Status;    // 0 = active 1 = miss 2 = lost
+
+  std::vector<ChannelBuffer<Precision>> Buffers;
+  vtkm::Id DebugWidth;
+  vtkm::Id DebugHeight;
+  vtkm::Id NumRays;
+
   VTKM_CONT
   Ray()
   {
+    IntersectionDataEnabled = false;
     NumRays = 0;
     vtkm::IdComponent inComp[3];
     inComp[0] = 0;
@@ -105,34 +128,94 @@ public:
 
     Dir = vtkm::cont::make_ArrayHandleCompositeVector(
       DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
+
+    ChannelBuffer<Precision> buffer;
+    buffer.Resize(NumRays);
+    Buffers.push_back(buffer);
+    DebugWidth = -1;
+    DebugHeight = -1;
   }
-  VTKM_CONT
-  Ray(const vtkm::Int32 size)
+
+  template <typename Device>
+  void EnableIntersectionData(Device)
+  {
+    if (IntersectionDataEnabled)
+    {
+      return;
+    }
+
+    IntersectionDataEnabled = true;
+    IntersectionX.PrepareForOutput(NumRays, Device());
+    IntersectionY.PrepareForOutput(NumRays, Device());
+    IntersectionZ.PrepareForOutput(NumRays, Device());
+    U.PrepareForOutput(NumRays, Device());
+    V.PrepareForOutput(NumRays, Device());
+    Scalar.PrepareForOutput(NumRays, Device());
+
+    NormalX.PrepareForOutput(NumRays, Device());
+    NormalY.PrepareForOutput(NumRays, Device());
+    NormalZ.PrepareForOutput(NumRays, Device());
+  }
+
+  void DisableIntersectionData()
+  {
+    if (!IntersectionDataEnabled)
+    {
+      return;
+    }
+
+    IntersectionDataEnabled = false;
+    IntersectionX.ReleaseResources();
+    IntersectionY.ReleaseResources();
+    IntersectionZ.ReleaseResources();
+    U.ReleaseResources();
+    V.ReleaseResources();
+    Scalar.ReleaseResources();
+
+    NormalX.ReleaseResources();
+    NormalY.ReleaseResources();
+    NormalZ.ReleaseResources();
+  }
+
+  template <typename Device>
+  VTKM_CONT Ray(const vtkm::Int32 size, Device, bool enableIntersectionData = false)
   {
     NumRays = size;
 
-    IntersectionX.PrepareForOutput(NumRays, DeviceAdapter());
-    IntersectionY.PrepareForOutput(NumRays, DeviceAdapter());
-    IntersectionZ.PrepareForOutput(NumRays, DeviceAdapter());
+    IntersectionDataEnabled = enableIntersectionData;
 
-    NormalX.PrepareForOutput(NumRays, DeviceAdapter());
-    NormalY.PrepareForOutput(NumRays, DeviceAdapter());
-    NormalZ.PrepareForOutput(NumRays, DeviceAdapter());
+    if (IntersectionDataEnabled)
+    {
+      IntersectionX.PrepareForOutput(NumRays, Device());
+      IntersectionY.PrepareForOutput(NumRays, Device());
+      IntersectionZ.PrepareForOutput(NumRays, Device());
 
-    OriginX.PrepareForOutput(NumRays, DeviceAdapter());
-    OriginY.PrepareForOutput(NumRays, DeviceAdapter());
-    OriginZ.PrepareForOutput(NumRays, DeviceAdapter());
+      U.PrepareForOutput(NumRays, Device());
+      V.PrepareForOutput(NumRays, Device());
 
-    DirX.PrepareForOutput(NumRays, DeviceAdapter());
-    DirY.PrepareForOutput(NumRays, DeviceAdapter());
-    DirZ.PrepareForOutput(NumRays, DeviceAdapter());
+      Scalar.PrepareForOutput(NumRays, Device());
 
-    U.PrepareForOutput(NumRays, DeviceAdapter());
-    V.PrepareForOutput(NumRays, DeviceAdapter());
-    Distance.PrepareForOutput(NumRays, DeviceAdapter());
-    Scalar.PrepareForOutput(NumRays, DeviceAdapter());
+      NormalX.PrepareForOutput(NumRays, Device());
+      NormalY.PrepareForOutput(NumRays, Device());
+      NormalZ.PrepareForOutput(NumRays, Device());
+    }
 
-    HitIdx.PrepareForOutput(NumRays, DeviceAdapter());
+    OriginX.PrepareForOutput(NumRays, Device());
+    OriginY.PrepareForOutput(NumRays, Device());
+    OriginZ.PrepareForOutput(NumRays, Device());
+
+    DirX.PrepareForOutput(NumRays, Device());
+    DirY.PrepareForOutput(NumRays, Device());
+    DirZ.PrepareForOutput(NumRays, Device());
+
+    Distance.PrepareForOutput(NumRays, Device());
+
+    MinDistance.PrepareForOutput(NumRays, Device());
+    MaxDistance.PrepareForOutput(NumRays, Device());
+    Status.PrepareForOutput(NumRays, Device());
+
+    HitIdx.PrepareForOutput(NumRays, Device());
+    PixelIdx.PrepareForOutput(NumRays, Device());
 
     vtkm::IdComponent inComp[3];
     inComp[0] = 0;
@@ -150,106 +233,26 @@ public:
 
     Dir = vtkm::cont::make_ArrayHandleCompositeVector(
       DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
+
+
+    ChannelBuffer<Precision> buffer;
+    buffer.Resize(NumRays, Device());
+    this->Buffers.push_back(buffer);
+
+    DebugWidth = -1;
+    DebugHeight = -1;
   }
+
   VTKM_CONT
-  virtual void resize(const vtkm::Int32 newSize)
+  void AddBuffer(const vtkm::Int32 numChannels, const std::string name)
   {
-    if (newSize == NumRays)
-      return; //nothing to do
 
-    NumRays = newSize;
-
-    IntersectionX.PrepareForOutput(NumRays, DeviceAdapter());
-    IntersectionY.PrepareForOutput(NumRays, DeviceAdapter());
-    IntersectionZ.PrepareForOutput(NumRays, DeviceAdapter());
-
-    NormalX.PrepareForOutput(NumRays, DeviceAdapter());
-    NormalY.PrepareForOutput(NumRays, DeviceAdapter());
-    NormalZ.PrepareForOutput(NumRays, DeviceAdapter());
-
-    OriginX.PrepareForOutput(NumRays, DeviceAdapter());
-    OriginY.PrepareForOutput(NumRays, DeviceAdapter());
-    OriginZ.PrepareForOutput(NumRays, DeviceAdapter());
-
-    DirX.PrepareForOutput(NumRays, DeviceAdapter());
-    DirY.PrepareForOutput(NumRays, DeviceAdapter());
-    DirZ.PrepareForOutput(NumRays, DeviceAdapter());
-
-    U.PrepareForOutput(NumRays, DeviceAdapter());
-    V.PrepareForOutput(NumRays, DeviceAdapter());
-    Distance.PrepareForOutput(NumRays, DeviceAdapter());
-    Scalar.PrepareForOutput(NumRays, DeviceAdapter());
-
-    HitIdx.PrepareForOutput(NumRays, DeviceAdapter());
+    ChannelBuffer<Precision> buffer(numChannels, this->NumRays);
+    buffer.SetName(name);
+    this->Buffers.push_back(buffer);
   }
 
-}; // class ray
-template <typename DeviceAdapter>
-class VolumeRay : public RayBase
-{
-public:
-  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>>::type Dir;
-
-  vtkm::cont::ArrayHandle<vtkm::Float32> DirX; //ray Dir
-  vtkm::cont::ArrayHandle<vtkm::Float32> DirY;
-  vtkm::cont::ArrayHandle<vtkm::Float32> DirZ;
-
-  vtkm::cont::ArrayHandle<vtkm::Float32> MinDistance; //distance to hit
-  vtkm::cont::ArrayHandle<vtkm::Float32> MaxDistance; //distance to hit
-  vtkm::cont::ArrayHandle<vtkm::Id> HitIndex;
-  vtkm::Int32 NumRays;
-  VTKM_CONT
-  VolumeRay()
-  {
-    NumRays = 0;
-    vtkm::IdComponent inComp[3];
-    inComp[0] = 0;
-    inComp[1] = 1;
-    inComp[2] = 2;
-
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
-      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
-  }
-  VTKM_CONT
-  VolumeRay(const vtkm::Int32 size)
-  {
-    NumRays = size;
-
-    DirX.PrepareForOutput(NumRays, DeviceAdapter());
-    DirY.PrepareForOutput(NumRays, DeviceAdapter());
-    DirZ.PrepareForOutput(NumRays, DeviceAdapter());
-
-    MinDistance.PrepareForOutput(NumRays, DeviceAdapter());
-    MaxDistance.PrepareForOutput(NumRays, DeviceAdapter());
-    HitIndex.PrepareForOutput(NumRays, DeviceAdapter());
-
-    vtkm::IdComponent inComp[3];
-    inComp[0] = 0;
-    inComp[1] = 1;
-    inComp[2] = 2;
-
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
-      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
-  }
-  VTKM_CONT
-  virtual void resize(const vtkm::Int32 newSize)
-  {
-    if (newSize == NumRays)
-      return; //nothing to do
-
-    NumRays = newSize;
-
-    DirX.PrepareForOutput(NumRays, DeviceAdapter());
-    DirY.PrepareForOutput(NumRays, DeviceAdapter());
-    DirZ.PrepareForOutput(NumRays, DeviceAdapter());
-
-    MinDistance.PrepareForOutput(NumRays, DeviceAdapter());
-    MaxDistance.PrepareForOutput(NumRays, DeviceAdapter());
-    HitIndex.PrepareForOutput(NumRays, DeviceAdapter());
-  }
-
+  friend class RayOperations;
 }; // class ray
 }
 }

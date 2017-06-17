@@ -21,12 +21,28 @@
 set(headers
   BoundingVolumeHierarchy.h
   Camera.h
+  ChannelBuffer.h
+  ChannelBufferOperations.h
+  ConnectivityBase.h
+  ConnectivityTracer.h
+  ConnectivityTracerFactory.h
+  CellIntersector.h
+  CellSampler.h
+  CellTables.h
+  Logger.h
+  MeshConnectivityBuilder.h
+  MeshConnectivityStructures.h
+  MortonCodes.h
+  Ray.h
+  RayOperations.h
   RayTracer.h
   RayTracingTypeDefs.h
-  Ray.h
   TriangleIntersector.h
   Worklets.h
   VolumeRendererStructured.h
   )
+
+set_source_files_properties(CellTables.h
+                            PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE)
 
 vtkm_declare_headers(${headers})
