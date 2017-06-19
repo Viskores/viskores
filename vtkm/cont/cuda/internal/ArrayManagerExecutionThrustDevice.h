@@ -157,7 +157,7 @@ public:
 
     const std::size_t maxNumVals = (std::numeric_limits<std::size_t>::max() / sizeof(ValueType));
 
-    if (static_cast<size_t>(numberOfValues) > maxNumVals)
+    if (static_cast<std::size_t>(numberOfValues) > maxNumVals)
     {
       std::ostringstream err;
       err << "Failed to allocate " << numberOfValues << " values on device: "
@@ -167,7 +167,7 @@ public:
 
     this->ReleaseResources();
 
-    const std::size_t bufferSize = numberOfValues * sizeof(ValueType);
+    const std::size_t bufferSize = static_cast<std::size_t>(numberOfValues) * sizeof(ValueType);
 
     // Attempt to allocate:
     try
