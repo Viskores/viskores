@@ -48,6 +48,7 @@ set(headers
   RemoveUnusedPoints.h
   ScatterCounting.h
   ScatterIdentity.h
+  ScatterPermutation.h
   ScatterUniform.h
   StreamLineUniformGrid.h
   SurfaceNormals.h
