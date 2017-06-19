@@ -89,12 +89,12 @@ public:
   }
 
   // Using the saved input to output cells, expand cell data
-  template <typename T, typename StorageType, typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<T, StorageType> ProcessField(
-    const vtkm::cont::ArrayHandle<T, StorageType>& input,
-    const DeviceAdapter& device)
+  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input,
+    const DeviceAdapter& device) const
   {
-    vtkm::cont::ArrayHandle<T, StorageType> output;
+    vtkm::cont::ArrayHandle<ValueType> output;
 
     DistributeCellData distribute(this->OutCellsPerCell, device);
     vtkm::worklet::DispatcherMapField<DistributeCellData, DeviceAdapter> dispatcher(distribute);

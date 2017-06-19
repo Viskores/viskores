@@ -96,7 +96,7 @@ inline VTKM_CONT bool Triangulate::DoMapField(vtkm::filter::ResultDataSet& resul
   // cell data must be scattered to the cells created per input cell
   if (fieldMeta.IsCellField())
   {
-    vtkm::cont::ArrayHandle<T, StorageType> output = this->Worklet.ProcessField(input, device);
+    vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input, device);
 
     result.GetDataSet().AddField(fieldMeta.AsField(output));
     return true;
