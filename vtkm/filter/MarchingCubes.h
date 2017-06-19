@@ -68,11 +68,35 @@ public:
   VTKM_CONT
   bool GetMergeDuplicatePoints() const { return this->Worklet.GetMergeDuplicatePoints(); }
 
+  /// Set/Get whether normals should be generated. Off by default. If enabled,
+  /// the default behaviour is to generate high quality normals for structured
+  /// datasets, using gradients, and generate fast normals for unstructured
+  /// datasets based on the result triangle mesh.
+  ///
   VTKM_CONT
   void SetGenerateNormals(bool on) { this->GenerateNormals = on; }
-
   VTKM_CONT
   bool GetGenerateNormals() const { return this->GenerateNormals; }
+
+  /// Set/Get whether the fast path should be used for normals computation for
+  /// structured datasets. Off by default.
+  VTKM_CONT
+  void SetComputeFastNormalsForStructured(bool on) { this->ComputeFastNormalsForStructured = on; }
+  VTKM_CONT
+  bool GetComputeFastNormalsForStructured() const { return this->ComputeFastNormalsForStructured; }
+
+  /// Set/Get whether the fast path should be used for normals computation for
+  /// unstructured datasets. On by default.
+  VTKM_CONT
+  void SetComputeFastNormalsForUnstructured(bool on)
+  {
+    this->ComputeFastNormalsForUnstructured = on;
+  }
+  VTKM_CONT
+  bool GetComputeFastNormalsForUnstructured() const
+  {
+    return this->ComputeFastNormalsForUnstructured;
+  }
 
   VTKM_CONT
   void SetNormalArrayName(const std::string& name) { this->NormalArrayName = name; }
@@ -100,6 +124,8 @@ public:
 private:
   std::vector<vtkm::Float64> IsoValues;
   bool GenerateNormals;
+  bool ComputeFastNormalsForStructured;
+  bool ComputeFastNormalsForUnstructured;
   std::string NormalArrayName;
   vtkm::worklet::MarchingCubes Worklet;
 };
