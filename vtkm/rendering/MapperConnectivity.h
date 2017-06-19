@@ -17,25 +17,28 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_MapperVolume_h
-#define vtk_m_rendering_MapperVolume_h
+#ifndef vtk_m_rendering_MapperConnectivity_h
+#define vtk_m_rendering_MapperConnectivity_h
 
+#include <cstdlib>
+#include <typeinfo>
+#include <vtkm/rendering/CanvasRayTracer.h>
+#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
-
-#include <memory>
+#include <vtkm/rendering/View.h>
 
 namespace vtkm
 {
 namespace rendering
 {
 
-class VTKM_RENDERING_EXPORT MapperVolume : public Mapper
+class VTKM_RENDERING_EXPORT MapperConnectivity : public Mapper
 {
 public:
-  MapperVolume();
+  MapperConnectivity();
 
-  ~MapperVolume();
-
+  ~MapperConnectivity();
+  void SetSampleDistance(const vtkm::Float32&);
   void SetCanvas(vtkm::rendering::Canvas* canvas) VTKM_OVERRIDE;
   virtual vtkm::rendering::Canvas* GetCanvas() const VTKM_OVERRIDE;
 
@@ -50,14 +53,12 @@ public:
   virtual void EndScene() VTKM_OVERRIDE;
 
   vtkm::rendering::Mapper* NewCopy() const VTKM_OVERRIDE;
-  void SetSampleDistance(const vtkm::Float32 distance);
-  void SetCompositeBackground(const bool compositeBackground);
+  void CreateDefaultView();
 
-private:
-  struct InternalsType;
-  std::shared_ptr<InternalsType> Internals;
+protected:
+  vtkm::Float32 SampleDistance;
+  CanvasRayTracer* CanvasRT;
 };
 }
 } //namespace vtkm::rendering
-
-#endif //vtk_m_rendering_MapperVolume_h
+#endif //vtk_m_rendering_SceneRendererVolume_h

@@ -20,7 +20,6 @@
 
 #include <vtkm/rendering/MapperVolume.h>
 
-#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
@@ -29,8 +28,10 @@
 #include <vtkm/rendering/internal/RunTriangulator.h>
 
 #include <vtkm/rendering/raytracing/Camera.h>
+#include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 
+#include <sstream>
 #include <typeinfo>
 
 #define DEFAULT_SAMPLE_DISTANCE -1.f
@@ -45,8 +46,6 @@ struct MapperVolume::InternalsType
   vtkm::rendering::CanvasRayTracer* Canvas;
   vtkm::Float32 SampleDistance;
   bool CompositeBackground;
-  vtkm::cont::RuntimeDeviceTracker DeviceTracker;
-  std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase> RayTracerContainer;
 
   VTKM_CONT
   InternalsType()
@@ -54,34 +53,6 @@ struct MapperVolume::InternalsType
     , SampleDistance(DEFAULT_SAMPLE_DISTANCE)
     , CompositeBackground(true)
   {
-  }
-
-  template <typename Device>
-  VTKM_CONT vtkm::rendering::raytracing::VolumeRendererStructured<Device>* GetRayTracer(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    typedef vtkm::rendering::raytracing::VolumeRendererStructured<Device> RayTracerType;
-    typedef vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType> ContainerType;
-    RayTracerType* tracer = nullptr;
-    if (this->RayTracerContainer)
-    {
-      ContainerType* container = dynamic_cast<ContainerType*>(this->RayTracerContainer.get());
-      if (container)
-      {
-        tracer = &container->Item;
-      }
-    }
-
-    if (tracer == nullptr)
-    {
-      ContainerType* container =
-        new vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType>;
-      tracer = &container->Item;
-      this->RayTracerContainer.reset(container);
-    }
-
-    return tracer;
   }
 };
 
@@ -99,6 +70,7 @@ void MapperVolume::SetCanvas(vtkm::rendering::Canvas* canvas)
   if (canvas != nullptr)
   {
     this->Internals->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
+
     if (this->Internals->Canvas == nullptr)
     {
       throw vtkm::cont::ErrorBadValue("Ray Tracer: bad canvas type. Must be CanvasRayTracer");
@@ -115,59 +87,6 @@ vtkm::rendering::Canvas* MapperVolume::GetCanvas() const
   return this->Internals->Canvas;
 }
 
-struct MapperVolume::RenderFunctor
-{
-  vtkm::rendering::MapperVolume* Self;
-  vtkm::cont::CellSetStructured<3> CellSet;
-  vtkm::cont::CoordinateSystem Coordinates;
-  vtkm::cont::Field ScalarField;
-  vtkm::rendering::Camera Camera;
-  vtkm::Range ScalarRange;
-
-  VTKM_CONT
-  RenderFunctor(vtkm::rendering::MapperVolume* self,
-                const vtkm::cont::CellSetStructured<3> cellSet,
-                const vtkm::cont::CoordinateSystem& coordinates,
-                const vtkm::cont::Field& scalarField,
-                const vtkm::rendering::Camera& camera,
-                const vtkm::Range& scalarRange)
-    : Self(self)
-    , CellSet(cellSet)
-    , Coordinates(coordinates)
-    , ScalarField(scalarField)
-    , Camera(camera)
-    , ScalarRange(scalarRange)
-  {
-  }
-
-  template <typename Device>
-  bool operator()(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::rendering::raytracing::VolumeRendererStructured<Device>* tracer =
-      this->Self->Internals->GetRayTracer(Device());
-
-    tracer->GetCamera().SetParameters(this->Camera, *this->Self->Internals->Canvas);
-    // Check to see of the sample distance was set
-    if (this->Self->Internals->SampleDistance != DEFAULT_SAMPLE_DISTANCE)
-    {
-      tracer->SetSampleDistance(this->Self->Internals->SampleDistance);
-    }
-
-    tracer->SetCompositeBackground(this->Self->Internals->CompositeBackground);
-    vtkm::Bounds dataBounds = this->Coordinates.GetBounds();
-
-    tracer->SetData(
-      this->Coordinates, this->ScalarField, dataBounds, this->CellSet, this->ScalarRange);
-    tracer->SetColorMap(this->Self->ColorMap);
-    tracer->SetBackgroundColor(this->Self->Internals->Canvas->GetBackgroundColor().Components);
-    tracer->Render(this->Self->Internals->Canvas);
-
-    return true;
-  }
-};
-
 void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                                const vtkm::cont::CoordinateSystem& coords,
                                const vtkm::cont::Field& scalarField,
@@ -177,20 +96,49 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
 {
   if (!cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
   {
-    std::cerr << "ERROR cell set type not currently supported\n";
+    std::stringstream msg;
     std::string theType = typeid(cellset).name();
-    std::cerr << "Type : " << theType << std::endl;
+    msg << "Mapper volume: cell set type not currently supported\n";
+    msg << "Type : " << theType << std::endl;
+    throw vtkm::cont::ErrorBadValue(msg.str());
   }
   else
   {
-    RenderFunctor functor(this,
-                          cellset.Cast<vtkm::cont::CellSetStructured<3>>(),
-                          coords,
-                          scalarField,
-                          camera,
-                          scalarRange);
-    vtkm::cont::TryExecute(
-      functor, this->Internals->DeviceTracker, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+    raytracing::Logger* logger = raytracing::Logger::GetInstance();
+    logger->OpenLogEntry("mapper_volume");
+    vtkm::cont::Timer<> tot_timer;
+    vtkm::cont::Timer<> timer;
+
+    vtkm::rendering::raytracing::VolumeRendererStructured tracer;
+
+    vtkm::rendering::raytracing::Camera rayCamera;
+    vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
+
+    rayCamera.SetParameters(camera, *this->Internals->Canvas);
+
+    rayCamera.CreateRays(rays, coords);
+
+    rays.Buffers.at(0).InitConst(0.f);
+
+    if (this->Internals->SampleDistance != DEFAULT_SAMPLE_DISTANCE)
+    {
+      tracer.SetSampleDistance(this->Internals->SampleDistance);
+    }
+
+    tracer.SetData(
+      coords, scalarField, cellset.Cast<vtkm::cont::CellSetStructured<3>>(), scalarRange);
+    tracer.SetColorMap(this->ColorMap);
+    tracer.SetBackgroundColor(this->Internals->Canvas->GetBackgroundColor().Components);
+    tracer.Render(rays);
+
+    timer.Reset();
+    this->Internals->Canvas->WriteToCanvas(
+      rays.PixelIdx, rays.Distance, rays.Buffers.at(0).Buffer, camera);
+
+    vtkm::Float64 time = timer.GetElapsedTime();
+    logger->AddLogData("write_to_canvas", time);
+    time = tot_timer.GetElapsedTime();
+    logger->CloseLogEntry(time);
   }
 }
 

@@ -62,6 +62,8 @@ public:
 
   bool GetSmooth() const;
 
+  void SetSmooth(bool smooth);
+
   void Sample(int numSamples, vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colors) const;
 
   vtkm::rendering::Color MapRGB(vtkm::Float32 scalar) const;
@@ -71,6 +73,8 @@ public:
   void Clear();
 
   void Reverse();
+
+  ColorTable CorrectOpacity(const vtkm::Float32& factor) const;
 
   void AddControlPoint(vtkm::Float32 position, const vtkm::rendering::Color& color);
 
