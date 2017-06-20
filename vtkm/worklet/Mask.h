@@ -60,41 +60,22 @@ public:
     return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
   }
 
-  // Permute cell data to match permuted cells
-  class PermuteCellData
+  //----------------------------------------------------------------------------
+  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& in,
+    const DeviceAdapter&) const
   {
-  public:
-    PermuteCellData(const vtkm::cont::ArrayHandle<vtkm::Id> validCellIds,
-                    vtkm::cont::DynamicArrayHandle& data)
-      : ValidCellIds(validCellIds)
-      , Data(&data)
-    {
-    }
+    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
-    template <typename ArrayHandleType>
-    void operator()(const ArrayHandleType& input) const
-    {
-      *(this->Data) = vtkm::cont::DynamicArrayHandle(
-        vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input));
-    }
+    // Use a temporary permutation array to simplify the mapping:
+    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, in);
 
-  private:
-    vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
-    vtkm::cont::DynamicArrayHandle* Data;
-  };
+    // Copy into an array with default storage:
+    vtkm::cont::ArrayHandle<ValueType> result;
+    Algo::Copy(tmp, result);
 
-  vtkm::cont::Field ProcessCellField(const vtkm::cont::Field field) const
-  {
-    if (field.GetAssociation() != vtkm::cont::Field::ASSOC_CELL_SET)
-    {
-      throw vtkm::cont::ErrorBadValue("Expecting cell field.");
-    }
-
-    vtkm::cont::DynamicArrayHandle data;
-    CastAndCall(field, PermuteCellData(this->ValidCellIds, data));
-
-    return vtkm::cont::Field(
-      field.GetName(), field.GetAssociation(), field.GetAssocCellSet(), data);
+    return result;
   }
 
 private:
