@@ -36,9 +36,6 @@ public:
 
     typedef vtkm::cont::CellSetExplicit<> CellSetType;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -54,9 +51,9 @@ public:
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds, DeviceAdapter());
 
-    vtkm::cont::Field cellField = extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
-    OutCellFieldArrayHandleType cellFieldArray;
-    cellField.GetData().CopyTo(cellFieldArray);
+    auto cellvar =
+      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
                      "Wrong result for ExtractCells");
@@ -71,10 +68,6 @@ public:
     std::cout << "Testing extract cells with implicit function (box) on explicit:" << std::endl;
 
     typedef vtkm::cont::CellSetExplicit<> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -92,17 +85,19 @@ public:
 
     // Output data set with cell set containing extracted cells and all points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet = extractGeometry.Run(cellSet,
-                                                    dataset.GetCoordinateSystem("coordinates"),
-                                                    box,
-                                                    extractInside,
-                                                    extractBoundaryCells,
-                                                    extractOnlyBoundaryCells,
-                                                    DeviceAdapter());
+    vtkm::cont::DynamicCellSet outCellSet =
+      extractGeometry.Run(cellSet,
+                          dataset.GetCoordinateSystem("coordinates"),
+                          box,
+                          extractInside,
+                          extractBoundaryCells,
+                          extractOnlyBoundaryCells,
+                          DeviceAdapter());
 
-    vtkm::cont::Field cellField = extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
-    OutCellFieldArrayHandleType cellFieldArray;
-    cellField.GetData().CopyTo(cellFieldArray);
+    auto cellvar =
+      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
+
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 2), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
@@ -117,9 +112,7 @@ public:
 
     typedef vtkm::cont::CellSetStructured<2> CellSetType;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
+
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
@@ -135,9 +128,9 @@ public:
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds, DeviceAdapter());
 
-    vtkm::cont::Field cellField = extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
-    OutCellFieldArrayHandleType cellFieldArray;
-    cellField.GetData().CopyTo(cellFieldArray);
+    auto cellvar =
+      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
                      "Wrong result for ExtractCells");
@@ -153,9 +146,6 @@ public:
 
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
     typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -171,9 +161,9 @@ public:
     vtkm::worklet::ExtractGeometry extractGeometry;
     OutCellSetType outCellSet = extractGeometry.Run(cellSet, cellIds, DeviceAdapter());
 
-    vtkm::cont::Field cellField = extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
-    OutCellFieldArrayHandleType cellFieldArray;
-    cellField.GetData().CopyTo(cellFieldArray);
+    auto cellvar =
+      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), nCells),
                      "Wrong result for ExtractCells");
@@ -188,10 +178,6 @@ public:
     std::cout << "Testing extract cells with implicit function (box):" << std::endl;
 
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -209,17 +195,18 @@ public:
 
     // Output data set with cell set containing extracted points
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet = extractGeometry.Run(cellSet,
-                                                    dataset.GetCoordinateSystem("coords"),
-                                                    box,
-                                                    extractInside,
-                                                    extractBoundaryCells,
-                                                    extractOnlyBoundaryCells,
-                                                    DeviceAdapter());
+    vtkm::cont::DynamicCellSet outCellSet =
+      extractGeometry.Run(cellSet,
+                          dataset.GetCoordinateSystem("coords"),
+                          box,
+                          extractInside,
+                          extractBoundaryCells,
+                          extractOnlyBoundaryCells,
+                          DeviceAdapter());
 
-    vtkm::cont::Field cellField = extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
-    OutCellFieldArrayHandleType cellFieldArray;
-    cellField.GetData().CopyTo(cellFieldArray);
+    auto cellvar =
+      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&
@@ -233,10 +220,6 @@ public:
     std::cout << "Testing extract cells with implicit function (sphere):" << std::endl;
 
     typedef vtkm::cont::CellSetStructured<3> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellFieldArrayHandleType;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -254,17 +237,18 @@ public:
 
     // Output data set with cell set containing extracted cells
     vtkm::worklet::ExtractGeometry extractGeometry;
-    OutCellSetType outCellSet = extractGeometry.Run(cellSet,
-                                                    dataset.GetCoordinateSystem("coords"),
-                                                    sphere,
-                                                    extractInside,
-                                                    extractBoundaryCells,
-                                                    extractOnlyBoundaryCells,
-                                                    DeviceAdapter());
+    vtkm::cont::DynamicCellSet outCellSet =
+      extractGeometry.Run(cellSet,
+                          dataset.GetCoordinateSystem("coords"),
+                          sphere,
+                          extractInside,
+                          extractBoundaryCells,
+                          extractOnlyBoundaryCells,
+                          DeviceAdapter());
 
-    vtkm::cont::Field cellField = extractGeometry.ProcessCellField(dataset.GetField("cellvar"));
-    OutCellFieldArrayHandleType cellFieldArray;
-    cellField.GetData().CopyTo(cellFieldArray);
+    auto cellvar =
+      dataset.GetField("cellvar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
+    auto cellFieldArray = extractGeometry.ProcessCellField(cellvar, DeviceAdapter());
 
     VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 8), "Wrong result for ExtractCells");
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 8 &&

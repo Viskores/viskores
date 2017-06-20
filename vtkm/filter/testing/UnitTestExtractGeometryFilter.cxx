@@ -60,11 +60,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for ExtractGeometry");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellArrayHandleType;
-
-    OutCellArrayHandleType outCellData;
+    vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 21.f, "Wrong cell field data");
@@ -100,11 +96,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
                      "Wrong result for ExtractGeometry");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellArrayHandleType;
-
-    OutCellArrayHandleType outCellData;
+    vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.f, "Wrong cell field data");
@@ -140,11 +132,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 64),
                      "Wrong result for ExtractGeometry");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellArrayHandleType;
-
-    OutCellArrayHandleType outCellData;
+    vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.f, "Wrong cell field data");
@@ -179,11 +167,7 @@ public:
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
                      "Wrong result for ExtractGeometry");
 
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
-      OutCellArrayHandleType;
-
-    OutCellArrayHandleType outCellData;
+    vtkm::cont::ArrayHandle<vtkm::Float32> outCellData;
     output.GetField("cellvar").GetData().CopyTo(outCellData);
 
     VTKM_TEST_ASSERT(outCellData.GetPortalConstControl().Get(0) == 0.f, "Wrong cell field data");
