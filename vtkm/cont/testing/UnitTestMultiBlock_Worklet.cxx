@@ -44,6 +44,8 @@
 #include <vtkm/worklet/AverageByKey.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/ScatterUniform.h>
+
+#include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/Histogram.h>
 /*namespace vtkm {
@@ -227,10 +229,9 @@ const std::vector<vtkm::filter::ResultField> MultiBlock_WorkletTest()
 
   std::vector<vtkm::filter::ResultField> results;
   //printSummary_ArrayHandle(make_ArrayHandle(Blocks.GetBlocks()),std::cout);
-  vtkm::filter::Histogram histogram;
-  histogram.SetNumberOfBins(10);
+  vtkm::filter::CellAverage cellAverage;
   //results = Apply(Blocks,divider,"pointvar");
-  results = histogram.Execute(Blocks, std::string("pointvar"));
+  results = cellAverage.Execute(Blocks, std::string("pointvar"));
   /*for(std::size_t j=100; j<Blocks.GetNumberOfBlocks(); j++)
   {   
     divider.SetDividerValue(2);
