@@ -39,6 +39,7 @@ set(unit_tests
   UnitTestPointGradient.cxx
   UnitTestRemoveUnusedPoints.cxx
   UnitTestScatterCounting.cxx
+  UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx

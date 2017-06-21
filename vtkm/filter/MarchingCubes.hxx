@@ -20,22 +20,42 @@
 
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/CellSetSingleType.h>
+#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterCounting.h>
+#include <vtkm/worklet/SurfaceNormals.h>
 
 namespace vtkm
 {
 namespace filter
 {
 
+namespace
+{
+
+template <typename CellSetList>
+bool IsCellSetStructured(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellset)
+{
+  if (cellset.template IsType<vtkm::cont::CellSetStructured<1>>() ||
+      cellset.template IsType<vtkm::cont::CellSetStructured<2>>() ||
+      cellset.template IsType<vtkm::cont::CellSetStructured<3>>())
+  {
+    return true;
+  }
+  return false;
+}
+} // anonymous namespace
+
 //-----------------------------------------------------------------------------
 inline VTKM_CONT MarchingCubes::MarchingCubes()
   : vtkm::filter::FilterDataSetWithField<MarchingCubes>()
   , IsoValues()
   , GenerateNormals(false)
+  , ComputeFastNormalsForStructured(false)
+  , ComputeFastNormalsForUnstructured(true)
   , NormalArrayName("normals")
   , Worklet()
 {
@@ -138,7 +158,11 @@ inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
   //worklet with the design
   //But I think we should get this to compile before we tinker with
   //a more efficient api
-  if (this->GenerateNormals)
+
+  bool generateHighQualityNormals = IsCellSetStructured(cells)
+    ? !this->ComputeFastNormalsForStructured
+    : !this->ComputeFastNormalsForUnstructured;
+  if (this->GenerateNormals && generateHighQualityNormals)
   {
     outputCells = this->Worklet.Run(&ivalues[0],
                                     static_cast<vtkm::Id>(ivalues.size()),
@@ -162,6 +186,16 @@ inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
 
   if (this->GenerateNormals)
   {
+    if (!generateHighQualityNormals)
+    {
+      Vec3HandleType faceNormals;
+      vtkm::worklet::FacetedSurfaceNormals faceted;
+      faceted.Run(outputCells, vertices, faceNormals, device);
+
+      vtkm::worklet::SmoothSurfaceNormals smooth;
+      smooth.Run(outputCells, faceNormals, normals, device);
+    }
+
     vtkm::cont::Field normalField(this->NormalArrayName, vtkm::cont::Field::ASSOC_POINTS, normals);
     output.AddField(normalField);
   }
