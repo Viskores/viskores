@@ -59,7 +59,6 @@ set(unit_tests
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
   UnitTestMultiBlock.cxx
-  UnitTestMultiBlock_Worklet.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
