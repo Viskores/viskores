@@ -1,0 +1,82 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2017 Sandia Corporation.
+//  Copyright 2017 UT-Battelle, LLC.
+//  Copyright 2017 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
+
+#include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
+
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
+
+ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareWithControl(
+  vtkm::cont::internal::StorageBasicBase& storage)
+  : Superclass(storage)
+{
+}
+
+void ExecutionArrayInterfaceBasicShareWithControl::Allocate(TypelessExecutionArray& execArray,
+                                                            Id numBytes) const
+{
+  this->ControlStorage.AllocateBytes(numBytes);
+
+  execArray.Array = this->ControlStorage.GetBasePointer();
+  execArray.ArrayEnd = this->ControlStorage.GetEndPointer();
+  execArray.ArrayCapacity = this->ControlStorage.GetCapacityPointer();
+}
+
+void ExecutionArrayInterfaceBasicShareWithControl::Free(TypelessExecutionArray& execArray) const
+{
+  // Just clear the pointers -- control storage will actually free the
+  // memory when the time comes.
+  execArray.Array = nullptr;
+  execArray.ArrayEnd = nullptr;
+  execArray.ArrayCapacity = nullptr;
+}
+
+void ExecutionArrayInterfaceBasicShareWithControl::CopyFromControl(const void* src,
+                                                                   void* dst,
+                                                                   Id bytes) const
+{
+  if (src != dst)
+  {
+    const vtkm::UInt8* srcBegin = static_cast<const vtkm::UInt8*>(src);
+    const vtkm::UInt8* srcEnd = srcBegin + bytes;
+    vtkm::UInt8* dstBegin = static_cast<vtkm::UInt8*>(dst);
+    std::copy(srcBegin, srcEnd, dstBegin);
+  }
+}
+
+void ExecutionArrayInterfaceBasicShareWithControl::CopyToControl(const void* src,
+                                                                 void* dst,
+                                                                 Id bytes) const
+{
+  if (src != dst)
+  {
+    const vtkm::UInt8* srcBegin = static_cast<const vtkm::UInt8*>(src);
+    const vtkm::UInt8* srcEnd = srcBegin + bytes;
+    vtkm::UInt8* dstBegin = static_cast<vtkm::UInt8*>(dst);
+    std::copy(srcBegin, srcEnd, dstBegin);
+  }
+}
+}
+}
+} // end namespace vtkm::cont::internal

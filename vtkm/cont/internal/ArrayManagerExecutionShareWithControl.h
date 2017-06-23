@@ -23,6 +23,7 @@
 #include <vtkm/Assert.h>
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/Storage.h>
 
 #include <algorithm>
@@ -120,6 +121,40 @@ private:
   void operator=(ArrayManagerExecutionShareWithControl<T, StorageTag>&) = delete;
 
   StorageType* Storage;
+};
+
+// Specializations for basic storage:
+template <typename T>
+struct ExecutionPortalFactoryBasicShareWithControl
+{
+  using ValueType = T;
+  using PortalType = ArrayPortalFromIterators<ValueType*>;
+  using PortalConstType = ArrayPortalFromIterators<const ValueType*>;
+
+  VTKM_CONT
+  static PortalType CreatePortal(ValueType* start, ValueType* end)
+  {
+    return PortalType(start, end);
+  }
+
+  VTKM_CONT
+  static PortalConstType CreatePortalConst(const ValueType* start, const ValueType* end)
+  {
+    return PortalConstType(start, end);
+  }
+};
+
+struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicShareWithControl
+  : public ExecutionArrayInterfaceBasicBase
+{
+  using Superclass = ExecutionArrayInterfaceBasicBase;
+
+  VTKM_CONT ExecutionArrayInterfaceBasicShareWithControl(StorageBasicBase& storage);
+
+  VTKM_CONT void Allocate(TypelessExecutionArray& execArray, vtkm::Id numBytes) const final;
+  VTKM_CONT void Free(TypelessExecutionArray& execArray) const final;
+  VTKM_CONT void CopyFromControl(const void* src, void* dst, vtkm::Id bytes) const final;
+  VTKM_CONT void CopyToControl(const void* src, void* dst, vtkm::Id bytes) const final;
 };
 }
 }

@@ -28,6 +28,7 @@
 
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
@@ -97,6 +98,35 @@ struct VirtualObjectTransfer<VirtualObject,
                              vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
   : public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
 {
+};
+
+template <typename T>
+struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagTestAlgorithmGeneral>
+  : public ExecutionPortalFactoryBasicShareWithControl<T>
+{
+  using Superclass = ExecutionPortalFactoryBasicShareWithControl<T>;
+
+  using typename Superclass::ValueType;
+  using typename Superclass::PortalType;
+  using typename Superclass::PortalConstType;
+  using Superclass::CreatePortal;
+  using Superclass::CreatePortalConst;
+};
+
+template <>
+struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
+  : public ExecutionArrayInterfaceBasicShareWithControl
+{
+  using Superclass = ExecutionArrayInterfaceBasicShareWithControl;
+
+  VTKM_CONT
+  ExecutionArrayInterfaceBasic(StorageBasicBase& storage)
+    : Superclass(storage)
+  {
+  }
+
+  VTKM_CONT
+  virtual DeviceAdapterId GetDeviceId() const final { return -3; }
 };
 }
 }

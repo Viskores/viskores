@@ -49,6 +49,32 @@ public:
   }
 };
 
+template <typename T>
+struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagSerial>
+  : public ExecutionPortalFactoryBasicShareWithControl<T>
+{
+  using Superclass = ExecutionPortalFactoryBasicShareWithControl<T>;
+
+  using typename Superclass::ValueType;
+  using typename Superclass::PortalType;
+  using typename Superclass::PortalConstType;
+  using Superclass::CreatePortal;
+  using Superclass::CreatePortalConst;
+};
+
+template <>
+struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagSerial>
+  : public ExecutionArrayInterfaceBasicShareWithControl
+{
+  using Superclass = ExecutionArrayInterfaceBasicShareWithControl;
+
+  VTKM_CONT
+  ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
+
+  VTKM_CONT
+  virtual DeviceAdapterId GetDeviceId() const final { return VTKM_DEVICE_ADAPTER_SERIAL; }
+};
+
 } // namespace internal
 
 #ifndef vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_cxx

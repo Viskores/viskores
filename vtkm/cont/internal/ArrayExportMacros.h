@@ -23,75 +23,28 @@
 
 /// Declare extern template instantiations for all ArrayHandle transfer
 /// infrastructure from a header file.
-#define VTKM_EXPORT_ARRAYHANDLE_FOR_DEVICE_ADAPTER(Type, Device)                                   \
+#define VTKM_EXPORT_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(Type, Device)                    \
   namespace internal                                                                               \
   {                                                                                                \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayManagerExecution<Type, vtkm::cont::StorageTagBasic, Device>;                              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayManagerExecution<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic, Device>;                \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayManagerExecution<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic, Device>;                \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayManagerExecution<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic, Device>;                \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayTransfer<Type, vtkm::cont::StorageTagBasic, Device>;                                      \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayTransfer<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic, Device>;                        \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayTransfer<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic, Device>;                        \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayTransfer<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic, Device>;                        \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleExecutionManager<Type, vtkm::cont::StorageTagBasic, Device>;                        \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleExecutionManager<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic, Device>;          \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleExecutionManager<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic, Device>;          \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleExecutionManager<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic, Device>;          \
+  extern template struct VTKM_CONT_TEMPLATE_EXPORT ExecutionPortalFactoryBasic<Type, Device>;      \
   }                                                                                                \
   extern template VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>::ExecutionTypes<    \
     Device>::PortalConst ArrayHandle<Type, StorageTagBasic>::PrepareForInput(Device) const;        \
-  extern template VTKM_CONT_TEMPLATE_EXPORT                                                        \
-    ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::ExecutionTypes<Device>::PortalConst          \
-      ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::PrepareForInput(Device) const;             \
-  extern template VTKM_CONT_TEMPLATE_EXPORT                                                        \
-    ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::ExecutionTypes<Device>::PortalConst          \
-      ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::PrepareForInput(Device) const;             \
-  extern template VTKM_CONT_TEMPLATE_EXPORT                                                        \
-    ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::ExecutionTypes<Device>::PortalConst          \
-      ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::PrepareForInput(Device) const;             \
   extern template VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>::ExecutionTypes<    \
     Device>::Portal ArrayHandle<Type, StorageTagBasic>::PrepareForOutput(vtkm::Id, Device);        \
-  extern template VTKM_CONT_TEMPLATE_EXPORT                                                        \
-    ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::ExecutionTypes<Device>::Portal               \
-      ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::PrepareForOutput(vtkm::Id, Device);        \
-  extern template VTKM_CONT_TEMPLATE_EXPORT                                                        \
-    ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::ExecutionTypes<Device>::Portal               \
-      ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::PrepareForOutput(vtkm::Id, Device);        \
-  extern template VTKM_CONT_TEMPLATE_EXPORT                                                        \
-    ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::ExecutionTypes<Device>::Portal               \
-      ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::PrepareForOutput(vtkm::Id, Device);        \
   extern template VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<Type, StorageTagBasic>::ExecutionTypes<    \
     Device>::Portal ArrayHandle<Type, StorageTagBasic>::PrepareForInPlace(Device);                 \
-  extern template VTKM_CONT_TEMPLATE_EXPORT                                                        \
-    ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::ExecutionTypes<Device>::Portal               \
-      ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::PrepareForInPlace(Device);                 \
-  extern template VTKM_CONT_TEMPLATE_EXPORT                                                        \
-    ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::ExecutionTypes<Device>::Portal               \
-      ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::PrepareForInPlace(Device);                 \
-  extern template VTKM_CONT_TEMPLATE_EXPORT                                                        \
-    ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::ExecutionTypes<Device>::Portal               \
-      ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::PrepareForInPlace(Device);                 \
   extern template VTKM_CONT_TEMPLATE_EXPORT void                                                   \
-    ArrayHandle<Type, StorageTagBasic>::PrepareForDevice(Device) const;                            \
-  extern template VTKM_CONT_TEMPLATE_EXPORT void                                                   \
-    ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::PrepareForDevice(Device) const;              \
-  extern template VTKM_CONT_TEMPLATE_EXPORT void                                                   \
-    ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::PrepareForDevice(Device) const;              \
-  extern template VTKM_CONT_TEMPLATE_EXPORT void                                                   \
-    ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::PrepareForDevice(Device) const;
+    ArrayHandle<Type, StorageTagBasic>::PrepareForDevice(Device) const;
+
+#define VTKM_EXPORT_ARRAYHANDLE_FOR_DEVICE_ADAPTER(BasicType, Device)                              \
+  VTKM_EXPORT_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(BasicType, Device)                     \
+  VTKM_EXPORT_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(                                       \
+    VTKM_PASS_COMMAS(vtkm::Vec<BasicType, 2>), Device)                                             \
+  VTKM_EXPORT_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(                                       \
+    VTKM_PASS_COMMAS(vtkm::Vec<BasicType, 3>), Device)                                             \
+  VTKM_EXPORT_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(                                       \
+    VTKM_PASS_COMMAS(vtkm::Vec<BasicType, 4>), Device)
 
 /// call VTKM_EXPORT_ARRAYHANDLE_FOR_DEVICE_ADAPTER for all vtkm types.
 #define VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(Device)                                        \
@@ -109,73 +62,28 @@
 
 /// Instantiate templates for all ArrayHandle transfer infrastructure from an
 /// implementation file.
-#define VTKM_INSTANTIATE_ARRAYHANDLE_FOR_DEVICE_ADAPTER(Type, Device)                              \
+#define VTKM_INSTANTIATE_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(Type, Device)               \
   namespace internal                                                                               \
   {                                                                                                \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayManagerExecution<Type, vtkm::cont::StorageTagBasic, Device>;                              \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayManagerExecution<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic, Device>;                \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayManagerExecution<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic, Device>;                \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayManagerExecution<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic, Device>;                \
-  template class VTKM_CONT_EXPORT ArrayTransfer<Type, vtkm::cont::StorageTagBasic, Device>;        \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayTransfer<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic, Device>;                        \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayTransfer<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic, Device>;                        \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayTransfer<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic, Device>;                        \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayHandleExecutionManager<Type, vtkm::cont::StorageTagBasic, Device>;                        \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayHandleExecutionManager<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic, Device>;          \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayHandleExecutionManager<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic, Device>;          \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayHandleExecutionManager<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic, Device>;          \
+  template struct VTKM_CONT_EXPORT ExecutionPortalFactoryBasic<Type, Device>;                      \
   }                                                                                                \
   template VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>::ExecutionTypes<                    \
     Device>::PortalConst ArrayHandle<Type, StorageTagBasic>::PrepareForInput(Device) const;        \
-  template VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::ExecutionTypes<      \
-    Device>::PortalConst ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::PrepareForInput(Device) \
-    const;                                                                                         \
-  template VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::ExecutionTypes<      \
-    Device>::PortalConst ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::PrepareForInput(Device) \
-    const;                                                                                         \
-  template VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::ExecutionTypes<      \
-    Device>::PortalConst ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::PrepareForInput(Device) \
-    const;                                                                                         \
   template VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>::ExecutionTypes<Device>::Portal     \
     ArrayHandle<Type, StorageTagBasic>::PrepareForOutput(vtkm::Id, Device);                        \
-  template VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::ExecutionTypes<      \
-    Device>::Portal ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::PrepareForOutput(vtkm::Id,   \
-                                                                                       Device);    \
-  template VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::ExecutionTypes<      \
-    Device>::Portal ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::PrepareForOutput(vtkm::Id,   \
-                                                                                       Device);    \
-  template VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::ExecutionTypes<      \
-    Device>::Portal ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::PrepareForOutput(vtkm::Id,   \
-                                                                                       Device);    \
   template VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>::ExecutionTypes<Device>::Portal     \
     ArrayHandle<Type, StorageTagBasic>::PrepareForInPlace(Device);                                 \
-  template VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::ExecutionTypes<      \
-    Device>::Portal ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::PrepareForInPlace(Device);   \
-  template VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::ExecutionTypes<      \
-    Device>::Portal ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::PrepareForInPlace(Device);   \
-  template VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::ExecutionTypes<      \
-    Device>::Portal ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::PrepareForInPlace(Device);   \
-  template VTKM_CONT_EXPORT void ArrayHandle<Type, StorageTagBasic>::PrepareForDevice(Device)      \
-    const;                                                                                         \
-  template VTKM_CONT_EXPORT void                                                                   \
-    ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>::PrepareForDevice(Device) const;              \
-  template VTKM_CONT_EXPORT void                                                                   \
-    ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>::PrepareForDevice(Device) const;              \
-  template VTKM_CONT_EXPORT void                                                                   \
-    ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>::PrepareForDevice(Device) const;
+  template VTKM_CONT_EXPORT void ArrayHandle<Type, StorageTagBasic>::PrepareForDevice(Device) const;
 
-/// call VTKM_INSTANTIATE_ARRAYHANDLE_FOR_DEVICE_ADAPTER for all vtkm types.
+#define VTKM_INSTANTIATE_ARRAYHANDLE_FOR_DEVICE_ADAPTER(BasicType, Device)                         \
+  VTKM_INSTANTIATE_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(BasicType, Device)                \
+  VTKM_INSTANTIATE_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(                                  \
+    VTKM_PASS_COMMAS(vtkm::Vec<BasicType, 2>), Device)                                             \
+  VTKM_INSTANTIATE_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(                                  \
+    VTKM_PASS_COMMAS(vtkm::Vec<BasicType, 3>), Device)                                             \
+  VTKM_INSTANTIATE_ARRAYHANDLE_FOR_VALUE_TYPE_AND_DEVICE_ADAPTER(                                  \
+    VTKM_PASS_COMMAS(vtkm::Vec<BasicType, 4>), Device)
+
 #define VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(Device)                                   \
   VTKM_INSTANTIATE_ARRAYHANDLE_FOR_DEVICE_ADAPTER(char, Device)                                    \
   VTKM_INSTANTIATE_ARRAYHANDLE_FOR_DEVICE_ADAPTER(vtkm::Int8, Device)                              \
