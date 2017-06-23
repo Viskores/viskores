@@ -40,19 +40,19 @@ struct Pair
 {
   /// The type of the first object.
   ///
-  typedef T1 FirstType;
+  using FirstType = T1;
 
   /// The type of the second object.
   ///
-  typedef T2 SecondType;
+  using SecondType = T2;
 
   /// The same as FirstType, but follows the naming convention of std::pair.
   ///
-  typedef FirstType first_type;
+  using first_type = FirstType;
 
   /// The same as SecondType, but follows the naming convention of std::pair.
   ///
-  typedef SecondType second_type;
+  using second_type = SecondType;
 
   /// The pair's first object. Note that this field breaks VTK-m's naming
   /// conventions to make vtkm::Pair more compatible with std::pair.

@@ -108,7 +108,7 @@ void TestDataSet_Explicit()
   dataSet.GetCellSet(0).CopyTo(cellSet);
 
   //verify that we can create a subset of a singlset
-  typedef vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>> SubsetType;
+  using SubsetType = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>>;
   SubsetType subset;
   subset.Fill(validCellIds, cellSet);
 
@@ -160,7 +160,7 @@ void TestDataSet_Structured2D()
   subset.PrintSummary(std::cout);
 
   //verify that we can call PrepareForInput on CellSetSingleType
-  typedef vtkm::cont::DeviceAdapterTagSerial DeviceAdapterTag;
+  using DeviceAdapterTag = vtkm::cont::DeviceAdapterTagSerial;
 
   //verify that PrepareForInput exists
   subset.PrepareForInput(

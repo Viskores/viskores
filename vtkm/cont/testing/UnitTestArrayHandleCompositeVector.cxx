@@ -41,7 +41,7 @@ namespace
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-typedef vtkm::cont::StorageTagBasic StorageTag;
+using StorageTag = vtkm::cont::StorageTagBasic;
 
 vtkm::FloatDefault TestValue3Ids(vtkm::Id index, vtkm::IdComponent inComponentIndex, int inArrayId)
 {
@@ -52,7 +52,7 @@ vtkm::FloatDefault TestValue3Ids(vtkm::Id index, vtkm::IdComponent inComponentIn
 template <typename ValueType>
 vtkm::cont::ArrayHandle<ValueType, StorageTag> MakeInputArray(int arrayId)
 {
-  typedef vtkm::VecTraits<ValueType> VTraits;
+  using VTraits = vtkm::VecTraits<ValueType>;
 
   // Create a buffer with valid test values.
   ValueType buffer[ARRAY_SIZE];
@@ -92,7 +92,7 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType, C>& outArray,
   vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::Copy(outArray, arrayCopy);
 
   typename ArrayHandleType::PortalConstControl portal = arrayCopy.GetPortalConstControl();
-  typedef vtkm::VecTraits<ValueType> VTraits;
+  using VTraits = vtkm::VecTraits<ValueType>;
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
     ValueType retreivedValue = portal.Get(index);
@@ -118,7 +118,7 @@ void TryScalarArray()
   int inArrayId = 0;
   InArrayType inArray = MakeInputArray<InValueType>(inArrayId);
 
-  typedef typename vtkm::cont::ArrayHandleCompositeVectorType<InArrayType>::type OutArrayType;
+  using OutArrayType = typename vtkm::cont::ArrayHandleCompositeVectorType<InArrayType>::type;
   for (vtkm::IdComponent inComponentIndex = 0; inComponentIndex < inComponents; inComponentIndex++)
   {
     OutArrayType outArray = vtkm::cont::make_ArrayHandleCompositeVector(inArray, inComponentIndex);
@@ -253,10 +253,10 @@ void TrySpecialArrays()
 {
   std::cout << "Trying special arrays." << std::endl;
 
-  typedef vtkm::cont::ArrayHandleIndex ArrayType1;
+  using ArrayType1 = vtkm::cont::ArrayHandleIndex;
   ArrayType1 array1(ARRAY_SIZE);
 
-  typedef vtkm::cont::ArrayHandleConstant<vtkm::Id> ArrayType2;
+  using ArrayType2 = vtkm::cont::ArrayHandleConstant<vtkm::Id>;
   ArrayType2 array2(295, ARRAY_SIZE);
 
   typedef vtkm::cont::ArrayHandleCompositeVectorType<ArrayType1, ArrayType2>::type

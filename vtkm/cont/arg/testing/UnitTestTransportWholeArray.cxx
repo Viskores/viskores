@@ -50,7 +50,7 @@ struct TestOutKernel : public vtkm::exec::FunctorBase
     {
       this->RaiseError("Out whole array has wrong size.");
     }
-    typedef typename PortalType::ValueType ValueType;
+    using ValueType = typename PortalType::ValueType;
     this->Portal.Set(index, TestValue(index, ValueType()));
   }
 };
@@ -67,7 +67,7 @@ struct TestInKernel : public vtkm::exec::FunctorBase
     {
       this->RaiseError("In whole array has wrong size.");
     }
-    typedef typename PortalType::ValueType ValueType;
+    using ValueType = typename PortalType::ValueType;
     if (!test_equal(this->Portal.Get(index), TestValue(index, ValueType())))
     {
       this->RaiseError("Got bad execution object.");
@@ -87,7 +87,7 @@ struct TestInOutKernel : public vtkm::exec::FunctorBase
     {
       this->RaiseError("In/Out whole array has wrong size.");
     }
-    typedef typename PortalType::ValueType ValueType;
+    using ValueType = typename PortalType::ValueType;
     this->Portal.Set(index, this->Portal.Get(index) + ValueType(OFFSET));
   }
 };
@@ -106,7 +106,7 @@ struct TestAtomicKernel : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename AtomicType::ValueType ValueType;
+    using ValueType = typename AtomicType::ValueType;
     this->AtomicArray.Add(0, static_cast<ValueType>(index));
   }
 };

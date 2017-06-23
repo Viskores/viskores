@@ -38,9 +38,9 @@ class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
   typedef vtkm::cont::internal::ArrayManagerExecutionShareWithControl<T, StorageTag> Superclass;
-  typedef typename Superclass::ValueType ValueType;
-  typedef typename Superclass::PortalType PortalType;
-  typedef typename Superclass::PortalConstType PortalConstType;
+  using ValueType = typename Superclass::ValueType;
+  using PortalType = typename Superclass::PortalType;
+  using PortalConstType = typename Superclass::PortalConstType;
 
   VTKM_CONT
   ArrayManagerExecution(typename Superclass::StorageType* storage)

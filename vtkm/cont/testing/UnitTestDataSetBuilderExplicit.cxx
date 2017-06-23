@@ -31,7 +31,7 @@
 namespace DataSetBuilderExplicitNamespace
 {
 
-typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
+using DFA = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
 
 template <typename T>
 vtkm::Bounds ComputeBounds(std::size_t numPoints, const T* coords)

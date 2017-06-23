@@ -39,7 +39,7 @@ template <typename PortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalReverse
 {
 public:
-  typedef typename PortalType::ValueType ValueType;
+  using ValueType = typename PortalType::ValueType;
 
   VTKM_EXEC_CONT
   ArrayPortalReverse()
