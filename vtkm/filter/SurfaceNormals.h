@@ -40,6 +40,14 @@ public:
   void SetGenerateCellNormals(bool value) { this->GenerateCellNormals = value; }
   bool GetGenerateCellNormals() const { return this->GenerateCellNormals; }
 
+  /// Set/Get if the cell normals should be normalized. Default value is true.
+  /// The intended use case of this flag is for faster, approximate point
+  /// normals generation by skipping the normalization of the face normals.
+  /// Note that when set to false, the result cell normals will not be unit
+  /// length normals and the point normals will be different.
+  void SetNormalizeCellNormals(bool value) { this->NormalizeCellNormals = value; }
+  bool GetNormalizeCellNormals() const { return this->NormalizeCellNormals; }
+
   /// Set/Get if the point normals should be generated. Default is on.
   void SetGeneratePointNormals(bool value) { this->GeneratePointNormals = value; }
   bool GetGeneratePointNormals() const { return this->GeneratePointNormals; }
@@ -73,6 +81,7 @@ public:
 
 private:
   bool GenerateCellNormals;
+  bool NormalizeCellNormals;
   bool GeneratePointNormals;
 
   std::string CellNormalsName;

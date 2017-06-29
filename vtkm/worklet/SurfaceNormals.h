@@ -32,9 +32,31 @@ namespace vtkm
 namespace worklet
 {
 
+namespace detail
+{
+struct PassThrough
+{
+  template <typename T>
+  VTKM_EXEC vtkm::Vec<T, 3> operator()(const vtkm::Vec<T, 3>& in) const
+  {
+    return in;
+  }
+};
+
+struct Normal
+{
+  template <typename T>
+  VTKM_EXEC vtkm::Vec<T, 3> operator()(const vtkm::Vec<T, 3>& in) const
+  {
+    return vtkm::Normal(in);
+  }
+};
+} // detail
+
 class FacetedSurfaceNormals
 {
 public:
+  template <typename NormalFnctr = detail::Normal>
   class Worklet : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
@@ -53,7 +75,7 @@ public:
       normal = vtkm::TypeTraits<vtkm::Vec<T, 3>>::ZeroInitialization();
       if (vtkm::CellTraits<CellShapeTag>::TOPOLOGICAL_DIMENSIONS == 2)
       {
-        normal = vtkm::Normal(vtkm::Cross(points[2] - points[1], points[0] - points[1]));
+        normal = this->Normal(vtkm::Cross(points[2] - points[1], points[0] - points[1]));
       }
     }
 
@@ -70,7 +92,19 @@ public:
           break;
       }
     }
+
+  private:
+    NormalFnctr Normal;
   };
+
+  FacetedSurfaceNormals()
+    : Normalize(true)
+  {
+  }
+
+  /// Set/Get if the results should be normalized
+  void SetNormalize(bool value) { this->Normalize = value; }
+  bool GetNormalize() const { return this->Normalize; }
 
   template <typename CellSetType,
             typename CoordsCompType,
@@ -82,8 +116,16 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals,
            DeviceAdapter)
   {
-    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher(Worklet{});
-    dispatcher.Invoke(cellset, points, normals);
+    if (this->Normalize)
+    {
+      vtkm::worklet::DispatcherMapTopology<Worklet<>, DeviceAdapter> dispatcher;
+      dispatcher.Invoke(cellset, points, normals);
+    }
+    else
+    {
+      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>, DeviceAdapter> dispatcher;
+      dispatcher.Invoke(cellset, points, normals);
+    }
   }
 
   template <typename CellSetType,
@@ -96,9 +138,20 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& normals,
     DeviceAdapter)
   {
-    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher(Worklet{});
-    dispatcher.Invoke(cellset, points, normals);
+    if (this->Normalize)
+    {
+      vtkm::worklet::DispatcherMapTopology<Worklet<>, DeviceAdapter> dispatcher;
+      dispatcher.Invoke(cellset, points, normals);
+    }
+    else
+    {
+      vtkm::worklet::DispatcherMapTopology<Worklet<detail::PassThrough>, DeviceAdapter> dispatcher;
+      dispatcher.Invoke(cellset, points, normals);
+    }
   }
+
+private:
+  bool Normalize;
 };
 
 class SmoothSurfaceNormals
@@ -124,7 +177,7 @@ public:
       {
         result += faceNormals[i];
       }
-      pointNormal = vtkm::Normal(result / static_cast<T>(numCells));
+      pointNormal = vtkm::Normal(result);
     }
   };
 
@@ -138,7 +191,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals,
     DeviceAdapter)
   {
-    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher(Worklet{});
+    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher;
     dispatcher.Invoke(cellset, faceNormals, pointNormals);
   }
 
@@ -153,7 +206,7 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Vec<NormalCompType, 3>>& pointNormals,
            DeviceAdapter)
   {
-    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher(Worklet{});
+    vtkm::worklet::DispatcherMapTopology<Worklet, DeviceAdapter> dispatcher;
     dispatcher.Invoke(cellset, faceNormals, pointNormals);
   }
 };

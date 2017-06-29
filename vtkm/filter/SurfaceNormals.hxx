@@ -63,6 +63,7 @@ inline std::string ComputeCellNormalsName(const SurfaceNormals* filter)
 
 inline SurfaceNormals::SurfaceNormals()
   : GenerateCellNormals(false)
+  , NormalizeCellNormals(true)
   , GeneratePointNormals(true)
 {
 }
@@ -100,6 +101,7 @@ inline vtkm::filter::ResultField SurfaceNormals::DoExecute(
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> faceNormals;
   vtkm::worklet::FacetedSurfaceNormals faceted;
+  faceted.SetNormalize(this->NormalizeCellNormals);
   faceted.Run(vtkm::filter::ApplyPolicy(cellset, policy), points, faceNormals, device);
 
   vtkm::filter::ResultField result;
