@@ -180,12 +180,12 @@ void TestPointGradientUniform3DWithVectorField2()
     VTKM_TEST_ASSERT(test_equal((eg[0][0] + eg[1][1] + eg[2][2]), d),
                      "Wrong result for Divergence on 3D uniform data");
 
-    vtkm::Vec<vtkm::Float64, 3> ev(eg[2][1] - eg[1][2], eg[0][2] - eg[2][0], eg[1][0] - eg[0][1]);
+    vtkm::Vec<vtkm::Float64, 3> ev(eg[1][2] - eg[2][1], eg[2][0] - eg[0][2], eg[0][1] - eg[1][0]);
     vtkm::Vec<vtkm::Float64, 3> v = extraOutput.Vorticity.GetPortalConstControl().Get(i);
     VTKM_TEST_ASSERT(test_equal(ev, v), "Wrong result for Vorticity on 3D uniform data");
 
     const vtkm::Vec<vtkm::Float64, 3> es(
-      eg[2][1] + eg[1][2], eg[0][2] + eg[2][0], eg[1][0] + eg[0][1]);
+      eg[1][2] + eg[2][1], eg[2][0] + eg[0][2], eg[0][1] + eg[1][0]);
     const vtkm::Vec<vtkm::Float64, 3> ed(eg[0][0], eg[1][1], eg[2][2]);
 
     //compute QCriterion

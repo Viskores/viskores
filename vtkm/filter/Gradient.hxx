@@ -42,6 +42,21 @@ inline void add_field(vtkm::filter::ResultField& result,
   }
 }
 
+//-----------------------------------------------------------------------------
+template <typename T, typename S, typename DeviceAdapter>
+inline void transpose_3x3(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& field,
+                          DeviceAdapter adapter)
+{
+  vtkm::worklet::gradient::Transpose3x3<T> transpose;
+  transpose.Run(field, adapter);
+}
+
+//-----------------------------------------------------------------------------
+template <typename T, typename S, typename DeviceAdapter>
+inline void transpose_3x3(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, S>&, DeviceAdapter)
+{ //This is not a 3x3 matrix so no transpose needed
+}
+
 } //namespace
 
 namespace vtkm
@@ -55,6 +70,7 @@ Gradient::Gradient()
   , ComputeVorticity(false)
   , ComputeQCriterion(false)
   , StoreGradient(true)
+  , RowOrdering(true)
   , GradientsName("Gradients")
   , DivergenceName("Divergence")
   , VorticityName("Vorticity")
@@ -95,7 +111,6 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
                                                         this->GetComputeDivergence(),
                                                         this->GetComputeVorticity(),
                                                         this->GetComputeQCriterion());
-
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> outArray;
   if (this->ComputePointGradient)
   {
@@ -115,6 +130,11 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
                             gradientfields,
                             adapter);
   }
+  if (!this->RowOrdering)
+  {
+    transpose_3x3(outArray, adapter);
+  }
+
   VTKM_CONSTEXPR bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
                                               vtkm::VecTraitsTagMultipleComponents>::value;
 

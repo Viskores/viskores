@@ -18,9 +18,10 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_gradient_Vorticity_h
-#define vtk_m_worklet_gradient_Vorticity_h
+#ifndef vtk_m_worklet_gradient_Transpose_h
+#define vtk_m_worklet_gradient_Transpose_h
 
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -30,24 +31,39 @@ namespace worklet
 namespace gradient
 {
 
-struct VorticityTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<vtkm::Float32, 3>, 3>,
-                                          vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3>>
+template <typename T>
+struct TransposeType : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<T, 3>, 3>>
 {
 };
 
-
-struct Vorticity : public vtkm::worklet::WorkletMapField
+template <typename T>
+struct Transpose3x3 : vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<VorticityTypes> input, FieldOut<Vec3> output);
-  typedef void ExecutionSignature(_1, _2);
+  typedef void ControlSignature(FieldInOut<TransposeType<T>> field);
+
+  typedef void ExecutionSignature(_1);
   typedef _1 InputDomain;
 
-  template <typename InputType, typename OutputType>
-  VTKM_EXEC void operator()(const InputType& input, OutputType& vorticity) const
+  template <typename FieldInVecType>
+  VTKM_EXEC void operator()(FieldInVecType& field) const
   {
-    vorticity[0] = input[1][2] - input[2][1];
-    vorticity[1] = input[2][0] - input[0][2];
-    vorticity[2] = input[0][1] - input[1][0];
+    T tempA, tempB, tempC;
+    tempA = field[0][1];
+    field[0][1] = field[1][0];
+    field[1][0] = tempA;
+    tempB = field[0][2];
+    field[0][2] = field[2][0];
+    field[2][0] = tempB;
+    tempC = field[1][2];
+    field[1][2] = field[2][1];
+    field[2][1] = tempC;
+  }
+
+  template <typename S, typename DeviceAdapter>
+  void Run(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& field, DeviceAdapter)
+  {
+    vtkm::worklet::DispatcherMapField<Transpose3x3<T>, DeviceAdapter> dispatcher;
+    dispatcher.Invoke(field);
   }
 };
 }

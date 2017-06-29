@@ -44,14 +44,9 @@ struct QCriterion : public vtkm::worklet::WorkletMapField
   template <typename InputType, typename OutputType>
   VTKM_EXEC void operator()(const InputType& input, OutputType& qcriterion) const
   {
-    const vtkm::Vec<OutputType, 3> v(
-      input[2][1] - input[1][2], input[0][2] - input[2][0], input[1][0] - input[0][1]);
-    const vtkm::Vec<OutputType, 3> s(
-      input[2][1] + input[1][2], input[0][2] + input[2][0], input[1][0] + input[0][1]);
-    const vtkm::Vec<OutputType, 3> d(input[0][0], input[1][1], input[2][2]);
-
-    //compute QCriterion
-    qcriterion = ((vtkm::dot(v, v) / 2.0f) - (vtkm::dot(d, d) + (vtkm::dot(s, s) / 2.0f))) / 2.0f;
+    qcriterion =
+      -(input[0][0] * input[0][0] + input[1][1] * input[1][1] + input[2][2] * input[2][2]) / 2 -
+      (input[1][0] * input[0][1] + input[2][0] * input[0][2] + input[2][1] * input[1][2]);
   }
 };
 }

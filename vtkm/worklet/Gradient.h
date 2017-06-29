@@ -30,6 +30,7 @@
 #include <vtkm/worklet/gradient/GradientOutput.h>
 #include <vtkm/worklet/gradient/PointGradient.h>
 #include <vtkm/worklet/gradient/QCriterion.h>
+#include <vtkm/worklet/gradient/Transpose.h>
 #include <vtkm/worklet/gradient/Vorticity.h>
 
 namespace vtkm

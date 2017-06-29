@@ -140,8 +140,8 @@ void TestCellGradientUniform3DWithVectorField()
     VTKM_TEST_ASSERT(test_equal(e[2], r[2]),
                      "Wrong result for vec field CellGradient worklet on 3D uniform data");
 
-    const vtkm::Vec<vtkm::Float64, 3> v(e[2][1] - e[1][2], e[0][2] - e[2][0], e[1][0] - e[0][1]);
-    const vtkm::Vec<vtkm::Float64, 3> s(e[2][1] + e[1][2], e[0][2] + e[2][0], e[1][0] + e[0][1]);
+    const vtkm::Vec<vtkm::Float64, 3> v(e[1][2] - e[2][1], e[2][0] - e[0][2], e[0][1] - e[1][0]);
+    const vtkm::Vec<vtkm::Float64, 3> s(e[1][2] + e[2][1], e[2][0] + e[0][2], e[0][1] + e[1][0]);
     const vtkm::Vec<vtkm::Float64, 3> d(e[0][0], e[1][1], e[2][2]);
 
     //compute QCriterion
@@ -149,6 +149,9 @@ void TestCellGradientUniform3DWithVectorField()
       ((vtkm::dot(v, v) / 2.0f) - (vtkm::dot(d, d) + (vtkm::dot(s, s) / 2.0f))) / 2.0f;
 
     vtkm::Float64 q = extraOutput.QCriterion.GetPortalConstControl().Get(i);
+
+    std::cout << "qcriterion expected: " << qcriterion << std::endl;
+    std::cout << "qcriterion actual: " << q << std::endl;
 
     VTKM_TEST_ASSERT(
       test_equal(qcriterion, q),
@@ -213,7 +216,7 @@ void TestCellGradientUniform3DWithVectorField2()
     VTKM_TEST_ASSERT(test_equal((eg[0][0] + eg[1][1] + eg[2][2]), d),
                      "Wrong result for Divergence on 3D uniform data");
 
-    vtkm::Vec<vtkm::Float64, 3> ev(eg[2][1] - eg[1][2], eg[0][2] - eg[2][0], eg[1][0] - eg[0][1]);
+    vtkm::Vec<vtkm::Float64, 3> ev(eg[1][2] - eg[2][1], eg[2][0] - eg[0][2], eg[0][1] - eg[1][0]);
     vtkm::Vec<vtkm::Float64, 3> v = extraOutput.Vorticity.GetPortalConstControl().Get(i);
     VTKM_TEST_ASSERT(test_equal(ev, v), "Wrong result for Vorticity on 3D uniform data");
   }

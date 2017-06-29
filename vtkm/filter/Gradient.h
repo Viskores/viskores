@@ -75,6 +75,18 @@ public:
   void SetComputeGradient(bool enable) { StoreGradient = enable; }
   bool GetComputeGradient() const { return StoreGradient; }
 
+  /// Make the vector gradient output format be in FORTRAN Column-major order.
+  /// This is only used when the input field is a vector field ( 3 components ).
+  /// Enabling  column-major is important if integrating with other projects
+  /// such as VTK.
+  /// Default: Row Order
+  void SetColumnMajorOrdering() { RowOrdering = false; }
+
+  /// Make the vector gradient output format be in C Row-major order.
+  /// This is only used when the input field is a vector field ( 3 components ).
+  /// Default: Row Order
+  void SetRowMajorOrdering() { RowOrdering = true; }
+
   void SetDivergenceName(const std::string& name) { this->DivergenceName = name; }
   const std::string& GetDivergenceName() const { return this->DivergenceName; }
 
@@ -97,6 +109,7 @@ private:
   bool ComputeVorticity;
   bool ComputeQCriterion;
   bool StoreGradient;
+  bool RowOrdering;
 
   std::string GradientsName;
   std::string DivergenceName;
