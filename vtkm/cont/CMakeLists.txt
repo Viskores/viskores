@@ -93,6 +93,7 @@ set(sources
   Field.cxx
   ImplicitFunction.cxx
   internal/SimplePolymorphicContainer.cxx
+  internal/ArrayManagerExecutionShareWithControl.cxx
   StorageBasic.cxx
   )
 

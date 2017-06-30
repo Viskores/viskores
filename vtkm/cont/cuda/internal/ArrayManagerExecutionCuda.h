@@ -117,6 +117,49 @@ public:
   }
 };
 
+template <typename T>
+struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagCuda>
+{
+  using ValueType = T;
+  using PortalType = vtkm::exec::cuda::internal::ArrayPortalFromThrust<ValueType>;
+  using PortalConstType = vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<ValueType>;
+
+  VTKM_CONT
+  static PortalType CreatePortal(ValueType* start, ValueType* end)
+  {
+    using ThrustPointerT = thrust::system::cuda::pointer<ValueType>;
+    ThrustPointerT startThrust(start);
+    ThrustPointerT endThrust(end);
+    return PortalType(startThrust, endThrust);
+  }
+
+  VTKM_CONT
+  static PortalConstType CreatePortalConst(const ValueType* start, const ValueType* end)
+  {
+    using ThrustPointerT = thrust::system::cuda::pointer<const ValueType>;
+    ThrustPointerT startThrust(start);
+    ThrustPointerT endThrust(end);
+    return PortalConstType(startThrust, endThrust);
+  }
+};
+
+template <>
+struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>
+  : public ExecutionArrayInterfaceBasicBase
+{
+  using Superclass = ExecutionArrayInterfaceBasicBase;
+
+  VTKM_CONT ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
+  VTKM_CONT DeviceAdapterId GetDeviceId() const final;
+  VTKM_CONT void Allocate(TypelessExecutionArray& execArray, vtkm::Id numBytes) const final;
+  VTKM_CONT void Free(TypelessExecutionArray& execArray) const final;
+  VTKM_CONT void CopyFromControl(const void* controlPtr,
+                                 void* executionPtr,
+                                 vtkm::Id numBytes) const final;
+  VTKM_CONT void CopyToControl(const void* executionPtr,
+                               void* controlPtr,
+                               vtkm::Id numBytes) const final;
+};
 } // namespace internal
 
 #ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu

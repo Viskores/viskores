@@ -51,6 +51,10 @@ namespace cont
 namespace internal
 {
 
+StorageBasicBase::~StorageBasicBase()
+{
+}
+
 void* alloc_aligned(size_t size, size_t align)
 {
 #if defined(VTKM_MEMALIGN_POSIX)

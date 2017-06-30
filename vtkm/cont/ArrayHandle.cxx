@@ -51,26 +51,25 @@ namespace vtkm
 {
 namespace cont
 {
+namespace internal
+{
+
+ExecutionArrayInterfaceBasicBase::ExecutionArrayInterfaceBasicBase(StorageBasicBase& storage)
+  : ControlStorage(storage)
+{
+}
+
+ExecutionArrayInterfaceBasicBase::~ExecutionArrayInterfaceBasicBase()
+{
+}
+
+} // end namespace internal
 
 #define _VTKM_ARRAYHANDLE_INSTANTIATE(Type)                                                        \
   template class VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>;                              \
   template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                \
   template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;                \
-  namespace internal                                                                               \
-  {                                                                                                \
-  template class VTKM_CONT_EXPORT ArrayHandleExecutionManagerBase<Type, StorageTagBasic>;          \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayHandleExecutionManagerBase<vtkm::Vec<Type, 2>, StorageTagBasic>;                          \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayHandleExecutionManagerBase<vtkm::Vec<Type, 3>, StorageTagBasic>;                          \
-  template class VTKM_CONT_EXPORT                                                                  \
-    ArrayHandleExecutionManagerBase<vtkm::Vec<Type, 4>, StorageTagBasic>;                          \
-  template class VTKM_CONT_EXPORT ArrayPortalFromIterators<Type*>;                                 \
-  template class VTKM_CONT_EXPORT ArrayPortalFromIterators<vtkm::Vec<Type, 2>*>;                   \
-  template class VTKM_CONT_EXPORT ArrayPortalFromIterators<vtkm::Vec<Type, 3>*>;                   \
-  template class VTKM_CONT_EXPORT ArrayPortalFromIterators<vtkm::Vec<Type, 4>*>;                   \
-  } /* end namespace internal */
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 _VTKM_ARRAYHANDLE_INSTANTIATE(char)
 _VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Int8)

@@ -18,6 +18,10 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/StorageBasic.h>
+
+#include <limits>
+
 namespace vtkm
 {
 namespace cont
@@ -102,6 +106,31 @@ void Storage<T, vtkm::cont::StorageTagBasic>::ReleaseResources()
 template <typename T>
 void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 {
+  if (numberOfValues < 0)
+  {
+    throw vtkm::cont::ErrorBadAllocation("Cannot allocate an array with negative size.");
+  }
+
+  // Check that the number of bytes won't be more than a size_t can hold.
+  const size_t maxNumValues = std::numeric_limits<size_t>::max() / sizeof(T);
+  if (static_cast<vtkm::UInt64>(numberOfValues) > static_cast<vtkm::UInt64>(maxNumValues))
+  {
+    throw ErrorBadAllocation("Requested allocation exceeds size_t capacity.");
+  }
+
+  this->AllocateBytes(numberOfValues * static_cast<vtkm::Id>(sizeof(T)));
+}
+
+template <typename T>
+void Storage<T, vtkm::cont::StorageTagBasic>::AllocateBytes(vtkm::Id numberOfBytes)
+{
+  if (numberOfBytes < 0)
+  {
+    throw vtkm::cont::ErrorBadAllocation("Cannot allocate an array with negative size.");
+  }
+
+  const vtkm::Id numberOfValues = numberOfBytes / static_cast<vtkm::Id>(sizeof(T));
+
   // If we are allocating less data, just shrink the array.
   // (If allocation empty, drop down so we can deallocate memory.)
   if ((numberOfValues <= this->AllocatedSize) && (numberOfValues > 0))
@@ -147,12 +176,18 @@ void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 template <typename T>
 void Storage<T, vtkm::cont::StorageTagBasic>::Shrink(vtkm::Id numberOfValues)
 {
-  if (numberOfValues > this->GetNumberOfValues())
+  this->ShrinkBytes(numberOfValues * static_cast<vtkm::Id>(sizeof(T)));
+}
+
+template <typename T>
+void Storage<T, vtkm::cont::StorageTagBasic>::ShrinkBytes(vtkm::Id numberOfBytes)
+{
+  if (numberOfBytes > this->GetNumberOfBytes())
   {
     throw vtkm::cont::ErrorBadValue("Shrink method cannot be used to grow array.");
   }
 
-  this->NumberOfValues = numberOfValues;
+  this->NumberOfValues = numberOfBytes / static_cast<vtkm::Id>(sizeof(T));
 }
 
 template <typename T>

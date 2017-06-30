@@ -294,6 +294,11 @@
   while (false)
 #endif
 
+// Use a trick to pass arguments containing commas through a macro. This is
+// helpful for mixing template code with macros.
+// See https://stackoverflow.com/questions/13842468
+#define VTKM_PASS_COMMAS(...) __VA_ARGS__
+
 #ifdef VTKM_MSVC
 //With MSVC the types that we generate cause warning C4503 (long symbol names)
 //this doesn't affect the resulting binary so we just supress that warning
