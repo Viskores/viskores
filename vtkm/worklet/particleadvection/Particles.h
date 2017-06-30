@@ -46,9 +46,10 @@ private:
         ::template ExecutionTypes<DeviceAdapterTag>::Portal PosPortal;
 public:
     VTKM_EXEC_CONT
-    Particles() : pos(), steps(), maxSteps(0)
+    Particles() : pos(), steps(), maxSteps(0), status()
     {
     }
+
     VTKM_EXEC_CONT    
     Particles(const Particles &ic) :
         pos(ic.pos), steps(ic.steps), maxSteps(ic.maxSteps), status(ic.status)
@@ -112,9 +113,9 @@ public:
     vtkm::Id GetStatus(const vtkm::Id &idx) const {return status.Get(idx);}
 
 private:
-    vtkm::Id maxSteps;
+PosPortal pos;
+   vtkm::Id maxSteps;
     IdPortal steps, status;
-    PosPortal pos;
 };
 
 template<typename T,typename DeviceAdapterTag>

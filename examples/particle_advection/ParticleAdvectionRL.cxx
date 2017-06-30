@@ -28,11 +28,12 @@
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/ParticleAdvectionFilters.h>
 
-#include <vtkm/io/reader/BOVDataSetReader.h>
+#include <vtkm/io/reader/VTKDataSetReader.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vector>
 #include <chrono>
+#include <string>
 
 const vtkm::Id SPARSE=0;
 const vtkm::Id DENSE=1;
@@ -41,7 +42,7 @@ const vtkm::Id MEDIUM=2;
 static vtkm::Range
 subRange(vtkm::Range &range, vtkm::Float32 a, vtkm::Float32 b)
 {
-    vtkm::Float32 len = range.Length();
+    vtkm::Float32 len = static_cast<vtkm::Float32>(range.Length());
     return vtkm::Range(range.Min + a*len,
                        range.Min + b*len);
 }
@@ -63,12 +64,12 @@ void RunTest(const std::string &fname,
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3> > FieldHandle;
   typedef typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
   
-  vtkm::io::reader::BOVDataSetReader rdr(fname);
+  vtkm::io::reader::VTKRectilinearGridReader rdr(fname.c_str());
   vtkm::cont::DataSet ds = rdr.ReadDataSet();
 
-  vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter, FieldType> eval(ds);
+  vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldPortalConstType, DeviceAdapter, FieldType> eval(ds);
 
-  typedef vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType, DeviceAdapter, FieldType> RGEvalType;
+  typedef vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldPortalConstType, DeviceAdapter, FieldType> RGEvalType;
   typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType,FieldType,FieldPortalConstType> RK4RGType;
   
   RK4RGType rk4(eval, stepSize);

@@ -107,7 +107,7 @@ public:
                             const vtkm::cont::DataSet &_ds,
                             const vtkm::Id &nSteps,
                             const vtkm::Id &particlesPerRound=-1) :
-        integrator(it), seeds(pts), maxSteps(nSteps), ParticlesPerRound(particlesPerRound), ds(_ds)
+        integrator(it), seeds(pts), ds(_ds), maxSteps(nSteps), ParticlesPerRound(particlesPerRound)
     {
         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
         ds.GetField(0).GetData().CopyTo(fieldArray);
@@ -158,12 +158,12 @@ public:
     }
 
 private:
-    FieldPortalConstType field;
-    vtkm::Id maxSteps;
     IntegratorType integrator;
     std::vector<vtkm::Vec<FieldType,3> > seeds;
     vtkm::cont::DataSet ds;
+    vtkm::Id maxSteps;
     vtkm::Id ParticlesPerRound;
+    FieldPortalConstType field;
 };
 
 
@@ -185,7 +185,7 @@ public:
                      const vtkm::Id &nSteps,
                      const vtkm::Id stepsPerRound=-1,
                      const vtkm::Id particlesPerRound=-1) :
-        integrator(it), seeds(pts), maxSteps(nSteps), ds(_ds), StepsPerRound(stepsPerRound), ParticlesPerRound(particlesPerRound)
+        integrator(it), seeds(pts), ds(_ds),maxSteps(nSteps), StepsPerRound(stepsPerRound), ParticlesPerRound(particlesPerRound)
     {
         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
         ds.GetField(0).GetData().CopyTo(fieldArray);
@@ -314,13 +314,13 @@ public:
     }
 
 private:
-    FieldPortalConstType field;
-    vtkm::Id maxSteps;
     IntegratorType integrator;
     std::vector<vtkm::Vec<FieldType,3> > seeds;
+    vtkm::cont::DataSet ds;   
+    vtkm::Id maxSteps;
     vtkm::Id StepsPerRound, ParticlesPerRound;
+    FieldPortalConstType field;
 
-    vtkm::cont::DataSet ds;    
 };
 
 }

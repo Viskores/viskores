@@ -109,14 +109,12 @@ private:
             }
             
             //DRP
-            /*
             else if (token.find("BRICK") != std::string::npos &&
                      token.find("SIZE") != std::string::npos)
             {
                 strStream >> spacing[0] >> spacing[1] >> spacing[2] >> std::ws;
                 spacingSet = true;
             }
-            */
             else if (token.find("DATA") != std::string::npos &&
                 token.find("FORMAT") != std::string::npos)
             {

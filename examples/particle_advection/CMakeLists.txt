@@ -30,6 +30,11 @@ target_include_directories(Particle_Advection_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS
 target_link_libraries(Particle_Advection_SERIAL ${VTKm_LIBRARIES})
 target_compile_options(Particle_Advection_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
+add_executable(Particle_Advection_RL_SERIAL ParticleAdvectionRL.cxx)
+target_include_directories(Particle_Advection_RL_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
+target_link_libraries(Particle_Advection_RL_SERIAL ${VTKm_LIBRARIES})
+target_compile_options(Particle_Advection_RL_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
+
 if(VTKm_TBB_FOUND)
   add_executable(Particle_Advection_TBB ParticleAdvectionTBB.cxx)
   target_include_directories(Particle_Advection_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
