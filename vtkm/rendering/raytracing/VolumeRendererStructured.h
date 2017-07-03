@@ -160,6 +160,7 @@ public:
 
         cell[dim] += searchDir;
         vtkm::Id nextCellId = searchDir == 1 ? cell[dim] + 1 : cell[dim];
+        BOUNDS_CHECK(CoordPortals[dim], nextCellId);
         vtkm::Float32 next = static_cast<vtkm::Float32>(CoordPortals[dim].Get(nextCellId));
         if (searchDir == 1)
         {
@@ -185,6 +186,7 @@ public:
   VTKM_EXEC
   inline void GetPoint(const vtkm::Id& index, vtkm::Vec<vtkm::Float32, 3>& point) const
   {
+    BOUNDS_CHECK(Coordinates, index);
     point = Coordinates.Get(index);
   }
 
@@ -273,6 +275,9 @@ public:
                          vtkm::Vec<vtkm::Float32, 3>& invSpacing) const
   {
     vtkm::Vec<vtkm::Float32, 3> temp = point;
+    vtkm::Vec<vtkm::Float32, 3> temp1 = temp;
+    temp = temp - Origin;
+    temp = temp * InvSpacing;
     //make sure that if we border the upper edge, we sample the correct cell
     if (temp[0] == vtkm::Float32(PointDimensions[0] - 1))
       temp[0] = vtkm::Float32(PointDimensions[0] - 2);
@@ -280,8 +285,6 @@ public:
       temp[0] = vtkm::Float32(PointDimensions[1] - 2);
     if (temp[2] == vtkm::Float32(PointDimensions[2] - 1))
       temp[0] = vtkm::Float32(PointDimensions[2] - 2);
-    temp = temp - Origin;
-    temp = temp * InvSpacing;
     cell = temp;
     invSpacing = InvSpacing;
   }
@@ -289,6 +292,7 @@ public:
   VTKM_EXEC
   inline void GetPoint(const vtkm::Id& index, vtkm::Vec<vtkm::Float32, 3>& point) const
   {
+    BOUNDS_CHECK(Coordinates, index);
     point = Coordinates.Get(index);
   }
 
