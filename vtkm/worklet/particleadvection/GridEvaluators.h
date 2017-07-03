@@ -122,14 +122,18 @@ public:
         vtkm::cont::CellSetStructured<3> cells;
         ds.GetCellSet(0).CopyTo(cells);
         dims = cells.GetSchedulingRange(vtkm::TopologyElementTagPoint());
-	spacing[0] = (bounds.X.Max - bounds.X.Min) / (dims[0] - 1);
-	spacing[1] = (bounds.Y.Max - bounds.Y.Min) / (dims[1] - 1);
-	spacing[2] = (bounds.Z.Max - bounds.Z.Min) / (dims[2] - 1);
-	oldMin[0] = bounds.X.Min / ((bounds.X.Max - bounds.X.Min) / dims[0]);
-	oldMin[1] = bounds.Y.Min / ((bounds.Y.Max - bounds.Y.Min) / dims[1]);
-	oldMin[2] = bounds.Z.Min / ((bounds.Z.Max - bounds.Z.Min) / dims[2]);
-        planeSize = dims[0]*dims[1];
-        rowSize = dims[0];
+	vtkm::Vec<FieldType, 3> castdims;
+        castdims[0] = static_cast<FieldType>(dims[0]);
+        castdims[1] = static_cast<FieldType>(dims[1]);
+        castdims[2] = static_cast<FieldType>(dims[2]);
+       	spacing[0]  = static_cast<FieldType>((bounds.X.Max - bounds.X.Min) / (castdims[0] - 1));
+	spacing[1]  = static_cast<FieldType>((bounds.Y.Max - bounds.Y.Min) / (castdims[1] - 1));
+	spacing[2]  = static_cast<FieldType>((bounds.Z.Max - bounds.Z.Min) / (castdims[2] - 1));
+	oldMin[0]   = static_cast<FieldType>(bounds.X.Min / ((bounds.X.Max - bounds.X.Min) / castdims[0]));
+	oldMin[1]   = static_cast<FieldType>(bounds.Y.Min / ((bounds.Y.Max - bounds.Y.Min) / castdims[1]));
+	oldMin[2]   = static_cast<FieldType>(bounds.Z.Min / ((bounds.Z.Max - bounds.Z.Min) / castdims[2]));
+        planeSize   = dims[0]*dims[1];
+        rowSize     = dims[0];
     }
 
     VTKM_EXEC_CONT
@@ -144,14 +148,14 @@ public:
         // Set the eight corner indices with no wraparound
         vtkm::Id3 idx000, idx001, idx010, idx011, idx100, idx101, idx110, idx111;
 	
-	vtkm::Vec<FieldType, 3> txPos;
-	txPos[0] = pos[0] / spacing[0];
-	txPos[1] = pos[1] / spacing[1];
-	txPos[2] = pos[2] / spacing[2];
+	vtkm::Vec<FieldType, 3> normalizedPos;
+	normalizedPos[0] = pos[0] / spacing[0];
+	normalizedPos[1] = pos[1] / spacing[1];
+	normalizedPos[2] = pos[2] / spacing[2];
 
-        idx000[0] = static_cast<vtkm::Id>(floor(txPos[0] - oldMin[0]));
-        idx000[1] = static_cast<vtkm::Id>(floor(txPos[1] - oldMin[1]));
-        idx000[2] = static_cast<vtkm::Id>(floor(txPos[2] - oldMin[2]));
+        idx000[0] = static_cast<vtkm::Id>(floor(normalizedPos[0] - oldMin[0]));
+        idx000[1] = static_cast<vtkm::Id>(floor(normalizedPos[1] - oldMin[1]));
+        idx000[2] = static_cast<vtkm::Id>(floor(normalizedPos[2] - oldMin[2]));
 
 	idx001 = idx000; idx001[0] = (idx001[0] + 1) <= dims[0] - 1 ? idx001[0] + 1 : dims[0] - 1;
         idx010 = idx000; idx010[1] = (idx010[1] + 1) <= dims[1] - 1 ? idx010[1] + 1 : dims[1] - 1;
