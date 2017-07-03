@@ -418,7 +418,7 @@ public:
     // SortByKey where key is PointToCell connectivity and value is the expanded cellIndex
     Algorithm::SortByKey(pointIndices, this->CellToPoint.Connectivity);
 
-    if (this->GetNumberOfPoints() <= 0)
+    if (this->GetNumberOfPoints() <= 0 && connectivityLength > 0)
     {
       this->NumberOfPoints = pointIndices.GetPortalControl().Get(connectivityLength - 1) + 1;
     }
