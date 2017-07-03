@@ -243,7 +243,7 @@ private:
             throw vtkm::io::ErrorIO("Unable to open data file: "+fName);
         buff.resize(sz);
         std::size_t nread = fread(&buff[0], sizeof(T), sz, fp);
-        if (nread != sz)
+        if (nread != static_cast<std::size_t>(sz))
             throw vtkm::io::ErrorIO("Data file read failed: "+fName);
         fclose(fp);
     }
@@ -280,8 +280,8 @@ private:
         }
     }    
 
-    bool Loaded;
     std::string FileName;
+    bool Loaded;
     vtkm::cont::DataSet DataSet;
 };
 

@@ -374,7 +374,6 @@ private:
 
 };//RectilinearGridEvaluate
 
-
 } //namespace particleadvection
 } //namespace worklet
 } //namespace vtkm

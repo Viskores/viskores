@@ -123,8 +123,8 @@ public:
         typedef vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag> ParticleType;
 
         vtkm::Id totNumSeeds = seeds.size();
-        vtkm::Id numSeeds = totNumSeeds;
         bool NeedParticleRounds = false;
+        vtkm::Id numSeeds = totNumSeeds;
         
         if (ParticlesPerRound == -1 || ParticlesPerRound > totNumSeeds)
             numSeeds = totNumSeeds;
@@ -201,9 +201,8 @@ public:
         typedef vtkm::worklet::particleadvection::StateRecordingParticlesRound<FieldType, DeviceAdapterTag> StreamlineRoundType;
 
         vtkm::Id totNumSeeds = seeds.size();
-
-        vtkm::Id numSeeds = totNumSeeds;
         bool NeedParticleRounds = false;
+        vtkm::Id numSeeds = totNumSeeds;
         
         if (ParticlesPerRound == -1 || ParticlesPerRound > totNumSeeds)
             numSeeds = totNumSeeds;

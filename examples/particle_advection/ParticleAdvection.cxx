@@ -38,12 +38,16 @@ const vtkm::Id SPARSE=0;
 const vtkm::Id DENSE=1;
 const vtkm::Id MEDIUM=2;
 
+template <typename T>
 static vtkm::Range
-subRange(vtkm::Range &range, vtkm::Float32 a, vtkm::Float32 b)
+subRange(vtkm::Range &range, T a, T b)
 {
-    vtkm::Float32 len = range.Length();
-    return vtkm::Range(range.Min + a*len,
-                       range.Min + b*len);
+    vtkm::Float32 arg1, arg2, len;
+    arg1 = static_cast<vtkm::Float32>(a);
+    arg2 = static_cast<vtkm::Float32>(b);
+    len  = static_cast<vtkm::Float32>(range.Length());
+    return vtkm::Range(range.Min + arg1*len,
+                       range.Min + arg2*len);
 }
 
 void RunTest(const std::string &fname,
