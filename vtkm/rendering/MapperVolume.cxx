@@ -129,6 +129,16 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
       coords, scalarField, cellset.Cast<vtkm::cont::CellSetStructured<3>>(), scalarRange);
     tracer.SetColorMap(this->ColorMap);
     tracer.SetBackgroundColor(this->Internals->Canvas->GetBackgroundColor().Components);
+    bool doComposite = this->Internals->CompositeBackground;
+    if (doComposite)
+    {
+      tracer.EnableCompositeBackground();
+    }
+    else
+    {
+      tracer.DisableCompositeBackground();
+    }
+
     tracer.Render(rays);
 
     timer.Reset();

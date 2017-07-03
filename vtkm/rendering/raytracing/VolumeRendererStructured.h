@@ -760,14 +760,13 @@ public:
     DoCompositeBackground = true;
     IsUniformDataSet = true;
     SampleDistance = -1.f;
-    DoCompositeBackground = false;
   }
 
   VTKM_CONT
-  void SetCompositeBackground(bool compositeBackground)
-  {
-    DoCompositeBackground = compositeBackground;
-  }
+  void EnableCompositeBackground() { DoCompositeBackground = true; }
+
+  VTKM_CONT
+  void DisableCompositeBackground() { DoCompositeBackground = false; }
 
   VTKM_CONT
   void SetColorMap(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap)
