@@ -275,7 +275,6 @@ public:
                          vtkm::Vec<vtkm::Float32, 3>& invSpacing) const
   {
     vtkm::Vec<vtkm::Float32, 3> temp = point;
-    vtkm::Vec<vtkm::Float32, 3> temp1 = temp;
     temp = temp - Origin;
     temp = temp * InvSpacing;
     //make sure that if we border the upper edge, we sample the correct cell
