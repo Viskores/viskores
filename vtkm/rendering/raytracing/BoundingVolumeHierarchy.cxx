@@ -96,9 +96,14 @@ public:
 
 class LinearBVHBuilder::FindAABBs : public vtkm::worklet::WorkletMapField
 {
+  const vtkm::Float32 Epsilon;
+
 public:
   VTKM_CONT
-  FindAABBs() {}
+  FindAABBs(const vtkm::Float32 epsilon)
+    : Epsilon(epsilon)
+  {
+  }
   typedef void ControlSignature(FieldIn<>,
                                 FieldOut<>,
                                 FieldOut<>,
@@ -135,12 +140,12 @@ public:
     ymax = vtkm::Max(ymax, point[1]);
     zmax = vtkm::Max(zmax, point[2]);
     point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[3]));
-    xmin = vtkm::Min(xmin, point[0]);
-    ymin = vtkm::Min(ymin, point[1]);
-    zmin = vtkm::Min(zmin, point[2]);
-    xmax = vtkm::Max(xmax, point[0]);
-    ymax = vtkm::Max(ymax, point[1]);
-    zmax = vtkm::Max(zmax, point[2]);
+    xmin = vtkm::Min(xmin, point[0]) - Epsilon;
+    ymin = vtkm::Min(ymin, point[1]) - Epsilon;
+    zmin = vtkm::Min(zmin, point[2]) - Epsilon;
+    xmax = vtkm::Max(xmax, point[0]) + Epsilon;
+    ymax = vtkm::Max(ymax, point[1]) + Epsilon;
+    zmax = vtkm::Max(zmax, point[2]) + Epsilon;
   }
 }; //class FindAABBs
 
@@ -683,9 +688,16 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
 
   const vtkm::Id numBBoxes = numberOfTriangles;
   BVHData bvh(numBBoxes, device);
+  // This could be a size dependent on scene size
+  //const epsilon = 10.f * std::numeric_limits<vtkm::Float32>::epsilon();
+  vtkm::Bounds sceneBounds = linearBVH.CoordBounds;
+  vtkm::Float64 maxLength = vtkm::Max(sceneBounds.X.Length(), sceneBounds.Y.Length());
+  maxLength = vtkm::Max(maxLength, sceneBounds.Z.Length());
+  const vtkm::Float32 epsilon = static_cast<vtkm::Float32>(maxLength / 1000000.0);
+  ;
 
   vtkm::cont::Timer<Device> timer;
-  vtkm::worklet::DispatcherMapField<FindAABBs, Device>(FindAABBs())
+  vtkm::worklet::DispatcherMapField<FindAABBs, Device>(FindAABBs(epsilon))
     .Invoke(triangleIndices,
             *bvh.xmins,
             *bvh.ymins,
@@ -803,8 +815,10 @@ LinearBVH::LinearBVH()
 
 VTKM_CONT
 LinearBVH::LinearBVH(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles)
-  : CoordsHandle(coordsHandle)
+                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
+                     vtkm::Bounds coordBounds)
+  : CoordBounds(coordBounds)
+  , CoordsHandle(coordsHandle)
   , Triangles(triangles)
   , IsConstructed(false)
   , CanConstruct(true)
@@ -815,9 +829,8 @@ VTKM_CONT
 LinearBVH::LinearBVH(const LinearBVH& other)
   : FlatBVH(other.FlatBVH)
   , LeafNodes(other.LeafNodes)
-  , ExtentMin(other.ExtentMin)
-  , ExtentMax(other.ExtentMax)
   , LeafCount(other.LeafCount)
+  , CoordBounds(other.CoordBounds)
   , CoordsHandle(other.CoordsHandle)
   , Triangles(other.Triangles)
   , IsConstructed(other.IsConstructed)
@@ -843,14 +856,14 @@ void LinearBVH::Construct()
   ConstructFunctor functor(this);
   vtkm::cont::TryExecute(functor);
   IsConstructed = true;
-  std::cout << "LeafNodes " << LeafNodes.GetPortalControl().GetNumberOfValues() << "\n";
-  std::cout << "innder " << FlatBVH.GetPortalControl().GetNumberOfValues() << "\n";
 }
 
 VTKM_CONT
 void LinearBVH::SetData(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
-                        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles)
+                        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
+                        vtkm::Bounds coordBounds)
 {
+  CoordBounds = coordBounds;
   CoordsHandle = coordsHandle;
   Triangles = triangles;
   IsConstructed = false;

@@ -355,10 +355,6 @@ public:
       color[2] *= vtkm::Min(
         LightAbmient[2] + LightDiffuse[2] * cosTheta + LightSpecular[2] * specularConstant, one);
 
-      //color[0] *= vtkm::Min(LightDiffuse[0] * cosTheta, one);
-      //color[1] *= vtkm::Min(LightDiffuse[1] * cosTheta, one);
-      //color[2] *= vtkm::Min(LightDiffuse[2] * cosTheta, one);
-
       colors.Set(offset + 0, color[0]);
       colors.Set(offset + 1, color[1]);
       colors.Set(offset + 2, color[2]);
@@ -417,7 +413,7 @@ void RayTracer::SetData(const vtkm::cont::DynamicArrayHandleCoordinateSystem& co
   NumberOfTriangles = numberOfTriangles;
   ScalarRange = scalarRange;
   DataBounds = dataBounds;
-  Bvh.SetData(coordsHandle, indices);
+  Bvh.SetData(coordsHandle, indices, DataBounds);
 }
 
 

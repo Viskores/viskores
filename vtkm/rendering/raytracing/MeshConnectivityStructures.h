@@ -165,7 +165,7 @@ public:
       //
       // Build BVH on external triangles
       //
-      Bvh.SetData(Coords.GetData(), ExternalTriangles);
+      Bvh.SetData(Coords.GetData(), ExternalTriangles, Coords.GetBounds());
       Bvh.ConstructOnDevice(Device());
       IsConstructed = true;
     }
@@ -429,7 +429,7 @@ public:
       //
       // Build BVH on external triangles
       //
-      Bvh.SetData(Coords.GetData(), ExternalTriangles);
+      Bvh.SetData(Coords.GetData(), ExternalTriangles, Coords.GetBounds());
       Bvh.ConstructOnDevice(Device());
 
       IsConstructed = true;
@@ -639,7 +639,7 @@ public:
       //
       // Build BVH on external triangles
       //
-      Bvh.SetData(Coords.GetData(), ExternalTriangles);
+      Bvh.SetData(Coords.GetData(), ExternalTriangles, Coords.GetBounds());
       Bvh.ConstructOnDevice(Device());
       IsConstructed = true;
     }

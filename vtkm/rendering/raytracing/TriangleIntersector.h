@@ -649,10 +649,6 @@ VTKM_EXEC inline bool IntersectAABB(const BVHPortalType& bvh,
   RayPrecision max0 = vtkm::Min(
     vtkm::Min(vtkm::Min(vtkm::Max(ymin0, ymax0), vtkm::Max(xmin0, xmax0)), vtkm::Max(zmin0, zmax0)),
     closestDistance);
-  //double eps =  2e-53;
-  //max0 *= 1 + (3*eps) / (1-3*eps);
-  if (min0 > max0)
-    max0 += EPSILON2;
   hitLeftChild = (max0 >= min0);
 
   RayPrecision xmin1 = second4[2] * invDirx - originDirX;
@@ -668,8 +664,6 @@ VTKM_EXEC inline bool IntersectAABB(const BVHPortalType& bvh,
   RayPrecision max1 = vtkm::Min(
     vtkm::Min(vtkm::Min(vtkm::Max(ymin1, ymax1), vtkm::Max(xmin1, xmax1)), vtkm::Max(zmin1, zmax1)),
     closestDistance);
-  if (min1 > max1)
-    max1 += EPSILON2;
   hitRightChild = (max1 >= min1);
   return (min0 > min1);
 }
