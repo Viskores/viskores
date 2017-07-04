@@ -40,7 +40,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-
+#define AABB_EPSILON 0.00001f
 namespace vtkm
 {
 namespace rendering
@@ -96,14 +96,9 @@ public:
 
 class LinearBVHBuilder::FindAABBs : public vtkm::worklet::WorkletMapField
 {
-  const vtkm::Float32 Epsilon;
-
 public:
   VTKM_CONT
-  FindAABBs(const vtkm::Float32 epsilon)
-    : Epsilon(epsilon)
-  {
-  }
+  FindAABBs() {}
   typedef void ControlSignature(FieldIn<>,
                                 FieldOut<>,
                                 FieldOut<>,
@@ -140,12 +135,23 @@ public:
     ymax = vtkm::Max(ymax, point[1]);
     zmax = vtkm::Max(zmax, point[2]);
     point = static_cast<vtkm::Vec<vtkm::Float32, 3>>(points.Get(indices[3]));
-    xmin = vtkm::Min(xmin, point[0]) - Epsilon;
-    ymin = vtkm::Min(ymin, point[1]) - Epsilon;
-    zmin = vtkm::Min(zmin, point[2]) - Epsilon;
-    xmax = vtkm::Max(xmax, point[0]) + Epsilon;
-    ymax = vtkm::Max(ymax, point[1]) + Epsilon;
-    zmax = vtkm::Max(zmax, point[2]) + Epsilon;
+    xmin = vtkm::Min(xmin, point[0]);
+    ymin = vtkm::Min(ymin, point[1]);
+    zmin = vtkm::Min(zmin, point[2]);
+    xmax = vtkm::Max(xmax, point[0]);
+    ymax = vtkm::Max(ymax, point[1]);
+    zmax = vtkm::Max(zmax, point[2]);
+
+    vtkm::Float32 xEpsilon = (xmax - xmin) * AABB_EPSILON;
+    vtkm::Float32 yEpsilon = (ymax - ymin) * AABB_EPSILON;
+    vtkm::Float32 zEpsilon = (zmax - zmin) * AABB_EPSILON;
+
+    xmin -= xEpsilon;
+    ymin -= yEpsilon;
+    zmin -= zEpsilon;
+    xmax += xEpsilon;
+    ymax += yEpsilon;
+    zmax += zEpsilon;
   }
 }; //class FindAABBs
 
@@ -688,16 +694,9 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
 
   const vtkm::Id numBBoxes = numberOfTriangles;
   BVHData bvh(numBBoxes, device);
-  // This could be a size dependent on scene size
-  //const epsilon = 10.f * std::numeric_limits<vtkm::Float32>::epsilon();
-  vtkm::Bounds sceneBounds = linearBVH.CoordBounds;
-  vtkm::Float64 maxLength = vtkm::Max(sceneBounds.X.Length(), sceneBounds.Y.Length());
-  maxLength = vtkm::Max(maxLength, sceneBounds.Z.Length());
-  const vtkm::Float32 epsilon = static_cast<vtkm::Float32>(maxLength / 1000000.0);
-  ;
 
   vtkm::cont::Timer<Device> timer;
-  vtkm::worklet::DispatcherMapField<FindAABBs, Device>(FindAABBs(epsilon))
+  vtkm::worklet::DispatcherMapField<FindAABBs, Device>(FindAABBs())
     .Invoke(triangleIndices,
             *bvh.xmins,
             *bvh.ymins,
