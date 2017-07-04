@@ -839,9 +839,12 @@ void LinearBVH::Construct()
   if (!CanConstruct)
     throw vtkm::cont::ErrorBadValue(
       "Linear BVH: coordinates and triangles must be set before calling construct!");
+
   ConstructFunctor functor(this);
   vtkm::cont::TryExecute(functor);
   IsConstructed = true;
+  std::cout << "LeafNodes " << LeafNodes.GetPortalControl().GetNumberOfValues() << "\n";
+  std::cout << "innder " << FlatBVH.GetPortalControl().GetNumberOfValues() << "\n";
 }
 
 VTKM_CONT
@@ -865,6 +868,17 @@ void LinearBVH::ConstructOnDevice(Device device)
       "Linear BVH: coordinates and triangles must be set before calling construct!");
   if (!IsConstructed)
   {
+    //
+    // This algorithm needs at least 2 triangles
+    //
+    vtkm::Id numTriangles = this->GetNumberOfTriangles();
+    if (numTriangles == 1)
+    {
+      vtkm::Vec<vtkm::Id, 4> triangle = Triangles.GetPortalControl().Get(0);
+      Triangles.Allocate(2);
+      Triangles.GetPortalControl().Set(0, triangle);
+      Triangles.GetPortalControl().Set(1, triangle);
+    }
     detail::LinearBVHBuilder builder;
     builder.RunOnDevice(*this, device);
     IsConstructed = true;
