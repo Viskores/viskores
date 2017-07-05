@@ -24,7 +24,7 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/NewtonsMethod.h>
-#include <vtkm/VecRectilinearPointCoordinates.h>
+#include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/exec/CellInterpolate.h>
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/Jacobian.h>
@@ -795,7 +795,7 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
 }
 
 static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParametricCoordinates(
-  const vtkm::VecRectilinearPointCoordinates<1>& pointWCoords,
+  const vtkm::VecAxisAlignedPointCoordinates<1>& pointWCoords,
   const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
   vtkm::CellShapeTagLine,
   const FunctorBase&)
@@ -963,7 +963,7 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
 }
 
 static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParametricCoordinates(
-  const vtkm::VecRectilinearPointCoordinates<2>& pointWCoords,
+  const vtkm::VecAxisAlignedPointCoordinates<2>& pointWCoords,
   const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
   vtkm::CellShapeTagQuad,
   const FunctorBase&)
@@ -1038,7 +1038,7 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
 }
 
 static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParametricCoordinates(
-  const vtkm::VecRectilinearPointCoordinates<3>& pointWCoords,
+  const vtkm::VecAxisAlignedPointCoordinates<3>& pointWCoords,
   const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
   vtkm::CellShapeTagHexahedron,
   const FunctorBase&)

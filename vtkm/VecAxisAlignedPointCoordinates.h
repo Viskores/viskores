@@ -17,8 +17,9 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_VecRectilinearPointCoordinates_h
-#define vtk_m_exec_VecRectilinearPointCoordinates_h
+
+#ifndef vtk_m_VecAxisAlignedPointCoordinates_h
+#define vtk_m_VecAxisAlignedPointCoordinates_h
 
 #include <vtkm/Math.h>
 #include <vtkm/TypeTraits.h>
@@ -31,56 +32,62 @@ namespace vtkm
 namespace detail
 {
 
-/// Specifies the size of VecRectilinearPointCoordinates for the given
+/// Specifies the size of VecAxisAlignedPointCoordinates for the given
 /// dimension.
 ///
 template <vtkm::IdComponent NumDimensions>
-struct VecRectilinearPointCoordinatesNumComponents;
+struct VecAxisAlignedPointCoordinatesNumComponents;
 
 template <>
-struct VecRectilinearPointCoordinatesNumComponents<1>
+struct VecAxisAlignedPointCoordinatesNumComponents<1>
 {
   static const vtkm::IdComponent NUM_COMPONENTS = 2;
 };
 
 template <>
-struct VecRectilinearPointCoordinatesNumComponents<2>
+struct VecAxisAlignedPointCoordinatesNumComponents<2>
 {
   static const vtkm::IdComponent NUM_COMPONENTS = 4;
 };
 
 template <>
-struct VecRectilinearPointCoordinatesNumComponents<3>
+struct VecAxisAlignedPointCoordinatesNumComponents<3>
 {
   static const vtkm::IdComponent NUM_COMPONENTS = 8;
 };
 
 VTKM_EXEC_CONSTANT
-const vtkm::FloatDefault VecRectilinearPointCoordinatesOffsetTable[8][3] = {
+const vtkm::FloatDefault VecAxisAlignedPointCoordinatesOffsetTable[8][3] = {
   { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f },
   { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }
 };
 
 } // namespace detail
 
-/// \brief An implicit vector for point coordinates in rectilinear cells.
+/// \brief An implicit vector for point coordinates in axis aligned cells. For
+/// internal use only.
 ///
-/// The \C VecRectilinearPointCoordinates class is a Vec-like class that holds
-/// the point coordinates for a rectilinear cell. The class is templated on the
-/// dimensions of the cell, which can be 1 (for a line), 2 (for a pixel), or 3
-/// (for a voxel).
+/// The \C VecAxisAlignedPointCoordinates class is a Vec-like class that holds
+/// the point coordinates for a axis aligned cell. The class is templated on the
+/// dimensions of the cell, which can be 1 (for a line).
+///
+/// This is an internal class used to represent coordinates for uniform datasets
+/// in an execution environment when executing a WorkletMapPointToCell. Users
+/// should not directly construct this class under any circumstances. Use the
+/// related ArrayPortalUniformPointCoordinates and
+/// ArrayHandleUniformPointCoordinates classes instead.
 ///
 template <vtkm::IdComponent NumDimensions>
-class VecRectilinearPointCoordinates
+class VecAxisAlignedPointCoordinates
 {
 public:
   typedef vtkm::Vec<vtkm::FloatDefault, 3> ComponentType;
 
   static const vtkm::IdComponent NUM_COMPONENTS =
-    detail::VecRectilinearPointCoordinatesNumComponents<NumDimensions>::NUM_COMPONENTS;
+    detail::VecAxisAlignedPointCoordinatesNumComponents<NumDimensions>::NUM_COMPONENTS;
 
   VTKM_EXEC_CONT
-  VecRectilinearPointCoordinates(ComponentType origin = ComponentType(0, 0, 0),
+  VecAxisAlignedPointCoordinates(ComponentType origin = ComponentType(0, 0, 0),
                                  ComponentType spacing = ComponentType(1, 1, 1))
     : Origin(origin)
     , Spacing(spacing)
@@ -103,7 +110,7 @@ public:
   VTKM_EXEC_CONT
   ComponentType operator[](vtkm::IdComponent index) const
   {
-    const vtkm::FloatDefault* offset = detail::VecRectilinearPointCoordinatesOffsetTable[index];
+    const vtkm::FloatDefault* offset = detail::VecAxisAlignedPointCoordinatesOffsetTable[index];
     return ComponentType(this->Origin[0] + offset[0] * this->Spacing[0],
                          this->Origin[1] + offset[1] * this->Spacing[1],
                          this->Origin[2] + offset[2] * this->Spacing[2]);
@@ -124,23 +131,23 @@ private:
 };
 
 template <vtkm::IdComponent NumDimensions>
-struct TypeTraits<vtkm::VecRectilinearPointCoordinates<NumDimensions>>
+struct TypeTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
 {
   typedef vtkm::TypeTraitsRealTag NumericTag;
   typedef TypeTraitsVectorTag DimensionalityTag;
 
   VTKM_EXEC_CONT
-  static vtkm::VecRectilinearPointCoordinates<NumDimensions> ZeroInitialization()
+  static vtkm::VecAxisAlignedPointCoordinates<NumDimensions> ZeroInitialization()
   {
-    return vtkm::VecRectilinearPointCoordinates<NumDimensions>(
+    return vtkm::VecAxisAlignedPointCoordinates<NumDimensions>(
       vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 0), vtkm::Vec<vtkm::FloatDefault, 3>(0, 0, 0));
   }
 };
 
 template <vtkm::IdComponent NumDimensions>
-struct VecTraits<vtkm::VecRectilinearPointCoordinates<NumDimensions>>
+struct VecTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
 {
-  typedef vtkm::VecRectilinearPointCoordinates<NumDimensions> VecType;
+  typedef vtkm::VecAxisAlignedPointCoordinates<NumDimensions> VecType;
 
   typedef vtkm::Vec<vtkm::FloatDefault, 3> ComponentType;
   typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
@@ -166,4 +173,4 @@ struct VecTraits<vtkm::VecRectilinearPointCoordinates<NumDimensions>>
 
 } // namespace vtkm
 
-#endif //vtk_m_exec_VecRectilinearPointCoordinates_h
+#endif //vtk_m_VecAxisAlignedPointCoordinates_h

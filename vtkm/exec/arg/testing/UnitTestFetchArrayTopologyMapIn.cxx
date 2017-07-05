@@ -159,7 +159,7 @@ void TryStructuredPointCoordinatesInvocation(const Invocation& invocation)
   vtkm::Vec<vtkm::FloatDefault, 3> origin = TestValue(0, vtkm::Vec<vtkm::FloatDefault, 3>());
   vtkm::Vec<vtkm::FloatDefault, 3> spacing = TestValue(1, vtkm::Vec<vtkm::FloatDefault, 3>());
 
-  vtkm::VecRectilinearPointCoordinates<NumDimensions> value = fetch.Load(
+  vtkm::VecAxisAlignedPointCoordinates<NumDimensions> value = fetch.Load(
     ThreadIndicesType(
       0, invocation.OutputToInputMap, invocation.VisitArray, invocation.GetInputDomain()),
     invocation.Parameters.template GetParameter<ParamIndex>());
