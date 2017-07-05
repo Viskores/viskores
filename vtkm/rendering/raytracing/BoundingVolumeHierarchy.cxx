@@ -40,7 +40,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-
+#define AABB_EPSILON 0.00001f
 namespace vtkm
 {
 namespace rendering
@@ -141,6 +141,17 @@ public:
     xmax = vtkm::Max(xmax, point[0]);
     ymax = vtkm::Max(ymax, point[1]);
     zmax = vtkm::Max(zmax, point[2]);
+
+    vtkm::Float32 xEpsilon = (xmax - xmin) * AABB_EPSILON;
+    vtkm::Float32 yEpsilon = (ymax - ymin) * AABB_EPSILON;
+    vtkm::Float32 zEpsilon = (zmax - zmin) * AABB_EPSILON;
+
+    xmin -= xEpsilon;
+    ymin -= yEpsilon;
+    zmin -= zEpsilon;
+    xmax += xEpsilon;
+    ymax += yEpsilon;
+    zmax += zEpsilon;
   }
 }; //class FindAABBs
 
@@ -803,8 +814,10 @@ LinearBVH::LinearBVH()
 
 VTKM_CONT
 LinearBVH::LinearBVH(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
-                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles)
-  : CoordsHandle(coordsHandle)
+                     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
+                     vtkm::Bounds coordBounds)
+  : CoordBounds(coordBounds)
+  , CoordsHandle(coordsHandle)
   , Triangles(triangles)
   , IsConstructed(false)
   , CanConstruct(true)
@@ -815,9 +828,8 @@ VTKM_CONT
 LinearBVH::LinearBVH(const LinearBVH& other)
   : FlatBVH(other.FlatBVH)
   , LeafNodes(other.LeafNodes)
-  , ExtentMin(other.ExtentMin)
-  , ExtentMax(other.ExtentMax)
   , LeafCount(other.LeafCount)
+  , CoordBounds(other.CoordBounds)
   , CoordsHandle(other.CoordsHandle)
   , Triangles(other.Triangles)
   , IsConstructed(other.IsConstructed)
@@ -843,14 +855,14 @@ void LinearBVH::Construct()
   ConstructFunctor functor(this);
   vtkm::cont::TryExecute(functor);
   IsConstructed = true;
-  std::cout << "LeafNodes " << LeafNodes.GetPortalControl().GetNumberOfValues() << "\n";
-  std::cout << "innder " << FlatBVH.GetPortalControl().GetNumberOfValues() << "\n";
 }
 
 VTKM_CONT
 void LinearBVH::SetData(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
-                        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles)
+                        vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
+                        vtkm::Bounds coordBounds)
 {
+  CoordBounds = coordBounds;
   CoordsHandle = coordsHandle;
   Triangles = triangles;
   IsConstructed = false;

@@ -41,10 +41,9 @@ public:
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> LeafNodesHandle;
   InnerNodesHandle FlatBVH;
   LeafNodesHandle LeafNodes;
-  vtkm::Vec<Float32, 3> ExtentMin;
-  vtkm::Vec<Float32, 3> ExtentMax;
   struct ConstructFunctor;
   vtkm::Id LeafCount;
+  vtkm::Bounds CoordBounds;
 
 protected:
   vtkm::cont::DynamicArrayHandleCoordinateSystem CoordsHandle;
@@ -57,7 +56,8 @@ public:
 
   VTKM_CONT
   LinearBVH(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
-            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles);
+            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
+            vtkm::Bounds coordBounds);
 
   VTKM_CONT
   LinearBVH(const LinearBVH& other);
@@ -70,7 +70,8 @@ public:
 
   VTKM_CONT
   void SetData(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
-               vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles);
+               vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
+               vtkm::Bounds coordBounds);
 
   template <typename Device>
   VTKM_CONT void ConstructOnDevice(Device device);
