@@ -350,7 +350,7 @@ template <typename T, vtkm::IdComponent Size>
 class VTKM_ALWAYS_EXPORT Vec;
 
 template <typename T>
-class VTKM_ALWAYS_EXPORTVecC;
+class VTKM_ALWAYS_EXPORT VecC;
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT VecCConst;

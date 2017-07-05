@@ -46,6 +46,8 @@ STRIP_FROM_INC_PATH    =
 
 SHORT_NAMES            = NO
 
+SHOW_NAMESPACES        = NO
+
 JAVADOC_AUTOBRIEF      = YES
 
 MULTILINE_CPP_IS_BRIEF = NO
@@ -142,11 +144,18 @@ FILE_PATTERNS          = *.cxx *.h *.cu
 
 RECURSIVE              = YES
 
-EXCLUDE                = @VTKm_DOXYGEN_EXCLUDE_FILES@
+EXCLUDE                = @VTKm_SOURCE_DIR@/vtkm/testing/OptionParser.h
 
 EXCLUDE_SYMLINKS       = NO
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       = */testing/*
+EXCLUDE_PATTERNS       += */examples/*
+EXCLUDE_PATTERNS       += UnitTest*
+
+EXCLUDE_SYMBOLS        = thrust
+EXCLUDE_SYMBOLS        += detail
+EXCLUDE_SYMBOLS        += placeholders
+EXCLUDE_SYMBOLS        += benchmarking
 
 EXAMPLE_PATH           =
 
@@ -182,7 +191,7 @@ VERBATIM_HEADERS       = YES
 # configuration options related to the alphabetical class index
 #---------------------------------------------------------------------------
 
-ALPHABETICAL_INDEX     = NO
+ALPHABETICAL_INDEX     = YES
 
 COLS_IN_ALPHA_INDEX    = 5
 
@@ -364,11 +373,11 @@ COLLABORATION_GRAPH    = YES
 
 UML_LOOK               = NO
 
-TEMPLATE_RELATIONS     = YES
+TEMPLATE_RELATIONS     = NO
 
-INCLUDE_GRAPH          = YES
+INCLUDE_GRAPH          = NO
 
-INCLUDED_BY_GRAPH      = YES
+INCLUDED_BY_GRAPH      = NO
 
 CALL_GRAPH             = NO
 
