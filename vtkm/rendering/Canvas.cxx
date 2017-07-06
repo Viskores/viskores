@@ -42,7 +42,7 @@ Canvas::~Canvas()
 void Canvas::SaveAs(const std::string& fileName) const
 {
   this->RefreshColorBuffer();
-  std::ofstream of(fileName.c_str());
+  std::ofstream of(fileName.c_str(), std::ios_base::binary | std::ios_base::out);
   of << "P6" << std::endl << this->Width << " " << this->Height << std::endl << 255 << std::endl;
   ColorBufferType::PortalConstControl colorPortal = this->ColorBuffer.GetPortalConstControl();
   for (vtkm::Id yIndex = this->Height - 1; yIndex >= 0; yIndex--)
