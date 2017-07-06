@@ -216,6 +216,7 @@ void parallel_quick_sort(RandomAccessIterator begin, RandomAccessIterator end, c
 } // namespace internal
 //! @endcond
 
+//! @cond INTERNAL
 /** \page parallel_sort_iter_req Requirements on iterators for parallel_sort
     Requirements on value type \c T of \c RandomAccessIterator for \c parallel_sort:
     - \code void swap( T& x, T& y ) \endcode        Swaps \c x and \c y
@@ -231,6 +232,7 @@ void parallel_quick_sort(RandomAccessIterator begin, RandomAccessIterator end, c
 /** The compare function object is used for all comparisons between elements during sorting.
     The compare object must define a bool operator() function.
     @ingroup algorithms **/
+//! @endcond
 template <typename RandomAccessIterator, typename Compare>
 void parallel_sort(RandomAccessIterator begin, RandomAccessIterator end, const Compare& comp)
 {

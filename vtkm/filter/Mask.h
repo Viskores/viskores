@@ -29,7 +29,9 @@ namespace vtkm
 {
 namespace filter
 {
-
+/// \brief Subselect cells using a stride
+///
+/// Extract only every Nth cell where N is equal to a stride value
 class Mask : public vtkm::filter::FilterDataSet<Mask>
 {
 public:

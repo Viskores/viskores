@@ -27,6 +27,8 @@ namespace vtkm
 namespace filter
 {
 
+/// \brief compute normals for polygonal mesh
+///
 /// Compute surface normals on points and/or cells of a polygonal dataset.
 /// The cell normals are faceted and are computed based on the plane where a
 /// face lies. The point normals are smooth normals, computed by averaging

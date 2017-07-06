@@ -74,13 +74,19 @@ namespace vtkm
 namespace filter
 {
 
+/// \brief Construct the ContourTree for a 2D Mesh
+///
+/// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and
+/// peak of contour
+/// Based on the algorithm presented in the paper:
+//  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
 class ContourTreeMesh2D : public vtkm::filter::FilterField<ContourTreeMesh2D>
 {
 public:
   VTKM_CONT
   ContourTreeMesh2D();
 
-  // Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
+  /// Output field
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT vtkm::filter::ResultField DoExecute(
     const vtkm::cont::DataSet& input,
@@ -97,13 +103,19 @@ public:
   typedef TypeListTagScalarAll InputFieldTypeList;
 };
 
+/// \brief Construct the ContourTree for a 3D Mesh
+///
+/// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and
+/// peak of contour
+/// Based on the algorithm presented in the paper:
+//  “Parallel Peak Pruning for Scalable SMP Contour Tree Computation.”
 class ContourTreeMesh3D : public vtkm::filter::FilterField<ContourTreeMesh3D>
 {
 public:
   VTKM_CONT
   ContourTreeMesh3D();
 
-  // Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
+  /// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT vtkm::filter::ResultField DoExecute(
     const vtkm::cont::DataSet& input,

@@ -28,16 +28,13 @@ namespace vtkm
 {
 namespace filter
 {
+/// \brief generate isosurface(s) from a Volume
 
-/*
-* Outstanding issues:
-* 1. The output is a proper dataset, which means:
-*     It needs a cell set
-*     It needs a coordinate system
-*
-*
-*/
-
+/// Takes as input a volume (e.g., 3D structured point set) and generates on
+/// output one or more isosurfaces.
+/// Multiple contour values must be specified to generate the isosurfaces.
+/// @warning
+/// This filter is currently only supports 3D volumes.
 class MarchingCubes : public vtkm::filter::FilterDataSetWithField<MarchingCubes>
 {
 public:
@@ -62,6 +59,10 @@ public:
   VTKM_CONT
   vtkm::Float64 GetIsoValue(vtkm::Id index) const;
 
+  /// Set/Get whether the points generated should be unique for every triangle
+  /// or will duplicate points be merged together. Duplicate points are identified
+  /// by the unique edge it was generated from.
+  ///
   VTKM_CONT
   void SetMergeDuplicatePoints(bool on) { this->Worklet.SetMergeDuplicatePoints(on); }
 

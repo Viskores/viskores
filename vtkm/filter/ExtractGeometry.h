@@ -30,6 +30,21 @@ namespace vtkm
 namespace filter
 {
 
+/// \brief  Extract a subset of geometry based on an implicit function
+///
+/// Extracts from its input geometry all cells that are either
+/// completely inside or outside of a specified implicit function. Any type of
+/// data can be input to this filter.
+///
+/// To use this filter you must specify an implicit function. You must also
+/// specify whether to extract cells laying inside or outside of the implicit
+/// function. (The inside of an implicit function is the negative values
+/// region.) An option exists to extract cells that are neither inside or
+/// outside (i.e., boundary).
+///
+/// This differs from Clip in that Clip will subdivide boundary cells into new
+/// cells, while this filter will not, producing a more 'crinkly' output.
+///
 class ExtractGeometry : public vtkm::filter::FilterDataSet<ExtractGeometry>
 {
 public:

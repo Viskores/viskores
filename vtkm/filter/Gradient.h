@@ -28,6 +28,7 @@ namespace vtkm
 namespace filter
 {
 
+/// \brief A general filter for gradient estimation.
 /// Estimates the gradient of a point field in a data set. The created gradient array
 /// can be determined at either each point location or at the center of each cell.
 ///
