@@ -31,91 +31,78 @@
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-namespace vtkm {
-namespace filter {
-
+namespace vtkm
+{
+namespace filter
+{
 
 //----------------------------------------------------------------------------
-template<class Derived>
-inline VTKM_CONT
-FilterField<Derived>::FilterField():
-  Tracker(vtkm::cont::GetGlobalRuntimeDeviceTracker())
+template <class Derived>
+inline VTKM_CONT FilterField<Derived>::FilterField()
+  : Tracker(vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
-
 }
 
 //----------------------------------------------------------------------------
-template<class Derived>
-inline VTKM_CONT
-FilterField<Derived>::~FilterField()
+template <class Derived>
+inline VTKM_CONT FilterField<Derived>::~FilterField()
 {
-
 }
 
 //-----------------------------------------------------------------------------
-template<typename Derived>
-inline VTKM_CONT
-ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
-                                          const std::string &inFieldName)
+template <typename Derived>
+inline VTKM_CONT ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                                                           const std::string& inFieldName)
 {
-  return this->Execute(input,
-                       input.GetField(inFieldName),
-                       vtkm::filter::PolicyDefault());
+  return this->Execute(input, input.GetField(inFieldName), vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
-template<typename Derived>
-inline VTKM_CONT
-ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
-                                          const vtkm::cont::Field &field)
+template <typename Derived>
+inline VTKM_CONT ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                                                           const vtkm::cont::Field& field)
 {
-  return this->Execute(input,
-                       field,
-                       vtkm::filter::PolicyDefault());
+  return this->Execute(input, field, vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
-template<typename Derived>
-inline VTKM_CONT
-ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
-                                          const vtkm::cont::CoordinateSystem &field)
+template <typename Derived>
+inline VTKM_CONT ResultField
+FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                              const vtkm::cont::CoordinateSystem& field)
 {
-  return this->Execute(input,
-                       field,
-                       vtkm::filter::PolicyDefault());
+  return this->Execute(input, field, vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
-template<typename Derived>
-template<typename DerivedPolicy>
-inline VTKM_CONT
-ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
-                                          const std::string &inFieldName,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
+template <typename Derived>
+template <typename DerivedPolicy>
+inline VTKM_CONT ResultField
+FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                              const std::string& inFieldName,
+                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  return this->Execute(input,
-                       input.GetField(inFieldName),
-                       policy);
+  return this->Execute(input, input.GetField(inFieldName), policy);
 }
 
 //-----------------------------------------------------------------------------
-template<typename Derived>
-template<typename DerivedPolicy>
-inline VTKM_CONT
-ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
-                                          const vtkm::cont::Field &field,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
+template <typename Derived>
+template <typename DerivedPolicy>
+inline VTKM_CONT ResultField
+FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                              const vtkm::cont::Field& field,
+                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   return this->PrepareForExecution(input, field, policy);
 }
 
 //-----------------------------------------------------------------------------
-template<typename Derived>
-template<typename DerivedPolicy>
-inline VTKM_CONT
-ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
-                                          const vtkm::cont::CoordinateSystem &field,
-                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
+template <typename Derived>
+template <typename DerivedPolicy>
+inline VTKM_CONT ResultField
+FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                              const vtkm::cont::CoordinateSystem& field,
+                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   //we need to state that the field is actually a coordinate system, so that
   //the filter uses the proper policy to convert the types.
@@ -123,38 +110,31 @@ ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet &input,
 }
 
 //-----------------------------------------------------------------------------
-template<typename Derived>
-template<typename DerivedPolicy>
-inline VTKM_CONT
-ResultField FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
-                                                      const vtkm::cont::Field &field,
-                                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
+template <typename Derived>
+template <typename DerivedPolicy>
+inline VTKM_CONT ResultField
+FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::Field& field,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   vtkm::filter::FieldMetadata metaData(field);
   ResultField result;
 
-  typedef internal::ResolveFieldTypeAndExecute< Derived,  DerivedPolicy,
-                                                ResultField > FunctorType;
-  FunctorType functor(static_cast<Derived*>(this),
-                      input,
-                      metaData,
-                      policy,
-                      this->Tracker,
-                      result);
+  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, ResultField> FunctorType;
+  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, this->Tracker, result);
 
-  typedef vtkm::filter::FilterTraits< Derived > Traits;
-  vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(field, policy, Traits()),
-                           functor );
+  typedef vtkm::filter::FilterTraits<Derived> Traits;
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy, Traits()), functor);
   return result;
 }
 
 //-----------------------------------------------------------------------------
-template<typename Derived>
-template<typename DerivedPolicy>
-inline VTKM_CONT
-ResultField FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet &input,
-                                                      const vtkm::cont::CoordinateSystem &field,
-                                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy )
+template <typename Derived>
+template <typename DerivedPolicy>
+inline VTKM_CONT ResultField
+FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::CoordinateSystem& field,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   //We have a special signature just for CoordinateSystem, so that we can ask
   //the policy for the storage types and value types just for coordinate systems
@@ -162,20 +142,12 @@ ResultField FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet 
   vtkm::filter::FieldMetadata metaData(field);
   ResultField result;
 
-  typedef internal::ResolveFieldTypeAndExecute< Derived, DerivedPolicy,
-                                                ResultField > FunctorType;
-  FunctorType functor(static_cast<Derived*>(this),
-                      input,
-                      metaData,
-                      policy,
-                      this->Tracker,
-                      result);
+  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, ResultField> FunctorType;
+  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, this->Tracker, result);
 
-  typedef vtkm::filter::FilterTraits< Derived > Traits;
-  vtkm::cont::CastAndCall( vtkm::filter::ApplyPolicy(field, policy, Traits()),
-                           functor );
+  typedef vtkm::filter::FilterTraits<Derived> Traits;
+  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy, Traits()), functor);
   return result;
 }
-
 }
 }

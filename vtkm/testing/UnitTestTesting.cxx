@@ -23,7 +23,8 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void Fail()
 {
@@ -42,10 +43,8 @@ void GoodAssert()
 
 void TestTestEqual()
 {
-  VTKM_TEST_ASSERT(test_equal(2.0, 1.9999999),
-                   "These should be close enough.");
-  VTKM_TEST_ASSERT(!test_equal(2.0, 1.999),
-                   "These should not be close enough.");
+  VTKM_TEST_ASSERT(test_equal(2.0, 1.9999999), "These should be close enough.");
+  VTKM_TEST_ASSERT(!test_equal(2.0, 1.999), "These should not be close enough.");
 }
 
 // All tests that should not raise a failure.
@@ -57,7 +56,7 @@ void CleanTests()
 
 } // anonymous namespace
 
-int UnitTestTesting(int, char *[])
+int UnitTestTesting(int, char* [])
 {
   std::cout << "This call should fail." << std::endl;
   if (vtkm::testing::Testing::Run(Fail) == 0)

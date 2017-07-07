@@ -20,45 +20,45 @@
 #ifndef vtk_m_exec_ExecutionWholeArray_h
 #define vtk_m_exec_ExecutionWholeArray_h
 
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
 
-namespace vtkm {
-namespace exec {
+namespace vtkm
+{
+namespace exec
+{
 
 /// \c ExecutionWholeArray is an execution object that allows an array handle
 /// content to be a parameter in an execution environment
 /// function. This can be used to allow worklets to have a shared search
 /// structure
 ///
-template<typename T,
-         typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
-         typename DeviceAdapterTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG
-         >
+template <typename T,
+          typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
+          typename DeviceAdapterTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class ExecutionWholeArray : public vtkm::exec::ExecutionObjectBase
 {
 public:
   using ValueType = T;
-  using HandleType = vtkm::cont::ArrayHandle<T,StorageTag>;
+  using HandleType = vtkm::cont::ArrayHandle<T, StorageTag>;
   using PortalType = typename HandleType::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
   VTKM_CONT
-  ExecutionWholeArray( ):
-    Portal( )
+  ExecutionWholeArray()
+    : Portal()
   {
   }
 
   VTKM_CONT
-  ExecutionWholeArray( HandleType& handle ):
-    Portal( handle.PrepareForInPlace( DeviceAdapterTag()) )
+  ExecutionWholeArray(HandleType& handle)
+    : Portal(handle.PrepareForInPlace(DeviceAdapterTag()))
   {
   }
 
   VTKM_CONT
-  ExecutionWholeArray( HandleType& handle,
-                       vtkm::Id length ):
-    Portal( handle.PrepareForOutput( length, DeviceAdapterTag()) )
+  ExecutionWholeArray(HandleType& handle, vtkm::Id length)
+    : Portal(handle.PrepareForOutput(length, DeviceAdapterTag()))
   {
   }
 
@@ -86,26 +86,25 @@ private:
 /// function. This can be used to allow worklets to have a shared search
 /// structure
 ///
-template<typename T,
-         typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
-         typename DeviceAdapterTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG
-         >
+template <typename T,
+          typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
+          typename DeviceAdapterTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class ExecutionWholeArrayConst : public vtkm::exec::ExecutionObjectBase
 {
 public:
   using ValueType = T;
-  using HandleType = vtkm::cont::ArrayHandle<T,StorageTag>;
+  using HandleType = vtkm::cont::ArrayHandle<T, StorageTag>;
   using PortalType = typename HandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
 
   VTKM_CONT
-  ExecutionWholeArrayConst( ):
-    Portal( )
+  ExecutionWholeArrayConst()
+    : Portal()
   {
   }
 
   VTKM_CONT
-  ExecutionWholeArrayConst( const HandleType& handle):
-    Portal( handle.PrepareForInput( DeviceAdapterTag() ) )
+  ExecutionWholeArrayConst(const HandleType& handle)
+    : Portal(handle.PrepareForInput(DeviceAdapterTag()))
   {
   }
 
@@ -124,7 +123,6 @@ public:
 private:
   PortalType Portal;
 };
-
 }
 } // namespace vtkm::exec
 

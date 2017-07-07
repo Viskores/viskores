@@ -22,9 +22,12 @@
 
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 /// \brief Class that manages data in the execution environment.
 ///
@@ -45,12 +48,12 @@ namespace internal {
 /// trivial subclass of
 /// vtkm::cont::internal::ArrayManagerExecutionShareWithControl.
 ///
-template<typename T, class StorageTag, class DeviceAdapterTag>
+template <typename T, class StorageTag, class DeviceAdapterTag>
 class ArrayManagerExecution
 #ifdef VTKM_DOXYGEN_ONLY
 {
 private:
-  typedef vtkm::cont::internal::Storage<T,StorageTag> StorageType;
+  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
 
 public:
   /// The type of value held in the array (vtkm::FloatDefault, vtkm::Vec, etc.)
@@ -67,8 +70,7 @@ public:
   /// Const version of PortalType.  You must be able to cast PortalType to
   /// PortalConstType.
   ///
-  typedef vtkm::exec::internal::ArrayPortalFromIterators<const ValueType*>
-      PortalConstType;
+  typedef vtkm::exec::internal::ArrayPortalFromIterators<const ValueType*> PortalConstType;
 
   /// All ArrayManagerExecution classes must have a constructor that takes a
   /// storage reference. The reference may be saved (and will remain valid
@@ -77,7 +79,7 @@ public:
   /// reference can also, of course, be ignored.
   ///
   VTKM_CONT
-  ArrayManagerExecution(vtkm::cont::internal::Storage<T,StorageTag> &storage);
+  ArrayManagerExecution(vtkm::cont::internal::Storage<T, StorageTag>& storage);
 
   /// Returns the number of values stored in the array.  Results are undefined
   /// if data has not been loaded or allocated.
@@ -121,8 +123,7 @@ public:
   /// called.
   ///
   VTKM_CONT
-  void RetrieveOutputData(
-      vtkm::cont::internal::Storage<T,StorageTag>* storage) const;
+  void RetrieveOutputData(vtkm::cont::internal::Storage<T, StorageTag>* storage) const;
 
   /// Similar to RetrieveOutputData except that instead of writing to the
   /// controlArray itself, it writes to the given control environment
@@ -151,10 +152,9 @@ public:
   VTKM_CONT
   void ReleaseResources();
 };
-#else // VTKM_DOXGEN_ONLY
-;
+#else  // VTKM_DOXGEN_ONLY
+  ;
 #endif // VTKM_DOXYGEN_ONLY
-
 }
 }
 } // namespace vtkm::cont::internal

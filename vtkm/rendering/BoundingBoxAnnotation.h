@@ -25,8 +25,10 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT BoundingBoxAnnotation
 {
@@ -40,35 +42,20 @@ public:
   virtual ~BoundingBoxAnnotation();
 
   VTKM_CONT
-  const vtkm::Bounds &GetExtents() const
-  {
-    return this->Extents;
-  }
+  const vtkm::Bounds& GetExtents() const { return this->Extents; }
 
   VTKM_CONT
-  void SetExtents(const vtkm::Bounds &extents)
-  {
-    this->Extents = extents;
-  }
+  void SetExtents(const vtkm::Bounds& extents) { this->Extents = extents; }
 
   VTKM_CONT
-  const vtkm::rendering::Color &GetColor() const
-  {
-    return this->Color;
-  }
+  const vtkm::rendering::Color& GetColor() const { return this->Color; }
 
   VTKM_CONT
-  void SetColor(vtkm::rendering::Color c)
-  {
-    this->Color = c;
-  }
+  void SetColor(vtkm::rendering::Color c) { this->Color = c; }
 
-  virtual void Render(const vtkm::rendering::Camera &,
-                      const WorldAnnotator &annotator);
+  virtual void Render(const vtkm::rendering::Camera&, const WorldAnnotator& annotator);
 };
-
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif // vtk_m_rendering_BoundingBoxAnnotation_h
-

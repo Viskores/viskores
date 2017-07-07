@@ -25,17 +25,17 @@
 
 namespace
 {
-template<std::size_t Len, int... Ts>
+template <std::size_t Len, int... Ts>
 void verify_correct_length(vtkm::internal::IntegerSequence<Ts...>)
 {
-  static_assert( Len == sizeof...(Ts), "Incorrect length");
+  static_assert(Len == sizeof...(Ts), "Incorrect length");
 
   //use a runtime time to verify the contents of the integer sequence
   //are 0...N-1
-  std::vector<int> container= {Ts...};
-  for(std::size_t i=0; i < Len; ++i)
+  std::vector<int> container = { Ts... };
+  for (std::size_t i = 0; i < Len; ++i)
   {
-    VTKM_TEST_ASSERT(container[i]==static_cast<int>(i), "Incorrect value");
+    VTKM_TEST_ASSERT(container[i] == static_cast<int>(i), "Incorrect value");
   }
 }
 
@@ -52,7 +52,6 @@ void IntegerSequenceSizes()
   using two_fifty_six = vtkm::internal::MakeIntegerSequence<256>::type;
   using five_twelve = vtkm::internal::MakeIntegerSequence<512>::type;
 
-
   verify_correct_length<0>(zero());
   verify_correct_length<1>(one());
   verify_correct_length<2>(two());
@@ -64,10 +63,9 @@ void IntegerSequenceSizes()
   verify_correct_length<256>(two_fifty_six());
   verify_correct_length<512>(five_twelve());
 }
-
 }
 
-int UnitTestIntegerSequence(int, char *[])
+int UnitTestIntegerSequence(int, char* [])
 {
   return vtkm::testing::Testing::Run(IntegerSequenceSizes);
 }

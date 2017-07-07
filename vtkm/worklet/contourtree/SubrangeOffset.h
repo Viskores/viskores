@@ -67,38 +67,40 @@
 #ifndef vtkm_worklet_contourtree_subrange_offset_h
 #define vtkm_worklet_contourtree_subrange_offset_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class SubrangeOffset : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> sortID,               // (input) index into sorted vertices
-                                WholeArrayIn<IdType> sortVector,      // (input) sorted vector of vertices
-                                WholeArrayOut<IdType> candidate);     // (output) candidate
+  typedef void ControlSignature(
+    FieldIn<IdType> sortID,           // (input) index into sorted vertices
+    WholeArrayIn<IdType> sortVector,  // (input) sorted vector of vertices
+    WholeArrayOut<IdType> candidate); // (output) candidate
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   SubrangeOffset() {}
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& sortID,
-                  const InFieldPortalType& sortVector,
-                  const OutFieldPortalType& candidate) const
+  VTKM_EXEC void operator()(const vtkm::Id& sortID,
+                            const InFieldPortalType& sortVector,
+                            const OutFieldPortalType& candidate) const
   {
-    if (sortVector.Get(sortID) != sortVector.Get(sortID-1))
+    if (sortVector.Get(sortID) != sortVector.Get(sortID - 1))
       candidate.Set(sortVector.Get(sortID), sortID);
   }
 }; // SubrangeOffset
-
 }
 }
 }

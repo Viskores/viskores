@@ -21,18 +21,20 @@
 #define vtk_m_rendering_ColorTable_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/rendering/vtkm_rendering_export.h>
 #include <vtkm/rendering/Color.h>
+#include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <memory>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-namespace detail {
+namespace detail
+{
 
 struct ColorTableInternals;
-
 }
 
 /// \brief It's a color table!
@@ -51,17 +53,18 @@ public:
   ColorTable();
 
   /// Constructs a \c ColorTable using the name of a pre-defined color set.
-  ColorTable(const std::string &name);
-  
-  // Make a single color ColorTable.
-  ColorTable(const vtkm::rendering::Color &color);
+  ColorTable(const std::string& name);
 
-  const std::string &GetName() const;
+  // Make a single color ColorTable.
+  ColorTable(const vtkm::rendering::Color& color);
+
+  const std::string& GetName() const;
 
   bool GetSmooth() const;
 
-  void Sample(int numSamples,
-              vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > &colors) const;
+  void SetSmooth(bool smooth);
+
+  void Sample(int numSamples, vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colors) const;
 
   vtkm::rendering::Color MapRGB(vtkm::Float32 scalar) const;
 
@@ -71,16 +74,16 @@ public:
 
   void Reverse();
 
-  void AddControlPoint(vtkm::Float32 position,
-                       const vtkm::rendering::Color &color);
+  ColorTable CorrectOpacity(const vtkm::Float32& factor) const;
+
+  void AddControlPoint(vtkm::Float32 position, const vtkm::rendering::Color& color);
 
   void AddControlPoint(vtkm::Float32 position,
-                       const vtkm::rendering::Color &color,
+                       const vtkm::rendering::Color& color,
                        vtkm::Float32 alpha);
 
   void AddAlphaControlPoint(vtkm::Float32 position, vtkm::Float32 alpha);
 };
-}}//namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 #endif //vtk_m_rendering_ColorTable_h
-
-

@@ -22,50 +22,42 @@
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
-namespace vtkm {
-namespace filter {
-
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT
-CellAverage::CellAverage():
-  vtkm::filter::FilterCell<CellAverage>(),
-  Worklet()
+namespace vtkm
+{
+namespace filter
 {
 
+//-----------------------------------------------------------------------------
+inline VTKM_CONT CellAverage::CellAverage()
+  : vtkm::filter::FilterCell<CellAverage>()
+  , Worklet()
+{
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-vtkm::filter::ResultField CellAverage::DoExecute(
-    const vtkm::cont::DataSet &input,
-    const vtkm::cont::ArrayHandle<T, StorageType> &inField,
-    const vtkm::filter::FieldMetadata &fieldMetadata,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter&)
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT vtkm::filter::ResultField CellAverage::DoExecute(
+  const vtkm::cont::DataSet& input,
+  const vtkm::cont::ArrayHandle<T, StorageType>& inField,
+  const vtkm::filter::FieldMetadata& fieldMetadata,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+  const DeviceAdapter&)
 {
-  if(!fieldMetadata.IsPointField())
+  if (!fieldMetadata.IsPointField())
   {
     return vtkm::filter::ResultField();
   }
 
-  vtkm::cont::DynamicCellSet cellSet =
-                  input.GetCellSet(this->GetActiveCellSetIndex());
+  vtkm::cont::DynamicCellSet cellSet = input.GetCellSet(this->GetActiveCellSetIndex());
 
   //todo: we need to ask the policy what storage type we should be using
   //If the input is implicit, we should know what to fall back to
   vtkm::cont::ArrayHandle<T> outArray;
 
-  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage,
-                                       DeviceAdapter > dispatcher(this->Worklet);
+  vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellAverage, DeviceAdapter> dispatcher(
+    this->Worklet);
 
-  dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellSet, policy),
-                    inField,
-                    outArray);
+  dispatcher.Invoke(vtkm::filter::ApplyPolicy(cellSet, policy), inField, outArray);
 
   std::string outputName = this->GetOutputFieldName();
   if (outputName == "")
@@ -74,12 +66,8 @@ vtkm::filter::ResultField CellAverage::DoExecute(
     outputName = fieldMetadata.GetName();
   }
 
-  return vtkm::filter::ResultField(input,
-                                   outArray,
-                                   outputName,
-                                   vtkm::cont::Field::ASSOC_CELL_SET,
-                                   cellSet.GetName());
+  return vtkm::filter::ResultField(
+    input, outArray, outputName, vtkm::cont::Field::ASSOC_CELL_SET, cellSet.GetName());
 }
-
 }
 } // namespace vtkm::filter

@@ -22,8 +22,12 @@
 
 #include <vtkm/cont/Error.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
 /// This class is thrown in the control environment whenever an error occurs in
 /// the execution environment.
@@ -31,11 +35,14 @@ namespace cont {
 class VTKM_ALWAYS_EXPORT ErrorExecution : public vtkm::cont::Error
 {
 public:
-  ErrorExecution(const std::string &message)
-    : Error(message) { }
+  ErrorExecution(const std::string& message)
+    : Error(message)
+  {
+  }
 };
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 }
-}  // namespace vtkm::cont
+} // namespace vtkm::cont
 
 #endif //vtk_m_cont_ErrorExecution_h

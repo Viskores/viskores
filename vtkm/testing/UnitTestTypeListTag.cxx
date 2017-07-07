@@ -27,20 +27,24 @@
 #include <set>
 #include <string>
 
-namespace {
+namespace
+{
 
 class TypeSet
 {
   typedef std::set<std::string> NameSetType;
   NameSetType NameSet;
+
 public:
-  template<typename T>
-  void AddExpected(T) {
+  template <typename T>
+  void AddExpected(T)
+  {
     this->NameSet.insert(vtkm::testing::TypeName<T>::Name());
   }
 
-  template<typename T>
-  void Found(T) {
+  template <typename T>
+  void Found(T)
+  {
     std::string name = vtkm::testing::TypeName<T>::Name();
     //std::cout << "  found " << name << std::endl;
     NameSetType::iterator typeLocation = this->NameSet.find(name);
@@ -56,15 +60,13 @@ public:
     }
   }
 
-  void CheckFound() {
-    for (NameSetType::iterator typeP = this->NameSet.begin();
-         typeP != this->NameSet.end();
-         typeP++)
+  void CheckFound()
+  {
+    for (NameSetType::iterator typeP = this->NameSet.begin(); typeP != this->NameSet.end(); typeP++)
     {
       std::cout << "**** Failed to find " << *typeP << std::endl;
     }
-    VTKM_TEST_ASSERT(this->NameSet.empty(),
-                     "List did not call functor on all expected types.");
+    VTKM_TEST_ASSERT(this->NameSet.empty(), "List did not call functor on all expected types.");
   }
 };
 
@@ -72,17 +74,20 @@ struct TestFunctor
 {
   TypeSet ExpectedTypes;
 
-  TestFunctor(const TypeSet &expectedTypes) : ExpectedTypes(expectedTypes) {  }
+  TestFunctor(const TypeSet& expectedTypes)
+    : ExpectedTypes(expectedTypes)
+  {
+  }
 
-  template<typename T>
-  VTKM_CONT
-  void operator()(T) {
+  template <typename T>
+  VTKM_CONT void operator()(T)
+  {
     this->ExpectedTypes.Found(T());
   }
 };
 
-template<typename ListTag>
-void TryList(const TypeSet &expected, ListTag)
+template <typename ListTag>
+void TryList(const TypeSet& expected, ListTag)
 {
   TestFunctor functor(expected);
   vtkm::ListForEach(functor, ListTag());
@@ -121,32 +126,32 @@ void TestLists()
 
   std::cout << "TypeListTagFieldVec2" << std::endl;
   TypeSet vec2;
-  vec2.AddExpected(vtkm::Vec<vtkm::Float32,2>());
-  vec2.AddExpected(vtkm::Vec<vtkm::Float64,2>());
+  vec2.AddExpected(vtkm::Vec<vtkm::Float32, 2>());
+  vec2.AddExpected(vtkm::Vec<vtkm::Float64, 2>());
   TryList(vec2, vtkm::TypeListTagFieldVec2());
 
   std::cout << "TypeListTagFieldVec3" << std::endl;
   TypeSet vec3;
-  vec3.AddExpected(vtkm::Vec<vtkm::Float32,3>());
-  vec3.AddExpected(vtkm::Vec<vtkm::Float64,3>());
+  vec3.AddExpected(vtkm::Vec<vtkm::Float32, 3>());
+  vec3.AddExpected(vtkm::Vec<vtkm::Float64, 3>());
   TryList(vec3, vtkm::TypeListTagFieldVec3());
 
   std::cout << "TypeListTagFieldVec4" << std::endl;
   TypeSet vec4;
-  vec4.AddExpected(vtkm::Vec<vtkm::Float32,4>());
-  vec4.AddExpected(vtkm::Vec<vtkm::Float64,4>());
+  vec4.AddExpected(vtkm::Vec<vtkm::Float32, 4>());
+  vec4.AddExpected(vtkm::Vec<vtkm::Float64, 4>());
   TryList(vec4, vtkm::TypeListTagFieldVec4());
 
   std::cout << "TypeListTagField" << std::endl;
   TypeSet field;
   field.AddExpected(vtkm::Float32());
   field.AddExpected(vtkm::Float64());
-  field.AddExpected(vtkm::Vec<vtkm::Float32,2>());
-  field.AddExpected(vtkm::Vec<vtkm::Float64,2>());
-  field.AddExpected(vtkm::Vec<vtkm::Float32,3>());
-  field.AddExpected(vtkm::Vec<vtkm::Float64,3>());
-  field.AddExpected(vtkm::Vec<vtkm::Float32,4>());
-  field.AddExpected(vtkm::Vec<vtkm::Float64,4>());
+  field.AddExpected(vtkm::Vec<vtkm::Float32, 2>());
+  field.AddExpected(vtkm::Vec<vtkm::Float64, 2>());
+  field.AddExpected(vtkm::Vec<vtkm::Float32, 3>());
+  field.AddExpected(vtkm::Vec<vtkm::Float64, 3>());
+  field.AddExpected(vtkm::Vec<vtkm::Float32, 4>());
+  field.AddExpected(vtkm::Vec<vtkm::Float64, 4>());
   TryList(field, vtkm::TypeListTagField());
 
   std::cout << "TypeListTagCommon" << std::endl;
@@ -155,8 +160,8 @@ void TestLists()
   common.AddExpected(vtkm::Float64());
   common.AddExpected(vtkm::Int32());
   common.AddExpected(vtkm::Int64());
-  common.AddExpected(vtkm::Vec<vtkm::Float32,3>());
-  common.AddExpected(vtkm::Vec<vtkm::Float64,3>());
+  common.AddExpected(vtkm::Vec<vtkm::Float32, 3>());
+  common.AddExpected(vtkm::Vec<vtkm::Float64, 3>());
   TryList(common, vtkm::TypeListTagCommon());
 
   std::cout << "TypeListTagScalarAll" << std::endl;
@@ -175,55 +180,55 @@ void TestLists()
 
   std::cout << "TypeListTagVecCommon" << std::endl;
   TypeSet vecCommon;
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Float32,2>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Float64,2>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::UInt8,2>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Int32,2>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Int64,2>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Float32,3>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Float64,3>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::UInt8,3>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Int32,3>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Int64,3>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Float32,4>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Float64,4>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::UInt8,4>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Int32,4>());
-  vecCommon.AddExpected(vtkm::Vec<vtkm::Int64,4>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Float32, 2>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Float64, 2>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::UInt8, 2>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Int32, 2>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Int64, 2>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Float32, 3>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Float64, 3>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::UInt8, 3>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Int32, 3>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Int64, 3>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Float32, 4>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Float64, 4>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::UInt8, 4>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Int32, 4>());
+  vecCommon.AddExpected(vtkm::Vec<vtkm::Int64, 4>());
   TryList(vecCommon, vtkm::TypeListTagVecCommon());
 
   std::cout << "TypeListTagVecAll" << std::endl;
   TypeSet vecAll;
-  vecAll.AddExpected(vtkm::Vec<vtkm::Float32,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Float64,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int8,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int16,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int32,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int64,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt8,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt16,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt32,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt64,2>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Float32,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Float64,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int8,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int16,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int32,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int64,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt8,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt16,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt32,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt64,3>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Float32,4>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Float64,4>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int8,4>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int16,4>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int32,4>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::Int64,4>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt8,4>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt16,4>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt32,4>());
-  vecAll.AddExpected(vtkm::Vec<vtkm::UInt64,4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Float32, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Float64, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int8, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int16, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int32, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int64, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt8, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt16, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt32, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt64, 2>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Float32, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Float64, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int8, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int16, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int32, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int64, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt8, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt16, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt32, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt64, 3>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Float32, 4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Float64, 4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int8, 4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int16, 4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int32, 4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::Int64, 4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt8, 4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt16, 4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt32, 4>());
+  vecAll.AddExpected(vtkm::Vec<vtkm::UInt64, 4>());
   TryList(vecAll, vtkm::TypeListTagVecAll());
 
   std::cout << "TypeListTagAll" << std::endl;
@@ -238,42 +243,42 @@ void TestLists()
   all.AddExpected(vtkm::UInt32());
   all.AddExpected(vtkm::Int64());
   all.AddExpected(vtkm::UInt64());
-  all.AddExpected(vtkm::Vec<vtkm::Float32,2>());
-  all.AddExpected(vtkm::Vec<vtkm::Float64,2>());
-  all.AddExpected(vtkm::Vec<vtkm::Int8,2>());
-  all.AddExpected(vtkm::Vec<vtkm::Int16,2>());
-  all.AddExpected(vtkm::Vec<vtkm::Int32,2>());
-  all.AddExpected(vtkm::Vec<vtkm::Int64,2>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt8,2>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt16,2>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt32,2>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt64,2>());
-  all.AddExpected(vtkm::Vec<vtkm::Float32,3>());
-  all.AddExpected(vtkm::Vec<vtkm::Float64,3>());
-  all.AddExpected(vtkm::Vec<vtkm::Int8,3>());
-  all.AddExpected(vtkm::Vec<vtkm::Int16,3>());
-  all.AddExpected(vtkm::Vec<vtkm::Int32,3>());
-  all.AddExpected(vtkm::Vec<vtkm::Int64,3>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt8,3>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt16,3>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt32,3>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt64,3>());
-  all.AddExpected(vtkm::Vec<vtkm::Float32,4>());
-  all.AddExpected(vtkm::Vec<vtkm::Float64,4>());
-  all.AddExpected(vtkm::Vec<vtkm::Int8,4>());
-  all.AddExpected(vtkm::Vec<vtkm::Int16,4>());
-  all.AddExpected(vtkm::Vec<vtkm::Int32,4>());
-  all.AddExpected(vtkm::Vec<vtkm::Int64,4>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt8,4>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt16,4>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt32,4>());
-  all.AddExpected(vtkm::Vec<vtkm::UInt64,4>());
+  all.AddExpected(vtkm::Vec<vtkm::Float32, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::Float64, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::Int8, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::Int16, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::Int32, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::Int64, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt8, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt16, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt32, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt64, 2>());
+  all.AddExpected(vtkm::Vec<vtkm::Float32, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::Float64, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::Int8, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::Int16, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::Int32, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::Int64, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt8, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt16, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt32, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt64, 3>());
+  all.AddExpected(vtkm::Vec<vtkm::Float32, 4>());
+  all.AddExpected(vtkm::Vec<vtkm::Float64, 4>());
+  all.AddExpected(vtkm::Vec<vtkm::Int8, 4>());
+  all.AddExpected(vtkm::Vec<vtkm::Int16, 4>());
+  all.AddExpected(vtkm::Vec<vtkm::Int32, 4>());
+  all.AddExpected(vtkm::Vec<vtkm::Int64, 4>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt8, 4>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt16, 4>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt32, 4>());
+  all.AddExpected(vtkm::Vec<vtkm::UInt64, 4>());
   TryList(all, vtkm::TypeListTagAll());
 }
 
 } // anonymous namespace
 
-int UnitTestTypeListTag(int, char *[])
+int UnitTestTypeListTag(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestLists);
 }

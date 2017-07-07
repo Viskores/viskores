@@ -21,16 +21,27 @@
 set(unit_tests
   UnitTestCellAverageFilter.cxx
   UnitTestCleanGrid.cxx
-  UnitTestClipFilter.cxx
+  UnitTestClipWithFieldFilter.cxx
+  UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
+  UnitTestEntropyFilter.cxx
   UnitTestExternalFacesFilter.cxx
+  UnitTestExtractGeometryFilter.cxx
+  UnitTestExtractPointsFilter.cxx
+  UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx
   UnitTestMarchingCubesFilter.cxx
+  UnitTestMaskFilter.cxx
+  UnitTestMaskPointsFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
+  UnitTestSurfaceNormalsFilter.cxx
+  UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx
+  UnitTestThresholdPointsFilter.cxx
+  UnitTestTriangulateFilter.cxx
   UnitTestVectorMagnitudeFilter.cxx
   UnitTestVertexClusteringFilter.cxx
  )

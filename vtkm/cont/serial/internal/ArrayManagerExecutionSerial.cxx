@@ -1,0 +1,42 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2017 Sandia Corporation.
+//  Copyright 2017 UT-Battelle, LLC.
+//  Copyright 2017 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
+
+#define vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_cxx
+
+#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
+
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
+
+ExecutionArrayInterfaceBasic<DeviceAdapterTagSerial>::ExecutionArrayInterfaceBasic(
+  StorageBasicBase& storage)
+  : Superclass(storage)
+{
+}
+
+} // end namespace internal
+
+VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagSerial)
+}
+} // end vtkm::cont

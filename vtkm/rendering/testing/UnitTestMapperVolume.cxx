@@ -18,19 +18,20 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperVolume.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 
-namespace {
-    
+namespace
+{
+
 void RenderTests()
 {
   typedef vtkm::rendering::MapperVolume M;
@@ -39,18 +40,16 @@ void RenderTests()
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
-  
-  vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRegularDataSet0(),
-                                           "pointvar", colorTable, "reg3D.pnm");
-  vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRectilinearDataSet0(),
-                                           "pointvar", colorTable, "rect3D.pnm");
+
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
 }
 
 } //namespace
 
-int UnitTestMapperVolume(int, char *[])
+int UnitTestMapperVolume(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(RenderTests);
 }
-
-

@@ -29,19 +29,14 @@
 class TestWholeArrayWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<>,
-                                WholeArrayInOut<>,
-                                WholeArrayOut<>);
+  typedef void ControlSignature(WholeArrayIn<>, WholeArrayInOut<>, WholeArrayOut<>);
   typedef void ExecutionSignature(WorkIndex, _1, _2, _3);
 
-  template<typename InPortalType,
-           typename InOutPortalType,
-           typename OutPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id &index,
-                  const InPortalType &inPortal,
-                  const InOutPortalType &inOutPortal,
-                  const OutPortalType &outPortal) const
+  template <typename InPortalType, typename InOutPortalType, typename OutPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& index,
+                            const InPortalType& inPortal,
+                            const InOutPortalType& inOutPortal,
+                            const OutPortalType& outPortal) const
   {
     typedef typename InPortalType::ValueType inT;
     if (!test_equal(inPortal.Get(index), TestValue(index, inT())))
@@ -50,8 +45,7 @@ public:
     }
 
     typedef typename InOutPortalType::ValueType inOutT;
-    if (!test_equal(inOutPortal.Get(index),
-                    TestValue(index, inOutT()) + inOutT(100)))
+    if (!test_equal(inOutPortal.Get(index), TestValue(index, inOutT()) + inOutT(100)))
     {
       this->RaiseError("Got wrong input/output value.");
     }
@@ -69,17 +63,16 @@ public:
   typedef void ExecutionSignature(WorkIndex, _2);
   typedef _1 InputDomain;
 
-  template<typename AtomicArrayType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id &index,
-                  const AtomicArrayType &atomicArray) const
+  template <typename AtomicArrayType>
+  VTKM_EXEC void operator()(const vtkm::Id& index, const AtomicArrayType& atomicArray) const
   {
     typedef typename AtomicArrayType::ValueType ValueType;
     atomicArray.Add(0, static_cast<ValueType>(index));
   }
 };
 
-namespace map_whole_array {
+namespace map_whole_array
+{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
@@ -89,18 +82,17 @@ struct DoTestWholeArrayWorklet
 
   // This just demonstrates that the WholeArray tags support dynamic arrays.
   VTKM_CONT
-  void CallWorklet(const vtkm::cont::DynamicArrayHandle &inArray,
-                   const vtkm::cont::DynamicArrayHandle &inOutArray,
-                   const vtkm::cont::DynamicArrayHandle &outArray) const
+  void CallWorklet(const vtkm::cont::DynamicArrayHandle& inArray,
+                   const vtkm::cont::DynamicArrayHandle& inOutArray,
+                   const vtkm::cont::DynamicArrayHandle& outArray) const
   {
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
     dispatcher.Invoke(inArray, inOutArray, outArray);
   }
 
-  template<typename T>
-  VTKM_CONT
-  void operator()(T) const
+  template <typename T>
+  VTKM_CONT void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;
     T inArray[ARRAY_SIZE];
@@ -112,10 +104,8 @@ struct DoTestWholeArrayWorklet
       inOutArray[index] = TestValue(index, T()) + T(100);
     }
 
-    vtkm::cont::ArrayHandle<T> inHandle =
-        vtkm::cont::make_ArrayHandle(inArray, ARRAY_SIZE);
-    vtkm::cont::ArrayHandle<T> inOutHandle =
-        vtkm::cont::make_ArrayHandle(inOutArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inHandle = vtkm::cont::make_ArrayHandle(inArray, ARRAY_SIZE);
+    vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle(inOutArray, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<T> outHandle;
     // Output arrays must be preallocated.
     outHandle.Allocate(ARRAY_SIZE);
@@ -136,37 +126,34 @@ struct DoTestAtomicArrayWorklet
 
   // This just demonstrates that the WholeArray tags support dynamic arrays.
   VTKM_CONT
-  void CallWorklet(const vtkm::cont::DynamicArrayHandle &inOutArray) const
+  void CallWorklet(const vtkm::cont::DynamicArrayHandle& inOutArray) const
   {
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
     dispatcher.Invoke(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), inOutArray);
   }
 
-  template<typename T>
-  VTKM_CONT
-  void operator()(T) const
+  template <typename T>
+  VTKM_CONT void operator()(T) const
   {
     std::cout << "Set up data." << std::endl;
     T inOutValue = 0;
 
-    vtkm::cont::ArrayHandle<T> inOutHandle =
-        vtkm::cont::make_ArrayHandle(&inOutValue, 1);
+    vtkm::cont::ArrayHandle<T> inOutHandle = vtkm::cont::make_ArrayHandle(&inOutValue, 1);
 
     this->CallWorklet(vtkm::cont::DynamicArrayHandle(inOutHandle));
 
     std::cout << "Check result." << std::endl;
     T result = inOutHandle.GetPortalConstControl().Get(0);
 
-    VTKM_TEST_ASSERT(result == (ARRAY_SIZE*(ARRAY_SIZE-1))/2,
+    VTKM_TEST_ASSERT(result == (ARRAY_SIZE * (ARRAY_SIZE - 1)) / 2,
                      "Got wrong summation in atomic array.");
   }
 };
 
 void TestWorkletMapFieldExecArg()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<
-                    VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
   std::cout << "Testing Worklet with WholeArray on device adapter: "
             << DeviceAdapterTraits::GetName() << std::endl;
 
@@ -177,12 +164,11 @@ void TestWorkletMapFieldExecArg()
   std::cout << "--- Worklet accepting atomics." << std::endl;
   vtkm::testing::Testing::TryTypes(map_whole_array::DoTestAtomicArrayWorklet(),
                                    vtkm::exec::AtomicArrayTypeListTag());
-
 }
 
 } // anonymous namespace
 
-int UnitTestWorkletMapFieldWholeArray(int, char *[])
+int UnitTestWorkletMapFieldWholeArray(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(map_whole_array::TestWorkletMapFieldExecArg);
 }

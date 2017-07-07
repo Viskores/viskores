@@ -24,31 +24,35 @@
 #include <vtkm/filter/FilterCell.h>
 #include <vtkm/worklet/PointAverage.h>
 
-namespace vtkm {
-namespace filter {
-
+namespace vtkm
+{
+namespace filter
+{
+/// \brief Cell to Point interpolation filter.
+///
+/// PointAverage is a filter that transforms cell data (i.e., data
+/// specified per cell) into point data (i.e., data specified at cell
+/// points). The method of transformation is based on averaging the data
+/// values of all cells using a particular point.
 class PointAverage : public vtkm::filter::FilterCell<PointAverage>
 {
 public:
   VTKM_CONT
   PointAverage();
 
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
-                                      const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                      const vtkm::filter::FieldMetadata& fieldMeta,
-                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                      const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultField DoExecute(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::ArrayHandle<T, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+    const DeviceAdapter& tag);
 
 private:
   vtkm::worklet::PointAverage Worklet;
-
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/PointAverage.hxx>
 

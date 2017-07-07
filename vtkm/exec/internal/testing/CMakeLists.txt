@@ -20,8 +20,15 @@
 ##
 ##=============================================================================
 
+set(headers
+  TestingTaskTiling.h
+  )
+
+vtkm_declare_headers(${headers})
+
 set(unit_tests
   UnitTestErrorMessageBuffer.cxx
+  UnitTestTaskSingular.cxx
   UnitTestWorkletInvokeFunctor.cxx
   )
 vtkm_unit_tests(SOURCES ${unit_tests})

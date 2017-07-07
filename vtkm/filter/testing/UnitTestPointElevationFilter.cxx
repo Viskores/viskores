@@ -18,35 +18,33 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/filter/PointElevation.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/PointElevation.h>
 
 #include <vector>
 
-namespace {
+namespace
+{
 
 vtkm::cont::DataSet MakePointElevationTestDataSet()
 {
   vtkm::cont::DataSet dataSet;
 
-  std::vector<vtkm::Vec<vtkm::Float32,3> > coordinates;
+  std::vector<vtkm::Vec<vtkm::Float32, 3>> coordinates;
   const vtkm::Id dim = 5;
   for (vtkm::Id j = 0; j < dim; ++j)
   {
-    vtkm::Float32 z = static_cast<vtkm::Float32>(j) /
-                      static_cast<vtkm::Float32>(dim - 1);
+    vtkm::Float32 z = static_cast<vtkm::Float32>(j) / static_cast<vtkm::Float32>(dim - 1);
     for (vtkm::Id i = 0; i < dim; ++i)
     {
-      vtkm::Float32 x = static_cast<vtkm::Float32>(i) /
-                        static_cast<vtkm::Float32>(dim - 1);
-      vtkm::Float32 y = (x*x + z*z)/2.0f;
-      coordinates.push_back(vtkm::make_Vec(x,y,z));
+      vtkm::Float32 x = static_cast<vtkm::Float32>(i) / static_cast<vtkm::Float32>(dim - 1);
+      vtkm::Float32 y = (x * x + z * z) / 2.0f;
+      coordinates.push_back(vtkm::make_Vec(x, y, z));
     }
   }
 
   vtkm::Id numCells = (dim - 1) * (dim - 1);
-  dataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem("coordinates", coordinates));
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells");
   cellSet.PrepareToAddCells(numCells, numCells * 4);
@@ -56,10 +54,8 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
     {
       cellSet.AddCell(vtkm::CELL_SHAPE_QUAD,
                       4,
-                      vtkm::make_Vec<vtkm::Id>(j * dim + i,
-                                               j * dim + i + 1,
-                                               (j + 1) * dim + i + 1,
-                                               (j + 1) * dim + i));
+                      vtkm::make_Vec<vtkm::Id>(
+                        j * dim + i, j * dim + i + 1, (j + 1) * dim + i + 1, (j + 1) * dim + i));
     }
   }
   cellSet.CompleteAddingCells(vtkm::Id(coordinates.size()));
@@ -67,7 +63,6 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   dataSet.AddCellSet(cellSet);
   return dataSet;
 }
-
 }
 
 void TestPointElevationNoPolicy()
@@ -77,35 +72,32 @@ void TestPointElevationNoPolicy()
   vtkm::cont::DataSet inputData = MakePointElevationTestDataSet();
 
   vtkm::filter::PointElevation filter;
-  filter.SetLowPoint( 0.0, 0.0, 0.0 );
-  filter.SetHighPoint( 0.0, 1.0, 0.0 );
-  filter.SetRange( 0.0, 2.0 );
+  filter.SetLowPoint(0.0, 0.0, 0.0);
+  filter.SetHighPoint(0.0, 1.0, 0.0);
+  filter.SetRange(0.0, 2.0);
 
   filter.SetOutputFieldName("height");
   vtkm::filter::ResultField result;
-  result = filter.Execute(inputData,
-                          inputData.GetCoordinateSystem());
+  result = filter.Execute(inputData, inputData.GetCoordinateSystem());
 
   //verify the result
-  VTKM_TEST_ASSERT( result.IsValid(), "result should be valid" );
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "height",
-                   "Output field has wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() ==
-                   vtkm::cont::Field::ASSOC_POINTS,
+  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "height", "Output field has wrong name.");
+  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
                    "Output field has wrong association");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
   const bool valid = result.FieldAs(resultArrayHandle);
-  if(valid)
+  if (valid)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > coordinates;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> coordinates;
     inputData.GetCoordinateSystem().GetData().CopyTo(coordinates);
 
     for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
                                   resultArrayHandle.GetPortalConstControl().Get(i)),
-         "Wrong result for PointElevation worklet");
+                       "Wrong result for PointElevation worklet");
     }
   }
 }
@@ -119,40 +111,35 @@ void TestPointElevationWithPolicy()
   vtkm::cont::DataSet inputData = MakePointElevationTestDataSet();
 
   vtkm::filter::PointElevation filter;
-  filter.SetLowPoint( 0.0, 0.0, 0.0 );
-  filter.SetHighPoint( 0.0, 1.0, 0.0 );
-  filter.SetRange( 0.0, 2.0 );
+  filter.SetLowPoint(0.0, 0.0, 0.0);
+  filter.SetHighPoint(0.0, 1.0, 0.0);
+  filter.SetRange(0.0, 2.0);
 
   vtkm::filter::ResultField result;
 
   vtkm::filter::PolicyDefault p;
-  result = filter.Execute(inputData,
-                          inputData.GetCoordinateSystem(),
-                          p);
+  result = filter.Execute(inputData, inputData.GetCoordinateSystem(), p);
 
   //verify the result
-  VTKM_TEST_ASSERT( result.IsValid(), "result should be valid" );
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "elevation",
-                   "Output field has wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() ==
-                   vtkm::cont::Field::ASSOC_POINTS,
+  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
+  VTKM_TEST_ASSERT(result.GetField().GetName() == "elevation", "Output field has wrong name.");
+  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
                    "Output field has wrong association");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
   const bool valid = result.FieldAs(resultArrayHandle);
-  if(valid)
+  if (valid)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > coordinates;
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> coordinates;
     inputData.GetCoordinateSystem().GetData().CopyTo(coordinates);
 
     for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
                                   resultArrayHandle.GetPortalConstControl().Get(i)),
-         "Wrong result for PointElevation worklet");
+                       "Wrong result for PointElevation worklet");
     }
   }
-
 }
 
 void TestPointElevation()
@@ -161,7 +148,7 @@ void TestPointElevation()
   TestPointElevationWithPolicy();
 }
 
-int UnitTestPointElevationFilter(int, char *[])
+int UnitTestPointElevationFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestPointElevation);
 }

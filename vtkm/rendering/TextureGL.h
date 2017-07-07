@@ -29,8 +29,10 @@
 #include <memory>
 #include <vector>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT TextureGL
 {
@@ -45,16 +47,13 @@ public:
 
   void Disable() const;
 
-  void CreateAlphaFromRGBA(vtkm::Id width,
-                           vtkm::Id height,
-                           const std::vector<unsigned char> &rgba);
+  void CreateAlphaFromRGBA(vtkm::Id width, vtkm::Id height, const std::vector<unsigned char>& rgba);
 
 private:
   struct InternalsType;
   std::shared_ptr<InternalsType> Internals;
 };
-
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif //vtk_m_rendering_TextureGL_h

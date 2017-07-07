@@ -25,9 +25,12 @@
 
 #include <type_traits>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief The base class for all tags used in a \c ControlSignature.
 ///
@@ -40,16 +43,18 @@ namespace arg {
 /// must define the following three typedefs: \c TypeCheckTag, \c TransportTag
 /// and \c FetchTag.
 ///
-struct ControlSignatureTagBase {  };
+struct ControlSignatureTagBase
+{
+};
 
-namespace internal {
+namespace internal
+{
 
-template<typename ControlSignatureTag>
+template <typename ControlSignatureTag>
 struct ControlSignatureTagCheck
 {
   static VTKM_CONSTEXPR bool Valid =
-      std::is_base_of<
-          vtkm::cont::arg::ControlSignatureTagBase, ControlSignatureTag>::value;
+    std::is_base_of<vtkm::cont::arg::ControlSignatureTagBase, ControlSignatureTag>::value;
 };
 
 } // namespace internal
@@ -59,11 +64,9 @@ struct ControlSignatureTagCheck
 /// that a template argument is actually an \c ControlSignature tag. (You can
 /// get weird errors elsewhere in the code when a mistake is made.)
 ///
-#define VTKM_IS_CONTROL_SIGNATURE_TAG(tag) \
-  VTKM_STATIC_ASSERT_MSG( \
-    ::vtkm::cont::arg::internal::ControlSignatureTagCheck<tag>::Valid, \
-    "Provided a type that is not a valid ControlSignature tag.")
-
+#define VTKM_IS_CONTROL_SIGNATURE_TAG(tag)                                                         \
+  VTKM_STATIC_ASSERT_MSG(::vtkm::cont::arg::internal::ControlSignatureTagCheck<tag>::Valid,        \
+                         "Provided a type that is not a valid ControlSignature tag.")
 }
 }
 } // namespace vtkm::cont::arg

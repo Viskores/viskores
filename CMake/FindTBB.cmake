@@ -136,6 +136,20 @@ set(TBB_INC_SEARCH_PATH "")
 set(TBB_LIB_SEARCH_PATH "")
 
 
+# If we found parts of TBB in a previous pass, add the directories for those
+# components to the list of those we look for.
+if(TBB_INCLUDE_DIR)
+  list(APPEND TBB_INC_SEARCH_PATH ${TBB_INCLUDE_DIR})
+endif()
+
+if(TBB_LIBRARY_RELEASE)
+  get_filename_component(dir ${TBB_LIBRARY_RELEASE} DIRECTORY)
+  list(APPEND TBB_LIB_SEARCH_PATH ${dir})
+elseif(TBB_LIBRARY_DEBUG)
+  get_filename_component(dir ${TBB_LIBRARY_DEBUG} DIRECTORY)
+  list(APPEND TBB_LIB_SEARCH_PATH ${dir})
+endif()
+
 # If user built from sources
 set(TBB_BUILD_PREFIX $ENV{TBB_BUILD_PREFIX})
 if (TBB_BUILD_PREFIX AND ENV_TBB_ROOT)

@@ -23,30 +23,28 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void TestExecutionSignatures()
 {
   VTKM_IS_EXECUTION_SIGNATURE_TAG(vtkm::exec::arg::BasicArg<1>);
 
   VTKM_TEST_ASSERT(
-        vtkm::exec::arg::internal::ExecutionSignatureTagCheck<
-          vtkm::exec::arg::BasicArg<2> >::Valid,
-        "Bad check for BasicArg");
+    vtkm::exec::arg::internal::ExecutionSignatureTagCheck<vtkm::exec::arg::BasicArg<2>>::Valid,
+    "Bad check for BasicArg");
 
   VTKM_TEST_ASSERT(
-        vtkm::exec::arg::internal::ExecutionSignatureTagCheck<
-          vtkm::exec::arg::WorkIndex >::Valid,
-        "Bad check for WorkIndex");
+    vtkm::exec::arg::internal::ExecutionSignatureTagCheck<vtkm::exec::arg::WorkIndex>::Valid,
+    "Bad check for WorkIndex");
 
-  VTKM_TEST_ASSERT(
-        !vtkm::exec::arg::internal::ExecutionSignatureTagCheck<vtkm::Id>::Valid,
-        "Bad check for vtkm::Id");
+  VTKM_TEST_ASSERT(!vtkm::exec::arg::internal::ExecutionSignatureTagCheck<vtkm::Id>::Valid,
+                   "Bad check for vtkm::Id");
 }
 
 } // anonymous namespace
 
-int UnitTestExecutionSignatureTag(int, char *[])
+int UnitTestExecutionSignatureTag(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestExecutionSignatures);
 }

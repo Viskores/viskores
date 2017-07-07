@@ -21,7 +21,7 @@
 set(headers
   ErrorMessageBuffer.h
   ReduceByKeyLookup.h
-  WorkletInvokeFunctor.h
+  TaskSingular.h
   WorkletInvokeFunctorDetail.h
   )
 

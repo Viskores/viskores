@@ -27,9 +27,12 @@
 
 #include <type_traits>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief \c Fetch tag for execution objects.
 ///
@@ -38,42 +41,40 @@ namespace arg {
 /// FetchTagExecObject is almost always used in conjunction with \c
 /// TransportTagExecObject and vice versa.
 ///
-struct FetchTagExecObject {  };
+struct FetchTagExecObject
+{
+};
 
-
-template<typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<
-    vtkm::exec::arg::FetchTagExecObject,
-    vtkm::exec::arg::AspectTagDefault,
-    ThreadIndicesType,
-    ExecObjectType>
+template <typename ThreadIndicesType, typename ExecObjectType>
+struct Fetch<vtkm::exec::arg::FetchTagExecObject,
+             vtkm::exec::arg::AspectTagDefault,
+             ThreadIndicesType,
+             ExecObjectType>
 {
   // If you get a compile error here, it means you tried to use an object that
   // is not an execution object as an argument that is expected to be one. All
   // execution objects are expected to inherit from
   // vtkm::exec::ExecutionObjectBase.
-  static_assert(std::is_base_of<vtkm::exec::ExecutionObjectBase, ExecObjectType>::value,
-      "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectBase");
+  static_assert(
+    std::is_base_of<vtkm::exec::ExecutionObjectBase, ExecObjectType>::value,
+    "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectBase");
 
   typedef ExecObjectType ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Load(const ThreadIndicesType &vtkmNotUsed(indices),
-                 const ExecObjectType &execObject) const
+  ValueType Load(const ThreadIndicesType& vtkmNotUsed(indices),
+                 const ExecObjectType& execObject) const
   {
     return execObject;
   }
 
   VTKM_EXEC
-  void Store(const ThreadIndicesType &,
-             const ExecObjectType &,
-             const ValueType &) const
+  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op for this fetch.
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

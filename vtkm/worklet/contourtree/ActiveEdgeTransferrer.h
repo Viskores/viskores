@@ -84,41 +84,48 @@
 #ifndef vtk_m_worklet_contourtree_active_edge_transferrer_h
 #define vtk_m_worklet_contourtree_active_edge_transferrer_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet: set initial chain maximum value
 template <typename DeviceAdapter>
 class ActiveEdgeTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexID,                // (input) active vertex ID
-                                FieldIn<IdType> newPosition,             // (input) new position of edge in array
-                                FieldIn<IdType> newOutdegree,            // (input) the new updegree computed
-                                WholeArrayInOut<IdType> firstEdge,       // (i/o) first edge of each active vertex
-                                WholeArrayInOut<IdType> outdegree,       // (i/o) existing vertex updegrees
-                                WholeArrayInOut<IdType> chainExtremum,   // (i/o) chain extremum for vertices
-                                WholeArrayInOut<IdType> edgeFar,         // (i/o) high end of each edge
-                                WholeArrayOut<IdType> newActiveEdges);   // (output) new active edge list
+  typedef void ControlSignature(
+    FieldIn<IdType> vertexID,              // (input) active vertex ID
+    FieldIn<IdType> newPosition,           // (input) new position of edge in array
+    FieldIn<IdType> newOutdegree,          // (input) the new updegree computed
+    WholeArrayInOut<IdType> firstEdge,     // (i/o) first edge of each active vertex
+    WholeArrayInOut<IdType> outdegree,     // (i/o) existing vertex updegrees
+    WholeArrayInOut<IdType> chainExtremum, // (i/o) chain extremum for vertices
+    WholeArrayInOut<IdType> edgeFar,       // (i/o) high end of each edge
+    WholeArrayOut<IdType> newActiveEdges); // (output) new active edge list
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Passed in constructor because of argument limit on operator
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst IdPortalType;
+  typedef
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
+      IdPortalType;
 
-  IdPortalType activeEdges;   // (input) active edges
-  IdPortalType prunesTo;      // (input) where a vertex prunes to
+  IdPortalType activeEdges; // (input) active edges
+  IdPortalType prunesTo;    // (input) where a vertex prunes to
 
   // Constructor
   VTKM_EXEC_CONT
-  ActiveEdgeTransferrer(IdPortalType ActiveEdges,
-                        IdPortalType PrunesTo) :
-                          activeEdges(ActiveEdges),
-                          prunesTo(PrunesTo) {}
+  ActiveEdgeTransferrer(IdPortalType ActiveEdges, IdPortalType PrunesTo)
+    : activeEdges(ActiveEdges)
+    , prunesTo(PrunesTo)
+  {
+  }
 
   // WARNING: POTENTIAL RISK FOR I/O
   // chainMaximum is safe for I/O here because:
@@ -130,15 +137,14 @@ public:
   //		the same is true of firstEdge and updegree
 
   template <typename InOutFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id &vertexID,
-                  const vtkm::Id &newPosition,
-                  const vtkm::Id &newOutdegree,
-                  const InOutFieldPortalType &firstEdge,
-                  const InOutFieldPortalType &outdegree,
-                  const InOutFieldPortalType &chainExtremum,
-                  const InOutFieldPortalType &edgeFar,
-                  const OutFieldPortalType &newActiveEdges) const
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID,
+                            const vtkm::Id& newPosition,
+                            const vtkm::Id& newOutdegree,
+                            const InOutFieldPortalType& firstEdge,
+                            const InOutFieldPortalType& outdegree,
+                            const InOutFieldPortalType& chainExtremum,
+                            const InOutFieldPortalType& edgeFar,
+                            const OutFieldPortalType& newActiveEdges) const
   {
     // retrieve actual vertex ID & first edge
     vtkm::Id edgeFirst = firstEdge.Get(vertexID);
@@ -175,7 +181,6 @@ public:
     firstEdge.Set(vertexID, newPosition);
   }
 }; // ActiveEdgeTransferrer
-
 }
 }
 }

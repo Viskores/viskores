@@ -32,12 +32,14 @@ set(headers
   Color.h
   ColorBarAnnotation.h
   ColorTable.h
+  ConnectivityProxy.h
   DecodePNG.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
   MapperRayTracer.h
   MapperVolume.h
+  MapperConnectivity.h
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
@@ -63,10 +65,12 @@ set(sources
   Color.cxx
   ColorBarAnnotation.cxx
   ColorTable.cxx
+  ConnectivityProxy.cxx
   DecodePNG.cxx
   Mapper.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
+  MapperConnectivity.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
@@ -78,7 +82,11 @@ set(sources
   WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
-  raytracing/Ray.cxx
+  raytracing/BoundingVolumeHierarchy.cxx
+  raytracing/Camera.cxx
+  raytracing/ChannelBuffer.cxx
+  raytracing/Logger.cxx
+  raytracing/RayTracer.cxx
   )
 
 set(opengl_headers
@@ -115,6 +123,11 @@ set(osmesa_sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   CanvasRayTracer.cxx
+  ConnectivityProxy.cxx
+  raytracing/BoundingVolumeHierarchy.cxx
+  raytracing/Camera.cxx
+  raytracing/ChannelBuffer.cxx
+  raytracing/RayTracer.cxx
   )
 
 #-----------------------------------------------------------------------------

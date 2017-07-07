@@ -83,46 +83,49 @@
 #ifndef vtkm_worklet_contourtree_mesh2d_dem_vertex_outdegree_starter_h
 #define vtkm_worklet_contourtree_mesh2d_dem_vertex_outdegree_starter_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation_Macros.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for setting initial chain maximum value
 class Mesh2D_DEM_VertexOutdegreeStarter : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertex,           // (input) index into active vertices
-                                FieldIn<IdType> nbrMask,          // (input) neighbor mask
-                                WholeArrayIn<IdType> arcArray,    // (input) chain extrema
-                                FieldOut<IdType> outdegree,       // (output) outdegree
-                                FieldOut<IdType> isCritical);     // (output) whether critical
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5/*, _6*/);
-  typedef _1   InputDomain;
+  typedef void ControlSignature(FieldIn<IdType> vertex,        // (input) index into active vertices
+                                FieldIn<IdType> nbrMask,       // (input) neighbor mask
+                                WholeArrayIn<IdType> arcArray, // (input) chain extrema
+                                FieldOut<IdType> outdegree,    // (output) outdegree
+                                FieldOut<IdType> isCritical);  // (output) whether critical
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5 /*, _6*/);
+  typedef _1 InputDomain;
 
-  vtkm::Id nRows;                                  // (input) number of rows in 2D
-  vtkm::Id nCols;                                  // (input) number of cols in 2D
-  bool ascending;                                  // (input) ascending or descending (join or split tree)
+  vtkm::Id nRows; // (input) number of rows in 2D
+  vtkm::Id nCols; // (input) number of cols in 2D
+  bool ascending; // (input) ascending or descending (join or split tree)
 
   // Constructor
   VTKM_EXEC_CONT
-  Mesh2D_DEM_VertexOutdegreeStarter(vtkm::Id NRows,
-                                    vtkm::Id NCols,
-                                    bool Ascending) : nRows(NRows),
-                                                      nCols(NCols),
-                                                      ascending(Ascending) {}
+  Mesh2D_DEM_VertexOutdegreeStarter(vtkm::Id NRows, vtkm::Id NCols, bool Ascending)
+    : nRows(NRows)
+    , nCols(NCols)
+    , ascending(Ascending)
+  {
+  }
 
   //template<typename InFieldPortalType>
-  template<typename InFieldPortalType/*, typename InOutFieldPortalType*/>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertex,
-                  const vtkm::Id& nbrMask,
-                  const InFieldPortalType& arcArray,
-                        vtkm::Id& outdegree,
-                        vtkm::Id& isCritical) const
+  template <typename InFieldPortalType /*, typename InOutFieldPortalType*/>
+  VTKM_EXEC void operator()(const vtkm::Id& vertex,
+                            const vtkm::Id& nbrMask,
+                            const InFieldPortalType& arcArray,
+                            vtkm::Id& outdegree,
+                            vtkm::Id& isCritical) const
   {
     // get the row and column
     vtkm::Id row = VERTEX_ROW(vertex, nCols);
@@ -134,22 +137,24 @@ public:
     vtkm::Id farEnds[MAX_OUTDEGREE];
 
     // special case for local extremum
-    if (nbrMask == 0x3F) {
+    if (nbrMask == 0x3F)
+    {
       outDegree = 1;
     }
-    else { // not a local minimum
+    else
+    { // not a local minimum
       if ((nbrMask & 0x30) == 0x20)
-        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row-1, col,   nCols));
+        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row - 1, col, nCols));
       if ((nbrMask & 0x18) == 0x10)
-        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row-1, col-1, nCols));
+        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row - 1, col - 1, nCols));
       if ((nbrMask & 0x0C) == 0x08)
-        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row,   col-1, nCols));
+        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row, col - 1, nCols));
       if ((nbrMask & 0x06) == 0x04)
-        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row+1, col,   nCols));
+        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row + 1, col, nCols));
       if ((nbrMask & 0x03) == 0x02)
-        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row+1, col+1, nCols));
+        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row + 1, col + 1, nCols));
       if ((nbrMask & 0x21) == 0x01)
-        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row,   col+1, nCols));
+        farEnds[outDegree++] = arcArray.Get(VERTEX_ID(row, col + 1, nCols));
     } // not a local minimum
 
     // now we check them against each other
@@ -174,13 +179,13 @@ public:
           // and reset the count
           outDegree = 2;
         } //
-      } // first two match
+      }   // first two match
       else if ((farEnds[0] == farEnds[2]) || (farEnds[1] == farEnds[2]))
       { // second one matches either of the first two
         // decrease the count, keeping 0 & 1
         outDegree = 2;
       } // second one matches either of the first two
-    } // outDegree 3
+    }   // outDegree 3
 
     // now store the outDegree
     outdegree = outDegree;

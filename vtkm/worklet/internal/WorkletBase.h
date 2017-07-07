@@ -20,8 +20,8 @@
 #ifndef vtk_m_worklet_internal_WorkletBase_h
 #define vtk_m_worklet_internal_WorkletBase_h
 
-#include <vtkm/TypeListTag.h>
 #include <vtkm/TopologyElementTag.h>
+#include <vtkm/TypeListTag.h>
 
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
@@ -43,31 +43,55 @@
 #include <vtkm/cont/arg/TransportTagWholeArrayOut.h>
 #include <vtkm/cont/arg/TypeCheckTagArray.h>
 #include <vtkm/cont/arg/TypeCheckTagAtomicArray.h>
-#include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 #include <vtkm/cont/arg/TypeCheckTagCellSet.h>
+#include <vtkm/cont/arg/TypeCheckTagExecObject.h>
 
 #include <vtkm/worklet/ScatterIdentity.h>
 
-namespace vtkm {
-namespace placeholders {
+namespace vtkm
+{
+namespace placeholders
+{
 
-  template<int ControlSignatureIndex>
-  struct Arg : vtkm::exec::arg::BasicArg<ControlSignatureIndex> {  };
+template <int ControlSignatureIndex>
+struct Arg : vtkm::exec::arg::BasicArg<ControlSignatureIndex>
+{
+};
 
-  /// Basic execution argument tags
-  struct _1 : Arg<1> {  };
-  struct _2 : Arg<2> {  };
-  struct _3 : Arg<3> {  };
-  struct _4 : Arg<4> {  };
-  struct _5 : Arg<5> {  };
-  struct _6 : Arg<6> {  };
-  struct _7 : Arg<7> {  };
-  struct _8 : Arg<8> {  };
-  struct _9 : Arg<9> {  };
+/// Basic execution argument tags
+struct _1 : Arg<1>
+{
+};
+struct _2 : Arg<2>
+{
+};
+struct _3 : Arg<3>
+{
+};
+struct _4 : Arg<4>
+{
+};
+struct _5 : Arg<5>
+{
+};
+struct _6 : Arg<6>
+{
+};
+struct _7 : Arg<7>
+{
+};
+struct _8 : Arg<8>
+{
+};
+struct _9 : Arg<9>
+{
+};
 }
 
-namespace worklet {
-namespace internal {
+namespace worklet
+{
+namespace internal
+{
 
 /// Base class for all worklet classes. Worklet classes are subclasses and a
 /// operator() const is added to implement an algorithm in VTK-m. Different
@@ -107,7 +131,8 @@ public:
   typedef vtkm::exec::arg::VisitIndex VisitIndex;
 
   /// \c ControlSignature tag for execution object inputs.
-  struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase {
+  struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase
+  {
     typedef vtkm::cont::arg::TypeCheckTagExecObject TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagExecObject TransportTag;
     typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
@@ -228,8 +253,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template<typename TypeList = AllTypes>
-  struct WholeArrayIn : vtkm::cont::arg::ControlSignatureTagBase {
+  template <typename TypeList = AllTypes>
+  struct WholeArrayIn : vtkm::cont::arg::ControlSignatureTagBase
+  {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagWholeArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
@@ -246,8 +272,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template<typename TypeList = AllTypes>
-  struct WholeArrayOut : vtkm::cont::arg::ControlSignatureTagBase {
+  template <typename TypeList = AllTypes>
+  struct WholeArrayOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagWholeArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
@@ -265,8 +292,9 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template<typename TypeList = AllTypes>
-  struct WholeArrayInOut : vtkm::cont::arg::ControlSignatureTagBase {
+  template <typename TypeList = AllTypes>
+  struct WholeArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagWholeArrayInOut TransportTag;
     typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
@@ -284,13 +312,13 @@ public:
   /// The template operator specifies all the potential value types of the
   /// array. The default value type is all types.
   ///
-  template<typename TypeList = AllTypes>
-  struct AtomicArrayInOut : vtkm::cont::arg::ControlSignatureTagBase {
+  template <typename TypeList = AllTypes>
+  struct AtomicArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
     typedef vtkm::cont::arg::TypeCheckTagAtomicArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagAtomicArray TransportTag;
     typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
   };
-
 
   /// \c ControlSignature tag for whole input topology.
   ///
@@ -302,10 +330,11 @@ public:
 
   using Cell = vtkm::TopologyElementTagCell;
   using Point = vtkm::TopologyElementTagPoint;
-  template<typename FromType=Point, typename ToType=Cell>
-  struct WholeCellSetIn : vtkm::cont::arg::ControlSignatureTagBase {
+  template <typename FromType = Point, typename ToType = Cell>
+  struct WholeCellSetIn : vtkm::cont::arg::ControlSignatureTagBase
+  {
     typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagCellSetIn<FromType,ToType> TransportTag;
+    typedef vtkm::cont::arg::TransportTagCellSetIn<FromType, ToType> TransportTag;
     typedef vtkm::exec::arg::FetchTagWholeCellSetIn FetchTag;
   };
 
@@ -315,22 +344,21 @@ public:
   /// types.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template<typename T, typename OutToInArrayType, typename VisitArrayType, typename InputDomainType>
-  VTKM_EXEC
-  vtkm::exec::arg::ThreadIndicesBasic
-  GetThreadIndices(const T& threadIndex,
-                   const OutToInArrayType& outToIn,
-                   const VisitArrayType& visit,
-                   const InputDomainType &,
-                   const T& globalThreadIndexOffset=0) const
+  template <typename T,
+            typename OutToInArrayType,
+            typename VisitArrayType,
+            typename InputDomainType>
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
+    const T& threadIndex,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const InputDomainType&,
+    const T& globalThreadIndexOffset = 0) const
   {
-    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
-                                               outToIn.Get(threadIndex),
-                                               visit.Get(threadIndex),
-                                               globalThreadIndexOffset );
+    return vtkm::exec::arg::ThreadIndicesBasic(
+      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
   }
 };
-
 }
 }
 } // namespace vtkm::worklet::internal

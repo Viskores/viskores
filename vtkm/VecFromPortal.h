@@ -21,45 +21,48 @@
 #define vtk_m_VecFromPortal_h
 
 #include <vtkm/Math.h>
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
 #include <vtkm/internal/ArrayPortalValueReference.h>
 
-namespace vtkm {
+namespace vtkm
+{
 
 /// \brief A short variable-length array from a window in an ArrayPortal.
 ///
 /// The \c VecFromPortal class is a Vec-like class that holds an array portal
 /// and exposes a small window of that portal as if it were a \c Vec.
 ///
-template<typename PortalType>
+template <typename PortalType>
 class VecFromPortal
 {
 public:
-  using ComponentType =
-      typename std::remove_const<typename PortalType::ValueType>::type;
+  using ComponentType = typename std::remove_const<typename PortalType::ValueType>::type;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  VecFromPortal() : NumComponents(0), Offset(0) {  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  VecFromPortal(const PortalType &portal,
-                vtkm::IdComponent numComponents = 0,
-                vtkm::Id offset = 0)
-    : Portal(portal), NumComponents(numComponents), Offset(offset) {  }
-
-  VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfComponents() const {
-    return this->NumComponents;
+  VecFromPortal()
+    : NumComponents(0)
+    , Offset(0)
+  {
   }
 
-  template<typename T, vtkm::IdComponent DestSize>
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void CopyInto(vtkm::Vec<T,DestSize> &dest) const
+  VecFromPortal(const PortalType& portal, vtkm::IdComponent numComponents = 0, vtkm::Id offset = 0)
+    : Portal(portal)
+    , NumComponents(numComponents)
+    , Offset(offset)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::IdComponent GetNumberOfComponents() const { return this->NumComponents; }
+
+  template <typename T, vtkm::IdComponent DestSize>
+  VTKM_EXEC_CONT void CopyInto(vtkm::Vec<T, DestSize>& dest) const
   {
     vtkm::IdComponent numComponents = vtkm::Min(DestSize, this->NumComponents);
     for (vtkm::IdComponent index = 0; index < numComponents; index++)
@@ -70,11 +73,10 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  vtkm::internal::ArrayPortalValueReference<PortalType>
-  operator[](vtkm::IdComponent index) const
+  vtkm::internal::ArrayPortalValueReference<PortalType> operator[](vtkm::IdComponent index) const
   {
-    return vtkm::internal::ArrayPortalValueReference<PortalType>(
-          this->Portal, index + this->Offset);
+    return vtkm::internal::ArrayPortalValueReference<PortalType>(this->Portal,
+                                                                 index + this->Offset);
   }
 
 private:
@@ -83,8 +85,8 @@ private:
   vtkm::Id Offset;
 };
 
-template<typename PortalType>
-struct TypeTraits<vtkm::VecFromPortal<PortalType> >
+template <typename PortalType>
+struct TypeTraits<vtkm::VecFromPortal<PortalType>>
 {
 private:
   typedef typename PortalType::ValueType ComponentType;
@@ -101,8 +103,8 @@ public:
   }
 };
 
-template<typename PortalType>
-struct VecTraits<vtkm::VecFromPortal<PortalType> >
+template <typename PortalType>
+struct VecTraits<vtkm::VecFromPortal<PortalType>>
 {
   typedef vtkm::VecFromPortal<PortalType> VecType;
 
@@ -112,23 +114,21 @@ struct VecTraits<vtkm::VecFromPortal<PortalType> >
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  static vtkm::IdComponent GetNumberOfComponents(const VecType &vector) {
+  static vtkm::IdComponent GetNumberOfComponents(const VecType& vector)
+  {
     return vector.GetNumberOfComponents();
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  static ComponentType GetComponent(const VecType &vector,
-                                    vtkm::IdComponent componentIndex)
+  static ComponentType GetComponent(const VecType& vector, vtkm::IdComponent componentIndex)
   {
     return vector[componentIndex];
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template<vtkm::IdComponent destSize>
-  VTKM_EXEC_CONT
-  static void CopyInto(const VecType &src,
-                       vtkm::Vec<ComponentType,destSize> &dest)
+  template <vtkm::IdComponent destSize>
+  VTKM_EXEC_CONT static void CopyInto(const VecType& src, vtkm::Vec<ComponentType, destSize>& dest)
   {
     src.CopyInto(dest);
   }

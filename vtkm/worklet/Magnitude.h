@@ -24,8 +24,10 @@
 
 #include <vtkm/VectorAnalysis.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 class Magnitude : public vtkm::worklet::WorkletMapField
 {
@@ -33,15 +35,12 @@ public:
   typedef void ControlSignature(FieldIn<VecAll>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1, _2);
 
-  template<typename T, typename T2>
-  VTKM_EXEC
-  void operator()(const T &inValue,
-                  T2 &outValue) const
+  template <typename T, typename T2>
+  VTKM_EXEC void operator()(const T& inValue, T2& outValue) const
   {
     outValue = vtkm::Magnitude(inValue);
   }
 };
-
 }
 } // namespace vtkm::worklet
 

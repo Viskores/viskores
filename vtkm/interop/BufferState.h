@@ -21,28 +21,36 @@
 #define vtk_m_interop_BufferState_h
 
 //gl headers needs to be buffer anything to do with buffer's
-#include <vtkm/interop/internal/OpenGLHeaders.h>
 #include <vtkm/interop/internal/BufferTypePicker.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
+
+#include <vtkm/internal/ExportMacros.h>
 
 #include <memory>
 
-namespace vtkm{
-namespace interop{
-
+namespace vtkm
+{
+namespace interop
+{
 
 namespace internal
 {
-  /// \brief Device backend and opengl interop resources management
-  ///
-  /// \c TransferResource manages a context for a given device backend and a
-  /// single OpenGL buffer as efficiently as possible.
-  ///
-  /// Default implementation is a no-op
-  class TransferResource
-  {
-  public:
-    virtual ~TransferResource() {}
-  };
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
+/// \brief Device backend and opengl interop resources management
+///
+/// \c TransferResource manages a context for a given device backend and a
+/// single OpenGL buffer as efficiently as possible.
+///
+/// Default implementation is a no-op
+class TransferResource
+{
+public:
+  virtual ~TransferResource() {}
+};
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 }
 
 /// \brief Manages the state for transferring an ArrayHandle to opengl.
@@ -59,34 +67,34 @@ class BufferState
 {
 public:
   /// Construct a BufferState using an existing GLHandle
-  BufferState(GLuint& gLHandle):
-    OpenGLHandle(&gLHandle),
-    BufferType(GL_INVALID_VALUE),
-    SizeOfActiveSection(0),
-    CapacityOfBuffer(0),
-    DefaultGLHandle(0),
-    Resource()
+  BufferState(GLuint& gLHandle)
+    : OpenGLHandle(&gLHandle)
+    , BufferType(GL_INVALID_VALUE)
+    , SizeOfActiveSection(0)
+    , CapacityOfBuffer(0)
+    , DefaultGLHandle(0)
+    , Resource()
   {
   }
 
   /// Construct a BufferState using an existing GLHandle and type
-  BufferState(GLuint& gLHandle, GLenum type):
-    OpenGLHandle(&gLHandle),
-    BufferType(type),
-    SizeOfActiveSection(0),
-    CapacityOfBuffer(0),
-    DefaultGLHandle(0),
-    Resource()
+  BufferState(GLuint& gLHandle, GLenum type)
+    : OpenGLHandle(&gLHandle)
+    , BufferType(type)
+    , SizeOfActiveSection(0)
+    , CapacityOfBuffer(0)
+    , DefaultGLHandle(0)
+    , Resource()
   {
   }
 
-  BufferState():
-    OpenGLHandle(NULL),
-    BufferType(GL_INVALID_VALUE),
-     SizeOfActiveSection(0),
-     CapacityOfBuffer(0),
-     DefaultGLHandle(0),
-     Resource()
+  BufferState()
+    : OpenGLHandle(nullptr)
+    , BufferType(GL_INVALID_VALUE)
+    , SizeOfActiveSection(0)
+    , CapacityOfBuffer(0)
+    , DefaultGLHandle(0)
+    , Resource()
   {
     this->OpenGLHandle = &this->DefaultGLHandle;
   }
@@ -121,9 +129,11 @@ public:
   /// Will be GL_ELEMENT_ARRAY_BUFFER for
   /// vtkm::Int32, vtkm::UInt32, vtkm::Int64, vtkm::UInt64, vtkm::Id, and vtkm::IdComponent
   /// will be GL_ARRAY_BUFFER for everything else.
-  template<typename T>
+  template <typename T>
   void DeduceAndSetType(T t)
-    { this->BufferType = vtkm::interop::internal::BufferTypePicker(t); }
+  {
+    this->BufferType = vtkm::interop::internal::BufferTypePicker(t);
+  }
 
   /// \brief Get the size of the buffer in bytes
   ///
@@ -150,7 +160,7 @@ public:
   bool ShouldRealloc(vtkm::Int64 desiredSize) const
   {
     const bool haveNotEnoughRoom = this->GetCapacity() < desiredSize;
-    const bool haveTooMuchRoom = this->GetCapacity() > (desiredSize*2);
+    const bool haveTooMuchRoom = this->GetCapacity() > (desiredSize * 2);
     return (haveNotEnoughRoom || haveTooMuchRoom);
   }
 
@@ -160,13 +170,13 @@ public:
   void SetCapacity(vtkm::Int64 capacity) { this->CapacityOfBuffer = capacity; }
 
   //Note: This call should only be used internally by vtk-m
-  vtkm::interop::internal::TransferResource* GetResource()
-    { return this->Resource.get(); }
+  vtkm::interop::internal::TransferResource* GetResource() { return this->Resource.get(); }
 
   //Note: This call should only be used internally by vtk-m
-  void SetResource( vtkm::interop::internal::TransferResource* resource)
-    { this->Resource.reset(resource); }
-
+  void SetResource(vtkm::interop::internal::TransferResource* resource)
+  {
+    this->Resource.reset(resource);
+  }
 
 private:
   // BufferState doesn't support copy or move semantics
@@ -176,11 +186,11 @@ private:
   GLuint* OpenGLHandle;
   GLenum BufferType;
   vtkm::Int64 SizeOfActiveSection; //must be Int64 as size can be over 2billion
-  vtkm::Int64 CapacityOfBuffer; //must be Int64 as size can be over 2billion
+  vtkm::Int64 CapacityOfBuffer;    //must be Int64 as size can be over 2billion
   GLuint DefaultGLHandle;
   std::unique_ptr<vtkm::interop::internal::TransferResource> Resource;
 };
-
-}}
+}
+}
 
 #endif //vtk_m_interop_BufferState_h

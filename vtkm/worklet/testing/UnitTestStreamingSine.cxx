@@ -19,13 +19,12 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleStreaming.h>
-#include <vtkm/worklet/DispatcherStreamingMapField.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/DispatcherStreamingMapField.h>
 
 #include <vector>
-
 
 namespace vtkm
 {
@@ -37,15 +36,14 @@ public:
   typedef void ControlSignature(FieldIn<>, FieldOut<>);
   typedef _2 ExecutionSignature(_1, WorkIndex);
 
-  template<typename T>
-  VTKM_EXEC
-  T operator()(T x, vtkm::Id& index) const {
+  template <typename T>
+  VTKM_EXEC T operator()(T x, vtkm::Id& index) const
+  {
     return (static_cast<T>(index) + vtkm::Sin(x));
   }
 };
 }
 }
-
 
 // Utility method to print input, output, and reference arrays
 template <class T1, class T2, class T3>
@@ -53,27 +51,25 @@ void compareArrays(T1& a1, T2& a2, T3& a3, char const* text)
 {
   for (vtkm::Id i = 0; i < a1.GetNumberOfValues(); ++i)
   {
-    std::cout << a1.GetPortalConstControl().Get(i) << " "
-              << a2.GetPortalConstControl().Get(i) << " "
-              << a3.GetPortalConstControl().Get(i) << std::endl;
+    std::cout << a1.GetPortalConstControl().Get(i) << " " << a2.GetPortalConstControl().Get(i)
+              << " " << a3.GetPortalConstControl().Get(i) << std::endl;
     VTKM_TEST_ASSERT(
-         test_equal(a2.GetPortalConstControl().Get(i),
-                    a3.GetPortalConstControl().Get(i), 0.01f),
-         text);
+      test_equal(a2.GetPortalConstControl().Get(i), a3.GetPortalConstControl().Get(i), 0.01f),
+      text);
   }
 }
-
 
 void TestStreamingSine()
 {
   // Test the streaming worklet
   std::cout << "Testing streaming worklet:" << std::endl;
 
-  const vtkm::Id N = 25;  const vtkm::Id NBlocks = 4;
+  const vtkm::Id N = 25;
+  const vtkm::Id NBlocks = 4;
   vtkm::cont::ArrayHandle<vtkm::Float32> input, output, reference, summation;
   std::vector<vtkm::Float32> data(N), test(N);
   vtkm::Float32 testSum = 0.0f;
-  for (vtkm::UInt32 i=0; i<N; i++)
+  for (vtkm::UInt32 i = 0; i < N; i++)
   {
     data[i] = static_cast<vtkm::Float32>(i);
     test[i] = static_cast<vtkm::Float32>(i) + static_cast<vtkm::Float32>(vtkm::Sin(data[i]));
@@ -83,8 +79,7 @@ void TestStreamingSine()
 
   typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAlgorithms;
   vtkm::worklet::SineWorklet sineWorklet;
-  vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> 
-      dispatcher(sineWorklet);
+  vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
   dispatcher.SetNumberOfBlocks(NBlocks);
   dispatcher.Invoke(input, output);
 
@@ -97,16 +92,20 @@ void TestStreamingSine()
   std::cout << "Testing streaming exclusive scan: " << std::endl;
   referenceSum = DeviceAlgorithms::ScanExclusive(input, summation);
   streamSum = DeviceAlgorithms::StreamingScanExclusive(4, input, output);
-  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f), "Wrong sum for streaming exclusive scan");
+  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f),
+                   "Wrong sum for streaming exclusive scan");
   compareArrays(input, output, summation, "Wrong result for streaming exclusive scan");
 
   // Test the streaming exclusive scan with binary operator
   std::cout << "Testing streaming exnclusive scan with binary operator: " << std::endl;
-  vtkm::Float32 initValue = 0.0; 
+  vtkm::Float32 initValue = 0.0;
   referenceSum = DeviceAlgorithms::ScanExclusive(input, summation, vtkm::Maximum(), initValue);
-  streamSum = DeviceAlgorithms::StreamingScanExclusive(4, input, output, vtkm::Maximum(), initValue);
-  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f), "Wrong sum for streaming exclusive scan with binary operator");
-  compareArrays(input, output, summation, "Wrong result for streaming exclusive scan with binary operator");
+  streamSum =
+    DeviceAlgorithms::StreamingScanExclusive(4, input, output, vtkm::Maximum(), initValue);
+  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f),
+                   "Wrong sum for streaming exclusive scan with binary operator");
+  compareArrays(
+    input, output, summation, "Wrong result for streaming exclusive scan with binary operator");
 
   // Test the streaming reduce
   std::cout << "Testing streaming reduce: " << std::endl;
@@ -120,11 +119,11 @@ void TestStreamingSine()
   referenceSum = DeviceAlgorithms::Reduce(input, 0.0f, vtkm::Maximum());
   streamSum = DeviceAlgorithms::StreamingReduce(4, input, 0.0f, vtkm::Maximum());
   std::cout << "Result: " << streamSum << " " << referenceSum << std::endl;
-  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f), "Wrong sum for streaming reduce with binary operator");
-
+  VTKM_TEST_ASSERT(test_equal(streamSum, referenceSum, 0.01f),
+                   "Wrong sum for streaming reduce with binary operator");
 }
 
-int UnitTestStreamingSine(int, char *[])
+int UnitTestStreamingSine(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestStreamingSine);
 }

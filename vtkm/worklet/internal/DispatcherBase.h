@@ -26,6 +26,7 @@
 #include <vtkm/internal/Invocation.h>
 
 #include <vtkm/cont/DeviceAdapter.h>
+
 #include <vtkm/cont/ErrorBadType.h>
 
 #include <vtkm/cont/arg/ControlSignatureTagBase.h>
@@ -34,18 +35,21 @@
 #include <vtkm/cont/internal/DynamicTransform.h>
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
-#include <vtkm/exec/internal/WorkletInvokeFunctor.h>
 
 #include <vtkm/internal/IntegerSequence.h>
 #include <vtkm/internal/brigand.hpp>
 
 #include <sstream>
 
-namespace vtkm {
-namespace worklet {
-namespace internal {
+namespace vtkm
+{
+namespace worklet
+{
+namespace internal
+{
 
-namespace detail {
+namespace detail
+{
 
 // This code is actually taking an error found at compile-time and not
 // reporting it until run-time. This seems strange at first, but this
@@ -55,50 +59,49 @@ namespace detail {
 // these unsupported combinations we just silently halt the compiler from
 // attempting to create code for these errant conditions and throw a run-time
 // error if one every tries to create one.
-inline void PrintFailureMessage(int, std::true_type) {}
+inline void PrintFailureMessage(int, std::true_type)
+{
+}
 inline void PrintFailureMessage(int index, std::false_type)
 {
   std::stringstream message;
-  message << "Encountered bad type for parameter "
-          << index
+  message << "Encountered bad type for parameter " << index
           << " when calling Invoke on a dispatcher.";
   throw vtkm::cont::ErrorBadType(message.str());
 }
 
 // Is designed as a brigand fold operation.
-template<typename T, typename State>
+template <typename T, typename State>
 struct DetermineIfHasDynamicParameter
 {
   using DynamicTag = typename vtkm::cont::internal::DynamicTransformTraits<T>::DynamicTag;
-  using isDynamic = typename std::is_same<
-            DynamicTag,
-            vtkm::cont::internal::DynamicTransformTagCastAndCall>::type;
+  using isDynamic =
+    typename std::is_same<DynamicTag, vtkm::cont::internal::DynamicTransformTagCastAndCall>::type;
 
-  using type = std::integral_constant<bool,
-                                      (State::value || isDynamic::value) >;
+  using type = std::integral_constant<bool, (State::value || isDynamic::value)>;
 };
 
 // Is designed as a brigand fold operation.
 template <typename Index, typename Params, typename SigTypes>
 struct DetermineHasInCorrectParameters
 {
-    using T = typename brigand::at_c<Params,Index::value>;
-    using ControlSignatureTag = typename brigand::at_c<SigTypes,Index::value>;
-    using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
+  using T = typename brigand::at_c<Params, Index::value>;
+  using ControlSignatureTag = typename brigand::at_c<SigTypes, Index::value>;
+  using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
 
-    using type = std::integral_constant< bool,
-                      vtkm::cont::arg::TypeCheck<TypeCheckTag,T>::value >;
+  using type = std::integral_constant<bool, vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value>;
 
-    static_assert( type::value,
-                   "Unable to match 'ValueType' to the signature tag 'ControlSignatureTag'");
+  static_assert(type::value,
+                "Unable to match 'ValueType' to the signature tag 'ControlSignatureTag'");
 };
 
 // Checks that an argument in a ControlSignature is a valid control signature
 // tag. Causes a compile error otherwise.
 struct DispatcherBaseControlSignatureTagCheck
 {
-  template<typename ControlSignatureTag, vtkm::IdComponent Index>
-  struct ReturnType {
+  template <typename ControlSignatureTag, vtkm::IdComponent Index>
+  struct ReturnType
+  {
     // If you get a compile error here, it means there is something that is
     // not a valid control signature tag in a worklet's ControlSignature.
     VTKM_IS_CONTROL_SIGNATURE_TAG(ControlSignatureTag);
@@ -110,8 +113,9 @@ struct DispatcherBaseControlSignatureTagCheck
 // signature tag. Causes a compile error otherwise.
 struct DispatcherBaseExecutionSignatureTagCheck
 {
-  template<typename ExecutionSignatureTag, vtkm::IdComponent Index>
-  struct ReturnType {
+  template <typename ExecutionSignatureTag, vtkm::IdComponent Index>
+  struct ReturnType
+  {
     // If you get a compile error here, it means there is something that is not
     // a valid execution signature tag in a worklet's ExecutionSignature.
     VTKM_IS_EXECUTION_SIGNATURE_TAG(ExecutionSignatureTag);
@@ -121,66 +125,62 @@ struct DispatcherBaseExecutionSignatureTagCheck
 
 // Used in the dynamic cast to check to make sure that the type passed into
 // the Invoke method matches the type accepted by the ControlSignature.
-template<typename ContinueFunctor,
-         typename TypeCheckTag,
-         vtkm::IdComponent Index>
+template <typename ContinueFunctor, typename TypeCheckTag, vtkm::IdComponent Index>
 struct DispatcherBaseTypeCheckFunctor
 {
-  const ContinueFunctor &Continue;
+  const ContinueFunctor& Continue;
 
   VTKM_CONT
-  DispatcherBaseTypeCheckFunctor(const ContinueFunctor &continueFunc)
-    : Continue(continueFunc) {  }
-
-  template<typename T>
-  VTKM_CONT
-  void operator()(const T &x) const
+  DispatcherBaseTypeCheckFunctor(const ContinueFunctor& continueFunc)
+    : Continue(continueFunc)
   {
-    typedef std::integral_constant<bool,
-            vtkm::cont::arg::TypeCheck<TypeCheckTag,T>::value> CanContinueTagType;
+  }
 
-    vtkm::worklet::internal::detail::PrintFailureMessage(Index,CanContinueTagType());
+  template <typename T>
+  VTKM_CONT void operator()(const T& x) const
+  {
+    typedef std::integral_constant<bool, vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value>
+      CanContinueTagType;
+
+    vtkm::worklet::internal::detail::PrintFailureMessage(Index, CanContinueTagType());
     this->WillContinue(x, CanContinueTagType());
   }
 
 private:
-  template<typename T>
-  VTKM_CONT
-  void WillContinue(const T &x, std::true_type) const
+  template <typename T>
+  VTKM_CONT void WillContinue(const T& x, std::true_type) const
   {
     this->Continue(x);
   }
 
-  template<typename T>
-  VTKM_CONT
-  void WillContinue(const T&, std::false_type) const
-  { }
+  template <typename T>
+  VTKM_CONT void WillContinue(const T&, std::false_type) const
+  {
+  }
 
-  void operator=(const DispatcherBaseTypeCheckFunctor<ContinueFunctor,TypeCheckTag,Index> &) = delete;
+  void operator=(const DispatcherBaseTypeCheckFunctor<ContinueFunctor, TypeCheckTag, Index>&) =
+    delete;
 };
 
 // Uses vtkm::cont::internal::DynamicTransform and the DynamicTransformCont
 // method of FunctionInterface to convert all DynamicArrayHandles and any
 // other arguments declaring themselves as dynamic to static versions.
-template<typename ControlInterface>
+template <typename ControlInterface>
 struct DispatcherBaseDynamicTransform
 {
   vtkm::cont::internal::DynamicTransform BasicDynamicTransform;
 
-  template<typename InputType,
-           typename ContinueFunctor,
-           vtkm::IdComponent Index>
-  VTKM_CONT
-  void operator()(const InputType &input,
-                  const ContinueFunctor &continueFunc,
-                  const vtkm::internal::IndexTag<Index>& indexTag) const
+  template <typename InputType, typename ContinueFunctor, vtkm::IdComponent Index>
+  VTKM_CONT void operator()(const InputType& input,
+                            const ContinueFunctor& continueFunc,
+                            const vtkm::internal::IndexTag<Index>& indexTag) const
   {
-    typedef typename ControlInterface::template ParameterType<Index>::type
-        ControlSignatureTag;
+    typedef typename ControlInterface::template ParameterType<Index>::type ControlSignatureTag;
 
-    typedef DispatcherBaseTypeCheckFunctor<
-        ContinueFunctor, typename ControlSignatureTag::TypeCheckTag, Index>
-        TypeCheckFunctor;
+    typedef DispatcherBaseTypeCheckFunctor<ContinueFunctor,
+                                           typename ControlSignatureTag::TypeCheckTag,
+                                           Index>
+      TypeCheckFunctor;
 
     this->BasicDynamicTransform(input, TypeCheckFunctor(continueFunc), indexTag);
   }
@@ -188,80 +188,92 @@ struct DispatcherBaseDynamicTransform
 
 // A functor called at the end of the dynamic transform to call the next
 // step in the dynamic transform.
-template<typename DispatcherBaseType>
+template <typename DispatcherBaseType>
 struct DispatcherBaseDynamicTransformHelper
 {
-  const DispatcherBaseType *Dispatcher;
+  const DispatcherBaseType* Dispatcher;
 
   VTKM_CONT
-  DispatcherBaseDynamicTransformHelper(const DispatcherBaseType *dispatcher)
-    : Dispatcher(dispatcher) {  }
+  DispatcherBaseDynamicTransformHelper(const DispatcherBaseType* dispatcher)
+    : Dispatcher(dispatcher)
+  {
+  }
 
-  template<typename FunctionInterface>
-  VTKM_CONT
-  void operator()(const FunctionInterface &parameters) const {
-    this->Dispatcher->DynamicTransformInvoke(parameters, std::true_type() );
+  template <typename FunctionInterface>
+  VTKM_CONT void operator()(const FunctionInterface& parameters) const
+  {
+    this->Dispatcher->DynamicTransformInvoke(parameters, std::true_type());
   }
 };
 
 // A look up helper used by DispatcherBaseTransportFunctor to determine
 //the types independent of the device we are templated on.
-template<typename ControlInterface, vtkm::IdComponent Index>
+template <typename ControlInterface, vtkm::IdComponent Index>
 struct DispatcherBaseTransportInvokeTypes
 {
   //Moved out of DispatcherBaseTransportFunctor to reduce code generation
-  typedef typename ControlInterface::template ParameterType<Index>::type
-        ControlSignatureTag;
+  typedef typename ControlInterface::template ParameterType<Index>::type ControlSignatureTag;
   typedef typename ControlSignatureTag::TransportTag TransportTag;
 };
 
+VTKM_CONT
+inline vtkm::Id FlatRange(vtkm::Id range)
+{
+  return range;
+}
+
+VTKM_CONT
+inline vtkm::Id FlatRange(const vtkm::Id3& range)
+{
+  return range[0] * range[1] * range[2];
+}
+
 // A functor used in a StaticCast of a FunctionInterface to transport arguments
 // from the control environment to the execution environment.
-template<typename ControlInterface, typename InputDomainType, typename Device>
+template <typename ControlInterface, typename InputDomainType, typename Device>
 struct DispatcherBaseTransportFunctor
 {
-  const InputDomainType &InputDomain;   // Warning: this is a reference
-  vtkm::Id OutputSize;
-
-  VTKM_CONT
-  DispatcherBaseTransportFunctor(const InputDomainType &inputDomain,
-                                 vtkm::Id outputSize)
-    : InputDomain(inputDomain),
-      OutputSize(outputSize)
-  {  }
+  const InputDomainType& InputDomain; // Warning: this is a reference
+  vtkm::Id InputRange;
+  vtkm::Id OutputRange;
 
   // TODO: We need to think harder about how scheduling on 3D arrays works.
   // Chances are we need to allow the transport for each argument to manage
   // 3D indices (for example, allocate a 3D array instead of a 1D array).
   // But for now, just treat all transports as 1D arrays.
-  VTKM_CONT
-  DispatcherBaseTransportFunctor(const InputDomainType &inputDomain,
-                                 vtkm::Id3 dimensions)
-    : InputDomain(inputDomain),
-      OutputSize(dimensions[0]*dimensions[1]*dimensions[2])
-  {  }
+  template <typename InputRangeType, typename OutputRangeType>
+  VTKM_CONT DispatcherBaseTransportFunctor(const InputDomainType& inputDomain,
+                                           const InputRangeType& inputRange,
+                                           const OutputRangeType& outputRange)
+    : InputDomain(inputDomain)
+    , InputRange(FlatRange(inputRange))
+    , OutputRange(FlatRange(outputRange))
+  {
+  }
 
-
-  template<typename ControlParameter, vtkm::IdComponent Index>
-  struct ReturnType {
-    using TransportTag = typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-    using TransportType = typename vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device>;
+  template <typename ControlParameter, vtkm::IdComponent Index>
+  struct ReturnType
+  {
+    using TransportTag =
+      typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
+    using TransportType =
+      typename vtkm::cont::arg::Transport<TransportTag, ControlParameter, Device>;
     using type = typename TransportType::ExecObjectType;
   };
 
-  template<typename ControlParameter, vtkm::IdComponent Index>
-  VTKM_CONT
-  typename ReturnType<ControlParameter, Index>::type
-  operator()(const ControlParameter &invokeData,
-             vtkm::internal::IndexTag<Index>) const
+  template <typename ControlParameter, vtkm::IdComponent Index>
+  VTKM_CONT typename ReturnType<ControlParameter, Index>::type operator()(
+    const ControlParameter& invokeData,
+    vtkm::internal::IndexTag<Index>) const
   {
-    using TransportTag = typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
-    vtkm::cont::arg::Transport<TransportTag,ControlParameter,Device> transport;
-    return transport(invokeData, this->InputDomain, this->OutputSize);
+    using TransportTag =
+      typename DispatcherBaseTransportInvokeTypes<ControlInterface, Index>::TransportTag;
+    vtkm::cont::arg::Transport<TransportTag, ControlParameter, Device> transport;
+    return transport(invokeData, this->InputDomain, this->InputRange, this->OutputRange);
   }
 
 private:
-  void operator=(const DispatcherBaseTransportFunctor &) = delete;
+  void operator=(const DispatcherBaseTransportFunctor&) = delete;
 };
 
 } // namespace detail
@@ -269,47 +281,40 @@ private:
 /// Base class for all dispatcher classes. Every worklet type should have its
 /// own dispatcher.
 ///
-template<typename DerivedClass,
-         typename WorkletType,
-         typename BaseWorkletType>
+template <typename DerivedClass, typename WorkletType, typename BaseWorkletType>
 class DispatcherBase
 {
 private:
-  typedef DispatcherBase<DerivedClass,WorkletType,BaseWorkletType> MyType;
+  typedef DispatcherBase<DerivedClass, WorkletType, BaseWorkletType> MyType;
 
   friend struct detail::DispatcherBaseDynamicTransformHelper<MyType>;
 
 protected:
-  typedef vtkm::internal::FunctionInterface<
-      typename WorkletType::ControlSignature> ControlInterface;
-  typedef vtkm::internal::FunctionInterface<
-      typename WorkletType::ExecutionSignature> ExecutionInterface;
+  typedef vtkm::internal::FunctionInterface<typename WorkletType::ControlSignature>
+    ControlInterface;
+  typedef vtkm::internal::FunctionInterface<typename WorkletType::ExecutionSignature>
+    ExecutionInterface;
 
   static const vtkm::IdComponent NUM_INVOKE_PARAMS = ControlInterface::ARITY;
 
 private:
   // We don't really need these types, but declaring them checks the arguments
   // of the control and execution signatures.
-  typedef typename ControlInterface::
-      template StaticTransformType<
-        detail::DispatcherBaseControlSignatureTagCheck>::type
-      ControlSignatureCheck;
-  typedef typename ExecutionInterface::
-      template StaticTransformType<
-        detail::DispatcherBaseExecutionSignatureTagCheck>::type
-      ExecutionSignatureCheck;
+  typedef typename ControlInterface::template StaticTransformType<
+    detail::DispatcherBaseControlSignatureTagCheck>::type ControlSignatureCheck;
+  typedef typename ExecutionInterface::template StaticTransformType<
+    detail::DispatcherBaseExecutionSignatureTagCheck>::type ExecutionSignatureCheck;
 
-  template<typename Signature>
-  VTKM_CONT
-  void StartInvoke(
-      const vtkm::internal::FunctionInterface<Signature> &parameters) const
+  template <typename Signature>
+  VTKM_CONT void StartInvoke(const vtkm::internal::FunctionInterface<Signature>& parameters) const
   {
     using ParameterInterface = vtkm::internal::FunctionInterface<Signature>;
 
     VTKM_STATIC_ASSERT_MSG(ParameterInterface::ARITY == NUM_INVOKE_PARAMS,
                            "Dispatcher Invoke called with wrong number of arguments.");
 
-    static_assert( std::is_base_of<BaseWorkletType,WorkletType>::value,
+    static_assert(
+      std::is_base_of<BaseWorkletType, WorkletType>::value,
       "The worklet being scheduled by this dispatcher doesn't match the type of the dispatcher");
 
     //We need to determine if we have the need to do any dynamic
@@ -320,22 +325,16 @@ private:
     //in smaller executables and libraries.
     using ParamTypes = typename ParameterInterface::ParameterSig;
     using HasDynamicTypes =
-      brigand::fold< ParamTypes,
-                     std::false_type,
-                     detail::DetermineIfHasDynamicParameter< brigand::_element,
-                                                             brigand::_state
-                                                           >
-                     >;
+      brigand::fold<ParamTypes,
+                    std::false_type,
+                    detail::DetermineIfHasDynamicParameter<brigand::_element, brigand::_state>>;
 
-    this->StartInvokeDynamic(parameters, HasDynamicTypes() );
+    this->StartInvokeDynamic(parameters, HasDynamicTypes());
   }
 
-
-  template<typename Signature>
-  VTKM_CONT
-  void StartInvokeDynamic(
-      const vtkm::internal::FunctionInterface<Signature> &parameters,
-      std::true_type) const
+  template <typename Signature>
+  VTKM_CONT void StartInvokeDynamic(const vtkm::internal::FunctionInterface<Signature>& parameters,
+                                    std::true_type) const
   {
     // As we do the dynamic transform, we are also going to check the static
     // type against the TypeCheckTag in the ControlSignature tags. To do this,
@@ -346,16 +345,13 @@ private:
     // dynamic transform mechanism to get the right tag and make sure that
     // the dynamic type is correct. (This prevents the compiler from expanding
     // worklets with types that should not be.)
-    parameters.DynamicTransformCont(
-          detail::DispatcherBaseDynamicTransform<ControlInterface>(),
-          detail::DispatcherBaseDynamicTransformHelper<MyType>(this));
+    parameters.DynamicTransformCont(detail::DispatcherBaseDynamicTransform<ControlInterface>(),
+                                    detail::DispatcherBaseDynamicTransformHelper<MyType>(this));
   }
 
-  template<typename Signature>
-  VTKM_CONT
-  void StartInvokeDynamic(
-      const vtkm::internal::FunctionInterface<Signature> &parameters,
-      std::false_type) const
+  template <typename Signature>
+  VTKM_CONT void StartInvokeDynamic(const vtkm::internal::FunctionInterface<Signature>& parameters,
+                                    std::false_type) const
   {
     using ParameterInterface = vtkm::internal::FunctionInterface<Signature>;
 
@@ -364,110 +360,93 @@ private:
     //we need to throw a nice compile time error
     using ParamTypes = typename ParameterInterface::ParameterSig;
     using ContSigTypes = typename vtkm::internal::detail::FunctionSigInfo<
-                            typename WorkletType::ControlSignature>::Parameters;
-    using NumParams = vtkm::internal::MakeIntegerSequence< ParameterInterface::ARITY >;
+      typename WorkletType::ControlSignature>::Parameters;
+    using NumParams = vtkm::internal::MakeIntegerSequence<ParameterInterface::ARITY>;
 
-    using isAllValid =
-      brigand::fold< NumParams,
-                     std::true_type,
-                     detail::DetermineHasInCorrectParameters< brigand::_element,
-                                                              ParamTypes,
-                                                              ContSigTypes
-                                                            >
-                     >;
+    using isAllValid = brigand::fold<
+      NumParams,
+      std::true_type,
+      detail::DetermineHasInCorrectParameters<brigand::_element, ParamTypes, ContSigTypes>>;
     //When isAllValid is false we produce a second static_assert
     //stating that the static transform is not possible
-    static_assert( isAllValid::value, "Unable to match all parameter types" );
+    static_assert(isAllValid::value, "Unable to match all parameter types");
 
     this->DynamicTransformInvoke(parameters, isAllValid());
   }
 
-  template<typename Signature>
-  VTKM_CONT
-  void DynamicTransformInvoke(
-      const vtkm::internal::FunctionInterface<Signature> &parameters,
-      std::true_type ) const
+  template <typename Signature>
+  VTKM_CONT void DynamicTransformInvoke(
+    const vtkm::internal::FunctionInterface<Signature>& parameters,
+    std::true_type) const
   {
     // TODO: Check parameters
-    static const vtkm::IdComponent INPUT_DOMAIN_INDEX =
-        WorkletType::InputDomain::INDEX;
-    reinterpret_cast<const DerivedClass *>(this)->DoInvoke(
-          vtkm::internal::make_Invocation<INPUT_DOMAIN_INDEX>(
-            parameters, ControlInterface(), ExecutionInterface()));
+    static const vtkm::IdComponent INPUT_DOMAIN_INDEX = WorkletType::InputDomain::INDEX;
+    reinterpret_cast<const DerivedClass*>(this)->DoInvoke(
+      vtkm::internal::make_Invocation<INPUT_DOMAIN_INDEX>(
+        parameters, ControlInterface(), ExecutionInterface()));
   }
 
-  template<typename Signature>
-  VTKM_CONT
-  void DynamicTransformInvoke(
-      const vtkm::internal::FunctionInterface<Signature> &,
-      std::false_type ) const
+  template <typename Signature>
+  VTKM_CONT void DynamicTransformInvoke(const vtkm::internal::FunctionInterface<Signature>&,
+                                        std::false_type) const
   {
   }
 
 public:
-  template<typename... ArgTypes>
-  VTKM_CONT
-  void Invoke(ArgTypes... args) const
+  template <typename... ArgTypes>
+  VTKM_CONT void Invoke(ArgTypes... args) const
   {
-  this->StartInvoke(
-        vtkm::internal::make_FunctionInterface<void>(args...));
+    this->StartInvoke(vtkm::internal::make_FunctionInterface<void>(args...));
   }
 
 protected:
   VTKM_CONT
-  DispatcherBase(const WorkletType &worklet) : Worklet(worklet) {  }
-
-  template<typename Invocation, typename DeviceAdapter>
-  VTKM_CONT
-  void BasicInvoke(const Invocation &invocation,
-                   vtkm::Id numInstances,
-                   DeviceAdapter device) const
+  DispatcherBase(const WorkletType& worklet)
+    : Worklet(worklet)
   {
-    this->InvokeTransportParameters(
-          invocation,
-          numInstances,
-          this->Worklet.GetScatter().GetOutputRange(numInstances),
-          device);
   }
 
-  template<typename Invocation, typename DeviceAdapter>
-  VTKM_CONT
-  void BasicInvoke(const Invocation &invocation,
-                   vtkm::Id2 dimensions,
-                   DeviceAdapter device) const
-  {
-    this->BasicInvoke(invocation,
-                      vtkm::Id3(dimensions[0], dimensions[1], 1),
-                      device);
-  }
-
-
-  template<typename Invocation, typename DeviceAdapter>
-  VTKM_CONT
-  void BasicInvoke(const Invocation &invocation,
-                   vtkm::Id3 dimensions,
-                   DeviceAdapter device) const
+  template <typename Invocation, typename DeviceAdapter>
+  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+                             vtkm::Id numInstances,
+                             DeviceAdapter device) const
   {
     this->InvokeTransportParameters(
-          invocation,
-          dimensions,
-          this->Worklet.GetScatter().GetOutputRange(dimensions),
-          device);
+      invocation, numInstances, this->Worklet.GetScatter().GetOutputRange(numInstances), device);
+  }
+
+  template <typename Invocation, typename DeviceAdapter>
+  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+                             vtkm::Id2 dimensions,
+                             DeviceAdapter device) const
+  {
+    this->BasicInvoke(invocation, vtkm::Id3(dimensions[0], dimensions[1], 1), device);
+  }
+
+  template <typename Invocation, typename DeviceAdapter>
+  VTKM_CONT void BasicInvoke(const Invocation& invocation,
+                             vtkm::Id3 dimensions,
+                             DeviceAdapter device) const
+  {
+    this->InvokeTransportParameters(
+      invocation, dimensions, this->Worklet.GetScatter().GetOutputRange(dimensions), device);
   }
 
   WorkletType Worklet;
 
 private:
   // Dispatchers cannot be copied
-  DispatcherBase(const MyType &) = delete;
-  void operator=(const MyType &) = delete;
+  DispatcherBase(const MyType&) = delete;
+  void operator=(const MyType&) = delete;
 
-  template<typename Invocation, typename InputRangeType, typename OutputRangeType, typename DeviceAdapter>
-  VTKM_CONT
-  void InvokeTransportParameters(const Invocation &invocation,
-                                 const InputRangeType& inputRange,
-                                 const OutputRangeType& outputRange,
-                                 DeviceAdapter device) const
+  template <typename Invocation,
+            typename InputRangeType,
+            typename OutputRangeType,
+            typename DeviceAdapter>
+  VTKM_CONT void InvokeTransportParameters(const Invocation& invocation,
+                                           const InputRangeType& inputRange,
+                                           const OutputRangeType& outputRange,
+                                           DeviceAdapter device) const
   {
     // The first step in invoking a worklet is to transport the arguments to
     // the execution environment. The invocation object passed to this function
@@ -479,57 +458,51 @@ private:
     // static transform of the FunctionInterface to call the transport on each
     // argument and return the corresponding execution environment object.
     typedef typename Invocation::ParameterInterface ParameterInterfaceType;
-    const ParameterInterfaceType &parameters = invocation.Parameters;
+    const ParameterInterfaceType& parameters = invocation.Parameters;
 
-    typedef detail::DispatcherBaseTransportFunctor<
-        typename Invocation::ControlInterface,
-        typename Invocation::InputDomainType,
-        DeviceAdapter> TransportFunctorType;
-    typedef typename ParameterInterfaceType::template StaticTransformType<
-        TransportFunctorType>::type ExecObjectParameters;
+    typedef detail::DispatcherBaseTransportFunctor<typename Invocation::ControlInterface,
+                                                   typename Invocation::InputDomainType,
+                                                   DeviceAdapter>
+      TransportFunctorType;
+    typedef
+      typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type
+        ExecObjectParameters;
 
-    ExecObjectParameters execObjectParameters =
-        parameters.StaticTransformCont(TransportFunctorType(
-                                         invocation.GetInputDomain(),
-                                         outputRange));
+    ExecObjectParameters execObjectParameters = parameters.StaticTransformCont(
+      TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
 
     // Get the arrays used for scattering input to output.
     typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
-        this->Worklet.GetScatter().GetOutputToInputMap(inputRange);
+      this->Worklet.GetScatter().GetOutputToInputMap(inputRange);
     typename WorkletType::ScatterType::VisitArrayType visitArray =
-        this->Worklet.GetScatter().GetVisitArray(inputRange);
+      this->Worklet.GetScatter().GetVisitArray(inputRange);
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.
-    this->InvokeSchedule(
-          invocation
-          .ChangeParameters(execObjectParameters)
-          .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
-          .ChangeVisitArray(visitArray.PrepareForInput(device)),
-          outputRange,
-          device);
+    this->InvokeSchedule(invocation.ChangeParameters(execObjectParameters)
+                           .ChangeOutputToInputMap(outputToInputMap.PrepareForInput(device))
+                           .ChangeVisitArray(visitArray.PrepareForInput(device)),
+                         outputRange,
+                         device);
   }
 
-  template<typename Invocation, typename RangeType, typename DeviceAdapter>
-  VTKM_CONT
-  void InvokeSchedule(const Invocation &invocation,
-                      RangeType range,
-                      DeviceAdapter) const
+  template <typename Invocation, typename RangeType, typename DeviceAdapter>
+  VTKM_CONT void InvokeSchedule(const Invocation& invocation, RangeType range, DeviceAdapter) const
   {
-    // The WorkletInvokeFunctor class handles the magic of fetching values
-    // for each instance and calling the worklet's function. So just create
-    // a WorkletInvokeFunctor and schedule it with the device adapter.
-    typedef vtkm::exec::internal::WorkletInvokeFunctor<WorkletType,Invocation>
-        WorkletInvokeFunctorType;
-    WorkletInvokeFunctorType workletFunctor =
-        WorkletInvokeFunctorType(this->Worklet, invocation);
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
 
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
-
-    Algorithm::Schedule(workletFunctor, range);
+    // The TaskType class handles the magic of fetching values
+    // for each instance and calling the worklet's function.
+    // The TaskType will evaluate to one of the following classes:
+    //
+    // vtkm::exec::internal::TaskSingular
+    // vtkm::exec::internal::TaskTiling1D
+    // vtkm::exec::internal::TaskTiling3D
+    auto task = TaskTypes::MakeTask(this->Worklet, invocation, range);
+    Algorithm::ScheduleTask(task, range);
   }
 };
-
 }
 }
 } // namespace vtkm::worklet::internal

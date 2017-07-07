@@ -25,9 +25,12 @@
 
 #include <vtkm/cont/ErrorExecution.h>
 
-namespace vtkm{
-namespace interop{
-namespace cuda{
+namespace vtkm
+{
+namespace interop
+{
+namespace cuda
+{
 
 static void SetCudaGLDevice(int id)
 {
@@ -39,15 +42,13 @@ static void SetCudaGLDevice(int id)
 #else
   cudaError_t cError = cudaSetDevice(id);
 #endif
-  if(cError != cudaSuccess)
-    {
+  if (cError != cudaSuccess)
+  {
     std::string cuda_error_msg("Unable to setup cuda/opengl interop. Error: ");
     cuda_error_msg.append(cudaGetErrorString(cError));
     throw vtkm::cont::ErrorExecution(cuda_error_msg);
-    }
+  }
 }
-
-
 }
 }
 } //namespace

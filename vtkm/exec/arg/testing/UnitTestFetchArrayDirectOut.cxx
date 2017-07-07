@@ -24,13 +24,14 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
 static vtkm::Id g_NumSets;
 
-template<typename T>
+template <typename T>
 struct TestPortal
 {
   typedef T ValueType;
@@ -39,7 +40,8 @@ struct TestPortal
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
   VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType &value) const {
+  void Set(vtkm::Id index, const ValueType& value) const
+  {
     VTKM_TEST_ASSERT(index >= 0, "Bad portal index.");
     VTKM_TEST_ASSERT(index < this->GetNumberOfValues(), "Bad portal index.");
     VTKM_TEST_ASSERT(test_equal(value, TestValue(index, ValueType())),
@@ -48,7 +50,7 @@ struct TestPortal
   }
 };
 
-template<typename T>
+template <typename T>
 struct FetchArrayDirectOutTests
 {
 
@@ -56,11 +58,11 @@ struct FetchArrayDirectOutTests
   {
     TestPortal<T> execObject;
 
-    typedef vtkm::exec::arg::Fetch<
-        vtkm::exec::arg::FetchTagArrayDirectOut,
-        vtkm::exec::arg::AspectTagDefault,
-        vtkm::exec::arg::ThreadIndicesTesting,
-        TestPortal<T> > FetchType;
+    typedef vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayDirectOut,
+                                   vtkm::exec::arg::AspectTagDefault,
+                                   vtkm::exec::arg::ThreadIndicesTesting,
+                                   TestPortal<T>>
+      FetchType;
 
     FetchType fetch;
 
@@ -83,12 +85,11 @@ struct FetchArrayDirectOutTests
                      "Array portal's set not called correct number of times."
                      "Store method must be wrong.");
   }
-
 };
 
 struct TryType
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     FetchArrayDirectOutTests<T>()();
@@ -102,7 +103,7 @@ void TestExecObjectFetch()
 
 } // anonymous namespace
 
-int UnitTestFetchArrayDirectOut(int, char *[])
+int UnitTestFetchArrayDirectOut(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestExecObjectFetch);
 }

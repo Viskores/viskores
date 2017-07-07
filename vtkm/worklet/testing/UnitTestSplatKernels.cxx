@@ -34,82 +34,91 @@
 typedef vtkm::Vec<vtkm::Float64, 3> Vector;
 
 // Simpson integradion rule
-double SimpsonIntegration(const std::vector<double> &y,
-              const std::vector<double> &x) {
-  std::size_t n = x.size()-1;
-  const double aux = 2.*(x[n]-x[0])/(3.*static_cast<double>(n));
-  double val = 0.5*(y[0]*x[0]+y[n]*x[n]);
-  for(std::size_t i=2; i<n; i+=2) {
-    val += 2*y[i-1] + y[i];
+double SimpsonIntegration(const std::vector<double>& y, const std::vector<double>& x)
+{
+  std::size_t n = x.size() - 1;
+  const double aux = 2. * (x[n] - x[0]) / (3. * static_cast<double>(n));
+  double val = 0.5 * (y[0] * x[0] + y[n] * x[n]);
+  for (std::size_t i = 2; i < n; i += 2)
+  {
+    val += 2 * y[i - 1] + y[i];
   }
-  val += 2*y[n-1];
-  return aux*val;
+  val += 2 * y[n - 1];
+  return aux * val;
 }
 
 // Integrade a kernel in 3D
 template <typename Kernel>
-double IntegralOfKernel(const Kernel& ker) {
+double IntegralOfKernel(const Kernel& ker)
+{
   const double supportlength = ker.maxDistance();
   const int npoint = 15000;
   std::vector<double> x;
   std::vector<double> y;
-  for (int i = 0; i<npoint; i++) {
+  for (int i = 0; i < npoint; i++)
+  {
     const double r = static_cast<double>(i) * supportlength / static_cast<double>(npoint);
     x.push_back(r);
-    y.push_back(ker.w(r)*r*r);
+    y.push_back(ker.w(r) * r * r);
   }
-  return 4.0*M_PI*SimpsonIntegration(y, x);
+  return 4.0 * M_PI * SimpsonIntegration(y, x);
 }
 
 // Same integration, but using the variable smoothing length interface
 template <typename Kernel>
-double IntegralOfKernel(const Kernel& ker, double h) {
+double IntegralOfKernel(const Kernel& ker, double h)
+{
   const double supportlength = ker.maxDistance();
   const int npoint = 15000;
   std::vector<double> x;
   std::vector<double> y;
-  for (int i = 0; i<npoint; i++) {
+  for (int i = 0; i < npoint; i++)
+  {
     const double r = static_cast<double>(i) * supportlength / static_cast<double>(npoint);
     x.push_back(r);
-    y.push_back(ker.w(h,r)*r*r);
+    y.push_back(ker.w(h, r) * r * r);
   }
-  return 4.0*M_PI*SimpsonIntegration(y, x);
+  return 4.0 * M_PI * SimpsonIntegration(y, x);
 }
 
-
-int TestSplatKernels() {
+int TestSplatKernels()
+{
   const double eps = 1e-4;
   double s;
   double smoothinglength;
 
   std::cout << "Testing Gaussian 3D fixed h kernel integration \n";
-  for (int i=0; i<100; ++i) {
-    smoothinglength = 0.01 + i*(10.0/100.0);
-    s  = IntegralOfKernel(vtkm::worklet::splatkernels::Gaussian<3>(smoothinglength));
-    VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Gaussian 3D integration failure");
+  for (int i = 0; i < 100; ++i)
+  {
+    smoothinglength = 0.01 + i * (10.0 / 100.0);
+    s = IntegralOfKernel(vtkm::worklet::splatkernels::Gaussian<3>(smoothinglength));
+    VTKM_TEST_ASSERT(fabs(s - 1.0) < eps, "Gaussian 3D integration failure");
   }
 
   std::cout << "Testing Gaussian 3D variable h kernel integration \n";
-  for (int i=0; i<100; ++i) {
-    smoothinglength = 0.01 + i*(10.0/100.0);
-    s  = IntegralOfKernel(vtkm::worklet::splatkernels::Gaussian<3>(smoothinglength),smoothinglength);
-    VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Gaussian 3D integration failure");
+  for (int i = 0; i < 100; ++i)
+  {
+    smoothinglength = 0.01 + i * (10.0 / 100.0);
+    s =
+      IntegralOfKernel(vtkm::worklet::splatkernels::Gaussian<3>(smoothinglength), smoothinglength);
+    VTKM_TEST_ASSERT(fabs(s - 1.0) < eps, "Gaussian 3D integration failure");
   }
 
-//  s  = IntegralOfKernel(vtkm::worklet::splatkernels::Gaussian<2>(smoothinglength));
-//  VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Gaussian 2D integration failure");
+  //  s  = IntegralOfKernel(vtkm::worklet::splatkernels::Gaussian<2>(smoothinglength));
+  //  VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Gaussian 2D integration failure");
 
   std::cout << "Testing Spline3rdOrder 3D kernel integration \n";
-  for (int i=0; i<100; ++i) {
-    smoothinglength = 0.01 + i*(10.0/100.0);
-    s  = IntegralOfKernel(vtkm::worklet::splatkernels::Spline3rdOrder<3>(smoothinglength));
-    VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Spline3rdOrder 3D integration failure");
+  for (int i = 0; i < 100; ++i)
+  {
+    smoothinglength = 0.01 + i * (10.0 / 100.0);
+    s = IntegralOfKernel(vtkm::worklet::splatkernels::Spline3rdOrder<3>(smoothinglength));
+    VTKM_TEST_ASSERT(fabs(s - 1.0) < eps, "Spline3rdOrder 3D integration failure");
   }
 
-//  s  = IntegralOfKernel(vtkm::worklet::splatkernels::Spline3rdOrder<2>(smoothinglength));
-//  VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Spline3rdOrder 2D integration failure");
+  //  s  = IntegralOfKernel(vtkm::worklet::splatkernels::Spline3rdOrder<2>(smoothinglength));
+  //  VTKM_TEST_ASSERT ( fabs(s - 1.0) < eps, "Spline3rdOrder 2D integration failure");
 
-/*
+  /*
   s  = IntegralOfKernel(KernelBox(ndim, smoothinglength));
   if ( fabs(s - 1.0) > eps) {
     return EXIT_FAILURE;
@@ -142,8 +151,7 @@ int TestSplatKernels() {
   return EXIT_SUCCESS;
 }
 
-int UnitTestSplatKernels(int, char *[])
+int UnitTestSplatKernels(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestSplatKernels);
 }
-

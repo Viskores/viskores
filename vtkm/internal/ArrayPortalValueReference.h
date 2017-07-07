@@ -20,12 +20,14 @@
 #ifndef vtk_m_internal_ArrayPortalValueReference_h
 #define vtk_m_internal_ArrayPortalValueReference_h
 
-#include <vtkm/Types.h>
 #include <vtkm/TypeTraits.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
 
-namespace vtkm {
-namespace internal {
+namespace vtkm
+{
+namespace internal
+{
 
 /// \brief A value class for returning setable values of an ArrayPortal
 ///
@@ -42,18 +44,21 @@ namespace internal {
 /// set this reference object to a new value, it will call \c Set on the
 /// \c ArrayPortal to insert the value into the array.
 ///
-template<typename ArrayPortalType>
+template <typename ArrayPortalType>
 struct ArrayPortalValueReference
 {
   using ValueType = typename ArrayPortalType::ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalValueReference(const ArrayPortalType &portal, vtkm::Id index)
-    : Portal(portal), Index(index) {  }
+  ArrayPortalValueReference(const ArrayPortalType& portal, vtkm::Id index)
+    : Portal(portal)
+    , Index(index)
+  {
+  }
 
   VTKM_CONT
-  void Swap( ArrayPortalValueReference<ArrayPortalType> &rhs ) throw()
+  void Swap(ArrayPortalValueReference<ArrayPortalType>& rhs) throw()
   {
     //we need use the explicit type not a proxy temp object
     //A proxy temp object would point to the same underlying data structure
@@ -65,8 +70,8 @@ struct ArrayPortalValueReference
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalValueReference<ArrayPortalType> &operator=(
-    const ArrayPortalValueReference<ArrayPortalType> &rhs)
+  ArrayPortalValueReference<ArrayPortalType>& operator=(
+    const ArrayPortalValueReference<ArrayPortalType>& rhs)
   {
     this->Portal.Set(this->Index, rhs.Portal.Get(rhs.Index));
     return *this;
@@ -82,42 +87,40 @@ struct ArrayPortalValueReference
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  operator ValueType(void) const
-  {
-    return this->Portal.Get(this->Index);
-  }
+  operator ValueType(void) const { return this->Portal.Get(this->Index); }
 
   const ArrayPortalType& Portal;
   vtkm::Id Index;
 };
 
-
 //implement a custom swap function, since the std::swap won't work
 //since we return RValues instead of Lvalues
-template<typename T>
-void swap( vtkm::internal::ArrayPortalValueReference<T> a,
-           vtkm::internal::ArrayPortalValueReference<T> b)
+template <typename T>
+void swap(vtkm::internal::ArrayPortalValueReference<T> a,
+          vtkm::internal::ArrayPortalValueReference<T> b)
 {
   a.Swap(b);
 }
-
 }
 } // namespace vtkm::internal
 
-namespace vtkm {
+namespace vtkm
+{
 
 // Make specialization for TypeTraits and VecTraits so that the reference
 // behaves the same as the value.
 
-template<typename PortalType>
-struct TypeTraits<vtkm::internal::ArrayPortalValueReference<PortalType> >
-    : vtkm::TypeTraits<typename vtkm::internal::ArrayPortalValueReference<PortalType>::ValueType>
-{  };
+template <typename PortalType>
+struct TypeTraits<vtkm::internal::ArrayPortalValueReference<PortalType>>
+  : vtkm::TypeTraits<typename vtkm::internal::ArrayPortalValueReference<PortalType>::ValueType>
+{
+};
 
-template<typename PortalType>
-struct VecTraits<vtkm::internal::ArrayPortalValueReference<PortalType> >
-    : vtkm::VecTraits<typename vtkm::internal::ArrayPortalValueReference<PortalType>::ValueType>
-{  };
+template <typename PortalType>
+struct VecTraits<vtkm::internal::ArrayPortalValueReference<PortalType>>
+  : vtkm::VecTraits<typename vtkm::internal::ArrayPortalValueReference<PortalType>::ValueType>
+{
+};
 
 } // namespace vtkm
 

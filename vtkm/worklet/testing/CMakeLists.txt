@@ -25,21 +25,29 @@ set(unit_tests
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestExternalFaces.cxx
+  UnitTestExtractGeometry.cxx
+  UnitTestExtractPoints.cxx
+  UnitTestExtractStructured.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
+  UnitTestMask.cxx
+  UnitTestMaskPoints.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx
   UnitTestRemoveUnusedPoints.cxx
   UnitTestScatterCounting.cxx
+  UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx
-  UnitTestTetrahedralizeExplicitGrid.cxx
-  UnitTestTetrahedralizeUniformGrid.cxx
+  UnitTestSurfaceNormals.cxx
+  UnitTestTetrahedralize.cxx
   UnitTestThreshold.cxx
+  UnitTestThresholdPoints.cxx
+  UnitTestTriangulate.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldWholeArray.cxx

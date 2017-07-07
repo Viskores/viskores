@@ -22,9 +22,12 @@
 
 #include <vtkm/cont/arg/TypeCheck.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// Check for a Keys object.
 ///
@@ -35,12 +38,11 @@ struct TypeCheckTagKeys
 // A more specific specialization that actually checks for Keys types is
 // implemented in vtkm/worklet/Keys.h. That class is not accessible from here
 // due to VTK-m package dependencies.
-template<typename Type>
+template <typename Type>
 struct TypeCheck<TypeCheckTagKeys, Type>
 {
   static const bool value = false;
 };
-
 }
 }
 } // namespace vtkm::cont::arg

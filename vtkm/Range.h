@@ -25,7 +25,8 @@
 #include <vtkm/Math.h>
 #include <vtkm/Types.h>
 
-namespace vtkm {
+namespace vtkm
+{
 
 /// \brief Represent a continuous scalar range of values.
 ///
@@ -42,16 +43,21 @@ struct Range
   vtkm::Float64 Max;
 
   VTKM_EXEC_CONT
-  Range() : Min(vtkm::Infinity64()), Max(vtkm::NegativeInfinity64()) {  }
+  Range()
+    : Min(vtkm::Infinity64())
+    , Max(vtkm::NegativeInfinity64())
+  {
+  }
 
-  template<typename T1, typename T2>
-  VTKM_EXEC_CONT
-  Range(const T1 &min, const T2 &max)
-    : Min(static_cast<vtkm::Float64>(min)), Max(static_cast<vtkm::Float64>(max))
-  {  }
+  template <typename T1, typename T2>
+  VTKM_EXEC_CONT Range(const T1& min, const T2& max)
+    : Min(static_cast<vtkm::Float64>(min))
+    , Max(static_cast<vtkm::Float64>(max))
+  {
+  }
 
   VTKM_EXEC_CONT
-  const vtkm::Range &operator=(const vtkm::Range &src)
+  const vtkm::Range& operator=(const vtkm::Range& src)
   {
     this->Min = src.Min;
     this->Max = src.Max;
@@ -68,10 +74,7 @@ struct Range
   /// are equal then true is returned.
   ///
   VTKM_EXEC_CONT
-  bool IsNonEmpty() const
-  {
-    return (this->Min <= this->Max);
-  }
+  bool IsNonEmpty() const { return (this->Min <= this->Max); }
 
   /// \b Determines if a value is within the range.
   ///
@@ -79,9 +82,8 @@ struct Range
   /// otherwise. \c Contains treats the min and max as inclusive. That is, if
   /// the value is exactly the min or max, true is returned.
   ///
-  template<typename T>
-  VTKM_EXEC_CONT
-  bool Contains(const T &value) const
+  template <typename T>
+  VTKM_EXEC_CONT bool Contains(const T& value) const
   {
     return ((this->Min <= static_cast<vtkm::Float64>(value)) &&
             (this->Max >= static_cast<vtkm::Float64>(value)));
@@ -115,7 +117,7 @@ struct Range
   {
     if (this->IsNonEmpty())
     {
-      return 0.5*(this->Max + this->Min);
+      return 0.5 * (this->Max + this->Min);
     }
     else
     {
@@ -129,9 +131,8 @@ struct Range
   /// given value. If the range already includes this value, then nothing is
   /// done.
   ///
-  template<typename T>
-  VTKM_EXEC_CONT
-  void Include(const T &value)
+  template <typename T>
+  VTKM_EXEC_CONT void Include(const T& value)
   {
     this->Min = vtkm::Min(this->Min, static_cast<vtkm::Float64>(value));
     this->Max = vtkm::Max(this->Max, static_cast<vtkm::Float64>(value));
@@ -143,7 +144,7 @@ struct Range
   /// of another range. Esentially it is the union of the two ranges.
   ///
   VTKM_EXEC_CONT
-  void Include(const vtkm::Range &range)
+  void Include(const vtkm::Range& range)
   {
     this->Include(range.Min);
     this->Include(range.Max);
@@ -154,7 +155,7 @@ struct Range
   /// This is a nondestructive form of \c Include.
   ///
   VTKM_EXEC_CONT
-  vtkm::Range Union(const vtkm::Range &otherRange) const
+  vtkm::Range Union(const vtkm::Range& otherRange) const
   {
     vtkm::Range unionRange(*this);
     unionRange.Include(otherRange);
@@ -164,19 +165,16 @@ struct Range
   /// \b Operator for union
   ///
   VTKM_EXEC_CONT
-  vtkm::Range operator+(const vtkm::Range &otherRange) const
-  {
-    return this->Union(otherRange);
-  }
+  vtkm::Range operator+(const vtkm::Range& otherRange) const { return this->Union(otherRange); }
 
   VTKM_EXEC_CONT
-  bool operator==(const vtkm::Range &otherRange) const
+  bool operator==(const vtkm::Range& otherRange) const
   {
     return ((this->Min == otherRange.Min) && (this->Max == otherRange.Max));
   }
 
   VTKM_EXEC_CONT
-  bool operator!=(const vtkm::Range &otherRange) const
+  bool operator!=(const vtkm::Range& otherRange) const
   {
     return ((this->Min != otherRange.Min) || (this->Max != otherRange.Max));
   }
@@ -186,8 +184,7 @@ struct Range
 
 /// Helper function for printing ranges during testing
 ///
-static inline VTKM_CONT
-std::ostream &operator<<(std::ostream &stream, const vtkm::Range &range)
+static inline VTKM_CONT std::ostream& operator<<(std::ostream& stream, const vtkm::Range& range)
 {
   return stream << "[" << range.Min << ".." << range.Max << "]";
 }

@@ -22,15 +22,19 @@
 
 // These are listed in non-alphabetical order because this is the conceptual
 // order in which the sub-files are loaded.  (But the compile should still
-// succeed of the order is changed.)
+// succeed of the order is changed.)  Turn off formatting to keep the order.
 
+// clang-format off
 #include <vtkm/cont/internal/DeviceAdapterDefaultSelection.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
+// clang-format on
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 #ifdef VTKM_DOXYGEN_ONLY
 /// \brief A tag specifying the interface between the control and execution environments.
@@ -60,15 +64,16 @@ namespace cont {
 /// documentation on all the functions and classes that must be
 /// overloaded/specialized to create a new device adapter.
 ///
-struct DeviceAdapterTag___ {  };
+struct DeviceAdapterTag___
+{
+};
 #endif //VTKM_DOXYGEN_ONLY
 
-namespace internal {
+namespace internal
+{
 
 } // namespace internal
-
 }
 } // namespace vtkm::cont
-
 
 #endif //vtk_m_cont_DeviceAdapter_h

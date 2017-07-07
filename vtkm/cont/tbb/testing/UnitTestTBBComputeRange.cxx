@@ -22,8 +22,7 @@
 
 #include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestTBBComputeRange(int, char *[])
+int UnitTestTBBComputeRange(int, char* [])
 {
-  return vtkm::cont::testing::TestingComputeRange
-      <vtkm::cont::DeviceAdapterTagTBB>::Run();
+  return vtkm::cont::testing::TestingComputeRange<vtkm::cont::DeviceAdapterTagTBB>::Run();
 }

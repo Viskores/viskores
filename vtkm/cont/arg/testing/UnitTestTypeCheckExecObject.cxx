@@ -24,10 +24,15 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-struct TestExecutionObject : vtkm::exec::ExecutionObjectBase {  };
-struct TestNotExecutionObject {  };
+struct TestExecutionObject : vtkm::exec::ExecutionObjectBase
+{
+};
+struct TestNotExecutionObject
+{
+};
 
 void TestCheckExecObject()
 {
@@ -36,26 +41,21 @@ void TestCheckExecObject()
   using vtkm::cont::arg::TypeCheck;
   using vtkm::cont::arg::TypeCheckTagExecObject;
 
-  VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagExecObject, TestExecutionObject>::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagExecObject, TestExecutionObject>::value),
+                   "Type check failed.");
 
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagExecObject, TestNotExecutionObject>::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagExecObject, TestNotExecutionObject>::value),
+                   "Type check failed.");
 
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagExecObject, vtkm::Id>::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagExecObject, vtkm::Id>::value), "Type check failed.");
 
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagExecObject, vtkm::cont::ArrayHandle<vtkm::Id> >::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagExecObject, vtkm::cont::ArrayHandle<vtkm::Id>>::value),
+                   "Type check failed.");
 }
 
 } // anonymous namespace
 
-int UnitTestTypeCheckExecObject(int, char *[])
+int UnitTestTypeCheckExecObject(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestCheckExecObject);
 }

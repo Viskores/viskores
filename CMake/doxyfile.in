@@ -38,7 +38,7 @@ ALWAYS_DETAILED_SEC    = NO
 
 INLINE_INHERITED_MEMB  = NO
 
-FULL_PATH_NAMES        = YES
+FULL_PATH_NAMES        = NO
 
 STRIP_FROM_PATH        =
 
@@ -46,13 +46,15 @@ STRIP_FROM_INC_PATH    =
 
 SHORT_NAMES            = NO
 
+SHOW_NAMESPACES        = NO
+
 JAVADOC_AUTOBRIEF      = YES
 
 MULTILINE_CPP_IS_BRIEF = NO
 
 INHERIT_DOCS           = YES
 
-DISTRIBUTE_GROUP_DOC   = NO
+DISTRIBUTE_GROUP_DOC   = YES
 
 TAB_SIZE               = 2
 
@@ -136,17 +138,29 @@ WARN_LOGFILE           =
 # configuration options related to the input files
 #---------------------------------------------------------------------------
 
-INPUT                  = @VTKm_SOURCE_DIR@/vtkm
+INPUT                  = @VTKm_SOURCE_DIR@/README.md
+INPUT                  += @VTKm_SOURCE_DIR@/CONTRIBUTING.md
+INPUT                  += @VTKm_SOURCE_DIR@/docs/CodingConventions.md
+INPUT                  += @VTKm_SOURCE_DIR@/vtkm
+
+USE_MDFILE_AS_MAINPAGE = README.md
 
 FILE_PATTERNS          = *.cxx *.h *.cu
 
 RECURSIVE              = YES
 
-EXCLUDE                = @VTKm_DOXYGEN_EXCLUDE_FILES@
+EXCLUDE                = @VTKm_SOURCE_DIR@/vtkm/testing/OptionParser.h
 
 EXCLUDE_SYMLINKS       = NO
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       = */testing/*
+EXCLUDE_PATTERNS       += */examples/*
+EXCLUDE_PATTERNS       += UnitTest*
+
+EXCLUDE_SYMBOLS        = thrust
+EXCLUDE_SYMBOLS        += detail
+EXCLUDE_SYMBOLS        += placeholders
+EXCLUDE_SYMBOLS        += benchmarking
 
 EXAMPLE_PATH           =
 
@@ -172,9 +186,9 @@ INLINE_SOURCES         = NO
 
 STRIP_CODE_COMMENTS    = YES
 
-REFERENCED_BY_RELATION = YES
+REFERENCED_BY_RELATION = NO
 
-REFERENCES_RELATION    = YES
+REFERENCES_RELATION    = NO
 
 VERBATIM_HEADERS       = YES
 
@@ -182,9 +196,9 @@ VERBATIM_HEADERS       = YES
 # configuration options related to the alphabetical class index
 #---------------------------------------------------------------------------
 
-ALPHABETICAL_INDEX     = NO
+ALPHABETICAL_INDEX     = YES
 
-COLS_IN_ALPHA_INDEX    = 5
+COLS_IN_ALPHA_INDEX    = 2
 
 IGNORE_PREFIX          =
 
@@ -220,7 +234,7 @@ DISABLE_INDEX          = NO
 
 ENUM_VALUES_PER_LINE   = 4
 
-GENERATE_TREEVIEW      = YES
+GENERATE_TREEVIEW      = NO
 
 TREEVIEW_WIDTH         = 250
 
@@ -364,7 +378,7 @@ COLLABORATION_GRAPH    = YES
 
 UML_LOOK               = NO
 
-TEMPLATE_RELATIONS     = YES
+TEMPLATE_RELATIONS     = NO
 
 INCLUDE_GRAPH          = YES
 
@@ -372,7 +386,7 @@ INCLUDED_BY_GRAPH      = YES
 
 CALL_GRAPH             = NO
 
-GRAPHICAL_HIERARCHY    = YES
+GRAPHICAL_HIERARCHY    = NO
 
 DOT_IMAGE_FORMAT       = png
 
@@ -380,7 +394,9 @@ DOT_PATH               = @VTKm_DOXYGEN_DOT_PATH@
 
 DOTFILE_DIRS           =
 
-MAX_DOT_GRAPH_DEPTH    = 0
+DOT_GRAPH_MAX_NODES    = 75
+
+MAX_DOT_GRAPH_DEPTH    = 5
 
 GENERATE_LEGEND        = YES
 

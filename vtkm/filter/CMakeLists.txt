@@ -21,9 +21,14 @@
 set(headers
   CellAverage.h
   CleanGrid.h
-  Clip.h
+  ClipWithField.h
+  ClipWithImplicitFunction.h
   ContourTreeUniform.h
+  Entropy.h
   ExternalFaces.h
+  ExtractGeometry.h
+  ExtractPoints.h
+  ExtractStructured.h
   FieldMetadata.h
   FilterCell.h
   FilterDataSet.h
@@ -33,6 +38,8 @@ set(headers
   Gradient.h
   Histogram.h
   MarchingCubes.h
+  Mask.h
+  MaskPoints.h
   PointAverage.h
   PointElevation.h
   PolicyBase.h
@@ -40,7 +47,11 @@ set(headers
   ResultBase.h
   ResultDataSet.h
   ResultField.h
+  SurfaceNormals.h
+  Tetrahedralize.h
   Threshold.h
+  ThresholdPoints.h
+  Triangulate.h
   VectorMagnitude.h
   VertexClustering.h
 )
@@ -48,9 +59,14 @@ set(headers
 set(header_template_sources
   CellAverage.hxx
   CleanGrid.hxx
-  Clip.hxx
+  ClipWithField.hxx
+  ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
+  Entropy.hxx
   ExternalFaces.hxx
+  ExtractGeometry.hxx
+  ExtractPoints.hxx
+  ExtractStructured.hxx
   FilterCell.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx
@@ -58,9 +74,15 @@ set(header_template_sources
   Gradient.hxx
   Histogram.hxx
   MarchingCubes.hxx
+  Mask.hxx
+  MaskPoints.hxx
   PointAverage.hxx
   PointElevation.hxx
+  SurfaceNormals.hxx
+  Tetrahedralize.hxx
   Threshold.hxx
+  ThresholdPoints.hxx
+  Triangulate.hxx
   VectorMagnitude.hxx
   VertexClustering.hxx
 )

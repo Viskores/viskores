@@ -23,9 +23,12 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 /// \brief Class that manages the transfer of data between control and execution.
 ///
@@ -43,13 +46,13 @@ namespace internal {
 /// but some storage types, like implicit storage, will be specialized to
 /// transfer through a different path.
 ///
-template<typename T, class StorageTag, class DeviceAdapterTag>
+template <typename T, class StorageTag, class DeviceAdapterTag>
 class ArrayTransfer
 {
 private:
-  typedef vtkm::cont::internal::Storage<T,StorageTag> StorageType;
-  typedef vtkm::cont::internal::ArrayManagerExecution<
-      T,StorageTag,DeviceAdapterTag> ArrayManagerType;
+  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  typedef vtkm::cont::internal::ArrayManagerExecution<T, StorageTag, DeviceAdapterTag>
+    ArrayManagerType;
 
 public:
   /// The type of value held in the array (vtkm::FloatDefault, vtkm::Vec, etc.)
@@ -67,16 +70,16 @@ public:
   typedef typename ArrayManagerType::PortalConstType PortalConstExecution;
 
   VTKM_CONT
-  ArrayTransfer(StorageType *storage) : ArrayManager(storage) {  }
+  ArrayTransfer(StorageType* storage)
+    : ArrayManager(storage)
+  {
+  }
 
   /// Returns the number of values stored in the array.  Results are undefined
   /// if data has not been loaded or allocated.
   ///
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return this->ArrayManager.GetNumberOfValues();
-  }
+  vtkm::Id GetNumberOfValues() const { return this->ArrayManager.GetNumberOfValues(); }
 
   /// Prepares the data for use as input in the execution environment. If the
   /// flag \c updateData is true, then data is transferred to the execution
@@ -124,7 +127,7 @@ public:
   /// called.
   ///
   VTKM_CONT
-  void RetrieveOutputData(StorageType *storage) const
+  void RetrieveOutputData(StorageType* storage) const
   {
     this->ArrayManager.RetrieveOutputData(storage);
   }
@@ -151,24 +154,17 @@ public:
   /// to shorten the array, not lengthen.
   ///
   VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues)
-  {
-    this->ArrayManager.Shrink(numberOfValues);
-  }
+  void Shrink(vtkm::Id numberOfValues) { this->ArrayManager.Shrink(numberOfValues); }
 
   /// Frees any resources (i.e. memory) allocated for the exeuction
   /// environment, if any.
   ///
   VTKM_CONT
-  void ReleaseResources()
-  {
-    this->ArrayManager.ReleaseResources();
-  }
+  void ReleaseResources() { this->ArrayManager.ReleaseResources(); }
 
 private:
   ArrayManagerType ArrayManager;
 };
-
 }
 }
 } // namespace vtkm::cont::internal

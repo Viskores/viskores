@@ -22,14 +22,16 @@
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasGL.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
-#include <vtkm/rendering/CanvasGL.h>
 
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT MapperGL : public Mapper
 {
@@ -38,27 +40,27 @@ public:
 
   ~MapperGL();
 
-  void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
-                   const vtkm::cont::CoordinateSystem &coords,
-                   const vtkm::cont::Field &scalarField,
-                   const vtkm::rendering::ColorTable &colorTable,
-                   const vtkm::rendering::Camera &,
-                   const vtkm::Range &scalarRange) VTKM_OVERRIDE;
+  void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+                   const vtkm::cont::CoordinateSystem& coords,
+                   const vtkm::cont::Field& scalarField,
+                   const vtkm::rendering::ColorTable& colorTable,
+                   const vtkm::rendering::Camera&,
+                   const vtkm::Range& scalarRange) VTKM_OVERRIDE;
 
   void StartScene() VTKM_OVERRIDE;
   void EndScene() VTKM_OVERRIDE;
-  void SetCanvas(vtkm::rendering::Canvas *canvas) VTKM_OVERRIDE;
+  void SetCanvas(vtkm::rendering::Canvas* canvas) VTKM_OVERRIDE;
   virtual vtkm::rendering::Canvas* GetCanvas() const VTKM_OVERRIDE;
 
-  vtkm::rendering::Mapper *NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Mapper* NewCopy() const VTKM_OVERRIDE;
 
-  vtkm::rendering::CanvasGL *Canvas;
+  vtkm::rendering::CanvasGL* Canvas;
   GLuint shader_programme;
   GLfloat mvMat[16], pMat[16];
   bool loaded;
   GLuint vao;
 };
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif //vtk_m_rendering_MapperGL_h

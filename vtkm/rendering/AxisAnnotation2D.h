@@ -28,11 +28,13 @@
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/rendering/TextAnnotation.h>
+#include <vtkm/rendering/WorldAnnotator.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT AxisAnnotation2D : public AxisAnnotation
 {
@@ -50,7 +52,6 @@ protected:
   TextAnnotation::VerticalAlignment AlignV;
   std::vector<TextAnnotation*> Labels;
 
-
   std::vector<vtkm::Float64> PositionsMajor;
   std::vector<vtkm::Float64> ProportionsMajor;
 
@@ -58,6 +59,7 @@ protected:
   std::vector<vtkm::Float64> ProportionsMinor;
 
   int MoreOrLessTickAdjustment;
+
 public:
   AxisAnnotation2D();
 
@@ -70,41 +72,31 @@ public:
   }
 #endif
 
-  void SetMoreOrLessTickAdjustment(int offset)
-  {
-    this->MoreOrLessTickAdjustment = offset;
-  }
+  void SetMoreOrLessTickAdjustment(int offset) { this->MoreOrLessTickAdjustment = offset; }
 
-  void SetColor(vtkm::rendering::Color c)
-  {
-    this->Color = c;
-  }
+  void SetColor(vtkm::rendering::Color c) { this->Color = c; }
 
-  void SetLineWidth(vtkm::Float32 lw)
-  {
-    this->LineWidth = lw;
-  }
+  void SetLineWidth(vtkm::Float32 lw) { this->LineWidth = lw; }
 
   void SetMajorTickSize(vtkm::Float64 xlen, vtkm::Float64 ylen, vtkm::Float64 offset)
   {
     /// offset of 0 means the tick is inside the frame
     /// offset of 1 means the tick is outside the frame
     /// offset of 0.5 means the tick is centered on the frame
-    this->MajorTickSizeX=xlen;
-    this->MajorTickSizeY=ylen;
+    this->MajorTickSizeX = xlen;
+    this->MajorTickSizeY = ylen;
     this->MajorTickOffset = offset;
   }
 
   void SetMinorTickSize(vtkm::Float64 xlen, vtkm::Float64 ylen, vtkm::Float64 offset)
   {
-    this->MinorTickSizeX=xlen;
-    this->MinorTickSizeY=ylen;
+    this->MinorTickSizeX = xlen;
+    this->MinorTickSizeY = ylen;
     this->MinorTickOffset = offset;
   }
 
   ///\todo: rename, since it might be screen OR world position?
-  void SetScreenPosition(vtkm::Float64 x0, vtkm::Float64 y0,
-                         vtkm::Float64 x1, vtkm::Float64 y1)
+  void SetScreenPosition(vtkm::Float64 x0, vtkm::Float64 y0, vtkm::Float64 x1, vtkm::Float64 y1)
   {
     this->PosX0 = x0;
     this->PosY0 = y0;
@@ -113,8 +105,7 @@ public:
     this->PosY1 = y1;
   }
 
-  void SetLabelAlignment(TextAnnotation::HorizontalAlignment h,
-                         TextAnnotation::VerticalAlignment v)
+  void SetLabelAlignment(TextAnnotation::HorizontalAlignment h, TextAnnotation::VerticalAlignment v)
   {
     this->AlignH = h;
     this->AlignV = v;
@@ -123,27 +114,27 @@ public:
   void SetLabelFontScale(vtkm::Float32 s)
   {
     this->FontScale = s;
-    for (unsigned int i=0; i<this->Labels.size(); i++)
+    for (unsigned int i = 0; i < this->Labels.size(); i++)
       this->Labels[i]->SetScale(s);
   }
 
-  void SetRangeForAutoTicks(const vtkm::Range &range);
+  void SetRangeForAutoTicks(const vtkm::Range& range);
   void SetRangeForAutoTicks(vtkm::Float64 lower, vtkm::Float64 upper)
   {
     this->SetRangeForAutoTicks(vtkm::Range(lower, upper));
   }
 
-  void SetMajorTicks(const std::vector<vtkm::Float64> &positions,
-                     const std::vector<vtkm::Float64> &proportions);
+  void SetMajorTicks(const std::vector<vtkm::Float64>& positions,
+                     const std::vector<vtkm::Float64>& proportions);
 
-  void SetMinorTicks(const std::vector<vtkm::Float64> &positions,
-                     const std::vector<vtkm::Float64> &proportions);
+  void SetMinorTicks(const std::vector<vtkm::Float64>& positions,
+                     const std::vector<vtkm::Float64>& proportions);
 
-  void Render(const vtkm::rendering::Camera &camera,
-              const vtkm::rendering::WorldAnnotator &worldAnnotator,
-              vtkm::rendering::Canvas &canvas) VTKM_OVERRIDE;
+  void Render(const vtkm::rendering::Camera& camera,
+              const vtkm::rendering::WorldAnnotator& worldAnnotator,
+              vtkm::rendering::Canvas& canvas) VTKM_OVERRIDE;
 };
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif // vtk_m_rendering_AxisAnnotation2D_h

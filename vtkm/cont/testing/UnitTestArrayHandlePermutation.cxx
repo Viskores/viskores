@@ -33,60 +33,60 @@
 
 #include <vector>
 
-namespace {
+namespace
+{
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-struct DoubleIndexFunctor {
+struct DoubleIndexFunctor
+{
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id index) const {
-    return 2*index;
-  }
+  vtkm::Id operator()(vtkm::Id index) const { return 2 * index; }
 };
 
-typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, DoubleIndexFunctor>
-    DoubleIndexArrayType;
+typedef vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor> DoubleIndexArrayType;
 
-template<typename PermutedPortalType>
+template <typename PermutedPortalType>
 struct CheckPermutationFunctor : vtkm::exec::FunctorBase
 {
   PermutedPortalType PermutedPortal;
 
   VTKM_EXEC
-  void operator()(vtkm::Id index) const {
+  void operator()(vtkm::Id index) const
+  {
     typedef typename PermutedPortalType::ValueType T;
     T value = this->PermutedPortal.Get(index);
 
-    vtkm::Id permutedIndex = 2*index;
+    vtkm::Id permutedIndex = 2 * index;
     T expectedValue = TestValue(permutedIndex, T());
 
-    if (!test_equal(value, expectedValue)) {
+    if (!test_equal(value, expectedValue))
+    {
       this->RaiseError("Encountered bad transformed value.");
     }
   }
 };
 
-template<typename PermutedArrayHandleType,
-         typename Device>
-VTKM_CONT
-CheckPermutationFunctor<
-    typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst>
-make_CheckPermutationFunctor(const PermutedArrayHandleType &permutedArray,
-                           Device)
+template <typename PermutedArrayHandleType, typename Device>
+VTKM_CONT CheckPermutationFunctor<
+  typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst>
+make_CheckPermutationFunctor(const PermutedArrayHandleType& permutedArray, Device)
 {
-  typedef typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst PermutedPortalType;
+  typedef typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst
+    PermutedPortalType;
   CheckPermutationFunctor<PermutedPortalType> functor;
   functor.PermutedPortal = permutedArray.PrepareForInput(Device());
   return functor;
 }
 
-template<typename PermutedPortalType>
+template <typename PermutedPortalType>
 struct InPlacePermutationFunctor : vtkm::exec::FunctorBase
 {
   PermutedPortalType PermutedPortal;
 
   VTKM_EXEC
-  void operator()(vtkm::Id index) const {
+  void operator()(vtkm::Id index) const
+  {
     typedef typename PermutedPortalType::ValueType T;
     T value = this->PermutedPortal.Get(index);
 
@@ -96,120 +96,107 @@ struct InPlacePermutationFunctor : vtkm::exec::FunctorBase
   }
 };
 
-template<typename PermutedArrayHandleType,
-         typename Device>
-VTKM_CONT
-InPlacePermutationFunctor<
-    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
-make_InPlacePermutationFunctor(PermutedArrayHandleType &permutedArray,
-                               Device)
+template <typename PermutedArrayHandleType, typename Device>
+VTKM_CONT InPlacePermutationFunctor<
+  typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
+make_InPlacePermutationFunctor(PermutedArrayHandleType& permutedArray, Device)
 {
-  typedef typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal PermutedPortalType;
+  typedef
+    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal PermutedPortalType;
   InPlacePermutationFunctor<PermutedPortalType> functor;
   functor.PermutedPortal = permutedArray.PrepareForInPlace(Device());
   return functor;
 }
 
-template<typename PortalType>
-VTKM_CONT
-void CheckInPlaceResult(PortalType portal)
+template <typename PortalType>
+VTKM_CONT void CheckInPlaceResult(PortalType portal)
 {
   typedef typename PortalType::ValueType T;
-  for (vtkm::Id permutedIndex = 0;
-       permutedIndex < 2*ARRAY_SIZE;
-       permutedIndex++)
+  for (vtkm::Id permutedIndex = 0; permutedIndex < 2 * ARRAY_SIZE; permutedIndex++)
   {
-    if (permutedIndex%2 == 0)
+    if (permutedIndex % 2 == 0)
     {
       // This index was part of the permuted array; has a value changed
       T expectedValue = TestValue(permutedIndex, T()) + T(1000);
-      T retrievedValue = portal.Get(permutedIndex );
-      VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
-                       "Permuted set unexpected value.");
+      T retrievedValue = portal.Get(permutedIndex);
+      VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue), "Permuted set unexpected value.");
     }
     else
     {
       // This index was not part of the permuted array; has original value
       T expectedValue = TestValue(permutedIndex, T());
-      T retrievedValue = portal.Get(permutedIndex );
+      T retrievedValue = portal.Get(permutedIndex);
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted array modified value it should not have.");
     }
   }
 }
 
-template<typename PermutedPortalType>
+template <typename PermutedPortalType>
 struct OutputPermutationFunctor : vtkm::exec::FunctorBase
 {
   PermutedPortalType PermutedPortal;
 
   VTKM_EXEC
-  void operator()(vtkm::Id index) const {
+  void operator()(vtkm::Id index) const
+  {
     typedef typename PermutedPortalType::ValueType T;
     this->PermutedPortal.Set(index, TestValue(static_cast<vtkm::Id>(index), T()));
   }
 };
 
-template<typename PermutedArrayHandleType,
-         typename Device>
-VTKM_CONT
-OutputPermutationFunctor<
-    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
-make_OutputPermutationFunctor(PermutedArrayHandleType &permutedArray,
-                              Device)
+template <typename PermutedArrayHandleType, typename Device>
+VTKM_CONT OutputPermutationFunctor<
+  typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
+make_OutputPermutationFunctor(PermutedArrayHandleType& permutedArray, Device)
 {
-  typedef typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal PermutedPortalType;
+  typedef
+    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal PermutedPortalType;
   OutputPermutationFunctor<PermutedPortalType> functor;
   functor.PermutedPortal = permutedArray.PrepareForOutput(ARRAY_SIZE, Device());
   return functor;
 }
 
-template<typename PortalType>
-VTKM_CONT
-void CheckOutputResult(PortalType portal)
+template <typename PortalType>
+VTKM_CONT void CheckOutputResult(PortalType portal)
 {
   typedef typename PortalType::ValueType T;
-  for (vtkm::IdComponent permutedIndex = 0;
-       permutedIndex < 2*ARRAY_SIZE;
-       permutedIndex++)
+  for (vtkm::IdComponent permutedIndex = 0; permutedIndex < 2 * ARRAY_SIZE; permutedIndex++)
   {
-    if (permutedIndex%2 == 0)
+    if (permutedIndex % 2 == 0)
     {
       // This index was part of the permuted array; has a value changed
-      vtkm::Id originalIndex = permutedIndex/2;
+      vtkm::Id originalIndex = permutedIndex / 2;
       T expectedValue = TestValue(originalIndex, T());
-      T retrievedValue = portal.Get(permutedIndex );
-      VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
-                       "Permuted set unexpected value.");
+      T retrievedValue = portal.Get(permutedIndex);
+      VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue), "Permuted set unexpected value.");
     }
     else
     {
       // This index was not part of the permuted array; has original value
       T expectedValue = TestValue(permutedIndex, T());
-      T retrievedValue = portal.Get(permutedIndex );
+      T retrievedValue = portal.Get(permutedIndex);
       VTKM_TEST_ASSERT(test_equal(expectedValue, retrievedValue),
                        "Permuted array modified value it should not have.");
     }
   }
 }
 
-template<typename ValueType>
+template <typename ValueType>
 struct PermutationTests
 {
-  typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, DoubleIndexFunctor>
-      IndexArrayType;
-  typedef vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>
-      ValueArrayType;
-  typedef vtkm::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType>
-      PermutationArrayType;
+  typedef vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor> IndexArrayType;
+  typedef vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic> ValueArrayType;
+  typedef vtkm::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType> PermutationArrayType;
 
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG Device;
   typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
 
-  ValueArrayType MakeValueArray() const {
+  ValueArrayType MakeValueArray() const
+  {
     // Allocate a buffer and set initial values
-    std::vector<ValueType> buffer(2*ARRAY_SIZE);
-    for (vtkm::IdComponent index = 0; index < 2*ARRAY_SIZE; index++)
+    std::vector<ValueType> buffer(2 * ARRAY_SIZE);
+    for (vtkm::IdComponent index = 0; index < 2 * ARRAY_SIZE; index++)
     {
       vtkm::UInt32 i = static_cast<vtkm::UInt32>(index);
       buffer[i] = TestValue(index, ValueType());
@@ -237,40 +224,31 @@ struct PermutationTests
 
     VTKM_TEST_ASSERT(permutationArray.GetNumberOfValues() == ARRAY_SIZE,
                      "Permutation array wrong size.");
-    VTKM_TEST_ASSERT(
-          permutationArray.GetPortalControl().GetNumberOfValues() == ARRAY_SIZE,
-          "Permutation portal wrong size.");
-    VTKM_TEST_ASSERT(
-          permutationArray.GetPortalConstControl().GetNumberOfValues()
-          == ARRAY_SIZE,
-          "Permutation portal wrong size.");
+    VTKM_TEST_ASSERT(permutationArray.GetPortalControl().GetNumberOfValues() == ARRAY_SIZE,
+                     "Permutation portal wrong size.");
+    VTKM_TEST_ASSERT(permutationArray.GetPortalConstControl().GetNumberOfValues() == ARRAY_SIZE,
+                     "Permutation portal wrong size.");
 
     std::cout << "Test initial values in execution environment" << std::endl;
-    Algorithm::Schedule(make_CheckPermutationFunctor(permutationArray, Device()),
-                        ARRAY_SIZE);
+    Algorithm::Schedule(make_CheckPermutationFunctor(permutationArray, Device()), ARRAY_SIZE);
 
     std::cout << "Try in place operation" << std::endl;
-    Algorithm::Schedule(
-          make_InPlacePermutationFunctor(permutationArray, Device()),
-          ARRAY_SIZE);
+    Algorithm::Schedule(make_InPlacePermutationFunctor(permutationArray, Device()), ARRAY_SIZE);
     CheckInPlaceResult(valueArray.GetPortalControl());
     CheckInPlaceResult(valueArray.GetPortalConstControl());
 
     std::cout << "Try output operation" << std::endl;
-    Algorithm::Schedule(
-          make_OutputPermutationFunctor(permutationArray, Device()),
-          ARRAY_SIZE);
+    Algorithm::Schedule(make_OutputPermutationFunctor(permutationArray, Device()), ARRAY_SIZE);
     CheckOutputResult(valueArray.GetPortalConstControl());
     CheckOutputResult(valueArray.GetPortalControl());
   }
-
 };
-
 
 struct TryInputType
 {
-  template<typename InputType>
-  void operator()(InputType) const {
+  template <typename InputType>
+  void operator()(InputType) const
+  {
     PermutationTests<InputType>()();
   }
 };
@@ -280,11 +258,9 @@ void TestArrayHandlePermutation()
   vtkm::testing::Testing::TryTypes(TryInputType(), vtkm::TypeListTagCommon());
 }
 
-
-
 } // annonymous namespace
 
-int UnitTestArrayHandlePermutation(int, char *[])
+int UnitTestArrayHandlePermutation(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestArrayHandlePermutation);
 }

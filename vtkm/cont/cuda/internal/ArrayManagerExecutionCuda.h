@@ -22,34 +22,36 @@
 
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 
-#include <vtkm/cont/Storage.h>
-#include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionThrustDevice.h>
+#include <vtkm/cont/internal/ArrayExportMacros.h>
+#include <vtkm/cont/internal/ArrayManagerExecution.h>
 
 // These must be placed in the vtkm::cont::internal namespace so that
 // the template can be found.
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 template <typename T, class StorageTag>
-class ArrayManagerExecution
-    <T, StorageTag, vtkm::cont::DeviceAdapterTagCuda>
-    : public vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice
-        <T, StorageTag>
+class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagCuda>
+  : public vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice<T, StorageTag>
 {
 public:
-  typedef vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice
-      <T, StorageTag> Superclass;
+  typedef vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice<T, StorageTag> Superclass;
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
   typedef typename Superclass::StorageType StorageType;
 
   VTKM_CONT
-  ArrayManagerExecution(StorageType *storage)
-    : Superclass(storage) {  }
+  ArrayManagerExecution(StorageType* storage)
+    : Superclass(storage)
+  {
+  }
 
   VTKM_CONT
   PortalConstType PrepareForInput(bool updateData)
@@ -60,7 +62,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForInput<void>(updateData);
     }
-    catch (vtkm::cont::ErrorBadAllocation &error)
+    catch (vtkm::cont::ErrorBadAllocation& error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -81,7 +83,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForInPlace<void>(updateData);
     }
-    catch (vtkm::cont::ErrorBadAllocation &error)
+    catch (vtkm::cont::ErrorBadAllocation& error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -102,7 +104,7 @@ public:
       // with nvcc 7.5.
       return this->Superclass::template _PrepareForOutput<void>(numberOfValues);
     }
-    catch (vtkm::cont::ErrorBadAllocation &error)
+    catch (vtkm::cont::ErrorBadAllocation& error)
     {
       // Thrust does not seem to be clearing the CUDA error, so do it here.
       cudaError_t cudaError = cudaPeekAtLastError();
@@ -115,9 +117,55 @@ public:
   }
 };
 
-}
-}
-} // namespace vtkm::cont::internal
+template <typename T>
+struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagCuda>
+{
+  using ValueType = T;
+  using PortalType = vtkm::exec::cuda::internal::ArrayPortalFromThrust<ValueType>;
+  using PortalConstType = vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<ValueType>;
 
+  VTKM_CONT
+  static PortalType CreatePortal(ValueType* start, ValueType* end)
+  {
+    using ThrustPointerT = thrust::system::cuda::pointer<ValueType>;
+    ThrustPointerT startThrust(start);
+    ThrustPointerT endThrust(end);
+    return PortalType(startThrust, endThrust);
+  }
+
+  VTKM_CONT
+  static PortalConstType CreatePortalConst(const ValueType* start, const ValueType* end)
+  {
+    using ThrustPointerT = thrust::system::cuda::pointer<const ValueType>;
+    ThrustPointerT startThrust(start);
+    ThrustPointerT endThrust(end);
+    return PortalConstType(startThrust, endThrust);
+  }
+};
+
+template <>
+struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>
+  : public ExecutionArrayInterfaceBasicBase
+{
+  using Superclass = ExecutionArrayInterfaceBasicBase;
+
+  VTKM_CONT ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
+  VTKM_CONT DeviceAdapterId GetDeviceId() const final;
+  VTKM_CONT void Allocate(TypelessExecutionArray& execArray, vtkm::Id numBytes) const final;
+  VTKM_CONT void Free(TypelessExecutionArray& execArray) const final;
+  VTKM_CONT void CopyFromControl(const void* controlPtr,
+                                 void* executionPtr,
+                                 vtkm::Id numBytes) const final;
+  VTKM_CONT void CopyToControl(const void* executionPtr,
+                               void* controlPtr,
+                               vtkm::Id numBytes) const final;
+};
+} // namespace internal
+
+#ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
+VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagCuda)
+#endif // !vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
+}
+} // namespace vtkm::cont
 
 #endif //vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_h
