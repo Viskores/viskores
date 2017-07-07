@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/VecRectilinearPointCoordinates.h>
+#include <vtkm/VecAxisAlignedPointCoordinates.h>
 
 #include <vtkm/testing/Testing.h>
 
@@ -76,10 +76,10 @@ void CheckCoordsValues(const VecCoordsType& coords)
 }
 
 template <vtkm::IdComponent NumDimensions>
-void TryVecRectilinearPointCoordinates(
-  const vtkm::VecRectilinearPointCoordinates<NumDimensions>& coords)
+void TryVecAxisAlignedPointCoordinates(
+  const vtkm::VecAxisAlignedPointCoordinates<NumDimensions>& coords)
 {
-  typedef vtkm::VecRectilinearPointCoordinates<NumDimensions> VecCoordsType;
+  typedef vtkm::VecAxisAlignedPointCoordinates<NumDimensions> VecCoordsType;
   typedef vtkm::TypeTraits<VecCoordsType> TTraits;
   typedef vtkm::VecTraits<VecCoordsType> VTraits;
 
@@ -113,39 +113,39 @@ void TryVecRectilinearPointCoordinates(
   VTKM_TEST_ASSERT(test_equal(coords.GetSpacing(), g_Spacing), "Wrong spacing");
 }
 
-void TestVecRectilinearPointCoordinates()
+void TestVecAxisAlignedPointCoordinates()
 {
   std::cout << "***** 1D Coordinates *****************" << std::endl;
-  vtkm::VecRectilinearPointCoordinates<1> coords1d(g_Origin, g_Spacing);
+  vtkm::VecAxisAlignedPointCoordinates<1> coords1d(g_Origin, g_Spacing);
   VTKM_TEST_ASSERT(coords1d.NUM_COMPONENTS == 2, "Wrong number of components");
-  VTKM_TEST_ASSERT(vtkm::VecRectilinearPointCoordinates<1>::NUM_COMPONENTS == 2,
+  VTKM_TEST_ASSERT(vtkm::VecAxisAlignedPointCoordinates<1>::NUM_COMPONENTS == 2,
                    "Wrong number of components");
-  VTKM_TEST_ASSERT(vtkm::VecTraits<vtkm::VecRectilinearPointCoordinates<1>>::NUM_COMPONENTS == 2,
+  VTKM_TEST_ASSERT(vtkm::VecTraits<vtkm::VecAxisAlignedPointCoordinates<1>>::NUM_COMPONENTS == 2,
                    "Wrong number of components");
-  TryVecRectilinearPointCoordinates(coords1d);
+  TryVecAxisAlignedPointCoordinates(coords1d);
 
   std::cout << "***** 2D Coordinates *****************" << std::endl;
-  vtkm::VecRectilinearPointCoordinates<2> coords2d(g_Origin, g_Spacing);
+  vtkm::VecAxisAlignedPointCoordinates<2> coords2d(g_Origin, g_Spacing);
   VTKM_TEST_ASSERT(coords2d.NUM_COMPONENTS == 4, "Wrong number of components");
-  VTKM_TEST_ASSERT(vtkm::VecRectilinearPointCoordinates<2>::NUM_COMPONENTS == 4,
+  VTKM_TEST_ASSERT(vtkm::VecAxisAlignedPointCoordinates<2>::NUM_COMPONENTS == 4,
                    "Wrong number of components");
-  VTKM_TEST_ASSERT(vtkm::VecTraits<vtkm::VecRectilinearPointCoordinates<2>>::NUM_COMPONENTS == 4,
+  VTKM_TEST_ASSERT(vtkm::VecTraits<vtkm::VecAxisAlignedPointCoordinates<2>>::NUM_COMPONENTS == 4,
                    "Wrong number of components");
-  TryVecRectilinearPointCoordinates(coords2d);
+  TryVecAxisAlignedPointCoordinates(coords2d);
 
   std::cout << "***** 3D Coordinates *****************" << std::endl;
-  vtkm::VecRectilinearPointCoordinates<3> coords3d(g_Origin, g_Spacing);
+  vtkm::VecAxisAlignedPointCoordinates<3> coords3d(g_Origin, g_Spacing);
   VTKM_TEST_ASSERT(coords3d.NUM_COMPONENTS == 8, "Wrong number of components");
-  VTKM_TEST_ASSERT(vtkm::VecRectilinearPointCoordinates<3>::NUM_COMPONENTS == 8,
+  VTKM_TEST_ASSERT(vtkm::VecAxisAlignedPointCoordinates<3>::NUM_COMPONENTS == 8,
                    "Wrong number of components");
-  VTKM_TEST_ASSERT(vtkm::VecTraits<vtkm::VecRectilinearPointCoordinates<3>>::NUM_COMPONENTS == 8,
+  VTKM_TEST_ASSERT(vtkm::VecTraits<vtkm::VecAxisAlignedPointCoordinates<3>>::NUM_COMPONENTS == 8,
                    "Wrong number of components");
-  TryVecRectilinearPointCoordinates(coords3d);
+  TryVecAxisAlignedPointCoordinates(coords3d);
 }
 
 } // anonymous namespace
 
-int UnitTestVecRectilinearPointCoordinates(int, char* [])
+int UnitTestVecAxisAlignedPointCoordinates(int, char* [])
 {
-  return vtkm::testing::Testing::Run(TestVecRectilinearPointCoordinates);
+  return vtkm::testing::Testing::Run(TestVecAxisAlignedPointCoordinates);
 }

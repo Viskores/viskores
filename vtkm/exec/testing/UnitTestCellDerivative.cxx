@@ -308,19 +308,19 @@ void TestDerivative()
   TestDerivativeFunctor<vtkm::Float64> testFunctorScalar;
   std::cout << "======== Uniform Point Coordinates 3D =====" << std::endl;
   testFunctorScalar.DoTestWithWCoords(vtkm::CellShapeTagHexahedron(),
-                                      vtkm::VecRectilinearPointCoordinates<3>(origin, spacing),
+                                      vtkm::VecAxisAlignedPointCoordinates<3>(origin, spacing),
                                       scalarField,
                                       expectedScalarGradient);
   std::cout << "======== Uniform Point Coordinates 2D =====" << std::endl;
   expectedScalarGradient[2] = 0.0;
   testFunctorScalar.DoTestWithWCoords(vtkm::CellShapeTagQuad(),
-                                      vtkm::VecRectilinearPointCoordinates<2>(origin, spacing),
+                                      vtkm::VecAxisAlignedPointCoordinates<2>(origin, spacing),
                                       scalarField,
                                       expectedScalarGradient);
   std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
   expectedScalarGradient[1] = 0.0;
   testFunctorScalar.DoTestWithWCoords(vtkm::CellShapeTagLine(),
-                                      vtkm::VecRectilinearPointCoordinates<1>(origin, spacing),
+                                      vtkm::VecAxisAlignedPointCoordinates<1>(origin, spacing),
                                       scalarField,
                                       expectedScalarGradient);
 
@@ -339,19 +339,19 @@ void TestDerivative()
   TestDerivativeFunctor<vtkm::Vec<vtkm::Float64, 3>> testFunctorVector;
   std::cout << "======== Uniform Point Coordinates 3D =====" << std::endl;
   testFunctorVector.DoTestWithWCoords(vtkm::CellShapeTagHexahedron(),
-                                      vtkm::VecRectilinearPointCoordinates<3>(origin, spacing),
+                                      vtkm::VecAxisAlignedPointCoordinates<3>(origin, spacing),
                                       vectorField,
                                       expectedVectorGradient);
   std::cout << "======== Uniform Point Coordinates 2D =====" << std::endl;
   expectedVectorGradient[2] = vtkm::Vec<vtkm::Float64, 3>(0.0);
   testFunctorVector.DoTestWithWCoords(vtkm::CellShapeTagQuad(),
-                                      vtkm::VecRectilinearPointCoordinates<2>(origin, spacing),
+                                      vtkm::VecAxisAlignedPointCoordinates<2>(origin, spacing),
                                       vectorField,
                                       expectedVectorGradient);
   std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
   expectedVectorGradient[1] = vtkm::Vec<vtkm::Float64, 3>(0.0);
   testFunctorVector.DoTestWithWCoords(vtkm::CellShapeTagLine(),
-                                      vtkm::VecRectilinearPointCoordinates<1>(origin, spacing),
+                                      vtkm::VecAxisAlignedPointCoordinates<1>(origin, spacing),
                                       vectorField,
                                       expectedVectorGradient);
 }

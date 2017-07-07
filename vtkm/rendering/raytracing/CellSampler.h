@@ -103,7 +103,7 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
 }
 
 template <typename S, typename P, typename WorkletType, typename CellShapeTagType>
-VTKM_EXEC_CONT inline bool Sample(const vtkm::VecRectilinearPointCoordinates<3>& points,
+VTKM_EXEC_CONT inline bool Sample(const vtkm::VecAxisAlignedPointCoordinates<3>& points,
                                   const vtkm::Vec<S, 8>& scalars,
                                   const vtkm::Vec<P, 3>& sampleLocation,
                                   S& lerpedScalar,
@@ -238,7 +238,7 @@ public:
     const WorkletType& callingWorklet,
     const vtkm::Int32& vtkmNotUsed(cellShape = CELL_SHAPE_HEXAHEDRON)) const
   {
-    vtkm::VecRectilinearPointCoordinates<3> rPoints(points[0], points[6] - points[0]);
+    vtkm::VecAxisAlignedPointCoordinates<3> rPoints(points[0], points[6] - points[0]);
     return detail::Sample(rPoints,
                           scalars,
                           sampleLocation,

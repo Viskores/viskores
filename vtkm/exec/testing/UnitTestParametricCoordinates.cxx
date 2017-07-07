@@ -263,10 +263,10 @@ void TestAllPCoords()
   vtkm::Vec<vtkm::FloatDefault, 3> spacing(
     randomDist(g_RandomGenerator), randomDist(g_RandomGenerator), randomDist(g_RandomGenerator));
 
-  TestPCoords(vtkm::VecRectilinearPointCoordinates<3>(origin, spacing),
+  TestPCoords(vtkm::VecAxisAlignedPointCoordinates<3>(origin, spacing),
               vtkm::CellShapeTagHexahedron());
-  TestPCoords(vtkm::VecRectilinearPointCoordinates<2>(origin, spacing), vtkm::CellShapeTagQuad());
-  TestPCoords(vtkm::VecRectilinearPointCoordinates<1>(origin, spacing), vtkm::CellShapeTagLine());
+  TestPCoords(vtkm::VecAxisAlignedPointCoordinates<2>(origin, spacing), vtkm::CellShapeTagQuad());
+  TestPCoords(vtkm::VecAxisAlignedPointCoordinates<1>(origin, spacing), vtkm::CellShapeTagLine());
 }
 
 } // Anonymous namespace

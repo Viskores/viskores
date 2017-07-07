@@ -28,7 +28,7 @@
 
 #include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 
-#include <vtkm/VecRectilinearPointCoordinates.h>
+#include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/exec/ConnectivityStructured.h>
 
 #include <vtkm/VecFromPortalPermute.h>
@@ -87,25 +87,25 @@ struct FetchArrayTopologyMapInImplementation
   }
 };
 
-static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<1> make_VecRectilinearPointCoordinates(
+static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<1> make_VecAxisAlignedPointCoordinates(
   const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
   const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
   const vtkm::Vec<vtkm::Id, 1>& logicalId)
 {
   vtkm::Vec<vtkm::FloatDefault, 3> offsetOrigin(
     origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]), origin[1], origin[2]);
-  return vtkm::VecRectilinearPointCoordinates<1>(offsetOrigin, spacing);
+  return vtkm::VecAxisAlignedPointCoordinates<1>(offsetOrigin, spacing);
 }
 
-static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<1> make_VecRectilinearPointCoordinates(
+static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<1> make_VecAxisAlignedPointCoordinates(
   const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
   const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
   vtkm::Id logicalId)
 {
-  return make_VecRectilinearPointCoordinates(origin, spacing, vtkm::Vec<vtkm::Id, 1>(logicalId));
+  return make_VecAxisAlignedPointCoordinates(origin, spacing, vtkm::Vec<vtkm::Id, 1>(logicalId));
 }
 
-static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<2> make_VecRectilinearPointCoordinates(
+static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<2> make_VecAxisAlignedPointCoordinates(
   const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
   const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
   const vtkm::Vec<vtkm::Id, 2>& logicalId)
@@ -114,10 +114,10 @@ static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<2> make_VecRectilin
     origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
     origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
     origin[2]);
-  return vtkm::VecRectilinearPointCoordinates<2>(offsetOrigin, spacing);
+  return vtkm::VecAxisAlignedPointCoordinates<2>(offsetOrigin, spacing);
 }
 
-static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<3> make_VecRectilinearPointCoordinates(
+static inline VTKM_EXEC vtkm::VecAxisAlignedPointCoordinates<3> make_VecAxisAlignedPointCoordinates(
   const vtkm::Vec<vtkm::FloatDefault, 3>& origin,
   const vtkm::Vec<vtkm::FloatDefault, 3>& spacing,
   const vtkm::Vec<vtkm::Id, 3>& logicalId)
@@ -126,7 +126,7 @@ static inline VTKM_EXEC vtkm::VecRectilinearPointCoordinates<3> make_VecRectilin
     origin[0] + spacing[0] * static_cast<vtkm::FloatDefault>(logicalId[0]),
     origin[1] + spacing[1] * static_cast<vtkm::FloatDefault>(logicalId[1]),
     origin[2] + spacing[2] * static_cast<vtkm::FloatDefault>(logicalId[2]));
-  return vtkm::VecRectilinearPointCoordinates<3>(offsetOrigin, spacing);
+  return vtkm::VecAxisAlignedPointCoordinates<3>(offsetOrigin, spacing);
 }
 
 template <vtkm::IdComponent NumDimensions>
@@ -143,7 +143,7 @@ struct FetchArrayTopologyMapInImplementation<
     ConnectivityType;
   typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
 
-  typedef vtkm::VecRectilinearPointCoordinates<NumDimensions> ValueType;
+  typedef vtkm::VecAxisAlignedPointCoordinates<NumDimensions> ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
@@ -152,7 +152,7 @@ struct FetchArrayTopologyMapInImplementation<
   {
     // This works because the logical cell index is the same as the logical
     // point index of the first point on the cell.
-    return vtkm::exec::arg::detail::make_VecRectilinearPointCoordinates(
+    return vtkm::exec::arg::detail::make_VecAxisAlignedPointCoordinates(
       field.GetOrigin(), field.GetSpacing(), indices.GetIndexLogical());
   }
 };
@@ -174,7 +174,7 @@ struct FetchArrayTopologyMapInImplementation<
     ConnectivityType;
   typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
 
-  typedef vtkm::VecRectilinearPointCoordinates<NumDimensions> ValueType;
+  typedef vtkm::VecAxisAlignedPointCoordinates<NumDimensions> ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
@@ -184,9 +184,9 @@ struct FetchArrayTopologyMapInImplementation<
     // This works because the logical cell index is the same as the logical
     // point index of the first point on the cell.
 
-    // we have a flat index but we need 3d rectilinear coordiantes, so we
+    // we have a flat index but we need 3d uniform coordinates, so we
     // need to take an flat index and convert to logical index
-    return vtkm::exec::arg::detail::make_VecRectilinearPointCoordinates(
+    return vtkm::exec::arg::detail::make_VecAxisAlignedPointCoordinates(
       field.GetOrigin(), field.GetSpacing(), indices.GetIndexLogical());
   }
 };

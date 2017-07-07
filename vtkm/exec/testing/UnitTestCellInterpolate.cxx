@@ -25,7 +25,7 @@
 
 #include <vtkm/CellTraits.h>
 #include <vtkm/StaticAssert.h>
-#include <vtkm/VecRectilinearPointCoordinates.h>
+#include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/VecVariable.h>
 
 #include <vtkm/testing/Testing.h>
@@ -163,13 +163,13 @@ void TestInterpolate()
   vtkm::Vec<vtkm::FloatDefault, 3> spacing = TestValue(1, vtkm::Vec<vtkm::FloatDefault, 3>());
   std::cout << "======== Uniform Point Coordinates 1D =====" << std::endl;
   testFunctor.DoTestWithField(vtkm::CellShapeTagLine(),
-                              vtkm::VecRectilinearPointCoordinates<1>(origin, spacing));
+                              vtkm::VecAxisAlignedPointCoordinates<1>(origin, spacing));
   std::cout << "======== Uniform Point Coordinates 2D =====" << std::endl;
   testFunctor.DoTestWithField(vtkm::CellShapeTagQuad(),
-                              vtkm::VecRectilinearPointCoordinates<2>(origin, spacing));
+                              vtkm::VecAxisAlignedPointCoordinates<2>(origin, spacing));
   std::cout << "======== Uniform Point Coordinates 3D =====" << std::endl;
   testFunctor.DoTestWithField(vtkm::CellShapeTagHexahedron(),
-                              vtkm::VecRectilinearPointCoordinates<3>(origin, spacing));
+                              vtkm::VecAxisAlignedPointCoordinates<3>(origin, spacing));
 }
 
 } // anonymous namespace

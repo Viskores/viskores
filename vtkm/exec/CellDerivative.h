@@ -25,7 +25,7 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
 #include <vtkm/Matrix.h>
-#include <vtkm/VecRectilinearPointCoordinates.h>
+#include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/VectorAnalysis.h>
 
 #include <vtkm/exec/CellInterpolate.h>
@@ -531,7 +531,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const FieldVecType& field,
-  const vtkm::VecRectilinearPointCoordinates<1>& wCoords,
+  const vtkm::VecAxisAlignedPointCoordinates<1>& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& vtkmNotUsed(pcoords),
   vtkm::CellShapeTagLine,
   const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
@@ -823,7 +823,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const FieldVecType& field,
-  const vtkm::VecRectilinearPointCoordinates<2>& wCoords,
+  const vtkm::VecAxisAlignedPointCoordinates<2>& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagQuad,
   const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
@@ -1014,7 +1014,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   const FieldVecType& field,
-  const vtkm::VecRectilinearPointCoordinates<3>& wCoords,
+  const vtkm::VecAxisAlignedPointCoordinates<3>& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagHexahedron,
   const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))

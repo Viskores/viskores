@@ -48,9 +48,9 @@ set(headers
   TypeListTag.h
   Types.h
   TypeTraits.h
+  VecAxisAlignedPointCoordinates.h
   VecFromPortal.h
   VecFromPortalPermute.h
-  VecRectilinearPointCoordinates.h
   VectorAnalysis.h
   VecTraits.h
   VecVariable.h
