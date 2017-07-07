@@ -26,6 +26,7 @@
 
 #include <cuda.h>
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <typeinfo>
@@ -49,7 +50,7 @@ __global__ void Schedule3DIndexKernel(FunctorType functor, dim3 size);
 template <class FunctorType>
 __global__ void Schedule3DIndexKernel2(FunctorType functor, dim3 size);
 
-inline void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d);
+void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d);
 
 
 template <typename Task>
