@@ -30,7 +30,6 @@ set(unit_tests
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
-#  UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx
   UnitTestRemoveUnusedPoints.cxx
