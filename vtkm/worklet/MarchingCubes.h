@@ -42,12 +42,12 @@
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
-#include <vtkm/worklet/Gradient.h>
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/ScatterPermutation.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
+#include <vtkm/worklet/gradient/PointGradient.h>
 
 #include <vtkm/worklet/MarchingCubesDataTables.h>
 
@@ -526,15 +526,14 @@ public:
                             const WholeFieldIn& inputField,
                             NormalType& normal) const
   {
-    this->GradientWorklet(
-      numCells, cellIds, pointId, geometry, pointCoordinates, inputField, normal);
+    vtkm::worklet::gradient::PointGradient<WholeFieldIn> gradient;
+    gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, normal);
   }
 
   ScatterType GetScatter() const { return this->Scatter; }
 
 private:
   ScatterType Scatter;
-  vtkm::worklet::PointGradient GradientWorklet;
 };
 
 class NormalsWorkletPass2 : public vtkm::worklet::WorkletMapCellToPoint
@@ -578,9 +577,9 @@ public:
                             const WholeWeightsIn& weights,
                             NormalType& normal) const
   {
+    vtkm::worklet::gradient::PointGradient<NormalType> gradient;
     NormalType grad1;
-    this->GradientWorklet(
-      numCells, cellIds, pointId, geometry, pointCoordinates, inputField, grad1);
+    gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, grad1);
 
     NormalType grad0 = normal;
     auto weight = weights.Get(edgeId);
@@ -591,7 +590,6 @@ public:
 
 private:
   ScatterType Scatter;
-  vtkm::worklet::PointGradient GradientWorklet;
 };
 
 template <typename NormalCType,
