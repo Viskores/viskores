@@ -8,7 +8,6 @@ def mkSeeds(N) :
           seeds.append(int(math.pow(10,n)))
           n = n+1
     return seeds
-    
 
 FILES = ['astro.bov', 'fusion.bov', 'fishtank.bov']
 #STEPSIZE = {'astro.bov':0.0025, 'fusion.bov':0.01, 'fishtank.bov':0.0002}
@@ -25,7 +24,7 @@ def buildMachineMap(machineMap, machName, exeDir='.',dataDir='.', hasGPU=False, 
           'maxThreads':maxThreads,
           'dbFile':'%s/%s.pickle'%(dataDir,machName),
           'name':machName}
-        
+
     machineMap[machName] = mi
     return machineMap
 
@@ -33,8 +32,7 @@ TBB_LIST = {'titan':[1,2,4,8,16, 3,5,6,7,9,10,11,12,13,14,15],
             'summit':[1,2,4,8,16, 3,5,6,7,9,10,11,12,13,14,15,16,17,18,19],
             'rhea':[1,2,4,8,16,32, 3,5,6,7,9,10,11,12,13,14,15],
             'rheaGPU':[1,2,4,8,14,28,56, 3,4,6,7,9,10,11,12,13,15,16,17,18,19,20,21,22,23,24,25,26,27]}
-            
-              
+
 def makeAlg(mach, doTBBScaling=False):
     alg = []
     if mach['hasGPU'] :
@@ -63,7 +61,7 @@ def needToRun(db, dataFile, alg, seeds, term, pt, st) :
        val = db[oldKey]
        db[key] = val
        del db[oldKey]
-    
+
     if key in db.keys() :
         print 'Test was run:', key, db[key]
         return False
@@ -93,7 +91,7 @@ def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt, st, test=Fals
        exe = 'cd %s; aprun -n 1 %s' %(machineInfo['exeDir'], exe)
     elif machineInfo['name'] == 'summit' :
        exe = 'cd %s; mpirun -np 1 %s' %(machineInfo['exeDir'], exe)
-    else:  
+    else:
        exe = machineInfo['exeDir'] + '/' + exe
 
     if 'streamline' in pt :
@@ -101,7 +99,7 @@ def createCommand(db, machineInfo, dataFile, alg, seeds, term, pt, st, test=Fals
        if stepsPerRound > 0 :
           if TERMINATE[term] <= stepsPerRound :
              return ''
-        
+
     args = ''
     args = args + '-seeds %d ' % seeds
     args = args + '-file %s/%s ' % (machineInfo['dataDir'],dataFile)
@@ -204,7 +202,7 @@ else:
   key = (f,a,s,t,p)
   if key in db.keys() :
      print 'Test was run, time= ', db[key]
-  else:      
+  else:
      print 'Test NOT run'
   result = subprocess.Popen(cmd, shell=True, stderr=subprocess.PIPE)
   print key

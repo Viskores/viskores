@@ -95,7 +95,7 @@ def printCompare3(tD, rcD, rgD) :
     for f in params['files'] :
         for t in params['term'] :
             for s in params['seeds'] :
-            
+
                 data = '%s,%s,%d' % (f[:-4], t,s)
                 for p in params['ptype'] :
                     t_gpu,t_cpu = (-1,-1)
@@ -118,9 +118,9 @@ def printCompare3(tD, rcD, rgD) :
                     key = (f,'TBB_16',s,t,p)
                     if key in rcD.keys() : t_cpu = rcD[key]
                     data = data + ',%d' % (t_cpu)
-                    
+
                 print data
-                
+
 def getValue(key, db) :
     val = -1
     if key in db.keys() :
@@ -156,7 +156,7 @@ def printCompare(tD, sD, rcD, rgD, ptype, fname) :
                 fp.write(header)
                 for s in params['seeds'] :
                     data = '%s,%s,%d,%s,' % (f[:-4], t,s,st)
-                    
+
                     ##Titan
                     for a in ['GPU', 'TBB_16'] :
                         data = data + getValue((f,a,s,t,ptype, st),tD)
@@ -166,7 +166,7 @@ def printCompare(tD, sD, rcD, rgD, ptype, fname) :
                     ##Summit
                     for a in ['GPU', 'TBB_20'] :
                         data = data + getValue((f,a,s,t,ptype, st),sD)
-                        sid = findSID((f,a,s,t,ptype, st),sD)                        
+                        sid = findSID((f,a,s,t,ptype, st),sD)
                         data = data + getFactor((f,a,s,t,ptype, st),(f,a,params['seeds'][sid],t,ptype, st),sD)
 
                     ##RheaG
@@ -179,7 +179,7 @@ def printCompare(tD, sD, rcD, rgD, ptype, fname) :
                     ##RheaC
                     for a in ['TBB_16'] :
                         data = data + getValue((f,a,s,t,ptype, st),rcD)
-                        sid = findSID((f,a,s,t,ptype, st),rcD)                        
+                        sid = findSID((f,a,s,t,ptype, st),rcD)
                         data = data + getFactor((f,a,s,t,ptype, st),(f,a,params['seeds'][sid],t,ptype, st),rcD)
 
                     fp.write('%s\n'%data)
@@ -206,7 +206,6 @@ def printTBBScaling(db, N, ptype, fname) :
                             if t_n1 > 0 : scaling = float(t_n1) / float(val)
                             else: scaling = 0.0
                             eff = scaling/float(n)
-                                
                             fp.write('%s,%s,%d,%d,%s,%d,%d,%6.4f,%6.4f\n'%(f[:-4],t,s,math.log10(s),st,n,val,scaling,eff))
 #                    fp.write(header)
                     fp.write('\n')
@@ -216,10 +215,10 @@ def printTBBScaling(db, N, ptype, fname) :
 def printMachineFile(db, alg, ptype, fname) :
     fp = open(fname, 'w')
     fp.write('ALG,FILE,DIST,SEEDS,STYPE,TIME\n')
-    
+
     if type(alg) == str :
         alg = [alg]
-    
+
     for f in [params['files'][0]] :
         for t in params['term'] :
             for st in params['sType'] :
@@ -233,7 +232,7 @@ def printMachineFile(db, alg, ptype, fname) :
                                 algID = 0
                             elif 'GPU' in a :
                                 algID = 1
-                                
+
                             fp.write('%d,%d,%d,%d,%d,%d\n'%(algID,
                                                             params['files'].index(f),
                                                             params['term'].index(t),
@@ -242,7 +241,7 @@ def printMachineFile(db, alg, ptype, fname) :
                                                             val))
     fp.close()
 
-            
+
 titanRaw = rawData('titan.pickle')
 summitRaw = rawData('summit.pickle')
 rheaCRaw = rawData('rhea.pickle')

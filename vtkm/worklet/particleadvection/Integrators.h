@@ -23,69 +23,73 @@
 
 #include <vtkm/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace particleadvection {
+namespace vtkm
+{
+namespace worklet
+{
+namespace particleadvection
+{
 
-template<typename FieldEvaluateType, typename FieldType, typename PortalType>
+template <typename FieldEvaluateType, typename FieldType, typename PortalType>
 class RK4Integrator
 {
 public:
-    VTKM_EXEC_CONT
-    RK4Integrator(const FieldEvaluateType &field,
-                  FieldType _h) : f(field), h(_h), h_2(_h/2.f) {}
+  VTKM_EXEC_CONT
+  RK4Integrator(const FieldEvaluateType& field, FieldType _h)
+    : f(field)
+    , h(_h)
+    , h_2(_h / 2.f)
+  {
+  }
 
-    VTKM_EXEC
-    bool
-    Step(const vtkm::Vec<FieldType, 3> &pos,
-         const PortalType &field,
-         vtkm::Vec<FieldType, 3> &out) const
+  VTKM_EXEC
+  bool Step(const vtkm::Vec<FieldType, 3>& pos,
+            const PortalType& field,
+            vtkm::Vec<FieldType, 3>& out) const
+  {
+    vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
+
+    if (f.Evaluate(pos, field, k1) && f.Evaluate(pos + h_2 * k1, field, k2) &&
+        f.Evaluate(pos + h_2 * k2, field, k3) && f.Evaluate(pos + h * k3, field, k4))
     {
-        vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
-
-        if (f.Evaluate(pos, field, k1) &&
-            f.Evaluate(pos+h_2*k1, field, k2) &&
-            f.Evaluate(pos+h_2*k2, field, k3) &&
-            f.Evaluate(pos+h*k3, field, k4))
-        {
-            out = pos + h/6.0f*(k1+2*k2+2*k3+k4);
-            return true;
-        }        
-        return false;
+      out = pos + h / 6.0f * (k1 + 2 * k2 + 2 * k3 + k4);
+      return true;
     }
+    return false;
+  }
 
-    FieldEvaluateType f;
-    FieldType h, h_2;
+  FieldEvaluateType f;
+  FieldType h, h_2;
 };
 
-template<typename FieldEvaluateType, typename FieldType, typename PortalType>
+template <typename FieldEvaluateType, typename FieldType, typename PortalType>
 class EulerIntegrator
 {
 public:
-    VTKM_EXEC_CONT    
-    EulerIntegrator(const FieldEvaluateType &field,
-                  FieldType _h) : f(field), h(_h) {}
+  VTKM_EXEC_CONT
+  EulerIntegrator(const FieldEvaluateType& field, FieldType _h)
+    : f(field)
+    , h(_h)
+  {
+  }
 
-    VTKM_EXEC
-    bool
-    Step(const vtkm::Vec<FieldType, 3> &pos,
-         const PortalType &field,         
-         vtkm::Vec<FieldType, 3> &out) const
+  VTKM_EXEC
+  bool Step(const vtkm::Vec<FieldType, 3>& pos,
+            const PortalType& field,
+            vtkm::Vec<FieldType, 3>& out) const
+  {
+    vtkm::Vec<FieldType, 3> vCur;
+    if (f.Evaluate(pos, field, vCur))
     {
-        vtkm::Vec<FieldType, 3> vCur;
-        if (f.Evaluate(pos, field, vCur))
-        {
-            out = pos + h * vCur;
-            return true;
-        }
-        return false;
+      out = pos + h * vCur;
+      return true;
     }
+    return false;
+  }
 
-    FieldEvaluateType f;
-    FieldType h;
+  FieldEvaluateType f;
+  FieldType h;
 };
-    
-
 }
 }
 }
