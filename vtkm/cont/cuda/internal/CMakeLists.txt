@@ -25,6 +25,7 @@ set(headers
   DeviceAdapterAlgorithmThrust.h
   DeviceAdapterTagCuda.h
   MakeThrustIterator.h
+  TaskTuner.h
   ThrustExceptionHandler.h
   VirtualObjectTransferCuda.h
   )
