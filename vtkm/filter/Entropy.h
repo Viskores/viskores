@@ -23,9 +23,15 @@
 
 #include <vtkm/filter/FilterField.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
+/// \brief Construct the entropy histogram of a given Field
+///
+/// Construct a histogram which is used to compute the entropy with a default of 10 bins
+///
 class Entropy : public vtkm::filter::FilterField<Entropy>
 {
 public:
@@ -34,28 +40,26 @@ public:
   Entropy();
 
   VTKM_CONT
-  void SetNumberOfBins(vtkm::Id count){ this->NumberOfBins = count; }
+  void SetNumberOfBins(vtkm::Id count) { this->NumberOfBins = count; }
 
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet& input,
-                                      const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                      const vtkm::filter::FieldMetadata& fieldMeta,
-                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                      const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultField DoExecute(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::ArrayHandle<T, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+    const DeviceAdapter& tag);
 
 private:
-  vtkm::Id  NumberOfBins;
+  vtkm::Id NumberOfBins;
 };
 
-template<>
+template <>
 class FilterTraits<Entropy>
 {
 public:
   typedef TypeListTagScalarAll InputFieldTypeList;
 };
-
-
 }
 } // namespace vtkm::filter
 

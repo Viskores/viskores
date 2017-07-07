@@ -30,6 +30,9 @@ namespace vtkm
 namespace filter
 {
 
+/// \brief Subselect points using a stride
+///
+/// Extract only every Nth point where N is equal to a stride value
 class MaskPoints : public vtkm::filter::FilterDataSet<MaskPoints>
 {
 public:

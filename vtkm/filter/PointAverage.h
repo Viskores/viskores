@@ -28,7 +28,12 @@ namespace vtkm
 {
 namespace filter
 {
-
+/// \brief Cell to Point interpolation filter.
+///
+/// PointAverage is a filter that transforms cell data (i.e., data
+/// specified per cell) into point data (i.e., data specified at cell
+/// points). The method of transformation is based on averaging the data
+/// values of all cells using a particular point.
 class PointAverage : public vtkm::filter::FilterCell<PointAverage>
 {
 public:

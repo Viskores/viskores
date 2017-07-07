@@ -30,6 +30,14 @@ namespace vtkm
 namespace filter
 {
 
+/// \brief  Extract external faces of a geometry
+///
+/// ExternalFaces is a filter that extracts all external faces from a
+/// data set. An external face is defined is defined as a face/side of a cell
+/// that belongs only to one cell in the entire mesh.
+/// @warning
+/// This filter is currently only supports propagation of point properties
+///
 class ExternalFaces : public vtkm::filter::FilterDataSet<ExternalFaces>
 {
 public:

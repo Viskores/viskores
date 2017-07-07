@@ -28,7 +28,7 @@
 #ifdef _WIN32
 #include <sys/timeb.h>
 #include <sys/types.h>
-#else //!_WIN32
+#else // _WIN32
 #include <limits.h>
 #include <sys/time.h>
 #include <unistd.h>

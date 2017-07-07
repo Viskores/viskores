@@ -28,7 +28,12 @@ namespace vtkm
 {
 namespace filter
 {
-
+/// \brief Clip a dataset using a field
+///
+/// Clip a dataset using a given field value. All points that are less than that
+/// value are considered outside, and will be discarded. All points that are greater
+/// are kept.
+/// The resulting geometry will not be water tight.
 class ClipWithField : public vtkm::filter::FilterDataSetWithField<ClipWithField>
 {
 public:
