@@ -501,26 +501,23 @@ private:
     {
       IteratorType end = ::thrust::inclusive_scan(
         thrust::cuda::par, IteratorBegin(input), IteratorEnd(input), IteratorBegin(output), bop);
-      return *(end - 1);
     }
     catch (...)
     {
       throwAsVTKmException();
-      return typename InputPortal::ValueType();
     }
 
     //return the value at the last index in the array, as that is the sum
   }
 
   template <typename KeysPortal, typename ValuesPortal, typename OutputPortal>
-  VTKM_CONT static typename ValuesPortal::ValueType ScanInclusiveByKeyPortal(
-    const KeysPortal& keys,
-    const ValuesPortal& values,
-    const OutputPortal& output)
+  VTKM_CONT static void ScanInclusiveByKeyPortal(const KeysPortal& keys,
+                                                 const ValuesPortal& values,
+                                                 const OutputPortal& output)
   {
     using KeyType = typename KeysPortal::ValueType;
     typedef typename OutputPortal::ValueType ValueType;
-    return ScanInclusiveByKeyPortal(
+    ScanInclusiveByKeyPortal(
       keys, values, output, ::thrust::equal_to<KeyType>(), ::thrust::plus<ValueType>());
   }
 
@@ -529,12 +526,11 @@ private:
             typename OutputPortal,
             typename BinaryPredicate,
             typename AssociativeOperator>
-  VTKM_CONT static typename ValuesPortal::ValueType ScanInclusiveByKeyPortal(
-    const KeysPortal& keys,
-    const ValuesPortal& values,
-    const OutputPortal& output,
-    BinaryPredicate binary_predicate,
-    AssociativeOperator binary_operator)
+  VTKM_CONT static void ScanInclusiveByKeyPortal(const KeysPortal& keys,
+                                                 const ValuesPortal& values,
+                                                 const OutputPortal& output,
+                                                 BinaryPredicate binary_predicate,
+                                                 AssociativeOperator binary_operator)
   {
     typedef typename KeysPortal::ValueType KeyType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType, BinaryPredicate> bpred(
@@ -546,22 +542,18 @@ private:
     typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
     try
     {
-      IteratorType end = ::thrust::inclusive_scan_by_key(thrust::cuda::par,
-                                                         IteratorBegin(keys),
-                                                         IteratorEnd(keys),
-                                                         IteratorBegin(values),
-                                                         IteratorBegin(output),
-                                                         bpred,
-                                                         bop);
-      return *(end - 1);
+      ::thrust::inclusive_scan_by_key(thrust::cuda::par,
+                                      IteratorBegin(keys),
+                                      IteratorEnd(keys),
+                                      IteratorBegin(values),
+                                      IteratorBegin(output),
+                                      bpred,
+                                      bop);
     }
     catch (...)
     {
       throwAsVTKmException();
-      return typename ValuesPortal::ValueType();
     }
-
-    //return the value at the last index in the array, as that is the sum
   }
 
   template <typename KeysPortal, typename ValuesPortal, typename OutputPortal>
@@ -602,23 +594,19 @@ private:
     typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
     try
     {
-      IteratorType end = ::thrust::exclusive_scan_by_key(thrust::cuda::par,
-                                                         IteratorBegin(keys),
-                                                         IteratorEnd(keys),
-                                                         IteratorBegin(values),
-                                                         IteratorBegin(output),
-                                                         initValue,
-                                                         bpred,
-                                                         bop);
-      return;
+      ::thrust::exclusive_scan_by_key(thrust::cuda::par,
+                                      IteratorBegin(keys),
+                                      IteratorEnd(keys),
+                                      IteratorBegin(values),
+                                      IteratorBegin(output),
+                                      initValue,
+                                      bpred,
+                                      bop);
     }
     catch (...)
     {
       throwAsVTKmException();
-      return;
     }
-
-    //return the value at the last index in the array, as that is the sum
   }
 
   template <class ValuesPortal>
@@ -1031,15 +1019,14 @@ public:
   }
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
-  VTKM_CONT static T ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                        const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                        vtkm::cont::ArrayHandle<U, VOut>& output)
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                           vtkm::cont::ArrayHandle<U, VOut>& output)
   {
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
       output.PrepareForOutput(0, DeviceAdapterTag());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
     //We need call PrepareForInput on the input argument before invoking a
@@ -1048,9 +1035,9 @@ public:
     //use case breaks.
     keys.PrepareForInput(DeviceAdapterTag());
     values.PrepareForInput(DeviceAdapterTag());
-    return ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                                    values.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+    ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                             values.PrepareForInput(DeviceAdapterTag()),
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
   template <typename T,
@@ -1059,16 +1046,15 @@ public:
             typename VIn,
             typename VOut,
             typename BinaryFunctor>
-  VTKM_CONT static T ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                        const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                        vtkm::cont::ArrayHandle<U, VOut>& output,
-                                        BinaryFunctor binary_functor)
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                           vtkm::cont::ArrayHandle<U, VOut>& output,
+                                           BinaryFunctor binary_functor)
   {
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
       output.PrepareForOutput(0, DeviceAdapterTag());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
     //We need call PrepareForInput on the input argument before invoking a
@@ -1077,11 +1063,11 @@ public:
     //use case breaks.
     keys.PrepareForInput(DeviceAdapterTag());
     values.PrepareForInput(DeviceAdapterTag());
-    return ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                                    values.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
-                                    ::thrust::equal_to<T>(),
-                                    binary_functor);
+    ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                             values.PrepareForInput(DeviceAdapterTag()),
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                             ::thrust::equal_to<T>(),
+                             binary_functor);
   }
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
