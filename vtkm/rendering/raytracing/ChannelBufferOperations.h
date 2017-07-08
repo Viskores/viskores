@@ -22,6 +22,8 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/ArrayHandleCast.h>
+
 #include <vtkm/rendering/raytracing/ChannelBuffer.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
 
