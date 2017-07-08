@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_particleadvection_ParticleAdvectionFilters_h
-#define vtk_m_worklet_particleadvection_ParticleAdvectionFilters_h
+#ifndef vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h
+#define vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -88,7 +88,7 @@ public:
 };
 
 template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag>
-class ParticleAdvectionFilter
+class ParticleAdvectionWorklet
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
@@ -99,11 +99,11 @@ public:
                                                                   DeviceAdapterTag>
     ParticleAdvectWorkletType;
 
-  ParticleAdvectionFilter(const IntegratorType& it,
-                          const std::vector<vtkm::Vec<FieldType, 3>>& pts,
-                          const vtkm::cont::DataSet& _ds,
-                          const vtkm::Id& nSteps,
-                          const vtkm::Id& particlesPerRound = -1)
+  ParticleAdvectionWorklet(const IntegratorType& it,
+                           const std::vector<vtkm::Vec<FieldType, 3>>& pts,
+                           const vtkm::cont::DataSet& _ds,
+                           const vtkm::Id& nSteps,
+                           const vtkm::Id& particlesPerRound = -1)
     : integrator(it)
     , seeds(pts)
     , ds(_ds)
@@ -115,7 +115,7 @@ public:
     field = fieldArray.PrepareForInput(DeviceAdapterTag());
   }
 
-  ~ParticleAdvectionFilter() {}
+  ~ParticleAdvectionWorklet() {}
 
   void run(bool dumpOutput = false)
   {
@@ -169,7 +169,7 @@ private:
 
 
 template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag>
-class StreamlineFilter
+class StreamlineWorklet
 {
 public:
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
@@ -180,12 +180,12 @@ public:
                                                                   DeviceAdapterTag>
     ParticleAdvectWorkletType;
 
-  StreamlineFilter(const IntegratorType& it,
-                   const std::vector<vtkm::Vec<FieldType, 3>>& pts,
-                   const vtkm::cont::DataSet& _ds,
-                   const vtkm::Id& nSteps,
-                   const vtkm::Id stepsPerRound = -1,
-                   const vtkm::Id particlesPerRound = -1)
+  StreamlineWorklet(const IntegratorType& it,
+                    const std::vector<vtkm::Vec<FieldType, 3>>& pts,
+                    const vtkm::cont::DataSet& _ds,
+                    const vtkm::Id& nSteps,
+                    const vtkm::Id stepsPerRound = -1,
+                    const vtkm::Id particlesPerRound = -1)
     : integrator(it)
     , seeds(pts)
     , ds(_ds)
@@ -198,7 +198,7 @@ public:
     field = fieldArray.PrepareForInput(DeviceAdapterTag());
   }
 
-  ~StreamlineFilter() {}
+  ~StreamlineWorklet() {}
 
   void run(bool dumpOutput = false)
   {
@@ -338,4 +338,4 @@ private:
 }
 }
 
-#endif // vtk_m_worklet_particleadvection_ParticleAdvectionFilters_h
+#endif // vtk_m_worklet_particleadvection_ParticleAdvectionWorklets_h

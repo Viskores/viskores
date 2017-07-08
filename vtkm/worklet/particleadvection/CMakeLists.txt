@@ -22,7 +22,7 @@ set(headers
   GridEvaluators.h
   Integrators.h
   Particles.h
-  ParticleAdvectionFilters.h
+  ParticleAdvectionWorklets.h
   )
 
 #-----------------------------------------------------------------------------

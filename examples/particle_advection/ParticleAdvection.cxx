@@ -25,7 +25,7 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
-#include <vtkm/worklet/particleadvection/ParticleAdvectionFilters.h>
+#include <vtkm/worklet/particleadvection/ParticleAdvectionWorklets.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 #include <vtkm/cont/Timer.h>
@@ -165,13 +165,13 @@ void RunTest(const std::string& fname,
   auto t0 = std::chrono::high_resolution_clock::now();
   if (advectType == 0)
   {
-    vtkm::worklet::particleadvection::ParticleAdvectionFilter<RK4RGType, FieldType, DeviceAdapter>
+    vtkm::worklet::particleadvection::ParticleAdvectionWorklet<RK4RGType, FieldType, DeviceAdapter>
       pa(rk4, seeds, ds, numSteps);
     pa.run(dumpOutput);
   }
   else
   {
-    vtkm::worklet::particleadvection::StreamlineFilter<RK4RGType, FieldType, DeviceAdapter> sl(
+    vtkm::worklet::particleadvection::StreamlineWorklet<RK4RGType, FieldType, DeviceAdapter> sl(
       rk4, seeds, ds, numSteps, stepsPerRound, particlesPerRound);
     sl.run(dumpOutput);
   }
