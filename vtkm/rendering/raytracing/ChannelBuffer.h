@@ -21,15 +21,10 @@
 #define vtkm_rendering_raytracing_ChannelBuffer_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCast.h>
-#include <vtkm/cont/ArrayPortalToIterators.h>
-#include <vtkm/cont/DeviceAdapter.h>
 
-#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
-#include <vtkm/rendering/raytracing/Worklets.h>
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
-#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
 
 #include <string>
 

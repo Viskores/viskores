@@ -58,10 +58,6 @@ namespace raytracing
 {
 template <typename T>
 VTKM_EXEC_CONT inline void GetInfinity(T& vtkmNotUsed(infinity));
-//{
-//  static_assert(!std::is_floating_point<T>(),
-//                "Get Infinity can only be called with float or double");
-//}
 
 template <>
 VTKM_EXEC_CONT inline void GetInfinity<vtkm::Float32>(vtkm::Float32& infinity)

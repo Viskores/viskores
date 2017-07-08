@@ -19,6 +19,20 @@
 //============================================================================
 #include <vtkm/rendering/raytracing/RayTracer.h>
 
+#include <iostream>
+#include <math.h>
+#include <stdio.h>
+#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/Timer.h>
+#include <vtkm/cont/TryExecute.h>
+#include <vtkm/rendering/ColorTable.h>
+#include <vtkm/rendering/raytracing/Camera.h>
+#include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
+#include <vtkm/rendering/raytracing/TriangleIntersector.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
+
 namespace vtkm
 {
 namespace rendering

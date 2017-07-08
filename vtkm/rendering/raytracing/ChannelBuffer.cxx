@@ -17,11 +17,19 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+
+#include <vtkm/cont/ArrayHandleCast.h>
+#include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/TryExecute.h>
+
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
 #include <vtkm/rendering/raytracing/ChannelBuffer.h>
 #include <vtkm/rendering/raytracing/ChannelBufferOperations.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
-#include <vtkm/rendering/vtkm_rendering_export.h>
+#include <vtkm/rendering/raytracing/Worklets.h>
+
 #include <vtkm/worklet/DispatcherMapField.h>
 
 namespace vtkm

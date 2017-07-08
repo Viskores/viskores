@@ -20,6 +20,7 @@
 
 #include <vtkm/rendering/MapperRayTracer.h>
 
+#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
