@@ -20,19 +20,12 @@
 #ifndef vtk_m_rendering_raytracing_RayTracer_h
 #define vtk_m_rendering_raytracing_RayTracer_h
 
-#include <iostream>
-#include <math.h>
-#include <stdio.h>
-#include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
-#include <vtkm/cont/Timer.h>
-#include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/DataSet.h>
+
 #include <vtkm/rendering/ColorTable.h>
+
+#include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Camera.h>
-#include <vtkm/rendering/raytracing/Logger.h>
-#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
-#include <vtkm/rendering/raytracing/TriangleIntersector.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
 {
@@ -40,7 +33,6 @@ namespace rendering
 {
 namespace raytracing
 {
-
 
 class RayTracer
 {

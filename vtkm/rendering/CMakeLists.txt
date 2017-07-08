@@ -87,6 +87,7 @@ set(sources
   raytracing/ChannelBuffer.cxx
   raytracing/Logger.cxx
   raytracing/RayTracer.cxx
+  raytracing/VolumeRendererStructured.cxx
   )
 
 set(opengl_headers
@@ -127,6 +128,7 @@ set(device_sources
   raytracing/BoundingVolumeHierarchy.cxx
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
+  raytracing/VolumeRendererStructured.cxx
   raytracing/RayTracer.cxx
   )
 

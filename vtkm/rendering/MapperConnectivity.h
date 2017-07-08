@@ -20,8 +20,6 @@
 #ifndef vtk_m_rendering_MapperConnectivity_h
 #define vtk_m_rendering_MapperConnectivity_h
 
-#include <cstdlib>
-#include <typeinfo>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>

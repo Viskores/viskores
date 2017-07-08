@@ -19,20 +19,11 @@
 //============================================================================
 #ifndef vtk_m_rendering_raytracing_Camera_h
 #define vtk_m_rendering_raytracing_Camera_h
-#include <vtkm/VectorAnalysis.h>
-#include <vtkm/cont/ArrayHandle.h>
+
 #include <vtkm/cont/CoordinateSystem.h>
-#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/Ray.h>
-#include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
-#include <vtkm/rendering/raytracing/Worklets.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
-
-#include <limits>
 
 namespace vtkm
 {

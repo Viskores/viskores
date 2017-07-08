@@ -20,12 +20,10 @@
 
 #include <vtkm/rendering/MapperVolume.h>
 
+#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
-
-#include <vtkm/rendering/internal/RunTriangulator.h>
 
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
