@@ -172,14 +172,16 @@ target_include_directories(vtkm_rendering
                                   ${VTKm_BACKEND_INCLUDE_DIRS}
                           )
 
+if(UNIX AND NOT APPLE)
+  target_link_libraries(vtkm_rendering PRIVATE rt )
+endif()
+
+
 # Subclasses need rendering library
 vtkm_configure_component_Rendering()
 
 add_subdirectory(internal)
 add_subdirectory(raytracing)
-
-
-
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
