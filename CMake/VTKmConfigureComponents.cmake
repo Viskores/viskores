@@ -172,8 +172,13 @@ macro(vtkm_configure_component_OpenGL)
     ADD_LIBRARIES ${vtkm_opengl_libraries}
     )
 
-  set(VTKm_OPENGL_INCLUDE_DIRS ${vtkm_opengl_includes})
-  set(VTKm_OPENGL_LIBRARIES  ${vtkm_opengl_libraries})
+  #setting VTKm_OPENGL_INCLUDE_DIRS when both mesa and
+  #opengl are not present causes cmake to fail to configure
+  #becase of a percieved dependency in the rendering lib
+  if(VTKm_OSMesa_FOUND OR OPENGL_FOUND)
+    set(VTKm_OPENGL_INCLUDE_DIRS ${vtkm_opengl_includes})
+    set(VTKm_OPENGL_LIBRARIES  ${vtkm_opengl_libraries})
+  endif()
 
 endmacro(vtkm_configure_component_OpenGL)
 
