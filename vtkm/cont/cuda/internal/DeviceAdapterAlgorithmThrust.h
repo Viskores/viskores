@@ -501,10 +501,12 @@ private:
     {
       IteratorType end = ::thrust::inclusive_scan(
         thrust::cuda::par, IteratorBegin(input), IteratorEnd(input), IteratorBegin(output), bop);
+      return *(end - 1);
     }
     catch (...)
     {
       throwAsVTKmException();
+      return typename InputPortal::ValueType();
     }
 
     //return the value at the last index in the array, as that is the sum
