@@ -19,7 +19,7 @@
 ##============================================================================
 
 set(headers
-  KdTree3D.h
+  KdTree3DConstruction.h
   KdTree3DNNSearch.h
   )
 

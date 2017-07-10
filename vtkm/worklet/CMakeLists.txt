@@ -36,6 +36,7 @@ set(headers
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
+  KdTree3D.h
   KernelSplatter.h
   Keys.h
   Magnitude.h

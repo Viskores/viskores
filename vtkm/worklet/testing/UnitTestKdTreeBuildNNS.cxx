@@ -19,8 +19,7 @@
 //============================================================================
 
 #include <random>
-#include <vtkm/worklet/spatialstructure/KdTree3D.h>
-#include <vtkm/worklet/spatialstructure/KdTree3DNNSearch.h>
+#include <vtkm/worklet/KdTree3D.h>
 
 namespace
 {
@@ -109,9 +108,9 @@ void TestKdTreeBuildNNS()
   vtkm::cont::ArrayHandle<vtkm::Id> pointId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Id> splitId_Handle;
 
-  vtkm::worklet::spatialstructure::KdTree3D kdtree3D;
   // Run data
-  kdtree3D.Run(coordi_Handle, pointId_Handle, splitId_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::worklet::KdTree3D kdtree3d;
+  kdtree3d.Run(coordi_Handle, pointId_Handle, splitId_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   //Nearest Neighbor worklet Testing
   /// randomly generate testing points /////
@@ -132,14 +131,13 @@ void TestKdTreeBuildNNS()
   vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
 
-  vtkm::worklet::spatialstructure::KdTree3DNNSearch kdtree3DNNS;
-  kdtree3DNNS.Run(coordi_Handle,
-                  pointId_Handle,
-                  splitId_Handle,
-                  qc_Handle,
-                  nnId_Handle,
-                  nnDis_Handle,
-                  VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  kdtree3d.Run(coordi_Handle,
+               pointId_Handle,
+               splitId_Handle,
+               qc_Handle,
+               nnId_Handle,
+               nnDis_Handle,
+               VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;

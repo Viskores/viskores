@@ -199,11 +199,13 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Vec<CoordiType, 3>>& qc_Handle,
            vtkm::cont::ArrayHandle<TreeIdType>& nnId_Handle,
            vtkm::cont::ArrayHandle<CoordiType>& nnDis_Handle,
-           DeviceAdapter device)
+           DeviceAdapter vtkmNotUsed(device))
   {
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
     //set up stack size for cuda envinroment
-    cudaThreadSetLimit(cudaLimitStackSize, 1024 * 16);
+    size_t stackSizeBackup;
+    cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
+    cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 16);
 #endif
 
     NearestNeighborSearch3DWorklet nns3dWorklet;
@@ -211,6 +213,9 @@ public:
       nns3DDispatcher(nns3dWorklet);
     nns3DDispatcher.Invoke(
       qc_Handle, pointId_Handle, splitId_Handle, coordi_Handle, nnId_Handle, nnDis_Handle);
+#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
+    cudaDeviceSetLimit(cudaLimitStackSize, stackSizeBackup);
+#endif
   }
 };
 }

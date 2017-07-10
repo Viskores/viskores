@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_KdTree3D_h
-#define vtk_m_worklet_KdTree3D_h
+#ifndef vtk_m_worklet_KdTree3DConstruction_h
+#define vtk_m_worklet_KdTree3DConstruction_h
 
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -42,7 +42,7 @@ namespace worklet
 namespace spatialstructure
 {
 
-class KdTree3D
+class KdTree3DConstruction
 {
 public:
   ////////// General WORKLET for Kd-tree  //////
@@ -236,7 +236,7 @@ public:
   vtkm::cont::ArrayHandle<T> ReverseScanInclusiveByKey(vtkm::cont::ArrayHandle<T>& keyHandle,
                                                        vtkm::cont::ArrayHandle<T>& dataHandle,
                                                        BinaryFunctor binary_functor,
-                                                       DeviceAdapter device)
+                                                       DeviceAdapter vtkmNotUsed(device))
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
 
@@ -254,7 +254,7 @@ public:
 
   template <typename T, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T> Inverse01ArrayWrapper(vtkm::cont::ArrayHandle<T>& inputHandle,
-                                                   DeviceAdapter device)
+                                                   DeviceAdapter vtkmNotUsed(device))
   {
     vtkm::cont::ArrayHandle<T> InverseHandle;
     InverseArray invWorklet;
@@ -267,7 +267,7 @@ public:
   template <typename T, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T> ScatterArrayWrapper(vtkm::cont::ArrayHandle<T>& inputHandle,
                                                  vtkm::cont::ArrayHandle<T>& indexHandle,
-                                                 DeviceAdapter device)
+                                                 DeviceAdapter vtkmNotUsed(device))
   {
     vtkm::cont::ArrayHandle<T> outputHandle;
     outputHandle.Allocate(inputHandle.GetNumberOfValues());
@@ -281,7 +281,7 @@ public:
   template <typename T, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T> NewKeyWrapper(vtkm::cont::ArrayHandle<T>& oldSegIdHandle,
                                            vtkm::cont::ArrayHandle<T>& flagHandle,
-                                           DeviceAdapter device)
+                                           DeviceAdapter vtkmNotUsed(device))
   {
     vtkm::cont::ArrayHandle<T> newSegIdHandle;
     NewSegmentId newsegidWorklet;
@@ -320,7 +320,7 @@ public:
   template <typename T, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<T> ArrayAddWrapper(vtkm::cont::ArrayHandle<T>& array0Handle,
                                              vtkm::cont::ArrayHandle<T>& array1Handle,
-                                             DeviceAdapter device)
+                                             DeviceAdapter vtkmNotUsed(device))
   {
     vtkm::cont::ArrayHandle<T> resultHandle;
     ArrayAdd arrayAddWorklet;
@@ -609,4 +609,4 @@ public:
 }
 } // namespace vtkm::worklet
 
-#endif // vtk_m_worklet_KdTree3D_h
+#endif // vtk_m_worklet_KdTree3DConstruction_h
