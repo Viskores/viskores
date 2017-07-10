@@ -138,7 +138,7 @@ template <typename R, typename... ArgTypes>
 struct FunctionSigInfo<R(ArgTypes...)>
 {
   static VTKM_CONSTEXPR std::size_t Arity = sizeof...(ArgTypes);
-  using ArityType = std::integral_constant<int, Arity>;
+  using ArityType = std::integral_constant<int, static_cast<int>(Arity)>;
 
   using ResultType = R;
   using Components = brigand::list<R, ArgTypes...>;
