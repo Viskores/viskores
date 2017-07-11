@@ -52,6 +52,7 @@ void* alloc_aligned(size_t size, size_t align);
 VTKM_CONT_EXPORT
 void free_aligned(void* mem);
 
+/// \brief an aligned allocator
 /// A simple aligned allocator type that will align allocations to `Alignment` bytes
 /// TODO: Once C++11 std::allocator_traits is better used by STL and we want to drop
 /// support for pre-C++11 we can drop a lot of the typedefs and functions here.
