@@ -211,6 +211,24 @@ public:
     {
     }
 
+    ~InternalStruct()
+    {
+      if (this->ExecutionArrayValid && this->ExecutionInterface != nullptr &&
+          this->ExecutionArray != nullptr)
+      {
+        internal::TypelessExecutionArray execArray(
+          reinterpret_cast<void*&>(this->ExecutionArray),
+          reinterpret_cast<void*&>(this->ExecutionArrayEnd),
+          reinterpret_cast<void*&>(this->ExecutionArrayCapacity));
+        this->ExecutionInterface->Free(execArray);
+      }
+
+      delete this->ExecutionInterface;
+    }
+
+    InternalStruct(const InternalStruct&) = delete;
+    void operator=(const InternalStruct&) = delete;
+
     bool ControlArrayValid;
     StorageType ControlArray;
 
