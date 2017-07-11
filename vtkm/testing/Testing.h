@@ -508,6 +508,13 @@ static inline VTKM_EXEC_CONT bool test_equal(const vtkm::Bounds& bounds1,
           test_equal(bounds1.Z, bounds2.Z, tolerance));
 }
 
+/// Special implementation of test_equal for booleans.
+///
+static inline VTKM_EXEC_CONT bool test_equal(bool bool1, bool bool2)
+{
+  return bool1 == bool2;
+}
+
 template <typename T>
 static inline VTKM_EXEC_CONT T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
 {
