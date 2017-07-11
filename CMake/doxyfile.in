@@ -150,6 +150,7 @@ FILE_PATTERNS          = *.cxx *.h *.cu
 RECURSIVE              = YES
 
 EXCLUDE                = @VTKm_SOURCE_DIR@/vtkm/testing/OptionParser.h
+EXCLUDE                += @VTKm_SOURCE_DIR@/vtkm/exec/cuda/internal/ExecutionPolicy.h
 
 EXCLUDE_SYMLINKS       = NO
 
