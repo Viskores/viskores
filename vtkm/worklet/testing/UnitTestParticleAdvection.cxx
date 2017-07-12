@@ -29,6 +29,9 @@
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
+namespace
+{
+
 vtkm::Float32 vecData[125 * 3] = {
   -0.00603248f, -0.0966396f,  -0.000732792f, 0.000530014f,  -0.0986189f,  -0.000806706f,
   0.00684929f,  -0.100098f,   -0.000876566f, 0.0129235f,    -0.101102f,   -0.000942341f,
@@ -94,6 +97,7 @@ vtkm::Float32 vecData[125 * 3] = {
   -0.0368736f,  -0.0104306f,  0.000911793f,  -0.0444294f,   -0.00773838f, 0.00129762f,
   -0.0512663f,  -0.00706554f, 0.00165611f
 };
+}
 
 void TestParticleAdvection()
 {
