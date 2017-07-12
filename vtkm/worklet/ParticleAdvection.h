@@ -39,18 +39,18 @@ public:
             typename FieldType,
             typename PointStorage,
             typename FieldStorage,
-            typename DeviceAdapterTag>
+            typename DeviceAdapter>
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage> Run(
     const IntegratorType& it,
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
     const vtkm::Id& nSteps,
     const vtkm::Id& particlesPerRound,
-    DeviceAdapterTag device)
+    const DeviceAdapter&)
   {
     vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType,
                                                                FieldType,
-                                                               DeviceAdapterTag>
+                                                               DeviceAdapter>
       worklet;
 
     return worklet.Run(it, pts, fieldArray, nSteps, particlesPerRound);
@@ -66,16 +66,16 @@ public:
             typename FieldType,
             typename PointStorage,
             typename FieldStorage,
-            typename DeviceAdapterTag>
+            typename DeviceAdapter>
   void Run(const IntegratorType& it,
            const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
            vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
            const vtkm::Id& nSteps,
            const vtkm::Id& stepsPerRound,
            const vtkm::Id& particlesPerRound,
-           DeviceAdapterTag device)
+           const DeviceAdapter&)
   {
-    vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType, FieldType, DeviceAdapterTag>
+    vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType, FieldType, DeviceAdapter>
       worklet;
 
     worklet.Run(it, pts, fieldArray, nSteps, stepsPerRound, particlesPerRound);
