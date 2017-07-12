@@ -30,21 +30,11 @@ target_include_directories(Particle_Advection_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS
 target_link_libraries(Particle_Advection_SERIAL ${VTKm_LIBRARIES})
 target_compile_options(Particle_Advection_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-#add_executable(Particle_Advection_RL_SERIAL ParticleAdvectionRectilinear.cxx)
-#target_include_directories(Particle_Advection_RL_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-#target_link_libraries(Particle_Advection_RL_SERIAL ${VTKm_LIBRARIES})
-#target_compile_options(Particle_Advection_RL_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
-
 if(VTKm_TBB_FOUND)
   add_executable(Particle_Advection_TBB ParticleAdvectionTBB.cxx)
   target_include_directories(Particle_Advection_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
   target_link_libraries(Particle_Advection_TBB ${VTKm_LIBRARIES})
   target_compile_options(Particle_Advection_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
-
-#  add_executable(Particle_Advection_RL_TBB ParticleAdvectionRectilinearTBB.cxx)
-#  target_include_directories(Particle_Advection_RL_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-#  target_link_libraries(Particle_Advection_RL_TBB ${VTKm_LIBRARIES})
-#  target_compile_options(Particle_Advection_RL_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
 endif()
 
 if(VTKm_CUDA_FOUND)
@@ -54,10 +44,4 @@ if(VTKm_CUDA_FOUND)
   target_include_directories(Particle_Advection_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
   target_link_libraries(Particle_Advection_CUDA PRIVATE ${VTKm_LIBRARIES})
   target_compile_options(Particle_Advection_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
-
-#  cuda_include_directories(${VTKm_INCLUDE_DIRS})
-#  cuda_add_executable(Particle_Advection_RL_CUDA ParticleAdvectionRectilinear.cu)
-#  target_include_directories(Particle_Advection_RL_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-#  target_link_libraries(Particle_Advection_RL_CUDA PRIVATE ${VTKm_LIBRARIES})
-#  target_compile_options(Particle_Advection_RL_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
 endif()
