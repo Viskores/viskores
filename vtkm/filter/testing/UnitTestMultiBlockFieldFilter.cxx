@@ -33,8 +33,6 @@
 
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
-
-
 #include <vtkm/filter/Histogram.h>
 
 const std::vector<vtkm::filter::ResultField> MultiBlockFieldFilterTest(std::size_t BlockNum);
@@ -43,15 +41,13 @@ void TestMultiBlockField()
 {
   std::size_t BlockNum=7;
   std::vector<vtkm::filter::ResultField> results = MultiBlockFieldFilterTest( BlockNum );
-  VTKM_TEST_ASSERT(results.size() == vtkm::Float64(BlockNum), "result block number incorrect");
+  VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
   for(std::size_t j = 0; j < results.size(); j++)
   { 
     VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() ==  10, 
                 "result cell size incorrect");
-
    
   }
-  std::cout <<"pass all tests"<<std::endl;
 }
 
 

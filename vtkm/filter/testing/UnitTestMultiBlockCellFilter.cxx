@@ -45,7 +45,7 @@ void TestMultiBlockCell()
 {
   std::size_t BlockNum=7;
   std::vector<vtkm::filter::ResultField> results = MultiBlockCellTest( BlockNum );
-  VTKM_TEST_ASSERT(results.size() == vtkm::Float64(BlockNum), "result block number incorrect");
+  VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
   for(std::size_t j = 0; j < results.size(); j++)
   { 
     VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() == ((j+2)*(j+2)-1)
@@ -55,11 +55,11 @@ void TestMultiBlockCell()
     results[j].GetField().GetData().CopyTo(array);
     for(std::size_t i = 0; i < results[j].GetField().GetData().GetNumberOfValues(); i++)
     { 
-      VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == vtkm::Float64(j),
-      "result incorrect");
+      VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == j,
+      "field value incorrect");
     }
   }
-  std::cout <<"pass all tests"<<std::endl;
+ 
 
 }
 
