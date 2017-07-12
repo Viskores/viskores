@@ -23,6 +23,7 @@
 #endif
 
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/ParticleAdvectionWorklets.h>
@@ -163,18 +164,24 @@ void RunTest(const std::string& fname,
 
   //time only the actual run
   auto t0 = std::chrono::high_resolution_clock::now();
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
+  seedArray = vtkm::cont::make_ArrayHandle(seeds);
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
+  ds.GetField(0).GetData().CopyTo(fieldArray);
+
   if (advectType == 0)
   {
-    vtkm::worklet::particleadvection::ParticleAdvectionWorklet<RK4RGType, FieldType, DeviceAdapter>
-      pa(rk4, seeds, ds, numSteps);
-    pa.run(dumpOutput);
+    vtkm::worklet::ParticleAdvection particleAdvection;
+    particleAdvection.Run(rk4, seedArray, fieldArray, numSteps, -1, DeviceAdapter());
   }
   else
   {
-    vtkm::worklet::particleadvection::StreamlineWorklet<RK4RGType, FieldType, DeviceAdapter> sl(
-      rk4, seeds, ds, numSteps, stepsPerRound, particlesPerRound);
-    sl.run(dumpOutput);
+    vtkm::worklet::Streamline streamline;
+    streamline.Run(
+      rk4, seedArray, fieldArray, numSteps, stepsPerRound, particlesPerRound, DeviceAdapter());
   }
+
   auto t1 = std::chrono::high_resolution_clock::now() - t0;
   auto runtime = std::chrono::duration_cast<std::chrono::milliseconds>(t1).count();
   std::cerr << "Runtime = " << runtime << " ms " << std::endl;

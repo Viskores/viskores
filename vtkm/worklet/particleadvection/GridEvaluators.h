@@ -118,6 +118,9 @@ class RegularGridEvaluate
 {
 public:
   VTKM_CONT
+  RegularGridEvaluate() {}
+
+  VTKM_CONT
   RegularGridEvaluate(const vtkm::cont::DataSet& ds)
   {
     bounds = ds.GetCoordinateSystem(0).GetBounds();

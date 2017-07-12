@@ -43,6 +43,7 @@ set(headers
   MarchingCubesDataTables.h
   Mask.h
   MaskPoints.h
+  ParticleAdvection.h
   PointAverage.h
   PointElevation.h
   RemoveUnusedPoints.h

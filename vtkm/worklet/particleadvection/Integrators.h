@@ -35,6 +35,13 @@ class RK4Integrator
 {
 public:
   VTKM_EXEC_CONT
+  RK4Integrator()
+    : h(0)
+    , h_2(0)
+  {
+  }
+
+  VTKM_EXEC_CONT
   RK4Integrator(const FieldEvaluateType& field, FieldType _h)
     : f(field)
     , h(_h)

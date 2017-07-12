@@ -35,6 +35,7 @@ set(unit_tests
   UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
   UnitTestMaskPoints.cxx
+  UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx
   UnitTestRemoveUnusedPoints.cxx
