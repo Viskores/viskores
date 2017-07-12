@@ -112,17 +112,23 @@ private:
   vtkm::Bounds bounds;
 };
 
-//Regular Grid Evaluator
+//Uniform Grid Evaluator
 template <typename PortalType, typename FieldType>
-class RegularGridEvaluate
+class UniformGridEvaluate
 {
 public:
   VTKM_CONT
-  RegularGridEvaluate() {}
+  UniformGridEvaluate() {}
 
   VTKM_CONT
-  RegularGridEvaluate(const vtkm::cont::DataSet& ds)
+  UniformGridEvaluate(const vtkm::cont::DataSet& ds)
   {
+    typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformType;
+
+    vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = ds.GetCoordinateSystem().GetData();
+    if (!coordArray.IsSameType(UniformType()))
+      throw vtkm::cont::ErrorInternal("Given dataset is was not uniform.");
+
     bounds = ds.GetCoordinateSystem(0).GetBounds();
     vtkm::cont::CellSetStructured<3> cells;
     ds.GetCellSet(0).CopyTo(cells);
@@ -234,7 +240,7 @@ private:
   vtkm::Id rowSize;
   vtkm::Vec<FieldType, 3> spacing;
   vtkm::Vec<FieldType, 3> oldMin;
-}; //RegularGridEvaluate
+};
 
 
 

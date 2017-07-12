@@ -126,15 +126,14 @@ void TestParticleAdvection()
   }
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims);
 
-  vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType, FieldType> eval(ds);
-
-  typedef vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType, FieldType>
+  typedef vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType, FieldType>
     RGEvalType;
   typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType,
                                                           FieldType,
                                                           FieldPortalConstType>
     RK4RGType;
 
+  RGEvalType eval(ds);
   RK4RGType rk4(eval, stepSize);
 
   std::vector<vtkm::Vec<FieldType, 3>> pts;
