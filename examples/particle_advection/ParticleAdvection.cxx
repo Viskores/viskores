@@ -62,7 +62,6 @@ void RunTest(const std::string& fname,
              vtkm::Id advectType,
              vtkm::Id stepsPerRound,
              vtkm::Id particlesPerRound,
-             bool dumpOutput,
              vtkm::Id seeding)
 {
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
@@ -328,7 +327,6 @@ int main(int argc, char** argv)
           advectType,
           stepsPerRound,
           particlesPerRound,
-          dumpOutput,
           seeding);
   return 0;
 }
