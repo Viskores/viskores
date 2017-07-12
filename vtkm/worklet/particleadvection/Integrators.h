@@ -30,7 +30,7 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename FieldEvaluateType, typename FieldType, typename PortalType>
+template <typename FieldEvaluateType, typename FieldType>
 class RK4Integrator
 {
 public:
@@ -49,10 +49,10 @@ public:
   {
   }
 
-  VTKM_EXEC
-  bool Step(const vtkm::Vec<FieldType, 3>& pos,
-            const PortalType& field,
-            vtkm::Vec<FieldType, 3>& out) const
+  template <typename PortalType>
+  VTKM_EXEC bool Step(const vtkm::Vec<FieldType, 3>& pos,
+                      const PortalType& field,
+                      vtkm::Vec<FieldType, 3>& out) const
   {
     vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
 
@@ -69,7 +69,7 @@ public:
   FieldType h, h_2;
 };
 
-template <typename FieldEvaluateType, typename FieldType, typename PortalType>
+template <typename FieldEvaluateType, typename FieldType>
 class EulerIntegrator
 {
 public:
@@ -80,10 +80,10 @@ public:
   {
   }
 
-  VTKM_EXEC
-  bool Step(const vtkm::Vec<FieldType, 3>& pos,
-            const PortalType& field,
-            vtkm::Vec<FieldType, 3>& out) const
+  template <typename PortalType>
+  VTKM_EXEC bool Step(const vtkm::Vec<FieldType, 3>& pos,
+                      const PortalType& field,
+                      vtkm::Vec<FieldType, 3>& out) const
   {
     vtkm::Vec<FieldType, 3> vCur;
     if (f.Evaluate(pos, field, vCur))

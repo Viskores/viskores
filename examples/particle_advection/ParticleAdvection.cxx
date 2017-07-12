@@ -76,10 +76,7 @@ void RunTest(const std::string& fname,
 
   typedef vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType, FieldType>
     RGEvalType;
-  typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType,
-                                                          FieldType,
-                                                          FieldPortalConstType>
-    RK4RGType;
+  typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType> RK4RGType;
 
   RGEvalType eval(ds);
   RK4RGType rk4(eval, stepSize);
