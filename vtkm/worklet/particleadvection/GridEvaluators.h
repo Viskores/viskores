@@ -51,7 +51,7 @@ public:
 };
 
 // Constant vector
-template <typename PortalType, typename DeviceAdapter, typename FieldType>
+template <typename PortalType, typename FieldType>
 class ConstantField
 {
 public:
@@ -82,7 +82,7 @@ private:
 };
 
 // Circular Orbit.
-template <typename PortalType, typename DeviceAdapter>
+template <typename PortalType>
 class AnalyticalOrbitEvaluate
 {
 public:
@@ -113,7 +113,7 @@ private:
 };
 
 //Regular Grid Evaluator
-template <typename PortalType, typename DeviceAdapter, typename FieldType>
+template <typename PortalType, typename FieldType>
 class RegularGridEvaluate
 {
 public:
@@ -238,7 +238,7 @@ private:
 
 
 
-template <typename PortalType, typename DeviceAdapter, typename FieldType>
+template <typename PortalType, typename FieldType>
 class RectilinearGridEvaluate
 {
 public:

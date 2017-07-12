@@ -75,14 +75,9 @@ void RunTest(const std::string& fname,
   vtkm::io::reader::BOVDataSetReader rdr(fname);
   vtkm::cont::DataSet ds = rdr.ReadDataSet();
 
-  vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType,
-                                                        DeviceAdapter,
-                                                        FieldType>
-    eval(ds);
+  vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType, FieldType> eval(ds);
 
-  typedef vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType,
-                                                                DeviceAdapter,
-                                                                FieldType>
+  typedef vtkm::worklet::particleadvection::RegularGridEvaluate<FieldPortalConstType, FieldType>
     RGEvalType;
   typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType,
                                                           FieldType,
