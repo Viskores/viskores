@@ -45,8 +45,7 @@ void TestMultiBlockField()
   for(std::size_t j = 0; j < results.size(); j++)
   { 
     VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() ==  10, 
-                "result cell size incorrect");
-   
+                "result cell size incorrect");  
   }
 }
 

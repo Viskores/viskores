@@ -43,7 +43,7 @@ const std::vector<vtkm::filter::ResultField> MultiBlockCellTest(std::size_t Bloc
 
 void TestMultiBlockCell()
 {
-  std::size_t BlockNum=7;
+  std::size_t BlockNum = 7;
   std::vector<vtkm::filter::ResultField> results = MultiBlockCellTest( BlockNum );
   VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
   for(std::size_t j = 0; j < results.size(); j++)
@@ -56,7 +56,7 @@ void TestMultiBlockCell()
     for(std::size_t i = 0; i < results[j].GetField().GetData().GetNumberOfValues(); i++)
     { 
       VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == j,
-      "field value incorrect");
+      "result field value incorrect");
     }
   }
  
