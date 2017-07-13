@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(benchmark_srcs
+  BenchmarkArrayTransfer.cxx
   BenchmarkDeviceAdapter.cxx
   BenchmarkFieldAlgorithms.cxx
   BenchmarkTopologyAlgorithms.cxx
