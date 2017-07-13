@@ -6,9 +6,9 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 Sandia Corporation.
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
+##  Copyright 2016 Sandia Corporation.
+##  Copyright 2016 UT-Battelle, LLC.
+##  Copyright 2016 Los Alamos National Security.
 ##
 ##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 ##  the U.S. Government retains certain rights in this software.
@@ -19,16 +19,11 @@
 ##============================================================================
 
 set(headers
-  BOVDataSetReader.h
-  VTKDataSetReaderBase.h
-  VTKPolyDataReader.h
-  VTKStructuredGridReader.h
-  VTKRectilinearGridReader.h
-  VTKStructuredPointsReader.h
-  VTKUnstructuredGridReader.h
-  VTKDataSetReader.h
-)
+  GridEvaluators.h
+  Integrators.h
+  Particles.h
+  ParticleAdvectionWorklets.h
+  )
 
+#-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers})
-
-add_subdirectory(testing)

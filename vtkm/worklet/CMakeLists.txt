@@ -44,6 +44,7 @@ set(headers
   MarchingCubesDataTables.h
   Mask.h
   MaskPoints.h
+  ParticleAdvection.h
   PointAverage.h
   PointElevation.h
   RemoveUnusedPoints.h
@@ -73,6 +74,7 @@ add_subdirectory(spatialstructure)
 add_subdirectory(tetrahedralize)
 add_subdirectory(triangulate)
 add_subdirectory(wavelets)
+add_subdirectory(particleadvection)
 
 vtkm_declare_headers(${headers})
 
