@@ -24,6 +24,7 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/worklet/particleadvection/ParticleStatus.h>
 
 namespace vtkm
 {
@@ -32,12 +33,12 @@ namespace worklet
 namespace particleadvection
 {
 
-enum ParticleStatus
+/*enum ParticleStatus
 {
   OK = 0,
   TERMINATE = 1,
   OUT_OF_BOUNDS = 2,
-};
+};*/
 
 template <typename T, typename DeviceAdapterTag>
 class Particles : public vtkm::exec::ExecutionObjectBase
@@ -46,6 +47,8 @@ private:
   typedef
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal
       IdPortal;
+  typedef typename vtkm::cont::ArrayHandle<ParticleStatus>::template ExecutionTypes<
+    DeviceAdapterTag>::Portal StatusPortal;
   typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
     DeviceAdapterTag>::Portal PosPortal;
 
@@ -71,7 +74,7 @@ public:
   VTKM_EXEC_CONT
   Particles(const PosPortal& _pos,
             const IdPortal& _steps,
-            const IdPortal& _status,
+            const StatusPortal& _status,
             const vtkm::Id& _maxSteps)
     : pos(_pos)
     , steps(_steps)
@@ -83,7 +86,7 @@ public:
   VTKM_EXEC_CONT
   Particles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
-            vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
+            vtkm::cont::ArrayHandle<ParticleStatus>& statusArray,
             const vtkm::Id& _maxSteps)
     : maxSteps(_maxSteps)
   {
@@ -104,12 +107,12 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void SetStatusTerminate(const vtkm::Id& idx) { status.Set(idx, TERMINATE); }
+  void SetStatusTerminate(const vtkm::Id& idx) { status.Get(idx).SetTerminated(); }
   VTKM_EXEC_CONT
-  void SetStatusOutOfBounds(const vtkm::Id& idx) { status.Set(idx, OUT_OF_BOUNDS); }
+  void SetStatusOutOfSpatialBounds(const vtkm::Id& idx) { status.Get(idx).ExitedSpatialBoundary(); }
 
   VTKM_EXEC_CONT
-  bool Done(const vtkm::Id& idx) { return status.Get(idx) != OK; }
+  bool Done(const vtkm::Id& idx) { return !(status.Get(idx).Integrateable()); }
 
   VTKM_EXEC_CONT
   vtkm::Vec<T, 3> GetPos(const vtkm::Id& idx) const { return pos.Get(idx); }
@@ -120,7 +123,8 @@ public:
 
 private:
   PosPortal pos;
-  IdPortal steps, status;
+  IdPortal steps;
+  StatusPortal status;
   vtkm::Id maxSteps;
 };
 
@@ -131,6 +135,8 @@ private:
   typedef
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal
       IdPortal;
+  typedef typename vtkm::cont::ArrayHandle<ParticleStatus>::template ExecutionTypes<
+    DeviceAdapterTag>::Portal StatusPortal;
   typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
     DeviceAdapterTag>::Portal PosPortal;
 
@@ -160,7 +166,7 @@ public:
   VTKM_EXEC_CONT
   StateRecordingParticles(const PosPortal& _pos,
                           const IdPortal& _steps,
-                          const IdPortal& _status,
+                          const StatusPortal& _status,
                           const vtkm::Id& _maxSteps)
     : pos(_pos)
     , steps(_steps)
@@ -174,7 +180,7 @@ public:
   VTKM_EXEC_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
-                          vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
+                          vtkm::cont::ArrayHandle<ParticleStatus>& statusArray,
                           const vtkm::Id& _maxSteps)
     : maxSteps(_maxSteps)
     , histSize(_maxSteps)
@@ -189,7 +195,7 @@ public:
   VTKM_EXEC_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
-                          vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
+                          vtkm::cont::ArrayHandle<ParticleStatus>& statusArray,
                           const vtkm::Id& _maxSteps,
                           vtkm::Id& _histSize)
     : maxSteps(_maxSteps)
@@ -215,12 +221,12 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void SetStatusTerminate(const vtkm::Id& idx) { status.Set(idx, TERMINATE); }
+  void SetStatusTerminate(const vtkm::Id& idx) { status.Get(idx).SetTerminated(); }
   VTKM_EXEC_CONT
-  void SetStatusOutOfBounds(const vtkm::Id& idx) { status.Set(idx, OUT_OF_BOUNDS); }
+  void SetStatusOutOfSpatialBounds(const vtkm::Id& idx) { status.Get(idx).ExitedSpatialBoundary(); }
 
   VTKM_EXEC_CONT
-  bool Done(const vtkm::Id& idx) { return status.Get(idx) != OK; }
+  bool Done(const vtkm::Id& idx) { return !(status.Get(idx).Integrateable()); }
 
   VTKM_EXEC_CONT
   vtkm::Vec<T, 3> GetPos(const vtkm::Id& idx) const { return pos.Get(idx); }
@@ -236,7 +242,8 @@ public:
 
 private:
   PosPortal pos;
-  IdPortal steps, status;
+  IdPortal steps;
+  StatusPortal status;
   vtkm::Id maxSteps, numPos, histSize;
   PosPortal history;
 
@@ -253,6 +260,8 @@ private:
   typedef
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal
       IdPortal;
+  typedef typename vtkm::cont::ArrayHandle<ParticleStatus>::template ExecutionTypes<
+    DeviceAdapterTag>::Portal StatusPortal;
   typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
     DeviceAdapterTag>::Portal PosPortal;
 
@@ -285,7 +294,7 @@ public:
   VTKM_EXEC_CONT
   StateRecordingParticlesRound(const PosPortal& _pos,
                                const IdPortal& _steps,
-                               const IdPortal& _status,
+                               const StatusPortal& _status,
                                const vtkm::Id& _maxSteps,
                                const vtkm::Id& _histSize,
                                const vtkm::Id& _offset,
@@ -303,7 +312,7 @@ public:
   VTKM_EXEC_CONT
   StateRecordingParticlesRound(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
                                vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
-                               vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
+                               vtkm::cont::ArrayHandle<ParticleStatus>& statusArray,
                                const vtkm::Id& _maxSteps,
                                const vtkm::Id& _histSize,
                                const vtkm::Id& _offset,
@@ -334,15 +343,15 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void SetStatusTerminate(const vtkm::Id& idx) { status.Set(idx, TERMINATE); }
+  void SetStatusTerminate(const vtkm::Id& idx) { status.Get(idx).SetTerminated(); }
   VTKM_EXEC_CONT
-  void SetStatusOutOfBounds(const vtkm::Id& idx) { status.Set(idx, OUT_OF_BOUNDS); }
+  void SetStatusOutOfSpatialBounds(const vtkm::Id& idx) { status.Get(idx).ExitedSpatialBoundary(); }
 
   VTKM_EXEC_CONT
   bool Done(const vtkm::Id& idx)
   {
     vtkm::Id nSteps = steps.Get(idx);
-    return (nSteps - offset == histSize) || status.Get(idx) != OK;
+    return (nSteps - offset == histSize) || !(status.Get(idx).Integrateable());
   }
 
   VTKM_EXEC_CONT
@@ -359,16 +368,18 @@ public:
 
 private:
   PosPortal pos;
-  IdPortal steps, status;
+  IdPortal steps;
+  StatusPortal status;
   vtkm::Id maxSteps, numPos, histSize, offset, totalMaxSteps;
   PosPortal history;
 
 public:
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> historyArray;
 };
-}
-}
-}
+
+} //namespace particleadvection
+} //namespace worklet
+} //namespace vtkm
 
 
 #endif // vtk_m_worklet_particleadvection_Particles_h

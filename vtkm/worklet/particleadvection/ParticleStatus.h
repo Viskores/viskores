@@ -53,7 +53,7 @@ public:
   }
   bool Terminated() const
   {
-    return (Error() || Terminated() || ExitedSpatialBoundary() || ExitedTemporalBoundary());
+    return (CheckBit(TERMINATED) || Error() || ExitedSpatialBoundary() || ExitedTemporalBoundary());
   }
   bool Integrateable() const
   {
