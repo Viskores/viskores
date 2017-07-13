@@ -107,9 +107,19 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void SetStatusTerminate(const vtkm::Id& idx) { status.Get(idx).SetTerminated(); }
+  void SetStatusTerminate(const vtkm::Id& idx)
+  {
+    auto stat = status.Get(idx);
+    stat.SetTerminated();
+    status.Set(idx, stat);
+  }
   VTKM_EXEC_CONT
-  void SetStatusOutOfSpatialBounds(const vtkm::Id& idx) { status.Get(idx).ExitedSpatialBoundary(); }
+  void SetStatusOutOfSpatialBounds(const vtkm::Id& idx)
+  {
+    auto stat = status.Get(idx);
+    stat.SetExitSpatialBoundary();
+    status.Set(idx, stat);
+  }
 
   VTKM_EXEC_CONT
   bool Done(const vtkm::Id& idx) { return !(status.Get(idx).Integrateable()); }
@@ -221,9 +231,20 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void SetStatusTerminate(const vtkm::Id& idx) { status.Get(idx).SetTerminated(); }
+  void SetStatusTerminate(const vtkm::Id& idx)
+  {
+    auto stat = status.Get(idx);
+    stat.SetTerminated();
+    status.Set(idx, stat);
+  }
   VTKM_EXEC_CONT
-  void SetStatusOutOfSpatialBounds(const vtkm::Id& idx) { status.Get(idx).ExitedSpatialBoundary(); }
+  void SetStatusOutOfSpatialBounds(const vtkm::Id& idx)
+  {
+    auto stat = status.Get(idx);
+    stat.SetExitSpatialBoundary();
+    status.Set(idx, stat);
+  }
+
 
   VTKM_EXEC_CONT
   bool Done(const vtkm::Id& idx) { return !(status.Get(idx).Integrateable()); }
@@ -343,9 +364,19 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void SetStatusTerminate(const vtkm::Id& idx) { status.Get(idx).SetTerminated(); }
+  void SetStatusTerminate(const vtkm::Id& idx)
+  {
+    auto stat = status.Get(idx);
+    stat.SetTerminated();
+    status.Set(idx, stat);
+  }
   VTKM_EXEC_CONT
-  void SetStatusOutOfSpatialBounds(const vtkm::Id& idx) { status.Get(idx).ExitedSpatialBoundary(); }
+  void SetStatusOutOfSpatialBounds(const vtkm::Id& idx)
+  {
+    auto stat = status.Get(idx);
+    stat.SetExitSpatialBoundary();
+    status.Set(idx, stat);
+  }
 
   VTKM_EXEC_CONT
   bool Done(const vtkm::Id& idx)
