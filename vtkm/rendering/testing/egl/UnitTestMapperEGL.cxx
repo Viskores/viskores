@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 #include <vtkm/Bounds.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -26,6 +27,7 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -41,6 +43,7 @@ void RenderTests()
   typedef vtkm::rendering::View2D V2;
   typedef vtkm::rendering::View1D V1;
 
+  vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
 
@@ -56,6 +59,19 @@ void RenderTests()
     maker.Make1DUniformDataSet0(), "pointvar", "uniform1D.pnm");
   vtkm::rendering::testing::Render<M, C, V1>(
     maker.Make1DExplicitDataSet0(), "pointvar", "expl1D.pnm");
+
+  vtkm::cont::DataSet ds = maker.Make1DUniformDataSet0();
+  const int nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  vtkm::Float32 vars[nVerts];
+  float smallVal = 1.000;
+  for (int i = 0; i <= nVerts; i++)
+  {
+    vars[i] = smallVal;
+    smallVal += .01;
+  }
+  dsf.AddPointField(ds, "smallScaledXAxis", vars, nVerts);
+  vtkm::rendering::testing::Render<M, C, V1>(
+    ds, "smallScaledXAxis", "uniform1DSmallScaledXAxis.pnm");
 }
 } //namespace
 

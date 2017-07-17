@@ -204,7 +204,7 @@ macro(vtkm_configure_component_EGL)
   vtkm_finish_configure_component(EGL
     DEPENDENT_VARIABLES VTKm_OpenGL_FOUND EGL_FOUND
     ADD_INCLUDES ${EGL_INCLUDE_DIRS}
-    ADD_LIBRARIES ${EGL_LIBRARIES}
+    ADD_LIBRARIES vtkm_rendering ${EGL_LIBRARIES}
     )
 endmacro(vtkm_configure_component_EGL)
 
