@@ -67,7 +67,7 @@ public:
       }
       else
       {
-        ic.SetExitedSpatialBounds(idx);
+        ic.SetExitedSpatialBoundary(idx);
       }
     }
   }

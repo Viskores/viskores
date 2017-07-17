@@ -36,8 +36,8 @@ enum ParticleStatus
 {
   STATUS_OK = 0x0000,
   TERMINATED = 0x0001,
-  ENCOUNTERED_SPATIAL_BOUNDARY = 0x0002,
-  ENCOUNTERED_TEMPORAL_BOUNDARY = 0x0004,
+  AT_SPATIAL_BOUNDARY = 0x0002,
+  AT_TEMPORAL_BOUNDARY = 0x0004,
   EXITED_SPATIAL_BOUNDARY = 0x0008,
   EXITED_TEMPORAL_BOUNDARY = 0x0010,
   STATUS_ERROR = 0x0020
@@ -108,39 +108,55 @@ public:
       SetTerminated(idx);
   }
 
+  /* Set/Change Status */
+  VTKM_EXEC_CONT
+  void SetOK(const vtkm::Id& idx) { status.Set(idx, STATUS_OK); }
+  VTKM_EXEC_CONT
+  void SetTerminated(const vtkm::Id& idx) { SetBit(idx, TERMINATED); }
+  VTKM_EXEC_CONT
+  void SetExitedSpatialBoundary(const vtkm::Id& idx) { SetBit(idx, EXITED_SPATIAL_BOUNDARY); }
+  VTKM_EXEC_CONT
+  void SetExitedTemporalBoundary(const vtkm::Id& idx) { SetBit(idx, EXITED_TEMPORAL_BOUNDARY); }
+  VTKM_EXEC_CONT
+  void SetAtSpatialBoundary(const vtkm::Id& idx) { SetBit(idx, AT_SPATIAL_BOUNDARY); }
+  VTKM_EXEC_CONT
+  void SetAtTemporalBoundary(const vtkm::Id& idx) { SetBit(idx, AT_TEMPORAL_BOUNDARY); }
+  VTKM_EXEC_CONT
+  void SetError(const vtkm::Id& idx) { SetBit(idx, STATUS_ERROR); }
+
+  /* Check Status */
+  VTKM_EXEC_CONT
+  bool Terminated(const vtkm::Id& idx) { return CheckBit(idx, TERMINATED); }
+  VTKM_EXEC_CONT
+  bool AtSpatialBoundary(const vtkm::Id& idx) { return CheckBit(idx, AT_SPATIAL_BOUNDARY); }
+  VTKM_EXEC_CONT
+  bool AtTemporalBoundary(const vtkm::Id& idx) { return CheckBit(idx, AT_TEMPORAL_BOUNDARY); }
+  VTKM_EXEC_CONT
+  bool ExitedSpatialBoundary(const vtkm::Id& idx) { return CheckBit(idx, EXITED_SPATIAL_BOUNDARY); }
+  VTKM_EXEC_CONT
+  bool ExitedTemporalBoundary(const vtkm::Id& idx)
+  {
+    return CheckBit(idx, EXITED_TEMPORAL_BOUNDARY);
+  }
+  VTKM_EXEC_CONT
+  bool Error(const vtkm::Id& idx) { return CheckBit(idx, STATUS_ERROR); }
+  VTKM_EXEC_CONT
+  bool Integrateable(const vtkm::Id& idx) { return status.Get(idx) == 0; }
   VTKM_EXEC_CONT
   bool Done(const vtkm::Id& idx) { return !Integrateable(idx); }
 
+  /* Bit Operations */
   VTKM_EXEC_CONT
-  void SetTerminated(const vtkm::Id& idx)
-  {
-    ClearBit(idx, STATUS_OK);
-    SetBit(idx, TERMINATED);
-  }
-
-  VTKM_EXEC_CONT
-  void SetExitedSpatialBounds(const vtkm::Id& idx) { SetBit(idx, EXITED_SPATIAL_BOUNDARY); }
-
-  VTKM_EXEC_CONT
-  bool Terminated(const vtkm::Id& idx)
-  {
-    return (CheckBit(idx, TERMINATED) || CheckBit(idx, STATUS_ERROR) ||
-            CheckBit(idx, EXITED_SPATIAL_BOUNDARY) || CheckBit(idx, EXITED_TEMPORAL_BOUNDARY));
-  }
-
-  VTKM_EXEC_CONT
-  bool Integrateable(const vtkm::Id& idx) { return !Terminated(idx); }
-
   void SetBit(const vtkm::Id& idx, const ParticleStatus& b)
   {
     status.Set(idx, status.Get(idx) | b);
   }
-
+  VTKM_EXEC_CONT
   void ClearBit(const vtkm::Id& idx, const ParticleStatus& b)
   {
     status.Set(idx, status.Get(idx) & ~b);
   }
-
+  VTKM_EXEC_CONT
   bool CheckBit(const vtkm::Id& idx, const ParticleStatus& b) const { return status.Get(idx) & b; }
 
   VTKM_EXEC_CONT
@@ -170,11 +186,7 @@ private:
 public:
   VTKM_EXEC_CONT
   StateRecordingParticles(const StateRecordingParticles& s)
-    : /* pos(s.pos)
-    , steps(s.steps)
-    , status(s.status)
-    , maxSteps(s.maxSteps)
-    ,*/ Particles<T, DeviceAdapterTag>(s.pos, s.steps, s.status, s.maxSteps)
+    : Particles<T, DeviceAdapterTag>(s.pos, s.steps, s.status, s.maxSteps)
     , histSize(s.histSize)
     , history(s.history)
   {
@@ -183,11 +195,7 @@ public:
 
   VTKM_EXEC_CONT
   StateRecordingParticles()
-    : /* pos()
-    , steps()
-    , status()
-    , maxSteps(0)
-    ,*/ Particles<T, DeviceAdapterTag>()
+    : Particles<T, DeviceAdapterTag>()
     , histSize(-1)
     , history()
   {
@@ -198,11 +206,7 @@ public:
                           const IdPortal& _steps,
                           const IdPortal& _status,
                           const vtkm::Id& _maxSteps)
-    : /* pos(_pos)
-    , steps(_steps)
-    , status(_status)
-    , maxSteps(_maxSteps)
-    ,*/ Particles<T, DeviceAdapterTag>(_pos, _steps, _status, _maxSteps)
+    : Particles<T, DeviceAdapterTag>(_pos, _steps, _status, _maxSteps)
     , histSize()
     , history()
   {
@@ -261,9 +265,7 @@ public:
   bool Done(const vtkm::Id& idx) { return !this->Integrateable(idx); }
 
 private:
-  /*PosPortal pos;
-  IdPortal steps,status;*/
-  vtkm::Id /*maxSteps,*/ numPos, histSize;
+  vtkm::Id numPos, histSize;
   PosPortal history;
 
 public:
@@ -286,11 +288,7 @@ private:
 public:
   VTKM_EXEC_CONT
   StateRecordingParticlesRound(const StateRecordingParticlesRound& s)
-    : /* pos(s.pos)
-    , steps(s.steps)
-    , status(s.status)
-    , maxSteps(s.maxSteps)
-    ,*/ Particles<T, DeviceAdapterTag>(s.pos, s.steps, s.status, s.maxSteps)
+    : Particles<T, DeviceAdapterTag>(s.pos, s.steps, s.status, s.maxSteps)
     , numPos(s.numPos)
     , histSize(s.histSize)
     , offset(s.offset)
@@ -301,10 +299,7 @@ public:
 
   VTKM_EXEC_CONT
   StateRecordingParticlesRound()
-    : /* pos()
-    , steps()
-    , maxSteps(0)
-    ,*/ Particles<T, DeviceAdapterTag>()
+    : Particles<T, DeviceAdapterTag>()
     , histSize(-1)
     , offset(0)
     , totalMaxSteps(0)
@@ -319,11 +314,7 @@ public:
                                const vtkm::Id& _histSize,
                                const vtkm::Id& _offset,
                                const vtkm::Id& _totalMaxSteps)
-    : /* pos(_pos)
-    , steps(_steps)
-    , status(_status)
-    , maxSteps(_maxSteps)
-    ,*/ Particles<T, DeviceAdapterTag>(_pos, _steps, _status, _maxSteps)
+    : Particles<T, DeviceAdapterTag>(_pos, _steps, _status, _maxSteps)
     , histSize(_histSize)
     , offset(_offset)
     , totalMaxSteps(_totalMaxSteps)
@@ -377,10 +368,7 @@ public:
   }
 
 private:
-  /*PosPortal pos;
-  IdPortal steps;
-  IdPortal status;*/
-  vtkm::Id /*maxSteps,*/ numPos, histSize, offset, totalMaxSteps;
+  vtkm::Id numPos, histSize, offset, totalMaxSteps;
   PosPortal history;
 
 public:
