@@ -31,7 +31,6 @@
 #include <vtkm/exec/ExecutionObjectBase.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/particleadvection/ParticleStatus.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm
@@ -68,7 +67,7 @@ public:
       }
       else
       {
-        ic.SetStatusOutOfSpatialBounds(idx);
+        ic.SetExitedSpatialBounds(idx);
       }
     }
   }
@@ -130,10 +129,10 @@ private:
     else
       numSeeds = ParticlesPerRound;
 
-    std::vector<vtkm::Id> steps((size_t)numSeeds, 0);
-    std::vector<ParticleStatus> status((size_t)numSeeds, ParticleStatus());
+    std::vector<vtkm::Id> steps((size_t)numSeeds, 0),
+      status((size_t)numSeeds, ParticleStatus::STATUS_OK);
     vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], numSeeds);
-    vtkm::cont::ArrayHandle<ParticleStatus> statusArray =
+    vtkm::cont::ArrayHandle<vtkm::Id> statusArray =
       vtkm::cont::make_ArrayHandle(&status[0], numSeeds);
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
 
@@ -230,10 +229,9 @@ private:
         if (NeedParticleRounds && num > ParticlesPerRound)
           num = ParticlesPerRound;
 
-        std::vector<vtkm::Id> steps((size_t)num, 0);
-        std::vector<ParticleStatus> status((size_t)num, ParticleStatus());
+        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::STATUS_OK);
         vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], num);
-        vtkm::cont::ArrayHandle<ParticleStatus> statusArray =
+        vtkm::cont::ArrayHandle<vtkm::Id> statusArray =
           vtkm::cont::make_ArrayHandle(&status[0], num);
         vtkm::cont::ArrayHandleIndex idxArray(num);
 
@@ -271,10 +269,9 @@ private:
         if (NeedParticleRounds && num > ParticlesPerRound)
           num = ParticlesPerRound;
 
-        std::vector<vtkm::Id> steps((size_t)num, 0);
-        std::vector<ParticleStatus> status((size_t)num, ParticleStatus());
+        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::STATUS_OK);
         vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], num);
-        vtkm::cont::ArrayHandle<ParticleStatus> statusArray =
+        vtkm::cont::ArrayHandle<vtkm::Id> statusArray =
           vtkm::cont::make_ArrayHandle(&status[0], num);
         vtkm::cont::ArrayHandleIndex idxArray(num);
 
