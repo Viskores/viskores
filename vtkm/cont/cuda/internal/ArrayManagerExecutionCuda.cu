@@ -68,12 +68,12 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
 #ifdef VTKM_USE_UNIFIED_MEMORY
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
-    VTKM_CUDA_CALL(cudaMallocManaged(&tmp, numBytes));
+    VTKM_CUDA_CALL(cudaMallocManaged(&tmp, static_cast<std::size_t>(numBytes)));
     VTKM_CUDA_CALL(cudaMemAdvise(tmp, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, numBytes, dev, 0));
     VTKM_CUDA_CALL(cudaStreamSynchronize(0));
 #else
-    VTKM_CUDA_CALL(cudaMalloc(&tmp, numBytes));
+    VTKM_CUDA_CALL(cudaMalloc(&tmp, static_cast<std::size_t>(numBytes)));
 #endif
 
     execArray.Array = tmp;
@@ -104,14 +104,16 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(const v
                                                                          void* executionPtr,
                                                                          vtkm::Id numBytes) const
 {
-  VTKM_CUDA_CALL(cudaMemcpy(executionPtr, controlPtr, numBytes, cudaMemcpyHostToDevice));
+  VTKM_CUDA_CALL(cudaMemcpy(
+    executionPtr, controlPtr, static_cast<std::size_t>(numBytes), cudaMemcpyHostToDevice));
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const void* executionPtr,
                                                                        void* controlPtr,
                                                                        vtkm::Id numBytes) const
 {
-  VTKM_CUDA_CALL(cudaMemcpy(controlPtr, executionPtr, numBytes, cudaMemcpyDeviceToHost));
+  VTKM_CUDA_CALL(cudaMemcpy(
+    controlPtr, executionPtr, static_cast<std::size_t>(numBytes), cudaMemcpyDeviceToHost));
 }
 
 } // end namespace internal
