@@ -24,8 +24,6 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
@@ -98,7 +96,7 @@ public:
   ParticleAdvectionWorklet() {}
 
   template <typename PointStorage, typename FieldStorage>
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage> Run(
+  vtkm::cont::DataSet Run(
     const IntegratorType& it,
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
@@ -116,7 +114,7 @@ public:
   ~ParticleAdvectionWorklet() {}
 
 private:
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> run(bool dumpOutput = false)
+  vtkm::cont::DataSet run()
   {
     typedef typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>
       ParticleWorkletDispatchType;
@@ -142,16 +140,15 @@ private:
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
     particleWorkletDispatch.Invoke(idxArray, particles);
 
-    if (dumpOutput)
-    {
-      for (vtkm::Id i = 0; i < numSeeds; i++)
-      {
-        vtkm::Vec<FieldType, 3> p = particles.GetPos(i);
-        std::cout << p[0] << " " << p[1] << " " << p[2] << std::endl;
-      }
-    }
+    vtkm::cont::DataSet output;
+    vtkm::cont::ArrayHandle<vtkm::Id> stepField, statusField;
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Copy(stepArray, stepField);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>::Copy(statusArray, statusField);
+    output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", seedArray));
+    output.AddField(vtkm::cont::Field("steps", vtkm::cont::Field::ASSOC_POINTS, stepField));
+    output.AddField(vtkm::cont::Field("status", vtkm::cont::Field::ASSOC_POINTS, statusField));
 
-    return seedArray;
+    return output;
   }
 
   IntegratorType integrator;

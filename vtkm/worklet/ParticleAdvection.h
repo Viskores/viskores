@@ -40,13 +40,12 @@ public:
             typename PointStorage,
             typename FieldStorage,
             typename DeviceAdapter>
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage> Run(
-    const IntegratorType& it,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
-    const vtkm::Id& nSteps,
-    const vtkm::Id& particlesPerRound,
-    const DeviceAdapter&)
+  vtkm::cont::DataSet Run(const IntegratorType& it,
+                          const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
+                          vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
+                          const vtkm::Id& nSteps,
+                          const vtkm::Id& particlesPerRound,
+                          const DeviceAdapter&)
   {
     vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType,
                                                                FieldType,
