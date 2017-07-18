@@ -36,11 +36,9 @@ enum ParticleStatus
 {
   STATUS_OK = 0x0000,
   TERMINATED = 0x0001,
-  AT_SPATIAL_BOUNDARY = 0x0002,
-  AT_TEMPORAL_BOUNDARY = 0x0004,
-  EXITED_SPATIAL_BOUNDARY = 0x0008,
-  EXITED_TEMPORAL_BOUNDARY = 0x0010,
-  STATUS_ERROR = 0x0020
+  EXITED_SPATIAL_BOUNDARY = 0x0002,
+  EXITED_TEMPORAL_BOUNDARY = 0x0004,
+  STATUS_ERROR = 0x0008
 };
 
 template <typename T, typename DeviceAdapterTag>
@@ -118,19 +116,11 @@ public:
   VTKM_EXEC_CONT
   void SetExitedTemporalBoundary(const vtkm::Id& idx) { SetBit(idx, EXITED_TEMPORAL_BOUNDARY); }
   VTKM_EXEC_CONT
-  void SetAtSpatialBoundary(const vtkm::Id& idx) { SetBit(idx, AT_SPATIAL_BOUNDARY); }
-  VTKM_EXEC_CONT
-  void SetAtTemporalBoundary(const vtkm::Id& idx) { SetBit(idx, AT_TEMPORAL_BOUNDARY); }
-  VTKM_EXEC_CONT
   void SetError(const vtkm::Id& idx) { SetBit(idx, STATUS_ERROR); }
 
   /* Check Status */
   VTKM_EXEC_CONT
   bool Terminated(const vtkm::Id& idx) { return CheckBit(idx, TERMINATED); }
-  VTKM_EXEC_CONT
-  bool AtSpatialBoundary(const vtkm::Id& idx) { return CheckBit(idx, AT_SPATIAL_BOUNDARY); }
-  VTKM_EXEC_CONT
-  bool AtTemporalBoundary(const vtkm::Id& idx) { return CheckBit(idx, AT_TEMPORAL_BOUNDARY); }
   VTKM_EXEC_CONT
   bool ExitedSpatialBoundary(const vtkm::Id& idx) { return CheckBit(idx, EXITED_SPATIAL_BOUNDARY); }
   VTKM_EXEC_CONT
@@ -190,7 +180,6 @@ public:
     , histSize(s.histSize)
     , history(s.history)
   {
-    Particles<T, DeviceAdapterTag>(s.pos, s.steps, s.status, s.maxSteps);
   }
 
   VTKM_EXEC_CONT
@@ -381,3 +370,4 @@ public:
 
 
 #endif // vtk_m_worklet_particleadvection_Particles_h
+//============================================================================
