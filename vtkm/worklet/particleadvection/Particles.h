@@ -34,11 +34,11 @@ namespace particleadvection
 
 enum ParticleStatus
 {
-  STATUS_OK = 0x0000,
-  TERMINATED = 0x0001,
-  EXITED_SPATIAL_BOUNDARY = 0x0002,
-  EXITED_TEMPORAL_BOUNDARY = 0x0004,
-  STATUS_ERROR = 0x0008
+  STATUS_OK = 0x0001,
+  TERMINATED = 0x0002,
+  EXITED_SPATIAL_BOUNDARY = 0x0004,
+  EXITED_TEMPORAL_BOUNDARY = 0x0008,
+  STATUS_ERROR = 0x0010
 };
 
 template <typename T, typename DeviceAdapterTag>
@@ -108,17 +108,31 @@ public:
 
   /* Set/Change Status */
   VTKM_EXEC_CONT
-  void SetOK(const vtkm::Id& idx) { status.Set(idx, STATUS_OK); }
+  void SetOK(const vtkm::Id& idx)
+  {
+    Clear(idx);
+    status.Set(idx, STATUS_OK);
+  }
   VTKM_EXEC_CONT
-  void SetTerminated(const vtkm::Id& idx) { SetBit(idx, TERMINATED); }
+  void SetTerminated(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, TERMINATED);
+  }
   VTKM_EXEC_CONT
   void SetExitedSpatialBoundary(const vtkm::Id& idx) { SetBit(idx, EXITED_SPATIAL_BOUNDARY); }
   VTKM_EXEC_CONT
   void SetExitedTemporalBoundary(const vtkm::Id& idx) { SetBit(idx, EXITED_TEMPORAL_BOUNDARY); }
   VTKM_EXEC_CONT
-  void SetError(const vtkm::Id& idx) { SetBit(idx, STATUS_ERROR); }
+  void SetError(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, STATUS_ERROR);
+  }
 
   /* Check Status */
+  VTKM_EXEC_CONT
+  bool OK(const vtkm::Id& idx) { return CheckBit(idx, STATUS_OK); }
   VTKM_EXEC_CONT
   bool Terminated(const vtkm::Id& idx) { return CheckBit(idx, TERMINATED); }
   VTKM_EXEC_CONT
@@ -131,11 +145,17 @@ public:
   VTKM_EXEC_CONT
   bool Error(const vtkm::Id& idx) { return CheckBit(idx, STATUS_ERROR); }
   VTKM_EXEC_CONT
-  bool Integrateable(const vtkm::Id& idx) { return status.Get(idx) == 0; }
+  bool Integrateable(const vtkm::Id& idx)
+  {
+    return OK(idx) &&
+      !(Terminated(idx) || ExitedSpatialBoundary(idx) || ExitedTemporalBoundary(idx));
+  }
   VTKM_EXEC_CONT
   bool Done(const vtkm::Id& idx) { return !Integrateable(idx); }
 
   /* Bit Operations */
+  VTKM_EXEC_CONT
+  void Clear(const vtkm::Id& idx) { status.Set(idx, 0); }
   VTKM_EXEC_CONT
   void SetBit(const vtkm::Id& idx, const ParticleStatus& b)
   {
