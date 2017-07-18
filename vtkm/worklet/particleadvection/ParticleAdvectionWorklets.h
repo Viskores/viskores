@@ -191,7 +191,7 @@ public:
     StepsPerRound = stepsPerRound;
     ParticlesPerRound = particlesPerRound;
     field = fieldArray.PrepareForInput(DeviceAdapterTag());
-    run(true);
+    run();
   }
 
   ~StreamlineWorklet() {}
