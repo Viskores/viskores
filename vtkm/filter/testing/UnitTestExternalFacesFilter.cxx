@@ -49,6 +49,16 @@ vtkm::cont::DataSet MakeDataTestSet2()
   return MakeTestDataSet().Make3DExplicitDataSet5();
 }
 
+vtkm::cont::DataSet MakeDataTestSet3()
+{
+  return MakeTestDataSet().Make3DUniformDataSet1();
+}
+
+vtkm::cont::DataSet MakeDataTestSet4()
+{
+  return MakeTestDataSet().Make3DRectilinearDataSet0();
+}
+
 void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
                                    bool compactPoints,
                                    vtkm::Id numExpectedExtFaces,
@@ -107,10 +117,32 @@ void TestWithHeterogeneousMesh()
   TestExternalFacesExplicitGrid(ds, true, 12, 11);
 }
 
+void TestWithUniformMesh()
+{
+  std::cout << "Testing with Uniform mesh\n";
+  vtkm::cont::DataSet ds = MakeDataTestSet3();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesExplicitGrid(ds, false, 16 * 6);
+  std::cout << "Compact Points On\n";
+  TestExternalFacesExplicitGrid(ds, true, 16 * 6, 98);
+}
+
+void TestWithRectilinearMesh()
+{
+  std::cout << "Testing with Rectilinear mesh\n";
+  vtkm::cont::DataSet ds = MakeDataTestSet4();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesExplicitGrid(ds, false, 16);
+  std::cout << "Compact Points On\n";
+  TestExternalFacesExplicitGrid(ds, true, 16, 18);
+}
+
 void TestExternalFacesFilter()
 {
   TestWithHeterogeneousMesh();
   TestWithHexahedraMesh();
+  TestWithUniformMesh();
+  TestWithRectilinearMesh();
 }
 
 } // anonymous namespace
