@@ -127,6 +127,11 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
+
+  if(MSVC)
+    vtkm_setup_msvc_properties(TestBuild_${name})
+  endif()
+
   # Send the libraries created for test builds to their own directory so as to
   # not polute the directory with useful libraries.
   set_target_properties(TestBuild_${name} PROPERTIES

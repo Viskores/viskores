@@ -32,6 +32,7 @@
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
@@ -43,8 +44,10 @@
 #include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
+#include <vtkm/worklet/ScatterPermutation.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
+#include <vtkm/worklet/gradient/PointGradient.h>
 
 #include <vtkm/worklet/MarchingCubesDataTables.h>
 
@@ -480,130 +483,142 @@ void MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& origina
   edgeDispatcher.Invoke(uniqueKeys, edgeIds);
 }
 
-/// \brief Compute the weights for each edge that is used to generate
-/// a point in the resulting iso-surface
 // -----------------------------------------------------------------------------
-template <typename T>
-class NormalWorklet : public vtkm::worklet::WorkletMapPointToCell
+template <vtkm::IdComponent Comp>
+struct EdgeVertex
 {
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id2& edge) const { return edge[Comp]; }
+};
+
+class NormalsWorkletPass1 : public vtkm::worklet::WorkletMapCellToPoint
+{
+private:
+  using PointIdsArray =
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<vtkm::Id2>, EdgeVertex<0>>;
+
 public:
-  struct ClassifyCellTagType : vtkm::ListTagBase<typename float_type<T>::type>
+  typedef void ControlSignature(CellSetIn,
+                                WholeCellSetIn<Point, Cell>,
+                                WholeArrayIn<Vec3> pointCoordinates,
+                                WholeArrayIn<Scalar> inputField,
+                                FieldOutPoint<Vec3> normals);
+
+  typedef void ExecutionSignature(CellCount, CellIndices, InputIndex, _2, _3, _4, _5);
+
+  using InputDomain = _1;
+  using ScatterType = vtkm::worklet::ScatterPermutation<typename PointIdsArray::StorageTag>;
+
+  NormalsWorkletPass1(const vtkm::cont::ArrayHandle<vtkm::Id2>& edges)
+    : Scatter(vtkm::cont::make_ArrayHandleTransform(edges, EdgeVertex<0>()))
   {
-  };
+  }
 
-  typedef void ControlSignature(CellSetIn cellset, // Cell set
-                                FieldInPoint<ClassifyCellTagType> field,
-                                FieldInPoint<Vec3> originalCellPoints,
-                                FieldInCell<Id2Type> edges,
-                                FieldInCell<Scalar> weights,
-                                FieldOutCell<Vec3> normal);
-  typedef void ExecutionSignature(CellShape, FromIndices, _2, _3, _4, _5, _6);
-
-  typedef _1 InputDomain;
-
-  template <typename CellType,
-            typename IndicesVecType,
-            typename FieldType,
-            typename CoordType,
-            typename EdgeType,
-            typename WeightType,
+  template <typename FromIndexType,
+            typename CellSetInType,
+            typename WholeCoordinatesIn,
+            typename WholeFieldIn,
             typename NormalType>
-  VTKM_EXEC void operator()(CellType shape,
-                            const IndicesVecType& indices,
-                            const FieldType& fieldIn,
-                            const CoordType& coords,
-                            const EdgeType& edges,
-                            const WeightType& weight,
+  VTKM_EXEC void operator()(const vtkm::IdComponent& numCells,
+                            const FromIndexType& cellIds,
+                            vtkm::Id pointId,
+                            const CellSetInType& geometry,
+                            const WholeCoordinatesIn& pointCoordinates,
+                            const WholeFieldIn& inputField,
                             NormalType& normal) const
   {
-    // steps to get the normal calculation to work.
-    // we need to back compute the correct parametric point
-    vtkm::IdComponent edgeVertex0 = 0;
-    vtkm::IdComponent edgeVertex1 = 1;
+    vtkm::worklet::gradient::PointGradient<WholeFieldIn> gradient;
+    gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, normal);
+  }
 
-    for (vtkm::IdComponent i = 0; i < indices.GetNumberOfComponents(); ++i)
-    {
-      if (indices[i] == edges[0])
-      {
-        edgeVertex0 = i;
-      }
-      if (indices[i] == edges[1])
-      {
-        edgeVertex1 = i;
-      }
-    }
+  ScatterType GetScatter() const { return this->Scatter; }
 
-    auto grad0 =
-      vtkm::exec::CellDerivative(fieldIn,
-                                 coords,
-                                 vtkm::exec::ParametricCoordinatesPoint(
-                                   fieldIn.GetNumberOfComponents(), edgeVertex0, shape, *this),
-                                 shape,
-                                 *this);
+private:
+  ScatterType Scatter;
+};
 
-    auto grad1 =
-      vtkm::exec::CellDerivative(fieldIn,
-                                 coords,
-                                 vtkm::exec::ParametricCoordinatesPoint(
-                                   fieldIn.GetNumberOfComponents(), edgeVertex1, shape, *this),
-                                 shape,
-                                 *this);
+class NormalsWorkletPass2 : public vtkm::worklet::WorkletMapCellToPoint
+{
+private:
+  using PointIdsArray =
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<vtkm::Id2>, EdgeVertex<1>>;
 
+public:
+  typedef void ControlSignature(CellSetIn,
+                                WholeCellSetIn<Point, Cell>,
+                                WholeArrayIn<Vec3> pointCoordinates,
+                                WholeArrayIn<Scalar> inputField,
+                                WholeArrayIn<Scalar> weights,
+                                FieldInOutPoint<Vec3> normals);
+
+  typedef void
+    ExecutionSignature(CellCount, CellIndices, InputIndex, _2, _3, _4, WorkIndex, _5, _6);
+
+  using InputDomain = _1;
+  using ScatterType = vtkm::worklet::ScatterPermutation<typename PointIdsArray::StorageTag>;
+
+  NormalsWorkletPass2(const vtkm::cont::ArrayHandle<vtkm::Id2>& edges)
+    : Scatter(vtkm::cont::make_ArrayHandleTransform(edges, EdgeVertex<1>()))
+  {
+  }
+
+  template <typename FromIndexType,
+            typename CellSetInType,
+            typename WholeCoordinatesIn,
+            typename WholeFieldIn,
+            typename WholeWeightsIn,
+            typename NormalType>
+  VTKM_EXEC void operator()(const vtkm::IdComponent& numCells,
+                            const FromIndexType& cellIds,
+                            vtkm::Id pointId,
+                            const CellSetInType& geometry,
+                            const WholeCoordinatesIn& pointCoordinates,
+                            const WholeFieldIn& inputField,
+                            vtkm::Id edgeId,
+                            const WholeWeightsIn& weights,
+                            NormalType& normal) const
+  {
+    vtkm::worklet::gradient::PointGradient<NormalType> gradient;
+    NormalType grad1;
+    gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, grad1);
+
+    NormalType grad0 = normal;
+    auto weight = weights.Get(edgeId);
     normal = vtkm::Normal(vtkm::Lerp(grad0, grad1, weight));
   }
+
+  ScatterType GetScatter() const { return this->Scatter; }
+
+private:
+  ScatterType Scatter;
 };
 
-// ---------------------------------------------------------------------------
-//missing we need the original cells field
-//missing we need the original cells coordinates
-
-template <typename InputFieldType,
+template <typename NormalCType,
+          typename InputFieldType,
           typename InputStorageType,
-          typename CoordinateSystem,
-          typename NormalCType,
-          typename DeviceAdapter>
-struct GenerateNormals
+          typename CellSet,
+          typename CoordinateSystem>
+void GenerateNormals(vtkm::cont::ArrayHandle<vtkm::Vec<NormalCType, 3>>& normals,
+                     const vtkm::cont::ArrayHandle<InputFieldType, InputStorageType>& field,
+                     const CellSet& cellset,
+                     const CoordinateSystem& coordinates,
+                     vtkm::cont::ArrayHandle<vtkm::Id2>& edges,
+                     vtkm::cont::ArrayHandle<vtkm::FloatDefault>& weights)
 {
-  GenerateNormals(vtkm::cont::ArrayHandle<vtkm::Vec<NormalCType, 3>>& normals,
-                  const vtkm::cont::ArrayHandle<InputFieldType, InputStorageType>& field,
-                  const CoordinateSystem& coordinates,
-                  vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
-                  vtkm::cont::ArrayHandle<vtkm::Id2>& edges,
-                  vtkm::cont::ArrayHandle<vtkm::FloatDefault>& weights)
-    : Field(field)
-    , Coordinates(coordinates)
-    , CellIds(cellIds)
-    , Edges(edges)
-    , Weights(weights)
-    , OutputNormals(normals)
-  {
-  }
+  // To save memory, the normals computation is done in two passes. In the first
+  // pass the gradient at the first vertex of each edge is computed and stored in
+  // the normals array. In the second pass the gradient at the second vertex is
+  // computed and the gradient of the first vertex is read from the normals array.
+  // The final normal is interpolated from the two gradient values and stored
+  // in the normals array.
+  //
+  NormalsWorkletPass1 pass1(edges);
+  vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1>(pass1).Invoke(
+    cellset, cellset, coordinates, field, normals);
 
-  template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
-  {
-    vtkm::cont::CellSetPermutation<CellSetType> permutation;
-    permutation.Fill(this->CellIds, cellset);
-
-    using NormalDispatcher =
-      typename vtkm::worklet::DispatcherMapTopology<NormalWorklet<InputFieldType>, DeviceAdapter>;
-
-    NormalDispatcher dispatcher;
-    dispatcher.Invoke(permutation,
-                      marchingcubes::make_ScalarField(this->Field),
-                      this->Coordinates,
-                      this->Edges,
-                      this->Weights,
-                      this->OutputNormals);
-  }
-
-  const vtkm::cont::ArrayHandle<InputFieldType, InputStorageType>& Field;
-  const CoordinateSystem& Coordinates;
-  vtkm::cont::ArrayHandle<vtkm::Id>& CellIds;
-  vtkm::cont::ArrayHandle<vtkm::Id2>& Edges;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault>& Weights;
-  vtkm::cont::ArrayHandle<vtkm::Vec<NormalCType, 3>>& OutputNormals;
-};
+  NormalsWorkletPass2 pass2(edges);
+  vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2>(pass2).Invoke(
+    cellset, cellset, coordinates, field, weights, normals);
+}
 }
 
 /// \brief Compute the isosurface for a uniform grid data set
@@ -853,16 +868,12 @@ private:
     //now that the vertices have been generated we can generate the normals
     if (withNormals)
     {
-      using GenNormals = marchingcubes::
-        GenerateNormals<ValueType, StorageTagField, CoordinateSystem, NormalType, DeviceAdapter>;
-      GenNormals gen(normals,
-                     inputField,
-                     coordinateSystem,
-                     originalCellIdsForPoints,
-                     this->InterpolationEdgeIds,
-                     this->InterpolationWeights);
-
-      CastAndCall(cells, gen);
+      marchingcubes::GenerateNormals(normals,
+                                     inputField,
+                                     cells,
+                                     coordinateSystem,
+                                     this->InterpolationEdgeIds,
+                                     this->InterpolationWeights);
     }
 
     return outputCells;

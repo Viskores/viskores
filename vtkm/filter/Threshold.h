@@ -29,6 +29,15 @@ namespace vtkm
 namespace filter
 {
 
+/// \brief Extracts cells where scalar value in cell satisfies threshold criterion
+///
+/// Extracts all cells from any dataset type that
+/// satisfy a threshold criterion. A cell satisfies the criterion if the
+/// scalar value of every point or cell satisfies the criterion. The
+/// criterion takes the form of between two values. The output of this
+/// filter is an permutation of the input dataset.
+///
+/// You can threshold either on point or cell fields
 class Threshold : public vtkm::filter::FilterDataSetWithField<Threshold>
 {
 public:
@@ -65,7 +74,7 @@ public:
 private:
   double LowerValue;
   double UpperValue;
-  vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
+  vtkm::worklet::Threshold Worklet;
 };
 
 template <>

@@ -41,9 +41,11 @@ struct IntegerSequence
 namespace detail
 {
 
-template <int N, int... Is> //unroll in blocks of 4
-struct MakeSeq : MakeSeq<N - 4, N - 3, N - 2, N - 1, N, Is...>
+template <int N, int... Is>                                                 //unroll in blocks of 4
+struct MakeSeq /** @cond */ : MakeSeq<N - 4, N - 3, N - 2, N - 1, N, Is...> /** @endcond */
 {
+  //The cond/endcond are used to tell doxygen to ignore the inheritance, as that
+  //builds a massive inheritance tree
 };
 
 template <int... Is>
@@ -106,8 +108,10 @@ struct PreMakeSeq<0, -1>
 
 /// \brief A helper method to create an Integer sequence of 0...N-1.
 template <int N>
-struct MakeIntegerSequence : detail::PreMakeSeq<N % 4, N - 1>
+struct MakeIntegerSequence /** @cond */ : detail::PreMakeSeq<N % 4, N - 1> /** @endcond */
 {
+  //The cond/endcond are used to tell doxygen to ignore the inheritance, as that
+  //builds a massive inheritance tree
 };
 }
 }

@@ -38,8 +38,13 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/TaskSingular.h>
 
-//#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
+
+// #define ANALYZE_VTKM_SCHEDULER_1D
+// #define ANALYZE_VTKM_SCHEDULER_3D
+#if defined(ANALYZE_VTKM_SCHEDULER_1D) || defined(ANALYZE_VTKM_SCHEDULER_3D)
+#include <vtkm/cont/cuda/internal/TaskTuner.h>
+#endif
 
 // Disable warnings we check vtkm for but Thrust does not.
 VTKM_THIRDPARTY_PRE_INCLUDE
@@ -118,6 +123,47 @@ __global__ void Schedule3DIndexKernel(FunctorType functor, dim3 size)
   functor(index);
 }
 
+#if defined(ANALYZE_VTKM_SCHEDULER_1D) || defined(ANALYZE_VTKM_SCHEDULER_3D)
+
+// Currently we are getting compile failures with vtkm::worklet::wavelets::InverseTransformOdd
+// for an unknown reason
+template <class FunctorType>
+__global__ void Schedule1DIndexKernel2(FunctorType functor,
+                                       vtkm::Id numberOfKernelsInvoked,
+                                       vtkm::Id length)
+{
+  vtkm::Id index = static_cast<vtkm::Id>(blockIdx.x * blockDim.x + threadIdx.x);
+  const vtkm::Id inc = static_cast<vtkm::Id>(blockDim.x * gridDim.x);
+  for (; index < length; index += inc)
+  {
+    functor(index);
+  }
+}
+
+template <class FunctorType>
+__global__ void Schedule3DIndexKernel2(FunctorType functor, dim3 size)
+{
+  const dim3 start(blockIdx.x * blockDim.x + threadIdx.x,
+                   blockIdx.y * blockDim.y + threadIdx.y,
+                   blockIdx.z * blockDim.z + threadIdx.z);
+  const dim3 inc(blockDim.x * gridDim.x, blockDim.y * gridDim.y, blockDim.z * gridDim.z);
+
+  for (uint k = start.z; k < size.z; k += inc.z)
+  {
+    for (uint j = start.y; j < size.y; j += inc.y)
+    {
+      vtkm::Id3 index(start.x, j, k);
+      for (vtkm::Id i = start.x; i < size.x; i += inc.x)
+      {
+        index[0] = i;
+        functor(index);
+      }
+    }
+  }
+}
+
+#endif
+
 template <typename T, typename BinaryOperationType>
 __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_op)
 {
@@ -133,140 +179,6 @@ inline void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d
   gridSize3d.z = (rangeMax.z % blockSize3d.z != 0) ? (rangeMax.z / blockSize3d.z + 1)
                                                    : (rangeMax.z / blockSize3d.z);
 }
-
-#ifdef ANALYZE_VTKM_SCHEDULER
-class PerfRecord
-{
-public:
-  PerfRecord(float elapsedT, dim3 block)
-    : elapsedTime(elapsedT)
-    , blockSize(block)
-  {
-  }
-
-  bool operator<(const PerfRecord& other) const { return elapsedTime < other.elapsedTime; }
-
-  float elapsedTime;
-  dim3 blockSize;
-};
-
-template <class Functor>
-static void compare_3d_schedule_patterns(Functor functor, const vtkm::Id3& rangeMax)
-{
-  const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
-                    static_cast<vtkm::UInt32>(rangeMax[1]),
-                    static_cast<vtkm::UInt32>(rangeMax[2]));
-  std::vector<PerfRecord> results;
-  vtkm::UInt32 indexTable[16] = { 1, 2, 4, 8, 12, 16, 20, 24, 28, 30, 32, 64, 128, 256, 512, 1024 };
-
-  for (vtkm::UInt32 i = 0; i < 16; i++)
-  {
-    for (vtkm::UInt32 j = 0; j < 16; j++)
-    {
-      for (vtkm::UInt32 k = 0; k < 16; k++)
-      {
-        cudaEvent_t start, stop;
-        VTKM_CUDA_CALL(cudaEventCreate(&start));
-        VTKM_CUDA_CALL(cudaEventCreate(&stop));
-
-        dim3 blockSize3d(indexTable[i], indexTable[j], indexTable[k]);
-        dim3 gridSize3d;
-
-        if ((blockSize3d.x * blockSize3d.y * blockSize3d.z) >= 1024 ||
-            (blockSize3d.x * blockSize3d.y * blockSize3d.z) <= 4 || blockSize3d.z >= 64)
-        {
-          //cuda can't handle more than 1024 threads per block
-          //so don't try if we compute higher than that
-
-          //also don't try stupidly low numbers
-
-          //cuda can't handle more than 64 threads in the z direction
-          continue;
-        }
-
-        compute_block_size(ranges, blockSize3d, gridSize3d);
-        VTKM_CUDA_CALL(cudaEventRecord(start, 0));
-        Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d>>>(functor, ranges);
-        VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
-
-        VTKM_CUDA_CALL(cudaEventSynchronize(stop));
-        float elapsedTimeMilliseconds;
-        VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
-
-        VTKM_CUDA_CALL(cudaEventDestroy(start));
-        VTKM_CUDA_CALL(cudaEventDestroy(stop));
-
-        PerfRecord record(elapsedTimeMilliseconds, blockSize3d);
-        results.push_back(record);
-      }
-    }
-  }
-
-  std::sort(results.begin(), results.end());
-  const vtkm::Int64 size = static_cast<vtkm::Int64>(results.size());
-  for (vtkm::Int64 i = 1; i <= size; i++)
-  {
-    vtkm::UInt64 index = static_cast<vtkm::UInt64>(size - i);
-    vtkm::UInt32 x = results[index].blockSize.x;
-    vtkm::UInt32 y = results[index].blockSize.y;
-    vtkm::UInt32 z = results[index].blockSize.z;
-    float t = results[index].elapsedTime;
-
-    std::cout << "BlockSize of: " << x << "," << y << "," << z << " required: " << t << std::endl;
-  }
-
-  std::cout << "flat array performance " << std::endl;
-  {
-    cudaEvent_t start, stop;
-    VTKM_CUDA_CALL(cudaEventCreate(&start));
-    VTKM_CUDA_CALL(cudaEventCreate(&stop));
-
-    VTKM_CUDA_CALL(cudaEventRecord(start, 0));
-    typedef vtkm::cont::cuda::internal::DeviceAdapterAlgorithmThrust<
-      vtkm::cont::DeviceAdapterTagCuda>
-      Algorithm;
-    Algorithm::Schedule(functor, numInstances);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
-
-    VTKM_CUDA_CALL(cudaEventSynchronize(stop));
-    float elapsedTimeMilliseconds;
-    VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
-
-    VTKM_CUDA_CALL(cudaEventDestroy(start));
-    VTKM_CUDA_CALL(cudaEventDestroy(stop));
-
-    std::cout << "Flat index required: " << elapsedTimeMilliseconds << std::endl;
-  }
-
-  std::cout << "fixed 3d block size performance " << std::endl;
-  {
-    cudaEvent_t start, stop;
-    VTKM_CUDA_CALL(cudaEventCreate(&start));
-    VTKM_CUDA_CALL(cudaEventCreate(&stop));
-
-    dim3 blockSize3d(64, 2, 1);
-    dim3 gridSize3d;
-
-    compute_block_size(ranges, blockSize3d, gridSize3d);
-    VTKM_CUDA_CALL(cudaEventRecord(start, 0));
-    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d>>>(functor, ranges);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
-
-    VTKM_CUDA_CALL(cudaEventSynchronize(stop));
-    float elapsedTimeMilliseconds;
-    VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
-
-    VTKM_CUDA_CALL(cudaEventDestroy(start));
-    VTKM_CUDA_CALL(cudaEventDestroy(stop));
-
-    std::cout << "BlockSize of: " << blockSize3d.x << "," << blockSize3d.y << "," << blockSize3d.z
-              << " required: " << elapsedTimeMilliseconds << std::endl;
-    std::cout << "GridSize of: " << gridSize3d.x << "," << gridSize3d.y << "," << gridSize3d.z
-              << " required: " << elapsedTimeMilliseconds << std::endl;
-  }
-}
-
-#endif
 
 /// This class can be subclassed to implement the DeviceAdapterAlgorithm for a
 /// device that uses thrust as its implementation. The subclass should pass in
@@ -601,14 +513,13 @@ private:
   }
 
   template <typename KeysPortal, typename ValuesPortal, typename OutputPortal>
-  VTKM_CONT static typename ValuesPortal::ValueType ScanInclusiveByKeyPortal(
-    const KeysPortal& keys,
-    const ValuesPortal& values,
-    const OutputPortal& output)
+  VTKM_CONT static void ScanInclusiveByKeyPortal(const KeysPortal& keys,
+                                                 const ValuesPortal& values,
+                                                 const OutputPortal& output)
   {
     using KeyType = typename KeysPortal::ValueType;
     typedef typename OutputPortal::ValueType ValueType;
-    return ScanInclusiveByKeyPortal(
+    ScanInclusiveByKeyPortal(
       keys, values, output, ::thrust::equal_to<KeyType>(), ::thrust::plus<ValueType>());
   }
 
@@ -617,12 +528,11 @@ private:
             typename OutputPortal,
             typename BinaryPredicate,
             typename AssociativeOperator>
-  VTKM_CONT static typename ValuesPortal::ValueType ScanInclusiveByKeyPortal(
-    const KeysPortal& keys,
-    const ValuesPortal& values,
-    const OutputPortal& output,
-    BinaryPredicate binary_predicate,
-    AssociativeOperator binary_operator)
+  VTKM_CONT static void ScanInclusiveByKeyPortal(const KeysPortal& keys,
+                                                 const ValuesPortal& values,
+                                                 const OutputPortal& output,
+                                                 BinaryPredicate binary_predicate,
+                                                 AssociativeOperator binary_operator)
   {
     typedef typename KeysPortal::ValueType KeyType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType, BinaryPredicate> bpred(
@@ -634,22 +544,18 @@ private:
     typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
     try
     {
-      IteratorType end = ::thrust::inclusive_scan_by_key(thrust::cuda::par,
-                                                         IteratorBegin(keys),
-                                                         IteratorEnd(keys),
-                                                         IteratorBegin(values),
-                                                         IteratorBegin(output),
-                                                         bpred,
-                                                         bop);
-      return *(end - 1);
+      ::thrust::inclusive_scan_by_key(thrust::cuda::par,
+                                      IteratorBegin(keys),
+                                      IteratorEnd(keys),
+                                      IteratorBegin(values),
+                                      IteratorBegin(output),
+                                      bpred,
+                                      bop);
     }
     catch (...)
     {
       throwAsVTKmException();
-      return typename ValuesPortal::ValueType();
     }
-
-    //return the value at the last index in the array, as that is the sum
   }
 
   template <typename KeysPortal, typename ValuesPortal, typename OutputPortal>
@@ -690,23 +596,19 @@ private:
     typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
     try
     {
-      IteratorType end = ::thrust::exclusive_scan_by_key(thrust::cuda::par,
-                                                         IteratorBegin(keys),
-                                                         IteratorEnd(keys),
-                                                         IteratorBegin(values),
-                                                         IteratorBegin(output),
-                                                         initValue,
-                                                         bpred,
-                                                         bop);
-      return;
+      ::thrust::exclusive_scan_by_key(thrust::cuda::par,
+                                      IteratorBegin(keys),
+                                      IteratorEnd(keys),
+                                      IteratorBegin(values),
+                                      IteratorBegin(output),
+                                      initValue,
+                                      bpred,
+                                      bop);
     }
     catch (...)
     {
       throwAsVTKmException();
-      return;
     }
-
-    //return the value at the last index in the array, as that is the sum
   }
 
   template <class ValuesPortal>
@@ -1119,15 +1021,14 @@ public:
   }
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
-  VTKM_CONT static T ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                        const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                        vtkm::cont::ArrayHandle<U, VOut>& output)
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                           vtkm::cont::ArrayHandle<U, VOut>& output)
   {
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
       output.PrepareForOutput(0, DeviceAdapterTag());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
     //We need call PrepareForInput on the input argument before invoking a
@@ -1136,9 +1037,9 @@ public:
     //use case breaks.
     keys.PrepareForInput(DeviceAdapterTag());
     values.PrepareForInput(DeviceAdapterTag());
-    return ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                                    values.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+    ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                             values.PrepareForInput(DeviceAdapterTag()),
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
   template <typename T,
@@ -1147,16 +1048,15 @@ public:
             typename VIn,
             typename VOut,
             typename BinaryFunctor>
-  VTKM_CONT static T ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                        const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                        vtkm::cont::ArrayHandle<U, VOut>& output,
-                                        BinaryFunctor binary_functor)
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                           vtkm::cont::ArrayHandle<U, VOut>& output,
+                                           BinaryFunctor binary_functor)
   {
     const vtkm::Id numberOfValues = keys.GetNumberOfValues();
     if (numberOfValues <= 0)
     {
       output.PrepareForOutput(0, DeviceAdapterTag());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
     //We need call PrepareForInput on the input argument before invoking a
@@ -1165,11 +1065,11 @@ public:
     //use case breaks.
     keys.PrepareForInput(DeviceAdapterTag());
     values.PrepareForInput(DeviceAdapterTag());
-    return ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                                    values.PrepareForInput(DeviceAdapterTag()),
-                                    output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
-                                    ::thrust::equal_to<T>(),
-                                    binary_functor);
+    ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
+                             values.PrepareForInput(DeviceAdapterTag()),
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                             ::thrust::equal_to<T>(),
+                             binary_functor);
   }
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
@@ -1365,6 +1265,10 @@ public:
     {
       throw vtkm::cont::ErrorExecution(hostErrorPtr);
     }
+
+#ifdef ANALYZE_VTKM_SCHEDULER_1D
+    compare_1d_dynamic_block_picker(functor, numInstances, totalBlocks, blockSize);
+#endif
   }
 
   template <class Functor>
@@ -1390,10 +1294,6 @@ public:
 
     functor.SetErrorMessageBuffer(errorMessage);
 
-#ifdef ANALYZE_VTKM_SCHEDULER
-    //requires the errormessage buffer be set
-    compare_3d_schedule_patterns(functor, rangeMax);
-#endif
     const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
                       static_cast<vtkm::UInt32>(rangeMax[1]),
                       static_cast<vtkm::UInt32>(rangeMax[2]));
@@ -1402,6 +1302,9 @@ public:
     //memory in the X direction. Also should be good for thin in the Z axis
     //algorithms.
     dim3 blockSize3d(64, 2, 1);
+    //In general we need more information as this doesn't work well when
+    //executing on the points, and need to fetch all cells used, as the z
+    //width is not fat enough
 
     //handle the simple use case of 'bad' datasets which are thin in X
     //but larger in the other directions, allowing us decent performance with
@@ -1410,6 +1313,7 @@ public:
     {
       blockSize3d = dim3(16, 4, 4);
     }
+
 
     dim3 gridSize3d;
     compute_block_size(ranges, blockSize3d, gridSize3d);
@@ -1427,6 +1331,22 @@ public:
     {
       throw vtkm::cont::ErrorExecution(hostErrorPtr);
     }
+
+#ifdef ANALYZE_VTKM_SCHEDULER_1D
+    compare_1d_dynamic_block_picker(functor,
+                                    rangeMax[0] * rangeMax[1] * rangeMax[2],
+                                    gridSize3d.x * gridSize3d.y * gridSize3d.z,
+                                    blockSize3d.x * blockSize3d.y * blockSize3d.z);
+#endif
+
+#ifdef ANALYZE_VTKM_SCHEDULER_3D
+    //requires the errormessage buffer be set
+    compare_3d_dynamic_block_picker(functor, rangeMax, gridSize3d, blockSize3d);
+#endif
+
+#ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_3D
+    parameter_sweep_3d_schedule(functor, rangeMax);
+#endif
   }
 
   template <typename T, class Storage>

@@ -32,6 +32,11 @@ namespace vtkm
 namespace filter
 {
 
+/// \brief Clip a dataset using an implicit function
+///
+/// Clip a dataset using a given implicit function value, such as vtkm::cont::Sphere
+/// or vtkm::cont::Frustum.
+/// The resulting geometry will not be water tight.
 class ClipWithImplicitFunction : public vtkm::filter::FilterDataSet<ClipWithImplicitFunction>
 {
 public:

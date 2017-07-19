@@ -78,7 +78,7 @@ struct CheckStructuredUniformPointCoords : public vtkm::worklet::WorkletMapPoint
 
   template <vtkm::IdComponent NumDimensions>
   VTKM_EXEC void operator()(
-    const vtkm::VecRectilinearPointCoordinates<NumDimensions>& vtkmNotUsed(coords)) const
+    const vtkm::VecAxisAlignedPointCoordinates<NumDimensions>& vtkmNotUsed(coords)) const
   {
     // Success if here.
   }

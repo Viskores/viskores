@@ -20,6 +20,8 @@
 
 #include <vtkm/rendering/ColorTable.h>
 
+#include <vtkm/Math.h>
+
 #include <string>
 #include <vector>
 
@@ -78,6 +80,11 @@ const std::string& ColorTable::GetName() const
 bool ColorTable::GetSmooth() const
 {
   return this->Internals->Smooth;
+}
+
+void ColorTable::SetSmooth(bool smooth)
+{
+  this->Internals->Smooth = smooth;
 }
 
 void ColorTable::Sample(int numSamples,
@@ -218,6 +225,28 @@ void ColorTable::Clear()
   this->Internals.reset(new detail::ColorTableInternals);
   this->Internals->UniqueName = "";
   this->Internals->Smooth = false;
+}
+
+ColorTable ColorTable::CorrectOpacity(const vtkm::Float32& factor) const
+{
+  ColorTable corrected;
+  corrected.SetSmooth(this->Internals->Smooth);
+  size_t rgbSize = this->Internals->RGBPoints.size();
+  for (size_t i = 0; i < rgbSize; ++i)
+  {
+    detail::ColorControlPoint point = this->Internals->RGBPoints.at(i);
+    corrected.AddControlPoint(point.Position, point.RGBA);
+  }
+
+  size_t alphaSize = this->Internals->AlphaPoints.size();
+  for (size_t i = 0; i < alphaSize; ++i)
+  {
+    detail::AlphaControlPoint point = this->Internals->AlphaPoints.at(i);
+    vtkm::Float32 alpha = 1.f - vtkm::Pow((1.f - point.AlphaValue), factor);
+    corrected.AddAlphaControlPoint(point.Position, alpha);
+  }
+
+  return corrected;
 }
 
 void ColorTable::Reverse()

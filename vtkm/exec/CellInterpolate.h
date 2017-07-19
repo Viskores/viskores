@@ -23,7 +23,7 @@
 #include <vtkm/Assert.h>
 #include <vtkm/CellShape.h>
 #include <vtkm/Math.h>
-#include <vtkm/VecRectilinearPointCoordinates.h>
+#include <vtkm/VecAxisAlignedPointCoordinates.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/exec/FunctorBase.h>
 
@@ -188,7 +188,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 
 template <typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecRectilinearPointCoordinates<1>& field,
+  const vtkm::VecAxisAlignedPointCoordinates<1>& field,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagLine,
   const vtkm::exec::FunctorBase&)
@@ -331,7 +331,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 
 template <typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecRectilinearPointCoordinates<2>& field,
+  const vtkm::VecAxisAlignedPointCoordinates<2>& field,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagQuad,
   const vtkm::exec::FunctorBase&)
@@ -386,7 +386,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 
 template <typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
-  const vtkm::VecRectilinearPointCoordinates<3>& field,
+  const vtkm::VecAxisAlignedPointCoordinates<3>& field,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagHexahedron,
   const vtkm::exec::FunctorBase&)

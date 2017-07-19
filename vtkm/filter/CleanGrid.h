@@ -70,7 +70,7 @@ public:
                             Device);
 
   template <typename ValueType, typename Storage, typename Device>
-  VTKM_CONT vtkm::cont::ArrayHandle<ValueType> CompactPointArray(
+  VTKM_CONT vtkm::cont::ArrayHandle<ValueType> MapPointField(
     const vtkm::cont::ArrayHandle<ValueType, Storage>& inArray,
     Device) const;
 

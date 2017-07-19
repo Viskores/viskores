@@ -28,29 +28,48 @@
 namespace
 {
 
-class AddPermutationCellSet
+template <typename DeviceTag>
+struct CallWorker
 {
-  vtkm::cont::DataSet* Output;
-  vtkm::cont::ArrayHandle<vtkm::Id>* ValidIds;
+  vtkm::cont::DynamicCellSet& Output;
+  vtkm::worklet::ExtractGeometry& Worklet;
+  const vtkm::cont::CoordinateSystem& Coords;
+  const vtkm::cont::ImplicitFunction& Function;
+  bool ExtractInside;
+  bool ExtractBoundaryCells;
+  bool ExtractOnlyBoundaryCells;
 
-public:
-  AddPermutationCellSet(vtkm::cont::DataSet& data, vtkm::cont::ArrayHandle<vtkm::Id>& validIds)
-    : Output(&data)
-    , ValidIds(&validIds)
+  CallWorker(vtkm::cont::DynamicCellSet& output,
+             vtkm::worklet::ExtractGeometry& worklet,
+             const vtkm::cont::CoordinateSystem& coords,
+             const vtkm::cont::ImplicitFunction& function,
+             bool extractInside,
+             bool extractBoundaryCells,
+             bool extractOnlyBoundaryCells)
+    : Output(output)
+    , Worklet(worklet)
+    , Coords(coords)
+    , Function(function)
+    , ExtractInside(extractInside)
+    , ExtractBoundaryCells(extractBoundaryCells)
+    , ExtractOnlyBoundaryCells(extractOnlyBoundaryCells)
   {
   }
 
   template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
+  void operator()(const CellSetType& cellSet) const
   {
-    typedef vtkm::cont::CellSetPermutation<CellSetType> PermutationCellSetType;
-
-    PermutationCellSetType permCellSet(*this->ValidIds, cellset, cellset.GetName());
-
-    this->Output->AddCellSet(permCellSet);
+    this->Output = this->Worklet.Run(cellSet,
+                                     this->Coords,
+                                     this->Function,
+                                     this->ExtractInside,
+                                     this->ExtractBoundaryCells,
+                                     this->ExtractOnlyBoundaryCells,
+                                     DeviceTag());
   }
 };
-}
+
+} // end anon namespace
 
 namespace vtkm
 {
@@ -72,7 +91,6 @@ inline VTKM_CONT ExtractGeometry::ExtractGeometry()
   , ExtractInside(true)
   , ExtractBoundaryCells(false)
   , ExtractOnlyBoundaryCells(false)
-  , ValidCellIds()
 {
 }
 
@@ -81,37 +99,27 @@ template <typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT vtkm::filter::ResultDataSet ExtractGeometry::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter& device)
+  const DeviceAdapter&)
 {
   // extract the input cell set and coordinates
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  // run the worklet on the cell set
-  vtkm::cont::ArrayHandle<bool> passFlags;
-
-  typedef vtkm::worklet::ExtractGeometry::ExtractCellsByVOI ExtractCellsWorklet;
-  ExtractCellsWorklet worklet((*this->Function).PrepareForExecution(device),
-                              this->ExtractInside,
-                              this->ExtractBoundaryCells,
-                              this->ExtractOnlyBoundaryCells);
-
-  vtkm::worklet::DispatcherMapTopology<ExtractCellsWorklet, DeviceAdapter> dispatcher(worklet);
-  dispatcher.Invoke(
-    vtkm::filter::ApplyPolicy(cells, policy), vtkm::filter::ApplyPolicy(coords, policy), passFlags);
-
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> indices =
-    vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), passFlags.GetNumberOfValues());
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::CopyIf(indices, passFlags, this->ValidCellIds);
+  vtkm::cont::DynamicCellSet outCells;
+  CallWorker<DeviceAdapter> worker(outCells,
+                                   this->Worklet,
+                                   coords,
+                                   *this->Function,
+                                   this->ExtractInside,
+                                   this->ExtractBoundaryCells,
+                                   this->ExtractOnlyBoundaryCells);
+  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(worker);
 
   // create the output dataset
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
-  // generate the cellset
-  AddPermutationCellSet addCellSet(output, this->ValidCellIds);
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy), addCellSet);
+  output.AddCellSet(outCells);
 
   return output;
 }
@@ -123,28 +131,26 @@ inline VTKM_CONT bool ExtractGeometry::DoMapField(
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter&)
+  const DeviceAdapter& device)
 {
-  // point data is copied as is because it was not collapsed
+  vtkm::cont::DynamicArrayHandle output;
+
   if (fieldMeta.IsPointField())
   {
-    result.GetDataSet().AddField(fieldMeta.AsField(input));
-    return true;
+    output = input; // pass through, points aren't changed.
   }
-
-  if (fieldMeta.IsCellField())
+  else if (fieldMeta.IsCellField())
   {
-    typedef vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                               vtkm::cont::ArrayHandle<T, StorageType>>
-      PermutationType;
-
-    PermutationType permutation =
-      vtkm::cont::make_ArrayHandlePermutation(this->ValidCellIds, input);
-
-    result.GetDataSet().AddField(fieldMeta.AsField(permutation));
-    return true;
+    output = this->Worklet.ProcessCellField(input, device);
   }
-  return false;
+  else
+  {
+    return false;
+  }
+
+  // use the same meta data as the input so we get the same field name, etc.
+  result.GetDataSet().AddField(fieldMeta.AsField(output));
+  return true;
 }
 }
 }

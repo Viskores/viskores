@@ -31,53 +31,110 @@
 
 /*!
  * \namespace vtkm
- * \brief VTKm Toolkit.
+ * \brief VTK-m Toolkit.
  *
- * vtkm is the namespace for the VTKm Toolkit. It contains other sub namespaces,
- * as well as basic data types and functions callable from all components in VTKm
+ * vtkm is the namespace for the VTK-m Toolkit. It contains other sub namespaces,
+ * as well as basic data types and functions callable from all components in VTK-m
  * toolkit.
  *
  * \namespace vtkm::cont
- * \brief VTKm Control Environment.
+ * \brief VTK-m Control Environment.
  *
- * vtkm::cont defines the publicly accessible API for the VTKm Control
- * Environment. Users of the VTKm Toolkit can use this namespace to access the
+ * vtkm::cont defines the publicly accessible API for the VTK-m Control
+ * Environment. Users of the VTK-m Toolkit can use this namespace to access the
  * Control Environment.
+ *
+ * \namespace vtkm::cont::arg
+ * \brief Transportation controls for Control Environment Objects.
+ *
+ * vtkm::cont::arg includes the classes that allows the vtkm::worklet::Dispatchers
+ * to request Control Environment Objects to be transfered to the Execution Environment.
  *
  * \namespace vtkm::cont::cuda
  * \brief CUDA implementation for Control Environment.
  *
- * vtkm::cont::cuda includes the code to implement the VTKm Control Environment
- * for CUDA-based platforms.
+ * vtkm::cont::cuda includes the code to implement the VTK-m Control Environment
+ * for the CUDA-based device adapter.
+ *
+ * \namespace vtkm::cont::serial
+ * \brief Serial implementation for Control Environment.
+ *
+ * vtkm::cont::serial includes the code to implement the VTK-m Control Environment
+ * for the serial device adapter.
+ *
+ * \namespace vtkm::cont::tbb
+ * \brief TBB implementation for Control Environment.
+ *
+ * vtkm::cont::tbb includes the code to implement the VTK-m Control Environment
+ * for the TBB-based device adapter.
  *
  * \namespace vtkm::exec
- * \brief VTKm Execution Environment.
+ * \brief VTK-m Execution Environment.
  *
- * vtkm::exec defines the publicly accessible API for the VTKm Execution
+ * vtkm::exec defines the publicly accessible API for the VTK-m Execution
  * Environment. Worklets typically use classes/apis defined within this
  * namespace alone.
  *
  * \namespace vtkm::exec::cuda
  * \brief CUDA implementation for Execution Environment.
  *
- * vtkm::exec::cuda includes the code to implement the VTKm Execution Environment
- * for CUDA-based platforms.
+ * vtkm::exec::cuda includes the code to implement the VTK-m Execution Environment
+ * for the CUDA-based device adapter.
+ *
+ * \namespace vtkm::exec::serial
+ * \brief CUDA implementation for Execution Environment.
+ *
+ * vtkm::exec::serial includes the code to implement the VTK-m Execution Environment
+ * for the serial device adapter.
+ *
+ * \namespace vtkm::exec::tbb
+ * \brief TBB implementation for Execution Environment.
+ *
+ * vtkm::exec::tbb includes the code to implement the VTK-m Execution Environment
+ * for the TBB device adapter.
+ *
+ * \namespace vtkm::filter
+ * \brief VTK-m Filters
+ *
+ * vtkm::filter is the collection of predefined filters that take data as input
+ * and write new data as output. Filters operate on vtkm::cont::DataSet objects,
+ * vtkm::cont::Fields, and other runtime typeless objects.
  *
  * \namespace vtkm::internal
- * \brief VTKm Internal Environment
+ * \brief VTK-m Internal Environment
  *
  * vtkm::internal defines API which is internal and subject to frequent
- * change. This should not be used for projects using VTKm. Instead it servers
- * are a reference for the developers of VTKm.
+ * change. This should not be used for projects using VTK-m. Instead it servers
+ * are a reference for the developers of VTK-m.
  *
  * \namespace vtkm::interop
- * \brief Utility opengl interop functions
+ * \brief VTK-m OpenGL Interoperability
  *
  * vtkm::interop defines the publicly accessible API for interoperability between
- * vtkm and opengl.
+ * vtkm and OpenGL.
+ *
+ * \namespace vtkm::io
+ * \brief VTK-m IO
+ *
+ * vtkm::io defines API for basic reading of VTK files. Intended to be used for
+ * examples and testing.
+ *
+ * \namespace vtkm::rendering
+ * \brief VTK-m Rendering
+ *
+ * vtkm::rendering defines API for
  *
  * \namespace vtkm::testing
  * \brief Internal testing classes
+ *
+ * \namespace vtkm::worklet
+ * \brief VTK-m Worklets
+ *
+ * vtkm::worklet defines API for the low level worklets that operate on an element of data,
+ * and the dispatcher that execute them in the execution environment.
+ *
+ * VTK-m provides numerous worklet implementations. These worklet implementations for the most
+ * part provide the underlying implementations of the algorithms in vtkm::filter.
  *
  */
 
@@ -86,9 +143,6 @@ namespace vtkm
 //*****************************************************************************
 // Typedefs for basic types.
 //*****************************************************************************
-
-/// Alignment requirements are prescribed by CUDA on device (Table B-1 in NVIDIA
-/// CUDA C Programming Guide 4.0)
 
 #if VTKM_SIZE_FLOAT == 4
 typedef float Float32;
@@ -350,7 +404,7 @@ template <typename T, vtkm::IdComponent Size>
 class VTKM_ALWAYS_EXPORT Vec;
 
 template <typename T>
-class VTKM_ALWAYS_EXPORTVecC;
+class VTKM_ALWAYS_EXPORT VecC;
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT VecCConst;

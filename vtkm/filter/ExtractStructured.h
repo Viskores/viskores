@@ -28,7 +28,22 @@ namespace vtkm
 {
 namespace filter
 {
-
+/// \brief Select piece (e.g., volume of interest) and/or subsample structured points dataset
+///
+/// Select or subsample a portion of an input structured dataset. The selected
+/// portion of interested is referred to as the Volume Of Interest, or VOI.
+/// The output of this filter is a structured dataset. The filter treats input
+/// data of any topological dimension (i.e., point, line, plane, or volume) and
+/// can generate output data of any topological dimension.
+///
+/// To use this filter set the VOI ivar which are i-j-k min/max indices that
+/// specify a rectangular region in the data. (Note that these are 0-offset.)
+/// You can also specify a sampling rate to subsample the data.
+///
+/// Typical applications of this filter are to extract a slice from a volume
+/// for image processing, subsampling large volumes to reduce data size, or
+/// extracting regions of a volume with interesting data.
+///
 class ExtractStructured : public vtkm::filter::FilterDataSet<ExtractStructured>
 {
 public:
@@ -54,17 +69,22 @@ public:
   VTKM_CONT
   void SetVOI(const vtkm::RangeId3& voi) { this->VOI = voi; }
 
-  // Sampling rate
+  /// Get the Sampling rate
   VTKM_CONT
   vtkm::Id3 GetSampleRate() const { return this->SampleRate; }
+
+  /// Set the Sampling rate
   VTKM_CONT
   void SetSampleRate(vtkm::Id i, vtkm::Id j, vtkm::Id k) { this->SampleRate = vtkm::Id3(i, j, k); }
+
+  /// Set the Sampling rate
   VTKM_CONT
   void SetSampleRate(vtkm::Id3 sampleRate) { this->SampleRate = sampleRate; }
 
-  // Include the outer boundary on a subsample
+  /// Get if we should include the outer boundary on a subsample
   VTKM_CONT
   bool GetIncludeBoundary() { return this->IncludeBoundary; }
+  /// Set if we should include the outer boundary on a subsample
   VTKM_CONT
   void SetIncludeBoundary(bool value) { this->IncludeBoundary = value; }
 

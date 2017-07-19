@@ -30,25 +30,34 @@ namespace vtkm
 {
 namespace filter
 {
-
+/// @brief Extract only points from a geometry using an implicit function
+///
+///
+/// Extract only the  points that are either inside or outside of a
+/// VTK-m implicit function. Examples include planes, spheres, boxes,
+/// etc.
+/// Note that while any geometry type can be provided as input, the output is
+/// represented by an explicit representation of points using
+/// vtkm::cont::CellSetSingleType
 class ExtractPoints : public vtkm::filter::FilterDataSet<ExtractPoints>
 {
 public:
   VTKM_CONT
   ExtractPoints();
 
-  // When CompactPoints is set, instead of copying the points and point fields
-  // from the input, the filter will create new compact fields without the unused elements
+  /// When CompactPoints is set, instead of copying the points and point fields
+  /// from the input, the filter will create new compact fields without the unused elements
   VTKM_CONT
   bool GetCompactPoints() const { return this->CompactPoints; }
   VTKM_CONT
   void SetCompactPoints(bool value) { this->CompactPoints = value; }
 
-  // Set the volume of interest to extract
+  /// Set the volume of interest to extract
   template <typename ImplicitFunctionType, typename DerivedPolicy>
   void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func,
                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
+  /// Set the volume of interest to extract
   template <typename ImplicitFunctionType>
   void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func)
   {

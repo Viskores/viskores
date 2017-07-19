@@ -19,47 +19,10 @@
 //============================================================================
 
 #include <vtkm/cont/DynamicCellSet.h>
-
-#include <vtkm/worklet/DispatcherMapTopology.h>
-
 #include <vtkm/worklet/Gradient.h>
 
 namespace
 {
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename Device, typename T, typename S>
-struct PointGrad
-{
-  PointGrad(const vtkm::cont::CoordinateSystem& coords,
-            const vtkm::cont::ArrayHandle<T, S>& field,
-            vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>* result)
-    : Points(&coords)
-    , InField(&field)
-    , Result(result)
-  {
-  }
-
-  template <typename CellSetType>
-  void operator()(const CellSetType& cellset) const
-  {
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::PointGradient, Device> dispatcher;
-    dispatcher.Invoke(cellset, //topology to iterate on a per point basis
-                      cellset, //whole cellset in
-                      vtkm::filter::ApplyPolicy(*this->Points, this->Policy),
-                      *this->InField,
-                      *this->Result);
-  }
-
-  vtkm::filter::PolicyBase<DerivedPolicy> Policy;
-  const vtkm::cont::CoordinateSystem* const Points;
-  const vtkm::cont::ArrayHandle<T, S>* const InField;
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>* Result;
-
-private:
-  void operator=(const PointGrad<DerivedPolicy, Device, T, S>&) = delete;
-};
-
 //-----------------------------------------------------------------------------
 template <typename HandleType>
 inline void add_field(vtkm::filter::ResultField& result,
@@ -81,47 +44,17 @@ inline void add_field(vtkm::filter::ResultField& result,
 
 //-----------------------------------------------------------------------------
 template <typename T, typename S, typename DeviceAdapter>
-inline void add_extra_vec_fields(
-  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& inField,
-  const vtkm::filter::Gradient* const filter,
-  vtkm::filter::ResultField& result,
-  const DeviceAdapter&)
+inline void transpose_3x3(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<T, 3>, 3>, S>& field,
+                          DeviceAdapter adapter)
 {
-  if (filter->GetComputeDivergence())
-  {
-    vtkm::cont::ArrayHandle<T> divergence;
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::Divergence, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(inField, divergence);
-
-    add_field(result, divergence, filter->GetDivergenceName());
-  }
-
-  if (filter->GetComputeVorticity())
-  {
-    vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> vorticity;
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::Vorticity, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(inField, vorticity);
-
-    add_field(result, vorticity, filter->GetVorticityName());
-  }
-
-  if (filter->GetComputeQCriterion())
-  {
-    vtkm::cont::ArrayHandle<T> qc;
-    vtkm::worklet::DispatcherMapField<vtkm::worklet::QCriterion, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(inField, qc);
-
-    add_field(result, qc, filter->GetQCriterionName());
-  }
+  vtkm::worklet::gradient::Transpose3x3<T> transpose;
+  transpose.Run(field, adapter);
 }
 
+//-----------------------------------------------------------------------------
 template <typename T, typename S, typename DeviceAdapter>
-inline void add_extra_vec_fields(const vtkm::cont::ArrayHandle<T, S>&,
-                                 const vtkm::filter::Gradient* const,
-                                 vtkm::filter::ResultField&,
-                                 const DeviceAdapter&)
-{
-  //not a vector array handle so add nothing
+inline void transpose_3x3(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, S>&, DeviceAdapter)
+{ //This is not a 3x3 matrix so no transpose needed
 }
 
 } //namespace
@@ -136,6 +69,9 @@ Gradient::Gradient()
   : ComputePointGradient(false)
   , ComputeVorticity(false)
   , ComputeQCriterion(false)
+  , StoreGradient(true)
+  , RowOrdering(true)
+  , GradientsName("Gradients")
   , DivergenceName("Divergence")
   , VorticityName("Vorticity")
   , QCriterionName("QCriterion")
@@ -163,37 +99,62 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  vtkm::cont::Field::AssociationEnum fieldAssociation;
   std::string outputName = this->GetOutputFieldName();
   if (outputName.empty())
   {
-    outputName = "Gradients";
+    outputName = this->GradientsName;
   }
 
   //todo: we need to ask the policy what storage type we should be using
   //If the input is implicit, we should know what to fall back to
+  vtkm::worklet::GradientOutputFields<T> gradientfields(this->GetComputeGradient(),
+                                                        this->GetComputeDivergence(),
+                                                        this->GetComputeVorticity(),
+                                                        this->GetComputeQCriterion());
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> outArray;
   if (this->ComputePointGradient)
   {
-    PointGrad<DerivedPolicy, DeviceAdapter, T, StorageType> func(coords, inField, &outArray);
-    vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(cells, policy), func);
-    fieldAssociation = vtkm::cont::Field::ASSOC_POINTS;
+    vtkm::worklet::PointGradient gradient;
+    outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                            vtkm::filter::ApplyPolicy(coords, policy),
+                            inField,
+                            gradientfields,
+                            adapter);
   }
   else
   {
-    vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellGradient, DeviceAdapter> dispatcher;
-    dispatcher.Invoke(vtkm::filter::ApplyPolicy(cells, policy),
-                      vtkm::filter::ApplyPolicy(coords, policy),
-                      inField,
-                      outArray);
-    fieldAssociation = vtkm::cont::Field::ASSOC_CELL_SET;
+    vtkm::worklet::CellGradient gradient;
+    outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                            vtkm::filter::ApplyPolicy(coords, policy),
+                            inField,
+                            gradientfields,
+                            adapter);
+  }
+  if (!this->RowOrdering)
+  {
+    transpose_3x3(outArray, adapter);
   }
 
+  VTKM_CONSTEXPR bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
+                                              vtkm::VecTraitsTagMultipleComponents>::value;
+
+  vtkm::cont::Field::AssociationEnum fieldAssociation(this->ComputePointGradient
+                                                        ? vtkm::cont::Field::ASSOC_POINTS
+                                                        : vtkm::cont::Field::ASSOC_CELL_SET);
   vtkm::filter::ResultField result(input, outArray, outputName, fieldAssociation, cells.GetName());
 
-  //Add the vorticity and qcriterion fields if they are enabled to the result
-  add_extra_vec_fields(outArray, this, result, adapter);
-
+  if (this->GetComputeDivergence() && isVector)
+  {
+    add_field(result, gradientfields.Divergence, this->GetDivergenceName());
+  }
+  if (this->GetComputeVorticity() && isVector)
+  {
+    add_field(result, gradientfields.Vorticity, this->GetVorticityName());
+  }
+  if (this->GetComputeQCriterion() && isVector)
+  {
+    add_field(result, gradientfields.QCriterion, this->GetQCriterionName());
+  }
   return result;
 }
 }

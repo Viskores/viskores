@@ -52,6 +52,7 @@ void* alloc_aligned(size_t size, size_t align);
 VTKM_CONT_EXPORT
 void free_aligned(void* mem);
 
+/// \brief an aligned allocator
 /// A simple aligned allocator type that will align allocations to `Alignment` bytes
 /// TODO: Once C++11 std::allocator_traits is better used by STL and we want to drop
 /// support for pre-C++11 we can drop a lot of the typedefs and functions here.
@@ -104,6 +105,61 @@ bool operator!=(const AlignedAllocator<T, AlignA>&, const AlignedAllocator<U, Al
   return AlignA != AlignB;
 }
 
+/// Base class for basic storage classes. This is currently only used by
+/// Basic storage to provide a type-agnostic API for allocations, etc.
+class VTKM_CONT_EXPORT StorageBasicBase
+{
+public:
+  StorageBasicBase() {}
+  virtual ~StorageBasicBase();
+
+  /// \brief Return the number of bytes allocated for this storage object.
+  VTKM_CONT
+  virtual vtkm::Id GetNumberOfBytes() const = 0;
+
+  /// \brief Allocates an array with the specified size in bytes.
+  ///
+  /// The allocation may be done on an already existing array, but can wipe out
+  /// any data already in the array. This method can throw
+  /// ErrorBadAllocation if the array cannot be allocated or
+  /// ErrorBadValue if the allocation is not feasible (for example, the
+  /// array storage is read-only).
+  VTKM_CONT
+  virtual void AllocateBytes(vtkm::Id numberOfBytes) = 0;
+
+  /// \brief Reduces the size of the array without changing its values.
+  ///
+  /// This method allows you to resize the array without reallocating it. The
+  /// size of the array is changed to \c numberOfBytes bytes. The data
+  /// in the reallocated array stays the same, but \c numberOfBytes must be
+  /// equal or less than the preexisting size. That is, this method can only be
+  /// used to shorten the array, not lengthen.
+  VTKM_CONT
+  virtual void ShrinkBytes(vtkm::Id numberOfBytes) = 0;
+
+  /// \brief Frees any resources (i.e. memory) stored in this array.
+  ///
+  /// After calling this method GetNumberOfBytes() will return 0. The
+  /// resources should also be released when the Storage class is
+  /// destroyed.
+  VTKM_CONT
+  virtual void ReleaseResources() = 0;
+
+  /// Return the memory location of the first element of the array data.
+  VTKM_CONT
+  virtual void* GetBasePointer() const = 0;
+
+  /// Return the memory location of the first element past the end of the array
+  /// data.
+  VTKM_CONT
+  virtual void* GetEndPointer() const = 0;
+
+  /// Return the memory location of the first element past the end of the
+  /// array's allocated memory buffer.
+  VTKM_CONT
+  virtual void* GetCapacityPointer() const = 0;
+};
+
 /// A basic implementation of an Storage object.
 ///
 /// \todo This storage does \em not construct the values within the array.
@@ -113,7 +169,7 @@ bool operator!=(const AlignedAllocator<T, AlignA>&, const AlignedAllocator<U, Al
 /// time check to enforce this.
 ///
 template <typename ValueT>
-class VTKM_ALWAYS_EXPORT Storage<ValueT, vtkm::cont::StorageTagBasic>
+class VTKM_ALWAYS_EXPORT Storage<ValueT, vtkm::cont::StorageTagBasic> : public StorageBasicBase
 {
 public:
   typedef ValueT ValueType;
@@ -143,7 +199,7 @@ public:
   Storage& operator=(const Storage<ValueType, StorageTagBasic>& src);
 
   VTKM_CONT
-  void ReleaseResources();
+  void ReleaseResources() final;
 
   VTKM_CONT
   void Allocate(vtkm::Id numberOfValues);
@@ -152,7 +208,19 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_CONT
+  vtkm::Id GetNumberOfBytes() const final
+  {
+    return this->NumberOfValues * static_cast<vtkm::Id>(sizeof(ValueT));
+  }
+
+  VTKM_CONT
   void Shrink(vtkm::Id numberOfValues);
+
+  VTKM_CONT
+  void AllocateBytes(vtkm::Id) final;
+
+  VTKM_CONT
+  void ShrinkBytes(vtkm::Id) final;
 
   VTKM_CONT
   PortalType GetPortal() { return PortalType(this->Array, this->Array + this->NumberOfValues); }
@@ -185,6 +253,21 @@ public:
   ///
   VTKM_CONT
   ValueType* StealArray();
+
+  VTKM_CONT
+  void* GetBasePointer() const final { return static_cast<void*>(this->Array); }
+
+  VTKM_CONT
+  void* GetEndPointer() const final
+  {
+    return static_cast<void*>(this->Array + this->NumberOfValues);
+  }
+
+  VTKM_CONT
+  void* GetCapacityPointer() const final
+  {
+    return static_cast<void*>(this->Array + this->AllocatedSize);
+  }
 
 private:
   ValueType* Array;

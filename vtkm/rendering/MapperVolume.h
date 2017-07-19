@@ -56,8 +56,6 @@ public:
 private:
   struct InternalsType;
   std::shared_ptr<InternalsType> Internals;
-
-  struct RenderFunctor;
 };
 }
 } //namespace vtkm::rendering

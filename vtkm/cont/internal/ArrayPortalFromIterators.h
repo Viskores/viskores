@@ -129,7 +129,11 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_CONT
-  ArrayPortalFromIterators() {}
+  ArrayPortalFromIterators()
+    : BeginIterator(nullptr)
+    , NumberOfValues(0)
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_CONT

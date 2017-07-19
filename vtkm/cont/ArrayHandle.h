@@ -241,8 +241,13 @@ template <typename T, typename StorageTag_ = VTKM_DEFAULT_STORAGE_TAG>
 class VTKM_ALWAYS_EXPORT ArrayHandle : public internal::ArrayHandleBase
 {
 private:
-  typedef vtkm::cont::internal::ArrayHandleExecutionManagerBase<T, StorageTag_>
-    ExecutionManagerType;
+  // Basic storage is specialized; this template should not be instantiated
+  // for it. Specialization is in ArrayHandleBasicImpl.h
+  static_assert(!std::is_same<StorageTag_, StorageTagBasic>::value,
+                "StorageTagBasic should not use this implementation.");
+
+  using ExecutionManagerType =
+    vtkm::cont::internal::ArrayHandleExecutionManagerBase<T, StorageTag_>;
 
 public:
   typedef vtkm::cont::internal::Storage<T, StorageTag_> StorageType;
@@ -573,7 +578,8 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
 template <typename T, typename StorageT>
 VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
   const vtkm::cont::ArrayHandle<T, StorageT>& array,
-  std::ostream& out)
+  std::ostream& out,
+  bool full = false)
 {
   using ArrayType = vtkm::cont::ArrayHandle<T, StorageT>;
   using PortalType = typename ArrayType::PortalConstControl;
@@ -585,7 +591,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
       << " numValues=" << sz << " [";
 
   PortalType portal = array.GetPortalConstControl();
-  if (sz <= 7)
+  if (full || sz <= 7)
   {
     for (vtkm::Id i = 0; i < sz; i++)
     {
@@ -616,6 +622,7 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 } //namespace vtkm::cont
 
 #include <vtkm/cont/ArrayHandle.hxx>
+#include <vtkm/cont/internal/ArrayHandleBasicImpl.h>
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 
 #ifndef vtkm_cont_ArrayHandle_cxx
@@ -657,23 +664,7 @@ namespace cont
     ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                                              \
   extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
     ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                                              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;                                              \
-  namespace internal                                                                               \
-  {                                                                                                \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleExecutionManagerBase<Type, StorageTagBasic>;                                        \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleExecutionManagerBase<vtkm::Vec<Type, 2>, StorageTagBasic>;                          \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleExecutionManagerBase<vtkm::Vec<Type, 3>, StorageTagBasic>;                          \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    ArrayHandleExecutionManagerBase<vtkm::Vec<Type, 4>, StorageTagBasic>;                          \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<Type*>;                 \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::Vec<Type, 2>*>;   \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::Vec<Type, 3>*>;   \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayPortalFromIterators<vtkm::Vec<Type, 4>*>;   \
-  } /* end namespace internal */
+  extern template class VTKM_CONT_TEMPLATE_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 _VTKM_ARRAYHANDLE_EXPORT(char)
 _VTKM_ARRAYHANDLE_EXPORT(vtkm::Int8)

@@ -53,7 +53,7 @@ struct CleanCompactPointArrayFunctor
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
     vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType> outArray =
-      this->Self->CompactPointArray(coordSystemArray, Device());
+      this->Self->MapPointField(coordSystemArray, Device());
     this->OutDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(this->Name, outArray));
   }
 };
@@ -152,7 +152,7 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
 {
   if (this->GetCompactPointFields() && fieldMeta.IsPointField())
   {
-    vtkm::cont::ArrayHandle<ValueType> compactedArray = this->CompactPointArray(input, Device());
+    vtkm::cont::ArrayHandle<ValueType> compactedArray = this->MapPointField(input, Device());
     result.GetDataSet().AddField(fieldMeta.AsField(compactedArray));
   }
   else
@@ -164,7 +164,7 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
 }
 
 template <typename ValueType, typename Storage, typename Device>
-inline VTKM_CONT vtkm::cont::ArrayHandle<ValueType> CleanGrid::CompactPointArray(
+inline VTKM_CONT vtkm::cont::ArrayHandle<ValueType> CleanGrid::MapPointField(
   const vtkm::cont::ArrayHandle<ValueType, Storage>& inArray,
   Device) const
 {

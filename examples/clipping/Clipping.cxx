@@ -34,6 +34,41 @@
 
 typedef vtkm::Vec<vtkm::Float32, 3> FloatVec3;
 
+namespace
+{
+
+template <typename DeviceTag>
+struct FieldMapper
+{
+  vtkm::cont::DynamicArrayHandle& Output;
+  vtkm::worklet::Clip& Worklet;
+  bool IsCellField;
+
+  FieldMapper(vtkm::cont::DynamicArrayHandle& output,
+              vtkm::worklet::Clip& worklet,
+              bool isCellField)
+    : Output(output)
+    , Worklet(worklet)
+    , IsCellField(isCellField)
+  {
+  }
+
+  template <typename ArrayType>
+  void operator()(const ArrayType& input) const
+  {
+    if (this->IsCellField)
+    {
+      this->Output = this->Worklet.ProcessCellField(input, DeviceTag());
+    }
+    else
+    {
+      this->Output = this->Worklet.ProcessPointField(input, DeviceTag());
+    }
+  }
+};
+
+} // end anon namespace
+
 int main(int argc, char* argv[])
 {
   if (argc < 4)
@@ -68,9 +103,13 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet output;
   output.AddCellSet(outputCellSet);
 
+
   timer.Reset();
-  vtkm::cont::DynamicArrayHandle coords =
-    clip.ProcessField(input.GetCoordinateSystem(0), DeviceAdapter());
+  vtkm::cont::DynamicArrayHandle coords;
+  {
+    FieldMapper<DeviceAdapter> coordMapper(coords, clip, false);
+    input.GetCoordinateSystem(0).GetData().CastAndCall(coordMapper);
+  }
   vtkm::Float64 processCoordinatesTime = timer.GetElapsedTime();
   output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coords));
 
@@ -78,14 +117,27 @@ int main(int argc, char* argv[])
   for (vtkm::Id i = 0; i < input.GetNumberOfFields(); ++i)
   {
     vtkm::cont::Field inField = input.GetField(i);
-    if (inField.GetAssociation() != vtkm::cont::Field::ASSOC_POINTS)
+    bool isCellField;
+    switch (inField.GetAssociation())
     {
-      continue; // clip only supports point fields for now.
+      case vtkm::cont::Field::ASSOC_POINTS:
+        isCellField = false;
+        break;
+
+      case vtkm::cont::Field::ASSOC_CELL_SET:
+        isCellField = true;
+        break;
+
+      default:
+        continue;
     }
-    vtkm::cont::DynamicArrayHandle data =
-      clip.ProcessField(inField.GetData().ResetTypeList(vtkm::TypeListTagAll()), DeviceAdapter());
-    output.AddField(vtkm::cont::Field(inField.GetName(), vtkm::cont::Field::ASSOC_POINTS, data));
+
+    vtkm::cont::DynamicArrayHandle outField;
+    FieldMapper<DeviceAdapter> fieldMapper(outField, clip, isCellField);
+    inField.GetData().CastAndCall(fieldMapper);
+    output.AddField(vtkm::cont::Field(inField.GetName(), inField.GetAssociation(), outField));
   }
+
   vtkm::Float64 processScalarsTime = timer.GetElapsedTime();
 
   vtkm::Float64 totalTime = total.GetElapsedTime();

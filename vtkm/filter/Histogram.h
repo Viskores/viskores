@@ -27,7 +27,10 @@ namespace vtkm
 {
 namespace filter
 {
-
+/// \brief Construct the histogram of a given Field
+///
+/// Construct a histogram with a default of 10 bins
+///
 class Histogram : public vtkm::filter::FilterField<Histogram>
 {
 public:

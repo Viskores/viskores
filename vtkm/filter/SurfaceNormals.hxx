@@ -24,13 +24,66 @@ namespace vtkm
 namespace filter
 {
 
-vtkm::filter::ResultField SurfaceNormals::Execute(const vtkm::cont::DataSet& input)
+namespace internal
+{
+
+inline std::string ComputePointNormalsName(const SurfaceNormals* filter)
+{
+  if (!filter->GetPointNormalsName().empty())
+  {
+    return filter->GetPointNormalsName();
+  }
+  else if (!filter->GetOutputFieldName().empty())
+  {
+    return filter->GetOutputFieldName();
+  }
+  else
+  {
+    return "Normals";
+  }
+}
+
+inline std::string ComputeCellNormalsName(const SurfaceNormals* filter)
+{
+  if (!filter->GetCellNormalsName().empty())
+  {
+    return filter->GetCellNormalsName();
+  }
+  else if (!filter->GetGeneratePointNormals() && !filter->GetOutputFieldName().empty())
+  {
+    return filter->GetOutputFieldName();
+  }
+  else
+  {
+    return "Normals";
+  }
+}
+
+} // internal
+
+inline SurfaceNormals::SurfaceNormals()
+  : GenerateCellNormals(false)
+  , NormalizeCellNormals(true)
+  , GeneratePointNormals(true)
+{
+}
+
+inline vtkm::filter::ResultField SurfaceNormals::Execute(const vtkm::cont::DataSet& input)
 {
   return this->Execute(input, input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 }
 
+template <typename DerivedPolicy>
+inline vtkm::filter::ResultField SurfaceNormals::Execute(
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+{
+  return this->Execute(
+    input, input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()), policy);
+}
+
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-vtkm::filter::ResultField SurfaceNormals::DoExecute(
+inline vtkm::filter::ResultField SurfaceNormals::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -39,20 +92,47 @@ vtkm::filter::ResultField SurfaceNormals::DoExecute(
 {
   VTKM_ASSERT(fieldMeta.IsPointField());
 
-  const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
-
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
-  vtkm::worklet::FacetedSurfaceNormals worklet;
-  worklet.Run(vtkm::filter::ApplyPolicy(cellset, policy), points, normals, device);
-
-  std::string outputName = this->GetOutputFieldName();
-  if (outputName == "")
+  if (!this->GenerateCellNormals && !this->GeneratePointNormals)
   {
-    outputName = "normals";
+    return vtkm::filter::ResultField();
   }
 
-  return vtkm::filter::ResultField(
-    input, normals, outputName, vtkm::cont::Field::ASSOC_CELL_SET, cellset.GetName());
+  const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> faceNormals;
+  vtkm::worklet::FacetedSurfaceNormals faceted;
+  faceted.SetNormalize(this->NormalizeCellNormals);
+  faceted.Run(vtkm::filter::ApplyPolicy(cellset, policy), points, faceNormals, device);
+
+  vtkm::filter::ResultField result;
+  if (this->GeneratePointNormals)
+  {
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> pointNormals;
+    vtkm::worklet::SmoothSurfaceNormals smooth;
+    smooth.Run(vtkm::filter::ApplyPolicy(cellset, policy), faceNormals, pointNormals, device);
+
+    result = vtkm::filter::ResultField(input,
+                                       pointNormals,
+                                       internal::ComputePointNormalsName(this),
+                                       vtkm::cont::Field::ASSOC_POINTS);
+    if (this->GenerateCellNormals)
+    {
+      result.GetDataSet().AddField(vtkm::cont::Field(internal::ComputeCellNormalsName(this),
+                                                     vtkm::cont::Field::ASSOC_CELL_SET,
+                                                     cellset.GetName(),
+                                                     faceNormals));
+    }
+  }
+  else
+  {
+    result = vtkm::filter::ResultField(input,
+                                       faceNormals,
+                                       internal::ComputeCellNormalsName(this),
+                                       vtkm::cont::Field::ASSOC_CELL_SET,
+                                       cellset.GetName());
+  }
+
+  return result;
 }
 }
 } // vtkm::filter

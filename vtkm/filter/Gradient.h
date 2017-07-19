@@ -28,6 +28,7 @@ namespace vtkm
 namespace filter
 {
 
+/// \brief A general filter for gradient estimation.
 /// Estimates the gradient of a point field in a data set. The created gradient array
 /// can be determined at either each point location or at the center of each cell.
 ///
@@ -68,6 +69,25 @@ public:
   void SetComputeQCriterion(bool enable) { ComputeQCriterion = enable; }
   bool GetComputeQCriterion() const { return ComputeQCriterion; }
 
+  /// Add gradient field to the output data.  The name of the array
+  /// will be Gradients and will be a cell field unless \c ComputePointGradient
+  /// is enabled. It is useful to turn this off when you are only interested
+  /// in the results of Divergence, Vorticity, or QCriterion. The default is on.
+  void SetComputeGradient(bool enable) { StoreGradient = enable; }
+  bool GetComputeGradient() const { return StoreGradient; }
+
+  /// Make the vector gradient output format be in FORTRAN Column-major order.
+  /// This is only used when the input field is a vector field ( 3 components ).
+  /// Enabling  column-major is important if integrating with other projects
+  /// such as VTK.
+  /// Default: Row Order
+  void SetColumnMajorOrdering() { RowOrdering = false; }
+
+  /// Make the vector gradient output format be in C Row-major order.
+  /// This is only used when the input field is a vector field ( 3 components ).
+  /// Default: Row Order
+  void SetRowMajorOrdering() { RowOrdering = true; }
+
   void SetDivergenceName(const std::string& name) { this->DivergenceName = name; }
   const std::string& GetDivergenceName() const { return this->DivergenceName; }
 
@@ -89,7 +109,10 @@ private:
   bool ComputeDivergence;
   bool ComputeVorticity;
   bool ComputeQCriterion;
+  bool StoreGradient;
+  bool RowOrdering;
 
+  std::string GradientsName;
   std::string DivergenceName;
   std::string VorticityName;
   std::string QCriterionName;

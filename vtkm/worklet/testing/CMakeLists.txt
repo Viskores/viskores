@@ -30,15 +30,18 @@ set(unit_tests
   UnitTestExtractStructured.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
+  UnitTestKdTreeBuildNNS.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
   UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
   UnitTestMaskPoints.cxx
+  UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx
   UnitTestRemoveUnusedPoints.cxx
   UnitTestScatterCounting.cxx
+  UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
   UnitTestStreamingSine.cxx
   UnitTestStreamLineUniformGrid.cxx

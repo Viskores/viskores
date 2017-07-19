@@ -157,7 +157,7 @@ public:
 
     const std::size_t maxNumVals = (std::numeric_limits<std::size_t>::max() / sizeof(ValueType));
 
-    if (static_cast<size_t>(numberOfValues) > maxNumVals)
+    if (static_cast<std::size_t>(numberOfValues) > maxNumVals)
     {
       std::ostringstream err;
       err << "Failed to allocate " << numberOfValues << " values on device: "
@@ -167,16 +167,18 @@ public:
 
     this->ReleaseResources();
 
-    const std::size_t bufferSize = numberOfValues * sizeof(ValueType);
+    const std::size_t bufferSize = static_cast<std::size_t>(numberOfValues) * sizeof(ValueType);
 
     // Attempt to allocate:
     try
     {
       ValueType* tmp;
 #ifdef VTKM_USE_UNIFIED_MEMORY
+      int dev;
+      VTKM_CUDA_CALL(cudaGetDevice(&dev));
       VTKM_CUDA_CALL(cudaMallocManaged(&tmp, bufferSize));
-      VTKM_CUDA_CALL(cudaMemAdvise(tmp, bufferSize, cudaMemAdviseSetPreferredLocation, 0));
-      VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, bufferSize, 0, 0));
+      VTKM_CUDA_CALL(cudaMemAdvise(tmp, bufferSize, cudaMemAdviseSetPreferredLocation, dev));
+      VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, bufferSize, dev, 0));
       VTKM_CUDA_CALL(cudaStreamSynchronize(0));
 #else
       VTKM_CUDA_CALL(cudaMalloc(&tmp, bufferSize));
