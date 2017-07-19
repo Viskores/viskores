@@ -32,15 +32,13 @@
 #ifndef VTKM_DEVICE_ADAPTER
 #ifdef VTKM_CUDA
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
-#elif defined(VTKM_OPENMP) // !VTKM_CUDA
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_OPENMP
-#elif defined(VTKM_ENABLE_TBB) // !VTKM_CUDA && !VTKM_OPENMP
+#elif defined(VTKM_ENABLE_TBB) // !VTKM_CUDA
 // Unfortunately, VTKM_ENABLE_TBB does not guarantee that TBB is (or isn't)
 // available, but there is no way to check for sure in a header library.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_TBB
-#else // !VTKM_CUDA && !VTKM_OPENMP && !VTKM_ENABLE_TBB
+#else // !VTKM_CUDA && !VTKM_ENABLE_TBB
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
-#endif // !VTKM_CUDA && !VTKM_OPENMP
+#endif // !VTKM_CUDA && !VTKM_ENABLE_TBB
 #endif // VTKM_DEVICE_ADAPTER
 
 //-----------------------------------------------------------------------------
