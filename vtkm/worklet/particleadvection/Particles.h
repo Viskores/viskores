@@ -167,7 +167,10 @@ public:
     status.Set(idx, status.Get(idx) & ~b);
   }
   VTKM_EXEC_CONT
-  bool CheckBit(const vtkm::Id& idx, const ParticleStatus& b) const { return status.Get(idx) & b; }
+  bool CheckBit(const vtkm::Id& idx, const ParticleStatus& b) const
+  {
+    return (status.Get(idx) & b) != 0;
+  }
 
   VTKM_EXEC_CONT
   vtkm::Vec<T, 3> GetPos(const vtkm::Id& idx) const { return pos.Get(idx); }
