@@ -145,7 +145,6 @@ void TestParticleAdvection()
   fieldArray = vtkm::cont::make_ArrayHandle(field);
 
   vtkm::worklet::ParticleAdvection particleAdvection;
-
   vtkm::worklet::ParticleAdvectionResult<FieldType> res;
   res = particleAdvection.Run(rk4, seeds, fieldArray, 1000, DeviceAdapter());
   VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
