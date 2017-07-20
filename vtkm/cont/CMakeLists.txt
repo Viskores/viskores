@@ -94,6 +94,7 @@ set(sources
   Field.cxx
   ImplicitFunction.cxx
   internal/SimplePolymorphicContainer.cxx
+  MultiBlock.cxx
   StorageBasic.cxx
   )
 

@@ -34,74 +34,50 @@ namespace cont {
 class MultiBlock
 {
 public:
-  VTKM_CONT
   MultiBlock(const vtkm::cont::DataSet &ds)
   {
     this->blocks.push_back(ds);
   }
 
-  VTKM_CONT
   MultiBlock(const vtkm::cont::MultiBlock &src)
   {
     this->blocks = src.GetBlocks();
   }
 
-  VTKM_CONT
-  MultiBlock()
-  {
-  }
-
-  VTKM_CONT
   MultiBlock(const std::vector<vtkm::cont::DataSet> &mblocks)
   {
     this->blocks = mblocks;
   }
-
-  VTKM_CONT
-  MultiBlock &operator=(const vtkm::cont::MultiBlock &src)
-  {
-    this->blocks = src.GetBlocks();
-    return *this;
-  }
-
-  ~MultiBlock()
-  {
-  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfBlocks() const
-  { 
-    return static_cast<vtkm::Id>(this->blocks.size());
-  }
- 
-  VTKM_CONT
-  const vtkm::cont::DataSet &GetBlock(vtkm::Id blockId) const
-  {
-    return this->blocks[(std::size_t) blockId];
-  }
   
-  const std::vector<vtkm::cont::DataSet> &GetBlocks() const
+  MultiBlock()
   {
-    return this->blocks;
-  }
- 
-  VTKM_CONT
-  void AddBlock(vtkm::cont::DataSet &ds)
-  {
-    this->blocks.push_back(ds);
   }
 
-  VTKM_CONT
-  void AddBlocks(std::vector<vtkm::cont::DataSet> &mblocks)
-  {    
-    for(std::size_t i = 0; i < mblocks.size(); i++)
-    {
-      AddBlock(mblocks[i]);
-    }
-  }
+  MultiBlock &operator=(const vtkm::cont::MultiBlock &src);
 
+  ~MultiBlock(){}
+
+  vtkm::cont::Field GetField(const std::string &field_name, 
+                             const int &domain_index);
+  vtkm::Id GetNumberOfBlocks() const;
+  const vtkm::cont::DataSet &GetBlock(vtkm::Id blockId) const;
+  const std::vector<vtkm::cont::DataSet> &GetBlocks() const; 
+
+  void AddBlock(vtkm::cont::DataSet &ds);
+  void AddBlocks(std::vector<vtkm::cont::DataSet> &mblocks);
+
+  vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
+
+  vtkm::Bounds GetBlockBounds(const std::size_t &domain_index,
+                               vtkm::Id coordinate_system_index = 0) const;
+
+  vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string &field_name) const;
+  vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int &index) const;
+
+  void PrintSummary(std::ostream &stream) const;
 private:
     std::vector<vtkm::cont::DataSet> blocks;
+    std::vector<vtkm::Id>            block_ids;
 };
 
 
