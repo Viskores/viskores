@@ -297,6 +297,23 @@ public:
     this->SetViewUp(vtkm::Vec<vtkm::Float32, 3>(viewUp));
   }
 
+  /// \brief The xscale of the camera
+  ///
+  /// The xscale forces the 2D curves to be full-frame
+  ///
+  /// Setting the xscale changes the mode to 2D.
+  ///
+  VTKM_CONT
+  vtkm::Float32 GetXScale() const { return this->Camera2D.XScale; }
+  VTKM_CONT
+  void SetXScale(vtkm::Float32 xscale)
+  {
+    this->SetModeTo2D();
+    this->Camera2D.XScale = xscale;
+  }
+  VTKM_CONT
+  void SetXScale(vtkm::Float64 xscale) { this->SetXScale(static_cast<vtkm::Float32>(xscale)); }
+
   /// \brief The field of view angle
   ///
   /// The field of view defines the angle (in degrees) that are visible from

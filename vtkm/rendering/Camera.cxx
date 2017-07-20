@@ -73,7 +73,10 @@ vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera2DStruct::CreateViewMatrix() con
   vtkm::Vec<vtkm::Float32, 3> position = lookAt;
   position[2] = 1.f;
   vtkm::Vec<vtkm::Float32, 3> up(0, 1, 0);
-  return MatrixHelpers::ViewMatrix(position, lookAt, up);
+  vtkm::Matrix<vtkm::Float32, 4, 4> V = MatrixHelpers::ViewMatrix(position, lookAt, up);
+  vtkm::Matrix<vtkm::Float32, 4, 4> scaleMatrix = MatrixHelpers::CreateScale(this->XScale, 1, 1);
+  V = vtkm::MatrixMultiply(scaleMatrix, V);
+  return V;
 }
 
 vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera2DStruct::CreateProjectionMatrix(

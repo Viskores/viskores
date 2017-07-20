@@ -163,7 +163,7 @@ void RunTest(const std::string& fname,
   if (advectType == 0)
   {
     vtkm::worklet::ParticleAdvection particleAdvection;
-    particleAdvection.Run(rk4, seedArray, fieldArray, numSteps, -1, DeviceAdapter());
+    particleAdvection.Run(rk4, seedArray, fieldArray, numSteps, DeviceAdapter());
   }
   else
   {

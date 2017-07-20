@@ -50,14 +50,22 @@ void View2D::Paint()
 {
   this->GetCanvas().Activate();
   this->GetCanvas().Clear();
-  this->SetupForWorldSpace();
 
+  // we always want to start with a curve being full-frame
+  if (this->GetCamera().GetMode() == Camera::MODE_2D)
+  {
+    vtkm::Float32 left, right, bottom, top;
+    this->GetCamera().GetViewRange2D(left, right, bottom, top);
+    this->GetCamera().SetXScale((static_cast<vtkm::Float32>(this->GetCanvas().GetWidth())) /
+                                (static_cast<vtkm::Float32>(this->GetCanvas().GetHeight())) *
+                                (top - bottom) / (right - left));
+  }
+
+  this->SetupForWorldSpace();
   this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
   this->RenderWorldAnnotations();
-
   this->SetupForScreenSpace();
   this->RenderScreenAnnotations();
-
   this->GetCanvas().Finish();
 }
 

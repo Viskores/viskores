@@ -24,10 +24,6 @@
 #define VTKM_CUDA
 #endif
 
-#ifdef _OPENMP
-#define VTKM_OPENMP
-#endif
-
 #if defined(_MSC_VER)
 //MSVC 2015+ can use a clang frontend, so we want to label it only as MSVC
 //and not MSVC and clang
