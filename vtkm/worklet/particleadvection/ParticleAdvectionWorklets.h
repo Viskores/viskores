@@ -65,7 +65,7 @@ public:
       }
       else
       {
-        ic.SetStatusOutOfBounds(idx);
+        ic.SetExitedSpatialBoundary(idx);
       }
     }
   }
@@ -125,7 +125,7 @@ private:
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
 
     //Allocate status and steps arrays.
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> ok(ParticleStatus::OK, numSeeds);
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> ok(ParticleStatus::STATUS_OK, numSeeds);
     statusArray.Allocate(numSeeds);
     DeviceAlgorithm::Copy(ok, statusArray);
 
@@ -216,7 +216,7 @@ private:
         if (NeedParticleRounds && num > ParticlesPerRound)
           num = ParticlesPerRound;
 
-        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::OK);
+        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::STATUS_OK);
         vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], num);
         vtkm::cont::ArrayHandle<vtkm::Id> statusArray =
           vtkm::cont::make_ArrayHandle(&status[0], num);
@@ -256,7 +256,7 @@ private:
         if (NeedParticleRounds && num > ParticlesPerRound)
           num = ParticlesPerRound;
 
-        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::OK);
+        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::STATUS_OK);
         vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], num);
         vtkm::cont::ArrayHandle<vtkm::Id> statusArray =
           vtkm::cont::make_ArrayHandle(&status[0], num);
