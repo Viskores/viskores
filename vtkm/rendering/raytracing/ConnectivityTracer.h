@@ -458,29 +458,26 @@ public:
     } //operator
   };  //class RayBumper
 
-  template <typename FloatType, typename Device, template <typename, typename> class MeshType>
+  template <typename FloatType>
   class Integrate : public vtkm::worklet::WorkletMapField
   {
   private:
     const vtkm::Int32 NumBins;
 
-    MeshType<ConnectivityType, Device> MeshConn;
-
   public:
     VTKM_CONT
-    Integrate(const vtkm::Int32 numBins, ConnectivityType meshConn)
+    Integrate(const vtkm::Int32 numBins)
       : NumBins(numBins)
-      , MeshConn(meshConn)
     {
     }
 
-    typedef void ControlSignature(FieldIn<>,                          // ray status
-                                  FieldIn<>,                          // cell enter distance
-                                  FieldIn<>,                          // cell exit distance
-                                  FieldInOut<>,                       // current distance
+    typedef void ControlSignature(FieldIn<RayStatusType>,             // ray status
+                                  FieldIn<ScalarRenderingTypes>,      // cell enter distance
+                                  FieldIn<ScalarRenderingTypes>,      // cell exit distance
+                                  FieldInOut<ScalarRenderingTypes>,   // current distance
                                   WholeArrayIn<ScalarRenderingTypes>, // cell absorption data array
-                                  WholeArrayInOut<>,                  // ray absorption data
-                                  FieldIn<>);                         // current cell
+                                  WholeArrayInOut<ScalarRenderingTypes>, // ray absorption data
+                                  FieldIn<IdType>);                      // current cell
 
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
 
@@ -516,6 +513,109 @@ public:
         BOUNDS_CHECK(energyBins, rayOffset + i);
         FloatType intensity = static_cast<FloatType>(energyBins.Get(rayOffset + i));
         energyBins.Set(rayOffset + i, intensity * absorb);
+      }
+      currentDistance = exitDistance;
+    }
+  };
+
+  template <typename FloatType>
+  class IntegrateEmission : public vtkm::worklet::WorkletMapField
+  {
+  private:
+    const vtkm::Int32 NumBins;
+    bool FirstCell; // first cell in a segment
+    bool DivideEmisByAbsorb;
+
+  public:
+    VTKM_CONT
+    IntegrateEmission(const vtkm::Int32 numBins,
+                      const bool firstCell,
+                      const bool divideEmisByAbsorb)
+      : NumBins(numBins)
+      , FirstCell(firstCell)
+      , DivideEmisByAbsorb(divideEmisByAbsorb)
+    {
+    }
+
+    typedef void ControlSignature(FieldIn<>,                          // ray status
+                                  FieldIn<>,                          // cell enter distance
+                                  FieldIn<>,                          // cell exit distance
+                                  FieldInOut<>,                       // current distance
+                                  WholeArrayIn<ScalarRenderingTypes>, // cell absorption data array
+                                  WholeArrayIn<ScalarRenderingTypes>, // cell emission data array
+                                  WholeArrayInOut<>,                  // ray absorption data
+                                  WholeArrayInOut<>,                  // ray emission data
+                                  FieldIn<>);                         // current cell
+
+    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9, WorkIndex);
+
+    template <typename CellDataPortalType, typename RayDataPortalType>
+    VTKM_EXEC inline void operator()(const vtkm::UInt8& rayStatus,
+                                     const FloatType& enterDistance,
+                                     const FloatType& exitDistance,
+                                     FloatType& currentDistance,
+                                     const CellDataPortalType& absorptionData,
+                                     const CellDataPortalType& emissionData,
+                                     RayDataPortalType& absorptionBins,
+                                     RayDataPortalType& emissionBins,
+                                     const vtkm::Id& currentCell,
+                                     const vtkm::Id& rayIndex) const
+    {
+      if (rayStatus != RAY_ACTIVE)
+      {
+        return;
+      }
+      if (exitDistance <= enterDistance)
+      {
+        return;
+      }
+
+      FloatType segmentLength = exitDistance - enterDistance;
+
+      vtkm::Id rayOffset = NumBins * rayIndex;
+      vtkm::Id cellOffset = NumBins * currentCell;
+      for (vtkm::Int32 i = 0; i < NumBins; ++i)
+      {
+        BOUNDS_CHECK(absorptionData, cellOffset + i);
+        FloatType absorb = static_cast<FloatType>(absorptionData.Get(cellOffset + i));
+        BOUNDS_CHECK(emissionData, cellOffset + i);
+        FloatType emission = static_cast<FloatType>(emissionData.Get(cellOffset + i));
+
+        if (DivideEmisByAbsorb)
+        {
+          emission /= absorb;
+        }
+
+        FloatType tmp = vtkm::Exp(-absorb * segmentLength);
+        BOUNDS_CHECK(absorptionBins, rayOffset + i);
+
+        //
+        // Traditionally, we would only keep track of a single intensity value per ray
+        // per bin and we would integrate from the begining to end of the ray. In a
+        // distributed memory setting, we would move cell data around so that the
+        // entire ray could be traced, but in situ, moving that much cell data around
+        // could blow memory. Here we are keeping track of two values. Total absorption
+        // through this contigious segment of the mesh, and the amount of emissed engery
+        // that makes it out of this mesh segment. If this is really run on a single node,
+        // we can get the final energy value by multiplying the background intensity by
+        // the total absorption of the mesh segment and add in the amount of emissed
+        // enegery that escapes.
+        //
+        FloatType absorbIntensity = static_cast<FloatType>(absorptionBins.Get(rayOffset + i));
+        FloatType emissionIntensity = static_cast<FloatType>(emissionBins.Get(rayOffset + i));
+
+        absorptionBins.Set(rayOffset + i, absorbIntensity * tmp);
+
+        if (FirstCell)
+        {
+          emissionIntensity = emission;
+        }
+        else
+        {
+          emissionIntensity = emissionIntensity * tmp + emission * (1.f - tmp);
+        }
+        BOUNDS_CHECK(emissionBins, rayOffset + i);
+        emissionBins.Set(rayOffset + i, emissionIntensity);
       }
       currentDistance = exitDistance;
     }
@@ -1154,20 +1254,40 @@ public:
   }
 
   template <typename FloatType, typename Device>
-  void IntegrateCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device)
+  void IntegrateCells(Ray<FloatType>& rays,
+                      detail::RayTracking<FloatType>& tracker,
+                      bool firstSegment,
+                      Device)
   {
     vtkm::cont::Timer<Device> timer;
-
-    vtkm::worklet::DispatcherMapField<Integrate<FloatType, Device, MeshConnExec>, Device>(
-      Integrate<FloatType, Device, MeshConnExec>(rays.Buffers.at(0).GetNumChannels(),
-                                                 this->MeshConn))
-      .Invoke(rays.Status,
-              *(tracker.EnterDist),
-              *(tracker.ExitDist),
-              rays.Distance,
-              this->ScalarField.GetData(),
-              rays.Buffers.at(0).Buffer,
-              rays.HitIdx);
+    if (HasEmission)
+    {
+      bool divideEmisByAbsorp = false;
+      vtkm::worklet::DispatcherMapField<IntegrateEmission<FloatType>, Device>(
+        IntegrateEmission<FloatType>(
+          rays.Buffers.at(0).GetNumChannels(), firstSegment, divideEmisByAbsorp))
+        .Invoke(rays.Status,
+                *(tracker.EnterDist),
+                *(tracker.ExitDist),
+                rays.Distance,
+                this->ScalarField.GetData(),
+                this->EmissionField.GetData(),
+                rays.Buffers.at(0).Buffer,
+                rays.GetBuffer("emission"),
+                rays.HitIdx);
+    }
+    else
+    {
+      vtkm::worklet::DispatcherMapField<Integrate<FloatType>, Device>(
+        Integrate<FloatType>(rays.Buffers.at(0).GetNumChannels()))
+        .Invoke(rays.Status,
+                *(tracker.EnterDist),
+                *(tracker.ExitDist),
+                rays.Distance,
+                this->ScalarField.GetData(),
+                rays.Buffers.at(0).Buffer,
+                rays.HitIdx);
+    }
 
     IntegrateTime += timer.GetElapsedTime();
   }
@@ -1256,7 +1376,7 @@ public:
 
     bool cullMissedRays = false;
     bool workRemaining = true;
-
+    bool firstHit = true;
     if (this->CountRayStatus)
     {
       this->PrintRayStatus(rays, Device());
@@ -1309,8 +1429,12 @@ public:
         if (this->Integrator == Volume)
           this->SampleCells(rays, rayTracker, Device());
         else
-          this->IntegrateCells(rays, rayTracker, Device());
+          this->IntegrateCells(rays, rayTracker, firstHit, Device());
 
+        if (firstHit)
+        {
+          firstHit = false;
+        }
         //swap enter and exit distances
         rayTracker.Swap();
         if (this->CountRayStatus)

@@ -153,7 +153,8 @@ public:
     }
     else
     {
-      Tracer->SetEnergyData(this->ScalarField, rays.Buffers.at(0).GetNumChannels());
+      Tracer->SetEnergyData(
+        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
     }
 
     Tracer->Trace(rays);
@@ -168,7 +169,8 @@ public:
     }
     else
     {
-      Tracer->SetEnergyData(this->ScalarField, rays.Buffers.at(0).GetNumChannels());
+      Tracer->SetEnergyData(
+        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
     }
     Tracer->Trace(rays);
   }
