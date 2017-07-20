@@ -110,6 +110,19 @@ struct MatrixHelpers
     return matrix;
   }
 
+  static VTKM_CONT vtkm::Matrix<vtkm::Float32, 4, 4> CreateScale(const vtkm::Float32 x,
+                                                                 const vtkm::Float32 y,
+                                                                 const vtkm::Float32 z)
+  {
+    vtkm::Matrix<vtkm::Float32, 4, 4> matrix;
+    vtkm::MatrixIdentity(matrix);
+    matrix[0][0] = x;
+    matrix[1][1] = y;
+    matrix[2][2] = z;
+
+    return matrix;
+  }
+
   static VTKM_CONT vtkm::Matrix<vtkm::Float32, 4, 4> TrackballMatrix(vtkm::Float32 p1x,
                                                                      vtkm::Float32 p1y,
                                                                      vtkm::Float32 p2x,
