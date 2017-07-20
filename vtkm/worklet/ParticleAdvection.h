@@ -30,6 +30,30 @@ namespace vtkm
 namespace worklet
 {
 
+template <typename FieldType>
+struct ParticleAdvectionResult
+{
+  ParticleAdvectionResult()
+    : positions()
+    , status()
+    , stepsTaken()
+  {
+  }
+
+  ParticleAdvectionResult(const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>& pos,
+                          const vtkm::cont::ArrayHandle<vtkm::Id>& stat,
+                          const vtkm::cont::ArrayHandle<vtkm::Id>& steps)
+    : positions(pos)
+    , status(stat)
+    , stepsTaken(steps)
+  {
+  }
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> positions;
+  vtkm::cont::ArrayHandle<vtkm::Id> status;
+  vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken;
+};
+
 class ParticleAdvection
 {
 public:
@@ -40,19 +64,24 @@ public:
             typename PointStorage,
             typename FieldStorage,
             typename DeviceAdapter>
-  vtkm::cont::DataSet Run(const IntegratorType& it,
-                          const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-                          vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
-                          const vtkm::Id& nSteps,
-                          const vtkm::Id& particlesPerRound,
-                          const DeviceAdapter&)
+  ParticleAdvectionResult<FieldType> Run(
+    const IntegratorType& it,
+    const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
+    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
+    const vtkm::Id& nSteps,
+    const DeviceAdapter&)
   {
     vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType,
                                                                FieldType,
                                                                DeviceAdapter>
       worklet;
 
-    return worklet.Run(it, pts, fieldArray, nSteps, particlesPerRound);
+    vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage> stepsTaken, status;
+    worklet.Run(it, pts, fieldArray, nSteps, status, stepsTaken);
+
+    //Create output.
+    ParticleAdvectionResult<FieldType> res(pts, status, stepsTaken);
+    return res;
   }
 };
 

@@ -145,11 +145,10 @@ void TestParticleAdvection()
   fieldArray = vtkm::cont::make_ArrayHandle(field);
 
   vtkm::worklet::ParticleAdvection particleAdvection;
-  vtkm::cont::DataSet outData;
-  outData = particleAdvection.Run(rk4, seeds, fieldArray, 100, -1, DeviceAdapter());
-  outData.PrintSummary(std::cout);
-  VTKM_TEST_ASSERT(seeds.GetNumberOfValues() ==
-                     outData.GetCoordinateSystem().GetData().GetNumberOfValues(),
+
+  vtkm::worklet::ParticleAdvectionResult<FieldType> res;
+  res = particleAdvection.Run(rk4, seeds, fieldArray, 1000, DeviceAdapter());
+  VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
                    "Number of output particles does not match input.");
 }
 
