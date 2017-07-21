@@ -133,22 +133,43 @@ void TestParticleAdvection()
   RGEvalType eval(ds);
   RK4RGType rk4(eval, stepSize);
 
-  std::vector<vtkm::Vec<FieldType, 3>> pts;
-  pts.push_back(vtkm::Vec<FieldType, 3>(1, 1, 1));
-  pts.push_back(vtkm::Vec<FieldType, 3>(2, 2, 2));
-  pts.push_back(vtkm::Vec<FieldType, 3>(3, 3, 3));
+  for (int i = 0; i < 2; i++)
+  {
+    std::vector<vtkm::Vec<FieldType, 3>> pts;
+    pts.push_back(vtkm::Vec<FieldType, 3>(1, 1, 1));
+    pts.push_back(vtkm::Vec<FieldType, 3>(2, 2, 2));
+    pts.push_back(vtkm::Vec<FieldType, 3>(3, 3, 3));
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
-  seeds = vtkm::cont::make_ArrayHandle(pts);
+    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
+    seeds = vtkm::cont::make_ArrayHandle(pts);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(field);
+    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
+    fieldArray = vtkm::cont::make_ArrayHandle(field);
 
-  vtkm::worklet::ParticleAdvection particleAdvection;
-  vtkm::worklet::ParticleAdvectionResult<FieldType> res;
-  res = particleAdvection.Run(rk4, seeds, fieldArray, 1000, DeviceAdapter());
-  VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
-                   "Number of output particles does not match input.");
+    if (i == 0)
+    {
+      vtkm::worklet::ParticleAdvection particleAdvection;
+      vtkm::worklet::ParticleAdvectionResult<FieldType> res;
+      res = particleAdvection.Run(rk4, seeds, fieldArray, 1000, DeviceAdapter());
+      VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
+                       "Number of output particles does not match input.");
+    }
+    else if (i == 1)
+    {
+      vtkm::worklet::Streamline streamline;
+      vtkm::worklet::StreamlineResult<FieldType> res;
+      std::cout << __FILE__ << " " << __LINE__ << std::endl;
+      res = streamline.Run(rk4, seeds, fieldArray, 5, DeviceAdapter());
+      std::cout << __FILE__ << " " << __LINE__ << std::endl;
+      //          VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
+      //                           "Number of output particles does not match input.");
+      std::cout << "pos: ";
+      printSummary_ArrayHandle(res.positions, std::cout, true);
+      printSummary_ArrayHandle(res.status, std::cout, true);
+      printSummary_ArrayHandle(res.stepsTaken, std::cout, true);
+      res.polyLines.PrintSummary(std::cout);
+    }
+  }
 }
 
 int UnitTestParticleAdvection(int, char* [])

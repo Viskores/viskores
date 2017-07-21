@@ -131,6 +131,8 @@ private:
   typedef
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal
       IdPortal;
+  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<
+    DeviceAdapterTag>::Portal IdComponentPortal;
   typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
     DeviceAdapterTag>::Portal PosPortal;
 
@@ -140,6 +142,7 @@ public:
     : pos(s.pos)
     , steps(s.steps)
     , status(s.status)
+    , validPoint(s.validPoint)
     , maxSteps(s.maxSteps)
     , histSize(s.histSize)
     , history(s.history)
@@ -151,6 +154,7 @@ public:
     : pos()
     , steps()
     , status()
+    , validPoint()
     , maxSteps(0)
     , histSize(-1)
     , history()
@@ -161,10 +165,12 @@ public:
   StateRecordingParticles(const PosPortal& _pos,
                           const IdPortal& _steps,
                           const IdPortal& _status,
+                          const IdPortal& _validPoint,
                           const vtkm::Id& _maxSteps)
     : pos(_pos)
     , steps(_steps)
     , status(_status)
+    , validPoint(_validPoint)
     , maxSteps(_maxSteps)
     , histSize()
     , history()
@@ -173,31 +179,37 @@ public:
 
   VTKM_EXEC_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
+                          vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
-                          const vtkm::Id& _maxSteps)
+                          vtkm::cont::ArrayHandle<vtkm::Id>& validPointArray,
+                          vtkm::Id& _maxSteps)
     : maxSteps(_maxSteps)
     , histSize(_maxSteps)
   {
     pos = posArray.PrepareForInPlace(DeviceAdapterTag());
     steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
     status = statusArray.PrepareForInPlace(DeviceAdapterTag());
+    validPoint = validPointArray.PrepareForInPlace(DeviceAdapterTag());
     numPos = posArray.GetNumberOfValues();
     history = historyArray.PrepareForOutput(numPos * histSize, DeviceAdapterTag());
   }
 
   VTKM_EXEC_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
+                          vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
+                          vtkm::cont::ArrayHandle<vtkm::Id>& validPointArray,
                           const vtkm::Id& _maxSteps,
-                          vtkm::Id& _histSize)
+                          const vtkm::Id& _histSize)
     : maxSteps(_maxSteps)
     , histSize(_histSize)
   {
     pos = posArray.PrepareForInPlace(DeviceAdapterTag());
     steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
     status = statusArray.PrepareForInPlace(DeviceAdapterTag());
+    validPoint = validPointArray.PrepareForInPlace(DeviceAdapterTag());
     numPos = posArray.GetNumberOfValues();
     history = historyArray.PrepareForOutput(numPos * histSize, DeviceAdapterTag());
   }
@@ -210,6 +222,7 @@ public:
     history.Set(loc, pt);
     nSteps = nSteps + 1;
     steps.Set(idx, nSteps);
+    validPoint.Set(loc, 1);
     if (nSteps == maxSteps)
       SetStatusTerminate(idx);
   }
@@ -236,15 +249,11 @@ public:
 
 private:
   PosPortal pos;
-  IdPortal steps, status;
+  IdPortal status;
+  IdPortal validPoint, steps;
   vtkm::Id maxSteps, numPos, histSize;
   PosPortal history;
-
-public:
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> historyArray;
 };
-
-
 
 template <typename T, typename DeviceAdapterTag>
 class StateRecordingParticlesRound : public vtkm::exec::ExecutionObjectBase
