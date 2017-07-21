@@ -277,7 +277,7 @@ private:
             seedArray, stepArray, statusArray, numSteps, StepsPerRound, stepOffset, maxSteps);
           particleWorkletDispatch.Invoke(idxArray, streamlines);
 
-          auto historyPortal = streamlines.historyArray.GetPortalConstControl();
+          auto historyPortal = streamlines.HistoryArray.GetPortalConstControl();
           if (dumpOutput)
           {
             for (vtkm::Id i = 0; i < num; i++)
