@@ -22,15 +22,10 @@
 
 #include <vtkm/CellShape.h>
 #include <vtkm/TopologyElementTag.h>
+#include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/CellSet.h>
 #include <vtkm/cont/internal/ConnectivityExplicitInternals.h>
 #include <vtkm/exec/ConnectivityExplicit.h>
-
-#include <vtkm/cont/ArrayHandleConstant.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
 
 #include <map>
 #include <utility>
@@ -348,98 +343,14 @@ public:
     // nothing to do
   }
 
-  // Worklet to expand the PointToCell numIndices array by repeating cell index
-  class ExpandIndices : public vtkm::worklet::WorkletMapField
-  {
-  public:
-    typedef void ControlSignature(FieldIn<> cellIndex,
-                                  FieldIn<> offset,
-                                  FieldIn<> numIndices,
-                                  WholeArrayOut<> cellIndices);
-    typedef void ExecutionSignature(_1, _2, _3, _4);
-    typedef _1 InputDomain;
-
-    VTKM_CONT
-    ExpandIndices() {}
-
-    template <typename PortalType>
-    VTKM_EXEC void operator()(const vtkm::Id& cellIndex,
-                              const vtkm::Id& offset,
-                              const vtkm::Id& numIndices,
-                              const PortalType& cellIndices) const
-    {
-      VTKM_ASSERT(cellIndices.GetNumberOfValues() >= offset + numIndices);
-      vtkm::Id startIndex = offset;
-      for (vtkm::Id i = 0; i < numIndices; i++)
-      {
-        cellIndices.Set(startIndex++, cellIndex);
-      }
-    }
-  };
-
   template <typename Device>
   VTKM_CONT void CreateConnectivity(Device,
                                     vtkm::TopologyElementTagCell,
                                     vtkm::TopologyElementTagPoint)
   {
-    // PointToCell connectivity array (point indices) will be
-    // transformed into the CellToPoint numIndices array using reduction
-    //
-    // PointToCell numIndices array using expansion will be
-    // transformed into the CellToPoint connectivity array
-
-    if (this->CellToPoint.ElementsValid)
-    {
-      return;
-    }
-
-    typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
-
-    // Sizes of the PointToCell information
-    vtkm::Id numberOfCells = this->GetNumberOfCells();
-    vtkm::Id connectivityLength = this->PointToCell.Connectivity.GetNumberOfValues();
-
-    // PointToCell connectivity will be basis of CellToPoint numIndices
-    vtkm::cont::ArrayHandle<vtkm::Id> pointIndices;
-    Algorithm::Copy(this->PointToCell.Connectivity, pointIndices);
-
-    // PointToCell numIndices will be basis of CellToPoint connectivity
-
-    this->CellToPoint.Connectivity.Allocate(connectivityLength);
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> index(0, 1, numberOfCells);
-
     this->PointToCell.BuildIndexOffsets(Device());
-    vtkm::worklet::DispatcherMapField<ExpandIndices, Device> expandDispatcher;
-    expandDispatcher.Invoke(index,
-                            this->PointToCell.IndexOffsets,
-                            this->PointToCell.NumIndices,
-                            this->CellToPoint.Connectivity);
-
-    // SortByKey where key is PointToCell connectivity and value is the expanded cellIndex
-    Algorithm::SortByKey(pointIndices, this->CellToPoint.Connectivity);
-
-    if (this->GetNumberOfPoints() <= 0 && connectivityLength > 0)
-    {
-      this->NumberOfPoints = pointIndices.GetPortalControl().Get(connectivityLength - 1) + 1;
-    }
-    vtkm::Id numberOfPoints = this->GetNumberOfPoints();
-
-    // CellToPoint numIndices from the now sorted PointToCell connectivity
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> numArray(1, connectivityLength);
-    vtkm::cont::ArrayHandle<vtkm::Id> uniquePoints;
-    vtkm::cont::ArrayHandle<vtkm::Id> numIndices;
-    uniquePoints.Allocate(numberOfPoints);
-    numIndices.Allocate(numberOfPoints);
-
-    Algorithm::ReduceByKey(pointIndices, numArray, uniquePoints, numIndices, vtkm::Add());
-
-    // Set the CellToPoint information
-    this->CellToPoint.Shapes = vtkm::cont::make_ArrayHandleConstant(
-      static_cast<vtkm::UInt8>(CELL_SHAPE_VERTEX), numberOfPoints);
-    Algorithm::Copy(numIndices, this->CellToPoint.NumIndices);
-
-    this->CellToPoint.ElementsValid = true;
-    this->CellToPoint.IndexOffsetsValid = false;
+    internal::ComputeCellToPointConnectivity(
+      this->CellToPoint, this->PointToCell, this->GetNumberOfPoints(), Device());
   }
 
   void PrintSummary(std::ostream& out) const VTKM_OVERRIDE
