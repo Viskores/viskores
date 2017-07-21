@@ -159,14 +159,15 @@ struct FetchArrayTopologyMapInImplementation<
 
 template <typename PermutationPortal, vtkm::IdComponent NumDimensions>
 struct FetchArrayTopologyMapInImplementation<
-  vtkm::exec::ConnectivityPermuted<PermutationPortal,
-                                   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                                      vtkm::TopologyElementTagCell,
-                                                                      NumDimensions>>,
+  vtkm::exec::ConnectivityPermutedPointToCell<
+    PermutationPortal,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                       vtkm::TopologyElementTagCell,
+                                       NumDimensions>>,
   vtkm::internal::ArrayPortalUniformPointCoordinates>
 
 {
-  typedef vtkm::exec::ConnectivityPermuted<
+  typedef vtkm::exec::ConnectivityPermutedPointToCell<
     PermutationPortal,
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                        vtkm::TopologyElementTagCell,

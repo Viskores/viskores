@@ -48,6 +48,7 @@ set(unit_tests
   UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayPortalToIterators.cxx
   UnitTestCellSetExplicit.cxx
+  UnitTestCellSetPermutation.cxx
   UnitTestContTesting.cxx
   UnitTestDataSetBuilderExplicit.cxx
   UnitTestDataSetBuilderRectilinear.cxx
