@@ -26,7 +26,6 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>

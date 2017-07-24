@@ -25,7 +25,7 @@ namespace
 {
 
 template <typename T, vtkm::IdComponent FromSize, vtkm::IdComponent ToSize>
-vtkm::Vec<T, ToSize> Unpack(const vtkm::Vec<T, FromSize>& inputVec)
+vtkm::Vec<T, ToSize> ShrinkVec(const vtkm::Vec<T, FromSize>& inputVec)
 {
   vtkm::Vec<T, ToSize> ret;
   for (vtkm::IdComponent idx = 0; idx < ToSize; ++idx)
@@ -45,14 +45,13 @@ void LineTests()
   canvas.AddLine(
     vtkm::make_Vec(0.0f, 0.0f), vtkm::make_Vec(999.0f, 999.0f), 1.0f, vtkm::rendering::Color::red);
   canvas.Finish();
-  canvas.SaveAs("test.pnm");
 
   vtkm::rendering::Canvas::ColorBufferType colorBuffer = canvas.GetColorBuffer();
   vtkm::Id idx = 500 * canvas.GetWidth() + 500;
   vtkm::Vec<vtkm::Float32, 3> actualColor =
-    Unpack<vtkm::Float32, 4, 3>(colorBuffer.GetPortalConstControl().Get(idx));
+    ShrinkVec<vtkm::Float32, 4, 3>(colorBuffer.GetPortalConstControl().Get(idx));
   vtkm::Vec<vtkm::Float32, 3> expectedColor =
-    Unpack<vtkm::Float32, 4, 3>(vtkm::rendering::Color::red.Components);
+    ShrinkVec<vtkm::Float32, 4, 3>(vtkm::rendering::Color::red.Components);
   VTKM_TEST_ASSERT(actualColor == expectedColor, "Line color not correct");
 }
 
