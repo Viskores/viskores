@@ -20,6 +20,8 @@
 #ifndef vtk_m_rendering_Color_h
 #define vtk_m_rendering_Color_h
 
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
 #include <iostream>
 #include <vtkm/Types.h>
 namespace vtkm
@@ -33,7 +35,7 @@ namespace rendering
 /// Ported from EAVL. Originally created by Jeremy Meredith, Dave Pugmire,
 /// and Sean Ahern.
 ///
-class Color
+class VTKM_RENDERING_EXPORT Color
 {
 public:
   vtkm::Vec<vtkm::Float32, 4> Components;
