@@ -189,7 +189,6 @@ public:
 
   ~StreamlineWorklet() {}
 
-private:
   struct IsOne
   {
     template <typename T>
@@ -199,6 +198,7 @@ private:
     }
   };
 
+private:
   void run(vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines,
            vtkm::cont::ArrayHandle<vtkm::Id>& status,
