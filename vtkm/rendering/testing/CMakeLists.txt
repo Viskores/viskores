@@ -25,6 +25,7 @@ set(headers
 vtkm_declare_headers(${headers})
 
 set(unit_tests
+  UnitTestCanvasLineRenderer.cxx
   UnitTestMapperConnectivity.cxx
   UnitTestMultiMapper.cxx
   UnitTestMapperRayTracer.cxx

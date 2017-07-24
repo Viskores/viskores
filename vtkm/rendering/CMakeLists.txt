@@ -29,6 +29,7 @@ set(headers
   Camera.h
   Canvas.h
   CanvasRayTracer.h
+  CanvasLineRenderer.h
   Color.h
   ColorBarAnnotation.h
   ColorLegendAnnotation.h
@@ -41,6 +42,7 @@ set(headers
   MapperRayTracer.h
   MapperVolume.h
   MapperConnectivity.h
+  MapperLineRenderer.h
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
@@ -63,6 +65,7 @@ set(sources
   Camera.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
+  CanvasLineRenderer.cxx
   Color.cxx
   ColorBarAnnotation.cxx
   ColorLegendAnnotation.cxx
@@ -73,6 +76,7 @@ set(sources
   MapperRayTracer.cxx
   MapperVolume.cxx
   MapperConnectivity.cxx
+  MapperLineRenderer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
