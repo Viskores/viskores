@@ -58,7 +58,8 @@ public:
 
     while (!ic.Done(idx))
     {
-      if (integrator.Step(p, field, p2))
+      ParticleStatus status = integrator.Step(p, field, p2);
+      if (status == ParticleStatus::STATUS_OK)
       {
         ic.TakeStep(idx, p2);
         p = p2;

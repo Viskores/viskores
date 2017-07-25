@@ -22,6 +22,7 @@
 #define vtk_m_worklet_particleadvection_Integrators_h
 
 #include <vtkm/Types.h>
+#include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm
 {
@@ -50,9 +51,9 @@ public:
   }
 
   template <typename PortalType>
-  VTKM_EXEC bool Step(const vtkm::Vec<FieldType, 3>& pos,
-                      const PortalType& field,
-                      vtkm::Vec<FieldType, 3>& out) const
+  VTKM_EXEC ParticleStatus Step(const vtkm::Vec<FieldType, 3>& pos,
+                                const PortalType& field,
+                                vtkm::Vec<FieldType, 3>& out) const
   {
     vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
 
@@ -60,9 +61,9 @@ public:
         f.Evaluate(pos + h_2 * k2, field, k3) && f.Evaluate(pos + h * k3, field, k4))
     {
       out = pos + h / 6.0f * (k1 + 2 * k2 + 2 * k3 + k4);
-      return true;
+      return ParticleStatus::STATUS_OK;
     }
-    return false;
+    return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
   }
 
   FieldEvaluateType f;
