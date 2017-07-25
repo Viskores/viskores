@@ -227,9 +227,9 @@ public:
     v1[2] = (1.0f - a) * v10[2] + a * v11[2];
 
     a = pos[2] - static_cast<FieldType>(floor(pos[2]));
-    out[0] = (1.0f - a) * v0[0] + v1[0];
-    out[1] = (1.0f - a) * v0[1] + v1[1];
-    out[2] = (1.0f - a) * v0[2] + v1[2];
+    out[0] = (1.0f - a) * v0[0] + a * v1[0];
+    out[1] = (1.0f - a) * v0[1] + a * v1[1];
+    out[2] = (1.0f - a) * v0[2] + a * v1[2];
     return true;
   }
 
@@ -379,9 +379,9 @@ public:
 
     // Interpolation in Z
     a = pos[2] - static_cast<FieldType>(floor(pos[2]));
-    out[0] = (1.0f - a) * v0[0] + v1[0];
-    out[1] = (1.0f - a) * v0[1] + v1[1];
-    out[2] = (1.0f - a) * v0[2] + v1[2];
+    out[0] = (1.0f - a) * v0[0] + a * v1[0];
+    out[1] = (1.0f - a) * v0[1] + a * v1[1];
+    out[2] = (1.0f - a) * v0[2] + a * v1[2];
 
     return true;
   }
