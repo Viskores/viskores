@@ -250,9 +250,9 @@ public:
 
 private:
   PosPortal pos;
+  IdPortal steps;
   IdPortal status;
   IdPortal validPoint;
-  IdPortal steps;
   vtkm::Id maxSteps, numPos, histSize;
   PosPortal history;
 };
