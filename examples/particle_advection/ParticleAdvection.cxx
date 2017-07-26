@@ -79,7 +79,7 @@ void RunTest(const std::string& fname,
   typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType> RK4RGType;
 
   RGEvalType eval(ds);
-  RK4RGType rk4(eval, stepSize);
+  RK4RGType rk4(eval, stepSize, ds);
 
   std::vector<vtkm::Vec<FieldType, 3>> seeds;
   srand(314);
