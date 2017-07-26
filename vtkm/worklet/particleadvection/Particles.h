@@ -120,7 +120,8 @@ public:
 
 private:
   PosPortal pos;
-  IdPortal steps, status;
+  IdPortal steps;
+  IdPortal status;
   vtkm::Id maxSteps;
 };
 
@@ -250,7 +251,8 @@ public:
 private:
   PosPortal pos;
   IdPortal status;
-  IdPortal validPoint, steps;
+  IdPortal validPoint;
+  IdPortal steps;
   vtkm::Id maxSteps, numPos, histSize;
   PosPortal history;
 };
@@ -368,7 +370,8 @@ public:
 
 private:
   PosPortal pos;
-  IdPortal steps, status;
+  IdPortal steps;
+  IdPortal status;
   vtkm::Id maxSteps, numPos, histSize, offset, totalMaxSteps;
   PosPortal history;
 
