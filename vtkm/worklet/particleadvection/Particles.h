@@ -96,14 +96,22 @@ public:
   }
 
   VTKM_EXEC
-  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt)
+  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
   {
-    Pos.Set(idx, pt);
-    vtkm::Id nSteps = Steps.Get(idx);
-    nSteps = nSteps + 1;
-    Steps.Set(idx, nSteps);
-    if (nSteps == MaxSteps)
-      SetTerminated(idx);
+    if (status == ParticleStatus::STATUS_OK)
+    {
+      Pos.Set(idx, pt);
+      vtkm::Id nSteps = Steps.Get(idx);
+      nSteps = nSteps + 1;
+      Steps.Set(idx, nSteps);
+      if (nSteps == MaxSteps)
+        SetTerminated(idx);
+    }
+    else
+    {
+      Pos.Set(idx, pt);
+      SetExitedSpatialBoundary(idx);
+    }
   }
 
   /* Set/Change Status */
@@ -257,8 +265,10 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt)
+  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
   {
+    if (status != ParticleStatus::STATUS_OK)
+      return;
     vtkm::Id nSteps = this->Steps.Get(idx);
     vtkm::Id loc = idx * HistSize + nSteps;
     History.Set(loc, pt);
@@ -354,8 +364,10 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt)
+  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
   {
+    if (status != ParticleStatus::STATUS_OK)
+      return;
     vtkm::Id nSteps = this->Steps.Get(idx);
     vtkm::Id loc = idx * HistSize + (nSteps - Offset);
     History.Set(loc, pt);

@@ -59,7 +59,7 @@ public:
     vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
     vtkm::Id numShortSteps = 0;
     bool shortSteps = false;
-    FieldType step_h = h / 2;
+    FieldType step_h = h;
     FieldType step_h_2 = step_h / 2;
     if (f.Evaluate(pos, field, k1) && f.Evaluate(pos + step_h_2 * k1, field, k2) &&
         f.Evaluate(pos + step_h_2 * k2, field, k3) && f.Evaluate(pos + step_h * k3, field, k4))
@@ -68,7 +68,7 @@ public:
        * If the particle is inside bounds after taking the steps
        * return that the step was successful.
        */
-      out = pos + h / 6.0f * (k1 + 2 * k2 + 2 * k3 + k4);
+      out = pos + step_h / 6.0f * (k1 + 2 * k2 + 2 * k3 + k4);
       return ParticleStatus::STATUS_OK;
     }
     else
@@ -84,11 +84,7 @@ public:
       if (f.Evaluate(pos, field, k1) && f.Evaluate(pos + step_h_2 * k1, field, k2) &&
           f.Evaluate(pos + step_h_2 * k2, field, k3) && f.Evaluate(pos + step_h * k3, field, k4))
       {
-        /*
-          * If the particle is inside bounds after taking the steps
-          * return that the step was successful.
-          */
-        out = pos + h / 6.0f * (k1 + 2 * k2 + 2 * k3 + k4);
+        out = pos + step_h / 6.0f * (k1 + 2 * k2 + 2 * k3 + k4);
         numShortSteps++;
       }
       /*
@@ -98,6 +94,8 @@ public:
       /*Check for the function like VisIt*/
       if (numShortSteps == 2)
       {
+        step_h /= 2;
+        step_h_2 = step_h / 2;
         /*Calculate the velocity of the particle at current position*/
         f.Evaluate(out, field, k1);
         f.Evaluate(out + step_h_2 * k1, field, k2);
@@ -111,10 +109,15 @@ public:
         FieldType xbound = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
         FieldType ybound = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
         FieldType zbound = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+        /*
+         * Determine the minimum travel time for the
+         * particle to reach the boundary
+         */
         FieldType hx = std::abs(xbound - out[0]) / std::abs(vel[0]);
         FieldType hy = std::abs(ybound - out[1]) / std::abs(vel[1]);
         FieldType hz = std::abs(zbound - out[2]) / std::abs(vel[2]);
         FieldType hesc = std::min(hx, std::min(hy, hz));
+        hesc += hesc / 100.0f;
         out += hesc * vel;
         shortSteps = false;
         break;

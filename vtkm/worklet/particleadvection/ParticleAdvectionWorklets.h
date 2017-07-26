@@ -61,12 +61,12 @@ public:
       ParticleStatus status = integrator.Step(p, field, p2);
       if (status == ParticleStatus::STATUS_OK)
       {
-        ic.TakeStep(idx, p2);
+        ic.TakeStep(idx, p2, status);
         p = p2;
       }
       else
       {
-        ic.SetExitedSpatialBoundary(idx);
+        ic.TakeStep(idx, p2, status);
       }
     }
   }
