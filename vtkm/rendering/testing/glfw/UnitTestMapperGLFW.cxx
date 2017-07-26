@@ -93,10 +93,10 @@ void RenderTests()
   ds[3] = maker.Make2DRectilinearDataSet0();
   //create 1D uniform DS with tiny Y axis
   vtkm::cont::DataSet tinyDS = maker.Make1DUniformDataSet0();
-  const int nVerts = tinyDS.GetField(0).GetData().GetNumberOfValues();
+  const vtkm::Id nVerts = tinyDS.GetField(0).GetData().GetNumberOfValues();
   vtkm::Float32 vars[nVerts];
   float smallVal = 1.000;
-  for (int i = 0; i <= nVerts; i++)
+  for (vtkm::Id i = 0; i <= nVerts; i++)
   {
     vars[i] = smallVal;
     smallVal += .01;
