@@ -29,6 +29,8 @@
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
 
+#include <vtkm/io/writer/VTKDataSetWriter.h>
+
 namespace
 {
 
@@ -108,7 +110,7 @@ void TestParticleAdvection()
 
   std::cout << "Testing Integrators for ParticleAdvection Worklet" << std::endl;
 
-  FieldType stepSize = 0.01f;
+  FieldType stepSize = 0.05f;
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
 
@@ -158,16 +160,24 @@ void TestParticleAdvection()
     {
       vtkm::worklet::Streamline streamline;
       vtkm::worklet::StreamlineResult<FieldType> res;
-      std::cout << __FILE__ << " " << __LINE__ << std::endl;
-      res = streamline.Run(rk4, seeds, fieldArray, 5, DeviceAdapter());
-      std::cout << __FILE__ << " " << __LINE__ << std::endl;
+      res = streamline.Run(rk4, seeds, fieldArray, 1000, DeviceAdapter());
       //          VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
       //                           "Number of output particles does not match input.");
-      std::cout << "pos: ";
-      printSummary_ArrayHandle(res.positions, std::cout, true);
+
+      printSummary_ArrayHandle(res.positions, std::cout);
       printSummary_ArrayHandle(res.status, std::cout, true);
       printSummary_ArrayHandle(res.stepsTaken, std::cout, true);
       res.polyLines.PrintSummary(std::cout);
+
+      vtkm::cont::DataSet Output;
+      Output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", res.positions));
+      Output.AddCellSet(res.polyLines);
+      Output.AddField(vtkm::cont::Field("status", vtkm::cont::Field::ASSOC_POINTS, res.status));
+      Output.AddField(vtkm::cont::Field("steps", vtkm::cont::Field::ASSOC_POINTS, res.stepsTaken));
+      Output.PrintSummary(std::cout);
+
+      vtkm::io::writer::VTKDataSetWriter writer("streamlines.vtk");
+      writer.WriteDataSet(Output);
     }
   }
 }

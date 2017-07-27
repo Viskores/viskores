@@ -257,6 +257,7 @@ private:
   PosPortal history;
 };
 
+#if 0
 template <typename T, typename DeviceAdapterTag>
 class StateRecordingParticlesRound : public vtkm::exec::ExecutionObjectBase
 {
@@ -378,6 +379,7 @@ private:
 public:
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> historyArray;
 };
+#endif
 }
 }
 }
