@@ -26,6 +26,7 @@
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
+#include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View1D.h>
@@ -97,6 +98,7 @@ void Render(const vtkm::cont::DataSet& ds,
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
+  canvas.SetBackgroundColor(vtkm::rendering::Color::white);
   vtkm::rendering::Scene scene;
 
   scene.AddActor(vtkm::rendering::Actor(
@@ -115,6 +117,7 @@ void Render(const vtkm::cont::DataSet& ds,
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
+  canvas.SetBackgroundColor(vtkm::rendering::Color::white);
   vtkm::rendering::Scene scene;
 
   //DRP Actor? no field? no colortable (or a constant colortable) ??
