@@ -31,6 +31,7 @@ set(headers
   CanvasRayTracer.h
   Color.h
   ColorBarAnnotation.h
+  ColorLegendAnnotation.h
   ColorTable.h
   ConnectivityProxy.h
   DecodePNG.h
@@ -64,6 +65,7 @@ set(sources
   CanvasRayTracer.cxx
   Color.cxx
   ColorBarAnnotation.cxx
+  ColorLegendAnnotation.cxx
   ColorTable.cxx
   ConnectivityProxy.cxx
   DecodePNG.cxx
@@ -168,10 +170,12 @@ target_link_libraries(vtkm_rendering
                       PUBLIC vtkm_cont
                       PRIVATE ${VTKm_OPENGL_LIBRARIES}
                               ${VTKm_BACKEND_LIBRARIES}
+                              ${EGL_LIBRARIES}
                       )
 target_include_directories(vtkm_rendering
                           PRIVATE ${VTKm_OPENGL_INCLUDE_DIRS}
                                   ${VTKm_BACKEND_INCLUDE_DIRS}
+                                  ${EGL_INCLUDE_DIRS}
                           )
 
 if(UNIX AND NOT APPLE)

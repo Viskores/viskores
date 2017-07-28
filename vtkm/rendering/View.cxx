@@ -76,6 +76,12 @@ void View::SaveAs(const std::string& fileName) const
   this->GetCanvas().SaveAs(fileName);
 }
 
+void View::RenderAnnotations()
+{
+  for (unsigned int i = 0; i < annotations.size(); ++i)
+    annotations[i]->Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
+}
+
 void View::SetupForWorldSpace(bool viewportClip)
 {
   //this->Camera.SetupMatrices();

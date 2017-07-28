@@ -253,29 +253,44 @@ void Camera::TrackballRotate(vtkm::Float32 startX,
   this->Camera3D.ViewUp = vtkm::Transform3DVector(fullTransform, this->Camera3D.ViewUp);
 }
 
-void Camera::ResetToBounds(const vtkm::Bounds& dataBounds)
+void Camera::ResetToBounds(const vtkm::Bounds& dataBounds,
+                           const vtkm::Float64 XDataViewPadding,
+                           const vtkm::Float64 YDataViewPadding,
+                           const vtkm::Float64 ZDataViewPadding)
 {
   // Save camera mode
   ModeEnum saveMode = this->GetMode();
+
+  // Pad view around data extents
+  vtkm::Bounds db = dataBounds;
+  vtkm::Float64 viewPadAmount = XDataViewPadding * (db.X.Max - db.X.Min);
+  db.X.Max += viewPadAmount;
+  db.X.Min -= viewPadAmount;
+  viewPadAmount = YDataViewPadding * (db.Y.Max - db.Y.Min);
+  db.Y.Max += viewPadAmount;
+  db.Y.Min -= viewPadAmount;
+  viewPadAmount = ZDataViewPadding * (db.Z.Max - db.Z.Min);
+  db.Z.Max += viewPadAmount;
+  db.Z.Min -= viewPadAmount;
 
   // Reset for 3D camera
   vtkm::Vec<vtkm::Float32, 3> directionOfProjection = this->GetPosition() - this->GetLookAt();
   vtkm::Normalize(directionOfProjection);
 
-  vtkm::Vec<vtkm::Float32, 3> center = dataBounds.Center();
+  vtkm::Vec<vtkm::Float32, 3> center = db.Center();
   this->SetLookAt(center);
 
   vtkm::Vec<vtkm::Float32, 3> totalExtent;
-  totalExtent[0] = vtkm::Float32(dataBounds.X.Length());
-  totalExtent[1] = vtkm::Float32(dataBounds.Y.Length());
-  totalExtent[2] = vtkm::Float32(dataBounds.Z.Length());
+  totalExtent[0] = vtkm::Float32(db.X.Length());
+  totalExtent[1] = vtkm::Float32(db.Y.Length());
+  totalExtent[2] = vtkm::Float32(db.Z.Length());
   vtkm::Float32 diagonalLength = vtkm::Magnitude(totalExtent);
   this->SetPosition(center + directionOfProjection * diagonalLength * 1.0f);
   this->SetFieldOfView(60.0f);
   this->SetClippingRange(0.1f * diagonalLength, diagonalLength * 10.0f);
 
   // Reset for 2D camera
-  this->SetViewRange2D(dataBounds);
+  this->SetViewRange2D(db);
 
   // Reset pan and zoom
   this->Camera3D.XPan = 0;
@@ -287,6 +302,17 @@ void Camera::ResetToBounds(const vtkm::Bounds& dataBounds)
 
   // Restore camera mode
   this->SetMode(saveMode);
+}
+
+// Enable the ability to pad the data extents in the final view
+void Camera::ResetToBounds(const vtkm::Bounds& dataBounds, const vtkm::Float64 dataViewPadding)
+{
+  Camera::ResetToBounds(dataBounds, dataViewPadding, dataViewPadding, dataViewPadding);
+}
+
+void Camera::ResetToBounds(const vtkm::Bounds& dataBounds)
+{
+  Camera::ResetToBounds(dataBounds, 0);
 }
 
 void Camera::Roll(vtkm::Float32 angleDegrees)

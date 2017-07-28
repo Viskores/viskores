@@ -27,6 +27,7 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/TextAnnotation.h>
 
 #include <memory>
 
@@ -101,16 +102,25 @@ public:
 
   void SaveAs(const std::string& fileName) const;
 
+  VTKM_CONT
+  void ClearAnnotations() { annotations.clear(); }
+
+  VTKM_CONT
+  void AddAnnotation(vtkm::rendering::TextAnnotation* ann) { annotations.push_back(ann); }
+
 protected:
   void SetupForWorldSpace(bool viewportClip = true);
 
   void SetupForScreenSpace(bool viewportClip = false);
+
+  void RenderAnnotations();
 
 private:
   vtkm::rendering::Scene Scene;
   std::shared_ptr<vtkm::rendering::Mapper> MapperPointer;
   std::shared_ptr<vtkm::rendering::Canvas> CanvasPointer;
   std::shared_ptr<vtkm::rendering::WorldAnnotator> WorldAnnotatorPointer;
+  std::vector<vtkm::rendering::TextAnnotation*> annotations;
   vtkm::rendering::Camera Camera;
 };
 }
