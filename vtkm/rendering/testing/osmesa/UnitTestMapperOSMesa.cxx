@@ -23,6 +23,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasOSMesa.h>
+#include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View2D.h>
