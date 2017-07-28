@@ -58,6 +58,9 @@ public:
   {
   }
 
+  VTKM_EXEC
+  vtkm::Id GetNumberOfElements() const { return this->Portal.GetNumberOfValues(); }
+
   typedef typename OriginalConnectivity::CellShapeTag CellShapeTag;
 
   VTKM_EXEC
@@ -65,6 +68,12 @@ public:
   {
     vtkm::Id pIndex = this->Portal.Get(index);
     return this->Connectivity.GetCellShape(pIndex);
+  }
+
+  VTKM_EXEC
+  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const
+  {
+    return this->Connectivity.GetNumberOfIndices(this->Portal.Get(index));
   }
 
   typedef typename OriginalConnectivity::IndicesType IndicesType;
