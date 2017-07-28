@@ -53,9 +53,9 @@ void RenderTests()
   vtkm::rendering::testing::Render<M, C, V2>(
     maker.Make2DRectilinearDataSet0(), "pointvar", colorTable, "rect2D.pnm");
   vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DUniformDataSet0(), "pointvar", vtkm::rendering::Color::white, "uniform1D.pnm");
+    maker.Make1DUniformDataSet0(), "pointvar", vtkm::rendering::Color(1, 1, 1, 1), "uniform1D.pnm");
   vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DExplicitDataSet0(), "pointvar", vtkm::rendering::Color::white, "expl1D.pnm");
+    maker.Make1DExplicitDataSet0(), "pointvar", vtkm::rendering::Color(1, 1, 1, 1), "expl1D.pnm");
 }
 
 } //namespace

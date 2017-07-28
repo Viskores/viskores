@@ -130,8 +130,8 @@ void Render(const vtkm::cont::DataSet& ds,
   vtkm::rendering::TextAnnotationScreen* titleAnnotation =
     new vtkm::rendering::TextAnnotationScreen("1D Test Plot",
                                               vtkm::rendering::Color::white,
-                                              .1,
-                                              vtkm::Vec<vtkm::Float32, 2>(-.27, .87),
+                                              .1f,
+                                              vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f),
                                               0.f);
   view.AddAnnotation(titleAnnotation);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
