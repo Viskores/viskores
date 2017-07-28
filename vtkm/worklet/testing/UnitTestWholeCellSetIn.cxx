@@ -266,10 +266,99 @@ void TryCellSetPermutation()
 }
 
 VTKM_CONT
+void TryStructuredGrid3D()
+{
+  std::cout << "Testing 3D structured grid." << std::endl;
+  vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet0();
+  vtkm::cont::CellSetStructured<3> cellSet;
+  dataSet.GetCellSet().CopyTo(cellSet);
+
+  vtkm::Id expectedCellIndexSum[4] = { 40, 48, 88, 96 };
+
+  vtkm::Id numCells = cellSet.GetNumberOfCells();
+  TryCellConnectivity(
+    cellSet,
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_HEXAHEDRON, numCells),
+    vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(8, numCells),
+    vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+
+  vtkm::IdComponent expectedPointNumIndices[18] = { 1, 2, 1, 1, 2, 1, 2, 4, 2,
+                                                    2, 4, 2, 1, 2, 1, 1, 2, 1 };
+
+  vtkm::Id expectedPointIndexSum[18] = { 0, 1, 1, 0, 1, 1, 2, 6, 4, 2, 6, 4, 2, 5, 3, 2, 5, 3 };
+
+  vtkm::Id numPoints = cellSet.GetNumberOfPoints();
+  TryPointConnectivity(
+    cellSet,
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_VERTEX, numPoints),
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+}
+
+VTKM_CONT
+void TryStructuredGrid2D()
+{
+  std::cout << "Testing 2D structured grid." << std::endl;
+  vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make2DUniformDataSet0();
+  vtkm::cont::CellSetStructured<2> cellSet;
+  dataSet.GetCellSet().CopyTo(cellSet);
+
+  vtkm::Id expectedCellIndexSum[2] = { 8, 12 };
+
+  vtkm::Id numCells = cellSet.GetNumberOfCells();
+  TryCellConnectivity(cellSet,
+                      vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_QUAD, numCells),
+                      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(4, numCells),
+                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+
+  vtkm::IdComponent expectedPointNumIndices[6] = { 1, 2, 1, 1, 2, 1 };
+
+  vtkm::Id expectedPointIndexSum[6] = { 0, 1, 1, 0, 1, 1 };
+
+  vtkm::Id numPoints = cellSet.GetNumberOfPoints();
+  TryPointConnectivity(
+    cellSet,
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_VERTEX, numPoints),
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+}
+
+VTKM_CONT
+void TryStructuredGrid1D()
+{
+  std::cout << "Testing 1D structured grid." << std::endl;
+  vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make1DUniformDataSet0();
+  vtkm::cont::CellSetStructured<1> cellSet;
+  dataSet.GetCellSet().CopyTo(cellSet);
+
+  vtkm::Id expectedCellIndexSum[5] = { 1, 3, 5, 7, 9 };
+
+  vtkm::Id numCells = cellSet.GetNumberOfCells();
+  TryCellConnectivity(cellSet,
+                      vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_LINE, numCells),
+                      vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(2, numCells),
+                      vtkm::cont::make_ArrayHandle(expectedCellIndexSum, numCells));
+
+  vtkm::IdComponent expectedPointNumIndices[6] = { 1, 2, 2, 2, 2, 1 };
+
+  vtkm::Id expectedPointIndexSum[6] = { 0, 1, 3, 5, 7, 4 };
+
+  vtkm::Id numPoints = cellSet.GetNumberOfPoints();
+  TryPointConnectivity(
+    cellSet,
+    vtkm::cont::ArrayHandleConstant<vtkm::UInt8>(vtkm::CELL_SHAPE_VERTEX, numPoints),
+    vtkm::cont::make_ArrayHandle(expectedPointNumIndices, numPoints),
+    vtkm::cont::make_ArrayHandle(expectedPointIndexSum, numPoints));
+}
+
+VTKM_CONT
 void RunWholeCellSetInTests()
 {
   TryExplicitGrid();
   TryCellSetPermutation();
+  TryStructuredGrid3D();
+  TryStructuredGrid2D();
+  TryStructuredGrid1D();
 }
 
 int UnitTestWholeCellSetIn(int, char* [])

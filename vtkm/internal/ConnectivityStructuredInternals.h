@@ -87,6 +87,19 @@ public:
   }
 
   VTKM_EXEC_CONT
+  vtkm::IdComponent GetNumberOfCellsOnPoint(vtkm::Id pointIndex) const
+  {
+    if ((pointIndex > 0) && (pointIndex < this->PointDimensions - 1))
+    {
+      return 2;
+    }
+    else
+    {
+      return 1;
+    }
+  }
+
+  VTKM_EXEC_CONT
   vtkm::VecVariable<vtkm::Id, MAX_CELL_TO_POINT> GetCellsOfPoint(vtkm::Id index) const
   {
     vtkm::VecVariable<vtkm::Id, MAX_CELL_TO_POINT> cellIds;
@@ -186,6 +199,27 @@ public:
   vtkm::Vec<vtkm::Id, NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id cellIndex) const
   {
     return this->GetPointsOfCell(this->FlatToLogicalCellIndex(cellIndex));
+  }
+
+  VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfCellsOnPoint(const SchedulingRangeType& ij) const
+  {
+    vtkm::IdComponent numCells = 1;
+
+    for (vtkm::IdComponent dim = 0; dim < 2; dim++)
+    {
+      if ((ij[dim] > 0) && (ij[dim] < this->PointDimensions[dim] - 1))
+      {
+        numCells *= 2;
+      }
+    }
+
+    return numCells;
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::IdComponent GetNumberOfCellsOnPoint(vtkm::Id pointIndex) const
+  {
+    return this->GetNumberOfCellsOnPoint(this->FlatToLogicalPointIndex(pointIndex));
   }
 
   VTKM_EXEC_CONT
@@ -334,6 +368,27 @@ public:
     return this->GetPointsOfCell(this->FlatToLogicalCellIndex(cellIndex));
   }
 
+  VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfCellsOnPoint(const SchedulingRangeType& ijk) const
+  {
+    vtkm::IdComponent numCells = 1;
+
+    for (vtkm::IdComponent dim = 0; dim < 3; dim++)
+    {
+      if ((ijk[dim] > 0) && (ijk[dim] < this->PointDimensions[dim] - 1))
+      {
+        numCells *= 2;
+      }
+    }
+
+    return numCells;
+  }
+
+  VTKM_EXEC_CONT
+  vtkm::IdComponent GetNumberOfCellsOnPoint(vtkm::Id pointIndex) const
+  {
+    return this->GetNumberOfCellsOnPoint(this->FlatToLogicalPointIndex(pointIndex));
+  }
+
   VTKM_EXEC_CONT
   vtkm::VecVariable<vtkm::Id, MAX_CELL_TO_POINT> GetCellsOfPoint(
     const SchedulingRangeType& ijk) const
@@ -460,7 +515,22 @@ struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
   typedef vtkm::internal::ConnectivityStructuredInternals<Dimension> ConnectivityType;
   typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;
 
+  using CellShapeTag = typename ConnectivityType::CellShapeTag;
+
   typedef vtkm::Vec<vtkm::Id, ConnectivityType::NUM_POINTS_IN_CELL> IndicesType;
+
+  VTKM_EXEC_CONT static vtkm::Id GetNumberOfElements(const ConnectivityType& connectivity)
+  {
+    return connectivity.GetNumberOfCells();
+  }
+
+  template <typename IndexType>
+  VTKM_EXEC_CONT static vtkm::IdComponent GetNumberOfIndices(
+    const ConnectivityType& vtkmNotUsed(connectivity),
+    const IndexType& vtkmNotUsed(cellIndex))
+  {
+    return ConnectivityType::NUM_POINTS_IN_CELL;
+  }
 
   template <typename IndexType>
   VTKM_EXEC_CONT static IndicesType GetIndices(const ConnectivityType& connectivity,
@@ -506,7 +576,21 @@ struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagCell,
   typedef vtkm::internal::ConnectivityStructuredInternals<Dimension> ConnectivityType;
   typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;
 
+  using CellShapeTag = vtkm::CellShapeTagVertex;
+
   typedef vtkm::VecVariable<vtkm::Id, ConnectivityType::MAX_CELL_TO_POINT> IndicesType;
+
+  VTKM_EXEC_CONT static vtkm::Id GetNumberOfElements(const ConnectivityType& connectivity)
+  {
+    return connectivity.GetNumberOfPoints();
+  }
+
+  template <typename IndexType>
+  VTKM_EXEC_CONT static vtkm::IdComponent GetNumberOfIndices(const ConnectivityType& connectivity,
+                                                             const IndexType& pointIndex)
+  {
+    return connectivity.GetNumberOfCellsOnPoint(pointIndex);
+  }
 
   template <typename IndexType>
   VTKM_EXEC_CONT static IndicesType GetIndices(const ConnectivityType& connectivity,
