@@ -56,6 +56,8 @@ public:
                                 const PortalType& field,
                                 vtkm::Vec<FieldType, 3>& out) const
   {
+    if (!bounds.Contains(pos))
+      return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
     vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
     vtkm::Id numShortSteps = 0;
     bool shortSteps = false;
@@ -99,8 +101,8 @@ public:
         /*Calculate the velocity of the particle at current position*/
         f.Evaluate(out, field, k1);
         f.Evaluate(out + step_h_2 * k1, field, k2);
-        f.Evaluate(out + step_h_2 * k2, field, k2);
-        f.Evaluate(out + step_h * k3, field, k2);
+        f.Evaluate(out + step_h_2 * k2, field, k3);
+        f.Evaluate(out + step_h * k3, field, k4);
         vtkm::Vec<FieldType, 3> vel = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
         /*Get the direction of the particle*/
         FieldType magnitude = vtkm::Magnitude(vel);

@@ -64,7 +64,7 @@ public:
         ic.TakeStep(idx, p2, status);
         p = p2;
       }
-      else
+      else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
       {
         ic.TakeStep(idx, p2, status);
       }
