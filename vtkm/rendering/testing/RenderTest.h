@@ -129,7 +129,7 @@ void Render(const vtkm::cont::DataSet& ds,
   // Print the title
   vtkm::rendering::TextAnnotationScreen* titleAnnotation =
     new vtkm::rendering::TextAnnotationScreen("1D Test Plot",
-                                              vtkm::rendering::Color::white,
+                                              vtkm::rendering::Color(1, 1, 1, 1),
                                               .1f,
                                               vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f),
                                               0.f);
