@@ -26,6 +26,7 @@
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
+#include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/TextAnnotationScreen.h>
@@ -127,8 +128,11 @@ void Render(const vtkm::cont::DataSet& ds,
   ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
   // Print the title
   vtkm::rendering::TextAnnotationScreen* titleAnnotation =
-    new vtkm::rendering::TextAnnotationScreen(
-      "1D Test Plot", vtkm::rendering::Color::white, .1, vtkm::Vec<vtkm::Float32, 2>(-.27, .87), 0);
+    new vtkm::rendering::TextAnnotationScreen("1D Test Plot",
+                                              vtkm::rendering::Color::white,
+                                              .1,
+                                              vtkm::Vec<vtkm::Float32, 2>(-.27, .87),
+                                              0.f);
   view.AddAnnotation(titleAnnotation);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
