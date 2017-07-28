@@ -28,6 +28,7 @@
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/TextAnnotationScreen.h>
 #include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
@@ -111,6 +112,7 @@ void Render(const vtkm::cont::DataSet& ds,
 template <typename MapperType, typename CanvasType, typename ViewType>
 void Render(const vtkm::cont::DataSet& ds,
             const std::string& fieldNm,
+            const vtkm::rendering::Color& color,
             const std::string& outputFile)
 {
   MapperType mapper;
@@ -119,10 +121,15 @@ void Render(const vtkm::cont::DataSet& ds,
 
   //DRP Actor? no field? no colortable (or a constant colortable) ??
   scene.AddActor(
-    vtkm::rendering::Actor(ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm)));
+    vtkm::rendering::Actor(ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm), color));
   vtkm::rendering::Camera camera;
   SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fieldNm));
   ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+  // Print the title
+  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+    new vtkm::rendering::TextAnnotationScreen(
+      "1D Test Plot", vtkm::rendering::Color::white, .1, vtkm::Vec<vtkm::Float32, 2>(-.27, .87), 0);
+  view.AddAnnotation(titleAnnotation);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 }
