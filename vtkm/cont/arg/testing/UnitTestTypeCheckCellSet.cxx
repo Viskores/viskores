@@ -26,9 +26,12 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-struct TestNotCellSet {  };
+struct TestNotCellSet
+{
+};
 
 void TestCheckCellSet()
 {
@@ -37,34 +40,26 @@ void TestCheckCellSet()
   using vtkm::cont::arg::TypeCheck;
   using vtkm::cont::arg::TypeCheckTagCellSet;
 
-  VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagCellSet, vtkm::cont::CellSetExplicit<> >::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagCellSet, vtkm::cont::CellSetExplicit<>>::value),
+                   "Type check failed.");
 
-    VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagCellSet, vtkm::cont::CellSetStructured<2> >::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagCellSet, vtkm::cont::CellSetStructured<2>>::value),
+                   "Type check failed.");
 
-    VTKM_TEST_ASSERT(
-        (TypeCheck<TypeCheckTagCellSet, vtkm::cont::CellSetStructured<3> >::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT((TypeCheck<TypeCheckTagCellSet, vtkm::cont::CellSetStructured<3>>::value),
+                   "Type check failed.");
 
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagCellSet, TestNotCellSet>::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagCellSet, TestNotCellSet>::value), "Type check failed.");
 
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagCellSet, vtkm::Id>::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagCellSet, vtkm::Id>::value), "Type check failed.");
 
-  VTKM_TEST_ASSERT(
-        !(TypeCheck<TypeCheckTagCellSet, vtkm::cont::ArrayHandle<vtkm::Id> >::value),
-        "Type check failed.");
+  VTKM_TEST_ASSERT(!(TypeCheck<TypeCheckTagCellSet, vtkm::cont::ArrayHandle<vtkm::Id>>::value),
+                   "Type check failed.");
 }
 
 } // anonymous namespace
 
-int UnitTestTypeCheckCellSet(int, char *[])
+int UnitTestTypeCheckCellSet(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestCheckCellSet);
 }

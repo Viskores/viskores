@@ -39,6 +39,7 @@ add_subdirectory(tau_timing)
 #endif()
 =======
 add_subdirectory(tetrahedra)
+add_subdirectory(particle_advection)
 if(VTKm_ENABLE_RENDERING)
   add_subdirectory(rendering)
 endif()

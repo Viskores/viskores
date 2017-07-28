@@ -34,22 +34,23 @@ set(headers
   Bounds.h
   CellShape.h
   CellTraits.h
-  ImplicitFunctions.h
   ListTag.h
   Math.h
   Matrix.h
   NewtonsMethod.h
   Pair.h
   Range.h
+  RangeId.h
+  RangeId3.h
   StaticAssert.h
   TopologyElementTag.h
   Transform3D.h
   TypeListTag.h
   Types.h
   TypeTraits.h
+  VecAxisAlignedPointCoordinates.h
   VecFromPortal.h
   VecFromPortalPermute.h
-  VecRectilinearPointCoordinates.h
   VectorAnalysis.h
   VecTraits.h
   VecVariable.h

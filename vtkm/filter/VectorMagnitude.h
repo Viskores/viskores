@@ -24,8 +24,10 @@
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/worklet/Magnitude.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 class VectorMagnitude : public vtkm::filter::FilterField<VectorMagnitude>
 {
@@ -33,29 +35,26 @@ public:
   VTKM_CONT
   VectorMagnitude();
 
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet &input,
-                                      const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                      const vtkm::filter::FieldMetadata& fieldMeta,
-                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                      const DeviceAdapter& tag);
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultField DoExecute(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::ArrayHandle<T, StorageType>& field,
+    const vtkm::filter::FieldMetadata& fieldMeta,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+    const DeviceAdapter& tag);
 
 private:
   vtkm::worklet::Magnitude Worklet;
-
 };
 
-template<>
+template <>
 class FilterTraits<VectorMagnitude>
 { //currently the VectorMagnitude filter only works on vector data.
 public:
   typedef TypeListTagVecCommon InputFieldTypeList;
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/VectorMagnitude.hxx>
 

@@ -25,9 +25,12 @@
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief The underlying tag for basic \c ExecutionSignature arguments.
 ///
@@ -35,13 +38,12 @@ namespace arg {
 /// subclasses of \c BasicArg. They all make available the components of
 /// this class.
 ///
-template<vtkm::IdComponent ControlSignatureIndex>
+template <vtkm::IdComponent ControlSignatureIndex>
 struct BasicArg : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = ControlSignatureIndex;
   typedef vtkm::exec::arg::AspectTagDefault AspectTag;
 };
-
 }
 }
 } // namespace vtkm::exec::arg

@@ -27,12 +27,13 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 static const vtkm::Id ARRAY_SIZE = 10;
 
-template<typename PortalType>
-struct TestKernel : public vtkm::exec::FunctorBase
+template <typename PortalType>
+struct TestKernelInOut : public vtkm::exec::FunctorBase
 {
   PortalType Portal;
 
@@ -45,10 +46,10 @@ struct TestKernel : public vtkm::exec::FunctorBase
   }
 };
 
-template<typename Device>
+template <typename Device>
 struct TryArrayInOutType
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     T array[ARRAY_SIZE];
@@ -60,20 +61,17 @@ struct TryArrayInOutType
     typedef vtkm::cont::ArrayHandle<T> ArrayHandleType;
     ArrayHandleType handle = vtkm::cont::make_ArrayHandle(array, ARRAY_SIZE);
 
-    typedef typename ArrayHandleType::
-        template ExecutionTypes<Device>::Portal PortalType;
+    typedef typename ArrayHandleType::template ExecutionTypes<Device>::Portal PortalType;
 
-    vtkm::cont::arg::Transport<
-        vtkm::cont::arg::TransportTagArrayInOut, ArrayHandleType, Device>
-        transport;
+    vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayInOut, ArrayHandleType, Device>
+      transport;
 
-    TestKernel<PortalType> kernel;
-    kernel.Portal = transport(handle, handle, ARRAY_SIZE);
+    TestKernelInOut<PortalType> kernel;
+    kernel.Portal = transport(handle, handle, ARRAY_SIZE, ARRAY_SIZE);
 
     vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, ARRAY_SIZE);
 
-    typename ArrayHandleType::PortalConstControl portal =
-        handle.GetPortalConstControl();
+    typename ArrayHandleType::PortalConstControl portal = handle.GetPortalConstControl();
     VTKM_TEST_ASSERT(portal.GetNumberOfValues() == ARRAY_SIZE,
                      "Portal has wrong number of values.");
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
@@ -86,11 +84,10 @@ struct TryArrayInOutType
   }
 };
 
-template<typename Device>
+template <typename Device>
 void TryArrayInOutTransport(Device)
 {
-  vtkm::testing::Testing::TryTypes(TryArrayInOutType<Device>(),
-                                   vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(TryArrayInOutType<Device>(), vtkm::TypeListTagCommon());
 }
 
 void TestArrayInOutTransport()
@@ -100,7 +97,7 @@ void TestArrayInOutTransport()
 
 } // anonymous namespace
 
-int UnitTestTransportArrayInOut(int, char *[])
+int UnitTestTransportArrayInOut(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestArrayInOutTransport);
 }

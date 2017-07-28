@@ -21,16 +21,20 @@
 #define vtk_m_exec_AtomicArray_h
 
 #include <vtkm/ListTag.h>
-#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
 
-namespace vtkm {
-namespace exec {
+namespace vtkm
+{
+namespace exec
+{
 
 /// \brief A type list containing types that can be used with an AtomicArray.
 ///
-struct AtomicArrayTypeListTag : vtkm::ListTagBase<vtkm::Int32,vtkm::Int64> {  };
+struct AtomicArrayTypeListTag : vtkm::ListTagBase<vtkm::Int32, vtkm::Int64>
+{
+};
 
 /// A class that can be used to atomically operate on an array of values safely
 /// across multiple instances of the same worklet. This is useful when you have
@@ -46,7 +50,7 @@ struct AtomicArrayTypeListTag : vtkm::ListTagBase<vtkm::Int32,vtkm::Int64> {  };
 /// Supported Types: 32 / 64 bit signed integers
 ///
 ///
-template<typename T, typename DeviceAdapterTag>
+template <typename T, typename DeviceAdapterTag>
 class AtomicArray : public vtkm::exec::ExecutionObjectBase
 {
 public:
@@ -54,20 +58,20 @@ public:
 
   VTKM_CONT
   AtomicArray()
-    : AtomicImplementation(vtkm::cont::make_ArrayHandle((T*)NULL, 0))
-  {  }
+    : AtomicImplementation(vtkm::cont::make_ArrayHandle((T*)nullptr, 0))
+  {
+  }
 
-  template<typename StorageType>
-  VTKM_CONT
-  AtomicArray(vtkm::cont::ArrayHandle<T, StorageType> handle):
-    AtomicImplementation( handle )
+  template <typename StorageType>
+  VTKM_CONT AtomicArray(vtkm::cont::ArrayHandle<T, StorageType> handle)
+    : AtomicImplementation(handle)
   {
   }
 
   VTKM_EXEC
   T Add(vtkm::Id index, const T& value) const
   {
-    return this->AtomicImplementation.Add(index,value);
+    return this->AtomicImplementation.Add(index, value);
   }
 
   //
@@ -78,14 +82,12 @@ public:
   VTKM_EXEC
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
   {
-    return this->AtomicImplementation.CompareAndSwap(index,newValue, oldValue);
+    return this->AtomicImplementation.CompareAndSwap(index, newValue, oldValue);
   }
 
 private:
-    vtkm::cont::DeviceAdapterAtomicArrayImplementation<T,DeviceAdapterTag>
-      AtomicImplementation;
+  vtkm::cont::DeviceAdapterAtomicArrayImplementation<T, DeviceAdapterTag> AtomicImplementation;
 };
-
 }
 } // namespace vtkm::exec
 

@@ -67,34 +67,37 @@
 #ifndef vtkm_worklet_contourtree_copy_neighbors_h
 #define vtkm_worklet_contourtree_copy_neighbors_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet
 class CopyNeighbors : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> activeSupernode,       // (input) index into supernodes
-                                WholeArrayIn<IdType> activeSupernodes, // (input) active supernode vertex IDs
-                                WholeArrayIn<IdType> arcs,             // (input) merge tree arcs
-                                FieldOut<IdType> sortVector);          // (output) neighbors for active edge
-  typedef _4   ExecutionSignature(_1, _2, _3);
-  typedef _1   InputDomain;
+  typedef void ControlSignature(
+    FieldIn<IdType> activeSupernode,       // (input) index into supernodes
+    WholeArrayIn<IdType> activeSupernodes, // (input) active supernode vertex IDs
+    WholeArrayIn<IdType> arcs,             // (input) merge tree arcs
+    FieldOut<IdType> sortVector);          // (output) neighbors for active edge
+  typedef _4 ExecutionSignature(_1, _2, _3);
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   CopyNeighbors() {}
 
   template <typename InFieldPortalType>
-  VTKM_EXEC
-  vtkm::Id operator()(const vtkm::Id& activeSupernode,
-                      const InFieldPortalType& activeSupernodes,
-                      const InFieldPortalType& arcs) const
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& activeSupernode,
+                                const InFieldPortalType& activeSupernodes,
+                                const InFieldPortalType& arcs) const
   {
     vtkm::Id sortVector;
     vtkm::Id superID = activeSupernodes.Get(activeSupernode);
@@ -103,7 +106,6 @@ public:
     return sortVector;
   }
 }; // CopyNeighbors
-
 }
 }
 }

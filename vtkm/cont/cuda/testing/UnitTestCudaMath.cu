@@ -29,8 +29,8 @@
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-int UnitTestCudaMath(int, char *[])
+int UnitTestCudaMath(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(
-        UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagCuda>);
+    UnitTestMathNamespace::RunMathTests<vtkm::cont::DeviceAdapterTagCuda>);
 }

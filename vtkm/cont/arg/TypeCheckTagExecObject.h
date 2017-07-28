@@ -28,23 +28,26 @@
 
 #include <type_traits>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// The ExecObject type check passes for any object that inherits from \c
 /// ExecutionObjectBase. This is supposed to signify that the object can be
 /// used in the execution environment although there is no way to verify that.
 ///
-struct TypeCheckTagExecObject {  };
-
-template<typename Type>
-struct TypeCheck<TypeCheckTagExecObject, Type>
+struct TypeCheckTagExecObject
 {
-  static VTKM_CONSTEXPR bool value =
-      std::is_base_of<vtkm::exec::ExecutionObjectBase, Type>::value;
 };
 
+template <typename Type>
+struct TypeCheck<TypeCheckTagExecObject, Type>
+{
+  static VTKM_CONSTEXPR bool value = std::is_base_of<vtkm::exec::ExecutionObjectBase, Type>::value;
+};
 }
 }
 } // namespace vtkm::cont::arg

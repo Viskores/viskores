@@ -21,25 +21,25 @@
 #define vtk_m_cont_DeviceAdapterListTag_h
 
 #ifndef VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
-#define VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG \
-  ::vtkm::cont::DeviceAdapterListTagCommon
+#define VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG ::vtkm::cont::DeviceAdapterListTagCommon
 #endif
 
 #include <vtkm/ListTag.h>
 
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-struct DeviceAdapterListTagCommon
-    : vtkm::ListTagBase<
-        vtkm::cont::DeviceAdapterTagCuda,
-        vtkm::cont::DeviceAdapterTagTBB,
-        vtkm::cont::DeviceAdapterTagSerial> {  };
-
+struct DeviceAdapterListTagCommon : vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda,
+                                                      vtkm::cont::DeviceAdapterTagTBB,
+                                                      vtkm::cont::DeviceAdapterTagSerial>
+{
+};
 }
 } // namespace vtkm::cont
 

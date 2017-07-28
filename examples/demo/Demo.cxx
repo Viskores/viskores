@@ -18,33 +18,31 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/io/reader/VTKDataSetReader.h>
 
-#include <vtkm/filter/MarchingCubes.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/filter/MarchingCubes.h>
 
 #include <iostream>
 
-void makeScene(const vtkm::cont::DataSet &inputData,
-                            const vtkm::rendering::ColorTable &colorTable,
-                            const   std::string &fieldName,
-                            vtkm::rendering::Scene &scene)
+void makeScene(const vtkm::cont::DataSet& inputData,
+               const vtkm::rendering::ColorTable& colorTable,
+               const std::string& fieldName,
+               vtkm::rendering::Scene& scene)
 {
-    scene.AddActor(vtkm::rendering::Actor(inputData.GetCellSet(),
-                                                inputData.GetCoordinateSystem(),
-                                                inputData.GetField(fieldName),
-                                                colorTable));
-
-
+  scene.AddActor(vtkm::rendering::Actor(inputData.GetCellSet(),
+                                        inputData.GetCoordinateSystem(),
+                                        inputData.GetField(fieldName),
+                                        colorTable));
 }
 
 // This example reads an input vtk file specified on the command-line (or generates a default
@@ -78,7 +76,7 @@ int main(int argc, char* argv[])
     fieldName = "SCALARS:pointvar";
   }
 
-  typedef vtkm::rendering::MapperRayTracer  Mapper;
+  typedef vtkm::rendering::MapperRayTracer Mapper;
   typedef vtkm::rendering::CanvasRayTracer Canvas;
 
   // Set up a camera for rendering the input data
@@ -91,7 +89,7 @@ int main(int argc, char* argv[])
 
   camera.ResetToBounds(coordsBounds);
 
-  vtkm::Vec<vtkm::Float32,3> totalExtent;
+  vtkm::Vec<vtkm::Float32, 3> totalExtent;
   totalExtent[0] = vtkm::Float32(coordsBounds.X.Max - coordsBounds.X.Min);
   totalExtent[1] = vtkm::Float32(coordsBounds.Y.Max - coordsBounds.Y.Min);
   totalExtent[2] = vtkm::Float32(coordsBounds.Z.Max - coordsBounds.Z.Min);
@@ -107,15 +105,11 @@ int main(int argc, char* argv[])
   // Create a scene for rendering the input data
   vtkm::rendering::Scene scene;
   vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-  Canvas canvas(512,512);
+  Canvas canvas(512, 512);
 
   makeScene(inputData, colorTable, fieldName, scene);
   // Create a view and use it to render the input data using OS Mesa
-  vtkm::rendering::View3D view(scene,
-                                                mapper,
-                                                canvas,
-                                                camera,
-                                                bg);
+  vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
   view.Initialize();
   view.Paint();
   view.SaveAs("demo_input.pnm");
@@ -125,8 +119,7 @@ int main(int argc, char* argv[])
   filter.SetGenerateNormals(false);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0, isovalue);
-  vtkm::filter::ResultDataSet result = filter.Execute( inputData,
-                                                       inputData.GetField(fieldName) );
+  vtkm::filter::ResultDataSet result = filter.Execute(inputData, inputData.GetField(fieldName));
   filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
   vtkm::cont::DataSet& outputData = result.GetDataSet();
   // Render a separate image with the output isosurface
@@ -134,12 +127,7 @@ int main(int argc, char* argv[])
   vtkm::rendering::Scene scene2;
   makeScene(outputData, colorTable, fieldName, scene2);
 
-
-  vtkm::rendering::View3D view2(scene2,
-                                                 mapper,
-                                                 canvas,
-                                                 camera,
-                                                 bg);
+  vtkm::rendering::View3D view2(scene2, mapper, canvas, camera, bg);
   view2.Initialize();
   view2.Paint();
   view2.SaveAs("demo_output.pnm");

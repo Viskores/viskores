@@ -26,7 +26,8 @@
 
 #include <string>
 
-namespace UnitTestArrayHandleCountingNamespace {
+namespace UnitTestArrayHandleCountingNamespace
+{
 
 const vtkm::Id ARRAY_SIZE = 10;
 
@@ -48,12 +49,9 @@ public:
 
   operator vtkm::Id() const { return vtkm::Id(this->Value.size()); }
 
-  StringInt operator+(const StringInt &rhs) const
-  {
-    return StringInt(this->Value + rhs.Value);
-  }
+  StringInt operator+(const StringInt& rhs) const { return StringInt(this->Value + rhs.Value); }
 
-  StringInt operator*(const StringInt &rhs) const
+  StringInt operator*(const StringInt& rhs) const
   {
     StringInt result;
     for (vtkm::Id i = 0; i < rhs; i++)
@@ -63,19 +61,19 @@ public:
     return result;
   }
 
-  bool operator==(const StringInt &other) const
-  {
-    return this->Value.size() == other.Value.size();
-  }
+  bool operator==(const StringInt& other) const { return this->Value.size() == other.Value.size(); }
 
-  StringInt &operator++()
+  StringInt& operator++()
   {
     this->Value.append(".");
     return *this;
   }
 
 private:
-  StringInt(const std::string &v) : Value(v) { }
+  StringInt(const std::string& v)
+    : Value(v)
+  {
+  }
 
   std::string Value;
 };
@@ -84,27 +82,28 @@ private:
 
 VTKM_BASIC_TYPE_VECTOR(UnitTestArrayHandleCountingNamespace::StringInt)
 
-namespace UnitTestArrayHandleCountingNamespace {
+namespace UnitTestArrayHandleCountingNamespace
+{
 
-template< typename ValueType>
+template <typename ValueType>
 struct TemplatedTests
 {
   typedef vtkm::cont::ArrayHandleCounting<ValueType> ArrayHandleType;
 
-  typedef vtkm::cont::ArrayHandle<ValueType,
-          typename vtkm::cont::internal::ArrayHandleCountingTraits<ValueType>::Tag>
-          ArrayHandleType2;
+  typedef vtkm::cont::
+    ArrayHandle<ValueType, typename vtkm::cont::internal::ArrayHandleCountingTraits<ValueType>::Tag>
+      ArrayHandleType2;
 
   typedef typename ArrayHandleType::PortalConstControl PortalType;
 
-  void operator()(const ValueType &startingValue, const ValueType &step)
+  void operator()(const ValueType& startingValue, const ValueType& step)
   {
     ArrayHandleType arrayConst(startingValue, step, ARRAY_SIZE);
 
-    ArrayHandleType arrayMake = vtkm::cont::make_ArrayHandleCounting(startingValue, step, ARRAY_SIZE);
+    ArrayHandleType arrayMake =
+      vtkm::cont::make_ArrayHandleCounting(startingValue, step, ARRAY_SIZE);
 
-    ArrayHandleType2 arrayHandle =
-      ArrayHandleType2(PortalType(startingValue, step, ARRAY_SIZE));
+    ArrayHandleType2 arrayHandle = ArrayHandleType2(PortalType(startingValue, step, ARRAY_SIZE));
 
     VTKM_TEST_ASSERT(arrayConst.GetNumberOfValues() == ARRAY_SIZE,
                      "Counting array using constructor has wrong size.");
@@ -142,10 +141,9 @@ void TestArrayHandleCounting()
   TemplatedTests<StringInt>()(StringInt(10), StringInt(2));
 }
 
-
 } // namespace UnitTestArrayHandleCountingNamespace
 
-int UnitTestArrayHandleCounting(int, char *[])
+int UnitTestArrayHandleCounting(int, char* [])
 {
   using namespace UnitTestArrayHandleCountingNamespace;
   return vtkm::cont::testing::Testing::Run(TestArrayHandleCounting);

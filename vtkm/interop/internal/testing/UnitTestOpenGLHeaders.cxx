@@ -17,10 +17,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/interop/internal/OpenGLHeaders.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
 
-namespace {
+namespace
+{
 void TestOpenGLHeaders()
 {
 #if defined(GL_VERSION_1_3) && (GL_VERSION_1_3 == 1)
@@ -29,15 +30,14 @@ void TestOpenGLHeaders()
   GLenum e = GL_ELEMENT_ARRAY_BUFFER;
   GLuint u = 1;
   u = u * e;
-  (void) u;
+  (void)u;
 #else
   unable_to_find_required_gl_version();
 #endif
 }
-
 }
 
-int UnitTestOpenGLHeaders(int, char *[])
+int UnitTestOpenGLHeaders(int, char* [])
 {
- return vtkm::cont::testing::Testing::Run(TestOpenGLHeaders);
+  return vtkm::cont::testing::Testing::Run(TestOpenGLHeaders);
 }

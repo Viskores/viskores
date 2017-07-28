@@ -25,8 +25,10 @@
 
 #include <vtkm/cont/Field.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 /// \brief Results for filters that create a field
 ///
@@ -40,20 +42,19 @@ class ResultField : public vtkm::filter::ResultBase
 {
 public:
   VTKM_CONT
-  ResultField() {  }
+  ResultField() {}
 
   /// Use this constructor if the field has already been added to the data set.
   /// In this case, just tell us what the field name is (and optionally its
   /// association).
   ///
   VTKM_CONT
-  ResultField(const vtkm::cont::DataSet &dataSet,
-              const std::string &fieldName,
-              vtkm::cont::Field::AssociationEnum fieldAssociation
-                = vtkm::cont::Field::ASSOC_ANY)
-    : ResultBase(dataSet),
-      FieldName(fieldName),
-      FieldAssociation(fieldAssociation)
+  ResultField(const vtkm::cont::DataSet& dataSet,
+              const std::string& fieldName,
+              vtkm::cont::Field::AssociationEnum fieldAssociation = vtkm::cont::Field::ASSOC_ANY)
+    : ResultBase(dataSet)
+    , FieldName(fieldName)
+    , FieldAssociation(fieldAssociation)
   {
     VTKM_ASSERT(fieldName != "");
     VTKM_ASSERT(dataSet.HasField(fieldName, fieldAssociation));
@@ -63,9 +64,9 @@ public:
   /// \c DataSet will be created by adding the field to the input.
   ///
   VTKM_CONT
-  ResultField(const vtkm::cont::DataSet &inDataSet,
-              const vtkm::cont::Field &field)
-    : FieldName(field.GetName()), FieldAssociation(field.GetAssociation())
+  ResultField(const vtkm::cont::DataSet& inDataSet, const vtkm::cont::Field& field)
+    : FieldName(field.GetName())
+    , FieldAssociation(field.GetAssociation())
   {
     VTKM_ASSERT(this->FieldName != "");
 
@@ -74,8 +75,7 @@ public:
     this->SetDataSet(outDataSet);
 
     // Sanity check.
-    VTKM_ASSERT(this->GetDataSet().HasField(this->FieldName,
-                                            this->FieldAssociation));
+    VTKM_ASSERT(this->GetDataSet().HasField(this->FieldName, this->FieldAssociation));
   }
 
   /// Use this constructor if you have an ArrayHandle that holds the data for
@@ -85,14 +85,14 @@ public:
   /// that associated set must also be given. The element set name is ignored
   /// for \c ASSOC_WHOLE_MESH and \c ASSOC_POINTS associations.
   ///
-  template<typename T, typename Storage>
-  VTKM_CONT
-  ResultField(const vtkm::cont::DataSet &inDataSet,
-              const vtkm::cont::ArrayHandle<T, Storage> &fieldArray,
-              const std::string &fieldName,
-              vtkm::cont::Field::AssociationEnum fieldAssociation,
-              const std::string &elementSetName = "")
-    : FieldName(fieldName), FieldAssociation(fieldAssociation)
+  template <typename T, typename Storage>
+  VTKM_CONT ResultField(const vtkm::cont::DataSet& inDataSet,
+                        const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
+                        const std::string& fieldName,
+                        vtkm::cont::Field::AssociationEnum fieldAssociation,
+                        const std::string& elementSetName = "")
+    : FieldName(fieldName)
+    , FieldAssociation(fieldAssociation)
   {
     VTKM_ASSERT(fieldName != "");
     VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_ANY);
@@ -108,18 +108,14 @@ public:
     }
     else
     {
-      vtkm::cont::Field field(fieldName,
-                              fieldAssociation,
-                              elementSetName,
-                              fieldArray);
+      vtkm::cont::Field field(fieldName, fieldAssociation, elementSetName, fieldArray);
       outDataSet.AddField(field);
     }
 
     this->SetDataSet(outDataSet);
 
     // Sanity check.
-    VTKM_ASSERT(this->GetDataSet().HasField(this->FieldName,
-                                            this->FieldAssociation));
+    VTKM_ASSERT(this->GetDataSet().HasField(this->FieldName, this->FieldAssociation));
   }
 
   /// Use this constructor if you have a DynamicArrayHandle that holds the data
@@ -130,12 +126,13 @@ public:
   /// for \c ASSOC_WHOLE_MESH and \c ASSOC_POINTS associations.
   ///
   VTKM_CONT
-  ResultField(const vtkm::cont::DataSet &inDataSet,
-              const vtkm::cont::DynamicArrayHandle &fieldArray,
-              const std::string &fieldName,
+  ResultField(const vtkm::cont::DataSet& inDataSet,
+              const vtkm::cont::DynamicArrayHandle& fieldArray,
+              const std::string& fieldName,
               vtkm::cont::Field::AssociationEnum fieldAssociation,
-              const std::string &elementSetName = "")
-    : FieldName(fieldName), FieldAssociation(fieldAssociation)
+              const std::string& elementSetName = "")
+    : FieldName(fieldName)
+    , FieldAssociation(fieldAssociation)
   {
     VTKM_ASSERT(fieldName != "");
     VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_ANY);
@@ -151,36 +148,31 @@ public:
     }
     else
     {
-      vtkm::cont::Field field(fieldName,
-                              fieldAssociation,
-                              elementSetName,
-                              fieldArray);
+      vtkm::cont::Field field(fieldName, fieldAssociation, elementSetName, fieldArray);
       outDataSet.AddField(field);
     }
 
     this->SetDataSet(outDataSet);
 
     // Sanity check.
-    VTKM_ASSERT(this->GetDataSet().HasField(this->FieldName,
-                                            this->FieldAssociation));
+    VTKM_ASSERT(this->GetDataSet().HasField(this->FieldName, this->FieldAssociation));
   }
 
   VTKM_CONT
-  const vtkm::cont::Field &GetField() const
+  const vtkm::cont::Field& GetField() const
   {
     return this->GetDataSet().GetField(this->FieldName, this->FieldAssociation);
   }
 
-  template<typename T, typename Storage>
-  VTKM_CONT
-  bool FieldAs(vtkm::cont::ArrayHandle<T, Storage> &dest) const
+  template <typename T, typename Storage>
+  VTKM_CONT bool FieldAs(vtkm::cont::ArrayHandle<T, Storage>& dest) const
   {
     try
     {
       this->GetField().GetData().CopyTo(dest);
       return true;
     }
-    catch(vtkm::cont::Error&)
+    catch (vtkm::cont::Error&)
     {
       return false;
     }
@@ -190,7 +182,6 @@ private:
   std::string FieldName;
   vtkm::cont::Field::AssociationEnum FieldAssociation;
 };
-
 }
 } // namespace vtkm::filter
 

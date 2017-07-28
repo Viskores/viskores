@@ -26,15 +26,19 @@
 
 #include "iterator"
 
-namespace vtkm {
-namespace io {
-namespace reader {
+namespace vtkm
+{
+namespace io
+{
+namespace reader
+{
 
-namespace internal {
+namespace internal
+{
 
-template<typename T>
+template <typename T>
 inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
-    const std::vector<vtkm::cont::ArrayHandle<T> > &arrays)
+  const std::vector<vtkm::cont::ArrayHandle<T>>& arrays)
 {
   vtkm::Id size = 0;
   for (std::size_t i = 0; i < arrays.size(); ++i)
@@ -46,19 +50,15 @@ inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
   out.Allocate(size);
 
   typedef typename vtkm::cont::ArrayPortalToIterators<
-    typename vtkm::cont::ArrayHandle<T>::PortalControl>::IteratorType
-    IteratorType;
-  IteratorType outp =
-    vtkm::cont::ArrayPortalToIteratorBegin(out.GetPortalControl());
+    typename vtkm::cont::ArrayHandle<T>::PortalControl>::IteratorType IteratorType;
+  IteratorType outp = vtkm::cont::ArrayPortalToIteratorBegin(out.GetPortalControl());
   for (std::size_t i = 0; i < arrays.size(); ++i)
   {
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(arrays[i].GetPortalConstControl()),
               vtkm::cont::ArrayPortalToIteratorEnd(arrays[i].GetPortalConstControl()),
               outp);
-    typedef typename std::iterator_traits<IteratorType>::difference_type
-        DifferenceType;
-    std::advance(
-          outp, static_cast<DifferenceType>(arrays[i].GetNumberOfValues()));
+    typedef typename std::iterator_traits<IteratorType>::difference_type DifferenceType;
+    std::advance(outp, static_cast<DifferenceType>(arrays[i].GetNumberOfValues()));
   }
 
   return out;
@@ -66,12 +66,15 @@ inline vtkm::cont::ArrayHandle<T> ConcatinateArrayHandles(
 
 } // namespace internal
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
+
 class VTKPolyDataReader : public VTKDataSetReaderBase
 {
 public:
-  explicit VTKPolyDataReader(const char *fileName)
+  explicit VTKPolyDataReader(const char* fileName)
     : VTKDataSetReaderBase(fileName)
-  { }
+  {
+  }
 
 private:
   virtual void Read()
@@ -85,7 +88,7 @@ private:
     //at the top of a VTK file
     std::string tag;
     this->DataFile->Stream >> tag;
-    if(tag == "FIELD")
+    if (tag == "FIELD")
     {
       std::string name;
       this->ReadFields(name);
@@ -96,12 +99,11 @@ private:
     internal::parseAssert(tag == "POINTS");
     this->ReadPoints();
 
-    vtkm::Id numPoints =
-        this->DataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
+    vtkm::Id numPoints = this->DataSet.GetCoordinateSystem().GetData().GetNumberOfValues();
 
     // Read the cellset
-    std::vector<vtkm::cont::ArrayHandle<vtkm::Id> > connectivityArrays;
-    std::vector<vtkm::cont::ArrayHandle<vtkm::IdComponent> > numIndicesArrays;
+    std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> connectivityArrays;
+    std::vector<vtkm::cont::ArrayHandle<vtkm::IdComponent>> numIndicesArrays;
     std::vector<vtkm::UInt8> shapesBuffer;
     while (!this->DataFile->Stream.eof())
     {
@@ -136,9 +138,8 @@ private:
 
       connectivityArrays.push_back(cellConnectivity);
       numIndicesArrays.push_back(cellNumIndices);
-      shapesBuffer.insert(shapesBuffer.end(),
-                          static_cast<std::size_t>(cellNumIndices.GetNumberOfValues()),
-                          shape);
+      shapesBuffer.insert(
+        shapesBuffer.end(), static_cast<std::size_t>(cellNumIndices.GetNumberOfValues()), shape);
     }
 
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity =
@@ -147,8 +148,9 @@ private:
       internal::ConcatinateArrayHandles(numIndicesArrays);
     vtkm::cont::ArrayHandle<vtkm::UInt8> shapes;
     shapes.Allocate(static_cast<vtkm::Id>(shapesBuffer.size()));
-    std::copy(shapesBuffer.begin(), shapesBuffer.end(),
-          vtkm::cont::ArrayPortalToIteratorBegin(shapes.GetPortalControl()));
+    std::copy(shapesBuffer.begin(),
+              shapesBuffer.end(),
+              vtkm::cont::ArrayPortalToIteratorBegin(shapes.GetPortalControl()));
 
     vtkm::cont::ArrayHandle<vtkm::Id> permutation;
     vtkm::io::internal::FixupCellSet(connectivity, numIndices, shapes, permutation);
@@ -175,6 +177,7 @@ private:
   }
 };
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 }
 }
 } // namespace vtkm::io:reader

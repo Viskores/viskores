@@ -33,14 +33,17 @@
 
 #include <sstream>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 // Forward declaration
-template<typename TypeList, typename StorageList>
+template <typename TypeList, typename StorageList>
 class DynamicArrayHandleBase;
 
-namespace detail {
+namespace detail
+{
 
 /// \brief Base class for PolymorphicArrayHandleContainer
 ///
@@ -54,10 +57,9 @@ struct VTKM_CONT_EXPORT PolymorphicArrayHandleContainerBase
   virtual vtkm::IdComponent GetNumberOfComponents() const = 0;
   virtual vtkm::Id GetNumberOfValues() const = 0;
 
-  virtual void PrintSummary(std::ostream &out) const = 0;
+  virtual void PrintSummary(std::ostream& out) const = 0;
 
-  virtual std::shared_ptr<PolymorphicArrayHandleContainerBase>
-  NewInstance() const = 0;
+  virtual std::shared_ptr<PolymorphicArrayHandleContainerBase> NewInstance() const = 0;
 };
 
 /// \brief ArrayHandle container that can use C++ run-time type information.
@@ -68,41 +70,42 @@ struct VTKM_CONT_EXPORT PolymorphicArrayHandleContainerBase
 /// (with different template parameters) so that it can polymorphically answer
 /// simple questions about the object.
 ///
-template<typename T, typename Storage>
+template <typename T, typename Storage>
 struct VTKM_ALWAYS_EXPORT PolymorphicArrayHandleContainer
-    : public PolymorphicArrayHandleContainerBase
+  : public PolymorphicArrayHandleContainerBase
 {
   typedef vtkm::cont::ArrayHandle<T, Storage> ArrayHandleType;
 
   ArrayHandleType Array;
 
   VTKM_CONT
-  PolymorphicArrayHandleContainer() : Array() {  }
+  PolymorphicArrayHandleContainer()
+    : Array()
+  {
+  }
 
   VTKM_CONT
-  PolymorphicArrayHandleContainer(const ArrayHandleType &array)
-    : Array(array) {  }
+  PolymorphicArrayHandleContainer(const ArrayHandleType& array)
+    : Array(array)
+  {
+  }
 
   virtual vtkm::IdComponent GetNumberOfComponents() const
   {
     return vtkm::VecTraits<T>::NUM_COMPONENTS;
   }
 
-  virtual vtkm::Id GetNumberOfValues() const
-  {
-    return this->Array.GetNumberOfValues();
-  }
+  virtual vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
 
-  virtual void PrintSummary(std::ostream &out) const
+  virtual void PrintSummary(std::ostream& out) const
   {
     vtkm::cont::printSummary_ArrayHandle(this->Array, out);
   }
 
-  virtual std::shared_ptr<PolymorphicArrayHandleContainerBase>
-  NewInstance() const
+  virtual std::shared_ptr<PolymorphicArrayHandleContainerBase> NewInstance() const
   {
     return std::shared_ptr<PolymorphicArrayHandleContainerBase>(
-          new PolymorphicArrayHandleContainer<T,Storage>());
+      new PolymorphicArrayHandleContainer<T, Storage>());
   }
 };
 
@@ -111,12 +114,11 @@ struct VTKM_ALWAYS_EXPORT PolymorphicArrayHandleContainer
 // construct a DynamicArrayHandle from another DynamicArrayHandle of any other
 // type. Since you cannot partially specialize friendship, use this accessor
 // class to get at the internals for the copy constructor.
-struct DynamicArrayHandleCopyHelper {
-  template<typename TypeList, typename StorageList>
-  VTKM_CONT
-  static
-  const std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>&
-  GetArrayHandleContainer(const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &src)
+struct DynamicArrayHandleCopyHelper
+{
+  template <typename TypeList, typename StorageList>
+  VTKM_CONT static const std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>&
+  GetArrayHandleContainer(const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& src)
   {
     return src.ArrayContainer;
   }
@@ -125,16 +127,13 @@ struct DynamicArrayHandleCopyHelper {
 // A simple function to downcast an ArrayHandle encapsulated in a
 // PolymorphicArrayHandleContainerBase to the given type of ArrayHandle. If the
 // conversion cannot be done, nullptr is returned.
-template<typename Type, typename Storage>
-VTKM_CONT
-vtkm::cont::ArrayHandle<Type,Storage> *
-DynamicArrayHandleTryCast(
-      vtkm::cont::detail::PolymorphicArrayHandleContainerBase *arrayContainer)
+template <typename Type, typename Storage>
+VTKM_CONT vtkm::cont::ArrayHandle<Type, Storage>* DynamicArrayHandleTryCast(
+  vtkm::cont::detail::PolymorphicArrayHandleContainerBase* arrayContainer)
 {
-  vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *
-      downcastContainer = dynamic_cast<
-        vtkm::cont::detail::PolymorphicArrayHandleContainer<Type,Storage> *>(
-          arrayContainer);
+  vtkm::cont::detail::PolymorphicArrayHandleContainer<Type, Storage>* downcastContainer =
+    dynamic_cast<vtkm::cont::detail::PolymorphicArrayHandleContainer<Type, Storage>*>(
+      arrayContainer);
   if (downcastContainer != nullptr)
   {
     return &downcastContainer->Array;
@@ -145,13 +144,11 @@ DynamicArrayHandleTryCast(
   }
 }
 
-template<typename Type, typename Storage>
-VTKM_CONT
-vtkm::cont::ArrayHandle<Type,Storage> *
-DynamicArrayHandleTryCast(
+template <typename Type, typename Storage>
+VTKM_CONT vtkm::cont::ArrayHandle<Type, Storage>* DynamicArrayHandleTryCast(
   const std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>& arrayContainer)
 {
-  return detail::DynamicArrayHandleTryCast<Type,Storage>(arrayContainer.get());
+  return detail::DynamicArrayHandleTryCast<Type, Storage>(arrayContainer.get());
 }
 
 } // namespace detail
@@ -189,39 +186,38 @@ DynamicArrayHandleTryCast(
 /// typedef of \c DynamicArrayHandleBase with the default type and storage
 /// lists.
 ///
-template<typename TypeList, typename StorageList>
+template <typename TypeList, typename StorageList>
 class VTKM_ALWAYS_EXPORT DynamicArrayHandleBase
 {
 public:
   VTKM_CONT
-  DynamicArrayHandleBase() {  }
+  DynamicArrayHandleBase() {}
 
-  template<typename Type, typename Storage>
-  VTKM_CONT
-  DynamicArrayHandleBase(const vtkm::cont::ArrayHandle<Type,Storage> &array)
-    : ArrayContainer(new vtkm::cont::detail::PolymorphicArrayHandleContainer<
-                     Type,Storage>(array))
-  {  }
-
-  VTKM_CONT
-  DynamicArrayHandleBase(
-      const DynamicArrayHandleBase<TypeList,StorageList> &src)
-    : ArrayContainer(src.ArrayContainer) {  }
-
-  template<typename OtherTypeList, typename OtherStorageList>
-  VTKM_CONT
-  explicit DynamicArrayHandleBase(
-      const DynamicArrayHandleBase<OtherTypeList,OtherStorageList> &src)
-    : ArrayContainer(
-        detail::DynamicArrayHandleCopyHelper::GetArrayHandleContainer(src))
-  {  }
+  template <typename Type, typename Storage>
+  VTKM_CONT DynamicArrayHandleBase(const vtkm::cont::ArrayHandle<Type, Storage>& array)
+    : ArrayContainer(new vtkm::cont::detail::PolymorphicArrayHandleContainer<Type, Storage>(array))
+  {
+  }
 
   VTKM_CONT
-  ~DynamicArrayHandleBase() {  }
+  DynamicArrayHandleBase(const DynamicArrayHandleBase<TypeList, StorageList>& src)
+    : ArrayContainer(src.ArrayContainer)
+  {
+  }
+
+  template <typename OtherTypeList, typename OtherStorageList>
+  VTKM_CONT explicit DynamicArrayHandleBase(
+    const DynamicArrayHandleBase<OtherTypeList, OtherStorageList>& src)
+    : ArrayContainer(detail::DynamicArrayHandleCopyHelper::GetArrayHandleContainer(src))
+  {
+  }
 
   VTKM_CONT
-  vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &
-  operator=(const vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> &src)
+  ~DynamicArrayHandleBase() {}
+
+  VTKM_CONT
+  vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& operator=(
+    const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& src)
   {
     this->ArrayContainer = src.ArrayContainer;
     return *this;
@@ -230,32 +226,28 @@ public:
   /// Returns true if this array is of the provided type and uses the provided
   /// storage.
   ///
-  template<typename Type, typename Storage>
-  VTKM_CONT
-  bool IsTypeAndStorage() const {
-    return (
-          detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer)
-          != nullptr);
+  template <typename Type, typename Storage>
+  VTKM_CONT bool IsTypeAndStorage() const
+  {
+    return (detail::DynamicArrayHandleTryCast<Type, Storage>(this->ArrayContainer) != nullptr);
   }
 
   /// Returns true if this array matches the array handle type passed in.
   ///
-  template<typename ArrayHandleType>
-  VTKM_CONT
-  bool IsType()
+  template <typename ArrayHandleType>
+  VTKM_CONT bool IsType()
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
     typedef typename ArrayHandleType::ValueType ValueType;
     typedef typename ArrayHandleType::StorageTag StorageTag;
-    return this->IsTypeAndStorage<ValueType,StorageTag>();
+    return this->IsTypeAndStorage<ValueType, StorageTag>();
   }
 
   /// Returns true if the array held in this object is the same (or equivalent)
   /// type as the object given.
   ///
-  template<typename ArrayHandleType>
-  VTKM_CONT
-  bool IsSameType(const ArrayHandleType &)
+  template <typename ArrayHandleType>
+  VTKM_CONT bool IsSameType(const ArrayHandleType&)
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
     return this->IsType<ArrayHandleType>();
@@ -266,12 +258,11 @@ public:
   /// \c IsTypeAndStorage to check if the cast can happen.
   ///
   ///
-  template<typename Type, typename Storage>
-  VTKM_CONT
-  vtkm::cont::ArrayHandle<Type, Storage>
-  CastToTypeStorage() const {
-    vtkm::cont::ArrayHandle<Type, Storage> *downcastArray =
-        detail::DynamicArrayHandleTryCast<Type,Storage>(this->ArrayContainer);
+  template <typename Type, typename Storage>
+  VTKM_CONT vtkm::cont::ArrayHandle<Type, Storage> CastToTypeStorage() const
+  {
+    vtkm::cont::ArrayHandle<Type, Storage>* downcastArray =
+      detail::DynamicArrayHandleTryCast<Type, Storage>(this->ArrayContainer);
     if (downcastArray == nullptr)
     {
       throw vtkm::cont::ErrorBadType("Bad cast of dynamic array.");
@@ -286,16 +277,16 @@ public:
   /// ErrorBadType if the cast does not work. Use \c IsType
   /// to check if the cast can happen.
   ///
-  template<typename ArrayHandleType>
-  VTKM_CONT
-  ArrayHandleType Cast() const {
+  template <typename ArrayHandleType>
+  VTKM_CONT ArrayHandleType Cast() const
+  {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
     typedef typename ArrayHandleType::ValueType ValueType;
     typedef typename ArrayHandleType::StorageTag StorageTag;
     // Technically, this method returns a copy of the \c ArrayHandle. But
     // because \c ArrayHandle acts like a shared pointer, it is valid to
     // do the copy.
-    return this->CastToTypeStorage<ValueType,StorageTag>();
+    return this->CastToTypeStorage<ValueType, StorageTag>();
   }
 
   /// Given a refernce to an ArrayHandle object, casts this array to the
@@ -306,9 +297,9 @@ public:
   /// Note that this is a shallow copy. The data are not copied and a change
   /// in the data in one array will be reflected in the other.
   ///
-  template<typename ArrayHandleType>
-  VTKM_CONT
-  void CopyTo(ArrayHandleType &array) const {
+  template <typename ArrayHandleType>
+  VTKM_CONT void CopyTo(ArrayHandleType& array) const
+  {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
     array = this->Cast<ArrayHandleType>();
   }
@@ -320,12 +311,12 @@ public:
   /// narrow down (or expand) the types when using an array of particular
   /// constraints.
   ///
-  template<typename NewTypeList>
-  VTKM_CONT
-  DynamicArrayHandleBase<NewTypeList,StorageList>
-  ResetTypeList(NewTypeList = NewTypeList()) const {
+  template <typename NewTypeList>
+  VTKM_CONT DynamicArrayHandleBase<NewTypeList, StorageList> ResetTypeList(
+    NewTypeList = NewTypeList()) const
+  {
     VTKM_IS_LIST_TAG(NewTypeList);
-    return DynamicArrayHandleBase<NewTypeList,StorageList>(*this);
+    return DynamicArrayHandleBase<NewTypeList, StorageList>(*this);
   }
 
   /// Changes the array storage types to try casting to when resolving this
@@ -335,12 +326,12 @@ public:
   /// method is particularly useful to narrow down (or expand) the types when
   /// using an array of particular constraints.
   ///
-  template<typename NewStorageList>
-  VTKM_CONT
-  DynamicArrayHandleBase<TypeList,NewStorageList>
-  ResetStorageList(NewStorageList = NewStorageList()) const {
+  template <typename NewStorageList>
+  VTKM_CONT DynamicArrayHandleBase<TypeList, NewStorageList> ResetStorageList(
+    NewStorageList = NewStorageList()) const
+  {
     VTKM_IS_LIST_TAG(NewStorageList);
-    return DynamicArrayHandleBase<TypeList,NewStorageList>(*this);
+    return DynamicArrayHandleBase<TypeList, NewStorageList>(*this);
   }
 
   /// Changes the value, and array storage types to try casting to when
@@ -349,14 +340,14 @@ public:
   /// object. This method is particularly useful when you have both custom
   /// types and traits.
   ///
-  template<typename NewTypeList, typename NewStorageList>
-  VTKM_CONT
-  DynamicArrayHandleBase<NewTypeList,NewStorageList>
-  ResetTypeAndStorageLists(NewTypeList = NewTypeList(),
-                           NewStorageList = NewStorageList()) const {
+  template <typename NewTypeList, typename NewStorageList>
+  VTKM_CONT DynamicArrayHandleBase<NewTypeList, NewStorageList> ResetTypeAndStorageLists(
+    NewTypeList = NewTypeList(),
+    NewStorageList = NewStorageList()) const
+  {
     VTKM_IS_LIST_TAG(NewTypeList);
     VTKM_IS_LIST_TAG(NewStorageList);
-    return DynamicArrayHandleBase<NewTypeList,NewStorageList>(*this);
+    return DynamicArrayHandleBase<NewTypeList, NewStorageList>(*this);
   }
 
   /// Attempts to cast the held array to a specific value type and storage,
@@ -366,9 +357,8 @@ public:
   /// two lists to VTKM_DEFAULT_TYPE_LIST_TAG and VTK_DEFAULT_STORAGE_LIST_TAG,
   /// respectively.
   ///
-  template<typename Functor>
-  VTKM_CONT
-  void CastAndCall(const Functor &f) const;
+  template <typename Functor>
+  VTKM_CONT void CastAndCall(const Functor& f) const;
 
   /// \brief Create a new array of the same type as this array.
   ///
@@ -377,9 +367,9 @@ public:
   /// creating output arrays that should be the same type as some input array.
   ///
   VTKM_CONT
-  DynamicArrayHandleBase<TypeList,StorageList> NewInstance() const
+  DynamicArrayHandleBase<TypeList, StorageList> NewInstance() const
   {
-    DynamicArrayHandleBase<TypeList,StorageList> newArray;
+    DynamicArrayHandleBase<TypeList, StorageList> newArray;
     newArray.ArrayContainer = this->ArrayContainer->NewInstance();
     return newArray;
   }
@@ -399,86 +389,90 @@ public:
   /// \brief Get the number of values in the array.
   ///
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return this->ArrayContainer->GetNumberOfValues();
-  }
+  vtkm::Id GetNumberOfValues() const { return this->ArrayContainer->GetNumberOfValues(); }
 
   VTKM_CONT
-  void PrintSummary(std::ostream &out) const
-  {
-    this->ArrayContainer->PrintSummary(out);
-  }
+  void PrintSummary(std::ostream& out) const { this->ArrayContainer->PrintSummary(out); }
 
 private:
-  std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase>
-    ArrayContainer;
+  std::shared_ptr<vtkm::cont::detail::PolymorphicArrayHandleContainerBase> ArrayContainer;
 
   friend struct detail::DynamicArrayHandleCopyHelper;
 };
 
-typedef vtkm::cont::DynamicArrayHandleBase<
-    VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG>
-    DynamicArrayHandle;
+typedef vtkm::cont::DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
+                                           VTKM_DEFAULT_STORAGE_LIST_TAG>
+  DynamicArrayHandle;
 
-namespace detail {
+namespace detail
+{
 
-template<typename Functor, typename Type>
-struct DynamicArrayHandleTryStorage {
+template <typename Functor, typename Type>
+struct DynamicArrayHandleTryStorage
+{
   const DynamicArrayHandle* const Array;
-  const Functor &Function;
+  const Functor& Function;
   bool FoundCast;
 
   VTKM_CONT
-  DynamicArrayHandleTryStorage(const DynamicArrayHandle &array,
-                               const Functor &f)
-    : Array(&array), Function(f), FoundCast(false) {  }
+  DynamicArrayHandleTryStorage(const DynamicArrayHandle& array, const Functor& f)
+    : Array(&array)
+    , Function(f)
+    , FoundCast(false)
+  {
+  }
 
-  template<typename Storage>
-  VTKM_CONT
-  void operator()(Storage) {
+  template <typename Storage>
+  VTKM_CONT void operator()(Storage)
+  {
     this->DoCast(Storage(),
-                 typename vtkm::cont::internal::IsValidArrayHandle<Type,Storage>::type());
+                 typename vtkm::cont::internal::IsValidArrayHandle<Type, Storage>::type());
   }
 
 private:
-  template<typename Storage>
+  template <typename Storage>
   void DoCast(Storage, std::true_type)
   {
-    if (!this->FoundCast &&
-        this->Array->template IsTypeAndStorage<Type,Storage>())
+    if (!this->FoundCast && this->Array->template IsTypeAndStorage<Type, Storage>())
     {
-      this->Function(this->Array->template CastToTypeStorage<Type,Storage>());
+      this->Function(this->Array->template CastToTypeStorage<Type, Storage>());
       this->FoundCast = true;
     }
   }
 
-  template<typename Storage>
+  template <typename Storage>
   void DoCast(Storage, std::false_type)
   {
     // This type of array handle cannot exist, so do nothing.
   }
 
-  void operator=(const DynamicArrayHandleTryStorage<Functor,Type> &) = delete;
+  void operator=(const DynamicArrayHandleTryStorage<Functor, Type>&) = delete;
 };
 
-template<typename Functor, typename StorageList>
-struct DynamicArrayHandleTryType {
+template <typename Functor, typename StorageList>
+struct DynamicArrayHandleTryType
+{
   const DynamicArrayHandle* const Array;
-  const Functor &Function;
+  const Functor& Function;
   bool FoundCast;
 
   VTKM_CONT
-  DynamicArrayHandleTryType(const DynamicArrayHandle &array, const Functor &f)
-    : Array(&array), Function(f), FoundCast(false) {  }
+  DynamicArrayHandleTryType(const DynamicArrayHandle& array, const Functor& f)
+    : Array(&array)
+    , Function(f)
+    , FoundCast(false)
+  {
+  }
 
-  template<typename Type>
-  VTKM_CONT
-  void operator()(Type) {
-    if (this->FoundCast) { return; }
+  template <typename Type>
+  VTKM_CONT void operator()(Type)
+  {
+    if (this->FoundCast)
+    {
+      return;
+    }
     typedef DynamicArrayHandleTryStorage<Functor, Type> TryStorageType;
-    TryStorageType tryStorage =
-        TryStorageType(*this->Array, this->Function);
+    TryStorageType tryStorage = TryStorageType(*this->Array, this->Function);
 
     vtkm::ListForEach(tryStorage, StorageList());
     if (tryStorage.FoundCast)
@@ -488,16 +482,14 @@ struct DynamicArrayHandleTryType {
   }
 
 private:
-  void operator=(const DynamicArrayHandleTryType<Functor,StorageList> &) = delete;
+  void operator=(const DynamicArrayHandleTryType<Functor, StorageList>&) = delete;
 };
 
 } // namespace detail
 
-template<typename TypeList, typename StorageList>
-template<typename Functor>
-VTKM_CONT
-void DynamicArrayHandleBase<TypeList,StorageList>::
-    CastAndCall(const Functor &f) const
+template <typename TypeList, typename StorageList>
+template <typename Functor>
+VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const Functor& f) const
 {
   VTKM_IS_LIST_TAG(TypeList);
   VTKM_IS_LIST_TAG(StorageList);
@@ -526,16 +518,14 @@ void DynamicArrayHandleBase<TypeList,StorageList>::
   }
 }
 
-template<>
-template<typename Functor>
-VTKM_CONT
-void DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
-                            VTKM_DEFAULT_STORAGE_LIST_TAG>::
-    CastAndCall(const Functor &f) const
+template <>
+template <typename Functor>
+VTKM_CONT void
+DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG>::CastAndCall(
+  const Functor& f) const
 {
 
-  typedef detail::DynamicArrayHandleTryType<Functor,
-                                            VTKM_DEFAULT_STORAGE_LIST_TAG> TryTypeType;
+  typedef detail::DynamicArrayHandleTryType<Functor, VTKM_DEFAULT_STORAGE_LIST_TAG> TryTypeType;
 
   // We can remove the copy, as the current DynamicArrayHandle is already
   // the default one, and no reason to do an atomic increment and increase
@@ -545,22 +535,20 @@ void DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
   vtkm::ListForEach(tryType, VTKM_DEFAULT_TYPE_LIST_TAG());
   if (!tryType.FoundCast)
   {
-    throw vtkm::cont::ErrorBadValue(
-          "Could not find appropriate cast for array in CastAndCall2.");
+    throw vtkm::cont::ErrorBadValue("Could not find appropriate cast for array in CastAndCall2.");
   }
 }
 
-namespace internal {
+namespace internal
+{
 
-template<typename TypeList, typename StorageList>
-struct DynamicTransformTraits<
-    vtkm::cont::DynamicArrayHandleBase<TypeList,StorageList> >
+template <typename TypeList, typename StorageList>
+struct DynamicTransformTraits<vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>>
 {
   typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
 };
 
 } // namespace internal
-
 }
 } // namespace vtkm::cont
 

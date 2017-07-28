@@ -22,12 +22,13 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 struct VecVariableTestFunctor
 {
   // You will get a compile fail if this does not pass
-  template<typename NumericTag>
+  template <typename NumericTag>
   void CheckNumericTag(NumericTag, NumericTag) const
   {
     std::cout << "NumericTag pass" << std::endl;
@@ -40,7 +41,7 @@ struct VecVariableTestFunctor
   }
 
   // You will get a compile fail if this does not pass
-  template<typename T>
+  template <typename T>
   void CheckComponentType(T, T) const
   {
     std::cout << "ComponentType pass" << std::endl;
@@ -58,12 +59,12 @@ struct VecVariableTestFunctor
     std::cout << "VariableSize" << std::endl;
   }
 
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     static const vtkm::IdComponent SIZE = 5;
-    typedef vtkm::Vec<T,SIZE> VecType;
-    typedef vtkm::VecVariable<T,SIZE> VecVariableType;
+    typedef vtkm::Vec<T, SIZE> VecType;
+    typedef vtkm::VecVariable<T, SIZE> VecVariableType;
     typedef vtkm::TypeTraits<VecVariableType> TTraits;
     typedef vtkm::VecTraits<VecVariableType> VTraits;
 
@@ -88,30 +89,27 @@ struct VecVariableTestFunctor
     VecVariableType vec1(source);
     VecType vecCopy;
     vec1.CopyInto(vecCopy);
-    VTKM_TEST_ASSERT(test_equal(vec1, vecCopy),
-                     "Bad init or copyinto.");
+    VTKM_TEST_ASSERT(test_equal(vec1, vecCopy), "Bad init or copyinto.");
 
-    vtkm::VecVariable<T,SIZE+1> vec2;
+    vtkm::VecVariable<T, SIZE + 1> vec2;
     for (vtkm::IdComponent setIndex = 0; setIndex < SIZE; setIndex++)
     {
       VTKM_TEST_ASSERT(vec2.GetNumberOfComponents() == setIndex,
                        "Report wrong number of components");
       vec2.Append(source[setIndex]);
     }
-    VTKM_TEST_ASSERT(test_equal(vec2, vec1),
-                     "Bad values from Append.");
+    VTKM_TEST_ASSERT(test_equal(vec2, vec1), "Bad values from Append.");
   }
 };
 
 void TestVecVariable()
 {
-  vtkm::testing::Testing::TryTypes(VecVariableTestFunctor(),
-                                   vtkm::TypeListTagFieldScalar());
+  vtkm::testing::Testing::TryTypes(VecVariableTestFunctor(), vtkm::TypeListTagFieldScalar());
 }
 
 } // anonymous namespace
 
-int UnitTestVecVariable(int, char *[])
+int UnitTestVecVariable(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestVecVariable);
 }

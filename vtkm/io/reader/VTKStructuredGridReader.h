@@ -22,16 +22,22 @@
 
 #include <vtkm/io/reader/VTKDataSetReaderBase.h>
 
-namespace vtkm {
-namespace io {
-namespace reader {
+namespace vtkm
+{
+namespace io
+{
+namespace reader
+{
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
 class VTKStructuredGridReader : public VTKDataSetReaderBase
 {
 public:
-  explicit VTKStructuredGridReader(const char *fileName)
+  explicit VTKStructuredGridReader(const char* fileName)
     : VTKDataSetReaderBase(fileName)
-  { }
+  {
+  }
 
 private:
   virtual void Read()
@@ -46,7 +52,7 @@ private:
     //We need to be able to handle VisIt files which dump Field data
     //at the top of a VTK file
     this->DataFile->Stream >> tag;
-    if(tag == "FIELD")
+    if (tag == "FIELD")
     {
       std::string name;
       this->ReadFields(name);
@@ -57,7 +63,6 @@ private:
     internal::parseAssert(tag == "DIMENSIONS");
     vtkm::Id3 dim;
     this->DataFile->Stream >> dim[0] >> dim[1] >> dim[2] >> std::ws;
-
 
     this->DataSet.AddCellSet(internal::CreateCellSetStructured(dim));
 
@@ -71,6 +76,7 @@ private:
   }
 };
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 }
 }
 } // namespace vtkm::io:reader

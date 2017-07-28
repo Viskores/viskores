@@ -24,15 +24,17 @@
 
 #include <vtkm/rendering/BitmapFont.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT BitmapFontFactory
 {
 public:
   static vtkm::rendering::BitmapFont CreateLiberation2Sans();
 };
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif

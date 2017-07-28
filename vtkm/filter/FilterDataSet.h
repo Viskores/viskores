@@ -21,20 +21,21 @@
 #ifndef vtk_m_filter_DataSetFilter_h
 #define vtk_m_filter_DataSetFilter_h
 
+#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/ResultDataSet.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
-
-template<class Derived>
+template <class Derived>
 class FilterDataSet
 {
 public:
@@ -45,36 +46,32 @@ public:
   ~FilterDataSet();
 
   VTKM_CONT
-  void SetActiveCellSet(vtkm::Id index)
-    { this->CellSetIndex = index; }
+  void SetActiveCellSet(vtkm::Id index) { this->CellSetIndex = index; }
 
   VTKM_CONT
-  vtkm::Id GetActiveCellSetIndex() const
-    { return this->CellSetIndex; }
+  vtkm::Id GetActiveCellSetIndex() const { return this->CellSetIndex; }
 
   VTKM_CONT
-  void SetActiveCoordinateSystem(vtkm::Id index)
-    { this->CoordinateSystemIndex = index; }
+  void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
 
   VTKM_CONT
-  vtkm::Id GetActiveCoordinateSystemIndex() const
-    { return this->CoordinateSystemIndex; }
+  vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
 
   VTKM_CONT
-  void SetRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker &tracker)
-  { this->Tracker = tracker; }
+  void SetRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker& tracker)
+  {
+    this->Tracker = tracker;
+  }
 
   VTKM_CONT
-  const vtkm::cont::RuntimeDeviceTracker &GetRuntimeDeviceTracker() const
-  { return this->Tracker; }
+  const vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker() const { return this->Tracker; }
 
   VTKM_CONT
-  ResultDataSet Execute(const vtkm::cont::DataSet &input);
+  ResultDataSet Execute(const vtkm::cont::DataSet& input);
 
-  template<typename DerivedPolicy>
-  VTKM_CONT
-  ResultDataSet Execute(const vtkm::cont::DataSet &input,
-                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy );
+  template <typename DerivedPolicy>
+  VTKM_CONT ResultDataSet Execute(const vtkm::cont::DataSet& input,
+                                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //From the field we can extract the association component
   // ASSOC_ANY -> unable to map
@@ -83,30 +80,26 @@ public:
   // ASSOC_CELL_SET -> how do we map this?
   // ASSOC_LOGICAL_DIM -> unable to map?
   VTKM_CONT
-  bool MapFieldOntoOutput(ResultDataSet& result,
-                          const vtkm::cont::Field& field);
+  bool MapFieldOntoOutput(ResultDataSet& result, const vtkm::cont::Field& field);
 
-  template<typename DerivedPolicy>
-  VTKM_CONT
-  bool MapFieldOntoOutput(ResultDataSet& result,
-                          const vtkm::cont::Field& field,
-                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  template <typename DerivedPolicy>
+  VTKM_CONT bool MapFieldOntoOutput(ResultDataSet& result,
+                                    const vtkm::cont::Field& field,
+                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  template<typename DerivedPolicy>
-  VTKM_CONT
-  ResultDataSet PrepareForExecution(const vtkm::cont::DataSet& input,
-                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  template <typename DerivedPolicy>
+  VTKM_CONT ResultDataSet
+  PrepareForExecution(const vtkm::cont::DataSet& input,
+                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
   vtkm::cont::RuntimeDeviceTracker Tracker;
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/FilterDataSet.hxx>
 

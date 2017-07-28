@@ -25,51 +25,40 @@
 
 #include <vtkm/VecFromPortal.h>
 
-namespace vtkm {
-namespace exec {
+namespace vtkm
+{
+namespace exec
+{
 
-template<typename ShapePortalType,
-         typename NumIndicesPortalType,
-         typename ConnectivityPortalType,
-         typename IndexOffsetPortalType
-         >
+template <typename ShapePortalType,
+          typename NumIndicesPortalType,
+          typename ConnectivityPortalType,
+          typename IndexOffsetPortalType>
 class ConnectivityExplicit
 {
 public:
+  typedef typename vtkm::Id SchedulingRangeType;
+
   ConnectivityExplicit() {}
 
   ConnectivityExplicit(const ShapePortalType& shapePortal,
                        const NumIndicesPortalType& numIndicesPortal,
                        const ConnectivityPortalType& connPortal,
-                       const IndexOffsetPortalType& indexOffsetPortal
-                       )
-  : Shapes(shapePortal),
-    NumIndices(numIndicesPortal),
-    Connectivity(connPortal),
-    IndexOffset(indexOffsetPortal)
+                       const IndexOffsetPortalType& indexOffsetPortal)
+    : Shapes(shapePortal)
+    , NumIndices(numIndicesPortal)
+    , Connectivity(connPortal)
+    , IndexOffset(indexOffsetPortal)
   {
-
   }
 
   VTKM_EXEC
-  vtkm::Id GetNumberOfElements() const
-  {
-    return this->Shapes.GetNumberOfValues();
-  }
-
-  VTKM_EXEC
-  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const
-  {
-    return static_cast<vtkm::IdComponent>(this->NumIndices.Get(index));
-  }
+  SchedulingRangeType GetNumberOfElements() const { return this->Shapes.GetNumberOfValues(); }
 
   typedef vtkm::CellShapeTagGeneric CellShapeTag;
 
   VTKM_EXEC
-  CellShapeTag GetCellShape(vtkm::Id index) const
-  {
-    return CellShapeTag(this->Shapes.Get(index));
-  }
+  CellShapeTag GetCellShape(vtkm::Id index) const { return CellShapeTag(this->Shapes.Get(index)); }
 
   using IndicesType = vtkm::VecFromPortal<ConnectivityPortalType>;
 
@@ -82,7 +71,7 @@ public:
   IndicesType GetIndices(vtkm::Id index) const
   {
     vtkm::Id offset = this->IndexOffset.Get(index);
-    vtkm::IdComponent length = this->GetNumberOfIndices(index);
+    vtkm::IdComponent length = this->NumIndices.Get(index);
     return IndicesType(this->Connectivity, length, offset);
   }
 

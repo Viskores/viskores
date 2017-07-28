@@ -26,43 +26,42 @@
 
 #include <vtkm/cont/arg/Transport.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief \c Transport tag for input arrays.
 ///
 /// \c TransportTagCellSetIn is a tag used with the \c Transport class to
 /// transport topology objects for input data.
 ///
-template<typename FromTopology,typename ToTopology>
-struct TransportTagCellSetIn {  };
+template <typename FromTopology, typename ToTopology>
+struct TransportTagCellSetIn
+{
+};
 
-template<typename FromTopology,
-         typename ToTopology,
-         typename ContObjectType,
-         typename Device>
-struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology,ToTopology>, ContObjectType, Device>
+template <typename FromTopology, typename ToTopology, typename ContObjectType, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology, ToTopology>,
+                 ContObjectType,
+                 Device>
 {
   VTKM_IS_CELL_SET(ContObjectType);
 
-  typedef typename ContObjectType
-      ::template ExecutionTypes<
-          Device,FromTopology,ToTopology>
-      ::ExecObjectType ExecObjectType;
+  typedef
+    typename ContObjectType::template ExecutionTypes<Device,
+                                                     FromTopology,
+                                                     ToTopology>::ExecObjectType ExecObjectType;
 
-  template<typename InputDomainType>
-  VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object,
-                            const InputDomainType &,
-                            vtkm::Id) const
+  template <typename InputDomainType>
+  VTKM_CONT ExecObjectType
+  operator()(const ContObjectType& object, const InputDomainType&, vtkm::Id, vtkm::Id) const
   {
-    return object.PrepareForInput(Device(),
-                                  FromTopology(),
-                                  ToTopology());
+    return object.PrepareForInput(Device(), FromTopology(), ToTopology());
   }
 };
-
 }
 }
 } // namespace vtkm::cont::arg

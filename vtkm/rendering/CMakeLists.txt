@@ -32,12 +32,14 @@ set(headers
   Color.h
   ColorBarAnnotation.h
   ColorTable.h
+  ConnectivityProxy.h
   DecodePNG.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
   MapperRayTracer.h
   MapperVolume.h
+  MapperConnectivity.h
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
@@ -63,10 +65,12 @@ set(sources
   Color.cxx
   ColorBarAnnotation.cxx
   ColorTable.cxx
+  ConnectivityProxy.cxx
   DecodePNG.cxx
   Mapper.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
+  MapperConnectivity.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
@@ -78,7 +82,12 @@ set(sources
   WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
-  raytracing/Ray.cxx
+  raytracing/BoundingVolumeHierarchy.cxx
+  raytracing/Camera.cxx
+  raytracing/ChannelBuffer.cxx
+  raytracing/Logger.cxx
+  raytracing/RayTracer.cxx
+  raytracing/VolumeRendererStructured.cxx
   )
 
 set(opengl_headers
@@ -115,6 +124,12 @@ set(osmesa_sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   CanvasRayTracer.cxx
+  ConnectivityProxy.cxx
+  raytracing/BoundingVolumeHierarchy.cxx
+  raytracing/Camera.cxx
+  raytracing/ChannelBuffer.cxx
+  raytracing/VolumeRendererStructured.cxx
+  raytracing/RayTracer.cxx
   )
 
 #-----------------------------------------------------------------------------
@@ -159,14 +174,16 @@ target_include_directories(vtkm_rendering
                                   ${VTKm_BACKEND_INCLUDE_DIRS}
                           )
 
+if(UNIX AND NOT APPLE)
+  target_link_libraries(vtkm_rendering PRIVATE rt )
+endif()
+
+
 # Subclasses need rendering library
 vtkm_configure_component_Rendering()
 
 add_subdirectory(internal)
 add_subdirectory(raytracing)
-
-
-
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

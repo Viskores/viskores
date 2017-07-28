@@ -22,9 +22,12 @@
 
 #include <string>
 
-namespace vtkm {
-namespace io {
-namespace internal {
+namespace vtkm
+{
+namespace io
+{
+namespace internal
+{
 
 enum DataSetStructure
 {
@@ -39,19 +42,17 @@ enum DataSetStructure
 
 inline const char* DataSetStructureString(int id)
 {
-  static const char *strings[] = {
-    "",
-    "STRUCTURED_POINTS",
-    "STRUCTURED_GRID",
-    "UNSTRUCTURED_GRID",
-    "POLYDATA",
-    "RECTILINEAR_GRID",
-    "FIELD"
-  };
+  static const char* strings[] = { "",
+                                   "STRUCTURED_POINTS",
+                                   "STRUCTURED_GRID",
+                                   "UNSTRUCTURED_GRID",
+                                   "POLYDATA",
+                                   "RECTILINEAR_GRID",
+                                   "FIELD" };
   return strings[id];
 }
 
-inline DataSetStructure DataSetStructureId(const std::string &str)
+inline DataSetStructure DataSetStructureId(const std::string& str)
 {
   DataSetStructure structure = DATASET_UNKNOWN;
   for (int id = 1; id < 7; ++id)
@@ -64,7 +65,6 @@ inline DataSetStructure DataSetStructureId(const std::string &str)
 
   return structure;
 }
-
 }
 }
 } // namespace vtkm::io::internal

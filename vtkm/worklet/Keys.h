@@ -34,13 +34,14 @@
 #include <vtkm/cont/arg/TransportTagKeyedValuesInOut.h>
 #include <vtkm/cont/arg/TransportTagKeyedValuesOut.h>
 #include <vtkm/cont/arg/TransportTagKeysIn.h>
-#include <vtkm/cont/arg/TransportTagReducedValuesIn.h>
 #include <vtkm/cont/arg/TypeCheckTagKeys.h>
 
 #include <vtkm/BinaryOperators.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 /// \brief Manage keys for a \c WorkletReduceByKey.
 ///
@@ -59,7 +60,7 @@ namespace worklet {
 /// Keys structure is reused for all the \c Invoke. This is more efficient than
 /// creating a different \c Keys structure for each \c Invoke.
 ///
-template<typename _KeyType>
+template <typename _KeyType>
 class Keys
 {
 public:
@@ -67,8 +68,7 @@ public:
   using KeyArrayHandleType = vtkm::cont::ArrayHandle<KeyType>;
 
   VTKM_CONT
-  Keys()
-  {  }
+  Keys() {}
 
   /// \b Construct a Keys class from an array of keys.
   ///
@@ -79,78 +79,61 @@ public:
   /// keys in the original order after calling this constructor, then make
   /// a deep copy of the keys first.
   ///
-  template<typename KeyStorage, typename Device>
-  VTKM_CONT
-  Keys(vtkm::cont::ArrayHandle<KeyType,KeyStorage> keys, Device)
+  template <typename KeyStorage, typename Device>
+  VTKM_CONT Keys(vtkm::cont::ArrayHandle<KeyType, KeyStorage> keys, Device)
   {
     this->BuildArrays(keys, Device());
   }
 
   VTKM_CONT
-  vtkm::Id GetInputRange() const
-  {
-    return this->UniqueKeys.GetNumberOfValues();
-  }
+  vtkm::Id GetInputRange() const { return this->UniqueKeys.GetNumberOfValues(); }
 
   VTKM_CONT
-  KeyArrayHandleType GetUniqueKeys() const
-  {
-    return this->UniqueKeys;
-  }
+  KeyArrayHandleType GetUniqueKeys() const { return this->UniqueKeys; }
 
   VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Id> GetSortedValuesMap() const
-  {
-    return this->SortedValuesMap;
-  }
+  vtkm::cont::ArrayHandle<vtkm::Id> GetSortedValuesMap() const { return this->SortedValuesMap; }
 
   VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Id> GetOffsets() const
-  {
-    return this->Offsets;
-  }
+  vtkm::cont::ArrayHandle<vtkm::Id> GetOffsets() const { return this->Offsets; }
 
   VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::IdComponent> GetCounts() const
-  {
-    return this->Counts;
-  }
+  vtkm::cont::ArrayHandle<vtkm::IdComponent> GetCounts() const { return this->Counts; }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return this->SortedValuesMap.GetNumberOfValues();
-  }
+  vtkm::Id GetNumberOfValues() const { return this->SortedValuesMap.GetNumberOfValues(); }
 
-  template<typename Device>
+  template <typename Device>
   struct ExecutionTypes
   {
     using KeyPortal = typename KeyArrayHandleType::template ExecutionTypes<Device>::PortalConst;
-    using IdPortal = typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::PortalConst;
-    using IdComponentPortal = typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<Device>::PortalConst;
+    using IdPortal =
+      typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::PortalConst;
+    using IdComponentPortal = typename vtkm::cont::ArrayHandle<
+      vtkm::IdComponent>::template ExecutionTypes<Device>::PortalConst;
 
-    using Lookup = vtkm::exec::internal::ReduceByKeyLookup<KeyPortal,IdPortal,IdComponentPortal>;
+    using Lookup = vtkm::exec::internal::ReduceByKeyLookup<KeyPortal, IdPortal, IdComponentPortal>;
   };
 
-  template<typename Device>
-  VTKM_CONT
-  typename ExecutionTypes<Device>::Lookup PrepareForInput(Device) const
+  template <typename Device>
+  VTKM_CONT typename ExecutionTypes<Device>::Lookup PrepareForInput(Device) const
   {
-    return typename ExecutionTypes<Device>::Lookup(
-          this->UniqueKeys.PrepareForInput(Device()),
-          this->SortedValuesMap.PrepareForInput(Device()),
-          this->Offsets.PrepareForInput(Device()),
-          this->Counts.PrepareForInput(Device()));
+    return typename ExecutionTypes<Device>::Lookup(this->UniqueKeys.PrepareForInput(Device()),
+                                                   this->SortedValuesMap.PrepareForInput(Device()),
+                                                   this->Offsets.PrepareForInput(Device()),
+                                                   this->Counts.PrepareForInput(Device()));
   }
 
   VTKM_CONT
-  bool operator==(const vtkm::worklet::Keys<KeyType> &other) const
+  bool operator==(const vtkm::worklet::Keys<KeyType>& other) const
   {
     return ((this->UniqueKeys == other.UniqueKeys) &&
-            (this->SortedValuesMap == other.SortedValuesMap) &&
-            (this->Offsets == other.Offsets) &&
+            (this->SortedValuesMap == other.SortedValuesMap) && (this->Offsets == other.Offsets) &&
             (this->Counts == other.Counts));
   }
+
+  VTKM_CONT
+  bool operator!=(const vtkm::worklet::Keys<KeyType>& other) const { return !(*this == other); }
 
 private:
   KeyArrayHandleType UniqueKeys;
@@ -158,38 +141,32 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Id> Offsets;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> Counts;
 
-  template<typename KeyArrayType, typename Device>
-  VTKM_CONT
-  void BuildArrays(KeyArrayType &keys, Device)
+  template <typename KeyArrayType, typename Device>
+  VTKM_CONT void BuildArrays(KeyArrayType& keys, Device)
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
     vtkm::Id numKeys = keys.GetNumberOfValues();
 
-    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numKeys),
-                    this->SortedValuesMap);
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(numKeys), this->SortedValuesMap);
 
     // TODO: Do we need the ability to specify a comparison functor for sort?
     Algorithm::SortByKey(keys, this->SortedValuesMap);
 
     // Find the unique keys and the number of values per key.
-    Algorithm::ReduceByKey(
-          keys,
-          vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
-          this->UniqueKeys,
-          this->Counts,
-          vtkm::Sum());
+    Algorithm::ReduceByKey(keys,
+                           vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>(1, numKeys),
+                           this->UniqueKeys,
+                           this->Counts,
+                           vtkm::Sum());
 
     // Get the offsets from the counts with a scan.
-    vtkm::Id offsetsTotal =
-        Algorithm::ScanExclusive(
-          vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()),
-          this->Offsets);
+    vtkm::Id offsetsTotal = Algorithm::ScanExclusive(
+      vtkm::cont::make_ArrayHandleCast(this->Counts, vtkm::Id()), this->Offsets);
     VTKM_ASSERT(offsetsTotal == numKeys); // Sanity check
-    (void)offsetsTotal; // Shut up, compiler
+    (void)offsetsTotal;                   // Shut up, compiler
   }
 };
-
 }
 } // namespace vtkm::worklet
 
@@ -198,69 +175,69 @@ private:
 // the arg classes. (The worklet package depends on the cont and exec packages,
 // not the other way around.)
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
-template<typename KeyType>
-struct TypeCheck<vtkm::cont::arg::TypeCheckTagKeys,
-                 vtkm::worklet::Keys<KeyType> >
+template <typename KeyType>
+struct TypeCheck<vtkm::cont::arg::TypeCheckTagKeys, vtkm::worklet::Keys<KeyType>>
 {
   static const bool value = true;
 };
 
-template<typename KeyType, typename Device>
-struct Transport<vtkm::cont::arg::TransportTagKeysIn,
-                 vtkm::worklet::Keys<KeyType>,
-                 Device>
+template <typename KeyType, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagKeysIn, vtkm::worklet::Keys<KeyType>, Device>
 {
   using ContObjectType = vtkm::worklet::Keys<KeyType>;
-  using ExecObjectType =
-      typename ContObjectType::template ExecutionTypes<Device>::Lookup;
+  using ExecObjectType = typename ContObjectType::template ExecutionTypes<Device>::Lookup;
 
   VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object,
-                            const ContObjectType &inputDomain,
+  ExecObjectType operator()(const ContObjectType& object,
+                            const ContObjectType& inputDomain,
+                            vtkm::Id,
                             vtkm::Id) const
   {
-    VTKM_ASSERT(object == inputDomain);
+    if (object != inputDomain)
+    {
+      throw vtkm::cont::ErrorBadValue("A Keys object must be the input domain.");
+    }
 
     return object.PrepareForInput(Device());
   }
 
   // If you get a compile error here, it means that you have used a KeysIn
   // tag in your ControlSignature that was not marked as the InputDomain.
-  template<typename InputDomainType>
-  VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &,
-                            const InputDomainType &,
-                            vtkm::Id) const = delete;
+  template <typename InputDomainType>
+  VTKM_CONT ExecObjectType
+  operator()(const ContObjectType&, const InputDomainType&, vtkm::Id, vtkm::Id) const = delete;
 };
 
-template<typename ArrayHandleType, typename Device>
-struct Transport<
-    vtkm::cont::arg::TransportTagKeyedValuesIn, ArrayHandleType, Device>
+template <typename ArrayHandleType, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagKeyedValuesIn, ArrayHandleType, Device>
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
   using ContObjectType = ArrayHandleType;
 
   using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using PermutedArrayType =
-      vtkm::cont::ArrayHandlePermutation<IdArrayType,ContObjectType>;
-  using GroupedArrayType =
-      vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType,IdArrayType>;
+  using PermutedArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, ContObjectType>;
+  using GroupedArrayType = vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
 
-  using ExecObjectType =
-      typename GroupedArrayType::template ExecutionTypes<Device>::PortalConst;
+  using ExecObjectType = typename GroupedArrayType::template ExecutionTypes<Device>::PortalConst;
 
-  template<typename KeyType>
-  VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object,
-                            const vtkm::worklet::Keys<KeyType> &keys,
-                            vtkm::Id) const
+  template <typename KeyType>
+  VTKM_CONT ExecObjectType operator()(const ContObjectType& object,
+                                      const vtkm::worklet::Keys<KeyType>& keys,
+                                      vtkm::Id,
+                                      vtkm::Id) const
   {
-    VTKM_ASSERT(object.GetNumberOfValues() == keys.GetNumberOfValues());
+    if (object.GetNumberOfValues() != keys.GetNumberOfValues())
+    {
+      throw vtkm::cont::ErrorBadValue("Input values array is wrong size.");
+    }
 
     PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
     GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
@@ -273,30 +250,29 @@ struct Transport<
   }
 };
 
-template<typename ArrayHandleType, typename Device>
-struct Transport<
-    vtkm::cont::arg::TransportTagKeyedValuesInOut, ArrayHandleType, Device>
+template <typename ArrayHandleType, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagKeyedValuesInOut, ArrayHandleType, Device>
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
   using ContObjectType = ArrayHandleType;
 
   using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using PermutedArrayType =
-      vtkm::cont::ArrayHandlePermutation<IdArrayType,ContObjectType>;
-  using GroupedArrayType =
-      vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType,IdArrayType>;
+  using PermutedArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, ContObjectType>;
+  using GroupedArrayType = vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
 
-  using ExecObjectType =
-      typename GroupedArrayType::template ExecutionTypes<Device>::Portal;
+  using ExecObjectType = typename GroupedArrayType::template ExecutionTypes<Device>::Portal;
 
-  template<typename KeyType>
-  VTKM_CONT
-  ExecObjectType operator()(ContObjectType object,
-                            const vtkm::worklet::Keys<KeyType> &keys,
-                            vtkm::Id) const
+  template <typename KeyType>
+  VTKM_CONT ExecObjectType operator()(ContObjectType object,
+                                      const vtkm::worklet::Keys<KeyType>& keys,
+                                      vtkm::Id,
+                                      vtkm::Id) const
   {
-    VTKM_ASSERT(object.GetNumberOfValues() == keys.GetNumberOfValues());
+    if (object.GetNumberOfValues() != keys.GetNumberOfValues())
+    {
+      throw vtkm::cont::ErrorBadValue("Input/output values array is wrong size.");
+    }
 
     PermutedArrayType permutedArray(keys.GetSortedValuesMap(), object);
     GroupedArrayType groupedArray(permutedArray, keys.GetOffsets());
@@ -309,28 +285,24 @@ struct Transport<
   }
 };
 
-template<typename ArrayHandleType, typename Device>
-struct Transport<
-    vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, Device>
+template <typename ArrayHandleType, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagKeyedValuesOut, ArrayHandleType, Device>
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
   using ContObjectType = ArrayHandleType;
 
   using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using PermutedArrayType =
-      vtkm::cont::ArrayHandlePermutation<IdArrayType,ContObjectType>;
-  using GroupedArrayType =
-      vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType,IdArrayType>;
+  using PermutedArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, ContObjectType>;
+  using GroupedArrayType = vtkm::cont::ArrayHandleGroupVecVariable<PermutedArrayType, IdArrayType>;
 
-  using ExecObjectType =
-      typename GroupedArrayType::template ExecutionTypes<Device>::Portal;
+  using ExecObjectType = typename GroupedArrayType::template ExecutionTypes<Device>::Portal;
 
-  template<typename KeyType>
-  VTKM_CONT
-  ExecObjectType operator()(ContObjectType object,
-                            const vtkm::worklet::Keys<KeyType> &keys,
-                            vtkm::Id) const
+  template <typename KeyType>
+  VTKM_CONT ExecObjectType operator()(ContObjectType object,
+                                      const vtkm::worklet::Keys<KeyType>& keys,
+                                      vtkm::Id,
+                                      vtkm::Id) const
   {
     // The PrepareForOutput for ArrayHandleGroupVecVariable and
     // ArrayHandlePermutation cannot determine the actual size expected for the
@@ -347,32 +319,6 @@ struct Transport<
     return groupedArray.PrepareForOutput(keys.GetInputRange(), Device());
   }
 };
-
-template<typename ContObjectType, typename Device>
-struct Transport<
-    vtkm::cont::arg::TransportTagReducedValuesIn, ContObjectType, Device>
-{
-  VTKM_IS_ARRAY_HANDLE(ContObjectType);
-
-  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst
-      ExecObjectType;
-
-  template<typename KeyType>
-  VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object,
-                            const vtkm::worklet::Keys<KeyType> &inputDomain,
-                            vtkm::Id) const
-  {
-    if (object.GetNumberOfValues() != inputDomain.GetInputRange())
-    {
-      throw vtkm::cont::ErrorBadValue(
-            "Input array to worklet invocation the wrong size.");
-    }
-
-    return object.PrepareForInput(Device());
-  }
-};
-
 }
 }
 } // namespace vtkm::cont::arg

@@ -26,38 +26,38 @@
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT Mapper
 {
 public:
   VTKM_CONT
-  Mapper()
-  {
-  }
+  Mapper() {}
 
   virtual ~Mapper();
 
+  virtual void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+                           const vtkm::cont::CoordinateSystem& coords,
+                           const vtkm::cont::Field& scalarField,
+                           const vtkm::rendering::ColorTable& colorTable,
+                           const vtkm::rendering::Camera& camera,
+                           const vtkm::Range& scalarRange) = 0;
 
-  virtual void RenderCells(const vtkm::cont::DynamicCellSet &cellset,
-                           const vtkm::cont::CoordinateSystem &coords,
-                           const vtkm::cont::Field &scalarField,
-                           const vtkm::rendering::ColorTable &colorTable,
-                           const vtkm::rendering::Camera &camera,
-                           const vtkm::Range &scalarRange) = 0;
-
-  virtual void SetActiveColorTable(const ColorTable &ct);
+  virtual void SetActiveColorTable(const ColorTable& ct);
 
   virtual void StartScene() = 0;
   virtual void EndScene() = 0;
-  virtual void SetCanvas(vtkm::rendering::Canvas *canvas) = 0;
+  virtual void SetCanvas(vtkm::rendering::Canvas* canvas) = 0;
   virtual vtkm::rendering::Canvas* GetCanvas() const = 0;
 
-  virtual vtkm::rendering::Mapper *NewCopy() const = 0;
+  virtual vtkm::rendering::Mapper* NewCopy() const = 0;
 
 protected:
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,4> > ColorMap;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
 };
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 #endif //vtk_m_rendering_Mapper_h

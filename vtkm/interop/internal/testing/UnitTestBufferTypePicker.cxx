@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/interop/internal/BufferTypePicker.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/interop/internal/BufferTypePicker.h>
 
 namespace
 {
@@ -36,9 +36,9 @@ void TestBufferTypePicker()
   type = vtkm::interop::internal::BufferTypePicker(vtkmUint());
   VTKM_TEST_ASSERT(type == GL_ELEMENT_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
 
-  type = vtkm::interop::internal::BufferTypePicker(vtkm::Vec<T,4>());
+  type = vtkm::interop::internal::BufferTypePicker(vtkm::Vec<T, 4>());
   VTKM_TEST_ASSERT(type == GL_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
-  type = vtkm::interop::internal::BufferTypePicker(vtkm::Vec<T,3>());
+  type = vtkm::interop::internal::BufferTypePicker(vtkm::Vec<T, 3>());
   VTKM_TEST_ASSERT(type == GL_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
   type = vtkm::interop::internal::BufferTypePicker(vtkm::FloatDefault());
   VTKM_TEST_ASSERT(type == GL_ARRAY_BUFFER, "Bad OpenGL Buffer Type");
@@ -49,8 +49,7 @@ void TestBufferTypePicker()
 }
 }
 
-
-int UnitTestBufferTypePicker(int, char *[])
+int UnitTestBufferTypePicker(int, char* [])
 {
- return vtkm::cont::testing::Testing::Run(TestBufferTypePicker);
+  return vtkm::cont::testing::Testing::Run(TestBufferTypePicker);
 }

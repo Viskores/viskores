@@ -23,16 +23,16 @@
 
 #include <vtkm/filter/PolicyBase.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
-struct PolicyDefault : vtkm::filter::PolicyBase< PolicyDefault >
+struct PolicyDefault : vtkm::filter::PolicyBase<PolicyDefault>
 {
   // Inherit defaults from PolicyBase
 };
-
 }
 }
-
 
 #endif //vtk_m_filter_PolicyDefault_h

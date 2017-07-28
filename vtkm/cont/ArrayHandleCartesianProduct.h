@@ -25,16 +25,19 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 
-namespace vtkm {
-namespace exec {
-namespace internal {
+namespace vtkm
+{
+namespace exec
+{
+namespace internal
+{
 
 /// \brief An array portal that acts as a 3D cartesian product of 3 arrays.
 ///
-template<typename ValueType_,
-         typename PortalTypeFirst_,
-         typename PortalTypeSecond_,
-         typename PortalTypeThird_>
+template <typename ValueType_,
+          typename PortalTypeFirst_,
+          typename PortalTypeSecond_,
+          typename PortalTypeThird_>
 class VTKM_ALWAYS_EXPORT ArrayPortalCartesianProduct
 {
 public:
@@ -47,37 +50,42 @@ public:
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalCartesianProduct()
-  : PortalFirst(), PortalSecond(), PortalThird()
-  {  } //needs to be host and device so that cuda can create lvalue of these
+    : PortalFirst()
+    , PortalSecond()
+    , PortalThird()
+  {
+  } //needs to be host and device so that cuda can create lvalue of these
 
   VTKM_CONT
-  ArrayPortalCartesianProduct(const PortalTypeFirst  &portalfirst,
-                              const PortalTypeSecond &portalsecond,
-                              const PortalTypeThird &portalthird)
-      : PortalFirst(portalfirst), PortalSecond(portalsecond), PortalThird(portalthird)
-  {  }
+  ArrayPortalCartesianProduct(const PortalTypeFirst& portalfirst,
+                              const PortalTypeSecond& portalsecond,
+                              const PortalTypeThird& portalthird)
+    : PortalFirst(portalfirst)
+    , PortalSecond(portalsecond)
+    , PortalThird(portalthird)
+  {
+  }
 
   /// Copy constructor for any other ArrayPortalCartesianProduct with an iterator
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
 
-  template<class OtherV, class OtherP1, class OtherP2, class OtherP3>
-  VTKM_CONT
-  ArrayPortalCartesianProduct(const ArrayPortalCartesianProduct<OtherV,OtherP1,OtherP2,OtherP3> &src)
-    : PortalFirst(src.GetPortalFirst()),
-      PortalSecond(src.GetPortalSecond()),
-      PortalThird(src.GetPortalThird())
-  {  }
-
+  template <class OtherV, class OtherP1, class OtherP2, class OtherP3>
+  VTKM_CONT ArrayPortalCartesianProduct(
+    const ArrayPortalCartesianProduct<OtherV, OtherP1, OtherP2, OtherP3>& src)
+    : PortalFirst(src.GetPortalFirst())
+    , PortalSecond(src.GetPortalSecond())
+    , PortalThird(src.GetPortalThird())
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const
   {
-    return this->PortalFirst.GetNumberOfValues() *
-        this->PortalSecond.GetNumberOfValues() *
-        this->PortalThird.GetNumberOfValues();
+    return this->PortalFirst.GetNumberOfValues() * this->PortalSecond.GetNumberOfValues() *
+      this->PortalThird.GetNumberOfValues();
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -89,27 +97,26 @@ public:
 
     vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
     vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
-    vtkm::Id dim12 = dim1*dim2;
+    vtkm::Id dim12 = dim1 * dim2;
     vtkm::Id idx12 = index % dim12;
     vtkm::Id i1 = idx12 % dim1;
     vtkm::Id i2 = idx12 / dim1;
     vtkm::Id i3 = index / dim12;
 
-    return vtkm::make_Vec(this->PortalFirst.Get(i1),
-                          this->PortalSecond.Get(i2),
-                          this->PortalThird.Get(i3));
+    return vtkm::make_Vec(
+      this->PortalFirst.Get(i1), this->PortalSecond.Get(i2), this->PortalThird.Get(i3));
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType &value) const
+  void Set(vtkm::Id index, const ValueType& value) const
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->GetNumberOfValues());
 
     vtkm::Id dim1 = this->PortalFirst.GetNumberOfValues();
     vtkm::Id dim2 = this->PortalSecond.GetNumberOfValues();
-    vtkm::Id dim12 = dim1*dim2;
+    vtkm::Id dim12 = dim1 * dim2;
     vtkm::Id idx12 = index % dim12;
 
     vtkm::Id i1 = idx12 % dim1;
@@ -123,57 +130,59 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  const PortalTypeFirst &GetFirstPortal() const { return this->PortalFirst; }
+  const PortalTypeFirst& GetFirstPortal() const { return this->PortalFirst; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  const PortalTypeSecond &GetSecondPortal() const { return this->PortalSecond; }
+  const PortalTypeSecond& GetSecondPortal() const { return this->PortalSecond; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  const PortalTypeThird &GetThirdPortal() const { return this->PortalThird; }
-
+  const PortalTypeThird& GetThirdPortal() const { return this->PortalThird; }
 
 private:
   PortalTypeFirst PortalFirst;
   PortalTypeSecond PortalSecond;
   PortalTypeThird PortalThird;
 };
-
 }
 }
 } // namespace vtkm::exec::internal
 
+namespace vtkm
+{
+namespace cont
+{
 
-namespace vtkm {
-namespace cont {
+namespace internal
+{
 
-namespace internal {
-
-template<typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-struct VTKM_ALWAYS_EXPORT StorageTagCartesianProduct {  };
+template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
+struct VTKM_ALWAYS_EXPORT StorageTagCartesianProduct
+{
+};
 
 /// This helper struct defines the value type for a zip container containing
 /// the given two array handles.
 ///
-template<typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-struct ArrayHandleCartesianProductTraits {
+template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
+struct ArrayHandleCartesianProductTraits
+{
   /// The ValueType (a pair containing the value types of the two arrays).
   ///
-  typedef vtkm::Vec<typename FirstHandleType::ValueType,3> ValueType;
+  typedef vtkm::Vec<typename FirstHandleType::ValueType, 3> ValueType;
 
   /// The appropriately templated tag.
   ///
-  typedef StorageTagCartesianProduct<FirstHandleType,SecondHandleType,ThirdHandleType> Tag;
+  typedef StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType> Tag;
 
   /// The superclass for ArrayHandleCartesianProduct.
   ///
-  typedef vtkm::cont::ArrayHandle<ValueType,Tag> Superclass;
+  typedef vtkm::cont::ArrayHandle<ValueType, Tag> Superclass;
 };
 
-
-template<typename T, typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
-class Storage<T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType > >
+template <typename T, typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
+class Storage<T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>>
 {
   VTKM_IS_ARRAY_HANDLE(FirstHandleType);
   VTKM_IS_ARRAY_HANDLE(SecondHandleType);
@@ -182,60 +191,70 @@ class Storage<T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, T
 public:
   typedef T ValueType;
 
-  typedef vtkm::exec::internal::ArrayPortalCartesianProduct< ValueType,
-                          typename FirstHandleType::PortalControl,
-                          typename SecondHandleType::PortalControl,
-                          typename ThirdHandleType::PortalControl> PortalType;
-  typedef vtkm::exec::internal::ArrayPortalCartesianProduct< ValueType,
-                          typename FirstHandleType::PortalConstControl,
-                          typename SecondHandleType::PortalConstControl,
-                          typename ThirdHandleType::PortalConstControl>
-                                                               PortalConstType;
+  typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
+    ValueType,
+    typename FirstHandleType::PortalControl,
+    typename SecondHandleType::PortalControl,
+    typename ThirdHandleType::PortalControl>
+    PortalType;
+  typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
+    ValueType,
+    typename FirstHandleType::PortalConstControl,
+    typename SecondHandleType::PortalConstControl,
+    typename ThirdHandleType::PortalConstControl>
+    PortalConstType;
 
   VTKM_CONT
-  Storage() : FirstArray(), SecondArray(), ThirdArray() {  }
-
-  VTKM_CONT
-  Storage(const FirstHandleType &array1, const SecondHandleType &array2, const ThirdHandleType &array3)
-      : FirstArray(array1), SecondArray(array2), ThirdArray(array3)
+  Storage()
+    : FirstArray()
+    , SecondArray()
+    , ThirdArray()
   {
+  }
 
+  VTKM_CONT
+  Storage(const FirstHandleType& array1,
+          const SecondHandleType& array2,
+          const ThirdHandleType& array3)
+    : FirstArray(array1)
+    , SecondArray(array2)
+    , ThirdArray(array3)
+  {
   }
 
   VTKM_CONT
   PortalType GetPortal()
   {
-      return PortalType(this->FirstArray.GetPortalControl(),
-                        this->SecondArray.GetPortalControl(),
-                        this->ThirdArray.GetPortalControl());
+    return PortalType(this->FirstArray.GetPortalControl(),
+                      this->SecondArray.GetPortalControl(),
+                      this->ThirdArray.GetPortalControl());
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
-      return PortalConstType(this->FirstArray.GetPortalConstControl(),
-                             this->SecondArray.GetPortalConstControl(),
-                             this->ThirdArray.GetPortalConstControl());
+    return PortalConstType(this->FirstArray.GetPortalConstControl(),
+                           this->SecondArray.GetPortalConstControl(),
+                           this->ThirdArray.GetPortalConstControl());
   }
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
-      return this->FirstArray.GetNumberOfValues() *
-          this->SecondArray.GetNumberOfValues() *
-          this->ThirdArray.GetNumberOfValues();
+    return this->FirstArray.GetNumberOfValues() * this->SecondArray.GetNumberOfValues() *
+      this->ThirdArray.GetNumberOfValues();
   }
 
   VTKM_CONT
   void Allocate(vtkm::Id /*numberOfValues*/)
   {
-      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
+    throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id /*numberOfValues*/)
   {
-      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
+    throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
   }
 
   VTKM_CONT
@@ -246,22 +265,13 @@ public:
   }
 
   VTKM_CONT
-  const FirstHandleType &GetFirstArray() const
-  {
-      return this->FirstArray;
-  }
+  const FirstHandleType& GetFirstArray() const { return this->FirstArray; }
 
   VTKM_CONT
-  const SecondHandleType &GetSecondArray() const
-  {
-      return this->SecondArray;
-  }
+  const SecondHandleType& GetSecondArray() const { return this->SecondArray; }
 
   VTKM_CONT
-  const ThirdHandleType &GetThirdArray() const
-  {
-      return this->ThirdArray;
-  }
+  const ThirdHandleType& GetThirdArray() const { return this->ThirdArray; }
 
 private:
   FirstHandleType FirstArray;
@@ -269,15 +279,16 @@ private:
   ThirdHandleType ThirdArray;
 };
 
-template<typename T,
-         typename FirstHandleType,
-         typename SecondHandleType,
-         typename ThirdHandleType,
-         typename Device>
-class ArrayTransfer<
-    T, StorageTagCartesianProduct<FirstHandleType,SecondHandleType,ThirdHandleType>, Device>
+template <typename T,
+          typename FirstHandleType,
+          typename SecondHandleType,
+          typename ThirdHandleType,
+          typename Device>
+class ArrayTransfer<T,
+                    StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>,
+                    Device>
 {
-  typedef StorageTagCartesianProduct<FirstHandleType,SecondHandleType,ThirdHandleType> StorageTag;
+  typedef StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType> StorageTag;
   typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
 
 public:
@@ -287,38 +298,37 @@ public:
   typedef typename StorageType::PortalConstType PortalConstControl;
 
   typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
-      ValueType,
-      typename FirstHandleType::template ExecutionTypes<Device>::Portal,
-      typename SecondHandleType::template ExecutionTypes<Device>::Portal,
-      typename ThirdHandleType::template ExecutionTypes<Device>::Portal
-      > PortalExecution;
+    ValueType,
+    typename FirstHandleType::template ExecutionTypes<Device>::Portal,
+    typename SecondHandleType::template ExecutionTypes<Device>::Portal,
+    typename ThirdHandleType::template ExecutionTypes<Device>::Portal>
+    PortalExecution;
 
   typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
-      ValueType,
-      typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
-      typename SecondHandleType::template ExecutionTypes<Device>::PortalConst,
-      typename ThirdHandleType::template ExecutionTypes<Device>::PortalConst
-      > PortalConstExecution;
+    ValueType,
+    typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
+    typename SecondHandleType::template ExecutionTypes<Device>::PortalConst,
+    typename ThirdHandleType::template ExecutionTypes<Device>::PortalConst>
+    PortalConstExecution;
 
   VTKM_CONT
-  ArrayTransfer(StorageType *storage)
-    :  FirstArray(storage->GetFirstArray()),
-       SecondArray(storage->GetSecondArray()),
-       ThirdArray(storage->GetThirdArray())
-    {  }
-
+  ArrayTransfer(StorageType* storage)
+    : FirstArray(storage->GetFirstArray())
+    , SecondArray(storage->GetSecondArray())
+    , ThirdArray(storage->GetThirdArray())
+  {
+  }
 
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const
   {
-    return this->FirstArray.GetNumberOfValues() *
-        this->SecondArray.GetNumberOfValues() *
-        this->ThirdArray.GetNumberOfValues();
-
+    return this->FirstArray.GetNumberOfValues() * this->SecondArray.GetNumberOfValues() *
+      this->ThirdArray.GetNumberOfValues();
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  {
     return PortalConstExecution(this->FirstArray.PrepareForInput(Device()),
                                 this->SecondArray.PrepareForInput(Device()),
                                 this->ThirdArray.PrepareForInput(Device()));
@@ -328,20 +338,20 @@ public:
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
     throw vtkm::cont::ErrorBadAllocation(
-          "Cannot write to an ArrayHandleCartesianProduct. It does not make "
-          "sense because there is overlap in the data.");
+      "Cannot write to an ArrayHandleCartesianProduct. It does not make "
+      "sense because there is overlap in the data.");
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
   {
     throw vtkm::cont::ErrorBadAllocation(
-        "Cannot write to an ArrayHandleCartesianProduct. It does not make "
-        "sense because there is overlap in the data.");
+      "Cannot write to an ArrayHandleCartesianProduct. It does not make "
+      "sense because there is overlap in the data.");
   }
 
   VTKM_CONT
-  void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const
+  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
   {
     // Implementation of this method should be unnecessary. The internal
     // first and second array handles should automatically retrieve the
@@ -351,7 +361,7 @@ public:
   VTKM_CONT
   void Shrink(vtkm::Id /*numberOfValues*/)
   {
-      throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
+    throw vtkm::cont::ErrorBadAllocation("Does not make sense.");
   }
 
   VTKM_CONT
@@ -361,7 +371,6 @@ public:
     this->SecondArray.ReleaseResourcesExecution();
     this->ThirdArray.ReleaseResourcesExecution();
   }
-
 
 private:
   FirstHandleType FirstArray;
@@ -374,11 +383,11 @@ private:
 /// array handle and makes a new handle that access the corresponding entries
 /// in these arrays as a pair.
 ///
-template<typename FirstHandleType,
-         typename SecondHandleType,
-         typename ThirdHandleType>
+template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
 class ArrayHandleCartesianProduct
-    : public internal::ArrayHandleCartesianProductTraits<FirstHandleType,SecondHandleType,ThirdHandleType>::Superclass
+  : public internal::ArrayHandleCartesianProductTraits<FirstHandleType,
+                                                       SecondHandleType,
+                                                       ThirdHandleType>::Superclass
 {
   // If the following line gives a compile error, then the FirstHandleType
   // template argument is not a valid ArrayHandle type.
@@ -388,37 +397,38 @@ class ArrayHandleCartesianProduct
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-      ArrayHandleCartesianProduct,
-      (ArrayHandleCartesianProduct<FirstHandleType,SecondHandleType,ThirdHandleType>),
-      (typename internal::ArrayHandleCartesianProductTraits<
-       FirstHandleType,SecondHandleType,ThirdHandleType>::Superclass));
+    ArrayHandleCartesianProduct,
+    (ArrayHandleCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>),
+    (typename internal::ArrayHandleCartesianProductTraits<FirstHandleType,
+                                                          SecondHandleType,
+                                                          ThirdHandleType>::Superclass));
 
 private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
   VTKM_CONT
-  ArrayHandleCartesianProduct(const FirstHandleType &firstArray,
-                              const SecondHandleType &secondArray,
-                              const ThirdHandleType &thirdArray)
-      : Superclass(StorageType(firstArray, secondArray, thirdArray)) { }
+  ArrayHandleCartesianProduct(const FirstHandleType& firstArray,
+                              const SecondHandleType& secondArray,
+                              const ThirdHandleType& thirdArray)
+    : Superclass(StorageType(firstArray, secondArray, thirdArray))
+  {
+  }
 };
 
 /// A convenience function for creating an ArrayHandleCartesianProduct. It takes the two
 /// arrays to be zipped together.
 ///
-template<typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
+template <typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
 VTKM_CONT
-vtkm::cont::ArrayHandleCartesianProduct<FirstHandleType,SecondHandleType,ThirdHandleType>
-make_ArrayHandleCartesianProduct(const FirstHandleType &first,
-                                 const SecondHandleType &second,
-                                 const ThirdHandleType &third)
+  vtkm::cont::ArrayHandleCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>
+  make_ArrayHandleCartesianProduct(const FirstHandleType& first,
+                                   const SecondHandleType& second,
+                                   const ThirdHandleType& third)
 {
-    return ArrayHandleCartesianProduct<FirstHandleType,
-                                       SecondHandleType,
-                                       ThirdHandleType>(first, second,third);
+  return ArrayHandleCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>(
+    first, second, third);
 }
-
 }
 } // namespace vtkm::cont
 

@@ -22,38 +22,38 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/worklet/TetrahedralizeExplicitGrid.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/filter/Tetrahedralize.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-#if defined (__APPLE__)
-# include <GLUT/glut.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
 #else
-# include <GL/glut.h>
+#include <GL/glut.h>
 #endif
 
 #include "../isosurface/quaternion.h"
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
-namespace {
+namespace
+{
 
 // Takes input uniform grid and outputs unstructured grid of tets
 static vtkm::cont::DataSet outDataSet;
-vtkm::Id numberOfInPoints;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> vertexArray;
 
 // OpenGL display variables
 Quaternion qrot;
@@ -70,24 +70,24 @@ vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
   vtkm::cont::DataSetBuilderExplicitIterative builder;
   builder.Begin();
 
-  builder.AddPoint( 0, 0, 0);
-  builder.AddPoint( 1, 0, 0);
-  builder.AddPoint( 2, 0, 0);
-  builder.AddPoint( 3, 0, 0);
-  builder.AddPoint( 0, 1, 0);
-  builder.AddPoint( 1, 1, 0);
-  builder.AddPoint( 2, 1, 0);
-  builder.AddPoint( 2.5, 1.0, 0.0);
-  builder.AddPoint( 0, 2, 0);
-  builder.AddPoint( 1, 2, 0);
-  builder.AddPoint( 0.5, 0.5, 1.0);
-  builder.AddPoint( 1, 0, 1);
-  builder.AddPoint( 2, 0, 1);
-  builder.AddPoint( 3, 0, 1);
-  builder.AddPoint( 1, 1, 1);
-  builder.AddPoint( 2, 1, 1);
-  builder.AddPoint( 2.5, 1.0, 1.0);
-  builder.AddPoint( 0.5, 1.5, 1.0);
+  builder.AddPoint(0, 0, 0);
+  builder.AddPoint(1, 0, 0);
+  builder.AddPoint(2, 0, 0);
+  builder.AddPoint(3, 0, 0);
+  builder.AddPoint(0, 1, 0);
+  builder.AddPoint(1, 1, 0);
+  builder.AddPoint(2, 1, 0);
+  builder.AddPoint(2.5, 1.0, 0.0);
+  builder.AddPoint(0, 2, 0);
+  builder.AddPoint(1, 2, 0);
+  builder.AddPoint(0.5, 0.5, 1.0);
+  builder.AddPoint(1, 0, 1);
+  builder.AddPoint(2, 0, 1);
+  builder.AddPoint(3, 0, 1);
+  builder.AddPoint(1, 1, 1);
+  builder.AddPoint(2, 1, 1);
+  builder.AddPoint(2.5, 1.0, 1.0);
+  builder.AddPoint(0.5, 1.5, 1.0);
 
   builder.AddCell(vtkm::CELL_SHAPE_TETRA);
   builder.AddCellPoint(0);
@@ -131,16 +131,14 @@ vtkm::cont::DataSet MakeTetrahedralizeExplicitDataSet()
 struct GetVertexArray
 {
   template <typename ArrayHandleType>
-  VTKM_CONT
-  void operator()(ArrayHandleType array) const
+  VTKM_CONT void operator()(ArrayHandleType array) const
   {
     this->GetVertexPortal(array.GetPortalConstControl());
   }
 
 private:
   template <typename PortalType>
-  VTKM_CONT
-  void GetVertexPortal(const PortalType &portal) const
+  VTKM_CONT void GetVertexPortal(const PortalType& portal) const
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
@@ -176,7 +174,6 @@ void initializeGL()
   glEnable(GL_COLOR_MATERIAL);
 }
 
-
 //
 // Render the output using simple OpenGL
 //
@@ -187,7 +184,7 @@ void displayCall()
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective( 45.0f, 1.0f, 1.0f, 40.0f);
+  gluPerspective(45.0f, 1.0f, 1.0f, 40.0f);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -206,19 +203,18 @@ void displayCall()
 
   // Need the actual vertex points from a static cast of the dynamic array but can't get it right
   // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(numberOfInPoints);
+  vertexArray.Allocate(cellSet.GetNumberOfPoints());
   vtkm::cont::CastAndCall(outDataSet.GetCoordinateSystem(), GetVertexArray());
 
   // Draw the five tetrahedra belonging to each hexadron
-  vtkm::Float32 color[5][3] = {
-    {1.0f, 0.0f, 0.0f},
-    {0.0f, 1.0f, 0.0f},
-    {0.0f, 0.0f, 1.0f},
-    {1.0f, 0.0f, 1.0f},
-    {1.0f, 1.0f, 0.0f}
-  };
+  vtkm::Float32 color[5][3] = { { 1.0f, 0.0f, 0.0f },
+                                { 0.0f, 1.0f, 0.0f },
+                                { 0.0f, 0.0f, 1.0f },
+                                { 1.0f, 0.0f, 1.0f },
+                                { 1.0f, 1.0f, 0.0f } };
 
-  for (vtkm::Id tetra = 0; tetra < numberOfCells; tetra++) {
+  for (vtkm::Id tetra = 0; tetra < numberOfCells; tetra++)
+  {
     vtkm::Id indx = tetra % 5;
     glColor3f(color[indx][0], color[indx][1], color[indx][2]);
 
@@ -227,13 +223,13 @@ void displayCall()
     cellSet.GetIndices(tetra, tetIndices);
 
     // Get the vertex points for this tetrahedron
-    vtkm::Vec<vtkm::Float64,3> pt0 = vertexArray.GetPortalConstControl().Get(tetIndices[0]);
-    vtkm::Vec<vtkm::Float64,3> pt1 = vertexArray.GetPortalConstControl().Get(tetIndices[1]);
-    vtkm::Vec<vtkm::Float64,3> pt2 = vertexArray.GetPortalConstControl().Get(tetIndices[2]);
-    vtkm::Vec<vtkm::Float64,3> pt3 = vertexArray.GetPortalConstControl().Get(tetIndices[3]);
+    vtkm::Vec<vtkm::Float64, 3> pt0 = vertexArray.GetPortalConstControl().Get(tetIndices[0]);
+    vtkm::Vec<vtkm::Float64, 3> pt1 = vertexArray.GetPortalConstControl().Get(tetIndices[1]);
+    vtkm::Vec<vtkm::Float64, 3> pt2 = vertexArray.GetPortalConstControl().Get(tetIndices[2]);
+    vtkm::Vec<vtkm::Float64, 3> pt3 = vertexArray.GetPortalConstControl().Get(tetIndices[3]);
 
     // Draw the tetrahedron filled with alternating colors
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBegin(GL_TRIANGLE_STRIP);
     glVertex3d(pt0[0], pt0[1], pt0[2]);
     glVertex3d(pt1[0], pt1[1], pt1[2]);
@@ -245,7 +241,7 @@ void displayCall()
 
     // Draw the tetrahedron wireframe
     glColor3f(1.0f, 1.0f, 1.0f);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     glBegin(GL_TRIANGLE_STRIP);
     glVertex3d(pt0[0], pt0[1], pt0[2]);
     glVertex3d(pt1[0], pt1[1], pt1[2]);
@@ -258,7 +254,6 @@ void displayCall()
   glPopMatrix();
   glutSwapBuffers();
 }
-
 
 // Allow rotations of the view
 void mouseMove(int x, int y)
@@ -283,14 +278,17 @@ void mouseMove(int x, int y)
   glutPostRedisplay();
 }
 
-
 // Respond to mouse button
 void mouseCall(int button, int state, int x, int y)
 {
-  if (button == 0) mouse_state = state;
-  if ((button == 0) && (state == 0)) { lastx = x;  lasty = y; }
+  if (button == 0)
+    mouse_state = state;
+  if ((button == 0) && (state == 0))
+  {
+    lastx = x;
+    lasty = y;
+  }
 }
-
 
 // Tetrahedralize and render uniform grid example
 int main(int argc, char* argv[])
@@ -302,17 +300,11 @@ int main(int argc, char* argv[])
   vtkm::cont::CellSetExplicit<> inCellSet;
   inDataSet.GetCellSet(0).CopyTo(inCellSet);
 
-  numberOfInPoints = inCellSet.GetNumberOfPoints();
-
-  // Create the output dataset explicit cell set with same coordinate system
-  vtkm::cont::CellSetSingleType<> cellSet("cells");
-  outDataSet.AddCellSet(cellSet);
-  outDataSet.AddCoordinateSystem(inDataSet.GetCoordinateSystem(0));
-
   // Convert cells to tetrahedra
-  vtkm::worklet::TetrahedralizeFilterExplicitGrid<DeviceAdapter>
-                 tetrahedralizeFilter(inDataSet, outDataSet);
-  tetrahedralizeFilter.Run();
+  vtkm::filter::Tetrahedralize tetrahedralize;
+  vtkm::filter::ResultDataSet result = tetrahedralize.Execute(inDataSet);
+
+  outDataSet = result.GetDataSet();
 
   // Render the output dataset of tets
   lastx = lasty = 0;
@@ -336,5 +328,5 @@ int main(int argc, char* argv[])
 }
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif

@@ -40,4 +40,3 @@ set_source_files_properties(ThrustPatches.h
 if (VTKm_ENABLE_CUDA)
   add_subdirectory(testing)
 endif()
-

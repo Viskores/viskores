@@ -26,8 +26,10 @@
 
 #include <vector>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 VTKM_RENDERING_EXPORT
 int DecodePNG(std::vector<unsigned char>& out_image,
@@ -35,8 +37,7 @@ int DecodePNG(std::vector<unsigned char>& out_image,
               unsigned long& image_height,
               const unsigned char* in_png,
               std::size_t in_size,
-              bool convert_to_rgba32=true);
-
+              bool convert_to_rgba32 = true);
 }
 } // vtkm::rendering
 

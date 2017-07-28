@@ -22,8 +22,10 @@
 
 #include <vtkm/Types.h>
 
-namespace vtkm {
-namespace internal {
+namespace vtkm
+{
+namespace internal
+{
 
 /// \brief A convenience tag to represent static indices.
 ///
@@ -34,12 +36,11 @@ namespace internal {
 /// resolved through function or method arguments. In such cases, it is
 /// convenient to use this tag to encapsulate the index.
 ///
-template<vtkm::IdComponent Index>
+template <vtkm::IdComponent Index>
 struct IndexTag
 {
   static const vtkm::IdComponent INDEX = Index;
 };
-
 }
 } // namespace vtkm::internal
 

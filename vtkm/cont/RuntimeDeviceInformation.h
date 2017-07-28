@@ -22,8 +22,10 @@
 
 #include <vtkm/cont/DeviceAdapter.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 /// A class that can be used to determine if a given device adapter
 /// is supported on the current machine at runtime. This is very important
@@ -31,26 +33,25 @@ namespace cont {
 /// or a Accelerator Card.
 ///
 ///
-template<class Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template <class Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
 class RuntimeDeviceInformation
 {
 public:
   VTKM_CONT
-  RuntimeDeviceInformation() : RuntimeImplementation() {  }
+  RuntimeDeviceInformation()
+    : RuntimeImplementation()
+  {
+  }
 
   /// Returns true if the given device adapter is supported on the current
   /// machine.
   ///
   VTKM_CONT
-  bool Exists() const
-  {
-    return this->RuntimeImplementation.Exists();
-  }
+  bool Exists() const { return this->RuntimeImplementation.Exists(); }
 
 private:
   vtkm::cont::DeviceAdapterRuntimeDetector<Device> RuntimeImplementation;
 };
-
 }
 } // namespace vtkm::cont
 

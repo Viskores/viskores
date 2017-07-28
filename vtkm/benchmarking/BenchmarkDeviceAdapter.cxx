@@ -19,20 +19,19 @@
 //============================================================================
 
 #include <vtkm/TypeTraits.h>
+#include <vtkm/benchmarking/Benchmarker.h>
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/ArrayHandleZip.h>
 #include <vtkm/cont/ArrayPortalToIterators.h>
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/StorageBasic.h>
 #include <vtkm/cont/Timer.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/benchmarking/Benchmarker.h>
-
 
 #include <algorithm>
 #include <cmath>
@@ -42,115 +41,132 @@
 
 #include <vtkm/internal/Windows.h>
 
-namespace vtkm {
-namespace benchmarking {
+namespace vtkm
+{
+namespace benchmarking
+{
 
 #define ARRAY_SIZE (1 << 21)
 const static std::string DIVIDER(40, '-');
 
-enum BenchmarkName {
-  COPY           = 1,
-  COPY_IF        = 1 << 1,
-  LOWER_BOUNDS   = 1 << 2,
-  REDUCE         = 1 << 3,
-  REDUCE_BY_KEY  = 1 << 4,
+enum BenchmarkName
+{
+  COPY = 1,
+  COPY_IF = 1 << 1,
+  LOWER_BOUNDS = 1 << 2,
+  REDUCE = 1 << 3,
+  REDUCE_BY_KEY = 1 << 4,
   SCAN_INCLUSIVE = 1 << 5,
   SCAN_EXCLUSIVE = 1 << 6,
-  SORT           = 1 << 7,
-  SORT_BY_KEY    = 1 << 8,
-  UNIQUE         = 1 << 9,
-  UPPER_BOUNDS   = 1 << 10,
-  ALL = COPY | COPY_IF | LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY | SCAN_INCLUSIVE
-    | SCAN_EXCLUSIVE | SORT | SORT_BY_KEY | UNIQUE | UPPER_BOUNDS
+  SORT = 1 << 7,
+  SORT_BY_KEY = 1 << 8,
+  UNIQUE = 1 << 9,
+  UPPER_BOUNDS = 1 << 10,
+  ALL = COPY | COPY_IF | LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY | SCAN_INCLUSIVE | SCAN_EXCLUSIVE |
+    SORT |
+    SORT_BY_KEY |
+    UNIQUE |
+    UPPER_BOUNDS
 };
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of the parallel primitives provided by each
 /// device adapter
-template<class DeviceAdapterTag>
-class BenchmarkDeviceAdapter {
+template <class DeviceAdapterTag>
+class BenchmarkDeviceAdapter
+{
   typedef vtkm::cont::StorageTagBasic StorageTag;
 
   typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag> IdArrayHandle;
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>
-      Algorithm;
+  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
 
   typedef vtkm::cont::Timer<DeviceAdapterTag> Timer;
 
 public:
   // Various kernels used by the different benchmarks to accelerate
   // initialization of data
-  template<typename Value>
-  struct FillTestValueKernel : vtkm::exec::FunctorBase {
+  template <typename Value>
+  struct FillTestValueKernel : vtkm::exec::FunctorBase
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>
-        ::Portal PortalType;
+    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
 
     PortalType Output;
 
     VTKM_CONT
-    FillTestValueKernel(PortalType out) : Output(out){}
-
-    VTKM_EXEC void operator()(vtkm::Id i) const {
-      Output.Set(i, TestValue(i, Value()));
+    FillTestValueKernel(PortalType out)
+      : Output(out)
+    {
     }
+
+    VTKM_EXEC void operator()(vtkm::Id i) const { Output.Set(i, TestValue(i, Value())); }
   };
 
-  template<typename Value>
-  struct FillScaledTestValueKernel : vtkm::exec::FunctorBase {
+  template <typename Value>
+  struct FillScaledTestValueKernel : vtkm::exec::FunctorBase
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>
-        ::Portal PortalType;
+    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
 
     PortalType Output;
     const vtkm::Id IdScale;
 
     VTKM_CONT
-    FillScaledTestValueKernel(vtkm::Id id_scale, PortalType out) : Output(out), IdScale(id_scale) {}
-
-    VTKM_EXEC void operator()(vtkm::Id i) const {
-      Output.Set(i, TestValue(i * IdScale, Value()));
+    FillScaledTestValueKernel(vtkm::Id id_scale, PortalType out)
+      : Output(out)
+      , IdScale(id_scale)
+    {
     }
+
+    VTKM_EXEC void operator()(vtkm::Id i) const { Output.Set(i, TestValue(i * IdScale, Value())); }
   };
 
-  template<typename Value>
-  struct FillModuloTestValueKernel : vtkm::exec::FunctorBase {
+  template <typename Value>
+  struct FillModuloTestValueKernel : vtkm::exec::FunctorBase
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>
-        ::Portal PortalType;
+    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
 
     PortalType Output;
     const vtkm::Id Modulus;
 
     VTKM_CONT
-    FillModuloTestValueKernel(vtkm::Id modulus, PortalType out) : Output(out), Modulus(modulus) {}
-
-    VTKM_EXEC void operator()(vtkm::Id i) const {
-      Output.Set(i, TestValue(i % Modulus, Value()));
+    FillModuloTestValueKernel(vtkm::Id modulus, PortalType out)
+      : Output(out)
+      , Modulus(modulus)
+    {
     }
+
+    VTKM_EXEC void operator()(vtkm::Id i) const { Output.Set(i, TestValue(i % Modulus, Value())); }
   };
 
-  template<typename Value>
-  struct FillBinaryTestValueKernel : vtkm::exec::FunctorBase {
+  template <typename Value>
+  struct FillBinaryTestValueKernel : vtkm::exec::FunctorBase
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>
-        ::Portal PortalType;
+    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
 
     PortalType Output;
     const vtkm::Id Modulus;
 
     VTKM_CONT
-    FillBinaryTestValueKernel(vtkm::Id modulus, PortalType out) : Output(out), Modulus(modulus) {}
+    FillBinaryTestValueKernel(vtkm::Id modulus, PortalType out)
+      : Output(out)
+      , Modulus(modulus)
+    {
+    }
 
-    VTKM_EXEC void operator()(vtkm::Id i) const {
+    VTKM_EXEC void operator()(vtkm::Id i) const
+    {
       Output.Set(i, i % Modulus == 0 ? TestValue(vtkm::Id(1), Value()) : Value());
     }
   };
 
 private:
-  template<typename Value>
-  struct BenchCopy {
+  template <typename Value>
+  struct BenchCopy
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     ValueArrayHandle ValueHandle_src;
@@ -158,32 +174,37 @@ private:
     std::mt19937 Rng;
 
     VTKM_CONT
-    BenchCopy(){
+    BenchCopy()
+    {
       ValueHandle_src.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
       ValueHandle_dst.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
-      for (vtkm::Id i = 0; i < ValueHandle_src.GetNumberOfValues(); ++i){
-          ValueHandle_src.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
+    vtkm::Float64 operator()()
+    {
+      for (vtkm::Id i = 0; i < ValueHandle_src.GetNumberOfValues(); ++i)
+      {
+        ValueHandle_src.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
       }
       Timer timer;
-      Algorithm::Copy(ValueHandle_src,ValueHandle_dst);
+      Algorithm::Copy(ValueHandle_src, ValueHandle_dst);
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
       description << "Copy " << ARRAY_SIZE << " values";
       return description.str();
     }
   };
-  VTKM_MAKE_BENCHMARK(Copy,  BenchCopy);
+  VTKM_MAKE_BENCHMARK(Copy, BenchCopy);
 
-  template<typename Value>
-  struct BenchCopyIf {
+  template <typename Value>
+  struct BenchCopyIf
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     const vtkm::Id N_VALID;
@@ -191,28 +212,32 @@ private:
     IdArrayHandle StencilHandle;
 
     VTKM_CONT
-    BenchCopyIf(vtkm::Id percent_valid) : N_VALID((ARRAY_SIZE * percent_valid) / 100)
+    BenchCopyIf(vtkm::Id percent_valid)
+      : N_VALID((ARRAY_SIZE * percent_valid) / 100)
     {
       vtkm::Id modulo = ARRAY_SIZE / N_VALID;
-      Algorithm::Schedule(FillTestValueKernel<Value>(
-        ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
-      Algorithm::Schedule(FillBinaryTestValueKernel<vtkm::Id>(modulo,
-                                                              StencilHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+      Algorithm::Schedule(
+        FillTestValueKernel<Value>(ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+        ARRAY_SIZE);
+      Algorithm::Schedule(FillBinaryTestValueKernel<vtkm::Id>(
+                            modulo, StencilHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                          ARRAY_SIZE);
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()() {
+    vtkm::Float64 operator()()
+    {
       Timer timer;
       Algorithm::CopyIf(ValueHandle, StencilHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
       description << "CopyIf on " << ARRAY_SIZE << " "
-      << " values with " << OutHandle.GetNumberOfValues()
-      << " valid values";
+                  << " values with " << OutHandle.GetNumberOfValues() << " valid values";
       return description.str();
     }
   };
@@ -223,8 +248,9 @@ private:
   VTKM_MAKE_BENCHMARK(CopyIf25, BenchCopyIf, 25);
   VTKM_MAKE_BENCHMARK(CopyIf30, BenchCopyIf, 30);
 
-  template<typename Value>
-  struct BenchLowerBounds {
+  template <typename Value>
+  struct BenchLowerBounds
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     const vtkm::Id N_VALS;
@@ -232,26 +258,30 @@ private:
     IdArrayHandle OutHandle;
 
     VTKM_CONT
-    BenchLowerBounds(vtkm::Id value_percent) : N_VALS((ARRAY_SIZE * value_percent) / 100)
+    BenchLowerBounds(vtkm::Id value_percent)
+      : N_VALS((ARRAY_SIZE * value_percent) / 100)
     {
-      Algorithm::Schedule(FillTestValueKernel<Value>(
-            InputHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
-      Algorithm::Schedule(FillScaledTestValueKernel<Value>(2,
-            ValueHandle.PrepareForOutput(N_VALS, DeviceAdapterTag())), N_VALS);
+      Algorithm::Schedule(
+        FillTestValueKernel<Value>(InputHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+        ARRAY_SIZE);
+      Algorithm::Schedule(FillScaledTestValueKernel<Value>(
+                            2, ValueHandle.PrepareForOutput(N_VALS, DeviceAdapterTag())),
+                          N_VALS);
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
+    vtkm::Float64 operator()()
+    {
       Timer timer;
       Algorithm::LowerBounds(InputHandle, ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
-      description << "LowerBounds on " << ARRAY_SIZE << " input and "
-        << N_VALS << " values";
+      description << "LowerBounds on " << ARRAY_SIZE << " input and " << N_VALS << " values";
       return description.str();
     }
   };
@@ -262,27 +292,32 @@ private:
   VTKM_MAKE_BENCHMARK(LowerBounds25, BenchLowerBounds, 25);
   VTKM_MAKE_BENCHMARK(LowerBounds30, BenchLowerBounds, 30);
 
-  template<typename Value>
-  struct BenchReduce {
+  template <typename Value>
+  struct BenchReduce
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     ValueArrayHandle InputHandle;
 
     VTKM_CONT
-    BenchReduce(){
-      Algorithm::Schedule(FillTestValueKernel<Value>(
-            InputHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+    BenchReduce()
+    {
+      Algorithm::Schedule(
+        FillTestValueKernel<Value>(InputHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+        ARRAY_SIZE);
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
+    vtkm::Float64 operator()()
+    {
       Timer timer;
       Algorithm::Reduce(InputHandle, Value());
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
       description << "Reduce on " << ARRAY_SIZE << " values";
       return description.str();
@@ -290,8 +325,9 @@ private:
   };
   VTKM_MAKE_BENCHMARK(Reduce, BenchReduce);
 
-  template<typename Value>
-  struct BenchReduceByKey {
+  template <typename Value>
+  struct BenchReduceByKey
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     const vtkm::Id N_KEYS;
@@ -299,28 +335,32 @@ private:
     IdArrayHandle KeyHandle, KeysOut;
 
     VTKM_CONT
-    BenchReduceByKey(vtkm::Id key_percent) : N_KEYS((ARRAY_SIZE * key_percent) / 100)
+    BenchReduceByKey(vtkm::Id key_percent)
+      : N_KEYS((ARRAY_SIZE * key_percent) / 100)
     {
-      Algorithm::Schedule(FillTestValueKernel<Value>(
-            ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
-      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id>(N_KEYS,
-            KeyHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+      Algorithm::Schedule(
+        FillTestValueKernel<Value>(ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+        ARRAY_SIZE);
+      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id>(
+                            N_KEYS, KeyHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                          ARRAY_SIZE);
       Algorithm::SortByKey(KeyHandle, ValueHandle);
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
+    vtkm::Float64 operator()()
+    {
       Timer timer;
-      Algorithm::ReduceByKey(KeyHandle, ValueHandle, KeysOut, ValuesOut,
-         vtkm::Add());
+      Algorithm::ReduceByKey(KeyHandle, ValueHandle, KeysOut, ValuesOut, vtkm::Add());
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
-      description << "ReduceByKey on " << ARRAY_SIZE
-        << " values with " << N_KEYS << " distinct vtkm::Id keys";
+      description << "ReduceByKey on " << ARRAY_SIZE << " values with " << N_KEYS
+                  << " distinct vtkm::Id keys";
       return description.str();
     }
   };
@@ -331,26 +371,31 @@ private:
   VTKM_MAKE_BENCHMARK(ReduceByKey25, BenchReduceByKey, 25);
   VTKM_MAKE_BENCHMARK(ReduceByKey30, BenchReduceByKey, 30);
 
-  template<typename Value>
-  struct BenchScanInclusive {
+  template <typename Value>
+  struct BenchScanInclusive
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
     ValueArrayHandle ValueHandle, OutHandle;
 
     VTKM_CONT
-    BenchScanInclusive(){
-      Algorithm::Schedule(FillTestValueKernel<Value>(
-            ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+    BenchScanInclusive()
+    {
+      Algorithm::Schedule(
+        FillTestValueKernel<Value>(ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+        ARRAY_SIZE);
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
+    vtkm::Float64 operator()()
+    {
       Timer timer;
       Algorithm::ScanInclusive(ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
       description << "ScanInclusive on " << ARRAY_SIZE << " values";
       return description.str();
@@ -358,27 +403,32 @@ private:
   };
   VTKM_MAKE_BENCHMARK(ScanInclusive, BenchScanInclusive);
 
-  template<typename Value>
-  struct BenchScanExclusive {
+  template <typename Value>
+  struct BenchScanExclusive
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     ValueArrayHandle ValueHandle, OutHandle;
 
     VTKM_CONT
-    BenchScanExclusive(){
-      Algorithm::Schedule(FillTestValueKernel<Value>(
-            ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+    BenchScanExclusive()
+    {
+      Algorithm::Schedule(
+        FillTestValueKernel<Value>(ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+        ARRAY_SIZE);
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
+    vtkm::Float64 operator()()
+    {
       Timer timer;
       Algorithm::ScanExclusive(ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
       description << "ScanExclusive on " << ARRAY_SIZE << " values";
       return description.str();
@@ -386,21 +436,22 @@ private:
   };
   VTKM_MAKE_BENCHMARK(ScanExclusive, BenchScanExclusive);
 
-  template<typename Value>
-  struct BenchSort {
+  template <typename Value>
+  struct BenchSort
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     ValueArrayHandle ValueHandle;
     std::mt19937 Rng;
 
     VTKM_CONT
-    BenchSort(){
-      ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
-    }
+    BenchSort() { ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag()); }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
-      for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i){
+    vtkm::Float64 operator()()
+    {
+      for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i)
+      {
         ValueHandle.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
       }
       Timer timer;
@@ -409,7 +460,8 @@ private:
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
       description << "Sort on " << ARRAY_SIZE << " random values";
       return description.str();
@@ -417,8 +469,9 @@ private:
   };
   VTKM_MAKE_BENCHMARK(Sort, BenchSort);
 
-  template<typename Value>
-  struct BenchSortByKey {
+  template <typename Value>
+  struct BenchSortByKey
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     std::mt19937 Rng;
@@ -427,27 +480,33 @@ private:
     IdArrayHandle KeyHandle;
 
     VTKM_CONT
-    BenchSortByKey(vtkm::Id percent_key) : N_KEYS((ARRAY_SIZE * percent_key) / 100){
+    BenchSortByKey(vtkm::Id percent_key)
+      : N_KEYS((ARRAY_SIZE * percent_key) / 100)
+    {
       ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
-      for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i){
+    vtkm::Float64 operator()()
+    {
+      for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i)
+      {
         ValueHandle.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
       }
-      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id>(N_KEYS,
-            KeyHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id>(
+                            N_KEYS, KeyHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                          ARRAY_SIZE);
       Timer timer;
       Algorithm::SortByKey(ValueHandle, KeyHandle);
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
-      description << "SortByKey on " << ARRAY_SIZE
-        << " random values with " << N_KEYS << " different vtkm::Id keys";
+      description << "SortByKey on " << ARRAY_SIZE << " random values with " << N_KEYS
+                  << " different vtkm::Id keys";
       return description.str();
     }
   };
@@ -458,21 +517,26 @@ private:
   VTKM_MAKE_BENCHMARK(SortByKey25, BenchSortByKey, 25);
   VTKM_MAKE_BENCHMARK(SortByKey30, BenchSortByKey, 30);
 
-  template<typename Value>
-  struct BenchUnique {
+  template <typename Value>
+  struct BenchUnique
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     const vtkm::Id N_VALID;
     ValueArrayHandle ValueHandle;
 
     VTKM_CONT
-    BenchUnique(vtkm::Id percent_valid) : N_VALID((ARRAY_SIZE * percent_valid) / 100)
-    {}
+    BenchUnique(vtkm::Id percent_valid)
+      : N_VALID((ARRAY_SIZE * percent_valid) / 100)
+    {
+    }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
-      Algorithm::Schedule(FillModuloTestValueKernel<Value>(N_VALID,
-            ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
+    vtkm::Float64 operator()()
+    {
+      Algorithm::Schedule(FillModuloTestValueKernel<Value>(
+                            N_VALID, ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+                          ARRAY_SIZE);
       Algorithm::Sort(ValueHandle);
       Timer timer;
       Algorithm::Unique(ValueHandle);
@@ -480,10 +544,11 @@ private:
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
       description << "Unique on " << ARRAY_SIZE << " values with "
-          << ValueHandle.GetNumberOfValues() << " valid values";
+                  << ValueHandle.GetNumberOfValues() << " valid values";
       return description.str();
     }
   };
@@ -494,8 +559,9 @@ private:
   VTKM_MAKE_BENCHMARK(Unique25, BenchUnique, 25);
   VTKM_MAKE_BENCHMARK(Unique30, BenchUnique, 30);
 
-  template<typename Value>
-  struct BenchUpperBounds {
+  template <typename Value>
+  struct BenchUpperBounds
+  {
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     const vtkm::Id N_VALS;
@@ -503,26 +569,30 @@ private:
     IdArrayHandle OutHandle;
 
     VTKM_CONT
-    BenchUpperBounds(vtkm::Id percent_vals) : N_VALS((ARRAY_SIZE * percent_vals) / 100)
+    BenchUpperBounds(vtkm::Id percent_vals)
+      : N_VALS((ARRAY_SIZE * percent_vals) / 100)
     {
-      Algorithm::Schedule(FillTestValueKernel<Value>(
-            InputHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())), ARRAY_SIZE);
-      Algorithm::Schedule(FillScaledTestValueKernel<Value>(2,
-            ValueHandle.PrepareForOutput(N_VALS, DeviceAdapterTag())), N_VALS);
+      Algorithm::Schedule(
+        FillTestValueKernel<Value>(InputHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+        ARRAY_SIZE);
+      Algorithm::Schedule(FillScaledTestValueKernel<Value>(
+                            2, ValueHandle.PrepareForOutput(N_VALS, DeviceAdapterTag())),
+                          N_VALS);
     }
 
     VTKM_CONT
-    vtkm::Float64 operator()(){
+    vtkm::Float64 operator()()
+    {
       Timer timer;
       Algorithm::UpperBounds(InputHandle, ValueHandle, OutHandle);
       return timer.GetElapsedTime();
     }
 
     VTKM_CONT
-    std::string Description() const {
+    std::string Description() const
+    {
       std::stringstream description;
-      description << "UpperBounds on " << ARRAY_SIZE << " input and "
-        << N_VALS << " values";
+      description << "UpperBounds on " << ARRAY_SIZE << " input and " << N_VALS << " values";
       return description.str();
     }
   };
@@ -534,22 +604,31 @@ private:
   VTKM_MAKE_BENCHMARK(UpperBounds30, BenchUpperBounds, 30);
 
 public:
+  struct ValueTypes : vtkm::ListTagBase<vtkm::UInt8,
+                                        vtkm::UInt32,
+                                        vtkm::Int32,
+                                        vtkm::Int64,
+                                        vtkm::Vec<vtkm::Int32, 2>,
+                                        vtkm::Vec<vtkm::UInt8, 4>,
+                                        vtkm::Float32,
+                                        vtkm::Float64,
+                                        vtkm::Vec<vtkm::Float64, 3>,
+                                        vtkm::Vec<vtkm::Float32, 4>>
+  {
+  };
 
-  struct ValueTypes : vtkm::ListTagBase<vtkm::UInt8, vtkm::UInt32, vtkm::Int32,
-                                        vtkm::Int64, vtkm::Vec<vtkm::Int32, 2>,
-                                        vtkm::Vec<vtkm::UInt8, 4>, vtkm::Float32,
-                                        vtkm::Float64, vtkm::Vec<vtkm::Float64, 3>,
-                                        vtkm::Vec<vtkm::Float32, 4> >{};
-
-  static VTKM_CONT int Run(int benchmarks){
+  static VTKM_CONT int Run(int benchmarks)
+  {
     std::cout << DIVIDER << "\nRunning DeviceAdapter benchmarks\n";
 
-    if (benchmarks & COPY) {
+    if (benchmarks & COPY)
+    {
       std::cout << DIVIDER << "\nBenchmarking Copy\n";
       VTKM_RUN_BENCHMARK(Copy, ValueTypes());
     }
 
-    if (benchmarks & COPY_IF){
+    if (benchmarks & COPY_IF)
+    {
       std::cout << "\n" << DIVIDER << "\nBenchmarking CopyIf\n";
       VTKM_RUN_BENCHMARK(CopyIf5, ValueTypes());
       VTKM_RUN_BENCHMARK(CopyIf10, ValueTypes());
@@ -559,7 +638,8 @@ public:
       VTKM_RUN_BENCHMARK(CopyIf30, ValueTypes());
     }
 
-    if (benchmarks & LOWER_BOUNDS){
+    if (benchmarks & LOWER_BOUNDS)
+    {
       std::cout << DIVIDER << "\nBenchmarking LowerBounds\n";
       VTKM_RUN_BENCHMARK(LowerBounds5, ValueTypes());
       VTKM_RUN_BENCHMARK(LowerBounds10, ValueTypes());
@@ -569,12 +649,14 @@ public:
       VTKM_RUN_BENCHMARK(LowerBounds30, ValueTypes());
     }
 
-    if (benchmarks & REDUCE){
+    if (benchmarks & REDUCE)
+    {
       std::cout << "\n" << DIVIDER << "\nBenchmarking Reduce\n";
       VTKM_RUN_BENCHMARK(Reduce, ValueTypes());
     }
 
-    if (benchmarks & REDUCE_BY_KEY){
+    if (benchmarks & REDUCE_BY_KEY)
+    {
       std::cout << "\n" << DIVIDER << "\nBenchmarking ReduceByKey\n";
       VTKM_RUN_BENCHMARK(ReduceByKey5, ValueTypes());
       VTKM_RUN_BENCHMARK(ReduceByKey10, ValueTypes());
@@ -584,22 +666,26 @@ public:
       VTKM_RUN_BENCHMARK(ReduceByKey30, ValueTypes());
     }
 
-    if (benchmarks & SCAN_INCLUSIVE){
+    if (benchmarks & SCAN_INCLUSIVE)
+    {
       std::cout << "\n" << DIVIDER << "\nBenchmarking ScanInclusive\n";
       VTKM_RUN_BENCHMARK(ScanInclusive, ValueTypes());
     }
 
-    if (benchmarks & SCAN_EXCLUSIVE){
+    if (benchmarks & SCAN_EXCLUSIVE)
+    {
       std::cout << "\n" << DIVIDER << "\nBenchmarking ScanExclusive\n";
       VTKM_RUN_BENCHMARK(ScanExclusive, ValueTypes());
     }
 
-    if (benchmarks & SORT){
+    if (benchmarks & SORT)
+    {
       std::cout << "\n" << DIVIDER << "\nBenchmarking Sort\n";
       VTKM_RUN_BENCHMARK(Sort, ValueTypes());
     }
 
-    if (benchmarks & SORT_BY_KEY){
+    if (benchmarks & SORT_BY_KEY)
+    {
       std::cout << "\n" << DIVIDER << "\nBenchmarking SortByKey\n";
       VTKM_RUN_BENCHMARK(SortByKey5, ValueTypes());
       VTKM_RUN_BENCHMARK(SortByKey10, ValueTypes());
@@ -609,7 +695,8 @@ public:
       VTKM_RUN_BENCHMARK(SortByKey30, ValueTypes());
     }
 
-    if (benchmarks & UNIQUE){
+    if (benchmarks & UNIQUE)
+    {
       std::cout << "\n" << DIVIDER << "\nBenchmarking Unique\n";
       VTKM_RUN_BENCHMARK(Unique5, ValueTypes());
       VTKM_RUN_BENCHMARK(Unique10, ValueTypes());
@@ -619,7 +706,8 @@ public:
       VTKM_RUN_BENCHMARK(Unique30, ValueTypes());
     }
 
-    if (benchmarks & UPPER_BOUNDS){
+    if (benchmarks & UPPER_BOUNDS)
+    {
       std::cout << "\n" << DIVIDER << "\nBenchmarking UpperBounds\n";
       VTKM_RUN_BENCHMARK(UpperBounds5, ValueTypes());
       VTKM_RUN_BENCHMARK(UpperBounds10, ValueTypes());
@@ -633,54 +721,68 @@ public:
 };
 
 #undef ARRAY_SIZE
-
 }
 } // namespace vtkm::benchmarking
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
   int benchmarks = 0;
-  if (argc < 2){
+  if (argc < 2)
+  {
     benchmarks = vtkm::benchmarking::ALL;
   }
-  else {
-    for (int i = 1; i < argc; ++i){
+  else
+  {
+    for (int i = 1; i < argc; ++i)
+    {
       std::string arg = argv[i];
       std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
-      if (arg == "copy"){
+      if (arg == "copy")
+      {
         benchmarks |= vtkm::benchmarking::COPY;
       }
-      else if (arg == "copyif"){
+      else if (arg == "copyif")
+      {
         benchmarks |= vtkm::benchmarking::COPY_IF;
       }
-      else if (arg == "lowerbounds"){
+      else if (arg == "lowerbounds")
+      {
         benchmarks |= vtkm::benchmarking::LOWER_BOUNDS;
       }
-      else if (arg == "reduce"){
+      else if (arg == "reduce")
+      {
         benchmarks |= vtkm::benchmarking::REDUCE;
       }
-      else if (arg == "reducebykey"){
+      else if (arg == "reducebykey")
+      {
         benchmarks |= vtkm::benchmarking::REDUCE_BY_KEY;
       }
-      else if (arg == "scaninclusive"){
+      else if (arg == "scaninclusive")
+      {
         benchmarks |= vtkm::benchmarking::SCAN_INCLUSIVE;
       }
-      else if (arg == "scanexclusive"){
+      else if (arg == "scanexclusive")
+      {
         benchmarks |= vtkm::benchmarking::SCAN_EXCLUSIVE;
       }
-      else if (arg == "sort"){
+      else if (arg == "sort")
+      {
         benchmarks |= vtkm::benchmarking::SORT;
       }
-      else if (arg == "sortbykey"){
+      else if (arg == "sortbykey")
+      {
         benchmarks |= vtkm::benchmarking::SORT_BY_KEY;
       }
-      else if (arg == "unique"){
+      else if (arg == "unique")
+      {
         benchmarks |= vtkm::benchmarking::UNIQUE;
       }
-      else if (arg == "upperbounds"){
+      else if (arg == "upperbounds")
+      {
         benchmarks |= vtkm::benchmarking::UPPER_BOUNDS;
       }
-      else {
+      else
+      {
         std::cout << "Unrecognized benchmark: " << argv[i] << std::endl;
         return 1;
       }
@@ -688,7 +790,6 @@ int main(int argc, char *argv[])
   }
 
   //now actually execute the benchmarks
-  return vtkm::benchmarking::BenchmarkDeviceAdapter
-    <VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run(benchmarks);
+  return vtkm::benchmarking::BenchmarkDeviceAdapter<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Run(
+    benchmarks);
 }
-

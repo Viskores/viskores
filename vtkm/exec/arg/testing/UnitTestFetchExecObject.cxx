@@ -28,12 +28,19 @@
 
 #define EXPECTED_NUMBER 67
 
-namespace {
+namespace
+{
 
 struct TestExecutionObject : public vtkm::exec::ExecutionObjectBase
 {
-  TestExecutionObject() : Number( static_cast<vtkm::Int32>(0xDEADDEAD) ) {  }
-  TestExecutionObject(vtkm::Int32 number) : Number(number) {  }
+  TestExecutionObject()
+    : Number(static_cast<vtkm::Int32>(0xDEADDEAD))
+  {
+  }
+  TestExecutionObject(vtkm::Int32 number)
+    : Number(number)
+  {
+  }
   vtkm::Int32 Number;
 };
 
@@ -41,19 +48,18 @@ void TryInvocation()
 {
   TestExecutionObject execObjectStore(EXPECTED_NUMBER);
 
-  typedef vtkm::exec::arg::Fetch<
-      vtkm::exec::arg::FetchTagExecObject,
-      vtkm::exec::arg::AspectTagDefault,
-      vtkm::exec::arg::ThreadIndicesTesting,
-      TestExecutionObject> FetchType;
+  typedef vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagExecObject,
+                                 vtkm::exec::arg::AspectTagDefault,
+                                 vtkm::exec::arg::ThreadIndicesTesting,
+                                 TestExecutionObject>
+    FetchType;
 
   FetchType fetch;
 
   vtkm::exec::arg::ThreadIndicesTesting indices(0);
 
   TestExecutionObject execObject = fetch.Load(indices, execObjectStore);
-  VTKM_TEST_ASSERT(execObject.Number == EXPECTED_NUMBER,
-                   "Did not load object correctly.");
+  VTKM_TEST_ASSERT(execObject.Number == EXPECTED_NUMBER, "Did not load object correctly.");
 
   execObject.Number = -1;
 
@@ -72,7 +78,7 @@ void TestExecObjectFetch()
 
 } // anonymous namespace
 
-int UnitTestFetchExecObject(int, char *[])
+int UnitTestFetchExecObject(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestExecObjectFetch);
 }

@@ -20,9 +20,12 @@
 #ifndef vtk_m_cont_arg_Transport_h
 #define vtk_m_cont_arg_Transport_h
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief Class for transporting from the control to the execution environment.
 ///
@@ -41,9 +44,7 @@ namespace arg {
 /// an invalid \c TransportTag or it is an invalid combination of data type or
 /// device adapter.
 ///
-template<typename TransportTag,
-         typename ContObjectType,
-         typename DeviceAdapterTag>
+template <typename TransportTag, typename ContObjectType, typename DeviceAdapterTag>
 struct Transport
 #ifdef VTKM_DOXYGEN_ONLY
 {
@@ -54,8 +55,8 @@ struct Transport
   /// For example, for an \c ArrayHandle, the \c ExecObjectType is the portal
   /// used in the execution environment.
   ///
-  typedef typename ContObjectType::
-      template ExecutionTypes<DeviceAdapterTag>::PortalConst ExecObjectType;
+  typedef
+    typename ContObjectType::template ExecutionTypes<DeviceAdapterTag>::PortalConst ExecObjectType;
 
   /// \brief Send data to the execution environment.
   ///
@@ -68,16 +69,13 @@ struct Transport
   /// example, to allocate data for an output array. The transport might ignore
   /// either or both of the second two arguments.
   ///
-  template<typename InputDomainType>
-  VTKM_CONT
-  ExecObjectType operator()(const ContObjectType contData,
-                            const InputDomainType &inputDomain
-                            vtkm::Id outputSize) const;
+  template <typename InputDomainType>
+  VTKM_CONT ExecObjectType operator()(const ContObjectType contData,
+                                      const InputDomainType& inputDomain vtkm::Id outputSize) const;
 };
-#else // VTKM_DOXYGEN_ONLY
-    ;
+#else  // VTKM_DOXYGEN_ONLY
+  ;
 #endif // VTKM_DOXYGEN_ONLY
-
 }
 }
 } // namespace vtkm::cont::arg

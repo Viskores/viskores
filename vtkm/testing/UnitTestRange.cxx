@@ -22,7 +22,8 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void TestRange()
 {
@@ -137,7 +138,7 @@ void TestRange()
 
 } // anonymous namespace
 
-int UnitTestRange(int, char *[])
+int UnitTestRange(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestRange);
 }

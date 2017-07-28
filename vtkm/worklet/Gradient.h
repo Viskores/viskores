@@ -21,345 +21,228 @@
 #ifndef vtk_m_worklet_Gradient_h
 #define vtk_m_worklet_Gradient_h
 
-#include <vtkm/exec/CellDerivative.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/exec/ParametricCoordinates.h>
-#include <vtkm/CellTraits.h>
-#include <vtkm/VecFromPortal.h>
-#include <vtkm/VecFromPortalPermute.h>
+#include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/worklet/gradient/CellGradient.h>
+#include <vtkm/worklet/gradient/Divergence.h>
+#include <vtkm/worklet/gradient/GradientOutput.h>
+#include <vtkm/worklet/gradient/PointGradient.h>
+#include <vtkm/worklet/gradient/QCriterion.h>
+#include <vtkm/worklet/gradient/Transpose.h>
+#include <vtkm/worklet/gradient/Vorticity.h>
 
-
-#include <vtkm/exec/CellDerivative.h>
-
-namespace vtkm {
-namespace worklet {
-
-struct GradientInTypes
-    : vtkm::ListTagBase<vtkm::Float32,
-                        vtkm::Float64,
-                        vtkm::Vec<vtkm::Float32,3>,
-                        vtkm::Vec<vtkm::Float64,3> >
-{  };
-
-struct GradientOutTypes
-    : vtkm::ListTagBase<
-                        vtkm::Vec<vtkm::Float32,3>,
-                        vtkm::Vec<vtkm::Float64,3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>
-                        >
-{  };
-
-struct GradientVecOutTypes
-    : vtkm::ListTagBase<
-                        vtkm::Vec< vtkm::Vec<vtkm::Float32,3>, 3>,
-                        vtkm::Vec< vtkm::Vec<vtkm::Float64,3>, 3>
-                        > {  };
-
-struct CellGradient : vtkm::worklet::WorkletMapPointToCell
+namespace vtkm
 {
-  typedef void ControlSignature(CellSetIn,
-                                FieldInPoint<Vec3> pointCoordinates,
-                                FieldInPoint<GradientInTypes> inputField,
-                                FieldOutCell<GradientOutTypes> outputField);
-
-  typedef void ExecutionSignature(CellShape, PointCount, _2, _3, _4);
-  typedef _1 InputDomain;
-
-  template <typename CellTagType, typename PointCoordVecType,
-    typename FieldInVecType, typename FieldOutType>
-  VTKM_EXEC void operator()(CellTagType shape,
-    vtkm::IdComponent pointCount, const PointCoordVecType& pointCoordinates,
-    const FieldInVecType& inputField, FieldOutType& outputField) const
-  {
-    //To confirm that we have the proper input and output types we need
-    //to verify that input type matches the output vtkm::Vec<T> 'T' type.
-    //For example:
-    // input is float => output is vtkm::Vec<float>
-    // input is vtkm::Vec<float> => output is vtkm::Vec< vtkm::Vec< float > >
-
-    //Grab the dimension tag for the input
-    using InValueType = typename FieldInVecType::ComponentType;
-    using InDimensionTag = typename TypeTraits<InValueType>::DimensionalityTag;
-
-    //grab the dimension tag for the output component type
-    using OutValueType = typename FieldOutType::ComponentType;
-    using OutDimensionTag = typename TypeTraits<OutValueType>::DimensionalityTag;
-
-    //Verify that input and output dimension tags match
-    using Matches = typename std::is_same<InDimensionTag, OutDimensionTag>::type;
-
-    this->Compute(shape, pointCount, pointCoordinates, inputField, outputField,
-      Matches());
-  }
-
-  template <typename CellShapeTag, typename PointCoordVecType,
-    typename FieldInVecType, typename FieldOutType>
-  VTKM_EXEC void Compute(CellShapeTag shape,
-    vtkm::IdComponent pointCount, const PointCoordVecType& wCoords,
-    const FieldInVecType& field, FieldOutType& outputField,
-    std::true_type) const
-  {
-    vtkm::Vec<vtkm::FloatDefault, 3> center =
-      vtkm::exec::ParametricCoordinatesCenter(pointCount, shape, *this);
-
-    outputField = vtkm::exec::CellDerivative(field, wCoords, center, shape, *this);
-  }
-
-  template <typename CellShapeTag,
-            typename PointCoordVecType,
-            typename FieldInVecType,
-            typename FieldOutType>
-  VTKM_EXEC void Compute(CellShapeTag,
-                                vtkm::IdComponent,
-                                const PointCoordVecType&,
-                                const FieldInVecType&,
-                                FieldOutType&,
-                                std::false_type) const
-  {
-  //this is invalid
-  }
-};
-
-struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
+namespace worklet
 {
-  typedef void ControlSignature(CellSetIn,
-                                WholeCellSetIn<Point,Cell>,
-                                WholeArrayIn<Vec3> pointCoordinates,
-                                WholeArrayIn<GradientInTypes> inputField,
-                                FieldOutPoint<GradientOutTypes> outputField);
 
-  typedef void ExecutionSignature(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+template <typename T>
+struct GradientOutputFields;
 
-  template <typename FromIndexType,
-            typename CellSetInType,
-            typename WholeCoordinatesIn,
-            typename WholeFieldIn,
-            typename FieldOutType>
-  VTKM_EXEC void operator()(const vtkm::IdComponent& numCells,
-                            const FromIndexType& cellIds,
-                            const vtkm::Id& pointId,
-                            const CellSetInType& geometry,
-                            const WholeCoordinatesIn& pointCoordinates,
-                            const WholeFieldIn& inputField,
-                            FieldOutType& outputField) const
+namespace gradient
+{
+
+//-----------------------------------------------------------------------------
+template <typename CoordinateSystem, typename T, typename S, typename Device>
+struct DeducedPointGrad
+{
+  DeducedPointGrad(const CoordinateSystem& coords,
+                   const vtkm::cont::ArrayHandle<T, S>& field,
+                   GradientOutputFields<T>* result)
+    : Points(&coords)
+    , Field(&field)
+    , Result(result)
   {
-    //To confirm that we have the proper input and output types we need
-    //to verify that input type matches the output vtkm::Vec<T> 'T' type.
-    //For example:
-    // input is float => output is vtkm::Vec<float>
-    // input is vtkm::Vec<float> => output is vtkm::Vec< vtkm::Vec< float > >
-
-    //Grab the dimension tag for the input
-    using InValueType = typename WholeFieldIn::ValueType;
-    using InDimensionTag = typename TypeTraits<InValueType>::DimensionalityTag;
-
-    //grab the dimension tag for the output component type
-    using OutValueType = typename FieldOutType::ComponentType;
-    using OutDimensionTag = typename TypeTraits<OutValueType>::DimensionalityTag;
-
-    //Verify that input and output dimension tags match
-    using Matches = typename std::is_same<InDimensionTag, OutDimensionTag>::type;
-    this->Compute(numCells, cellIds, pointId, geometry, pointCoordinates,
-      inputField, outputField, Matches());
   }
 
-  template <typename FromIndexType,
-            typename CellSetInType,
-            typename WholeCoordinatesIn,
-            typename WholeFieldIn,
-            typename FieldOutType>
-  VTKM_EXEC void Compute(const vtkm::IdComponent& numCells,
-                         const FromIndexType& cellIds,
-                         const vtkm::Id& pointId,
-                         const CellSetInType& geometry,
-                         const WholeCoordinatesIn& pointCoordinates,
-                         const WholeFieldIn& inputField,
-                         FieldOutType& outputField,
-                         std::true_type) const
+  template <typename CellSetType>
+  void operator()(const CellSetType& cellset) const
   {
-    using ThreadIndices = vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>;
-    using ValueType = typename WholeFieldIn::ValueType;
-    using CellShapeTag = typename CellSetInType::CellShapeTag;
-
-    vtkm::Vec<ValueType, 3> gradient( ValueType(0.0) );
-    for (vtkm::IdComponent i = 0; i < numCells; ++i)
-      {
-      const vtkm::Id cellId = cellIds[i];
-      ThreadIndices cellIndices(cellId, cellId, 0, geometry);
-
-      const CellShapeTag cellShape = cellIndices.GetCellShape();
-
-      // compute the parametric coordinates for the current point
-      const auto wCoords = this->GetValues(cellIndices, pointCoordinates);
-      const auto field = this->GetValues(cellIndices, inputField);
-
-      const vtkm::IdComponent pointIndexForCell =
-        this->GetPointIndexForCell(cellIndices, pointId);
-
-      this->ComputeGradient(cellShape, pointIndexForCell, wCoords, field, gradient);
-      }
-
-    using BaseGradientType = typename vtkm::BaseComponent<ValueType>::Type;
-    const BaseGradientType invNumCells =
-        static_cast<BaseGradientType>(1.) /
-        static_cast<BaseGradientType>(numCells);
-    using OutValueType = typename FieldOutType::ComponentType;
-    outputField[0] = static_cast<OutValueType>(gradient[0] * invNumCells);
-    outputField[1] = static_cast<OutValueType>(gradient[1] * invNumCells);
-    outputField[2] = static_cast<OutValueType>(gradient[2] * invNumCells);
+    vtkm::worklet::DispatcherMapTopology<PointGradient<T>, Device> dispatcher;
+    dispatcher.Invoke(cellset, //topology to iterate on a per point basis
+                      cellset, //whole cellset in
+                      *this->Points,
+                      *this->Field,
+                      *this->Result);
   }
 
-  template <typename FromIndexType,
-            typename CellSetInType,
-            typename WholeCoordinatesIn,
-            typename WholeFieldIn,
-            typename FieldOutType>
-  VTKM_EXEC void Compute(const vtkm::IdComponent&,
-                         const FromIndexType&,
-                         const vtkm::Id&,
-                         const CellSetInType&,
-                         const WholeCoordinatesIn&,
-                         const WholeFieldIn&,
-                         FieldOutType&,
-                         std::false_type) const
-  {
-  //this is invalid, as the input and output types don't match.
-  //e.g input is float => output is vtkm::Vec< vtkm::Vec< float > >
-  }
+  const CoordinateSystem* const Points;
+  const vtkm::cont::ArrayHandle<T, S>* const Field;
+  GradientOutputFields<T>* Result;
 
 private:
-  template <typename CellShapeTag, typename PointCoordVecType,
-            typename FieldInVecType, typename OutValueType>
-  inline VTKM_EXEC
-  void ComputeGradient(CellShapeTag cellShape,
-                       const vtkm::IdComponent& pointIndexForCell,
-                       const PointCoordVecType& wCoords,
-                       const FieldInVecType& field,
-                       vtkm::Vec<OutValueType, 3>& gradient) const
-  {
-    vtkm::Vec<vtkm::FloatDefault, 3> pCoords;
-    vtkm::exec::ParametricCoordinatesPoint(
-        wCoords.GetNumberOfComponents(), pointIndexForCell, pCoords, cellShape, *this);
-
-    //we need to add this to a return value
-    gradient += vtkm::exec::CellDerivative(field,
-                                           wCoords, pCoords,
-                                           cellShape, *this);
-  }
-
-  template<typename CellSetInType>
-  VTKM_EXEC
-  vtkm::IdComponent GetPointIndexForCell(
-     const vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>& indices,
-     vtkm::Id pointId) const
-  {
-    vtkm::IdComponent result = 0;
-    const auto& topo = indices.GetIndicesFrom();
-    for (vtkm::IdComponent i = 0; i < topo.GetNumberOfComponents(); ++i)
-    {
-      if (topo[i] == pointId)
-      {
-        result = i;
-      }
-    }
-    return result;
-  }
-
-  //This is fairly complex so that we can trigger code to extract
-  //VecRectilinearPointCoordinates when using structured connectivity, and
-  //uniform point coordinates.
-  //c++14 would make the return type simply auto
-  template<typename CellSetInType, typename WholeFieldIn>
-  VTKM_EXEC
-  typename vtkm::exec::arg::Fetch<
-                    vtkm::exec::arg::FetchTagArrayTopologyMapIn,
-                    vtkm::exec::arg::AspectTagDefault,
-                    vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>,
-                    typename WholeFieldIn::PortalType>::ValueType
-  GetValues(const vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>& indices,
-            const WholeFieldIn& in) const
-  {
-    //the current problem is that when the topology is structured
-    //we are passing in an vtkm::Id when it wants a Id2 or an Id3 that
-    //represents the flat index of the topology
-    using ExecObjectType = typename WholeFieldIn::PortalType;
-    using Fetch = vtkm::exec::arg::Fetch<
-                    vtkm::exec::arg::FetchTagArrayTopologyMapIn,
-                    vtkm::exec::arg::AspectTagDefault,
-                    vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>,
-                    ExecObjectType>;
-    Fetch fetch;
-    return fetch.Load(indices,in.GetPortal());
-  }
-
+  void operator=(const DeducedPointGrad<CoordinateSystem, T, S, Device>&) = delete;
 };
 
+} //namespace gradient
 
-struct Divergence : public vtkm::worklet::WorkletMapField
+template <typename T>
+struct GradientOutputFields : public vtkm::exec::ExecutionObjectBase
 {
-  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input,
-                                FieldOut<Scalar> output);
-  typedef void ExecutionSignature(_1,_2);
-  typedef _1 InputDomain;
 
-  template<typename InputType, typename OutputType>
-  VTKM_EXEC
-  void operator()(const InputType &input, OutputType &divergence) const
+  using ValueType = T;
+  using BaseTType = typename vtkm::BaseComponent<T>::Type;
+
+  template <typename DeviceAdapter>
+  struct ExecutionTypes
   {
-    divergence = input[0][0]+input[1][1]+input[2][2];
-  }
-};
+    using Portal = vtkm::exec::GradientOutput<T, DeviceAdapter>;
+  };
 
-struct Vorticity : public vtkm::worklet::WorkletMapField
+  GradientOutputFields()
+    : Gradient()
+    , Divergence()
+    , Vorticity()
+    , QCriterion()
+    , StoreGradient(true)
+    , ComputeDivergence(false)
+    , ComputeVorticity(false)
+    , ComputeQCriterion(false)
+  {
+  }
+
+  GradientOutputFields(bool store, bool divergence, bool vorticity, bool qc)
+    : Gradient()
+    , Divergence()
+    , Vorticity()
+    , QCriterion()
+    , StoreGradient(store)
+    , ComputeDivergence(divergence)
+    , ComputeVorticity(vorticity)
+    , ComputeQCriterion(qc)
+  {
+  }
+
+  /// Add divergence field to the output data.
+  /// The input array must have 3 components in order to compute this.
+  /// The default is off.
+  void SetComputeDivergence(bool enable) { ComputeDivergence = enable; }
+  bool GetComputeDivergence() const { return ComputeDivergence; }
+
+  /// Add voriticity/curl field to the output data.
+  /// The input array must have 3 components in order to compute this.
+  /// The default is off.
+  void SetComputeVorticity(bool enable) { ComputeVorticity = enable; }
+  bool GetComputeVorticity() const { return ComputeVorticity; }
+
+  /// Add Q-criterion field to the output data.
+  /// The input array must have 3 components in order to compute this.
+  /// The default is off.
+  void SetComputeQCriterion(bool enable) { ComputeQCriterion = enable; }
+  bool GetComputeQCriterion() const { return ComputeQCriterion; }
+
+  /// Add gradient field to the output data.
+  /// The input array must have 3 components in order to disable this.
+  /// The default is on.
+  void SetComputeGradient(bool enable) { StoreGradient = enable; }
+  bool GetComputeGradient() const { return StoreGradient; }
+
+  //todo fix this for scalar
+  template <typename DeviceAdapter>
+  vtkm::exec::GradientOutput<T, DeviceAdapter> PrepareForOutput(vtkm::Id size, DeviceAdapter)
+  {
+    vtkm::exec::GradientOutput<T, DeviceAdapter> portal(this->StoreGradient,
+                                                        this->ComputeDivergence,
+                                                        this->ComputeVorticity,
+                                                        this->ComputeQCriterion,
+                                                        this->Gradient,
+                                                        this->Divergence,
+                                                        this->Vorticity,
+                                                        this->QCriterion,
+                                                        size);
+    return portal;
+  }
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Gradient;
+  vtkm::cont::ArrayHandle<BaseTType> Divergence;
+  vtkm::cont::ArrayHandle<vtkm::Vec<BaseTType, 3>> Vorticity;
+  vtkm::cont::ArrayHandle<BaseTType> QCriterion;
+
+private:
+  bool StoreGradient;
+  bool ComputeDivergence;
+  bool ComputeVorticity;
+  bool ComputeQCriterion;
+};
+class PointGradient
 {
-  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input,
-                                FieldOut<Vec3> output);
-  typedef void ExecutionSignature(_1,_2);
-  typedef _1 InputDomain;
-
-  template<typename InputType, typename OutputType>
-  VTKM_EXEC
-  void operator()(const InputType &input, OutputType &vorticity) const
+public:
+  template <typename CellSetType,
+            typename CoordinateSystem,
+            typename T,
+            typename S,
+            typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
+                                               const CoordinateSystem& coords,
+                                               const vtkm::cont::ArrayHandle<T, S>& field,
+                                               DeviceAdapter device)
   {
-    vorticity[0] = input[2][1] - input[1][2];
-    vorticity[1] = input[0][2] - input[2][0];
-    vorticity[2] = input[1][0] - input[0][1];
+    vtkm::worklet::GradientOutputFields<T> extraOutput(true, false, false, false);
+    return this->Run(cells, coords, field, extraOutput, device);
+  }
+
+  template <typename CellSetType,
+            typename CoordinateSystem,
+            typename T,
+            typename S,
+            typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
+                                               const CoordinateSystem& coords,
+                                               const vtkm::cont::ArrayHandle<T, S>& field,
+                                               GradientOutputFields<T>& extraOutput,
+                                               DeviceAdapter)
+  {
+    //we are using cast and call here as we pass the cells twice to the invoke
+    //and want the type resolved once before hand instead of twice
+    //by the dispatcher ( that will cost more in time and binary size )
+    gradient::DeducedPointGrad<CoordinateSystem, T, S, DeviceAdapter> func(
+      coords, field, &extraOutput);
+    vtkm::cont::CastAndCall(cells, func);
+    return extraOutput.Gradient;
   }
 };
 
-struct QCriterion : public vtkm::worklet::WorkletMapField
+class CellGradient
 {
-  typedef void ControlSignature(FieldIn<GradientVecOutTypes> input,
-                                FieldOut<Scalar> output);
-  typedef void ExecutionSignature(_1,_2);
-  typedef _1 InputDomain;
-
-  template<typename InputType, typename OutputType>
-  VTKM_EXEC
-  void operator()(const InputType &input, OutputType &qcriterion) const
+public:
+  template <typename CellSetType,
+            typename CoordinateSystem,
+            typename T,
+            typename S,
+            typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
+                                               const CoordinateSystem& coords,
+                                               const vtkm::cont::ArrayHandle<T, S>& field,
+                                               DeviceAdapter device)
   {
-    OutputType t1 =
-          ((input[2][1] - input[1][2]) * (input[2][1] - input[1][2]) +
-           (input[1][0] - input[0][1]) * (input[1][0] - input[0][1]) +
-           (input[0][2] - input[2][0]) * (input[0][2] - input[2][0])) / 2.0f;
-      OutputType t2 =
-          input[0][0] * input[0][0] + input[1][1] * input[1][1] +
-          input[2][2] * input[2][2] +
-          ((input[1][0] + input[0][1]) * (input[1][0] + input[0][1]) +
-           (input[2][0] + input[0][2]) * (input[2][0] + input[0][2]) +
-           (input[2][1] + input[1][2]) * (input[2][1] + input[1][2])) / 2.0f;
+    vtkm::worklet::GradientOutputFields<T> extra(true, false, false, false);
+    return this->Run(cells, coords, field, extra, device);
+  }
 
-    qcriterion = (t1 - t2) / 2.0f;
+  template <typename CellSetType,
+            typename CoordinateSystem,
+            typename T,
+            typename S,
+            typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Run(const CellSetType& cells,
+                                               const CoordinateSystem& coords,
+                                               const vtkm::cont::ArrayHandle<T, S>& field,
+                                               GradientOutputFields<T>& extraOutput,
+                                               DeviceAdapter)
+  {
+    using DispatcherType =
+      vtkm::worklet::DispatcherMapTopology<vtkm::worklet::gradient::CellGradient<T>, DeviceAdapter>;
+
+    vtkm::worklet::gradient::CellGradient<T> worklet;
+    DispatcherType dispatcher(worklet);
+
+
+    dispatcher.Invoke(cells, coords, field, extraOutput);
+    return extraOutput.Gradient;
   }
 };
-
-
 }
 } // namespace vtkm::worklet
-
 #endif

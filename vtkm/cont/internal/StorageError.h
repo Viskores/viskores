@@ -22,9 +22,12 @@
 
 #include <vtkm/internal/ExportMacros.h>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 /// This is an invalid Storage. The point of this class is to include the
 /// header file to make this invalid class the default Storage. From that
@@ -35,7 +38,6 @@ struct VTKM_ALWAYS_EXPORT StorageTagError
 {
   // Not implemented.
 };
-
 }
 }
 } // namespace vtkm::cont::internal

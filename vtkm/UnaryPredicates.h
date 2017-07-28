@@ -23,16 +23,17 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/internal/ExportMacros.h>
 
-namespace vtkm {
+namespace vtkm
+{
 
 /// Predicate that takes a single argument \c x, and returns
 /// True if it is the identity of the Type \p T.
 struct IsZeroInitialized
 {
-  template<typename T>
-  VTKM_EXEC_CONT bool operator()(const T &x) const
+  template <typename T>
+  VTKM_EXEC_CONT bool operator()(const T& x) const
   {
-    return (x  == vtkm::TypeTraits<T>::ZeroInitialization() );
+    return (x == vtkm::TypeTraits<T>::ZeroInitialization());
   }
 };
 
@@ -40,10 +41,10 @@ struct IsZeroInitialized
 /// True if it isn't the identity of the Type \p T.
 struct NotZeroInitialized
 {
-  template<typename T>
-  VTKM_EXEC_CONT bool operator()(const T &x) const
+  template <typename T>
+  VTKM_EXEC_CONT bool operator()(const T& x) const
   {
-    return (x  != vtkm::TypeTraits<T>::ZeroInitialization() );
+    return (x != vtkm::TypeTraits<T>::ZeroInitialization());
   }
 };
 
@@ -53,7 +54,7 @@ struct NotZeroInitialized
 /// ! operator.
 struct LogicalNot
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT bool operator()(const T& x) const
   {
     return !x;

@@ -18,23 +18,21 @@
 //  this software.
 //============================================================================
 
-
 //This sets up testing with the default device adapter and array container
 
-#include <vtkm/rendering/CanvasEGL.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/interop/testing/TestingOpenGLInterop.h>
+#include <vtkm/rendering/CanvasEGL.h>
 
-int UnitTestTransferEGL(int, char *[])
+int UnitTestTransferEGL(int, char* [])
 {
   //get egl canvas to construct a context for us
-  vtkm::rendering::CanvasEGL canvas(1024,1024);
+  vtkm::rendering::CanvasEGL canvas(1024, 1024);
   canvas.Initialize();
   canvas.Activate();
 
-  //get glew to bind all the opengl functions 
-  glewInit();  
+  //get glew to bind all the opengl functions
+  glewInit();
 
-  return vtkm::interop::testing::TestingOpenGLInterop<
-            vtkm::cont::DeviceAdapterTagSerial >::Run();
+  return vtkm::interop::testing::TestingOpenGLInterop<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

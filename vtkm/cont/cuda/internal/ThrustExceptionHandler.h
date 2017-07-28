@@ -20,17 +20,20 @@
 #ifndef vtk_m_cont_cuda_interal_ThrustExecptionHandler_h
 #define vtk_m_cont_cuda_interal_ThrustExecptionHandler_h
 
-#include <vtkm/internal/ExportMacros.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/internal/ExportMacros.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system_error.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
-namespace vtkm {
-namespace cont {
-namespace cuda {
+namespace vtkm
+{
+namespace cont
+{
+namespace cuda
+{
 namespace internal
 {
 
@@ -41,16 +44,15 @@ static inline void throwAsVTKmException()
     //re-throw the last exception
     throw;
   }
-  catch(std::bad_alloc &error)
+  catch (std::bad_alloc& error)
   {
     throw vtkm::cont::ErrorBadAllocation(error.what());
   }
-  catch(thrust::system_error &error)
+  catch (thrust::system_error& error)
   {
     throw vtkm::cont::ErrorExecution(error.what());
   }
 }
-
 }
 }
 }

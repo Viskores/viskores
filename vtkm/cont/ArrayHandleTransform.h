@@ -26,31 +26,41 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorInternal.h>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 /// Tag used in place of an inverse functor.
-struct NullFunctorType {};
-
+struct NullFunctorType
+{
+};
 }
 }
 } // namespace vtkm::cont::internal
 
-namespace vtkm {
-namespace exec {
-namespace internal {
+namespace vtkm
+{
+namespace exec
+{
+namespace internal
+{
 
 typedef vtkm::cont::internal::NullFunctorType NullFunctorType;
 
 /// \brief An array portal that transforms a value from another portal.
 ///
-template<typename ValueType_, typename PortalType_, typename FunctorType_,
-  typename InverseFunctorType_=NullFunctorType>
+template <typename ValueType_,
+          typename PortalType_,
+          typename FunctorType_,
+          typename InverseFunctorType_ = NullFunctorType>
 class VTKM_ALWAYS_EXPORT ArrayPortalTransform;
 
-template<typename ValueType_, typename PortalType_, typename FunctorType_>
-class VTKM_ALWAYS_EXPORT ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
+template <typename ValueType_, typename PortalType_, typename FunctorType_>
+class VTKM_ALWAYS_EXPORT
+  ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>
 {
 public:
   typedef PortalType_ PortalType;
@@ -59,64 +69,65 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalTransform(const PortalType &portal = PortalType(),
-                       const FunctorType &functor = FunctorType())
-    : Portal(portal), Functor(functor)
-  {  }
+  ArrayPortalTransform(const PortalType& portal = PortalType(),
+                       const FunctorType& functor = FunctorType())
+    : Portal(portal)
+    , Functor(functor)
+  {
+  }
 
   /// Copy constructor for any other ArrayPortalTransform with an iterator
   /// type that can be copied to this iterator type. This allows us to do any
   /// type casting that the iterators do (like the non-const to const cast).
   ///
-  template<class OtherV, class OtherP, class OtherF>
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF> &src)
-    : Portal(src.GetPortal()),
-      Functor(src.GetFunctor())
-  {  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfValues() const {
-    return this->Portal.GetNumberOfValues();
+  template <class OtherV, class OtherP, class OtherF>
+  VTKM_EXEC_CONT ArrayPortalTransform(const ArrayPortalTransform<OtherV, OtherP, OtherF>& src)
+    : Portal(src.GetPortal())
+    , Functor(src.GetFunctor())
+  {
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ValueType Get(vtkm::Id index) const {
-    return this->Functor(this->Portal.Get(index));
-  }
+  vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  void Set(vtkm::Id vtkmNotUsed(index),
-           const ValueType &vtkmNotUsed(value)) const
+  ValueType Get(vtkm::Id index) const { return this->Functor(this->Portal.Get(index)); }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void Set(vtkm::Id vtkmNotUsed(index), const ValueType& vtkmNotUsed(value)) const
   {
 #if !(defined(VTKM_MSVC) && defined(VTKM_CUDA))
-    VTKM_ASSERT(false && "Cannot write to read-only transform array. (No inverse transform given.)");
+    VTKM_ASSERT(false &&
+                "Cannot write to read-only transform array. (No inverse transform given.)");
 #endif
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  const PortalType &GetPortal() const { return this->Portal; }
+  const PortalType& GetPortal() const { return this->Portal; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  const FunctorType &GetFunctor() const { return this->Functor; }
+  const FunctorType& GetFunctor() const { return this->Functor; }
 
 protected:
   PortalType Portal;
   FunctorType Functor;
 };
 
-template<typename ValueType_, typename PortalType_,
-  typename FunctorType_, typename InverseFunctorType_>
-class VTKM_ALWAYS_EXPORT ArrayPortalTransform : public ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType>
+template <typename ValueType_,
+          typename PortalType_,
+          typename FunctorType_,
+          typename InverseFunctorType_>
+class VTKM_ALWAYS_EXPORT ArrayPortalTransform
+  : public ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>
 {
 public:
-  typedef ArrayPortalTransform<ValueType_,PortalType_,FunctorType_,NullFunctorType> Superclass;
+  typedef ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType> Superclass;
   typedef PortalType_ PortalType;
   typedef ValueType_ ValueType;
   typedef FunctorType_ FunctorType;
@@ -124,124 +135,149 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalTransform(const PortalType &portal = PortalType(),
-                       const FunctorType &functor = FunctorType(),
-                const InverseFunctorType& inverseFunctor = InverseFunctorType())
-    : Superclass(portal,functor), InverseFunctor(inverseFunctor)
-  {  }
-
-  template<class OtherV, class OtherP, class OtherF, class OtherInvF>
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  ArrayPortalTransform(const ArrayPortalTransform<OtherV,OtherP,OtherF,OtherInvF> &src)
-    : Superclass(src), InverseFunctor(src.GetInverseFunctor())
-  {  }
+  ArrayPortalTransform(const PortalType& portal = PortalType(),
+                       const FunctorType& functor = FunctorType(),
+                       const InverseFunctorType& inverseFunctor = InverseFunctorType())
+    : Superclass(portal, functor)
+    , InverseFunctor(inverseFunctor)
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ValueType& value) const {
-    return this->Portal.Set(index,this->InverseFunctor(value));
+  template <class OtherV, class OtherP, class OtherF, class OtherInvF>
+  VTKM_EXEC_CONT ArrayPortalTransform(
+    const ArrayPortalTransform<OtherV, OtherP, OtherF, OtherInvF>& src)
+    : Superclass(src)
+    , InverseFunctor(src.GetInverseFunctor())
+  {
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  const InverseFunctorType &GetInverseFunctor() const {
-    return this->InverseFunctor; }
+  void Set(vtkm::Id index, const ValueType& value) const
+  {
+    return this->Portal.Set(index, this->InverseFunctor(value));
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  const InverseFunctorType& GetInverseFunctor() const { return this->InverseFunctor; }
 
 private:
   InverseFunctorType InverseFunctor;
-
 };
-
 }
 }
 } // namespace vtkm::exec::internal
 
+namespace vtkm
+{
+namespace cont
+{
 
-namespace vtkm {
-namespace cont {
+namespace internal
+{
 
-namespace internal {
+template <typename ArrayHandleType,
+          typename FunctorType,
+          typename InverseFunctorType = NullFunctorType>
+struct VTKM_ALWAYS_EXPORT StorageTagTransform
+{
+#if defined(VTKM_MSVC) && (_MSC_VER == 1800) // workaround for VS2013
+private:
+  using ArrayHandleValueType = typename ArrayHandleType::ValueType;
 
-template<typename ValueType, typename ArrayHandleType, typename FunctorType,
-  typename InverseFunctorType=NullFunctorType>
-struct VTKM_ALWAYS_EXPORT StorageTagTransform {};
+public:
+  using ValueType = decltype(FunctorType{}(ArrayHandleValueType{}));
+#else
+  using ValueType = decltype(FunctorType{}(typename ArrayHandleType::ValueType{}));
+#endif
+};
 
-template<typename T, typename ArrayHandleType, typename FunctorType>
-class Storage<T, StorageTagTransform<T, ArrayHandleType, FunctorType, NullFunctorType > >
+template <typename ArrayHandleType, typename FunctorType>
+class Storage<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
+              StorageTagTransform<ArrayHandleType, FunctorType>>
 {
 public:
-  typedef T ValueType;
+  typedef typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType ValueType;
 
   // This is meant to be invalid. Because Transform arrays are read only, you
   // should only be able to use the const version.
   struct PortalType
   {
-    typedef void *ValueType;
-    typedef void *IteratorType;
+    typedef void* ValueType;
+    typedef void* IteratorType;
   };
 
-  typedef vtkm::exec::internal::ArrayPortalTransform<
-      ValueType, typename ArrayHandleType::PortalConstControl, FunctorType>
+  typedef vtkm::exec::internal::ArrayPortalTransform<ValueType,
+                                                     typename ArrayHandleType::PortalConstControl,
+                                                     FunctorType>
     PortalConstType;
 
   VTKM_CONT
-  Storage() : Valid(false) {  }
-
-  VTKM_CONT
-  Storage(const ArrayHandleType &array,
-          const FunctorType &functor = FunctorType())
-    : Array(array), Functor(functor), Valid(true) {  }
-
-  VTKM_CONT
-  PortalType GetPortal() {
-    VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl(),
-                      this->Functor);
+  Storage()
+    : Valid(false)
+  {
   }
 
   VTKM_CONT
-  PortalConstType GetPortalConst() const {
-    VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.GetPortalConstControl(),
-                           this->Functor);
+  Storage(const ArrayHandleType& array, const FunctorType& functor = FunctorType())
+    : Array(array)
+    , Functor(functor)
+    , Valid(true)
+  {
   }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const {
+  PortalType GetPortal()
+  {
+    VTKM_ASSERT(this->Valid);
+    return PortalType(this->Array.GetPortalControl(), this->Functor);
+  }
+
+  VTKM_CONT
+  PortalConstType GetPortalConst() const
+  {
+    VTKM_ASSERT(this->Valid);
+    return PortalConstType(this->Array.GetPortalConstControl(), this->Functor);
+  }
+
+  VTKM_CONT
+  vtkm::Id GetNumberOfValues() const
+  {
     VTKM_ASSERT(this->Valid);
     return this->Array.GetNumberOfValues();
   }
 
   VTKM_CONT
-  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorBadType(
-          "ArrayHandleTransform is read only. It cannot be allocated.");
+  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
+  {
+    throw vtkm::cont::ErrorBadType("ArrayHandleTransform is read only. It cannot be allocated.");
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorBadType(
-          "ArrayHandleTransform is read only. It cannot shrink.");
+  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
+  {
+    throw vtkm::cont::ErrorBadType("ArrayHandleTransform is read only. It cannot shrink.");
   }
 
   VTKM_CONT
-  void ReleaseResources() {
+  void ReleaseResources()
+  {
     // This request is ignored since it is asking to release the resources
     // of the delegate array, which may be used elsewhere. Should the behavior
     // be different?
   }
 
   VTKM_CONT
-  const ArrayHandleType &GetArray() const {
+  const ArrayHandleType& GetArray() const
+  {
     VTKM_ASSERT(this->Valid);
     return this->Array;
   }
 
   VTKM_CONT
-  const FunctorType &GetFunctor() const {
-    return this->Functor;
-  }
+  const FunctorType& GetFunctor() const { return this->Functor; }
 
 private:
   ArrayHandleType Array;
@@ -249,84 +285,94 @@ private:
   bool Valid;
 };
 
-template<typename T, typename ArrayHandleType, typename FunctorType,
-  typename InverseFunctorType>
-class Storage<T,
-  StorageTagTransform<T, ArrayHandleType, FunctorType, InverseFunctorType> >
+template <typename ArrayHandleType, typename FunctorType, typename InverseFunctorType>
+class Storage<
+  typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType,
+  StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>
 {
 public:
-  typedef T ValueType;
+  typedef typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType
+    ValueType;
 
   typedef vtkm::exec::internal::ArrayPortalTransform<ValueType,
-    typename ArrayHandleType::PortalControl, FunctorType, InverseFunctorType>
+                                                     typename ArrayHandleType::PortalControl,
+                                                     FunctorType,
+                                                     InverseFunctorType>
     PortalType;
   typedef vtkm::exec::internal::ArrayPortalTransform<ValueType,
-    typename ArrayHandleType::PortalConstControl,FunctorType,InverseFunctorType>
+                                                     typename ArrayHandleType::PortalConstControl,
+                                                     FunctorType,
+                                                     InverseFunctorType>
     PortalConstType;
 
   VTKM_CONT
-  Storage() : Valid(false) {  }
-
-  VTKM_CONT
-  Storage(const ArrayHandleType &array,
-          const FunctorType &functor,
-          const InverseFunctorType &inverseFunctor)
-    : Array(array), Functor(functor), InverseFunctor(inverseFunctor), Valid(true) {  }
-
-  VTKM_CONT
-  PortalType GetPortal() {
-    VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl(),
-                      this->Functor,
-                      this->InverseFunctor);
+  Storage()
+    : Valid(false)
+  {
   }
 
   VTKM_CONT
-  PortalConstType GetPortalConst() const {
-    VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.GetPortalConstControl(),
-                           this->Functor,
-                           this->InverseFunctor);
+  Storage(const ArrayHandleType& array,
+          const FunctorType& functor,
+          const InverseFunctorType& inverseFunctor)
+    : Array(array)
+    , Functor(functor)
+    , InverseFunctor(inverseFunctor)
+    , Valid(true)
+  {
   }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const {
+  PortalType GetPortal()
+  {
+    VTKM_ASSERT(this->Valid);
+    return PortalType(this->Array.GetPortalControl(), this->Functor, this->InverseFunctor);
+  }
+
+  VTKM_CONT
+  PortalConstType GetPortalConst() const
+  {
+    VTKM_ASSERT(this->Valid);
+    return PortalConstType(
+      this->Array.GetPortalConstControl(), this->Functor, this->InverseFunctor);
+  }
+
+  VTKM_CONT
+  vtkm::Id GetNumberOfValues() const
+  {
     VTKM_ASSERT(this->Valid);
     return this->Array.GetNumberOfValues();
   }
 
   VTKM_CONT
-  void Allocate(vtkm::Id numberOfValues) {
+  void Allocate(vtkm::Id numberOfValues)
+  {
     this->Array.Allocate(numberOfValues);
     this->Valid = true;
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues) {
-    this->Array.Shrink(numberOfValues);
-  }
+  void Shrink(vtkm::Id numberOfValues) { this->Array.Shrink(numberOfValues); }
 
   VTKM_CONT
-  void ReleaseResources() {
+  void ReleaseResources()
+  {
     this->Array.ReleaseResources();
     this->Valid = false;
   }
 
   VTKM_CONT
-  const ArrayHandleType &GetArray() const {
+  const ArrayHandleType& GetArray() const
+  {
     VTKM_ASSERT(this->Valid);
     return this->Array;
   }
 
   VTKM_CONT
-  const FunctorType &GetFunctor() const {
-    return this->Functor;
-  }
+  const FunctorType& GetFunctor() const { return this->Functor; }
 
   VTKM_CONT
-  const InverseFunctorType &GetInverseFunctor() const {
-    return this->InverseFunctor;
-  }
+  const InverseFunctorType& GetInverseFunctor() const { return this->InverseFunctor; }
 
 private:
   ArrayHandleType Array;
@@ -335,18 +381,16 @@ private:
   bool Valid;
 };
 
-template<typename T,
-         typename ArrayHandleType,
-         typename FunctorType,
-         typename Device>
-class ArrayTransfer<
-    T, StorageTagTransform<T,ArrayHandleType,FunctorType>, Device>
+template <typename ArrayHandleType, typename FunctorType, typename Device>
+class ArrayTransfer<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
+                    StorageTagTransform<ArrayHandleType, FunctorType>,
+                    Device>
 {
-  typedef StorageTagTransform<T,ArrayHandleType,FunctorType> StorageTag;
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  typedef StorageTagTransform<ArrayHandleType, FunctorType> StorageTag;
 
 public:
-  typedef T ValueType;
+  typedef typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType ValueType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
@@ -354,131 +398,138 @@ public:
   //meant to be an invalid writeable execution portal
   typedef typename StorageType::PortalType PortalExecution;
   typedef vtkm::exec::internal::ArrayPortalTransform<
-      ValueType,
-      typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
-      FunctorType> PortalConstExecution;
+    ValueType,
+    typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
+    FunctorType>
+    PortalConstExecution;
 
   VTKM_CONT
-  ArrayTransfer(StorageType *storage)
-    : Array(storage->GetArray()), Functor(storage->GetFunctor()) {  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const {
-    return this->Array.GetNumberOfValues();
+  ArrayTransfer(StorageType* storage)
+    : Array(storage->GetArray())
+    , Functor(storage->GetFunctor())
+  {
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
+  vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
+
+  VTKM_CONT
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  {
     return PortalConstExecution(this->Array.PrepareForInput(Device()), this->Functor);
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool &vtkmNotUsed(updateData)) {
-    throw vtkm::cont::ErrorBadType(
-          "ArrayHandleTransform read only. "
-          "Cannot be used for in-place operations.");
+  PortalExecution PrepareForInPlace(bool& vtkmNotUsed(updateData))
+  {
+    throw vtkm::cont::ErrorBadType("ArrayHandleTransform read only. "
+                                   "Cannot be used for in-place operations.");
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorBadType(
-          "ArrayHandleTransform read only. Cannot be used as output.");
+  PortalExecution PrepareForOutput(vtkm::Id vtkmNotUsed(numberOfValues))
+  {
+    throw vtkm::cont::ErrorBadType("ArrayHandleTransform read only. Cannot be used as output.");
   }
 
   VTKM_CONT
-  void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
+  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
+  {
     throw vtkm::cont::ErrorInternal(
-          "ArrayHandleTransform read only. "
-          "There should be no occurance of the ArrayHandle trying to pull "
-          "data from the execution environment.");
+      "ArrayHandleTransform read only. "
+      "There should be no occurance of the ArrayHandle trying to pull "
+      "data from the execution environment.");
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorBadType(
-          "ArrayHandleTransform read only. Cannot shrink.");
+  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
+  {
+    throw vtkm::cont::ErrorBadType("ArrayHandleTransform read only. Cannot shrink.");
   }
 
   VTKM_CONT
-  void ReleaseResources() {
-    this->Array.ReleaseResourcesExecution();
-  }
+  void ReleaseResources() { this->Array.ReleaseResourcesExecution(); }
 
 private:
   ArrayHandleType Array;
   FunctorType Functor;
 };
 
-template<typename T,
-         typename ArrayHandleType,
-         typename FunctorType,
-         typename InverseFunctorType,
-         typename Device>
+template <typename ArrayHandleType,
+          typename FunctorType,
+          typename InverseFunctorType,
+          typename Device>
 class ArrayTransfer<
-  T, StorageTagTransform<T,ArrayHandleType,FunctorType,InverseFunctorType>,
+  typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType,
+  StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>,
   Device>
 {
-  typedef StorageTagTransform<T,ArrayHandleType,
-                              FunctorType,InverseFunctorType> StorageTag;
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  typedef StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType> StorageTag;
 
 public:
-  typedef T ValueType;
+  typedef typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType ValueType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
   typedef typename StorageType::PortalType PortalControl;
   typedef typename StorageType::PortalConstType PortalConstControl;
 
   typedef vtkm::exec::internal::ArrayPortalTransform<
-      ValueType,
-      typename ArrayHandleType::template ExecutionTypes<Device>::Portal,
-      FunctorType, InverseFunctorType> PortalExecution;
+    ValueType,
+    typename ArrayHandleType::template ExecutionTypes<Device>::Portal,
+    FunctorType,
+    InverseFunctorType>
+    PortalExecution;
   typedef vtkm::exec::internal::ArrayPortalTransform<
-      ValueType,
-      typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
-      FunctorType, InverseFunctorType> PortalConstExecution;
+    ValueType,
+    typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
+    FunctorType,
+    InverseFunctorType>
+    PortalConstExecution;
 
   VTKM_CONT
-  ArrayTransfer(StorageType *storage)
-    : Array(storage->GetArray()),
-      Functor(storage->GetFunctor()),
-      InverseFunctor(storage->GetInverseFunctor()) {  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const {
-    return this->Array.GetNumberOfValues();
+  ArrayTransfer(StorageType* storage)
+    : Array(storage->GetArray())
+    , Functor(storage->GetFunctor())
+    , InverseFunctor(storage->GetInverseFunctor())
+  {
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()),this->Functor,this->InverseFunctor);
+  vtkm::Id GetNumberOfValues() const { return this->Array.GetNumberOfValues(); }
+
+  VTKM_CONT
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  {
+    return PortalConstExecution(
+      this->Array.PrepareForInput(Device()), this->Functor, this->InverseFunctor);
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool &vtkmNotUsed(updateData)) {
-    return PortalExecution(this->Array.PrepareForInPlace(Device()),this->Functor,this->InverseFunctor);
+  PortalExecution PrepareForInPlace(bool& vtkmNotUsed(updateData))
+  {
+    return PortalExecution(
+      this->Array.PrepareForInPlace(Device()), this->Functor, this->InverseFunctor);
   }
 
   VTKM_CONT
-  PortalExecution PrepareForOutput(vtkm::Id numberOfValues) {
-    return PortalExecution(this->Array.PrepareForOutput(numberOfValues,
-                                                        Device()),this->Functor,this->InverseFunctor);
+  PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
+  {
+    return PortalExecution(
+      this->Array.PrepareForOutput(numberOfValues, Device()), this->Functor, this->InverseFunctor);
   }
 
   VTKM_CONT
-  void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
+  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
+  {
     // Implementation of this method should be unnecessary. The internal
     // array handle should automatically retrieve the output data as necessary.
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id numberOfValues) {
-    this->Array.Shrink(numberOfValues);
-  }
+  void Shrink(vtkm::Id numberOfValues) { this->Array.Shrink(numberOfValues); }
 
   VTKM_CONT
-  void ReleaseResources() {
-    this->Array.ReleaseResourcesExecution();
-  }
+  void ReleaseResources() { this->Array.ReleaseResourcesExecution(); }
 
 private:
   ArrayHandleType Array;
@@ -499,18 +550,16 @@ private:
 /// the functor operator should work in both the control and execution
 /// environments.
 ///
-template <typename T,
-          typename ArrayHandleType,
+template <typename ArrayHandleType,
           typename FunctorType,
-          typename InverseFunctorType=internal::NullFunctorType>
+          typename InverseFunctorType = internal::NullFunctorType>
 class ArrayHandleTransform;
 
-template <typename T,
-          typename ArrayHandleType,
-          typename FunctorType>
-class ArrayHandleTransform<T,ArrayHandleType,FunctorType,internal::NullFunctorType>
-    : public vtkm::cont::ArrayHandle<
-        T, internal::StorageTagTransform<T, ArrayHandleType, FunctorType> >
+template <typename ArrayHandleType, typename FunctorType>
+class ArrayHandleTransform<ArrayHandleType, FunctorType, internal::NullFunctorType>
+  : public vtkm::cont::ArrayHandle<
+      typename internal::StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
+      internal::StorageTagTransform<ArrayHandleType, FunctorType>>
 {
   // If the following line gives a compile error, then the ArrayHandleType
   // template argument is not a valid ArrayHandle type.
@@ -518,74 +567,75 @@ class ArrayHandleTransform<T,ArrayHandleType,FunctorType,internal::NullFunctorTy
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-      ArrayHandleTransform,
-      (ArrayHandleTransform<T,ArrayHandleType,FunctorType>),
-      (vtkm::cont::ArrayHandle<
-         T, internal::StorageTagTransform<T, ArrayHandleType, FunctorType> >));
+    ArrayHandleTransform,
+    (ArrayHandleTransform<ArrayHandleType, FunctorType>),
+    (vtkm::cont::ArrayHandle<
+      typename internal::StorageTagTransform<ArrayHandleType, FunctorType>::ValueType,
+      internal::StorageTagTransform<ArrayHandleType, FunctorType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
   VTKM_CONT
-  ArrayHandleTransform(const ArrayHandleType &handle,
-                       const FunctorType &functor = FunctorType())
-    : Superclass(StorageType(handle, functor)) {  }
+  ArrayHandleTransform(const ArrayHandleType& handle, const FunctorType& functor = FunctorType())
+    : Superclass(StorageType(handle, functor))
+  {
+  }
 };
 
 /// make_ArrayHandleTransform is convenience function to generate an
 /// ArrayHandleTransform.  It takes in an ArrayHandle and a functor
 /// to apply to each element of the Handle.
-
-template <typename T, typename HandleType, typename FunctorType>
-VTKM_CONT
-vtkm::cont::ArrayHandleTransform<T, HandleType, FunctorType>
-make_ArrayHandleTransform(HandleType handle, FunctorType functor)
+template <typename HandleType, typename FunctorType>
+VTKM_CONT vtkm::cont::ArrayHandleTransform<HandleType, FunctorType> make_ArrayHandleTransform(
+  HandleType handle,
+  FunctorType functor)
 {
-  return ArrayHandleTransform<T,HandleType,FunctorType>(handle,functor);
+  return ArrayHandleTransform<HandleType, FunctorType>(handle, functor);
 }
 
 // ArrayHandleTransform with inverse functors enabled (no need to subclass from
 // ArrayHandleTransform without inverse functors: nothing to inherit).
-template <typename T,
-          typename ArrayHandleType,
-          typename FunctorType,
-          typename InverseFunctorType>
+template <typename ArrayHandleType, typename FunctorType, typename InverseFunctorType>
 class ArrayHandleTransform
-    : public vtkm::cont::ArrayHandle<
-        T,
-        internal::StorageTagTransform<T, ArrayHandleType, FunctorType,
-          InverseFunctorType> >
+  : public vtkm::cont::ArrayHandle<
+      typename internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::
+        ValueType,
+      internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-      ArrayHandleTransform,
-      (ArrayHandleTransform<T,ArrayHandleType,FunctorType,InverseFunctorType>),
-      (vtkm::cont::ArrayHandle<
-       T, internal::StorageTagTransform<T, ArrayHandleType, FunctorType,
-       InverseFunctorType> >));
+    ArrayHandleTransform,
+    (ArrayHandleTransform<ArrayHandleType, FunctorType, InverseFunctorType>),
+    (vtkm::cont::ArrayHandle<
+      typename internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::
+        ValueType,
+      internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
- public:
-  ArrayHandleTransform(const ArrayHandleType &handle,
-                       const FunctorType &functor = FunctorType(),
-                const InverseFunctorType &inverseFunctor = InverseFunctorType())
-    : Superclass(StorageType(handle, functor, inverseFunctor)) {  }
+public:
+  ArrayHandleTransform(const ArrayHandleType& handle,
+                       const FunctorType& functor = FunctorType(),
+                       const InverseFunctorType& inverseFunctor = InverseFunctorType())
+    : Superclass(StorageType(handle, functor, inverseFunctor))
+  {
+  }
 };
 
-template <typename T, typename HandleType, typename FunctorType, typename InverseFunctorType>
-VTKM_CONT
-vtkm::cont::ArrayHandleTransform<T, HandleType, FunctorType, InverseFunctorType>
+template <typename HandleType, typename FunctorType, typename InverseFunctorType>
+VTKM_CONT vtkm::cont::ArrayHandleTransform<HandleType, FunctorType, InverseFunctorType>
 make_ArrayHandleTransform(HandleType handle, FunctorType functor, InverseFunctorType inverseFunctor)
 {
-  return ArrayHandleTransform<T,HandleType,FunctorType,InverseFunctorType>(handle,functor,inverseFunctor);
+  return ArrayHandleTransform<HandleType, FunctorType, InverseFunctorType>(
+    handle, functor, inverseFunctor);
+}
 }
 
-}
 } // namespace vtkm::cont
 
 #endif //vtk_m_cont_ArrayHandleTransform_h

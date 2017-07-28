@@ -81,17 +81,23 @@ def signature(num_params, name=''):
 $#
 $extend(comma_if, ptype, template_params, signature)\
 
-namespace vtkm {
-namespace internal {
+namespace vtkm
+{
+namespace internal
+{
 
-namespace detail {
+namespace detail
+{
 
 //============================================================================
+
+// clang-format off
 
 $for(num_params in xrange(0, max_parameters+1))\
 template<typename Transform,
          $template_params(num_params)>
-struct FunctionInterfaceStaticTransformType<$signature(num_params), Transform> {
+struct FunctionInterfaceStaticTransformType<$signature(num_params), Transform>
+{
   typedef $ptype(0)(type)(
 $for(param_index in xrange(1, num_params+1))\
         typename Transform::template ReturnType<$ptype(param_index),$(param_index)>::type$comma_if(param_index<num_params)
@@ -101,9 +107,13 @@ $endfor\
 
 $endfor\
 
+// clang-format on
+
 } // namespace detail
 
 //============================================================================
+
+// clang-format off
 
 $for(num_params in xrange(0, max_parameters+1))\
 /// \brief Create a \c FunctionInterface
@@ -124,9 +134,9 @@ VTKM_EXEC_CONT
 FunctionInterface<$signature(num_params)>
 make_FunctionInterface(
 $for(param_index in xrange(1,num_params+1))\
-      const $ptype(param_index)& p$(param_index)$comma_if(param_index<num_params)
+  const $ptype(param_index)& p$(param_index)$comma_if(param_index<num_params)
 $endfor\
-      )
+  )
 {
   FunctionInterface<$signature(num_params)> fi;
 $for(param_index in xrange(1,num_params+1))\
@@ -136,6 +146,8 @@ $endfor\
 }
 
 $endfor\
+
+// clang-format off
 
 }
 } // namespace vtkm::internal

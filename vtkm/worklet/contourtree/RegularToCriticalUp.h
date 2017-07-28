@@ -67,37 +67,38 @@
 #ifndef vtkm_worklet_contourtree_regular_to_critical_up_h
 #define vtkm_worklet_contourtree_regular_to_critical_up_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to critical
 class RegularToCriticalUp : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> candIndex,        // (input) index into candidates
-                                FieldIn<IdType> candidate,        // (input) candidate index
-                                WholeArrayOut<IdType> critical);  // (output)
+  typedef void ControlSignature(FieldIn<IdType> candIndex,       // (input) index into candidates
+                                FieldIn<IdType> candidate,       // (input) candidate index
+                                WholeArrayOut<IdType> critical); // (output)
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   RegularToCriticalUp() {}
 
   template <typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& index,
-                  const vtkm::Id& candidate,
-                  const OutFieldPortalType& critical) const
+  VTKM_EXEC void operator()(const vtkm::Id& index,
+                            const vtkm::Id& candidate,
+                            const OutFieldPortalType& critical) const
   {
     critical.Set(candidate, index);
   }
 }; // RegularToCriticalUp
-
 }
 }
 }

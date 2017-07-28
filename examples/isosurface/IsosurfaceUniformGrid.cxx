@@ -34,14 +34,14 @@
 
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-#if defined (__APPLE__)
-# include <GLUT/glut.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
 #else
-# include <GL/glut.h>
+#include <GL/glut.h>
 #endif
 
 #include "quaternion.h"
@@ -49,13 +49,14 @@
 #include <vector>
 
 static vtkm::Id3 dims(256, 256, 256);
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32,3> > verticesArray, normalsArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verticesArray, normalsArray;
 static vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 static Quaternion qrot;
 static int lastx, lasty;
 static int mouse_state = 1;
 
-namespace {
+namespace
+{
 
 // Define the tangle field for the input data
 class TangleField : public vtkm::worklet::WorkletMapField
@@ -70,28 +71,39 @@ public:
   const vtkm::Id cellsPerLayer;
 
   VTKM_CONT
-  TangleField(const vtkm::Id3 dims, const vtkm::Float32 mins[3], const vtkm::Float32 maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
-              xmin(mins[0]), ymin(mins[1]), zmin(mins[2]), xmax(maxs[0]), ymax(maxs[1]), zmax(maxs[2]), cellsPerLayer((xdim) * (ydim)) { };
+  TangleField(const vtkm::Id3 dims, const vtkm::Float32 mins[3], const vtkm::Float32 maxs[3])
+    : xdim(dims[0])
+    , ydim(dims[1])
+    , zdim(dims[2])
+    , xmin(mins[0])
+    , ymin(mins[1])
+    , zmin(mins[2])
+    , xmax(maxs[0])
+    , ymax(maxs[1])
+    , zmax(maxs[2])
+    , cellsPerLayer((xdim) * (ydim)){};
 
   VTKM_EXEC
-  void operator()(const vtkm::Id &vertexId, vtkm::Float32 &v) const
+  void operator()(const vtkm::Id& vertexId, vtkm::Float32& v) const
   {
     const vtkm::Id x = vertexId % (xdim);
     const vtkm::Id y = (vertexId / (xdim)) % (ydim);
     const vtkm::Id z = vertexId / cellsPerLayer;
 
-    const vtkm::Float32 fx = static_cast<vtkm::Float32>(x) / static_cast<vtkm::Float32>(xdim-1);
-    const vtkm::Float32 fy = static_cast<vtkm::Float32>(y) / static_cast<vtkm::Float32>(xdim-1);
-    const vtkm::Float32 fz = static_cast<vtkm::Float32>(z) / static_cast<vtkm::Float32>(xdim-1);
+    const vtkm::Float32 fx = static_cast<vtkm::Float32>(x) / static_cast<vtkm::Float32>(xdim - 1);
+    const vtkm::Float32 fy = static_cast<vtkm::Float32>(y) / static_cast<vtkm::Float32>(xdim - 1);
+    const vtkm::Float32 fz = static_cast<vtkm::Float32>(z) / static_cast<vtkm::Float32>(xdim - 1);
 
-    const vtkm::Float32 xx = 3.0f*(xmin+(xmax-xmin)*(fx));
-    const vtkm::Float32 yy = 3.0f*(ymin+(ymax-ymin)*(fy));
-    const vtkm::Float32 zz = 3.0f*(zmin+(zmax-zmin)*(fz));
+    const vtkm::Float32 xx = 3.0f * (xmin + (xmax - xmin) * (fx));
+    const vtkm::Float32 yy = 3.0f * (ymin + (ymax - ymin) * (fy));
+    const vtkm::Float32 zz = 3.0f * (zmin + (zmax - zmin) * (fz));
 
-    v = (xx*xx*xx*xx - 5.0f*xx*xx + yy*yy*yy*yy - 5.0f*yy*yy + zz*zz*zz*zz - 5.0f*zz*zz + 11.8f) * 0.2f + 0.5f;
+    v = (xx * xx * xx * xx - 5.0f * xx * xx + yy * yy * yy * yy - 5.0f * yy * yy +
+         zz * zz * zz * zz - 5.0f * zz * zz + 11.8f) *
+        0.2f +
+      0.5f;
   }
 };
-
 
 // Construct an input data set using the tangle field worklet
 vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
@@ -100,24 +112,23 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 
   const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
 
-  vtkm::Float32 mins[3] = {-1.0f, -1.0f, -1.0f};
-  vtkm::Float32 maxs[3] = {1.0f, 1.0f, 1.0f};
+  vtkm::Float32 mins[3] = { -1.0f, -1.0f, -1.0f };
+  vtkm::Float32 maxs[3] = { 1.0f, 1.0f, 1.0f };
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, 1, vdims[0]*vdims[1]*vdims[2]);
-  vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(TangleField(vdims, mins, maxs));
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(
+    0, 1, vdims[0] * vdims[1] * vdims[2]);
+  vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(
+    TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
 
-  vtkm::Vec<vtkm::FloatDefault,3> origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec<vtkm::FloatDefault,3> spacing(
-        1.0f/static_cast<vtkm::FloatDefault>(dims[0]),
-        1.0f/static_cast<vtkm::FloatDefault>(dims[2]),
-        1.0f/static_cast<vtkm::FloatDefault>(dims[1]));
+  vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
+                                           1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
+                                           1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates
-      coordinates(vdims, origin, spacing);
-  dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", coordinates));
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   dataSet.AddField(vtkm::cont::Field("nodevar", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
@@ -128,9 +139,7 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 
   return dataSet;
 }
-
 }
-
 
 // Initialize the OpenGL state
 void initializeGL()
@@ -157,7 +166,6 @@ void initializeGL()
   glEnable(GL_COLOR_MATERIAL);
 }
 
-
 // Render the output using simple OpenGL
 void displayCall()
 {
@@ -166,7 +174,7 @@ void displayCall()
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective( 45.0f, 1.0f, 1.0f, 20.0f);
+  gluPerspective(45.0f, 1.0f, 1.0f, 20.0f);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -181,7 +189,7 @@ void displayCall()
   glColor3f(0.1f, 0.1f, 0.6f);
 
   glBegin(GL_TRIANGLES);
-  for (vtkm::IdComponent i=0; i<verticesArray.GetNumberOfValues(); i++)
+  for (vtkm::IdComponent i = 0; i < verticesArray.GetNumberOfValues(); i++)
   {
     vtkm::Vec<vtkm::Float32, 3> curNormal = normalsArray.GetPortalConstControl().Get(i);
     vtkm::Vec<vtkm::Float32, 3> curVertex = verticesArray.GetPortalConstControl().Get(i);
@@ -194,7 +202,6 @@ void displayCall()
   glutSwapBuffers();
 }
 
-
 // Allow rotations of the view
 void mouseMove(int x, int y)
 {
@@ -205,11 +212,11 @@ void mouseMove(int x, int y)
   {
     vtkm::Float32 pideg = static_cast<vtkm::Float32>(vtkm::Pi_2());
     Quaternion newRotX;
-    newRotX.setEulerAngles(-0.2f*dx*pideg/180.0f, 0.0f, 0.0f);
+    newRotX.setEulerAngles(-0.2f * dx * pideg / 180.0f, 0.0f, 0.0f);
     qrot.mul(newRotX);
 
     Quaternion newRotY;
-    newRotY.setEulerAngles(0.0f, 0.0f, -0.2f*dy*pideg/180.0f);
+    newRotY.setEulerAngles(0.0f, 0.0f, -0.2f * dy * pideg / 180.0f);
     qrot.mul(newRotY);
   }
   lastx = x;
@@ -218,14 +225,17 @@ void mouseMove(int x, int y)
   glutPostRedisplay();
 }
 
-
 // Respond to mouse button
 void mouseCall(int button, int state, int x, int y)
 {
-  if (button == 0) mouse_state = state;
-  if ((button == 0) && (state == 0)) { lastx = x;  lasty = y; }
+  if (button == 0)
+    mouse_state = state;
+  if ((button == 0) && (state == 0))
+  {
+    lastx = x;
+    lasty = y;
+  }
 }
-
 
 // Compute and render an isosurface for a uniform grid example
 int main(int argc, char* argv[])
@@ -236,21 +246,20 @@ int main(int argc, char* argv[])
   filter.SetGenerateNormals(true);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0, 0.5);
-  vtkm::filter::ResultDataSet result =
-      filter.Execute( dataSet, dataSet.GetField("nodevar") );
+  vtkm::filter::ResultDataSet result = filter.Execute(dataSet, dataSet.GetField("nodevar"));
 
   filter.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));
 
   //need to extract vertices, normals, and scalars
   vtkm::cont::DataSet& outputData = result.GetDataSet();
 
-
-  typedef vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > VertType;
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> VertType;
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
 
   verticesArray = coords.GetData().Cast<VertType>();
   normalsArray = outputData.GetField("normals").GetData().Cast<VertType>();
-  scalarsArray = outputData.GetField("nodevar").GetData().Cast< vtkm::cont::ArrayHandle<vtkm::Float32> >();
+  scalarsArray =
+    outputData.GetField("nodevar").GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
 
   std::cout << "Number of output vertices: " << verticesArray.GetNumberOfValues() << std::endl;
 
@@ -282,5 +291,5 @@ int main(int argc, char* argv[])
 }
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif

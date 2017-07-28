@@ -26,13 +26,13 @@
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
+namespace
+{
 
-namespace {
-
-template<typename CellSetInType>
+template <typename CellSetInType>
 struct TestKernel : public vtkm::exec::FunctorBase
 {
   CellSetInType CellSet;
@@ -40,51 +40,48 @@ struct TestKernel : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id) const
   {
-  if (this->CellSet.GetNumberOfElements() != 2)
+    if (this->CellSet.GetNumberOfElements() != 2)
     {
       this->RaiseError("Got bad number of shapes in exec cellset object.");
     }
 
-  if (this->CellSet.GetNumberOfIndices(0) != 3 ||
-      this->CellSet.GetNumberOfIndices(1) != 4 )
+    if (this->CellSet.GetIndices(0).GetNumberOfComponents() != 3 ||
+        this->CellSet.GetIndices(1).GetNumberOfComponents() != 4)
     {
       this->RaiseError("Got bad number of Indices in exec cellset object.");
     }
 
-  if (this->CellSet.GetCellShape(0).Id != 5 ||
-      this->CellSet.GetCellShape(1).Id != 9 )
+    if (this->CellSet.GetCellShape(0).Id != 5 || this->CellSet.GetCellShape(1).Id != 9)
     {
       this->RaiseError("Got bad cell shape in exec cellset object.");
     }
   }
 };
 
-template<typename Device>
+template <typename Device>
 void TransportWholeCellSetIn(Device)
 {
   //build a fake cell set
   const int nVerts = 5;
   vtkm::cont::CellSetExplicit<> contObject("cells");
   contObject.PrepareToAddCells(2, 7);
-  contObject.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::make_Vec<vtkm::Id>(0,1,2));
-  contObject.AddCell(vtkm::CELL_SHAPE_QUAD, 4, vtkm::make_Vec<vtkm::Id>(2,1,3,4));
+  contObject.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, vtkm::make_Vec<vtkm::Id>(0, 1, 2));
+  contObject.AddCell(vtkm::CELL_SHAPE_QUAD, 4, vtkm::make_Vec<vtkm::Id>(2, 1, 3, 4));
   contObject.CompleteAddingCells(nVerts);
 
   typedef vtkm::TopologyElementTagPoint FromType;
   typedef vtkm::TopologyElementTagCell ToType;
 
-  typedef typename  vtkm::cont::CellSetExplicit<>
-      ::template ExecutionTypes< Device, FromType, ToType >
-      ::ExecObjectType ExecObjectType;
+  typedef typename vtkm::cont::CellSetExplicit<>::
+    template ExecutionTypes<Device, FromType, ToType>::ExecObjectType ExecObjectType;
 
-  vtkm::cont::arg::Transport<
-      vtkm::cont::arg::TransportTagCellSetIn<FromType,ToType>,
-      vtkm::cont::CellSetExplicit<>,
-      Device>
-      transport;
+  vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagCellSetIn<FromType, ToType>,
+                             vtkm::cont::CellSetExplicit<>,
+                             Device>
+    transport;
 
   TestKernel<ExecObjectType> kernel;
-  kernel.CellSet = transport(contObject, nullptr, 1);
+  kernel.CellSet = transport(contObject, nullptr, 1, 1);
 
   vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, 1);
 }
@@ -97,7 +94,7 @@ void UnitTestCellSetIn()
 
 } // Anonymous namespace
 
-int UnitTestTransportCellSetIn(int, char *[])
+int UnitTestTransportCellSetIn(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(UnitTestCellSetIn);
 }

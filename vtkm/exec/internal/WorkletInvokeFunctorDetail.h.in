@@ -40,8 +40,9 @@ $# Ignore the following comment. It is meant for the generated file.
 #ifndef vtk_m_exec_internal_WorkletInvokeFunctorDetail_h
 #define vtk_m_exec_internal_WorkletInvokeFunctorDetail_h
 
-#if !defined(vtk_m_exec_internal_WorkletInvokeFunctor_h) && !defined(VTKM_TEST_HEADER_BUILD)
-#error WorkletInvokeFunctorDetail.h must be included from WorkletInvokeFunctor.h
+#if !defined(vtk_m_exec_internal_TaskSingular_h) && !defined(vtk_m_exec_internal_TaskTiling_h) &&  \\
+  !defined(VTKM_TEST_HEADER_BUILD)
+#error WorkletInvokeFunctorDetail.h must be included from TaskSingular.h or TaskTiling.h
 #endif
 
 #include <vtkm/internal/FunctionInterface.h>
@@ -80,7 +81,7 @@ def template_params(num_params, start=0, name=''):
     return ''
   result = 'typename %s' % ptype(start, name)
   for param in xrange(start+1, num_params+1):
-    result += ',\n         typename %s' % ptype(param, name)
+    result += ',\n          typename %s' % ptype(param, name)
   return result
 
 def signature(num_params, return_type=ptype(0), name=''):
@@ -88,7 +89,7 @@ def signature(num_params, return_type=ptype(0), name=''):
   if num_params > 0:
     result += ptype(1, name)
   for param in xrange(2, num_params+1):
-    result += ',%s' % ptype(param, name)
+    result += ', %s' % ptype(param, name)
   result += ')'
   return result
 
@@ -97,89 +98,92 @@ def arg_list(num_params, name='', start=1):
     return ''
   result = pname(start, name)
   for param in xrange(start+1, num_params+1):
-    result += ',%s' % pname(param, name)
+    result += ', %s' % pname(param, name)
   return result
 )\
 $#
 $extend(comma_if, ptype, pname, template_params, signature, arg_list)\
 
-namespace vtkm {
-namespace exec {
-namespace internal {
-namespace detail {
+namespace vtkm
+{
+namespace exec
+{
+namespace internal
+{
+namespace detail
+{
 
 /// A helper class that takes an \c Invocation object and an index to a
 /// parameter in the ExecutionSignature and finds the \c Fetch type valid for
 /// that parameter.
-template<typename ThreadIndicesType,
-         typename Invocation,
-         vtkm::IdComponent ExecutionParameterIndex>
+template <typename ThreadIndicesType,
+          typename Invocation,
+          vtkm::IdComponent ExecutionParameterIndex>
 struct InvocationToFetch
 {
-  typedef typename Invocation::ExecutionInterface::
-      template ParameterType<ExecutionParameterIndex>::type
-        ExecutionSignatureTag;
+  typedef
+    typename Invocation::ExecutionInterface::template ParameterType<ExecutionParameterIndex>::type
+      ExecutionSignatureTag;
 
   // Expected fields from ExecutionSignatureTag. If these do not exist in
   // ExecutionSignatureTag, then something that is not really an execution
   // signature tag was used in an ExecutionSignature.
-  static const vtkm::IdComponent ControlParameterIndex =
-      ExecutionSignatureTag::INDEX;
+  static const vtkm::IdComponent ControlParameterIndex = ExecutionSignatureTag::INDEX;
   typedef typename ExecutionSignatureTag::AspectTag AspectTag;
 
   // Find the fetch tag from the control signature tag pointed to by
   // ParameterIndex.
   typedef typename Invocation::ControlInterface ControlInterface;
-  typedef typename ControlInterface::
-      template ParameterType<ControlParameterIndex>::type ControlSignatureTag;
+  typedef typename ControlInterface::template ParameterType<ControlParameterIndex>::type
+    ControlSignatureTag;
   typedef typename ControlSignatureTag::FetchTag FetchTag;
 
-  typedef typename Invocation::ParameterInterface::
-      template ParameterType<ControlParameterIndex>::type ExecObjectType;
+  typedef
+    typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type
+      ExecObjectType;
 
-  typedef vtkm::exec::arg::Fetch<
-      FetchTag,AspectTag,ThreadIndicesType,ExecObjectType> type;
+  typedef vtkm::exec::arg::Fetch<FetchTag, AspectTag, ThreadIndicesType, ExecObjectType> type;
 };
 
+// clang-format off
+
 $for(num_params in range(1, max_parameters+1))\
-template<typename WorkletType,
-         typename ParameterInterface,
-         typename ControlInterface,
-         vtkm::IdComponent InputDomainIndex,
-         typename OutputToInputMapType,
-         typename VisitArrayType,
-         typename ThreadIndicesType,
-         $template_params(num_params)>
-VTKM_EXEC
-void DoWorkletInvokeFunctor(
-      const WorkletType &worklet,
-      const vtkm::internal::Invocation<
-        ParameterInterface,
-        ControlInterface,
-        vtkm::internal::FunctionInterface<$signature(num_params)>,
-        InputDomainIndex,
-        OutputToInputMapType,
-        VisitArrayType> &invocation,
-      const ThreadIndicesType &threadIndices)
+template <typename WorkletType,
+          typename ParameterInterface,
+          typename ControlInterface,
+          vtkm::IdComponent InputDomainIndex,
+          typename OutputToInputMapType,
+          typename VisitArrayType,
+          typename ThreadIndicesType,
+          $template_params(num_params)>
+VTKM_EXEC void DoWorkletInvokeFunctor(
+  const WorkletType& worklet,
+  const vtkm::internal::Invocation<ParameterInterface,
+                                   ControlInterface,
+                                   vtkm::internal::FunctionInterface<$signature(num_params)>,
+                                   InputDomainIndex,
+                                   OutputToInputMapType,
+                                   VisitArrayType>& invocation,
+  const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-      ParameterInterface,
-      ControlInterface,
-      vtkm::internal::FunctionInterface<$signature(num_params)>,
-      InputDomainIndex,
-      OutputToInputMapType,
-      VisitArrayType> Invocation;
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<$signature(num_params)>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
+    Invocation;
 $for(param_index in range(1, num_params+1))\
 
-  typedef InvocationToFetch<ThreadIndicesType,Invocation,$(param_index)> FetchInfo$(param_index);
+  typedef InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)> FetchInfo$(param_index);
   typedef typename FetchInfo$(param_index)::type FetchType$(param_index);
   FetchType$(param_index) fetch$(param_index);
   typename FetchType$(param_index)::ValueType $pname(param_index) =
-      fetch$(param_index).Load(
-        threadIndices, invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>());
+    fetch$(param_index).Load(threadIndices,
+                invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>());
 $endfor\
 
-  typedef InvocationToFetch<ThreadIndicesType,Invocation,0> FetchInfo0;
+  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
   typedef typename FetchInfo0::type ReturnFetchType;
   typedef typename ReturnFetchType::ValueType ReturnValueType;
   ReturnFetchType returnFetch;
@@ -195,49 +199,50 @@ $endfor\
   ReturnValueType $pname(0) = ReturnValueType(worklet($arg_list(num_params)));
 
   returnFetch.Store(
-        threadIndices, invocation.Parameters.template GetParameter<FetchInfo0::ControlParameterIndex>(), $pname(0));
+    threadIndices,
+    invocation.Parameters.template GetParameter<FetchInfo0::ControlParameterIndex>(),
+    $pname(0));
 
 $for(param_index in range(1, num_params+1))\
-  fetch$(param_index).Store(
-      threadIndices, invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>(), $pname(param_index));
+  fetch$(param_index).Store(threadIndices,
+               invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>(),
+               $pname(param_index));
 $endfor\
 }
 
-template<typename WorkletType,
-         typename ParameterInterface,
-         typename ControlInterface,
-         vtkm::IdComponent InputDomainIndex,
-         typename OutputToInputMapType,
-         typename VisitArrayType,
-         typename ThreadIndicesType,
-         $template_params(num_params, start=1)>
-VTKM_EXEC
-void DoWorkletInvokeFunctor(
-      const WorkletType &worklet,
-      const vtkm::internal::Invocation<
-        ParameterInterface,
-        ControlInterface,
-        vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
-        InputDomainIndex,
-        OutputToInputMapType,
-        VisitArrayType> &invocation,
-      const ThreadIndicesType &threadIndices)
+template <typename WorkletType,
+          typename ParameterInterface,
+          typename ControlInterface,
+          vtkm::IdComponent InputDomainIndex,
+          typename OutputToInputMapType,
+          typename VisitArrayType,
+          typename ThreadIndicesType,
+          $template_params(num_params, start=1)>
+VTKM_EXEC void DoWorkletInvokeFunctor(
+  const WorkletType& worklet,
+  const vtkm::internal::Invocation<ParameterInterface,
+                                   ControlInterface,
+                                   vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
+                                   InputDomainIndex,
+                                   OutputToInputMapType,
+                                   VisitArrayType>& invocation,
+  const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<
-      ParameterInterface,
-      ControlInterface,
-      vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
-      InputDomainIndex,
-      OutputToInputMapType,
-      VisitArrayType> Invocation;
+  typedef vtkm::internal::Invocation<ParameterInterface,
+                                     ControlInterface,
+                                     vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
+                                     InputDomainIndex,
+                                     OutputToInputMapType,
+                                     VisitArrayType>
+    Invocation;
 $for(param_index in range(1, num_params+1))\
 
-  typedef InvocationToFetch<ThreadIndicesType,Invocation,$(param_index)> FetchInfo$(param_index);
+  typedef InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)> FetchInfo$(param_index);
   typedef typename FetchInfo$(param_index)::type FetchType$(param_index);
   FetchType$(param_index) fetch$(param_index);
   typename FetchType$(param_index)::ValueType $pname(param_index) =
-      fetch$(param_index).Load(
-        threadIndices, invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>());
+    fetch$(param_index).Load(threadIndices,
+                invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>());
 $endfor\
 
   // If you got a compile error on the following line, it probably means that
@@ -252,13 +257,14 @@ $endfor\
   worklet($arg_list(num_params));
 
 $for(param_index in range(1, num_params+1))\
-  fetch$(param_index).Store(
-      threadIndices, invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>(), $pname(param_index));
+  fetch$(param_index).Store(threadIndices,
+               invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>(),
+               $pname(param_index));
 $endfor\
 }
 
 $endfor\
-
+// clang-format on
 }
 }
 }

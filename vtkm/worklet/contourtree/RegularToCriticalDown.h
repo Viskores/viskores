@@ -67,13 +67,16 @@
 #ifndef vtkm_worklet_contourtree_regular_to_critical_down_h
 #define vtkm_worklet_contourtree_regular_to_critical_down_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to critical
 class RegularToCriticalDown : public vtkm::worklet::WorkletMapField
@@ -91,10 +94,9 @@ public:
   RegularToCriticalDown() {}
 
   template <typename InFieldPortalType>
-  VTKM_EXEC
-  vtkm::Id operator()(const vtkm::Id& vertexID,
-                      const InFieldPortalType& mergeArcs,
-                      const InFieldPortalType& regularToCritical) const
+  VTKM_EXEC vtkm::Id operator()(const vtkm::Id& vertexID,
+                                const InFieldPortalType& mergeArcs,
+                                const InFieldPortalType& regularToCritical) const
   {
     vtkm::Id sortVector;
 
@@ -110,7 +112,6 @@ public:
     return sortVector;
   }
 }; // RegularToCriticalDown
-
 }
 }
 }

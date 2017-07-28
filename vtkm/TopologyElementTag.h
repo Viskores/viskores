@@ -22,7 +22,8 @@
 
 #include <vtkm/Types.h>
 
-namespace vtkm {
+namespace vtkm
+{
 
 /// \brief A tag used to identify the cell elements in a topology.
 ///
@@ -30,7 +31,9 @@ namespace vtkm {
 /// example, a 3D mesh has points, edges, faces, and cells. Each of these is an
 /// example of a topology element and has its own tag.
 ///
-struct TopologyElementTagCell {  };
+struct TopologyElementTagCell
+{
+};
 
 /// \brief A tag used to identify the point elements in a topology.
 ///
@@ -38,7 +41,9 @@ struct TopologyElementTagCell {  };
 /// example, a 3D mesh has points, edges, faces, and cells. Each of these is an
 /// example of a topology element and has its own tag.
 ///
-struct TopologyElementTagPoint {  };
+struct TopologyElementTagPoint
+{
+};
 
 /// \brief A tag used to identify the edge elements in a topology.
 ///
@@ -46,7 +51,9 @@ struct TopologyElementTagPoint {  };
 /// example, a 3D mesh has points, edges, faces, and cells. Each of these is an
 /// example of a topology element and has its own tag.
 ///
-struct TopologyElementTagEdge {  };
+struct TopologyElementTagEdge
+{
+};
 
 /// \brief A tag used to identify the face elements in a topology.
 ///
@@ -54,10 +61,12 @@ struct TopologyElementTagEdge {  };
 /// example, a 3D mesh has points, edges, faces, and cells. Each of these is an
 /// example of a topology element and has its own tag.
 ///
-struct TopologyElementTagFace {  };
+struct TopologyElementTagFace
+{
+};
 
-
-namespace internal {
+namespace internal
+{
 
 /// Checks to see if the given object is a topology element tag.This check is
 /// compatible with C++11 type_traits.
@@ -65,35 +74,34 @@ namespace internal {
 /// std::false_type. Both of these have a typedef named value with the
 /// respective boolean value.
 ///
-template<typename T>
+template <typename T>
 struct TopologyElementTagCheck : std::false_type
 {
 };
 
-template<>
+template <>
 struct TopologyElementTagCheck<vtkm::TopologyElementTagCell> : std::true_type
 {
 };
 
-template<>
+template <>
 struct TopologyElementTagCheck<vtkm::TopologyElementTagPoint> : std::true_type
 {
 };
 
-template<>
+template <>
 struct TopologyElementTagCheck<vtkm::TopologyElementTagEdge> : std::true_type
 {
 };
 
-template<>
+template <>
 struct TopologyElementTagCheck<vtkm::TopologyElementTagFace> : std::true_type
 {
 };
 
-
-#define VTKM_IS_TOPOLOGY_ELEMENT_TAG(type) \
-  static_assert( ::vtkm::internal::TopologyElementTagCheck<type>::value, \
-                  "Invalid Topology Element Tag being used")
+#define VTKM_IS_TOPOLOGY_ELEMENT_TAG(type)                                                         \
+  static_assert(::vtkm::internal::TopologyElementTagCheck<type>::value,                            \
+                "Invalid Topology Element Tag being used")
 
 } // namespace internal
 

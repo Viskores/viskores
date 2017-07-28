@@ -29,21 +29,24 @@
 
 #include <vtkm/rendering/internal/OpenGLHeaders.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 WorldAnnotatorGL::~WorldAnnotatorGL()
-{  }
+{
+}
 
-void WorldAnnotatorGL::AddLine(const vtkm::Vec<vtkm::Float64,3> &point0,
-                               const vtkm::Vec<vtkm::Float64,3> &point1,
+void WorldAnnotatorGL::AddLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
+                               const vtkm::Vec<vtkm::Float64, 3>& point1,
                                vtkm::Float32 lineWidth,
-                               const vtkm::rendering::Color &color,
+                               const vtkm::rendering::Color& color,
                                bool inFront) const
 {
   if (inFront)
   {
-    glDepthRange(-.0001,.9999);
+    glDepthRange(-.0001, .9999);
   }
 
   glDisable(GL_LIGHTING);
@@ -60,23 +63,23 @@ void WorldAnnotatorGL::AddLine(const vtkm::Vec<vtkm::Float64,3> &point0,
 
   if (inFront)
   {
-    glDepthRange(0,1);
+    glDepthRange(0, 1);
   }
 }
 
-void WorldAnnotatorGL::AddText(const vtkm::Vec<vtkm::Float32,3> &origin,
-                               const vtkm::Vec<vtkm::Float32,3> &right,
-                               const vtkm::Vec<vtkm::Float32,3> &up,
+void WorldAnnotatorGL::AddText(const vtkm::Vec<vtkm::Float32, 3>& origin,
+                               const vtkm::Vec<vtkm::Float32, 3>& right,
+                               const vtkm::Vec<vtkm::Float32, 3>& up,
                                vtkm::Float32 scale,
-                               const vtkm::Vec<vtkm::Float32,2> &anchor,
-                               const vtkm::rendering::Color &color,
-                               const std::string &text) const
+                               const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                               const vtkm::rendering::Color& color,
+                               const std::string& text) const
 {
 
-  vtkm::Vec<vtkm::Float32,3> n = vtkm::Cross(right,up);
+  vtkm::Vec<vtkm::Float32, 3> n = vtkm::Cross(right, up);
   vtkm::Normalize(n);
 
-  vtkm::Matrix<vtkm::Float32,4,4> m;
+  vtkm::Matrix<vtkm::Float32, 4, 4> m;
   m = MatrixHelpers::WorldMatrix(origin, right, up, n);
 
   vtkm::Float32 ogl[16];
@@ -89,7 +92,8 @@ void WorldAnnotatorGL::AddText(const vtkm::Vec<vtkm::Float32,3> &origin,
 }
 
 void WorldAnnotatorGL::RenderText(vtkm::Float32 scale,
-                                  vtkm::Float32 anchorx, vtkm::Float32 anchory,
+                                  vtkm::Float32 anchorx,
+                                  vtkm::Float32 anchory,
                                   std::string text) const
 {
   if (!this->FontTexture.Valid())
@@ -98,24 +102,20 @@ void WorldAnnotatorGL::RenderText(vtkm::Float32 scale,
     // use it. Although technically we are changing the state, the logical
     // state does not change, so we go ahead and do it in this const
     // function.
-    vtkm::rendering::WorldAnnotatorGL *self =
-        const_cast<vtkm::rendering::WorldAnnotatorGL *>(this);
+    vtkm::rendering::WorldAnnotatorGL* self = const_cast<vtkm::rendering::WorldAnnotatorGL*>(this);
     self->Font = BitmapFontFactory::CreateLiberation2Sans();
-    const std::vector<unsigned char> &rawpngdata =
-        this->Font.GetRawImageData();
+    const std::vector<unsigned char>& rawpngdata = this->Font.GetRawImageData();
 
     std::vector<unsigned char> rgba;
     unsigned long width, height;
-    int error = vtkm::rendering::DecodePNG(rgba, width, height,
-                                           &rawpngdata[0], rawpngdata.size());
+    int error = vtkm::rendering::DecodePNG(rgba, width, height, &rawpngdata[0], rawpngdata.size());
     if (error != 0)
     {
       return;
     }
 
-    self->FontTexture.CreateAlphaFromRGBA(int(width),int(height),rgba);
+    self->FontTexture.CreateAlphaFromRGBA(int(width), int(height), rgba);
   }
-
 
   this->FontTexture.Enable();
 
@@ -130,31 +130,29 @@ void WorldAnnotatorGL::RenderText(vtkm::Float32 scale,
 
   vtkm::Float32 textwidth = this->Font.GetTextWidth(text);
 
-  vtkm::Float32 fx = -(.5f + .5f*anchorx) * textwidth;
-  vtkm::Float32 fy = -(.5f + .5f*anchory);
+  vtkm::Float32 fx = -(.5f + .5f * anchorx) * textwidth;
+  vtkm::Float32 fy = -(.5f + .5f * anchory);
   vtkm::Float32 fz = 0;
-  for (unsigned int i=0; i<text.length(); ++i)
+  for (unsigned int i = 0; i < text.length(); ++i)
   {
     char c = text[i];
-    char nextchar = (i < text.length()-1) ? text[i+1] : 0;
+    char nextchar = (i < text.length() - 1) ? text[i + 1] : 0;
 
-    vtkm::Float32 vl,vr,vt,vb;
-    vtkm::Float32 tl,tr,tt,tb;
-    this->Font.GetCharPolygon(c, fx, fy,
-                        vl, vr, vt, vb,
-                        tl, tr, tt, tb, nextchar);
+    vtkm::Float32 vl, vr, vt, vb;
+    vtkm::Float32 tl, tr, tt, tb;
+    this->Font.GetCharPolygon(c, fx, fy, vl, vr, vt, vb, tl, tr, tt, tb, nextchar);
 
-    glTexCoord2f(tl, 1.f-tt);
-    glVertex3f(scale*vl, scale*vt, fz);
+    glTexCoord2f(tl, 1.f - tt);
+    glVertex3f(scale * vl, scale * vt, fz);
 
-    glTexCoord2f(tl, 1.f-tb);
-    glVertex3f(scale*vl, scale*vb, fz);
+    glTexCoord2f(tl, 1.f - tb);
+    glVertex3f(scale * vl, scale * vb, fz);
 
-    glTexCoord2f(tr, 1.f-tb);
-    glVertex3f(scale*vr, scale*vb, fz);
+    glTexCoord2f(tr, 1.f - tb);
+    glVertex3f(scale * vr, scale * vb, fz);
 
-    glTexCoord2f(tr, 1.f-tt);
-    glVertex3f(scale*vr, scale*vt, fz);
+    glTexCoord2f(tr, 1.f - tt);
+    glVertex3f(scale * vr, scale * vt, fz);
   }
 
   glEnd();
@@ -165,6 +163,5 @@ void WorldAnnotatorGL::RenderText(vtkm::Float32 scale,
   glDepthMask(GL_TRUE);
   glDisable(GL_ALPHA_TEST);
 }
-
 }
 } // namespace vtkm::rendering

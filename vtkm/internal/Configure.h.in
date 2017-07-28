@@ -24,10 +24,6 @@
 #define VTKM_CUDA
 #endif
 
-#ifdef _OPENMP
-#define VTKM_OPENMP
-#endif
-
 #if defined(_MSC_VER)
 //MSVC 2015+ can use a clang frontend, so we want to label it only as MSVC
 //and not MSVC and clang
@@ -293,6 +289,11 @@
 #define VTKM_SWALLOW_SEMICOLON_POST_BLOCK \
   while (false)
 #endif
+
+// Use a trick to pass arguments containing commas through a macro. This is
+// helpful for mixing template code with macros.
+// See https://stackoverflow.com/questions/13842468
+#define VTKM_PASS_COMMAS(...) __VA_ARGS__
 
 #ifdef VTKM_MSVC
 //With MSVC the types that we generate cause warning C4503 (long symbol names)

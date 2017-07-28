@@ -20,37 +20,37 @@
 
 #include <vtkm/rendering/WorldAnnotator.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 WorldAnnotator::~WorldAnnotator()
-{  }
+{
+}
 
-void WorldAnnotator::AddLine(
-    const vtkm::Vec<vtkm::Float64,3> &vtkmNotUsed(point0),
-    const vtkm::Vec<vtkm::Float64,3> &vtkmNotUsed(point1),
-    vtkm::Float32 vtkmNotUsed(lineWidth),
-    const vtkm::rendering::Color &vtkmNotUsed(color),
-    bool vtkmNotUsed(inFront)) const
+void WorldAnnotator::AddLine(const vtkm::Vec<vtkm::Float64, 3>& vtkmNotUsed(point0),
+                             const vtkm::Vec<vtkm::Float64, 3>& vtkmNotUsed(point1),
+                             vtkm::Float32 vtkmNotUsed(lineWidth),
+                             const vtkm::rendering::Color& vtkmNotUsed(color),
+                             bool vtkmNotUsed(inFront)) const
 {
   // Default implementation does nothing. Should this be pure virtual and force
   // all subclasses to implement this? We would have to implement a
   // WorldAnnotator for ray tracing first.
 }
 
-void WorldAnnotator::AddText(
-    const vtkm::Vec<vtkm::Float32,3> &vtkmNotUsed(origin),
-    const vtkm::Vec<vtkm::Float32,3> &vtkmNotUsed(right),
-    const vtkm::Vec<vtkm::Float32,3> &vtkmNotUsed(up),
-    vtkm::Float32 vtkmNotUsed(scale),
-    const vtkm::Vec<vtkm::Float32,2> &vtkmNotUsed(anchor),
-    const vtkm::rendering::Color &vtkmNotUsed(color),
-    const std::string &vtkmNotUsed(text)) const
+void WorldAnnotator::AddText(const vtkm::Vec<vtkm::Float32, 3>& vtkmNotUsed(origin),
+                             const vtkm::Vec<vtkm::Float32, 3>& vtkmNotUsed(right),
+                             const vtkm::Vec<vtkm::Float32, 3>& vtkmNotUsed(up),
+                             vtkm::Float32 vtkmNotUsed(scale),
+                             const vtkm::Vec<vtkm::Float32, 2>& vtkmNotUsed(anchor),
+                             const vtkm::rendering::Color& vtkmNotUsed(color),
+                             const std::string& vtkmNotUsed(text)) const
 {
   // Default implementation does nothing. Should this be pure virtual and force
   // all subclasses to implement this? We would have to implement a
   // WorldAnnotator for ray tracing first.
 }
-
 }
 } // namespace vtkm::rendering

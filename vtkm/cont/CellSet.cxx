@@ -20,14 +20,13 @@
 
 #include <vtkm/cont/CellSet.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 CellSet::~CellSet()
 {
-
 }
-
-
 }
 } // namespace vtkm::cont

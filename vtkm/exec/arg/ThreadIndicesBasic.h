@@ -22,9 +22,12 @@
 
 #include <vtkm/internal/Invocation.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief Basic container for thread indices in a worklet invocation
 ///
@@ -43,12 +46,14 @@ class ThreadIndicesBasic
 {
 public:
   VTKM_EXEC
-  ThreadIndicesBasic(vtkm::Id threadIndex, vtkm::Id inIndex,
-                     vtkm::IdComponent visitIndex, vtkm::Id globalThreadIndexOffset=0)
-    : InputIndex(inIndex),
-      OutputIndex(threadIndex),
-      VisitIndex(visitIndex),
-      GlobalThreadIndexOffset(globalThreadIndexOffset)
+  ThreadIndicesBasic(vtkm::Id threadIndex,
+                     vtkm::Id inIndex,
+                     vtkm::IdComponent visitIndex,
+                     vtkm::Id globalThreadIndexOffset = 0)
+    : InputIndex(inIndex)
+    , OutputIndex(threadIndex)
+    , VisitIndex(visitIndex)
+    , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
   }
 
@@ -70,10 +75,7 @@ public:
   /// first component with the remaining components set to 0.
   ///
   VTKM_EXEC
-  vtkm::Id3 GetInputIndex3D() const
-  {
-    return vtkm::Id3(this->GetInputIndex(), 0, 0);
-  }
+  vtkm::Id3 GetInputIndex3D() const { return vtkm::Id3(this->GetInputIndex(), 0, 0); }
 
   /// \brief The index into the output domain.
   ///
@@ -104,7 +106,6 @@ private:
   vtkm::IdComponent VisitIndex;
   vtkm::Id GlobalThreadIndexOffset;
 };
-
 }
 }
 } // namespace vtkm::exec::arg

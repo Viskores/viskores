@@ -26,19 +26,24 @@
 
 #include <vtkm/exec/ExecutionObjectBase.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief \c Transport tag for execution objects.
 ///
 /// \c TransportTagExecObject is a tag used with the \c Transport class to
 /// transport objects that work directly in the execution environment.
 ///
-struct TransportTagExecObject {  };
+struct TransportTagExecObject
+{
+};
 
-template<typename ContObjectType, typename Device>
-struct Transport<vtkm::cont::arg::TransportTagExecObject,ContObjectType,Device>
+template <typename ContObjectType, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagExecObject, ContObjectType, Device>
 {
   // If you get a compile error here, it means you tried to use an object that
   // is not an execution object as an argument that is expected to be one. All
@@ -50,16 +55,13 @@ struct Transport<vtkm::cont::arg::TransportTagExecObject,ContObjectType,Device>
 
   typedef ContObjectType ExecObjectType;
 
-  template<typename InputDomainType>
-  VTKM_CONT
-  ExecObjectType operator()(const ContObjectType &object,
-                            const InputDomainType &,
-                            vtkm::Id) const
+  template <typename InputDomainType>
+  VTKM_CONT ExecObjectType
+  operator()(const ContObjectType& object, const InputDomainType&, vtkm::Id, vtkm::Id) const
   {
     return object;
   }
 };
-
 }
 }
 } // namespace vtkm::cont::arg

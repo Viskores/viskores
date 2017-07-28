@@ -29,26 +29,35 @@ set(headers
   DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
   ExternalFaces.h
+  ExtractGeometry.h
+  ExtractPoints.h
+  ExtractStructured.h
+  FieldEntropy.h
   FieldHistogram.h
   FieldStatistics.h
   Gradient.h
+  KdTree3D.h
   KernelSplatter.h
   Keys.h
   Magnitude.h
   MarchingCubes.h
   MarchingCubesDataTables.h
+  Mask.h
+  MaskPoints.h
+  ParticleAdvection.h
   PointAverage.h
   PointElevation.h
   RemoveUnusedPoints.h
   ScatterCounting.h
   ScatterIdentity.h
+  ScatterPermutation.h
   ScatterUniform.h
   StreamLineUniformGrid.h
-  TetrahedralizeExplicitGrid.h
-  TetrahedralizeUniformGrid.h
+  SurfaceNormals.h
+  Tetrahedralize.h
   Threshold.h
-  TriangulateExplicitGrid.h
-  TriangulateUniformGrid.h
+  ThresholdPoints.h
+  Triangulate.h
   VertexClustering.h
   WaveletCompressor.h
   WorkletMapField.h
@@ -59,8 +68,13 @@ set(headers
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(contourtree)
+add_subdirectory(gradient)
 add_subdirectory(splatkernels)
+add_subdirectory(spatialstructure)
+add_subdirectory(tetrahedralize)
+add_subdirectory(triangulate)
 add_subdirectory(wavelets)
+add_subdirectory(particleadvection)
 
 vtkm_declare_headers(${headers})
 

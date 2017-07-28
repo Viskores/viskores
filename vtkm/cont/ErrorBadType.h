@@ -22,8 +22,12 @@
 
 #include <vtkm/cont/Error.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
+
+VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
 /// This class is thrown when VTK-m encounters data of a type that is
 /// incompatible with the current operation.
@@ -31,10 +35,13 @@ namespace cont {
 class VTKM_ALWAYS_EXPORT ErrorBadType : public Error
 {
 public:
-  ErrorBadType(const std::string &message)
-    : Error(message) { }
+  ErrorBadType(const std::string& message)
+    : Error(message)
+  {
+  }
 };
 
+VTKM_SILENCE_WEAK_VTABLE_WARNING_END
 }
 } // namespace vtkm::cont
 

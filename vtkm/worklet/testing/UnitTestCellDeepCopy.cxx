@@ -27,10 +27,10 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-vtkm::cont::CellSetExplicit<>
-CreateCellSet()
+vtkm::cont::CellSetExplicit<> CreateCellSet()
 {
   vtkm::cont::testing::MakeTestDataSet makeData;
   vtkm::cont::DataSet data = makeData.Make3DExplicitDataSet0();
@@ -39,31 +39,28 @@ CreateCellSet()
   return cellSet;
 }
 
-vtkm::cont::CellSetPermutation<
-  vtkm::cont::CellSetExplicit<>,
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> >
+vtkm::cont::CellSetPermutation<vtkm::cont::CellSetExplicit<>,
+                               vtkm::cont::ArrayHandleCounting<vtkm::Id>>
 CreatePermutedCellSet()
 {
   std::cout << "Creating input cell set" << std::endl;
 
   vtkm::cont::CellSetExplicit<> cellSet = CreateCellSet();
   return vtkm::cont::make_CellSetPermutation(
-        vtkm::cont::ArrayHandleCounting<vtkm::Id>(
-          cellSet.GetNumberOfCells()-1, -1, cellSet.GetNumberOfCells()),
-        cellSet);
+    vtkm::cont::ArrayHandleCounting<vtkm::Id>(
+      cellSet.GetNumberOfCells() - 1, -1, cellSet.GetNumberOfCells()),
+    cellSet);
 }
 
-template<typename CellSetType>
-vtkm::cont::CellSetExplicit<>
-DoCellDeepCopy(const CellSetType &inCells)
+template <typename CellSetType>
+vtkm::cont::CellSetExplicit<> DoCellDeepCopy(const CellSetType& inCells)
 {
   std::cout << "Doing cell copy" << std::endl;
 
-  return vtkm::worklet::CellDeepCopy::Run(inCells,
-                                          VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  return vtkm::worklet::CellDeepCopy::Run(inCells, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 }
 
-void CheckOutput(const vtkm::cont::CellSetExplicit<> &copiedCells)
+void CheckOutput(const vtkm::cont::CellSetExplicit<>& copiedCells)
 {
   std::cout << "Checking copied cells" << std::endl;
 
@@ -77,36 +74,31 @@ void CheckOutput(const vtkm::cont::CellSetExplicit<> &copiedCells)
   for (vtkm::Id cellIndex = 0; cellIndex < numberOfCells; cellIndex++)
   {
     vtkm::Id oCellIndex = numberOfCells - cellIndex - 1;
-    VTKM_TEST_ASSERT(copiedCells.GetCellShape(cellIndex) ==
-                       originalCells.GetCellShape(oCellIndex),
+    VTKM_TEST_ASSERT(copiedCells.GetCellShape(cellIndex) == originalCells.GetCellShape(oCellIndex),
                      "Bad cell shape");
 
-    vtkm::IdComponent numPoints =
-        copiedCells.GetNumberOfPointsInCell(cellIndex);
-    VTKM_TEST_ASSERT(
-          numPoints == originalCells.GetNumberOfPointsInCell(oCellIndex),
-          "Bad number of points in cell");
+    vtkm::IdComponent numPoints = copiedCells.GetNumberOfPointsInCell(cellIndex);
+    VTKM_TEST_ASSERT(numPoints == originalCells.GetNumberOfPointsInCell(oCellIndex),
+                     "Bad number of points in cell");
 
     // Only checking 3 points. All cells should have at least 3
-    vtkm::Vec<vtkm::Id,3> cellPoints;
+    vtkm::Vec<vtkm::Id, 3> cellPoints;
     copiedCells.GetIndices(cellIndex, cellPoints);
-    vtkm::Vec<vtkm::Id,3> oCellPoints;
+    vtkm::Vec<vtkm::Id, 3> oCellPoints;
     originalCells.GetIndices(oCellIndex, oCellPoints);
-    VTKM_TEST_ASSERT(cellPoints == oCellPoints,
-                     "Point indices not copied correctly");
+    VTKM_TEST_ASSERT(cellPoints == oCellPoints, "Point indices not copied correctly");
   }
 }
 
 void RunTest()
 {
-  vtkm::cont::CellSetExplicit<> cellSet =
-      DoCellDeepCopy(CreatePermutedCellSet());
+  vtkm::cont::CellSetExplicit<> cellSet = DoCellDeepCopy(CreatePermutedCellSet());
   CheckOutput(cellSet);
 }
 
-}  // anonymous namespace
+} // anonymous namespace
 
-int UnitTestCellDeepCopy(int, char *[])
+int UnitTestCellDeepCopy(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(RunTest);
 }

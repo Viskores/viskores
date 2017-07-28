@@ -20,20 +20,20 @@
 
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 SimplePolymorphicContainerBase::SimplePolymorphicContainerBase()
 {
-
 }
 
 SimplePolymorphicContainerBase::~SimplePolymorphicContainerBase()
 {
-
 }
-
 }
 }
 } // namespace vtkm::cont::internal

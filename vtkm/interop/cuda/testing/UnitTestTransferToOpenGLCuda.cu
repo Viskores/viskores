@@ -24,10 +24,10 @@
 
 #include <vtkm/interop/testing/TestingOpenGLInterop.h>
 
-int UnitTestTransferToOpenGLCuda(int, char *[])
+int UnitTestTransferToOpenGLCuda(int, char* [])
 {
   int result = 1;
-	result = vtkm::interop::testing::TestingOpenGLInterop
-                           <vtkm::cont::cuda::DeviceAdapterTagCuda >::Run();
+  result =
+    vtkm::interop::testing::TestingOpenGLInterop<vtkm::cont::cuda::DeviceAdapterTagCuda>::Run();
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

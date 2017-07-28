@@ -26,9 +26,7 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/TestingArrayHandles.h>
 
-int UnitTestSerialArrayHandle(int, char *[])
+int UnitTestSerialArrayHandle(int, char* [])
 {
-return vtkm::cont::testing::TestingArrayHandles
-         <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingArrayHandles<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }
-

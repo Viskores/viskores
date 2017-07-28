@@ -20,12 +20,15 @@
 #ifndef vtk_m_exec_arg_VisitIndex_h
 #define vtk_m_exec_arg_VisitIndex_h
 
-#include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+#include <vtkm/exec/arg/Fetch.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief Aspect tag to use for getting the work index.
 ///
@@ -33,7 +36,9 @@ namespace arg {
 /// whatever data is in the associated execution object and return the visit
 /// index.
 ///
-struct AspectTagVisitIndex {  };
+struct AspectTagVisitIndex
+{
+};
 
 /// \brief The \c ExecutionSignature tag to use to get the visit index
 ///
@@ -56,30 +61,23 @@ struct VisitIndex : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagVisitIndex AspectTag;
 };
 
-template<typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagVisitIndex,
-             ThreadIndicesType,
-             ExecObjectType>
+template <typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagVisitIndex, ThreadIndicesType, ExecObjectType>
 {
   typedef vtkm::IdComponent ValueType;
 
   VTKM_EXEC
-  vtkm::IdComponent Load(const ThreadIndicesType &indices,
-                         const ExecObjectType &) const
+  vtkm::IdComponent Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
     return indices.GetVisitIndex();
   }
 
   VTKM_EXEC
-  void Store(const ThreadIndicesType &,
-             const ExecObjectType &,
-             const ValueType &) const
+  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op.
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

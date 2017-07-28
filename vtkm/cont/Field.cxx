@@ -20,60 +20,67 @@
 
 #include <vtkm/cont/Field.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 VTKM_CONT
-void Field::PrintSummary(std::ostream &out) const
+void Field::PrintSummary(std::ostream& out) const
 {
-  out<<"   "<<this->Name;
-  out<<" assoc= ";
+  out << "   " << this->Name;
+  out << " assoc= ";
   switch (this->GetAssociation())
   {
-    case ASSOC_ANY: out<<"Any "; break;
-    case ASSOC_WHOLE_MESH: out<<"Mesh "; break;
-    case ASSOC_POINTS: out<<"Points "; break;
-    case ASSOC_CELL_SET: out<<"Cells "; break;
-    case ASSOC_LOGICAL_DIM: out<<"LogicalDim "; break;
+    case ASSOC_ANY:
+      out << "Any ";
+      break;
+    case ASSOC_WHOLE_MESH:
+      out << "Mesh ";
+      break;
+    case ASSOC_POINTS:
+      out << "Points ";
+      break;
+    case ASSOC_CELL_SET:
+      out << "Cells ";
+      break;
+    case ASSOC_LOGICAL_DIM:
+      out << "LogicalDim ";
+      break;
   }
   this->Data.PrintSummary(out);
 }
 
 VTKM_CONT
-const vtkm::cont::ArrayHandle<vtkm::Range> &
-Field::GetRange() const
+const vtkm::cont::ArrayHandle<vtkm::Range>& Field::GetRange() const
 {
-  return this->GetRange(VTKM_DEFAULT_TYPE_LIST_TAG(),
-                        VTKM_DEFAULT_STORAGE_LIST_TAG());
+  return this->GetRange(VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
 }
 
 VTKM_CONT
-void Field::GetRange(vtkm::Range *range) const
+void Field::GetRange(vtkm::Range* range) const
 {
-  this->GetRange(range,
-                 VTKM_DEFAULT_TYPE_LIST_TAG(),
-                 VTKM_DEFAULT_STORAGE_LIST_TAG());
+  this->GetRange(range, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
 }
 
 VTKM_CONT
-const vtkm::cont::DynamicArrayHandle &Field::GetData() const
+const vtkm::cont::DynamicArrayHandle& Field::GetData() const
 {
   return this->Data;
 }
 
 VTKM_CONT
-vtkm::cont::DynamicArrayHandle &Field::GetData()
+vtkm::cont::DynamicArrayHandle& Field::GetData()
 {
   this->ModifiedFlag = true;
   return this->Data;
 }
 
 VTKM_CONT
-const vtkm::cont::ArrayHandle<vtkm::Range> &
-Field::GetRange(VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG) const
+const vtkm::cont::ArrayHandle<vtkm::Range>& Field::GetRange(VTKM_DEFAULT_TYPE_LIST_TAG,
+                                                            VTKM_DEFAULT_STORAGE_LIST_TAG) const
 {
   return this->GetRangeImpl(VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
 }
-
 }
 } // namespace vtkm::cont
