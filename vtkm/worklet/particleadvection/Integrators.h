@@ -57,7 +57,12 @@ public:
                                 vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
+    {
+      out[0] = pos[0];
+      out[1] = pos[1];
+      out[2] = pos[2];
       return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
+    }
     vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
     vtkm::Id numShortSteps = 0;
     bool shortSteps = false;
@@ -145,17 +150,17 @@ public:
   }
 
   template <typename PortalType>
-  VTKM_EXEC bool Step(const vtkm::Vec<FieldType, 3>& pos,
-                      const PortalType& field,
-                      vtkm::Vec<FieldType, 3>& out) const
+  VTKM_EXEC ParticleStatus Step(const vtkm::Vec<FieldType, 3>& pos,
+                                const PortalType& field,
+                                vtkm::Vec<FieldType, 3>& out) const
   {
     vtkm::Vec<FieldType, 3> vCur;
     if (f.Evaluate(pos, field, vCur))
     {
       out = pos + h * vCur;
-      return true;
+      return ParticleStatus::STATUS::OK;
     }
-    return false;
+    return ParticleStatus::STATUS::EXITED_SPATIAL_BOUNDARY;
   }
 
   FieldEvaluateType f;
