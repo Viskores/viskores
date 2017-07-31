@@ -73,26 +73,33 @@ public:
   virtual ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
                                    const PortalType& field,
                                    FieldType stepLength,
-                                   vtkm::Vec<FieldType, 3>& velocity) const;
+                                   vtkm::Vec<FieldType, 3>& velocity) const = 0;
 
   VTKM_EXEC
-  ParticleStatus PushOutOfDomain(const vtkm::Vec<FieldType, 3>& inpos,
+  virtual FieldType GetEscapeStepLength(const vtkm::Vec<FieldType, 3>& inpos,
+                                        const PortalType& field,
+                                        FieldType stepLength) const = 0;
+
+  VTKM_EXEC
+  ParticleStatus PushOutOfDomain(vtkm::Vec<FieldType, 3> inpos,
                                  const PortalType& field,
                                  vtkm::Vec<FieldType, 3>& outpos) const
   {
-    FieldType stepLength = this->StepLength;
+    FieldType stepLength = this->StepLength / 2;
     vtkm::Vec<FieldType, 3> velocity;
     vtkm::Id numSteps = 0;
     do
     {
-      stepLength = stepLength / 2;
       ParticleStatus status = this->CheckStep(inpos, field, stepLength, velocity);
       if (status == ParticleStatus::STATUS_OK)
       {
-        outpos = inpos + stepLength * velocity;
+        inpos = inpos + stepLength * velocity;
         ++numSteps;
       }
+      stepLength = stepLength / 2;
     } while (numSteps < 10);
+    stepLength = GetEscapeStepLength(inpos, field, stepLength);
+    outpos = inpos + stepLength * velocity;
     return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
   }
 
@@ -119,10 +126,10 @@ public:
   }
 
   VTKM_EXEC
-  ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
-                           const PortalType& field,
-                           FieldType stepLength,
-                           vtkm::Vec<FieldType, 3>& velocity) const
+  virtual ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
+                                   const PortalType& field,
+                                   FieldType stepLength,
+                                   vtkm::Vec<FieldType, 3>& velocity) const VTKM_OVERRIDE
   {
     if (!bounds.Contains(inpos))
     {
@@ -143,6 +150,27 @@ public:
       return ParticleStatus::AT_SPATIAL_BOUNDARY;
     }
   }
+
+  VTKM_EXEC
+  virtual FieldType GetEscapeStepLength(const vtkm::Vec<FieldType, 3>& inpos,
+                                        const PortalType& field,
+                                        FieldType stepLength) const VTKM_OVERRIDE
+  {
+    vtkm::Vec<FieldType, 3> velocity;
+    this->CheckStep(inpos, field, stepLength, velocity);
+    FieldType magnitude = vtkm::Magnitude(velocity);
+    vtkm::Vec<FieldType, 3> dir = velocity / magnitude;
+    FieldType xbound = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    FieldType ybound = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    FieldType zbound = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+    FieldType hx = std::abs(xbound - inpos[0]) / std::abs(velocity[0]);
+    FieldType hy = std::abs(ybound - inpos[1]) / std::abs(velocity[1]);
+    FieldType hz = std::abs(zbound - inpos[2]) / std::abs(velocity[2]);
+    stepLength = std::min(hx, std::min(hy, hz));
+    stepLength += stepLength / 100.0f;
+    return stepLength;
+  }
+
 
 private:
   vtkm::Bounds bounds;
