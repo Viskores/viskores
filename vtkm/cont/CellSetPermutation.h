@@ -103,10 +103,32 @@ public:
 
   template <typename Device, typename FromTopology, typename ToTopology>
   typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType
-  PrepareForInput(Device d, FromTopology f, ToTopology t) const
+    PrepareForInput(Device, FromTopology, ToTopology) const
   {
-    typedef
-      typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType ConnectivityType;
+    // Developer's note: I looked into supporting cell to point connectivity in a permutation cell
+    // set and found it to be complex. It is not straightforward to implement this on top of the
+    // original cell set's cell to point because points could be attached to cells that do not
+    // exist in the permuted topology. Ultimately, you will probably have to rebuild these
+    // connections in a way very similar to how CellSetExplicit already does it. In fact, the
+    // easiest implementation will probably be to just convert to a CellSetExplicit and use that.
+    // In fact, it may be possible to change this whole implementation to just be a subclass of
+    // CellSetExplicit with some fancy arrays for its point to cell arrays.
+    throw vtkm::cont::ErrorBadType(
+      "CellSetPermutation currently only supports point to cell connectivity. "
+      "To support other connectivity, convert to an explicit grid with the CellDeepCopy "
+      "worklet or the CleanGrid filter.");
+  }
+
+  template <typename Device>
+  typename ExecutionTypes<Device,
+                          vtkm::TopologyElementTagPoint,
+                          vtkm::TopologyElementTagCell>::ExecObjectType
+  PrepareForInput(Device d, vtkm::TopologyElementTagPoint f, vtkm::TopologyElementTagCell t) const
+  {
+    using FromTopology = vtkm::TopologyElementTagPoint;
+    using ToTopology = vtkm::TopologyElementTagCell;
+    using ConnectivityType =
+      typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType;
     return ConnectivityType(this->ValidCellIds.PrepareForInput(d),
                             this->FullCellSet.PrepareForInput(d, f, t));
   }

@@ -60,6 +60,9 @@ public:
   VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id index) const { return CellShapeTag(this->Shapes.Get(index)); }
 
+  VTKM_EXEC
+  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const { return this->NumIndices.Get(index); }
+
   using IndicesType = vtkm::VecFromPortal<ConnectivityPortalType>;
 
   /// Returns a Vec-like object containing the indices for the given index.
