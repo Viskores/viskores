@@ -70,6 +70,7 @@ public:
 public:
   bool CompactPoints;
   vtkm::filter::CleanGrid Compactor;
+  vtkm::worklet::ExternalFaces Worklet;
 };
 }
 } // namespace vtkm::filter

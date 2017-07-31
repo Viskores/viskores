@@ -53,6 +53,10 @@ namespace worklet
 
 struct ExternalFaces
 {
+
+private:
+  vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
+
   //Unary predicate operator
   //Returns True if the argument is equal to 1; False otherwise.
   struct IsUnity
@@ -560,8 +564,9 @@ struct ExternalFaces
                                   ValuesIn<> originCells,
                                   ValuesIn<> originFaces,
                                   ReducedValuesOut<> shapesOut,
-                                  ReducedValuesOut<> connectivityOut);
-    typedef void ExecutionSignature(_2, _3, _4, _5, _6);
+                                  ReducedValuesOut<> connectivityOut,
+                                  ReducedValuesOut<> cellIdMapOut);
+    typedef void ExecutionSignature(_2, _3, _4, _5, _6, _7);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -590,13 +595,15 @@ struct ExternalFaces
                               const OriginCellsType& originCells,
                               const OriginFacesType& originFaces,
                               vtkm::UInt8& shapeOut,
-                              ConnectivityType& connectivityOut) const
+                              ConnectivityType& connectivityOut,
+                              vtkm::Id& cellIdMapOut) const
     {
       VTKM_ASSERT(originCells.GetNumberOfComponents() == 1);
       VTKM_ASSERT(originFaces.GetNumberOfComponents() == 1);
 
       typename CellSetType::CellShapeTag shapeIn = cellSet.GetCellShape(originCells[0]);
       shapeOut = vtkm::exec::CellFaceShape(originFaces[0], shapeIn, *this);
+      cellIdMapOut = originCells[0];
 
       vtkm::VecCConst<vtkm::IdComponent> localFaceIndices =
         vtkm::exec::CellFaceLocalIndices(originFaces[0], shapeIn, *this);
@@ -616,6 +623,26 @@ struct ExternalFaces
   };
 
 public:
+  //----------------------------------------------------------------------------
+  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& in,
+    const DeviceAdapter&) const
+  {
+    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+
+    // Use a temporary permutation array to simplify the mapping:
+    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->CellIdMap, in);
+
+    // Copy into an array with default storage:
+    vtkm::cont::ArrayHandle<ValueType> result;
+    Algo::Copy(tmp, result);
+
+    return result;
+  }
+
+  void ReleaseCellMapArrays() { this->CellIdMap.ReleaseResources(); }
+
   template <typename ShapeStorage,
             typename NumIndicesStorage,
             typename ConnectivityStorage,
@@ -711,6 +738,9 @@ public:
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     std::cout << "numExternalFaces_ScatterCounting," << timer.GetElapsedTime() << "\n";
 #endif
+
+    // Maps output cells to input cells. Store this for cell field mapping.
+    this->CellIdMap = scatterCellToExternalFace.GetOutputToInputMap();
 
     numExternalFaces.ReleaseResources();
 
@@ -871,7 +901,8 @@ public:
       originCells,
       originFaces,
       faceShapes,
-      vtkm::cont::make_ArrayHandleGroupVecVariable(faceConnectivity, faceOffsets));
+      vtkm::cont::make_ArrayHandleGroupVecVariable(faceConnectivity, faceOffsets),
+      this->CellIdMap);
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     std::cout << "BuildConnectivity_Worklet," << timer.GetElapsedTime() << "\n";
 #endif
