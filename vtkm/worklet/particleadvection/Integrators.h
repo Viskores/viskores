@@ -33,6 +33,47 @@ namespace worklet
 namespace particleadvection
 {
 
+template <typename FieldEvaluateType, typename FieldType, typename PortalType>
+class Integrator
+{
+protected:
+  VTKM_EXEC_CONT
+  Integrator()
+    : StepLength(0)
+    , HighAccuracy(false)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  Integrator(const FieldEvaluateType& evaluator, FieldType stepLength)
+    : Evaluator(evaluator)
+    , StepLength(stepLength)
+    , HighAccuracy(false)
+  {
+  }
+
+  VTKM_EXEC
+  virtual ParticleStatus Step(const vtkm::Vec<FieldType, 3>& inpos,
+                              const PortalType& vectorField,
+                              vtkm::Vec<FieldType, 3>& outpos) const;
+
+  VTKM_EXEC
+  virtual bool IsStepValid(const vtkm::Vec<FieldType, 3>& inpos,
+                           const PortalType& vectorField,
+                           vtkm::Vec<FieldType, 3>& velocity) const;
+
+  VTKM_EXEC
+  virtual ParticleStatus PushOutOfDomain(const vtkm::Vec<FieldType, 3>& inpos,
+                                         const PortalType& vectorField,
+                                         vtkm::Vec<FieldType, 3>& outpos) const;
+
+protected:
+  FieldEvaluateType Evaluator;
+  FieldType StepLength;
+  bool HighAccuracy;
+};
+
+
 template <typename FieldEvaluateType, typename FieldType>
 class RK4Integrator
 {
@@ -138,7 +179,7 @@ public:
   vtkm::Bounds bounds;
 }; //RK4Integrator
 
-template <typename FieldEvaluateType, typename FieldType>
+/*template<typename FieldEvaluateType, typename FieldType>
 class EulerIntegrator
 {
 public:
@@ -149,10 +190,10 @@ public:
   {
   }
 
-  template <typename PortalType>
+  template<typename PortalType>
   VTKM_EXEC ParticleStatus Step(const vtkm::Vec<FieldType, 3>& pos,
-                                const PortalType& field,
-                                vtkm::Vec<FieldType, 3>& out) const
+                      const PortalType& field,
+                      vtkm::Vec<FieldType, 3>& out) const
   {
     vtkm::Vec<FieldType, 3> vCur;
     if (f.Evaluate(pos, field, vCur))
@@ -165,7 +206,7 @@ public:
 
   FieldEvaluateType f;
   FieldType h;
-}; //EulerIntegrator
+};*/ //EulerIntegrator
 
 } //namespace particleadvection
 } //namespace worklet
