@@ -96,6 +96,7 @@ public:
   }
 }; //class InitBuffer
 
+
 } // namespace detail
 
 class ChannelBufferOperations

@@ -1262,6 +1262,7 @@ public:
     vtkm::cont::Timer<Device> timer;
     if (HasEmission)
     {
+      std::cout << "******$*$*$**$*$*$*$*$*$*$*$*$*$*$*$*\n";
       bool divideEmisByAbsorp = false;
       vtkm::worklet::DispatcherMapField<IntegrateEmission<FloatType>, Device>(
         IntegrateEmission<FloatType>(

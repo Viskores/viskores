@@ -130,7 +130,7 @@ public:
       std::cout << "Volume Tracer Error: must set energy mode before setting emission field\n";
       return;
     }
-
+    std::cout << "*************** Setting emission " << fieldName << "\n";
     EmissionField = Dataset.GetField(fieldName);
   }
 
