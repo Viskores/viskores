@@ -53,20 +53,25 @@ public:
   template <typename IntegralCurveType>
   VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
   {
-    vtkm::Vec<FieldType, 3> p = ic.GetPos(idx);
-    vtkm::Vec<FieldType, 3> p2;
+    vtkm::Vec<FieldType, 3> inpos = ic.GetPos(idx);
+    vtkm::Vec<FieldType, 3> outpos;
 
     while (!ic.Done(idx))
     {
-      ParticleStatus status = integrator.Step(p, field, p2);
+      ParticleStatus status = integrator.Step(inpos, field, outpos);
       if (status == ParticleStatus::STATUS_OK)
       {
-        ic.TakeStep(idx, p2, status);
-        p = p2;
+        ic.TakeStep(idx, outpos, status);
+        inpos = outpos;
       }
-      else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
+      if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
       {
-        ic.TakeStep(idx, p2, status);
+        status = integrator.PushOutOfDomain(inpos, field, outpos);
+      }
+      if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
+      {
+        ic.TakeStep(idx, outpos, status);
+        ic.SetExitedSpatialBoundary(idx);
       }
     }
   }

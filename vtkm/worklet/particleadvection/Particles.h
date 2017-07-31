@@ -36,9 +36,11 @@ enum ParticleStatus
 {
   STATUS_OK = 1,
   TERMINATED = 1 << 1,
-  EXITED_SPATIAL_BOUNDARY = 1 << 2,
-  EXITED_TEMPORAL_BOUNDARY = 1 << 3,
-  STATUS_ERROR = 1 << 4
+  AT_SPATIAL_BOUNDARY = 1 << 2,
+  AT_TEMPORAL_BOUNDARY = 1 << 3,
+  EXITED_SPATIAL_BOUNDARY = 1 << 4,
+  EXITED_TEMPORAL_BOUNDARY = 1 << 5,
+  STATUS_ERROR = 1 << 6
 };
 
 template <typename T, typename DeviceAdapterTag>
