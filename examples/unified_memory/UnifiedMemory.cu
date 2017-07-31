@@ -30,6 +30,7 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/cuda/internal/CudaAllocator.h>
 
 namespace
 {
@@ -92,8 +93,8 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::Float32 maxs[3] = { 1.0f, 1.0f, 1.0f };
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, 1, vdims[0] * vdims[1] *
-                                                                       vdims[2]);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(
+    0, 1, vdims[0] * vdims[1] * vdims[2]);
   vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(
     TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
@@ -153,37 +154,39 @@ int main(int argc, char* argv[])
   typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAlgorithms;
   vtkm::worklet::SineWorklet sineWorklet;
 
-#ifdef VTKM_USE_UNIFIED_MEMORY
-  std::cout << "Testing with unified memory" << std::endl;
+  bool usingManagedMemory = vtkm::cont::cuda::internal::CudaAllocator::UsingManagedMemory();
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
+  if (usingManagedMemory)
+  {
+    std::cout << "Testing with unified memory" << std::endl;
 
-  vtkm::cont::Timer<> timer;
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
 
-  dispatcher.Invoke(input, output);
-  std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues() - 1) << std::endl;
+    vtkm::cont::Timer<> timer;
 
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
-  std::cout << "Time: " << elapsedTime << std::endl;
+    dispatcher.Invoke(input, output);
+    std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues() - 1) << std::endl;
 
-#else
+    vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+    std::cout << "Time: " << elapsedTime << std::endl;
+  }
+  else
+  {
+    vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
+    vtkm::Id NBlocks = N / (1024 * 1024 * 1024);
+    NBlocks *= 2;
+    dispatcher.SetNumberOfBlocks(NBlocks);
+    std::cout << "Testing with streaming (without unified memory) with " << NBlocks << " blocks"
+              << std::endl;
 
-  vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
-  vtkm::Id NBlocks = N / (1024 * 1024 * 1024);
-  NBlocks *= 2;
-  dispatcher.SetNumberOfBlocks(NBlocks);
-  std::cout << "Testing with streaming (without unified memory) with " << NBlocks << " blocks"
-            << std::endl;
+    vtkm::cont::Timer<> timer;
 
-  vtkm::cont::Timer<> timer;
+    dispatcher.Invoke(input, output);
+    std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues() - 1) << std::endl;
 
-  dispatcher.Invoke(input, output);
-  std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues() - 1) << std::endl;
-
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
-  std::cout << "Time: " << elapsedTime << std::endl;
-
-#endif
+    vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+    std::cout << "Time: " << elapsedTime << std::endl;
+  }
 
   int dim = 128;
   if (argc > 2)
