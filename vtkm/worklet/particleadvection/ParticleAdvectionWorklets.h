@@ -66,7 +66,8 @@ public:
       }
       if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
       {
-        status = integrator.PushOutOfDomain(inpos, field, outpos);
+        vtkm::Id numSteps = ic.GetStep(idx);
+        status = integrator.PushOutOfDomain(inpos, field, numSteps, outpos);
       }
       if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
       {
