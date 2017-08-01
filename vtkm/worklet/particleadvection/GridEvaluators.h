@@ -36,20 +36,6 @@ namespace worklet
 namespace particleadvection
 {
 
-//Base class for all grid evaluators
-
-class GridEvaluate
-{
-public:
-  enum Status
-  {
-    OK = 0,
-    OUTSIDE_SPATIAL,
-    OUTSIDE_TEMPORAL,
-    FAIL
-  };
-};
-
 // Constant vector
 template <typename PortalType, typename FieldType>
 class ConstantField
@@ -63,9 +49,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                const PortalType& vtkmNotUsed(vecData),
-                vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
       return false;
@@ -82,7 +66,6 @@ private:
 };
 
 // Circular Orbit.
-template <typename PortalType>
 class AnalyticalOrbitEvaluate
 {
 public:
@@ -94,7 +77,6 @@ public:
 
   template <typename FieldType>
   VTKM_EXEC_CONT bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                               const PortalType& vtkmNotUsed(vecData),
                                vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
@@ -112,13 +94,51 @@ private:
   vtkm::Bounds bounds;
 };
 
+
 //Uniform Grid Evaluator
-template <typename PortalType, typename FieldType>
+template <typename PortalType, typename FieldType, typename DeviceAdapterTag>
 class UniformGridEvaluate
 {
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
+
 public:
   VTKM_CONT
   UniformGridEvaluate() {}
+
+  VTKM_CONT
+  UniformGridEvaluate(const vtkm::cont::CoordinateSystem& coords,
+                      const vtkm::cont::DynamicCellSet& cellSet,
+                      const FieldHandle& vectorField)
+  {
+    vectors = vectorField.PrepareForInput(DeviceAdapterTag());
+
+    typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformType;
+    typedef vtkm::cont::CellSetStructured<3> StructuredType;
+
+    if (!coords.GetData().IsSameType(UniformType()))
+      throw vtkm::cont::ErrorInternal("Coordinates are not uniform.");
+    if (!cellSet.IsSameType(StructuredType()))
+      throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
+
+    bounds = coords.GetBounds();
+
+    vtkm::cont::CellSetStructured<3> cells;
+    cellSet.CopyTo(cells);
+    dims = cells.GetSchedulingRange(vtkm::TopologyElementTagPoint());
+
+    vtkm::Vec<FieldType, 3> castDims = dims;
+    spacing[0] = static_cast<FieldType>((bounds.X.Max - bounds.X.Min) / (castDims[0] - 1));
+    spacing[1] = static_cast<FieldType>((bounds.Y.Max - bounds.Y.Min) / (castDims[1] - 1));
+    spacing[2] = static_cast<FieldType>((bounds.Z.Max - bounds.Z.Min) / (castDims[2] - 1));
+    oldMin[0] =
+      static_cast<FieldType>(bounds.X.Min / ((bounds.X.Max - bounds.X.Min) / castDims[0]));
+    oldMin[1] =
+      static_cast<FieldType>(bounds.Y.Min / ((bounds.Y.Max - bounds.Y.Min) / castDims[1]));
+    oldMin[2] =
+      static_cast<FieldType>(bounds.Z.Min / ((bounds.Z.Max - bounds.Z.Min) / castDims[2]));
+    planeSize = dims[0] * dims[1];
+    rowSize = dims[0];
+  }
 
   VTKM_CONT
   UniformGridEvaluate(const vtkm::cont::DataSet& ds)
@@ -151,9 +171,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                const PortalType& vecData,
-                vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
       return false;
@@ -187,14 +205,14 @@ public:
 
     // Get the vecdata at the eight corners
     vtkm::Vec<FieldType, 3> v000, v001, v010, v011, v100, v101, v110, v111;
-    v000 = vecData.Get(idx000[2] * planeSize + idx000[1] * rowSize + idx000[0]);
-    v001 = vecData.Get(idx001[2] * planeSize + idx001[1] * rowSize + idx001[0]);
-    v010 = vecData.Get(idx010[2] * planeSize + idx010[1] * rowSize + idx010[0]);
-    v011 = vecData.Get(idx011[2] * planeSize + idx011[1] * rowSize + idx011[0]);
-    v100 = vecData.Get(idx100[2] * planeSize + idx100[1] * rowSize + idx100[0]);
-    v101 = vecData.Get(idx101[2] * planeSize + idx101[1] * rowSize + idx101[0]);
-    v110 = vecData.Get(idx110[2] * planeSize + idx110[1] * rowSize + idx110[0]);
-    v111 = vecData.Get(idx111[2] * planeSize + idx111[1] * rowSize + idx111[0]);
+    v000 = vectors.Get(idx000[2] * planeSize + idx000[1] * rowSize + idx000[0]);
+    v001 = vectors.Get(idx001[2] * planeSize + idx001[1] * rowSize + idx001[0]);
+    v010 = vectors.Get(idx010[2] * planeSize + idx010[1] * rowSize + idx010[0]);
+    v011 = vectors.Get(idx011[2] * planeSize + idx011[1] * rowSize + idx011[0]);
+    v100 = vectors.Get(idx100[2] * planeSize + idx100[1] * rowSize + idx100[0]);
+    v101 = vectors.Get(idx101[2] * planeSize + idx101[1] * rowSize + idx101[0]);
+    v110 = vectors.Get(idx110[2] * planeSize + idx110[1] * rowSize + idx110[0]);
+    v111 = vectors.Get(idx111[2] * planeSize + idx111[1] * rowSize + idx111[0]);
 
     // Interpolation in X
     vtkm::Vec<FieldType, 3> v00, v01, v10, v11;
@@ -236,6 +254,7 @@ public:
 private:
   vtkm::Bounds bounds;
   vtkm::Id3 dims;
+  PortalType vectors;
   vtkm::Id planeSize;
   vtkm::Id rowSize;
   vtkm::Vec<FieldType, 3> spacing;
@@ -244,10 +263,39 @@ private:
 
 
 
-template <typename PortalType, typename FieldType>
+template <typename PortalType, typename FieldType, typename DeviceAdapterTag>
 class RectilinearGridEvaluate
 {
+  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
+
 public:
+  VTKM_CONT
+  RectilinearGridEvaluate(const vtkm::cont::CoordinateSystem& coords,
+                          const vtkm::cont::DynamicCellSet& cellSet,
+                          const FieldHandle& vectorField)
+  {
+    typedef vtkm::cont::CellSetStructured<3> StructuredType;
+
+    if (!coords.GetData().IsSameType(RectilinearType()))
+      throw vtkm::cont::ErrorInternal("Coordinates are not rectilinear.");
+    if (!cellSet.IsSameType(StructuredType()))
+      throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
+
+    vectors = vectorField.PrepareForInput(DeviceAdapterTag());
+
+    bounds = coords.GetBounds();
+    vtkm::cont::CellSetStructured<3> cells;
+    cellSet.CopyTo(cells);
+    dims = cells.GetSchedulingRange(vtkm::TopologyElementTagPoint());
+    planeSize = dims[0] * dims[1];
+    rowSize = dims[0];
+
+    RectilinearType gridPoints = coords.GetData().Cast<RectilinearType>();
+    xAxis = gridPoints.GetPortalConstControl().GetFirstPortal();
+    yAxis = gridPoints.GetPortalConstControl().GetSecondPortal();
+    zAxis = gridPoints.GetPortalConstControl().GetThirdPortal();
+  }
+
   VTKM_CONT
   RectilinearGridEvaluate(const vtkm::cont::DataSet& dataset)
   {
@@ -278,9 +326,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                const PortalType& vecData,
-                vtkm::Vec<FieldType, 3>& out) const
+  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
       return false;
@@ -337,14 +383,14 @@ public:
 
     // Get the vecdata at the eight corners
     vtkm::Vec<FieldType, 3> v000, v001, v010, v011, v100, v101, v110, v111;
-    v000 = vecData.Get(idx000[2] * planeSize + idx000[1] * rowSize + idx000[0]);
-    v001 = vecData.Get(idx001[2] * planeSize + idx001[1] * rowSize + idx001[0]);
-    v010 = vecData.Get(idx010[2] * planeSize + idx010[1] * rowSize + idx010[0]);
-    v011 = vecData.Get(idx011[2] * planeSize + idx011[1] * rowSize + idx011[0]);
-    v100 = vecData.Get(idx100[2] * planeSize + idx100[1] * rowSize + idx100[0]);
-    v101 = vecData.Get(idx101[2] * planeSize + idx101[1] * rowSize + idx101[0]);
-    v110 = vecData.Get(idx110[2] * planeSize + idx110[1] * rowSize + idx110[0]);
-    v111 = vecData.Get(idx111[2] * planeSize + idx111[1] * rowSize + idx111[0]);
+    v000 = vectors.Get(idx000[2] * planeSize + idx000[1] * rowSize + idx000[0]);
+    v001 = vectors.Get(idx001[2] * planeSize + idx001[1] * rowSize + idx001[0]);
+    v010 = vectors.Get(idx010[2] * planeSize + idx010[1] * rowSize + idx010[0]);
+    v011 = vectors.Get(idx011[2] * planeSize + idx011[1] * rowSize + idx011[0]);
+    v100 = vectors.Get(idx100[2] * planeSize + idx100[1] * rowSize + idx100[0]);
+    v101 = vectors.Get(idx101[2] * planeSize + idx101[1] * rowSize + idx101[0]);
+    v110 = vectors.Get(idx110[2] * planeSize + idx110[1] * rowSize + idx110[0]);
+    v111 = vectors.Get(idx111[2] * planeSize + idx111[1] * rowSize + idx111[0]);
 
     // Interpolation in X
     vtkm::Vec<FieldType, 3> v00, v01, v10, v11;
@@ -395,6 +441,7 @@ private:
   typename AxisHandle::PortalConstControl zAxis;
   vtkm::Bounds bounds;
   vtkm::Id3 dims;
+  PortalType vectors;
   vtkm::Id planeSize;
   vtkm::Id rowSize;
 

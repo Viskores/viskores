@@ -42,10 +42,6 @@ template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef typename FieldHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-    FieldPortalConstType;
-
   typedef void ControlSignature(FieldIn<IdType> idx, ExecObject ic);
   typedef void ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
@@ -58,7 +54,7 @@ public:
 
     while (!ic.Done(idx))
     {
-      if (integrator.Step(p, field, p2))
+      if (integrator.Step(p, p2))
       {
         ic.TakeStep(idx, p2);
         p = p2;
@@ -70,14 +66,12 @@ public:
     }
   }
 
-  ParticleAdvectWorklet(const IntegratorType& it, const FieldPortalConstType& f)
+  ParticleAdvectWorklet(const IntegratorType& it)
     : integrator(it)
-    , field(f)
   {
   }
 
   IntegratorType integrator;
-  FieldPortalConstType field;
 };
 
 
@@ -85,9 +79,6 @@ template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag
 class ParticleAdvectionWorklet
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef typename FieldHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-    FieldPortalConstType;
   typedef vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType,
                                                                   FieldType,
                                                                   DeviceAdapterTag>
@@ -98,7 +89,6 @@ public:
   template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
            const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-           const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
            const vtkm::Id& nSteps,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken)
@@ -106,7 +96,6 @@ public:
     integrator = it;
     seedArray = pts;
     maxSteps = nSteps;
-    field = fieldArray.PrepareForInput(DeviceAdapterTag());
     run(statusArray, stepsTaken);
   }
 
@@ -137,7 +126,7 @@ private:
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
     ParticleType particles(seedArray, stepsTaken, statusArray, maxSteps);
 
-    ParticleAdvectWorkletType particleWorklet(integrator, field);
+    ParticleAdvectWorkletType particleWorklet(integrator);
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
     particleWorkletDispatch.Invoke(idxArray, particles);
   }
@@ -146,7 +135,6 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
   vtkm::cont::DataSet ds;
   vtkm::Id maxSteps;
-  FieldPortalConstType field;
 };
 
 

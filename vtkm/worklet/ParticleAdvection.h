@@ -62,12 +62,10 @@ public:
   template <typename IntegratorType,
             typename FieldType,
             typename PointStorage,
-            typename FieldStorage,
             typename DeviceAdapter>
   ParticleAdvectionResult<FieldType> Run(
     const IntegratorType& it,
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
     const vtkm::Id& nSteps,
     const DeviceAdapter&)
   {
@@ -76,8 +74,8 @@ public:
                                                                DeviceAdapter>
       worklet;
 
-    vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage> stepsTaken, status;
-    worklet.Run(it, pts, fieldArray, nSteps, status, stepsTaken);
+    vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken, status;
+    worklet.Run(it, pts, nSteps, status, stepsTaken);
 
     //Create output.
     ParticleAdvectionResult<FieldType> res(pts, status, stepsTaken);

@@ -49,15 +49,12 @@ public:
   {
   }
 
-  template <typename PortalType>
-  VTKM_EXEC bool Step(const vtkm::Vec<FieldType, 3>& pos,
-                      const PortalType& field,
-                      vtkm::Vec<FieldType, 3>& out) const
+  VTKM_EXEC bool Step(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
     vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
 
-    if (f.Evaluate(pos, field, k1) && f.Evaluate(pos + h_2 * k1, field, k2) &&
-        f.Evaluate(pos + h_2 * k2, field, k3) && f.Evaluate(pos + h * k3, field, k4))
+    if (f.Evaluate(pos, k1) && f.Evaluate(pos + h_2 * k1, k2) && f.Evaluate(pos + h_2 * k2, k3) &&
+        f.Evaluate(pos + h * k3, k4))
     {
       out = pos + h / 6.0f * (k1 + 2 * k2 + 2 * k3 + k4);
       return true;
