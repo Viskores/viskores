@@ -17,7 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_MultiBlock_h
+
 #include <vtkm/StaticAssert.h>
 #include <vtkm/cont/ErrorExecution.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -187,4 +187,4 @@ void MultiBlock::PrintSummary(std::ostream &stream) const
 }
 } // namespace vtkm::cont
 
-#endif
+
