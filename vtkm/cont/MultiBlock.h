@@ -17,7 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifdef !vtk_m_cont_MultiBlock_h
+#ifndef vtk_m_cont_MultiBlock_h
 #define vtk_m_cont_MultiBlock_h
 
 #include <vtkm/StaticAssert.h>
