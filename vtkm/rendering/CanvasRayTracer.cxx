@@ -88,36 +88,59 @@ struct ClearBuffersInvokeFunctor
 
 class SurfaceConverter : public vtkm::worklet::WorkletMapField
 {
-  vtkm::Float32 Proj22;
-  vtkm::Float32 Proj23;
-  vtkm::Float32 Proj32;
+  vtkm::Matrix<vtkm::Float32, 4, 4> ViewProjMat;
 
 public:
   VTKM_CONT
-  SurfaceConverter(const vtkm::Matrix<vtkm::Float32, 4, 4> projMat)
+  SurfaceConverter(const vtkm::Matrix<vtkm::Float32, 4, 4> viewProjMat)
+    : ViewProjMat(viewProjMat)
   {
-    Proj22 = projMat[2][2];
-    Proj23 = projMat[2][3];
-    Proj32 = projMat[3][2];
   }
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, FieldIn<>, ExecObject, ExecObject);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex);
+
+  typedef void ControlSignature(FieldIn<>,
+                                WholeArrayIn<>,
+                                FieldIn<>,
+                                FieldIn<>,
+                                FieldIn<>,
+                                ExecObject,
+                                ExecObject);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
   template <typename Precision, typename ColorPortalType>
   VTKM_EXEC void operator()(
     const vtkm::Id& pixelIndex,
     ColorPortalType& colorBufferIn,
     const Precision& inDepth,
+    const vtkm::Vec<Precision, 3>& origin,
+    const vtkm::Vec<Precision, 3>& dir,
     vtkm::exec::ExecutionWholeArray<vtkm::Float32>& depthBuffer,
     vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32, 4>>& colorBuffer,
     const vtkm::Id& index) const
   {
-    vtkm::Float32 depth = (Proj22 + Proj23 / (-static_cast<vtkm::Float32>(inDepth))) / Proj32;
-    depth = 0.5f * depth + 0.5f;
+    vtkm::Vec<Precision, 3> intersection = origin + inDepth * dir;
+    vtkm::Vec<vtkm::Float32, 4> point;
+
+    point[0] = static_cast<vtkm::Float32>(intersection[0]);
+    point[1] = static_cast<vtkm::Float32>(intersection[1]);
+    point[2] = static_cast<vtkm::Float32>(intersection[2]);
+    point[3] = 1.f;
+
+    vtkm::Vec<vtkm::Float32, 4> newpoint;
+    newpoint = vtkm::MatrixMultiply(this->ViewProjMat, point);
+    newpoint[0] = newpoint[0] / newpoint[3];
+    newpoint[1] = newpoint[1] / newpoint[3];
+    newpoint[2] = newpoint[2] / newpoint[3];
+
+    vtkm::Float32 depth = newpoint[2];
+
+    depth = 0.5f * (-depth) + 0.5f;
     vtkm::Vec<vtkm::Float32, 4> color;
     color[0] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 0));
     color[1] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 1));
     color[2] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 2));
     color[3] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 3));
+
+    vtkm::Float32 existingDepth = depthBuffer.Get(pixelIndex);
+
     depthBuffer.Set(pixelIndex, depth);
     colorBuffer.Set(pixelIndex, color);
   }
@@ -128,37 +151,38 @@ struct WriteFunctor
 {
 protected:
   vtkm::rendering::CanvasRayTracer* Canvas;
-  const vtkm::cont::ArrayHandle<Precision>& Distances;
+  const vtkm::rendering::raytracing::Ray<Precision>& Rays;
   const vtkm::cont::ArrayHandle<Precision>& Colors;
-  const vtkm::cont::ArrayHandle<vtkm::Id>& PixelIds;
   const vtkm::rendering::Camera& CameraView;
+  vtkm::Matrix<vtkm::Float32, 4, 4> ViewProjMat;
 
 public:
   VTKM_CONT
   WriteFunctor(vtkm::rendering::CanvasRayTracer* canvas,
-               const vtkm::cont::ArrayHandle<Precision>& distances,
+               const vtkm::rendering::raytracing::Ray<Precision>& rays,
                const vtkm::cont::ArrayHandle<Precision>& colors,
-               const vtkm::cont::ArrayHandle<vtkm::Id>& pixelIds,
                const vtkm::rendering::Camera& camera)
     : Canvas(canvas)
-    , Distances(distances)
+    , Rays(rays)
     , Colors(colors)
-    , PixelIds(pixelIds)
     , CameraView(camera)
   {
+    ViewProjMat = vtkm::MatrixMultiply(
+      CameraView.CreateProjectionMatrix(Canvas->GetWidth(), Canvas->GetHeight()),
+      CameraView.CreateViewMatrix());
   }
 
   template <typename Device>
   VTKM_CONT bool operator()(Device)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::worklet::DispatcherMapField<SurfaceConverter, Device>(
-      SurfaceConverter(
-        this->CameraView.CreateProjectionMatrix(Canvas->GetWidth(), Canvas->GetHeight())))
+    vtkm::worklet::DispatcherMapField<SurfaceConverter, Device>(SurfaceConverter(ViewProjMat))
       .Invoke(
-        PixelIds,
+        Rays.PixelIdx,
         Colors,
-        Distances,
+        Rays.Distance,
+        Rays.Origin,
+        Rays.Dir,
         vtkm::exec::ExecutionWholeArray<vtkm::Float32>(Canvas->GetDepthBuffer()),
         vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32, 4>>(Canvas->GetColorBuffer()));
     return true;
@@ -166,13 +190,13 @@ public:
 };
 
 template <typename Precision>
-VTKM_CONT void WriteToCanvas(const vtkm::cont::ArrayHandle<vtkm::Id>& pixelIds,
-                             const vtkm::cont::ArrayHandle<Precision>& distances,
+VTKM_CONT void WriteToCanvas(const vtkm::rendering::raytracing::Ray<Precision>& rays,
                              const vtkm::cont::ArrayHandle<Precision>& colors,
                              const vtkm::rendering::Camera& camera,
                              vtkm::rendering::CanvasRayTracer* canvas)
 {
-  WriteFunctor<Precision> functor(canvas, distances, colors, pixelIds, camera);
+  camera.Print();
+  WriteFunctor<Precision> functor(canvas, rays, colors, camera);
 
   vtkm::cont::TryExecute(functor);
 
@@ -215,20 +239,18 @@ void CanvasRayTracer::Clear()
     this->GetBackgroundColor(), this->GetColorBuffer(), this->GetDepthBuffer()));
 }
 
-void CanvasRayTracer::WriteToCanvas(const vtkm::cont::ArrayHandle<vtkm::Id>& pixelIds,
-                                    const vtkm::cont::ArrayHandle<vtkm::Float32>& distances,
+void CanvasRayTracer::WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays,
                                     const vtkm::cont::ArrayHandle<vtkm::Float32>& colors,
                                     const vtkm::rendering::Camera& camera)
 {
-  internal::WriteToCanvas(pixelIds, distances, colors, camera, this);
+  internal::WriteToCanvas(rays, colors, camera, this);
 }
 
-void CanvasRayTracer::WriteToCanvas(const vtkm::cont::ArrayHandle<vtkm::Id>& pixelIds,
-                                    const vtkm::cont::ArrayHandle<vtkm::Float64>& distances,
+void CanvasRayTracer::WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays,
                                     const vtkm::cont::ArrayHandle<vtkm::Float64>& colors,
                                     const vtkm::rendering::Camera& camera)
 {
-  internal::WriteToCanvas(pixelIds, distances, colors, camera, this);
+  internal::WriteToCanvas(rays, colors, camera, this);
 }
 
 vtkm::rendering::Canvas* CanvasRayTracer::NewCopy() const

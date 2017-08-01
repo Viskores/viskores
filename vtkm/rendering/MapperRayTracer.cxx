@@ -112,10 +112,8 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   this->Internals->Tracer.Render(this->Internals->Rays);
 
   timer.Reset();
-  this->Internals->Canvas->WriteToCanvas(this->Internals->Rays.PixelIdx,
-                                         this->Internals->Rays.Distance,
-                                         this->Internals->Rays.Buffers.at(0).Buffer,
-                                         camera);
+  this->Internals->Canvas->WriteToCanvas(
+    this->Internals->Rays, this->Internals->Rays.Buffers.at(0).Buffer, camera);
 
   time = timer.GetElapsedTime();
   logger->AddLogData("write_to_canvas", time);

@@ -199,7 +199,7 @@ public:
 
     Tracer->Trace(rays);
 
-    canvas->WriteToCanvas(rays.PixelIdx, rays.Distance, rays.Buffers.at(0).Buffer, camera);
+    canvas->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
   }
 };
 

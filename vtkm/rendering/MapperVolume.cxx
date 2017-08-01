@@ -140,8 +140,7 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     tracer.Render(rays);
 
     timer.Reset();
-    this->Internals->Canvas->WriteToCanvas(
-      rays.PixelIdx, rays.Distance, rays.Buffers.at(0).Buffer, camera);
+    this->Internals->Canvas->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
 
     vtkm::Float64 time = timer.GetElapsedTime();
     logger->AddLogData("write_to_canvas", time);

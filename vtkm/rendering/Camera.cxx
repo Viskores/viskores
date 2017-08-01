@@ -346,6 +346,7 @@ void Camera::Print() const
     std::cout << "  Pos   : " << Camera3D.Position << std::endl;
     std::cout << "  Up    : " << Camera3D.ViewUp << std::endl;
     std::cout << "  FOV   : " << GetFieldOfView() << std::endl;
+    std::cout << "  Clip  : " << GetClippingRange() << std::endl;
     std::cout << "  XyZ   : " << Camera3D.XPan << " " << Camera3D.YPan << " " << Camera3D.Zoom
               << std::endl;
   }
