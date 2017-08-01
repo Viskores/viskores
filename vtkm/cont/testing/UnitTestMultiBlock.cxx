@@ -99,7 +99,7 @@ MultiBlock_TwoDimUniformTest()
   Vblocks.push_back(testDataSet.Make2DRectilinearDataSet0());
   Vblocks.push_back(testDataSet.Make3DRegularDataSet1());
   Vblocks.push_back(testDataSet.Make3DRegularDataSet0());
-  Vblocks.push_back(testDataSet.Make3DExplicitDataSet4());
+  Vblocks.push_back(testDataSet.Make3DExplicitDataSet1());
 
 
   vtkm::cont::MultiBlock T2Block(Vblocks);
