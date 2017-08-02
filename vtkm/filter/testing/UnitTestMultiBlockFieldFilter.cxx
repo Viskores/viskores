@@ -61,7 +61,7 @@ vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum)
   vtkm::Vec<T,2> origin(0);
   vtkm::Vec<T,2> spacing(1);
   vtkm::cont::MultiBlock Blocks;
-  for (vtkm::Id BlockId = 0; BlockId < BlockNum; BlockId++)
+  for (vtkm::size_t BlockId = 0; BlockId < BlockNum; BlockId++)
   {
     vtkm::Id2 dimensions( (BlockId+2) * (BlockId+2), (BlockId+2) * (BlockId+2) );
     vtkm::Id numCells = (dimensions[0]-1) * (dimensions[1]-1);
