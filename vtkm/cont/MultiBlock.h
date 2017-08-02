@@ -34,46 +34,52 @@ namespace cont {
 class MultiBlock
 {
 public:
+  VTKM_CONT
   MultiBlock(const vtkm::cont::DataSet &ds)
   {
     this->blocks.push_back(ds);
   }
-
+  VTKM_CONT
   MultiBlock(const vtkm::cont::MultiBlock &src)
   {
     this->blocks = src.GetBlocks();
   }
-
+  VTKM_CONT
   MultiBlock(const std::vector<vtkm::cont::DataSet> &mblocks)
   {
     this->blocks = mblocks;
   }
-  
+  VTKM_CONT  
   MultiBlock()
   {
   }
-
+  VTKM_CONT
   MultiBlock &operator=(const vtkm::cont::MultiBlock &src);
-
+  VTKM_CONT
   ~MultiBlock(){}
-
+  VTKM_CONT
   vtkm::cont::Field GetField(const std::string &field_name, 
                              const int &domain_index);
+  VTKM_CONT
   vtkm::Id GetNumberOfBlocks() const;
+  VTKM_CONT
   const vtkm::cont::DataSet &GetBlock(vtkm::Id blockId) const;
+  VTKM_CONT
   const std::vector<vtkm::cont::DataSet> &GetBlocks() const; 
-
+  VTKM_CONT
   void AddBlock(vtkm::cont::DataSet &ds);
+  VTKM_CONT
   void AddBlocks(std::vector<vtkm::cont::DataSet> &mblocks);
-
+  VTKM_CONT
   vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
-
+  VTKM_CONT
   vtkm::Bounds GetBlockBounds(const std::size_t &domain_index,
                                vtkm::Id coordinate_system_index = 0) const;
-
+  VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string &field_name) const;
+  VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int &index) const;
-
+  VTKM_CONT
   void PrintSummary(std::ostream &stream) const;
 private:
     std::vector<vtkm::cont::DataSet> blocks;
