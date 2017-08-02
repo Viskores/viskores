@@ -74,7 +74,7 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder(std::size_t BlockNum)
   vtkm::Vec<T,2> origin(0);
   vtkm::Vec<T,2> spacing(1);
   vtkm::cont::MultiBlock Blocks;
-  for (std::size_t BlockId = 0; BlockId < BlockNum; BlockId++)
+  for (std::size_t BlockId = 0; BlockId < static_cast<vtkm::Id>(BlockNum); BlockId++)
   {
     vtkm::Id2 dimensions( (BlockId+2) * (BlockId+2), (BlockId+2) * (BlockId+2) );
     vtkm::Id numPoints = dimensions[0] * dimensions[1];
