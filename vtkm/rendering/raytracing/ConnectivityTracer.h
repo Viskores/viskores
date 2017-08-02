@@ -549,13 +549,13 @@ public:
 
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9, WorkIndex);
 
-    template <typename CellDataPortalType, typename RayDataPortalType>
+    template <typename CellAbsPortalType, typename CellEmisPortalType, typename RayDataPortalType>
     VTKM_EXEC inline void operator()(const vtkm::UInt8& rayStatus,
                                      const FloatType& enterDistance,
                                      const FloatType& exitDistance,
                                      FloatType& currentDistance,
-                                     const CellDataPortalType& absorptionData,
-                                     const CellDataPortalType& emissionData,
+                                     const CellAbsPortalType& absorptionData,
+                                     const CellEmisPortalType& emissionData,
                                      RayDataPortalType& absorptionBins,
                                      RayDataPortalType& emissionBins,
                                      const vtkm::Id& currentCell,
@@ -1101,14 +1101,17 @@ public:
 
     bool isSupportedField = absorption.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET;
     if (!isSupportedField)
-      throw vtkm::cont::ErrorBadValue("Absorption Field not accociated with cells");
+      throw vtkm::cont::ErrorBadValue("Absorption Field '" + absorption.GetName() +
+                                      "' not accociated with cells");
     ScalarField = absorption;
     // Check for emmision
     HasEmission = false;
+
     if (emission.GetAssociation() != vtkm::cont::Field::ASSOC_ANY)
     {
       if (emission.GetAssociation() != vtkm::cont::Field::ASSOC_CELL_SET)
-        throw vtkm::cont::ErrorBadValue("Emission Field not accociated with cells");
+        throw vtkm::cont::ErrorBadValue("Emission Field '" + emission.GetName() +
+                                        "' not accociated with cells");
       HasEmission = true;
       EmissionField = emission;
     }
@@ -1262,8 +1265,10 @@ public:
     vtkm::cont::Timer<Device> timer;
     if (HasEmission)
     {
-      std::cout << "******$*$*$**$*$*$*$*$*$*$*$*$*$*$*$*\n";
       bool divideEmisByAbsorp = false;
+      vtkm::cont::ArrayHandle<FloatType> absorp = rays.Buffers.at(0).Buffer;
+      vtkm::cont::ArrayHandle<FloatType> emission = rays.GetBuffer("emission").Buffer;
+
       vtkm::worklet::DispatcherMapField<IntegrateEmission<FloatType>, Device>(
         IntegrateEmission<FloatType>(
           rays.Buffers.at(0).GetNumChannels(), firstSegment, divideEmisByAbsorp))
@@ -1273,9 +1278,10 @@ public:
                 rays.Distance,
                 this->ScalarField.GetData(),
                 this->EmissionField.GetData(),
-                rays.Buffers.at(0).Buffer,
-                rays.GetBuffer("emission"),
+                absorp,
+                emission,
                 rays.HitIdx);
+      std::cout << "------------------------------------\n";
     }
     else
     {
