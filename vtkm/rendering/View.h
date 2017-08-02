@@ -103,10 +103,13 @@ public:
   void SaveAs(const std::string& fileName) const;
 
   VTKM_CONT
-  void ClearAnnotations() { annotations.clear(); }
+  void SetAxisColor(vtkm::rendering::Color c) { this->AxisColor = c; }
 
   VTKM_CONT
-  void AddAnnotation(vtkm::rendering::TextAnnotation* ann) { annotations.push_back(ann); }
+  void ClearAnnotations() { Annotations.clear(); }
+
+  VTKM_CONT
+  void AddAnnotation(vtkm::rendering::TextAnnotation* ann) { Annotations.push_back(ann); }
 
 protected:
   void SetupForWorldSpace(bool viewportClip = true);
@@ -115,12 +118,14 @@ protected:
 
   void RenderAnnotations();
 
+  vtkm::rendering::Color AxisColor = vtkm::rendering::Color::white;
+
 private:
   vtkm::rendering::Scene Scene;
   std::shared_ptr<vtkm::rendering::Mapper> MapperPointer;
   std::shared_ptr<vtkm::rendering::Canvas> CanvasPointer;
   std::shared_ptr<vtkm::rendering::WorldAnnotator> WorldAnnotatorPointer;
-  std::vector<vtkm::rendering::TextAnnotation*> annotations;
+  std::vector<vtkm::rendering::TextAnnotation*> Annotations;
   vtkm::rendering::Camera Camera;
 };
 }

@@ -49,8 +49,10 @@ public:
   void RenderScreenAnnotations() VTKM_OVERRIDE;
   void RenderWorldAnnotations() VTKM_OVERRIDE;
   void RenderColorLegendAnnotations();
+
   void EnableLegend();
   void DisableLegend();
+  void SetLegendLabelColor(vtkm::rendering::Color c) { this->Legend.SetLabelColor(c); }
 
 private:
   // 1D-specific annotations
