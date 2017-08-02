@@ -74,12 +74,18 @@ void RunTest(const std::string& fname,
   vtkm::io::reader::BOVDataSetReader rdr(fname);
   vtkm::cont::DataSet ds = rdr.ReadDataSet();
 
-  typedef vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType, FieldType>
+  typedef vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
+                                                                FieldType,
+                                                                DeviceAdapter>
     RGEvalType;
   typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType> RK4RGType;
 
-  RGEvalType eval(ds);
-  RK4RGType rk4(eval, stepSize);
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
+  fieldArray = vtkm::cont::make_ArrayHandle(field);
+
+  RGEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
+  RK4RGType rk4(eval, stepSize, ds);
+
 
   std::vector<vtkm::Vec<FieldType, 3>> seeds;
   srand(314);

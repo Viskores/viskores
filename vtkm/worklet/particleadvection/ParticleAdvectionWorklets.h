@@ -49,18 +49,25 @@ public:
   template <typename IntegralCurveType>
   VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
   {
-    vtkm::Vec<FieldType, 3> p = ic.GetPos(idx);
-    vtkm::Vec<FieldType, 3> p2;
+    vtkm::Vec<FieldType, 3> inpos = ic.GetPos(idx);
+    vtkm::Vec<FieldType, 3> outpos;
 
     while (!ic.Done(idx))
     {
-      if (integrator.Step(p, p2))
+      ParticleStatus status = integrator.Step(inpos, outpos);
+      if (status == ParticleStatus::STATUS_OK)
       {
-        ic.TakeStep(idx, p2);
-        p = p2;
+        ic.TakeStep(idx, outpos, status);
+        inpos = outpos;
       }
-      else
+      if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
       {
+        vtkm::Id numSteps = ic.GetStep(idx);
+        status = integrator.PushOutOfDomain(inpos, numSteps, outpos);
+      }
+      if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
+      {
+        ic.TakeStep(idx, outpos, status);
         ic.SetExitedSpatialBoundary(idx);
       }
     }
@@ -112,15 +119,14 @@ private:
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> DeviceAlgorithm;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
-
     //Allocate status and steps arrays.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> ok(ParticleStatus::STATUS_OK, numSeeds);
     statusArray.Allocate(numSeeds);
     DeviceAlgorithm::Copy(ok, statusArray);
 
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds);
+    /*vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds);
     stepsTaken.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(zero, stepsTaken);
+    DeviceAlgorithm::Copy(zero, stepsTaken);*/
 
     //Create and invoke the particle advection.
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);

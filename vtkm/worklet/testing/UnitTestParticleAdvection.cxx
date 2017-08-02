@@ -356,7 +356,7 @@ void TestParticleWorklets()
   fieldArray = vtkm::cont::make_ArrayHandle(field);
 
   RGEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
-  RK4RGType rk4(eval, stepSize);
+  RK4RGType rk4(eval, stepSize, ds);
 
   std::vector<vtkm::Vec<FieldType, 3>> pts;
   pts.push_back(vtkm::Vec<FieldType, 3>(1, 1, 1));

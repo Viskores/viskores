@@ -37,7 +37,7 @@ namespace particleadvection
 {
 
 // Constant vector
-template <typename PortalType, typename FieldType>
+template <typename FieldType>
 class ConstantField
 {
 public:
@@ -65,7 +65,8 @@ private:
   vtkm::Vec<FieldType, 3> vector;
 };
 
-// Circular Orbit.
+// Circular Orbit
+template <typename FieldType>
 class AnalyticalOrbitEvaluate
 {
 public:
@@ -75,7 +76,6 @@ public:
   {
   }
 
-  template <typename FieldType>
   VTKM_EXEC_CONT bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
                                vtkm::Vec<FieldType, 3>& out) const
   {
@@ -261,8 +261,6 @@ private:
   vtkm::Vec<FieldType, 3> oldMin;
 };
 
-
-
 template <typename PortalType, typename FieldType, typename DeviceAdapterTag>
 class RectilinearGridEvaluate
 {
@@ -316,11 +314,9 @@ public:
     }
     else
     {
-      /*
-             * As the data is not in the rectilinear format.
-             * The code will not be able to continue unless
-             * the data is in the required format.
-             */
+      // As the data is not in the rectilinear format.
+      // The code will not be able to continue unless
+      // the data is in the required format.
       throw vtkm::cont::ErrorInternal("Given dataset is was not rectilinear.");
     }
   }
