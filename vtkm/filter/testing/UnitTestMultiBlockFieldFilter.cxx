@@ -43,9 +43,9 @@ void TestMultiBlockField()
   std::vector<vtkm::filter::ResultField> results = MultiBlockFieldFilterTest( BlockNum );
   VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
   for(std::size_t j = 0; j < results.size(); j++)
-  { 
-    VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() ==  10, 
-                "result cell size incorrect");  
+  {
+    VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() ==  10,
+                "result cell size incorrect");
   }
 }
 
@@ -85,7 +85,6 @@ vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum)
 const std::vector<vtkm::filter::ResultField> MultiBlockFieldFilterTest(std::size_t BlockNum)
 {
   vtkm::cont::MultiBlock Blocks = MultiBlockBuilder<vtkm::Float64>(BlockNum);
-  
   vtkm::filter::Histogram histogram;
   std::vector<vtkm::filter::ResultField> results;
   results = histogram.Execute(Blocks, std::string("cellvar"));

@@ -56,7 +56,7 @@ VTKM_CONT
 MultiBlock & MultiBlock::operator=(const vtkm::cont::MultiBlock &src)
   {
     this->blocks = src.GetBlocks();
-    return *this;  
+    return *this;
   }
 VTKM_CONT
 vtkm::cont::Field MultiBlock::GetField(const std::string &field_name,
@@ -162,7 +162,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const std::strin
 
       if(i == 0)
       {
-        num_components = sub_range.GetPortalConstControl().GetNumberOfValues();    
+        num_components = sub_range.GetPortalConstControl().GetNumberOfValues();
         range = sub_range;
         continue;
       }
@@ -210,4 +210,3 @@ void MultiBlock::PrintSummary(std::ostream &stream) const
   }
 }
 } // namespace vtkm::cont
-

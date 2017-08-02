@@ -47,19 +47,18 @@ void TestMultiBlockCell()
   std::vector<vtkm::filter::ResultField> results = MultiBlockCellTest( BlockNum );
   VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
   for(std::size_t j = 0; j < results.size(); j++)
-  { 
-    VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() == ((j+2)*(j+2)-1)
-    *((j+2)*(j+2)-1), "result cell size incorrect");
+  {
+    VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() == static_cast<std::vtkm::Id>(((j+2)*(j+2)-1)
+    *((j+2)*(j+2)-1)), "result cell size incorrect");
 
-    vtkm::cont::ArrayHandle<vtkm::Float64> array; 
+    vtkm::cont::ArrayHandle<vtkm::Float64> array;
     results[j].GetField().GetData().CopyTo(array);
-    for(std::size_t i = 0; i < results[j].GetField().GetData().GetNumberOfValues(); i++)
-    { 
+    for(vtkm::Id i = 0; i < results[j].GetField().GetData().GetNumberOfValues(); i++)
+    {
       VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == j,
       "result field value incorrect");
     }
   }
- 
 
 }
 
@@ -78,13 +77,13 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder(std::size_t BlockNum)
   {
     vtkm::Id2 dimensions( (BlockId+2) * (BlockId+2), (BlockId+2) * (BlockId+2) );
     vtkm::Id numPoints = dimensions[0] * dimensions[1];
-  
+
     std::vector<T> varP2D(static_cast<std::size_t>(numPoints));
     for ( vtkm::Id i = 0; i < numPoints; i++)
     {
       varP2D[static_cast<std::size_t>(i)] = static_cast<T>(BlockId);
     }
-   
+
     dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
                                     vtkm::Vec<T,2>(origin[0], origin[1]),
                                     vtkm::Vec<T,2>(spacing[0], spacing[1]));

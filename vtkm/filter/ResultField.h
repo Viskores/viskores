@@ -167,7 +167,7 @@ public:
 
   VTKM_CONT
   const vtkm::cont::Field &GetField() const
-  { 
+  {
     return this->GetDataSet().GetField(this->FieldName, this->FieldAssociation);
   }
 
