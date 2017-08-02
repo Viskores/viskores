@@ -40,13 +40,13 @@ VTKM_CONT_EXPORT
 VTKM_CONT_EXPORT
   VTKM_CONT
   MultiBlock(const vtkm::cont::MultiBlock &src);
-VTKM_CONT_EXPORT  
-  VTKM_CONT
-  MultiBlock(const std::vector<vtkm::cont::DataSet> &mblocks);  
 VTKM_CONT_EXPORT
-  VTKM_CONT  
+  VTKM_CONT
+  MultiBlock(const std::vector<vtkm::cont::DataSet> &mblocks);
+VTKM_CONT_EXPORT
+  VTKM_CONT
   MultiBlock();
-VTKM_CONT_EXPORT  
+VTKM_CONT_EXPORT
   VTKM_CONT
   MultiBlock &operator=(const vtkm::cont::MultiBlock &src);
 VTKM_CONT_EXPORT
@@ -54,7 +54,7 @@ VTKM_CONT_EXPORT
   ~MultiBlock();
 VTKM_CONT_EXPORT
   VTKM_CONT
-  vtkm::cont::Field GetField(const std::string &field_name, 
+  vtkm::cont::Field GetField(const std::string &field_name,
                              const int &domain_index);
 VTKM_CONT_EXPORT
   VTKM_CONT
@@ -64,7 +64,7 @@ VTKM_CONT_EXPORT
   const vtkm::cont::DataSet &GetBlock(vtkm::Id blockId) const;
 VTKM_CONT_EXPORT
   VTKM_CONT
-  const std::vector<vtkm::cont::DataSet> &GetBlocks() const; 
+  const std::vector<vtkm::cont::DataSet> &GetBlocks() const;
   VTKM_CONT
 VTKM_CONT_EXPORT
   void AddBlock(vtkm::cont::DataSet &ds);
@@ -97,4 +97,4 @@ private:
 }
 } // namespace vtkm::cont
 
-#endif 
+#endif

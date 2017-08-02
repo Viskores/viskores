@@ -46,7 +46,7 @@ void TestMultiBlockCell()
   std::size_t BlockNum = 7;
   std::vector<vtkm::filter::ResultField> results = MultiBlockCellTest( BlockNum );
   VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
-  for(vtkm::Id j = 0; j < results.size(); j++)
+  for(std::size_t j = 0; j < results.size(); j++)
   { 
     VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() == ((j+2)*(j+2)-1)
     *((j+2)*(j+2)-1), "result cell size incorrect");

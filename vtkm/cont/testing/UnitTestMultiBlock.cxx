@@ -47,16 +47,16 @@ void TestMultiBlock_Uniform()
 
 static void
 MultiBlock_TwoDimUniformTest()
-{ 
+{
   vtkm::cont::testing::MakeTestDataSet testDataSet;
-  vtkm::cont::MultiBlock TestBlock;  
-    
+  vtkm::cont::MultiBlock TestBlock;
+
   vtkm::cont::DataSet TDset1 = testDataSet.Make2DUniformDataSet0();
   vtkm::cont::DataSet TDset2 = testDataSet.Make3DUniformDataSet0();
 
   TestBlock.AddBlock(TDset1);
   TestBlock.AddBlock(TDset2);
-   
+
   VTKM_TEST_ASSERT(TestBlock.GetNumberOfBlocks() == 2,
                    "Incorrect number of blocks");
 
@@ -71,16 +71,14 @@ MultiBlock_TwoDimUniformTest()
                    "Incorrect number of fields");
   VTKM_TEST_ASSERT(TDset2.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
                    "Incorrect number of coordinate systems");
- 
 
   VTKM_TEST_ASSERT(TestBlock.GetBounds() == vtkm::Bounds({0,2,0,1,0,2}),
-                   "Global bounds info incorrect"); 
+                   "Global bounds info incorrect");
   VTKM_TEST_ASSERT(TestBlock.GetBlockBounds(0) == vtkm::Bounds({0,2,0,1,0,0}),
-                   "Local bounds info incorrect"); 
-
+                   "Local bounds info incorrect");
 
   VTKM_TEST_ASSERT(TestBlock.GetBlockBounds(1) == vtkm::Bounds({0,2,0,1,0,2}),
-                   "Local bounds info incorrect"); 
+                   "Local bounds info incorrect");
   VTKM_TEST_ASSERT(TestBlock.GetGlobalRange("cellvar").GetPortalControl().Get(0) == vtkm::Range({100.1f,200.1f}),
                    "Local field value range info incorrect"); 
 
