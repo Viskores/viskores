@@ -94,14 +94,14 @@ void RenderTests()
   //create 1D uniform DS with tiny Y axis
   vtkm::cont::DataSet tinyDS = maker.Make1DUniformDataSet0();
   const vtkm::Id nVerts = tinyDS.GetField(0).GetData().GetNumberOfValues();
-  vtkm::Float32 vars[nVerts];
+  std::vector<vtkm::Float32> vars(nVerts);
   float smallVal = 1.000;
   for (vtkm::Id i = 0; i <= nVerts; i++)
   {
     vars[i] = smallVal;
-    smallVal += .01;
+    smallVal += .01f;
   }
-  dsf.AddPointField(tinyDS, "smallScaledXAxis", vars, nVerts);
+  dsf.AddPointField(tinyDS, "smallScaledXAxis", vars);
   ds[4] = tinyDS;
   tinyDS.PrintSummary(std::cerr);
 
