@@ -35,28 +35,21 @@ class MultiBlock
 {
 public:
   VTKM_CONT
-  MultiBlock(const vtkm::cont::DataSet &ds)
-  {
-    this->blocks.push_back(ds);
-  }
+  MultiBlock(const vtkm::cont::DataSet &ds);
+
   VTKM_CONT
-  MultiBlock(const vtkm::cont::MultiBlock &src)
-  {
-    this->blocks = src.GetBlocks();
-  }
+  MultiBlock(const vtkm::cont::MultiBlock &src);
+  
   VTKM_CONT
-  MultiBlock(const std::vector<vtkm::cont::DataSet> &mblocks)
-  {
-    this->blocks = mblocks;
-  }
+  MultiBlock(const std::vector<vtkm::cont::DataSet> &mblocks);  
+
   VTKM_CONT  
-  MultiBlock()
-  {
-  }
+  MultiBlock();
+  
   VTKM_CONT
   MultiBlock &operator=(const vtkm::cont::MultiBlock &src);
   VTKM_CONT
-  ~MultiBlock(){}
+  ~MultiBlock();
   VTKM_CONT
   vtkm::cont::Field GetField(const std::string &field_name, 
                              const int &domain_index);

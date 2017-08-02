@@ -28,6 +28,30 @@
 #include <vtkm/cont/MultiBlock.h>
 namespace vtkm {
 namespace cont {
+
+VTKM_CONT
+  MultiBlock::MultiBlock(const vtkm::cont::DataSet &ds)
+  {
+    this->blocks.push_back(ds);
+  }
+
+  VTKM_CONT
+  MultiBlock::MultiBlock(const vtkm::cont::MultiBlock &src)
+  {
+    this->blocks = src.GetBlocks();
+  }
+VTKM_CONT
+  MultiBlock::MultiBlock(const std::vector<vtkm::cont::DataSet> &mblocks)
+  {
+    this->blocks = mblocks;
+  }
+VTKM_CONT  
+  MultiBlock::MultiBlock()
+  {
+  }
+VTKM_CONT
+  MultiBlock::~MultiBlock(){}
+
 VTKM_CONT
 MultiBlock & MultiBlock::operator=(const vtkm::cont::MultiBlock &src)
   {
