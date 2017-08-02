@@ -73,8 +73,6 @@ void ColorLegendAnnotation::Render(const vtkm::rendering::Camera& camera,
       "test", this->LabelColor, this->FontScale, vtkm::Vec<vtkm::Float32, 2>(0, 0), 0));
   }
 
-  std::cerr << this->LabelColor << std::endl;
-
   for (unsigned int i = 0; i < this->Annot.size(); ++i)
   {
     TextAnnotationScreen* txt = Annot[i];
