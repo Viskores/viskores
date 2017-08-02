@@ -72,7 +72,7 @@ std::vector<vtkm::filter::ResultField> FilterField<Derived>::Execute(const vtkm:
 {
   std::vector<vtkm::filter::ResultField> results;
 
-  for(std::size_t j=0; j<input.GetNumberOfBlocks(); j++)
+  for(vtkm::Id j=0; j<input.GetNumberOfBlocks(); j++)
   { 
     vtkm::filter::ResultField result = this->Execute(input.GetBlock(j),
                        input.GetBlock(j).GetField(inFieldName),

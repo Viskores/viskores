@@ -82,7 +82,7 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder(std::size_t BlockNum)
     std::vector<T> varP2D(static_cast<std::size_t>(numPoints));
     for ( vtkm::Id i = 0; i < numPoints; i++)
     {
-      varP2D[i] = static_cast<T>(BlockId);
+      varP2D[static_cast<std::size_t>(i)] = static_cast<T>(BlockId);
     }
    
     dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),

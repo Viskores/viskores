@@ -68,7 +68,7 @@ vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum)
     std::vector<T> varC2D(static_cast<std::size_t>(numCells));
     for (vtkm::Id i = 0; i < numCells; i++)
     {
-      varC2D[i] = static_cast<T>(BlockId * i);
+      varC2D[static_cast<std::size_t>(i)] = static_cast<T>(BlockId * i);
     }
     dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
                                     vtkm::Vec<T,2>(origin[0], origin[1]),
