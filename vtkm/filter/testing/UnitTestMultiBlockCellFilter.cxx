@@ -78,7 +78,7 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder(std::size_t BlockNum)
   {
     vtkm::Id2 dimensions( (BlockId+2) * (BlockId+2), (BlockId+2) * (BlockId+2) );
     vtkm::Id numPoints = dimensions[0] * dimensions[1];
-    vtkm::Id numCells = (dimensions[0]-1) * (dimensions[1]-1);
+  
     std::vector<T> varP2D(static_cast<std::size_t>(numPoints));
     for ( vtkm::Id i = 0; i < numPoints; i++)
     {
