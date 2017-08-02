@@ -36,13 +36,13 @@ struct TestWholeCellSetIn
   template <typename FromTopology, typename ToTopology>
   struct WholeCellSetWorklet : public vtkm::worklet::WorkletMapField
   {
-    using ControlSignature = void(FieldIn<> indices,
+    typedef void ControlSignature(FieldIn<> indices,
                                   WholeCellSetIn<FromTopology, ToTopology>,
                                   FieldOut<> numberOfElements,
                                   FieldOut<> shapes,
                                   FieldOut<> numberOfindices,
                                   FieldOut<> connectionSum);
-    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
+    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
     using InputDomain = _1;
 
     template <typename ConnectivityType>
