@@ -88,7 +88,7 @@ MultiBlock_TwoDimUniformTest()
   vtkm::Range SourceRange;
   TestBlock.GetField("cellvar",0).GetRange(&SourceRange);
   VTKM_TEST_ASSERT(SourceRange == vtkm::Range({100.1f,200.1f}),
-                   "Local field value info incorrect"); 
+                   "Local field value info incorrect");
 
   std::vector<vtkm::cont::DataSet> Vblocks;
   Vblocks.push_back(testDataSet.Make2DRectilinearDataSet0());
