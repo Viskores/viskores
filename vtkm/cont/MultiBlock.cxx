@@ -28,13 +28,13 @@
 #include <vtkm/cont/MultiBlock.h>
 namespace vtkm {
 namespace cont {
-
+VTKM_CONT
 MultiBlock & MultiBlock::operator=(const vtkm::cont::MultiBlock &src)
   {
     this->blocks = src.GetBlocks();
     return *this;    
   }
-
+VTKM_CONT
 vtkm::cont::Field MultiBlock::GetField(const std::string &field_name, 
                              const int &block_index)
   {
@@ -42,27 +42,27 @@ vtkm::cont::Field MultiBlock::GetField(const std::string &field_name,
     assert(block_index < static_cast<int>( blocks.size() ) );
     return blocks[block_index].GetField(field_name);
   }
-
+VTKM_CONT
 vtkm::Id MultiBlock::GetNumberOfBlocks() const
   { 
     return static_cast<vtkm::Id>(this->blocks.size());
   }
-
+VTKM_CONT
 const vtkm::cont::DataSet & MultiBlock:: GetBlock(vtkm::Id blockId) const
   {
     return this->blocks[(std::size_t) blockId];
   }
-
+VTKM_CONT
 const std::vector<vtkm::cont::DataSet> & MultiBlock::GetBlocks() const
   {
     return this->blocks;
   }
-
+VTKM_CONT
 void MultiBlock::AddBlock(vtkm::cont::DataSet &ds)
   {
     this->blocks.push_back(ds);
   }
-
+VTKM_CONT
 void MultiBlock::AddBlocks(std::vector<vtkm::cont::DataSet> &mblocks)
   {    
     for(std::size_t i = 0; i < mblocks.size(); i++)
@@ -70,7 +70,7 @@ void MultiBlock::AddBlocks(std::vector<vtkm::cont::DataSet> &mblocks)
       AddBlock(mblocks[i]);
     }
   }
-
+VTKM_CONT
 vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) const
   {
     const vtkm::Id index = coordinate_system_index;
@@ -86,7 +86,7 @@ vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) const
 
     return bounds; 
   }
-
+VTKM_CONT
 vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t &block_index,
                                vtkm::Id coordinate_system_index) const
   {
@@ -107,7 +107,7 @@ vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t &block_index,
     return coords.GetBounds();
   }
 
-
+VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int &index) const
   {
     assert(blocks.size() > 0); 
@@ -115,7 +115,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int &index
     std::string field_name = field.GetName();
     return this->GetGlobalRange(field_name);
   }  
-
+VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const std::string &field_name) const
   {
     bool valid_field = true;
@@ -173,7 +173,7 @@ vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const std::strin
 
     return range;
   }
-
+VTKM_CONT
 void MultiBlock::PrintSummary(std::ostream &stream) const
   {
     stream<<"block "<<"\n";
