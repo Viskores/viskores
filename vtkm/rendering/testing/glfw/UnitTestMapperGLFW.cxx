@@ -96,7 +96,7 @@ void RenderTests()
   const vtkm::Id nVerts = tinyDS.GetField(0).GetData().GetNumberOfValues();
   std::vector<vtkm::Float32> vars(nVerts);
   float smallVal = 1.000;
-  for (vtkm::Id i = 0; i <= nVerts; i++)
+  for (vtkm::Id i = 0; i < nVerts; i++)
   {
     vars[i] = smallVal;
     smallVal += .01f;
