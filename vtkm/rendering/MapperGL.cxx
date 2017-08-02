@@ -178,13 +178,16 @@ struct MapColorAndVerticesInvokeFunctor
 template <typename PtType>
 VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
                                             const PtType& verts,
-                                            const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar)
+                                            const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
+                                            vtkm::rendering::ColorTable ct)
 {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glLineWidth(1);
-  glColor3f(1.0, 1.0, 1.0);
+  vtkm::UInt8 r, g, b, a;
+  ct.MapRGB(0).GetRGBA(r, g, b, a);
 
+  glColor4ub(r, g, b, a);
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
@@ -198,13 +201,16 @@ VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
 template <typename PtType>
 VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts,
                                           const PtType& verts,
-                                          const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar)
+                                          const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
+                                          vtkm::rendering::ColorTable ct)
 {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glLineWidth(1);
-  glColor3f(1.0, 1.0, 1.0);
+  vtkm::UInt8 r, g, b, a;
+  ct.MapRGB(0).GetRGBA(r, g, b, a);
 
+  glColor4ub(r, g, b, a);
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
@@ -412,7 +418,7 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   {
     vtkm::cont::ArrayHandleUniformPointCoordinates verts;
     verts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-    RenderStructuredLineSegments(numVerts, verts, sf);
+    RenderStructuredLineSegments(numVerts, verts, sf, colorTable);
   }
   else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()) &&
            cellset.Cast<vtkm::cont::CellSetSingleType<>>().GetCellShapeAsId() ==
@@ -420,7 +426,7 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   {
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verts;
     verts = dcoords.Cast<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>();
-    RenderExplicitLineSegments(numVerts, verts, sf);
+    RenderExplicitLineSegments(numVerts, verts, sf, colorTable);
   }
   else
   {

@@ -114,22 +114,30 @@ void RenderTests()
 
   for (int i = 0; i < NUM_DATASETS; i++)
   {
-    scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
-                                             ds[i].GetCoordinateSystem(),
-                                             ds[i].GetField(fldNames[i].c_str()),
-                                             colorTable));
     if (i < 3)
     {
+      scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                               ds[i].GetCoordinateSystem(),
+                                               ds[i].GetField(fldNames[i].c_str()),
+                                               colorTable));
       vtkm::rendering::testing::SetCamera<View3DType>(camera[i],
                                                       ds[i].GetCoordinateSystem().GetBounds());
     }
     else if (i == 3)
     {
+      scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                               ds[i].GetCoordinateSystem(),
+                                               ds[i].GetField(fldNames[i].c_str()),
+                                               colorTable));
       vtkm::rendering::testing::SetCamera<View2DType>(camera[i],
                                                       ds[i].GetCoordinateSystem().GetBounds());
     }
     else
     {
+      scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                               ds[i].GetCoordinateSystem(),
+                                               ds[i].GetField(fldNames[i].c_str()),
+                                               vtkm::rendering::Color::white));
       vtkm::rendering::testing::SetCamera<View1DType>(
         camera[i], ds[i].GetCoordinateSystem().GetBounds(), ds[i].GetField(fldNames[i].c_str()));
     }

@@ -395,6 +395,20 @@ public:
   ///
   void ResetToBounds(const vtkm::Bounds& dataBounds);
 
+  /// \brief Set up the camera to look at geometry with padding
+  ///
+  /// \c ResetToBounds takes a \c Bounds structure containing the bounds in
+  /// 3D space that contain the geometry being rendered and a \c Float64 value
+  /// representing the percent that a view should be padded in x, y, and z.
+  /// This method sets up the camera so that it is looking at this region in
+  // space with the given padding percent. The view direction is preserved.
+  ///
+  void ResetToBounds(const vtkm::Bounds& dataBounds, vtkm::Float64 dataViewPadding);
+  void ResetToBounds(const vtkm::Bounds& dataBounds,
+                     vtkm::Float64 XDataViewPadding,
+                     vtkm::Float64 YDataViewPadding,
+                     vtkm::Float64 ZDataViewPadding);
+
   /// \brief Roll the camera
   ///
   /// Rotates the camera around the view direction by the given angle. The
