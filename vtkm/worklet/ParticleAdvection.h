@@ -80,7 +80,7 @@ public:
     vtkm::cont::ArrayHandleConstant<vtkm::Id> init(0, numSeeds);
     stepsTaken.Allocate(numSeeds);
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(init, stepsTaken);
-    worklet.Run(it, pts, fieldArray, nSteps, status, stepsTaken);
+    worklet.Run(it, pts, nSteps, status, stepsTaken);
 
     //Create output.
     ParticleAdvectionResult<FieldType> res(pts, status, stepsTaken);
@@ -103,8 +103,8 @@ public:
                                                                DeviceAdapter>
       worklet;
 
-    vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage> status;
-    worklet.Run(it, pts, fieldArray, nSteps, status, stepsTaken);
+    vtkm::cont::ArrayHandle<vtkm::Id> status;
+    worklet.Run(it, pts, nSteps, status, stepsTaken);
 
     //Create output.
     ParticleAdvectionResult<FieldType> res(pts, status, stepsTaken);

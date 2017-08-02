@@ -81,7 +81,7 @@ void RunTest(const std::string& fname,
   typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType> RK4RGType;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
-  fieldArray = vtkm::cont::make_ArrayHandle(field);
+  ds.GetField(0).GetData().CopyTo(fieldArray);
 
   RGEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
   RK4RGType rk4(eval, stepSize, ds);
@@ -163,13 +163,11 @@ void RunTest(const std::string& fname,
 
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
-  ds.GetField(0).GetData().CopyTo(fieldArray);
 
   if (advectType == 0)
   {
     vtkm::worklet::ParticleAdvection particleAdvection;
-    particleAdvection.Run(rk4, seedArray, fieldArray, numSteps, DeviceAdapter());
+    particleAdvection.Run(rk4, seedArray, numSteps, DeviceAdapter());
   }
   else
   {

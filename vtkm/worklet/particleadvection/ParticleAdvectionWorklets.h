@@ -193,7 +193,7 @@ private:
     if (!(ParticlesPerRound == -1 || ParticlesPerRound > totNumSeeds))
       NeedParticleRounds = true;
 
-    ParticleAdvectWorkletType particleWorklet(integrator, field);
+    ParticleAdvectWorkletType particleWorklet(integrator);
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
 
     //Brute force method, or rounds.

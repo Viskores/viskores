@@ -55,7 +55,7 @@ public:
   ParticleStatus Step(const vtkm::Vec<FieldType, 3>& inpos, vtkm::Vec<FieldType, 3>& outpos) const
   {
     vtkm::Vec<FieldType, 3> velocity;
-    ParticleStatus status = this->CheckStep(inpos, field, this->StepLength, velocity);
+    ParticleStatus status = this->CheckStep(inpos, this->StepLength, velocity);
     if (status == ParticleStatus::STATUS_OK)
     {
       outpos = inpos + this->StepLength * velocity;

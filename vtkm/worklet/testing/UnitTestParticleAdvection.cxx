@@ -205,8 +205,7 @@ void TestEvaluators()
 
 
   //Constant field evaluator and RK4 integrator.
-  typedef vtkm::worklet::particleadvection::ConstantField<FieldPortalConstType, FieldType>
-    CEvalType;
+  typedef vtkm::worklet::particleadvection::ConstantField<FieldType> CEvalType;
   typedef vtkm::worklet::particleadvection::RK4Integrator<CEvalType, FieldType> RK4CType;
 
   //Uniform grid evaluator and RK4 integrator.
@@ -273,18 +272,18 @@ void TestEvaluators()
 
           //Constant vector field evaluator.
           CEvalType constEval(bounds[j], vecs[i]);
-          RK4CType constRK4(constEval, stepSize);
+          RK4CType constRK4(constEval, stepSize, uniformData);
 
 
           //Uniform vector field evaluator
           UniformEvalType uniformEval(
             uniformData.GetCoordinateSystem(), uniformData.GetCellSet(0), vecField);
-          RK4UniformType uniformRK4(uniformEval, stepSize);
+          RK4UniformType uniformRK4(uniformEval, stepSize, uniformData);
 
           //Rectilinear grid evaluator.
           RectilinearEvalType rectEval(
             rectData.GetCoordinateSystem(), rectData.GetCellSet(0), vecField);
-          RK4RectilinearType rectRK4(rectEval, stepSize);
+          RK4RectilinearType rectRK4(rectEval, stepSize, rectData);
 
           //Create a bunch of random points in the bounds.
           for (int k = 0; k < 38; k++)
