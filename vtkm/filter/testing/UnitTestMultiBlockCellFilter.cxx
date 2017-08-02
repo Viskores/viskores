@@ -74,13 +74,13 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder(std::size_t BlockNum)
   vtkm::Vec<T,2> origin(0);
   vtkm::Vec<T,2> spacing(1);
   vtkm::cont::MultiBlock Blocks;
-  for (std::size_t BlockId = 0; BlockId < static_cast<vtkm::Id>(BlockNum); BlockId++)
+  for ( vtkm::Id BlockId = 0; BlockId < static_cast<vtkm::Id>(BlockNum); BlockId++)
   {
     vtkm::Id2 dimensions( (BlockId+2) * (BlockId+2), (BlockId+2) * (BlockId+2) );
     vtkm::Id numPoints = dimensions[0] * dimensions[1];
     vtkm::Id numCells = (dimensions[0]-1) * (dimensions[1]-1);
     std::vector<T> varP2D(static_cast<std::size_t>(numPoints));
-    for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
+    for ( vtkm::Id i = 0; i < numPoints; i++)
     {
       varP2D[i] = static_cast<T>(BlockId);
     }

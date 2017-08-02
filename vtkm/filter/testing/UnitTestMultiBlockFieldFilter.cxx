@@ -66,7 +66,7 @@ vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum)
     vtkm::Id2 dimensions( (BlockId+2) * (BlockId+2), (BlockId+2) * (BlockId+2) );
     vtkm::Id numCells = (dimensions[0]-1) * (dimensions[1]-1);
     std::vector<T> varC2D(static_cast<std::size_t>(numCells));
-    for (std::size_t i = 0; i < static_cast<std::size_t>(numCells); i++)
+    for (vtkm::Id i = 0; i < numCells; i++)
     {
       varC2D[i] = static_cast<T>(BlockId * i);
     }
