@@ -77,23 +77,8 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
       vtkm::filter::ApplyPolicyUnstructured(cells, policy), outCellSet, DeviceAdapter());
   }
 
-  //3. create the output dataset
-  vtkm::cont::DataSet output;
-  output.AddCellSet(outCellSet);
-  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
-  if (this->CompactPoints)
-  {
-    this->Compactor.SetCompactPointFields(true);
-    return this->Compactor.DoExecute(output, GetCellSetExplicitPolicy(policy), DeviceAdapter());
-  }
-  else
-  {
-    return vtkm::filter::ResultDataSet(output);
-  }
-
-  // Check the fields of the dataset to see what kinds of fields are present so
-  // we can free the mapping arrays that won't be needed.
+  //3. Check the fields of the dataset to see what kinds of fields are present so
+  //   we can free the cell mapping array if it won't be needed.
   const vtkm::Id numFields = input.GetNumberOfFields();
   bool hasCellFields = false;
   for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
@@ -108,6 +93,21 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
   if (!hasCellFields)
   {
     this->Worklet.ReleaseCellMapArrays();
+  }
+
+  //4. create the output dataset
+  vtkm::cont::DataSet output;
+  output.AddCellSet(outCellSet);
+  output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
+
+  if (this->CompactPoints)
+  {
+    this->Compactor.SetCompactPointFields(true);
+    return this->Compactor.DoExecute(output, GetCellSetExplicitPolicy(policy), DeviceAdapter());
+  }
+  else
+  {
+    return vtkm::filter::ResultDataSet(output);
   }
 }
 
