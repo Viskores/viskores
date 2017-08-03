@@ -80,7 +80,6 @@ inline VTKM_CONT std::vector<vtkm::filter::ResultField> FilterField<Derived>::Ex
 template <typename Derived>
 inline VTKM_CONT ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
                                                            const vtkm::cont::Field& field)
->>>>>>> 6eb38b4bded5d2f91aaefb9660930b941ffa4fd3
 {
   return this->Execute(input, field, vtkm::filter::PolicyDefault());
 }
