@@ -64,22 +64,14 @@ public:
   ResultField Execute(const vtkm::cont::DataSet& input, const std::string& inFieldName);
 
   VTKM_CONT
-<<<<<<< HEAD
+  ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field);
+
+  VTKM_CONT
+  ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field);
+
+  VTKM_CONT
   std::vector<vtkm::filter::ResultField> Execute(const vtkm::cont::MultiBlock& input,
                                                  const std::string& inFieldName);
-
-  VTKM_CONT
-  ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field);
-
-  VTKM_CONT
-  ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field);
-
-=======
-  ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field);
->>>>>>> 6eb38b4bded5d2f91aaefb9660930b941ffa4fd3
-
-  VTKM_CONT
-  ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field);
 
   template <typename DerivedPolicy>
   VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input,

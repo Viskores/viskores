@@ -94,11 +94,8 @@ set(sources
   Field.cxx
   ImplicitFunction.cxx
   internal/SimplePolymorphicContainer.cxx
-<<<<<<< HEAD
   MultiBlock.cxx
-=======
   internal/ArrayManagerExecutionShareWithControl.cxx
->>>>>>> 6eb38b4bded5d2f91aaefb9660930b941ffa4fd3
   StorageBasic.cxx
   )
 

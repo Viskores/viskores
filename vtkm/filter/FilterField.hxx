@@ -59,7 +59,6 @@ inline VTKM_CONT ResultField FilterField<Derived>::Execute(const vtkm::cont::Dat
 }
 
 //-----------------------------------------------------------------------------
-<<<<<<< HEAD
 template <typename Derived>
 inline VTKM_CONT std::vector<vtkm::filter::ResultField> FilterField<Derived>::Execute(
   const vtkm::cont::MultiBlock& input,
@@ -78,10 +77,6 @@ inline VTKM_CONT std::vector<vtkm::filter::ResultField> FilterField<Derived>::Ex
 }
 
 //-----------------------------------------------------------------------------
-template <typename Derived>
-inline VTKM_CONT ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
-                                                           const vtkm::cont::Field& field)
-=======
 template <typename Derived>
 inline VTKM_CONT ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
                                                            const vtkm::cont::Field& field)
