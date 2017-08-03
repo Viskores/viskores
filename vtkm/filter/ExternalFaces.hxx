@@ -65,13 +65,17 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
   vtkm::cont::CellSetExplicit<> outCellSet(cells.GetName());
 
   if (cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  {
     this->Worklet.Run(cells.Cast<vtkm::cont::CellSetStructured<3>>(),
                       input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
                       outCellSet,
                       DeviceAdapter());
+  }
   else
+  {
     this->Worklet.Run(
       vtkm::filter::ApplyPolicyUnstructured(cells, policy), outCellSet, DeviceAdapter());
+  }
 
   //3. create the output dataset
   vtkm::cont::DataSet output;

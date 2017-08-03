@@ -110,18 +110,18 @@ struct ExternalFaces
     typedef _1 InputDomain;
 
     VTKM_CONT
-    NumExternalFacesPerStructuredCell(const vtkm::Vec<vtkm::Float32, 3>& min_point,
-                                      const vtkm::Vec<vtkm::Float32, 3>& max_point)
+    NumExternalFacesPerStructuredCell(const vtkm::Vec<vtkm::Float64, 3>& min_point,
+                                      const vtkm::Vec<vtkm::Float64, 3>& max_point)
       : MinPoint(min_point)
       , MaxPoint(max_point)
     {
     }
 
     VTKM_EXEC
-    inline vtkm::IdComponent CountExternalFacesOnDimension(vtkm::Float32 grid_min,
-                                                           vtkm::Float32 grid_max,
-                                                           vtkm::Float32 cell_min,
-                                                           vtkm::Float32 cell_max) const
+    inline vtkm::IdComponent CountExternalFacesOnDimension(vtkm::Float64 grid_min,
+                                                           vtkm::Float64 grid_max,
+                                                           vtkm::Float64 cell_min,
+                                                           vtkm::Float64 cell_max) const
     {
       vtkm::IdComponent count = 0;
 
@@ -129,11 +129,17 @@ struct ExternalFaces
       bool cell_max_at_grid_boundary = cell_max >= grid_max;
 
       if (cell_min_at_grid_boundary && !cell_max_at_grid_boundary)
+      {
         count++;
+      }
       else if (!cell_min_at_grid_boundary && cell_max_at_grid_boundary)
+      {
         count++;
+      }
       else if (cell_min_at_grid_boundary && cell_max_at_grid_boundary)
+      {
         count += 2;
+      }
 
       return count;
     }
@@ -159,8 +165,8 @@ struct ExternalFaces
     }
 
   private:
-    vtkm::Vec<vtkm::Float32, 3> MinPoint;
-    vtkm::Vec<vtkm::Float32, 3> MaxPoint;
+    vtkm::Vec<vtkm::Float64, 3> MinPoint;
+    vtkm::Vec<vtkm::Float64, 3> MaxPoint;
   };
 
 
@@ -183,8 +189,8 @@ struct ExternalFaces
     ScatterType GetScatter() const { return this->Scatter; }
 
     template <typename CountArrayType, typename Device>
-    VTKM_CONT BuildConnectivityStructured(const vtkm::Vec<vtkm::Float32, 3>& min_point,
-                                          const vtkm::Vec<vtkm::Float32, 3>& max_point,
+    VTKM_CONT BuildConnectivityStructured(const vtkm::Vec<vtkm::Float64, 3>& min_point,
+                                          const vtkm::Vec<vtkm::Float64, 3>& max_point,
                                           const CountArrayType& countArray,
                                           Device)
       : MinPoint(min_point)
@@ -195,8 +201,8 @@ struct ExternalFaces
     }
 
     VTKM_CONT
-    BuildConnectivityStructured(const vtkm::Vec<vtkm::Float32, 3>& min_point,
-                                const vtkm::Vec<vtkm::Float32, 3>& max_point,
+    BuildConnectivityStructured(const vtkm::Vec<vtkm::Float64, 3>& min_point,
+                                const vtkm::Vec<vtkm::Float64, 3>& max_point,
                                 const ScatterType& scatter)
       : MinPoint(min_point)
       , MaxPoint(max_point)
@@ -213,10 +219,10 @@ struct ExternalFaces
     };
 
     VTKM_EXEC
-    inline bool FoundFaceOnDimension(vtkm::Float32 grid_min,
-                                     vtkm::Float32 grid_max,
-                                     vtkm::Float32 cell_min,
-                                     vtkm::Float32 cell_max,
+    inline bool FoundFaceOnDimension(vtkm::Float64 grid_min,
+                                     vtkm::Float64 grid_max,
+                                     vtkm::Float64 cell_min,
+                                     vtkm::Float64 cell_max,
                                      vtkm::IdComponent& faceIndex,
                                      vtkm::IdComponent& count,
                                      vtkm::IdComponent dimensionFaceOffset,
@@ -228,11 +234,17 @@ struct ExternalFaces
       FaceType Faces = FaceType::FACE_NONE;
 
       if (cell_min_at_grid_boundary && !cell_max_at_grid_boundary)
+      {
         Faces = FaceType::FACE_GRID_MIN;
+      }
       else if (!cell_min_at_grid_boundary && cell_max_at_grid_boundary)
+      {
         Faces = FaceType::FACE_GRID_MAX;
+      }
       else if (cell_min_at_grid_boundary && cell_max_at_grid_boundary)
+      {
         Faces = FaceType::FACE_GRID_MIN_AND_MAX;
+      }
 
       if (Faces == FaceType::FACE_NONE)
         return false;
@@ -245,7 +257,9 @@ struct ExternalFaces
           return true;
         }
         else
+        {
           count++;
+        }
       }
       else if (Faces == FaceType::FACE_GRID_MAX)
       {
@@ -255,7 +269,9 @@ struct ExternalFaces
           return true;
         }
         else
+        {
           count++;
+        }
       }
       else if (Faces == FaceType::FACE_GRID_MIN_AND_MAX)
       {
@@ -351,8 +367,8 @@ struct ExternalFaces
     }
 
   private:
-    vtkm::Vec<vtkm::Float32, 3> MinPoint;
-    vtkm::Vec<vtkm::Float32, 3> MaxPoint;
+    vtkm::Vec<vtkm::Float64, 3> MinPoint;
+    vtkm::Vec<vtkm::Float64, 3> MaxPoint;
     ScatterType Scatter;
   };
 
@@ -689,13 +705,12 @@ struct ExternalFaces
                                   FieldOut<> shapes,
                                   FieldOut<> pointIndices,
                                   FieldOut<> cellIdMapOut);
-    typedef void ExecutionSignature(CellShape, PointIndices, InputIndex, VisitIndex, _2, _3, _4);
+    typedef void ExecutionSignature(CellShape, PointIndices, InputIndex, _2, _3, _4);
 
     template <typename CellShape, typename InPointIndexType, typename OutPointIndexType>
     VTKM_EXEC void operator()(const CellShape& inShape,
                               const InPointIndexType& inPoints,
                               vtkm::Id inputIndex,
-                              vtkm::IdComponent visitIndex,
                               vtkm::UInt8& outShape,
                               OutPointIndexType& outPoints,
                               vtkm::Id& cellIdMapOut) const
@@ -779,8 +794,8 @@ public:
                                                  OffsetsStorage>& outCellSet,
                      DeviceAdapter)
   {
-    vtkm::Vec<vtkm::Float32, 3> MinPoint;
-    vtkm::Vec<vtkm::Float32, 3> MaxPoint;
+    vtkm::Vec<vtkm::Float64, 3> MinPoint;
+    vtkm::Vec<vtkm::Float64, 3> MaxPoint;
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                        vtkm::TopologyElementTagCell,
                                        3>
@@ -800,17 +815,17 @@ public:
       vertices = coord.GetData().Cast<CartesianArrayHandle>();
 
       MinPoint[0] =
-        static_cast<vtkm::Float32>(vertices.GetPortalConstControl().GetFirstPortal().Get(0));
+        static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetFirstPortal().Get(0));
       MinPoint[1] =
-        static_cast<vtkm::Float32>(vertices.GetPortalConstControl().GetSecondPortal().Get(0));
+        static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetSecondPortal().Get(0));
       MinPoint[2] =
-        static_cast<vtkm::Float32>(vertices.GetPortalConstControl().GetThirdPortal().Get(0));
+        static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetThirdPortal().Get(0));
 
-      MaxPoint[0] = static_cast<vtkm::Float32>(
+      MaxPoint[0] = static_cast<vtkm::Float64>(
         vertices.GetPortalConstControl().GetFirstPortal().Get(PointDimensions[0] - 1));
-      MaxPoint[1] = static_cast<vtkm::Float32>(
+      MaxPoint[1] = static_cast<vtkm::Float64>(
         vertices.GetPortalConstControl().GetSecondPortal().Get(PointDimensions[1] - 1));
-      MaxPoint[2] = static_cast<vtkm::Float32>(
+      MaxPoint[2] = static_cast<vtkm::Float64>(
         vertices.GetPortalConstControl().GetThirdPortal().Get(PointDimensions[2] - 1));
     }
     else
@@ -823,12 +838,12 @@ public:
       UniformConstPortal Coordinates = vertices.PrepareForInput(DeviceAdapter());
 
       MinPoint = Coordinates.GetOrigin();
-      vtkm::Vec<vtkm::Float32, 3> spacing = Coordinates.GetSpacing();
+      vtkm::Vec<vtkm::Float64, 3> spacing = Coordinates.GetSpacing();
 
-      vtkm::Vec<vtkm::Float32, 3> unitLength;
-      unitLength[0] = static_cast<vtkm::Float32>(PointDimensions[0] - 1);
-      unitLength[1] = static_cast<vtkm::Float32>(PointDimensions[1] - 1);
-      unitLength[2] = static_cast<vtkm::Float32>(PointDimensions[2] - 1);
+      vtkm::Vec<vtkm::Float64, 3> unitLength;
+      unitLength[0] = static_cast<vtkm::Float64>(PointDimensions[0] - 1);
+      unitLength[1] = static_cast<vtkm::Float64>(PointDimensions[1] - 1);
+      unitLength[2] = static_cast<vtkm::Float64>(PointDimensions[2] - 1);
       MaxPoint = MinPoint + spacing * unitLength;
     }
 
