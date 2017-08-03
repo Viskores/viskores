@@ -33,7 +33,9 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename FieldEvaluateType, typename FieldType>
+template <typename FieldEvaluateType,
+          typename FieldType,
+          template <typename, typename> class IntegratorType>
 class Integrator
 {
 protected:
@@ -72,6 +74,8 @@ public:
                            FieldType stepLength,
                            vtkm::Vec<FieldType, 3>& velocity) const
   {
+    using ConcreteType = IntegratorType<FieldEvaluateType, FieldType>;
+    return static_cast<ConcreteType>(this)->CheckStep(inpos, stepLength, velocity);
   }
 
   VTKM_EXEC
@@ -126,19 +130,20 @@ protected:
 };
 
 template <typename FieldEvaluateType, typename FieldType>
-class RK4Integrator : public Integrator<FieldEvaluateType, FieldType>
+class RK4Integrator : public Integrator<FieldEvaluateType, FieldType, RK4Integrator>
 {
 public:
   VTKM_EXEC_CONT
   RK4Integrator()
-    : Integrator<FieldEvaluateType, FieldType>()
+    : Integrator<FieldEvaluateType, FieldType, RK4Integrator::template RK4Integrator>()
   {
     this->ShortStepsSupported = true;
   }
 
   VTKM_EXEC_CONT
   RK4Integrator(const FieldEvaluateType& evaluator, FieldType stepLength)
-    : Integrator<FieldEvaluateType, FieldType>(evaluator, stepLength)
+    : Integrator<FieldEvaluateType, FieldType, RK4Integrator::template RK4Integrator>(evaluator,
+                                                                                      stepLength)
   {
     this->ShortStepsSupported = true;
   }
@@ -170,12 +175,13 @@ public:
 };
 
 template <typename FieldEvaluateType, typename FieldType>
-class EulerIntegrator : public Integrator<FieldEvaluateType, FieldType>
+class EulerIntegrator : public Integrator<FieldEvaluateType, FieldType, EulerIntegrator>
 {
 public:
   VTKM_EXEC_CONT
   EulerIntegrator(const FieldEvaluateType& evaluator, FieldType field)
-    : Integrator<FieldEvaluateType, FieldType>(evaluator, field)
+    : Integrator<FieldEvaluateType, FieldType, EulerIntegrator::template EulerIntegrator>(evaluator,
+                                                                                          field)
   {
     this->ShortStepsSupported = false;
   }
@@ -192,7 +198,6 @@ public:
     else
       return ParticleStatus::AT_SPATIAL_BOUNDARY;
   }
-
 }; //EulerIntegrator
 
 } //namespace particleadvection
