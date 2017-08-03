@@ -108,7 +108,7 @@ vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
   {
-    vtkm::Bounds block_range = multiblock.GetBlock(i).GetField(FieldIndex).GetRange();
+    vtkm::Range block_range = multiblock.GetBlock(i).GetField(FieldIndex).GetRange();
     range.Include(block_range);
   }
   return range;
@@ -119,7 +119,7 @@ vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string& FieldNam
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
   {
-    vtkm::Bounds block_range = multiblock.GetBlock(i).GetField(FieldName).GetRange();
+    vtkm::Range block_range = multiblock.GetBlock(i).GetField(FieldName).GetRange();
     range.Include(block_range);
   }
   return range;
