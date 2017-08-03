@@ -30,13 +30,14 @@
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/MultiBlock.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/exec/ConnectivityStructured.h>
-
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/exec/ConnectivityStructured.h>
+
 vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex = 0);
 vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex);
-vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string& FieldName);
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, const std::string& FieldName);
+
 static void MultiBlockTest()
 {
   vtkm::cont::testing::MakeTestDataSet testDataSet;
@@ -82,7 +83,7 @@ static void MultiBlockTest()
                      GlobalRange(multiblock, 0),
                    "Local field value range info incorrect");
   VTKM_TEST_ASSERT(multiblock.GetGlobalRange(1).GetPortalControl().Get(0) ==
-                     GlobalRange(multiblock, 0),
+                     GlobalRange(multiblock, 1),
                    "Local field value range info incorrect");
 
   vtkm::Range SourceRange;
@@ -91,7 +92,7 @@ static void MultiBlockTest()
                    "Local field value info incorrect");
 }
 
-vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex = 0)
+vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex)
 {
   vtkm::Bounds bounds;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
@@ -114,7 +115,7 @@ vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
   return range;
 }
 
-vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string& FieldName)
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, const std::string& FieldName)
 {
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
