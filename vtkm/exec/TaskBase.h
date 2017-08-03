@@ -24,18 +24,16 @@
 
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
-namespace vtkm {
-namespace exec {
-
+namespace vtkm
+{
+namespace exec
+{
 
 /// Base class for all classes that are used to marshal data from the invocation
 /// parameters to the user worklets when invoked in the execution environment.
-/// These classes are generally automatically created by
-/// vtkm::worklet::internal::DispatcherBase.
 class TaskBase
 {
 };
-
 }
 } // namespace vtkm::exec
 

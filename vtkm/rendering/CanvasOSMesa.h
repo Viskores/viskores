@@ -26,10 +26,13 @@
 
 #include <memory>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
-namespace detail {
+namespace detail
+{
 
 struct CanvasOSMesaInternals;
 
@@ -38,8 +41,7 @@ struct CanvasOSMesaInternals;
 class VTKM_RENDERING_EXPORT CanvasOSMesa : public CanvasGL
 {
 public:
-  CanvasOSMesa(vtkm::Id width=1024,
-               vtkm::Id height=1024);
+  CanvasOSMesa(vtkm::Id width = 1024, vtkm::Id height = 1024);
 
   ~CanvasOSMesa();
 
@@ -51,12 +53,12 @@ public:
 
   virtual void Finish() VTKM_OVERRIDE;
 
-  vtkm::rendering::Canvas *NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
 
 private:
   std::shared_ptr<detail::CanvasOSMesaInternals> Internals;
 };
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif //vtk_m_rendering_CanvasOSMesa_h

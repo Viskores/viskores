@@ -94,7 +94,11 @@ set(sources
   Field.cxx
   ImplicitFunction.cxx
   internal/SimplePolymorphicContainer.cxx
+<<<<<<< HEAD
   MultiBlock.cxx
+=======
+  internal/ArrayManagerExecutionShareWithControl.cxx
+>>>>>>> 6eb38b4bded5d2f91aaefb9660930b941ffa4fd3
   StorageBasic.cxx
   )
 
@@ -105,14 +109,19 @@ set(device_sources
   RuntimeDeviceTracker.cxx
   )
 
+vtkm_declare_headers(${headers})
+
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(arg)
 
-vtkm_declare_headers(${headers})
-
 add_subdirectory(serial)
 set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_serial>)
+
+add_subdirectory(tbb)
+if (VTKm_ENABLE_TBB)
+  set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_tbb>)
+endif()
 
 add_subdirectory(cuda)
 if (VTKm_ENABLE_CUDA)
@@ -124,14 +133,7 @@ if (VTKm_ENABLE_CUDA)
                               PROPERTIES GENERATED TRUE)
 
   set(sources ${sources} ${vtkm_cont_cuda_object_files})
-
 endif()
-
-add_subdirectory(tbb)
-if (VTKm_ENABLE_TBB)
-  set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_tbb>)
-endif()
-
 
 vtkm_library(
   SOURCES ${sources}

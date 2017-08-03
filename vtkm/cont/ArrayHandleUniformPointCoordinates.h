@@ -20,12 +20,14 @@
 #ifndef vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 #define vtk_m_cont_ArrayHandleUniformPointCoordinates_h
 
-#include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageImplicit.h>
+#include <vtkm/internal/ArrayPortalUniformPointCoordinates.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 /// ArrayHandleUniformPointCoordinates is a specialization of ArrayHandle. It
 /// contains the information necessary to compute the point coordinates in a
@@ -33,34 +35,30 @@ namespace cont {
 /// computes these coordinates in its array portal.
 ///
 class ArrayHandleUniformPointCoordinates
-    : public vtkm::cont::ArrayHandle<
-        vtkm::Vec<vtkm::FloatDefault,3>,
-        vtkm::cont::StorageTagImplicit<
-          vtkm::internal::ArrayPortalUniformPointCoordinates> >
+  : public vtkm::cont::ArrayHandle<
+      vtkm::Vec<vtkm::FloatDefault, 3>,
+      vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>
 {
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS_NT(
-      ArrayHandleUniformPointCoordinates,
-      (vtkm::cont::ArrayHandle<
-         vtkm::Vec<vtkm::FloatDefault,3>,
-         vtkm::cont::StorageTagImplicit<
-           vtkm::internal::ArrayPortalUniformPointCoordinates> >));
+    ArrayHandleUniformPointCoordinates,
+    (vtkm::cont::ArrayHandle<
+      vtkm::Vec<vtkm::FloatDefault, 3>,
+      vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>));
 
 private:
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
   VTKM_CONT
-  ArrayHandleUniformPointCoordinates(
-      vtkm::Id3 dimensions,
-      ValueType origin = ValueType(0.0f, 0.0f, 0.0f),
-      ValueType spacing = ValueType(1.0f, 1.0f, 1.0f))
-    : Superclass(
-        StorageType(vtkm::internal::ArrayPortalUniformPointCoordinates(
-                      dimensions, origin, spacing)))
-  {  }
+  ArrayHandleUniformPointCoordinates(vtkm::Id3 dimensions,
+                                     ValueType origin = ValueType(0.0f, 0.0f, 0.0f),
+                                     ValueType spacing = ValueType(1.0f, 1.0f, 1.0f))
+    : Superclass(StorageType(
+        vtkm::internal::ArrayPortalUniformPointCoordinates(dimensions, origin, spacing)))
+  {
+  }
 };
-
 }
 } // namespace vtkm::cont
 

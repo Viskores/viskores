@@ -22,11 +22,12 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 typedef vtkm::Vec<vtkm::FloatDefault, 3> Vector3;
 
-const vtkm::Id3 DIMENSIONS(16, 18,  5);
+const vtkm::Id3 DIMENSIONS(16, 18, 5);
 const vtkm::Id NUM_POINTS = 1440;
 
 const Vector3 ORIGIN(-20, 5, -10);
@@ -36,18 +37,14 @@ void TestArrayHandleUniformPointCoordinates()
 {
   std::cout << "Creating ArrayHandleUniformPointCoordinates" << std::endl;
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates arrayHandle(
-        DIMENSIONS, ORIGIN, SPACING);
+  vtkm::cont::ArrayHandleUniformPointCoordinates arrayHandle(DIMENSIONS, ORIGIN, SPACING);
   VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == NUM_POINTS,
                    "Array computed wrong number of points.");
 
   std::cout << "Getting array portal." << std::endl;
-  vtkm::internal::ArrayPortalUniformPointCoordinates portal =
-      arrayHandle.GetPortalConstControl();
-  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == NUM_POINTS,
-                   "Portal has wrong number of points.");
-  VTKM_TEST_ASSERT(portal.GetRange3() == DIMENSIONS,
-                   "Portal range is wrong.");
+  vtkm::internal::ArrayPortalUniformPointCoordinates portal = arrayHandle.GetPortalConstControl();
+  VTKM_TEST_ASSERT(portal.GetNumberOfValues() == NUM_POINTS, "Portal has wrong number of points.");
+  VTKM_TEST_ASSERT(portal.GetRange3() == DIMENSIONS, "Portal range is wrong.");
 
   std::cout << "Checking computed values of portal." << std::endl;
   Vector3 expectedValue;
@@ -79,8 +76,7 @@ void TestArrayHandleUniformPointCoordinates()
 
 } // anonymous namespace
 
-int UnitTestArrayHandleUniformPointCoordinates(int, char *[])
+int UnitTestArrayHandleUniformPointCoordinates(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(
-        TestArrayHandleUniformPointCoordinates);
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleUniformPointCoordinates);
 }

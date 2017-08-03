@@ -25,25 +25,54 @@
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
-namespace vtkm {
-namespace cont {
-namespace internal {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
 template <typename T, class StorageTag>
 class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>
-    : public vtkm::cont::internal::ArrayManagerExecutionShareWithControl
-          <T, StorageTag>
+  : public vtkm::cont::internal::ArrayManagerExecutionShareWithControl<T, StorageTag>
 {
 public:
-  typedef vtkm::cont::internal::ArrayManagerExecutionShareWithControl
-      <T, StorageTag> Superclass;
+  typedef vtkm::cont::internal::ArrayManagerExecutionShareWithControl<T, StorageTag> Superclass;
   typedef typename Superclass::ValueType ValueType;
   typedef typename Superclass::PortalType PortalType;
   typedef typename Superclass::PortalConstType PortalConstType;
 
   VTKM_CONT
-  ArrayManagerExecution(typename Superclass::StorageType *storage)
-    : Superclass(storage) {  }
+  ArrayManagerExecution(typename Superclass::StorageType* storage)
+    : Superclass(storage)
+  {
+  }
+};
+
+template <typename T>
+struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagSerial>
+  : public ExecutionPortalFactoryBasicShareWithControl<T>
+{
+  using Superclass = ExecutionPortalFactoryBasicShareWithControl<T>;
+
+  using typename Superclass::ValueType;
+  using typename Superclass::PortalType;
+  using typename Superclass::PortalConstType;
+  using Superclass::CreatePortal;
+  using Superclass::CreatePortalConst;
+};
+
+template <>
+struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagSerial>
+  : public ExecutionArrayInterfaceBasicShareWithControl
+{
+  using Superclass = ExecutionArrayInterfaceBasicShareWithControl;
+
+  VTKM_CONT
+  ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
+
+  VTKM_CONT
+  virtual DeviceAdapterId GetDeviceId() const final { return VTKM_DEVICE_ADAPTER_SERIAL; }
 };
 
 } // namespace internal
@@ -51,7 +80,6 @@ public:
 #ifndef vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_cxx
 VTKM_EXPORT_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagSerial)
 #endif // !vtk_m_cont_serial_internal_ArrayManagerExecutionSerial_cxx
-
 }
 } // namespace vtkm::cont
 

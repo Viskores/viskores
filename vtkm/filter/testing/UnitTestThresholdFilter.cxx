@@ -25,8 +25,8 @@
 
 using vtkm::cont::testing::MakeTestDataSet;
 
-namespace {
-
+namespace
+{
 
 class TestingThreshold
 {
@@ -44,21 +44,17 @@ public:
     threshold.SetUpperThreshold(60.1);
     result = threshold.Execute(dataset, dataset.GetField("pointvar"));
 
-    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
+    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                   "Wrong number of fields in the output dataset");
+                     "Wrong number of fields in the output dataset");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 1 &&
-                     cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
+                       cellFieldArray.GetPortalConstControl().Get(0) == 200.1f,
                      "Wrong cell field data");
   }
 
@@ -74,22 +70,18 @@ public:
     threshold.SetUpperThreshold(20.1);
     result = threshold.Execute(dataset, std::string("pointvar"));
 
-    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
+    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                   "Wrong number of fields in the output dataset");
+                     "Wrong number of fields in the output dataset");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                     cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
-                     cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
+                       cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
+                       cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
                      "Wrong cell field data");
   }
 
@@ -105,22 +97,18 @@ public:
     threshold.SetUpperThreshold(20.1);
     result = threshold.Execute(dataset, std::string("pointvar"));
 
-    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
+    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                   "Wrong number of fields in the output dataset");
+                     "Wrong number of fields in the output dataset");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 2 &&
-                     cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
-                     cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
+                       cellFieldArray.GetPortalConstControl().Get(0) == 100.1f &&
+                       cellFieldArray.GetPortalConstControl().Get(1) == 100.2f,
                      "Wrong cell field data");
   }
 
@@ -138,17 +126,13 @@ public:
 
     VTKM_TEST_ASSERT(result.IsValid(), "threshold algorithm should return true");
 
-    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar") );
+    threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
 
     vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
-                   "Wrong number of fields in the output dataset");
+                     "Wrong number of fields in the output dataset");
 
-    typedef vtkm::cont::ArrayHandlePermutation<
-      vtkm::cont::ArrayHandle<vtkm::Id>,
-      vtkm::cont::ArrayHandle<vtkm::Float32> > OutCellFieldArrayHandleType;
-
-    OutCellFieldArrayHandleType cellFieldArray;
+    vtkm::cont::ArrayHandle<vtkm::Float32> cellFieldArray;
     output.GetField("cellvar").GetData().CopyTo(cellFieldArray);
 
     VTKM_TEST_ASSERT(cellFieldArray.GetNumberOfValues() == 0, "field should be empty");
@@ -162,10 +146,9 @@ public:
     this->TestExplicit3DZeroResults();
   }
 };
-
 }
 
-int UnitTestThresholdFilter(int, char *[])
+int UnitTestThresholdFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestingThreshold());
 }

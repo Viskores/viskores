@@ -29,35 +29,36 @@
 
 #include <vtkm/exec/AtomicArray.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// The atomic array type check passes for an \c ArrayHandle of a structure
 /// that is valid for atomic access. There are many restrictions on the
 /// type of data that can be used for an atomic array.
 ///
-template<typename TypeList = vtkm::exec::AtomicArrayTypeListTag>
+template <typename TypeList = vtkm::exec::AtomicArrayTypeListTag>
 struct TypeCheckTagAtomicArray
 {
   VTKM_IS_LIST_TAG(TypeList);
 };
 
-template<typename TypeList, typename ArrayType>
+template <typename TypeList, typename ArrayType>
 struct TypeCheck<TypeCheckTagAtomicArray<TypeList>, ArrayType>
 {
   static const bool value = false;
 };
 
-template<typename T, typename TypeList>
+template <typename T, typename TypeList>
 struct TypeCheck<TypeCheckTagAtomicArray<TypeList>,
-                 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> >
+                 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
 {
-  static const bool value =
-      ( vtkm::ListContains<TypeList,T>::value &&
-        vtkm::ListContains<vtkm::exec::AtomicArrayTypeListTag,T>::value );
+  static const bool value = (vtkm::ListContains<TypeList, T>::value &&
+                             vtkm::ListContains<vtkm::exec::AtomicArrayTypeListTag, T>::value);
 };
-
 }
 }
 } // namespace vtkm::cont::arg

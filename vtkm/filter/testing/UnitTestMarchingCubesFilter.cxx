@@ -22,12 +22,16 @@
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetSingleType.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/testing/Testing.h>
+#include <vtkm/filter/CleanGrid.h>
 
 #include <vtkm/filter/MarchingCubes.h>
 
-namespace {
+namespace
+{
 
 class TangleField : public vtkm::worklet::WorkletMapField
 {
@@ -41,25 +45,44 @@ public:
   const vtkm::Id cellsPerLayer;
 
   VTKM_CONT
-  TangleField(const vtkm::Id3 dims, const vtkm::FloatDefault mins[3], const vtkm::FloatDefault maxs[3]) : xdim(dims[0]), ydim(dims[1]), zdim(dims[2]),
-              xmin(mins[0]), ymin(mins[1]), zmin(mins[2]), xmax(maxs[0]), ymax(maxs[1]), zmax(maxs[2]), cellsPerLayer((xdim) * (ydim)) { }
+  TangleField(const vtkm::Id3 dims,
+              const vtkm::FloatDefault mins[3],
+              const vtkm::FloatDefault maxs[3])
+    : xdim(dims[0])
+    , ydim(dims[1])
+    , zdim(dims[2])
+    , xmin(mins[0])
+    , ymin(mins[1])
+    , zmin(mins[2])
+    , xmax(maxs[0])
+    , ymax(maxs[1])
+    , zmax(maxs[2])
+    , cellsPerLayer((xdim) * (ydim))
+  {
+  }
 
   VTKM_EXEC
-  void operator()(const vtkm::Id &vertexId, vtkm::Float32 &v) const
+  void operator()(const vtkm::Id& vertexId, vtkm::Float32& v) const
   {
     const vtkm::Id x = vertexId % (xdim);
     const vtkm::Id y = (vertexId / (xdim)) % (ydim);
     const vtkm::Id z = vertexId / cellsPerLayer;
 
-    const vtkm::FloatDefault fx = static_cast<vtkm::FloatDefault>(x) / static_cast<vtkm::FloatDefault>(xdim-1);
-    const vtkm::FloatDefault fy = static_cast<vtkm::FloatDefault>(y) / static_cast<vtkm::FloatDefault>(xdim-1);
-    const vtkm::FloatDefault fz = static_cast<vtkm::FloatDefault>(z) / static_cast<vtkm::FloatDefault>(xdim-1);
+    const vtkm::FloatDefault fx =
+      static_cast<vtkm::FloatDefault>(x) / static_cast<vtkm::FloatDefault>(xdim - 1);
+    const vtkm::FloatDefault fy =
+      static_cast<vtkm::FloatDefault>(y) / static_cast<vtkm::FloatDefault>(xdim - 1);
+    const vtkm::FloatDefault fz =
+      static_cast<vtkm::FloatDefault>(z) / static_cast<vtkm::FloatDefault>(xdim - 1);
 
-    const vtkm::Float32 xx = 3.0f*vtkm::Float32(xmin+(xmax-xmin)*(fx));
-    const vtkm::Float32 yy = 3.0f*vtkm::Float32(ymin+(ymax-ymin)*(fy));
-    const vtkm::Float32 zz = 3.0f*vtkm::Float32(zmin+(zmax-zmin)*(fz));
+    const vtkm::Float32 xx = 3.0f * vtkm::Float32(xmin + (xmax - xmin) * (fx));
+    const vtkm::Float32 yy = 3.0f * vtkm::Float32(ymin + (ymax - ymin) * (fy));
+    const vtkm::Float32 zz = 3.0f * vtkm::Float32(zmin + (zmax - zmin) * (fz));
 
-    v = (xx*xx*xx*xx - 5.0f*xx*xx + yy*yy*yy*yy - 5.0f*yy*yy + zz*zz*zz*zz - 5.0f*zz*zz + 11.8f) * 0.2f + 0.5f;
+    v = (xx * xx * xx * xx - 5.0f * xx * xx + yy * yy * yy * yy - 5.0f * yy * yy +
+         zz * zz * zz * zz - 5.0f * zz * zz + 11.8f) *
+        0.2f +
+      0.5f;
   }
 };
 
@@ -69,26 +92,25 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 
   const vtkm::Id3 vdims(dims[0] + 1, dims[1] + 1, dims[2] + 1);
 
-  vtkm::FloatDefault mins[3] = {-1.0f, -1.0f, -1.0f};
-  vtkm::FloatDefault maxs[3] = {1.0f, 1.0f, 1.0f};
+  vtkm::FloatDefault mins[3] = { -1.0f, -1.0f, -1.0f };
+  vtkm::FloatDefault maxs[3] = { 1.0f, 1.0f, 1.0f };
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  vtkm::cont::ArrayHandleIndex vertexCountImplicitArray(vdims[0]*vdims[1]*vdims[2]);
-  vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(TangleField(vdims, mins, maxs));
+  vtkm::cont::ArrayHandleIndex vertexCountImplicitArray(vdims[0] * vdims[1] * vdims[2]);
+  vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(
+    TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
 
-  vtkm::Vec<vtkm::FloatDefault,3> origin(0.0f, 0.0f, 0.0f);
-  vtkm::Vec<vtkm::FloatDefault,3> spacing(
-        1.0f/static_cast<vtkm::FloatDefault>(dims[0]),
-        1.0f/static_cast<vtkm::FloatDefault>(dims[2]),
-        1.0f/static_cast<vtkm::FloatDefault>(dims[1]));
+  vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
+  vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
+                                           1.0f / static_cast<vtkm::FloatDefault>(dims[2]),
+                                           1.0f / static_cast<vtkm::FloatDefault>(dims[1]));
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates
-      coordinates(vdims, origin, spacing);
-  dataSet.AddCoordinateSystem(
-          vtkm::cont::CoordinateSystem("coordinates", coordinates));
+  vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
-  dataSet.AddField(vtkm::cont::Field(std::string("nodevar"), vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+  dataSet.AddField(
+    vtkm::cont::Field(std::string("nodevar"), vtkm::cont::Field::ASSOC_POINTS, fieldArray));
 
   static const vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
@@ -102,34 +124,45 @@ class EuclideanNorm
 {
 public:
   VTKM_EXEC_CONT
-  EuclideanNorm() : Reference(0.,0.,0.) {}
+  EuclideanNorm()
+    : Reference(0., 0., 0.)
+  {
+  }
   VTKM_EXEC_CONT
-  EuclideanNorm(vtkm::Vec<vtkm::Float32,3> reference):Reference(reference) {}
+  EuclideanNorm(vtkm::Vec<vtkm::Float32, 3> reference)
+    : Reference(reference)
+  {
+  }
 
   VTKM_EXEC_CONT
-  vtkm::Float32 operator()(vtkm::Vec<vtkm::Float32,3> v) const
+  vtkm::Float32 operator()(vtkm::Vec<vtkm::Float32, 3> v) const
   {
-    vtkm::Vec<vtkm::Float32,3> d(v[0]-this->Reference[0],
-                                 v[1]-this->Reference[1],
-                                 v[2]-this->Reference[2]);
+    vtkm::Vec<vtkm::Float32, 3> d(
+      v[0] - this->Reference[0], v[1] - this->Reference[1], v[2] - this->Reference[2]);
     return vtkm::Magnitude(d);
   }
 
 private:
-  vtkm::Vec<vtkm::Float32,3> Reference;
+  vtkm::Vec<vtkm::Float32, 3> Reference;
 };
 
 class CubeGridConnectivity
 {
 public:
   VTKM_EXEC_CONT
-  CubeGridConnectivity() : Dimension(1),
-                           DimSquared(1),
-                           DimPlus1Squared(4) {}
+  CubeGridConnectivity()
+    : Dimension(1)
+    , DimSquared(1)
+    , DimPlus1Squared(4)
+  {
+  }
   VTKM_EXEC_CONT
-  CubeGridConnectivity(vtkm::Id dim) : Dimension(dim),
-                                       DimSquared(dim*dim),
-                                       DimPlus1Squared((dim+1)*(dim+1)) {}
+  CubeGridConnectivity(vtkm::Id dim)
+    : Dimension(dim)
+    , DimSquared(dim * dim)
+    , DimPlus1Squared((dim + 1) * (dim + 1))
+  {
+  }
 
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id vertex) const
@@ -137,23 +170,31 @@ public:
     typedef vtkm::CellShapeTagHexahedron HexTag;
     typedef vtkm::CellTraits<HexTag> HexTraits;
 
-    vtkm::Id cellId = vertex/HexTraits::NUM_POINTS;
-    vtkm::Id localId = vertex%HexTraits::NUM_POINTS;
+    vtkm::Id cellId = vertex / HexTraits::NUM_POINTS;
+    vtkm::Id localId = vertex % HexTraits::NUM_POINTS;
     vtkm::Id globalId =
-      (cellId + cellId/this->Dimension +
-       (this->Dimension+1)*(cellId/(this->DimSquared)));
+      (cellId + cellId / this->Dimension + (this->Dimension + 1) * (cellId / (this->DimSquared)));
 
     switch (localId)
-      {
-      case 2: globalId += 1;
-      case 3: globalId += this->Dimension;
-      case 1: globalId += 1;
-      case 0: break;
-      case 6: globalId += 1;
-      case 7: globalId += this->Dimension;
-      case 5: globalId += 1;
-      case 4: globalId += this->DimPlus1Squared; break;
-      }
+    {
+      case 2:
+        globalId += 1;
+      case 3:
+        globalId += this->Dimension;
+      case 1:
+        globalId += 1;
+      case 0:
+        break;
+      case 6:
+        globalId += 1;
+      case 7:
+        globalId += this->Dimension;
+      case 5:
+        globalId += 1;
+      case 4:
+        globalId += this->DimPlus1Squared;
+        break;
+    }
 
     return globalId;
   }
@@ -168,41 +209,42 @@ class MakeRadiantDataSet
 {
 public:
   typedef vtkm::cont::ArrayHandleUniformPointCoordinates CoordinateArrayHandle;
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::Float32,
-    vtkm::cont::ArrayHandleUniformPointCoordinates,
-  EuclideanNorm> DataArrayHandle;
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::Id,
-    vtkm::cont::ArrayHandleCounting<vtkm::Id>,
-    CubeGridConnectivity> ConnectivityArrayHandle;
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleUniformPointCoordinates,
+                                           EuclideanNorm>
+    DataArrayHandle;
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+                                           CubeGridConnectivity>
+    ConnectivityArrayHandle;
 
   typedef vtkm::cont::CellSetSingleType<
-    vtkm::cont::ArrayHandleTransform<vtkm::Id,
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>,
-      CubeGridConnectivity>::StorageTag> CellSet;
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+                                     CubeGridConnectivity>::StorageTag>
+    CellSet;
 
-  vtkm::cont::DataSet Make3DRadiantDataSet(vtkm::IdComponent dim=5);
+  vtkm::cont::DataSet Make3DRadiantDataSet(vtkm::IdComponent dim = 5);
 };
 
-class PolicyRadiantDataSet : public vtkm::filter::PolicyBase< PolicyRadiantDataSet >
+class PolicyRadiantDataSet : public vtkm::filter::PolicyBase<PolicyRadiantDataSet>
 {
   typedef MakeRadiantDataSet::DataArrayHandle DataHandleType;
   typedef MakeRadiantDataSet::ConnectivityArrayHandle CountingHandleType;
 
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::Id,
-            vtkm::cont::ArrayHandleCounting<vtkm::Id>,CubeGridConnectivity
-                                           > TransformHandleType;
-
+  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+                                           CubeGridConnectivity>
+    TransformHandleType;
 
 public:
-  struct TypeListTagRadiantTypes : vtkm::ListTagBase<
-                      DataHandleType::StorageTag,
-                      CountingHandleType::StorageTag,
-                      TransformHandleType::StorageTag> {};
+  struct TypeListTagRadiantTypes : vtkm::ListTagBase<DataHandleType::StorageTag,
+                                                     CountingHandleType::StorageTag,
+                                                     TransformHandleType::StorageTag>
+  {
+  };
 
   typedef TypeListTagRadiantTypes FieldStorageList;
 
-  struct TypeListTagRadiantCellSetTypes : vtkm::ListTagBase<
-                      MakeRadiantDataSet::CellSet > {};
+  struct TypeListTagRadiantCellSetTypes : vtkm::ListTagBase<MakeRadiantDataSet::CellSet>
+  {
+  };
 
   typedef TypeListTagRadiantCellSetTypes AllCellSetList;
 };
@@ -217,39 +259,34 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   typedef vtkm::CellShapeTagHexahedron HexTag;
   typedef vtkm::CellTraits<HexTag> HexTraits;
 
-  typedef vtkm::Vec<vtkm::Float32,3> CoordType;
+  typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
 
-  const vtkm::IdComponent nCells = dim*dim*dim;
+  const vtkm::IdComponent nCells = dim * dim * dim;
 
-  vtkm::Float32 spacing = vtkm::Float32(1./dim);
-  CoordinateArrayHandle coordinates(vtkm::Id3(dim+1,dim+1,dim+1),
-                                    CoordType(-.5,-.5,-.5),
-                                    CoordType(spacing,spacing,spacing));
+  vtkm::Float32 spacing = vtkm::Float32(1. / dim);
+  CoordinateArrayHandle coordinates(vtkm::Id3(dim + 1, dim + 1, dim + 1),
+                                    CoordType(-.5, -.5, -.5),
+                                    CoordType(spacing, spacing, spacing));
 
   DataArrayHandle distanceToOrigin(coordinates);
-  DataArrayHandle distanceToOther(coordinates,
-                                  EuclideanNorm(CoordType(1.,1.,1.)));
+  DataArrayHandle distanceToOther(coordinates, EuclideanNorm(CoordType(1., 1., 1.)));
 
   ConnectivityArrayHandle connectivity(
-    vtkm::cont::ArrayHandleCounting<vtkm::Id>(0,1,nCells*HexTraits::NUM_POINTS),
+    vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, nCells * HexTraits::NUM_POINTS),
     CubeGridConnectivity(dim));
 
-  dataSet.AddCoordinateSystem(
-        vtkm::cont::CoordinateSystem("coordinates", coordinates));
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   //Set point scalar
-  dataSet.AddField(
-    vtkm::cont::Field("distanceToOrigin", vtkm::cont::Field::ASSOC_POINTS,
-                      vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
-  dataSet.AddField(
-    vtkm::cont::Field("distanceToOther", vtkm::cont::Field::ASSOC_POINTS,
-                      vtkm::cont::DynamicArrayHandle(distanceToOther)));
+  dataSet.AddField(vtkm::cont::Field("distanceToOrigin",
+                                     vtkm::cont::Field::ASSOC_POINTS,
+                                     vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
+  dataSet.AddField(vtkm::cont::Field("distanceToOther",
+                                     vtkm::cont::Field::ASSOC_POINTS,
+                                     vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
   CellSet cellSet("cells");
-  cellSet.Fill(coordinates.GetNumberOfValues(),
-               HexTag::Id,
-               HexTraits::NUM_POINTS,
-               connectivity);
+  cellSet.Fill(coordinates.GetNumberOfValues(), HexTag::Id, HexTraits::NUM_POINTS, connectivity);
 
   dataSet.AddCellSet(cellSet);
 
@@ -260,7 +297,7 @@ void TestMarchingCubesUniformGrid()
 {
   std::cout << "Testing MarchingCubes filter on a uniform grid" << std::endl;
 
-  vtkm::Id3 dims(4,4,4);
+  vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
   vtkm::filter::ResultDataSet result;
@@ -269,8 +306,7 @@ void TestMarchingCubesUniformGrid()
   mc.SetGenerateNormals(true);
   mc.SetIsoValue(0, 0.5);
 
-  result = mc.Execute( dataSet,
-                       dataSet.GetField("nodevar") );
+  result = mc.Execute(dataSet, dataSet.GetField("nodevar"));
 
   {
     const vtkm::cont::DataSet& outputData = result.GetDataSet();
@@ -284,7 +320,7 @@ void TestMarchingCubesUniformGrid()
 
     //Map a field onto the resulting dataset
     const bool isMapped = mc.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));
-    VTKM_TEST_ASSERT( isMapped, "mapping should pass" );
+    VTKM_TEST_ASSERT(isMapped, "mapping should pass");
 
     VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
                      "Wrong number of fields in the output dataset");
@@ -303,8 +339,7 @@ void TestMarchingCubesUniformGrid()
 
   //Now try with vertex merging disabled
   mc.SetMergeDuplicatePoints(false);
-  result = mc.Execute( dataSet,
-                       dataSet.GetField("nodevar") );
+  result = mc.Execute(dataSet, dataSet.GetField("nodevar"));
 
   {
     const vtkm::cont::DataSet& outputData = result.GetDataSet();
@@ -330,15 +365,14 @@ void TestMarchingCubesCustomPolicy()
   DataSetGenerator dataSetGenerator;
 
   const vtkm::IdComponent Dimension = 10;
-  vtkm::cont::DataSet dataSet =
-    dataSetGenerator.Make3DRadiantDataSet(Dimension);
+  vtkm::cont::DataSet dataSet = dataSetGenerator.Make3DRadiantDataSet(Dimension);
 
   vtkm::cont::Field contourField = dataSet.GetField("distanceToOrigin");
 
   vtkm::filter::ResultDataSet result;
   vtkm::filter::MarchingCubes mc;
 
-  mc.SetGenerateNormals( false );
+  mc.SetGenerateNormals(false);
   mc.SetIsoValue(0, 0.45);
   mc.SetIsoValue(1, 0.45);
   mc.SetIsoValue(2, 0.45);
@@ -346,7 +380,7 @@ void TestMarchingCubesCustomPolicy()
 
   //We specify a custom execution policy here, since the contourField is a
   //custom field type
-  result = mc.Execute( dataSet, contourField, PolicyRadiantDataSet() );
+  result = mc.Execute(dataSet, contourField, PolicyRadiantDataSet());
 
   //Map a field onto the resulting dataset
   vtkm::cont::Field projectedField = dataSet.GetField("distanceToOther");
@@ -362,22 +396,129 @@ void TestMarchingCubesCustomPolicy()
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
                    "Wrong number of fields in the output dataset");
 
-
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
-  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == (414*4),
+  VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == (414 * 4),
                    "Should have some coordinates");
+}
+
+
+vtkm::cont::DataSet MakeNormalsTestDataSet()
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  vtkm::Id3 dimensions(3, 4, 4);
+  vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  const int nVerts = 48;
+  vtkm::Float32 vars[nVerts] = { 60.764f,  107.555f, 80.524f,  63.639f,  131.087f, 83.4f,
+                                 98.161f,  165.608f, 117.921f, 37.353f,  84.145f,  57.114f,
+                                 95.202f,  162.649f, 114.962f, 115.896f, 215.56f,  135.657f,
+                                 150.418f, 250.081f, 170.178f, 71.791f,  139.239f, 91.552f,
+                                 95.202f,  162.649f, 114.962f, 115.896f, 215.56f,  135.657f,
+                                 150.418f, 250.081f, 170.178f, 71.791f,  139.239f, 91.552f,
+                                 60.764f,  107.555f, 80.524f,  63.639f,  131.087f, 83.4f,
+                                 98.161f,  165.608f, 117.921f, 37.353f,  84.145f,  57.114f };
+
+  //Set point and cell scalar
+  dsf.AddPointField(dataSet, "pointvar", vars, nVerts);
+
+  return dataSet;
+}
+
+void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
+{
+  const vtkm::Id numVerts = 16;
+
+  const vtkm::Vec<vtkm::FloatDefault, 3> hq[numVerts] = {
+    { 0.1510f, 0.6268f, 0.7644f },   { 0.1333f, -0.3974f, 0.9079f },
+    { 0.1626f, 0.7642f, 0.6242f },   { 0.3853f, 0.6643f, 0.6405f },
+    { -0.1337f, 0.7136f, 0.6876f },  { 0.7705f, -0.4212f, 0.4784f },
+    { -0.7360f, -0.4452f, 0.5099f }, { 0.1234f, -0.8871f, 0.4448f },
+    { 0.1626f, 0.7642f, -0.6242f },  { 0.3853f, 0.6643f, -0.6405f },
+    { -0.1337f, 0.7136f, -0.6876f }, { 0.1510f, 0.6268f, -0.7644f },
+    { 0.7705f, -0.4212f, -0.4784f }, { -0.7360f, -0.4452f, -0.5099f },
+    { 0.1234f, -0.8871f, -0.4448f }, { 0.1333f, -0.3974f, -0.9079f }
+  };
+
+  const vtkm::Vec<vtkm::FloatDefault, 3> fast[numVerts] = {
+    { -0.1351f, 0.4377f, 0.8889f },  { 0.2863f, -0.1721f, 0.9426f },
+    { 0.3629f, 0.8155f, 0.4509f },   { 0.8486f, 0.3560f, 0.3914f },
+    { -0.8315f, 0.4727f, 0.2917f },  { 0.9395f, -0.2530f, 0.2311f },
+    { -0.9105f, -0.0298f, 0.4124f }, { -0.1078f, -0.9585f, 0.2637f },
+    { -0.2538f, 0.8534f, -0.4553f }, { 0.8953f, 0.3902f, -0.2149f },
+    { -0.8295f, 0.4188f, -0.3694f }, { 0.2434f, 0.4297f, -0.8695f },
+    { 0.8951f, -0.1347f, -0.4251f }, { -0.8467f, -0.4258f, -0.3191f },
+    { 0.2164f, -0.9401f, -0.2635f }, { -0.1589f, -0.1642f, -0.9735f }
+  };
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> normals;
+
+  vtkm::filter::MarchingCubes mc;
+  mc.SetIsoValue(0, 200);
+  mc.SetGenerateNormals(true);
+
+  // Test default normals generation: high quality for structured, fast for unstructured.
+  auto expected = structured ? hq : fast;
+
+  auto result = mc.Execute(dataset, dataset.GetField("pointvar"));
+  result.GetDataSet().GetField("normals").GetData().CopyTo(normals);
+  VTKM_TEST_ASSERT(normals.GetNumberOfValues() == numVerts,
+                   "Wrong number of values in normals field");
+  for (vtkm::Id i = 0; i < numVerts; ++i)
+  {
+    VTKM_TEST_ASSERT(test_equal(normals.GetPortalConstControl().Get(i), expected[i], 0.001),
+                     "Result does not match expected values");
+  }
+
+  // Test the other normals generation method
+  if (structured)
+  {
+    mc.SetComputeFastNormalsForStructured(true);
+    expected = fast;
+  }
+  else
+  {
+    mc.SetComputeFastNormalsForUnstructured(false);
+    expected = hq;
+  }
+
+  result = mc.Execute(dataset, dataset.GetField("pointvar"));
+  result.GetDataSet().GetField("normals").GetData().CopyTo(normals);
+  VTKM_TEST_ASSERT(normals.GetNumberOfValues() == numVerts,
+                   "Wrong number of values in normals field");
+  for (vtkm::Id i = 0; i < numVerts; ++i)
+  {
+    VTKM_TEST_ASSERT(test_equal(normals.GetPortalConstControl().Get(i), expected[i], 0.001),
+                     "Result does not match expected values");
+  }
+}
+
+void TestMarchingCubesNormals()
+{
+  std::cout << "Testing MarchingCubes normals generation" << std::endl;
+
+  std::cout << "\tStructured dataset\n";
+  vtkm::cont::DataSet dataset = MakeNormalsTestDataSet();
+  TestNormals(dataset, true);
+
+  std::cout << "\tUnstructured dataset\n";
+  vtkm::filter::CleanGrid makeUnstructured;
+  makeUnstructured.SetCompactPointFields(false);
+  auto result = makeUnstructured.Execute(dataset);
+  makeUnstructured.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
+  TestNormals(result.GetDataSet(), false);
 }
 
 void TestMarchingCubesFilter()
 {
   TestMarchingCubesUniformGrid();
   TestMarchingCubesCustomPolicy();
+  TestMarchingCubesNormals();
 }
 
 } // anonymous namespace
 
-
-int UnitTestMarchingCubesFilter(int, char *[])
+int UnitTestMarchingCubesFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestMarchingCubesFilter);
 }

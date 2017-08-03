@@ -67,53 +67,58 @@
 #ifndef vtkm_worklet_contourtree_degree_delta_h
 #define vtkm_worklet_contourtree_degree_delta_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Worklet for doing regular to candidate
 class DegreeDelta : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> sortID,               // (input) index into sorted vertices [1..N]
-                                WholeArrayIn<IdType> sortVector,      // (input) sorted vector of vertices
-                                WholeArrayOut<IdType> candidate);     // (output) candidate
+  typedef void ControlSignature(
+    FieldIn<IdType> sortID,           // (input) index into sorted vertices [1..N]
+    WholeArrayIn<IdType> sortVector,  // (input) sorted vector of vertices
+    WholeArrayOut<IdType> candidate); // (output) candidate
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   vtkm::Id nCandidates;
 
   // Constructor
   VTKM_EXEC_CONT
-  DegreeDelta(vtkm::Id NCandidates) : nCandidates(NCandidates) {}
+  DegreeDelta(vtkm::Id NCandidates)
+    : nCandidates(NCandidates)
+  {
+  }
 
   template <typename InFieldPortalType, typename OutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& sortID,
-                  const InFieldPortalType& sortVector,
-                  const OutFieldPortalType& candidate) const
+  VTKM_EXEC void operator()(const vtkm::Id& sortID,
+                            const InFieldPortalType& sortVector,
+                            const OutFieldPortalType& candidate) const
   {
     vtkm::Id iCandidate = sortVector.Get(sortID);
     // last element needs to be subtracted from vector size
-    if (sortID == nCandidates-1)
+    if (sortID == nCandidates - 1)
     { // final element
       candidate.Set(iCandidate, (nCandidates - candidate.Get(iCandidate)));
     } // final element
     // otherwise, if the next one is different
     else
     { // not the last element
-      vtkm::Id nextCandidate = sortVector.Get(sortID+1);
+      vtkm::Id nextCandidate = sortVector.Get(sortID + 1);
       if (iCandidate != nextCandidate)
       { // no match
-        candidate.Set(iCandidate, (sortID+1 - candidate.Get(iCandidate)));
+        candidate.Set(iCandidate, (sortID + 1 - candidate.Get(iCandidate)));
       } // no match
-    } // not the last element
+    }   // not the last element
   }
 }; // DegreeDelta
-
 }
 }
 }

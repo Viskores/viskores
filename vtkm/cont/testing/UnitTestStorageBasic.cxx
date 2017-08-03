@@ -23,32 +23,32 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/cont/testing/Testing.h>
 
 // We use these to check if the aligned allocator provided by
 // StorageBasic can be used with all STL containers
-#include <vector>
 #include <deque>
 #include <list>
-#include <set>
 #include <map>
-#include <stack>
 #include <queue>
+#include <set>
+#include <stack>
+#include <vector>
 
-namespace {
+namespace
+{
 
 const vtkm::Id ARRAY_SIZE = 10;
 
 template <typename T>
 struct TemplatedTests
 {
-  typedef vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>
-      StorageType;
+  typedef vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic> StorageType;
   typedef typename StorageType::ValueType ValueType;
   typedef typename StorageType::PortalType PortalType;
 
-  void SetStorage(StorageType &array, const ValueType& value)
+  void SetStorage(StorageType& array, const ValueType& value)
   {
     PortalType portal = array.GetPortal();
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
@@ -57,22 +57,23 @@ struct TemplatedTests
     }
   }
 
-  bool CheckStorage(StorageType &array, const ValueType& value)
+  bool CheckStorage(StorageType& array, const ValueType& value)
   {
     PortalType portal = array.GetPortal();
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
-      if (!test_equal(portal.Get(index), value)) { return false; }
+      if (!test_equal(portal.Get(index), value))
+      {
+        return false;
+      }
     }
     return true;
   }
 
-  typename vtkm::VecTraits<ValueType>::ComponentType STOLEN_ARRAY_VALUE()
-  {
-    return 29;
-  }
+  typename vtkm::VecTraits<ValueType>::ComponentType STOLEN_ARRAY_VALUE() { return 29; }
 
-  void TestAlignedAllocatorSTL(){
+  void TestAlignedAllocatorSTL()
+  {
     typedef typename StorageType::AllocatorType Allocator;
     std::vector<ValueType, Allocator> vec(ARRAY_SIZE, ValueType());
     StorageType store(&vec[0], ARRAY_SIZE);
@@ -80,10 +81,12 @@ struct TemplatedTests
 
   // This test checks that we can compile and use the allocator with all
   // STL containers
-  void CompileSTLAllocator(){
+  void CompileSTLAllocator()
+  {
     typedef typename StorageType::AllocatorType Allocator;
-    typedef typename StorageType::AllocatorType::
-      template rebind<std::pair<ValueType, ValueType> >::other PairAllocator;
+    typedef
+      typename StorageType::AllocatorType::template rebind<std::pair<ValueType, ValueType>>::other
+        PairAllocator;
     std::vector<ValueType, Allocator> v;
     v.push_back(ValueType());
 
@@ -105,22 +108,22 @@ struct TemplatedTests
     std::multimap<ValueType, ValueType, std::less<ValueType>, PairAllocator> mm;
     mm.insert(std::pair<ValueType, ValueType>(ValueType(), ValueType()));
 
-    std::stack<ValueType, std::deque<ValueType, Allocator> > stack;
+    std::stack<ValueType, std::deque<ValueType, Allocator>> stack;
     stack.push(ValueType());
 
-    std::queue<ValueType, std::deque<ValueType, Allocator> > queue;
+    std::queue<ValueType, std::deque<ValueType, Allocator>> queue;
     queue.push(ValueType());
 
-    std::priority_queue<ValueType, std::vector<ValueType, Allocator> > pqueue;
+    std::priority_queue<ValueType, std::vector<ValueType, Allocator>> pqueue;
     pqueue.push(ValueType());
   }
 
   /// Returned value should later be passed to StealArray2.  It is best to
   /// put as much between the two test parts to maximize the chance of a
   /// deallocated array being overridden (and thus detected).
-  ValueType *StealArray1()
+  ValueType* StealArray1()
   {
-    ValueType *stolenArray;
+    ValueType* stolenArray;
 
     ValueType stolenArrayValue = ValueType(STOLEN_ARRAY_VALUE());
 
@@ -132,12 +135,11 @@ struct TemplatedTests
                      "Array not properly allocated.");
     // This call steals the array and prevents deallocation.
     stolenArray = stealMyArray.StealArray();
-    VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == 0,
-                     "StealArray did not let go of array.");
+    VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == 0, "StealArray did not let go of array.");
 
     return stolenArray;
   }
-  void StealArray2(ValueType *stolenArray)
+  void StealArray2(ValueType* stolenArray)
   {
     ValueType stolenArrayValue = ValueType(STOLEN_ARRAY_VALUE());
 
@@ -153,8 +155,7 @@ struct TemplatedTests
   void BasicAllocation()
   {
     StorageType arrayStorage;
-    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 0,
-                     "New array storage not zero sized.");
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 0, "New array storage not zero sized.");
 
     arrayStorage.Allocate(ARRAY_SIZE);
     VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE,
@@ -174,21 +175,22 @@ struct TemplatedTests
                      "Array Shrnk failed to resize.");
 
     arrayStorage.ReleaseResources();
-    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 0,
-                     "Array not released correctly.");
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == 0, "Array not released correctly.");
 
     try
     {
       arrayStorage.Shrink(ARRAY_SIZE);
-      VTKM_TEST_ASSERT(true==false,
+      VTKM_TEST_ASSERT(true == false,
                        "Array shrink do a larger size was possible. This can't be allowed.");
     }
-    catch(vtkm::cont::ErrorBadValue&) {}
+    catch (vtkm::cont::ErrorBadValue&)
+    {
+    }
   }
 
   void operator()()
   {
-    ValueType *stolenArray = StealArray1();
+    ValueType* stolenArray = StealArray1();
 
     BasicAllocation();
 
@@ -206,7 +208,6 @@ struct TestFunctor
   {
     TemplatedTests<T> tests;
     tests();
-
   }
 };
 
@@ -217,7 +218,7 @@ void TestStorageBasic()
 
 } // Anonymous namespace
 
-int UnitTestStorageBasic(int, char *[])
+int UnitTestStorageBasic(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestStorageBasic);
 }

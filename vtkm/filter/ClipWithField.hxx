@@ -26,33 +26,55 @@
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
-namespace vtkm {
-namespace filter {
-
-//-----------------------------------------------------------------------------
-inline VTKM_CONT
-ClipWithField::ClipWithField():
-  vtkm::filter::FilterDataSetWithField<ClipWithField>(),
-  ClipValue(0),
-  Worklet()
+namespace vtkm
+{
+namespace filter
 {
 
+namespace clipwithfield
+{
+
+template <typename Device>
+struct PointMapHelper
+{
+  PointMapHelper(const vtkm::worklet::Clip& worklet, vtkm::cont::DynamicArrayHandle& output)
+    : Worklet(worklet)
+    , Output(output)
+  {
+  }
+
+  template <typename ArrayType>
+  void operator()(const ArrayType& array) const
+  {
+    this->Output = this->Worklet.ProcessPointField(array, Device());
+  }
+
+  const vtkm::worklet::Clip& Worklet;
+  vtkm::cont::DynamicArrayHandle& Output;
+};
+
+} // end namespace clipwithfield
+
+//-----------------------------------------------------------------------------
+inline VTKM_CONT ClipWithField::ClipWithField()
+  : vtkm::filter::FilterDataSetWithField<ClipWithField>()
+  , ClipValue(0)
+  , Worklet()
+{
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-vtkm::filter::ResultDataSet ClipWithField::DoExecute(
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT vtkm::filter::ResultDataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
 {
-  if(fieldMeta.IsPointField() == false)
+  using namespace clipwithfield;
+
+  if (fieldMeta.IsPointField() == false)
   {
     //todo: we need to mark this as a failure of input, not a failure
     //of the algorithm
@@ -60,30 +82,23 @@ vtkm::filter::ResultDataSet ClipWithField::DoExecute(
   }
 
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells =
-                  input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
   const vtkm::cont::CoordinateSystem& inputCoords =
-                      input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
-
+    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   vtkm::cont::CellSetExplicit<> outputCellSet =
-          this->Worklet.Run( vtkm::filter::ApplyPolicy(cells, policy),
-                             field,
-                             this->ClipValue,
-                             device
-                           );
+    this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy), field, this->ClipValue, device);
 
   //create the output data
   vtkm::cont::DataSet output;
-  output.AddCellSet( outputCellSet );
+  output.AddCellSet(outputCellSet);
 
   // Compute the new boundary points and add them to the output:
-  vtkm::cont::DynamicArrayHandle outputCoordsArray =
-      this->Worklet.ProcessField(
-        vtkm::filter::ApplyPolicy(inputCoords, policy), device);
-  vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(),
-                                            outputCoordsArray);
+  vtkm::cont::DynamicArrayHandle outputCoordsArray;
+  PointMapHelper<DeviceAdapter> pointMapper(this->Worklet, outputCoordsArray);
+  vtkm::filter::ApplyPolicy(inputCoords, policy).CastAndCall(pointMapper);
+  vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(), outputCoordsArray);
   output.AddCoordinateSystem(outputCoords);
   vtkm::filter::ResultDataSet result(output);
 
@@ -91,31 +106,33 @@ vtkm::filter::ResultDataSet ClipWithField::DoExecute(
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-bool ClipWithField::DoMapField(
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool ClipWithField::DoMapField(
   vtkm::filter::ResultDataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
-  if(fieldMeta.IsPointField() == false)
+  vtkm::cont::ArrayHandle<T> output;
+
+  if (fieldMeta.IsPointField())
   {
-    //not a point field, we can't map it
+    output = this->Worklet.ProcessPointField(input, device);
+  }
+  else if (fieldMeta.IsCellField())
+  {
+    output = this->Worklet.ProcessCellField(input, device);
+  }
+  else
+  {
     return false;
   }
 
-  vtkm::cont::DynamicArrayHandle output =
-                          this->Worklet.ProcessField( input, device);
-
   //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField( fieldMeta.AsField(output) );
+  result.GetDataSet().AddField(fieldMeta.AsField(output));
+
   return true;
 }
-
 }
-}
+} // end namespace vtkm::filter

@@ -22,66 +22,73 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/internal/IndexTag.h>
 #include <vtkm/internal/FunctionInterfaceDetailPre.h>
+#include <vtkm/internal/IndexTag.h>
 
 #include <utility>
 
-namespace vtkm {
-namespace internal {
+namespace vtkm
+{
+namespace internal
+{
 
-namespace detail {
+namespace detail
+{
 
-struct IdentityFunctor {
-  template<typename T>
-  VTKM_EXEC_CONT
-  T &operator()(T &x) const { return x; }
+struct IdentityFunctor
+{
+  template <typename T>
+  VTKM_EXEC_CONT T& operator()(T& x) const
+  {
+    return x;
+  }
 
-  template<typename T>
-  VTKM_EXEC_CONT
-  const T &operator()(const T &x) const { return x; }
+  template <typename T>
+  VTKM_EXEC_CONT const T& operator()(const T& x) const
+  {
+    return x;
+  }
 };
 
 // These functions exist to help copy components of a FunctionInterface.
 
-template<vtkm::IdComponent NumToMove, vtkm::IdComponent ParameterIndex = 1>
-struct FunctionInterfaceMoveParameters {
+template <vtkm::IdComponent NumToMove, vtkm::IdComponent ParameterIndex = 1>
+struct FunctionInterfaceMoveParameters
+{
   VTKM_SUPPRESS_EXEC_WARNINGS
-  template<typename DestSignature, typename SrcSignature>
-  static
-  VTKM_EXEC_CONT
-  void Move(vtkm::internal::detail::ParameterContainer<DestSignature> &dest,
-            const vtkm::internal::detail::ParameterContainer<SrcSignature> &src)
+  template <typename DestSignature, typename SrcSignature>
+  static VTKM_EXEC_CONT void Move(
+    vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+    const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
   {
     ParameterContainerAccess<ParameterIndex> pca;
 
     // using forwarding_type = typename AtType<ParameterIndex, SrcSignature>::type;
-    pca.Move( dest, src );
-              // std::forward<forwarding_type>(pca.Get(src)) );
-             // pca.Get(src));
-   FunctionInterfaceMoveParameters<NumToMove-1,ParameterIndex+1>::Move(dest, src);
+    pca.Move(dest, src);
+    // std::forward<forwarding_type>(pca.Get(src)) );
+    // pca.Get(src));
+    FunctionInterfaceMoveParameters<NumToMove - 1, ParameterIndex + 1>::Move(dest, src);
   }
 };
 
-template<vtkm::IdComponent ParameterIndex>
-struct FunctionInterfaceMoveParameters<0, ParameterIndex> {
-  template<typename DestSignature, typename SrcSignature>
-  static
-  VTKM_EXEC_CONT
-  void Move(vtkm::internal::detail::ParameterContainer<DestSignature> &,
-            const vtkm::internal::detail::ParameterContainer<SrcSignature> &)
+template <vtkm::IdComponent ParameterIndex>
+struct FunctionInterfaceMoveParameters<0, ParameterIndex>
+{
+  template <typename DestSignature, typename SrcSignature>
+  static VTKM_EXEC_CONT void Move(vtkm::internal::detail::ParameterContainer<DestSignature>&,
+                                  const vtkm::internal::detail::ParameterContainer<SrcSignature>&)
   {
     // Nothing left to move.
   }
 };
 
-template<typename OriginalSignature, typename Transform>
+template <typename OriginalSignature, typename Transform>
 struct FunctionInterfaceStaticTransformType;
 
-template<typename OriginalFunction,
-         typename NewFunction,
-         typename TransformFunctor,
-         typename FinishFunctor>
+template <typename OriginalFunction,
+          typename NewFunction,
+          typename TransformFunctor,
+          typename FinishFunctor>
 class FunctionInterfaceDynamicTransformContContinue;
 
 } // namespace detail
@@ -220,21 +227,20 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// resolution to run time. See the documentation for each of these methods for
 /// details on how they are used.
 ///
-template<typename FunctionSignature>
+template <typename FunctionSignature>
 class FunctionInterface
 {
-  template<typename OtherSignature>
+  template <typename OtherSignature>
   friend class FunctionInterface;
 
 public:
   typedef FunctionSignature Signature;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
-  FunctionInterface():
-    Result(),
-    Parameters()
+  FunctionInterface()
+    : Result()
+    , Parameters()
   {
-
   }
 
   // the number of parameters as an integral constant
@@ -244,9 +250,10 @@ public:
   typedef typename SigInfo::Components ComponentSig;
   typedef typename SigInfo::Parameters ParameterSig;
 
-  template<vtkm::IdComponent ParameterIndex>
-  struct ParameterType {
-    typedef typename detail::AtType<ParameterIndex,FunctionSignature>::type type;
+  template <vtkm::IdComponent ParameterIndex>
+  struct ParameterType
+  {
+    typedef typename detail::AtType<ParameterIndex, FunctionSignature>::type type;
   };
 
   static const bool RETURN_VALID = FunctionInterfaceReturnContainer<ResultType>::VALID;
@@ -275,15 +282,12 @@ public:
   /// simplify templated programming.
   ///
   VTKM_EXEC_CONT
-  const FunctionInterfaceReturnContainer<ResultType> &GetReturnValueSafe() const
+  const FunctionInterfaceReturnContainer<ResultType>& GetReturnValueSafe() const
   {
     return this->Result;
   }
   VTKM_EXEC_CONT
-  FunctionInterfaceReturnContainer<ResultType> &GetReturnValueSafe()
-  {
-    return this->Result;
-  }
+  FunctionInterfaceReturnContainer<ResultType>& GetReturnValueSafe() { return this->Result; }
 
   /// Gets the value for the parameter of the given index. Parameters are
   /// indexed starting at 1. To use this method you have to specify a static,
@@ -315,12 +319,10 @@ public:
   /// }
   /// \endcode
   ///
-  template<vtkm::IdComponent ParameterIndex>
-  VTKM_EXEC_CONT
-  const typename ParameterType<ParameterIndex>::type &
-  GetParameter(
-      vtkm::internal::IndexTag<ParameterIndex> =
-        vtkm::internal::IndexTag<ParameterIndex>()) const {
+  template <vtkm::IdComponent ParameterIndex>
+  VTKM_EXEC_CONT const typename ParameterType<ParameterIndex>::type& GetParameter(
+    vtkm::internal::IndexTag<ParameterIndex> = vtkm::internal::IndexTag<ParameterIndex>()) const
+  {
     return (detail::ParameterContainerAccess<ParameterIndex>()).Get(this->Parameters);
   }
 
@@ -361,12 +363,10 @@ public:
   /// template (which is almost always the case), then you will have to use the
   /// template keyword.
   ///
-  template<vtkm::IdComponent ParameterIndex>
-  VTKM_EXEC_CONT
-  void SetParameter(
-      const typename ParameterType<ParameterIndex>::type& parameter,
-      vtkm::internal::IndexTag<ParameterIndex> =
-        vtkm::internal::IndexTag<ParameterIndex>())
+  template <vtkm::IdComponent ParameterIndex>
+  VTKM_EXEC_CONT void SetParameter(
+    const typename ParameterType<ParameterIndex>::type& parameter,
+    vtkm::internal::IndexTag<ParameterIndex> = vtkm::internal::IndexTag<ParameterIndex>())
   {
     return (detail::ParameterContainerAccess<ParameterIndex>()).Set(this->Parameters, parameter);
   }
@@ -377,19 +377,19 @@ public:
   /// the same, copies the first N arguments, where N is the smaller arity of
   /// the two function interfaces.
   ///
-  template<typename SrcFunctionSignature>
-  void Copy(const FunctionInterface<SrcFunctionSignature> &src)
+  template <typename SrcFunctionSignature>
+  void Copy(const FunctionInterface<SrcFunctionSignature>& src)
   {
     this->Result = src.GetReturnValueSafe();
 
-    VTKM_CONSTEXPR vtkm::UInt16 minArity =
-      (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY) ?
-       ARITY : FunctionInterface<SrcFunctionSignature>::ARITY;
+    VTKM_CONSTEXPR vtkm::UInt16 minArity = (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY)
+      ? ARITY
+      : FunctionInterface<SrcFunctionSignature>::ARITY;
 
     (detail::CopyAllParameters<minArity>()).Copy(this->Parameters, src.Parameters);
   }
 
-  void Copy(const FunctionInterface<FunctionSignature> &src)
+  void Copy(const FunctionInterface<FunctionSignature>& src)
   { //optimized version for assignment/copy
     this->Result = src.GetReturnValueSafe();
     this->Parameters = src.Parameters;
@@ -402,37 +402,25 @@ public:
   /// result of the function call is stored within this FunctionInterface and
   /// can be retrieved with GetReturnValue().
   ///
-  template<typename Function>
-  VTKM_CONT
-  void InvokeCont(const Function &f) {
-    detail::DoInvokeCont(f,
-                         this->Parameters,
-                         this->Result,
-                         detail::IdentityFunctor());
+  template <typename Function>
+  VTKM_CONT void InvokeCont(const Function& f)
+  {
+    detail::DoInvokeCont(f, this->Parameters, this->Result, detail::IdentityFunctor());
   }
-  template<typename Function>
-  VTKM_CONT
-  void InvokeCont(Function &f) {
-    detail::DoInvokeCont(f,
-                         this->Parameters,
-                         this->Result,
-                         detail::IdentityFunctor());
+  template <typename Function>
+  VTKM_CONT void InvokeCont(Function& f)
+  {
+    detail::DoInvokeCont(f, this->Parameters, this->Result, detail::IdentityFunctor());
   }
-  template<typename Function>
-  VTKM_EXEC
-  void InvokeExec(const Function &f) {
-    detail::DoInvokeExec(f,
-                         this->Parameters,
-                         this->Result,
-                         detail::IdentityFunctor());
+  template <typename Function>
+  VTKM_EXEC void InvokeExec(const Function& f)
+  {
+    detail::DoInvokeExec(f, this->Parameters, this->Result, detail::IdentityFunctor());
   }
-  template<typename Function>
-  VTKM_EXEC
-  void InvokeExec(Function &f) {
-    detail::DoInvokeExec(f,
-                         this->Parameters,
-                         this->Result,
-                         detail::IdentityFunctor());
+  template <typename Function>
+  VTKM_EXEC void InvokeExec(Function& f)
+  {
+    detail::DoInvokeExec(f, this->Parameters, this->Result, detail::IdentityFunctor());
   }
 
   /// Invoke a function \c f using the arguments stored in this
@@ -444,32 +432,31 @@ public:
   /// the function call is also transformed and stored within this
   /// FunctionInterface and can be retrieved with GetReturnValue().
   ///
-  template<typename Function, typename TransformFunctor>
-  VTKM_CONT
-  void InvokeCont(const Function &f, const TransformFunctor &transform) {
+  template <typename Function, typename TransformFunctor>
+  VTKM_CONT void InvokeCont(const Function& f, const TransformFunctor& transform)
+  {
     detail::DoInvokeCont(f, this->Parameters, this->Result, transform);
   }
-  template<typename Function, typename TransformFunctor>
-  VTKM_CONT
-  void InvokeCont(Function &f, const TransformFunctor &transform) {
+  template <typename Function, typename TransformFunctor>
+  VTKM_CONT void InvokeCont(Function& f, const TransformFunctor& transform)
+  {
     detail::DoInvokeCont(f, this->Parameters, this->Result, transform);
   }
-  template<typename Function, typename TransformFunctor>
-  VTKM_EXEC
-  void InvokeExec(const Function &f, const TransformFunctor &transform) {
+  template <typename Function, typename TransformFunctor>
+  VTKM_EXEC void InvokeExec(const Function& f, const TransformFunctor& transform)
+  {
     detail::DoInvokeExec(f, this->Parameters, this->Result, transform);
   }
-  template<typename Function, typename TransformFunctor>
-  VTKM_EXEC
-  void InvokeExec(Function &f, const TransformFunctor &transform) {
+  template <typename Function, typename TransformFunctor>
+  VTKM_EXEC void InvokeExec(Function& f, const TransformFunctor& transform)
+  {
     detail::DoInvokeExec(f, this->Parameters, this->Result, transform);
   }
 
-  template<typename NewType>
+  template <typename NewType>
   struct AppendType
   {
-    using type =
-      FunctionInterface<typename detail::AppendType<ComponentSig,NewType>::type>;
+    using type = FunctionInterface<typename detail::AppendType<ComponentSig, NewType>::type>;
   };
 
   /// Returns a new \c FunctionInterface with all the parameters of this \c
@@ -477,24 +464,22 @@ public:
   /// parameters. The return type can be determined with the \c AppendType
   /// template.
   ///
-  template<typename NewType>
-  VTKM_CONT
-  typename AppendType<NewType>::type
-  Append(const NewType& newParameter) const
+  template <typename NewType>
+  VTKM_CONT typename AppendType<NewType>::type Append(const NewType& newParameter) const
   {
-    typedef typename detail::AppendType<ComponentSig,NewType>::type AppendSignature;
+    typedef typename detail::AppendType<ComponentSig, NewType>::type AppendSignature;
 
-    FunctionInterface< AppendSignature > appendedFuncInterface;
+    FunctionInterface<AppendSignature> appendedFuncInterface;
     appendedFuncInterface.Copy(*this);
-    appendedFuncInterface.template SetParameter<ARITY+1>(newParameter);
+    appendedFuncInterface.template SetParameter<ARITY + 1>(newParameter);
     return appendedFuncInterface;
   }
 
-  template<vtkm::IdComponent ParameterIndex, typename NewType>
+  template <vtkm::IdComponent ParameterIndex, typename NewType>
   struct ReplaceType
   {
     using type =
-      FunctionInterface < typename detail::ReplaceType<ComponentSig,ParameterIndex, NewType>::type >;
+      FunctionInterface<typename detail::ReplaceType<ComponentSig, ParameterIndex, NewType>::type>;
   };
 
   /// Returns a new \c FunctionInterface with all the parameters of this \c
@@ -534,32 +519,32 @@ public:
   /// \endcode
   ///
   ///
-  template<vtkm::IdComponent ParameterIndex, typename NewType>
-  VTKM_CONT
-  typename ReplaceType<ParameterIndex, NewType>::type
-  Replace(const NewType& newParameter,
-          vtkm::internal::IndexTag<ParameterIndex> =
-            vtkm::internal::IndexTag<ParameterIndex>()) const
+  template <vtkm::IdComponent ParameterIndex, typename NewType>
+  VTKM_CONT typename ReplaceType<ParameterIndex, NewType>::type Replace(
+    const NewType& newParameter,
+    vtkm::internal::IndexTag<ParameterIndex> = vtkm::internal::IndexTag<ParameterIndex>()) const
   {
 
-    typedef typename detail::ReplaceType<ComponentSig,ParameterIndex, NewType>::type ReplaceSigType;
-    FunctionInterface< ReplaceSigType >  replacedFuncInterface;
+    typedef
+      typename detail::ReplaceType<ComponentSig, ParameterIndex, NewType>::type ReplaceSigType;
+    FunctionInterface<ReplaceSigType> replacedFuncInterface;
 
-    detail::FunctionInterfaceMoveParameters<ParameterIndex-1>::
-        Move(replacedFuncInterface.Parameters, this->Parameters);
+    detail::FunctionInterfaceMoveParameters<ParameterIndex - 1>::Move(
+      replacedFuncInterface.Parameters, this->Parameters);
 
     replacedFuncInterface.template SetParameter<ParameterIndex>(newParameter);
 
-    detail::FunctionInterfaceMoveParameters<ARITY-ParameterIndex,ParameterIndex+1>::
-        Move(replacedFuncInterface.Parameters, this->Parameters);
+    detail::FunctionInterfaceMoveParameters<ARITY - ParameterIndex, ParameterIndex + 1>::Move(
+      replacedFuncInterface.Parameters, this->Parameters);
     return replacedFuncInterface;
   }
 
-  template<typename Transform>
-  struct StaticTransformType {
+  template <typename Transform>
+  struct StaticTransformType
+  {
     typedef FunctionInterface<
-        typename detail::FunctionInterfaceStaticTransformType<
-          FunctionSignature,Transform>::type> type;
+      typename detail::FunctionInterfaceStaticTransformType<FunctionSignature, Transform>::type>
+      type;
   };
 
   /// \brief Transforms the \c FunctionInterface based on compile-time
@@ -607,26 +592,20 @@ public:
   /// }
   /// \endcode
   ///
-  template<typename Transform>
-  VTKM_CONT
-  typename StaticTransformType<Transform>::type
-  StaticTransformCont(const Transform &transform) const
+  template <typename Transform>
+  VTKM_CONT typename StaticTransformType<Transform>::type StaticTransformCont(
+    const Transform& transform) const
   {
     typename StaticTransformType<Transform>::type newFuncInterface;
-    detail::DoStaticTransformCont(transform,
-                                  this->Parameters,
-                                  newFuncInterface.Parameters);
+    detail::DoStaticTransformCont(transform, this->Parameters, newFuncInterface.Parameters);
     return newFuncInterface;
   }
-  template<typename Transform>
-  VTKM_EXEC
-  typename StaticTransformType<Transform>::type
-  StaticTransformExec(const Transform &transform) const
+  template <typename Transform>
+  VTKM_EXEC typename StaticTransformType<Transform>::type StaticTransformExec(
+    const Transform& transform) const
   {
     typename StaticTransformType<Transform>::type newFuncInterface;
-    detail::DoStaticTransformExec(transform,
-                                  this->Parameters,
-                                  newFuncInterface.Parameters);
+    detail::DoStaticTransformExec(transform, this->Parameters, newFuncInterface.Parameters);
     return newFuncInterface;
   }
 
@@ -705,22 +684,22 @@ public:
   /// transform functor. It is also possible to abort the transform by not
   /// calling the continue functor.
   ///
-  template<typename TransformFunctor, typename FinishFunctor>
-  VTKM_CONT
-  void DynamicTransformCont(const TransformFunctor &transform,
-                            const FinishFunctor &finish) const {
-    typedef detail::FunctionInterfaceDynamicTransformContContinue<
-        FunctionSignature,
-        ResultType(),
-        TransformFunctor,
-        FinishFunctor> ContinueFunctorType;
+  template <typename TransformFunctor, typename FinishFunctor>
+  VTKM_CONT void DynamicTransformCont(const TransformFunctor& transform,
+                                      const FinishFunctor& finish) const
+  {
+    typedef detail::FunctionInterfaceDynamicTransformContContinue<FunctionSignature,
+                                                                  ResultType(),
+                                                                  TransformFunctor,
+                                                                  FinishFunctor>
+      ContinueFunctorType;
 
     FunctionInterface<ResultType()> emptyInterface;
     ContinueFunctorType continueFunctor =
-        ContinueFunctorType(*this, emptyInterface, transform, finish);
+      ContinueFunctorType(*this, emptyInterface, transform, finish);
 
     continueFunctor.DoNextTransform(emptyInterface);
-//    this->Result = emptyInterface.GetReturnValueSafe();
+    //    this->Result = emptyInterface.GetReturnValueSafe();
   }
 
   /// \brief Applies a function to all the parameters.
@@ -731,24 +710,24 @@ public:
   /// the second argument is an \c IndexTag, which can be used to identify the
   /// index of the parameter.
   ///
-  template<typename Functor>
-  VTKM_CONT
-  void ForEachCont(const Functor &f) const {
+  template <typename Functor>
+  VTKM_CONT void ForEachCont(const Functor& f) const
+  {
     detail::DoForEachCont(f, this->Parameters);
   }
-  template<typename Functor>
-  VTKM_CONT
-  void ForEachCont(const Functor &f) {
+  template <typename Functor>
+  VTKM_CONT void ForEachCont(const Functor& f)
+  {
     detail::DoForEachCont(f, this->Parameters);
   }
-  template<typename Functor>
-  VTKM_EXEC
-  void ForEachExec(const Functor &f) const {
+  template <typename Functor>
+  VTKM_EXEC void ForEachExec(const Functor& f) const
+  {
     detail::DoForEachExec(f, this->Parameters);
   }
-  template<typename Functor>
-  VTKM_EXEC
-  void ForEachExec(const Functor &f) {
+  template <typename Functor>
+  VTKM_EXEC void ForEachExec(const Functor& f)
+  {
     detail::DoForEachExec(f, this->Parameters);
   }
 
@@ -757,109 +736,102 @@ private:
   detail::ParameterContainer<FunctionSignature> Parameters;
 };
 
-namespace detail {
+namespace detail
+{
 
-template<typename OriginalFunction,
-         typename NewFunction,
-         typename TransformFunctor,
-         typename FinishFunctor>
+template <typename OriginalFunction,
+          typename NewFunction,
+          typename TransformFunctor,
+          typename FinishFunctor>
 class FunctionInterfaceDynamicTransformContContinue
 {
 public:
   FunctionInterfaceDynamicTransformContContinue(
-      const vtkm::internal::FunctionInterface<OriginalFunction> &originalInterface,
-      vtkm::internal::FunctionInterface<NewFunction> &newInterface,
-      const TransformFunctor &transform,
-      const FinishFunctor &finish)
-    : OriginalInterface(originalInterface),
-      NewInterface(newInterface),
-      Transform(transform),
-      Finish(finish)
-  {  }
+    const vtkm::internal::FunctionInterface<OriginalFunction>& originalInterface,
+    vtkm::internal::FunctionInterface<NewFunction>& newInterface,
+    const TransformFunctor& transform,
+    const FinishFunctor& finish)
+    : OriginalInterface(originalInterface)
+    , NewInterface(newInterface)
+    , Transform(transform)
+    , Finish(finish)
+  {
+  }
 
-  template<typename T>
-  VTKM_CONT
-  void operator()(const T& newParameter) const
+  template <typename T>
+  VTKM_CONT void operator()(const T& newParameter) const
   {
     typedef typename FunctionInterface<NewFunction>::ComponentSig NewFSigComp;
 
     //Determine if we should do the next transform
-    using appended = brigand::push_back<NewFSigComp,T>;
+    using appended = brigand::push_back<NewFSigComp, T>;
     using interfaceSig = typename detail::AsSigType<appended>::type;
-    using NextInterfaceType = FunctionInterface< interfaceSig >;
+    using NextInterfaceType = FunctionInterface<interfaceSig>;
 
     static VTKM_CONSTEXPR std::size_t newArity = NextInterfaceType::ARITY;
     static VTKM_CONSTEXPR std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
-    typedef std::integral_constant<bool,
-                            (newArity < oldArity ) > ShouldDoNextTransformType;
+    typedef std::integral_constant<bool, (newArity < oldArity)> ShouldDoNextTransformType;
 
     NextInterfaceType nextInterface = this->NewInterface.Append(newParameter);
 
     this->DoNextTransform(nextInterface, ShouldDoNextTransformType());
-    this->NewInterface.GetReturnValueSafe()
-        = nextInterface.GetReturnValueSafe();
+    this->NewInterface.GetReturnValueSafe() = nextInterface.GetReturnValueSafe();
   }
 
-  template<typename NextFunction>
-  void
-  DoNextTransform(
-      vtkm::internal::FunctionInterface<NextFunction> &nextInterface) const
+  template <typename NextFunction>
+  void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface) const
   {
-    typedef FunctionInterfaceDynamicTransformContContinue<
-        OriginalFunction,NextFunction,TransformFunctor,FinishFunctor> NextContinueType;
-    NextContinueType nextContinue = NextContinueType(this->OriginalInterface,
-                                                     nextInterface,
-                                                     this->Transform,
-                                                     this->Finish);
+    typedef FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
+                                                          NextFunction,
+                                                          TransformFunctor,
+                                                          FinishFunctor>
+      NextContinueType;
+    NextContinueType nextContinue =
+      NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
     static const vtkm::IdComponent Index =
-        vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1;
+      vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1;
     vtkm::internal::IndexTag<Index> indexTag;
-    this->Transform(this->OriginalInterface.GetParameter(indexTag),
-                    nextContinue,
-                    indexTag);
+    this->Transform(this->OriginalInterface.GetParameter(indexTag), nextContinue, indexTag);
   }
 
 private:
-  template<typename NextFunction>
-  void
-  DoNextTransform(
-      vtkm::internal::FunctionInterface<NextFunction> &nextInterface,
-      std::true_type) const
+  template <typename NextFunction>
+  void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface,
+                       std::true_type) const
   {
-    typedef FunctionInterfaceDynamicTransformContContinue<
-        OriginalFunction,NextFunction,TransformFunctor,FinishFunctor> NextContinueType;
-    NextContinueType nextContinue = NextContinueType(this->OriginalInterface,
-                                                     nextInterface,
-                                                     this->Transform,
-                                                     this->Finish);
+    typedef FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
+                                                          NextFunction,
+                                                          TransformFunctor,
+                                                          FinishFunctor>
+      NextContinueType;
+    NextContinueType nextContinue =
+      NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
     static const vtkm::IdComponent Index =
-        vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1;
+      vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1;
     vtkm::internal::IndexTag<Index> indexTag;
-    this->Transform(this->OriginalInterface.GetParameter(indexTag),
-                    nextContinue,
-                    indexTag);
+    this->Transform(this->OriginalInterface.GetParameter(indexTag), nextContinue, indexTag);
   }
 
-  template<typename NextFunction>
-  void
-  DoNextTransform(
-      vtkm::internal::FunctionInterface<NextFunction> &nextInterface,
-      std::false_type) const
+  template <typename NextFunction>
+  void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface,
+                       std::false_type) const
   {
     this->Finish(nextInterface);
   }
 
 private:
-  const vtkm::internal::FunctionInterface<OriginalFunction> &OriginalInterface;
-  vtkm::internal::FunctionInterface<NewFunction> &NewInterface;
-  const TransformFunctor &Transform;
-  const FinishFunctor &Finish;
+  const vtkm::internal::FunctionInterface<OriginalFunction>& OriginalInterface;
+  vtkm::internal::FunctionInterface<NewFunction>& NewInterface;
+  const TransformFunctor& Transform;
+  const FinishFunctor& Finish;
 
-  void operator=(const FunctionInterfaceDynamicTransformContContinue<OriginalFunction,NewFunction,TransformFunctor,FinishFunctor> &) = delete;
+  void operator=(const FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
+                                                                     NewFunction,
+                                                                     TransformFunctor,
+                                                                     FinishFunctor>&) = delete;
 };
 
 } // namespace detail
-
 }
 } // namespace vtkm::internal
 

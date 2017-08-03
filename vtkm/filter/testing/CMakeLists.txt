@@ -24,7 +24,10 @@ set(unit_tests
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
+  UnitTestEntropyFilter.cxx
   UnitTestExternalFacesFilter.cxx
+  UnitTestExtractGeometryFilter.cxx
+  UnitTestExtractPointsFilter.cxx
   UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestGradient.cxx
@@ -36,6 +39,7 @@ set(unit_tests
   UnitTestMultiBlockFieldFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
+  UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx
   UnitTestThresholdPointsFilter.cxx

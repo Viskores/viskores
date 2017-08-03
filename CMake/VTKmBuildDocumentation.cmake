@@ -29,9 +29,7 @@ find_package(Doxygen REQUIRED)
 set(VTKm_DOXYGEN_HAVE_DOT ${DOXYGEN_DOT_FOUND})
 set(VTKm_DOXYGEN_DOT_PATH ${DOXYGEN_DOT_PATH})
 set(VTKm_DOXYFILE ${CMAKE_CURRENT_BINARY_DIR}/docs/doxyfile)
-set(VTKm_DOXYGEN_EXCLUDE_FILES
-  ${VTKm_SOURCE_DIR}/vtkm/testing/OptionParser.h
-)
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/doxyfile.in ${VTKm_DOXYFILE}
     @ONLY)
 

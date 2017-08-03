@@ -85,8 +85,7 @@ struct Test
 
     for (vtkm::Id i = 0; i < NUM_KEYS; ++i)
     {
-      VTKM_TEST_ASSERT(outputs.Get(i) == refData[i],
-                       "Unexpected output value after ReduceByKey.");
+      VTKM_TEST_ASSERT(outputs.Get(i) == refData[i], "Unexpected output value after ReduceByKey.");
     }
   }
 
@@ -136,7 +135,7 @@ void TestArrayHandleDiscard()
 
 } // end namespace UnitTestArrayHandleDiscardDetail
 
-int UnitTestArrayHandleDiscard(int, char *[])
+int UnitTestArrayHandleDiscard(int, char* [])
 {
   using namespace UnitTestArrayHandleDiscardDetail;
   return vtkm::cont::testing::Testing::Run(TestArrayHandleDiscard);

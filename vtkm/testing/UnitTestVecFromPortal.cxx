@@ -22,17 +22,18 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace UnitTestVecFromPortalNamespace {
+namespace UnitTestVecFromPortalNamespace
+{
 
 static const vtkm::IdComponent ARRAY_SIZE = 10;
 
-template<typename T>
+template <typename T>
 void CheckType(T, T)
 {
   // Check passes if this function is called correctly.
 }
 
-template<typename T>
+template <typename T>
 class TestPortal
 {
 public:
@@ -47,7 +48,7 @@ public:
 
 struct VecFromPortalTestFunctor
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     typedef TestPortal<T> PortalType;
@@ -59,13 +60,10 @@ struct VecFromPortalTestFunctor
 
     // The statements will fail to compile if the traits is not working as
     // expected.
-    CheckType(typename TTraits::DimensionalityTag(),
-              vtkm::TypeTraitsVectorTag());
+    CheckType(typename TTraits::DimensionalityTag(), vtkm::TypeTraitsVectorTag());
     CheckType(typename VTraits::ComponentType(), T());
-    CheckType(typename VTraits::HasMultipleComponents(),
-              vtkm::VecTraitsTagMultipleComponents());
-    CheckType(typename VTraits::IsSizeStatic(),
-              vtkm::VecTraitsTagSizeVariable());
+    CheckType(typename VTraits::HasMultipleComponents(), vtkm::VecTraitsTagMultipleComponents());
+    CheckType(typename VTraits::IsSizeStatic(), vtkm::VecTraitsTagSizeVariable());
 
     std::cout << "Checking VecFromPortal contents" << std::endl;
 
@@ -73,32 +71,26 @@ struct VecFromPortalTestFunctor
 
     for (vtkm::Id offset = 0; offset < ARRAY_SIZE; offset++)
     {
-      for (vtkm::IdComponent length = 0; length < ARRAY_SIZE-offset; length++)
+      for (vtkm::IdComponent length = 0; length < ARRAY_SIZE - offset; length++)
       {
         VecType vec(portal, length, offset);
 
-        VTKM_TEST_ASSERT(vec.GetNumberOfComponents() == length,
-                         "Wrong length.");
-        VTKM_TEST_ASSERT(VTraits::GetNumberOfComponents(vec) == length,
-                         "Wrong length.");
+        VTKM_TEST_ASSERT(vec.GetNumberOfComponents() == length, "Wrong length.");
+        VTKM_TEST_ASSERT(VTraits::GetNumberOfComponents(vec) == length, "Wrong length.");
 
-        vtkm::Vec<T,ARRAY_SIZE> copyDirect;
+        vtkm::Vec<T, ARRAY_SIZE> copyDirect;
         vec.CopyInto(copyDirect);
 
-        vtkm::Vec<T,ARRAY_SIZE> copyTraits;
+        vtkm::Vec<T, ARRAY_SIZE> copyTraits;
         VTraits::CopyInto(vec, copyTraits);
 
         for (vtkm::IdComponent index = 0; index < length; index++)
         {
-          T expected = TestValue(index+offset, T());
+          T expected = TestValue(index + offset, T());
           VTKM_TEST_ASSERT(test_equal(vec[index], expected), "Wrong value.");
-          VTKM_TEST_ASSERT(
-                test_equal(VTraits::GetComponent(vec, index), expected),
-                "Wrong value.");
-          VTKM_TEST_ASSERT(test_equal(copyDirect[index], expected),
-                           "Wrong copied value.");
-          VTKM_TEST_ASSERT(test_equal(copyTraits[index], expected),
-                           "Wrong copied value.");
+          VTKM_TEST_ASSERT(test_equal(VTraits::GetComponent(vec, index), expected), "Wrong value.");
+          VTKM_TEST_ASSERT(test_equal(copyDirect[index], expected), "Wrong copied value.");
+          VTKM_TEST_ASSERT(test_equal(copyTraits[index], expected), "Wrong copied value.");
         }
       }
     }
@@ -107,14 +99,12 @@ struct VecFromPortalTestFunctor
 
 void VecFromPortalTest()
 {
-  vtkm::testing::Testing::TryTypes(VecFromPortalTestFunctor(),
-                                   vtkm::TypeListTagCommon());
+  vtkm::testing::Testing::TryTypes(VecFromPortalTestFunctor(), vtkm::TypeListTagCommon());
 }
 
 } // namespace UnitTestVecFromPortalNamespace
 
-int UnitTestVecFromPortal(int, char *[])
+int UnitTestVecFromPortal(int, char* [])
 {
-  return vtkm::testing::Testing::Run(
-      UnitTestVecFromPortalNamespace::VecFromPortalTest);
+  return vtkm::testing::Testing::Run(UnitTestVecFromPortalNamespace::VecFromPortalTest);
 }

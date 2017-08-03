@@ -21,13 +21,17 @@
 #ifndef vtk_m_filter_Mask_h
 #define vtk_m_filter_Mask_h
 
-#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/filter/CleanGrid.h>
+#include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/Mask.h>
 
-namespace vtkm {
-namespace filter {
-
+namespace vtkm
+{
+namespace filter
+{
+/// \brief Subselect cells using a stride
+///
+/// Extract only every Nth cell where N is equal to a stride value
 class Mask : public vtkm::filter::FilterDataSet<Mask>
 {
 public:
@@ -37,42 +41,38 @@ public:
   // When CompactPoints is set, instead of copying the points and point fields
   // from the input, the filter will create new compact fields without the unused elements
   VTKM_CONT
-  bool GetCompactPoints() const     { return this->CompactPoints; }
+  bool GetCompactPoints() const { return this->CompactPoints; }
   VTKM_CONT
   void SetCompactPoints(bool value) { this->CompactPoints = value; }
 
   // Set the stride of the subsample
   VTKM_CONT
-  vtkm::Id GetStride() const        { return this->Stride; }
+  vtkm::Id GetStride() const { return this->Stride; }
   VTKM_CONT
-  void SetStride(vtkm::Id &stride)  { this->Stride = stride; }
+  void SetStride(vtkm::Id& stride) { this->Stride = stride; }
 
-  template<typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
-                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                        const DeviceAdapter& tag);
+  template <typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT vtkm::filter::ResultDataSet DoExecute(
+    const vtkm::cont::DataSet& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+    const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT
-  bool DoMapField(vtkm::filter::ResultDataSet& result,
-                  const vtkm::cont::ArrayHandle<T, StorageType>& input,
-                  const vtkm::filter::FieldMetadata& fieldMeta,
-                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                  const DeviceAdapter& tag);
-
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT bool DoMapField(vtkm::filter::ResultDataSet& result,
+                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                            const vtkm::filter::FieldMetadata& fieldMeta,
+                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                            const DeviceAdapter& tag);
 
 private:
   vtkm::Id Stride;
-  vtkm::cont::ArrayHandle<vtkm::Id> ValidCellIds;
   bool CompactPoints;
   vtkm::filter::CleanGrid Compactor;
+  vtkm::worklet::Mask Worklet;
 };
-
 }
 } // namespace vtkm::filter
-
 
 #include <vtkm/filter/Mask.hxx>
 

@@ -26,10 +26,13 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
-namespace detail {
+namespace detail
+{
 
 struct FunctorModulus
 {
@@ -38,7 +41,8 @@ struct FunctorModulus
   VTKM_EXEC_CONT
   FunctorModulus(vtkm::IdComponent modulus = 1)
     : Modulus(modulus)
-  {  }
+  {
+  }
 
   VTKM_EXEC_CONT
   vtkm::IdComponent operator()(vtkm::Id index) const
@@ -54,15 +58,12 @@ struct FunctorDiv
   VTKM_EXEC_CONT
   FunctorDiv(vtkm::Id divisor = 1)
     : Divisor(divisor)
-  {  }
+  {
+  }
 
   VTKM_EXEC_CONT
-  vtkm::Id operator()(vtkm::Id index) const
-  {
-    return index / this->Divisor;
-  }
+  vtkm::Id operator()(vtkm::Id index) const { return index / this->Divisor; }
 };
-
 }
 
 /// \brief A scatter that maps input to some constant numbers of output.
@@ -78,7 +79,8 @@ struct ScatterUniform
   VTKM_CONT
   ScatterUniform(vtkm::IdComponent numOutputsPerInput)
     : NumOutputsPerInput(numOutputsPerInput)
-  {  }
+  {
+  }
 
   VTKM_CONT
   vtkm::Id GetOutputRange(vtkm::Id inputRange) const
@@ -88,24 +90,20 @@ struct ScatterUniform
   VTKM_CONT
   vtkm::Id GetOutputRange(vtkm::Id3 inputRange) const
   {
-    return this->GetOutputRange(inputRange[0]*inputRange[1]*inputRange[2]);
+    return this->GetOutputRange(inputRange[0] * inputRange[1] * inputRange[2]);
   }
 
-  typedef vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::FunctorDiv>
-      OutputToInputMapType;
-  template<typename RangeType>
-  VTKM_CONT
-  OutputToInputMapType GetOutputToInputMap(RangeType inputRange) const
+  typedef vtkm::cont::ArrayHandleImplicit<detail::FunctorDiv> OutputToInputMapType;
+  template <typename RangeType>
+  VTKM_CONT OutputToInputMapType GetOutputToInputMap(RangeType inputRange) const
   {
     return OutputToInputMapType(detail::FunctorDiv(this->NumOutputsPerInput),
                                 this->GetOutputRange(inputRange));
   }
 
-  typedef vtkm::cont::ArrayHandleImplicit<vtkm::IdComponent, detail::FunctorModulus>
-      VisitArrayType;
-  template<typename RangeType>
-  VTKM_CONT
-  VisitArrayType GetVisitArray(RangeType inputRange) const
+  typedef vtkm::cont::ArrayHandleImplicit<detail::FunctorModulus> VisitArrayType;
+  template <typename RangeType>
+  VTKM_CONT VisitArrayType GetVisitArray(RangeType inputRange) const
   {
     return VisitArrayType(detail::FunctorModulus(this->NumOutputsPerInput),
                           this->GetOutputRange(inputRange));
@@ -114,7 +112,6 @@ struct ScatterUniform
 private:
   vtkm::IdComponent NumOutputsPerInput;
 };
-
 }
 } // namespace vtkm::worklet
 

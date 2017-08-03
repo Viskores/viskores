@@ -20,8 +20,8 @@
 //
 //=============================================================================
 
-#include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 
@@ -29,7 +29,8 @@
 
 #include <vector>
 
-namespace ArrayHandleCartesianProductNamespace {
+namespace ArrayHandleCartesianProductNamespace
+{
 
 typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
 
@@ -39,49 +40,48 @@ void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x,
                         vtkm::cont::ArrayHandle<T> z)
 
 {
-    vtkm::cont::ArrayHandleCartesianProduct<
-        vtkm::cont::ArrayHandle<T>,
-        vtkm::cont::ArrayHandle<T>,
-        vtkm::cont::ArrayHandle<T> > cpArray;
+  vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<T>,
+                                          vtkm::cont::ArrayHandle<T>,
+                                          vtkm::cont::ArrayHandle<T>>
+    cpArray;
 
-    vtkm::Id nx = x.GetNumberOfValues();
-    vtkm::Id ny = y.GetNumberOfValues();
-    vtkm::Id nz = z.GetNumberOfValues();
-    vtkm::Id n = nx*ny*nz;
+  vtkm::Id nx = x.GetNumberOfValues();
+  vtkm::Id ny = y.GetNumberOfValues();
+  vtkm::Id nz = z.GetNumberOfValues();
+  vtkm::Id n = nx * ny * nz;
 
-    cpArray = vtkm::cont::make_ArrayHandleCartesianProduct(x,y,z);
+  cpArray = vtkm::cont::make_ArrayHandleCartesianProduct(x, y, z);
 
-    //Make sure we have the right number of values.
-    VTKM_TEST_ASSERT(cpArray.GetNumberOfValues() == (nx*ny*nz),
-                     "Cartesian array constructor has wrong number of values");
+  //Make sure we have the right number of values.
+  VTKM_TEST_ASSERT(cpArray.GetNumberOfValues() == (nx * ny * nz),
+                   "Cartesian array constructor has wrong number of values");
 
-    //Make sure the values are correct.
-    vtkm::Vec<T,3> val;
-    for (vtkm::Id i = 0; i < n; i++)
-    {
-        vtkm::Id idx0 = (i % (nx*ny)) % nx;
-        vtkm::Id idx1 = (i % (nx*ny)) / nx;
-        vtkm::Id idx2 = i / (nx*ny);
+  //Make sure the values are correct.
+  vtkm::Vec<T, 3> val;
+  for (vtkm::Id i = 0; i < n; i++)
+  {
+    vtkm::Id idx0 = (i % (nx * ny)) % nx;
+    vtkm::Id idx1 = (i % (nx * ny)) / nx;
+    vtkm::Id idx2 = i / (nx * ny);
 
-        val = vtkm::Vec<T,3>(x.GetPortalConstControl().Get(idx0),
-                             y.GetPortalConstControl().Get(idx1),
-                             z.GetPortalConstControl().Get(idx2));
-        VTKM_TEST_ASSERT(test_equal(cpArray.GetPortalConstControl().Get(i), val),
-                         "Wrong value in array");
-    }
+    val = vtkm::Vec<T, 3>(x.GetPortalConstControl().Get(idx0),
+                          y.GetPortalConstControl().Get(idx1),
+                          z.GetPortalConstControl().Get(idx2));
+    VTKM_TEST_ASSERT(test_equal(cpArray.GetPortalConstControl().Get(i), val),
+                     "Wrong value in array");
+  }
 }
 
 template <typename T>
-void createArr(std::vector<T> &arr, std::size_t n)
+void createArr(std::vector<T>& arr, std::size_t n)
 {
-    arr.resize(n);
-    for (std::size_t i = 0; i < n; i++)
-        arr[i] = static_cast<T>(i);
+  arr.resize(n);
+  for (std::size_t i = 0; i < n; i++)
+    arr[i] = static_cast<T>(i);
 }
 
 template <typename T>
-void
-RunTest()
+void RunTest()
 {
   std::size_t nX = 11, nY = 13, nZ = 11;
 
@@ -91,7 +91,7 @@ RunTest()
     {
       for (std::size_t k = 1; k < nZ; k += 5)
       {
-        std::vector<T> X,Y,Z;
+        std::vector<T> X, Y, Z;
         createArr(X, nX);
         createArr(Y, nY);
         createArr(Z, nZ);
@@ -104,18 +104,17 @@ RunTest()
   }
 }
 
-void
-TestArrayHandleCartesianProduct()
+void TestArrayHandleCartesianProduct()
 {
-    RunTest<vtkm::Float32>();
-    RunTest<vtkm::Float64>();
-    RunTest<vtkm::Id>();
+  RunTest<vtkm::Float32>();
+  RunTest<vtkm::Float64>();
+  RunTest<vtkm::Id>();
 }
 
 } // namespace ArrayHandleCartesianProductNamespace
 
-int UnitTestArrayHandleCartesianProduct(int, char *[])
+int UnitTestArrayHandleCartesianProduct(int, char* [])
 {
-    using namespace ArrayHandleCartesianProductNamespace;
-    return vtkm::cont::testing::Testing::Run(TestArrayHandleCartesianProduct);
+  using namespace ArrayHandleCartesianProductNamespace;
+  return vtkm::cont::testing::Testing::Run(TestArrayHandleCartesianProduct);
 }

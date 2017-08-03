@@ -28,9 +28,10 @@
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>
 
-
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 class VTKM_RENDERING_EXPORT ColorBarAnnotation
 {
@@ -44,24 +45,24 @@ public:
   virtual ~ColorBarAnnotation();
 
   VTKM_CONT
-  void SetColorTable(const vtkm::rendering::ColorTable &colorTable)
+  void SetColorTable(const vtkm::rendering::ColorTable& colorTable)
   {
     this->ColorTable = colorTable;
   }
 
-  void SetRange(const vtkm::Range &range, vtkm::IdComponent numTicks);
+  void SetRange(const vtkm::Range& range, vtkm::IdComponent numTicks);
 
   VTKM_CONT
   void SetRange(vtkm::Float64 l, vtkm::Float64 h, vtkm::IdComponent numTicks)
   {
-    this->SetRange(vtkm::Range(l,h), numTicks);
+    this->SetRange(vtkm::Range(l, h), numTicks);
   }
 
-  virtual void Render(const vtkm::rendering::Camera &camera,
-                      const vtkm::rendering::WorldAnnotator &worldAnnotator,
-                      vtkm::rendering::Canvas &canvas);
+  virtual void Render(const vtkm::rendering::Camera& camera,
+                      const vtkm::rendering::WorldAnnotator& worldAnnotator,
+                      vtkm::rendering::Canvas& canvas);
 };
-
-}} //namespace vtkm::rendering
+}
+} //namespace vtkm::rendering
 
 #endif // vtk_m_rendering_ColorBarAnnotation_h

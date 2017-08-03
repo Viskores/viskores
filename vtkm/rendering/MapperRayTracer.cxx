@@ -20,76 +20,52 @@
 
 #include <vtkm/rendering/MapperRayTracer.h>
 
+#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/internal/RunTriangulator.h>
-#include <vtkm/rendering/raytracing/RayTracer.h>
 #include <vtkm/rendering/raytracing/Camera.h>
+#include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/raytracing/RayTracer.h>
 
-namespace vtkm {
-namespace rendering {
+namespace vtkm
+{
+namespace rendering
+{
 
 struct MapperRayTracer::InternalsType
 {
-  vtkm::rendering::CanvasRayTracer *Canvas;
-  std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
-      RayTracerContainer;
+  vtkm::rendering::CanvasRayTracer* Canvas;
+  vtkm::rendering::raytracing::RayTracer Tracer;
+  vtkm::rendering::raytracing::Camera RayCamera;
+  vtkm::rendering::raytracing::Ray<vtkm::Float32> Rays;
 
   VTKM_CONT
   InternalsType()
     : Canvas(nullptr)
-  {  }
-
-  template<typename Device>
-  VTKM_CONT
-  vtkm::rendering::raytracing::RayTracer<Device> *GetRayTracer(Device)
   {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    typedef vtkm::rendering::raytracing::RayTracer<Device> RayTracerType;
-    typedef vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType>
-        ContainerType;
-    RayTracerType *tracer = nullptr;
-    if (this->RayTracerContainer)
-    {
-      ContainerType *container =
-          dynamic_cast<ContainerType *>(this->RayTracerContainer.get());
-      if (container)
-      {
-        tracer = &container->Item;
-      }
-    }
-
-    if (tracer == nullptr)
-    {
-      ContainerType *container
-          = new vtkm::cont::internal::SimplePolymorphicContainer<RayTracerType>;
-      tracer = &container->Item;
-      this->RayTracerContainer.reset(container);
-    }
-
-    return tracer;
   }
 };
 
 MapperRayTracer::MapperRayTracer()
   : Internals(new InternalsType)
-{  }
+{
+}
 
 MapperRayTracer::~MapperRayTracer()
-{  }
-
-void MapperRayTracer::SetCanvas(vtkm::rendering::Canvas *canvas)
 {
-  if(canvas != nullptr)
+}
+
+void MapperRayTracer::SetCanvas(vtkm::rendering::Canvas* canvas)
+{
+  if (canvas != nullptr)
   {
     this->Internals->Canvas = dynamic_cast<CanvasRayTracer*>(canvas);
-    if(this->Internals->Canvas == nullptr)
+    if (this->Internals->Canvas == nullptr)
     {
-      throw vtkm::cont::ErrorBadValue(
-        "Ray Tracer: bad canvas type. Must be CanvasRayTracer");
+      throw vtkm::cont::ErrorBadValue("Ray Tracer: bad canvas type. Must be CanvasRayTracer");
     }
   }
   else
@@ -98,88 +74,53 @@ void MapperRayTracer::SetCanvas(vtkm::rendering::Canvas *canvas)
   }
 }
 
-vtkm::rendering::Canvas *
-MapperRayTracer::GetCanvas() const
+vtkm::rendering::Canvas* MapperRayTracer::GetCanvas() const
 {
   return this->Internals->Canvas;
 }
 
-struct MapperRayTracer::RenderFunctor
+void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
+                                  const vtkm::cont::CoordinateSystem& coords,
+                                  const vtkm::cont::Field& scalarField,
+                                  const vtkm::rendering::ColorTable& vtkmNotUsed(colorTable),
+                                  const vtkm::rendering::Camera& camera,
+                                  const vtkm::Range& scalarRange)
 {
-  vtkm::rendering::MapperRayTracer *Self;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4> > TriangleIndices;
-  vtkm::Id NumberOfTriangles;
-  vtkm::cont::CoordinateSystem Coordinates;
-  vtkm::cont::Field ScalarField;
-  vtkm::rendering::Camera Camera;
-  vtkm::Range ScalarRange;
-
-  VTKM_CONT
-  RenderFunctor(vtkm::rendering::MapperRayTracer *self,
-                const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id,4> > &indices,
-                vtkm::Id numberOfTriangles,
-                const vtkm::cont::CoordinateSystem &coordinates,
-                const vtkm::cont::Field &scalarField,
-                const vtkm::rendering::Camera &camera,
-                const vtkm::Range &scalarRange)
-    : Self(self),
-      TriangleIndices(indices),
-      NumberOfTriangles(numberOfTriangles),
-      Coordinates(coordinates),
-      ScalarField(scalarField),
-      Camera(camera),
-      ScalarRange(scalarRange)
-  {  }
-
-  template<typename Device>
-  bool operator()(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::rendering::raytracing::RayTracer<Device> *tracer =
-        this->Self->Internals->GetRayTracer(Device());
-
-    tracer->GetCamera().SetParameters(this->Camera,
-                                      *this->Self->Internals->Canvas);
-
-    vtkm::Bounds dataBounds = this->Coordinates.GetBounds();
-
-    tracer->SetData(this->Coordinates.GetData(),
-                    this->TriangleIndices,
-                    this->ScalarField,
-                    this->NumberOfTriangles,
-                    this->ScalarRange,
-                    dataBounds);
-    tracer->SetColorMap(this->Self->ColorMap);
-    tracer->SetBackgroundColor(
-          this->Self->Internals->Canvas->GetBackgroundColor().Components);
-    tracer->Render(this->Self->Internals->Canvas);
-
-    return true;
-  }
-};
-
-void MapperRayTracer::RenderCells(
-    const vtkm::cont::DynamicCellSet &cellset,
-    const vtkm::cont::CoordinateSystem &coords,
-    const vtkm::cont::Field &scalarField,
-    const vtkm::rendering::ColorTable &vtkmNotUsed(colorTable),
-    const vtkm::rendering::Camera &camera,
-    const vtkm::Range &scalarRange)
-{
-  vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Id, 4> >  indices;
+  raytracing::Logger* logger = raytracing::Logger::GetInstance();
+  logger->OpenLogEntry("mapper_ray_tracer");
+  vtkm::cont::Timer<> tot_timer;
+  vtkm::cont::Timer<> timer;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> indices;
   vtkm::Id numberOfTriangles;
-  vtkm::rendering::internal::RunTriangulator(
-        cellset, indices, numberOfTriangles);
 
-  RenderFunctor functor(this,
-                        indices,
-                        numberOfTriangles,
-                        coords,
-                        scalarField,
-                        camera,
-                        scalarRange);
-  vtkm::cont::TryExecute(functor);
+  vtkm::rendering::internal::RunTriangulator(cellset, indices, numberOfTriangles);
+  vtkm::Float64 time = timer.GetElapsedTime();
+  logger->AddLogData("triangulator", time);
+  vtkm::rendering::raytracing::Camera& cam = this->Internals->Tracer.GetCamera();
+  cam.SetParameters(camera, *this->Internals->Canvas);
+  this->Internals->RayCamera.SetParameters(camera, *this->Internals->Canvas);
+  this->Internals->RayCamera.CreateRays(this->Internals->Rays, coords);
+
+  vtkm::Bounds dataBounds = coords.GetBounds();
+
+  this->Internals->Tracer.SetData(
+    coords.GetData(), indices, scalarField, numberOfTriangles, scalarRange, dataBounds);
+
+  this->Internals->Tracer.SetColorMap(this->ColorMap);
+  this->Internals->Tracer.SetBackgroundColor(
+    this->Internals->Canvas->GetBackgroundColor().Components);
+  this->Internals->Tracer.Render(this->Internals->Rays);
+
+  timer.Reset();
+  this->Internals->Canvas->WriteToCanvas(this->Internals->Rays.PixelIdx,
+                                         this->Internals->Rays.Distance,
+                                         this->Internals->Rays.Buffers.at(0).Buffer,
+                                         camera);
+
+  time = timer.GetElapsedTime();
+  logger->AddLogData("write_to_canvas", time);
+  time = tot_timer.GetElapsedTime();
+  logger->CloseLogEntry(time);
 }
 
 void MapperRayTracer::StartScene()
@@ -192,11 +133,9 @@ void MapperRayTracer::EndScene()
   // Nothing needs to be done.
 }
 
-vtkm::rendering::Mapper *MapperRayTracer::NewCopy() const
+vtkm::rendering::Mapper* MapperRayTracer::NewCopy() const
 {
   return new vtkm::rendering::MapperRayTracer(*this);
 }
-
-
 }
 } // vtkm::rendering

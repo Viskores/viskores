@@ -21,12 +21,13 @@
 #define vtkm_cont_CellSetStructured_cxx
 #include <vtkm/cont/CellSetStructured.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 template class VTKM_CONT_EXPORT CellSetStructured<1>;
 template class VTKM_CONT_EXPORT CellSetStructured<2>;
 template class VTKM_CONT_EXPORT CellSetStructured<3>;
-
 }
 }

@@ -30,42 +30,39 @@
 /// A macro that can be used to check to see if there are any unchecked
 /// CUDA errors. Will throw an ErrorCuda if there are.
 ///
-#define VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR() \
-  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
-  { \
-    const cudaError_t vtkm_cuda_check_async_error = cudaGetLastError(); \
-    if (vtkm_cuda_check_async_error != cudaSuccess) \
-    { \
-      throw ::vtkm::cont::cuda::ErrorCuda( \
-        vtkm_cuda_check_async_error, \
-        __FILE__, \
-        __LINE__, \
-        "Unchecked asynchronous error"); \
-    } \
-  } \
+#define VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR()                                                       \
+  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK                                                                 \
+  {                                                                                                \
+    const cudaError_t vtkm_cuda_check_async_error = cudaGetLastError();                            \
+    if (vtkm_cuda_check_async_error != cudaSuccess)                                                \
+    {                                                                                              \
+      throw ::vtkm::cont::cuda::ErrorCuda(                                                         \
+        vtkm_cuda_check_async_error, __FILE__, __LINE__, "Unchecked asynchronous error");          \
+    }                                                                                              \
+  }                                                                                                \
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
 /// A macro that can be wrapped around a CUDA command and will throw an
 /// ErrorCuda exception if the CUDA command fails.
 ///
-#define VTKM_CUDA_CALL(command) \
-  VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR(); \
-  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK \
-  { \
-    const cudaError_t vtkm_cuda_call_error = command; \
-    if (vtkm_cuda_call_error != cudaSuccess) \
-    { \
-      throw ::vtkm::cont::cuda::ErrorCuda(vtkm_cuda_call_error, \
-                                                 __FILE__, \
-                                                 __LINE__, \
-                                                 #command); \
-    } \
-  } \
+#define VTKM_CUDA_CALL(command)                                                                    \
+  VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();                                                            \
+  VTKM_SWALLOW_SEMICOLON_PRE_BLOCK                                                                 \
+  {                                                                                                \
+    const cudaError_t vtkm_cuda_call_error = command;                                              \
+    if (vtkm_cuda_call_error != cudaSuccess)                                                       \
+    {                                                                                              \
+      throw ::vtkm::cont::cuda::ErrorCuda(vtkm_cuda_call_error, __FILE__, __LINE__, #command);     \
+    }                                                                                              \
+  }                                                                                                \
   VTKM_SWALLOW_SEMICOLON_POST_BLOCK
 
-namespace vtkm {
-namespace cont {
-namespace cuda {
+namespace vtkm
+{
+namespace cont
+{
+namespace cuda
+{
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_START
 
@@ -83,9 +80,9 @@ public:
   }
 
   ErrorCuda(cudaError_t error,
-                   const std::string &file,
-                   vtkm::Id line,
-                   const std::string &description)
+            const std::string& file,
+            vtkm::Id line,
+            const std::string& description)
   {
     std::stringstream message;
     message << "CUDA Error: " << cudaGetErrorString(error) << std::endl
@@ -95,7 +92,6 @@ public:
 };
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END
-
 }
 }
 } // namespace vtkm::cont:cuda

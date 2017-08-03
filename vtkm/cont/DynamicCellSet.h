@@ -27,26 +27,28 @@
 #include <vtkm/cont/internal/DynamicTransform.h>
 #include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 // Forward declaration.
-template<typename CellSetList>
+template <typename CellSetList>
 class DynamicCellSetBase;
 
-namespace detail {
+namespace detail
+{
 
 // One instance of a template class cannot access the private members of
 // another instance of a template class. However, I want to be able to copy
 // construct a DynamicCellSet from another DynamicCellSet of any other type.
 // Since you cannot partially specialize friendship, use this accessor class to
 // get at the internals for the copy constructor.
-struct DynamicCellSetCopyHelper {
-  template<typename CellSetList>
-  VTKM_CONT
-  static
-  const std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>&
-  GetCellSetContainer(const vtkm::cont::DynamicCellSetBase<CellSetList> &src)
+struct DynamicCellSetCopyHelper
+{
+  template <typename CellSetList>
+  VTKM_CONT static const std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>&
+  GetCellSetContainer(const vtkm::cont::DynamicCellSetBase<CellSetList>& src)
   {
     return src.CellSetContainer;
   }
@@ -55,16 +57,12 @@ struct DynamicCellSetCopyHelper {
 // A simple function to downcast a CellSet encapsulated in a
 // SimplePolymorphicContainerBase to the given subclass of CellSet. If the
 // conversion cannot be done, nullptr is returned.
-template<typename CellSetType>
-VTKM_CONT
-CellSetType *
-DynamicCellSetTryCast(
-      vtkm::cont::internal::SimplePolymorphicContainerBase *cellSetContainer)
+template <typename CellSetType>
+VTKM_CONT CellSetType* DynamicCellSetTryCast(
+  vtkm::cont::internal::SimplePolymorphicContainerBase* cellSetContainer)
 {
-  vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *
-      downcastContainer = dynamic_cast<
-        vtkm::cont::internal::SimplePolymorphicContainer<CellSetType> *>(
-          cellSetContainer);
+  vtkm::cont::internal::SimplePolymorphicContainer<CellSetType>* downcastContainer =
+    dynamic_cast<vtkm::cont::internal::SimplePolymorphicContainer<CellSetType>*>(cellSetContainer);
   if (downcastContainer != nullptr)
   {
     return &downcastContainer->Item;
@@ -75,10 +73,8 @@ DynamicCellSetTryCast(
   }
 }
 
-template<typename CellSetType>
-VTKM_CONT
-CellSetType *
-DynamicCellSetTryCast(
+template <typename CellSetType>
+VTKM_CONT CellSetType* DynamicCellSetTryCast(
   const std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>& cellSetContainer)
 {
   return detail::DynamicCellSetTryCast<CellSetType>(cellSetContainer.get());
@@ -115,42 +111,40 @@ DynamicCellSetTryCast(
 /// types. \c DynamicCellSet is really just a typedef of \c DynamicCellSetBase
 /// with the default cell set list.
 ///
-template<typename CellSetList>
+template <typename CellSetList>
 class VTKM_ALWAYS_EXPORT DynamicCellSetBase
 {
   VTKM_IS_LIST_TAG(CellSetList);
+
 public:
   VTKM_CONT
-  DynamicCellSetBase() {  }
+  DynamicCellSetBase() {}
 
-  template<typename CellSetType>
-  VTKM_CONT
-  DynamicCellSetBase(const CellSetType &cellSet)
-    : CellSetContainer(
-        new vtkm::cont::internal::SimplePolymorphicContainer<CellSetType>(
-          cellSet))
+  template <typename CellSetType>
+  VTKM_CONT DynamicCellSetBase(const CellSetType& cellSet)
+    : CellSetContainer(new vtkm::cont::internal::SimplePolymorphicContainer<CellSetType>(cellSet))
   {
     VTKM_IS_CELL_SET(CellSetType);
   }
 
   VTKM_CONT
-  DynamicCellSetBase(const DynamicCellSetBase<CellSetList> &src)
-    : CellSetContainer(src.CellSetContainer) {  }
+  DynamicCellSetBase(const DynamicCellSetBase<CellSetList>& src)
+    : CellSetContainer(src.CellSetContainer)
+  {
+  }
 
-  template<typename OtherCellSetList>
-  VTKM_CONT
-  explicit
-  DynamicCellSetBase(const DynamicCellSetBase<OtherCellSetList> &src)
-    : CellSetContainer(
-        detail::DynamicCellSetCopyHelper::GetCellSetContainer(src))
-  {  }
-
-  VTKM_CONT
-  ~DynamicCellSetBase() {  }
+  template <typename OtherCellSetList>
+  VTKM_CONT explicit DynamicCellSetBase(const DynamicCellSetBase<OtherCellSetList>& src)
+    : CellSetContainer(detail::DynamicCellSetCopyHelper::GetCellSetContainer(src))
+  {
+  }
 
   VTKM_CONT
-  vtkm::cont::DynamicCellSetBase<CellSetList> &
-  operator=(const vtkm::cont::DynamicCellSetBase<CellSetList> &src)
+  ~DynamicCellSetBase() {}
+
+  VTKM_CONT
+  vtkm::cont::DynamicCellSetBase<CellSetList>& operator=(
+    const vtkm::cont::DynamicCellSetBase<CellSetList>& src)
   {
     this->CellSetContainer = src.CellSetContainer;
     return *this;
@@ -158,39 +152,38 @@ public:
 
   /// Returns true if this cell set is of the provided type.
   ///
-  template<typename CellSetType>
-  VTKM_CONT
-  bool IsType() const {
-    return (detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer)
-            != nullptr);
+  template <typename CellSetType>
+  VTKM_CONT bool IsType() const
+  {
+    return (detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer) != nullptr);
   }
 
   /// Returns true if this cell set is the same (or equivalent) type as the
   /// object provided.
   ///
-  template<typename CellSetType>
-  VTKM_CONT
-  bool IsSameType(const CellSetType &) const {
+  template <typename CellSetType>
+  VTKM_CONT bool IsSameType(const CellSetType&) const
+  {
     return this->IsType<CellSetType>();
   }
 
   /// Returns the contained cell set as the abstract \c CellSet type.
   ///
   VTKM_CONT
-  const vtkm::cont::CellSet &CastToBase() const {
-    return *reinterpret_cast<const vtkm::cont::CellSet *>(
-          this->CellSetContainer->GetVoidPointer());
+  const vtkm::cont::CellSet& CastToBase() const
+  {
+    return *reinterpret_cast<const vtkm::cont::CellSet*>(this->CellSetContainer->GetVoidPointer());
   }
 
   /// Returns this cell set cast to the given \c CellSet type. Throws \c
   /// ErrorBadType if the cast does not work. Use \c IsType to check if
   /// the cast can happen.
   ///
-  template<typename CellSetType>
-  VTKM_CONT
-  CellSetType &Cast() const {
-    CellSetType *cellSetPointer =
-        detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
+  template <typename CellSetType>
+  VTKM_CONT CellSetType& Cast() const
+  {
+    CellSetType* cellSetPointer =
+      detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
     if (cellSetPointer == nullptr)
     {
       throw vtkm::cont::ErrorBadType("Bad cast of dynamic cell set.");
@@ -206,9 +199,9 @@ public:
   /// Note that this is a shallow copy. Any data in associated arrays are not
   /// copied.
   ///
-  template<typename CellSetType>
-  VTKM_CONT
-  void CopyTo(CellSetType &cellSet) const {
+  template <typename CellSetType>
+  VTKM_CONT void CopyTo(CellSetType& cellSet) const
+  {
     cellSet = this->Cast<CellSetType>();
   }
 
@@ -219,10 +212,10 @@ public:
   /// This method is particularly useful to narrow down (or expand) the types
   /// when using a cell set of particular constraints.
   ///
-  template<typename NewCellSetList>
-  VTKM_CONT
-  DynamicCellSetBase<NewCellSetList>
-  ResetCellSetList(NewCellSetList = NewCellSetList()) const {
+  template <typename NewCellSetList>
+  VTKM_CONT DynamicCellSetBase<NewCellSetList> ResetCellSetList(
+    NewCellSetList = NewCellSetList()) const
+  {
     VTKM_IS_LIST_TAG(NewCellSetList);
     return DynamicCellSetBase<NewCellSetList>(*this);
   }
@@ -234,9 +227,8 @@ public:
   /// DynamicCellSet). You can use \c ResetCellSetList to get different
   /// behavior from \c CastAndCall.
   ///
-  template<typename Functor>
-  VTKM_CONT
-  void CastAndCall(const Functor &f) const;
+  template <typename Functor>
+  VTKM_CONT void CastAndCall(const Functor& f) const;
 
   /// \brief Create a new cell set of the same type as this cell set.
   ///
@@ -254,71 +246,54 @@ public:
   }
 
   VTKM_CONT
-  std::string GetName() const
-  {
-    return this->CastToBase().GetName();
-  }
+  std::string GetName() const { return this->CastToBase().GetName(); }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfCells() const
-  {
-    return this->CastToBase().GetNumberOfCells();
-  }
+  vtkm::Id GetNumberOfCells() const { return this->CastToBase().GetNumberOfCells(); }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfFaces() const
-  {
-    return this->CastToBase().GetNumberOfFaces();
-  }
+  vtkm::Id GetNumberOfFaces() const { return this->CastToBase().GetNumberOfFaces(); }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfEdges() const
-  {
-    return this->CastToBase().GetNumberOfEdges();
-  }
+  vtkm::Id GetNumberOfEdges() const { return this->CastToBase().GetNumberOfEdges(); }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfPoints() const
-  {
-    return this->CastToBase().GetNumberOfPoints();
-  }
+  vtkm::Id GetNumberOfPoints() const { return this->CastToBase().GetNumberOfPoints(); }
 
   VTKM_CONT
-  void PrintSummary(std::ostream& stream) const
-  {
-    return this->CastToBase().PrintSummary(stream);
-  }
-
+  void PrintSummary(std::ostream& stream) const { return this->CastToBase().PrintSummary(stream); }
 
 private:
-  std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase>
-      CellSetContainer;
+  std::shared_ptr<vtkm::cont::internal::SimplePolymorphicContainerBase> CellSetContainer;
 
   friend struct detail::DynamicCellSetCopyHelper;
 };
 
-namespace detail {
+namespace detail
+{
 
-template<typename Functor>
+template <typename Functor>
 struct DynamicCellSetTryCellSet
 {
-  vtkm::cont::internal::SimplePolymorphicContainerBase *CellSetContainer;
-  const Functor &Function;
+  vtkm::cont::internal::SimplePolymorphicContainerBase* CellSetContainer;
+  const Functor& Function;
   bool FoundCast;
 
   VTKM_CONT
-  DynamicCellSetTryCellSet(
-        vtkm::cont::internal::SimplePolymorphicContainerBase *cellSetContainer,
-        const Functor &f)
-    : CellSetContainer(cellSetContainer), Function(f), FoundCast(false) {  }
+  DynamicCellSetTryCellSet(vtkm::cont::internal::SimplePolymorphicContainerBase* cellSetContainer,
+                           const Functor& f)
+    : CellSetContainer(cellSetContainer)
+    , Function(f)
+    , FoundCast(false)
+  {
+  }
 
-  template<typename CellSetType>
-  VTKM_CONT
-  void operator()(CellSetType) {
+  template <typename CellSetType>
+  VTKM_CONT void operator()(CellSetType)
+  {
     if (!this->FoundCast)
     {
-      CellSetType *cellSet =
-          detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
+      CellSetType* cellSet = detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
       if (cellSet != nullptr)
       {
         this->Function(*cellSet);
@@ -328,15 +303,14 @@ struct DynamicCellSetTryCellSet
   }
 
 private:
-  void operator=(const DynamicCellSetTryCellSet<Functor> &) = delete;
+  void operator=(const DynamicCellSetTryCellSet<Functor>&) = delete;
 };
 
 } // namespace detail
 
-template<typename CellSetList>
-template<typename Functor>
-VTKM_CONT
-void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor &f) const
+template <typename CellSetList>
+template <typename Functor>
+VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor& f) const
 {
   typedef detail::DynamicCellSetTryCellSet<Functor> TryCellSetType;
   TryCellSetType tryCellSet = TryCellSetType(this->CellSetContainer.get(), f);
@@ -344,52 +318,50 @@ void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor &f) const
   vtkm::ListForEach(tryCellSet, CellSetList());
   if (!tryCellSet.FoundCast)
   {
-    throw vtkm::cont::ErrorBadValue(
-          "Could not find appropriate cast for cell set.");
+    throw vtkm::cont::ErrorBadValue("Could not find appropriate cast for cell set.");
   }
 }
 
-typedef DynamicCellSetBase< VTKM_DEFAULT_CELL_SET_LIST_TAG > DynamicCellSet;
+typedef DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST_TAG> DynamicCellSet;
 
-namespace internal {
+namespace internal
+{
 
-template<typename CellSetList>
-struct DynamicTransformTraits<
-    vtkm::cont::DynamicCellSetBase<CellSetList> >
+template <typename CellSetList>
+struct DynamicTransformTraits<vtkm::cont::DynamicCellSetBase<CellSetList>>
 {
   typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
 };
 
 } // namespace internal
 
-namespace internal {
+namespace internal
+{
 
 /// Checks to see if the given object is a dynamic cell set. It contains a
 /// typedef named \c type that is either std::true_type or std::false_type.
 /// Both of these have a typedef named value with the respective boolean value.
 ///
-template<typename T>
+template <typename T>
 struct DynamicCellSetCheck
 {
   using type = std::false_type;
 };
 
-template<typename CellSetList>
-struct DynamicCellSetCheck<vtkm::cont::DynamicCellSetBase<CellSetList> >
+template <typename CellSetList>
+struct DynamicCellSetCheck<vtkm::cont::DynamicCellSetBase<CellSetList>>
 {
   using type = std::true_type;
 };
 
-#define VTKM_IS_DYNAMIC_CELL_SET(T) \
+#define VTKM_IS_DYNAMIC_CELL_SET(T)                                                                \
   VTKM_STATIC_ASSERT(::vtkm::cont::internal::DynamicCellSetCheck<T>::type::value)
 
-#define VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(T) \
-  VTKM_STATIC_ASSERT( \
-      ::vtkm::cont::internal::CellSetCheck<T>::type::value || \
-      ::vtkm::cont::internal::DynamicCellSetCheck<T>::type::value)
+#define VTKM_IS_DYNAMIC_OR_STATIC_CELL_SET(T)                                                      \
+  VTKM_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value ||                       \
+                     ::vtkm::cont::internal::DynamicCellSetCheck<T>::type::value)
 
 } // namespace internal
-
 }
 } // namespace vtkm::cont
 

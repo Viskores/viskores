@@ -25,9 +25,12 @@
 
 #include <type_traits>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief The base class for all tags used in an \c ExecutionSignature.
 ///
@@ -41,17 +44,18 @@ namespace arg {
 /// that points to a parameter in the \c ControlSignature and a \c typedef
 /// named \c AspectTag that defines the aspect of the fetch.
 ///
-struct ExecutionSignatureTagBase {  };
+struct ExecutionSignatureTagBase
+{
+};
 
-namespace internal {
+namespace internal
+{
 
-template<typename ExecutionSignatureTag>
+template <typename ExecutionSignatureTag>
 struct ExecutionSignatureTagCheck
 {
   static const bool Valid =
-      std::is_base_of<
-          vtkm::exec::arg::ExecutionSignatureTagBase, ExecutionSignatureTag>::
-        value;
+    std::is_base_of<vtkm::exec::arg::ExecutionSignatureTagBase, ExecutionSignatureTag>::value;
 };
 
 } // namespace internal
@@ -61,11 +65,9 @@ struct ExecutionSignatureTagCheck
 /// that a template argument is actually an \c ExecutionSignature tag. (You can
 /// get weird errors elsewhere in the code when a mistake is made.)
 ///
-#define VTKM_IS_EXECUTION_SIGNATURE_TAG(tag) \
-  VTKM_STATIC_ASSERT_MSG( \
-    ::vtkm::exec::arg::internal::ExecutionSignatureTagCheck<tag>::Valid, \
-    "Provided a type that is not a valid ExecutionSignature tag.")
-
+#define VTKM_IS_EXECUTION_SIGNATURE_TAG(tag)                                                       \
+  VTKM_STATIC_ASSERT_MSG(::vtkm::exec::arg::internal::ExecutionSignatureTagCheck<tag>::Valid,      \
+                         "Provided a type that is not a valid ExecutionSignature tag.")
 }
 }
 } // namespace vtkm::exec::arg

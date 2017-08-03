@@ -27,19 +27,25 @@
 
 #include <memory>
 
+namespace vtkm
+{
+namespace filter
+{
 
-namespace vtkm {
-namespace filter {
-
+/// \brief Clip a dataset using an implicit function
+///
+/// Clip a dataset using a given implicit function value, such as vtkm::cont::Sphere
+/// or vtkm::cont::Frustum.
+/// The resulting geometry will not be water tight.
 class ClipWithImplicitFunction : public vtkm::filter::FilterDataSet<ClipWithImplicitFunction>
 {
 public:
   template <typename ImplicitFunctionType, typename DerivedPolicy>
-  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType> &func,
+  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func,
                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename ImplicitFunctionType>
-  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType> &func)
+  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func)
   {
     this->Function = func;
   }
@@ -49,14 +55,14 @@ public:
     return this->Function;
   }
 
-  template<typename DerivedPolicy, typename DeviceAdapter>
+  template <typename DerivedPolicy, typename DeviceAdapter>
   vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& input,
                                         const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                                         const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter.
   //This call is only valid after Execute has been called.
-  template<typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   bool DoMapField(vtkm::filter::ResultDataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -67,7 +73,6 @@ private:
   std::shared_ptr<vtkm::cont::ImplicitFunction> Function;
   vtkm::worklet::Clip Worklet;
 };
-
 }
 } // namespace vtkm::filter
 

@@ -18,20 +18,45 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/CellSetPermutation.h>
+#include <vtkm/cont/DynamicCellSet.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
+
+namespace clipwithimplicitfunction
+{
+
+template <typename Device>
+struct PointMapHelper
+{
+  PointMapHelper(const vtkm::worklet::Clip& worklet, vtkm::cont::DynamicArrayHandle& output)
+    : Worklet(worklet)
+    , Output(output)
+  {
+  }
+
+  template <typename ArrayType>
+  void operator()(const ArrayType& array) const
+  {
+    this->Output = this->Worklet.ProcessPointField(array, Device());
+  }
+
+  const vtkm::worklet::Clip& Worklet;
+  vtkm::cont::DynamicArrayHandle& Output;
+};
+
+} // end namespace clipwithimplicitfunction
 
 //-----------------------------------------------------------------------------
 template <typename ImplicitFunctionType, typename DerivedPolicy>
-inline
-void ClipWithImplicitFunction::SetImplicitFunction(
-  const std::shared_ptr<ImplicitFunctionType> &func,
+inline void ClipWithImplicitFunction::SetImplicitFunction(
+  const std::shared_ptr<ImplicitFunctionType>& func,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
   func->ResetDevices(DerivedPolicy::DeviceAdapterList);
@@ -39,46 +64,40 @@ void ClipWithImplicitFunction::SetImplicitFunction(
 }
 
 //-----------------------------------------------------------------------------
-template<typename DerivedPolicy,
-         typename DeviceAdapter>
+template <typename DerivedPolicy, typename DeviceAdapter>
 inline vtkm::filter::ResultDataSet ClipWithImplicitFunction::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
 {
+  using namespace clipwithimplicitfunction;
+
   //get the cells and coordinates of the dataset
-  const vtkm::cont::DynamicCellSet& cells =
-                  input.GetCellSet(this->GetActiveCellSetIndex());
+  const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
   const vtkm::cont::CoordinateSystem& inputCoords =
-                      input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
+    input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-          this->Worklet.Run( vtkm::filter::ApplyPolicy(cells, policy),
-                             *this->Function,
-                             inputCoords,
-                             device
-                           );
+  vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
+    vtkm::filter::ApplyPolicy(cells, policy), *this->Function, inputCoords, device);
 
   // compute output coordinates
-  vtkm::cont::CoordinateSystem outputCoords;
-  outputCoords.SetData(this->Worklet.ProcessField(inputCoords, device));
+  vtkm::cont::DynamicArrayHandle outputCoordsArray;
+  PointMapHelper<DeviceAdapter> pointMapper(this->Worklet, outputCoordsArray);
+  vtkm::filter::ApplyPolicy(inputCoords, policy).CastAndCall(pointMapper);
+  vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(), outputCoordsArray);
 
   //create the output data
   vtkm::cont::DataSet output;
-  output.AddCellSet( outputCellSet );
-  output.AddCoordinateSystem( outputCoords );
+  output.AddCellSet(outputCellSet);
+  output.AddCoordinateSystem(outputCoords);
 
   vtkm::filter::ResultDataSet result(output);
   return result;
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline bool ClipWithImplicitFunction::DoMapField(
   vtkm::filter::ResultDataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
@@ -86,19 +105,25 @@ inline bool ClipWithImplicitFunction::DoMapField(
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter& device)
 {
-  if(fieldMeta.IsPointField() == false)
+  vtkm::cont::ArrayHandle<T> output;
+
+  if (fieldMeta.IsPointField())
   {
-    //not a point field, we can't map it
+    output = this->Worklet.ProcessPointField(input, device);
+  }
+  else if (fieldMeta.IsCellField())
+  {
+    output = this->Worklet.ProcessCellField(input, device);
+  }
+  else
+  {
     return false;
   }
 
-  vtkm::cont::DynamicArrayHandle output =
-                          this->Worklet.ProcessField( input, device);
-
   //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField( fieldMeta.AsField(output) );
+  result.GetDataSet().AddField(fieldMeta.AsField(output));
+
   return true;
 }
-
 }
-}
+} // end namespace vtkm::filter

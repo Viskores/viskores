@@ -20,19 +20,24 @@
 #ifndef vtk_m_exec_arg_WorkIndex_h
 #define vtk_m_exec_arg_WorkIndex_h
 
-#include <vtkm/exec/arg/Fetch.h>
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
+#include <vtkm/exec/arg/Fetch.h>
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief Aspect tag to use for getting the work index.
 ///
 /// The \c AspectTagWorkIndex aspect tag causes the \c Fetch class to ignore
 /// whatever data is in the associated execution object and return the index.
 ///
-struct AspectTagWorkIndex {  };
+struct AspectTagWorkIndex
+{
+};
 
 /// \brief The \c ExecutionSignature tag to use to get the work index
 ///
@@ -52,29 +57,23 @@ struct WorkIndex : vtkm::exec::arg::ExecutionSignatureTagBase
   typedef vtkm::exec::arg::AspectTagWorkIndex AspectTag;
 };
 
-template<typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
-struct Fetch<FetchTag,
-             vtkm::exec::arg::AspectTagWorkIndex,
-             ThreadIndicesType,
-             ExecObjectType>
+template <typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
+struct Fetch<FetchTag, vtkm::exec::arg::AspectTagWorkIndex, ThreadIndicesType, ExecObjectType>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC
-  vtkm::Id Load(const ThreadIndicesType &indices, const ExecObjectType &) const
+  vtkm::Id Load(const ThreadIndicesType& indices, const ExecObjectType&) const
   {
-    return indices.GetGlobalIndex(); 
+    return indices.GetGlobalIndex();
   }
 
   VTKM_EXEC
-  void Store(const ThreadIndicesType &,
-             const ExecObjectType &,
-             const ValueType &) const
+  void Store(const ThreadIndicesType&, const ExecObjectType&, const ValueType&) const
   {
     // Store is a no-op.
   }
 };
-
 }
 }
 } // namespace vtkm::exec::arg

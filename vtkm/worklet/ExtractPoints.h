@@ -20,21 +20,25 @@
 #ifndef vtkm_m_worklet_ExtractPoints_h
 #define vtkm_m_worklet_ExtractPoints_h
 
-#include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
+#include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/ImplicitFunction.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 class ExtractPoints
 {
 public:
-  struct BoolType : vtkm::ListTagBase<bool> {};
+  struct BoolType : vtkm::ListTagBase<bool>
+  {
+  };
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Worklet to identify points within volume of interest
@@ -44,64 +48,65 @@ public:
     typedef void ControlSignature(CellSetIn cellset,
                                   FieldInPoint<Vec3> coordinates,
                                   FieldOutPoint<BoolType> passFlags);
-    typedef   _3 ExecutionSignature(_2);
+    typedef _3 ExecutionSignature(_2);
 
     VTKM_CONT
-    ExtractPointsByVOI(const vtkm::exec::ImplicitFunction &function) :
-                                     Function(function) {}
+    ExtractPointsByVOI(const vtkm::exec::ImplicitFunction& function, bool extractInside)
+      : Function(function)
+      , passValue(extractInside)
+      , failValue(!extractInside)
+    {
+    }
 
     VTKM_EXEC
-    bool operator()(const vtkm::Vec<vtkm::Float64,3> &coordinate) const
+    bool operator()(const vtkm::Vec<vtkm::Float64, 3>& coordinate) const
     {
-      bool pass = true;
+      bool pass = passValue;
       vtkm::Float64 value = this->Function.Value(coordinate);
       if (value > 0)
-        pass = false;
+        pass = failValue;
       return pass;
     }
 
   private:
     vtkm::exec::ImplicitFunction Function;
+    bool passValue;
+    bool failValue;
   };
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract points by id creates new cellset of vertex cells
-  template <typename CellSetType,
-            typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(
-                                    const CellSetType &cellSet,
-                                    const vtkm::cont::ArrayHandle<vtkm::Id> &pointIds,
-                                    DeviceAdapter)
+  template <typename CellSetType, typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      const vtkm::cont::ArrayHandle<vtkm::Id>& pointIds,
+                                      DeviceAdapter)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
     DeviceAlgorithm::Copy(pointIds, this->ValidPointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType< > outCellSet(cellSet.GetName());
-    outCellSet.Fill(cellSet.GetNumberOfPoints(),
-                    vtkm::CellShapeTagVertex::Id,
-                    1,
-                    this->ValidPointIds);
+    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    outCellSet.Fill(
+      cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, this->ValidPointIds);
 
     return outCellSet;
   }
 
   ////////////////////////////////////////////////////////////////////////////////////
   // Extract points by implicit function
-  template <typename CellSetType,
-            typename DeviceAdapter>
-  vtkm::cont::CellSetSingleType<> Run(
-                                    const CellSetType &cellSet,
-                                    const vtkm::cont::CoordinateSystem &coordinates,
-                                    const vtkm::cont::ImplicitFunction &implicitFunction,
-                                    DeviceAdapter device)
+  template <typename CellSetType, typename CoordinateType, typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      const CoordinateType& coordinates,
+                                      const vtkm::cont::ImplicitFunction& implicitFunction,
+                                      bool extractInside,
+                                      DeviceAdapter device)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
 
     // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;
 
-    ExtractPointsByVOI worklet(implicitFunction.PrepareForExecution(device));
+    ExtractPointsByVOI worklet(implicitFunction.PrepareForExecution(device), extractInside);
     DispatcherMapTopology<ExtractPointsByVOI, DeviceAdapter> dispatcher(worklet);
     dispatcher.Invoke(cellSet, coordinates, passFlags);
 
@@ -110,11 +115,9 @@ public:
     DeviceAlgorithm::CopyIf(indices, passFlags, this->ValidPointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
-    vtkm::cont::CellSetSingleType< > outCellSet(cellSet.GetName());
-    outCellSet.Fill(cellSet.GetNumberOfPoints(),
-                    vtkm::CellShapeTagVertex::Id,
-                    1,
-                    this->ValidPointIds);
+    vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
+    outCellSet.Fill(
+      cellSet.GetNumberOfPoints(), vtkm::CellShapeTagVertex::Id, 1, this->ValidPointIds);
 
     return outCellSet;
   }
@@ -122,7 +125,6 @@ public:
 private:
   vtkm::cont::ArrayHandle<vtkm::Id> ValidPointIds;
 };
-
 }
 } // namespace vtkm::worklet
 

@@ -26,11 +26,14 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
 
-namespace vtkm {
-namespace exec {
-namespace internal {
+namespace vtkm
+{
+namespace exec
+{
+namespace internal
+{
 
-template<typename IndexPortalType, typename ValuePortalType>
+template <typename IndexPortalType, typename ValuePortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalPermutation
 {
 public:
@@ -38,78 +41,85 @@ public:
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalPermutation( )
-    : IndexPortal(), ValuePortal() {  }
+  ArrayPortalPermutation()
+    : IndexPortal()
+    , ValuePortal()
+  {
+  }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalPermutation(
-      const IndexPortalType &indexPortal,
-      const ValuePortalType &valuePortal)
-    : IndexPortal(indexPortal), ValuePortal(valuePortal) {  }
+  ArrayPortalPermutation(const IndexPortalType& indexPortal, const ValuePortalType& valuePortal)
+    : IndexPortal(indexPortal)
+    , ValuePortal(valuePortal)
+  {
+  }
 
   /// Copy constructor for any other ArrayPortalPermutation with delegate
   /// portal types that can be copied to these portal types. This allows us to
   /// do any type casting that the delegate portals do (like the non-const to
   /// const cast).
   ///
-  template<typename OtherIP, typename OtherVP>
   VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  ArrayPortalPermutation(
-      const ArrayPortalPermutation<OtherIP,OtherVP> &src)
-    : IndexPortal(src.GetIndexPortal()), ValuePortal(src.GetValuePortal())
-  {  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC_CONT
-  vtkm::Id GetNumberOfValues() const {
-    return this->IndexPortal.GetNumberOfValues();
+  template <typename OtherIP, typename OtherVP>
+  VTKM_EXEC_CONT ArrayPortalPermutation(const ArrayPortalPermutation<OtherIP, OtherVP>& src)
+    : IndexPortal(src.GetIndexPortal())
+    , ValuePortal(src.GetValuePortal())
+  {
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  vtkm::Id GetNumberOfValues() const { return this->IndexPortal.GetNumberOfValues(); }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  ValueType Get(vtkm::Id index) const {
+  ValueType Get(vtkm::Id index) const
+  {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);
     return this->ValuePortal.Get(permutedIndex);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
-  void Set(vtkm::Id index, const ValueType &value) const {
+  void Set(vtkm::Id index, const ValueType& value) const
+  {
     vtkm::Id permutedIndex = this->IndexPortal.Get(index);
     this->ValuePortal.Set(permutedIndex, value);
   }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  const IndexPortalType &GetIndexPortal() const { return this->IndexPortal; }
+  const IndexPortalType& GetIndexPortal() const { return this->IndexPortal; }
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  const ValuePortalType &GetValuePortal() const { return this->ValuePortal; }
+  const ValuePortalType& GetValuePortal() const { return this->ValuePortal; }
 
 private:
   IndexPortalType IndexPortal;
   ValuePortalType ValuePortal;
 };
-
 }
 }
 } // namespace vtkm::exec::internal
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-namespace internal {
+namespace internal
+{
 
-template<typename IndexArrayType, typename ValueArrayType>
-struct VTKM_ALWAYS_EXPORT StorageTagPermutation {  };
+template <typename IndexArrayType, typename ValueArrayType>
+struct VTKM_ALWAYS_EXPORT StorageTagPermutation
+{
+};
 
-template<typename IndexArrayType, typename ValueArrayType>
-class Storage<
-    typename ValueArrayType::ValueType,
-    StorageTagPermutation<IndexArrayType, ValueArrayType> >
+template <typename IndexArrayType, typename ValueArrayType>
+class Storage<typename ValueArrayType::ValueType,
+              StorageTagPermutation<IndexArrayType, ValueArrayType>>
 {
   VTKM_IS_ARRAY_HANDLE(IndexArrayType);
   VTKM_IS_ARRAY_HANDLE(ValueArrayType);
@@ -117,64 +127,75 @@ class Storage<
 public:
   typedef typename ValueArrayType::ValueType ValueType;
 
-  typedef vtkm::exec::internal::ArrayPortalPermutation<
-      typename IndexArrayType::PortalConstControl,
-      typename ValueArrayType::PortalControl> PortalType;
-  typedef vtkm::exec::internal::ArrayPortalPermutation<
-      typename IndexArrayType::PortalConstControl,
-      typename ValueArrayType::PortalConstControl> PortalConstType;
+  typedef vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
+                                                       typename ValueArrayType::PortalControl>
+    PortalType;
+  typedef vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
+                                                       typename ValueArrayType::PortalConstControl>
+    PortalConstType;
 
   VTKM_CONT
-  Storage() : Valid(false) {  }
+  Storage()
+    : Valid(false)
+  {
+  }
 
   VTKM_CONT
-  Storage(const IndexArrayType &indexArray, const ValueArrayType &valueArray)
-    : IndexArray(indexArray), ValueArray(valueArray), Valid(true) {  }
+  Storage(const IndexArrayType& indexArray, const ValueArrayType& valueArray)
+    : IndexArray(indexArray)
+    , ValueArray(valueArray)
+    , Valid(true)
+  {
+  }
 
   VTKM_CONT
-  PortalType GetPortal() {
+  PortalType GetPortal()
+  {
     VTKM_ASSERT(this->Valid);
     return PortalType(this->IndexArray.GetPortalConstControl(),
                       this->ValueArray.GetPortalControl());
   }
 
   VTKM_CONT
-  PortalConstType GetPortalConst() const {
+  PortalConstType GetPortalConst() const
+  {
     VTKM_ASSERT(this->Valid);
     return PortalConstType(this->IndexArray.GetPortalConstControl(),
                            this->ValueArray.GetPortalConstControl());
   }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const {
+  vtkm::Id GetNumberOfValues() const
+  {
     VTKM_ASSERT(this->Valid);
     return this->IndexArray.GetNumberOfValues();
   }
 
   VTKM_CONT
-  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorBadType(
-          "ArrayHandlePermutation cannot be allocated.");
+  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
+  {
+    throw vtkm::cont::ErrorBadType("ArrayHandlePermutation cannot be allocated.");
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorBadType(
-          "ArrayHandlePermutation cannot shrink.");
+  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
+  {
+    throw vtkm::cont::ErrorBadType("ArrayHandlePermutation cannot shrink.");
   }
 
   VTKM_CONT
-  void ReleaseResources() {
+  void ReleaseResources()
+  {
     // This request is ignored since it is asking to release the resources
     // of the delegate array, which may be used elsewhere. Should the behavior
     // be different?
   }
 
   VTKM_CONT
-  const IndexArrayType &GetIndexArray() const { return this->IndexArray; }
+  const IndexArrayType& GetIndexArray() const { return this->IndexArray; }
 
   VTKM_CONT
-  const ValueArrayType &GetValueArray() const { return this->ValueArray; }
+  const ValueArrayType& GetValueArray() const { return this->ValueArray; }
 
 private:
   IndexArrayType IndexArray;
@@ -182,11 +203,10 @@ private:
   bool Valid;
 };
 
-template<typename IndexArrayType, typename ValueArrayType, typename Device>
-class ArrayTransfer<
-    typename ValueArrayType::ValueType,
-    StorageTagPermutation<IndexArrayType, ValueArrayType>,
-    Device>
+template <typename IndexArrayType, typename ValueArrayType, typename Device>
+class ArrayTransfer<typename ValueArrayType::ValueType,
+                    StorageTagPermutation<IndexArrayType, ValueArrayType>,
+                    Device>
 {
 public:
   typedef typename ValueArrayType::ValueType ValueType;
@@ -200,32 +220,34 @@ public:
   typedef typename StorageType::PortalConstType PortalConstControl;
 
   typedef vtkm::exec::internal::ArrayPortalPermutation<
-      typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
-      typename ValueArrayType::template ExecutionTypes<Device>::Portal>
+    typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
+    typename ValueArrayType::template ExecutionTypes<Device>::Portal>
     PortalExecution;
   typedef vtkm::exec::internal::ArrayPortalPermutation<
-      typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
-      typename ValueArrayType::template ExecutionTypes<Device>::PortalConst>
+    typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
+    typename ValueArrayType::template ExecutionTypes<Device>::PortalConst>
     PortalConstExecution;
 
   VTKM_CONT
-  ArrayTransfer(StorageType *storage)
-    : IndexArray(storage->GetIndexArray()),
-      ValueArray(storage->GetValueArray()) {  }
-
-  VTKM_CONT
-  vtkm::Id GetNumberOfValues() const {
-    return this->IndexArray.GetNumberOfValues();
+  ArrayTransfer(StorageType* storage)
+    : IndexArray(storage->GetIndexArray())
+    , ValueArray(storage->GetValueArray())
+  {
   }
 
   VTKM_CONT
-  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData)) {
+  vtkm::Id GetNumberOfValues() const { return this->IndexArray.GetNumberOfValues(); }
+
+  VTKM_CONT
+  PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
+  {
     return PortalConstExecution(this->IndexArray.PrepareForInput(Device()),
                                 this->ValueArray.PrepareForInput(Device()));
   }
 
   VTKM_CONT
-  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData)) {
+  PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
+  {
     return PortalExecution(this->IndexArray.PrepareForInput(Device()),
                            this->ValueArray.PrepareForInPlace(Device()));
   }
@@ -233,11 +255,12 @@ public:
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
-    if (numberOfValues != this->GetNumberOfValues()) {
+    if (numberOfValues != this->GetNumberOfValues())
+    {
       throw vtkm::cont::ErrorBadValue(
-            "An ArrayHandlePermutation can be used as an output array, "
-            "but it cannot be resized. Make sure the index array is sized "
-            "to the appropriate length before trying to prepare for output.");
+        "An ArrayHandlePermutation can be used as an output array, "
+        "but it cannot be resized. Make sure the index array is sized "
+        "to the appropriate length before trying to prepare for output.");
     }
 
     // We cannot practically allocate ValueArray because we do not know the
@@ -247,30 +270,32 @@ public:
     if ((numberOfValues > 0) && (this->ValueArray.GetNumberOfValues() < 1))
     {
       throw vtkm::cont::ErrorBadValue(
-            "The value array must be pre-allocated before it is used for the "
-            "output of ArrayHandlePermutation.");
+        "The value array must be pre-allocated before it is used for the "
+        "output of ArrayHandlePermutation.");
     }
 
-    return PortalExecution(this->IndexArray.PrepareForInput(Device()),
-                           this->ValueArray.PrepareForOutput(
-                             this->ValueArray.GetNumberOfValues(), Device()));
+    return PortalExecution(
+      this->IndexArray.PrepareForInput(Device()),
+      this->ValueArray.PrepareForOutput(this->ValueArray.GetNumberOfValues(), Device()));
   }
 
   VTKM_CONT
-  void RetrieveOutputData(StorageType *vtkmNotUsed(storage)) const {
+  void RetrieveOutputData(StorageType* vtkmNotUsed(storage)) const
+  {
     // Implementation of this method should be unnecessary. The internal
     // array handles should automatically retrieve the output data as
     // necessary.
   }
 
   VTKM_CONT
-  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues)) {
-    throw vtkm::cont::ErrorBadType(
-          "ArrayHandlePermutation cannot shrink.");
+  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
+  {
+    throw vtkm::cont::ErrorBadType("ArrayHandlePermutation cannot shrink.");
   }
 
   VTKM_CONT
-  void ReleaseResources() {
+  void ReleaseResources()
+  {
     this->IndexArray.ReleaseResourcesExecution();
     this->ValueArray.ReleaseResourcesExecution();
   }
@@ -307,9 +332,9 @@ private:
 ///
 template <typename IndexArrayHandleType, typename ValueArrayHandleType>
 class ArrayHandlePermutation
-    : public vtkm::cont::ArrayHandle<
-        typename ValueArrayHandleType::ValueType,
-        internal::StorageTagPermutation<IndexArrayHandleType, ValueArrayHandleType> >
+  : public vtkm::cont::ArrayHandle<
+      typename ValueArrayHandleType::ValueType,
+      internal::StorageTagPermutation<IndexArrayHandleType, ValueArrayHandleType>>
 {
   // If the following line gives a compile error, then the ArrayHandleType
   // template argument is not a valid ArrayHandle type.
@@ -318,22 +343,22 @@ class ArrayHandlePermutation
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
-      ArrayHandlePermutation,
-      (ArrayHandlePermutation<IndexArrayHandleType,ValueArrayHandleType>),
-      (vtkm::cont::ArrayHandle<
-         typename ValueArrayHandleType::ValueType,
-         internal::StorageTagPermutation<
-           IndexArrayHandleType,ValueArrayHandleType> >));
+    ArrayHandlePermutation,
+    (ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>),
+    (vtkm::cont::ArrayHandle<
+      typename ValueArrayHandleType::ValueType,
+      internal::StorageTagPermutation<IndexArrayHandleType, ValueArrayHandleType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag>
-      StorageType;
+  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
- public:
+public:
   VTKM_CONT
-  ArrayHandlePermutation(const IndexArrayHandleType &indexArray,
-                         const ValueArrayHandleType &valueArray)
-    : Superclass(StorageType(indexArray, valueArray)) {  }
+  ArrayHandlePermutation(const IndexArrayHandleType& indexArray,
+                         const ValueArrayHandleType& valueArray)
+    : Superclass(StorageType(indexArray, valueArray))
+  {
+  }
 };
 
 /// make_ArrayHandleTransform is convenience function to generate an
@@ -341,15 +366,11 @@ private:
 /// to apply to each element of the Handle.
 
 template <typename IndexArrayHandleType, typename ValueArrayHandleType>
-VTKM_CONT
-vtkm::cont::ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>
-make_ArrayHandlePermutation(IndexArrayHandleType indexArray,
-                            ValueArrayHandleType valueArray)
+VTKM_CONT vtkm::cont::ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>
+make_ArrayHandlePermutation(IndexArrayHandleType indexArray, ValueArrayHandleType valueArray)
 {
-  return ArrayHandlePermutation<IndexArrayHandleType,ValueArrayHandleType>(
-        indexArray, valueArray);
+  return ArrayHandlePermutation<IndexArrayHandleType, ValueArrayHandleType>(indexArray, valueArray);
 }
-
 }
 } // namespace vtkm::cont
 

@@ -37,8 +37,10 @@
 
 #include <vtkm/worklet/internal/TriangulateTables.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 /// \brief Compute the tetrahedralize cells for an explicit grid data set
 template <typename DeviceAdapter>
@@ -53,9 +55,7 @@ public:
   class TetrahedraPerCell : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> shapes,
-                                  ExecObject tables,
-                                  FieldOut<> tetrahedronCount);
+    typedef void ControlSignature(FieldIn<> shapes, ExecObject tables, FieldOut<> tetrahedronCount);
     typedef _3 ExecutionSignature(_1, _2);
     typedef _1 InputDomain;
 
@@ -64,8 +64,9 @@ public:
 
     VTKM_EXEC
     vtkm::IdComponent operator()(
-        vtkm::UInt8 shape,
-        const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter> &tables) const
+      vtkm::UInt8 shape,
+      const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter>& tables)
+      const
     {
       return tables.GetCount(vtkm::CellShapeTagGeneric(shape));
     }
@@ -86,30 +87,24 @@ public:
 
     typedef vtkm::worklet::ScatterCounting ScatterType;
     VTKM_CONT
-    ScatterType GetScatter() const
+    ScatterType GetScatter() const { return this->Scatter; }
+
+    template <typename CellArrayType>
+    VTKM_CONT TetrahedralizeCell(const CellArrayType& cellArray)
+      : Scatter(cellArray, DeviceAdapter())
     {
-      return this->Scatter;
     }
 
-    template<typename CellArrayType>
-    VTKM_CONT
-    TetrahedralizeCell(const CellArrayType &cellArray)
-      : Scatter(cellArray, DeviceAdapter())
-    {  }
-
     // Each cell produces tetrahedra and write result at the offset
-    template<typename CellShapeTag,
-             typename ConnectivityInVec,
-             typename ConnectivityOutVec>
-    VTKM_EXEC
-    void operator()(CellShapeTag shape,
-                    const ConnectivityInVec &connectivityIn,
-                    const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter> &tables,
-                    ConnectivityOutVec &connectivityOut,
-                    vtkm::IdComponent visitIndex) const
+    template <typename CellShapeTag, typename ConnectivityInVec, typename ConnectivityOutVec>
+    VTKM_EXEC void operator()(
+      CellShapeTag shape,
+      const ConnectivityInVec& connectivityIn,
+      const vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<DeviceAdapter>& tables,
+      ConnectivityOutVec& connectivityOut,
+      vtkm::IdComponent visitIndex) const
     {
-      vtkm::Vec<vtkm::IdComponent,4> tetIndices =
-          tables.GetIndices(shape, visitIndex);
+      vtkm::Vec<vtkm::IdComponent, 4> tetIndices = tables.GetIndices(shape, visitIndex);
       connectivityOut[0] = connectivityIn[tetIndices[0]];
       connectivityOut[1] = connectivityIn[tetIndices[1]];
       connectivityOut[2] = connectivityIn[tetIndices[2]];
@@ -121,18 +116,16 @@ public:
   };
 
   template <typename CellSetType>
-  vtkm::cont::CellSetSingleType<> Run(const CellSetType &cellSet,
-                                      vtkm::cont::ArrayHandle<vtkm::IdComponent> &outCellsPerCell)
+  vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
+                                      vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
 
     // Input topology
-    auto inShapes = 
-        cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), 
-                               vtkm::TopologyElementTagCell());
-    auto inNumIndices = 
-        cellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), 
-                                   vtkm::TopologyElementTagCell());
+    auto inShapes =
+      cellSet.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    auto inNumIndices =
+      cellSet.GetNumIndicesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
     // Output topology
     vtkm::cont::ArrayHandle<vtkm::Id> outConnectivity;
@@ -140,29 +133,22 @@ public:
     vtkm::worklet::internal::TetrahedralizeTables tables;
 
     // Determine the number of output cells each input cell will generate
-    vtkm::worklet::DispatcherMapField<TetrahedraPerCell,DeviceAdapter>
-                   tetPerCellDispatcher;
-    tetPerCellDispatcher.Invoke(inShapes,
-                                tables.PrepareForInput(DeviceAdapter()),
-                                outCellsPerCell);
+    vtkm::worklet::DispatcherMapField<TetrahedraPerCell, DeviceAdapter> tetPerCellDispatcher;
+    tetPerCellDispatcher.Invoke(inShapes, tables.PrepareForInput(DeviceAdapter()), outCellsPerCell);
 
     // Build new cells
     TetrahedralizeCell tetrahedralizeWorklet(outCellsPerCell);
-    vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell,DeviceAdapter>
-                   tetrahedralizeDispatcher(tetrahedralizeWorklet);
+    vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell, DeviceAdapter>
+      tetrahedralizeDispatcher(tetrahedralizeWorklet);
     tetrahedralizeDispatcher.Invoke(cellSet,
                                     tables.PrepareForInput(DeviceAdapter()),
                                     vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
 
     // Add cells to output cellset
-    outCellSet.Fill(cellSet.GetNumberOfPoints(),
-                    vtkm::CellShapeTagTetra::Id,
-                    4,
-                    outConnectivity);
+    outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagTetra::Id, 4, outConnectivity);
     return outCellSet;
   }
 };
-
 }
 } // namespace vtkm::worklet
 

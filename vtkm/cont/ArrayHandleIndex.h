@@ -24,12 +24,16 @@
 
 #include <vtkm/cont/ArrayHandleImplicit.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-namespace detail {
+namespace detail
+{
 
-struct VTKM_ALWAYS_EXPORT IndexFunctor {
+struct VTKM_ALWAYS_EXPORT IndexFunctor
+{
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id index) const { return index; }
 };
@@ -42,19 +46,18 @@ struct VTKM_ALWAYS_EXPORT IndexFunctor {
 /// 0, 1, 2, 3,... to a specified size. Every value in the array is the same
 /// as the index to that value.
 ///
-class ArrayHandleIndex
-    : public vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::IndexFunctor>
+class ArrayHandleIndex : public vtkm::cont::ArrayHandleImplicit<detail::IndexFunctor>
 {
 public:
-  VTKM_ARRAY_HANDLE_SUBCLASS_NT(
-      ArrayHandleIndex,
-      (vtkm::cont::ArrayHandleImplicit<vtkm::Id, detail::IndexFunctor>));
+  VTKM_ARRAY_HANDLE_SUBCLASS_NT(ArrayHandleIndex,
+                                (vtkm::cont::ArrayHandleImplicit<detail::IndexFunctor>));
 
   VTKM_CONT
   ArrayHandleIndex(vtkm::Id length)
-    : Superclass(detail::IndexFunctor(), length) {  }
+    : Superclass(detail::IndexFunctor(), length)
+  {
+  }
 };
-
 }
 } // namespace vtkm::cont
 

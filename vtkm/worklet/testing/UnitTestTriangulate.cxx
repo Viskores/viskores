@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/worklet/Triangulate.h>
 #include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/Triangulate.h>
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
@@ -45,8 +45,7 @@ public:
 
     // Convert uniform quadrilaterals to triangles
     vtkm::worklet::Triangulate triangulate;
-    OutCellSetType outCellSet = triangulate.Run(cellSet, 
-                                                DeviceAdapter());
+    OutCellSetType outCellSet = triangulate.Run(cellSet, DeviceAdapter());
 
     // Create the output dataset and assign the input coordinate system
     vtkm::cont::DataSet outDataSet;
@@ -63,24 +62,24 @@ public:
     std::cout << "Testing TriangulateExplicit:" << std::endl;
     typedef vtkm::cont::CellSetExplicit<> CellSetType;
     typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
-  
+
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DExplicitDataSet0();
     CellSetType cellSet;
     dataSet.GetCellSet(0).CopyTo(cellSet);
     vtkm::cont::ArrayHandle<vtkm::IdComponent> outCellsPerCell;
-  
+
     // Convert explicit cells to triangles
     vtkm::worklet::Triangulate triangulate;
-    OutCellSetType outCellSet = triangulate.Run(cellSet, 
-                                                DeviceAdapter());
+    OutCellSetType outCellSet = triangulate.Run(cellSet, DeviceAdapter());
 
     // Create the output dataset explicit cell set with same coordinate system
     vtkm::cont::DataSet outDataSet;
     outDataSet.AddCoordinateSystem(dataSet.GetCoordinateSystem(0));
     outDataSet.AddCellSet(outCellSet);
-  
-    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 14), "Wrong result for Triangulate filter");
+
+    VTKM_TEST_ASSERT(test_equal(outCellSet.GetNumberOfCells(), 14),
+                     "Wrong result for Triangulate filter");
   }
 
   void operator()() const
@@ -90,8 +89,7 @@ public:
   }
 };
 
-int UnitTestTriangulate(int, char *[])
+int UnitTestTriangulate(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(
-    TestingTriangulate<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(TestingTriangulate<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
 }

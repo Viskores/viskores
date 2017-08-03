@@ -22,9 +22,8 @@
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
 #include <vtkm/cont/testing/TestingComputeRange.h>
 
-int UnitTestCudaComputeRange(int, char *[])
+int UnitTestCudaComputeRange(int, char* [])
 {
-  int result = vtkm::cont::testing::TestingComputeRange
-      <vtkm::cont::DeviceAdapterTagCuda>::Run();
+  int result = vtkm::cont::testing::TestingComputeRange<vtkm::cont::DeviceAdapterTagCuda>::Run();
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  BOVDataSetReader.h
   VTKDataSetReaderBase.h
   VTKPolyDataReader.h
   VTKStructuredGridReader.h

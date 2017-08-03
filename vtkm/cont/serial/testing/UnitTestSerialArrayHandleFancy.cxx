@@ -29,9 +29,7 @@
 
 #include <vtkm/cont/testing/TestingFancyArrayHandles.h>
 
-
-int UnitTestSerialArrayHandleFancy(int, char *[])
+int UnitTestSerialArrayHandleFancy(int, char* [])
 {
-  return vtkm::cont::testing::TestingFancyArrayHandles
-         <vtkm::cont::DeviceAdapterTagSerial>::Run();
+  return vtkm::cont::testing::TestingFancyArrayHandles<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

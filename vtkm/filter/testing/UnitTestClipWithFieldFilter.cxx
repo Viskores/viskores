@@ -21,21 +21,21 @@
 #include <vtkm/filter/ClipWithField.h>
 
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 typedef vtkm::Vec<vtkm::FloatDefault, 3> Coord3D;
-
 
 vtkm::cont::DataSet MakeTestDatasetExplicit()
 {
   std::vector<Coord3D> coords;
-  coords.push_back( Coord3D(0.0f, 0.0f, 0.0f) );
-  coords.push_back( Coord3D(1.0f, 0.0f, 0.0f) );
-  coords.push_back( Coord3D(1.0f, 1.0f, 0.0f) );
-  coords.push_back( Coord3D(0.0f, 1.0f, 0.0f) );
+  coords.push_back(Coord3D(0.0f, 0.0f, 0.0f));
+  coords.push_back(Coord3D(1.0f, 0.0f, 0.0f));
+  coords.push_back(Coord3D(1.0f, 1.0f, 0.0f));
+  coords.push_back(Coord3D(0.0f, 1.0f, 0.0f));
 
   std::vector<vtkm::Id> connectivity;
   connectivity.push_back(0);
@@ -70,8 +70,7 @@ void TestClipExplicit()
   vtkm::filter::ClipWithField clip;
   clip.SetClipValue(0.5);
 
-  result = clip.Execute( ds, std::string("scalars"));
-
+  result = clip.Execute(ds, std::string("scalars"));
 
   const vtkm::cont::DataSet& outputData = result.GetDataSet();
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
@@ -95,22 +94,19 @@ void TestClipExplicit()
   vtkm::Float32 expected[7] = { 1, 2, 1, 0, 0.5, 0.5, 0.5 };
   for (int i = 0; i < 7; ++i)
   {
-    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i),
-        expected[i]), "Wrong result for Clip fliter on triangle explicit data");
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+                     "Wrong result for Clip fliter on triangle explicit data");
   }
-
 }
-
 
 void TestClip()
 {
   //todo: add more clip tests
   TestClipExplicit();
 }
-
 }
 
-int UnitTestClipWithFieldFilter(int, char *[])
+int UnitTestClipWithFieldFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestClip);
 }

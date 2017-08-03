@@ -23,8 +23,10 @@
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/internal/IteratorFromArrayPortal.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 /// \brief Convert an \c ArrayPortal to STL iterators.
 ///
@@ -39,7 +41,7 @@ namespace cont {
 /// ArrayPortalFromIterator has a specialization to return the original
 /// iterators.
 ///
-template<typename PortalType>
+template <typename PortalType>
 class ArrayPortalToIterators
 {
 public:
@@ -48,28 +50,26 @@ public:
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ArrayPortalToIterators(const PortalType &portal) : Portal(portal) {  }
+  ArrayPortalToIterators(const PortalType& portal)
+    : Portal(portal)
+  {
+  }
 
   /// The type of the iterator.
   ///
-  typedef vtkm::cont::internal::IteratorFromArrayPortal<PortalType>
-      IteratorType;
+  typedef vtkm::cont::internal::IteratorFromArrayPortal<PortalType> IteratorType;
 
   /// Returns an iterator pointing to the beginning of the ArrayPortal.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  IteratorType GetBegin() const {
-    return vtkm::cont::internal::make_IteratorBegin(this->Portal);
-  }
+  IteratorType GetBegin() const { return vtkm::cont::internal::make_IteratorBegin(this->Portal); }
 
   /// Returns an iterator pointing to one past the end of the ArrayPortal.
   ///
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  IteratorType GetEnd() const {
-    return vtkm::cont::internal::make_IteratorEnd(this->Portal);
-  }
+  IteratorType GetEnd() const { return vtkm::cont::internal::make_IteratorEnd(this->Portal); }
 
 private:
   PortalType Portal;
@@ -77,11 +77,10 @@ private:
 
 /// Convienience function for converting an ArrayPortal to a begin iterator.
 ///
-template<typename PortalType>
 VTKM_SUPPRESS_EXEC_WARNINGS
-VTKM_EXEC_CONT
-typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType
-ArrayPortalToIteratorBegin(const PortalType &portal)
+template <typename PortalType>
+VTKM_EXEC_CONT typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType
+ArrayPortalToIteratorBegin(const PortalType& portal)
 {
   vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
   return iterators.GetBegin();
@@ -89,16 +88,14 @@ ArrayPortalToIteratorBegin(const PortalType &portal)
 
 /// Convienience function for converting an ArrayPortal to an end iterator.
 ///
-template<typename PortalType>
 VTKM_SUPPRESS_EXEC_WARNINGS
-VTKM_EXEC_CONT
-typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType
-ArrayPortalToIteratorEnd(const PortalType &portal)
+template <typename PortalType>
+VTKM_EXEC_CONT typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType
+ArrayPortalToIteratorEnd(const PortalType& portal)
 {
   vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
   return iterators.GetEnd();
 }
-
 }
 } // namespace vtkm::cont
 

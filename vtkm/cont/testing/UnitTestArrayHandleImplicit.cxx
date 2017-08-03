@@ -28,57 +28,53 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-template<typename ValueType>
+template <typename ValueType>
 struct IndexSquared
 {
   VTKM_EXEC_CONT
   ValueType operator()(vtkm::Id i) const
   {
     typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
-    return ValueType(static_cast<ComponentType>(i*i));
+    return ValueType(static_cast<ComponentType>(i * i));
   }
 };
 
-
 struct ImplicitTests
 {
-  template<typename ValueType>
+  template <typename ValueType>
   void operator()(const ValueType) const
   {
     typedef IndexSquared<ValueType> FunctorType;
     FunctorType functor;
 
-    typedef vtkm::cont::ArrayHandleImplicit<ValueType,FunctorType>
-        ImplicitHandle;
+    typedef vtkm::cont::ArrayHandleImplicit<FunctorType> ImplicitHandle;
 
-    ImplicitHandle implict =
-            vtkm::cont::make_ArrayHandleImplicit<ValueType>(functor,ARRAY_SIZE);
+    ImplicitHandle implict = vtkm::cont::make_ArrayHandleImplicit(functor, ARRAY_SIZE);
 
     //verify that the control portal works
-    for(int i=0; i < ARRAY_SIZE; ++i)
-      {
+    for (int i = 0; i < ARRAY_SIZE; ++i)
+    {
       const ValueType v = implict.GetPortalConstControl().Get(i);
       const ValueType correct_value = functor(i);
-        VTKM_TEST_ASSERT(v == correct_value, "Implicit Handle Failed");
-      }
+      VTKM_TEST_ASSERT(v == correct_value, "Implicit Handle Failed");
+    }
 
     //verify that the execution portal works
     typedef vtkm::cont::DeviceAdapterTagSerial Device;
-    typedef typename ImplicitHandle::template ExecutionTypes<Device>
-        ::PortalConst CEPortal;
+    typedef typename ImplicitHandle::template ExecutionTypes<Device>::PortalConst CEPortal;
     CEPortal execPortal = implict.PrepareForInput(Device());
-    for(int i=0; i < ARRAY_SIZE; ++i)
-      {
+    for (int i = 0; i < ARRAY_SIZE; ++i)
+    {
       const ValueType v = execPortal.Get(i);
       const ValueType correct_value = functor(i);
       VTKM_TEST_ASSERT(v == correct_value, "Implicit Handle Failed");
-      }
+    }
   }
-
 };
 
 void TestArrayHandleImplicit()
@@ -86,11 +82,9 @@ void TestArrayHandleImplicit()
   vtkm::testing::Testing::TryTypes(ImplicitTests(), vtkm::TypeListTagCommon());
 }
 
-
-
 } // annonymous namespace
 
-int UnitTestArrayHandleImplicit(int, char *[])
+int UnitTestArrayHandleImplicit(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestArrayHandleImplicit);
 }

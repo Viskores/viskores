@@ -22,10 +22,21 @@
 
 #include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
+
+ExecutionArrayInterfaceBasic<DeviceAdapterTagSerial>::ExecutionArrayInterfaceBasic(
+  StorageBasicBase& storage)
+  : Superclass(storage)
+{
+}
+
+} // end namespace internal
 
 VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagSerial)
-
 }
 } // end vtkm::cont

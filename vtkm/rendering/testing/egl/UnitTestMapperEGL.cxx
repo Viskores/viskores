@@ -18,47 +18,64 @@
 //  this software.
 //============================================================================
 #include <vtkm/Bounds.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasEGL.h>
+#include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
-#include <vtkm/rendering/Color.h>
-#include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 
-namespace {
+namespace
+{
 
 void RenderTests()
 {
-    typedef vtkm::rendering::MapperGL M;
-    typedef vtkm::rendering::CanvasEGL C;
-    typedef vtkm::rendering::View3D V3;
-    typedef vtkm::rendering::View2D V2;
-    typedef vtkm::rendering::View1D V1;
+  typedef vtkm::rendering::MapperGL M;
+  typedef vtkm::rendering::CanvasEGL C;
+  typedef vtkm::rendering::View3D V3;
+  typedef vtkm::rendering::View2D V2;
+  typedef vtkm::rendering::View1D V1;
 
-    vtkm::cont::testing::MakeTestDataSet maker;
-    vtkm::rendering::ColorTable colorTable("thermal");
-    
-    vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRegularDataSet0(),
-                                             "pointvar", colorTable, "reg3D.pnm");
-    vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DRectilinearDataSet0(),
-                                             "pointvar", colorTable, "rect3D.pnm");
-    vtkm::rendering::testing::Render<M,C,V3>(maker.Make3DExplicitDataSet4(),
-                                             "pointvar", colorTable, "expl3D.pnm");
-    vtkm::rendering::testing::Render<M,C,V2>(maker.Make2DRectilinearDataSet0(),
-                                             "pointvar", colorTable, "rect2D.pnm");
-    vtkm::rendering::testing::Render<M,C,V1>(maker.Make1DUniformDataSet0(),
-                                             "pointvar", "uniform1D.pnm");
-    vtkm::rendering::testing::Render<M,C,V1>(maker.Make1DExplicitDataSet0(),
-                                             "pointvar", "expl1D.pnm");
+  vtkm::cont::DataSetFieldAdd dsf;
+  vtkm::cont::testing::MakeTestDataSet maker;
+  vtkm::rendering::ColorTable colorTable("thermal");
+
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V2>(
+    maker.Make2DRectilinearDataSet0(), "pointvar", colorTable, "rect2D.pnm");
+  vtkm::rendering::testing::Render<M, C, V1>(
+    maker.Make1DUniformDataSet0(), "pointvar", "uniform1D.pnm");
+  vtkm::rendering::testing::Render<M, C, V1>(
+    maker.Make1DExplicitDataSet0(), "pointvar", "expl1D.pnm");
+
+  vtkm::cont::DataSet ds = maker.Make1DUniformDataSet0();
+  const int nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  vtkm::Float32 vars[nVerts];
+  float smallVal = 1.000;
+  for (int i = 0; i <= nVerts; i++)
+  {
+    vars[i] = smallVal;
+    smallVal += .01;
+  }
+  dsf.AddPointField(ds, "smallScaledXAxis", vars, nVerts);
+  vtkm::rendering::testing::Render<M, C, V1>(
+    ds, "smallScaledXAxis", "uniform1DSmallScaledXAxis.pnm");
 }
 } //namespace
 
-int UnitTestMapperEGL(int, char *[])
+int UnitTestMapperEGL(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(RenderTests);
 }

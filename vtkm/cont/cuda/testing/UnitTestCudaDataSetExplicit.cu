@@ -23,12 +23,11 @@
 #endif
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
-#include <vtkm/cont/testing/TestingDataSetExplicit.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
+#include <vtkm/cont/testing/TestingDataSetExplicit.h>
 
-int UnitTestCudaDataSetExplicit(int, char *[])
+int UnitTestCudaDataSetExplicit(int, char* [])
 {
-  int result = vtkm::cont::testing::TestingDataSetExplicit
-      <vtkm::cont::DeviceAdapterTagCuda>::Run();
+  int result = vtkm::cont::testing::TestingDataSetExplicit<vtkm::cont::DeviceAdapterTagCuda>::Run();
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

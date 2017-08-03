@@ -27,31 +27,31 @@
 
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
-namespace detail {
+namespace detail
+{
 
-template<typename Functor, typename Device, bool DeviceAdapterValid>
+template <typename Functor, typename Device, bool DeviceAdapterValid>
 struct TryExecuteRunIfValid;
 
-template<typename Functor, typename Device>
+template <typename Functor, typename Device>
 struct TryExecuteRunIfValid<Functor, Device, false>
 {
   VTKM_CONT
-  static bool Run(Functor &, const vtkm::cont::RuntimeDeviceTracker &) {
-    return false;
-  }
+  static bool Run(Functor&, const vtkm::cont::RuntimeDeviceTracker&) { return false; }
 };
 
-template<typename Functor, typename Device>
+template <typename Functor, typename Device>
 struct TryExecuteRunIfValid<Functor, Device, true>
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
   VTKM_CONT
-  static bool Run(Functor &functor,
-                  vtkm::cont::RuntimeDeviceTracker tracker)
+  static bool Run(Functor& functor, vtkm::cont::RuntimeDeviceTracker tracker)
   {
     if (tracker.CanRunOn(Device()))
     {
@@ -59,31 +59,31 @@ struct TryExecuteRunIfValid<Functor, Device, true>
       {
         return functor(Device());
       }
-      catch(vtkm::cont::ErrorBadAllocation &e)
+      catch (vtkm::cont::ErrorBadAllocation& e)
       {
         std::cerr << "caught ErrorBadAllocation " << e.GetMessage() << std::endl;
         //currently we only consider OOM errors worth disabling a device for
         //than we fallback to another device
         tracker.ReportAllocationFailure(Device(), e);
       }
-      catch(vtkm::cont::ErrorBadType &e)
+      catch (vtkm::cont::ErrorBadType& e)
       {
         //should bad type errors should stop the execution, instead of
         //deferring to another device adapter?
         std::cerr << "caught ErrorBadType : " << e.GetMessage() << std::endl;
       }
-      catch(vtkm::cont::ErrorBadValue &e)
+      catch (vtkm::cont::ErrorBadValue& e)
       {
         //should bad value errors should stop the filter, instead of deferring
         //to another device adapter?
         std::cerr << "caught ErrorBadValue : " << e.GetMessage() << std::endl;
       }
-      catch(vtkm::cont::Error &e)
+      catch (vtkm::cont::Error& e)
       {
         //general errors should be caught and let us try the next device adapter.
         std::cerr << "exception is: " << e.GetMessage() << std::endl;
       }
-      catch (std::exception &e)
+      catch (std::exception& e)
       {
         std::cerr << "caught standard exception: " << e.what() << std::endl;
       }
@@ -98,40 +98,42 @@ struct TryExecuteRunIfValid<Functor, Device, true>
   }
 };
 
-template<typename FunctorType>
+template <typename FunctorType>
 struct TryExecuteImpl
 {
   // Warning, these are a references. Make sure referenced objects do not go
   // out of scope.
-  FunctorType &Functor;
+  FunctorType& Functor;
   vtkm::cont::RuntimeDeviceTracker Tracker;
 
   bool Success;
 
   VTKM_CONT
-  TryExecuteImpl(FunctorType &functor,
-                 vtkm::cont::RuntimeDeviceTracker tracker =
-                   vtkm::cont::GetGlobalRuntimeDeviceTracker())
-    : Functor(functor), Tracker(tracker), Success(false) {  }
+  TryExecuteImpl(
+    FunctorType& functor,
+    vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
+    : Functor(functor)
+    , Tracker(tracker)
+    , Success(false)
+  {
+  }
 
-  template<typename Device>
-  VTKM_CONT
-  bool operator()(Device)
+  template <typename Device>
+  VTKM_CONT bool operator()(Device)
   {
     if (!this->Success)
     {
       typedef vtkm::cont::DeviceAdapterTraits<Device> DeviceTraits;
 
-      this->Success =
-          detail::TryExecuteRunIfValid<FunctorType,Device,DeviceTraits::Valid>
-          ::Run(this->Functor, this->Tracker);
+      this->Success = detail::TryExecuteRunIfValid<FunctorType, Device, DeviceTraits::Valid>::Run(
+        this->Functor, this->Tracker);
     }
 
     return this->Success;
   }
 
 private:
-  void operator=(const TryExecuteImpl<FunctorType> &) = delete;
+  void operator=(const TryExecuteImpl<FunctorType>&) = delete;
 };
 
 } // namespace detail
@@ -157,63 +159,46 @@ private:
 /// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
 /// is used.
 ///
-template<typename Functor, typename DeviceList>
-VTKM_CONT
-bool TryExecute(const Functor &functor,
-                vtkm::cont::RuntimeDeviceTracker tracker,
-                DeviceList)
+template <typename Functor, typename DeviceList>
+VTKM_CONT bool TryExecute(const Functor& functor,
+                          vtkm::cont::RuntimeDeviceTracker tracker,
+                          DeviceList)
 {
   detail::TryExecuteImpl<const Functor> internals(functor, tracker);
   vtkm::ListForEach(internals, DeviceList());
   return internals.Success;
 }
-template<typename Functor, typename DeviceList>
-VTKM_CONT
-bool TryExecute(Functor &functor,
-                vtkm::cont::RuntimeDeviceTracker tracker,
-                DeviceList)
+template <typename Functor, typename DeviceList>
+VTKM_CONT bool TryExecute(Functor& functor, vtkm::cont::RuntimeDeviceTracker tracker, DeviceList)
 {
   detail::TryExecuteImpl<Functor> internals(functor, tracker);
   vtkm::ListForEach(internals, DeviceList());
   return internals.Success;
 }
-template<typename Functor, typename DeviceList>
-VTKM_CONT
-bool TryExecute(const Functor &functor, DeviceList)
+template <typename Functor, typename DeviceList>
+VTKM_CONT bool TryExecute(const Functor& functor, DeviceList)
 {
-  return vtkm::cont::TryExecute(functor,
-                                vtkm::cont::GetGlobalRuntimeDeviceTracker(),
-                                DeviceList());
+  return vtkm::cont::TryExecute(functor, vtkm::cont::GetGlobalRuntimeDeviceTracker(), DeviceList());
 }
-template<typename Functor, typename DeviceList>
-VTKM_CONT
-bool TryExecute(Functor &functor, DeviceList)
+template <typename Functor, typename DeviceList>
+VTKM_CONT bool TryExecute(Functor& functor, DeviceList)
 {
-  return vtkm::cont::TryExecute(functor,
-                                vtkm::cont::GetGlobalRuntimeDeviceTracker(),
-                                DeviceList());
+  return vtkm::cont::TryExecute(functor, vtkm::cont::GetGlobalRuntimeDeviceTracker(), DeviceList());
 }
-template<typename Functor>
-VTKM_CONT
-bool TryExecute(const Functor &functor,
-                vtkm::cont::RuntimeDeviceTracker tracker =
-                  vtkm::cont::GetGlobalRuntimeDeviceTracker())
+template <typename Functor>
+VTKM_CONT bool TryExecute(
+  const Functor& functor,
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
-  return vtkm::cont::TryExecute(functor,
-                                tracker,
-                                VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+  return vtkm::cont::TryExecute(functor, tracker, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
 }
-template<typename Functor>
-VTKM_CONT
-bool TryExecute(Functor &functor,
-                vtkm::cont::RuntimeDeviceTracker tracker =
-                  vtkm::cont::GetGlobalRuntimeDeviceTracker())
+template <typename Functor>
+VTKM_CONT bool TryExecute(
+  Functor& functor,
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
-  return vtkm::cont::TryExecute(functor,
-                                tracker,
-                                VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+  return vtkm::cont::TryExecute(functor, tracker, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
 }
-
 }
 } // namespace vtkm::cont
 

@@ -22,14 +22,15 @@
 
 #include <vtkm/internal/ExportMacros.h>
 
-namespace vtkm {
+namespace vtkm
+{
 
 /// Binary Predicate that takes two arguments argument \c x, and \c y and
 /// returns True if and only if \c x is equal to \c y.
 /// Note: Requires Type \p T implement the == operator.
 struct Equal
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x == y;
@@ -41,7 +42,7 @@ struct Equal
 /// Note: Requires Type \p T implement the != operator.
 struct NotEqual
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x != y;
@@ -53,7 +54,7 @@ struct NotEqual
 /// Note: Requires Type \p T implement the < operator.
 struct SortLess
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x < y;
@@ -66,7 +67,7 @@ struct SortLess
 /// comparison
 struct SortGreater
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return y < x;
@@ -79,7 +80,7 @@ struct SortGreater
 /// && operator.
 struct LogicalAnd
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x && y;
@@ -92,7 +93,7 @@ struct LogicalAnd
 /// || operator.
 struct LogicalOr
 {
-  template<typename T>
+  template <typename T>
   VTKM_EXEC_CONT bool operator()(const T& x, const T& y) const
   {
     return x || y;

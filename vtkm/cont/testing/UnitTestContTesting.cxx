@@ -25,7 +25,8 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 void TestFail()
 {
@@ -45,7 +46,7 @@ void GoodAssert()
 
 } // anonymous namespace
 
-int UnitTestContTesting(int, char *[])
+int UnitTestContTesting(int, char* [])
 {
   std::cout << "-------\nThis call should fail." << std::endl;
   if (vtkm::cont::testing::Testing::Run(TestFail) == 0)

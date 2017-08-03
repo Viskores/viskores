@@ -83,12 +83,15 @@
 #ifndef vtkm_worklet_contourtree_chain_doubler_h
 #define vtkm_worklet_contourtree_chain_doubler_h
 
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
-namespace vtkm {
-namespace worklet {
-namespace contourtree {
+namespace vtkm
+{
+namespace worklet
+{
+namespace contourtree
+{
 
 // Functor for doing chain doubling
 // Unary because it takes the index of the element to process, and is not guaranteed to
@@ -99,19 +102,16 @@ namespace contourtree {
 class ChainDoubler : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexID,
-                                WholeArrayInOut<IdType> chains);
+  typedef void ControlSignature(FieldIn<IdType> vertexID, WholeArrayInOut<IdType> chains);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1   InputDomain;
+  typedef _1 InputDomain;
 
   // Constructor
   VTKM_EXEC_CONT
   ChainDoubler() {}
 
   template <typename InOutFieldPortalType>
-  VTKM_EXEC
-  void operator()(const vtkm::Id& vertexID,
-                  const InOutFieldPortalType& chains) const
+  VTKM_EXEC void operator()(const vtkm::Id& vertexID, const InOutFieldPortalType& chains) const
   {
     vtkm::Id next = chains.Get(vertexID);
     vtkm::Id doubleNext = chains.Get(next);
@@ -120,7 +120,6 @@ public:
       chains.Set(vertexID, doubleNext);
   }
 }; // ChainDoubler
-
 }
 }
 }

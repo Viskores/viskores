@@ -19,10 +19,11 @@
 //============================================================================
 #include <vtkm/cont/ImplicitFunction.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 ImplicitFunction::~ImplicitFunction() = default;
-
 }
 } // vtkm::cont

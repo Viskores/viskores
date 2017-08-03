@@ -22,28 +22,28 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/worklet/StreamLineUniformGrid.h>
-#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/StreamLineUniformGrid.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 #include <fstream>
-#include <vector>
 #include <math.h>
+#include <vector>
 
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-#if defined (__APPLE__)
-# include <GLUT/glut.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
 #else
-# include <GL/glut.h>
+#include <GL/glut.h>
 #endif
 
 #include "../isosurface/quaternion.h"
@@ -51,7 +51,7 @@
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
 // Output data set shared with opengl
-static vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter> *streamLineFilter;
+static vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>* streamLineFilter;
 static vtkm::cont::DataSet outDataSet;
 
 // Input parameters
@@ -61,7 +61,7 @@ const vtkm::Float32 tStep = 0.5f;
 const vtkm::Id direction = vtkm::worklet::internal::BOTH;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> vertexArray;
 
 // OpenGL display variables
 Quaternion qrot;
@@ -76,16 +76,14 @@ int mouse_state = 1;
 struct GetVertexArray
 {
   template <typename ArrayHandleType>
-  VTKM_CONT
-  void operator()(ArrayHandleType array) const
+  VTKM_CONT void operator()(ArrayHandleType array) const
   {
     this->GetVertexPortal(array.GetPortalConstControl());
   }
 
 private:
   template <typename PortalType>
-  VTKM_CONT
-  void GetVertexPortal(const PortalType &portal) const
+  VTKM_CONT void GetVertexPortal(const PortalType& portal) const
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
@@ -131,7 +129,7 @@ void displayCall()
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluPerspective( 60.0f, 1.0f, 1.0f, 100.0f);
+  gluPerspective(60.0f, 1.0f, 1.0f, 100.0f);
 
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -147,8 +145,8 @@ void displayCall()
   // Get the cell set, coordinate system and coordinate data
   vtkm::cont::CellSetExplicit<> cellSet;
   outDataSet.GetCellSet(0).CopyTo(cellSet);
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem &coordArray =
-                                    outDataSet.GetCoordinateSystem().GetData();
+  const vtkm::cont::DynamicArrayHandleCoordinateSystem& coordArray =
+    outDataSet.GetCoordinateSystem().GetData();
 
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
   vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();
@@ -169,7 +167,7 @@ void displayCall()
     glBegin(GL_LINE_STRIP);
     for (vtkm::IdComponent i = 0; i < numIndices; i++)
     {
-      vtkm::Vec<vtkm::Float32,3> pt = vertexArray.GetPortalConstControl().Get(polylineIndices[i]);
+      vtkm::Vec<vtkm::Float32, 3> pt = vertexArray.GetPortalConstControl().Get(polylineIndices[i]);
       glVertex3f(pt[0], pt[1], pt[2]);
     }
     glEnd();
@@ -201,19 +199,23 @@ void mouseMove(int x, int y)
   glutPostRedisplay();
 }
 
-
 // Respond to mouse button
 void mouseCall(int button, int state, int x, int y)
 {
-  if (button == 0) mouse_state = state;
-  if ((button == 0) && (state == 0)) { lastx = x;  lasty = y; }
+  if (button == 0)
+    mouse_state = state;
+  if ((button == 0) && (state == 0))
+  {
+    lastx = x;
+    lasty = y;
+  }
 }
 
-namespace {
+namespace
+{
 
 template <typename T>
-VTKM_EXEC_CONT
-vtkm::Vec<T,3> Normalize(vtkm::Vec<T,3> v)
+VTKM_EXEC_CONT vtkm::Vec<T, 3> Normalize(vtkm::Vec<T, 3> v)
 {
   T magnitude = static_cast<T>(sqrt(vtkm::dot(v, v)));
   T zero = static_cast<T>(0.0);
@@ -223,50 +225,50 @@ vtkm::Vec<T,3> Normalize(vtkm::Vec<T,3> v)
   else
     return one / magnitude * v;
 }
-
 }
 
 // Run streamlines on a uniform grid of vector data
 int main(int argc, char* argv[])
 {
   std::cout << "StreamLineUniformGrid Example" << std::endl;
-  std::cout << "Parameters are fileName [numSeeds maxSteps timeStep direction]" << std::endl << std::endl;
+  std::cout << "Parameters are fileName [numSeeds maxSteps timeStep direction]" << std::endl
+            << std::endl;
   std::cout << "Direction is FORWARD=0 BACKWARD=1 BOTH=2" << std::endl << std::endl;
   std::cout << "File is expected to be binary with xdim ydim zdim as 32 bit integers " << std::endl;
   std::cout << "followed by vector data per dimension point as 32 bit float" << std::endl;
 
   // Read in the vector data for testing
-  FILE * pFile = fopen(argv[1], "rb");
-  if (pFile == nullptr) perror ("Error opening file");
+  FILE* pFile = fopen(argv[1], "rb");
+  if (pFile == nullptr)
+    perror("Error opening file");
 
   size_t ret_code = 0;
   // Size of the dataset
   int dims[3];
   ret_code = fread(dims, sizeof(int), 3, pFile);
-  if(ret_code != 3)
-    {
+  if (ret_code != 3)
+  {
     perror("Error reading size of data");
     fclose(pFile);
     return 0;
-    }
+  }
   const vtkm::Id3 vdims(dims[0], dims[1], dims[2]);
 
   // Read vector data at each point of the uniform grid and store
   vtkm::Id nElements = vdims[0] * vdims[1] * vdims[2] * 3;
   float* data = new float[static_cast<std::size_t>(nElements)];
   ret_code = fread(data, sizeof(float), static_cast<std::size_t>(nElements), pFile);
-  if( ret_code != static_cast<size_t>(nElements) )
-    {
+  if (ret_code != static_cast<size_t>(nElements))
+  {
     perror("Error reading vector data");
     fclose(pFile);
     return 0;
-    }
-
+  }
 
   //We are done with the file now, so release the file descriptor
   fclose(pFile);
 
-  std::vector<vtkm::Vec<vtkm::Float32, 3> > field;
+  std::vector<vtkm::Vec<vtkm::Float32, 3>> field;
   for (vtkm::Id i = 0; i < nElements; i++)
   {
     vtkm::Float32 x = data[i];
@@ -275,7 +277,7 @@ int main(int argc, char* argv[])
     vtkm::Vec<vtkm::Float32, 3> vecData(x, y, z);
     field.push_back(Normalize(vecData));
   }
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3> > fieldArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> fieldArray;
   fieldArray = vtkm::cont::make_ArrayHandle(field);
 
   // Construct the input dataset (uniform) to hold the input and set vector data
@@ -290,12 +292,7 @@ int main(int argc, char* argv[])
 
   // Create and run the filter
   streamLineFilter = new vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>();
-  outDataSet = streamLineFilter->Run(inDataSet,
-                                     direction,
-                                     nSeeds,
-                                     nSteps,
-                                     tStep);
-
+  outDataSet = streamLineFilter->Run(inDataSet, direction, nSeeds, nSteps, tStep);
 
   // Render the output dataset of polylines
   lastx = lasty = 0;
@@ -320,5 +317,5 @@ int main(int argc, char* argv[])
 }
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif

@@ -31,17 +31,24 @@
 
 #include <vtkm/testing/Testing.h>
 
-namespace {
+namespace
+{
 
 struct TestExecObject
 {
   VTKM_EXEC_CONT
-  TestExecObject() : Value(nullptr) {  }
+  TestExecObject()
+    : Value(nullptr)
+  {
+  }
 
   VTKM_EXEC_CONT
-  TestExecObject(vtkm::Id *value) : Value(value) {  }
+  TestExecObject(vtkm::Id* value)
+    : Value(value)
+  {
+  }
 
-  vtkm::Id *Value;
+  vtkm::Id* Value;
 };
 
 struct MyOutputToInputMapPortal
@@ -57,8 +64,12 @@ struct MyVisitArrayPortal
   vtkm::IdComponent Get(vtkm::Id) const { return 1; }
 };
 
-struct TestFetchTagInput {  };
-struct TestFetchTagOutput {  };
+struct TestFetchTagInput
+{
+};
+struct TestFetchTagOutput
+{
+};
 
 // Missing TransportTag, but we are not testing that so we can leave it out.
 struct TestControlSignatureTagInput
@@ -72,120 +83,108 @@ struct TestControlSignatureTagOutput
 
 } // anonymous namespace
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
-template<>
-struct Fetch<
-    TestFetchTagInput,
-    vtkm::exec::arg::AspectTagDefault,
-    vtkm::exec::arg::ThreadIndicesBasic,
-    TestExecObject>
+template <>
+struct Fetch<TestFetchTagInput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC
-  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &indices,
-                 const TestExecObject &execObject) const {
-    return *execObject.Value + 10*indices.GetInputIndex();
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic& indices,
+                 const TestExecObject& execObject) const
+  {
+    return *execObject.Value + 10 * indices.GetInputIndex();
   }
 
   VTKM_EXEC
-  void Store(const vtkm::exec::arg::ThreadIndicesBasic &,
-             const TestExecObject &,
-             ValueType) const {
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic&, const TestExecObject&, ValueType) const
+  {
     // No-op
   }
 };
 
-template<>
-struct Fetch<
-    TestFetchTagOutput,
-    vtkm::exec::arg::AspectTagDefault,
-    vtkm::exec::arg::ThreadIndicesBasic,
-    TestExecObject>
+template <>
+struct Fetch<TestFetchTagOutput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
   typedef vtkm::Id ValueType;
 
   VTKM_EXEC
-  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic &,
-                 const TestExecObject &) const {
+  ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic&, const TestExecObject&) const
+  {
     // No-op
     return ValueType();
   }
 
   VTKM_EXEC
-  void Store(const vtkm::exec::arg::ThreadIndicesBasic &indices,
-             const TestExecObject &execObject,
-             ValueType value) const {
-    *execObject.Value = value + 20*indices.GetOutputIndex();
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic& indices,
+             const TestExecObject& execObject,
+             ValueType value) const
+  {
+    *execObject.Value = value + 20 * indices.GetOutputIndex();
   }
 };
-
 }
 }
 } // vtkm::exec::arg
 
-namespace {
+namespace
+{
 
-typedef void TestControlSignature(TestControlSignatureTagInput,
-                                  TestControlSignatureTagOutput);
-typedef vtkm::internal::FunctionInterface<TestControlSignature>
-    TestControlInterface;
+typedef void TestControlSignature(TestControlSignatureTagInput, TestControlSignatureTagOutput);
+typedef vtkm::internal::FunctionInterface<TestControlSignature> TestControlInterface;
 
-typedef void TestExecutionSignature1(vtkm::exec::arg::BasicArg<1>,
-                                     vtkm::exec::arg::BasicArg<2>);
-typedef vtkm::internal::FunctionInterface<TestExecutionSignature1>
-    TestExecutionInterface1;
+typedef void TestExecutionSignature1(vtkm::exec::arg::BasicArg<1>, vtkm::exec::arg::BasicArg<2>);
+typedef vtkm::internal::FunctionInterface<TestExecutionSignature1> TestExecutionInterface1;
 
-typedef vtkm::exec::arg::BasicArg<2> TestExecutionSignature2(
-    vtkm::exec::arg::BasicArg<1>);
-typedef vtkm::internal::FunctionInterface<TestExecutionSignature2>
-    TestExecutionInterface2;
+typedef vtkm::exec::arg::BasicArg<2> TestExecutionSignature2(vtkm::exec::arg::BasicArg<1>);
+typedef vtkm::internal::FunctionInterface<TestExecutionSignature2> TestExecutionInterface2;
 
 // Not a full worklet, but provides operators that we expect in a worklet.
 struct TestWorkletProxy : vtkm::exec::FunctorBase
 {
   VTKM_EXEC
-  void operator()(vtkm::Id input, vtkm::Id &output) const
-  {
-    output = input + 100;
-  }
+  void operator()(vtkm::Id input, vtkm::Id& output) const { output = input + 100; }
 
   VTKM_EXEC
-  vtkm::Id operator()(vtkm::Id input) const
-  {
-    return input + 200;
-  }
+  vtkm::Id operator()(vtkm::Id input) const { return input + 200; }
 
-  template<typename T, typename OutToInArrayType, typename VisitArrayType,
-           typename InputDomainType, typename G>
-  VTKM_EXEC
-  vtkm::exec::arg::ThreadIndicesBasic
-  GetThreadIndices(const T& threadIndex,
-                   const OutToInArrayType& outToIn,
-                   const VisitArrayType& visit,
-                   const InputDomainType &,
-                   const G& globalThreadIndexOffset) const
+  template <typename T,
+            typename OutToInArrayType,
+            typename VisitArrayType,
+            typename InputDomainType,
+            typename G>
+  VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
+    const T& threadIndex,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const InputDomainType&,
+    const G& globalThreadIndexOffset) const
   {
-    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex,
-                                               outToIn.Get(threadIndex),
-                                               visit.Get(threadIndex),
-                                               globalThreadIndexOffset );
+    return vtkm::exec::arg::ThreadIndicesBasic(
+      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
   }
 };
 
-template<typename Invocation>
-void CallDoWorkletInvokeFunctor(const Invocation &invocation, vtkm::Id index)
+template <typename Invocation>
+void CallDoWorkletInvokeFunctor(const Invocation& invocation, vtkm::Id index)
 {
   vtkm::exec::internal::detail::DoWorkletInvokeFunctor(
-        TestWorkletProxy(),
-        invocation,
-        vtkm::exec::arg::ThreadIndicesBasic(index,
-                                            invocation.OutputToInputMap.Get(index),
-                                            invocation.VisitArray.Get(index) )
-        );
+    TestWorkletProxy(),
+    invocation,
+    vtkm::exec::arg::ThreadIndicesBasic(
+      index, invocation.OutputToInputMap.Get(index), invocation.VisitArray.Get(index)));
 }
 
 void TestDoWorkletInvoke()
@@ -194,39 +193,34 @@ void TestDoWorkletInvoke()
 
   vtkm::Id inputTestValue;
   vtkm::Id outputTestValue;
-  vtkm::internal::FunctionInterface<void(TestExecObject,TestExecObject)> execObjects =
-      vtkm::internal::make_FunctionInterface<void>(TestExecObject(&inputTestValue),
-                                                   TestExecObject(&outputTestValue));
+  vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)> execObjects =
+    vtkm::internal::make_FunctionInterface<void>(TestExecObject(&inputTestValue),
+                                                 TestExecObject(&outputTestValue));
 
   std::cout << "  Try void return." << std::endl;
   inputTestValue = 5;
   outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
-  CallDoWorkletInvokeFunctor(
-        vtkm::internal::make_Invocation<1>(execObjects,
-                                           TestControlInterface(),
-                                           TestExecutionInterface1(),
-                                           MyOutputToInputMapPortal(),
-                                           MyVisitArrayPortal()),
-        1);
+  CallDoWorkletInvokeFunctor(vtkm::internal::make_Invocation<1>(execObjects,
+                                                                TestControlInterface(),
+                                                                TestExecutionInterface1(),
+                                                                MyOutputToInputMapPortal(),
+                                                                MyVisitArrayPortal()),
+                             1);
   VTKM_TEST_ASSERT(inputTestValue == 5, "Input value changed.");
-  VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 100 + 30,
-                   "Output value not set right.");
+  VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 100 + 30, "Output value not set right.");
 
   std::cout << "  Try return value." << std::endl;
   inputTestValue = 6;
   outputTestValue = static_cast<vtkm::Id>(0xDEADDEAD);
-  CallDoWorkletInvokeFunctor(
-        vtkm::internal::make_Invocation<1>(execObjects,
-                                           TestControlInterface(),
-                                           TestExecutionInterface2(),
-                                           MyOutputToInputMapPortal(),
-                                           MyVisitArrayPortal()),
-        2);
+  CallDoWorkletInvokeFunctor(vtkm::internal::make_Invocation<1>(execObjects,
+                                                                TestControlInterface(),
+                                                                TestExecutionInterface2(),
+                                                                MyOutputToInputMapPortal(),
+                                                                MyVisitArrayPortal()),
+                             2);
   VTKM_TEST_ASSERT(inputTestValue == 6, "Input value changed.");
-  VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 200 + 30*2,
-                   "Output value not set right.");
+  VTKM_TEST_ASSERT(outputTestValue == inputTestValue + 200 + 30 * 2, "Output value not set right.");
 }
-
 
 void TestWorkletInvokeFunctor()
 {
@@ -235,7 +229,7 @@ void TestWorkletInvokeFunctor()
 
 } // anonymous namespace
 
-int UnitTestWorkletInvokeFunctor(int, char *[])
+int UnitTestWorkletInvokeFunctor(int, char* [])
 {
   return vtkm::testing::Testing::Run(TestWorkletInvokeFunctor);
 }

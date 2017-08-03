@@ -18,7 +18,6 @@
 //  this software.
 //============================================================================
 
-
 #ifndef vtk_m_exec_ConnectivityPermuted_h
 #define vtk_m_exec_ConnectivityPermuted_h
 
@@ -26,67 +25,59 @@
 #include <vtkm/Types.h>
 #include <vtkm/exec/ConnectivityStructured.h>
 
-namespace vtkm {
-namespace exec {
+namespace vtkm
+{
+namespace exec
+{
 
-template<typename PermutationPortal,
-         typename OriginalConnectivity>
+template <typename PermutationPortal, typename OriginalConnectivity>
 class ConnectivityPermuted
 {
 public:
-  typedef vtkm::Id SchedulingRangeType;
+  typedef typename OriginalConnectivity::SchedulingRangeType SchedulingRangeType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ConnectivityPermuted():
-    Portal(),
-    Connectivity()
-  {
-
-  }
-
-  VTKM_EXEC_CONT
-  ConnectivityPermuted(const PermutationPortal& portal,
-                       const OriginalConnectivity &src):
-    Portal(portal),
-    Connectivity(src)
+  ConnectivityPermuted()
+    : Portal()
+    , Connectivity()
   {
   }
 
   VTKM_EXEC_CONT
-  ConnectivityPermuted(const ConnectivityPermuted &src):
-    Portal(src.Portal),
-    Connectivity(src.Connectivity)
+  ConnectivityPermuted(const PermutationPortal& portal, const OriginalConnectivity& src)
+    : Portal(portal)
+    , Connectivity(src)
   {
   }
 
-  VTKM_EXEC
-  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const {
-    return this->Connectivity.GetNumberOfIndices( this->Portal.Get(index) );
+  VTKM_EXEC_CONT
+  ConnectivityPermuted(const ConnectivityPermuted& src)
+    : Portal(src.Portal)
+    , Connectivity(src.Connectivity)
+  {
   }
-
 
   typedef typename OriginalConnectivity::CellShapeTag CellShapeTag;
 
   VTKM_EXEC
-  CellShapeTag GetCellShape(vtkm::Id index) const {
+  CellShapeTag GetCellShape(vtkm::Id index) const
+  {
     vtkm::Id pIndex = this->Portal.Get(index);
-    return this->Connectivity.GetCellShape( pIndex );
+    return this->Connectivity.GetCellShape(pIndex);
   }
 
   typedef typename OriginalConnectivity::IndicesType IndicesType;
 
-  VTKM_EXEC
-  IndicesType GetIndices(vtkm::Id index) const
+  template <typename IndexType>
+  VTKM_EXEC IndicesType GetIndices(const IndexType& index) const
   {
-    return this->Connectivity.GetIndices( this->Portal.Get(index) );
+    return this->Connectivity.GetIndices(this->Portal.Get(index));
   }
 
-private:
   PermutationPortal Portal;
   OriginalConnectivity Connectivity;
 };
-
 }
 } // namespace vtkm::exec
 

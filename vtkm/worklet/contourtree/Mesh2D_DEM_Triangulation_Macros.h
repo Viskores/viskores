@@ -86,23 +86,26 @@
 #define MAX_OUTDEGREE 3
 
 // vertex row - integer divide by columns
-#define VERTEX_ROW(V,NCOLS) ((V)/(NCOLS))
+#define VERTEX_ROW(V, NCOLS) ((V) / (NCOLS))
 
 // vertex column - integer modulus by columns
-#define VERTEX_COL(V,NCOLS) ((V)%(NCOLS))
+#define VERTEX_COL(V, NCOLS) ((V) % (NCOLS))
 
 // vertex ID - row * ncols + col
-#define VERTEX_ID(R,C,NCOLS) ((R)*(NCOLS)+(C))
+#define VERTEX_ID(R, C, NCOLS) ((R) * (NCOLS) + (C))
 
 // edge row - edge / (ncols * nEdgeTypes)
-#define EDGE_ROW(E,NCOLS) ((E)/((NCOLS)*(N_EDGE_TYPES)))
+#define EDGE_ROW(E, NCOLS) ((E) / ((NCOLS) * (N_EDGE_TYPES)))
 // edge col - (edge / nEdgeTypes) % nCols
-#define EDGE_COL(E,NCOLS) (((E)/(N_EDGE_TYPES))%(NCOLS))
+#define EDGE_COL(E, NCOLS) (((E) / (N_EDGE_TYPES)) % (NCOLS))
 // edge which - edge % nEdgeTypes
-#define EDGE_WHICH(E) ((E)%(N_EDGE_TYPES))
+#define EDGE_WHICH(E) ((E) % (N_EDGE_TYPES))
 // edge ID - (row * ncols + col) * nEdgeTypes + which
-#define EDGE_ID(R,C,W,NCOLS) ((((R)*(NCOLS)+(C))*(N_EDGE_TYPES))+(W))
+#define EDGE_ID(R, C, W, NCOLS) ((((R) * (NCOLS) + (C)) * (N_EDGE_TYPES)) + (W))
 // edge from - vertex with same row & col
-#define EDGE_FROM(E,NCOLS) VERTEX_ID(EDGE_ROW(E,NCOLS),EDGE_COL(E,NCOLS),NCOLS)
+#define EDGE_FROM(E, NCOLS) VERTEX_ID(EDGE_ROW(E, NCOLS), EDGE_COL(E, NCOLS), NCOLS)
 // edge to - edge from +1 col if not vertical, +1 row if not horizontal
-#define EDGE_TO(E,NCOLS) VERTEX_ID(EDGE_ROW(E,NCOLS)+((EDGE_WHICH(E)==EDGE_TYPE_HORIZONTAL)?0:1),EDGE_COL(E,NCOLS)+((EDGE_WHICH(E)==EDGE_TYPE_VERTICAL)?0:1),NCOLS)
+#define EDGE_TO(E, NCOLS)                                                                          \
+  VERTEX_ID(EDGE_ROW(E, NCOLS) + ((EDGE_WHICH(E) == EDGE_TYPE_HORIZONTAL) ? 0 : 1),                \
+            EDGE_COL(E, NCOLS) + ((EDGE_WHICH(E) == EDGE_TYPE_VERTICAL) ? 0 : 1),                  \
+            NCOLS)

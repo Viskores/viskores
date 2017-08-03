@@ -22,11 +22,15 @@
 #include <vtkm/cont/ArrayHandle.h>
 
 #ifdef VTKM_MSVC
-#define _VTKM_SHARED_PTR_INSTANTIATE(Type) \
-  template class VTKM_CONT_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<Type, vtkm::cont::StorageTagBasic>::InternalStruct >; \
-  template class VTKM_CONT_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic>::InternalStruct >; \
-  template class VTKM_CONT_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic>::InternalStruct >; \
-  template class VTKM_CONT_EXPORT std::shared_ptr< vtkm::cont::ArrayHandle<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic>::InternalStruct >;
+#define _VTKM_SHARED_PTR_INSTANTIATE(Type)                                                         \
+  template class VTKM_CONT_EXPORT                                                                  \
+    std::shared_ptr<vtkm::cont::ArrayHandle<Type, vtkm::cont::StorageTagBasic>::InternalStruct>;   \
+  template class VTKM_CONT_EXPORT std::shared_ptr<                                                 \
+    vtkm::cont::ArrayHandle<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic>::InternalStruct>;     \
+  template class VTKM_CONT_EXPORT std::shared_ptr<                                                 \
+    vtkm::cont::ArrayHandle<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic>::InternalStruct>;     \
+  template class VTKM_CONT_EXPORT std::shared_ptr<                                                 \
+    vtkm::cont::ArrayHandle<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic>::InternalStruct>;
 
 _VTKM_SHARED_PTR_INSTANTIATE(char)
 _VTKM_SHARED_PTR_INSTANTIATE(vtkm::Int8)
@@ -43,24 +47,29 @@ _VTKM_SHARED_PTR_INSTANTIATE(vtkm::Float64)
 #undef _VTKM_SHARED_PTR_INSTANTIATE
 #endif // VTKM_MSVC
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
-#define _VTKM_ARRAYHANDLE_INSTANTIATE(Type) \
-  template class VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>; \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>; \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>; \
-  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>; \
-  namespace internal { \
-  template class VTKM_CONT_EXPORT ArrayHandleExecutionManagerBase<Type, StorageTagBasic>; \
-  template class VTKM_CONT_EXPORT ArrayHandleExecutionManagerBase<vtkm::Vec<Type, 2>, StorageTagBasic>; \
-  template class VTKM_CONT_EXPORT ArrayHandleExecutionManagerBase<vtkm::Vec<Type, 3>, StorageTagBasic>; \
-  template class VTKM_CONT_EXPORT ArrayHandleExecutionManagerBase<vtkm::Vec<Type, 4>, StorageTagBasic>; \
-  template class VTKM_CONT_EXPORT ArrayPortalFromIterators<Type*>; \
-  template class VTKM_CONT_EXPORT ArrayPortalFromIterators<vtkm::Vec<Type, 2>*>; \
-  template class VTKM_CONT_EXPORT ArrayPortalFromIterators<vtkm::Vec<Type, 3>*>; \
-  template class VTKM_CONT_EXPORT ArrayPortalFromIterators<vtkm::Vec<Type, 4>*>; \
-  } /* end namespace internal */
+ExecutionArrayInterfaceBasicBase::ExecutionArrayInterfaceBasicBase(StorageBasicBase& storage)
+  : ControlStorage(storage)
+{
+}
+
+ExecutionArrayInterfaceBasicBase::~ExecutionArrayInterfaceBasicBase()
+{
+}
+
+} // end namespace internal
+
+#define _VTKM_ARRAYHANDLE_INSTANTIATE(Type)                                                        \
+  template class VTKM_CONT_EXPORT ArrayHandle<Type, StorageTagBasic>;                              \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 2>, StorageTagBasic>;                \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 3>, StorageTagBasic>;                \
+  template class VTKM_CONT_EXPORT ArrayHandle<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
 _VTKM_ARRAYHANDLE_INSTANTIATE(char)
 _VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Int8)
@@ -75,6 +84,5 @@ _VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Float32)
 _VTKM_ARRAYHANDLE_INSTANTIATE(vtkm::Float64)
 
 #undef _VTKM_ARRAYHANDLE_INSTANTIATE
-
 }
 } // end vtkm::cont

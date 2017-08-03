@@ -25,12 +25,11 @@
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-#include <vtkm/cont/testing/TestingDeviceAdapter.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
+#include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
-int UnitTestCudaDeviceAdapter(int, char *[])
+int UnitTestCudaDeviceAdapter(int, char* [])
 {
-  int result =  vtkm::cont::testing::TestingDeviceAdapter
-      <vtkm::cont::DeviceAdapterTagCuda>::Run();
+  int result = vtkm::cont::testing::TestingDeviceAdapter<vtkm::cont::DeviceAdapterTagCuda>::Run();
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

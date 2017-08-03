@@ -29,9 +29,12 @@
 
 #include <vtkm/exec/AtomicArray.h>
 
-namespace vtkm {
-namespace cont {
-namespace arg {
+namespace vtkm
+{
+namespace cont
+{
+namespace arg
+{
 
 /// \brief \c Transport tag for in-place arrays with atomic operations.
 ///
@@ -41,23 +44,22 @@ namespace arg {
 /// in a vtkm::exec::AtomicArray class that provides atomic operations (like
 /// add and compare/swap).
 ///
-struct TransportTagAtomicArray {  };
+struct TransportTagAtomicArray
+{
+};
 
-template<typename T, typename Device>
-struct Transport<
-    vtkm::cont::arg::TransportTagAtomicArray,
-    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>,
-    Device>
+template <typename T, typename Device>
+struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
+                 vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>,
+                 Device>
 {
   typedef vtkm::exec::AtomicArray<T, Device> ExecObjectType;
 
-  template<typename InputDomainType>
-  VTKM_CONT
-  ExecObjectType operator()(
-      vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> array,
-      const InputDomainType &,
-      vtkm::Id,
-      vtkm::Id) const
+  template <typename InputDomainType>
+  VTKM_CONT ExecObjectType operator()(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> array,
+                                      const InputDomainType&,
+                                      vtkm::Id,
+                                      vtkm::Id) const
   {
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using
@@ -66,7 +68,6 @@ struct Transport<
     return ExecObjectType(array);
   }
 };
-
 }
 }
 } // namespace vtkm::cont::arg

@@ -24,11 +24,11 @@
 #include <vtkm/internal/Windows.h>
 
 #include <GL/glew.h>
-#if defined(__APPLE__)
-# include <OpenGL/gl.h>
 
+#if defined(__APPLE__)
+#include <OpenGL/gl.h>
 #else
-# include <GL/gl.h>
+#include <GL/gl.h>
 #endif
 
 #endif //vtk_m_rendering_internal_OpenGLHeaders_h

@@ -24,9 +24,10 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-namespace {
+namespace
+{
 
-template<typename T>
+template <typename T>
 struct TemplatedTests
 {
   static const vtkm::Id ARRAY_SIZE = 10;
@@ -36,7 +37,7 @@ struct TemplatedTests
 
   static ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {
-    return ValueType(static_cast<ComponentType>(index+static_cast<vtkm::Id>(value)));
+    return ValueType(static_cast<ComponentType>(index + static_cast<vtkm::Id>(value)));
   }
 
   class ReadOnlyArrayPortal
@@ -45,7 +46,10 @@ struct TemplatedTests
     typedef T ValueType;
 
     VTKM_CONT
-    ReadOnlyArrayPortal(ComponentType value) : Value(value) {  }
+    ReadOnlyArrayPortal(ComponentType value)
+      : Value(value)
+    {
+    }
 
     VTKM_CONT
     vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
@@ -63,13 +67,17 @@ struct TemplatedTests
     typedef T ValueType;
 
     VTKM_CONT
-    WriteOnlyArrayPortal(ComponentType value) : Value(value) {  }
+    WriteOnlyArrayPortal(ComponentType value)
+      : Value(value)
+    {
+    }
 
     VTKM_CONT
     vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
 
     VTKM_CONT
-    void Set(vtkm::Id index, const ValueType &value) const {
+    void Set(vtkm::Id index, const ValueType& value) const
+    {
       VTKM_TEST_ASSERT(value == ExpectedValue(index, this->Value),
                        "Set unexpected value in array portal.");
     }
@@ -78,7 +86,7 @@ struct TemplatedTests
     ComponentType Value;
   };
 
-  template<class IteratorType>
+  template <class IteratorType>
   void FillIterator(IteratorType begin, IteratorType end, ComponentType value)
   {
     std::cout << "    Check distance" << std::endl;
@@ -94,10 +102,8 @@ struct TemplatedTests
     }
   }
 
-  template<class IteratorType>
-  bool CheckIterator(IteratorType begin,
-                     IteratorType end,
-                     ComponentType value)
+  template <class IteratorType>
+  bool CheckIterator(IteratorType begin, IteratorType end, ComponentType value)
   {
     std::cout << "    Check distance" << std::endl;
     VTKM_TEST_ASSERT(std::distance(begin, end) == ARRAY_SIZE,
@@ -122,13 +128,11 @@ struct TemplatedTests
     static const ComponentType READ_VALUE = 23;
     ArrayPortalType portal(READ_VALUE);
 
-    std::cout << "  Testing read-only iterators with ArrayPortalToIterators."
-              << std::endl;
+    std::cout << "  Testing read-only iterators with ArrayPortalToIterators." << std::endl;
     GetIteratorsType iterators(portal);
     CheckIterator(iterators.GetBegin(), iterators.GetEnd(), READ_VALUE);
 
-    std::cout << "  Testing read-only iterators with convenience functions."
-              << std::endl;
+    std::cout << "  Testing read-only iterators with convenience functions." << std::endl;
     CheckIterator(vtkm::cont::ArrayPortalToIteratorBegin(portal),
                   vtkm::cont::ArrayPortalToIteratorEnd(portal),
                   READ_VALUE);
@@ -139,16 +143,14 @@ struct TemplatedTests
     typedef WriteOnlyArrayPortal ArrayPortalType;
     typedef vtkm::cont::ArrayPortalToIterators<ArrayPortalType> GetIteratorsType;
 
-    static const  ComponentType WRITE_VALUE = 63;
+    static const ComponentType WRITE_VALUE = 63;
     ArrayPortalType portal(WRITE_VALUE);
 
-    std::cout << "  Testing write-only iterators with ArrayPortalToIterators."
-              << std::endl;
+    std::cout << "  Testing write-only iterators with ArrayPortalToIterators." << std::endl;
     GetIteratorsType iterators(portal);
     FillIterator(iterators.GetBegin(), iterators.GetEnd(), WRITE_VALUE);
 
-    std::cout << "  Testing write-only iterators with convenience functions."
-              << std::endl;
+    std::cout << "  Testing write-only iterators with convenience functions." << std::endl;
     FillIterator(vtkm::cont::ArrayPortalToIteratorBegin(portal),
                  vtkm::cont::ArrayPortalToIteratorEnd(portal),
                  WRITE_VALUE);
@@ -163,7 +165,7 @@ struct TemplatedTests
 
 struct TestFunctor
 {
-  template<typename T>
+  template <typename T>
   void operator()(T) const
   {
     TemplatedTests<T> tests;
@@ -178,7 +180,7 @@ void TestArrayPortalToIterators()
 
 } // Anonymous namespace
 
-int UnitTestArrayPortalToIterators(int, char *[])
+int UnitTestArrayPortalToIterators(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestArrayPortalToIterators);
 }

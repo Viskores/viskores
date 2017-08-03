@@ -172,8 +172,13 @@ macro(vtkm_configure_component_OpenGL)
     ADD_LIBRARIES ${vtkm_opengl_libraries}
     )
 
-  set(VTKm_OPENGL_INCLUDE_DIRS ${vtkm_opengl_includes})
-  set(VTKm_OPENGL_LIBRARIES  ${vtkm_opengl_libraries})
+  #setting VTKm_OPENGL_INCLUDE_DIRS when both mesa and
+  #opengl are not present causes cmake to fail to configure
+  #becase of a percieved dependency in the rendering lib
+  if(VTKm_OSMesa_FOUND OR OPENGL_FOUND)
+    set(VTKm_OPENGL_INCLUDE_DIRS ${vtkm_opengl_includes})
+    set(VTKm_OPENGL_LIBRARIES  ${vtkm_opengl_libraries})
+  endif()
 
 endmacro(vtkm_configure_component_OpenGL)
 
@@ -321,21 +326,24 @@ macro(vtkm_configure_component_CUDA)
     # 1 - native
     #   - Uses system introspection to determine compile flags
     # 2 - fermi
-    #   - Uses: --generate-code arch=compute_20,code=compute_20
+    #   - Uses: --generate-code=arch=compute_20,code=compute_20
     # 3 - kepler
-    #   - Uses: --generate-code arch=compute_30,code=compute_30
-    #   - Uses: --generate-code arch=compute_35,code=compute_35
+    #   - Uses: --generate-code=arch=compute_30,code=compute_30
+    #   - Uses: --generate-code=arch=compute_35,code=compute_35
     # 4 - maxwell
-    #   - Uses: --generate-code arch=compute_50,code=compute_50
-    #   - Uses: --generate-code arch=compute_52,code=compute_52
+    #   - Uses: --generate-code=arch=compute_50,code=compute_50
+    #   - Uses: --generate-code=arch=compute_52,code=compute_52
     # 5 - pascal
-    #   - Uses: --generate-code arch=compute_60,code=compute_60
-    #   - Uses: --generate-code arch=compute_61,code=compute_61
+    #   - Uses: --generate-code=arch=compute_60,code=compute_60
+    #   - Uses: --generate-code=arch=compute_61,code=compute_61
     # 6 - all
-    #   - Uses: --generate-code arch=compute_20,code=compute_20
-    #   - Uses: --generate-code arch=compute_30,code=compute_30
-    #   - Uses: --generate-code arch=compute_35,code=compute_35
-    #   - Uses: --generate-code arch=compute_50,code=compute_50
+    #   - Uses: --generate-code=arch=compute_20,code=compute_20
+    #   - Uses: --generate-code=arch=compute_30,code=compute_30
+    #   - Uses: --generate-code=arch=compute_35,code=compute_35
+    #   - Uses: --generate-code=arch=compute_50,code=compute_50
+    #   - Uses: --generate-code=arch=compute_52,code=compute_52
+    #   - Uses: --generate-code=arch=compute_60,code=compute_60
+    #   - Uses: --generate-code=arch=compute_61,code=compute_61
     #
 
     #specify the property
@@ -385,24 +393,24 @@ macro(vtkm_configure_component_CUDA)
     #since when we are native we can fail, and fall back to "fermi" these have
     #to happen after, and separately of the native check
     if(VTKm_CUDA_Architecture STREQUAL "fermi")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_20,code=compute_20")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_20,code=compute_20")
     elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_30,code=compute_30")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_35,code=compute_35")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_30,code=compute_30")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_35,code=compute_35")
     elseif(VTKm_CUDA_Architecture STREQUAL "maxwell")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_50,code=compute_50")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_52,code=compute_52")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_50,code=compute_50")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_52,code=compute_52")
     elseif(VTKm_CUDA_Architecture STREQUAL "pascal")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_60,code=compute_60")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_61,code=compute_61")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_60,code=compute_60")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_61,code=compute_61")
     elseif(VTKm_CUDA_Architecture STREQUAL "all")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_20,code=compute_20")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_30,code=compute_30")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_35,code=compute_35")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_50,code=compute_50")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_52,code=compute_52")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_60,code=compute_60")
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --generate-code arch=compute_61,code=compute_61")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_20,code=compute_20")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_30,code=compute_30")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_35,code=compute_35")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_50,code=compute_50")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_52,code=compute_52")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_60,code=compute_60")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_61,code=compute_61")
     endif()
 
     if(WIN32)

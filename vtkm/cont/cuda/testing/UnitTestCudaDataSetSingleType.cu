@@ -25,12 +25,12 @@
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 
-#include <vtkm/cont/testing/TestingDataSetSingleType.h>
 #include <vtkm/cont/cuda/internal/testing/Testing.h>
+#include <vtkm/cont/testing/TestingDataSetSingleType.h>
 
-int UnitTestCudaDataSetSingleType(int, char *[])
+int UnitTestCudaDataSetSingleType(int, char* [])
 {
-  int result = vtkm::cont::testing::TestingDataSetSingleType
-      <vtkm::cont::DeviceAdapterTagCuda>::Run();
+  int result =
+    vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagCuda>::Run();
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);
 }

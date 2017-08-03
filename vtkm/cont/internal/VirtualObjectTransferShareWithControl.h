@@ -20,30 +20,27 @@
 #ifndef vtk_m_cont_internal_VirtualObjectTransferShareWithControl_h
 #define vtk_m_cont_internal_VirtualObjectTransferShareWithControl_h
 
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
-namespace vtkm {
-namespace cont {
-namespace internal {
-
-template<typename VirtualObject, typename TargetClass>
+template <typename VirtualObject, typename TargetClass>
 struct VirtualObjectTransferShareWithControl
 {
-  static void* Create(VirtualObject &object, const void *target)
+  static void* Create(VirtualObject& object, const void* target)
   {
     static int dummyState = 0;
     object.Bind(static_cast<const TargetClass*>(target));
     return &dummyState;
   }
 
-  static void Update(void*, const void*)
-  {
-  }
+  static void Update(void*, const void*) {}
 
-  static void Cleanup(void*)
-  {
-  }
+  static void Cleanup(void*) {}
 };
-
 }
 }
 } // vtkm::cont::internal

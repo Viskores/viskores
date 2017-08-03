@@ -25,29 +25,32 @@
 #include <vtkm/StaticAssert.h>
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/Field.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/Field.h>
 
-namespace vtkm {
-namespace cont {
+namespace vtkm
+{
+namespace cont
+{
 
 class VTKM_CONT_EXPORT CellSet
 {
 public:
   VTKM_CONT
-  CellSet(const std::string &name)
+  CellSet(const std::string& name)
     : Name(name)
   {
   }
 
   VTKM_CONT
-  CellSet(const vtkm::cont::CellSet &src)
+  CellSet(const vtkm::cont::CellSet& src)
     : Name(src.Name)
-  {  }
+  {
+  }
 
   VTKM_CONT
-  CellSet &operator=(const vtkm::cont::CellSet &src)
+  CellSet& operator=(const vtkm::cont::CellSet& src)
   {
     this->Name = src.Name;
     return *this;
@@ -55,10 +58,7 @@ public:
 
   virtual ~CellSet();
 
-  std::string GetName() const
-  {
-    return this->Name;
-  }
+  std::string GetName() const { return this->Name; }
 
   virtual vtkm::Id GetNumberOfCells() const = 0;
 
@@ -71,27 +71,26 @@ public:
   virtual void PrintSummary(std::ostream&) const = 0;
 
 protected:
-    std::string Name;
+  std::string Name;
 };
 
-namespace internal {
+namespace internal
+{
 
 /// Checks to see if the given object is a cell set. It contains a
 /// typedef named \c type that is either std::true_type or
 /// std::false_type. Both of these have a typedef named value with the
 /// respective boolean value.
 ///
-template<typename T>
+template <typename T>
 struct CellSetCheck
 {
   using type = typename std::is_base_of<vtkm::cont::CellSet, T>;
 };
 
-#define VTKM_IS_CELL_SET(T) \
-  VTKM_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value)
+#define VTKM_IS_CELL_SET(T) VTKM_STATIC_ASSERT(::vtkm::cont::internal::CellSetCheck<T>::type::value)
 
 } // namespace internal
-
 }
 } // namespace vtkm::cont
 

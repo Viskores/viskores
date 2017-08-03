@@ -20,7 +20,8 @@
 
 #include <vtkm/cont/testing/TestingImplicitFunction.h>
 
-namespace {
+namespace
+{
 
 void TestImplicitFunctions()
 {
@@ -30,9 +31,7 @@ void TestImplicitFunctions()
 
 } // anonymous namespace
 
-
-int UnitTestSerialImplicitFunction(int, char *[])
+int UnitTestSerialImplicitFunction(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestImplicitFunctions);
 }
-

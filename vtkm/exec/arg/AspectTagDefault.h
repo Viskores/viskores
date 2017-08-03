@@ -20,14 +20,18 @@
 #ifndef vtk_m_exec_arg_AspectTagDefault_h
 #define vtk_m_exec_arg_AspectTagDefault_h
 
-namespace vtkm {
-namespace exec {
-namespace arg {
+namespace vtkm
+{
+namespace exec
+{
+namespace arg
+{
 
 /// \brief Aspect tag to use for default load/store of data.
 ///
-struct AspectTagDefault {  };
-
+struct AspectTagDefault
+{
+};
 }
 }
 } // namespace vtkm::exec::arg

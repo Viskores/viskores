@@ -22,35 +22,36 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
-#include <vtkm/filter/Triangulate.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/filter/Triangulate.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
 //Suppress warnings about glut being deprecated on OSX
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
-#if defined (__APPLE__)
-# include <GLUT/glut.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
 #else
-# include <GL/glut.h>
+#include <GL/glut.h>
 #endif
 
 typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
 
-namespace {
+namespace
+{
 
 // Takes input uniform grid and outputs unstructured grid of triangles
 static vtkm::cont::DataSet outDataSet;
 static vtkm::Id numberOfInPoints;
 
 // Point location of vertices from a CastAndCall but needs a static cast eventually
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3> > vertexArray;
+static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> vertexArray;
 
 } // anonymous namespace
 
@@ -132,16 +133,14 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 struct GetVertexArray
 {
   template <typename ArrayHandleType>
-  VTKM_CONT
-  void operator()(ArrayHandleType array) const
+  VTKM_CONT void operator()(ArrayHandleType array) const
   {
     this->GetVertexPortal(array.GetPortalConstControl());
   }
 
 private:
   template <typename PortalType>
-  VTKM_CONT
-  void GetVertexPortal(const PortalType &portal) const
+  VTKM_CONT void GetVertexPortal(const PortalType& portal) const
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
@@ -160,7 +159,6 @@ void initializeGL()
   glLoadIdentity();
   glOrtho(-0.5f, 3.5f, -0.5f, 4.5f, -1.0f, 1.0f);
 }
-
 
 //
 // Render the output using simple OpenGL
@@ -182,13 +180,11 @@ void displayCall()
 
   // Draw the two triangles belonging to each quad
   vtkm::Float32 color[4][3] = {
-    {1.0f, 0.0f, 0.0f},
-    {0.0f, 1.0f, 0.0f},
-    {0.0f, 0.0f, 1.0f},
-    {1.0f, 1.0f, 0.0f}
+    { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 0.0f }
   };
 
-  for (vtkm::Id triangle = 0; triangle < numberOfCells; triangle++) {
+  for (vtkm::Id triangle = 0; triangle < numberOfCells; triangle++)
+  {
     vtkm::Id indx = triangle % 4;
     glColor3f(color[indx][0], color[indx][1], color[indx][2]);
 
@@ -197,16 +193,16 @@ void displayCall()
     cellSet.GetIndices(triangle, triIndices);
 
     // Get the vertex points for this triangle
-    vtkm::Vec<vtkm::Float64,3> pt0 = vertexArray.GetPortalConstControl().Get(triIndices[0]);
-    vtkm::Vec<vtkm::Float64,3> pt1 = vertexArray.GetPortalConstControl().Get(triIndices[1]);
-    vtkm::Vec<vtkm::Float64,3> pt2 = vertexArray.GetPortalConstControl().Get(triIndices[2]);
+    vtkm::Vec<vtkm::Float64, 3> pt0 = vertexArray.GetPortalConstControl().Get(triIndices[0]);
+    vtkm::Vec<vtkm::Float64, 3> pt1 = vertexArray.GetPortalConstControl().Get(triIndices[1]);
+    vtkm::Vec<vtkm::Float64, 3> pt2 = vertexArray.GetPortalConstControl().Get(triIndices[2]);
 
     // Draw the triangle filled with alternating colors
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glBegin(GL_TRIANGLES);
-      glVertex3d(pt0[0], pt0[1], pt0[2]);
-      glVertex3d(pt1[0], pt1[1], pt1[2]);
-      glVertex3d(pt2[0], pt2[1], pt2[2]);
+    glVertex3d(pt0[0], pt0[1], pt0[2]);
+    glVertex3d(pt1[0], pt1[1], pt1[2]);
+    glVertex3d(pt2[0], pt2[1], pt2[2]);
     glEnd();
   }
   glFlush();
@@ -248,5 +244,5 @@ int main(int argc, char* argv[])
 }
 
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-# pragma GCC diagnostic pop
+#pragma GCC diagnostic pop
 #endif

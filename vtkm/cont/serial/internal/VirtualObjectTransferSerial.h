@@ -20,22 +20,22 @@
 #ifndef vtk_m_cont_serial_internal_VirtualObjectTransferSerial_h
 #define vtk_m_cont_serial_internal_VirtualObjectTransferSerial_h
 
-#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 #include <vtkm/cont/internal/VirtualObjectTransferShareWithControl.h>
+#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
 
-namespace vtkm {
-namespace cont {
-namespace internal {
-
-template<typename VirtualObject, typename TargetClass>
-struct VirtualObjectTransfer<
-  VirtualObject, TargetClass, vtkm::cont::DeviceAdapterTagSerial> :
-  public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
+template <typename VirtualObject, typename TargetClass>
+struct VirtualObjectTransfer<VirtualObject, TargetClass, vtkm::cont::DeviceAdapterTagSerial>
+  : public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
 {
 };
-
 }
 }
 } // vtkm::cont::internal

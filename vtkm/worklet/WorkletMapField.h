@@ -34,8 +34,10 @@
 #include <vtkm/exec/arg/FetchTagArrayDirectInOut.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 /// Base class for worklets that do a simple mapping of field arrays. All
 /// inputs and outputs are on the same domain. That is, all the arrays are the
@@ -49,8 +51,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template<typename TypeList = AllTypes>
-  struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase {
+  template <typename TypeList = AllTypes>
+  struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase
+  {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
@@ -61,8 +64,9 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template<typename TypeList = AllTypes>
-  struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase {
+  template <typename TypeList = AllTypes>
+  struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
@@ -73,14 +77,14 @@ public:
   /// This tag takes a template argument that is a type list tag that limits
   /// the possible value types in the array.
   ///
-  template<typename TypeList = AllTypes>
-  struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase {
+  template <typename TypeList = AllTypes>
+  struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
+  {
     typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
     typedef vtkm::cont::arg::TransportTagArrayInOut TransportTag;
     typedef vtkm::exec::arg::FetchTagArrayDirectInOut FetchTag;
   };
 };
-
 }
 } // namespace vtkm::worklet
 

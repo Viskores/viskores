@@ -23,19 +23,19 @@
 #include <vtkm/internal/ExportMacros.h>
 
 #if defined(__APPLE__)
-# include <GL/glew.h>
-# include <OpenGL/gl.h>
+#include <GL/glew.h>
+
+#include <OpenGL/gl.h>
 #else
-# include <GL/glew.h>
-# include <GL/gl.h>
+#include <GL/glew.h>
+
+#include <GL/gl.h>
 #endif
 
 #ifdef VTKM_CUDA
-# include <cuda_runtime.h>
-# include <cuda_gl_interop.h>
+#include <cuda_runtime.h>
+
+#include <cuda_gl_interop.h>
 #endif
-
-
-
 
 #endif //vtk_m_interop_internal_OpenGLHeaders_h

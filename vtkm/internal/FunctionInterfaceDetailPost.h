@@ -34,16 +34,22 @@
 #endif
 
 
-namespace vtkm {
-namespace internal {
+namespace vtkm
+{
+namespace internal
+{
 
-namespace detail {
+namespace detail
+{
 
 //============================================================================
 
+// clang-format off
+
 template<typename Transform,
          typename R>
-struct FunctionInterfaceStaticTransformType<R(), Transform> {
+struct FunctionInterfaceStaticTransformType<R(), Transform>
+{
   typedef R(type)(
         );
 };
@@ -51,7 +57,8 @@ struct FunctionInterfaceStaticTransformType<R(), Transform> {
 template<typename Transform,
          typename R,
          typename P1>
-struct FunctionInterfaceStaticTransformType<R(P1), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type
         );
@@ -61,7 +68,8 @@ template<typename Transform,
          typename R,
          typename P1,
          typename P2>
-struct FunctionInterfaceStaticTransformType<R(P1,P2), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1,P2), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type
@@ -73,7 +81,8 @@ template<typename Transform,
          typename P1,
          typename P2,
          typename P3>
-struct FunctionInterfaceStaticTransformType<R(P1,P2,P3), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1,P2,P3), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
@@ -87,7 +96,8 @@ template<typename Transform,
          typename P2,
          typename P3,
          typename P4>
-struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
@@ -103,7 +113,8 @@ template<typename Transform,
          typename P3,
          typename P4,
          typename P5>
-struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
@@ -121,7 +132,8 @@ template<typename Transform,
          typename P4,
          typename P5,
          typename P6>
-struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
@@ -141,7 +153,8 @@ template<typename Transform,
          typename P5,
          typename P6,
          typename P7>
-struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
@@ -163,7 +176,8 @@ template<typename Transform,
          typename P6,
          typename P7,
          typename P8>
-struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
@@ -187,7 +201,8 @@ template<typename Transform,
          typename P7,
          typename P8,
          typename P9>
-struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
@@ -213,7 +228,8 @@ template<typename Transform,
          typename P8,
          typename P9,
          typename P10>
-struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10), Transform> {
+struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10), Transform>
+{
   typedef R(type)(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
@@ -229,9 +245,13 @@ struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10), T
 };
 
 
+// clang-format on
+
 } // namespace detail
 
 //============================================================================
+
+// clang-format off
 
 /// \brief Create a \c FunctionInterface
 ///
@@ -250,7 +270,7 @@ template<typename R>
 VTKM_EXEC_CONT
 FunctionInterface<R()>
 make_FunctionInterface(
-      )
+  )
 {
   FunctionInterface<R()> fi;
   return fi;
@@ -274,8 +294,8 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1)>
 make_FunctionInterface(
-      const P1& p1
-      )
+  const P1& p1
+  )
 {
   FunctionInterface<R(P1)> fi;
   fi.template SetParameter<1>(p1);
@@ -301,9 +321,9 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2)>
 make_FunctionInterface(
-      const P1& p1,
-      const P2& p2
-      )
+  const P1& p1,
+  const P2& p2
+  )
 {
   FunctionInterface<R(P1,P2)> fi;
   fi.template SetParameter<1>(p1);
@@ -331,10 +351,10 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3)>
 make_FunctionInterface(
-      const P1& p1,
-      const P2& p2,
-      const P3& p3
-      )
+  const P1& p1,
+  const P2& p2,
+  const P3& p3
+  )
 {
   FunctionInterface<R(P1,P2,P3)> fi;
   fi.template SetParameter<1>(p1);
@@ -364,11 +384,11 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4)>
 make_FunctionInterface(
-      const P1& p1,
-      const P2& p2,
-      const P3& p3,
-      const P4& p4
-      )
+  const P1& p1,
+  const P2& p2,
+  const P3& p3,
+  const P4& p4
+  )
 {
   FunctionInterface<R(P1,P2,P3,P4)> fi;
   fi.template SetParameter<1>(p1);
@@ -400,12 +420,12 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5)>
 make_FunctionInterface(
-      const P1& p1,
-      const P2& p2,
-      const P3& p3,
-      const P4& p4,
-      const P5& p5
-      )
+  const P1& p1,
+  const P2& p2,
+  const P3& p3,
+  const P4& p4,
+  const P5& p5
+  )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5)> fi;
   fi.template SetParameter<1>(p1);
@@ -439,13 +459,13 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6)>
 make_FunctionInterface(
-      const P1& p1,
-      const P2& p2,
-      const P3& p3,
-      const P4& p4,
-      const P5& p5,
-      const P6& p6
-      )
+  const P1& p1,
+  const P2& p2,
+  const P3& p3,
+  const P4& p4,
+  const P5& p5,
+  const P6& p6
+  )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6)> fi;
   fi.template SetParameter<1>(p1);
@@ -481,14 +501,14 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7)>
 make_FunctionInterface(
-      const P1& p1,
-      const P2& p2,
-      const P3& p3,
-      const P4& p4,
-      const P5& p5,
-      const P6& p6,
-      const P7& p7
-      )
+  const P1& p1,
+  const P2& p2,
+  const P3& p3,
+  const P4& p4,
+  const P5& p5,
+  const P6& p6,
+  const P7& p7
+  )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7)> fi;
   fi.template SetParameter<1>(p1);
@@ -526,15 +546,15 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8)>
 make_FunctionInterface(
-      const P1& p1,
-      const P2& p2,
-      const P3& p3,
-      const P4& p4,
-      const P5& p5,
-      const P6& p6,
-      const P7& p7,
-      const P8& p8
-      )
+  const P1& p1,
+  const P2& p2,
+  const P3& p3,
+  const P4& p4,
+  const P5& p5,
+  const P6& p6,
+  const P7& p7,
+  const P8& p8
+  )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8)> fi;
   fi.template SetParameter<1>(p1);
@@ -574,16 +594,16 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)>
 make_FunctionInterface(
-      const P1& p1,
-      const P2& p2,
-      const P3& p3,
-      const P4& p4,
-      const P5& p5,
-      const P6& p6,
-      const P7& p7,
-      const P8& p8,
-      const P9& p9
-      )
+  const P1& p1,
+  const P2& p2,
+  const P3& p3,
+  const P4& p4,
+  const P5& p5,
+  const P6& p6,
+  const P7& p7,
+  const P8& p8,
+  const P9& p9
+  )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> fi;
   fi.template SetParameter<1>(p1);
@@ -625,17 +645,17 @@ template<typename R,
 VTKM_EXEC_CONT
 FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)>
 make_FunctionInterface(
-      const P1& p1,
-      const P2& p2,
-      const P3& p3,
-      const P4& p4,
-      const P5& p5,
-      const P6& p6,
-      const P7& p7,
-      const P8& p8,
-      const P9& p9,
-      const P10& p10
-      )
+  const P1& p1,
+  const P2& p2,
+  const P3& p3,
+  const P4& p4,
+  const P5& p5,
+  const P6& p6,
+  const P7& p7,
+  const P8& p8,
+  const P9& p9,
+  const P10& p10
+  )
 {
   FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> fi;
   fi.template SetParameter<1>(p1);
@@ -651,6 +671,8 @@ make_FunctionInterface(
   return fi;
 }
 
+
+// clang-format off
 
 }
 } // namespace vtkm::internal
