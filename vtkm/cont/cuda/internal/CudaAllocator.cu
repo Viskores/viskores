@@ -48,6 +48,46 @@ bool CudaAllocator::UsingManagedMemory()
   return ManagedMemorySupported;
 }
 
+bool CudaAllocator::IsDevicePointer(const void* ptr)
+{
+  if (!ptr)
+  {
+    return false;
+  }
+
+  cudaPointerAttributes attr;
+  cudaError_t err = cudaPointerGetAttributes(&attr, ptr);
+  // This function will return invalid value if the pointer is unknown to the
+  // cuda runtime. Manually catch this value since it's not really an error.
+  if (err == cudaErrorInvalidValue)
+  {
+    cudaGetLastError(); // Clear the error so we don't raise it later...
+    return false;
+  }
+  VTKM_CUDA_CALL(err /*= cudaPointerGetAttributes(&attr, ptr)*/);
+  return attr.devicePointer == ptr;
+}
+
+bool CudaAllocator::IsManagedPointer(const void* ptr)
+{
+  if (!ptr)
+  {
+    return false;
+  }
+
+  cudaPointerAttributes attr;
+  cudaError_t err = cudaPointerGetAttributes(&attr, ptr);
+  // This function will return invalid value if the pointer is unknown to the
+  // cuda runtime. Manually catch this value since it's not really an error.
+  if (err == cudaErrorInvalidValue)
+  {
+    cudaGetLastError(); // Clear the error so we don't raise it later...
+    return false;
+  }
+  VTKM_CUDA_CALL(err /*= cudaPointerGetAttributes(&attr, ptr)*/);
+  return attr.isManaged != 0;
+}
+
 void* CudaAllocator::Allocate(std::size_t numBytes)
 {
   CudaAllocator::Initialize();
