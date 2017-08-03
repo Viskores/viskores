@@ -128,11 +128,11 @@ struct ExternalFaces
       bool cell_min_at_grid_boundary = cell_min <= grid_min;
       bool cell_max_at_grid_boundary = cell_max >= grid_max;
 
-      if (cell_min_at_grid_boundary and !cell_max_at_grid_boundary)
+      if (cell_min_at_grid_boundary && !cell_max_at_grid_boundary)
         count++;
-      else if (!cell_min_at_grid_boundary and cell_max_at_grid_boundary)
+      else if (!cell_min_at_grid_boundary && cell_max_at_grid_boundary)
         count++;
-      else if (cell_min_at_grid_boundary and cell_max_at_grid_boundary)
+      else if (cell_min_at_grid_boundary && cell_max_at_grid_boundary)
         count += 2;
 
       return count;
@@ -217,7 +217,7 @@ struct ExternalFaces
                                      vtkm::Float32 grid_max,
                                      vtkm::Float32 cell_min,
                                      vtkm::Float32 cell_max,
-                                     vtkm::Id& faceIndex,
+                                     vtkm::IdComponent& faceIndex,
                                      vtkm::IdComponent& count,
                                      vtkm::IdComponent dimensionFaceOffset,
                                      vtkm::IdComponent visitIndex) const
@@ -227,11 +227,11 @@ struct ExternalFaces
 
       FaceType Faces = FaceType::FACE_NONE;
 
-      if (cell_min_at_grid_boundary and !cell_max_at_grid_boundary)
+      if (cell_min_at_grid_boundary && !cell_max_at_grid_boundary)
         Faces = FaceType::FACE_GRID_MIN;
-      else if (!cell_min_at_grid_boundary and cell_max_at_grid_boundary)
+      else if (!cell_min_at_grid_boundary && cell_max_at_grid_boundary)
         Faces = FaceType::FACE_GRID_MAX;
-      else if (cell_min_at_grid_boundary and cell_max_at_grid_boundary)
+      else if (cell_min_at_grid_boundary && cell_max_at_grid_boundary)
         Faces = FaceType::FACE_GRID_MIN_AND_MAX;
 
       if (Faces == FaceType::FACE_NONE)
@@ -282,7 +282,7 @@ struct ExternalFaces
       const PointCoordVecType& pointCoordinates) const
     {
       vtkm::IdComponent count = 0;
-      vtkm::Id faceIndex = 0;
+      vtkm::IdComponent faceIndex = 0;
       // Search X dimension
       if (!FoundFaceOnDimension(MinPoint[0],
                                 MaxPoint[0],
@@ -332,12 +332,12 @@ struct ExternalFaces
     {
       VTKM_ASSERT(shape.Id == CELL_SHAPE_HEXAHEDRON);
 
-      vtkm::Id faceIndex = FindFaceIndexForVisit(visitIndex, pointCoordinates);
+      vtkm::IdComponent faceIndex = FindFaceIndexForVisit(visitIndex, pointCoordinates);
 
       vtkm::VecCConst<vtkm::IdComponent> localFaceIndices =
         vtkm::exec::CellFaceLocalIndices(faceIndex, shape, *this);
       vtkm::IdComponent numFacePoints = localFaceIndices.GetNumberOfComponents();
-      VTKM_ASSERT(numFacePoints == connectivityOut.GetNumberOfComponents());
+      VTKM_ASSERT(numFacePoints == faceConnectivity.GetNumberOfComponents());
 
       typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(inputIndex);
 
