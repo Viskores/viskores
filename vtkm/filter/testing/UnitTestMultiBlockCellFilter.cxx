@@ -62,8 +62,6 @@ void TestMultiBlockCell()
 
 }
 
-
-
 template <typename T>
 vtkm::cont::MultiBlock UniformMultiBlockBuilder(std::size_t BlockNum)
 {
@@ -92,8 +90,6 @@ vtkm::cont::MultiBlock UniformMultiBlockBuilder(std::size_t BlockNum)
   }
   return Blocks;
 }
-
-
 
 const std::vector<vtkm::filter::ResultField> MultiBlockCellTest(std::size_t BlockNum)
 {
