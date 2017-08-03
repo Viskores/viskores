@@ -86,8 +86,10 @@ struct HelloVTKMInterop
     {
       for (int j = 0; j < dim; ++j)
       {
-        this->InputData.push_back(vtkm::Vec<T, 3>(
-          2.f * static_cast<T>(i / dim) - 1.f, 0.f, 2.f * static_cast<T>(j / dim) - 1.f));
+        vtkm::Vec<T, 3> t(2.f * (static_cast<T>(i) / static_cast<T>(dim)) - 1.f,
+                          0.f,
+                          2.f * (static_cast<T>(j) / static_cast<T>(dim)) - 1.f);
+        this->InputData.push_back(t);
       }
     }
 
@@ -169,7 +171,6 @@ struct HelloVTKMInterop
 
     vtkm::interop::TransferToOpenGL(this->OutCoords, this->VBOState, DeviceAdapter());
     vtkm::interop::TransferToOpenGL(this->OutColors, this->ColorState, DeviceAdapter());
-
     this->render();
     if (t > 10)
     {

@@ -20,6 +20,8 @@
 #ifndef vtk_m_rendering_Color_h
 #define vtk_m_rendering_Color_h
 
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
 #include <iostream>
 #include <vtkm/Types.h>
 namespace vtkm
@@ -135,10 +137,11 @@ public:
     return out;
   }
 
-  static Color white, black;
-  static Color red, green, blue;
-  static Color cyan, magenta, yellow;
-  static Color gray10, gray20, gray30, gray40, gray50, gray60, gray70, gray80, gray90;
+  static VTKM_RENDERING_EXPORT Color white, black;
+  static VTKM_RENDERING_EXPORT Color red, green, blue;
+  static VTKM_RENDERING_EXPORT Color cyan, magenta, yellow;
+  static VTKM_RENDERING_EXPORT Color gray10, gray20, gray30, gray40, gray50, gray60, gray70, gray80,
+    gray90;
 };
 }
 } //namespace vtkm::rendering

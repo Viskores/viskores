@@ -21,6 +21,9 @@
 #define vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
 
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
+#include <vtkm/cont/cuda/internal/CudaAllocator.h>
+
+using vtkm::cont::cuda::internal::CudaAllocator;
 
 namespace vtkm
 {
@@ -64,18 +67,8 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
   // Attempt to allocate:
   try
   {
-    char* tmp;
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    int dev;
-    VTKM_CUDA_CALL(cudaGetDevice(&dev));
-    VTKM_CUDA_CALL(cudaMallocManaged(&tmp, static_cast<std::size_t>(numBytes)));
-    VTKM_CUDA_CALL(cudaMemAdvise(tmp, numBytes, cudaMemAdviseSetPreferredLocation, dev));
-    VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, numBytes, dev, 0));
-    VTKM_CUDA_CALL(cudaStreamSynchronize(0));
-#else
-    VTKM_CUDA_CALL(cudaMalloc(&tmp, static_cast<std::size_t>(numBytes)));
-#endif
-
+    // Cast to char* so that the pointer math below will work.
+    char* tmp = static_cast<char*>(CudaAllocator::Allocate(static_cast<size_t>(numBytes)));
     execArray.Array = tmp;
     execArray.ArrayEnd = tmp + numBytes;
     execArray.ArrayCapacity = tmp + numBytes;
@@ -93,7 +86,7 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Free(
 {
   if (execArray.Array != nullptr)
   {
-    VTKM_CUDA_CALL(cudaFree(execArray.Array));
+    CudaAllocator::Free(execArray.Array);
     execArray.Array = nullptr;
     execArray.ArrayEnd = nullptr;
     execArray.ArrayCapacity = nullptr;

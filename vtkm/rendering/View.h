@@ -27,6 +27,7 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/TextAnnotation.h>
 
 #include <memory>
 
@@ -101,16 +102,30 @@ public:
 
   void SaveAs(const std::string& fileName) const;
 
+  VTKM_CONT
+  void SetAxisColor(vtkm::rendering::Color c) { this->AxisColor = c; }
+
+  VTKM_CONT
+  void ClearAnnotations() { Annotations.clear(); }
+
+  VTKM_CONT
+  void AddAnnotation(vtkm::rendering::TextAnnotation* ann) { Annotations.push_back(ann); }
+
 protected:
   void SetupForWorldSpace(bool viewportClip = true);
 
   void SetupForScreenSpace(bool viewportClip = false);
+
+  void RenderAnnotations();
+
+  vtkm::rendering::Color AxisColor = vtkm::rendering::Color::white;
 
 private:
   vtkm::rendering::Scene Scene;
   std::shared_ptr<vtkm::rendering::Mapper> MapperPointer;
   std::shared_ptr<vtkm::rendering::Canvas> CanvasPointer;
   std::shared_ptr<vtkm::rendering::WorldAnnotator> WorldAnnotatorPointer;
+  std::vector<vtkm::rendering::TextAnnotation*> Annotations;
   vtkm::rendering::Camera Camera;
 };
 }

@@ -1218,6 +1218,7 @@ ColorTable::ColorTable(const std::string& name_)
 }
 
 ColorTable::ColorTable(const vtkm::rendering::Color& color)
+  : Internals(new detail::ColorTableInternals)
 {
   this->Internals->UniqueName = "";
   this->Internals->Smooth = false;

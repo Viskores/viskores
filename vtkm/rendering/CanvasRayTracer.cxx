@@ -251,6 +251,15 @@ void CanvasRayTracer::AddColorBar(const vtkm::Bounds&,
   // Not implemented
 }
 
+void CanvasRayTracer::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>&,
+                                     const vtkm::Vec<vtkm::Float64, 2>&,
+                                     const vtkm::Vec<vtkm::Float64, 2>&,
+                                     const vtkm::Vec<vtkm::Float64, 2>&,
+                                     const vtkm::rendering::Color&) const
+{
+  // Not implemented
+}
+
 void CanvasRayTracer::AddText(const vtkm::Vec<vtkm::Float32, 2>&,
                               vtkm::Float32,
                               vtkm::Float32,
