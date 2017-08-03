@@ -49,6 +49,22 @@ public:
   }
 
   VTKM_EXEC_CONT
+  bool IsWithinBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  {
+    if (!bounds.Contains(position))
+      return false;
+    return true;
+  }
+
+  VTKM_EXEC_CONT
+  void GetBoundary(vtkm::Vec<FieldType, 3> dir, vtkm::Vec<FieldType, 3> dirBounds) const
+  {
+    dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+  }
+
+  VTKM_EXEC_CONT
   bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
@@ -74,6 +90,22 @@ public:
   AnalyticalOrbitEvaluate(const vtkm::Bounds& bb)
     : bounds{ bb }
   {
+  }
+
+  VTKM_EXEC_CONT
+  bool IsWithinBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  {
+    if (!bounds.Contains(position))
+      return false;
+    return true;
+  }
+
+  VTKM_EXEC_CONT
+  void GetBoundary(vtkm::Vec<FieldType, 3> dir, vtkm::Vec<FieldType, 3> dirBounds) const
+  {
+    dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
   VTKM_EXEC_CONT bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
@@ -168,6 +200,22 @@ public:
       static_cast<FieldType>(bounds.Z.Min / ((bounds.Z.Max - bounds.Z.Min) / castdims[2]));
     planeSize = dims[0] * dims[1];
     rowSize = dims[0];
+  }
+
+  VTKM_EXEC_CONT
+  bool IsWithinBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  {
+    if (!bounds.Contains(position))
+      return false;
+    return true;
+  }
+
+  VTKM_EXEC_CONT
+  void GetBoundary(vtkm::Vec<FieldType, 3> dir, vtkm::Vec<FieldType, 3> dirBounds) const
+  {
+    dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
   VTKM_EXEC_CONT
@@ -319,6 +367,22 @@ public:
       // the data is in the required format.
       throw vtkm::cont::ErrorInternal("Given dataset is was not rectilinear.");
     }
+  }
+
+  VTKM_EXEC_CONT
+  bool IsWithinBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  {
+    if (!bounds.Contains(position))
+      return false;
+    return true;
+  }
+
+  VTKM_EXEC_CONT
+  void GetBoundary(vtkm::Vec<FieldType, 3> dir, vtkm::Vec<FieldType, 3> dirBounds) const
+  {
+    dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
   VTKM_EXEC_CONT

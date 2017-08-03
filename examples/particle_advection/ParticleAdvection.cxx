@@ -84,7 +84,7 @@ void RunTest(const std::string& fname,
   ds.GetField(0).GetData().CopyTo(fieldArray);
 
   RGEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
-  RK4RGType rk4(eval, stepSize, ds);
+  RK4RGType rk4(eval, stepSize);
 
 
   std::vector<vtkm::Vec<FieldType, 3>> seeds;

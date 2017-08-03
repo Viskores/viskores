@@ -272,18 +272,18 @@ void TestEvaluators()
 
           //Constant vector field evaluator.
           CEvalType constEval(bounds[j], vecs[i]);
-          RK4CType constRK4(constEval, stepSize, uniformData);
+          RK4CType constRK4(constEval, stepSize);
 
 
           //Uniform vector field evaluator
           UniformEvalType uniformEval(
             uniformData.GetCoordinateSystem(), uniformData.GetCellSet(0), vecField);
-          RK4UniformType uniformRK4(uniformEval, stepSize, uniformData);
+          RK4UniformType uniformRK4(uniformEval, stepSize);
 
           //Rectilinear grid evaluator.
           RectilinearEvalType rectEval(
             rectData.GetCoordinateSystem(), rectData.GetCellSet(0), vecField);
-          RK4RectilinearType rectRK4(rectEval, stepSize, rectData);
+          RK4RectilinearType rectRK4(rectEval, stepSize);
 
           //Create a bunch of random points in the bounds.
           for (int k = 0; k < 38; k++)
@@ -355,7 +355,7 @@ void TestParticleWorklets()
   fieldArray = vtkm::cont::make_ArrayHandle(field);
 
   RGEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
-  RK4RGType rk4(eval, stepSize, ds);
+  RK4RGType rk4(eval, stepSize);
 
   std::vector<vtkm::Vec<FieldType, 3>> pts;
   pts.push_back(vtkm::Vec<FieldType, 3>(1, 1, 1));
