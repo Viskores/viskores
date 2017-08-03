@@ -65,11 +65,11 @@ static void MultiBlockTest()
 
   VTKM_TEST_ASSERT(multiblock.GetBounds() == GlobalBounds(multiblock),
                    "Global bounds info incorrect");
-  VTKM_TEST_ASSERT(multiblock.GetBlockBounds(0) ==
-                     multiblock.GetBlock(0).GetCoordinateSystem(0).GetBounds(),
+  VTKM_TEST_ASSERT(multiblock.GetBlock(0).GetCoordinateSystem(0).GetBounds() ==
+                     multiblock.GetBlockBounds(0),
                    "Local bounds info incorrect");
-  VTKM_TEST_ASSERT(multiblock.GetBlockBounds(1) ==
-                     multiblock.GetBlock(1).GetCoordinateSystem(0).GetBounds(),
+  VTKM_TEST_ASSERT(multiblock.GetBlock(1).GetCoordinateSystem(0).GetBounds() ==
+                     multiblock.GetBlockBounds(1),
                    "Local bounds info incorrect");
 
   VTKM_TEST_ASSERT(multiblock.GetGlobalRange("pointvar").GetPortalControl().Get(0) ==
@@ -88,8 +88,9 @@ static void MultiBlockTest()
 
   vtkm::Range SourceRange;
   multiblock.GetField("cellvar", 0).GetRange(&SourceRange);
-  VTKM_TEST_ASSERT(SourceRange == multiblock.GetBlock(0).GetField("cellvar").GetRange(),
-                   "Local field value info incorrect");
+  VTKM_TEST_ASSERT(
+    multiblock.GetBlock(0).GetField("cellvar").GetRange() GetPortalControl().Get(0) == SourceRange,
+    "Local field value info incorrect");
 }
 
 vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex)
