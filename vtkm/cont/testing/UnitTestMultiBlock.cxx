@@ -35,8 +35,8 @@
 #include <vtkm/exec/ConnectivityStructured.h>
 
 vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex = 0);
-vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex);
-vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, const std::string& FieldName);
+vtkm::Range GlobalRange(const vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex);
+vtkm::Range GlobalRange(const vtkm::cont::MultiBlock multiblock, std::string& FieldName);
 
 static void MultiBlockTest()
 {
@@ -105,7 +105,7 @@ vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIn
   return bounds;
 }
 
-vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
+vtkm::Range GlobalRange(const vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
 {
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
@@ -117,7 +117,7 @@ vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
   return range;
 }
 
-vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, const std::string& FieldName)
+vtkm::Range GlobalRange(const vtkm::cont::MultiBlock multiblock, const std::string& FieldName)
 {
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
