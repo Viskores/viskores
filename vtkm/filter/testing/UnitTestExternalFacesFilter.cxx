@@ -59,14 +59,21 @@ vtkm::cont::DataSet MakeDataTestSet4()
   return MakeTestDataSet().Make3DRectilinearDataSet0();
 }
 
+vtkm::cont::DataSet MakeDataTestSet5()
+{
+  return MakeTestDataSet().Make3DExplicitDataSet6();
+}
+
 void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
                                    bool compactPoints,
                                    vtkm::Id numExpectedExtFaces,
-                                   vtkm::Id numExpectedPoints = 0)
+                                   vtkm::Id numExpectedPoints = 0,
+                                   bool passPolyData = true)
 {
   //Run the External Faces filter
   vtkm::filter::ExternalFaces externalFaces;
   externalFaces.SetCompactPoints(compactPoints);
+  externalFaces.SetPassPolyData(passPolyData);
   vtkm::filter::ResultDataSet result = externalFaces.Execute(ds);
 
   VTKM_TEST_ASSERT(result.IsValid(), "Results should be valid");
@@ -138,12 +145,27 @@ void TestWithRectilinearMesh()
   TestExternalFacesExplicitGrid(ds, true, 16, 18);
 }
 
+void TestWithMixed2Dand3DMesh()
+{
+  std::cout << "Testing with mixed poly data and 3D mesh\n";
+  vtkm::cont::DataSet ds = MakeDataTestSet5();
+  std::cout << "Compact Points Off, Pass Poly Data On\n";
+  TestExternalFacesExplicitGrid(ds, false, 12);
+  std::cout << "Compact Points On, Pass Poly Data On\n";
+  TestExternalFacesExplicitGrid(ds, true, 12, 8);
+  std::cout << "Compact Points Off, Pass Poly Data Off\n";
+  TestExternalFacesExplicitGrid(ds, false, 6, 8, false);
+  std::cout << "Compact Points On, Pass Poly Data Off\n";
+  TestExternalFacesExplicitGrid(ds, true, 6, 5, false);
+}
+
 void TestExternalFacesFilter()
 {
   TestWithHeterogeneousMesh();
   TestWithHexahedraMesh();
   TestWithUniformMesh();
   TestWithRectilinearMesh();
+  TestWithMixed2Dand3DMesh();
 }
 
 } // anonymous namespace

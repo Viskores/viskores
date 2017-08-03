@@ -29,6 +29,7 @@ inline VTKM_CONT ExternalFaces::ExternalFaces()
   , CompactPoints(false)
   , Worklet()
 {
+  this->SetPassPolyData(true);
 }
 
 namespace

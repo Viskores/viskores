@@ -26,11 +26,13 @@
 #include <vtkm/exec/CellFace.h>
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleGroupVec.h>
 #include <vtkm/cont/ArrayHandleGroupVecVariable.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
+#include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -53,9 +55,8 @@ namespace worklet
 
 struct ExternalFaces
 {
-
-private:
   vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
+  bool PassPolyData;
 
   //Unary predicate operator
   //Returns True if the argument is equal to 1; False otherwise.
@@ -355,9 +356,6 @@ private:
     ScatterType Scatter;
   };
 
-
-
-
   //Worklet that returns the number of faces for each cell/shape
   class NumFacesPerCell : public vtkm::worklet::WorkletMapPointToCell
   {
@@ -622,7 +620,126 @@ private:
     ScatterType Scatter;
   };
 
+  class IsPolyDataCell : public vtkm::worklet::WorkletMapPointToCell
+  {
+  public:
+    typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> isPolyDataCell);
+    typedef _2 ExecutionSignature(CellShape);
+    typedef _1 InputDomain;
+
+    template <typename CellShapeTag>
+    VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag shape) const
+    {
+      return !vtkm::exec::CellFaceNumberOfFaces(shape, *this);
+    }
+  };
+
+  class CountPolyDataCellPoints : public vtkm::worklet::WorkletMapPointToCell
+  {
+  public:
+    using ScatterType = vtkm::worklet::ScatterCounting;
+
+    VTKM_CONT
+    ScatterType GetScatter() const { return this->Scatter; }
+
+    template <typename CountArrayType, typename Device>
+    VTKM_CONT CountPolyDataCellPoints(const CountArrayType& countArray, Device)
+      : Scatter(countArray, Device())
+    {
+      VTKM_IS_ARRAY_HANDLE(CountArrayType);
+    }
+
+    VTKM_CONT
+    CountPolyDataCellPoints(const ScatterType& scatter)
+      : Scatter(scatter)
+    {
+    }
+
+    typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> numPoints);
+    typedef _2 ExecutionSignature(PointCount);
+    typedef _1 InputDomain;
+
+    VTKM_EXEC vtkm::Id operator()(vtkm::Id count) const { return count; }
+  private:
+    ScatterType Scatter;
+  };
+
+  class PassPolyDataCells : public vtkm::worklet::WorkletMapPointToCell
+  {
+  public:
+    using ScatterType = vtkm::worklet::ScatterCounting;
+
+    VTKM_CONT
+    ScatterType GetScatter() const { return this->Scatter; }
+
+    template <typename CountArrayType, typename Device>
+    VTKM_CONT PassPolyDataCells(const CountArrayType& countArray, Device)
+      : Scatter(countArray, Device())
+    {
+      VTKM_IS_ARRAY_HANDLE(CountArrayType);
+    }
+
+    VTKM_CONT
+    PassPolyDataCells(const ScatterType& scatter)
+      : Scatter(scatter)
+    {
+    }
+
+    typedef void ControlSignature(CellSetIn inputTopology,
+                                  FieldOut<> shapes,
+                                  FieldOut<> pointIndices,
+                                  FieldOut<> cellIdMapOut);
+    typedef void ExecutionSignature(CellShape, PointIndices, InputIndex, VisitIndex, _2, _3, _4);
+
+    template <typename CellShape, typename InPointIndexType, typename OutPointIndexType>
+    VTKM_EXEC void operator()(const CellShape& inShape,
+                              const InPointIndexType& inPoints,
+                              vtkm::Id inputIndex,
+                              vtkm::IdComponent visitIndex,
+                              vtkm::UInt8& outShape,
+                              OutPointIndexType& outPoints,
+                              vtkm::Id& cellIdMapOut) const
+    {
+      cellIdMapOut = inputIndex;
+      outShape = inShape.Id;
+
+      vtkm::IdComponent numPoints = inPoints.GetNumberOfComponents();
+      VTKM_ASSERT(numPoints == outPoints.GetNumberOfComponents());
+      for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)
+      {
+        outPoints[pointIndex] = inPoints[pointIndex];
+      }
+    }
+
+  private:
+    ScatterType Scatter;
+  };
+
+  template <typename T>
+  struct BiasFunctor
+  {
+    VTKM_EXEC_CONT
+    BiasFunctor(T bias = T(0))
+      : Bias(bias)
+    {
+    }
+
+    VTKM_EXEC_CONT
+    T operator()(T x) const { return x + this->Bias; }
+
+    T Bias;
+  };
+
 public:
+  VTKM_CONT
+  ExternalFaces()
+    : PassPolyData(true)
+  {
+  }
+
+  VTKM_CONT
+  void SetPassPolyData(bool flag) { this->PassPolyData = flag; }
+
   //----------------------------------------------------------------------------
   template <typename ValueType, typename StorageType, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
@@ -643,6 +760,12 @@ public:
 
   void ReleaseCellMapArrays() { this->CellIdMap.ReleaseResources(); }
 
+
+  ///////////////////////////////////////////////////
+  /// \brief ExternalFaces: Extract Faces on outside of geometry for regular grids.
+  ///
+  /// Faster Run() method for uniform and rectilinear grid types.
+  /// Uses grid extents to find cells on the boundaries of the grid.
   template <typename ShapeStorage,
             typename NumIndicesStorage,
             typename ConnectivityStorage,
@@ -790,6 +913,12 @@ public:
                                                  OffsetsStorage>& outCellSet,
                      DeviceAdapter)
   {
+    typedef vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage> PointCountArrayType;
+    typedef vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage> ShapeArrayType;
+    typedef vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage> OffsetsArrayType;
+    typedef vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorage> ConnectivityArrayType;
+    typedef vtkm::cont::ArrayHandle<vtkm::Id> CellIdArrayType;
+
     //Create a worklet to map the number of faces to each cell
     vtkm::cont::ArrayHandle<vtkm::IdComponent> facesPerCell;
     vtkm::worklet::DispatcherMapTopology<NumFacesPerCell> numFacesDispatcher;
@@ -811,12 +940,90 @@ public:
 #endif
     facesPerCell.ReleaseResources();
 
+    PointCountArrayType polyDataPointCount;
+    ShapeArrayType polyDataShapes;
+    OffsetsArrayType polyDataOffsets;
+    ConnectivityArrayType polyDataConnectivity;
+    CellIdArrayType polyDataCellIdMap;
+    vtkm::Id polyDataConnectivitySize = 0;
+    if (this->PassPolyData)
+    {
+      vtkm::cont::ArrayHandle<vtkm::IdComponent> isPolyDataCell;
+      vtkm::worklet::DispatcherMapTopology<IsPolyDataCell> isPolyDataCellDispatcher;
+
+#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
+      timer.Reset();
+#endif
+      isPolyDataCellDispatcher.Invoke(inCellSet, isPolyDataCell);
+#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
+      std::cout << "IsPolyDataCell_Worklet," << timer.GetElapsedTime() << "\n";
+#endif
+
+#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
+      timer.Reset();
+#endif
+      vtkm::worklet::ScatterCounting scatterPolyDataCells(isPolyDataCell, DeviceAdapter());
+#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
+      std::cout << "scatterPolyDataCells_ScatterCounting," << timer.GetElapsedTime() << "\n";
+#endif
+
+      isPolyDataCell.ReleaseResources();
+
+      if (scatterPolyDataCells.GetOutputRange(inCellSet.GetNumberOfCells()) != 0)
+      {
+        vtkm::worklet::DispatcherMapTopology<CountPolyDataCellPoints, DeviceAdapter>
+          countPolyDataCellPointsDispatcher((CountPolyDataCellPoints(scatterPolyDataCells)));
+
+#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
+        timer.Reset();
+#endif
+        countPolyDataCellPointsDispatcher.Invoke(inCellSet, polyDataPointCount);
+#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
+        std::cout << "CountPolyDataCellPoints_Worklet" << timer.GetElapsedTime() << "\n";
+#endif
+
+        vtkm::cont::ConvertNumComponentsToOffsets(
+          polyDataPointCount, polyDataOffsets, polyDataConnectivitySize);
+
+        vtkm::worklet::DispatcherMapTopology<PassPolyDataCells, DeviceAdapter>
+          passPolyDataCellsDispatcher((PassPolyDataCells(scatterPolyDataCells)));
+
+        polyDataConnectivity.Allocate(polyDataConnectivitySize);
+
+#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
+        timer.Reset();
+#endif
+        passPolyDataCellsDispatcher.Invoke(
+          inCellSet,
+          polyDataShapes,
+          vtkm::cont::make_ArrayHandleGroupVecVariable(polyDataConnectivity, polyDataOffsets),
+          polyDataCellIdMap);
+#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
+        std::cout << "PassPolyDataCells_Worklet," << timer.GetElapsedTime() << "\n";
+#endif
+      }
+    }
+
     if (scatterCellToFace.GetOutputRange(inCellSet.GetNumberOfCells()) == 0)
     {
-      // Data has no faces. Output is empty.
-      outCellSet.PrepareToAddCells(0, 0);
-      outCellSet.CompleteAddingCells(inCellSet.GetNumberOfPoints());
-      return;
+      if (!polyDataConnectivitySize)
+      {
+        // Data has no faces. Output is empty.
+        outCellSet.PrepareToAddCells(0, 0);
+        outCellSet.CompleteAddingCells(inCellSet.GetNumberOfPoints());
+        return;
+      }
+      else
+      {
+        // Pass only input poly data to output
+        outCellSet.Fill(inCellSet.GetNumberOfPoints(),
+                        polyDataShapes,
+                        polyDataPointCount,
+                        polyDataConnectivity,
+                        polyDataOffsets);
+        this->CellIdMap = polyDataCellIdMap;
+        return;
+      }
     }
 
     vtkm::cont::ArrayHandle<vtkm::Id3> faceHashes;
@@ -860,7 +1067,7 @@ public:
     std::cout << "FaceOutputCount_ScatterCounting," << timer.GetElapsedTime() << "\n";
 #endif
 
-    vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage> facePointCount;
+    PointCountArrayType facePointCount;
     vtkm::worklet::DispatcherReduceByKey<NumPointsPerFace, DeviceAdapter> pointsPerFaceDispatcher(
       scatterCullInternalFaces);
 
@@ -872,9 +1079,9 @@ public:
     std::cout << "PointsPerFaceCount_Worklet," << timer.GetElapsedTime() << "\n";
 #endif
 
-    vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage> faceShapes;
+    ShapeArrayType faceShapes;
 
-    vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage> faceOffsets;
+    OffsetsArrayType faceOffsets;
     vtkm::Id connectivitySize;
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     timer.Reset();
@@ -884,13 +1091,15 @@ public:
     std::cout << "FacePointCount_ScanExclusive," << timer.GetElapsedTime() << "\n";
 #endif
 
-    vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorage> faceConnectivity;
+    ConnectivityArrayType faceConnectivity;
     // Must pre allocate because worklet invocation will not have enough
     // information to.
     faceConnectivity.Allocate(connectivitySize);
 
     vtkm::worklet::DispatcherReduceByKey<BuildConnectivity, DeviceAdapter>
       buildConnectivityDispatcher(scatterCullInternalFaces);
+
+    CellIdArrayType faceToCellIdMap;
 
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     timer.Reset();
@@ -902,13 +1111,60 @@ public:
       originFaces,
       faceShapes,
       vtkm::cont::make_ArrayHandleGroupVecVariable(faceConnectivity, faceOffsets),
-      this->CellIdMap);
+      faceToCellIdMap);
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     std::cout << "BuildConnectivity_Worklet," << timer.GetElapsedTime() << "\n";
 #endif
 
-    outCellSet.Fill(
-      inCellSet.GetNumberOfPoints(), faceShapes, facePointCount, faceConnectivity, faceOffsets);
+    if (!polyDataConnectivitySize)
+    {
+      outCellSet.Fill(
+        inCellSet.GetNumberOfPoints(), faceShapes, facePointCount, faceConnectivity, faceOffsets);
+      this->CellIdMap = faceToCellIdMap;
+    }
+    else
+    {
+      // Join poly data to face data output
+      typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+
+      vtkm::cont::ArrayHandleConcatenate<ShapeArrayType, ShapeArrayType> faceShapesArray(
+        faceShapes, polyDataShapes);
+      ShapeArrayType joinedShapesArray;
+      DeviceAlgorithm::Copy(faceShapesArray, joinedShapesArray);
+
+      vtkm::cont::ArrayHandleConcatenate<PointCountArrayType, PointCountArrayType> pointCountArray(
+        facePointCount, polyDataPointCount);
+      PointCountArrayType joinedPointCountArray;
+      DeviceAlgorithm::Copy(pointCountArray, joinedPointCountArray);
+
+      vtkm::cont::ArrayHandleConcatenate<ConnectivityArrayType, ConnectivityArrayType>
+        connectivityArray(faceConnectivity, polyDataConnectivity);
+      ConnectivityArrayType joinedConnectivity;
+      DeviceAlgorithm::Copy(connectivityArray, joinedConnectivity);
+
+      // Adjust poly data offsets array with face connectivity size before join
+      typedef vtkm::cont::ArrayHandleTransform<OffsetsArrayType, BiasFunctor<vtkm::Id>>
+        TransformBiasArrayType;
+      TransformBiasArrayType adjustedPolyDataOffsets =
+        vtkm::cont::make_ArrayHandleTransform<OffsetsArrayType>(
+          polyDataOffsets, BiasFunctor<vtkm::Id>(faceConnectivity.GetNumberOfValues()));
+      vtkm::cont::ArrayHandleConcatenate<OffsetsArrayType, TransformBiasArrayType> offsetsArray(
+        faceOffsets, adjustedPolyDataOffsets);
+      OffsetsArrayType joinedOffsets;
+      DeviceAlgorithm::Copy(offsetsArray, joinedOffsets);
+
+      vtkm::cont::ArrayHandleConcatenate<CellIdArrayType, CellIdArrayType> cellIdMapArray(
+        faceToCellIdMap, polyDataCellIdMap);
+      CellIdArrayType joinedCellIdMap;
+      DeviceAlgorithm::Copy(cellIdMapArray, joinedCellIdMap);
+
+      outCellSet.Fill(inCellSet.GetNumberOfPoints(),
+                      joinedShapesArray,
+                      joinedPointCountArray,
+                      joinedConnectivity,
+                      joinedOffsets);
+      this->CellIdMap = joinedCellIdMap;
+    }
 
 #ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
     std::cout << "Total External Faces = " << outCellSet.GetNumberOfCells() << std::endl;

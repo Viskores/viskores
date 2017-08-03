@@ -52,6 +52,17 @@ public:
   VTKM_CONT
   void SetCompactPoints(bool value) { this->CompactPoints = value; }
 
+  // When PassPolyData is set (the default), incoming poly data (0D, 1D, and 2D cells)
+  // will be passed to the output external faces data set.
+  VTKM_CONT
+  bool GetPassPolyData() const { return this->PassPolyData; }
+  VTKM_CONT
+  void SetPassPolyData(bool value)
+  {
+    this->PassPolyData = value;
+    this->Worklet.SetPassPolyData(value);
+  }
+
   template <typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT vtkm::filter::ResultDataSet DoExecute(
     const vtkm::cont::DataSet& input,
@@ -69,6 +80,7 @@ public:
 
 public:
   bool CompactPoints;
+  bool PassPolyData;
   vtkm::filter::CleanGrid Compactor;
   vtkm::worklet::ExternalFaces Worklet;
 };
