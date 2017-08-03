@@ -22,6 +22,7 @@
 
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/Bounds.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
@@ -33,7 +34,9 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-
+vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex = 0);
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex);
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string& FieldName);
 static void MultiBlockTest()
 {
   vtkm::cont::testing::MakeTestDataSet testDataSet;
@@ -88,7 +91,7 @@ static void MultiBlockTest()
                    "Local field value info incorrect");
 }
 
-GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex = 0)
+vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex = 0)
 {
   vtkm::Bounds bounds;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
@@ -100,7 +103,7 @@ GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex = 0)
   return bounds;
 }
 
-GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
 {
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
@@ -111,7 +114,7 @@ GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
   return range;
 }
 
-GlobalRange(vtkm::cont::MultiBlock multiblock, std::string& FieldName)
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string& FieldName)
 {
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
