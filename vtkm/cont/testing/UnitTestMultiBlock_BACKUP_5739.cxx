@@ -1,0 +1,206 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
+
+#include <vtkm/CellShape.h>
+
+#include <vtkm/Bounds.h>
+#include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
+#include <vtkm/cont/DynamicArrayHandle.h>
+<<<<<<< HEAD
+#include <vtkm/Bounds.h>
+#include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/Field.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+=======
+#include <vtkm/cont/Field.h>
+>>>>>>> b0213e74283272a6576e45905c826b16edc74230
+#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
+#include <vtkm/exec/ConnectivityStructured.h>
+<<<<<<< HEAD
+#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
+
+vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock,vtkm::Id CoordSysIndex=0);
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex);
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string FieldName);
+
+static void MultiBlockTest()
+=======
+
+vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex = 0);
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex);
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string FieldName);
+
+static void MultiBlockTest()
+>>>>>>> b0213e74283272a6576e45905c826b16edc74230
+{
+  vtkm::cont::testing::MakeTestDataSet testDataSet;
+  vtkm::cont::MultiBlock multiblock;
+
+  vtkm::cont::DataSet TDset1 = testDataSet.Make2DUniformDataSet0();
+  vtkm::cont::DataSet TDset2 = testDataSet.Make3DUniformDataSet0();
+
+  multiblock.AddBlock(TDset1);
+  multiblock.AddBlock(TDset2);
+
+  VTKM_TEST_ASSERT(multiblock.GetNumberOfBlocks() == 2, "Incorrect number of blocks");
+
+  vtkm::cont::DataSet TestDSet = multiblock.GetBlock(0);
+  VTKM_TEST_ASSERT(TDset1.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
+                   "Incorrect number of fields");
+  VTKM_TEST_ASSERT(TDset1.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
+                   "Incorrect number of coordinate systems");
+
+  TestDSet = multiblock.GetBlock(1);
+  VTKM_TEST_ASSERT(TDset2.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
+                   "Incorrect number of fields");
+  VTKM_TEST_ASSERT(TDset2.GetNumberOfCoordinateSystems() == TestDSet.GetNumberOfCoordinateSystems(),
+                   "Incorrect number of coordinate systems");
+
+  VTKM_TEST_ASSERT(multiblock.GetBounds() == GlobalBounds(multiblock),
+                   "Global bounds info incorrect");
+  VTKM_TEST_ASSERT(multiblock.GetBlock(0).GetCoordinateSystem(0).GetBounds() ==
+<<<<<<< HEAD
+                     multiblock.GetBlockBounds(0),
+                   "Local bounds info incorrect");
+  VTKM_TEST_ASSERT(multiblock.GetBlock(1).GetCoordinateSystem(0).GetBounds() ==
+                     multiblock.GetBlockBounds(1),
+                   "Local bounds info incorrect");
+
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("pointvar").GetPortalControl().Get(0) ==
+                     GlobalRange(multiblock, std::string("pointvar")),
+                   "Local field value range info incorrect");
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("cellvar").GetPortalControl().Get(0) ==
+                     GlobalRange(multiblock, std::string("cellvar")),
+                   "Local field value range info incorrect");
+
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange(0).GetPortalControl().Get(0) ==
+                     GlobalRange(multiblock, 0),
+                   "Local field value range info incorrect");
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange(1).GetPortalControl().Get(0) ==
+                     GlobalRange(multiblock, 1),
+                   "Local field value range info incorrect");
+
+  vtkm::Range SourceRange;
+  multiblock.GetField("cellvar", 0).GetRange(&SourceRange);
+  vtkm::Range TestRange;
+  multiblock.GetBlock(0).GetField("cellvar").GetRange(&TestRange);
+  VTKM_TEST_ASSERT(TestRange == SourceRange, "Local field value info incorrect");
+}
+
+vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex)
+{
+  vtkm::Bounds bounds;
+  for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
+  {
+    vtkm::Bounds block_bounds =
+      multiblock.GetBlock(i).GetCoordinateSystem(CoordSysIndex).GetBounds();
+    bounds.Include(block_bounds);
+  }
+  return bounds;
+}
+
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
+{
+  vtkm::Range range;
+  for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
+=======
+                     multiblock.GetBlockBounds(0),
+                   "Local bounds info incorrect");
+  VTKM_TEST_ASSERT(multiblock.GetBlock(1).GetCoordinateSystem(0).GetBounds() ==
+                     multiblock.GetBlockBounds(1),
+                   "Local bounds info incorrect");
+
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("pointvar").GetPortalControl().Get(0) ==
+                     GlobalRange(multiblock, std::string("pointvar")),
+                   "Local field value range info incorrect");
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("cellvar").GetPortalControl().Get(0) ==
+                     GlobalRange(multiblock, std::string("cellvar")),
+                   "Local field value range info incorrect");
+
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange(0).GetPortalControl().Get(0) ==
+                     GlobalRange(multiblock, 0),
+                   "Local field value range info incorrect");
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange(1).GetPortalControl().Get(0) ==
+                     GlobalRange(multiblock, 1),
+                   "Local field value range info incorrect");
+
+  vtkm::Range SourceRange;
+  multiblock.GetField("cellvar", 0).GetRange(&SourceRange);
+  vtkm::Range TestRange;
+  multiblock.GetBlock(0).GetField("cellvar").GetRange(&TestRange);
+  VTKM_TEST_ASSERT(TestRange == SourceRange, "Local field value info incorrect");
+}
+
+vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex)
+{
+  vtkm::Bounds bounds;
+  for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
+  {
+    vtkm::Bounds block_bounds =
+      multiblock.GetBlock(i).GetCoordinateSystem(CoordSysIndex).GetBounds();
+    bounds.Include(block_bounds);
+  }
+  return bounds;
+}
+
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
+{
+  vtkm::Range range;
+  for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
+>>>>>>> b0213e74283272a6576e45905c826b16edc74230
+  {
+    vtkm::Range block_range;
+    multiblock.GetBlock(i).GetField(FieldIndex).GetRange(&block_range);
+    range.Include(block_range);
+  }
+  return range;
+}
+
+<<<<<<< HEAD
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string FieldName)
+{
+  vtkm::Range range;
+  for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
+=======
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string FieldName)
+{
+  vtkm::Range range;
+  for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
+>>>>>>> b0213e74283272a6576e45905c826b16edc74230
+  {
+    vtkm::Range block_range;
+    multiblock.GetBlock(i).GetField(FieldName).GetRange(&block_range);
+    range.Include(block_range);
+  }
+  return range;
+}
+
+int UnitTestMultiBlock(int, char* [])
+{
+  return vtkm::cont::testing::Testing::Run(MultiBlockTest);
+}
