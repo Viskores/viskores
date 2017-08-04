@@ -75,7 +75,7 @@ public:
                            vtkm::Vec<FieldType, 3>& velocity) const
   {
     using ConcreteType = IntegratorType<FieldEvaluateType, FieldType>;
-    return static_cast<ConcreteType>(this)->CheckStep(inpos, stepLength, velocity);
+    return static_cast<const ConcreteType*>(this)->CheckStep(inpos, stepLength, velocity);
   }
 
   VTKM_EXEC
@@ -135,15 +135,16 @@ class RK4Integrator : public Integrator<FieldEvaluateType, FieldType, RK4Integra
 public:
   VTKM_EXEC_CONT
   RK4Integrator()
-    : Integrator<FieldEvaluateType, FieldType, RK4Integrator::template RK4Integrator>()
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>()
   {
     this->ShortStepsSupported = true;
   }
 
   VTKM_EXEC_CONT
   RK4Integrator(const FieldEvaluateType& evaluator, FieldType stepLength)
-    : Integrator<FieldEvaluateType, FieldType, RK4Integrator::template RK4Integrator>(evaluator,
-                                                                                      stepLength)
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>(
+        evaluator,
+        stepLength)
   {
     this->ShortStepsSupported = true;
   }
@@ -180,8 +181,9 @@ class EulerIntegrator : public Integrator<FieldEvaluateType, FieldType, EulerInt
 public:
   VTKM_EXEC_CONT
   EulerIntegrator(const FieldEvaluateType& evaluator, FieldType field)
-    : Integrator<FieldEvaluateType, FieldType, EulerIntegrator::template EulerIntegrator>(evaluator,
-                                                                                          field)
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::EulerIntegrator>(
+        evaluator,
+        field)
   {
     this->ShortStepsSupported = false;
   }
