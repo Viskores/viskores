@@ -27,6 +27,7 @@ set(unit_tests
   UnitTestCudaDeviceAdapter.cu
   UnitTestCudaImplicitFunction.cu
   UnitTestCudaMath.cu
+  UnitTestCudaShareUserProvidedManagedMemory.cu
   UnitTestCudaVirtualObjectCache.cu
   )
 vtkm_unit_tests(CUDA SOURCES ${unit_tests})
