@@ -22,12 +22,12 @@
 
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/internal/RunTriangulator.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/raytracing/RayOperations.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
 
 namespace vtkm
@@ -99,7 +99,10 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   vtkm::rendering::raytracing::Camera& cam = this->Internals->Tracer.GetCamera();
   cam.SetParameters(camera, *this->Internals->Canvas);
   this->Internals->RayCamera.SetParameters(camera, *this->Internals->Canvas);
+
   this->Internals->RayCamera.CreateRays(this->Internals->Rays, coords);
+  raytracing::RayOperations::MapCanvasToRays(
+    this->Internals->Rays, camera, *this->Internals->Canvas);
 
   vtkm::Bounds dataBounds = coords.GetBounds();
 

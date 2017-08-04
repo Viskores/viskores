@@ -87,6 +87,7 @@ set(sources
   raytracing/ChannelBuffer.cxx
   raytracing/Logger.cxx
   raytracing/RayTracer.cxx
+  raytracing/RayOperations.cxx
   raytracing/VolumeRendererStructured.cxx
   )
 
@@ -129,6 +130,7 @@ set(device_sources
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
   raytracing/VolumeRendererStructured.cxx
+  raytracing/RayOperations.cxx
   raytracing/RayTracer.cxx
   )
 

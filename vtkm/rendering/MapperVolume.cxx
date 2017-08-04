@@ -27,6 +27,7 @@
 
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/raytracing/RayOperations.h>
 #include <vtkm/rendering/raytracing/VolumeRendererStructured.h>
 
 #include <sstream>
@@ -115,8 +116,9 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     rayCamera.SetParameters(camera, *this->Internals->Canvas);
 
     rayCamera.CreateRays(rays, coords);
-
     rays.Buffers.at(0).InitConst(0.f);
+    raytracing::RayOperations::MapCanvasToRays(rays, camera, *this->Internals->Canvas);
+
 
     if (this->Internals->SampleDistance != DEFAULT_SAMPLE_DISTANCE)
     {

@@ -764,7 +764,7 @@ public:
                               const PointPortalType& points) const
     {
       Precision closestDistance = maxDistance;
-      distance = -1;
+      distance = maxDistance;
       hitIndex = -1;
       Precision dirx = rayDir[0];
       Precision diry = rayDir[1];

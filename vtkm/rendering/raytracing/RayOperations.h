@@ -20,6 +20,10 @@
 #ifndef vtk_m_rendering_raytracing_Ray_Operations_h
 #define vtk_m_rendering_raytracing_Ray_Operations_h
 
+#include <vtkm/Matrix.h>
+#include <vtkm/cont/TryExecute.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/raytracing/ChannelBufferOperations.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
@@ -51,6 +55,71 @@ public:
   }
 }; //class RayStatusFileter
 
+class RayMapMaxDistances : public vtkm::worklet::WorkletMapField
+{
+protected:
+  vtkm::Matrix<vtkm::Float32, 4, 4> InverseProjection;
+  vtkm::Id Width;
+  vtkm::Float32 DoubleInvHeight;
+  vtkm::Float32 DoubleInvWidth;
+
+public:
+  VTKM_CONT
+  RayMapMaxDistances(const vtkm::Matrix<vtkm::Float32, 4, 4>& inverseProjection,
+                     const vtkm::Id width,
+                     const vtkm::Id height)
+    : InverseProjection(inverseProjection)
+    , Width(width)
+  {
+    VTKM_ASSERT(width > 0);
+    VTKM_ASSERT(height > 0);
+    DoubleInvHeight = 2.f / static_cast<vtkm::Float32>(height);
+    DoubleInvWidth = 2.f / static_cast<vtkm::Float32>(width);
+  }
+
+  typedef void ControlSignature(FieldIn<>,
+                                FieldInOut<>,
+                                WholeArrayIn<>,
+                                WholeArrayInOut<>,
+                                WholeArrayIn<>);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex);
+
+  template <typename Precision,
+            typename DepthPortalType,
+            typename RayColorType,
+            typename ColorBufferType>
+  VTKM_EXEC void operator()(const vtkm::Id& pixelId,
+                            Precision& maxDistance,
+                            const DepthPortalType& depths,
+                            RayColorType& outColors,
+                            const ColorBufferType inColors,
+                            const vtkm::Id& index) const
+  {
+    vtkm::Vec<vtkm::Float32, 4> position;
+    position[0] = static_cast<vtkm::Float32>(pixelId % Width);
+    position[1] = static_cast<vtkm::Float32>(pixelId / Width);
+    position[2] = static_cast<vtkm::Float32>(depths.Get(pixelId));
+    position[3] = 1;
+    // transform into normalized device coordinates (-1,1)
+    position[0] = position[0] * DoubleInvWidth - 1.f;
+    position[1] = position[1] * DoubleInvHeight - 1.f;
+    position[2] = 2.f * position[2] - 1.f;
+
+    position = vtkm::MatrixMultiply(InverseProjection, position);
+    //for(vtkm::Int32 i = 0; i < 4; ++i)
+    //{
+    //  position[] /= position[3];
+    //}
+    maxDistance = -position[2] / position[3];
+    vtkm::Vec<vtkm::Float32, 4> inColor = inColors.Get(pixelId);
+    std::cout << "$" << inColor;
+    outColors.Set(index * 4 + 0, inColor[0]);
+    outColors.Set(index * 4 + 1, inColor[1]);
+    outColors.Set(index * 4 + 2, inColor[2]);
+    outColors.Set(index * 4 + 3, inColor[3]);
+  }
+}; //class RayMapMinDistances
+
 } // namespace detail
 
 class RayOperations
@@ -74,6 +143,10 @@ public:
     vtkm::worklet::DispatcherMapField<detail::RayStatusFilter, Device>(detail::RayStatusFilter())
       .Invoke(rays.HitIdx, rays.Status);
   }
+
+  static void MapCanvasToRays(Ray<vtkm::Float32>& rays,
+                              const vtkm::rendering::Camera& camera,
+                              const vtkm::rendering::CanvasRayTracer& canvas);
 
   template <typename Device, typename T>
   static vtkm::Id RaysInMesh(Ray<T>& rays, Device)

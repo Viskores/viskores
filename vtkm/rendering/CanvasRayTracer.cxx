@@ -98,7 +98,7 @@ public:
   }
 
   typedef void ControlSignature(FieldIn<>,
-                                WholeArrayIn<>,
+                                WholeArrayInOut<>,
                                 FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
@@ -132,15 +132,16 @@ public:
 
     vtkm::Float32 depth = newpoint[2];
 
-    depth = 0.5f * (-depth) + 0.5f;
+    depth = 0.5f * (depth) + 0.5f;
     vtkm::Vec<vtkm::Float32, 4> color;
     color[0] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 0));
     color[1] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 1));
     color[2] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 2));
     color[3] = static_cast<vtkm::Float32>(colorBufferIn.Get(index * 4 + 3));
 
-    vtkm::Float32 existingDepth = depthBuffer.Get(pixelIndex);
+    //vtkm::Float32 existingDepth = depthBuffer.Get(pixelIndex);
 
+    //std::cout<<" in "<<inDepth<<" "<<depth;;
     depthBuffer.Set(pixelIndex, depth);
     colorBuffer.Set(pixelIndex, color);
   }

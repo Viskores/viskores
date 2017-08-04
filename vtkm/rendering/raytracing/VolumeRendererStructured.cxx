@@ -364,8 +364,11 @@ public:
     BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 3);
     color[3] = colorBuffer.Get(pixelIndex * 4 + 3);
 
+    std::cout << color << " ";
     if (minDistance == -1.f)
+    {
       return; //TODO: Compact? or just image subset...
+    }
     //get the initial sample position;
     vtkm::Vec<vtkm::Float32, 3> sampleLocation;
     sampleLocation = rayOrigin + (0.0001f + minDistance) * rayDir;
@@ -654,11 +657,12 @@ public:
   VTKM_EXEC
   vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
 
-  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldOut<>, FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldInOut<>, FieldInOut<>, FieldIn<>);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
   template <typename Precision>
   VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& rayDir,
                             vtkm::Float32& minDistance,
+                            vtkm::Float32& distance,
                             vtkm::Float32& maxDistance,
                             const vtkm::Vec<Precision, 3>& rayOrigin) const
   {
@@ -688,11 +692,18 @@ public:
     minDistance = vtkm::Max(
       vtkm::Max(vtkm::Max(vtkm::Min(ymin, ymax), vtkm::Min(xmin, xmax)), vtkm::Min(zmin, zmax)),
       0.f);
-    maxDistance =
+    vtkm::Float32 exitDistance =
       vtkm::Min(vtkm::Min(vtkm::Max(ymin, ymax), vtkm::Max(xmin, xmax)), vtkm::Max(zmin, zmax));
+    maxDistance = vtkm::Min(maxDistance, exitDistance);
     if (maxDistance < minDistance)
     {
+      //std::cout<<" & "<<maxDistance<<" <"<<minDistance<<" "<<exitDistance<<">";
       minDistance = -1.f; //flag for miss
+    }
+    else
+    {
+      distance = minDistance;
+      std::cout << " | " << maxDistance << " <" << minDistance << " " << exitDistance << ">";
     }
   }
 }; //class CalcRayStart
@@ -844,7 +855,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
   vtkm::cont::Timer<Device> timer;
   vtkm::worklet::DispatcherMapField<CalcRayStart, Device>(CalcRayStart(this->SpatialExtent))
-    .Invoke(rays.Dir, rays.MinDistance, rays.MaxDistance, rays.Origin);
+    .Invoke(rays.Dir, rays.MinDistance, rays.Distance, rays.MaxDistance, rays.Origin);
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("calc_ray_start", time);
