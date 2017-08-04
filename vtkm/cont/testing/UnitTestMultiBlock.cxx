@@ -110,8 +110,8 @@ vtkm::Range GlobalRange(const vtkm::cont::MultiBlock multiblock, vtkm::Id FieldI
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
   {
-    vtkm::cont::ArrayHandle<vtkm::Range> RangeArray =
-      multiblock.GetBlock(i).GetField(FieldIndex).GetRange();
+    vtkm::cont::ArrayHandle<vtkm::Range> RangeArray(
+      multiblock.GetBlock(i).GetField(FieldIndex).GetRange());
     vtkm::Range block_range = RangeArray.GetPortalControl().Get(0);
     range.Include(block_range);
   }
@@ -123,8 +123,8 @@ vtkm::Range GlobalRange(const vtkm::cont::MultiBlock multiblock, const std::stri
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
   {
-    vtkm::cont::ArrayHandle<vtkm::Range> RangeArray =
-      multiblock.GetBlock(i).GetField(FieldName).GetRange();
+    vtkm::cont::ArrayHandle<vtkm::Range> RangeArray(
+      multiblock.GetBlock(i).GetField(FieldName).GetRange());
     vtkm::Range block_range = RangeArray.GetPortalControl().Get(0);
     range.Include(block_range);
   }
