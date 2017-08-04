@@ -103,7 +103,7 @@ void View3D::RenderWorldAnnotations()
   vtkm::Float64 zrel = vtkm::Abs(dz) / size;
 
   this->XAxisAnnotation.SetAxis(0);
-  this->XAxisAnnotation.SetColor(Color(1, 1, 1));
+  this->XAxisAnnotation.SetColor(AxisColor);
   this->XAxisAnnotation.SetTickInvert(xtest, ytest, ztest);
   this->XAxisAnnotation.SetWorldPosition(
     xmin, ytest ? ymin : ymax, ztest ? zmin : zmax, xmax, ytest ? ymin : ymax, ztest ? zmin : zmax);
@@ -115,7 +115,7 @@ void View3D::RenderWorldAnnotations()
   this->XAxisAnnotation.Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
 
   this->YAxisAnnotation.SetAxis(1);
-  this->YAxisAnnotation.SetColor(Color(1, 1, 1));
+  this->YAxisAnnotation.SetColor(AxisColor);
   this->YAxisAnnotation.SetTickInvert(xtest, ytest, ztest);
   this->YAxisAnnotation.SetWorldPosition(
     xtest ? xmin : xmax, ymin, ztest ? zmin : zmax, xtest ? xmin : xmax, ymax, ztest ? zmin : zmax);
@@ -127,7 +127,7 @@ void View3D::RenderWorldAnnotations()
   this->YAxisAnnotation.Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
 
   this->ZAxisAnnotation.SetAxis(2);
-  this->ZAxisAnnotation.SetColor(Color(1, 1, 1));
+  this->ZAxisAnnotation.SetColor(AxisColor);
   this->ZAxisAnnotation.SetTickInvert(xtest, ytest, ztest);
   this->ZAxisAnnotation.SetWorldPosition(
     xtest ? xmin : xmax, ytest ? ymin : ymax, zmin, xtest ? xmin : xmax, ytest ? ymin : ymax, zmax);

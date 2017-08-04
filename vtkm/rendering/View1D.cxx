@@ -68,6 +68,8 @@ void View1D::Paint()
   this->RenderWorldAnnotations();
   this->SetupForScreenSpace();
   this->RenderScreenAnnotations();
+  this->RenderColorLegendAnnotations();
+  this->RenderAnnotations();
   this->GetCanvas().Finish();
 }
 
@@ -84,7 +86,7 @@ void View1D::RenderScreenAnnotations()
                                     viewportBottom,
                                     viewportTop);
 
-  this->HorizontalAxisAnnotation.SetColor(vtkm::rendering::Color(1, 1, 1));
+  this->HorizontalAxisAnnotation.SetColor(AxisColor);
   this->HorizontalAxisAnnotation.SetScreenPosition(
     viewportLeft, viewportBottom, viewportRight, viewportBottom);
   vtkm::Bounds viewRange = this->GetCamera().GetViewRange2D();
@@ -100,7 +102,7 @@ void View1D::RenderScreenAnnotations()
   vtkm::Float32 windowaspect =
     vtkm::Float32(this->GetCanvas().GetWidth()) / vtkm::Float32(this->GetCanvas().GetHeight());
 
-  this->VerticalAxisAnnotation.SetColor(vtkm::rendering::Color(1, 1, 1));
+  this->VerticalAxisAnnotation.SetColor(AxisColor);
   this->VerticalAxisAnnotation.SetScreenPosition(
     viewportLeft, viewportBottom, viewportLeft, viewportTop);
   this->VerticalAxisAnnotation.SetRangeForAutoTicks(viewRange.Y.Min, viewRange.Y.Max);
@@ -112,9 +114,33 @@ void View1D::RenderScreenAnnotations()
     this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
 }
 
+void View1D::RenderColorLegendAnnotations()
+{
+  if (LegendEnabled)
+  {
+    this->Legend.Clear();
+    for (int i = 0; i < this->GetScene().GetNumberOfActors(); ++i)
+    {
+      vtkm::rendering::Actor act = this->GetScene().GetActor(i);
+      this->Legend.AddItem(act.GetScalarField().GetName(), act.GetColorTable().MapRGB(0));
+    }
+    this->Legend.Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
+  }
+}
+
 void View1D::RenderWorldAnnotations()
 {
   // 1D views don't have world annotations.
+}
+
+void View1D::EnableLegend()
+{
+  LegendEnabled = true;
+}
+
+void View1D::DisableLegend()
+{
+  LegendEnabled = false;
 }
 }
 } // namespace vtkm::rendering
