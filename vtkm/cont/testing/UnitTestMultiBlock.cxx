@@ -73,10 +73,10 @@ static void MultiBlockTest()
                    "Local bounds info incorrect");
 
   VTKM_TEST_ASSERT(multiblock.GetGlobalRange("pointvar").GetPortalControl().Get(0) ==
-                     GlobalRange(multiblock, "pointvar"),
+                     GlobalRange(multiblock, std::string("pointvar")),
                    "Local field value range info incorrect");
   VTKM_TEST_ASSERT(multiblock.GetGlobalRange("cellvar").GetPortalControl().Get(0) ==
-                     GlobalRange(multiblock, "cellvar"),
+                     GlobalRange(multiblock, std::string("cellvar")),
                    "Local field value range info incorrect");
 
   VTKM_TEST_ASSERT(multiblock.GetGlobalRange(0).GetPortalControl().Get(0) ==
@@ -110,8 +110,9 @@ vtkm::Range GlobalRange(const vtkm::cont::MultiBlock multiblock, vtkm::Id FieldI
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
   {
-    vtkm::Range block_range =
-      multiblock.GetBlock(i).GetField(FieldIndex).GetRange().GetPortalControl().Get(0);
+    vtkm::cont::ArrayHandle<vtkm::Range> RangeArray =
+      multiblock.GetBlock(i).GetField(FieldIndex).GetRange();
+    vtkm::Range block_range = RangeArray.GetPortalControl().Get(0);
     range.Include(block_range);
   }
   return range;
@@ -122,8 +123,9 @@ vtkm::Range GlobalRange(const vtkm::cont::MultiBlock multiblock, const std::stri
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
   {
-    vtkm::Range block_range =
-      multiblock.GetBlock(i).GetField(FieldName).GetRange().GetPortalControl().Get(0);
+    vtkm::cont::ArrayHandle<vtkm::Range> RangeArray =
+      multiblock.GetBlock(i).GetField(FieldName).GetRange();
+    vtkm::Range block_range = RangeArray.GetPortalControl().Get(0);
     range.Include(block_range);
   }
   return range;
