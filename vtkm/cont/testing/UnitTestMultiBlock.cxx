@@ -36,7 +36,7 @@
 
 vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex = 0);
 vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex);
-vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string& FieldName);
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string FieldName);
 
 static void MultiBlockTest()
 {
@@ -88,9 +88,9 @@ static void MultiBlockTest()
 
   vtkm::Range SourceRange;
   multiblock.GetField("cellvar", 0).GetRange(&SourceRange);
-  VTKM_TEST_ASSERT(
-    multiblock.GetBlock(0).GetField("cellvar").GetRange().GetPortalControl().Get(0) == SourceRange,
-    "Local field value info incorrect");
+  vtkm::Range TestRange;
+  multiblock.GetBlock(0).GetField("cellvar").GetRange(&TestRange);
+  VTKM_TEST_ASSERT(TestRange == SourceRange, "Local field value info incorrect");
 }
 
 vtkm::Bounds GlobalBounds(vtkm::cont::MultiBlock multiblock, vtkm::Id CoordSysIndex)
@@ -110,22 +110,20 @@ vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, vtkm::Id FieldIndex)
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
   {
-    vtkm::cont::ArrayHandle<vtkm::Range> RangeArray;
-    multiblock.GetBlock(i).GetField(FieldIndex).GetRange().GetData().CopyTo(RangeArray);
-    vtkm::Range block_range = RangeArray.GetPortalControl().Get(0);
+    vtkm::Range block_range;
+    multiblock.GetBlock(i).GetField(FieldIndex).GetRange(&block_range);
     range.Include(block_range);
   }
   return range;
 }
 
-vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string& FieldName)
+vtkm::Range GlobalRange(vtkm::cont::MultiBlock multiblock, std::string FieldName)
 {
   vtkm::Range range;
   for (vtkm::Id i = 0; i < multiblock.GetNumberOfBlocks(); ++i)
   {
-    vtkm::cont::ArrayHandle<vtkm::Range> RangeArray;
-    multiblock.GetBlock(i).GetField(FieldName).GetRange().GetData().CopyTo(RangeArray);
-    vtkm::Range block_range = RangeArray.GetPortalControl().Get(0);
+    vtkm::Range block_range;
+    multiblock.GetBlock(i).GetField(FieldName).GetRange(&block_range);
     range.Include(block_range);
   }
   return range;
