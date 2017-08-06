@@ -55,21 +55,24 @@ public:
   }
 }; //class RayStatusFileter
 
-class RayMapMaxDistances : public vtkm::worklet::WorkletMapField
+class RayMapCanvas : public vtkm::worklet::WorkletMapField
 {
 protected:
-  vtkm::Matrix<vtkm::Float32, 4, 4> InverseProjection;
+  vtkm::Matrix<vtkm::Float32, 4, 4> InverseProjView;
   vtkm::Id Width;
   vtkm::Float32 DoubleInvHeight;
   vtkm::Float32 DoubleInvWidth;
+  vtkm::Vec<vtkm::Float32, 3> Origin;
 
 public:
   VTKM_CONT
-  RayMapMaxDistances(const vtkm::Matrix<vtkm::Float32, 4, 4>& inverseProjection,
-                     const vtkm::Id width,
-                     const vtkm::Id height)
-    : InverseProjection(inverseProjection)
+  RayMapCanvas(const vtkm::Matrix<vtkm::Float32, 4, 4>& inverseProjView,
+               const vtkm::Id width,
+               const vtkm::Id height,
+               const vtkm::Vec<vtkm::Float32, 3>& origin)
+    : InverseProjView(inverseProjView)
     , Width(width)
+    , Origin(origin)
   {
     VTKM_ASSERT(width > 0);
     VTKM_ASSERT(height > 0);
@@ -77,23 +80,13 @@ public:
     DoubleInvWidth = 2.f / static_cast<vtkm::Float32>(width);
   }
 
-  typedef void ControlSignature(FieldIn<>,
-                                FieldInOut<>,
-                                WholeArrayIn<>,
-                                WholeArrayInOut<>,
-                                WholeArrayIn<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex);
+  typedef void ControlSignature(FieldIn<>, FieldInOut<>, WholeArrayIn<>);
+  typedef void ExecutionSignature(_1, _2, _3);
 
-  template <typename Precision,
-            typename DepthPortalType,
-            typename RayColorType,
-            typename ColorBufferType>
+  template <typename Precision, typename DepthPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& pixelId,
                             Precision& maxDistance,
-                            const DepthPortalType& depths,
-                            RayColorType& outColors,
-                            const ColorBufferType inColors,
-                            const vtkm::Id& index) const
+                            const DepthPortalType& depths) const
   {
     vtkm::Vec<vtkm::Float32, 4> position;
     position[0] = static_cast<vtkm::Float32>(pixelId % Width);
@@ -104,24 +97,21 @@ public:
     position[0] = position[0] * DoubleInvWidth - 1.f;
     position[1] = position[1] * DoubleInvHeight - 1.f;
     position[2] = 2.f * position[2] - 1.f;
+    // offset so we don't go all the way to the same point
+    position[2] -= 0.00001f;
+    position = vtkm::MatrixMultiply(InverseProjView, position);
+    vtkm::Vec<vtkm::Float32, 3> p;
+    p[0] = position[0] / position[3];
+    p[1] = position[1] / position[3];
+    p[2] = position[2] / position[3];
+    p = p - Origin;
+    ;
 
-    position = vtkm::MatrixMultiply(InverseProjection, position);
-    //for(vtkm::Int32 i = 0; i < 4; ++i)
-    //{
-    //  position[] /= position[3];
-    //}
-    maxDistance = -position[2] / position[3];
-    vtkm::Vec<vtkm::Float32, 4> inColor = inColors.Get(pixelId);
-    std::cout << "$" << inColor;
-    outColors.Set(index * 4 + 0, inColor[0]);
-    outColors.Set(index * 4 + 1, inColor[1]);
-    outColors.Set(index * 4 + 2, inColor[2]);
-    outColors.Set(index * 4 + 3, inColor[3]);
+    maxDistance = vtkm::Magnitude(p);
   }
 }; //class RayMapMinDistances
 
 } // namespace detail
-
 class RayOperations
 {
 public:

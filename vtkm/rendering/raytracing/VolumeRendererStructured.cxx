@@ -364,7 +364,6 @@ public:
     BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 3);
     color[3] = colorBuffer.Get(pixelIndex * 4 + 3);
 
-    std::cout << color << " ";
     if (minDistance == -1.f)
     {
       return; //TODO: Compact? or just image subset...
@@ -697,81 +696,20 @@ public:
     maxDistance = vtkm::Min(maxDistance, exitDistance);
     if (maxDistance < minDistance)
     {
-      //std::cout<<" & "<<maxDistance<<" <"<<minDistance<<" "<<exitDistance<<">";
       minDistance = -1.f; //flag for miss
     }
     else
     {
       distance = minDistance;
-      std::cout << " | " << maxDistance << " <" << minDistance << " " << exitDistance << ">";
     }
   }
 }; //class CalcRayStart
 
-class CompositeBackground : public vtkm::worklet::WorkletMapField
-{
-  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
-
-public:
-  VTKM_CONT
-  CompositeBackground(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
-    : BackgroundColor(backgroundColor)
-  {
-  }
-
-  typedef void ControlSignature(FieldIn<>, WholeArrayInOut<>);
-  typedef void ExecutionSignature(_1, _2);
-
-  template <typename ColorBufferType>
-  VTKM_EXEC void operator()(const vtkm::Id& pixelIndex, ColorBufferType& colorBuffer) const
-  {
-
-    vtkm::Vec<vtkm::Float32, 4> color;
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 0);
-    color[0] = colorBuffer.Get(pixelIndex * 4 + 0);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 1);
-    color[1] = colorBuffer.Get(pixelIndex * 4 + 1);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 2);
-    color[2] = colorBuffer.Get(pixelIndex * 4 + 2);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 3);
-    color[3] = colorBuffer.Get(pixelIndex * 4 + 3);
-
-    if (color[3] >= 1.f)
-      return;
-
-    vtkm::Float32 alpha = BackgroundColor[3] * (1.f - color[3]);
-    color[0] = color[0] + BackgroundColor[0] * alpha;
-    color[1] = color[1] + BackgroundColor[1] * alpha;
-    color[2] = color[2] + BackgroundColor[2] * alpha;
-    color[3] = alpha + color[3];
-
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 0);
-    colorBuffer.Set(pixelIndex * 4 + 0, color[0]);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 1);
-    colorBuffer.Set(pixelIndex * 4 + 1, color[1]);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 2);
-    colorBuffer.Set(pixelIndex * 4 + 2, color[2]);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 3);
-    colorBuffer.Set(pixelIndex * 4 + 3, color[3]);
-  }
-}; //class CompositeBackground
-
 VolumeRendererStructured::VolumeRendererStructured()
 {
   IsSceneDirty = false;
-  DoCompositeBackground = true;
   IsUniformDataSet = true;
   SampleDistance = -1.f;
-}
-
-void VolumeRendererStructured::EnableCompositeBackground()
-{
-  DoCompositeBackground = true;
-}
-
-void VolumeRendererStructured::DisableCompositeBackground()
-{
-  DoCompositeBackground = false;
 }
 
 void VolumeRendererStructured::SetColorMap(
@@ -925,17 +863,6 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   time = timer.GetElapsedTime();
   logger->AddLogData("sample", time);
   timer.Reset();
-
-  if (DoCompositeBackground)
-  {
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> rayIterator(0, 1, rays.NumRays);
-    vtkm::worklet::DispatcherMapField<CompositeBackground>(CompositeBackground(BackgroundColor))
-      .Invoke(rayIterator, rays.Buffers.at(0).Buffer);
-
-    time = timer.GetElapsedTime();
-    logger->AddLogData("compsosite_background", time);
-    timer.Reset();
-  }
 
   time = renderTimer.GetElapsedTime();
   logger->CloseLogEntry(time);

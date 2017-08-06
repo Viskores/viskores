@@ -349,6 +349,19 @@ void Camera::Print() const
     std::cout << "  Clip  : " << GetClippingRange() << std::endl;
     std::cout << "  XyZ   : " << Camera3D.XPan << " " << Camera3D.YPan << " " << Camera3D.Zoom
               << std::endl;
+    vtkm::Matrix<vtkm::Float32, 4, 4> pm, vm;
+    pm = CreateProjectionMatrix(512, 512);
+    vm = CreateViewMatrix();
+    std::cout << " PM: " << std::endl;
+    std::cout << pm[0][0] << " " << pm[0][1] << " " << pm[0][2] << " " << pm[0][3] << std::endl;
+    std::cout << pm[1][0] << " " << pm[1][1] << " " << pm[1][2] << " " << pm[1][3] << std::endl;
+    std::cout << pm[2][0] << " " << pm[2][1] << " " << pm[2][2] << " " << pm[2][3] << std::endl;
+    std::cout << pm[3][0] << " " << pm[3][1] << " " << pm[3][2] << " " << pm[3][3] << std::endl;
+    std::cout << " VM: " << std::endl;
+    std::cout << vm[0][0] << " " << vm[0][1] << " " << vm[0][2] << " " << vm[0][3] << std::endl;
+    std::cout << vm[1][0] << " " << vm[1][1] << " " << vm[1][2] << " " << vm[1][3] << std::endl;
+    std::cout << vm[2][0] << " " << vm[2][1] << " " << vm[2][2] << " " << vm[2][3] << std::endl;
+    std::cout << vm[3][0] << " " << vm[3][1] << " " << vm[3][2] << " " << vm[3][3] << std::endl;
   }
   else if (Mode == MODE_2D)
   {

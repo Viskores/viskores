@@ -47,6 +47,8 @@ public:
 
   vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
 
+  void BlendBackground();
+
   void WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays,
                      const vtkm::cont::ArrayHandle<vtkm::Float32>& colors,
                      const vtkm::rendering::Camera& camera);
