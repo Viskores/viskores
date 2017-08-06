@@ -144,7 +144,6 @@ public:
   SurfaceConverter(const vtkm::Matrix<vtkm::Float32, 4, 4> viewProjMat)
     : ViewProjMat(viewProjMat)
   {
-    vtkm::Matrix<vtkm::Float32, 4, 4> p = ViewProjMat;
   }
 
   typedef void ControlSignature(FieldIn<>,

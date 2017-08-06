@@ -138,18 +138,19 @@ void MultiMapperRender(const vtkm::cont::DataSet& ds1,
   MapperType2 mapper2;
 
   CanvasType canvas(512, 512);
+  canvas.SetBackgroundColor(vtkm::rendering::Color(0.8f, 0.8f, 0.8f, 1.0f));
+  canvas.Clear();
 
   vtkm::Bounds totalBounds =
     ds1.GetCoordinateSystem().GetBounds() + ds2.GetCoordinateSystem().GetBounds();
-
-  ///vtkm::rendering::Actor(ds2.GetCellSet(), ds2.GetCoordinateSystem(), ds2.GetField(fieldNm)));
-
+  ds1.PrintSummary(std::cout);
   vtkm::rendering::Camera camera;
   SetCamera<ViewType>(camera, totalBounds);
-  canvas.SetBackgroundColor(vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 0.0f));
-  canvas.Clear();
+
   mapper1.SetCanvas(&canvas);
   mapper1.SetActiveColorTable(colorTable1);
+  mapper1.SetCompositeBackground(false);
+
   mapper2.SetCanvas(&canvas);
   mapper2.SetActiveColorTable(colorTable2);
 
@@ -163,10 +164,14 @@ void MultiMapperRender(const vtkm::cont::DataSet& ds1,
 
   mapper1.RenderCells(
     ds1.GetCellSet(), ds1.GetCoordinateSystem(), field1, colorTable1, camera, range1);
-  canvas.SaveAs("test.pnm");
+
+  canvas.SaveAs("1_" + outputFile);
+  //canvas.Clear();
   mapper2.RenderCells(
     ds2.GetCellSet(), ds2.GetCoordinateSystem(), field2, colorTable2, camera, range2);
+
   canvas.SaveAs(outputFile);
+  std::cout << "File name " << outputFile << "\n";
 }
 }
 }

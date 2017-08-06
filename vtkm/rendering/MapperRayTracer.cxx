@@ -41,10 +41,11 @@ struct MapperRayTracer::InternalsType
   vtkm::rendering::raytracing::RayTracer Tracer;
   vtkm::rendering::raytracing::Camera RayCamera;
   vtkm::rendering::raytracing::Ray<vtkm::Float32> Rays;
-
+  bool CompositeBackground;
   VTKM_CONT
   InternalsType()
     : Canvas(nullptr)
+    , CompositeBackground(true)
   {
   }
 };
@@ -118,10 +119,20 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   this->Internals->Canvas->WriteToCanvas(
     this->Internals->Rays, this->Internals->Rays.Buffers.at(0).Buffer, camera);
 
+  if (this->Internals->CompositeBackground)
+  {
+    this->Internals->Canvas->BlendBackground();
+  }
+
   time = timer.GetElapsedTime();
   logger->AddLogData("write_to_canvas", time);
   time = tot_timer.GetElapsedTime();
   logger->CloseLogEntry(time);
+}
+
+void MapperRayTracer::SetCompositeBackground(bool on)
+{
+  this->Internals->CompositeBackground = on;
 }
 
 void MapperRayTracer::StartScene()
