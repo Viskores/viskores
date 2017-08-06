@@ -143,7 +143,6 @@ void MultiMapperRender(const vtkm::cont::DataSet& ds1,
 
   vtkm::Bounds totalBounds =
     ds1.GetCoordinateSystem().GetBounds() + ds2.GetCoordinateSystem().GetBounds();
-  ds1.PrintSummary(std::cout);
   vtkm::rendering::Camera camera;
   SetCamera<ViewType>(camera, totalBounds);
 
@@ -165,13 +164,10 @@ void MultiMapperRender(const vtkm::cont::DataSet& ds1,
   mapper1.RenderCells(
     ds1.GetCellSet(), ds1.GetCoordinateSystem(), field1, colorTable1, camera, range1);
 
-  canvas.SaveAs("1_" + outputFile);
-  //canvas.Clear();
   mapper2.RenderCells(
     ds2.GetCellSet(), ds2.GetCoordinateSystem(), field2, colorTable2, camera, range2);
 
   canvas.SaveAs(outputFile);
-  std::cout << "File name " << outputFile << "\n";
 }
 }
 }
