@@ -24,34 +24,52 @@
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
+#include <vtkm/rendering/MapperConnectivity.h>
+#include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/MapperVolume.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
+
+#include <vtkm/rendering/raytracing/RayOperations.h>
 
 namespace
 {
 
 void RenderTests()
 {
-  typedef vtkm::rendering::MapperVolume M;
+  typedef vtkm::rendering::MapperVolume M1;
+  typedef vtkm::rendering::MapperConnectivity M2;
+  typedef vtkm::rendering::MapperRayTracer R;
   typedef vtkm::rendering::CanvasRayTracer C;
   typedef vtkm::rendering::View3D V3;
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
-  colorTable.AddAlphaControlPoint(0.0, .01f);
-  colorTable.AddAlphaControlPoint(1.0, .01f);
 
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
-  vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
+
+  vtkm::rendering::ColorTable colorTable2("cool2warm");
+  colorTable2.AddAlphaControlPoint(0.0, .02f);
+  colorTable2.AddAlphaControlPoint(1.0, .02f);
+
+  vtkm::rendering::testing::MultiMapperRender<R, M2, C, V3>(maker.Make3DExplicitDataSetPolygonal(),
+                                                            maker.Make3DRectilinearDataSet0(),
+                                                            "pointvar",
+                                                            colorTable,
+                                                            colorTable2,
+                                                            "multi1.pnm");
+
+  vtkm::rendering::testing::MultiMapperRender<R, M1, C, V3>(maker.Make3DExplicitDataSet4(),
+                                                            maker.Make3DRectilinearDataSet0(),
+                                                            "pointvar",
+                                                            colorTable,
+                                                            colorTable2,
+                                                            "multi2.pnm");
 }
 
 } //namespace
 
-int UnitTestMapperVolume(int, char* [])
+int UnitTestMultiMapper(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(RenderTests);
 }

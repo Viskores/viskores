@@ -50,7 +50,7 @@ public:
 
   virtual void StartScene() VTKM_OVERRIDE;
   virtual void EndScene() VTKM_OVERRIDE;
-
+  void SetCompositeBackground(bool on);
   vtkm::rendering::Mapper* NewCopy() const VTKM_OVERRIDE;
 
 private:

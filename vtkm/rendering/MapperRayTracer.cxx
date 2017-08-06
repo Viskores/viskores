@@ -22,12 +22,12 @@
 
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/cont/internal/SimplePolymorphicContainer.h>
 
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/internal/RunTriangulator.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/raytracing/RayOperations.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
 
 namespace vtkm
@@ -41,10 +41,11 @@ struct MapperRayTracer::InternalsType
   vtkm::rendering::raytracing::RayTracer Tracer;
   vtkm::rendering::raytracing::Camera RayCamera;
   vtkm::rendering::raytracing::Ray<vtkm::Float32> Rays;
-
+  bool CompositeBackground;
   VTKM_CONT
   InternalsType()
     : Canvas(nullptr)
+    , CompositeBackground(true)
   {
   }
 };
@@ -99,7 +100,10 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   vtkm::rendering::raytracing::Camera& cam = this->Internals->Tracer.GetCamera();
   cam.SetParameters(camera, *this->Internals->Canvas);
   this->Internals->RayCamera.SetParameters(camera, *this->Internals->Canvas);
+
   this->Internals->RayCamera.CreateRays(this->Internals->Rays, coords);
+  raytracing::RayOperations::MapCanvasToRays(
+    this->Internals->Rays, camera, *this->Internals->Canvas);
 
   vtkm::Bounds dataBounds = coords.GetBounds();
 
@@ -112,15 +116,23 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   this->Internals->Tracer.Render(this->Internals->Rays);
 
   timer.Reset();
-  this->Internals->Canvas->WriteToCanvas(this->Internals->Rays.PixelIdx,
-                                         this->Internals->Rays.Distance,
-                                         this->Internals->Rays.Buffers.at(0).Buffer,
-                                         camera);
+  this->Internals->Canvas->WriteToCanvas(
+    this->Internals->Rays, this->Internals->Rays.Buffers.at(0).Buffer, camera);
+
+  if (this->Internals->CompositeBackground)
+  {
+    this->Internals->Canvas->BlendBackground();
+  }
 
   time = timer.GetElapsedTime();
   logger->AddLogData("write_to_canvas", time);
   time = tot_timer.GetElapsedTime();
   logger->CloseLogEntry(time);
+}
+
+void MapperRayTracer::SetCompositeBackground(bool on)
+{
+  this->Internals->CompositeBackground = on;
 }
 
 void MapperRayTracer::StartScene()
