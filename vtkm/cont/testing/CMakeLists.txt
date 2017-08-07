@@ -39,6 +39,7 @@ set(unit_tests
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleDiscard.cxx
+  UnitTestArrayHandleExtractComponent.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleReverse.cxx
