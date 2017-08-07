@@ -179,7 +179,8 @@ template <typename PtType>
 VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
                                             const PtType& verts,
                                             const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
-                                            vtkm::rendering::ColorTable ct)
+                                            vtkm::rendering::ColorTable ct,
+                                            bool logY)
 {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
@@ -193,6 +194,8 @@ VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
   {
     vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
     vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    if (logY)
+      s = vtkm::Float32(log10(s));
     glVertex3f(pt[0], s, 0.0f);
   }
   glEnd();
@@ -202,7 +205,8 @@ template <typename PtType>
 VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts,
                                           const PtType& verts,
                                           const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
-                                          vtkm::rendering::ColorTable ct)
+                                          vtkm::rendering::ColorTable ct,
+                                          bool logY)
 {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
@@ -216,6 +220,8 @@ VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts,
   {
     vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
     vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    if (logY)
+      s = vtkm::Float32(log10(s));
     glVertex3f(pt[0], s, 0.0f);
   }
   glEnd();
@@ -418,7 +424,7 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   {
     vtkm::cont::ArrayHandleUniformPointCoordinates verts;
     verts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-    RenderStructuredLineSegments(numVerts, verts, sf, colorTable);
+    RenderStructuredLineSegments(numVerts, verts, sf, colorTable, this->LogarithmY);
   }
   else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()) &&
            cellset.Cast<vtkm::cont::CellSetSingleType<>>().GetCellShapeAsId() ==
@@ -426,7 +432,7 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   {
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verts;
     verts = dcoords.Cast<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>();
-    RenderExplicitLineSegments(numVerts, verts, sf, colorTable);
+    RenderExplicitLineSegments(numVerts, verts, sf, colorTable, this->LogarithmY);
   }
   else
   {

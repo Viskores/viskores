@@ -114,7 +114,8 @@ template <typename MapperType, typename CanvasType, typename ViewType>
 void Render(const vtkm::cont::DataSet& ds,
             const std::string& fieldNm,
             const vtkm::rendering::Color& color,
-            const std::string& outputFile)
+            const std::string& outputFile,
+            const bool logY = false)
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
@@ -134,6 +135,7 @@ void Render(const vtkm::cont::DataSet& ds,
                                               vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f),
                                               0.f);
   view.AddAnnotation(titleAnnotation);
+  view.SetLogY(logY);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 }
