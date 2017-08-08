@@ -62,6 +62,12 @@ public:
   {
   }
 
+  VTKM_EXEC_CONT
+  ConnectivityStructured(const ConnectivityStructured<ToTopology, FromTopology, Dimension>& src)
+    : Internals(src.Internals)
+  {
+  }
+
   VTKM_EXEC
   vtkm::Id GetNumberOfElements() const { return Helper::GetNumberOfElements(this->Internals); }
 
@@ -112,6 +118,8 @@ public:
   {
     return this->Internals.GetPointDimensions();
   }
+
+  friend class ConnectivityStructured<ToTopology, FromTopology, Dimension>;
 
 private:
   InternalsType Internals;

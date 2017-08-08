@@ -41,15 +41,18 @@
 #include <vtkm/cont/Field.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/DispatcherPointNeighborhood.h>
 #include <vtkm/worklet/DispatcherReduceByKey.h>
 #include <vtkm/worklet/Keys.h>
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/ScatterPermutation.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/WorkletPointNeighborhood.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
-#include <vtkm/worklet/gradient/PointGradient.h>
 
-#include <vtkm/worklet/MarchingCubesDataTables.h>
+#include <vtkm/worklet/contour/DataTables.h>
+#include <vtkm/worklet/gradient/PointGradient.h>
+#include <vtkm/worklet/gradient/StructuredPointGradient.h>
 
 namespace vtkm
 {
@@ -526,8 +529,38 @@ public:
                             const WholeFieldIn& inputField,
                             NormalType& normal) const
   {
-    vtkm::worklet::gradient::PointGradient<WholeFieldIn> gradient;
+    using T = typename WholeFieldIn::ValueType;
+    vtkm::worklet::gradient::PointGradient<T> gradient;
     gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, normal);
+  }
+
+  template <typename FromIndexType,
+            typename WholeCoordinatesIn,
+            typename WholeFieldIn,
+            typename NormalType>
+  VTKM_EXEC void operator()(const vtkm::IdComponent& vtkmNotUsed(numCells),
+                            const FromIndexType& vtkmNotUsed(cellIds),
+                            vtkm::Id pointId,
+                            vtkm::exec::ConnectivityStructured<Point, Cell, 3>& geometry,
+                            const WholeCoordinatesIn& pointCoordinates,
+                            const WholeFieldIn& inputField,
+                            NormalType& normal) const
+  {
+    using T = typename WholeFieldIn::ValueType;
+
+    //Optimization for structured cellsets so we can call StructuredPointGradient
+    //and have way faster gradients
+    vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood<3> tpn(pointId, pointId, 0, pointGeom, 0);
+
+    const auto& boundary = tpn.GetBoundaryState();
+    auto pointPortal = pointCoordinates.GetPortal();
+    auto fieldPortal = inputField.GetPortal();
+    vtkm::exec::arg::Neighborhood<1, decltype(pointPortal)> points(pointPortal, boundary);
+    vtkm::exec::arg::Neighborhood<1, decltype(fieldPortal)> field(fieldPortal, boundary);
+
+    vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
+    gradient(boundary, points, field, normal);
   }
 
   ScatterType GetScatter() const { return this->Scatter; }
@@ -577,9 +610,46 @@ public:
                             const WholeWeightsIn& weights,
                             NormalType& normal) const
   {
-    vtkm::worklet::gradient::PointGradient<NormalType> gradient;
+    using T = typename WholeFieldIn::ValueType;
+    vtkm::worklet::gradient::PointGradient<T> gradient;
     NormalType grad1;
     gradient(numCells, cellIds, pointId, geometry, pointCoordinates, inputField, grad1);
+
+    NormalType grad0 = normal;
+    auto weight = weights.Get(edgeId);
+    normal = vtkm::Normal(vtkm::Lerp(grad0, grad1, weight));
+  }
+
+  template <typename FromIndexType,
+            typename WholeCoordinatesIn,
+            typename WholeFieldIn,
+            typename WholeWeightsIn,
+            typename NormalType>
+  VTKM_EXEC void operator()(const vtkm::IdComponent& vtkmNotUsed(numCells),
+                            const FromIndexType& vtkmNotUsed(cellIds),
+                            vtkm::Id pointId,
+                            vtkm::exec::ConnectivityStructured<Point, Cell, 3>& geometry,
+                            const WholeCoordinatesIn& pointCoordinates,
+                            const WholeFieldIn& inputField,
+                            vtkm::Id edgeId,
+                            const WholeWeightsIn& weights,
+                            NormalType& normal) const
+  {
+    using T = typename WholeFieldIn::ValueType;
+    //Optimization for structured cellsets so we can call StructuredPointGradient
+    //and have way faster gradients
+    vtkm::exec::ConnectivityStructured<Cell, Point, 3> pointGeom(geometry);
+    vtkm::exec::arg::ThreadIndicesPointNeighborhood<3> tpn(pointId, pointId, 0, pointGeom, 0);
+
+    const auto& boundary = tpn.GetBoundaryState();
+    auto pointPortal = pointCoordinates.GetPortal();
+    auto fieldPortal = inputField.GetPortal();
+    vtkm::exec::arg::Neighborhood<1, decltype(pointPortal)> points(pointPortal, boundary);
+    vtkm::exec::arg::Neighborhood<1, decltype(fieldPortal)> field(fieldPortal, boundary);
+
+    vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
+    NormalType grad1;
+    gradient(boundary, points, field, grad1);
 
     NormalType grad0 = normal;
     auto weight = weights.Get(edgeId);
