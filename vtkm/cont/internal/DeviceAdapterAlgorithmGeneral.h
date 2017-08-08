@@ -155,8 +155,8 @@ public:
       DeviceAdapterTag>::PortalConst StencilPortalType;
     StencilPortalType stencilPortal = stencil.PrepareForInput(DeviceAdapterTag());
 
-    typedef
-      typename IndexArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal IndexPortalType;
+    using IndexPortalType =
+      typename IndexArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal;
     IndexPortalType indexPortal = indices.PrepareForOutput(arrayLength, DeviceAdapterTag());
 
     StencilToIndexFlagKernel<StencilPortalType, IndexPortalType, UnaryPredicate> indexKernel(
@@ -328,7 +328,7 @@ public:
 
     typedef ReduceKernel<InputPortalType, U, BinaryFunctor> ReduceKernelType;
 
-    typedef vtkm::cont::ArrayHandleImplicit<ReduceKernelType> ReduceHandleType;
+    using ReduceHandleType = vtkm::cont::ArrayHandleImplicit<ReduceKernelType>;
     typedef vtkm::cont::ArrayHandle<U, vtkm::cont::StorageTagBasic> TempArrayType;
 
     ReduceKernelType kernel(
@@ -418,8 +418,8 @@ public:
       typedef typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
         DeviceAdapterTag>::PortalConst InputPortalType;
 
-      typedef typename vtkm::cont::ArrayHandle<ReduceKeySeriesStates>::template ExecutionTypes<
-        DeviceAdapterTag>::Portal KeyStatePortalType;
+      using KeyStatePortalType = typename vtkm::cont::ArrayHandle<
+        ReduceKeySeriesStates>::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
       InputPortalType inputPortal = keys.PrepareForInput(DeviceAdapterTag());
       KeyStatePortalType keyStatePortal =
@@ -438,7 +438,7 @@ public:
     {
       typedef vtkm::cont::ArrayHandle<U, VIn> ValueInHandleType;
       typedef vtkm::cont::ArrayHandle<U, VOut> ValueOutHandleType;
-      typedef vtkm::cont::ArrayHandle<ReduceKeySeriesStates> StencilHandleType;
+      using StencilHandleType = vtkm::cont::ArrayHandle<ReduceKeySeriesStates>;
       typedef vtkm::cont::ArrayHandleZip<ValueInHandleType, StencilHandleType> ZipInHandleType;
       typedef vtkm::cont::ArrayHandleZip<ValueOutHandleType, StencilHandleType> ZipOutHandleType;
 
@@ -477,10 +477,10 @@ public:
     typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> TempArrayType;
     typedef vtkm::cont::ArrayHandle<T, COut> OutputArrayType;
 
-    typedef
-      typename TempArrayType::template ExecutionTypes<DeviceAdapterTag>::PortalConst SrcPortalType;
-    typedef
-      typename OutputArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal DestPortalType;
+    using SrcPortalType =
+      typename TempArrayType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
+    using DestPortalType =
+      typename OutputArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     vtkm::Id numValues = input.GetNumberOfValues();
     if (numValues <= 0)
@@ -545,8 +545,8 @@ public:
       typedef typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
         DeviceAdapterTag>::PortalConst InputPortalType;
 
-      typedef typename vtkm::cont::ArrayHandle<ReduceKeySeriesStates>::template ExecutionTypes<
-        DeviceAdapterTag>::Portal KeyStatePortalType;
+      using KeyStatePortalType = typename vtkm::cont::ArrayHandle<
+        ReduceKeySeriesStates>::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
       InputPortalType inputPortal = keys.PrepareForInput(DeviceAdapterTag());
       KeyStatePortalType keyStatePortal =
@@ -566,8 +566,8 @@ public:
       typedef typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
         DeviceAdapterTag>::PortalConst InputPortalType;
 
-      typedef typename vtkm::cont::ArrayHandle<ReduceKeySeriesStates>::template ExecutionTypes<
-        DeviceAdapterTag>::PortalConst KeyStatePortalType;
+      using KeyStatePortalType = typename vtkm::cont::ArrayHandle<
+        ReduceKeySeriesStates>::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
 
       InputPortalType inputPortal = values.PrepareForInput(DeviceAdapterTag());
       KeyStatePortalType keyStatePortal = keystate.PrepareForInput(DeviceAdapterTag());
@@ -724,8 +724,8 @@ public:
       typedef typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
         DeviceAdapterTag>::PortalConst InputPortalType;
 
-      typedef typename vtkm::cont::ArrayHandle<ReduceKeySeriesStates>::template ExecutionTypes<
-        DeviceAdapterTag>::Portal KeyStatePortalType;
+      using KeyStatePortalType = typename vtkm::cont::ArrayHandle<
+        ReduceKeySeriesStates>::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
       InputPortalType inputPortal = keys.PrepareForInput(DeviceAdapterTag());
       KeyStatePortalType keyStatePortal =
@@ -744,7 +744,7 @@ public:
     {
       typedef vtkm::cont::ArrayHandle<U, VIn> ValueInHandleType;
       typedef vtkm::cont::ArrayHandle<U, VOut> ValueOutHandleType;
-      typedef vtkm::cont::ArrayHandle<ReduceKeySeriesStates> StencilHandleType;
+      using StencilHandleType = vtkm::cont::ArrayHandle<ReduceKeySeriesStates>;
       typedef vtkm::cont::ArrayHandleZip<ValueInHandleType, StencilHandleType> ZipInHandleType;
       typedef vtkm::cont::ArrayHandleZip<ValueOutHandleType, StencilHandleType> ZipOutHandleType;
 
@@ -770,8 +770,8 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
                              BinaryCompare binary_compare)
   {
-    typedef typename vtkm::cont::ArrayHandle<T, Storage> ArrayType;
-    typedef typename ArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
+    using ArrayType = typename vtkm::cont::ArrayHandle<T, Storage>;
+    using PortalType = typename ArrayType::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     vtkm::Id numValues = values.GetNumberOfValues();
     if (numValues < 2)
@@ -818,8 +818,9 @@ public:
     //combine the keys and values into a ZipArrayHandle
     //we than need to specify a custom compare function wrapper
     //that only checks for key side of the pair, using a custom compare functor.
-    typedef vtkm::cont::ArrayHandle<T, StorageT> KeyType;
-    typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
+    using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
+    ;
+    using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
     typedef vtkm::cont::ArrayHandleZip<KeyType, ValueType> ZipHandleType;
 
     ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
@@ -835,8 +836,9 @@ public:
     //we than need to specify a custom compare function wrapper
     //that only checks for key side of the pair, using the custom compare
     //functor that the user passed in
-    typedef vtkm::cont::ArrayHandle<T, StorageT> KeyType;
-    typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
+    using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
+    ;
+    using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
     typedef vtkm::cont::ArrayHandleZip<KeyType, ValueType> ZipHandleType;
 
     ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
@@ -997,7 +999,7 @@ public:
 private:
   typedef typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
     DeviceTag>::Portal PortalType;
-  typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
+  using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
   IteratorsType Iterators;
 
 #if defined(VTKM_MSVC) //MSVC atomics

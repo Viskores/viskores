@@ -137,7 +137,7 @@ private:
   template <typename FunctionType>
   void PrintAndInvoke(const FunctionType& function, std::true_type) const
   {
-    typedef typename vtkm::CellShapeIdToTag<cellShapeId>::Tag CellShapeTag;
+    using CellShapeTag = typename vtkm::CellShapeIdToTag<cellShapeId>::Tag;
     std::cout << "*** " << vtkm::GetCellShapeName(CellShapeTag()) << " ***************"
               << std::endl;
     function(CellShapeTag());
@@ -562,7 +562,7 @@ static inline VTKM_CONT std::string TestValue(vtkm::Id index, std::string)
 template <typename PortalType>
 static inline VTKM_CONT void CheckPortal(const PortalType& portal)
 {
-  typedef typename PortalType::ValueType ValueType;
+  using ValueType = typename PortalType::ValueType;
 
   for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
   {
@@ -584,7 +584,7 @@ static inline VTKM_CONT void CheckPortal(const PortalType& portal)
 template <typename PortalType>
 static inline VTKM_CONT void SetPortal(const PortalType& portal)
 {
-  typedef typename PortalType::ValueType ValueType;
+  using ValueType = typename PortalType::ValueType;
 
   for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
   {

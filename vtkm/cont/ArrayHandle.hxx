@@ -175,8 +175,8 @@ void ArrayHandle<T, S>::CopyInto(IteratorType dest, DeviceAdapterTag) const
     /// class and call CopyInto. The dynamic conversion will be sucessful
     /// becuase the check to ensure the ExecutionArray is of the type
     /// DeviceAdapterTag has already passed
-    typedef vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>
-      ConcreteType;
+    using ConcreteType =
+      vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>;
     ConcreteType* ConcreteExecutionArray =
       dynamic_cast<ConcreteType*>(this->Internals->ExecutionArray.get());
 

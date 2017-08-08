@@ -247,13 +247,13 @@ struct FloatingPointReturnCondition
 template <typename T, typename = void>
 struct FloatingPointReturnType
 {
-  typedef vtkm::Float64 Type;
+  using Type = vtkm::Float64;
 };
 
 template <typename T>
 struct FloatingPointReturnType<T, typename FloatingPointReturnCondition<T>::type>
 {
-  typedef vtkm::Float32 Type;
+  using Type = vtkm::Float32;
 };
 } // namespace detail
 
@@ -513,7 +513,7 @@ static inline VTKM_EXEC_CONT T Max(T x, T y, vtkm::TypeTraitsScalarTag)
 template <typename T>
 static inline VTKM_EXEC_CONT T Max(const T& x, const T& y, vtkm::TypeTraitsVectorTag)
 {
-  typedef vtkm::VecTraits<T> Traits;
+  using Traits = vtkm::VecTraits<T>;
   T result;
   for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
   {
@@ -532,7 +532,7 @@ static inline VTKM_EXEC_CONT T Min(T x, T y, vtkm::TypeTraitsScalarTag)
 template <typename T>
 static inline VTKM_EXEC_CONT T Min(const T& x, const T& y, vtkm::TypeTraitsVectorTag)
 {
-  typedef vtkm::VecTraits<T> Traits;
+  using Traits = vtkm::VecTraits<T>;
   T result;
   for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; index++)
   {
@@ -595,7 +595,7 @@ struct FloatLimits;
 template <>
 struct FloatLimits<vtkm::Float32>
 {
-  typedef vtkm::detail::IEEE754Bits32 BitsType;
+  using BitsType = vtkm::detail::IEEE754Bits32;
 
   VTKM_EXEC_CONT
   static vtkm::Float32 Nan()
@@ -625,7 +625,7 @@ struct FloatLimits<vtkm::Float32>
 template <int N>
 struct FloatLimits<vtkm::Vec<vtkm::Float32, N>>
 {
-  typedef vtkm::detail::IEEE754Bits32 BitsType;
+  using BitsType = vtkm::detail::IEEE754Bits32;
 
   VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float32, N> Nan()
@@ -658,7 +658,7 @@ struct FloatLimits<vtkm::Vec<vtkm::Float32, N>>
 template <>
 struct FloatLimits<vtkm::Float64>
 {
-  typedef vtkm::detail::IEEE754Bits64 BitsType;
+  using BitsType = vtkm::detail::IEEE754Bits64;
 
   VTKM_EXEC_CONT
   static vtkm::Float64 Nan()
@@ -688,7 +688,7 @@ struct FloatLimits<vtkm::Float64>
 template <int N>
 struct FloatLimits<vtkm::Vec<vtkm::Float64, N>>
 {
-  typedef vtkm::detail::IEEE754Bits64 BitsType;
+  using BitsType = vtkm::detail::IEEE754Bits64;
 
   VTKM_EXEC_CONT
   static vtkm::Vec<vtkm::Float64, N> Nan()

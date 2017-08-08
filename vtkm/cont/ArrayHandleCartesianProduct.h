@@ -41,11 +41,11 @@ template <typename ValueType_,
 class VTKM_ALWAYS_EXPORT ArrayPortalCartesianProduct
 {
 public:
-  typedef ValueType_ ValueType;
-  typedef ValueType_ IteratorType;
-  typedef PortalTypeFirst_ PortalTypeFirst;
-  typedef PortalTypeSecond_ PortalTypeSecond;
-  typedef PortalTypeThird_ PortalTypeThird;
+  using ValueType = ValueType_;
+  using IteratorType = ValueType_;
+  using PortalTypeFirst = PortalTypeFirst_;
+  using PortalTypeSecond = PortalTypeSecond_;
+  using PortalTypeThird = PortalTypeThird_;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -189,7 +189,7 @@ class Storage<T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, T
   VTKM_IS_ARRAY_HANDLE(ThirdHandleType);
 
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
   typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
     ValueType,
@@ -292,10 +292,10 @@ class ArrayTransfer<T,
   typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
 
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
   typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
     ValueType,

@@ -216,10 +216,10 @@ protected:
   void* Worklet;
   void* Invocation;
 
-  typedef void (*ExecuteSignature)(void*, void* const, vtkm::Id, vtkm::Id, vtkm::Id);
+  using ExecuteSignature = void (*)(void*, void* const, vtkm::Id, vtkm::Id, vtkm::Id);
   ExecuteSignature ExecuteFunction;
 
-  typedef void (*SetErrorBufferSignature)(void*, const vtkm::exec::internal::ErrorMessageBuffer&);
+  using SetErrorBufferSignature = void (*)(void*, const vtkm::exec::internal::ErrorMessageBuffer&);
   SetErrorBufferSignature SetErrorBufferFunction;
 
   const vtkm::Id GlobalIndexOffset;
@@ -307,11 +307,11 @@ protected:
   void* Worklet;
   void* Invocation;
 
-  typedef void (
-    *ExecuteSignature)(void*, void* const, vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id);
+  using ExecuteSignature =
+    void (*)(void*, void* const, vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id, vtkm::Id);
   ExecuteSignature ExecuteFunction;
 
-  typedef void (*SetErrorBufferSignature)(void*, const vtkm::exec::internal::ErrorMessageBuffer&);
+  using SetErrorBufferSignature = void (*)(void*, const vtkm::exec::internal::ErrorMessageBuffer&);
   SetErrorBufferSignature SetErrorBufferFunction;
 
   const vtkm::Id GlobalIndexOffset;

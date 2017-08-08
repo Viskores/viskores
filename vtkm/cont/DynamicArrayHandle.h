@@ -238,8 +238,8 @@ public:
   VTKM_CONT bool IsType()
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-    typedef typename ArrayHandleType::ValueType ValueType;
-    typedef typename ArrayHandleType::StorageTag StorageTag;
+    using ValueType = typename ArrayHandleType::ValueType;
+    using StorageTag = typename ArrayHandleType::StorageTag;
     return this->IsTypeAndStorage<ValueType, StorageTag>();
   }
 
@@ -281,8 +281,8 @@ public:
   VTKM_CONT ArrayHandleType Cast() const
   {
     VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-    typedef typename ArrayHandleType::ValueType ValueType;
-    typedef typename ArrayHandleType::StorageTag StorageTag;
+    using ValueType = typename ArrayHandleType::ValueType;
+    using StorageTag = typename ArrayHandleType::StorageTag;
     // Technically, this method returns a copy of the \c ArrayHandle. But
     // because \c ArrayHandle acts like a shared pointer, it is valid to
     // do the copy.
@@ -545,7 +545,7 @@ namespace internal
 template <typename TypeList, typename StorageList>
 struct DynamicTransformTraits<vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>>
 {
-  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
 
 } // namespace internal

@@ -49,18 +49,18 @@ public:
     typedef vtkm::cont::internal::ArrayTransfer<T, Storage, DeviceAdapter> ArrayTransferType;
 
   public:
-    typedef typename ArrayTransferType::PortalExecution Portal;
-    typedef typename ArrayTransferType::PortalConstExecution PortalConst;
+    using Portal = typename ArrayTransferType::PortalExecution;
+    using PortalConst = typename ArrayTransferType::PortalConstExecution;
   };
 
   /// The type of value held in the array (vtkm::FloatDefault, vtkm::Vec, etc.)
   ///
-  typedef T ValueType;
+  using ValueType = T;
 
   /// An array portal that can be used in the control environment.
   ///
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
   VTKM_CONT
   virtual ~ArrayHandleExecutionManagerBase() {}
@@ -200,11 +200,11 @@ class ArrayHandleExecutionManager : public ArrayHandleExecutionManagerBase<T, St
   typedef vtkm::cont::internal::Storage<T, Storage> StorageType;
 
 public:
-  typedef typename ArrayTransferType::PortalControl PortalControl;
-  typedef typename ArrayTransferType::PortalConstControl PortalConstControl;
+  using PortalControl = typename ArrayTransferType::PortalControl;
+  using PortalConstControl = typename ArrayTransferType::PortalConstControl;
 
-  typedef typename ArrayTransferType::PortalExecution PortalExecution;
-  typedef typename ArrayTransferType::PortalConstExecution PortalConstExecution;
+  using PortalExecution = typename ArrayTransferType::PortalExecution;
+  using PortalConstExecution = typename ArrayTransferType::PortalConstExecution;
 
   VTKM_CONT
   ArrayHandleExecutionManager(StorageType* storage)

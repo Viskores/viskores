@@ -211,8 +211,8 @@ struct ReduceStencilGeneration : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id centerIndex) const
   {
-    typedef typename InputPortalType::ValueType ValueType;
-    typedef typename KeyStatePortalType::ValueType KeyStateType;
+    using ValueType = typename InputPortalType::ValueType;
+    using KeyStateType = typename KeyStatePortalType::ValueType;
 
     const vtkm::Id leftIndex = centerIndex - 1;
     const vtkm::Id rightIndex = centerIndex + 1;
@@ -356,7 +356,7 @@ struct CopyKernel
   VTKM_EXEC_CONT
   void operator()(vtkm::Id index) const
   {
-    typedef typename OutputPortalType::ValueType ValueType;
+    using ValueType = typename OutputPortalType::ValueType;
     this->OutputPortal.Set(
       index + this->OutputOffset,
       static_cast<ValueType>(this->InputPortal.Get(index + this->InputOffset)));
@@ -394,7 +394,7 @@ struct LowerBoundsKernel
     // necessarily true, but it is true for the current uses of this general
     // function and I don't want to compete with STL if I don't have to.
 
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
     typename InputIteratorsType::IteratorType resultPos = std::lower_bound(
       inputIterators.GetBegin(), inputIterators.GetEnd(), this->ValuesPortal.Get(index));
@@ -442,7 +442,7 @@ struct LowerBoundsComparisonKernel
     // necessarily true, but it is true for the current uses of this general
     // function and I don't want to compete with STL if I don't have to.
 
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
     typename InputIteratorsType::IteratorType resultPos =
       std::lower_bound(inputIterators.GetBegin(),
@@ -462,7 +462,7 @@ struct LowerBoundsComparisonKernel
 template <typename PortalType>
 struct SetConstantKernel
 {
-  typedef typename PortalType::ValueType ValueType;
+  using ValueType = typename PortalType::ValueType;
   PortalType Portal;
   ValueType Value;
 
@@ -500,7 +500,7 @@ struct BitonicSortMergeKernel : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename PortalType::ValueType ValueType;
+    using ValueType = typename PortalType::ValueType;
 
     vtkm::Id groupIndex = index % this->GroupSize;
     vtkm::Id blockSize = 2 * this->GroupSize;
@@ -543,7 +543,7 @@ struct BitonicSortCrossoverKernel : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename PortalType::ValueType ValueType;
+    using ValueType = typename PortalType::ValueType;
 
     vtkm::Id groupIndex = index % this->GroupSize;
     vtkm::Id blockSize = 2 * this->GroupSize;
@@ -568,7 +568,7 @@ struct BitonicSortCrossoverKernel : vtkm::exec::FunctorBase
 template <class StencilPortalType, class OutputPortalType, class UnaryPredicate>
 struct StencilToIndexFlagKernel
 {
-  typedef typename StencilPortalType::ValueType StencilValueType;
+  using StencilValueType = typename StencilPortalType::ValueType;
   StencilPortalType StencilPortal;
   OutputPortalType OutputPortal;
   UnaryPredicate Predicate;
@@ -626,13 +626,13 @@ struct CopyIfKernel
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename StencilPortalType::ValueType StencilValueType;
+    using StencilValueType = typename StencilPortalType::ValueType;
     StencilValueType stencilValue = this->StencilPortal.Get(index);
     if (Predicate(stencilValue))
     {
       vtkm::Id outputIndex = this->IndexPortal.Get(index);
 
-      typedef typename OutputPortalType::ValueType OutputValueType;
+      using OutputValueType = typename OutputPortalType::ValueType;
       OutputValueType value = this->InputPortal.Get(index);
 
       this->OutputPortal.Set(outputIndex, value);
@@ -660,7 +660,7 @@ struct ClassifyUniqueKernel
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename StencilPortalType::ValueType ValueType;
+    using ValueType = typename StencilPortalType::ValueType;
     if (index == 0)
     {
       // Always copy first value.
@@ -698,7 +698,7 @@ struct ClassifyUniqueComparisonKernel
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename StencilPortalType::ValueType ValueType;
+    using ValueType = typename StencilPortalType::ValueType;
     if (index == 0)
     {
       // Always copy first value.
@@ -746,7 +746,7 @@ struct UpperBoundsKernel
     // necessarily true, but it is true for the current uses of this general
     // function and I don't want to compete with STL if I don't have to.
 
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
     typename InputIteratorsType::IteratorType resultPos = std::upper_bound(
       inputIterators.GetBegin(), inputIterators.GetEnd(), this->ValuesPortal.Get(index));
@@ -794,7 +794,7 @@ struct UpperBoundsKernelComparisonKernel
     // necessarily true, but it is true for the current uses of this general
     // function and I don't want to compete with STL if I don't have to.
 
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
     typename InputIteratorsType::IteratorType resultPos =
       std::upper_bound(inputIterators.GetBegin(),
@@ -814,7 +814,7 @@ struct UpperBoundsKernelComparisonKernel
 template <typename InPortalType, typename OutPortalType, typename BinaryFunctor>
 struct InclusiveToExclusiveKernel : vtkm::exec::FunctorBase
 {
-  typedef typename InPortalType::ValueType ValueType;
+  using ValueType = typename InPortalType::ValueType;
 
   InPortalType InPortal;
   OutPortalType OutPortal;
@@ -870,7 +870,7 @@ struct ScanKernel : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename PortalType::ValueType ValueType;
+    using ValueType = typename PortalType::ValueType;
 
     vtkm::Id leftIndex = this->Offset + index * this->Stride;
     vtkm::Id rightIndex = leftIndex + this->Distance;

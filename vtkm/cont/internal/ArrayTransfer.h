@@ -57,17 +57,17 @@ private:
 public:
   /// The type of value held in the array (vtkm::FloatDefault, vtkm::Vec, etc.)
   ///
-  typedef T ValueType;
+  using ValueType = T;
 
   /// An array portal that can be used in the control environment.
   ///
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
   /// An array portal that can be used in the execution environment.
   ///
-  typedef typename ArrayManagerType::PortalType PortalExecution;
-  typedef typename ArrayManagerType::PortalConstType PortalConstExecution;
+  using PortalExecution = typename ArrayManagerType::PortalType;
+  using PortalConstExecution = typename ArrayManagerType::PortalConstType;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)

@@ -36,10 +36,10 @@ template <typename ValueType_, typename PortalTypeFirst_, typename PortalTypeSec
 class ArrayPortalZip
 {
 public:
-  typedef ValueType_ ValueType;
-  typedef ValueType_ IteratorType;
-  typedef PortalTypeFirst_ PortalTypeFirst;
-  typedef PortalTypeSecond_ PortalTypeSecond;
+  using ValueType = ValueType_;
+  using IteratorType = ValueType_;
+  using PortalTypeFirst = PortalTypeFirst_;
+  using PortalTypeSecond = PortalTypeSecond_;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -137,7 +137,7 @@ class Storage<T, StorageTagZip<FirstHandleType, SecondHandleType>>
   VTKM_IS_ARRAY_HANDLE(SecondHandleType);
 
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
   typedef vtkm::exec::internal::ArrayPortalZip<ValueType,
                                                typename FirstHandleType::PortalControl,
@@ -221,10 +221,10 @@ class ArrayTransfer<T, StorageTagZip<FirstHandleType, SecondHandleType>, Device>
   typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
 
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
   typedef vtkm::exec::internal::ArrayPortalZip<
     ValueType,

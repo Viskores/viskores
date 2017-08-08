@@ -37,7 +37,7 @@ template <typename IndexPortalType, typename ValuePortalType>
 class VTKM_ALWAYS_EXPORT ArrayPortalPermutation
 {
 public:
-  typedef typename ValuePortalType::ValueType ValueType;
+  using ValueType = typename ValuePortalType::ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -125,7 +125,7 @@ class Storage<typename ValueArrayType::ValueType,
   VTKM_IS_ARRAY_HANDLE(ValueArrayType);
 
 public:
-  typedef typename ValueArrayType::ValueType ValueType;
+  using ValueType = typename ValueArrayType::ValueType;
 
   typedef vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
                                                        typename ValueArrayType::PortalControl>
@@ -209,15 +209,15 @@ class ArrayTransfer<typename ValueArrayType::ValueType,
                     Device>
 {
 public:
-  typedef typename ValueArrayType::ValueType ValueType;
+  using ValueType = typename ValueArrayType::ValueType;
 
 private:
   typedef StorageTagPermutation<IndexArrayType, ValueArrayType> StorageTag;
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
 
 public:
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
   typedef vtkm::exec::internal::ArrayPortalPermutation<
     typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
