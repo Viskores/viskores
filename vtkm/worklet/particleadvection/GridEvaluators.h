@@ -64,7 +64,7 @@ public:
     dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
@@ -108,8 +108,7 @@ public:
     dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
-  VTKM_EXEC_CONT bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                               vtkm::Vec<FieldType, 3>& out) const
+  VTKM_EXEC bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
       return false;
@@ -218,7 +217,7 @@ public:
     dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
@@ -385,7 +384,7 @@ public:
     dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
 
-  VTKM_EXEC_CONT
+  VTKM_EXEC
   bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
     if (!bounds.Contains(pos))
