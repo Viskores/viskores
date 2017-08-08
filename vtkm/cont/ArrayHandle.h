@@ -520,6 +520,24 @@ printSummary_ArrayHandle_Value(const T& value, std::ostream& out, vtkm::VecTrait
   out << value;
 }
 
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(vtkm::UInt8 value,
+                                           std::ostream& out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << static_cast<int>(value);
+}
+
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(vtkm::Int8 value,
+                                           std::ostream& out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << static_cast<int>(value);
+}
+
 template <typename T>
 VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
   const T& value,
@@ -540,24 +558,6 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
   out << ")";
 }
 
-VTKM_NEVER_EXPORT
-VTKM_CONT
-inline void printSummary_ArrayHandle_Value(UInt8 value,
-                                           std::ostream& out,
-                                           vtkm::VecTraitsTagSingleComponent)
-{
-  out << static_cast<int>(value);
-}
-
-VTKM_NEVER_EXPORT
-VTKM_CONT
-inline void printSummary_ArrayHandle_Value(Int8 value,
-                                           std::ostream& out,
-                                           vtkm::VecTraitsTagSingleComponent)
-{
-  out << static_cast<int>(value);
-}
-
 template <typename T1, typename T2>
 VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
   const vtkm::Pair<T1, T2>& value,
@@ -572,6 +572,8 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
     value.second, out, typename vtkm::VecTraits<T2>::HasMultipleComponents());
   out << "}";
 }
+
+
 
 } // namespace detail
 
