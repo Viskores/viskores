@@ -49,14 +49,31 @@ vtkm::cont::DataSet MakeDataTestSet2()
   return MakeTestDataSet().Make3DExplicitDataSet5();
 }
 
+vtkm::cont::DataSet MakeDataTestSet3()
+{
+  return MakeTestDataSet().Make3DUniformDataSet1();
+}
+
+vtkm::cont::DataSet MakeDataTestSet4()
+{
+  return MakeTestDataSet().Make3DRectilinearDataSet0();
+}
+
+vtkm::cont::DataSet MakeDataTestSet5()
+{
+  return MakeTestDataSet().Make3DExplicitDataSet6();
+}
+
 void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
                                    bool compactPoints,
                                    vtkm::Id numExpectedExtFaces,
-                                   vtkm::Id numExpectedPoints = 0)
+                                   vtkm::Id numExpectedPoints = 0,
+                                   bool passPolyData = true)
 {
   //Run the External Faces filter
   vtkm::filter::ExternalFaces externalFaces;
   externalFaces.SetCompactPoints(compactPoints);
+  externalFaces.SetPassPolyData(passPolyData);
   vtkm::filter::ResultDataSet result = externalFaces.Execute(ds);
 
   VTKM_TEST_ASSERT(result.IsValid(), "Results should be valid");
@@ -77,6 +94,7 @@ void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
 
   // verify fields
   VTKM_TEST_ASSERT(resultds.HasField("pointvar"), "Point field not mapped succesfully");
+  VTKM_TEST_ASSERT(resultds.HasField("cellvar"), "Cell field not mapped succesfully");
 
   // verify CompactPoints
   if (compactPoints)
@@ -107,10 +125,47 @@ void TestWithHeterogeneousMesh()
   TestExternalFacesExplicitGrid(ds, true, 12, 11);
 }
 
+void TestWithUniformMesh()
+{
+  std::cout << "Testing with Uniform mesh\n";
+  vtkm::cont::DataSet ds = MakeDataTestSet3();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesExplicitGrid(ds, false, 16 * 6);
+  std::cout << "Compact Points On\n";
+  TestExternalFacesExplicitGrid(ds, true, 16 * 6, 98);
+}
+
+void TestWithRectilinearMesh()
+{
+  std::cout << "Testing with Rectilinear mesh\n";
+  vtkm::cont::DataSet ds = MakeDataTestSet4();
+  std::cout << "Compact Points Off\n";
+  TestExternalFacesExplicitGrid(ds, false, 16);
+  std::cout << "Compact Points On\n";
+  TestExternalFacesExplicitGrid(ds, true, 16, 18);
+}
+
+void TestWithMixed2Dand3DMesh()
+{
+  std::cout << "Testing with mixed poly data and 3D mesh\n";
+  vtkm::cont::DataSet ds = MakeDataTestSet5();
+  std::cout << "Compact Points Off, Pass Poly Data On\n";
+  TestExternalFacesExplicitGrid(ds, false, 12);
+  std::cout << "Compact Points On, Pass Poly Data On\n";
+  TestExternalFacesExplicitGrid(ds, true, 12, 8);
+  std::cout << "Compact Points Off, Pass Poly Data Off\n";
+  TestExternalFacesExplicitGrid(ds, false, 6, 8, false);
+  std::cout << "Compact Points On, Pass Poly Data Off\n";
+  TestExternalFacesExplicitGrid(ds, true, 6, 5, false);
+}
+
 void TestExternalFacesFilter()
 {
   TestWithHeterogeneousMesh();
   TestWithHexahedraMesh();
+  TestWithUniformMesh();
+  TestWithRectilinearMesh();
+  TestWithMixed2Dand3DMesh();
 }
 
 } // anonymous namespace
