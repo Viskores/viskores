@@ -199,6 +199,7 @@ void ValidateEvaluator(const EvalType& eval,
                        const vtkm::Vec<FieldType, 3>& vec,
                        const std::string& msg)
 {
+  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
   typedef TestEvaluatorWorklet<FieldType, EvalType> EvalTester;
   typedef vtkm::worklet::DispatcherMapField<EvalTester> EvalTesterDispatcher;
   EvalTester evalTester(eval);
@@ -206,10 +207,11 @@ void ValidateEvaluator(const EvalType& eval,
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
+  pointsHandle.PrepareForInput(DeviceAdapter());
   vtkm::cont::ArrayHandle<bool> evalStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> evalResults;
-  evalStatus.Allocate(numPoints);
-  evalResults.Allocate(numPoints);
+  evalStatus.PrepareForOutput(numPoints, DeviceAdapter());
+  evalResults.PrepareForOutput(numPoints, DeviceAdapter());
   evalTesterDispatcher.Invoke(pointsHandle, evalStatus, evalResults);
   auto statusPortal = evalStatus.GetPortalConstControl();
   auto resultsPortal = evalResults.GetPortalConstControl();
@@ -242,8 +244,6 @@ void TestEvaluators()
   typedef vtkm::Float32 FieldType;
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
   typedef FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
-  //typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
-
 
   //Constant field evaluator and RK4 integrator.
   typedef vtkm::worklet::particleadvection::ConstantField<FieldType> CEvalType;
