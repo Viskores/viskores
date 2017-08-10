@@ -59,17 +59,10 @@ class ParticleAdvection
 public:
   ParticleAdvection() {}
 
-<<<<<<< HEAD
   template <typename IntegratorType,
             typename FieldType,
             typename PointStorage,
             typename DeviceAdapter>
-=======
-  template <typename IntegratorType,
-            typename FieldType,
-            typename PointStorage,
-            typename DeviceAdapter>
->>>>>>> b23564a52638de124a1196217bc4bca22d8f254a
   ParticleAdvectionResult<FieldType> Run(
     const IntegratorType& it,
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
@@ -110,8 +103,6 @@ public:
                                                                DeviceAdapter>
       worklet;
 
-<<<<<<< HEAD
-=======
     vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken, status;
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
     //Allocate status and steps arrays.
@@ -140,8 +131,6 @@ public:
                                                                FieldType,
                                                                DeviceAdapter>
       worklet;
-
->>>>>>> b23564a52638de124a1196217bc4bca22d8f254a
     vtkm::cont::ArrayHandle<vtkm::Id> status;
     worklet.Run(it, pts, nSteps, status, stepsTaken);
 
