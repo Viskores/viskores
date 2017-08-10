@@ -336,9 +336,10 @@ public:
     rowSize = dims[0];
 
     RectilinearType gridPoints = coords.GetData().Cast<RectilinearType>();
-    xAxis = gridPoints.GetPortalConstControl().GetFirstPortal();
-    yAxis = gridPoints.GetPortalConstControl().GetSecondPortal();
-    zAxis = gridPoints.GetPortalConstControl().GetThirdPortal();
+    RectilinearConstPortal gridPointsPortal = gridPoints.PrepareForInput(DeviceAdapterTag());
+    xAxis = gridPointsPortal.GetFirstPortal();
+    yAxis = gridPointsPortal.GetSecondPortal();
+    zAxis = gridPointsPortal.GetThirdPortal();
   }
 
   VTKM_CONT
@@ -495,9 +496,11 @@ private:
   typedef vtkm::cont::ArrayHandle<FieldType> AxisHandle;
   typedef vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>
     RectilinearType;
-  typename AxisHandle::PortalConstControl xAxis;
-  typename AxisHandle::PortalConstControl yAxis;
-  typename AxisHandle::PortalConstControl zAxis;
+  typedef typename RectilinearType::template ExecutionTypes<DeviceAdapterTag>::PortalConst
+    RectilinearConstPortal;
+  typename AxisHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst xAxis;
+  typename AxisHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst yAxis;
+  typename AxisHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst zAxis;
   vtkm::Bounds bounds;
   vtkm::Id3 dims;
   PortalType vectors;

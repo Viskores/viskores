@@ -118,10 +118,12 @@ void RandomPoint(const vtkm::Bounds& bounds, vtkm::Vec<FieldType, 3>& p)
 template <typename FieldType>
 vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds, const vtkm::Id3& dims)
 {
-  vtkm::Vec<FieldType, 3> origin(bounds.X.Min, bounds.Y.Min, bounds.Z.Min);
-  vtkm::Vec<FieldType, 3> spacing(bounds.X.Length() / (dims[0] - 1),
-                                  bounds.Y.Length() / (dims[1] - 1),
-                                  bounds.Z.Length() / (dims[2] - 1));
+  vtkm::Vec<FieldType, 3> origin(static_cast<FieldType>(bounds.X.Min),
+                                 static_cast<FieldType>(bounds.Y.Min),
+                                 static_cast<FieldType>(bounds.Z.Min));
+  vtkm::Vec<FieldType, 3> spacing(static_cast<FieldType>(bounds.X.Length() / (dims[0] - 1)),
+                                  static_cast<FieldType>(bounds.Y.Length() / (dims[1] - 1)),
+                                  static_cast<FieldType>(bounds.Z.Length() / (dims[2] - 1)));
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
@@ -134,22 +136,22 @@ vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds, const v
   vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
   std::vector<FieldType> xvals, yvals, zvals;
 
-  vtkm::Vec<FieldType, 3> spacing(bounds.X.Length() / (dims[0] - 1),
-                                  bounds.Y.Length() / (dims[1] - 1),
-                                  bounds.Z.Length() / (dims[2] - 1));
+  vtkm::Vec<FieldType, 3> spacing(static_cast<FieldType>(bounds.X.Length() / (dims[0] - 1)),
+                                  static_cast<FieldType>(bounds.Y.Length() / (dims[1] - 1)),
+                                  static_cast<FieldType>(bounds.Z.Length() / (dims[2] - 1)));
   xvals.resize(dims[0]);
-  xvals[0] = bounds.X.Min;
+  xvals[0] = static_cast<FieldType>(bounds.X.Min);
   for (vtkm::Id i = 1; i < dims[0]; i++)
     xvals[i] = xvals[i - 1] + spacing[0];
   yvals.resize(dims[1]);
 
   yvals.resize(dims[1]);
-  yvals[0] = bounds.Y.Min;
+  yvals[0] = static_cast<FieldType>(bounds.Y.Min);
   for (vtkm::Id i = 1; i < dims[1]; i++)
     yvals[i] = yvals[i - 1] + spacing[1];
 
   zvals.resize(dims[2]);
-  zvals[0] = bounds.Z.Min;
+  zvals[0] = static_cast<FieldType>(bounds.Z.Min);
   for (vtkm::Id i = 1; i < dims[2]; i++)
     zvals[i] = zvals[i - 1] + spacing[2];
 
@@ -392,10 +394,12 @@ void TestEvaluators()
           //Test the result for the evaluator
           ValidateEvaluator(constEval, pointIns, vec, "constant vector evaluator");
           ValidateEvaluator(uniformEval, pointIns, vec, "uniform evaluator");
+          ValidateEvaluator(rectEval, pointIns, vec, "rectilinear evaluator");
 
           //Test taking one step.
           ValidateIntegrator(constRK4, pointIns, stepResult, "constant vector RK4");
           ValidateIntegrator(uniformRK4, pointIns, stepResult, "uniform RK4");
+          ValidateIntegrator(rectRK4, pointIns, stepResult, "rectilinear evaluator");
         }
       }
     }
