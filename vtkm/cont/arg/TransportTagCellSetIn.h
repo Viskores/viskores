@@ -50,10 +50,10 @@ struct Transport<vtkm::cont::arg::TransportTagCellSetIn<FromTopology, ToTopology
 {
   VTKM_IS_CELL_SET(ContObjectType);
 
-  typedef
+  using ExecObjectType =
     typename ContObjectType::template ExecutionTypes<Device,
                                                      FromTopology,
-                                                     ToTopology>::ExecObjectType ExecObjectType;
+                                                     ToTopology>::ExecObjectType;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType

@@ -80,7 +80,6 @@ protected:
   struct RenderFunctor;
 
   bool IsSceneDirty;
-  bool DoCompositeBackground;
   bool IsUniformDataSet;
   vtkm::Bounds SpatialExtent;
   vtkm::cont::DynamicArrayHandleCoordinateSystem Coordinates;

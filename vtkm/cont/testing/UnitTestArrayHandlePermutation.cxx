@@ -44,7 +44,7 @@ struct DoubleIndexFunctor
   vtkm::Id operator()(vtkm::Id index) const { return 2 * index; }
 };
 
-typedef vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor> DoubleIndexArrayType;
+using DoubleIndexArrayType = vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor>;
 
 template <typename PermutedPortalType>
 struct CheckPermutationFunctor : vtkm::exec::FunctorBase
@@ -54,7 +54,7 @@ struct CheckPermutationFunctor : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename PermutedPortalType::ValueType T;
+    using T = typename PermutedPortalType::ValueType;
     T value = this->PermutedPortal.Get(index);
 
     vtkm::Id permutedIndex = 2 * index;
@@ -72,8 +72,8 @@ VTKM_CONT CheckPermutationFunctor<
   typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst>
 make_CheckPermutationFunctor(const PermutedArrayHandleType& permutedArray, Device)
 {
-  typedef typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst
-    PermutedPortalType;
+  using PermutedPortalType =
+    typename PermutedArrayHandleType::template ExecutionTypes<Device>::PortalConst;
   CheckPermutationFunctor<PermutedPortalType> functor;
   functor.PermutedPortal = permutedArray.PrepareForInput(Device());
   return functor;
@@ -87,7 +87,7 @@ struct InPlacePermutationFunctor : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename PermutedPortalType::ValueType T;
+    using T = typename PermutedPortalType::ValueType;
     T value = this->PermutedPortal.Get(index);
 
     value = value + T(1000);
@@ -101,8 +101,8 @@ VTKM_CONT InPlacePermutationFunctor<
   typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
 make_InPlacePermutationFunctor(PermutedArrayHandleType& permutedArray, Device)
 {
-  typedef
-    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal PermutedPortalType;
+  using PermutedPortalType =
+    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal;
   InPlacePermutationFunctor<PermutedPortalType> functor;
   functor.PermutedPortal = permutedArray.PrepareForInPlace(Device());
   return functor;
@@ -111,7 +111,7 @@ make_InPlacePermutationFunctor(PermutedArrayHandleType& permutedArray, Device)
 template <typename PortalType>
 VTKM_CONT void CheckInPlaceResult(PortalType portal)
 {
-  typedef typename PortalType::ValueType T;
+  using T = typename PortalType::ValueType;
   for (vtkm::Id permutedIndex = 0; permutedIndex < 2 * ARRAY_SIZE; permutedIndex++)
   {
     if (permutedIndex % 2 == 0)
@@ -140,7 +140,7 @@ struct OutputPermutationFunctor : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename PermutedPortalType::ValueType T;
+    using T = typename PermutedPortalType::ValueType;
     this->PermutedPortal.Set(index, TestValue(static_cast<vtkm::Id>(index), T()));
   }
 };
@@ -150,8 +150,8 @@ VTKM_CONT OutputPermutationFunctor<
   typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal>
 make_OutputPermutationFunctor(PermutedArrayHandleType& permutedArray, Device)
 {
-  typedef
-    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal PermutedPortalType;
+  using PermutedPortalType =
+    typename PermutedArrayHandleType::template ExecutionTypes<Device>::Portal;
   OutputPermutationFunctor<PermutedPortalType> functor;
   functor.PermutedPortal = permutedArray.PrepareForOutput(ARRAY_SIZE, Device());
   return functor;
@@ -160,7 +160,7 @@ make_OutputPermutationFunctor(PermutedArrayHandleType& permutedArray, Device)
 template <typename PortalType>
 VTKM_CONT void CheckOutputResult(PortalType portal)
 {
-  typedef typename PortalType::ValueType T;
+  using T = typename PortalType::ValueType;
   for (vtkm::IdComponent permutedIndex = 0; permutedIndex < 2 * ARRAY_SIZE; permutedIndex++)
   {
     if (permutedIndex % 2 == 0)
@@ -185,12 +185,12 @@ VTKM_CONT void CheckOutputResult(PortalType portal)
 template <typename ValueType>
 struct PermutationTests
 {
-  typedef vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor> IndexArrayType;
+  using IndexArrayType = vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor>;
   typedef vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic> ValueArrayType;
   typedef vtkm::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType> PermutationArrayType;
 
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG Device;
-  typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
+  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
   ValueArrayType MakeValueArray() const
   {

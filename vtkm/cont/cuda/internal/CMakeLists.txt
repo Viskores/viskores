@@ -21,6 +21,7 @@
 set(headers
   ArrayManagerExecutionCuda.h
   ArrayManagerExecutionThrustDevice.h
+  CudaAllocator.h
   DeviceAdapterAlgorithmCuda.h
   DeviceAdapterAlgorithmThrust.h
   DeviceAdapterTagCuda.h
@@ -28,6 +29,11 @@ set(headers
   TaskTuner.h
   ThrustExceptionHandler.h
   VirtualObjectTransferCuda.h
+  )
+
+set(sources
+  ArrayManagerExecutionCuda.cu
+  CudaAllocator.cu
   )
 
 vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
@@ -49,7 +55,7 @@ if (VTKm_ENABLE_CUDA)
     list(APPEND compile_options -Xcompiler=-fPIC)
   endif()
 
-  cuda_compile(vtkm_cont_cuda_object_files ArrayManagerExecutionCuda.cu
+  cuda_compile(vtkm_cont_cuda_object_files ${sources}
                OPTIONS "${compile_options}")
 
   #Setup the dependency chain for the custom object build so that

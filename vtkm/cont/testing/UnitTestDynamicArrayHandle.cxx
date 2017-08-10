@@ -71,7 +71,7 @@ struct TypeListTagString : vtkm::ListTagBase<std::string>
 template <typename T>
 struct UnusualPortal
 {
-  typedef T ValueType;
+  using ValueType = T;
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }

@@ -79,7 +79,7 @@ void RunTest(const CellSetType& cellset, const vtkm::cont::ArrayHandle<vtkm::Id>
     VTKM_TEST_ASSERT(outPointId.GetPortalConstControl().Get(i) ==
                        permutation.GetPortalConstControl().Get(i),
                      "output point ids do not match the permutation");
-    VTKM_TEST_ASSERT(outVisit.GetPortalConstControl().Get(i) == 1, "incorrect visit index");
+    VTKM_TEST_ASSERT(outVisit.GetPortalConstControl().Get(i) == 0, "incorrect visit index");
   }
 }
 

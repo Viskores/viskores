@@ -44,10 +44,10 @@ template <typename T, class StorageTag>
 class ArrayManagerExecutionShareWithControl
 {
 public:
-  typedef T ValueType;
+  using ValueType = T;
   typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
-  typedef typename StorageType::PortalType PortalType;
-  typedef typename StorageType::PortalConstType PortalConstType;
+  using PortalType = typename StorageType::PortalType;
+  using PortalConstType = typename StorageType::PortalConstType;
 
   VTKM_CONT
   ArrayManagerExecutionShareWithControl(StorageType* storage)
@@ -99,7 +99,7 @@ public:
   template <class IteratorTypeControl>
   VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
-    typedef typename StorageType::PortalConstType::IteratorType IteratorType;
+    using IteratorType = typename StorageType::PortalConstType::IteratorType;
     IteratorType beginIterator = this->Storage->GetPortalConst().GetIteratorBegin();
 
     std::copy(beginIterator, beginIterator + this->Storage->GetNumberOfValues(), dest);

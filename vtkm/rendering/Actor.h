@@ -41,6 +41,11 @@ public:
         const vtkm::cont::Field& scalarField,
         const vtkm::rendering::ColorTable& colorTable = vtkm::rendering::ColorTable("default"));
 
+  Actor(const vtkm::cont::DynamicCellSet& cells,
+        const vtkm::cont::CoordinateSystem& coordinates,
+        const vtkm::cont::Field& scalarField,
+        const vtkm::rendering::Color& color);
+
   void Render(vtkm::rendering::Mapper& mapper,
               vtkm::rendering::Canvas& canvas,
               const vtkm::rendering::Camera& camera) const;
@@ -64,6 +69,8 @@ private:
   std::shared_ptr<InternalsType> Internals;
 
   struct RangeFunctor;
+
+  void Init(const vtkm::cont::CoordinateSystem& coordinates, const vtkm::cont::Field& scalarField);
 };
 }
 } //namespace vtkm::rendering

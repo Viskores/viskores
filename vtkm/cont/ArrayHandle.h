@@ -128,15 +128,15 @@ struct GetTypeInParentheses;
 template <typename T>
 struct GetTypeInParentheses<void(T)>
 {
-  typedef T type;
+  using type = T;
 };
 
 } // namespace detail
 
 // Implementation for VTKM_ARRAY_HANDLE_SUBCLASS macros
 #define VTK_M_ARRAY_HANDLE_SUBCLASS_IMPL(classname, fullclasstype, superclass, typename__)         \
-  typedef typename__ vtkm::cont::detail::GetTypeInParentheses<void fullclasstype>::type Thisclass; \
-  typedef typename__ vtkm::cont::detail::GetTypeInParentheses<void superclass>::type Superclass;   \
+  using Thisclass = typename__ vtkm::cont::detail::GetTypeInParentheses<void fullclasstype>::type; \
+  using Superclass = typename__ vtkm::cont::detail::GetTypeInParentheses<void superclass>::type;   \
                                                                                                    \
   VTKM_IS_ARRAY_HANDLE(Superclass);                                                                \
                                                                                                    \
@@ -166,8 +166,8 @@ struct GetTypeInParentheses<void(T)>
     return *this;                                                                                  \
   }                                                                                                \
                                                                                                    \
-  typedef typename__ Superclass::ValueType ValueType;                                              \
-  typedef typename__ Superclass::StorageTag StorageTag
+  using ValueType = typename__ Superclass::ValueType;                                              \
+  using StorageTag = typename__ Superclass::StorageTag
 
 /// \brief Macro to make default methods in ArrayHandle subclasses.
 ///
@@ -250,17 +250,17 @@ private:
     vtkm::cont::internal::ArrayHandleExecutionManagerBase<T, StorageTag_>;
 
 public:
-  typedef vtkm::cont::internal::Storage<T, StorageTag_> StorageType;
-  typedef T ValueType;
-  typedef StorageTag_ StorageTag;
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using StorageType = vtkm::cont::internal::Storage<T, StorageTag_>;
+  using ValueType = T;
+  using StorageTag = StorageTag_;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
   template <typename DeviceAdapterTag>
   struct ExecutionTypes
   {
-    typedef typename ExecutionManagerType::template ExecutionTypes<DeviceAdapterTag>::Portal Portal;
-    typedef typename ExecutionManagerType::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-      PortalConst;
+    using Portal = typename ExecutionManagerType::template ExecutionTypes<DeviceAdapterTag>::Portal;
+    using PortalConst =
+      typename ExecutionManagerType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
   };
 
   /// Constructs an empty ArrayHandle. Typically used for output or
@@ -488,8 +488,8 @@ template <typename T>
 VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> make_ArrayHandle(const T* array,
                                                                                    vtkm::Id length)
 {
-  typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> ArrayHandleType;
-  typedef vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic> StorageType;
+  using ArrayHandleType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
+  using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>;
   return ArrayHandleType(StorageType(array, length));
 }
 
@@ -520,6 +520,24 @@ printSummary_ArrayHandle_Value(const T& value, std::ostream& out, vtkm::VecTrait
   out << value;
 }
 
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(vtkm::UInt8 value,
+                                           std::ostream& out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << static_cast<int>(value);
+}
+
+VTKM_NEVER_EXPORT
+VTKM_CONT
+inline void printSummary_ArrayHandle_Value(vtkm::Int8 value,
+                                           std::ostream& out,
+                                           vtkm::VecTraitsTagSingleComponent)
+{
+  out << static_cast<int>(value);
+}
+
 template <typename T>
 VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
   const T& value,
@@ -540,24 +558,6 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
   out << ")";
 }
 
-VTKM_NEVER_EXPORT
-VTKM_CONT
-inline void printSummary_ArrayHandle_Value(UInt8 value,
-                                           std::ostream& out,
-                                           vtkm::VecTraitsTagSingleComponent)
-{
-  out << static_cast<int>(value);
-}
-
-VTKM_NEVER_EXPORT
-VTKM_CONT
-inline void printSummary_ArrayHandle_Value(Int8 value,
-                                           std::ostream& out,
-                                           vtkm::VecTraitsTagSingleComponent)
-{
-  out << static_cast<int>(value);
-}
-
 template <typename T1, typename T2>
 VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
   const vtkm::Pair<T1, T2>& value,
@@ -572,6 +572,8 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle_Value(
     value.second, out, typename vtkm::VecTraits<T2>::HasMultipleComponents());
   out << "}";
 }
+
+
 
 } // namespace detail
 

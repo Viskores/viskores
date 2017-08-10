@@ -59,15 +59,15 @@ void free_aligned(void* mem);
 template <typename T, size_t Alignment>
 struct AlignedAllocator
 {
-  typedef T value_type;
-  typedef T& reference;
-  typedef const T& const_reference;
-  typedef T* pointer;
-  typedef const T* const_pointer;
-  typedef void* void_pointer;
-  typedef const void* const_void_pointer;
-  typedef std::ptrdiff_t difference_type;
-  typedef std::size_t size_type;
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using void_pointer = void*;
+  using const_void_pointer = const void*;
+  using difference_type = std::ptrdiff_t;
+  using size_type = std::size_t;
 
   template <typename U>
   struct rebind
@@ -172,9 +172,9 @@ template <typename ValueT>
 class VTKM_ALWAYS_EXPORT Storage<ValueT, vtkm::cont::StorageTagBasic> : public StorageBasicBase
 {
 public:
-  typedef ValueT ValueType;
-  typedef vtkm::cont::internal::ArrayPortalFromIterators<ValueType*> PortalType;
-  typedef vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*> PortalConstType;
+  using ValueType = ValueT;
+  using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<ValueType*>;
+  using PortalConstType = vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*>;
 
   /// The original design of this class provided an allocator as a template
   /// parameters. That messed things up, though, because other templated

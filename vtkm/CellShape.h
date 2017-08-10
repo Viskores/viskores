@@ -87,7 +87,7 @@ struct CellShapeIdToTag
   // probably means you are using an ID that does not have a defined cell
   // shape.
 
-  typedef std::false_type valid;
+  using valid = std::false_type;
 };
 
 // Define a tag for each cell shape as well as the support structs to go
@@ -112,8 +112,8 @@ struct CellShapeIdToTag
   template <>                                                                                      \
   struct CellShapeIdToTag<vtkm::idname>                                                            \
   {                                                                                                \
-    typedef std::true_type valid;                                                                  \
-    typedef vtkm::CellShapeTag##name Tag;                                                          \
+    using valid = std::true_type;                                                                  \
+    using Tag = vtkm::CellShapeTag##name;                                                          \
   }
 
 VTKM_DEFINE_CELL_TAG(Empty, CELL_SHAPE_EMPTY);
@@ -153,7 +153,7 @@ struct CellShapeTagGeneric
 #define vtkmGenericCellShapeMacroCase(cellShapeId, call)                                           \
   case vtkm::cellShapeId:                                                                          \
   {                                                                                                \
-    typedef vtkm::CellShapeIdToTag<vtkm::cellShapeId>::Tag CellShapeTag;                           \
+    using CellShapeTag = vtkm::CellShapeIdToTag<vtkm::cellShapeId>::Tag;                           \
     call;                                                                                          \
   }                                                                                                \
   break

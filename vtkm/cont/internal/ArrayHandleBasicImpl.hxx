@@ -302,7 +302,9 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device) const
     internal::TypelessExecutionArray execArray(
       reinterpret_cast<void*&>(priv->ExecutionArray),
       reinterpret_cast<void*&>(priv->ExecutionArrayEnd),
-      reinterpret_cast<void*&>(priv->ExecutionArrayCapacity));
+      reinterpret_cast<void*&>(priv->ExecutionArrayCapacity),
+      this->Internals->ControlArray.GetBasePointer(),
+      this->Internals->ControlArray.GetCapacityPointer());
 
     const vtkm::Id numBytes =
       static_cast<vtkm::Id>(sizeof(ValueType)) * this->GetStorage().GetNumberOfValues();
@@ -334,10 +336,11 @@ ArrayHandle<T, StorageTagBasic>::PrepareForOutput(vtkm::Id numVals, DeviceAdapte
   // the execution environment.
   this->Internals->ControlArrayValid = false;
 
-  internal::TypelessExecutionArray execArray(
-    reinterpret_cast<void*&>(priv->ExecutionArray),
-    reinterpret_cast<void*&>(priv->ExecutionArrayEnd),
-    reinterpret_cast<void*&>(priv->ExecutionArrayCapacity));
+  internal::TypelessExecutionArray execArray(reinterpret_cast<void*&>(priv->ExecutionArray),
+                                             reinterpret_cast<void*&>(priv->ExecutionArrayEnd),
+                                             reinterpret_cast<void*&>(priv->ExecutionArrayCapacity),
+                                             this->Internals->ControlArray.GetBasePointer(),
+                                             this->Internals->ControlArray.GetCapacityPointer());
 
   this->Internals->ExecutionInterface->Allocate(execArray,
                                                 static_cast<vtkm::Id>(sizeof(ValueType)) * numVals);
@@ -370,7 +373,9 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
     internal::TypelessExecutionArray execArray(
       reinterpret_cast<void*&>(this->Internals->ExecutionArray),
       reinterpret_cast<void*&>(this->Internals->ExecutionArrayEnd),
-      reinterpret_cast<void*&>(this->Internals->ExecutionArrayCapacity));
+      reinterpret_cast<void*&>(this->Internals->ExecutionArrayCapacity),
+      this->Internals->ControlArray.GetBasePointer(),
+      this->Internals->ControlArray.GetCapacityPointer());
 
     vtkm::Id numBytes =
       static_cast<vtkm::Id>(sizeof(ValueType)) * this->GetStorage().GetNumberOfValues();
@@ -413,7 +418,9 @@ void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag) const
       internal::TypelessExecutionArray execArray(
         reinterpret_cast<void*&>(priv->ExecutionArray),
         reinterpret_cast<void*&>(priv->ExecutionArrayEnd),
-        reinterpret_cast<void*&>(priv->ExecutionArrayCapacity));
+        reinterpret_cast<void*&>(priv->ExecutionArrayCapacity),
+        this->Internals->ControlArray.GetBasePointer(),
+        this->Internals->ControlArray.GetCapacityPointer());
       priv->ExecutionInterface->Free(execArray);
       delete priv->ExecutionInterface;
       priv->ExecutionInterface = nullptr;
@@ -465,7 +472,9 @@ void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecutionInternal()
     internal::TypelessExecutionArray execArray(
       reinterpret_cast<void*&>(this->Internals->ExecutionArray),
       reinterpret_cast<void*&>(this->Internals->ExecutionArrayEnd),
-      reinterpret_cast<void*&>(this->Internals->ExecutionArrayCapacity));
+      reinterpret_cast<void*&>(this->Internals->ExecutionArrayCapacity),
+      this->Internals->ControlArray.GetBasePointer(),
+      this->Internals->ControlArray.GetCapacityPointer());
     this->Internals->ExecutionInterface->Free(execArray);
     this->Internals->ExecutionArrayValid = false;
   }

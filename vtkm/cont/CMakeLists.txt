@@ -25,6 +25,7 @@ set(headers
   ArrayHandleCompositeVector.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
+  ArrayHandleExtractComponent.h
   ArrayHandleDiscard.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
@@ -33,6 +34,7 @@ set(headers
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
   ArrayHandleStreaming.h
+  ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayHandleZip.h

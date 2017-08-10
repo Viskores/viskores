@@ -50,8 +50,8 @@ class ArrayPortalFromIterators<IteratorT,
                                  typename std::remove_pointer<IteratorT>::type>::value>::type>
 {
 public:
-  typedef typename std::iterator_traits<IteratorT>::value_type ValueType;
-  typedef IteratorT IteratorType;
+  using ValueType = typename std::iterator_traits<IteratorT>::value_type;
+  using IteratorType = IteratorT;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_CONT
@@ -124,8 +124,8 @@ class ArrayPortalFromIterators<IteratorT,
                                  typename std::remove_pointer<IteratorT>::type>::value>::type>
 {
 public:
-  typedef typename std::iterator_traits<IteratorT>::value_type ValueType;
-  typedef IteratorT IteratorType;
+  using ValueType = typename std::iterator_traits<IteratorT>::value_type;
+  using IteratorType = IteratorT;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_CONT
@@ -216,11 +216,11 @@ namespace cont
 template <typename _IteratorType>
 class ArrayPortalToIterators<vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType>>
 {
-  typedef vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType> PortalType;
+  using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<_IteratorType>;
 
 public:
 #if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
-  typedef _IteratorType IteratorType;
+  using IteratorType = _IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -255,7 +255,7 @@ public:
   IteratorType GetEnd() const
   {
     IteratorType iterator = this->Iterator;
-    typedef typename std::iterator_traits<IteratorType>::difference_type difference_type;
+    using difference_type = typename std::iterator_traits<IteratorType>::difference_type;
 
 #if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
     std::advance(iterator, static_cast<difference_type>(this->NumberOfValues));

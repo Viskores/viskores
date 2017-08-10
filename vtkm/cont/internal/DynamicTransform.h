@@ -129,7 +129,7 @@ struct DynamicTransformTraits
   /// should specialize this class redefine it to \c
   /// DynamicTransformTagCastAndCall.
   ///
-  typedef vtkm::cont::internal::DynamicTransformTagStatic DynamicTag;
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagStatic;
 };
 
 /// This functor can be used as the transform in the \c DynamicTransformCont

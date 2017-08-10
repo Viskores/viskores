@@ -46,7 +46,7 @@ template <typename ValueType>
 struct VTKM_ALWAYS_EXPORT CompositeVectorSwizzleFunctor
 {
   static const vtkm::IdComponent NUM_COMPONENTS = vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
-  typedef vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
+  using ComponentMapType = vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS>;
 
   // Caution! This is a reference.
   const ComponentMapType& SourceComponents;
@@ -118,7 +118,7 @@ struct CompositeVectorArrayToPortalCont
   template <typename ArrayHandleType, vtkm::IdComponent Index>
   struct ReturnType
   {
-    typedef typename ArrayHandleType::PortalConstControl type;
+    using type = typename ArrayHandleType::PortalConstControl;
   };
 
   template <typename ArrayHandleType, vtkm::IdComponent Index>
@@ -136,7 +136,7 @@ struct CompositeVectorArrayToPortalExec
   template <typename ArrayHandleType, vtkm::IdComponent Index>
   struct ReturnType
   {
-    typedef typename ArrayHandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst type;
+    using type = typename ArrayHandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
   };
 
   template <typename ArrayHandleType, vtkm::IdComponent Index>
@@ -179,14 +179,14 @@ struct CheckArraySizeFunctor
 template <typename SignatureWithPortals>
 class VTKM_ALWAYS_EXPORT ArrayPortalCompositeVector
 {
-  typedef vtkm::internal::FunctionInterface<SignatureWithPortals> PortalTypes;
+  using PortalTypes = vtkm::internal::FunctionInterface<SignatureWithPortals>;
 
 public:
-  typedef typename PortalTypes::ResultType ValueType;
+  using ValueType = typename PortalTypes::ResultType;
   static const vtkm::IdComponent NUM_COMPONENTS = vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
 
   // Used internally.
-  typedef vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
+  using ComponentMapType = vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS>;
 
   VTKM_STATIC_ASSERT(NUM_COMPONENTS == PortalTypes::ARITY);
 
@@ -248,10 +248,10 @@ struct VTKM_ALWAYS_EXPORT StorageTagCompositeVector
 template <typename SignatureWithArrays>
 struct ArrayHandleCompositeVectorTraits
 {
-  typedef vtkm::cont::internal::StorageTagCompositeVector<SignatureWithArrays> Tag;
-  typedef typename vtkm::internal::FunctionInterface<SignatureWithArrays>::ResultType ValueType;
-  typedef vtkm::cont::internal::Storage<ValueType, Tag> StorageType;
-  typedef vtkm::cont::ArrayHandle<ValueType, Tag> Superclass;
+  using Tag = vtkm::cont::internal::StorageTagCompositeVector<SignatureWithArrays>;
+  using ValueType = typename vtkm::internal::FunctionInterface<SignatureWithArrays>::ResultType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, Tag>;
+  using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
 };
 
 // It may seem weird that this specialization throws an exception for
@@ -261,18 +261,19 @@ template <typename SignatureWithArrays>
 class Storage<typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::ValueType,
               vtkm::cont::internal::StorageTagCompositeVector<SignatureWithArrays>>
 {
-  typedef vtkm::internal::FunctionInterface<SignatureWithArrays> FunctionInterfaceWithArrays;
+  using FunctionInterfaceWithArrays = vtkm::internal::FunctionInterface<SignatureWithArrays>;
   static const vtkm::IdComponent NUM_COMPONENTS = FunctionInterfaceWithArrays::ARITY;
-  typedef vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS> ComponentMapType;
+  using ComponentMapType = vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS>;
 
-  typedef typename FunctionInterfaceWithArrays::template StaticTransformType<
-    detail::CompositeVectorArrayToPortalCont>::type FunctionInterfaceWithPortals;
-  typedef typename FunctionInterfaceWithPortals::Signature SignatureWithPortals;
+  using FunctionInterfaceWithPortals =
+    typename FunctionInterfaceWithArrays::template StaticTransformType<
+      detail::CompositeVectorArrayToPortalCont>::type;
+  using SignatureWithPortals = typename FunctionInterfaceWithPortals::Signature;
 
 public:
-  typedef ArrayPortalCompositeVector<SignatureWithPortals> PortalType;
-  typedef PortalType PortalConstType;
-  typedef typename PortalType::ValueType ValueType;
+  using PortalType = ArrayPortalCompositeVector<SignatureWithPortals>;
+  using PortalConstType = PortalType;
+  using ValueType = typename PortalType::ValueType;
 
   VTKM_CONT
   Storage()
@@ -373,22 +374,22 @@ class ArrayTransfer<typename ArrayHandleCompositeVectorTraits<SignatureWithArray
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
 
-  typedef typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::StorageType StorageType;
+  using StorageType = typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::StorageType;
 
-  typedef vtkm::internal::FunctionInterface<SignatureWithArrays> FunctionWithArrays;
-  typedef typename FunctionWithArrays::template StaticTransformType<
-    detail::CompositeVectorArrayToPortalExec<DeviceAdapterTag>>::type FunctionWithPortals;
-  typedef typename FunctionWithPortals::Signature SignatureWithPortals;
+  using FunctionWithArrays = vtkm::internal::FunctionInterface<SignatureWithArrays>;
+  using FunctionWithPortals = typename FunctionWithArrays::template StaticTransformType<
+    detail::CompositeVectorArrayToPortalExec<DeviceAdapterTag>>::type;
+  using SignatureWithPortals = typename FunctionWithPortals::Signature;
 
 public:
-  typedef typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::ValueType ValueType;
+  using ValueType = typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::ValueType;
 
   // These are not currently fully implemented.
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
-  typedef ArrayPortalCompositeVector<SignatureWithPortals> PortalExecution;
-  typedef ArrayPortalCompositeVector<SignatureWithPortals> PortalConstExecution;
+  using PortalExecution = ArrayPortalCompositeVector<SignatureWithPortals>;
+  using PortalConstExecution = ArrayPortalCompositeVector<SignatureWithPortals>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -460,9 +461,9 @@ template <typename Signature>
 class ArrayHandleCompositeVector
   : public internal::ArrayHandleCompositeVectorTraits<Signature>::Superclass
 {
-  typedef typename internal::ArrayHandleCompositeVectorTraits<Signature>::StorageType StorageType;
-  typedef
-    typename internal::ArrayPortalCompositeVector<Signature>::ComponentMapType ComponentMapType;
+  using StorageType = typename internal::ArrayHandleCompositeVectorTraits<Signature>::StorageType;
+  using ComponentMapType =
+    typename internal::ArrayPortalCompositeVector<Signature>::ComponentMapType;
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(
@@ -553,15 +554,15 @@ struct ArrayHandleCompositeVectorType
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType4);
 
 private:
-  typedef
-    typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType ComponentType;
+  using ComponentType =
+    typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType;
   typedef vtkm::Vec<ComponentType, 4> Signature(ArrayHandleType1,
                                                 ArrayHandleType2,
                                                 ArrayHandleType3,
                                                 ArrayHandleType4);
 
 public:
-  typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
+  using type = vtkm::cont::ArrayHandleCompositeVector<Signature>;
 };
 
 template <typename ArrayHandleType1, typename ArrayHandleType2, typename ArrayHandleType3>
@@ -572,14 +573,14 @@ struct ArrayHandleCompositeVectorType<ArrayHandleType1, ArrayHandleType2, ArrayH
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType3);
 
 private:
-  typedef
-    typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType ComponentType;
+  using ComponentType =
+    typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType;
   typedef vtkm::Vec<ComponentType, 3> Signature(ArrayHandleType1,
                                                 ArrayHandleType2,
                                                 ArrayHandleType3);
 
 public:
-  typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
+  using type = vtkm::cont::ArrayHandleCompositeVector<Signature>;
 };
 
 template <typename ArrayHandleType1, typename ArrayHandleType2>
@@ -589,12 +590,12 @@ struct ArrayHandleCompositeVectorType<ArrayHandleType1, ArrayHandleType2>
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType2);
 
 private:
-  typedef
-    typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType ComponentType;
+  using ComponentType =
+    typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType;
   typedef vtkm::Vec<ComponentType, 2> Signature(ArrayHandleType1, ArrayHandleType2);
 
 public:
-  typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
+  using type = vtkm::cont::ArrayHandleCompositeVector<Signature>;
 };
 
 template <typename ArrayHandleType1>
@@ -603,12 +604,12 @@ struct ArrayHandleCompositeVectorType<ArrayHandleType1>
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType1);
 
 private:
-  typedef
-    typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType ComponentType;
+  using ComponentType =
+    typename vtkm::VecTraits<typename ArrayHandleType1::ValueType>::ComponentType;
   typedef ComponentType Signature(ArrayHandleType1);
 
 public:
-  typedef vtkm::cont::ArrayHandleCompositeVector<Signature> type;
+  using type = vtkm::cont::ArrayHandleCompositeVector<Signature>;
 };
 
 // clang-format off

@@ -47,7 +47,7 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>
       vtkm::cont::DeviceAdapterTagSerial>
 {
 private:
-  typedef vtkm::cont::DeviceAdapterTagSerial Device;
+  using Device = vtkm::cont::DeviceAdapterTagSerial;
 
 public:
   template <typename T, typename U, class CIn>
@@ -310,8 +310,9 @@ private:
     //we than need to specify a custom compare function wrapper
     //that only checks for key side of the pair, using the custom compare
     //functor that the user passed in
-    typedef vtkm::cont::ArrayHandle<T, StorageT> KeyType;
-    typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
+    using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
+    ;
+    using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
     typedef vtkm::cont::ArrayHandleZip<KeyType, ValueType> ZipHandleType;
 
     ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
@@ -336,8 +337,8 @@ public:
     {
       /// More efficient sort:
       /// Move value indexes when sorting and reorder the value array at last
-      typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
-      typedef vtkm::cont::ArrayHandle<vtkm::Id> IndexType;
+      using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
+      using IndexType = vtkm::cont::ArrayHandle<vtkm::Id>;
 
       IndexType indexArray;
       ValueType valuesScattered;

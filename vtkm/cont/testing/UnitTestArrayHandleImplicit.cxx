@@ -39,7 +39,7 @@ struct IndexSquared
   VTKM_EXEC_CONT
   ValueType operator()(vtkm::Id i) const
   {
-    typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+    using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
     return ValueType(static_cast<ComponentType>(i * i));
   }
 };
@@ -49,10 +49,10 @@ struct ImplicitTests
   template <typename ValueType>
   void operator()(const ValueType) const
   {
-    typedef IndexSquared<ValueType> FunctorType;
+    using FunctorType = IndexSquared<ValueType>;
     FunctorType functor;
 
-    typedef vtkm::cont::ArrayHandleImplicit<FunctorType> ImplicitHandle;
+    using ImplicitHandle = vtkm::cont::ArrayHandleImplicit<FunctorType>;
 
     ImplicitHandle implict = vtkm::cont::make_ArrayHandleImplicit(functor, ARRAY_SIZE);
 
@@ -65,8 +65,8 @@ struct ImplicitTests
     }
 
     //verify that the execution portal works
-    typedef vtkm::cont::DeviceAdapterTagSerial Device;
-    typedef typename ImplicitHandle::template ExecutionTypes<Device>::PortalConst CEPortal;
+    using Device = vtkm::cont::DeviceAdapterTagSerial;
+    using CEPortal = typename ImplicitHandle::template ExecutionTypes<Device>::PortalConst;
     CEPortal execPortal = implict.PrepareForInput(Device());
     for (int i = 0; i < ARRAY_SIZE; ++i)
     {

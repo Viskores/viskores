@@ -49,24 +49,12 @@ void AxisAnnotation2D::SetRangeForAutoTicks(const Range& range)
 {
   this->TickRange = range;
 
-#if 0
   if (this->Logarithmic)
   {
-    CalculateTicksLogarithmic(this->TickRange.Min,
-                              this->TickRange.Max,
-                              false,
-                              this->PositionsMajor,
-                              this->ProportionsMajor,
-                              this->MoreOrLessTickAdjustment);
-    CalculateTicksLogarithmic(this->TickRange.Min,
-                              this->TickRange.Max,
-                              true,
-                              this->PositionsMinor,
-                              this->ProportionsMinor,
-                              this->MoreOrLessTickAdjustment);
+    CalculateTicksLogarithmic(this->TickRange, false, this->PositionsMajor, this->ProportionsMajor);
+    CalculateTicksLogarithmic(this->TickRange, true, this->PositionsMinor, this->ProportionsMinor);
   }
   else
-#endif
   {
     CalculateTicks(this->TickRange,
                    false,

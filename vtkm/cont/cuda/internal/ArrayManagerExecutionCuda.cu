@@ -21,6 +21,9 @@
 #define vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
 
 #include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
+#include <vtkm/cont/cuda/internal/CudaAllocator.h>
+
+using vtkm::cont::cuda::internal::CudaAllocator;
 
 namespace vtkm
 {
@@ -43,6 +46,25 @@ DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::GetDeviceId(
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecutionArray& execArray,
                                                                   vtkm::Id numBytes) const
 {
+  // Detect if we can reuse a device-accessible pointer from the control env:
+  if (CudaAllocator::IsDevicePointer(execArray.ArrayControl))
+  {
+    const vtkm::Id managedCapacity = static_cast<const char*>(execArray.ArrayControlCapacity) -
+      static_cast<const char*>(execArray.ArrayControl);
+    if (managedCapacity >= numBytes)
+    {
+      if (execArray.Array && execArray.Array != execArray.ArrayControl)
+      {
+        this->Free(execArray);
+      }
+
+      execArray.Array = const_cast<void*>(execArray.ArrayControl);
+      execArray.ArrayEnd = static_cast<char*>(execArray.Array) + numBytes;
+      execArray.ArrayCapacity = const_cast<void*>(execArray.ArrayControlCapacity);
+      return;
+    }
+  }
+
   if (execArray.Array != nullptr)
   {
     const vtkm::Id cap =
@@ -64,18 +86,8 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
   // Attempt to allocate:
   try
   {
-    char* tmp;
-#ifdef VTKM_USE_UNIFIED_MEMORY
-    int dev;
-    VTKM_CUDA_CALL(cudaGetDevice(&dev));
-    VTKM_CUDA_CALL(cudaMallocManaged(&tmp, static_cast<std::size_t>(numBytes)));
-    VTKM_CUDA_CALL(cudaMemAdvise(tmp, numBytes, cudaMemAdviseSetPreferredLocation, dev));
-    VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, numBytes, dev, 0));
-    VTKM_CUDA_CALL(cudaStreamSynchronize(0));
-#else
-    VTKM_CUDA_CALL(cudaMalloc(&tmp, static_cast<std::size_t>(numBytes)));
-#endif
-
+    // Cast to char* so that the pointer math below will work.
+    char* tmp = static_cast<char*>(CudaAllocator::Allocate(static_cast<size_t>(numBytes)));
     execArray.Array = tmp;
     execArray.ArrayEnd = tmp + numBytes;
     execArray.ArrayCapacity = tmp + numBytes;
@@ -91,9 +103,20 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Free(
   TypelessExecutionArray& execArray) const
 {
+  // If we're sharing a device-accessible pointer between control/exec, don't
+  // actually free it -- just null the pointers here:
+  if (execArray.Array == execArray.ArrayControl &&
+      CudaAllocator::IsDevicePointer(execArray.ArrayControl))
+  {
+    execArray.Array = nullptr;
+    execArray.ArrayEnd = nullptr;
+    execArray.ArrayCapacity = nullptr;
+    return;
+  }
+
   if (execArray.Array != nullptr)
   {
-    VTKM_CUDA_CALL(cudaFree(execArray.Array));
+    CudaAllocator::Free(execArray.Array);
     execArray.Array = nullptr;
     execArray.ArrayEnd = nullptr;
     execArray.ArrayCapacity = nullptr;
@@ -104,6 +127,13 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(const v
                                                                          void* executionPtr,
                                                                          vtkm::Id numBytes) const
 {
+  // Do nothing if we're sharing a device-accessible pointer between control and
+  // execution:
+  if (controlPtr == executionPtr && CudaAllocator::IsDevicePointer(controlPtr))
+  {
+    return;
+  }
+
   VTKM_CUDA_CALL(cudaMemcpy(
     executionPtr, controlPtr, static_cast<std::size_t>(numBytes), cudaMemcpyHostToDevice));
 }
@@ -112,6 +142,22 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
                                                                        void* controlPtr,
                                                                        vtkm::Id numBytes) const
 {
+  // Do nothing if we're sharing a cuda managed pointer between control and execution:
+  if (controlPtr == executionPtr && CudaAllocator::IsDevicePointer(controlPtr))
+  {
+    // If we're trying to copy a shared, non-managed device pointer back to
+    // control throw an exception -- the pointer cannot be read from control,
+    // so this operation is invalid.
+    if (!CudaAllocator::IsManagedPointer(controlPtr))
+    {
+      throw vtkm::cont::ErrorBadValue(
+        "Control pointer is a CUDA device pointer that does not supported managed access.");
+    }
+
+    // If it is managed, just return and let CUDA handle the migration for us.
+    return;
+  }
+
   VTKM_CUDA_CALL(cudaMemcpy(
     controlPtr, executionPtr, static_cast<std::size_t>(numBytes), cudaMemcpyDeviceToHost));
 }

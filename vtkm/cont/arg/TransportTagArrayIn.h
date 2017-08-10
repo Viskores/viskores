@@ -47,7 +47,7 @@ struct Transport<vtkm::cont::arg::TransportTagArrayIn, ContObjectType, Device>
 {
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  typedef typename ContObjectType::template ExecutionTypes<Device>::PortalConst ExecObjectType;
+  using ExecObjectType = typename ContObjectType::template ExecutionTypes<Device>::PortalConst;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(const ContObjectType& object,

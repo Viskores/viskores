@@ -46,7 +46,7 @@ namespace cont
 template <class ArrayPortalType>
 struct VTKM_ALWAYS_EXPORT StorageTagImplicit
 {
-  typedef ArrayPortalType PortalType;
+  using PortalType = ArrayPortalType;
 };
 
 namespace internal
@@ -56,15 +56,15 @@ template <class ArrayPortalType>
 class Storage<typename ArrayPortalType::ValueType, StorageTagImplicit<ArrayPortalType>>
 {
 public:
-  typedef typename ArrayPortalType::ValueType ValueType;
-  typedef ArrayPortalType PortalConstType;
+  using ValueType = typename ArrayPortalType::ValueType;
+  using PortalConstType = ArrayPortalType;
 
   // This is meant to be invalid. Because implicit arrays are read only, you
   // should only be able to use the const version.
   struct PortalType
   {
-    typedef void* ValueType;
-    typedef void* IteratorType;
+    using ValueType = void*;
+    using IteratorType = void*;
   };
 
   VTKM_CONT
@@ -101,16 +101,16 @@ template <typename T, class ArrayPortalType, class DeviceAdapterTag>
 class ArrayTransfer<T, StorageTagImplicit<ArrayPortalType>, DeviceAdapterTag>
 {
 private:
-  typedef StorageTagImplicit<ArrayPortalType> StorageTag;
+  using StorageTag = StorageTagImplicit<ArrayPortalType>;
   typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
 
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
-  typedef PortalControl PortalExecution;
-  typedef PortalConstControl PortalConstExecution;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
+  using PortalExecution = PortalControl;
+  using PortalConstExecution = PortalConstControl;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -147,7 +147,7 @@ public:
   template <class IteratorTypeControl>
   VTKM_CONT void CopyInto(IteratorTypeControl dest) const
   {
-    typedef typename StorageType::PortalConstType PortalType;
+    using PortalType = typename StorageType::PortalConstType;
     PortalType portal = this->Storage->GetPortalConst();
 
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),

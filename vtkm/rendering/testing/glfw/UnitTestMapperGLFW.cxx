@@ -93,15 +93,16 @@ void RenderTests()
   ds[3] = maker.Make2DRectilinearDataSet0();
   //create 1D uniform DS with tiny Y axis
   vtkm::cont::DataSet tinyDS = maker.Make1DUniformDataSet0();
-  const vtkm::Id nVerts = tinyDS.GetField(0).GetData().GetNumberOfValues();
-  vtkm::Float32 vars[nVerts];
+  const std::size_t nVerts =
+    static_cast<std::size_t>(tinyDS.GetField(0).GetData().GetNumberOfValues());
+  std::vector<vtkm::Float32> vars(nVerts);
   float smallVal = 1.000;
-  for (vtkm::Id i = 0; i <= nVerts; i++)
+  for (std::size_t i = 0; i < nVerts; i++)
   {
     vars[i] = smallVal;
-    smallVal += .01;
+    smallVal += .01f;
   }
-  dsf.AddPointField(tinyDS, "smallScaledXAxis", vars, nVerts);
+  dsf.AddPointField(tinyDS, "smallScaledXAxis", vars);
   ds[4] = tinyDS;
   tinyDS.PrintSummary(std::cerr);
 
@@ -114,22 +115,30 @@ void RenderTests()
 
   for (int i = 0; i < NUM_DATASETS; i++)
   {
-    scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
-                                             ds[i].GetCoordinateSystem(),
-                                             ds[i].GetField(fldNames[i].c_str()),
-                                             colorTable));
     if (i < 3)
     {
+      scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                               ds[i].GetCoordinateSystem(),
+                                               ds[i].GetField(fldNames[i].c_str()),
+                                               colorTable));
       vtkm::rendering::testing::SetCamera<View3DType>(camera[i],
                                                       ds[i].GetCoordinateSystem().GetBounds());
     }
     else if (i == 3)
     {
+      scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                               ds[i].GetCoordinateSystem(),
+                                               ds[i].GetField(fldNames[i].c_str()),
+                                               colorTable));
       vtkm::rendering::testing::SetCamera<View2DType>(camera[i],
                                                       ds[i].GetCoordinateSystem().GetBounds());
     }
     else
     {
+      scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                               ds[i].GetCoordinateSystem(),
+                                               ds[i].GetField(fldNames[i].c_str()),
+                                               vtkm::rendering::Color::white));
       vtkm::rendering::testing::SetCamera<View1DType>(
         camera[i], ds[i].GetCoordinateSystem().GetBounds(), ds[i].GetField(fldNames[i].c_str()));
     }
