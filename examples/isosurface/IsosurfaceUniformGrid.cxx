@@ -64,7 +64,7 @@ class TangleField : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
   const vtkm::Float32 xmin, ymin, zmin, xmax, ymax, zmax;
@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
   //need to extract vertices, normals, and scalars
   vtkm::cont::DataSet& outputData = result.GetDataSet();
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> VertType;
+  using VertType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
 
   verticesArray = coords.GetData().Cast<VertType>();

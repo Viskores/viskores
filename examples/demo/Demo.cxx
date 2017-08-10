@@ -76,8 +76,8 @@ int main(int argc, char* argv[])
     fieldName = "SCALARS:pointvar";
   }
 
-  typedef vtkm::rendering::MapperRayTracer Mapper;
-  typedef vtkm::rendering::CanvasRayTracer Canvas;
+  using Mapper = vtkm::rendering::MapperRayTracer;
+  using Canvas = vtkm::rendering::CanvasRayTracer;
 
   // Set up a camera for rendering the input data
   const vtkm::cont::CoordinateSystem coords = inputData.GetCoordinateSystem();
