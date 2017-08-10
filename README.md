@@ -165,7 +165,7 @@ relevant options
 | VTKm_ENABLE_EXAMPLES        | Disabled by default. Turn on building of simple examples of using VTK-m.  |
 | VTKm_ENABLE_BENCHMARKS      | Disabled by default. Turn on additional timing tests.                     |
 | VTKm_ENABLE_CUDA            | Disabled by default. Enable CUDA backend.                                 |
-| VTKm_CUDA_Architecture      | Defaults to native. Specify what GPU architecture(s) to build CUDA code for, options include native, fermi, kepler, maxwell, and pascal.                                                                       |
+| VTKm_CUDA_Architecture      | Defaults to native. Specify what GPU architecture(s) to build CUDA code for, options include native, fermi, kepler, maxwell, pascal, and volta.                                                                       |
 | VTKm_ENABLE_TBB             | Disabled by default. Enable Intel Threading Building Blocks backend.      |
 | VTKm_ENABLE_TESTING         | Enabled by default. Turn on header, unit, worklet, and filter tests.      |
 | VTKm_ENABLE_RENDERING       | Enabled by default. Turn on the rendering module.                         |
