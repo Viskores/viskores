@@ -75,7 +75,7 @@ void TestMultiBlockField()
   results = histogram.Execute(Blocks, std::string("cellvar"));
 
   VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
-  for (std::size_t j = 0; j < results.size(); j++)
+  for (vtkm::Id j = 0; j < results.size(); j++)
   {
     VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() ==
                        histogram.GetNumberOfBins(),
@@ -85,11 +85,13 @@ void TestMultiBlockField()
       histogram.Execute(Blocks.GetBlock(j), std::string("cellvar"));
 
     vtkm::cont::ArrayHandle<vtkm::Id> MBlockArray;
-    results[j].GetField().GetData().CopyTo(MBlockArray);
+    results[static_cast<std::size_t>(j)].GetField().GetData().CopyTo(MBlockArray);
     vtkm::cont::ArrayHandle<vtkm::Id> SDataSetArray;
     BlockResult.GetField().GetData().CopyTo(SDataSetArray);
 
-    for (vtkm::Id i = 0; i < results[j].GetField().GetData().GetNumberOfValues(); i++)
+    for (vtkm::Id i = 0;
+         i < results[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues();
+         i++)
     {
       VTKM_TEST_ASSERT(MBlockArray.GetPortalConstControl().Get(i) ==
                          SDataSetArray.GetPortalConstControl().Get(i),
