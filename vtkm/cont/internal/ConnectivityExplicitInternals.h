@@ -46,12 +46,12 @@ void buildIndexOffsets(const NumIndicesArrayType& numIndices,
 {
   //We first need to make sure that NumIndices and IndexOffsetArrayType
   //have the same type so we can call scane exclusive
-  typedef vtkm::cont::ArrayHandleCast<vtkm::Id, NumIndicesArrayType> CastedNumIndicesType;
+  using CastedNumIndicesType = vtkm::cont::ArrayHandleCast<vtkm::Id, NumIndicesArrayType>;
 
   // Although technically we are making changes to this object, the changes
   // are logically consistent with the previous state, so we consider it
   // valid under const.
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
   Algorithm::ScanExclusive(CastedNumIndicesType(numIndices), offsets);
 }
 
@@ -73,8 +73,8 @@ void buildIndexOffsets(const ArrayHandleIndices& numIndices,
                        ArrayHandleOffsets offsets,
                        DeviceAdapterTag tag)
 {
-  typedef vtkm::cont::internal::IsWriteableArrayHandle<ArrayHandleOffsets, DeviceAdapterTag>
-    IsWriteable;
+  using IsWriteable =
+    vtkm::cont::internal::IsWriteableArrayHandle<ArrayHandleOffsets, DeviceAdapterTag>;
   buildIndexOffsets(numIndices, offsets, tag, typename IsWriteable::type());
 }
 
@@ -84,10 +84,10 @@ template <typename ShapeStorageTag = VTKM_DEFAULT_STORAGE_TAG,
           typename IndexOffsetStorageTag = VTKM_DEFAULT_STORAGE_TAG>
 struct ConnectivityExplicitInternals
 {
-  typedef vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag> ShapeArrayType;
-  typedef vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag> NumIndicesArrayType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag> ConnectivityArrayType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, IndexOffsetStorageTag> IndexOffsetArrayType;
+  using ShapeArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorageTag>;
+  using NumIndicesArrayType = vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorageTag>;
+  using ConnectivityArrayType = vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorageTag>;
+  using IndexOffsetArrayType = vtkm::cont::ArrayHandle<vtkm::Id, IndexOffsetStorageTag>;
 
   ShapeArrayType Shapes;
   NumIndicesArrayType NumIndices;

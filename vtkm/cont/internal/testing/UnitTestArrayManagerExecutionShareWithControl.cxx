@@ -36,11 +36,10 @@ const vtkm::Id ARRAY_SIZE = 10;
 template <typename T>
 struct TemplatedTests
 {
-  typedef vtkm::cont::internal::ArrayManagerExecutionShareWithControl<T,
-                                                                      vtkm::cont::StorageTagBasic>
-    ArrayManagerType;
-  typedef typename ArrayManagerType::ValueType ValueType;
-  typedef vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic> StorageType;
+  using ArrayManagerType =
+    vtkm::cont::internal::ArrayManagerExecutionShareWithControl<T, vtkm::cont::StorageTagBasic>;
+  using ValueType = typename ArrayManagerType::ValueType;
+  using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>;
 
   void SetStorage(StorageType& array, const ValueType& value)
   {

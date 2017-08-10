@@ -39,14 +39,14 @@ template <typename T, typename Storage>
 class ArrayHandleExecutionManagerBase
 {
 private:
-  typedef vtkm::cont::internal::Storage<T, Storage> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<T, Storage>;
 
 public:
   template <typename DeviceAdapter>
   struct ExecutionTypes
   {
   private:
-    typedef vtkm::cont::internal::ArrayTransfer<T, Storage, DeviceAdapter> ArrayTransferType;
+    using ArrayTransferType = vtkm::cont::internal::ArrayTransfer<T, Storage, DeviceAdapter>;
 
   public:
     using Portal = typename ArrayTransferType::PortalExecution;
@@ -195,9 +195,9 @@ private:
 template <typename T, typename Storage, typename DeviceAdapter>
 class ArrayHandleExecutionManager : public ArrayHandleExecutionManagerBase<T, Storage>
 {
-  typedef ArrayHandleExecutionManagerBase<T, Storage> Superclass;
-  typedef vtkm::cont::internal::ArrayTransfer<T, Storage, DeviceAdapter> ArrayTransferType;
-  typedef vtkm::cont::internal::Storage<T, Storage> StorageType;
+  using Superclass = ArrayHandleExecutionManagerBase<T, Storage>;
+  using ArrayTransferType = vtkm::cont::internal::ArrayTransfer<T, Storage, DeviceAdapter>;
+  using StorageType = vtkm::cont::internal::Storage<T, Storage>;
 
 public:
   using PortalControl = typename ArrayTransferType::PortalControl;
