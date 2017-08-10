@@ -50,22 +50,13 @@ void View2D::Paint()
 {
   this->GetCanvas().Activate();
   this->GetCanvas().Clear();
-
-  // we always want to start with a curve being full-frame
-  if (this->GetCamera().GetMode() == Camera::MODE_2D)
-  {
-    vtkm::Float32 left, right, bottom, top;
-    this->GetCamera().GetViewRange2D(left, right, bottom, top);
-    this->GetCamera().SetXScale((static_cast<vtkm::Float32>(this->GetCanvas().GetWidth())) /
-                                (static_cast<vtkm::Float32>(this->GetCanvas().GetHeight())) *
-                                (top - bottom) / (right - left));
-  }
-
+  this->UpdateCameraProperties();
   this->SetupForWorldSpace();
   this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
   this->RenderWorldAnnotations();
   this->SetupForScreenSpace();
   this->RenderScreenAnnotations();
+  this->RenderAnnotations();
   this->GetCanvas().Finish();
 }
 
@@ -122,6 +113,31 @@ void View2D::RenderScreenAnnotations()
 void View2D::RenderWorldAnnotations()
 {
   // 2D views don't have world annotations.
+}
+
+void View2D::UpdateCameraProperties()
+{
+  // Modify the camera if our bounds are equal to enable an image to show
+  vtkm::Bounds origCamBounds = this->GetCamera().GetViewRange2D();
+  if (origCamBounds.Y.Min == origCamBounds.Y.Max)
+  {
+    origCamBounds.Y.Min -= .5;
+    origCamBounds.Y.Max += .5;
+  }
+
+  // Set camera bounds with new top/bottom values
+  this->GetCamera().SetViewRange2D(
+    origCamBounds.X.Min, origCamBounds.X.Max, origCamBounds.Y.Min, origCamBounds.Y.Max);
+
+  // if unchanged by user we always want to start with a curve being full-frame
+  if (this->GetCamera().GetMode() == Camera::MODE_2D && this->GetCamera().GetXScale() == 1.0f)
+  {
+    vtkm::Float32 left, right, bottom, top;
+    this->GetCamera().GetViewRange2D(left, right, bottom, top);
+    this->GetCamera().SetXScale((static_cast<vtkm::Float32>(this->GetCanvas().GetWidth())) /
+                                (static_cast<vtkm::Float32>(this->GetCanvas().GetHeight())) *
+                                (top - bottom) / (right - left));
+  }
 }
 }
 } // namespace vtkm::rendering

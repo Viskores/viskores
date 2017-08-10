@@ -53,6 +53,8 @@ public:
   void RenderWorldAnnotations() VTKM_OVERRIDE;
 
 private:
+  void UpdateCameraProperties();
+
   // 2D-specific annotations
   vtkm::rendering::AxisAnnotation2D HorizontalAxisAnnotation;
   vtkm::rendering::AxisAnnotation2D VerticalAxisAnnotation;
