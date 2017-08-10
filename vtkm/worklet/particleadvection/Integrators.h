@@ -92,7 +92,7 @@ public:
     FieldType hx = (std::abs(dirBounds[0] - inpos[0]) + this->Tolerance) / std::abs(velocity[0]);
     FieldType hy = (std::abs(dirBounds[1] - inpos[1]) + this->Tolerance) / std::abs(velocity[1]);
     FieldType hz = (std::abs(dirBounds[2] - inpos[2]) + this->Tolerance) / std::abs(velocity[2]);
-    return std::min(hx, std::min(hy, hz));
+    return vtkm::Min(hx, vtkm::Min(hy, hz));
   }
 
   VTKM_EXEC

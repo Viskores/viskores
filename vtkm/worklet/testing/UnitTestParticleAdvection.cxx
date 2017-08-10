@@ -219,23 +219,70 @@ void ValidateEvaluator(const EvalType& eval,
   {
     bool status = statusPortal.Get(index);
     vtkm::Vec<FieldType, 3> result = resultsPortal.Get(index);
-    std::cout << "Testing : " << status << ", vec {" << result[0] << ", " << result[1] << ", "
-              << result[2] << "}" << std::endl;
     VTKM_TEST_ASSERT(status, "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == vec, "Error in evaluator result for " + msg);
   }
+  pointsHandle.ReleaseResources();
+  evalStatus.ReleaseResources();
+  evalResults.ReleaseResources();
 }
+
+template <typename FieldType, typename Integrator>
+class TestIntegratorWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  TestIntegratorWorklet(Integrator i)
+    : integrator(i){};
+
+  typedef void ControlSignature(FieldIn<> inputPoint, FieldOut<> validity, FieldOut<> outputPoint);
+
+  typedef void ExecutionSignature(_1, _2, _3);
+
+  VTKM_EXEC
+  void operator()(vtkm::Vec<FieldType, 3>& pointIn,
+                  bool& validity,
+                  vtkm::Vec<FieldType, 3>& pointOut) const
+  {
+    validity = integrator.Step(pointIn, pointOut);
+  }
+
+private:
+  Integrator integrator;
+};
+
 
 template <typename IntegratorType, typename FieldType>
 void ValidateIntegrator(const IntegratorType& integrator,
-                        const vtkm::Vec<FieldType, 3>& p,
-                        const vtkm::Vec<FieldType, 3>& q,
+                        const std::vector<vtkm::Vec<FieldType, 3>>& pointIns,
+                        const std::vector<vtkm::Vec<FieldType, 3>>& expStepResults,
                         const std::string& msg)
 {
-  vtkm::Vec<FieldType, 3> result;
-  bool val = integrator.Step(p, result);
-  VTKM_TEST_ASSERT(val, "Error in integrator for " + msg);
-  VTKM_TEST_ASSERT(result == q, "Error in integrator result for " + msg);
+  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+  typedef TestIntegratorWorklet<FieldType, IntegratorType> IntegratorTester;
+  typedef vtkm::worklet::DispatcherMapField<IntegratorTester> IntegratorTesterDispatcher;
+  IntegratorTester integratorTester(integrator);
+  IntegratorTesterDispatcher integratorTesterDispatcher(integratorTester);
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> pointsHandle =
+    vtkm::cont::make_ArrayHandle(pointIns);
+  vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
+  pointsHandle.PrepareForInput(DeviceAdapter());
+  vtkm::cont::ArrayHandle<bool> stepStatus;
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> stepResults;
+  stepStatus.PrepareForOutput(numPoints, DeviceAdapter());
+  stepResults.PrepareForOutput(numPoints, DeviceAdapter());
+  integratorTesterDispatcher.Invoke(pointsHandle, stepStatus, stepResults);
+  auto statusPortal = stepStatus.GetPortalConstControl();
+  auto resultsPortal = stepResults.GetPortalConstControl();
+  for (vtkm::Id index = 0; index < numPoints; index++)
+  {
+    bool status = statusPortal.Get(index);
+    vtkm::Vec<FieldType, 3> result = resultsPortal.Get(index);
+    VTKM_TEST_ASSERT(status, "Error in evaluator for " + msg);
+    VTKM_TEST_ASSERT(result == expStepResults[index], "Error in evaluator result for " + msg);
+  }
+  pointsHandle.ReleaseResources();
+  stepStatus.ReleaseResources();
+  stepResults.ReleaseResources();
 }
 
 void TestEvaluators()
@@ -325,6 +372,7 @@ void TestEvaluators()
             rectData.GetCoordinateSystem(), rectData.GetCellSet(0), vecField);
           RK4RectilinearType rectRK4(rectEval, stepSize);
           std::vector<vtkm::Vec<FieldType, 3>> pointIns;
+          std::vector<vtkm::Vec<FieldType, 3>> stepResult;
           //Create a bunch of random points in the bounds.
           for (int k = 0; k < 38; k++)
           {
@@ -339,17 +387,15 @@ void TestEvaluators()
             vtkm::Vec<FieldType, 3> p;
             RandomPoint<FieldType>(interiorBounds, p);
             pointIns.push_back(p);
+            stepResult.push_back(p + vec * stepSize);
           }
           //Test the result for the evaluator
           ValidateEvaluator(constEval, pointIns, vec, "constant vector evaluator");
           ValidateEvaluator(uniformEval, pointIns, vec, "uniform evaluator");
-          ValidateEvaluator(rectEval, pointIns, vec, "rectilinear evaluator");
 
           //Test taking one step.
-          //vtkm::Vec<FieldType, 3> result = p + vec * stepSize;
-          /*ValidateIntegrator(constRK4, p, result, "constant vector RK4");
-          ValidateIntegrator(uniformRK4, p, result, "uniform RK4");
-          ValidateIntegrator(rectRK4, p, result, "rectilinear RK4");*/
+          ValidateIntegrator(constRK4, pointIns, stepResult, "constant vector RK4");
+          ValidateIntegrator(uniformRK4, pointIns, stepResult, "uniform RK4");
         }
       }
     }
@@ -362,8 +408,6 @@ void TestParticleWorklets()
   typedef vtkm::Float32 FieldType;
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
   typedef FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
-
-  std::cout << "Testing Integrators for ParticleAdvection Worklet" << std::endl;
 
   FieldType stepSize = 0.01f;
 
