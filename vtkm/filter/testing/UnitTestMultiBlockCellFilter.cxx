@@ -20,89 +20,91 @@
 
 #include <vtkm/CellShape.h>
 
+#include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/VectorAnalysis.h>
 
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/MultiBlock.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/exec/ConnectivityStructured.h>
 
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 #include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/FilterField.h>
 #include <vtkm/filter/Histogram.h>
 
 
-const std::vector<vtkm::filter::ResultField> MultiBlockCellTest(std::size_t BlockNum);
-
-void TestMultiBlockCell()
-{
-  std::size_t BlockNum = 7;
-  std::vector<vtkm::filter::ResultField> results = MultiBlockCellTest( BlockNum );
-  VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
-  for(std::size_t j = 0; j < results.size(); j++)
-  {
-    VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() == static_cast<vtkm::Id>(((j+2)*(j+2)-1)
-    *((j+2)*(j+2)-1)), "result cell size incorrect");
-
-    vtkm::cont::ArrayHandle<vtkm::Float64> array;
-    results[j].GetField().GetData().CopyTo(array);
-    for(vtkm::Id i = 0; i < results[j].GetField().GetData().GetNumberOfValues(); i++)
-    {
-      VTKM_TEST_ASSERT(array.GetPortalConstControl().Get(i) == j,
-      "result field value incorrect");
-    }
-  }
-
-}
-
 template <typename T>
-vtkm::cont::MultiBlock UniformMultiBlockBuilder(std::size_t BlockNum)
+vtkm::cont::MultiBlock MultiBlockBuilder2D(std::size_t BlockNum)
 {
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetFieldAdd dsf;
-  vtkm::Vec<T,2> origin(0);
-  vtkm::Vec<T,2> spacing(1);
+  vtkm::Vec<T, 2> origin(0);
+  vtkm::Vec<T, 2> spacing(1);
   vtkm::cont::MultiBlock Blocks;
-  for ( vtkm::Id BlockId = 0; BlockId < static_cast<vtkm::Id>(BlockNum); BlockId++)
+  for (vtkm::Id BlockId = 0; BlockId < static_cast<vtkm::Id>(BlockNum); BlockId++)
   {
-    vtkm::Id2 dimensions( (BlockId+2) * (BlockId+2), (BlockId+2) * (BlockId+2) );
+    vtkm::Id2 dimensions((BlockId + 2) * (BlockId + 2), (BlockId + 2) * (BlockId + 2));
     vtkm::Id numPoints = dimensions[0] * dimensions[1];
 
     std::vector<T> varP2D(static_cast<std::size_t>(numPoints));
-    for ( vtkm::Id i = 0; i < numPoints; i++)
+    for (vtkm::Id i = 0; i < numPoints; i++)
     {
       varP2D[static_cast<std::size_t>(i)] = static_cast<T>(BlockId);
     }
 
     dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
-                                    vtkm::Vec<T,2>(origin[0], origin[1]),
-                                    vtkm::Vec<T,2>(spacing[0], spacing[1]));
+                                    vtkm::Vec<T, 2>(origin[0], origin[1]),
+                                    vtkm::Vec<T, 2>(spacing[0], spacing[1]));
     dsf.AddPointField(dataSet, "pointvar", varP2D);
     Blocks.AddBlock(dataSet);
   }
   return Blocks;
 }
 
-const std::vector<vtkm::filter::ResultField> MultiBlockCellTest(std::size_t BlockNum)
+void TestMultiBlockCell()
 {
-  vtkm::cont::MultiBlock Blocks = UniformMultiBlockBuilder<vtkm::Float64>(BlockNum);
+  std::size_t BlockNum = 7;
+  vtkm::cont::MultiBlock Blocks = MultiBlockBuilder2D<vtkm::Float64>(BlockNum);
   std::vector<vtkm::filter::ResultField> results;
+
   vtkm::filter::CellAverage cellAverage;
   results = cellAverage.Execute(Blocks, std::string("pointvar"));
-  return results;
+  VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
+  for (std::size_t j = 0; j < results.size(); j++)
+  {
+    VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() ==
+                       Blocks.GetBlock(j).GetCellSet().GetNumberOfCells(),
+                     "result vectors' size incorrect");
+
+    vtkm::filter::ResultField BlockResult =
+      cellAverage.Execute(Blocks.GetBlock(j), std::string("pointvar"));
+
+    vtkm::cont::ArrayHandle<vtkm::Float64> MBlockArray;
+    results[j].GetField().GetData().CopyTo(MBlockArray);
+
+    vtkm::cont::ArrayHandle<vtkm::Float64> SDataSetArray;
+    BlockResult.GetField().GetData().CopyTo(SDataSetArray);
+
+    for (vtkm::Id i = 0; i < results[j].GetField().GetData().GetNumberOfValues(); i++)
+    {
+      VTKM_TEST_ASSERT(MBlockArray.GetPortalConstControl().Get(i) ==
+                         SDataSetArray.GetPortalConstControl().Get(i),
+                       "result values incorrect");
+    }
+  }
+  return;
 }
 
 
 
-int UnitTestMultiBlockCellFilter(int, char *[])
+int UnitTestMultiBlockCellFilter(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestMultiBlockCell);
 }
