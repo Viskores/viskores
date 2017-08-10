@@ -194,10 +194,10 @@ void TestStreamlineUniformGrid(int d)
     vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
     vtkm::cont::ArrayHandle< vtkm::Vec<vtkm::Float32,3> > result;
-    
+
     PointGrad<vtkm::Float32> func(dataSet, "nodevar", result);
     vtkm::cont::CastAndCall(dataSet.GetCellSet(), func);
-    
+
     printSummary_ArrayHandle(result, std::cout);
     */
 }
@@ -259,16 +259,16 @@ void MarchingCubesTest(const vtkm::cont::DataSet& ds, int N)
 #if 0
   vtkm::filter::MarchingCubes mc;
   mc.SetGenerateNormals(true);
-  
+
   for (int i = 0; i < N; i++)
   {
       if (printProgress && i % 10 == 0)
-          std::cout<<"   "<<i<<" of "<<N<<std::endl;      
+          std::cout<<"   "<<i<<" of "<<N<<std::endl;
       vtkm::filter::ResultDataSet result;
       //vtkm::Float32 val = v0 + i*dv;
       //std::cout<<i<<": "<<val<<std::endl;
       mc.SetIsoValue(v0 + i*dv);
-      //mc.SetMergeDuplicatePoints(false);  
+      //mc.SetMergeDuplicatePoints(false);
       result = mc.Execute(ds, ds.GetField(0));
       const vtkm::cont::DataSet &out = result.GetDataSet();
   }
@@ -277,14 +277,14 @@ void MarchingCubesTest(const vtkm::cont::DataSet& ds, int N)
   for (int i = 0; i < N; i++)
   {
       if (printProgress && i % 10 == 0)
-          std::cout<<"   "<<i<<" of "<<N<<std::endl;      
+          std::cout<<"   "<<i<<" of "<<N<<std::endl;
       vtkm::filter::ResultDataSet result;
       vtkm::filter::MarchingCubes mc;
       mc.SetGenerateNormals(true);
       //vtkm::Float32 val = v0 + i*dv;
       //std::cout<<i<<": "<<val<<std::endl;
       mc.SetIsoValue(v0 + i*dv);
-      //mc.SetMergeDuplicatePoints(false);  
+      //mc.SetMergeDuplicatePoints(false);
       result = mc.Execute(ds, ds.GetField(0));
       const vtkm::cont::DataSet &out = result.GetDataSet();
   }
