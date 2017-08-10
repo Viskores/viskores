@@ -86,7 +86,6 @@ void TestMultiBlockField()
 
     vtkm::cont::ArrayHandle<vtkm::Id> MBlockArray;
     results[j].GetField().GetData().CopyTo(MBlockArray);
-
     vtkm::cont::ArrayHandle<vtkm::Id> SDataSetArray;
     BlockResult.GetField().GetData().CopyTo(SDataSetArray);
 
