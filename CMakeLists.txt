@@ -38,9 +38,13 @@ set(VTKm_EXPORT_NAME "VTKmTargets")
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
+# Setup default build types
+include(VTKmBuildType)
+
 # Determine VTK-m version
 include(Utilities/Git/Git.cmake)
 include(VTKmDetermineVersion)
+
 # Load hardcoded version in case this is not a Git repository
 file(STRINGS version.txt version_txt)
 extract_version_components("${version_txt}" "VTKm")
