@@ -396,7 +396,7 @@ struct LowerBoundsKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    typename InputIteratorsType::IteratorType resultPos = std::lower_bound(
+    auto resultPos = std::lower_bound(
       inputIterators.GetBegin(), inputIterators.GetEnd(), this->ValuesPortal.Get(index));
 
     vtkm::Id resultIndex =
@@ -444,11 +444,10 @@ struct LowerBoundsComparisonKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    typename InputIteratorsType::IteratorType resultPos =
-      std::lower_bound(inputIterators.GetBegin(),
-                       inputIterators.GetEnd(),
-                       this->ValuesPortal.Get(index),
-                       this->CompareFunctor);
+    auto resultPos = std::lower_bound(inputIterators.GetBegin(),
+                                      inputIterators.GetEnd(),
+                                      this->ValuesPortal.Get(index),
+                                      this->CompareFunctor);
 
     vtkm::Id resultIndex =
       static_cast<vtkm::Id>(std::distance(inputIterators.GetBegin(), resultPos));
@@ -748,7 +747,7 @@ struct UpperBoundsKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    typename InputIteratorsType::IteratorType resultPos = std::upper_bound(
+    auto resultPos = std::upper_bound(
       inputIterators.GetBegin(), inputIterators.GetEnd(), this->ValuesPortal.Get(index));
 
     vtkm::Id resultIndex =
@@ -796,11 +795,10 @@ struct UpperBoundsKernelComparisonKernel
 
     using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
-    typename InputIteratorsType::IteratorType resultPos =
-      std::upper_bound(inputIterators.GetBegin(),
-                       inputIterators.GetEnd(),
-                       this->ValuesPortal.Get(index),
-                       this->CompareFunctor);
+    auto resultPos = std::upper_bound(inputIterators.GetBegin(),
+                                      inputIterators.GetEnd(),
+                                      this->ValuesPortal.Get(index),
+                                      this->CompareFunctor);
 
     vtkm::Id resultIndex =
       static_cast<vtkm::Id>(std::distance(inputIterators.GetBegin(), resultPos));
