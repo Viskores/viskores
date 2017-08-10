@@ -107,6 +107,14 @@ void Render(const vtkm::cont::DataSet& ds,
   SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds());
   ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
 
+  // Print the title
+  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+    new vtkm::rendering::TextAnnotationScreen("Test Plot",
+                                              vtkm::rendering::Color(1, 1, 1, 1),
+                                              .075f,
+                                              vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
+                                              0.f);
+  view.AddAnnotation(titleAnnotation);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 

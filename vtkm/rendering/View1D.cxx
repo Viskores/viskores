@@ -174,8 +174,8 @@ void View1D::UpdateCameraProperties()
   this->GetCamera().SetViewRange2D(
     origCamBounds.X.Min, origCamBounds.X.Max, origCamBounds.Y.Min, origCamBounds.Y.Max);
 
-  // we always want to start with a curve being full-frame
-  if (this->GetCamera().GetMode() == Camera::MODE_2D)
+  // if unchanged by user we always want to start with a curve being full-frame
+  if (this->GetCamera().GetMode() == Camera::MODE_2D && this->GetCamera().GetXScale() == 1.0f)
   {
     vtkm::Float32 left, right, bottom, top;
     this->GetCamera().GetViewRange2D(left, right, bottom, top);
