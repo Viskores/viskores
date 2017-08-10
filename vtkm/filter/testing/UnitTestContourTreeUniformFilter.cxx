@@ -88,15 +88,15 @@ public:
     vtkm::cont::DataSet inDataSet = MakeTestDataSet().Make2DUniformDataSet1();
 
     // Output data set is pairs of saddle and peak vertex IDs
-    vtkm::filter::ResultField result;
+    vtkm::filter::Result result;
 
     // Convert 2D mesh of values into contour tree, pairs of vertex ids
     vtkm::filter::ContourTreeMesh2D contourTreeMesh2D;
     result = contourTreeMesh2D.Execute(inDataSet, std::string("pointvar"));
 
-    vtkm::cont::Field resultField = result.GetField();
+    vtkm::cont::Field Result = result.GetField();
     vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-    resultField.GetData().CopyTo(saddlePeak);
+    Result.GetData().CopyTo(saddlePeak);
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 7),
                      "Wrong result for ContourTree filter");
@@ -127,15 +127,15 @@ public:
     vtkm::cont::DataSet inDataSet = MakeTestDataSet().Make3DUniformDataSet1();
 
     // Output data set is pairs of saddle and peak vertex IDs
-    vtkm::filter::ResultField result;
+    vtkm::filter::Result result;
 
     // Convert 2D mesh of values into contour tree, pairs of vertex ids
     vtkm::filter::ContourTreeMesh3D contourTreeMesh3D;
     result = contourTreeMesh3D.Execute(inDataSet, std::string("pointvar"));
 
-    vtkm::cont::Field resultField = result.GetField();
+    vtkm::cont::Field Result = result.GetField();
     vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
-    resultField.GetData().CopyTo(saddlePeak);
+    Result.GetData().CopyTo(saddlePeak);
 
     VTKM_TEST_ASSERT(test_equal(saddlePeak.GetNumberOfValues(), 9),
                      "Wrong result for ContourTree filter");

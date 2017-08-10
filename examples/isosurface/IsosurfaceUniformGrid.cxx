@@ -246,7 +246,7 @@ int main(int argc, char* argv[])
   filter.SetGenerateNormals(true);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0, 0.5);
-  vtkm::filter::ResultDataSet result = filter.Execute(dataSet, dataSet.GetField("nodevar"));
+  vtkm::filter::Result result = filter.Execute(dataSet, dataSet.GetField("nodevar"));
 
   filter.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));
 

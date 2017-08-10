@@ -35,7 +35,7 @@ public:
   {
     std::cout << "Testing mask points on 2D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(2);
@@ -54,7 +54,7 @@ public:
   {
     std::cout << "Testing mask points on 3D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(5);
@@ -73,7 +73,7 @@ public:
   {
     std::cout << "Testing mask points on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(3);

@@ -44,9 +44,7 @@ set(headers
   PointElevation.h
   PolicyBase.h
   PolicyDefault.h
-  ResultBase.h
-  ResultDataSet.h
-  ResultField.h
+  Result.h
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h

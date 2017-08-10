@@ -55,7 +55,7 @@ inline VTKM_CONT FilterDataSet<Derived>::~FilterDataSet()
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet& input)
+inline VTKM_CONT Result FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet& input)
 {
   return this->Execute(input, vtkm::filter::PolicyDefault());
 }
@@ -63,7 +63,7 @@ inline VTKM_CONT ResultDataSet FilterDataSet<Derived>::Execute(const vtkm::cont:
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultDataSet
+inline VTKM_CONT Result
 FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet& input,
                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
@@ -76,7 +76,7 @@ namespace detail
 template <typename Derived, typename DerivedPolicy>
 struct FilterDataSetPrepareForExecutionFunctor
 {
-  vtkm::filter::ResultDataSet Result;
+  vtkm::filter::Result Result;
   Derived* Self;
   const vtkm::cont::DataSet& Input;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
@@ -95,7 +95,7 @@ struct FilterDataSetPrepareForExecutionFunctor
   VTKM_CONT bool operator()(Device)
   {
     this->Result = this->Self->DoExecute(this->Input, this->Policy, Device());
-    return this->Result.IsValid();
+    return this->Result.IsDataSetValid();
   }
 
 private:
@@ -105,7 +105,7 @@ private:
 
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultDataSet
+inline VTKM_CONT Result
 FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
@@ -120,7 +120,7 @@ FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& result,
+inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(Result& result,
                                                                  const vtkm::cont::Field& field)
 {
   return this->MapFieldOntoOutput(result, field, vtkm::filter::PolicyDefault());
@@ -130,12 +130,12 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(ResultDataSet& 
 template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
-  ResultDataSet& result,
+  Result& result,
   const vtkm::cont::Field& field,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   bool valid = false;
-  if (result.IsValid())
+  if (result.IsDataSetValid())
   {
     vtkm::filter::FieldMetadata metaData(field);
     typedef internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy> FunctorType;
@@ -148,7 +148,7 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been
-  //added to the ResultDataSet that was passed in.
+  //added to the Result that was passed in.
   return valid;
 }
 }

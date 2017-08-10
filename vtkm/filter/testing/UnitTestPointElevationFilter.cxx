@@ -77,11 +77,11 @@ void TestPointElevationNoPolicy()
   filter.SetRange(0.0, 2.0);
 
   filter.SetOutputFieldName("height");
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   result = filter.Execute(inputData, inputData.GetCoordinateSystem());
 
   //verify the result
-  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
+  VTKM_TEST_ASSERT(result.IsDataSetValid(), "result should be valid");
   VTKM_TEST_ASSERT(result.GetField().GetName() == "height", "Output field has wrong name.");
   VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
                    "Output field has wrong association");
@@ -115,13 +115,13 @@ void TestPointElevationWithPolicy()
   filter.SetHighPoint(0.0, 1.0, 0.0);
   filter.SetRange(0.0, 2.0);
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
 
   vtkm::filter::PolicyDefault p;
   result = filter.Execute(inputData, inputData.GetCoordinateSystem(), p);
 
   //verify the result
-  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
+  VTKM_TEST_ASSERT(result.IsDataSetValid(), "result should be valid");
   VTKM_TEST_ASSERT(result.GetField().GetName() == "elevation", "Output field has wrong name.");
   VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
                    "Output field has wrong association");
