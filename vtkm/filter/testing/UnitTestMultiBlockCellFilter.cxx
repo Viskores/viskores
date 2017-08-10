@@ -77,11 +77,12 @@ void TestMultiBlockCell()
   vtkm::filter::CellAverage cellAverage;
   results = cellAverage.Execute(Blocks, std::string("pointvar"));
   VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
-  for (vtkm::Id j = 0; j < results.size(); j++)
+  for (vtkm::Id j = 0; static_cast<std::size_t>(j) < results.size(); j++)
   {
-    VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() ==
-                       Blocks.GetBlock(j).GetCellSet().GetNumberOfCells(),
-                     "result vectors' size incorrect");
+    VTKM_TEST_ASSERT(
+      results[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues() ==
+        Blocks.GetBlock(j).GetCellSet().GetNumberOfCells(),
+      "result vectors' size incorrect");
 
     vtkm::filter::ResultField BlockResult =
       cellAverage.Execute(Blocks.GetBlock(j), std::string("pointvar"));

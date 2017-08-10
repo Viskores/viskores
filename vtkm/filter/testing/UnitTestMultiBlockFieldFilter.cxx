@@ -75,11 +75,12 @@ void TestMultiBlockField()
   results = histogram.Execute(Blocks, std::string("cellvar"));
 
   VTKM_TEST_ASSERT(results.size() == BlockNum, "result block number incorrect");
-  for (vtkm::Id j = 0; j < results.size(); j++)
+  for (vtkm::Id j = 0; static_cast<std::size_t>(j) < results.size(); j++)
   {
-    VTKM_TEST_ASSERT(results[j].GetField().GetData().GetNumberOfValues() ==
-                       histogram.GetNumberOfBins(),
-                     "result vectors' size incorrect");
+    VTKM_TEST_ASSERT(
+      results[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues() ==
+        histogram.GetNumberOfBins(),
+      "result vectors' size incorrect");
 
     vtkm::filter::ResultField BlockResult =
       histogram.Execute(Blocks.GetBlock(j), std::string("cellvar"));
