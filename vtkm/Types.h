@@ -691,14 +691,16 @@ public:
   vtkm::IdComponent GetNumberOfComponents() const { return NUM_COMPONENTS; }
 
   VTKM_EXEC_CONT
-  const ComponentType& operator[](vtkm::IdComponent idx) const
+  //DRP
+  /*  inline */ const ComponentType& operator[](vtkm::IdComponent idx) const
   {
     VTKM_ASSERT(idx >= 0);
     VTKM_ASSERT(idx < NUM_COMPONENTS);
     return this->Components[idx];
   }
   VTKM_EXEC_CONT
-  ComponentType& operator[](vtkm::IdComponent idx)
+  //DRP
+  /*inline*/ ComponentType& operator[](vtkm::IdComponent idx)
   {
     VTKM_ASSERT(idx >= 0);
     VTKM_ASSERT(idx < NUM_COMPONENTS);

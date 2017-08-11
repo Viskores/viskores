@@ -74,11 +74,15 @@ void RunTest(const std::string& fname,
   vtkm::io::reader::BOVDataSetReader rdr(fname);
   vtkm::cont::DataSet ds = rdr.ReadDataSet();
 
-  using RGEvalType =
-    vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType, FieldType>;
+  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
+                                                                           FieldType,
+                                                                           DeviceAdapter>;
   using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType>;
 
-  RGEvalType eval(ds);
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
+  ds.GetField(0).GetData().CopyTo(fieldArray);
+
+  RGEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
   RK4RGType rk4(eval, stepSize);
 
   std::vector<vtkm::Vec<FieldType, 3>> seeds;
@@ -157,13 +161,11 @@ void RunTest(const std::string& fname,
 
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
-  ds.GetField(0).GetData().CopyTo(fieldArray);
 
   if (advectType == 0)
   {
     vtkm::worklet::ParticleAdvection particleAdvection;
-    particleAdvection.Run(rk4, seedArray, fieldArray, numSteps, DeviceAdapter());
+    particleAdvection.Run(rk4, seedArray, numSteps, DeviceAdapter());
   }
   else
   {
