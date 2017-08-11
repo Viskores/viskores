@@ -41,7 +41,7 @@
 #include <GL/glut.h>
 #endif
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 // Default size of the example
 static vtkm::Id2 dims(4, 4);

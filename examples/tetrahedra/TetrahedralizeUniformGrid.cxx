@@ -43,7 +43,7 @@
 
 #include "../isosurface/quaternion.h"
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 // Default size of the example
 static vtkm::Id3 dims(4, 4, 4);
