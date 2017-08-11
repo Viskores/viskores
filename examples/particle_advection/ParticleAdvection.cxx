@@ -64,28 +64,26 @@ void RunTest(const std::string& fname,
              vtkm::Id particlesPerRound,
              vtkm::Id seeding)
 {
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
-  typedef vtkm::Float32 FieldType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef
-    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
+  using FieldType = vtkm::Float32;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
+  using FieldPortalConstType =
+    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   vtkm::io::reader::BOVDataSetReader rdr(fname);
   vtkm::cont::DataSet ds = rdr.ReadDataSet();
 
-  typedef vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
-                                                                FieldType,
-                                                                DeviceAdapter>
-    RGEvalType;
-  typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType> RK4RGType;
+  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
+                                                                           FieldType,
+                                                                           DeviceAdapter>;
+  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType>;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
   ds.GetField(0).GetData().CopyTo(fieldArray);
 
   RGEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
   RK4RGType rk4(eval, stepSize);
-
 
   std::vector<vtkm::Vec<FieldType, 3>> seeds;
   srand(314);
