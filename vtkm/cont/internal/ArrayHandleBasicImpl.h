@@ -194,6 +194,8 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void PrepareForDevice(DeviceAdapterTag) const;
 
+  VTKM_CONT DeviceAdapterId GetDeviceAdapterId() const;
+
   VTKM_CONT void SyncControlArray() const;
   VTKM_CONT void ReleaseResourcesExecutionInternal();
 

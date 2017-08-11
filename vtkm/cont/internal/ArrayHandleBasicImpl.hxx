@@ -436,6 +436,13 @@ void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag) const
 }
 
 template <typename T>
+DeviceAdapterId ArrayHandle<T, StorageTagBasic>::GetDeviceAdapterId() const
+{
+  return this->Internals->ExecutionArrayValid ? this->Internals->ExecutionInterface->GetDeviceId()
+                                              : VTKM_DEVICE_ADAPTER_UNDEFINED;
+}
+
+template <typename T>
 void ArrayHandle<T, StorageTagBasic>::SyncControlArray() const
 {
   if (!this->Internals->ControlArrayValid)
