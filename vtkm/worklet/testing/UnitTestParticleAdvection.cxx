@@ -141,20 +141,19 @@ vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds, const v
     static_cast<FieldType>(bounds.X.Length()) / static_cast<FieldType>((dims[0] - 1)),
     static_cast<FieldType>(bounds.Y.Length()) / static_cast<FieldType>((dims[1] - 1)),
     static_cast<FieldType>(bounds.Z.Length()) / static_cast<FieldType>((dims[2] - 1)));
-  xvals.resize(dims[0]);
+  xvals.resize((size_t)dims[0]);
   xvals[0] = static_cast<FieldType>(bounds.X.Min);
-  for (vtkm::Id i = 1; i < dims[0]; i++)
+  for (size_t i = 1; i < (size_t)dims[0]; i++)
     xvals[i] = xvals[i - 1] + spacing[0];
-  yvals.resize(dims[1]);
 
-  yvals.resize(dims[1]);
+  yvals.resize((size_t)dims[1]);
   yvals[0] = static_cast<FieldType>(bounds.Y.Min);
-  for (vtkm::Id i = 1; i < dims[1]; i++)
+  for (size_t i = 1; i < (size_t)dims[1]; i++)
     yvals[i] = yvals[i - 1] + spacing[1];
 
-  zvals.resize(dims[2]);
+  zvals.resize((size_t)dims[2]);
   zvals[0] = static_cast<FieldType>(bounds.Z.Min);
-  for (vtkm::Id i = 1; i < dims[2]; i++)
+  for (size_t i = 1; i < (size_t)dims[2]; i++)
     zvals[i] = zvals[i - 1] + spacing[2];
 
   vtkm::cont::DataSet ds = dataSetBuilder.Create(xvals, yvals, zvals);
@@ -285,7 +284,8 @@ void ValidateIntegrator(const IntegratorType& integrator,
     VTKM_TEST_ASSERT(status == Status::STATUS_OK || status == Status::TERMINATED ||
                        status == Status::EXITED_SPATIAL_BOUNDARY,
                      "Error in evaluator for " + msg);
-    VTKM_TEST_ASSERT(result == expStepResults[index], "Error in evaluator result for " + msg);
+    VTKM_TEST_ASSERT(result == expStepResults[(size_t)index],
+                     "Error in evaluator result for " + msg);
   }
   pointsHandle.ReleaseResources();
   stepStatus.ReleaseResources();
