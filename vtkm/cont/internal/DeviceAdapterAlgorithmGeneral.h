@@ -749,8 +749,7 @@ public:
 
       StencilHandleType stencil;
 
-      vtkm::cont::ArrayHandle<U> tempArray;
-      ValueOutHandleType reducedValues(tempArray);
+      ValueOutHandleType reducedValues;
 
       ZipInHandleType scanInput(values, keystate);
       ZipOutHandleType scanOutput(reducedValues, stencil);
