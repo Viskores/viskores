@@ -29,8 +29,8 @@ std::string fieldName = "pointvar";
 // Create an isosurface filter
 vtkm::filter::MarchingCubes filter;
 filter.SetIsoValue(0, isovalue);
-vtkm::filter::ResultDataSet result = filter.Execute( inputData,
-                                                     inputData.GetField(fieldName) );
+vtkm::filter::Result result = filter.Execute( inputData,
+                                              inputData.GetField(fieldName) );
 filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
 
 // compute the bounds and extends of the input data

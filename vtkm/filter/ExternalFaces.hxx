@@ -52,7 +52,7 @@ inline vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>> GetCellSet
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
+inline VTKM_CONT vtkm::filter::Result ExternalFaces::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
@@ -107,14 +107,14 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
   }
   else
   {
-    return vtkm::filter::ResultDataSet(output);
+    return vtkm::filter::Result(output);
   }
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExternalFaces::DoMapField(
-  vtkm::filter::ResultDataSet& result,
+  vtkm::filter::Result& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,

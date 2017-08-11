@@ -51,7 +51,7 @@ inline VTKM_CONT MaskPoints::MaskPoints()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet MaskPoints::DoExecute(
+inline VTKM_CONT vtkm::filter::Result MaskPoints::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
@@ -74,19 +74,19 @@ inline VTKM_CONT vtkm::filter::ResultDataSet MaskPoints::DoExecute(
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
     result = this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy), DeviceAdapter());
     return result;
   }
   else
   {
-    return vtkm::filter::ResultDataSet(output);
+    return vtkm::filter::Result(output);
   }
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT bool MaskPoints::DoMapField(vtkm::filter::ResultDataSet& result,
+inline VTKM_CONT bool MaskPoints::DoMapField(vtkm::filter::Result& result,
                                              const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                              const vtkm::filter::FieldMetadata& fieldMeta,
                                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy,

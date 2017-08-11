@@ -35,7 +35,7 @@ vtkm::cont::DataSet MakeDataTestSet1()
   vtkm::cont::DataSet ds = MakeTestDataSet().Make3DUniformDataSet1();
 
   vtkm::filter::CleanGrid clean;
-  vtkm::filter::ResultDataSet result = clean.Execute(ds);
+  vtkm::filter::Result result = clean.Execute(ds);
   for (vtkm::IdComponent i = 0; i < ds.GetNumberOfFields(); ++i)
   {
     clean.MapFieldOntoOutput(result, ds.GetField(i));
@@ -74,9 +74,9 @@ void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
   vtkm::filter::ExternalFaces externalFaces;
   externalFaces.SetCompactPoints(compactPoints);
   externalFaces.SetPassPolyData(passPolyData);
-  vtkm::filter::ResultDataSet result = externalFaces.Execute(ds);
+  vtkm::filter::Result result = externalFaces.Execute(ds);
 
-  VTKM_TEST_ASSERT(result.IsValid(), "Results should be valid");
+  VTKM_TEST_ASSERT(result.IsDataSetValid(), "Results should be valid");
 
   // map fields
   for (vtkm::IdComponent i = 0; i < ds.GetNumberOfFields(); ++i)

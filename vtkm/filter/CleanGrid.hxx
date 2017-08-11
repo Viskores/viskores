@@ -66,10 +66,9 @@ inline VTKM_CONT CleanGrid::CleanGrid()
 }
 
 template <typename Policy, typename Device>
-inline VTKM_CONT vtkm::filter::ResultDataSet CleanGrid::DoExecute(
-  const vtkm::cont::DataSet& inData,
-  vtkm::filter::PolicyBase<Policy> policy,
-  Device)
+inline VTKM_CONT vtkm::filter::Result CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
+                                                           vtkm::filter::PolicyBase<Policy> policy,
+                                                           Device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
@@ -144,7 +143,7 @@ inline VTKM_CONT vtkm::filter::ResultDataSet CleanGrid::DoExecute(
 
 template <typename ValueType, typename Storage, typename Policy, typename Device>
 inline VTKM_CONT bool CleanGrid::DoMapField(
-  vtkm::filter::ResultDataSet& result,
+  vtkm::filter::Result& result,
   const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   vtkm::filter::PolicyBase<Policy>,

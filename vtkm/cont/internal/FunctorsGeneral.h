@@ -274,7 +274,7 @@ struct ReduceByKeyAdd
     const vtkm::Pair<T, ReduceKeySeriesStates>& a,
     const vtkm::Pair<T, ReduceKeySeriesStates>& b) const
   {
-    typedef vtkm::Pair<T, ReduceKeySeriesStates> ReturnType;
+    using ReturnType = vtkm::Pair<T, ReduceKeySeriesStates>;
     //need too handle how we are going to add two numbers together
     //based on the keyStates that they have
 

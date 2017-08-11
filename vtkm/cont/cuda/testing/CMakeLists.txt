@@ -19,7 +19,6 @@
 ##============================================================================
 
 set(unit_tests
-  UnitTestCudaArrayHandle.cu
   UnitTestCudaArrayHandleFancy.cu
   UnitTestCudaComputeRange.cu
   UnitTestCudaDataSetExplicit.cu
