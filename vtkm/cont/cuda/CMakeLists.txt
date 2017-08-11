@@ -19,7 +19,6 @@
 ##============================================================================
 
 set(headers
-  ArrayHandleCuda.h
   ChooseCudaDevice.h
   DeviceAdapterCuda.h
   ErrorCuda.h
