@@ -234,7 +234,7 @@ public:
   // The MSVC compiler issues warnings when using raw pointer math when in
   // debug mode. To keep the compiler happy (and add some safety checks),
   // wrap the iterator in checked_array_iterator.
-  typedef stdext::checked_array_iterator<_IteratorType> IteratorType;
+  using IteratorType = stdext::checked_array_iterator<_IteratorType>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT

@@ -102,8 +102,8 @@ private:
   template <typename T, class CIn>
   VTKM_CONT static T GetExecutionValue(const vtkm::cont::ArrayHandle<T, CIn>& input, vtkm::Id index)
   {
-    typedef vtkm::cont::ArrayHandle<T, CIn> InputArrayType;
-    typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> OutputArrayType;
+    using InputArrayType = vtkm::cont::ArrayHandle<T, CIn>;
+    using OutputArrayType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
 
     OutputArrayType output;
 
@@ -125,11 +125,10 @@ public:
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
                              vtkm::cont::ArrayHandle<U, COut>& output)
   {
-    typedef CopyKernel<
+    using CopyKernelType = CopyKernel<
       typename vtkm::cont::ArrayHandle<T,
                                        CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
-      typename vtkm::cont::ArrayHandle<U, COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>
-      CopyKernelType;
+      typename vtkm::cont::ArrayHandle<U, COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>;
     const vtkm::Id inSize = input.GetNumberOfValues();
 
     CopyKernelType kernel(input.PrepareForInput(DeviceAdapterTag()),
@@ -148,11 +147,12 @@ public:
     VTKM_ASSERT(input.GetNumberOfValues() == stencil.GetNumberOfValues());
     vtkm::Id arrayLength = stencil.GetNumberOfValues();
 
-    typedef vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> IndexArrayType;
+    using IndexArrayType = vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic>;
     IndexArrayType indices;
 
-    typedef typename vtkm::cont::ArrayHandle<U, CStencil>::template ExecutionTypes<
-      DeviceAdapterTag>::PortalConst StencilPortalType;
+    using StencilPortalType =
+      typename vtkm::cont::ArrayHandle<U, CStencil>::template ExecutionTypes<
+        DeviceAdapterTag>::PortalConst;
     StencilPortalType stencilPortal = stencil.PrepareForInput(DeviceAdapterTag());
 
     using IndexPortalType =
@@ -166,13 +166,13 @@ public:
 
     vtkm::Id outArrayLength = DerivedAlgorithm::ScanExclusive(indices, indices);
 
-    typedef typename vtkm::cont::ArrayHandle<T, CIn>::template ExecutionTypes<
-      DeviceAdapterTag>::PortalConst InputPortalType;
+    using InputPortalType =
+      typename vtkm::cont::ArrayHandle<T,
+                                       CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
     InputPortalType inputPortal = input.PrepareForInput(DeviceAdapterTag());
 
-    typedef
-      typename vtkm::cont::ArrayHandle<T, COut>::template ExecutionTypes<DeviceAdapterTag>::Portal
-        OutputPortalType;
+    using OutputPortalType =
+      typename vtkm::cont::ArrayHandle<T, COut>::template ExecutionTypes<DeviceAdapterTag>::Portal;
     OutputPortalType outputPortal = output.PrepareForOutput(outArrayLength, DeviceAdapterTag());
 
     CopyIfKernel<InputPortalType,
@@ -202,11 +202,10 @@ public:
                                      vtkm::cont::ArrayHandle<U, COut>& output,
                                      vtkm::Id outputIndex = 0)
   {
-    typedef CopyKernel<
+    using CopyKernel = CopyKernel<
       typename vtkm::cont::ArrayHandle<T,
                                        CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst,
-      typename vtkm::cont::ArrayHandle<U, COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>
-      CopyKernel;
+      typename vtkm::cont::ArrayHandle<U, COut>::template ExecutionTypes<DeviceAdapterTag>::Portal>;
 
     const vtkm::Id inSize = input.GetNumberOfValues();
     if (inputStartIndex < 0 || numberOfElementsToCopy < 0 || outputIndex < 0 ||
@@ -323,13 +322,14 @@ public:
     //
     //Now that we have an implicit array that is 1/16 the length of full array
     //we can use scan inclusive to compute the final sum
-    typedef typename vtkm::cont::ArrayHandle<T, CIn>::template ExecutionTypes<
-      DeviceAdapterTag>::PortalConst InputPortalType;
+    using InputPortalType =
+      typename vtkm::cont::ArrayHandle<T,
+                                       CIn>::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
 
-    typedef ReduceKernel<InputPortalType, U, BinaryFunctor> ReduceKernelType;
+    using ReduceKernelType = ReduceKernel<InputPortalType, U, BinaryFunctor>;
 
     using ReduceHandleType = vtkm::cont::ArrayHandleImplicit<ReduceKernelType>;
-    typedef vtkm::cont::ArrayHandle<U, vtkm::cont::StorageTagBasic> TempArrayType;
+    using TempArrayType = vtkm::cont::ArrayHandle<U, vtkm::cont::StorageTagBasic>;
 
     ReduceKernelType kernel(
       input.PrepareForInput(DeviceAdapterTag()), initialValue, binary_functor);
@@ -415,8 +415,8 @@ public:
     vtkm::cont::ArrayHandle<ReduceKeySeriesStates> keystate;
 
     {
-      typedef typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
-        DeviceAdapterTag>::PortalConst InputPortalType;
+      using InputPortalType = typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
+        DeviceAdapterTag>::PortalConst;
 
       using KeyStatePortalType = typename vtkm::cont::ArrayHandle<
         ReduceKeySeriesStates>::template ExecutionTypes<DeviceAdapterTag>::Portal;
@@ -436,11 +436,11 @@ public:
     // the value summed currently, the second being 0 or 1, with 1 being used
     // when this is a value of a key we need to write ( END or START_AND_END)
     {
-      typedef vtkm::cont::ArrayHandle<U, VIn> ValueInHandleType;
-      typedef vtkm::cont::ArrayHandle<U, VOut> ValueOutHandleType;
+      using ValueInHandleType = vtkm::cont::ArrayHandle<U, VIn>;
+      using ValueOutHandleType = vtkm::cont::ArrayHandle<U, VOut>;
       using StencilHandleType = vtkm::cont::ArrayHandle<ReduceKeySeriesStates>;
-      typedef vtkm::cont::ArrayHandleZip<ValueInHandleType, StencilHandleType> ZipInHandleType;
-      typedef vtkm::cont::ArrayHandleZip<ValueOutHandleType, StencilHandleType> ZipOutHandleType;
+      using ZipInHandleType = vtkm::cont::ArrayHandleZip<ValueInHandleType, StencilHandleType>;
+      using ZipOutHandleType = vtkm::cont::ArrayHandleZip<ValueOutHandleType, StencilHandleType>;
 
       StencilHandleType stencil;
       ValueOutHandleType reducedValues;
@@ -474,8 +474,8 @@ public:
                                    BinaryFunctor binaryFunctor,
                                    const T& initialValue)
   {
-    typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> TempArrayType;
-    typedef vtkm::cont::ArrayHandle<T, COut> OutputArrayType;
+    using TempArrayType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
+    using OutputArrayType = vtkm::cont::ArrayHandle<T, COut>;
 
     using SrcPortalType =
       typename TempArrayType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
@@ -542,8 +542,8 @@ public:
     vtkm::cont::ArrayHandle<ReduceKeySeriesStates> keystate;
 
     {
-      typedef typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
-        DeviceAdapterTag>::PortalConst InputPortalType;
+      using InputPortalType = typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
+        DeviceAdapterTag>::PortalConst;
 
       using KeyStatePortalType = typename vtkm::cont::ArrayHandle<
         ReduceKeySeriesStates>::template ExecutionTypes<DeviceAdapterTag>::Portal;
@@ -557,14 +557,14 @@ public:
     }
 
     // 2. Shift input and initialize elements at head flags position to initValue
-    typedef typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> TempArrayType;
-    typedef
+    using TempArrayType = typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
+    using TempPortalType =
       typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
-        DeviceAdapterTag>::Portal TempPortalType;
+        DeviceAdapterTag>::Portal;
     TempArrayType temp;
     {
-      typedef typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
-        DeviceAdapterTag>::PortalConst InputPortalType;
+      using InputPortalType = typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
+        DeviceAdapterTag>::PortalConst;
 
       using KeyStatePortalType = typename vtkm::cont::ArrayHandle<
         ReduceKeySeriesStates>::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
@@ -659,11 +659,10 @@ public:
                                    vtkm::cont::ArrayHandle<T, COut>& output,
                                    BinaryFunctor binary_functor)
   {
-    typedef
-      typename vtkm::cont::ArrayHandle<T, COut>::template ExecutionTypes<DeviceAdapterTag>::Portal
-        PortalType;
+    using PortalType =
+      typename vtkm::cont::ArrayHandle<T, COut>::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
-    typedef ScanKernel<PortalType, BinaryFunctor> ScanKernelType;
+    using ScanKernelType = ScanKernel<PortalType, BinaryFunctor>;
 
     DerivedAlgorithm::Copy(input, output);
 
@@ -721,8 +720,8 @@ public:
     vtkm::cont::ArrayHandle<ReduceKeySeriesStates> keystate;
 
     {
-      typedef typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
-        DeviceAdapterTag>::PortalConst InputPortalType;
+      using InputPortalType = typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<
+        DeviceAdapterTag>::PortalConst;
 
       using KeyStatePortalType = typename vtkm::cont::ArrayHandle<
         ReduceKeySeriesStates>::template ExecutionTypes<DeviceAdapterTag>::Portal;
@@ -742,11 +741,11 @@ public:
     // the value summed currently, the second being 0 or 1, with 1 being used
     // when this is a value of a key we need to write ( END or START_AND_END)
     {
-      typedef vtkm::cont::ArrayHandle<U, VIn> ValueInHandleType;
-      typedef vtkm::cont::ArrayHandle<U, VOut> ValueOutHandleType;
+      using ValueInHandleType = vtkm::cont::ArrayHandle<U, VIn>;
+      using ValueOutHandleType = vtkm::cont::ArrayHandle<U, VOut>;
       using StencilHandleType = vtkm::cont::ArrayHandle<ReduceKeySeriesStates>;
-      typedef vtkm::cont::ArrayHandleZip<ValueInHandleType, StencilHandleType> ZipInHandleType;
-      typedef vtkm::cont::ArrayHandleZip<ValueOutHandleType, StencilHandleType> ZipOutHandleType;
+      using ZipInHandleType = vtkm::cont::ArrayHandleZip<ValueInHandleType, StencilHandleType>;
+      using ZipOutHandleType = vtkm::cont::ArrayHandleZip<ValueOutHandleType, StencilHandleType>;
 
       StencilHandleType stencil;
 
@@ -788,8 +787,8 @@ public:
     }
     numThreads /= 2;
 
-    typedef BitonicSortMergeKernel<PortalType, BinaryCompare> MergeKernel;
-    typedef BitonicSortCrossoverKernel<PortalType, BinaryCompare> CrossoverKernel;
+    using MergeKernel = BitonicSortMergeKernel<PortalType, BinaryCompare>;
+    using CrossoverKernel = BitonicSortCrossoverKernel<PortalType, BinaryCompare>;
 
     for (vtkm::Id crossoverSize = 1; crossoverSize < numValues; crossoverSize *= 2)
     {
@@ -821,7 +820,7 @@ public:
     using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
     ;
     using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
-    typedef vtkm::cont::ArrayHandleZip<KeyType, ValueType> ZipHandleType;
+    using ZipHandleType = vtkm::cont::ArrayHandleZip<KeyType, ValueType>;
 
     ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
     DerivedAlgorithm::Sort(zipHandle, internal::KeyCompare<T, U>());
@@ -839,7 +838,7 @@ public:
     using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
     ;
     using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
-    typedef vtkm::cont::ArrayHandleZip<KeyType, ValueType> ZipHandleType;
+    using ZipHandleType = vtkm::cont::ArrayHandleZip<KeyType, ValueType>;
 
     ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
     DerivedAlgorithm::Sort(zipHandle, internal::KeyCompare<T, U, BinaryCompare>(binary_compare));
@@ -860,7 +859,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id, vtkm::cont::StorageTagBasic> stencilArray;
     vtkm::Id inputSize = values.GetNumberOfValues();
 
-    typedef internal::WrappedBinaryOperator<bool, BinaryCompare> WrappedBOpType;
+    using WrappedBOpType = internal::WrappedBinaryOperator<bool, BinaryCompare>;
     WrappedBOpType wrappedCompare(binary_compare);
 
     ClassifyUniqueComparisonKernel<
@@ -969,7 +968,7 @@ public:
   {
     T* lockedValue;
 #if defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL > 0
-    typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
+    using IteratorType = typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType;
     typename IteratorType::pointer temp =
       &(*(Iterators.GetBegin() + static_cast<std::ptrdiff_t>(index)));
     lockedValue = temp;
@@ -985,7 +984,7 @@ public:
   {
     T* lockedValue;
 #if defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL > 0
-    typedef typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType IteratorType;
+    using IteratorType = typename vtkm::cont::ArrayPortalToIterators<PortalType>::IteratorType;
     typename IteratorType::pointer temp =
       &(*(Iterators.GetBegin() + static_cast<std::ptrdiff_t>(index)));
     lockedValue = temp;
@@ -997,8 +996,9 @@ public:
   }
 
 private:
-  typedef typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
-    DeviceTag>::Portal PortalType;
+  using PortalType =
+    typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
+      DeviceTag>::Portal;
   using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
   IteratorsType Iterators;
 

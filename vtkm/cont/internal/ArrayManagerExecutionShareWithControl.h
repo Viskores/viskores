@@ -45,7 +45,7 @@ class ArrayManagerExecutionShareWithControl
 {
 public:
   using ValueType = T;
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
   using PortalType = typename StorageType::PortalType;
   using PortalConstType = typename StorageType::PortalConstType;
 

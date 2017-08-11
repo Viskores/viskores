@@ -41,9 +41,9 @@ template <class PortalT>
 class ArrayPortalShrink
 {
 public:
-  typedef PortalT DelegatePortalType;
+  using DelegatePortalType = PortalT;
 
-  typedef typename DelegatePortalType::ValueType ValueType;
+  using ValueType = typename DelegatePortalType::ValueType;
 
   VTKM_CONT ArrayPortalShrink()
     : NumberOfValues(0)
@@ -125,8 +125,8 @@ namespace cont
 template <typename DelegatePortalType>
 class ArrayPortalToIterators<vtkm::cont::internal::ArrayPortalShrink<DelegatePortalType>>
 {
-  typedef vtkm::cont::internal::ArrayPortalShrink<DelegatePortalType> PortalType;
-  typedef vtkm::cont::ArrayPortalToIterators<DelegatePortalType> DelegateArrayPortalToIterators;
+  using PortalType = vtkm::cont::internal::ArrayPortalShrink<DelegatePortalType>;
+  using DelegateArrayPortalToIterators = vtkm::cont::ArrayPortalToIterators<DelegatePortalType>;
 
 public:
   VTKM_SUPPRESS_EXEC_WARNINGS
@@ -137,7 +137,7 @@ public:
   {
   }
 
-  typedef typename DelegateArrayPortalToIterators::IteratorType IteratorType;
+  using IteratorType = typename DelegateArrayPortalToIterators::IteratorType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT

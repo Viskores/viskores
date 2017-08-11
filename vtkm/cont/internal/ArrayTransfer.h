@@ -50,9 +50,9 @@ template <typename T, class StorageTag, class DeviceAdapterTag>
 class ArrayTransfer
 {
 private:
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
-  typedef vtkm::cont::internal::ArrayManagerExecution<T, StorageTag, DeviceAdapterTag>
-    ArrayManagerType;
+  using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
+  using ArrayManagerType =
+    vtkm::cont::internal::ArrayManagerExecution<T, StorageTag, DeviceAdapterTag>;
 
 public:
   /// The type of value held in the array (vtkm::FloatDefault, vtkm::Vec, etc.)
