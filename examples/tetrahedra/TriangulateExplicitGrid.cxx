@@ -222,7 +222,7 @@ int main(int argc, char* argv[])
 
   // Convert 2D explicit cells to triangles
   vtkm::filter::Triangulate triangulate;
-  vtkm::filter::ResultDataSet result = triangulate.Execute(inDataSet);
+  vtkm::filter::Result result = triangulate.Execute(inDataSet);
   outDataSet = result.GetDataSet();
 
   // Render the output dataset of tets

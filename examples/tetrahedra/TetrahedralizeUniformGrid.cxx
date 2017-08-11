@@ -284,7 +284,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet inDataSet = MakeTetrahedralizeTestDataSet(dims);
 
   vtkm::filter::Tetrahedralize tetrahedralize;
-  vtkm::filter::ResultDataSet result = tetrahedralize.Execute(inDataSet);
+  vtkm::filter::Result result = tetrahedralize.Execute(inDataSet);
 
   tetDataSet = result.GetDataSet();
 

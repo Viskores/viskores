@@ -35,7 +35,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
@@ -77,7 +77,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
@@ -120,7 +120,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (sphere):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
@@ -149,7 +149,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.f, 0.f, 0.f);
@@ -178,7 +178,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.f, 0.f, 0.f);

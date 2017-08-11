@@ -96,7 +96,7 @@ inline VTKM_CONT Threshold::Threshold()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet Threshold::DoExecute(
+inline VTKM_CONT vtkm::filter::Result Threshold::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -123,7 +123,7 @@ inline VTKM_CONT vtkm::filter::ResultDataSet Threshold::DoExecute(
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT bool Threshold::DoMapField(vtkm::filter::ResultDataSet& result,
+inline VTKM_CONT bool Threshold::DoMapField(vtkm::filter::Result& result,
                                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                             const vtkm::filter::FieldMetadata& fieldMeta,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>&,

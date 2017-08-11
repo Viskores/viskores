@@ -35,12 +35,12 @@ void TestVertexClustering()
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose();
 
   vtkm::filter::VertexClustering clustering;
-  vtkm::filter::ResultDataSet result;
+  vtkm::filter::Result result;
 
   clustering.SetNumberOfDivisions(vtkm::Id3(3, 3, 3));
   result = clustering.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.IsValid(), "results should be valid");
+  VTKM_TEST_ASSERT(result.IsDataSetValid(), "results should be valid");
 
   vtkm::cont::DataSet output = result.GetDataSet();
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,

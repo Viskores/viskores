@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
 
   // Convert uniform quad to triangle
   vtkm::filter::Triangulate triangulate;
-  vtkm::filter::ResultDataSet result = triangulate.Execute(inDataSet);
+  vtkm::filter::Result result = triangulate.Execute(inDataSet);
 
   triDataSet = result.GetDataSet();
 

@@ -66,7 +66,7 @@ void TestClipExplicit()
 
   vtkm::cont::DataSet ds = MakeTestDatasetExplicit();
 
-  vtkm::filter::ResultDataSet result;
+  vtkm::filter::Result result;
   vtkm::filter::ClipWithField clip;
   clip.SetClipValue(0.5);
 
