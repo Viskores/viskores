@@ -121,9 +121,10 @@ vtkm::cont::DataSet CreateUniformDataSet(const vtkm::Bounds& bounds, const vtkm:
   vtkm::Vec<FieldType, 3> origin(static_cast<FieldType>(bounds.X.Min),
                                  static_cast<FieldType>(bounds.Y.Min),
                                  static_cast<FieldType>(bounds.Z.Min));
-  vtkm::Vec<FieldType, 3> spacing(static_cast<FieldType>(bounds.X.Length() / (dims[0] - 1)),
-                                  static_cast<FieldType>(bounds.Y.Length() / (dims[1] - 1)),
-                                  static_cast<FieldType>(bounds.Z.Length() / (dims[2] - 1)));
+  vtkm::Vec<FieldType, 3> spacing(
+    static_cast<FieldType>(bounds.X.Length()) / static_cast<FieldType>((dims[0] - 1)),
+    static_cast<FieldType>(bounds.Y.Length()) / static_cast<FieldType>((dims[1] - 1)),
+    static_cast<FieldType>(bounds.Z.Length()) / static_cast<FieldType>((dims[2] - 1)));
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims, origin, spacing);
@@ -136,9 +137,10 @@ vtkm::cont::DataSet CreateRectilinearDataSet(const vtkm::Bounds& bounds, const v
   vtkm::cont::DataSetBuilderRectilinear dataSetBuilder;
   std::vector<FieldType> xvals, yvals, zvals;
 
-  vtkm::Vec<FieldType, 3> spacing(static_cast<FieldType>(bounds.X.Length() / (dims[0] - 1)),
-                                  static_cast<FieldType>(bounds.Y.Length() / (dims[1] - 1)),
-                                  static_cast<FieldType>(bounds.Z.Length() / (dims[2] - 1)));
+  vtkm::Vec<FieldType, 3> spacing(
+    static_cast<FieldType>(bounds.X.Length()) / static_cast<FieldType>((dims[0] - 1)),
+    static_cast<FieldType>(bounds.Y.Length()) / static_cast<FieldType>((dims[1] - 1)),
+    static_cast<FieldType>(bounds.Z.Length()) / static_cast<FieldType>((dims[2] - 1)));
   xvals.resize(dims[0]);
   xvals[0] = static_cast<FieldType>(bounds.X.Min);
   for (vtkm::Id i = 1; i < dims[0]; i++)
@@ -242,10 +244,10 @@ public:
 
   VTKM_EXEC
   void operator()(vtkm::Vec<FieldType, 3>& pointIn,
-                  bool& validity,
+                  vtkm::worklet::particleadvection::ParticleStatus& status,
                   vtkm::Vec<FieldType, 3>& pointOut) const
   {
-    validity = integrator.Step(pointIn, pointOut);
+    status = integrator.Step(pointIn, pointOut);
   }
 
 private:
@@ -262,13 +264,14 @@ void ValidateIntegrator(const IntegratorType& integrator,
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
   typedef TestIntegratorWorklet<FieldType, IntegratorType> IntegratorTester;
   typedef vtkm::worklet::DispatcherMapField<IntegratorTester> IntegratorTesterDispatcher;
+  typedef vtkm::worklet::particleadvection::ParticleStatus Status;
   IntegratorTester integratorTester(integrator);
   IntegratorTesterDispatcher integratorTesterDispatcher(integratorTester);
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> pointsHandle =
     vtkm::cont::make_ArrayHandle(pointIns);
   vtkm::Id numPoints = pointsHandle.GetNumberOfValues();
   pointsHandle.PrepareForInput(DeviceAdapter());
-  vtkm::cont::ArrayHandle<bool> stepStatus;
+  vtkm::cont::ArrayHandle<Status> stepStatus;
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> stepResults;
   stepStatus.PrepareForOutput(numPoints, DeviceAdapter());
   stepResults.PrepareForOutput(numPoints, DeviceAdapter());
@@ -277,9 +280,11 @@ void ValidateIntegrator(const IntegratorType& integrator,
   auto resultsPortal = stepResults.GetPortalConstControl();
   for (vtkm::Id index = 0; index < numPoints; index++)
   {
-    bool status = statusPortal.Get(index);
+    Status status = statusPortal.Get(index);
     vtkm::Vec<FieldType, 3> result = resultsPortal.Get(index);
-    VTKM_TEST_ASSERT(status, "Error in evaluator for " + msg);
+    VTKM_TEST_ASSERT(status == Status::STATUS_OK || status == Status::TERMINATED ||
+                       status == Status::EXITED_SPATIAL_BOUNDARY,
+                     "Error in evaluator for " + msg);
     VTKM_TEST_ASSERT(result == expStepResults[index], "Error in evaluator result for " + msg);
   }
   pointsHandle.ReleaseResources();
