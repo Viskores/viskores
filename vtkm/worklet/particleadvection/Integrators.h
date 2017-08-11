@@ -101,7 +101,7 @@ public:
                                  vtkm::Vec<FieldType, 3>& outpos) const
   {
     numSteps = (numSteps == 0) ? 1 : numSteps;
-    FieldType totalTime = numSteps * this->StepLength;
+    FieldType totalTime = static_cast<FieldType>(numSteps) * this->StepLength;
     FieldType timeFraction = totalTime * this->Tolerance;
     FieldType stepLength = this->StepLength / 2;
     vtkm::Vec<FieldType, 3> velocity;
