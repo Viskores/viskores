@@ -123,9 +123,10 @@ void TestMultiBlockFilters()
   results = histogram.Execute(Blocks, std::string("cellvar"));
   Result_Verify(results, histogram, Blocks, std::string("cellvar"));
 
-  Blocks = MultiBlockBuilder<vtkm::Float64>(BlockNum, "pointvar");
+  Blocks = MultiBlockBuilder<vtkm::Id>(BlockNum, "pointvar");
   vtkm::filter::CellAverage cellAverage;
   results = cellAverage.Execute(Blocks, std::string("pointvar"));
+
   Result_Verify(results, cellAverage, Blocks, std::string("pointvar"));
 
   return;
@@ -133,7 +134,7 @@ void TestMultiBlockFilters()
 
 
 
-int UnitTestMultiBlockFieldFilter(int, char* [])
+int UnitTestMultiBlockFilters(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestMultiBlockFilters);
 }

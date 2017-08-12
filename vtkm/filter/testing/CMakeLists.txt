@@ -35,7 +35,7 @@ set(unit_tests
   UnitTestMarchingCubesFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
-  UnitTestMultiBlockFieldFilter.cxx
+  UnitTestMultiBlockFilters.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
