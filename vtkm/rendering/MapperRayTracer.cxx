@@ -112,8 +112,6 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     coords.GetData(), indices, scalarField, numberOfTriangles, scalarRange, dataBounds);
 
   this->Internals->Tracer.SetColorMap(this->ColorMap);
-  this->Internals->Tracer.SetBackgroundColor(
-    this->Internals->Canvas->GetBackgroundColor().Components);
   this->Internals->Tracer.Render(this->Internals->Rays);
 
   timer.Reset();

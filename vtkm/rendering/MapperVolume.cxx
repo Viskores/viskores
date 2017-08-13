@@ -128,7 +128,6 @@ void MapperVolume::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     tracer.SetData(
       coords, scalarField, cellset.Cast<vtkm::cont::CellSetStructured<3>>(), scalarRange);
     tracer.SetColorMap(this->ColorMap);
-    tracer.SetBackgroundColor(this->Internals->Canvas->GetBackgroundColor().Components);
 
     tracer.Render(rays);
 
