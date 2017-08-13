@@ -874,12 +874,6 @@ void VolumeRendererStructured::SetSampleDistance(const vtkm::Float32& distance)
     throw vtkm::cont::ErrorBadValue("Sample distance must be positive.");
   SampleDistance = distance;
 }
-
-void VolumeRendererStructured::SetBackgroundColor(
-  const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
-{
-  BackgroundColor = backgroundColor;
-}
 }
 }
 } //namespace vtkm::rendering::raytracing

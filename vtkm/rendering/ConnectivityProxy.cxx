@@ -187,6 +187,7 @@ public:
     rayCamera.SetParameters(camera, *canvas);
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
     rayCamera.CreateRays(rays, this->Coords);
+    rays.Buffers.at(0).InitConst(0.f);
     raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvas);
 
     if (Mode == VOLUME_MODE)
