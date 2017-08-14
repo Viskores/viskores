@@ -105,6 +105,7 @@ set(sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   ArrayRangeCompute.cxx
+  CellSetExplicit.cxx
   RuntimeDeviceTracker.cxx
   )
 
