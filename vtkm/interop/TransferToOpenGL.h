@@ -21,8 +21,14 @@
 #define vtk_m_interop_TransferToOpenGL_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/interop/BufferState.h>
 #include <vtkm/interop/internal/TransferToOpenGL.h>
+
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 namespace vtkm
 {
@@ -49,6 +55,54 @@ VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> h
 {
   vtkm::interop::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
   return toGL.Transfer(handle);
+}
+
+/// Dispatch overload for TransferToOpenGL that deduces the DeviceAdapter for
+/// the given ArrayHandle.
+///
+/// \overload
+///
+template <typename ValueType, class StorageTag>
+VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
+                                BufferState& state)
+{
+  vtkm::cont::DeviceAdapterId devId = handle.GetDeviceAdapterId();
+  switch (devId)
+  {
+    case VTKM_DEVICE_ADAPTER_SERIAL:
+      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagSerial());
+      break;
+
+#ifdef VTKM_ENABLE_TBB
+    case VTKM_DEVICE_ADAPTER_TBB:
+      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagTBB());
+      break;
+#endif
+
+#ifdef VTKM_CUDA
+    case VTKM_DEVICE_ADAPTER_CUDA:
+      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagCuda());
+      break;
+#endif
+
+    default:
+// Print warning on debug builds, then fallthrough to host case.
+#ifndef NDEBUG
+      std::cerr << __FILE__ << ":" << __LINE__ << ": "
+                << "Unrecognized DeviceAdapterId encountered: " << devId << "\n";
+#endif // NDEBUG
+
+    /* Fallthrough */
+    case VTKM_DEVICE_ADAPTER_UNDEFINED:
+// GetDeviceAdapterId returns UNDEFINED when memory is on the host.
+// Try TBB if enabled and serial otherwise.
+#ifdef VTKM_ENABLE_TBB
+      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagTBB());
+#else
+      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagSerial());
+#endif
+      break;
+  }
 }
 }
 }

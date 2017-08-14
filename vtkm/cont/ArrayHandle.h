@@ -463,6 +463,17 @@ public:
     }
   }
 
+  /// Returns the DeviceAdapterId for the current device. If there is no device
+  /// with an up-to-date copy of the data, VTKM_DEVICE_ADAPTER_UNDEFINED is
+  /// returned.
+  VTKM_CONT
+  DeviceAdapterId GetDeviceAdapterId() const
+  {
+    return this->Internals->ExecutionArrayValid
+      ? this->Internals->ExecutionArray->GetDeviceAdapterId()
+      : VTKM_DEVICE_ADAPTER_UNDEFINED;
+  }
+
   struct VTKM_ALWAYS_EXPORT InternalStruct
   {
     StorageType ControlArray;
