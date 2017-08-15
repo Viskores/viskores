@@ -20,6 +20,7 @@
 
 set(headers
   TestingOpenGLInterop.h
+  TestingTransferFancyHandles.h
   )
 
 set(unit_tests)
@@ -33,11 +34,13 @@ set(needs_rendering FALSE)
 if(VTKm_OSMesa_FOUND AND TARGET vtkm_rendering)
   list(APPEND unit_tests
     UnitTestTransferOSMesa.cxx
+    UnitTestFancyTransferOSMesa.cxx
   )
   set(needs_rendering TRUE)
 elseif(VTKm_EGL_FOUND AND TARGET vtkm_rendering)
   list(APPEND unit_tests
     UnitTestTransferEGL.cxx
+    UnitTestFancyTransferEGL.cxx
   )
   set(needs_rendering TRUE)
 else()
@@ -45,6 +48,7 @@ else()
   if(VTKm_GLUT_FOUND)
     list(APPEND unit_tests
        UnitTestTransferGLUT.cxx
+       UnitTestFancyTransferGLUT.cxx
     )
   endif()
 endif()
