@@ -38,8 +38,8 @@ namespace vtkm
 namespace cont
 {
 
-typedef vtkm::Int8 DeviceAdapterId;
-typedef std::string DeviceAdapterNameType;
+using DeviceAdapterId = vtkm::Int8;
+using DeviceAdapterNameType = std::string;
 
 template <typename DeviceAdapter>
 struct DeviceAdapterTraits;

@@ -58,7 +58,7 @@ inline VTKM_CONT Triangulate::Triangulate()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet Triangulate::DoExecute(
+inline VTKM_CONT vtkm::filter::Result Triangulate::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
@@ -75,12 +75,12 @@ inline VTKM_CONT vtkm::filter::ResultDataSet Triangulate::DoExecute(
   output.AddCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-  return vtkm::filter::ResultDataSet(output);
+  return vtkm::filter::Result(output);
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT bool Triangulate::DoMapField(vtkm::filter::ResultDataSet& result,
+inline VTKM_CONT bool Triangulate::DoMapField(vtkm::filter::Result& result,
                                               const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                               const vtkm::filter::FieldMetadata& fieldMeta,
                                               const vtkm::filter::PolicyBase<DerivedPolicy>&,

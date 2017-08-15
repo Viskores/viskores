@@ -32,7 +32,7 @@ void TestPointAverageUniform3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::PointAverage pointAverage;
   pointAverage.SetOutputFieldName("avgvals");
 
@@ -64,7 +64,7 @@ void TestPointAverageRegular3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DRectilinearDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::PointAverage pointAverage;
 
   result = pointAverage.Execute(dataSet, dataSet.GetField("cellvar"));
@@ -73,11 +73,11 @@ void TestPointAverageRegular3D()
   VTKM_TEST_ASSERT(result.GetField().GetName() == "cellvar", "Field was given the wrong name.");
   VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
                    "Field was given the wrong association.");
-  vtkm::cont::Field resultField = result.GetField();
+  vtkm::cont::Field Result = result.GetField();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  resultField.GetData().CopyTo(resultArrayHandle);
+  Result.GetData().CopyTo(resultArrayHandle);
 
-  if (result.IsValid())
+  if (result.IsDataSetValid())
   {
     vtkm::Float32 expected[18] = { 0.f, 0.5f, 1.f, 0.f, 0.5f, 1.f, 1.f, 1.5f, 2.f,
                                    1.f, 1.5f, 2.f, 2.f, 2.5f, 3.f, 2.f, 2.5f, 3.f };
@@ -96,7 +96,7 @@ void TestPointAverageExplicit1()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet1();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::PointAverage pointAverage;
 
   result = pointAverage.Execute(dataSet, dataSet.GetField("cellvar"));
@@ -126,7 +126,7 @@ void TestPointAverageExplicit2()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet5();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::PointAverage pointAverage;
 
   result = pointAverage.Execute(dataSet, dataSet.GetField("cellvar"));

@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
 #include <vtkm/Bounds.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -27,6 +27,7 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -41,7 +42,7 @@
 namespace
 {
 static const vtkm::Id WIDTH = 512, HEIGHT = 512;
-static vtkm::Id which = 0, NUM_DATASETS = 4;
+static vtkm::Id which = 0, NUM_DATASETS = 5;
 static bool done = false;
 static bool batch = false;
 
@@ -65,7 +66,9 @@ void RenderTests()
   typedef vtkm::rendering::CanvasGL CanvasType;
   typedef vtkm::rendering::View3D View3DType;
   typedef vtkm::rendering::View2D View2DType;
+  typedef vtkm::rendering::View1D View1DType;
 
+  vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
 
@@ -74,33 +77,71 @@ void RenderTests()
   glfwMakeContextCurrent(window);
   glfwSetKeyCallback(window, keyCallback);
 
-  CanvasType canvas[4] = {
-    CanvasType(512, 512), CanvasType(512, 512), CanvasType(512, 512), CanvasType(512, 512)
-  };
-  vtkm::rendering::Scene scene[4];
-  vtkm::cont::DataSet ds[4];
-  MapperType mapper[4];
-  vtkm::rendering::Camera camera[4];
+  CanvasType canvas[5] = { CanvasType(512, 512),
+                           CanvasType(512, 512),
+                           CanvasType(512, 512),
+                           CanvasType(512, 512),
+                           CanvasType(512, 512) };
+  vtkm::rendering::Scene scene[5];
+  vtkm::cont::DataSet ds[5];
+  MapperType mapper[5];
+  vtkm::rendering::Camera camera[5];
 
   ds[0] = maker.Make3DRegularDataSet0();
   ds[1] = maker.Make3DRectilinearDataSet0();
   ds[2] = maker.Make3DExplicitDataSet4();
   ds[3] = maker.Make2DRectilinearDataSet0();
+  //create 1D uniform DS with tiny Y axis
+  vtkm::cont::DataSet tinyDS = maker.Make1DUniformDataSet0();
+  const std::size_t nVerts =
+    static_cast<std::size_t>(tinyDS.GetField(0).GetData().GetNumberOfValues());
+  std::vector<vtkm::Float32> vars(nVerts);
+  float smallVal = 1.000;
+  for (std::size_t i = 0; i < nVerts; i++)
+  {
+    vars[i] = smallVal;
+    smallVal += .01f;
+  }
+  dsf.AddPointField(tinyDS, "smallScaledXAxis", vars);
+  ds[4] = tinyDS;
+  tinyDS.PrintSummary(std::cerr);
 
-  std::string fldNames[4];
+  std::string fldNames[5];
   fldNames[0] = "pointvar";
   fldNames[1] = "pointvar";
   fldNames[2] = "pointvar";
   fldNames[3] = "pointvar";
+  fldNames[4] = "smallScaledXAxis";
 
   for (int i = 0; i < NUM_DATASETS; i++)
   {
-    scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
-                                             ds[i].GetCoordinateSystem(),
-                                             ds[i].GetField(fldNames[i].c_str()),
-                                             colorTable));
-    vtkm::rendering::testing::SetCamera<View3DType>(camera[i],
-                                                    ds[i].GetCoordinateSystem().GetBounds());
+    if (i < 3)
+    {
+      scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                               ds[i].GetCoordinateSystem(),
+                                               ds[i].GetField(fldNames[i].c_str()),
+                                               colorTable));
+      vtkm::rendering::testing::SetCamera<View3DType>(camera[i],
+                                                      ds[i].GetCoordinateSystem().GetBounds());
+    }
+    else if (i == 3)
+    {
+      scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                               ds[i].GetCoordinateSystem(),
+                                               ds[i].GetField(fldNames[i].c_str()),
+                                               colorTable));
+      vtkm::rendering::testing::SetCamera<View2DType>(camera[i],
+                                                      ds[i].GetCoordinateSystem().GetBounds());
+    }
+    else
+    {
+      scene[i].AddActor(vtkm::rendering::Actor(ds[i].GetCellSet(),
+                                               ds[i].GetCoordinateSystem(),
+                                               ds[i].GetField(fldNames[i].c_str()),
+                                               vtkm::rendering::Color::white));
+      vtkm::rendering::testing::SetCamera<View1DType>(
+        camera[i], ds[i].GetCoordinateSystem().GetBounds(), ds[i].GetField(fldNames[i].c_str()));
+    }
   }
 
   View3DType view3d0(
@@ -109,9 +150,10 @@ void RenderTests()
     scene[1], mapper[1], canvas[1], camera[1], vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
   View3DType view3d2(
     scene[2], mapper[2], canvas[2], camera[2], vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
-
-  View2DType view2d(
+  View2DType view2d0(
     scene[3], mapper[3], canvas[3], camera[3], vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+  View1DType view1d0(
+    scene[4], mapper[4], canvas[4], camera[4], vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
 
   while (!glfwWindowShouldClose(window) && !done)
   {
@@ -124,7 +166,10 @@ void RenderTests()
     else if (which == 2)
       vtkm::rendering::testing::Render<MapperType, CanvasType, View3DType>(view3d2, "expl3D.pnm");
     else if (which == 3)
-      vtkm::rendering::testing::Render<MapperType, CanvasType, View2DType>(view2d, "rect2D.pnm");
+      vtkm::rendering::testing::Render<MapperType, CanvasType, View2DType>(view2d0, "rect2D.pnm");
+    else if (which == 4)
+      vtkm::rendering::testing::Render<MapperType, CanvasType, View1DType>(
+        view1d0, "uniform1DSmallScaledXAxis.pnm");
     glfwSwapBuffers(window);
 
     if (batch)

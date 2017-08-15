@@ -983,48 +983,6 @@ public:
     }
   }; //class Sample cell
 
-  class CompositeBackground : public vtkm::worklet::WorkletMapField
-  {
-    vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
-
-  public:
-    VTKM_CONT
-    CompositeBackground(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
-      : BackgroundColor(backgroundColor)
-    {
-    }
-
-    typedef void ControlSignature(FieldIn<>, WholeArrayInOut<>);
-    typedef void ExecutionSignature(_1, _2);
-    template <typename PortalType>
-    VTKM_EXEC inline void operator()(const vtkm::Id& index, PortalType& colorBuffer) const
-    {
-      vtkm::Vec<vtkm::Float32, 4> color;
-      vtkm::Id offset = index * 4;
-      BOUNDS_CHECK(colorBuffer, offset + 0);
-      color[0] = static_cast<vtkm::Float32>(colorBuffer.Get(offset + 0));
-      BOUNDS_CHECK(colorBuffer, offset + 1);
-      color[1] = static_cast<vtkm::Float32>(colorBuffer.Get(offset + 1));
-      BOUNDS_CHECK(colorBuffer, offset + 2);
-      color[2] = static_cast<vtkm::Float32>(colorBuffer.Get(offset + 2));
-      BOUNDS_CHECK(colorBuffer, offset + 3);
-      color[3] = static_cast<vtkm::Float32>(colorBuffer.Get(offset + 3));
-
-      if (color[3] >= 1.f)
-        return;
-      vtkm::Float32 alpha = BackgroundColor[3] * (1.f - color[3]);
-      color[0] = color[0] + BackgroundColor[0] * alpha;
-      color[1] = color[1] + BackgroundColor[1] * alpha;
-      color[2] = color[2] + BackgroundColor[2] * alpha;
-      color[3] = alpha + color[3];
-
-      colorBuffer.Set(offset + 0, color[0]);
-      colorBuffer.Set(offset + 1, color[1]);
-      colorBuffer.Set(offset + 2, color[2]);
-      colorBuffer.Set(offset + 3, color[3]);
-    }
-  }; //class CompositeBackground
-
   ConnectivityTracer(ConnectivityType& meshConn)
     : ConnectivityBase()
     , MeshConn(meshConn)
@@ -1032,11 +990,8 @@ public:
     CountRayStatus = false;
     SampleDistance = -1.f;
     DebugFiltersOn = true;
-    DoCompositeBackground = true;
     RaysLost = 0;
   }
-
-  virtual void SetCompositeBackground(bool on) { this->DoCompositeBackground = on; }
 
   template <typename Device>
   VTKM_CONT void SetBoundingBox(Device)
@@ -1460,14 +1415,6 @@ public:
       }
     } while (workRemaining);
 
-    if (this->Integrator == Volume && DoCompositeBackground)
-    {
-      vtkm::cont::ArrayHandleCounting<vtkm::Id> rayIterator(0, 1, rays.NumRays);
-      vtkm::worklet::DispatcherMapField<CompositeBackground, Device>(
-        CompositeBackground(this->BackgroundColor))
-        .Invoke(rayIterator, rays.Buffers.at(0).Buffer);
-    }
-
     if (rays.DebugWidth != -1 && this->Integrator == Volume)
     {
 
@@ -1502,7 +1449,6 @@ protected:
   vtkm::Id RaysLost;
   IntegrationMode Integrator;
   bool DebugFiltersOn;
-  bool DoCompositeBackground;
   bool ReEnterMesh; // Do not try to re-enter the mesh
   bool CreatePartialComposites;
   bool FieldAssocPoints;

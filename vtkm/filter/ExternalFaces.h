@@ -52,16 +52,26 @@ public:
   VTKM_CONT
   void SetCompactPoints(bool value) { this->CompactPoints = value; }
 
+  // When PassPolyData is set (the default), incoming poly data (0D, 1D, and 2D cells)
+  // will be passed to the output external faces data set.
+  VTKM_CONT
+  bool GetPassPolyData() const { return this->PassPolyData; }
+  VTKM_CONT
+  void SetPassPolyData(bool value)
+  {
+    this->PassPolyData = value;
+    this->Worklet.SetPassPolyData(value);
+  }
+
   template <typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::ResultDataSet DoExecute(
-    const vtkm::cont::DataSet& input,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter& tag);
+  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
+                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                           const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT bool DoMapField(vtkm::filter::ResultDataSet& result,
+  VTKM_CONT bool DoMapField(vtkm::filter::Result& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -69,7 +79,9 @@ public:
 
 public:
   bool CompactPoints;
+  bool PassPolyData;
   vtkm::filter::CleanGrid Compactor;
+  vtkm::worklet::ExternalFaces Worklet;
 };
 }
 } // namespace vtkm::filter

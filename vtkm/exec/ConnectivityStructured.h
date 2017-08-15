@@ -62,11 +62,18 @@ public:
   {
   }
 
-  // This needs some thought. What does cell shape mean when the to topology
-  // is not a cell?
-  typedef typename InternalsType::CellShapeTag CellShapeTag;
+  VTKM_EXEC
+  vtkm::Id GetNumberOfElements() const { return Helper::GetNumberOfElements(this->Internals); }
+
+  typedef typename Helper::CellShapeTag CellShapeTag;
   VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id) const { return CellShapeTag(); }
+
+  template <typename IndexType>
+  VTKM_EXEC vtkm::IdComponent GetNumberOfIndices(const IndexType& index) const
+  {
+    return Helper::GetNumberOfIndices(this->Internals, index);
+  }
 
   typedef typename Helper::IndicesType IndicesType;
 

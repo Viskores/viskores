@@ -108,6 +108,45 @@ public:
 
   virtual void SaveAs(const std::string& fileName) const;
 
+  /// Creates a WorldAnnotator of a type that is paired with this Canvas. Other
+  /// types of world annotators might work, but this provides a default.
+  ///
+  /// The WorldAnnotator is created with the C++ new keyword (so it should be
+  /// deleted with delete later). A pointer to the created WorldAnnotator is
+  /// returned.
+  ///
+  virtual vtkm::rendering::WorldAnnotator* CreateWorldAnnotator() const;
+
+  friend class AxisAnnotation2D;
+  friend class ColorBarAnnotation;
+  friend class ColorLegendAnnotation;
+  friend class TextAnnotationScreen;
+
+protected:
+  virtual void AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
+                              const vtkm::Vec<vtkm::Float64, 2>& point1,
+                              const vtkm::Vec<vtkm::Float64, 2>& point2,
+                              const vtkm::Vec<vtkm::Float64, 2>& point3,
+                              const vtkm::rendering::Color& color) const = 0;
+
+  VTKM_CONT
+  void AddColorSwatch(const vtkm::Float64 x0,
+                      const vtkm::Float64 y0,
+                      const vtkm::Float64 x1,
+                      const vtkm::Float64 y1,
+                      const vtkm::Float64 x2,
+                      const vtkm::Float64 y2,
+                      const vtkm::Float64 x3,
+                      const vtkm::Float64 y3,
+                      const vtkm::rendering::Color& color) const
+  {
+    this->AddColorSwatch(vtkm::make_Vec(x0, y0),
+                         vtkm::make_Vec(x1, y1),
+                         vtkm::make_Vec(x2, y2),
+                         vtkm::make_Vec(x3, y3),
+                         color);
+  }
+
   virtual void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
                        const vtkm::Vec<vtkm::Float64, 2>& point1,
                        vtkm::Float32 linewidth,
@@ -170,14 +209,6 @@ public:
                   text);
   }
 
-  /// Creates a WorldAnnotator of a type that is paired with this Canvas. Other
-  /// types of world annotators might work, but this provides a default.
-  ///
-  /// The WorldAnnotator is created with the C++ new keyword (so it should be
-  /// deleted with delete later). A pointer to the created WorldAnnotator is
-  /// returned.
-  ///
-  virtual vtkm::rendering::WorldAnnotator* CreateWorldAnnotator() const;
 
 private:
   vtkm::Id Width;

@@ -36,7 +36,7 @@ inline VTKM_CONT CellAverage::CellAverage()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultField CellAverage::DoExecute(
+inline VTKM_CONT vtkm::filter::Result CellAverage::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
@@ -45,7 +45,7 @@ inline VTKM_CONT vtkm::filter::ResultField CellAverage::DoExecute(
 {
   if (!fieldMetadata.IsPointField())
   {
-    return vtkm::filter::ResultField();
+    return vtkm::filter::Result();
   }
 
   vtkm::cont::DynamicCellSet cellSet = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -66,7 +66,7 @@ inline VTKM_CONT vtkm::filter::ResultField CellAverage::DoExecute(
     outputName = fieldMetadata.GetName();
   }
 
-  return vtkm::filter::ResultField(
+  return vtkm::filter::Result(
     input, outArray, outputName, vtkm::cont::Field::ASSOC_CELL_SET, cellSet.GetName());
 }
 }

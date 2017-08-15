@@ -21,6 +21,7 @@
 #define vtk_m_rendering_View1D_h
 
 #include <vtkm/rendering/AxisAnnotation2D.h>
+#include <vtkm/rendering/ColorLegendAnnotation.h>
 #include <vtkm/rendering/View.h>
 
 namespace vtkm
@@ -47,11 +48,34 @@ public:
   void Paint() VTKM_OVERRIDE;
   void RenderScreenAnnotations() VTKM_OVERRIDE;
   void RenderWorldAnnotations() VTKM_OVERRIDE;
+  void RenderColorLegendAnnotations();
+
+  void EnableLegend();
+  void DisableLegend();
+  void SetLegendLabelColor(vtkm::rendering::Color c) { this->Legend.SetLabelColor(c); }
+
+  void SetLogX(bool l)
+  {
+    this->GetMapper().SetLogarithmX(l);
+    this->LogX = l;
+  }
+
+  void SetLogY(bool l)
+  {
+    this->GetMapper().SetLogarithmY(l);
+    this->LogY = l;
+  }
 
 private:
+  void UpdateCameraProperties();
+
   // 1D-specific annotations
   vtkm::rendering::AxisAnnotation2D HorizontalAxisAnnotation;
   vtkm::rendering::AxisAnnotation2D VerticalAxisAnnotation;
+  vtkm::rendering::ColorLegendAnnotation Legend;
+  bool LegendEnabled = true;
+  bool LogX = false;
+  bool LogY = false;
 };
 }
 } // namespace vtkm::rendering

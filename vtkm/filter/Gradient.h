@@ -98,11 +98,11 @@ public:
   const std::string& GetQCriterionName() const { return this->QCriterionName; }
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  vtkm::filter::ResultField DoExecute(const vtkm::cont::DataSet& input,
-                                      const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                      const vtkm::filter::FieldMetadata& fieldMeta,
-                                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                      const DeviceAdapter& tag);
+  vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
+                                 const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                 const vtkm::filter::FieldMetadata& fieldMeta,
+                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                 const DeviceAdapter& tag);
 
 private:
   bool ComputePointGradient;

@@ -55,8 +55,6 @@ public:
 
   virtual void SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor) = 0;
 
-  virtual void SetCompositeBackground(bool on) = 0;
-
   virtual void SetSampleDistance(const vtkm::Float32& distance) = 0;
 
   virtual void SetColorMap(

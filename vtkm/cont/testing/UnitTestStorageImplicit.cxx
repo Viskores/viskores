@@ -36,7 +36,7 @@ namespace
 template <typename T>
 struct TestImplicitStorage
 {
-  typedef T ValueType;
+  using ValueType = T;
   ValueType Temp;
 
   VTKM_EXEC_CONT
@@ -57,12 +57,12 @@ const vtkm::Id ARRAY_SIZE = 1;
 template <typename T>
 struct TemplatedTests
 {
-  typedef vtkm::cont::StorageTagImplicit<TestImplicitStorage<T>> StorageTagType;
+  using StorageTagType = vtkm::cont::StorageTagImplicit<TestImplicitStorage<T>>;
   typedef vtkm::cont::internal::Storage<T, StorageTagType> StorageType;
 
-  typedef typename StorageType::ValueType ValueType;
-  typedef typename StorageType::PortalType PortalType;
-  typedef typename PortalType::IteratorType IteratorType;
+  using ValueType = typename StorageType::ValueType;
+  using PortalType = typename StorageType::PortalType;
+  using IteratorType = typename PortalType::IteratorType;
 
   void BasicAllocation()
   {

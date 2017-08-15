@@ -25,6 +25,7 @@ set(headers
   ArrayHandleCompositeVector.h
   ArrayHandleConstant.h
   ArrayHandleCounting.h
+  ArrayHandleExtractComponent.h
   ArrayHandleDiscard.h
   ArrayHandleGroupVec.h
   ArrayHandleGroupVecVariable.h
@@ -33,6 +34,7 @@ set(headers
   ArrayHandlePermutation.h
   ArrayHandleReverse.h
   ArrayHandleStreaming.h
+  ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
   ArrayHandleZip.h
@@ -79,6 +81,7 @@ set(headers
 
 set(header_impls
   ArrayHandle.hxx
+  CellSetExplicit.hxx
   CellSetStructured.hxx
   ImplicitFunction.hxx
   StorageBasic.hxx
@@ -87,6 +90,7 @@ set(header_impls
 set(sources
   ArrayHandle.cxx
   CellSet.cxx
+  CellSetExplicit.cxx
   CellSetStructured.cxx
   CoordinateSystem.cxx
   DynamicArrayHandle.cxx
@@ -101,6 +105,7 @@ set(sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   ArrayRangeCompute.cxx
+  CellSetExplicit.cxx
   RuntimeDeviceTracker.cxx
   )
 

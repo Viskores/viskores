@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 #include <vtkm/Bounds.h>
+#include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -26,6 +27,7 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/View1D.h>
 #include <vtkm/rendering/View2D.h>
 #include <vtkm/rendering/View3D.h>
 #include <vtkm/rendering/testing/RenderTest.h>
@@ -41,6 +43,7 @@ void RenderTests()
   typedef vtkm::rendering::View2D V2;
   typedef vtkm::rendering::View1D V1;
 
+  vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
 
@@ -53,9 +56,54 @@ void RenderTests()
   vtkm::rendering::testing::Render<M, C, V2>(
     maker.Make2DRectilinearDataSet0(), "pointvar", colorTable, "rect2D.pnm");
   vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DUniformDataSet0(), "pointvar", "uniform1D.pnm");
+    maker.Make1DUniformDataSet0(), "pointvar", vtkm::rendering::Color::white, "uniform1D.pnm");
   vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DExplicitDataSet0(), "pointvar", "expl1D.pnm");
+    maker.Make1DExplicitDataSet0(), "pointvar", vtkm::rendering::Color::white, "expl1D.pnm");
+
+  vtkm::cont::DataSet ds = maker.Make1DUniformDataSet0();
+  vtkm::Int32 nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  vtkm::Float32 vars[nVerts];
+  vtkm::Float32 smallVal = 1.000;
+  for (vtkm::Int32 i = 0; i <= nVerts; i++)
+  {
+    vars[i] = smallVal;
+    smallVal += .01;
+  }
+  dsf.AddPointField(ds, "smallScaledYAxis", vars, nVerts);
+  vtkm::rendering::testing::Render<M, C, V1>(
+    ds, "smallScaledYAxis", vtkm::rendering::Color::white, "uniform1DSmallScaledYAxis.pnm");
+
+  // Test to demonstrate that straight horizontal lines can be drawn
+  ds = maker.Make1DUniformDataSet0();
+  nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  vtkm::Float32 largeVal = 1e-16;
+  for (vtkm::Int32 i = 0; i <= nVerts; i++)
+  {
+    vars[i] = largeVal;
+  }
+  dsf.AddPointField(ds, "straightLine", vars, nVerts);
+  vtkm::rendering::testing::Render<M, C, V1>(
+    ds, "straightLine", vtkm::rendering::Color::white, "uniform1DStraightLine.pnm");
+
+
+  ds = maker.Make1DUniformDataSet0();
+  nVerts = ds.GetField(0).GetData().GetNumberOfValues();
+  largeVal = 1;
+  for (vtkm::Int32 i = 0; i <= nVerts; i++)
+  {
+    vars[i] = largeVal;
+    if (i < 2)
+    {
+      largeVal *= 100;
+    }
+    else
+    {
+      largeVal /= 2.25;
+    }
+  }
+  dsf.AddPointField(ds, "logScaledYAxis", vars, nVerts);
+  vtkm::rendering::testing::Render<M, C, V1>(
+    ds, "logScaledYAxis", vtkm::rendering::Color::white, "uniform1DLogScaledYAxis.pnm", true);
 }
 } //namespace
 

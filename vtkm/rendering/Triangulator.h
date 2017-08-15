@@ -21,6 +21,7 @@
 #define vtk_m_rendering_Triangulator_h
 
 #include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -487,6 +488,34 @@ public:
         .Invoke(cellSetStructured2D, cellIdxs);
 
       outputTriangles = numCells * 2;
+    }
+    else if (cellset.IsSameType(vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>>()))
+    {
+      vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>> cellSetPermutation2D =
+        cellset.Cast<vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>>>();
+      const vtkm::Id numCells = cellSetPermutation2D.GetNumberOfCells();
+
+      vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0, 1, numCells);
+      outputIndices.Allocate(numCells * 2);
+      vtkm::worklet::DispatcherMapTopology<TrianglulateStructured<2>>(
+        TrianglulateStructured<2>(outputIndices))
+        .Invoke(cellSetPermutation2D, cellIdxs);
+
+      outputTriangles = numCells * 2;
+    }
+    else if (cellset.IsSameType(vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>>()))
+    {
+      vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>> cellSetPermutation2D =
+        cellset.Cast<vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>>>();
+      const vtkm::Id numCells = cellSetPermutation2D.GetNumberOfCells();
+
+      vtkm::cont::ArrayHandleCounting<vtkm::Id> cellIdxs(0, 1, numCells);
+      outputIndices.Allocate(numCells * 2);
+      vtkm::worklet::DispatcherMapTopology<TrianglulateStructured<3>>(
+        TrianglulateStructured<3>(outputIndices))
+        .Invoke(cellSetPermutation2D, cellIdxs);
+
+      outputTriangles = numCells * 12;
     }
     else if (cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {

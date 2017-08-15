@@ -69,6 +69,7 @@ public:
   vtkm::cont::DataSet Make3DExplicitDataSet3();
   vtkm::cont::DataSet Make3DExplicitDataSet4();
   vtkm::cont::DataSet Make3DExplicitDataSet5();
+  vtkm::cont::DataSet Make3DExplicitDataSet6();
   vtkm::cont::DataSet Make3DExplicitDataSetPolygonal();
   vtkm::cont::DataSet Make3DExplicitDataSetCowNose();
 };
@@ -773,6 +774,83 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet5()
 
   //todo this need to be a reference/shared_ptr style class
   dataSet.AddCellSet(cellSet);
+
+  return dataSet;
+}
+
+inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet6()
+{
+  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetBuilderExplicit dsb;
+  vtkm::cont::DataSetFieldAdd dsf;
+
+  // Coordinates
+  const int nVerts = 8;
+  const int nCells = 8;
+  typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
+  std::vector<CoordType> coords = { { -0.707f, -0.354f, -0.354f }, { 0.000f, -0.854f, 0.146f },
+                                    { 0.000f, -0.146f, 0.854f },   { -0.707f, 0.354f, 0.354f },
+                                    { 10.0f, 10.0f, 10.0f },       { 5.0f, 5.0f, 5.0f },
+                                    { 0.0f, 0.0f, 2.0f },          { 0.0f, 0.0f, -2.0f } };
+
+  // Connectivity
+  std::vector<vtkm::UInt8> shapes;
+  std::vector<vtkm::IdComponent> numindices;
+  std::vector<vtkm::Id> conn;
+
+  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  numindices.push_back(2);
+  conn.push_back(0);
+  conn.push_back(1);
+
+  shapes.push_back(vtkm::CELL_SHAPE_LINE);
+  numindices.push_back(2);
+  conn.push_back(2);
+  conn.push_back(3);
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(4);
+
+  shapes.push_back(vtkm::CELL_SHAPE_VERTEX);
+  numindices.push_back(1);
+  conn.push_back(5);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TRIANGLE);
+  numindices.push_back(3);
+  conn.push_back(2);
+  conn.push_back(3);
+  conn.push_back(5);
+
+  shapes.push_back(vtkm::CELL_SHAPE_QUAD);
+  numindices.push_back(4);
+  conn.push_back(0);
+  conn.push_back(1);
+  conn.push_back(2);
+  conn.push_back(3);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(0);
+  conn.push_back(2);
+  conn.push_back(3);
+  conn.push_back(6);
+
+  shapes.push_back(vtkm::CELL_SHAPE_TETRA);
+  numindices.push_back(4);
+  conn.push_back(3);
+  conn.push_back(2);
+  conn.push_back(0);
+  conn.push_back(7);
+
+  dataSet = dsb.Create(coords, shapes, numindices, conn, "coordinates", "cells");
+
+  // Field data
+  vtkm::Float32 pointvar[nVerts] = { 100.0f, 78.0f, 49.0f, 17.0f, 94.0f, 71.0f, 47.0f, 57.0f };
+  vtkm::Float32 cellvar[nCells] = { 0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f };
+
+  dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
+  dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
 
   return dataSet;
 }

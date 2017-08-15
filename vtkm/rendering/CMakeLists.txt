@@ -31,6 +31,7 @@ set(headers
   CanvasRayTracer.h
   Color.h
   ColorBarAnnotation.h
+  ColorLegendAnnotation.h
   ColorTable.h
   ConnectivityProxy.h
   DecodePNG.h
@@ -64,6 +65,7 @@ set(sources
   CanvasRayTracer.cxx
   Color.cxx
   ColorBarAnnotation.cxx
+  ColorLegendAnnotation.cxx
   ColorTable.cxx
   ConnectivityProxy.cxx
   DecodePNG.cxx
@@ -87,6 +89,7 @@ set(sources
   raytracing/ChannelBuffer.cxx
   raytracing/Logger.cxx
   raytracing/RayTracer.cxx
+  raytracing/RayOperations.cxx
   raytracing/VolumeRendererStructured.cxx
   )
 
@@ -129,6 +132,7 @@ set(device_sources
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
   raytracing/VolumeRendererStructured.cxx
+  raytracing/RayOperations.cxx
   raytracing/RayTracer.cxx
   )
 
@@ -144,11 +148,11 @@ if(VTKm_OpenGL_FOUND)
     list(APPEND sources ${osmesa_sources})
   endif()
 
-  vtkm_configure_component_EGL()
-  if(VTKm_EGL_FOUND)
-    list(APPEND headers ${egl_headers})
-    list(APPEND sources ${egl_sources})
-  endif()
+#  vtkm_configure_component_EGL()
+#  if(VTKm_EGL_FOUND)
+#    list(APPEND headers ${egl_headers})
+#    list(APPEND sources ${egl_sources})
+#  endif()
 endif()
 
 if(VTKm_ENABLE_OSMESA AND NOT VTKm_OSMesa_FOUND)
@@ -164,14 +168,21 @@ vtkm_library(
   WRAP_FOR_CUDA ${device_sources}
   )
 
+# EGL Libs are added here to ensure propper linking when statically compiling.
+# This is safe to do even when not using EGL as the values will then be empty.
 target_link_libraries(vtkm_rendering
                       PUBLIC vtkm_cont
                       PRIVATE ${VTKm_OPENGL_LIBRARIES}
                               ${VTKm_BACKEND_LIBRARIES}
+                              ${EGL_LIBRARIES}
                       )
+
+# EGL Dirs are added here to ensure propper linking when statically compiling.
+# This is safe to do even when not using EGL as the values will then be empty.
 target_include_directories(vtkm_rendering
                           PRIVATE ${VTKm_OPENGL_INCLUDE_DIRS}
                                   ${VTKm_BACKEND_INCLUDE_DIRS}
+                                  ${EGL_INCLUDE_DIRS}
                           )
 
 if(UNIX AND NOT APPLE)

@@ -26,13 +26,14 @@ vtkm_declare_headers(${headers})
 
 set(unit_tests
   UnitTestMapperConnectivity.cxx
+  UnitTestMultiMapper.cxx
   UnitTestMapperRayTracer.cxx
   UnitTestMapperVolume.cxx
 )
 
 VTKm_unit_tests(SOURCES ${unit_tests})
 
-add_subdirectory(osmesa)
-add_subdirectory(egl)
-add_subdirectory(glfw)
+#add_subdirectory(osmesa)
+#add_subdirectory(egl)
+#add_subdirectory(glfw)
 

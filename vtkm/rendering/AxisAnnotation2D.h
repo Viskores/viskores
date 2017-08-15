@@ -65,12 +65,7 @@ public:
 
   ~AxisAnnotation2D();
 
-#if 0
-  void SetLogarithmic(bool l)
-  {
-    this->Logarithmic = l;
-  }
-#endif
+  void SetLogarithmic(bool l) { this->Logarithmic = l; }
 
   void SetMoreOrLessTickAdjustment(int offset) { this->MoreOrLessTickAdjustment = offset; }
 

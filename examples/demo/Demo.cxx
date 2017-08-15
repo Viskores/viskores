@@ -76,8 +76,8 @@ int main(int argc, char* argv[])
     fieldName = "SCALARS:pointvar";
   }
 
-  typedef vtkm::rendering::MapperRayTracer Mapper;
-  typedef vtkm::rendering::CanvasRayTracer Canvas;
+  using Mapper = vtkm::rendering::MapperRayTracer;
+  using Canvas = vtkm::rendering::CanvasRayTracer;
 
   // Set up a camera for rendering the input data
   const vtkm::cont::CoordinateSystem coords = inputData.GetCoordinateSystem();
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
   filter.SetGenerateNormals(false);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0, isovalue);
-  vtkm::filter::ResultDataSet result = filter.Execute(inputData, inputData.GetField(fieldName));
+  vtkm::filter::Result result = filter.Execute(inputData, inputData.GetField(fieldName));
   filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
   vtkm::cont::DataSet& outputData = result.GetDataSet();
   // Render a separate image with the output isosurface

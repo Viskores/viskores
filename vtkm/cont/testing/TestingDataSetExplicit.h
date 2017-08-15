@@ -105,9 +105,6 @@ private:
     vtkm::cont::CellSetExplicit<> cellset;
     ds.GetCellSet(0).CopyTo(cellset);
 
-    cellset.BuildConnectivity(
-      DeviceAdapterTag(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-
     vtkm::Id connectivitySize = 7;
     vtkm::Id numPoints = 5;
 

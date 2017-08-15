@@ -140,7 +140,7 @@ public:
       vtkm::cont::DeviceAdapterTagTBB>::Portal PortalType;
     PortalType arrayPortal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagTBB());
 
-    typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
+    using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
     IteratorsType iterators(arrayPortal);
 
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
@@ -159,14 +159,15 @@ public:
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   Compare comp)
   {
-    typedef vtkm::cont::ArrayHandle<T, StorageT> KeyType;
+    using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
+    ;
     if (sizeof(U) > sizeof(vtkm::Id))
     {
       /// More efficient sort:
       /// Move value indexes when sorting and reorder the value array at last
 
-      typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
-      typedef vtkm::cont::ArrayHandle<vtkm::Id> IndexType;
+      using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
+      using IndexType = vtkm::cont::ArrayHandle<vtkm::Id>;
       typedef vtkm::cont::ArrayHandleZip<KeyType, IndexType> ZipHandleType;
 
       IndexType indexArray;
@@ -186,7 +187,7 @@ public:
     }
     else
     {
-      typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
+      using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
       typedef vtkm::cont::ArrayHandleZip<KeyType, ValueType> ZipHandleType;
 
       ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);

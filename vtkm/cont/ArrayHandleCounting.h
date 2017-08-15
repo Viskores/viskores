@@ -37,10 +37,10 @@ namespace internal
 template <class CountingValueType>
 class VTKM_ALWAYS_EXPORT ArrayPortalCounting
 {
-  typedef typename vtkm::VecTraits<CountingValueType>::ComponentType ComponentType;
+  using ComponentType = typename vtkm::VecTraits<CountingValueType>::ComponentType;
 
 public:
-  typedef CountingValueType ValueType;
+  using ValueType = CountingValueType;
 
   VTKM_EXEC_CONT
   ArrayPortalCounting()
@@ -102,9 +102,8 @@ private:
 template <typename ConstantValueType>
 struct ArrayHandleCountingTraits
 {
-  typedef vtkm::cont::StorageTagImplicit<
-    vtkm::cont::internal::ArrayPortalCounting<ConstantValueType>>
-    Tag;
+  using Tag =
+    vtkm::cont::StorageTagImplicit<vtkm::cont::internal::ArrayPortalCounting<ConstantValueType>>;
 };
 
 } // namespace internal

@@ -62,7 +62,7 @@ void TestClipStructured()
   vtkm::FloatDefault radius(0.5);
   auto sphere = std::make_shared<vtkm::cont::Sphere>(center, radius);
 
-  vtkm::filter::ResultDataSet result;
+  vtkm::filter::Result result;
   vtkm::filter::ClipWithImplicitFunction clip;
   clip.SetImplicitFunction(sphere);
 

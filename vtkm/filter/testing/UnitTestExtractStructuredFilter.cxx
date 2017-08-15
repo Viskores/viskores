@@ -35,7 +35,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::RangeId3 range(1, 4, 1, 4, 0, 1);
     vtkm::Id3 sample(1, 1, 1);
@@ -81,7 +81,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -126,7 +126,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -173,7 +173,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -219,7 +219,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -266,7 +266,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -313,7 +313,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -359,7 +359,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -405,7 +405,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -450,7 +450,7 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -499,7 +499,7 @@ public:
   {
     std::cout << "Testing extract structured rectilinear" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DRectilinearDataSet0();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -543,7 +543,7 @@ public:
   {
     std::cout << "Testing extract structured rectilinear" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DRectilinearDataSet0();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 

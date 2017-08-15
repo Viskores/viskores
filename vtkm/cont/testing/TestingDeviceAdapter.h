@@ -70,7 +70,7 @@ template <class DeviceAdapterTag>
 struct TestingDeviceAdapter
 {
 private:
-  typedef vtkm::cont::StorageTagBasic StorageTag;
+  using StorageTag = vtkm::cont::StorageTagBasic;
 
   typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag> IdArrayHandle;
 
@@ -81,11 +81,11 @@ private:
 
   typedef vtkm::cont::internal::Storage<vtkm::Id, StorageTag> IdStorage;
 
-  typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal IdPortalType;
-  typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-    IdPortalConstType;
+  using IdPortalType = typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
+  using IdPortalConstType =
+    typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
 public:
   // Cuda kernels have to be public (in Cuda 4.0).
@@ -362,8 +362,8 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing device adapter tag" << std::endl;
 
-    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
-    typedef vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError> ErrorTraits;
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    using ErrorTraits = vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>;
 
     VTKM_TEST_ASSERT(Traits::GetId() == Traits::GetId(),
                      "Device adapter Id does not equal itself.");
@@ -1150,7 +1150,7 @@ private:
       //and a custom reduce binary functor
       const vtkm::Id indexLength = 30;
       const vtkm::Id valuesLength = 10;
-      typedef vtkm::Float32 ValueType;
+      using ValueType = vtkm::Float32;
 
       vtkm::Id indexs[indexLength] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
                                        5, 5, 5, 1, 4, 9, 7, 7, 7, 8, 8, 8, 0, 1, 2 };
@@ -1256,7 +1256,7 @@ private:
     //and a custom reduce binary functor
     const vtkm::Id inputLength = 30;
     const vtkm::Id expectedLength = 10;
-    typedef vtkm::Float32 ValueType;
+    using ValueType = vtkm::Float32;
     vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
                                         5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9 }; // input keys
     ValueType inputValues1[inputLength] = {
@@ -1274,7 +1274,7 @@ private:
     IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ValueArrayType;
     ValueArrayType values1 = vtkm::cont::make_ArrayHandle(inputValues1, inputLength);
-    typedef vtkm::cont::ArrayHandleConstant<ValueType> ConstValueArrayType;
+    using ConstValueArrayType = vtkm::cont::ArrayHandleConstant<ValueType>;
     ConstValueArrayType constOneArray(1.f, inputLength);
 
     vtkm::cont::ArrayHandleZip<ValueArrayType, ConstValueArrayType> valuesZip;
