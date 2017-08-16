@@ -34,7 +34,7 @@ namespace vtkm
 {
 namespace rendering
 {
-namespace internal
+namespace
 {
 
 class ClearBuffers : public vtkm::worklet::WorkletMapField
@@ -140,13 +140,13 @@ public:
     vtkm::Id yInt = static_cast<vtkm::Id>(y);
     if (Transposed)
     {
-      BlendPixel(yInt, x, colorBuffer, internal::RFPart(y));
-      BlendPixel(yInt + 1, x, colorBuffer, internal::FPart(y));
+      BlendPixel(yInt, x, colorBuffer, RFPart(y));
+      BlendPixel(yInt + 1, x, colorBuffer, FPart(y));
     }
     else
     {
-      BlendPixel(x, yInt, colorBuffer, internal::RFPart(y));
-      BlendPixel(x, yInt + 1, colorBuffer, internal::FPart(y));
+      BlendPixel(x, yInt, colorBuffer, RFPart(y));
+      BlendPixel(x, yInt + 1, colorBuffer, FPart(y));
     }
   }
 
@@ -222,7 +222,7 @@ struct LinePlotterInvokeFunctor
     return true;
   }
 };
-} // namespace internal
+} // namespace
 
 CanvasLineRenderer::CanvasLineRenderer(vtkm::Id width, vtkm::Id height)
   : Canvas(width, height)
@@ -250,7 +250,7 @@ void CanvasLineRenderer::Finish()
 
 void CanvasLineRenderer::Clear()
 {
-  vtkm::cont::TryExecute(internal::ClearBuffersInvokeFunctor(
+  vtkm::cont::TryExecute(ClearBuffersInvokeFunctor(
     this->GetBackgroundColor(), this->GetColorBuffer(), this->GetDepthBuffer()));
 }
 
@@ -302,49 +302,49 @@ void CanvasLineRenderer::AddLine(const vtkm::Vec<vtkm::Float64, 2>& start,
 
   vtkm::Float32 xEnd = vtkm::Round(x1);
   vtkm::Float32 yEnd = y1 + gradient * (xEnd - x1);
-  vtkm::Float32 xGap = internal::RFPart(x1 + 0.5f);
-  vtkm::Float32 xPxl1 = xEnd, yPxl1 = internal::IPart(yEnd);
+  vtkm::Float32 xGap = RFPart(x1 + 0.5f);
+  vtkm::Float32 xPxl1 = xEnd, yPxl1 = IPart(yEnd);
 
   if (transposed)
   {
-    BlendPixel(yPxl1, xPxl1, color, internal::RFPart(yEnd) * xGap);
-    BlendPixel(yPxl1 + 1, xPxl1, color, internal::FPart(yEnd) * xGap);
+    BlendPixel(yPxl1, xPxl1, color, RFPart(yEnd) * xGap);
+    BlendPixel(yPxl1 + 1, xPxl1, color, FPart(yEnd) * xGap);
   }
   else
   {
-    BlendPixel(xPxl1, yPxl1, color, internal::RFPart(yEnd) * xGap);
-    BlendPixel(xPxl1, yPxl1 + 1, color, internal::FPart(yEnd) * xGap);
+    BlendPixel(xPxl1, yPxl1, color, RFPart(yEnd) * xGap);
+    BlendPixel(xPxl1, yPxl1 + 1, color, FPart(yEnd) * xGap);
   }
 
   xEnd = vtkm::Round(x2);
   yEnd = y2 + gradient * (xEnd - x2);
-  xGap = internal::FPart(x2 + 0.5f);
-  vtkm::Float32 xPxl2 = xEnd, yPxl2 = internal::IPart(yEnd);
+  xGap = FPart(x2 + 0.5f);
+  vtkm::Float32 xPxl2 = xEnd, yPxl2 = IPart(yEnd);
 
   if (transposed)
   {
-    BlendPixel(yPxl2, xPxl2, color, internal::RFPart(yEnd) * xGap);
-    BlendPixel(yPxl2 + 1, xPxl2, color, internal::FPart(yEnd) * xGap);
+    BlendPixel(yPxl2, xPxl2, color, RFPart(yEnd) * xGap);
+    BlendPixel(yPxl2 + 1, xPxl2, color, FPart(yEnd) * xGap);
   }
   else
   {
-    BlendPixel(xPxl2, yPxl2, color, internal::RFPart(yEnd) * xGap);
-    BlendPixel(xPxl2, yPxl2 + 1, color, internal::FPart(yEnd) * xGap);
+    BlendPixel(xPxl2, yPxl2, color, RFPart(yEnd) * xGap);
+    BlendPixel(xPxl2, yPxl2 + 1, color, FPart(yEnd) * xGap);
   }
 
   vtkm::cont::ArrayHandleCounting<vtkm::Id> xCoords(static_cast<vtkm::Id>(xPxl1 + 1),
                                                     static_cast<vtkm::Id>(1),
                                                     static_cast<vtkm::Id>(xPxl2 - xPxl1 - 1));
   ColorBufferType colorBuffer(this->GetColorBuffer());
-  vtkm::cont::TryExecute(internal::LinePlotterInvokeFunctor(x1,
-                                                            y1,
-                                                            this->GetWidth(),
-                                                            this->GetHeight(),
-                                                            gradient,
-                                                            color,
-                                                            transposed,
-                                                            xCoords,
-                                                            colorBuffer));
+  vtkm::cont::TryExecute(LinePlotterInvokeFunctor(x1,
+                                                  y1,
+                                                  this->GetWidth(),
+                                                  this->GetHeight(),
+                                                  gradient,
+                                                  color,
+                                                  transposed,
+                                                  xCoords,
+                                                  colorBuffer));
 }
 
 void CanvasLineRenderer::BlendPixel(vtkm::Float32 x,
@@ -384,6 +384,16 @@ void CanvasLineRenderer::AddText(const vtkm::Vec<vtkm::Float32, 2>&,
 {
   //TODO: Implement
 }
+
+void CanvasLineRenderer::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
+                                        const vtkm::Vec<vtkm::Float64, 2>& point1,
+                                        const vtkm::Vec<vtkm::Float64, 2>& point2,
+                                        const vtkm::Vec<vtkm::Float64, 2>& point3,
+                                        const vtkm::rendering::Color& color) const
+{
+  //TODO: Implement
+}
+
 
 vtkm::Id CanvasLineRenderer::GetBufferIndex(vtkm::Id x, vtkm::Id y) const
 {

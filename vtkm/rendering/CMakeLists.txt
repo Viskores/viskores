@@ -73,6 +73,7 @@ set(sources
   ConnectivityProxy.cxx
   DecodePNG.cxx
   Mapper.cxx
+  MapperRasterizer.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
   MapperConnectivity.cxx
@@ -130,6 +131,10 @@ set(osmesa_sources
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
+  Mapper.cxx
+  MapperRasterizer.cxx
+  MapperLineRenderer.cxx
+  CanvasLineRenderer.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx
   raytracing/BoundingVolumeHierarchy.cxx

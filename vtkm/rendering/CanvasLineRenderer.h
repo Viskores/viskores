@@ -62,6 +62,12 @@ public:
                        const vtkm::rendering::Color& color,
                        const std::string& text) const VTKM_OVERRIDE;
 
+  virtual void AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
+                              const vtkm::Vec<vtkm::Float64, 2>& point1,
+                              const vtkm::Vec<vtkm::Float64, 2>& point2,
+                              const vtkm::Vec<vtkm::Float64, 2>& point3,
+                              const vtkm::rendering::Color& color) const VTKM_OVERRIDE;
+
 private:
   vtkm::Id GetBufferIndex(vtkm::Id x, vtkm::Id y) const;
   void BlendPixel(vtkm::Float32 x,

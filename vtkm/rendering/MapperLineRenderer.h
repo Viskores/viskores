@@ -24,7 +24,7 @@
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/rendering/Camera.h>
-#include <vtkm/rendering/CanvasLineRenderer.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
 
@@ -38,14 +38,18 @@ class VTKM_RENDERING_EXPORT MapperLineRenderer : public Mapper
 public:
   VTKM_CONT
   MapperLineRenderer();
+  MapperLineRenderer(const MapperLineRenderer& other) = default;
   virtual ~MapperLineRenderer();
 
-  virtual void SetActiveColorTable(const ColorTable& ct) VTKM_OVERRIDE;
   virtual vtkm::rendering::Canvas* GetCanvas() const VTKM_OVERRIDE;
   virtual void SetCanvas(vtkm::rendering::Canvas* canvas) VTKM_OVERRIDE;
 
+  bool GetShowInternalZones() const;
+  void SetShowInternalZones(bool showInternalZones);
+
   virtual void StartScene() VTKM_OVERRIDE;
   virtual void EndScene() VTKM_OVERRIDE;
+
   virtual void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,
                            const vtkm::cont::Field& scalarField,
@@ -53,12 +57,12 @@ public:
                            const vtkm::rendering::Camera& camera,
                            const vtkm::Range& scalarRange) VTKM_OVERRIDE;
 
-
   virtual vtkm::rendering::Mapper* NewCopy() const VTKM_OVERRIDE;
 
 private:
-  vtkm::rendering::CanvasLineRenderer* Canvas;
-};
+  struct InternalsType;
+  std::shared_ptr<InternalsType> Internals;
+}; // class MapperLineRenderer
 }
-} //namespace vtkm::rendering
-#endif //vtk_m_rendering_MapperLineRenderer_h
+} // namespace vtkm::rendering
+#endif // vtk_m_rendering_MapperLineRenderer_h
