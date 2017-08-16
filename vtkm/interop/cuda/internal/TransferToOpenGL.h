@@ -33,6 +33,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/copy.h>
 #include <thrust/device_ptr.h>
 #include <thrust/system/cuda/execution_policy.h>
+#include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
@@ -200,7 +201,7 @@ public:
 
     //Perhaps a direct call to thrust copy should be wrapped in a vtkm
     //compatble function
-    ::thrust::copy(thrust::cuda::par,
+    ::thrust::copy(ThrustCudaPolicyPerThread,
                    vtkm::cont::cuda::internal::IteratorBegin(portal),
                    vtkm::cont::cuda::internal::IteratorEnd(portal),
                    thrust::cuda::pointer<ValueType>(beginPointer));

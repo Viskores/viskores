@@ -63,7 +63,10 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
       vtkm::cont::DeviceAdapterTagCuda>
 {
 
-  VTKM_CONT static void Synchronize() { VTKM_CUDA_CALL(cudaDeviceSynchronize()); }
+  VTKM_CONT static void Synchronize()
+  {
+    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
+  }
 };
 
 /// CUDA contains its own high resolution timer.
@@ -86,13 +89,13 @@ public:
 
   VTKM_CONT void Reset()
   {
-    VTKM_CUDA_CALL(cudaEventRecord(this->StartEvent, 0));
+    VTKM_CUDA_CALL(cudaEventRecord(this->StartEvent, cudaStreamPerThread));
     VTKM_CUDA_CALL(cudaEventSynchronize(this->StartEvent));
   }
 
   VTKM_CONT vtkm::Float64 GetElapsedTime()
   {
-    VTKM_CUDA_CALL(cudaEventRecord(this->EndEvent, 0));
+    VTKM_CUDA_CALL(cudaEventRecord(this->EndEvent, cudaStreamPerThread));
     VTKM_CUDA_CALL(cudaEventSynchronize(this->EndEvent));
     float elapsedTimeMilliseconds;
     VTKM_CUDA_CALL(

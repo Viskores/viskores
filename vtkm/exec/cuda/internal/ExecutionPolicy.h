@@ -31,6 +31,8 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/memory.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
+#define ThrustCudaPolicyPerThread ::thrust::cuda::par.on(cudaStreamPerThread)
+
 struct vtkm_cuda_policy : thrust::device_execution_policy<vtkm_cuda_policy>
 {
 };
@@ -47,7 +49,7 @@ __host__ __device__ void sort(
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortLess> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort(thrust::cuda::par, first, last, thrust::less<T>());
+  return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::less<T>());
 }
 
 template <typename T, typename RandomAccessIterator>
@@ -59,7 +61,8 @@ __host__ __device__ void sort_by_key(
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortLess> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, thrust::less<T>());
+  return thrust::sort_by_key(
+    ThrustCudaPolicyPerThread, first, last, values_first, thrust::less<T>());
 }
 
 template <typename T>
@@ -70,7 +73,7 @@ __host__ __device__ void sort(
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::less<T>> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort(thrust::cuda::par, first, last, thrust::less<T>());
+  return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::less<T>());
 }
 
 template <typename T, typename RandomAccessIterator>
@@ -82,7 +85,8 @@ __host__ __device__ void sort_by_key(
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::less<T>> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, thrust::less<T>());
+  return thrust::sort_by_key(
+    ThrustCudaPolicyPerThread, first, last, values_first, thrust::less<T>());
 }
 
 template <typename T>
@@ -93,7 +97,7 @@ __host__ __device__ void sort(
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortGreater> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort(thrust::cuda::par, first, last, thrust::greater<T>());
+  return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::greater<T>());
 }
 
 template <typename T, typename RandomAccessIterator>
@@ -105,7 +109,8 @@ __host__ __device__ void sort_by_key(
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortGreater> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, thrust::greater<T>());
+  return thrust::sort_by_key(
+    ThrustCudaPolicyPerThread, first, last, values_first, thrust::greater<T>());
 }
 
 template <typename T>
@@ -116,7 +121,7 @@ __host__ __device__ void sort(
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::greater<T>> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort(thrust::cuda::par, first, last, thrust::greater<T>());
+  return thrust::sort(ThrustCudaPolicyPerThread, first, last, thrust::greater<T>());
 }
 
 template <typename T, typename RandomAccessIterator>
@@ -128,7 +133,8 @@ __host__ __device__ void sort_by_key(
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::greater<T>> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
-  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, thrust::greater<T>());
+  return thrust::sort_by_key(
+    ThrustCudaPolicyPerThread, first, last, values_first, thrust::greater<T>());
 }
 
 template <typename RandomAccessIterator, typename StrictWeakOrdering>
@@ -141,7 +147,7 @@ __host__ __device__ void sort(const vtkm_cuda_policy& exec,
   //the operator is not an approved less/greater operator.
   //This most likely will cause thrust to internally determine that
   //the best sort implementation is merge sort.
-  return thrust::sort(thrust::cuda::par, first, last, comp);
+  return thrust::sort(ThrustCudaPolicyPerThread, first, last, comp);
 }
 
 template <typename RandomAccessIteratorKeys,
@@ -157,7 +163,7 @@ __host__ __device__ void sort_by_key(const vtkm_cuda_policy& exec,
   //the operator is not an approved less/greater operator.
   //This most likely will cause thrust to internally determine that
   //the best sort implementation is merge sort.
-  return thrust::sort_by_key(thrust::cuda::par, first, last, values_first, comp);
+  return thrust::sort_by_key(ThrustCudaPolicyPerThread, first, last, values_first, comp);
 }
 
 template <typename T,
@@ -178,23 +184,24 @@ __host__ __device__::thrust::pair<OutputIterator1, OutputIterator2> reduce_by_ke
 
 {
 #if defined(__CUDACC_VER__) && (__CUDACC_VER__ >= 70500) && (__CUDACC_VER__ < 80000)
-  ::thrust::pair<OutputIterator1, OutputIterator2> result = thrust::reduce_by_key(thrust::cuda::par,
-                                                                                  keys_first.get(),
-                                                                                  keys_last.get(),
-                                                                                  values_first,
-                                                                                  keys_output,
-                                                                                  values_output,
-                                                                                  binary_pred,
-                                                                                  binary_op);
+  ::thrust::pair<OutputIterator1, OutputIterator2> result =
+    thrust::reduce_by_key(ThrustCudaPolicyPerThread,
+                          keys_first.get(),
+                          keys_last.get(),
+                          values_first,
+                          keys_output,
+                          values_output,
+                          binary_pred,
+                          binary_op);
 
 //only sync if we are being invoked from the host
 #ifndef __CUDA_ARCH__
-  VTKM_CUDA_CALL(cudaDeviceSynchronize());
+  VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
 #endif
 
   return result;
 #else
-  return thrust::reduce_by_key(thrust::cuda::par,
+  return thrust::reduce_by_key(ThrustCudaPolicyPerThread,
                                keys_first,
                                keys_last,
                                values_first,
