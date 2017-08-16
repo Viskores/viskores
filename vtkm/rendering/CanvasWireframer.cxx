@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/rendering/CanvasLineRenderer.h>
+#include <vtkm/rendering/CanvasWireframer.h>
 
 #include <fstream>
 
@@ -224,46 +224,46 @@ struct LinePlotterInvokeFunctor
 };
 } // namespace
 
-CanvasLineRenderer::CanvasLineRenderer(vtkm::Id width, vtkm::Id height)
+CanvasWireframer::CanvasWireframer(vtkm::Id width, vtkm::Id height)
   : Canvas(width, height)
 {
 }
 
-CanvasLineRenderer::~CanvasLineRenderer()
+CanvasWireframer::~CanvasWireframer()
 {
 }
 
-void CanvasLineRenderer::Initialize()
+void CanvasWireframer::Initialize()
 {
   // Nothing to initialize
 }
 
-void CanvasLineRenderer::Activate()
+void CanvasWireframer::Activate()
 {
   // Nothing to activate
 }
 
-void CanvasLineRenderer::Finish()
+void CanvasWireframer::Finish()
 {
   // Nothing to finish
 }
 
-void CanvasLineRenderer::Clear()
+void CanvasWireframer::Clear()
 {
   vtkm::cont::TryExecute(ClearBuffersInvokeFunctor(
     this->GetBackgroundColor(), this->GetColorBuffer(), this->GetDepthBuffer()));
 }
 
-vtkm::rendering::Canvas* CanvasLineRenderer::NewCopy() const
+vtkm::rendering::Canvas* CanvasWireframer::NewCopy() const
 {
-  return new vtkm::rendering::CanvasLineRenderer(*this);
+  return new vtkm::rendering::CanvasWireframer(*this);
 }
 
 
-void CanvasLineRenderer::AddLine(const vtkm::Vec<vtkm::Float64, 2>& start,
-                                 const vtkm::Vec<vtkm::Float64, 2>& end,
-                                 vtkm::Float32 vtkmNotUsed(lineWidth),
-                                 const vtkm::rendering::Color& color) const
+void CanvasWireframer::AddLine(const vtkm::Vec<vtkm::Float64, 2>& start,
+                               const vtkm::Vec<vtkm::Float64, 2>& end,
+                               vtkm::Float32 vtkmNotUsed(lineWidth),
+                               const vtkm::rendering::Color& color) const
 {
   // Draw's a line from start to end using the specified color.
   // lineWidth is ignored for now.
@@ -347,10 +347,10 @@ void CanvasLineRenderer::AddLine(const vtkm::Vec<vtkm::Float64, 2>& start,
                                                   colorBuffer));
 }
 
-void CanvasLineRenderer::BlendPixel(vtkm::Float32 x,
-                                    vtkm::Float32 y,
-                                    const vtkm::rendering::Color& color,
-                                    vtkm::Float32 intensity) const
+void CanvasWireframer::BlendPixel(vtkm::Float32 x,
+                                  vtkm::Float32 y,
+                                  const vtkm::rendering::Color& color,
+                                  vtkm::Float32 intensity) const
 {
   vtkm::Id xi = static_cast<vtkm::Id>(x), yi = static_cast<vtkm::Id>(y);
   if (!(xi >= 0 && xi < this->GetWidth() && yi >= 0 && yi < this->GetHeight()))
@@ -367,35 +367,35 @@ void CanvasLineRenderer::BlendPixel(vtkm::Float32 x,
   buffer.GetPortalControl().Set(index, blendedColor);
 }
 
-void CanvasLineRenderer::AddColorBar(const vtkm::Bounds&,
-                                     const vtkm::rendering::ColorTable&,
-                                     bool) const
+void CanvasWireframer::AddColorBar(const vtkm::Bounds&,
+                                   const vtkm::rendering::ColorTable&,
+                                   bool) const
 {
   //TODO: Implement
 }
 
-void CanvasLineRenderer::AddText(const vtkm::Vec<vtkm::Float32, 2>&,
-                                 vtkm::Float32,
-                                 vtkm::Float32,
-                                 vtkm::Float32,
-                                 const vtkm::Vec<vtkm::Float32, 2>&,
-                                 const vtkm::rendering::Color&,
-                                 const std::string&) const
+void CanvasWireframer::AddText(const vtkm::Vec<vtkm::Float32, 2>&,
+                               vtkm::Float32,
+                               vtkm::Float32,
+                               vtkm::Float32,
+                               const vtkm::Vec<vtkm::Float32, 2>&,
+                               const vtkm::rendering::Color&,
+                               const std::string&) const
 {
   //TODO: Implement
 }
 
-void CanvasLineRenderer::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                                        const vtkm::Vec<vtkm::Float64, 2>& point1,
-                                        const vtkm::Vec<vtkm::Float64, 2>& point2,
-                                        const vtkm::Vec<vtkm::Float64, 2>& point3,
-                                        const vtkm::rendering::Color& color) const
+void CanvasWireframer::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
+                                      const vtkm::Vec<vtkm::Float64, 2>& point1,
+                                      const vtkm::Vec<vtkm::Float64, 2>& point2,
+                                      const vtkm::Vec<vtkm::Float64, 2>& point3,
+                                      const vtkm::rendering::Color& color) const
 {
   //TODO: Implement
 }
 
 
-vtkm::Id CanvasLineRenderer::GetBufferIndex(vtkm::Id x, vtkm::Id y) const
+vtkm::Id CanvasWireframer::GetBufferIndex(vtkm::Id x, vtkm::Id y) const
 {
   return y * this->GetWidth() + x;
 }

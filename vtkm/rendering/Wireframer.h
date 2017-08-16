@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_rendering_WireframeRenderer_h
-#define vtk_m_rendering_WireframeRenderer_h
+#ifndef vtk_m_rendering_Wireframer_h
+#define vtk_m_rendering_Wireframer_h
 
 #include <vtkm/Math.h>
 #include <vtkm/Types.h>
@@ -126,7 +126,7 @@ struct DepthBufferCopy : public vtkm::worklet::WorkletMapField
 }; //struct DepthBufferCopy
 
 template <typename DeviceTag>
-class LinePlotter : public vtkm::worklet::WorkletMapField
+class EdgePlotter : public vtkm::worklet::WorkletMapField
 {
 public:
   using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArray<vtkm::Int64, DeviceTag>;
@@ -138,7 +138,7 @@ public:
   vtkm::Vec<vtkm::Float32, 3> Color;
 
   VTKM_CONT
-  LinePlotter(const vtkm::Matrix<vtkm::Float32, 4, 4>& worldToProjection,
+  EdgePlotter(const vtkm::Matrix<vtkm::Float32, 4, 4>& worldToProjection,
               vtkm::Id width,
               vtkm::Id height,
               const vtkm::Range& fieldRange,
@@ -369,11 +369,11 @@ public:
 
 } // namespace
 
-class WireframeRenderer
+class Wireframer
 {
 public:
   VTKM_CONT
-  WireframeRenderer(vtkm::rendering::Canvas* canvas, bool showInternalZones)
+  Wireframer(vtkm::rendering::Canvas* canvas, bool showInternalZones)
     : Canvas(canvas)
     , ShowInternalZones(showInternalZones)
   {
@@ -445,9 +445,9 @@ private:
         .Invoke(SolidDepthBuffer, FrameBuffer);
     }
 
-    LinePlotter<DeviceTag> plotter(
+    EdgePlotter<DeviceTag> plotter(
       WorldToProjection, width, height, ScalarFieldRange, ColorMap, FrameBuffer);
-    vtkm::worklet::DispatcherMapField<LinePlotter<DeviceTag>, DeviceTag>(plotter).Invoke(
+    vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>, DeviceTag>(plotter).Invoke(
       PointIndices, Coordinates, ScalarField.GetData());
 
     BufferConverter converter;
@@ -460,9 +460,9 @@ private:
   VTKM_CONT
   struct RenderWithDeviceFunctor
   {
-    WireframeRenderer* Renderer;
+    Wireframer* Renderer;
 
-    RenderWithDeviceFunctor(WireframeRenderer* renderer)
+    RenderWithDeviceFunctor(Wireframer* renderer)
       : Renderer(renderer)
     {
     }
@@ -488,8 +488,8 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Float32> SolidDepthBuffer;
   vtkm::Matrix<vtkm::Float32, 4, 4> WorldToProjection;
   PackedFrameBufferHandle FrameBuffer;
-}; // class WireframeRenderer
+}; // class Wireframer
 }
 } //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_WireframeRenderer_h
+#endif //vtk_m_rendering_Wireframer_h

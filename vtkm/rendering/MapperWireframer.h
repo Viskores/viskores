@@ -17,8 +17,10 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_MapperLineRenderer_h
-#define vtk_m_rendering_MapperLineRenderer_h
+#ifndef vtk_m_rendering_MapperWireframer_h
+#define vtk_m_rendering_MapperWireframer_h
+
+#include <memory>
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
@@ -33,13 +35,12 @@ namespace vtkm
 namespace rendering
 {
 
-class VTKM_RENDERING_EXPORT MapperLineRenderer : public Mapper
+class VTKM_RENDERING_EXPORT MapperWireframer : public Mapper
 {
 public:
   VTKM_CONT
-  MapperLineRenderer();
-  MapperLineRenderer(const MapperLineRenderer& other) = default;
-  virtual ~MapperLineRenderer();
+  MapperWireframer();
+  virtual ~MapperWireframer();
 
   virtual vtkm::rendering::Canvas* GetCanvas() const VTKM_OVERRIDE;
   virtual void SetCanvas(vtkm::rendering::Canvas* canvas) VTKM_OVERRIDE;
@@ -62,7 +63,7 @@ public:
 private:
   struct InternalsType;
   std::shared_ptr<InternalsType> Internals;
-}; // class MapperLineRenderer
+}; // class MapperWireframer
 }
 } // namespace vtkm::rendering
-#endif // vtk_m_rendering_MapperLineRenderer_h
+#endif // vtk_m_rendering_MapperWireframer_h

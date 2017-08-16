@@ -22,11 +22,10 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/exec/CellEdge.h>
-#include <vtkm/rendering/CanvasLineRenderer.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/MapperLineRenderer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
-#include <vtkm/rendering/WireframeRenderer.h>
+#include <vtkm/rendering/MapperWireframer.h>
+#include <vtkm/rendering/Wireframer.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterCounting.h>
@@ -49,7 +48,14 @@ struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
   template <typename CellShapeTag>
   VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag shape, vtkm::IdComponent numPoints) const
   {
-    return vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, *this);
+    if (shape.Id == vtkm::CELL_SHAPE_LINE)
+    {
+      return 1;
+    }
+    else
+    {
+      return vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, *this);
+    }
   }
 }; // struct EdgesCounter
 
@@ -75,10 +81,19 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
                             vtkm::IdComponent visitIndex,
                             EdgeIndexVecType& edgeIndices) const
   {
-    vtkm::Vec<vtkm::IdComponent, 2> localEdgeIndices = vtkm::exec::CellEdgeLocalIndices(
-      pointIndices.GetNumberOfComponents(), visitIndex, shape, *this);
-    vtkm::Id p1 = pointIndices[localEdgeIndices[0]];
-    vtkm::Id p2 = pointIndices[localEdgeIndices[1]];
+    vtkm::Id p1, p2;
+    if (shape.Id == vtkm::CELL_SHAPE_LINE)
+    {
+      p1 = pointIndices[0];
+      p2 = pointIndices[1];
+    }
+    else
+    {
+      vtkm::Vec<vtkm::IdComponent, 2> localEdgeIndices = vtkm::exec::CellEdgeLocalIndices(
+        pointIndices.GetNumberOfComponents(), visitIndex, shape, *this);
+      p1 = pointIndices[localEdgeIndices[0]];
+      p2 = pointIndices[localEdgeIndices[1]];
+    }
     // These indices need to be arranged in a definite order, as they will later be sorted to
     // detect duplicates
     edgeIndices[0] = p1 < p2 ? p1 : p2;
@@ -87,7 +102,7 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
 
 private:
   ScatterType Scatter;
-}; // struct EdgesCounter
+}; // struct EdgesExtracter
 
 struct ExtractEdgesFunctor
 {
@@ -115,10 +130,10 @@ struct ExtractEdgesFunctor
     vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Unique<vtkm::Id2>(EdgeIndices);
     return true;
   }
-};
+}; // struct ExtractEdgesFunctor
 } // namespace
 
-struct MapperLineRenderer::InternalsType
+struct MapperWireframer::InternalsType
 {
   InternalsType()
     : InternalsType(nullptr, false)
@@ -133,68 +148,68 @@ struct MapperLineRenderer::InternalsType
 
   vtkm::rendering::Canvas* Canvas;
   bool ShowInternalZones;
-};
+}; // struct MapperWireframer::InternalsType
 
-MapperLineRenderer::MapperLineRenderer()
-  : Internals(new InternalsType())
+MapperWireframer::MapperWireframer()
+  : Internals(new InternalsType(nullptr, false))
 {
 }
 
-MapperLineRenderer::~MapperLineRenderer()
+MapperWireframer::~MapperWireframer()
 {
 }
 
-vtkm::rendering::Canvas* MapperLineRenderer::GetCanvas() const
+vtkm::rendering::Canvas* MapperWireframer::GetCanvas() const
 {
   return this->Internals->Canvas;
 }
 
-void MapperLineRenderer::SetCanvas(vtkm::rendering::Canvas* canvas)
+void MapperWireframer::SetCanvas(vtkm::rendering::Canvas* canvas)
 {
   this->Internals->Canvas = canvas;
 }
 
-bool MapperLineRenderer::GetShowInternalZones() const
+bool MapperWireframer::GetShowInternalZones() const
 {
   return this->Internals->ShowInternalZones;
 }
 
-void MapperLineRenderer::SetShowInternalZones(bool showInternalZones)
+void MapperWireframer::SetShowInternalZones(bool showInternalZones)
 {
   this->Internals->ShowInternalZones = showInternalZones;
 }
 
-void MapperLineRenderer::StartScene()
+void MapperWireframer::StartScene()
 {
   // Nothing needs to be done.
 }
 
-void MapperLineRenderer::EndScene()
+void MapperWireframer::EndScene()
 {
   // Nothing needs to be done.
 }
 
-void MapperLineRenderer::RenderCells(const vtkm::cont::DynamicCellSet& cellSet,
-                                     const vtkm::cont::CoordinateSystem& coords,
-                                     const vtkm::cont::Field& scalarField,
-                                     const vtkm::rendering::ColorTable& colorTable,
-                                     const vtkm::rendering::Camera& camera,
-                                     const vtkm::Range& scalarRange)
+void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& cellSet,
+                                   const vtkm::cont::CoordinateSystem& coords,
+                                   const vtkm::cont::Field& scalarField,
+                                   const vtkm::rendering::ColorTable& colorTable,
+                                   const vtkm::rendering::Camera& camera,
+                                   const vtkm::Range& scalarRange)
 {
   ExtractEdgesFunctor functor(cellSet);
   vtkm::cont::TryExecute(functor);
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> edgeIndices = functor.EdgeIndices;
 
-  WireframeRenderer renderer(this->Internals->Canvas, this->Internals->ShowInternalZones);
+  Wireframer renderer(this->Internals->Canvas, this->Internals->ShowInternalZones);
   if (!(this->Internals->ShowInternalZones))
   {
     CanvasRayTracer canvas(this->Internals->Canvas->GetWidth(),
                            this->Internals->Canvas->GetHeight());
-    MapperRayTracer raytracer;
     canvas.Initialize();
     canvas.Activate();
     canvas.Clear();
     canvas.SetBackgroundColor(vtkm::rendering::Color::white);
+    MapperRayTracer raytracer;
     raytracer.SetCanvas(&canvas);
     raytracer.SetActiveColorTable(colorTable);
     raytracer.RenderCells(cellSet, coords, scalarField, colorTable, camera, scalarRange);
@@ -207,9 +222,9 @@ void MapperLineRenderer::RenderCells(const vtkm::cont::DynamicCellSet& cellSet,
   renderer.Render();
 }
 
-vtkm::rendering::Mapper* MapperLineRenderer::NewCopy() const
+vtkm::rendering::Mapper* MapperWireframer::NewCopy() const
 {
-  return new vtkm::rendering::MapperLineRenderer(*this);
+  return new vtkm::rendering::MapperWireframer(*this);
 }
 }
 } // vtkm::rendering

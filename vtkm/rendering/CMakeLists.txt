@@ -29,7 +29,7 @@ set(headers
   Camera.h
   Canvas.h
   CanvasRayTracer.h
-  CanvasLineRenderer.h
+  CanvasWireframer.h
   Color.h
   ColorBarAnnotation.h
   ColorLegendAnnotation.h
@@ -42,7 +42,7 @@ set(headers
   MapperRayTracer.h
   MapperVolume.h
   MapperConnectivity.h
-  MapperLineRenderer.h
+  MapperWireframer.h
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
@@ -65,7 +65,7 @@ set(sources
   Camera.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
-  CanvasLineRenderer.cxx
+  CanvasWireframer.cxx
   Color.cxx
   ColorBarAnnotation.cxx
   ColorLegendAnnotation.cxx
@@ -73,11 +73,10 @@ set(sources
   ConnectivityProxy.cxx
   DecodePNG.cxx
   Mapper.cxx
-  MapperRasterizer.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
   MapperConnectivity.cxx
-  MapperLineRenderer.cxx
+  MapperWireframer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
@@ -132,9 +131,8 @@ set(osmesa_sources
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
   Mapper.cxx
-  MapperRasterizer.cxx
-  MapperLineRenderer.cxx
-  CanvasLineRenderer.cxx
+  MapperWireframer.cxx
+  CanvasWireframer.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx
   raytracing/BoundingVolumeHierarchy.cxx

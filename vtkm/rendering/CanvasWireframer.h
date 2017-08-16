@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_rendering_CanvasLineRenderer_h
-#define vtk_m_rendering_CanvasLineRenderer_h
+#ifndef vtk_m_rendering_CanvasWireframer_h
+#define vtk_m_rendering_CanvasWireframer_h
 
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/vtkm_rendering_export.h>
@@ -28,12 +28,12 @@ namespace vtkm
 namespace rendering
 {
 
-class VTKM_RENDERING_EXPORT CanvasLineRenderer : public Canvas
+class VTKM_RENDERING_EXPORT CanvasWireframer : public Canvas
 {
 public:
-  CanvasLineRenderer(vtkm::Id width = 1024, vtkm::Id height = 1024);
+  CanvasWireframer(vtkm::Id width = 1024, vtkm::Id height = 1024);
 
-  ~CanvasLineRenderer();
+  ~CanvasWireframer();
 
   void Initialize() VTKM_OVERRIDE;
 
@@ -78,4 +78,4 @@ private:
 }
 } //namespace vtkm::rendering
 
-#endif //vtk_m_rendering_CanvasLineRenderer_h
+#endif //vtk_m_rendering_CanvasWireframer_h
