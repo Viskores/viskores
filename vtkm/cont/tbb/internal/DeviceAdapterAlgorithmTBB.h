@@ -160,7 +160,6 @@ public:
                                   Compare comp)
   {
     using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
-    ;
     if (sizeof(U) > sizeof(vtkm::Id))
     {
       /// More efficient sort:

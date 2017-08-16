@@ -103,7 +103,6 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(implictHandle.GetNumberOfValues() == 1, "handle should have size 1");
     VTKM_TEST_ASSERT(implictHandle.GetPortalConstControl().Get(0) == T(1),
                      "portals first values should be 1");
-    ;
   }
 
   void operator()()
