@@ -78,10 +78,8 @@ class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgor
                                                        vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
-  typedef vtkm::cont::internal::ArrayManagerExecution<T,
-                                                      StorageTag,
-                                                      vtkm::cont::DeviceAdapterTagSerial>
-    Superclass;
+  using Superclass =
+    vtkm::cont::internal::ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>;
   using ValueType = typename Superclass::ValueType;
   using PortalType = typename Superclass::PortalType;
   using PortalConstType = typename Superclass::PortalConstType;

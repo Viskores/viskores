@@ -84,7 +84,7 @@ template <typename T>
 class ArrayHandleWithUnusualStorage
   : public vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T>>>
 {
-  typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T>>> Superclass;
+  using Superclass = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T>>>;
 
 public:
   VTKM_CONT

@@ -41,7 +41,7 @@ namespace detail
 template <typename CellSetType, typename FromTopology, typename ToTopology>
 struct CellSetExplicitConnectivityChooser
 {
-  typedef vtkm::cont::internal::ConnectivityExplicitInternals<> ConnectivityType;
+  using ConnectivityType = vtkm::cont::internal::ConnectivityExplicitInternals<>;
 };
 
 } // namespace detail
@@ -68,36 +68,36 @@ template <typename ShapeStorageTag = VTKM_DEFAULT_SHAPE_STORAGE_TAG,
           typename OffsetsStorageTag = VTKM_DEFAULT_OFFSETS_STORAGE_TAG>
 class VTKM_ALWAYS_EXPORT CellSetExplicit : public CellSet
 {
-  typedef CellSetExplicit<ShapeStorageTag,
-                          NumIndicesStorageTag,
-                          ConnectivityStorageTag,
-                          OffsetsStorageTag>
-    Thisclass;
+  using Thisclass = CellSetExplicit<ShapeStorageTag,
+                                    NumIndicesStorageTag,
+                                    ConnectivityStorageTag,
+                                    OffsetsStorageTag>;
 
   template <typename FromTopology, typename ToTopology>
   struct ConnectivityChooser
   {
-    typedef
-      typename detail::CellSetExplicitConnectivityChooser<Thisclass, FromTopology, ToTopology>::
-        ConnectivityType ConnectivityType;
+    using ConnectivityType =
+      typename detail::CellSetExplicitConnectivityChooser<Thisclass,
+                                                          FromTopology,
+                                                          ToTopology>::ConnectivityType;
 
-    typedef typename ConnectivityType::ShapeArrayType ShapeArrayType;
-    typedef typename ConnectivityType::NumIndicesArrayType NumIndicesArrayType;
-    typedef typename ConnectivityType::ConnectivityArrayType ConnectivityArrayType;
-    typedef typename ConnectivityType::IndexOffsetArrayType IndexOffsetArrayType;
+    using ShapeArrayType = typename ConnectivityType::ShapeArrayType;
+    using NumIndicesArrayType = typename ConnectivityType::NumIndicesArrayType;
+    using ConnectivityArrayType = typename ConnectivityType::ConnectivityArrayType;
+    using IndexOffsetArrayType = typename ConnectivityType::IndexOffsetArrayType;
   };
 
 public:
-  typedef vtkm::Id SchedulingRangeType;
+  using SchedulingRangeType = vtkm::Id;
 
   //point to cell is used when iterating cells and asking for point properties
-  typedef ConnectivityChooser<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>
-    PointToCellConnectivityType;
+  using PointToCellConnectivityType =
+    ConnectivityChooser<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell>;
 
-  typedef typename PointToCellConnectivityType::ShapeArrayType ShapeArrayType;
-  typedef typename PointToCellConnectivityType::NumIndicesArrayType NumIndicesArrayType;
-  typedef typename PointToCellConnectivityType::ConnectivityArrayType ConnectivityArrayType;
-  typedef typename PointToCellConnectivityType::IndexOffsetArrayType IndexOffsetArrayType;
+  using ShapeArrayType = typename PointToCellConnectivityType::ShapeArrayType;
+  using NumIndicesArrayType = typename PointToCellConnectivityType::NumIndicesArrayType;
+  using ConnectivityArrayType = typename PointToCellConnectivityType::ConnectivityArrayType;
+  using IndexOffsetArrayType = typename PointToCellConnectivityType::IndexOffsetArrayType;
 
   VTKM_CONT CellSetExplicit(const std::string& name = std::string());
   VTKM_CONT CellSetExplicit(const Thisclass& src);
@@ -148,22 +148,24 @@ public:
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
 
-    typedef ConnectivityChooser<FromTopology, ToTopology> ConnectivityTypes;
+    using ConnectivityTypes = ConnectivityChooser<FromTopology, ToTopology>;
 
-    typedef typename ConnectivityTypes::ShapeArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst ShapePortalType;
-    typedef typename ConnectivityTypes::NumIndicesArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst IndicePortalType;
-    typedef typename ConnectivityTypes::ConnectivityArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst ConnectivityPortalType;
-    typedef typename ConnectivityTypes::IndexOffsetArrayType::template ExecutionTypes<
-      DeviceAdapter>::PortalConst IndexOffsetPortalType;
+    using ShapePortalType = typename ConnectivityTypes::ShapeArrayType::template ExecutionTypes<
+      DeviceAdapter>::PortalConst;
+    using IndicePortalType =
+      typename ConnectivityTypes::NumIndicesArrayType::template ExecutionTypes<
+        DeviceAdapter>::PortalConst;
+    using ConnectivityPortalType =
+      typename ConnectivityTypes::ConnectivityArrayType::template ExecutionTypes<
+        DeviceAdapter>::PortalConst;
+    using IndexOffsetPortalType =
+      typename ConnectivityTypes::IndexOffsetArrayType::template ExecutionTypes<
+        DeviceAdapter>::PortalConst;
 
-    typedef vtkm::exec::ConnectivityExplicit<ShapePortalType,
-                                             IndicePortalType,
-                                             ConnectivityPortalType,
-                                             IndexOffsetPortalType>
-      ExecObjectType;
+    using ExecObjectType = vtkm::exec::ConnectivityExplicit<ShapePortalType,
+                                                            IndicePortalType,
+                                                            ConnectivityPortalType,
+                                                            IndexOffsetPortalType>;
   };
 
   template <typename Device, typename FromTopology, typename ToTopology>
@@ -245,9 +247,8 @@ struct CellSetExplicitConnectivityChooser<
   vtkm::TopologyElementTagPoint,
   vtkm::TopologyElementTagCell>
 {
-  typedef vtkm::cont::internal::
-    ConnectivityExplicitInternals<Storage1, Storage2, Storage3, Storage4>
-      ConnectivityType;
+  using ConnectivityType =
+    vtkm::cont::internal::ConnectivityExplicitInternals<Storage1, Storage2, Storage3, Storage4>;
 };
 
 template <typename CellSetType>
@@ -257,9 +258,8 @@ struct CellSetExplicitConnectivityChooser<CellSetType,
 {
   //only specify the shape type as it will be constant as everything
   //is a vertex. otherwise use the defaults.
-  typedef vtkm::cont::internal::ConnectivityExplicitInternals<
-    typename ArrayHandleConstant<vtkm::UInt8>::StorageTag>
-    ConnectivityType;
+  using ConnectivityType = vtkm::cont::internal::ConnectivityExplicitInternals<
+    typename ArrayHandleConstant<vtkm::UInt8>::StorageTag>;
 };
 
 } // namespace detail

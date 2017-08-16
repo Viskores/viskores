@@ -136,8 +136,8 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
                              BinaryCompare binary_compare)
   {
-    typedef typename vtkm::cont::ArrayHandle<T, Container>::template ExecutionTypes<
-      vtkm::cont::DeviceAdapterTagTBB>::Portal PortalType;
+    using PortalType = typename vtkm::cont::ArrayHandle<T, Container>::template ExecutionTypes<
+      vtkm::cont::DeviceAdapterTagTBB>::Portal;
     PortalType arrayPortal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagTBB());
 
     using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
@@ -167,7 +167,7 @@ public:
 
       using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
       using IndexType = vtkm::cont::ArrayHandle<vtkm::Id>;
-      typedef vtkm::cont::ArrayHandleZip<KeyType, IndexType> ZipHandleType;
+      using ZipHandleType = vtkm::cont::ArrayHandleZip<KeyType, IndexType>;
 
       IndexType indexArray;
       ValueType valuesScattered;
@@ -187,7 +187,7 @@ public:
     else
     {
       using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
-      typedef vtkm::cont::ArrayHandleZip<KeyType, ValueType> ZipHandleType;
+      using ZipHandleType = vtkm::cont::ArrayHandleZip<KeyType, ValueType>;
 
       ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
       Sort(zipHandle, vtkm::cont::internal::KeyCompare<T, U, Compare>(comp));

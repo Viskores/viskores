@@ -37,10 +37,10 @@ class VTKM_ALWAYS_EXPORT ArrayPortalGroupVec
 {
 public:
   static const vtkm::IdComponent NUM_COMPONENTS = _NUM_COMPONENTS;
-  typedef _SourcePortalType SourcePortalType;
+  using SourcePortalType = _SourcePortalType;
 
-  typedef typename std::remove_const<typename SourcePortalType::ValueType>::type ComponentType;
-  typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
+  using ComponentType = typename std::remove_const<typename SourcePortalType::ValueType>::type;
+  using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -128,17 +128,17 @@ template <typename SourceArrayHandleType, vtkm::IdComponent NUM_COMPONENTS>
 class Storage<vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
               vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>>
 {
-  typedef typename SourceArrayHandleType::ValueType ComponentType;
+  using ComponentType = typename SourceArrayHandleType::ValueType;
 
 public:
-  typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
+  using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
 
-  typedef vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::PortalControl,
-                                                    NUM_COMPONENTS>
-    PortalType;
-  typedef vtkm::exec::internal::
-    ArrayPortalGroupVec<typename SourceArrayHandleType::PortalConstControl, NUM_COMPONENTS>
-      PortalConstType;
+  using PortalType =
+    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::PortalControl,
+                                              NUM_COMPONENTS>;
+  using PortalConstType =
+    vtkm::exec::internal::ArrayPortalGroupVec<typename SourceArrayHandleType::PortalConstControl,
+                                              NUM_COMPONENTS>;
 
   VTKM_CONT
   Storage()
@@ -222,26 +222,24 @@ class ArrayTransfer<vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COM
                     Device>
 {
 public:
-  typedef typename SourceArrayHandleType::ValueType ComponentType;
-  typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
+  using ComponentType = typename SourceArrayHandleType::ValueType;
+  using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
 
 private:
-  typedef vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>
-    StorageTag;
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageTag =
+    vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
-  typedef vtkm::exec::internal::ArrayPortalGroupVec<
+  using PortalExecution = vtkm::exec::internal::ArrayPortalGroupVec<
     typename SourceArrayHandleType::template ExecutionTypes<Device>::Portal,
-    NUM_COMPONENTS>
-    PortalExecution;
-  typedef vtkm::exec::internal::ArrayPortalGroupVec<
+    NUM_COMPONENTS>;
+  using PortalConstExecution = vtkm::exec::internal::ArrayPortalGroupVec<
     typename SourceArrayHandleType::template ExecutionTypes<Device>::PortalConst,
-    NUM_COMPONENTS>
-    PortalConstExecution;
+    NUM_COMPONENTS>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -341,10 +339,10 @@ public:
       vtkm::Vec<typename SourceArrayHandleType::ValueType, NUM_COMPONENTS>,
       vtkm::cont::internal::StorageTagGroupVec<SourceArrayHandleType, NUM_COMPONENTS>>));
 
-  typedef typename SourceArrayHandleType::ValueType ComponentType;
+  using ComponentType = typename SourceArrayHandleType::ValueType;
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   VTKM_CONT

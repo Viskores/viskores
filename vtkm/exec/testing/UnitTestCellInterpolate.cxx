@@ -60,7 +60,7 @@ void GetMinMaxPoints(CellShapeTag,
 template <typename FieldType>
 struct TestInterpolateFunctor
 {
-  typedef typename vtkm::VecTraits<FieldType>::ComponentType ComponentType;
+  using ComponentType = typename vtkm::VecTraits<FieldType>::ComponentType;
 
   template <typename CellShapeTag, typename FieldVecType>
   void DoTestWithField(CellShapeTag shape, const FieldVecType& fieldValues) const

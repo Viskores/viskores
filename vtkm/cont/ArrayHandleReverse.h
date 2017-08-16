@@ -91,9 +91,9 @@ template <typename ArrayHandleType>
 class Storage<typename ArrayHandleType::ValueType, StorageTagReverse<ArrayHandleType>>
 {
 public:
-  typedef typename ArrayHandleType::ValueType ValueType;
-  typedef ArrayPortalReverse<typename ArrayHandleType::PortalControl> PortalType;
-  typedef ArrayPortalReverse<typename ArrayHandleType::PortalConstControl> PortalConstType;
+  using ValueType = typename ArrayHandleType::ValueType;
+  using PortalType = ArrayPortalReverse<typename ArrayHandleType::PortalControl>;
+  using PortalConstType = ArrayPortalReverse<typename ArrayHandleType::PortalConstControl>;
 
   VTKM_CONT
   Storage()
@@ -145,20 +145,20 @@ template <typename ArrayHandleType, typename Device>
 class ArrayTransfer<typename ArrayHandleType::ValueType, StorageTagReverse<ArrayHandleType>, Device>
 {
 public:
-  typedef typename ArrayHandleType::ValueType ValueType;
+  using ValueType = typename ArrayHandleType::ValueType;
 
 private:
-  typedef StorageTagReverse<ArrayHandleType> StorageTag;
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageTag = StorageTagReverse<ArrayHandleType>;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
-  typedef ArrayPortalReverse<typename ArrayHandleType::template ExecutionTypes<Device>::Portal>
-    PortalExecution;
-  typedef ArrayPortalReverse<typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst>
-    PortalConstExecution;
+  using PortalExecution =
+    ArrayPortalReverse<typename ArrayHandleType::template ExecutionTypes<Device>::Portal>;
+  using PortalConstExecution =
+    ArrayPortalReverse<typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -223,7 +223,7 @@ public:
                                                       StorageTagReverse<ArrayHandleType>>));
 
 protected:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   ArrayHandleReverse(const ArrayHandleType& handle)

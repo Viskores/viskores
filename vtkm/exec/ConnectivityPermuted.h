@@ -35,7 +35,7 @@ template <typename PermutationPortal, typename OriginalConnectivity>
 class ConnectivityPermutedPointToCell
 {
 public:
-  typedef typename OriginalConnectivity::SchedulingRangeType SchedulingRangeType;
+  using SchedulingRangeType = typename OriginalConnectivity::SchedulingRangeType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -62,7 +62,7 @@ public:
   VTKM_EXEC
   vtkm::Id GetNumberOfElements() const { return this->Portal.GetNumberOfValues(); }
 
-  typedef typename OriginalConnectivity::CellShapeTag CellShapeTag;
+  using CellShapeTag = typename OriginalConnectivity::CellShapeTag;
 
   VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id index) const
@@ -77,7 +77,7 @@ public:
     return this->Connectivity.GetNumberOfIndices(this->Portal.Get(index));
   }
 
-  typedef typename OriginalConnectivity::IndicesType IndicesType;
+  using IndicesType = typename OriginalConnectivity::IndicesType;
 
   template <typename IndexType>
   VTKM_EXEC IndicesType GetIndices(const IndexType& index) const

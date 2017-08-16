@@ -117,12 +117,11 @@ struct TransformTests
   using OutputValueType = typename vtkm::VecTraits<InputValueType>::ComponentType;
   using FunctorType = MySquare<OutputValueType>;
 
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<InputValueType>, FunctorType>
-    TransformHandle;
+  using TransformHandle =
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<InputValueType>, FunctorType>;
 
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<InputValueType>,
-                                           FunctorType>
-    CountingTransformHandle;
+  using CountingTransformHandle =
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<InputValueType>, FunctorType>;
 
   using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;

@@ -58,7 +58,7 @@ template <typename T>
 struct TemplatedTests
 {
   using StorageTagType = vtkm::cont::StorageTagImplicit<TestImplicitStorage<T>>;
-  typedef vtkm::cont::internal::Storage<T, StorageTagType> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<T, StorageTagType>;
 
   using ValueType = typename StorageType::ValueType;
   using PortalType = typename StorageType::PortalType;

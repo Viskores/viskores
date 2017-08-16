@@ -106,21 +106,21 @@ public:
 public:
   /// The type of each item in the array.
   ///
-  typedef T ValueType;
+  using ValueType = T;
 
   /// \brief The type of portal objects for the array.
   ///
   /// The actual portal object can take any form. This is a simple example of a
   /// portal to a C array.
   ///
-  typedef ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType*> PortalType;
+  using PortalType = ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType*>;
 
   /// \brief The type of portal objects (const version) for the array.
   ///
   /// The actual portal object can take any form. This is a simple example of a
   /// portal to a C array.
   ///
-  typedef ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*> PortalConstType;
+  using PortalConstType = ::vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*>;
 
   /// Returns a portal to the array.
   ///

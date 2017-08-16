@@ -74,7 +74,7 @@ template <typename T, typename Storage>
 struct VTKM_ALWAYS_EXPORT PolymorphicArrayHandleContainer
   : public PolymorphicArrayHandleContainerBase
 {
-  typedef vtkm::cont::ArrayHandle<T, Storage> ArrayHandleType;
+  using ArrayHandleType = vtkm::cont::ArrayHandle<T, Storage>;
 
   ArrayHandleType Array;
 
@@ -400,9 +400,8 @@ private:
   friend struct detail::DynamicArrayHandleCopyHelper;
 };
 
-typedef vtkm::cont::DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG,
-                                           VTKM_DEFAULT_STORAGE_LIST_TAG>
-  DynamicArrayHandle;
+using DynamicArrayHandle =
+  vtkm::cont::DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG>;
 
 namespace detail
 {
@@ -471,7 +470,7 @@ struct DynamicArrayHandleTryType
     {
       return;
     }
-    typedef DynamicArrayHandleTryStorage<Functor, Type> TryStorageType;
+    using TryStorageType = DynamicArrayHandleTryStorage<Functor, Type>;
     TryStorageType tryStorage = TryStorageType(*this->Array, this->Function);
 
     vtkm::ListForEach(tryStorage, StorageList());
@@ -493,7 +492,7 @@ VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const 
 {
   VTKM_IS_LIST_TAG(TypeList);
   VTKM_IS_LIST_TAG(StorageList);
-  typedef detail::DynamicArrayHandleTryType<Functor, StorageList> TryTypeType;
+  using TryTypeType = detail::DynamicArrayHandleTryType<Functor, StorageList>;
 
   // We cast this to a DynamicArrayHandle because at this point we are ignoring
   // the type/storage lists in it. There is no sense in adding more unnecessary
@@ -525,7 +524,7 @@ DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG
   const Functor& f) const
 {
 
-  typedef detail::DynamicArrayHandleTryType<Functor, VTKM_DEFAULT_STORAGE_LIST_TAG> TryTypeType;
+  using TryTypeType = detail::DynamicArrayHandleTryType<Functor, VTKM_DEFAULT_STORAGE_LIST_TAG>;
 
   // We can remove the copy, as the current DynamicArrayHandle is already
   // the default one, and no reason to do an atomic increment and increase

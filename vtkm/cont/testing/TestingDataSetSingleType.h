@@ -68,7 +68,7 @@ private:
 
   static inline vtkm::cont::DataSet make_SingleTypeDataSet()
   {
-    typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
+    using CoordType = vtkm::Vec<vtkm::Float32, 3>;
     std::vector<CoordType> coordinates;
     coordinates.push_back(CoordType(0, 0, 0));
     coordinates.push_back(CoordType(1, 0, 0));

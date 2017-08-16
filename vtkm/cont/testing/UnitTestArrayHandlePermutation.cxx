@@ -186,8 +186,8 @@ template <typename ValueType>
 struct PermutationTests
 {
   using IndexArrayType = vtkm::cont::ArrayHandleImplicit<DoubleIndexFunctor>;
-  typedef vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic> ValueArrayType;
-  typedef vtkm::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType> PermutationArrayType;
+  using ValueArrayType = vtkm::cont::ArrayHandle<ValueType, vtkm::cont::StorageTagBasic>;
+  using PermutationArrayType = vtkm::cont::ArrayHandlePermutation<IndexArrayType, ValueArrayType>;
 
   using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;

@@ -47,13 +47,12 @@ class VTKM_ALWAYS_EXPORT CellSetSingleType
       typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag //IndexOffsetStorageTag
       >
 {
-  typedef vtkm::cont::CellSetSingleType<ConnectivityStorageTag> Thisclass;
-  typedef vtkm::cont::CellSetExplicit<
+  using Thisclass = vtkm::cont::CellSetSingleType<ConnectivityStorageTag>;
+  using Superclass = vtkm::cont::CellSetExplicit<
     typename vtkm::cont::ArrayHandleConstant<vtkm::UInt8>::StorageTag,
     typename vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>::StorageTag,
     ConnectivityStorageTag,
-    typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>
-    Superclass;
+    typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>;
 
 public:
   VTKM_CONT

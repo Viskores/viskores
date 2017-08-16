@@ -216,9 +216,10 @@ private:
                                          OutputPortal output,
                                          UnaryPredicate unary_predicate)
   {
-    using ValueType = typename StencilPortal::ValueType;
+    using IteratorType = typename detail::IteratorTraits<OutputPortal>::IteratorType;
+    IteratorType outputBegin = IteratorBegin(output);
 
-    auto outputBegin = IteratorBegin(output);
+    using ValueType = typename StencilPortal::ValueType;
 
     vtkm::exec::cuda::internal::WrappedUnaryPredicate<ValueType, UnaryPredicate> up(
       unary_predicate);
@@ -626,7 +627,7 @@ private:
   template <class KeysPortal, class ValuesPortal>
   VTKM_CONT static void SortByKeyPortal(const KeysPortal& keys, const ValuesPortal& values)
   {
-    typedef typename KeysPortal::ValueType ValueType;
+    using ValueType = typename KeysPortal::ValueType;
     SortByKeyPortal(keys, values, ::thrust::less<ValueType>());
   }
 
@@ -710,7 +711,7 @@ private:
                                           const OutputPortal& output,
                                           BinaryCompare binary_compare)
   {
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
 
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);

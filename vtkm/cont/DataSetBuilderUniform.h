@@ -30,7 +30,7 @@ namespace cont
 
 class DataSetBuilderUniform
 {
-  typedef vtkm::Vec<vtkm::FloatDefault, 3> VecType;
+  using VecType = vtkm::Vec<vtkm::FloatDefault, 3>;
 
 public:
   VTKM_CONT

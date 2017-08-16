@@ -36,13 +36,13 @@ class ConnectivityStructured
   VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
   VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
 
-  typedef vtkm::internal::ConnectivityStructuredInternals<Dimension> InternalsType;
+  using InternalsType = vtkm::internal::ConnectivityStructuredInternals<Dimension>;
 
-  typedef vtkm::internal::ConnectivityStructuredIndexHelper<FromTopology, ToTopology, Dimension>
-    Helper;
+  using Helper =
+    vtkm::internal::ConnectivityStructuredIndexHelper<FromTopology, ToTopology, Dimension>;
 
 public:
-  typedef typename InternalsType::SchedulingRangeType SchedulingRangeType;
+  using SchedulingRangeType = typename InternalsType::SchedulingRangeType;
 
   VTKM_EXEC_CONT
   ConnectivityStructured()
@@ -65,7 +65,7 @@ public:
   VTKM_EXEC
   vtkm::Id GetNumberOfElements() const { return Helper::GetNumberOfElements(this->Internals); }
 
-  typedef typename Helper::CellShapeTag CellShapeTag;
+  using CellShapeTag = typename Helper::CellShapeTag;
   VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id) const { return CellShapeTag(); }
 
@@ -75,7 +75,7 @@ public:
     return Helper::GetNumberOfIndices(this->Internals, index);
   }
 
-  typedef typename Helper::IndicesType IndicesType;
+  using IndicesType = typename Helper::IndicesType;
 
   template <typename IndexType>
   VTKM_EXEC IndicesType GetIndices(const IndexType& index) const

@@ -32,7 +32,7 @@ static const vtkm::Id ARRAY_SIZE = 10;
 template <typename T>
 struct TestPortal
 {
-  typedef T ValueType;
+  using ValueType = T;
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
@@ -53,11 +53,10 @@ struct FetchArrayDirectInTests
   {
     TestPortal<T> execObject;
 
-    typedef vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
-                                   vtkm::exec::arg::AspectTagDefault,
-                                   vtkm::exec::arg::ThreadIndicesTesting,
-                                   TestPortal<T>>
-      FetchType;
+    using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
+                                             vtkm::exec::arg::AspectTagDefault,
+                                             vtkm::exec::arg::ThreadIndicesTesting,
+                                             TestPortal<T>>;
 
     FetchType fetch;
 

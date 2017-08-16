@@ -41,11 +41,11 @@ class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagCuda>
   : public vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice<T, StorageTag>
 {
 public:
-  typedef vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice<T, StorageTag> Superclass;
-  typedef typename Superclass::ValueType ValueType;
-  typedef typename Superclass::PortalType PortalType;
-  typedef typename Superclass::PortalConstType PortalConstType;
-  typedef typename Superclass::StorageType StorageType;
+  using Superclass = vtkm::cont::cuda::internal::ArrayManagerExecutionThrustDevice<T, StorageTag>;
+  using ValueType = typename Superclass::ValueType;
+  using PortalType = typename Superclass::PortalType;
+  using PortalConstType = typename Superclass::PortalConstType;
+  using StorageType = typename Superclass::StorageType;
 
   VTKM_CONT
   ArrayManagerExecution(StorageType* storage)

@@ -50,7 +50,7 @@ struct WriteConnectivity : public vtkm::worklet::WorkletMapPointToCell
                                 FieldInCell<IdType> offset,
                                 WholeArrayOut<> connectivity);
   typedef void ExecutionSignature(PointCount, PointIndices, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename PointIndicesType, typename OutPortalType>
   VTKM_EXEC void operator()(vtkm::IdComponent pointcount,

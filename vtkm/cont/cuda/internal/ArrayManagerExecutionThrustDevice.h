@@ -59,14 +59,14 @@ template <typename T, class StorageTag>
 class ArrayManagerExecutionThrustDevice
 {
 public:
-  typedef T ValueType;
-  typedef typename thrust::system::cuda::pointer<ValueType> PointerType;
-  typedef typename PointerType::difference_type difference_type;
+  using ValueType = T;
+  using PointerType = typename thrust::system::cuda::pointer<ValueType>;
+  using difference_type = typename PointerType::difference_type;
 
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
-  typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust<T> PortalType;
-  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T> PortalConstType;
+  using PortalType = vtkm::exec::cuda::internal::ArrayPortalFromThrust<T>;
+  using PortalConstType = vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T>;
 
   VTKM_CONT
   ArrayManagerExecutionThrustDevice(StorageType* storage)

@@ -123,7 +123,7 @@ private:
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  typedef vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag> DispatcherPassThrough;
+  using DispatcherPassThrough = vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag>;
   struct VerifyEmptyArrays
   {
     template <typename T>

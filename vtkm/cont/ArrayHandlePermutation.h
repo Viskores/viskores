@@ -127,12 +127,12 @@ class Storage<typename ValueArrayType::ValueType,
 public:
   using ValueType = typename ValueArrayType::ValueType;
 
-  typedef vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
-                                                       typename ValueArrayType::PortalControl>
-    PortalType;
-  typedef vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
-                                                       typename ValueArrayType::PortalConstControl>
-    PortalConstType;
+  using PortalType =
+    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
+                                                 typename ValueArrayType::PortalControl>;
+  using PortalConstType =
+    vtkm::exec::internal::ArrayPortalPermutation<typename IndexArrayType::PortalConstControl,
+                                                 typename ValueArrayType::PortalConstControl>;
 
   VTKM_CONT
   Storage()
@@ -212,21 +212,19 @@ public:
   using ValueType = typename ValueArrayType::ValueType;
 
 private:
-  typedef StorageTagPermutation<IndexArrayType, ValueArrayType> StorageTag;
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageTag = StorageTagPermutation<IndexArrayType, ValueArrayType>;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
-  typedef vtkm::exec::internal::ArrayPortalPermutation<
+  using PortalExecution = vtkm::exec::internal::ArrayPortalPermutation<
     typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
-    typename ValueArrayType::template ExecutionTypes<Device>::Portal>
-    PortalExecution;
-  typedef vtkm::exec::internal::ArrayPortalPermutation<
+    typename ValueArrayType::template ExecutionTypes<Device>::Portal>;
+  using PortalConstExecution = vtkm::exec::internal::ArrayPortalPermutation<
     typename IndexArrayType::template ExecutionTypes<Device>::PortalConst,
-    typename ValueArrayType::template ExecutionTypes<Device>::PortalConst>
-    PortalConstExecution;
+    typename ValueArrayType::template ExecutionTypes<Device>::PortalConst>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -350,7 +348,7 @@ public:
       internal::StorageTagPermutation<IndexArrayHandleType, ValueArrayHandleType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   VTKM_CONT
