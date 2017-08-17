@@ -385,11 +385,11 @@ void CanvasWireframer::AddText(const vtkm::Vec<vtkm::Float32, 2>&,
   //TODO: Implement
 }
 
-void CanvasWireframer::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                                      const vtkm::Vec<vtkm::Float64, 2>& point1,
-                                      const vtkm::Vec<vtkm::Float64, 2>& point2,
-                                      const vtkm::Vec<vtkm::Float64, 2>& point3,
-                                      const vtkm::rendering::Color& color) const
+void CanvasWireframer::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>&,
+                                      const vtkm::Vec<vtkm::Float64, 2>&,
+                                      const vtkm::Vec<vtkm::Float64, 2>&,
+                                      const vtkm::Vec<vtkm::Float64, 2>&,
+                                      const vtkm::rendering::Color&) const
 {
   //TODO: Implement
 }

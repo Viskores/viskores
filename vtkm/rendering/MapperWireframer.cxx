@@ -22,6 +22,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/exec/CellEdge.h>
+#include <vtkm/filter/ExternalFaces.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperRayTracer.h>
 #include <vtkm/rendering/MapperWireframer.h>
@@ -189,36 +190,57 @@ void MapperWireframer::EndScene()
   // Nothing needs to be done.
 }
 
-void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& cellSet,
+void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
                                    const vtkm::cont::CoordinateSystem& coords,
-                                   const vtkm::cont::Field& scalarField,
+                                   const vtkm::cont::Field& inScalarField,
                                    const vtkm::rendering::ColorTable& colorTable,
                                    const vtkm::rendering::Camera& camera,
                                    const vtkm::Range& scalarRange)
 {
+  vtkm::cont::DynamicCellSet cellSet = inCellSet;
+  vtkm::cont::Field field = inScalarField;
+  if (!(this->Internals->ShowInternalZones))
+  {
+    // If internal zones are to be hidden, the number of edges processed can be reduced by first
+    // running the external faces filter on the input cell set and using the resulting cell set.
+    vtkm::cont::DataSet dataSet;
+    dataSet.AddCoordinateSystem(coords);
+    dataSet.AddCellSet(inCellSet);
+    vtkm::filter::ExternalFaces externalFaces;
+    externalFaces.SetCompactPoints(false);
+    externalFaces.SetPassPolyData(true);
+    vtkm::filter::Result result = externalFaces.Execute(dataSet);
+    externalFaces.MapFieldOntoOutput(result, inScalarField);
+    cellSet = result.GetDataSet().GetCellSet();
+    field = result.GetDataSet().GetField(0);
+  }
+
+  // Extract unique edges from the cell set.
   ExtractEdgesFunctor functor(cellSet);
   vtkm::cont::TryExecute(functor);
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> edgeIndices = functor.EdgeIndices;
 
   Wireframer renderer(this->Internals->Canvas, this->Internals->ShowInternalZones);
+  // Render the cell set using a raytracer, on a separate canvas, and use the generated depth
+  // buffer, which represents the solid mesh, to avoid drawing on the internal zones
   if (!(this->Internals->ShowInternalZones))
   {
     CanvasRayTracer canvas(this->Internals->Canvas->GetWidth(),
                            this->Internals->Canvas->GetHeight());
+    canvas.SetBackgroundColor(vtkm::rendering::Color::white);
     canvas.Initialize();
     canvas.Activate();
     canvas.Clear();
-    canvas.SetBackgroundColor(vtkm::rendering::Color::white);
     MapperRayTracer raytracer;
     raytracer.SetCanvas(&canvas);
     raytracer.SetActiveColorTable(colorTable);
-    raytracer.RenderCells(cellSet, coords, scalarField, colorTable, camera, scalarRange);
+    raytracer.RenderCells(cellSet, coords, field, colorTable, camera, scalarRange);
     renderer.SetSolidDepthBuffer(canvas.GetDepthBuffer());
   }
 
   renderer.SetCamera(camera);
   renderer.SetColorMap(this->ColorMap);
-  renderer.SetData(coords, edgeIndices, scalarField, scalarRange);
+  renderer.SetData(coords, edgeIndices, field, scalarRange);
   renderer.Render();
 }
 
