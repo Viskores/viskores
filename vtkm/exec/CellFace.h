@@ -248,14 +248,13 @@ static inline VTKM_EXEC vtkm::VecCConst<vtkm::IdComponent> CellFaceLocalIndices(
 
 /// \brief Returns a cononical identifer for a cell face
 ///
-/// Given information about a cell face and the global point indices for that cell,
-/// returns a vtkm::Id3 that contains values that are unique to that face. The
-/// values for two faces will be the same if and only if the faces contain the same
-/// points.
+/// Given information about a cell face and the global point indices for that cell, returns a
+/// vtkm::Id3 that contains values that are unique to that face. The values for two faces will be
+/// the same if and only if the faces contain the same points.
 ///
-/// Note that this property is only try if the mesh is conforming. That is, any two
-/// neighboring cells that share a face have the same points on that face. This
-/// preculdes to faces sharing more than a single point or single edge.
+/// Note that this property is only true if the mesh is conforming. That is, any two neighboring
+/// cells that share a face have the same points on that face. This preculdes 2 faces sharing more
+/// than a single point or single edge.
 ///
 template <typename CellShapeTag, typename GlobalPointIndicesVecType>
 static inline VTKM_EXEC vtkm::Id3 CellFaceCononicalId(
