@@ -743,7 +743,7 @@ function(vtkm_library)
 
   configure_file(
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
-      ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+      ${VTKm_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
     @ONLY)
 
   unset(EXPORT_MACRO_NAME)
@@ -757,7 +757,7 @@ function(vtkm_library)
     RUNTIME DESTINATION ${VTKm_INSTALL_BIN_DIR}
     )
   vtkm_install_headers("${dir_prefix}"
-    ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+    ${VTKm_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
     ${VTKm_LIB_HEADERS}
     )
 endfunction(vtkm_library)
