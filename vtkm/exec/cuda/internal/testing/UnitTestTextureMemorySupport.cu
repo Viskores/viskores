@@ -31,11 +31,11 @@ struct customType
 void TestScalarTextureLoad()
 {
   using namespace vtkm::exec::cuda::internal;
-  typedef load_through_texture<vtkm::Float32> f;
-  typedef load_through_texture<vtkm::Int32> i;
-  typedef load_through_texture<vtkm::UInt8> ui;
+  using f = load_through_texture<vtkm::Float32>;
+  using i = load_through_texture<vtkm::Int32>;
+  using ui = load_through_texture<vtkm::UInt8>;
 
-  typedef load_through_texture<customType> ct;
+  using ct = load_through_texture<customType>;
 
   VTKM_TEST_ASSERT(f::WillUseTexture == 1, "Float32 can be loaded through texture memory");
   VTKM_TEST_ASSERT(i::WillUseTexture == 1, "Int32 can be loaded through texture memory");
@@ -46,18 +46,18 @@ void TestScalarTextureLoad()
 void TestVecTextureLoad()
 {
   using namespace vtkm::exec::cuda::internal;
-  typedef load_through_texture<vtkm::Vec<vtkm::UInt32, 3>> ui32_3;
-  typedef load_through_texture<vtkm::Vec<vtkm::Float32, 3>> f32_3;
-  typedef load_through_texture<vtkm::Vec<vtkm::UInt8, 3>> ui8_3;
-  typedef load_through_texture<vtkm::Vec<vtkm::Float64, 3>> f64_3;
+  using ui32_3 = load_through_texture<vtkm::Vec<vtkm::UInt32, 3>>;
+  using f32_3 = load_through_texture<vtkm::Vec<vtkm::Float32, 3>>;
+  using ui8_3 = load_through_texture<vtkm::Vec<vtkm::UInt8, 3>>;
+  using f64_3 = load_through_texture<vtkm::Vec<vtkm::Float64, 3>>;
 
-  typedef load_through_texture<vtkm::Vec<vtkm::UInt32, 4>> ui32_4;
-  typedef load_through_texture<vtkm::Vec<vtkm::Float32, 4>> f32_4;
-  typedef load_through_texture<vtkm::Vec<vtkm::UInt8, 4>> ui8_4;
-  typedef load_through_texture<vtkm::Vec<vtkm::Float64, 4>> f64_4;
+  using ui32_4 = load_through_texture<vtkm::Vec<vtkm::UInt32, 4>>;
+  using f32_4 = load_through_texture<vtkm::Vec<vtkm::Float32, 4>>;
+  using ui8_4 = load_through_texture<vtkm::Vec<vtkm::UInt8, 4>>;
+  using f64_4 = load_through_texture<vtkm::Vec<vtkm::Float64, 4>>;
 
-  typedef load_through_texture<vtkm::Vec<customType, 3>> ct_3;
-  typedef load_through_texture<vtkm::Vec<customType, 4>> ct_4;
+  using ct_3 = load_through_texture<vtkm::Vec<customType, 3>>;
+  using ct_4 = load_through_texture<vtkm::Vec<customType, 4>>;
 
   VTKM_TEST_ASSERT(ui32_3::WillUseTexture == 1, "Can be loaded through texture loads");
   VTKM_TEST_ASSERT(f32_3::WillUseTexture == 1, "Can be loaded through texture loads");

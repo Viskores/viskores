@@ -36,8 +36,8 @@ namespace internal
 template <typename T>
 struct Space2D
 {
-  typedef vtkm::Vec<T, 3> Vec3;
-  typedef vtkm::Vec<T, 2> Vec2;
+  using Vec3 = vtkm::Vec<T, 3>;
+  using Vec2 = vtkm::Vec<T, 2>;
 
   Vec3 Origin;
   Vec3 Basis0;
@@ -94,7 +94,7 @@ template <typename FieldVecType>
 VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 8> PermutePyramidToHex(
   const FieldVecType& field)
 {
-  typedef typename FieldVecType::ComponentType T;
+  using T = typename FieldVecType::ComponentType;
 
   vtkm::Vec<T, 8> hexField;
 

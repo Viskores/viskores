@@ -117,20 +117,18 @@ struct TryWholeArrayType
   template <typename T>
   void operator()(T) const
   {
-    typedef vtkm::cont::ArrayHandle<T> ArrayHandleType;
+    using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
 
-    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayIn,
-                                       ArrayHandleType,
-                                       Device>
-      InTransportType;
-    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayInOut,
-                                       ArrayHandleType,
-                                       Device>
-      InOutTransportType;
-    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayOut,
-                                       ArrayHandleType,
-                                       Device>
-      OutTransportType;
+    using InTransportType = vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayIn,
+                                                       ArrayHandleType,
+                                                       Device>;
+    using InOutTransportType =
+      vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayInOut,
+                                 ArrayHandleType,
+                                 Device>;
+    using OutTransportType = vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagWholeArrayOut,
+                                                        ArrayHandleType,
+                                                        Device>;
 
     ArrayHandleType array;
     array.Allocate(ARRAY_SIZE);
@@ -172,12 +170,10 @@ struct TryAtomicArrayType
   template <typename T>
   void operator()(T) const
   {
-    typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> ArrayHandleType;
+    using ArrayHandleType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
 
-    typedef vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagAtomicArray,
-                                       ArrayHandleType,
-                                       Device>
-      TransportType;
+    using TransportType =
+      vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagAtomicArray, ArrayHandleType, Device>;
 
     ArrayHandleType array;
     array.Allocate(1);

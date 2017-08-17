@@ -118,16 +118,16 @@ struct ArrayHandleZipTraits
 {
   /// The ValueType (a pair containing the value types of the two arrays).
   ///
-  typedef vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>
-    ValueType;
+  using ValueType =
+    vtkm::Pair<typename FirstHandleType::ValueType, typename SecondHandleType::ValueType>;
 
   /// The appropriately templated tag.
   ///
-  typedef StorageTagZip<FirstHandleType, SecondHandleType> Tag;
+  using Tag = StorageTagZip<FirstHandleType, SecondHandleType>;
 
   /// The superclass for ArrayHandleZip.
   ///
-  typedef vtkm::cont::ArrayHandle<ValueType, Tag> Superclass;
+  using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
 };
 
 template <typename T, typename FirstHandleType, typename SecondHandleType>
@@ -139,14 +139,13 @@ class Storage<T, StorageTagZip<FirstHandleType, SecondHandleType>>
 public:
   using ValueType = T;
 
-  typedef vtkm::exec::internal::ArrayPortalZip<ValueType,
-                                               typename FirstHandleType::PortalControl,
-                                               typename SecondHandleType::PortalControl>
-    PortalType;
-  typedef vtkm::exec::internal::ArrayPortalZip<ValueType,
-                                               typename FirstHandleType::PortalConstControl,
-                                               typename SecondHandleType::PortalConstControl>
-    PortalConstType;
+  using PortalType = vtkm::exec::internal::ArrayPortalZip<ValueType,
+                                                          typename FirstHandleType::PortalControl,
+                                                          typename SecondHandleType::PortalControl>;
+  using PortalConstType =
+    vtkm::exec::internal::ArrayPortalZip<ValueType,
+                                         typename FirstHandleType::PortalConstControl,
+                                         typename SecondHandleType::PortalConstControl>;
 
   VTKM_CONT
   Storage()
@@ -217,8 +216,8 @@ private:
 template <typename T, typename FirstHandleType, typename SecondHandleType, typename Device>
 class ArrayTransfer<T, StorageTagZip<FirstHandleType, SecondHandleType>, Device>
 {
-  typedef StorageTagZip<FirstHandleType, SecondHandleType> StorageTag;
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  using StorageTag = StorageTagZip<FirstHandleType, SecondHandleType>;
+  using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
 
 public:
   using ValueType = T;
@@ -226,17 +225,15 @@ public:
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
 
-  typedef vtkm::exec::internal::ArrayPortalZip<
+  using PortalExecution = vtkm::exec::internal::ArrayPortalZip<
     ValueType,
     typename FirstHandleType::template ExecutionTypes<Device>::Portal,
-    typename SecondHandleType::template ExecutionTypes<Device>::Portal>
-    PortalExecution;
+    typename SecondHandleType::template ExecutionTypes<Device>::Portal>;
 
-  typedef vtkm::exec::internal::ArrayPortalZip<
+  using PortalConstExecution = vtkm::exec::internal::ArrayPortalZip<
     ValueType,
     typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
-    typename SecondHandleType::template ExecutionTypes<Device>::PortalConst>
-    PortalConstExecution;
+    typename SecondHandleType::template ExecutionTypes<Device>::PortalConst>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -324,7 +321,7 @@ public:
     (typename internal::ArrayHandleZipTraits<FirstHandleType, SecondHandleType>::Superclass));
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   VTKM_CONT

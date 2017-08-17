@@ -57,8 +57,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> ParametricDerivativ
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagHexahedron)
 {
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType, 3> GradientType;
+  using FieldType = typename FieldVecType::ComponentType;
+  using GradientType = vtkm::Vec<FieldType, 3>;
 
   GradientType pc(pcoords);
   GradientType rc = GradientType(FieldType(1)) - pc;
@@ -83,8 +83,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> ParametricDerivativ
 {
 #if 0
   // This is not working. Just leverage the hexahedron code that is working.
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType,3> GradientType;
+  using FieldType = typename FieldVecType::ComponentType;
+  using GradientType = vtkm::Vec<FieldType,3>;
 
   GradientType pc(pcoords);
   GradientType rc = GradientType(1) - pc;
@@ -107,8 +107,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> ParametricDerivativ
 {
 #if 0
   // This is not working. Just leverage the hexahedron code that is working.
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType,3> GradientType;
+  using FieldType = typename FieldVecType::ComponentType;
+  using GradientType = vtkm::Vec<FieldType,3>;
 
   GradientType pc(pcoords);
   GradientType rc = GradientType(1) - pc;
@@ -135,8 +135,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 2> ParametricDerivativ
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagQuad)
 {
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType, 2> GradientType;
+  using FieldType = typename FieldVecType::ComponentType;
+  using GradientType = vtkm::Vec<FieldType, 2>;
 
   GradientType pc(static_cast<FieldType>(pcoords[0]), static_cast<FieldType>(pcoords[1]));
   GradientType rc = GradientType(FieldType(1)) - pc;
@@ -162,8 +162,8 @@ ParametricDerivative(const FieldVecType &field,
                      const vtkm::Vec<ParametricCoordType,3> &pcoords,
                      vtkm::CellShapeTagPolygon)
 {
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType,2> GradientType;
+  using FieldType = typename FieldVecType::ComponentType;
+  using GradientType = vtkm::Vec<FieldType,2>;
 
   const vtkm::IdComponent numPoints = field.GetNumberOfComponents();
   FieldType deltaAngle = static_cast<FieldType>(2*vtkm::Pi()/numPoints);
@@ -213,8 +213,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor3D
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   CellShapeTag)
 {
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef vtkm::Vec<FieldType, 3> GradientType;
+  using FieldType = typename FieldVecType::ComponentType;
+  using GradientType = vtkm::Vec<FieldType, 3>;
 
   // For reasons that should become apparent in a moment, we actually want
   // the transpose of the Jacobian.
@@ -448,7 +448,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   VTKM_ASSERT(field.GetNumberOfComponents() == 1);
   VTKM_ASSERT(wCoords.GetNumberOfComponents() == 1);
 
-  typedef vtkm::Vec<typename FieldVecType::ComponentType, 3> GradientType;
+  using GradientType = vtkm::Vec<typename FieldVecType::ComponentType, 3>;
   return vtkm::TypeTraits<GradientType>::ZeroInitialization();
 }
 
@@ -538,7 +538,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 2);
 
-  typedef typename FieldVecType::ComponentType T;
+  using T = typename FieldVecType::ComponentType;
 
   return vtkm::Vec<T, 3>((field[1] - field[0]) / wCoords.GetSpacing()[0], T(0), T(0));
 }
@@ -740,8 +740,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> PolygonDerivative(
   // have a non 1 to 1 mapping between parametric coordinates world coordinates
   // if the polygon is not planar or convex.
 
-  typedef typename FieldVecType::ComponentType FieldType;
-  typedef typename WorldCoordType::ComponentType WCoordType;
+  using FieldType = typename FieldVecType::ComponentType;
+  using WCoordType = typename WorldCoordType::ComponentType;
 
   // Find the interpolation for the center point.
   FieldType fieldCenter = field[0];
@@ -830,8 +830,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 4);
 
-  typedef typename FieldVecType::ComponentType T;
-  typedef vtkm::Vec<T, 2> VecT;
+  using T = typename FieldVecType::ComponentType;
+  using VecT = vtkm::Vec<T, 2>;
 
   VecT pc(static_cast<T>(pcoords[0]), static_cast<T>(pcoords[1]));
   VecT rc = VecT(T(1)) - pc;
@@ -1021,8 +1021,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 8);
 
-  typedef typename FieldVecType::ComponentType T;
-  typedef vtkm::Vec<T, 3> VecT;
+  using T = typename FieldVecType::ComponentType;
+  using VecT = vtkm::Vec<T, 3>;
 
   VecT pc(static_cast<T>(pcoords[0]), static_cast<T>(pcoords[1]), static_cast<T>(pcoords[2]));
   VecT rc = VecT(T(1)) - pc;

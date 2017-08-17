@@ -72,7 +72,7 @@ struct AlignedAllocator
   template <typename U>
   struct rebind
   {
-    typedef AlignedAllocator<U, Alignment> other;
+    using other = AlignedAllocator<U, Alignment>;
   };
 
   AlignedAllocator() {}
@@ -183,7 +183,7 @@ public:
   /// whether that would ever be useful. So, instead of jumping through hoops
   /// implementing them, just fix the allocator for now.
   ///
-  typedef AlignedAllocator<ValueType, VTKM_CACHE_LINE_SIZE> AllocatorType;
+  using AllocatorType = AlignedAllocator<ValueType, VTKM_CACHE_LINE_SIZE>;
 
 public:
   VTKM_CONT

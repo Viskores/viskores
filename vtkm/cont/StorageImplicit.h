@@ -102,7 +102,7 @@ class ArrayTransfer<T, StorageTagImplicit<ArrayPortalType>, DeviceAdapterTag>
 {
 private:
   using StorageTag = StorageTagImplicit<ArrayPortalType>;
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
 
 public:
   using ValueType = T;

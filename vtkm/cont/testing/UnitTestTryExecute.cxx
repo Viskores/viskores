@@ -93,7 +93,7 @@ static void Run()
   TryExecuteWithList(SingleValidList(), true);
 
   std::cout << "Try a list with two valid devices." << std::endl;
-  typedef vtkm::ListTagBase<ValidDevice, ValidDevice> DoubleValidList;
+  using DoubleValidList = vtkm::ListTagBase<ValidDevice, ValidDevice>;
   TryExecuteWithList(DoubleValidList(), true);
 
   std::cout << "Try a list with only invalid device." << std::endl;
@@ -101,7 +101,7 @@ static void Run()
   TryExecuteWithList(SingleInvalidList(), false);
 
   std::cout << "Try a list with an invalid and valid device." << std::endl;
-  typedef vtkm::ListTagBase<InvalidDevice, ValidDevice> InvalidAndValidList;
+  using InvalidAndValidList = vtkm::ListTagBase<InvalidDevice, ValidDevice>;
   TryExecuteWithList(InvalidAndValidList(), true);
 }
 

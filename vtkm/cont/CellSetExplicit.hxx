@@ -355,7 +355,7 @@ auto CellSetExplicit<ShapeStorageTag,
   const auto& connectivity = this->GetConnectivity(FromTopology(), ToTopology());
   VTKM_ASSERT(connectivity.ElementsValid);
 
-  typedef typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType ExecObjType;
+  using ExecObjType = typename ExecutionTypes<Device, FromTopology, ToTopology>::ExecObjectType;
   return ExecObjType(connectivity.Shapes.PrepareForInput(Device()),
                      connectivity.NumIndices.PrepareForInput(Device()),
                      connectivity.Connectivity.PrepareForInput(Device()),

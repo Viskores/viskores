@@ -47,11 +47,11 @@ namespace internal
 template <typename T_, typename Function>
 struct WrappedUnaryPredicate
 {
-  typedef typename std::remove_const<T_>::type T;
+  using T = typename std::remove_const<T_>::type;
 
   //make typedefs that thust expects unary operators to have
-  typedef T first_argument_type;
-  typedef bool result_type;
+  using first_argument_type = T;
+  using result_type = bool;
 
   Function m_f;
 
@@ -85,12 +85,12 @@ struct WrappedUnaryPredicate
 template <typename T_, typename Function>
 struct WrappedBinaryOperator
 {
-  typedef typename std::remove_const<T_>::type T;
+  using T = typename std::remove_const<T_>::type;
 
   //make typedefs that thust expects binary operators to have
-  typedef T first_argument_type;
-  typedef T second_argument_type;
-  typedef T result_type;
+  using first_argument_type = T;
+  using second_argument_type = T;
+  using result_type = T;
 
   Function m_f;
 
@@ -151,12 +151,12 @@ struct WrappedBinaryOperator
 template <typename T_, typename Function>
 struct WrappedBinaryPredicate
 {
-  typedef typename std::remove_const<T_>::type T;
+  using T = typename std::remove_const<T_>::type;
 
   //make typedefs that thust expects binary operators to have
-  typedef T first_argument_type;
-  typedef T second_argument_type;
-  typedef bool result_type;
+  using first_argument_type = T;
+  using second_argument_type = T;
+  using result_type = bool;
 
   Function m_f;
 

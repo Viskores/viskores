@@ -71,7 +71,7 @@ struct CellShapeInitializer<vtkm::CellShapeTagGeneric>
 template <typename ConnectivityType>
 class ThreadIndicesTopologyMap : public vtkm::exec::arg::ThreadIndicesBasic
 {
-  typedef vtkm::exec::arg::ThreadIndicesBasic Superclass;
+  using Superclass = vtkm::exec::arg::ThreadIndicesBasic;
 
 public:
   using IndicesFromType = typename ConnectivityType::IndicesType;

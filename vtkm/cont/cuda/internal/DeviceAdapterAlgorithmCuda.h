@@ -216,8 +216,9 @@ public:
   }
 
 private:
-  typedef typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
-    vtkm::cont::DeviceAdapterTagCuda>::Portal PortalType;
+  using PortalType =
+    typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
+      vtkm::cont::DeviceAdapterTagCuda>::Portal;
   PortalType Portal;
 
   inline __device__ vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const

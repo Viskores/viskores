@@ -69,11 +69,13 @@ void TransportWholeCellSetIn(Device)
   contObject.AddCell(vtkm::CELL_SHAPE_QUAD, 4, vtkm::make_Vec<vtkm::Id>(2, 1, 3, 4));
   contObject.CompleteAddingCells(nVerts);
 
-  typedef vtkm::TopologyElementTagPoint FromType;
-  typedef vtkm::TopologyElementTagCell ToType;
+  using FromType = vtkm::TopologyElementTagPoint;
+  using ToType = vtkm::TopologyElementTagCell;
 
-  typedef typename vtkm::cont::CellSetExplicit<>::
-    template ExecutionTypes<Device, FromType, ToType>::ExecObjectType ExecObjectType;
+  using ExecObjectType =
+    typename vtkm::cont::CellSetExplicit<>::template ExecutionTypes<Device,
+                                                                    FromType,
+                                                                    ToType>::ExecObjectType;
 
   vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagCellSetIn<FromType, ToType>,
                              vtkm::cont::CellSetExplicit<>,

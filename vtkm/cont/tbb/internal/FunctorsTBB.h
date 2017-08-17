@@ -171,7 +171,7 @@ VTKM_CONT static T ReducePortals(InputPortalType inputPortal,
                                  T initialValue,
                                  BinaryOperationType binaryOperation)
 {
-  typedef internal::WrappedBinaryOperator<T, BinaryOperationType> WrappedBinaryOp;
+  using WrappedBinaryOp = internal::WrappedBinaryOperator<T, BinaryOperationType>;
 
   WrappedBinaryOp wrappedBinaryOp(binaryOperation);
   ReduceBody<InputPortalType, T, WrappedBinaryOp> body(inputPortal, initialValue, wrappedBinaryOp);
@@ -399,7 +399,7 @@ ScanInclusivePortals(InputPortalType inputPortal,
 {
   using ValueType = typename std::remove_reference<typename OutputPortalType::ValueType>::type;
 
-  typedef internal::WrappedBinaryOperator<ValueType, BinaryOperationType> WrappedBinaryOp;
+  using WrappedBinaryOp = internal::WrappedBinaryOperator<ValueType, BinaryOperationType>;
 
   WrappedBinaryOp wrappedBinaryOp(binaryOperation);
   ScanInclusiveBody<InputPortalType, OutputPortalType, WrappedBinaryOp> body(
@@ -422,7 +422,7 @@ ScanExclusivePortals(
 {
   using ValueType = typename std::remove_reference<typename OutputPortalType::ValueType>::type;
 
-  typedef internal::WrappedBinaryOperator<ValueType, BinaryOperationType> WrappedBinaryOp;
+  using WrappedBinaryOp = internal::WrappedBinaryOperator<ValueType, BinaryOperationType>;
 
   WrappedBinaryOp wrappedBinaryOp(binaryOperation);
   ScanExclusiveBody<InputPortalType, OutputPortalType, WrappedBinaryOp> body(

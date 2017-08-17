@@ -48,11 +48,10 @@ void TryInvocation()
 {
   TestExecutionObject execObjectStore(EXPECTED_NUMBER);
 
-  typedef vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagExecObject,
-                                 vtkm::exec::arg::AspectTagDefault,
-                                 vtkm::exec::arg::ThreadIndicesTesting,
-                                 TestExecutionObject>
-    FetchType;
+  using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagExecObject,
+                                           vtkm::exec::arg::AspectTagDefault,
+                                           vtkm::exec::arg::ThreadIndicesTesting,
+                                           TestExecutionObject>;
 
   FetchType fetch;
 
