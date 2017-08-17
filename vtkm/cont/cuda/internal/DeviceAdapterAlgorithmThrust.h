@@ -216,18 +216,16 @@ private:
                                          OutputPortal output,
                                          UnaryPredicate unary_predicate)
   {
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
+    using ValueType = typename StencilPortal::ValueType;
 
-    IteratorType outputBegin = IteratorBegin(output);
-
-    typedef typename StencilPortal::ValueType ValueType;
+    auto outputBegin = IteratorBegin(output);
 
     vtkm::exec::cuda::internal::WrappedUnaryPredicate<ValueType, UnaryPredicate> up(
       unary_predicate);
 
     try
     {
-      IteratorType newLast = ::thrust::copy_if(
+      auto newLast = ::thrust::copy_if(
         thrust::cuda::par, valuesBegin, valuesEnd, IteratorBegin(stencil), outputBegin, up);
       return static_cast<vtkm::Id>(::thrust::distance(outputBegin, newLast));
     }
@@ -273,7 +271,7 @@ private:
                                           const ValuesPortal& values,
                                           const OutputPortal& output)
   {
-    typedef typename ValuesPortal::ValueType ValueType;
+    using ValueType = typename ValuesPortal::ValueType;
     LowerBoundsPortal(input, values, output, ::thrust::less<ValueType>());
   }
 
@@ -281,7 +279,7 @@ private:
   VTKM_CONT static void LowerBoundsPortal(const InputPortal& input,
                                           const OutputPortal& values_output)
   {
-    typedef typename InputPortal::ValueType ValueType;
+    using ValueType = typename InputPortal::ValueType;
     LowerBoundsPortal(input, values_output, values_output, ::thrust::less<ValueType>());
   }
 
@@ -291,7 +289,7 @@ private:
                                           const OutputPortal& output,
                                           BinaryCompare binary_compare)
   {
-    typedef typename InputPortal::ValueType ValueType;
+    using ValueType = typename InputPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);
 
@@ -388,17 +386,14 @@ private:
                                               const ValueOutputPortal& values_output,
                                               BinaryFunctor binary_functor)
   {
-    typedef typename detail::IteratorTraits<KeysOutputPortal>::IteratorType KeysIteratorType;
-    typedef typename detail::IteratorTraits<ValueOutputPortal>::IteratorType ValuesIteratorType;
+    auto keys_out_begin = IteratorBegin(keys_output);
+    auto values_out_begin = IteratorBegin(values_output);
 
-    KeysIteratorType keys_out_begin = IteratorBegin(keys_output);
-    ValuesIteratorType values_out_begin = IteratorBegin(values_output);
-
-    ::thrust::pair<KeysIteratorType, ValuesIteratorType> result_iterators;
+    ::thrust::pair<decltype(keys_out_begin), decltype(values_out_begin)> result_iterators;
 
     ::thrust::equal_to<typename KeysPortal::ValueType> binaryPredicate;
 
-    typedef typename ValuesPortal::ValueType ValueType;
+    using ValueType = typename ValuesPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(binary_functor);
 
     try
@@ -424,7 +419,7 @@ private:
   VTKM_CONT static typename InputPortal::ValueType ScanExclusivePortal(const InputPortal& input,
                                                                        const OutputPortal& output)
   {
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
 
     return ScanExclusivePortal(input,
                                output,
@@ -441,7 +436,7 @@ private:
   {
     // Use iterator to get value so that thrust device_ptr has chance to handle
     // data on device.
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
 
     //we have size three so that we can store the origin end value, the
     //new end value, and the sum of those two
@@ -456,13 +451,12 @@ private:
 
       vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(binaryOp);
 
-      typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
-      IteratorType end = ::thrust::exclusive_scan(thrust::cuda::par,
-                                                  IteratorBegin(input),
-                                                  IteratorEnd(input),
-                                                  IteratorBegin(output),
-                                                  initialValue,
-                                                  bop);
+      auto end = ::thrust::exclusive_scan(thrust::cuda::par,
+                                          IteratorBegin(input),
+                                          IteratorEnd(input),
+                                          IteratorBegin(output),
+                                          initialValue,
+                                          bop);
 
       //Store the new value for the end of the array. This is done because
       //with items such as the transpose array it is unsafe to pass the
@@ -483,7 +477,7 @@ private:
   VTKM_CONT static typename InputPortal::ValueType ScanInclusivePortal(const InputPortal& input,
                                                                        const OutputPortal& output)
   {
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     return ScanInclusivePortal(input, output, ::thrust::plus<ValueType>());
   }
 
@@ -492,14 +486,12 @@ private:
                                                                        const OutputPortal& output,
                                                                        BinaryFunctor binary_functor)
   {
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(binary_functor);
-
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
 
     try
     {
-      IteratorType end = ::thrust::inclusive_scan(
+      auto end = ::thrust::inclusive_scan(
         thrust::cuda::par, IteratorBegin(input), IteratorEnd(input), IteratorBegin(output), bop);
       return *(end - 1);
     }
@@ -518,7 +510,7 @@ private:
                                                  const OutputPortal& output)
   {
     using KeyType = typename KeysPortal::ValueType;
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     ScanInclusiveByKeyPortal(
       keys, values, output, ::thrust::equal_to<KeyType>(), ::thrust::plus<ValueType>());
   }
@@ -534,14 +526,13 @@ private:
                                                  BinaryPredicate binary_predicate,
                                                  AssociativeOperator binary_operator)
   {
-    typedef typename KeysPortal::ValueType KeyType;
+    using KeyType = typename KeysPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType, BinaryPredicate> bpred(
       binary_predicate);
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, AssociativeOperator> bop(
       binary_operator);
 
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
     try
     {
       ::thrust::inclusive_scan_by_key(thrust::cuda::par,
@@ -564,7 +555,7 @@ private:
                                                  const OutputPortal& output)
   {
     using KeyType = typename KeysPortal::ValueType;
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     ScanExclusiveByKeyPortal(keys,
                              values,
                              output,
@@ -586,14 +577,12 @@ private:
                                                  BinaryPredicate binary_predicate,
                                                  AssociativeOperator binary_operator)
   {
-    typedef typename KeysPortal::ValueType KeyType;
+    using KeyType = typename KeysPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType, BinaryPredicate> bpred(
       binary_predicate);
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, AssociativeOperator> bop(
       binary_operator);
-
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
     try
     {
       ::thrust::exclusive_scan_by_key(thrust::cuda::par,
@@ -614,14 +603,14 @@ private:
   template <class ValuesPortal>
   VTKM_CONT static void SortPortal(const ValuesPortal& values)
   {
-    typedef typename ValuesPortal::ValueType ValueType;
+    using ValueType = typename ValuesPortal::ValueType;
     SortPortal(values, ::thrust::less<ValueType>());
   }
 
   template <class ValuesPortal, class BinaryCompare>
   VTKM_CONT static void SortPortal(const ValuesPortal& values, BinaryCompare binary_compare)
   {
-    typedef typename ValuesPortal::ValueType ValueType;
+    using ValueType = typename ValuesPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);
     try
@@ -646,7 +635,7 @@ private:
                                         const ValuesPortal& values,
                                         BinaryCompare binary_compare)
   {
-    typedef typename KeysPortal::ValueType ValueType;
+    using ValueType = typename KeysPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);
     try
@@ -663,11 +652,10 @@ private:
   template <class ValuesPortal>
   VTKM_CONT static vtkm::Id UniquePortal(const ValuesPortal values)
   {
-    typedef typename detail::IteratorTraits<ValuesPortal>::IteratorType IteratorType;
     try
     {
-      IteratorType begin = IteratorBegin(values);
-      IteratorType newLast = ::thrust::unique(thrust::cuda::par, begin, IteratorEnd(values));
+      auto begin = IteratorBegin(values);
+      auto newLast = ::thrust::unique(thrust::cuda::par, begin, IteratorEnd(values));
       return static_cast<vtkm::Id>(::thrust::distance(begin, newLast));
     }
     catch (...)
@@ -680,15 +668,13 @@ private:
   template <class ValuesPortal, class BinaryCompare>
   VTKM_CONT static vtkm::Id UniquePortal(const ValuesPortal values, BinaryCompare binary_compare)
   {
-    typedef typename detail::IteratorTraits<ValuesPortal>::IteratorType IteratorType;
-    typedef typename ValuesPortal::ValueType ValueType;
-
+    using ValueType = typename ValuesPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);
     try
     {
-      IteratorType begin = IteratorBegin(values);
-      IteratorType newLast = ::thrust::unique(thrust::cuda::par, begin, IteratorEnd(values), bop);
+      auto begin = IteratorBegin(values);
+      auto newLast = ::thrust::unique(thrust::cuda::par, begin, IteratorEnd(values), bop);
       return static_cast<vtkm::Id>(::thrust::distance(begin, newLast));
     }
     catch (...)
@@ -949,8 +935,8 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    input.PrepareForInput(DeviceAdapterTag());
-    return ScanExclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
+    return ScanExclusivePortal(inputPortal,
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
@@ -971,8 +957,8 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    input.PrepareForInput(DeviceAdapterTag());
-    return ScanExclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
+    return ScanExclusivePortal(inputPortal,
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                                binary_functor,
                                initialValue);
@@ -993,8 +979,8 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    input.PrepareForInput(DeviceAdapterTag());
-    return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
+    return ScanInclusivePortal(inputPortal,
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
@@ -1014,10 +1000,9 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    input.PrepareForInput(DeviceAdapterTag());
-    return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
-                               output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
-                               binary_functor);
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
+    return ScanInclusivePortal(
+      inputPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTag()), binary_functor);
   }
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
@@ -1035,11 +1020,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    keys.PrepareForInput(DeviceAdapterTag());
-    values.PrepareForInput(DeviceAdapterTag());
-    ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                             values.PrepareForInput(DeviceAdapterTag()),
-                             output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTag());
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
+    ScanInclusiveByKeyPortal(
+      keysPortal, valuesPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
   template <typename T,
@@ -1063,10 +1047,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    keys.PrepareForInput(DeviceAdapterTag());
-    values.PrepareForInput(DeviceAdapterTag());
-    ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                             values.PrepareForInput(DeviceAdapterTag()),
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTag());
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
+    ScanInclusiveByKeyPortal(keysPortal,
+                             valuesPortal,
                              output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                              ::thrust::equal_to<T>(),
                              binary_functor);
@@ -1088,10 +1072,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    keys.PrepareForInput(DeviceAdapterTag());
-    values.PrepareForInput(DeviceAdapterTag());
-    ScanExnclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                              values.PrepareForInput(DeviceAdapterTag()),
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTag());
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
+    ScanExnclusiveByKeyPortal(keysPortal,
+                              valuesPortal,
                               output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                               vtkm::TypeTraits<T>::ZeroInitialization(),
                               vtkm::Add());
@@ -1120,10 +1104,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    keys.PrepareForInput(DeviceAdapterTag());
-    values.PrepareForInput(DeviceAdapterTag());
-    ScanExclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                             values.PrepareForInput(DeviceAdapterTag()),
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTag());
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
+    ScanExclusiveByKeyPortal(keysPortal,
+                             valuesPortal,
                              output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                              initialValue,
                              ::thrust::equal_to<T>(),

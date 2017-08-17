@@ -56,7 +56,7 @@ struct CheckTransformFunctor : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename TransformedPortalType::ValueType T;
+    using T = typename TransformedPortalType::ValueType;
     typename OriginalPortalType::ValueType original = this->OriginalPortal.Get(index);
     T transformed = this->TransformedPortal.Get(index);
     if (!test_equal(transformed, MySquare<T>()(original)))
@@ -74,10 +74,10 @@ make_CheckTransformFunctor(const OriginalArrayHandleType& originalArray,
                            const TransformedArrayHandleType& transformedArray,
                            Device)
 {
-  typedef typename OriginalArrayHandleType::template ExecutionTypes<Device>::PortalConst
-    OriginalPortalType;
-  typedef typename TransformedArrayHandleType::template ExecutionTypes<Device>::PortalConst
-    TransformedPortalType;
+  using OriginalPortalType =
+    typename OriginalArrayHandleType::template ExecutionTypes<Device>::PortalConst;
+  using TransformedPortalType =
+    typename TransformedArrayHandleType::template ExecutionTypes<Device>::PortalConst;
   CheckTransformFunctor<OriginalPortalType, TransformedPortalType> functor;
   functor.OriginalPortal = originalArray.PrepareForInput(Device());
   functor.TransformedPortal = transformedArray.PrepareForInput(Device());
@@ -90,8 +90,8 @@ VTKM_CONT void CheckControlPortals(const OriginalArrayHandleType& originalArray,
 {
   std::cout << "  Verify that the control portal works" << std::endl;
 
-  typedef typename OriginalArrayHandleType::PortalConstControl OriginalPortalType;
-  typedef typename TransformedArrayHandleType::PortalConstControl TransformedPortalType;
+  using OriginalPortalType = typename OriginalArrayHandleType::PortalConstControl;
+  using TransformedPortalType = typename TransformedArrayHandleType::PortalConstControl;
 
   VTKM_TEST_ASSERT(originalArray.GetNumberOfValues() == transformedArray.GetNumberOfValues(),
                    "Number of values in transformed array incorrect.");
@@ -104,7 +104,7 @@ VTKM_CONT void CheckControlPortals(const OriginalArrayHandleType& originalArray,
 
   for (vtkm::Id index = 0; index < originalArray.GetNumberOfValues(); index++)
   {
-    typedef typename TransformedPortalType::ValueType T;
+    using T = typename TransformedPortalType::ValueType;
     typename OriginalPortalType::ValueType original = originalPortal.Get(index);
     T transformed = transformedPortal.Get(index);
     VTKM_TEST_ASSERT(test_equal(transformed, MySquare<T>()(original)), "Bad transform value.");
@@ -114,8 +114,8 @@ VTKM_CONT void CheckControlPortals(const OriginalArrayHandleType& originalArray,
 template <typename InputValueType>
 struct TransformTests
 {
-  typedef typename vtkm::VecTraits<InputValueType>::ComponentType OutputValueType;
-  typedef MySquare<OutputValueType> FunctorType;
+  using OutputValueType = typename vtkm::VecTraits<InputValueType>::ComponentType;
+  using FunctorType = MySquare<OutputValueType>;
 
   typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<InputValueType>, FunctorType>
     TransformHandle;
@@ -124,8 +124,8 @@ struct TransformTests
                                            FunctorType>
     CountingTransformHandle;
 
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG Device;
-  typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
+  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
   void operator()() const
   {
@@ -149,7 +149,7 @@ struct TransformTests
     vtkm::cont::ArrayHandle<InputValueType> input;
     TransformHandle thandle(input, functor);
 
-    typedef typename vtkm::cont::ArrayHandle<InputValueType>::PortalControl Portal;
+    using Portal = typename vtkm::cont::ArrayHandle<InputValueType>::PortalControl;
     input.Allocate(ARRAY_SIZE);
     Portal portal = input.GetPortalControl();
     for (vtkm::Id index = 0; index < ARRAY_SIZE; ++index)

@@ -75,7 +75,6 @@ struct Spline3rdOrder : public KernelBase<Spline3rdOrder<Dimensions>>
     {
       double q2 = (2.0 - Q);
       return scale_W_ * (1.0 / 4.0) * (q2 * q2 * q2);
-      ;
     }
     else
     {
@@ -98,7 +97,6 @@ struct Spline3rdOrder : public KernelBase<Spline3rdOrder<Dimensions>>
     {
       double q2 = (2.0 - Q);
       return scale_W_ * (1.0 / 4.0) * (q2 * q2 * q2);
-      ;
     }
     else
     {
@@ -122,7 +120,6 @@ struct Spline3rdOrder : public KernelBase<Spline3rdOrder<Dimensions>>
     {
       double q2 = (2.0 - Q);
       return scale_W * (1.0 / 4.0) * (q2 * q2 * q2);
-      ;
     }
     else
     {
@@ -146,7 +143,6 @@ struct Spline3rdOrder : public KernelBase<Spline3rdOrder<Dimensions>>
     {
       double q2 = (2.0 - Q);
       return scale_W * (1.0 / 4.0) * (q2 * q2 * q2);
-      ;
     }
     else
     {

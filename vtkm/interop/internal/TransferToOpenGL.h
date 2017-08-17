@@ -21,8 +21,11 @@
 #define vtk_m_interop_internal_TransferToOpenGL_h
 
 #include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/StorageBasic.h>
+
+#include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 #include <vtkm/interop/BufferState.h>
 #include <vtkm/interop/internal/OpenGLHeaders.h>
@@ -34,6 +37,60 @@ namespace interop
 namespace internal
 {
 
+/// \brief smp backend and opengl interop resource management
+///
+/// \c TransferResource manages any extra memory allocation that is required
+///    When binding an implicit array handle to opengl
+///
+///
+class SMPTransferResource : public vtkm::interop::internal::TransferResource
+{
+public:
+  template <typename T>
+  SMPTransferResource(T, vtkm::Id numberOfValues)
+    : vtkm::interop::internal::TransferResource()
+    , Size(0)
+    , TempStorage()
+  {
+    this->resize<T>(numberOfValues);
+  }
+
+  ~SMPTransferResource() {}
+
+  template <typename T>
+  void resize(vtkm::Id numberOfValues)
+  {
+    if (this->Size != numberOfValues)
+    {
+      this->Size = numberOfValues;
+      T* storage = new T[this->Size];
+      this->TempStorage.reset(reinterpret_cast<vtkm::UInt8*>(storage));
+    }
+  }
+
+  template <typename T>
+  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle(vtkm::Id size) const
+  {
+    VTKM_ASSERT(this->Size > 0);
+    VTKM_ASSERT(this->Size >= size);
+
+    T* storage = reinterpret_cast<T*>(this->TempStorage.get());
+    //construct a handle that is a view onto the memory
+    return vtkm::cont::make_ArrayHandle(storage, size);
+  }
+
+  template <typename T>
+  T* as() const
+  {
+    VTKM_ASSERT(this->Size > 0);
+    T* storage = reinterpret_cast<T*>(this->TempStorage.get());
+    return storage;
+  }
+
+  vtkm::Id Size;
+  std::unique_ptr<vtkm::UInt8[]> TempStorage;
+};
+
 namespace detail
 {
 
@@ -43,42 +100,47 @@ VTKM_CONT void CopyFromHandle(vtkm::cont::ArrayHandle<ValueType, StorageTag>& ha
                               DeviceAdapterTag)
 {
   //Generic implementation that will work no matter what. We copy the data
-  //in the given handle to a temporary handle using the basic storage tag.
-  //We then ensure the data is available in the control environment by
-  //synchronizing the control array. Last, we steal the array and pass the
-  //iterator to the rendering system
+  //in the given handle to storage held by the buffer state.
   const vtkm::Id numberOfValues = handle.GetNumberOfValues();
   const GLsizeiptr size =
     static_cast<GLsizeiptr>(sizeof(ValueType)) * static_cast<GLsizeiptr>(numberOfValues);
 
-  //Copy the data from its specialized Storage container to a basic heap alloc
-  ValueType* temporaryStorage = new ValueType[static_cast<std::size_t>(numberOfValues)];
-
-#ifdef VTKM_MSVC
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4996)
-#endif
-  handle.CopyInto(temporaryStorage, DeviceAdapterTag());
-#ifdef VTKM_MSVC
-#pragma warning(default : 4996)
-#pragma warning(default : 4244)
-#endif
+  //grab the temporary storage from the buffer resource
+  vtkm::interop::internal::SMPTransferResource* resource =
+    dynamic_cast<vtkm::interop::internal::SMPTransferResource*>(state.GetResource());
 
   //Determine if we need to reallocate the buffer
   state.SetSize(size);
   const bool resize = state.ShouldRealloc(size);
+
   if (resize)
   {
     //Allocate the memory and set it as GL_DYNAMIC_DRAW draw
     glBufferData(state.GetType(), size, 0, GL_DYNAMIC_DRAW);
-
     state.SetCapacity(size);
+
+    //If we have an existing resource reallocate it to fit our new size
+    if (resource)
+    {
+      resource->resize<ValueType>(numberOfValues);
+    }
   }
 
-  //copy into opengl buffer
-  glBufferSubData(state.GetType(), 0, size, temporaryStorage);
+  //if we don't have a valid resource make a new one. We do this after the
+  //resize check so we don't double allocate when resource == nullptr and
+  //resize == true
+  if (!resource)
+  {
+    resource = new vtkm::interop::internal::SMPTransferResource(ValueType(), numberOfValues);
+    state.SetResource(resource);
+  }
 
-  delete[] temporaryStorage;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
+  auto resourceHandle = resource->handle<ValueType>(numberOfValues);
+  Algorithm::Copy(handle, resourceHandle);
+
+  //copy into opengl buffer
+  glBufferSubData(state.GetType(), 0, size, resource->as<ValueType>());
 }
 
 template <class ValueType, class DeviceAdapterTag>

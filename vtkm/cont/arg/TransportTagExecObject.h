@@ -53,7 +53,7 @@ struct Transport<vtkm::cont::arg::TransportTagExecObject, ContObjectType, Device
     (std::is_base_of<vtkm::exec::ExecutionObjectBase, ContObjectType>::value),
     "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectBase");
 
-  typedef ContObjectType ExecObjectType;
+  using ExecObjectType = ContObjectType;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType

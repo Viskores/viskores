@@ -47,7 +47,7 @@ struct Fetch<vtkm::exec::arg::FetchTagWholeCellSetIn,
              ThreadIndicesType,
              ExecObjectType>
 {
-  typedef ExecObjectType ValueType;
+  using ValueType = ExecObjectType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC

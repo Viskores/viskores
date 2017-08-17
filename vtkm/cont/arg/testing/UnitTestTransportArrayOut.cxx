@@ -41,7 +41,7 @@ struct TestKernelOut : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename PortalType::ValueType ValueType;
+    using ValueType = typename PortalType::ValueType;
     this->Portal.Set(index, TestValue(index, ValueType()));
   }
 };
@@ -52,10 +52,10 @@ struct TryArrayOutType
   template <typename T>
   void operator()(T) const
   {
-    typedef vtkm::cont::ArrayHandle<T> ArrayHandleType;
+    using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
     ArrayHandleType handle;
 
-    typedef typename ArrayHandleType::template ExecutionTypes<Device>::Portal PortalType;
+    using PortalType = typename ArrayHandleType::template ExecutionTypes<Device>::Portal;
 
     vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayOut, ArrayHandleType, Device>
       transport;

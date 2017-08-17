@@ -31,8 +31,8 @@
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
-typedef vtkm::Vec<vtkm::Float32, 3> FloatVec3;
-typedef vtkm::Vec<vtkm::UInt8, 4> Uint8Vec4;
+using FloatVec3 = vtkm::Vec<vtkm::Float32, 3>;
+using Uint8Vec4 = vtkm::Vec<vtkm::UInt8, 4>;
 
 struct GenerateSurfaceWorklet : public vtkm::worklet::WorkletMapField
 {
@@ -67,10 +67,10 @@ struct RunGenerateSurfaceWorklet
   bool operator()(DeviceAdapterTag) const
   {
     //At this point we know we have runtime support
-    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> DeviceTraits;
+    using DeviceTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
 
-    typedef vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet, DeviceAdapterTag>
-      DispatcherType;
+    using DispatcherType =
+      vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet, DeviceAdapterTag>;
 
     std::cout << "Running a worklet on device adapter: " << DeviceTraits::GetName() << std::endl;
 

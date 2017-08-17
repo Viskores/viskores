@@ -38,7 +38,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet0();
 
     vtkm::filter::Threshold threshold;
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     threshold.SetLowerThreshold(60.1);
     threshold.SetUpperThreshold(60.1);
@@ -64,7 +64,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
 
     vtkm::filter::Threshold threshold;
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     threshold.SetLowerThreshold(20.1);
     threshold.SetUpperThreshold(20.1);
@@ -91,7 +91,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
     vtkm::filter::Threshold threshold;
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     threshold.SetLowerThreshold(20.1);
     threshold.SetUpperThreshold(20.1);
@@ -118,13 +118,13 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
     vtkm::filter::Threshold threshold;
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     threshold.SetLowerThreshold(500.1);
     threshold.SetUpperThreshold(500.1);
     result = threshold.Execute(dataset, std::string("pointvar"));
 
-    VTKM_TEST_ASSERT(result.IsValid(), "threshold algorithm should return true");
+    VTKM_TEST_ASSERT(result.IsDataSetValid(), "threshold algorithm should return true");
 
     threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
 

@@ -120,7 +120,7 @@ struct ReduceBody
   VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
 
     //use temp, and iterators instead of member variable to reduce false sharing
@@ -231,7 +231,7 @@ struct ScanInclusiveBody
   VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::pre_scan_tag)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
 
     //use temp, and iterators instead of member variable to reduce false sharing
@@ -250,8 +250,8 @@ struct ScanInclusiveBody
   VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::final_scan_tag)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
-    typedef vtkm::cont::ArrayPortalToIterators<OutputPortalType> OutputIteratorsType;
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
+    using OutputIteratorsType = vtkm::cont::ArrayPortalToIterators<OutputPortalType>;
 
     InputIteratorsType inputIterators(this->InputPortal);
     OutputIteratorsType outputIterators(this->OutputPortal);
@@ -321,7 +321,7 @@ struct ScanExclusiveBody
   VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::pre_scan_tag)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
     InputIteratorsType inputIterators(this->InputPortal);
 
     //move the iterator to the first item
@@ -346,8 +346,8 @@ struct ScanExclusiveBody
   VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range, ::tbb::final_scan_tag)
   {
-    typedef vtkm::cont::ArrayPortalToIterators<InputPortalType> InputIteratorsType;
-    typedef vtkm::cont::ArrayPortalToIterators<OutputPortalType> OutputIteratorsType;
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
+    using OutputIteratorsType = vtkm::cont::ArrayPortalToIterators<OutputPortalType>;
 
     InputIteratorsType inputIterators(this->InputPortal);
     OutputIteratorsType outputIterators(this->OutputPortal);

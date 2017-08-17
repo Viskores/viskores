@@ -54,7 +54,7 @@ inline VTKM_CONT void PointElevation::SetRange(vtkm::Float64 low, vtkm::Float64 
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultField PointElevation::DoExecute(
+inline VTKM_CONT vtkm::filter::Result PointElevation::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
@@ -69,11 +69,11 @@ inline VTKM_CONT vtkm::filter::ResultField PointElevation::DoExecute(
   //that the dispatcher should do
   dispatcher.Invoke(field, outArray);
 
-  return vtkm::filter::ResultField(inDataSet,
-                                   outArray,
-                                   this->GetOutputFieldName(),
-                                   fieldMetadata.GetAssociation(),
-                                   fieldMetadata.GetCellSetName());
+  return vtkm::filter::Result(inDataSet,
+                              outArray,
+                              this->GetOutputFieldName(),
+                              fieldMetadata.GetAssociation(),
+                              fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

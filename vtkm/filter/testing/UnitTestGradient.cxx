@@ -33,7 +33,7 @@ void TestCellGradientUniform3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetOutputFieldName("Gradient");
 
@@ -89,7 +89,7 @@ void TestCellGradientUniform3DWithVectorField()
   vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec_pointvar", input);
 
   //we need to add Vec3 array to the dataset
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetOutputFieldName("vec_gradient");
   gradient.SetComputeVorticity(true);
@@ -141,7 +141,7 @@ void TestCellGradientExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetOutputFieldName("gradient");
 
@@ -183,7 +183,7 @@ void TestPointGradientUniform3DWithVectorField()
   vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec_pointvar", input);
 
   //we need to add Vec3 array to the dataset
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetComputePointGradient(true);
   gradient.SetOutputFieldName("vec_gradient");
@@ -227,7 +227,7 @@ void TestPointGradientExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetComputePointGradient(true);
   gradient.SetOutputFieldName("gradient");

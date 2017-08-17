@@ -57,13 +57,13 @@ struct OutputIndex : vtkm::exec::arg::ExecutionSignatureTagBase
   // whether we use it or not. 1 should be guaranteed to be valid since you
   // need at least one argument for the output domain.
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagOutputIndex AspectTag;
+  using AspectTag = vtkm::exec::arg::AspectTagOutputIndex;
 };
 
 template <typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
 struct Fetch<FetchTag, vtkm::exec::arg::AspectTagOutputIndex, ThreadIndicesType, ExecObjectType>
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
 
   VTKM_EXEC
   vtkm::Id Load(const ThreadIndicesType& indices, const ExecObjectType&) const

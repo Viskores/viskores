@@ -54,12 +54,28 @@ public:
   void DisableLegend();
   void SetLegendLabelColor(vtkm::rendering::Color c) { this->Legend.SetLabelColor(c); }
 
+  void SetLogX(bool l)
+  {
+    this->GetMapper().SetLogarithmX(l);
+    this->LogX = l;
+  }
+
+  void SetLogY(bool l)
+  {
+    this->GetMapper().SetLogarithmY(l);
+    this->LogY = l;
+  }
+
 private:
+  void UpdateCameraProperties();
+
   // 1D-specific annotations
   vtkm::rendering::AxisAnnotation2D HorizontalAxisAnnotation;
   vtkm::rendering::AxisAnnotation2D VerticalAxisAnnotation;
   vtkm::rendering::ColorLegendAnnotation Legend;
   bool LegendEnabled = true;
+  bool LogX = false;
+  bool LogY = false;
 };
 }
 } // namespace vtkm::rendering

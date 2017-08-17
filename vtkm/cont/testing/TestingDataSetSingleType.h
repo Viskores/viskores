@@ -112,12 +112,6 @@ private:
     vtkm::cont::CellSetSingleType<> cellset;
     dataSet.GetCellSet(0).CopyTo(cellset);
 
-    //verify that we can compute the cell to point connectivity
-    cellset.BuildConnectivity(
-      DeviceAdapterTag(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-
-    dataSet.PrintSummary(std::cout);
-
     //verify that the point to cell connectivity types are correct
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesPointToCell =
       cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());

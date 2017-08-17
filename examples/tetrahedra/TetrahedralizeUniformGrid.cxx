@@ -43,7 +43,7 @@
 
 #include "../isosurface/quaternion.h"
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 // Default size of the example
 static vtkm::Id3 dims(4, 4, 4);
@@ -284,7 +284,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet inDataSet = MakeTetrahedralizeTestDataSet(dims);
 
   vtkm::filter::Tetrahedralize tetrahedralize;
-  vtkm::filter::ResultDataSet result = tetrahedralize.Execute(inDataSet);
+  vtkm::filter::Result result = tetrahedralize.Execute(inDataSet);
 
   tetDataSet = result.GetDataSet();
 

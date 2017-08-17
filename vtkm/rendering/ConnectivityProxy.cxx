@@ -46,6 +46,7 @@ protected:
   ColorMapType ColorMap;
   vtkm::cont::DataSet Dataset;
   vtkm::Range ScalarRange;
+  bool CompositeBackground;
 
   struct BoundsFunctor
   {
@@ -77,7 +78,7 @@ public:
     Cells = dataSet.GetCellSet();
     Coords = dataSet.GetCoordinateSystem();
     Mode = VOLUME_MODE;
-
+    CompositeBackground = true;
     //
     // Just grab a default scalar field
     //
@@ -120,7 +121,7 @@ public:
   }
 
   VTKM_CONT
-  void SetCompositeBackground(bool on) { Tracer->SetCompositeBackground(on); }
+  void SetCompositeBackground(bool on) { CompositeBackground = on; }
 
   VTKM_CONT
   void SetEmissionField(const std::string& fieldName)
@@ -180,13 +181,14 @@ public:
     if (canvas == NULL)
     {
       std::cout << "Conn proxy: canvas is NULL\n";
-      return;
+      throw vtkm::cont::ErrorBadValue("Conn Proxy: null canvas");
     }
     vtkm::rendering::raytracing::Camera rayCamera;
     rayCamera.SetParameters(camera, *canvas);
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
     rayCamera.CreateRays(rays, this->Coords);
-
+    rays.Buffers.at(0).InitConst(0.f);
+    raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvas);
 
     if (Mode == VOLUME_MODE)
     {
@@ -194,12 +196,16 @@ public:
     }
     else
     {
-      std::cout << "ENGERY MODE Not implementedd yet\n";
+      throw vtkm::cont::ErrorBadValue("ENGERY MODE Not implemented for this use case\n");
     }
 
     Tracer->Trace(rays);
 
-    canvas->WriteToCanvas(rays.PixelIdx, rays.Distance, rays.Buffers.at(0).Buffer, camera);
+    canvas->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
+    if (CompositeBackground)
+    {
+      canvas->BlendBackground();
+    }
   }
 };
 

@@ -145,45 +145,45 @@ namespace vtkm
 //*****************************************************************************
 
 #if VTKM_SIZE_FLOAT == 4
-typedef float Float32;
+using Float32 = float;
 #else
 #error Could not find a 32-bit float.
 #endif
 
 #if VTKM_SIZE_DOUBLE == 8
-typedef double Float64;
+using Float64 = double;
 #else
 #error Could not find a 64-bit float.
 #endif
 
 #if VTKM_SIZE_CHAR == 1
-typedef signed char Int8;
-typedef unsigned char UInt8;
+using Int8 = signed char;
+using UInt8 = unsigned char;
 #else
 #error Could not find an 8-bit integer.
 #endif
 
 #if VTKM_SIZE_SHORT == 2
-typedef signed short Int16;
-typedef unsigned short UInt16;
+using Int16 = short;
+using UInt16 = unsigned short;
 #else
 #error Could not find a 16-bit integer.
 #endif
 
 #if VTKM_SIZE_INT == 4
-typedef signed int Int32;
-typedef unsigned int UInt32;
+using Int32 = int;
+using UInt32 = unsigned int;
 #else
 #error Could not find a 32-bit integer.
 #endif
 
 //In this order so that we exactly match the logic that exists in VTK
 #if VTKM_SIZE_LONG_LONG == 8
-typedef signed long long Int64;
-typedef unsigned long long UInt64;
+using Int64 = long long;
+using UInt64 = unsigned long long;
 #elif VTKM_SIZE_LONG == 8
-typedef signed long Int64;
-typedef unsigned long UInt64;
+using Int64 = signed long;
+using UInt64 = unsigned long;
 #else
 #error Could not find a 64-bit integer.
 #endif
@@ -193,12 +193,12 @@ typedef unsigned long UInt64;
 #if VTKM_SIZE_ID == 4
 
 /// Represents an ID (index into arrays).
-typedef vtkm::Int32 Id;
+using Id = vtkm::Int32;
 
 #elif VTKM_SIZE_ID == 8
 
 /// Represents an ID.
-typedef vtkm::Int64 Id;
+using Id = vtkm::Int64;
 
 #else
 #error Unknown Id Size
@@ -209,17 +209,17 @@ typedef vtkm::Int64 Id;
 /// to be quite small. However, we are currently using a 32-bit width
 /// integer because modern processors tend to access them more efficiently
 /// than smaller widths.
-typedef vtkm::Int32 IdComponent;
+using IdComponent = vtkm::Int32;
 
 #ifdef VTKM_USE_DOUBLE_PRECISION
 
 /// The floating point type to use when no other precision is specified.
-typedef vtkm::Float64 FloatDefault;
+using FloatDefault = vtkm::Float64;
 
 #else //VTKM_USE_DOUBLE_PRECISION
 
 /// The floating point type to use when no other precision is specified.
-typedef vtkm::Float32 FloatDefault;
+using FloatDefault = vtkm::Float32;
 
 #endif //VTKM_USE_DOUBLE_PRECISION
 
@@ -434,7 +434,7 @@ template <typename T, typename DerivedClass>
 class VTKM_ALWAYS_EXPORT VecBaseCommon
 {
 public:
-  typedef T ComponentType;
+  using ComponentType = T;
 
 protected:
   VTKM_EXEC_CONT
@@ -661,7 +661,7 @@ template <typename T, vtkm::IdComponent Size, typename DerivedClass>
 class VTKM_ALWAYS_EXPORT VecBase : public vtkm::detail::VecBaseCommon<T, DerivedClass>
 {
 public:
-  typedef T ComponentType;
+  using ComponentType = T;
   static const vtkm::IdComponent NUM_COMPONENTS = Size;
 
 protected:
@@ -816,11 +816,11 @@ protected:
 template <typename T, vtkm::IdComponent Size>
 class VTKM_ALWAYS_EXPORT Vec : public detail::VecBase<T, Size, Vec<T, Size>>
 {
-  typedef detail::VecBase<T, Size, Vec<T, Size>> Superclass;
+  using Superclass = detail::VecBase<T, Size, Vec<T, Size>>;
 
 public:
 #ifdef VTKM_DOXYGEN_ONLY
-  typedef T ComponentType;
+  using ComponentType = T;
   static const vtkm::IdComponent NUM_COMPONENTS = Size;
 #endif
 
@@ -848,7 +848,7 @@ template <typename T>
 class VTKM_ALWAYS_EXPORT Vec<T, 0>
 {
 public:
-  typedef T ComponentType;
+  using ComponentType = T;
   static const vtkm::IdComponent NUM_COMPONENTS = 0;
 
   VTKM_EXEC_CONT Vec() {}
@@ -879,7 +879,7 @@ public:
 template <typename T>
 class VTKM_ALWAYS_EXPORT Vec<T, 1> : public detail::VecBase<T, 1, Vec<T, 1>>
 {
-  typedef detail::VecBase<T, 1, Vec<T, 1>> Superclass;
+  using Superclass = detail::VecBase<T, 1, Vec<T, 1>>;
 
 public:
   VTKM_EXEC_CONT Vec() {}
@@ -909,7 +909,7 @@ public:
 template <typename T>
 class VTKM_ALWAYS_EXPORT Vec<T, 2> : public detail::VecBase<T, 2, Vec<T, 2>>
 {
-  typedef detail::VecBase<T, 2, Vec<T, 2>> Superclass;
+  using Superclass = detail::VecBase<T, 2, Vec<T, 2>>;
 
 public:
   VTKM_EXEC_CONT Vec() {}
@@ -933,12 +933,12 @@ public:
 };
 
 /// Id2 corresponds to a 2-dimensional index
-typedef vtkm::Vec<vtkm::Id, 2> Id2;
+using Id2 = vtkm::Vec<vtkm::Id, 2>;
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT Vec<T, 3> : public detail::VecBase<T, 3, Vec<T, 3>>
 {
-  typedef detail::VecBase<T, 3, Vec<T, 3>> Superclass;
+  using Superclass = detail::VecBase<T, 3, Vec<T, 3>>;
 
 public:
   VTKM_EXEC_CONT Vec() {}
@@ -964,12 +964,12 @@ public:
 
 /// Id3 corresponds to a 3-dimensional index for 3d arrays.  Note that
 /// the precision of each index may be less than vtkm::Id.
-typedef vtkm::Vec<vtkm::Id, 3> Id3;
+using Id3 = vtkm::Vec<vtkm::Id, 3>;
 
 template <typename T>
 class VTKM_ALWAYS_EXPORT Vec<T, 4> : public detail::VecBase<T, 4, Vec<T, 4>>
 {
-  typedef detail::VecBase<T, 4, Vec<T, 4>> Superclass;
+  using Superclass = detail::VecBase<T, 4, Vec<T, 4>>;
 
 public:
   VTKM_EXEC_CONT Vec() {}
@@ -1001,12 +1001,12 @@ public:
 template <typename ComponentType, vtkm::IdComponent NumComponents>
 struct VecOrScalar
 {
-  typedef vtkm::Vec<ComponentType, NumComponents> Type;
+  using Type = vtkm::Vec<ComponentType, NumComponents>;
 };
 template <typename ComponentType>
 struct VecOrScalar<ComponentType, 1>
 {
-  typedef ComponentType Type;
+  using Type = ComponentType;
 };
 
 /// Initializes and returns a Vec of length 2.

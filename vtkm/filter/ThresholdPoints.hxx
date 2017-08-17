@@ -144,7 +144,7 @@ inline VTKM_CONT void ThresholdPoints::SetThresholdBetween(const vtkm::Float64 v
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet ThresholdPoints::DoExecute(
+inline VTKM_CONT vtkm::filter::Result ThresholdPoints::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -158,7 +158,7 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ThresholdPoints::DoExecute(
   if (fieldMeta.IsPointField() == false)
   {
     //todo: we need to mark this as a failure of input, not a failure of the algorithm
-    return vtkm::filter::ResultDataSet();
+    return vtkm::filter::Result();
   }
 
   // run the worklet on the cell set and input field
@@ -203,20 +203,20 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ThresholdPoints::DoExecute(
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
     result = this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy), DeviceAdapter());
     return result;
   }
   else
   {
-    return vtkm::filter::ResultDataSet(output);
+    return vtkm::filter::Result(output);
   }
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ThresholdPoints::DoMapField(
-  vtkm::filter::ResultDataSet& result,
+  vtkm::filter::Result& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,

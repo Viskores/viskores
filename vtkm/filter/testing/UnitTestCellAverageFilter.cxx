@@ -32,7 +32,7 @@ void TestCellAverageRegular3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::CellAverage cellAverage;
   cellAverage.SetOutputFieldName("avgvals");
 
@@ -87,7 +87,7 @@ void TestCellAverageRegular2D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::CellAverage cellAverage;
 
   result = cellAverage.Execute(dataSet, dataSet.GetField("pointvar"));
@@ -96,11 +96,11 @@ void TestCellAverageRegular2D()
   VTKM_TEST_ASSERT(result.GetField().GetName() == "pointvar", "Field was given the wrong name.");
   VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
                    "Field was given the wrong association.");
-  vtkm::cont::Field resultField = result.GetField();
+  vtkm::cont::Field Result = result.GetField();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  resultField.GetData().CopyTo(resultArrayHandle);
+  Result.GetData().CopyTo(resultArrayHandle);
 
-  if (result.IsValid())
+  if (result.IsDataSetValid())
   {
     vtkm::Float32 expected[2] = { 30.1f, 40.1f };
     for (int i = 0; i < 2; ++i)
@@ -118,7 +118,7 @@ void TestCellAverageExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::CellAverage cellAverage;
 
   result = cellAverage.Execute(dataSet, dataSet.GetField("pointvar"));

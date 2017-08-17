@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/cont/DataSetBuilderExplicit.h>
+#include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapter.h>
 
 #include <vtkm/cont/internal/DeviceAdapterError.h>
@@ -43,14 +44,19 @@ using MyDeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
 {
-
-  vtkm::cont::CellSetExplicit<> inCellSet;
-  inDataSet.GetCellSet(0).CopyTo(inCellSet);
+  const vtkm::cont::DynamicCellSet& inCellSet = inDataSet.GetCellSet(0);
 
   vtkm::cont::CellSetExplicit<> outCellSet("cells");
 
   //Run the External Faces worklet
-  vtkm::worklet::ExternalFaces().Run(inCellSet, outCellSet, MyDeviceAdapter());
+  if (inCellSet.IsSameType(vtkm::cont::CellSetStructured<3>()))
+    vtkm::worklet::ExternalFaces().Run(inCellSet.Cast<vtkm::cont::CellSetStructured<3>>(),
+                                       inDataSet.GetCoordinateSystem(),
+                                       outCellSet,
+                                       MyDeviceAdapter());
+  else
+    vtkm::worklet::ExternalFaces().Run(
+      inCellSet.Cast<vtkm::cont::CellSetExplicit<>>(), outCellSet, MyDeviceAdapter());
 
   vtkm::cont::DataSet outDataSet;
   for (vtkm::IdComponent i = 0; i < inDataSet.GetNumberOfCoordinateSystems(); ++i)
@@ -172,10 +178,30 @@ void TestExternalFaces2()
   }
 }
 
+void TestExternalFaces3()
+{
+  std::cout << "Test 3" << std::endl;
+
+  vtkm::cont::DataSetBuilderUniform dataSetBuilder;
+  vtkm::cont::DataSet dataSet = dataSetBuilder.Create(vtkm::Id3(6, 6, 5));
+
+  //Run the External Faces worklet
+  vtkm::cont::DataSet new_ds = RunExternalFaces(dataSet);
+  vtkm::cont::CellSetExplicit<> new_cs;
+  new_ds.GetCellSet(0).CopyTo(new_cs);
+
+  vtkm::Id numExtFaces_out = new_cs.GetNumberOfCells();
+
+  //Validate the number of external faces (output) returned by the worklet
+  const vtkm::Id numExtFaces_actual = 130;
+  VTKM_TEST_ASSERT(numExtFaces_out == numExtFaces_actual, "Number of External Faces mismatch");
+}
+
 void TestExternalFaces()
 {
   TestExternalFaces1();
   TestExternalFaces2();
+  TestExternalFaces3();
 }
 }
 

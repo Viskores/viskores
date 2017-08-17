@@ -88,13 +88,13 @@ namespace UnitTestArrayHandleCountingNamespace
 template <typename ValueType>
 struct TemplatedTests
 {
-  typedef vtkm::cont::ArrayHandleCounting<ValueType> ArrayHandleType;
+  using ArrayHandleType = vtkm::cont::ArrayHandleCounting<ValueType>;
 
   typedef vtkm::cont::
     ArrayHandle<ValueType, typename vtkm::cont::internal::ArrayHandleCountingTraits<ValueType>::Tag>
       ArrayHandleType2;
 
-  typedef typename ArrayHandleType::PortalConstControl PortalType;
+  using PortalType = typename ArrayHandleType::PortalConstControl;
 
   void operator()(const ValueType& startingValue, const ValueType& step)
   {

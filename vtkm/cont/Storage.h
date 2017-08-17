@@ -98,8 +98,8 @@ class Storage
   : public vtkm::cont::internal::UndefinedStorage
 {
 public:
-  typedef vtkm::cont::internal::detail::UndefinedArrayPortal<T> PortalType;
-  typedef vtkm::cont::internal::detail::UndefinedArrayPortal<T> PortalConstType;
+  using PortalType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
+  using PortalConstType = vtkm::cont::internal::detail::UndefinedArrayPortal<T>;
 };
 #else  //VTKM_DOXYGEN_ONLY
 {

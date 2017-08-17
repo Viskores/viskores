@@ -193,9 +193,7 @@ public:
     ValueType* beginPointer = this->Resource->GetMappedPoiner<ValueType>(size);
 
     //get the device pointers
-    typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> HandleType;
-    typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst PortalType;
-    PortalType portal = handle.PrepareForInput(DeviceAdapterTag());
+    auto portal = handle.PrepareForInput(DeviceAdapterTag());
 
     //Copy the data into memory that opengl owns, since we can't
     //give memory from cuda to opengl

@@ -121,7 +121,7 @@ struct TestingArrayHandles
 private:
   static const vtkm::Id ARRAY_SIZE = 100;
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
   typedef vtkm::worklet::DispatcherMapField<PassThrough, DeviceAdapterTag> DispatcherPassThrough;
   struct VerifyEmptyArrays
@@ -274,9 +274,8 @@ private:
       VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == 0,
                        "ArrayHandle has wrong number of entries.");
       {
-        typedef
-          typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-            ExecutionPortalType;
+        using ExecutionPortalType =
+          typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
         ExecutionPortalType executionPortal =
           arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag());
 
@@ -304,9 +303,8 @@ private:
 
       std::cout << "Try in place operation." << std::endl;
       {
-        typedef
-          typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
-            ExecutionPortalType;
+        using ExecutionPortalType =
+          typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal;
         ExecutionPortalType executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag());
 
         //in place can't be done through the dispatcher

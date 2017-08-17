@@ -172,12 +172,19 @@ public:
                               const FaceNormalsVecType& faceNormals,
                               vtkm::Vec<T, 3>& pointNormal) const
     {
-      auto result = faceNormals[0];
-      for (vtkm::IdComponent i = 1; i < numCells; ++i)
+      if (numCells == 0)
       {
-        result += faceNormals[i];
+        pointNormal = vtkm::TypeTraits<vtkm::Vec<T, 3>>::ZeroInitialization();
       }
-      pointNormal = vtkm::Normal(result);
+      else
+      {
+        auto result = faceNormals[0];
+        for (vtkm::IdComponent i = 1; i < numCells; ++i)
+        {
+          result += faceNormals[i];
+        }
+        pointNormal = vtkm::Normal(result);
+      }
     }
   };
 

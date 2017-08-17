@@ -32,7 +32,7 @@
 #include <stdexcept>
 #include <string>
 
-typedef vtkm::Vec<vtkm::Float32, 3> FloatVec3;
+using FloatVec3 = vtkm::Vec<vtkm::Float32, 3>;
 
 namespace
 {
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     return 1;
   }
 
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   std::cout << "Device Adapter Name: " << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName()
             << std::endl;
 

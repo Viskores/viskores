@@ -23,6 +23,8 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/rendering/Canvas.h>
+#include <vtkm/rendering/raytracing/Ray.h>
+
 namespace vtkm
 {
 namespace rendering
@@ -45,13 +47,13 @@ public:
 
   vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
 
-  void WriteToCanvas(const vtkm::cont::ArrayHandle<vtkm::Id>& pixelIds,
-                     const vtkm::cont::ArrayHandle<vtkm::Float32>& distances,
+  void BlendBackground();
+
+  void WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays,
                      const vtkm::cont::ArrayHandle<vtkm::Float32>& colors,
                      const vtkm::rendering::Camera& camera);
 
-  void WriteToCanvas(const vtkm::cont::ArrayHandle<vtkm::Id>& pixelIds,
-                     const vtkm::cont::ArrayHandle<vtkm::Float64>& distances,
+  void WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays,
                      const vtkm::cont::ArrayHandle<vtkm::Float64>& colors,
                      const vtkm::rendering::Camera& camera);
 

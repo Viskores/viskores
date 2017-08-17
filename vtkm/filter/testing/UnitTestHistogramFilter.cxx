@@ -257,13 +257,13 @@ vtkm::cont::DataSet MakeTestDataSet()
 //
 // Verify the histogram result and tally
 //
-void VerifyHistogram(const vtkm::filter::ResultField& result,
+void VerifyHistogram(const vtkm::filter::Result& result,
                      vtkm::Id numberOfBins,
                      const vtkm::Range& range,
                      vtkm::Float64 delta,
                      bool output = true)
 {
-  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
+  VTKM_TEST_ASSERT(result.IsDataSetValid(), "result should be valid");
   VTKM_TEST_ASSERT(result.GetField().GetName() == "histogram", "Output field has wrong name.");
 
   vtkm::cont::ArrayHandle<vtkm::Id> bins;
@@ -299,7 +299,7 @@ void TestHistogram()
   // Data attached is the poisson distribution
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::Histogram histogram;
 
   // Run data

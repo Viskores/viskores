@@ -47,7 +47,6 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
   vtkm::Range ScalarRange;
   vtkm::Bounds DataBounds;
-  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
   template <typename Precision>
   struct RenderFunctor;
 
@@ -57,9 +56,6 @@ protected:
 public:
   VTKM_CONT
   RayTracer();
-
-  VTKM_CONT
-  void SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor);
 
   VTKM_CONT
   Camera& GetCamera();
