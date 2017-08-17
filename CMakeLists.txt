@@ -144,21 +144,21 @@ endif (VTKm_ENABLE_CUDA)
 #-----------------------------------------------------------------------------
 
 ## Set the directory where the binaries will be stored
-set( EXECUTABLE_OUTPUT_PATH
+set( VTKm_EXECUTABLE_OUTPUT_PATH
   ${PROJECT_BINARY_DIR}/bin
   CACHE PATH
   "Directory where all executable will be stored"
 )
 
 ## Set the directory where the libraries will be stored
-set( LIBRARY_OUTPUT_PATH
+set( VTKm_LIBRARY_OUTPUT_PATH
   ${PROJECT_BINARY_DIR}/lib
   CACHE PATH
   "Directory where all the libraries will be stored"
 )
 mark_as_advanced(
-  EXECUTABLE_OUTPUT_PATH
-  LIBRARY_OUTPUT_PATH)
+  VTKm_EXECUTABLE_OUTPUT_PATH
+  VTKm_LIBRARY_OUTPUT_PATH)
 
 #-----------------------------------------------------------------------------
 # Add "meta" tests that check the state of the repository
