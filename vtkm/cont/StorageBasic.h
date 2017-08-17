@@ -186,8 +186,13 @@ public:
   typedef AlignedAllocator<ValueType, VTKM_CACHE_LINE_SIZE> AllocatorType;
 
 public:
+  /// \brief construct storage that VTK-m is responsible for
   VTKM_CONT
-  Storage(const ValueType* array = nullptr, vtkm::Id numberOfValues = 0);
+  Storage();
+
+  /// \brief construct storage that VTK-m is not responsible for
+  VTKM_CONT
+  Storage(const ValueType* array, vtkm::Id numberOfValues = 0);
 
   VTKM_CONT
   ~Storage();
@@ -245,14 +250,21 @@ public:
   /// \brief Take the reference away from this object.
   ///
   /// This method returns the pointer to the array held by this array. It then
-  /// clears the internal array pointer to nullptr, thereby ensuring that the
-  /// Storage will never deallocate the array. This is helpful for taking a
-  /// reference for an array created internally by VTK-m and not having to keep
-  /// a VTK-m object around. Obviously the caller becomes responsible for
-  /// destroying the memory.
+  /// clears the internal ownership flags, thereby ensuring that the
+  /// Storage will never deallocate the array or be able to reallocate it. This
+  /// is helpful for taking a reference for an array created internally by
+  /// VTK-m and not having to keep a VTK-m object around. Obviously the caller
+  /// becomes responsible for destroying the memory.
   ///
   VTKM_CONT
   ValueType* StealArray();
+
+  /// \brief Returns if vtkm will deallocate this memory. VTK-m StorageBasic
+  /// is designed that VTK-m will not deallocate user passed memory, or
+  /// instances that have been stolen (\c StealArray)
+  VTKM_CONT
+  bool WillDeallocate() const { return this->DeallocateOnRelease; }
+
 
   VTKM_CONT
   void* GetBasePointer() const final { return static_cast<void*>(this->Array); }
@@ -274,7 +286,6 @@ private:
   vtkm::Id NumberOfValues;
   vtkm::Id AllocatedSize;
   bool DeallocateOnRelease;
-  bool UserProvidedMemory;
 };
 
 } // namespace internal
