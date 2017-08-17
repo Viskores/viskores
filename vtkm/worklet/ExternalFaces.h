@@ -425,72 +425,7 @@ struct ExternalFaces
                               vtkm::Id inputIndex,
                               vtkm::IdComponent visitIndex) const
     {
-      vtkm::VecCConst<vtkm::IdComponent> localFaceIndices =
-        vtkm::exec::CellFaceLocalIndices(visitIndex, shape, *this);
-
-      VTKM_ASSERT(localFaceIndices.GetNumberOfComponents() >= 3);
-
-      //Assign cell points/nodes to this face
-      vtkm::Id faceP1 = cellNodeIds[localFaceIndices[0]];
-      vtkm::Id faceP2 = cellNodeIds[localFaceIndices[1]];
-      vtkm::Id faceP3 = cellNodeIds[localFaceIndices[2]];
-
-      //Sort the first 3 face points/nodes in ascending order
-      vtkm::Id sorted[3] = { faceP1, faceP2, faceP3 };
-      vtkm::Id temp;
-      if (sorted[0] > sorted[2])
-      {
-        temp = sorted[0];
-        sorted[0] = sorted[2];
-        sorted[2] = temp;
-      }
-      if (sorted[0] > sorted[1])
-      {
-        temp = sorted[0];
-        sorted[0] = sorted[1];
-        sorted[1] = temp;
-      }
-      if (sorted[1] > sorted[2])
-      {
-        temp = sorted[1];
-        sorted[1] = sorted[2];
-        sorted[2] = temp;
-      }
-
-      // Check the rest of the points to see if they are in the lowest 3
-      vtkm::IdComponent numPointsInFace = localFaceIndices.GetNumberOfComponents();
-      for (vtkm::IdComponent pointIndex = 3; pointIndex < numPointsInFace; pointIndex++)
-      {
-        vtkm::Id nextPoint = cellNodeIds[localFaceIndices[pointIndex]];
-        if (nextPoint < sorted[2])
-        {
-          if (nextPoint < sorted[1])
-          {
-            sorted[2] = sorted[1];
-            if (nextPoint < sorted[0])
-            {
-              sorted[1] = sorted[0];
-              sorted[0] = nextPoint;
-            }
-            else // nextPoint > P0, nextPoint < P1
-            {
-              sorted[1] = nextPoint;
-            }
-          }
-          else // nextPoint > P1, nextPoint < P2
-          {
-            sorted[2] = nextPoint;
-          }
-        }
-        else // nextPoint > P2
-        {
-          // Do nothing. nextPoint not in top 3.
-        }
-      }
-
-      faceHash[0] = sorted[0];
-      faceHash[1] = sorted[1];
-      faceHash[2] = sorted[2];
+      faceHash = vtkm::exec::CellFaceCononicalId(visitIndex, shape, cellNodeIds, *this);
 
       cellIndex = inputIndex;
       faceIndex = visitIndex;

@@ -50,13 +50,17 @@ vtkm::cont::DataSet RunExternalFaces(vtkm::cont::DataSet& inDataSet)
 
   //Run the External Faces worklet
   if (inCellSet.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  {
     vtkm::worklet::ExternalFaces().Run(inCellSet.Cast<vtkm::cont::CellSetStructured<3>>(),
                                        inDataSet.GetCoordinateSystem(),
                                        outCellSet,
                                        MyDeviceAdapter());
+  }
   else
+  {
     vtkm::worklet::ExternalFaces().Run(
       inCellSet.Cast<vtkm::cont::CellSetExplicit<>>(), outCellSet, MyDeviceAdapter());
+  }
 
   vtkm::cont::DataSet outDataSet;
   for (vtkm::IdComponent i = 0; i < inDataSet.GetNumberOfCoordinateSystems(); ++i)
