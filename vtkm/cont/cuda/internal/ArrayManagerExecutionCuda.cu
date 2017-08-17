@@ -134,8 +134,11 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(const v
     return;
   }
 
-  VTKM_CUDA_CALL(cudaMemcpy(
-    executionPtr, controlPtr, static_cast<std::size_t>(numBytes), cudaMemcpyHostToDevice));
+  VTKM_CUDA_CALL(cudaMemcpyAsync(executionPtr,
+                                 controlPtr,
+                                 static_cast<std::size_t>(numBytes),
+                                 cudaMemcpyHostToDevice,
+                                 cudaStreamPerThread));
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const void* executionPtr,
@@ -158,8 +161,11 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
     return;
   }
 
-  VTKM_CUDA_CALL(cudaMemcpy(
-    controlPtr, executionPtr, static_cast<std::size_t>(numBytes), cudaMemcpyDeviceToHost));
+  VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
+                                 executionPtr,
+                                 static_cast<std::size_t>(numBytes),
+                                 cudaMemcpyDeviceToHost,
+                                 cudaStreamPerThread));
 }
 
 } // end namespace internal

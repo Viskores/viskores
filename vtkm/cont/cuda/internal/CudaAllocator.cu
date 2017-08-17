@@ -123,7 +123,7 @@ void CudaAllocator::PrepareForControl(const void* ptr, std::size_t numBytes)
     VTKM_CUDA_CALL(
       cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, cudaCpuDeviceId));
-    VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, cudaCpuDeviceId, 0));
+    VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, cudaCpuDeviceId, cudaStreamPerThread));
   }
 }
 
@@ -137,7 +137,7 @@ void CudaAllocator::PrepareForInput(const void* ptr, std::size_t numBytes)
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetReadMostly, dev));
-    VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, 0));
+    VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
   }
 }
 
@@ -151,7 +151,7 @@ void CudaAllocator::PrepareForOutput(const void* ptr, std::size_t numBytes)
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
-    VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, 0));
+    VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
   }
 }
 
@@ -165,7 +165,7 @@ void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
-    VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, 0));
+    VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
   }
 }
 
