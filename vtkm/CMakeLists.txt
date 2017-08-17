@@ -24,7 +24,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Version.h.in
   ${VTKm_BINARY_DIR}/include/${kit_dir}/Version.h
   @ONLY)
 vtkm_install_headers(
-  vtkm ${CMAKE_BINARY_DIR}/include/${kit_dir}/Version.h)
+  vtkm ${VTKm_BINARY_DIR}/include/${kit_dir}/Version.h)
 
 set(headers
   Assert.h

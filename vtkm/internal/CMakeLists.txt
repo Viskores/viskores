@@ -36,7 +36,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
   ${VTKm_BINARY_DIR}/include/${kit_dir}/Configure.h
   @ONLY)
 vtkm_install_headers(
-  vtkm/internal ${CMAKE_BINARY_DIR}/include/${kit_dir}/Configure.h)
+  vtkm/internal ${VTKm_BINARY_DIR}/include/${kit_dir}/Configure.h)
 
 unset(VTKM_ENABLE_OPENGL_INTEROP)
 
