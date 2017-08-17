@@ -545,10 +545,10 @@ public:
   // Execute the 3d kd tree construction given x y z coordinate vectors
   // Returns:
   // Leaf Node vector and internal node (split) vectpr
-  template <typename CoordiType, typename TreeIdType, typename DeviceAdapter>
-  void Run(vtkm::cont::ArrayHandle<vtkm::Vec<CoordiType, 3>>& coordi_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& pointId_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& splitId_Handle,
+  template <typename CoordType, typename CoordStorageTag, typename DeviceAdapter>
+  void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag>& coordi_Handle,
+           vtkm::cont::ArrayHandle<vtkm::Id>& pointId_Handle,
+           vtkm::cont::ArrayHandle<vtkm::Id>& splitId_Handle,
            DeviceAdapter device)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
@@ -556,18 +556,18 @@ public:
     vtkm::Id nTrainingPoints = coordi_Handle.GetNumberOfValues();
     vtkm::cont::ArrayHandleCounting<vtkm::Id> counting_Handle(0, 1, nTrainingPoints);
     Algorithm::Copy(counting_Handle, pointId_Handle);
-    vtkm::cont::ArrayHandle<TreeIdType> xorder_Handle;
+    vtkm::cont::ArrayHandle<vtkm::Id> xorder_Handle;
     Algorithm::Copy(counting_Handle, xorder_Handle);
-    vtkm::cont::ArrayHandle<TreeIdType> yorder_Handle;
+    vtkm::cont::ArrayHandle<vtkm::Id> yorder_Handle;
     Algorithm::Copy(counting_Handle, yorder_Handle);
-    vtkm::cont::ArrayHandle<TreeIdType> zorder_Handle;
+    vtkm::cont::ArrayHandle<vtkm::Id> zorder_Handle;
     Algorithm::Copy(counting_Handle, zorder_Handle);
 
     splitId_Handle.Allocate(nTrainingPoints);
 
-    vtkm::cont::ArrayHandle<CoordiType> xcoordi_Handle;
-    vtkm::cont::ArrayHandle<CoordiType> ycoordi_Handle;
-    vtkm::cont::ArrayHandle<CoordiType> zcoordi_Handle;
+    vtkm::cont::ArrayHandle<CoordType> xcoordi_Handle;
+    vtkm::cont::ArrayHandle<CoordType> ycoordi_Handle;
+    vtkm::cont::ArrayHandle<CoordType> zcoordi_Handle;
 
     SeprateVec3AryHandle sepVec3Worklet;
     vtkm::worklet::DispatcherMapField<SeprateVec3AryHandle, DeviceAdapter> sepVec3Dispatcher(
@@ -575,19 +575,19 @@ public:
     sepVec3Dispatcher.Invoke(coordi_Handle, xcoordi_Handle, ycoordi_Handle, zcoordi_Handle);
 
     Algorithm::SortByKey(xcoordi_Handle, xorder_Handle);
-    vtkm::cont::ArrayHandle<TreeIdType> xrank_Handle =
+    vtkm::cont::ArrayHandle<vtkm::Id> xrank_Handle =
       ScatterArrayWrapper(pointId_Handle, xorder_Handle, device);
 
     Algorithm::SortByKey(ycoordi_Handle, yorder_Handle);
-    vtkm::cont::ArrayHandle<TreeIdType> yrank_Handle =
+    vtkm::cont::ArrayHandle<vtkm::Id> yrank_Handle =
       ScatterArrayWrapper(pointId_Handle, yorder_Handle, device);
 
     Algorithm::SortByKey(zcoordi_Handle, zorder_Handle);
-    vtkm::cont::ArrayHandle<TreeIdType> zrank_Handle =
+    vtkm::cont::ArrayHandle<vtkm::Id> zrank_Handle =
       ScatterArrayWrapper(pointId_Handle, zorder_Handle, device);
 
-    vtkm::cont::ArrayHandle<TreeIdType> segId_Handle;
-    vtkm::cont::ArrayHandleConstant<TreeIdType> constHandle(0, nTrainingPoints);
+    vtkm::cont::ArrayHandle<vtkm::Id> segId_Handle;
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> constHandle(0, nTrainingPoints);
     Algorithm::Copy(constHandle, segId_Handle);
 
     ///// build kd tree /////
