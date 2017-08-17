@@ -105,7 +105,6 @@ public:
     p[1] = position[1] / position[3];
     p[2] = position[2] / position[3];
     p = p - Origin;
-    ;
 
     maxDistance = vtkm::Magnitude(p);
   }
