@@ -23,6 +23,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/TryExecute.h>
 #include <vtkm/interop/BufferState.h>
 #include <vtkm/interop/internal/TransferToOpenGL.h>
 
@@ -34,6 +35,27 @@ namespace vtkm
 {
 namespace interop
 {
+
+namespace detail
+{
+template <typename ArrayT>
+struct PrepareForInteropFunctor
+{
+  ArrayT& Array;
+  PrepareForInteropFunctor(ArrayT& array)
+    : Array(array)
+  {
+  }
+
+  template <typename DeviceAdapterTag>
+  bool operator()(DeviceAdapterTag) const
+  {
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    this->Array.PrepareForInput(DeviceAdapterTag());
+    return this->Array.GetDeviceAdapterId() == Traits::GetId();
+  }
+};
+}
 
 /// \brief Manages transferring an ArrayHandle to opengl .
 ///
@@ -67,6 +89,21 @@ VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> h
                                 BufferState& state)
 {
   vtkm::cont::DeviceAdapterId devId = handle.GetDeviceAdapterId();
+
+  if (devId == VTKM_DEVICE_ADAPTER_UNDEFINED)
+  {
+    using ArrayT = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
+    using Functor = detail::PrepareForInteropFunctor<ArrayT>;
+    // Undefined device means that the array is not in an execution environment.
+    // In this case, call PrepareForInput using the devices in the tracker
+    // to move the data onto a device. This is required for a CUDA usecase
+    // where a device pointer is set as control memory to reuse an already
+    // allocated buffer. PrepareForInput on CUDA will detect this and set the
+    // execution pointer to match the control pointer.
+    vtkm::cont::TryExecute(Functor(handle));
+    devId = handle.GetDeviceAdapterId();
+  }
+
   switch (devId)
   {
     case VTKM_DEVICE_ADAPTER_SERIAL:
@@ -86,22 +123,7 @@ VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> h
 #endif
 
     default:
-// Print warning on debug builds, then fallthrough to host case.
-#ifndef NDEBUG
-      std::cerr << __FILE__ << ":" << __LINE__ << ": "
-                << "Unrecognized DeviceAdapterId encountered: " << devId << "\n";
-#endif // NDEBUG
-
-    /* Fallthrough */
-    case VTKM_DEVICE_ADAPTER_UNDEFINED:
-// GetDeviceAdapterId returns UNDEFINED when memory is on the host.
-// Try TBB if enabled and serial otherwise.
-#ifdef VTKM_ENABLE_TBB
-      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagTBB());
-#else
-      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagSerial());
-#endif
-      break;
+      throw vtkm::cont::ErrorBadValue("Unknown device id.");
   }
 }
 }
