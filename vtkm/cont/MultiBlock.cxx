@@ -57,7 +57,7 @@ MultiBlock::MultiBlock(vtkm::Id size)
 {
   this->capacity = size;
   this->capacitytag = true;
-  this->blocks.reserve(size);
+  this->blocks.reserve(static_cast<std::size_t>(size));
 }
 
 VTKM_CONT
@@ -82,7 +82,7 @@ VTKM_CONT
 vtkm::cont::Field MultiBlock::GetField(const std::string& field_name, const int& block_index)
 {
   assert(block_index >= 0);
-  assert(block_index < static_cast<int>(blocks.size()));
+  assert(block_index < static_cast<std::size_t>(blocks.size()));
   return blocks[static_cast<std::size_t>(block_index)].GetField(field_name);
 }
 
@@ -97,6 +97,9 @@ vtkm::Id MultiBlock::GetCapacity()
 {
   if (this->capacitytag)
     return this->capacity;
+  else
+    std::cout << "structure capacity not set yet\n";
+  return 0;
 }
 
 
@@ -107,16 +110,17 @@ void MultiBlock::SetCapacity(vtkm::Id size)
   {
     this->capacity = size;
     this->capacitytag = true;
-    this->blocks.reserve(size);
+    this->blocks.reserve(static_cast<std::size_t>(size));
   }
   else
   {
     std::cout << "required size is too small and rejected<<\n";
   }
 }
+UnitTests_vtkm_cont_testing
 
-VTKM_CONT
-const vtkm::cont::DataSet& MultiBlock::GetBlock(vtkm::Id blockId) const
+  VTKM_CONT const vtkm::cont::DataSet&
+  MultiBlock::GetBlock(vtkm::Id blockId) const
 {
   return this->blocks[(std::size_t)blockId];
 }
@@ -156,7 +160,7 @@ VTKM_CONT
 void MultiBlock::OverWriteBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
 {
   if (index < static_cast<vtkm::Id>(blocks.size()))
-    this->blocks.at(index) = ds;
+    this->blocks.at(static_cast<std::size_t>(index)) = ds;
   else
     std::cout << "invalid overwrite posotion\n";
 }

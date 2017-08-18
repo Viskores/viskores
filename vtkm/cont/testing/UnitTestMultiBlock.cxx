@@ -130,7 +130,7 @@ static void MultiBlockTest()
 void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet)
 {
 
-  for (vtkm::Id j = 0; static_cast<std::size_t>(j) < LeftDateSet.GetNumberOfFields(); j++)
+  for (vtkm::Id j = 0; j < LeftDateSet.GetNumberOfFields(); j++)
   {
     vtkm::cont::ArrayHandle<vtkm::Float32> LDataArray;
     LeftDateSet.GetField(j).GetData().CopyTo(LDataArray);
