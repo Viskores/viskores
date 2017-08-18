@@ -75,6 +75,25 @@ inline VTKM_CONT std::vector<vtkm::filter::ResultField> FilterField<Derived>::Ex
 
   return results;
 }
+//-----------------------------------------------------------------------------
+template <typename Derived>
+template <typename DerivedPolicy>
+inline VTKM_CONT std::vector<vtkm::filter::ResultField> FilterField<Derived>::Execute(
+  const vtkm::cont::MultiBlock& input,
+  const std::string& inFieldName,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+{
+  std::vector<vtkm::filter::ResultField> results;
+
+  for (vtkm::Id j = 0; j < input.GetNumberOfBlocks(); j++)
+  {
+    vtkm::filter::ResultField result =
+      this->Execute(input.GetBlock(j), input.GetBlock(j).GetField(inFieldName), policy);
+    results.push_back(result);
+  }
+
+  return results;
+}
 
 //-----------------------------------------------------------------------------
 template <typename Derived>

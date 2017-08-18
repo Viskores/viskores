@@ -34,6 +34,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/exec/ConnectivityStructured.h>
 
+void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet);
 static void MultiBlockTest()
 {
   vtkm::cont::testing::MakeTestDataSet testDataSet;
@@ -86,10 +87,10 @@ static void MultiBlockTest()
   Field2GlobeRange.Include(Set1Field2Range);
   Field2GlobeRange.Include(Set2Field2Range);
 
-  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("pointvar").GetPortalControl().Get(0) ==
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("pointvar").GetPortalConstControl().Get(0) ==
                      Field1GlobeRange,
                    "Local field value range info incorrect");
-  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("cellvar").GetPortalControl().Get(0) ==
+  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("cellvar").GetPortalConstControl().Get(0) ==
                      Field2GlobeRange,
                    "Local field value range info incorrect");
 
@@ -113,8 +114,32 @@ static void MultiBlockTest()
   vtkm::Range TestRange;
   multiblock.GetBlock(0).GetField("cellvar").GetRange(&TestRange);
   VTKM_TEST_ASSERT(TestRange == SourceRange, "Local field value info incorrect");
+
+  multiblock.OverWriteBlock(0, TDset2);
+  TestDSet = multiblock.GetBlock(0);
+  DataSet_Compare(TDset2, TestDSet);
+  multiblock.OverWriteBlock(0, TDset1);
+  TestDSet = multiblock.GetBlock(0);
+  DataSet_Compare(TDset1, TestDSet);
+  multiblock.SetCapacity(3);
+  std::cout << "capacity updated\n";
+  multiblock.SetCapacity(2);
+  std::cout << "structure capacity" << multiblock.GetCapacity() << "\n";
 }
 
+void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet)
+{
+
+  for (vtkm::Id j = 0; static_cast<std::size_t>(j) < LeftDateSet.GetNumberOfFields(); j++)
+  {
+    vtkm::cont::ArrayHandle<vtkm::Float32> LDataArray;
+    LeftDateSet.GetField(j).GetData().CopyTo(LDataArray);
+    vtkm::cont::ArrayHandle<vtkm::Float32> RDataArray;
+    RightDateSet.GetField(j).GetData().CopyTo(RDataArray);
+    VTKM_TEST_ASSERT(LDataArray == RDataArray, "field value info incorrect");
+  }
+  return;
+}
 
 int UnitTestMultiBlock(int, char* [])
 {
