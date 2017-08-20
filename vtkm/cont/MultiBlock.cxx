@@ -82,7 +82,7 @@ VTKM_CONT
 vtkm::cont::Field MultiBlock::GetField(const std::string& field_name, const int& block_index)
 {
   assert(block_index >= 0);
-  assert(block_index < static_cast<std::size_t>(blocks.size()));
+  assert(static_cast<std::size_t>(block_index) < blocks.size());
   return blocks[static_cast<std::size_t>(block_index)].GetField(field_name);
 }
 
