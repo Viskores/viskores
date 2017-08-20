@@ -110,6 +110,10 @@ struct Vec3RenderingTypes : vtkm::ListTagBase<Vec3F, Vec3D>
 typedef vtkm::Float32 ScalarF;
 typedef vtkm::Float64 ScalarD;
 
+struct RayStatusType : vtkm::ListTagBase<vtkm::UInt8>
+{
+};
+
 struct ScalarRenderingTypes : vtkm::ListTagBase<ScalarF, ScalarD>
 {
 };

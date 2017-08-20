@@ -83,7 +83,10 @@ public:
     // Just grab a default scalar field
     //
 
-    this->SetScalarField(Dataset.GetField(0).GetName());
+    if (Dataset.GetNumberOfFields() > 0)
+    {
+      this->SetScalarField(Dataset.GetField(0).GetName());
+    }
 
     Tracer = raytracing::ConnectivityTracerFactory::CreateTracer(Cells, Coords);
   }
@@ -131,7 +134,6 @@ public:
       std::cout << "Volume Tracer Error: must set energy mode before setting emission field\n";
       return;
     }
-
     EmissionField = Dataset.GetField(fieldName);
   }
 
@@ -154,7 +156,8 @@ public:
     }
     else
     {
-      Tracer->SetEnergyData(this->ScalarField, rays.Buffers.at(0).GetNumChannels());
+      Tracer->SetEnergyData(
+        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
     }
 
     Tracer->Trace(rays);
@@ -169,7 +172,8 @@ public:
     }
     else
     {
-      Tracer->SetEnergyData(this->ScalarField, rays.Buffers.at(0).GetNumChannels());
+      Tracer->SetEnergyData(
+        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
     }
     Tracer->Trace(rays);
   }
