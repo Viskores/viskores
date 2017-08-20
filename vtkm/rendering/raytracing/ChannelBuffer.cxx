@@ -408,7 +408,6 @@ struct NormalizeFunctor
     asField.GetRange(&range);
     Precision minScalar = static_cast<Precision>(range.Min);
     Precision maxScalar = static_cast<Precision>(range.Max);
-
     vtkm::worklet::DispatcherMapField<NormalizeBuffer<Precision>, Device>(
       NormalizeBuffer<Precision>(minScalar, maxScalar, Invert))
       .Invoke(Input);

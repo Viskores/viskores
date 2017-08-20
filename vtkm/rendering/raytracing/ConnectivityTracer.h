@@ -523,16 +523,12 @@ public:
   {
   private:
     const vtkm::Int32 NumBins;
-    bool FirstCell; // first cell in a segment
     bool DivideEmisByAbsorb;
 
   public:
     VTKM_CONT
-    IntegrateEmission(const vtkm::Int32 numBins,
-                      const bool firstCell,
-                      const bool divideEmisByAbsorb)
+    IntegrateEmission(const vtkm::Int32 numBins, const bool divideEmisByAbsorb)
       : NumBins(numBins)
-      , FirstCell(firstCell)
       , DivideEmisByAbsorb(divideEmisByAbsorb)
     {
     }
@@ -606,14 +602,8 @@ public:
 
         absorptionBins.Set(rayOffset + i, absorbIntensity * tmp);
 
-        if (FirstCell)
-        {
-          emissionIntensity = emission;
-        }
-        else
-        {
-          emissionIntensity = emissionIntensity * tmp + emission * (1.f - tmp);
-        }
+        emissionIntensity = emissionIntensity * tmp + emission * (1.f - tmp);
+
         BOUNDS_CHECK(emissionBins, rayOffset + i);
         emissionBins.Set(rayOffset + i, emissionIntensity);
       }
@@ -1212,10 +1202,7 @@ public:
   }
 
   template <typename FloatType, typename Device>
-  void IntegrateCells(Ray<FloatType>& rays,
-                      detail::RayTracking<FloatType>& tracker,
-                      bool firstSegment,
-                      Device)
+  void IntegrateCells(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device)
   {
     vtkm::cont::Timer<Device> timer;
     if (HasEmission)
@@ -1225,8 +1212,7 @@ public:
       vtkm::cont::ArrayHandle<FloatType> emission = rays.GetBuffer("emission").Buffer;
 
       vtkm::worklet::DispatcherMapField<IntegrateEmission<FloatType>, Device>(
-        IntegrateEmission<FloatType>(
-          rays.Buffers.at(0).GetNumChannels(), firstSegment, divideEmisByAbsorp))
+        IntegrateEmission<FloatType>(rays.Buffers.at(0).GetNumChannels(), divideEmisByAbsorp))
         .Invoke(rays.Status,
                 *(tracker.EnterDist),
                 *(tracker.ExitDist),
@@ -1236,7 +1222,6 @@ public:
                 absorp,
                 emission,
                 rays.HitIdx);
-      std::cout << "------------------------------------\n";
     }
     else
     {
@@ -1338,7 +1323,6 @@ public:
 
     bool cullMissedRays = false;
     bool workRemaining = true;
-    bool firstHit = true;
     if (this->CountRayStatus)
     {
       this->PrintRayStatus(rays, Device());
@@ -1391,12 +1375,8 @@ public:
         if (this->Integrator == Volume)
           this->SampleCells(rays, rayTracker, Device());
         else
-          this->IntegrateCells(rays, rayTracker, firstHit, Device());
+          this->IntegrateCells(rays, rayTracker, Device());
 
-        if (firstHit)
-        {
-          firstHit = false;
-        }
         //swap enter and exit distances
         rayTracker.Swap();
         if (this->CountRayStatus)
