@@ -117,12 +117,11 @@ void MultiBlock::SetCapacity(vtkm::Id size)
     std::cout << "required size is too small and rejected<<\n";
   }
 }
-UnitTests_vtkm_cont_testing
 
-  VTKM_CONT const vtkm::cont::DataSet&
-  MultiBlock::GetBlock(vtkm::Id blockId) const
+VTKM_CONT
+const vtkm::cont::DataSet& MultiBlock::GetBlock(vtkm::Id blockId) const
 {
-  return this->blocks[(std::size_t)blockId];
+  return this->blocks[static_cast<std::size_t>(blockId)];
 }
 
 VTKM_CONT
