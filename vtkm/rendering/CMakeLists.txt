@@ -29,7 +29,6 @@ set(headers
   Camera.h
   Canvas.h
   CanvasRayTracer.h
-  CanvasWireframer.h
   Color.h
   ColorBarAnnotation.h
   ColorLegendAnnotation.h
@@ -65,7 +64,6 @@ set(sources
   Camera.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
-  CanvasWireframer.cxx
   Color.cxx
   ColorBarAnnotation.cxx
   ColorLegendAnnotation.cxx
@@ -132,7 +130,6 @@ set(osmesa_sources
 set(device_sources
   Mapper.cxx
   MapperWireframer.cxx
-  CanvasWireframer.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx
   raytracing/BoundingVolumeHierarchy.cxx

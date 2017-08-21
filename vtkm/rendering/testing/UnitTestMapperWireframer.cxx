@@ -20,7 +20,7 @@
 
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/rendering/CanvasWireframer.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperWireframer.h>
 #include <vtkm/rendering/testing/RenderTest.h>
 
@@ -30,7 +30,7 @@ namespace
 void RenderTests()
 {
   typedef vtkm::rendering::MapperWireframer M;
-  typedef vtkm::rendering::CanvasWireframer C;
+  typedef vtkm::rendering::CanvasRayTracer C;
   typedef vtkm::rendering::View3D V3;
 
   vtkm::cont::testing::MakeTestDataSet maker;

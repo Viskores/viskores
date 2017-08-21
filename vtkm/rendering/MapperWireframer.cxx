@@ -105,13 +105,13 @@ private:
   ScatterType Scatter;
 }; // struct EdgesExtracter
 
-struct ExtractEdgesFunctor
+struct ExtractUniqueEdges
 {
   vtkm::cont::DynamicCellSet CellSet;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> EdgeIndices;
 
   VTKM_CONT
-  ExtractEdgesFunctor(const vtkm::cont::DynamicCellSet& cellSet)
+  ExtractUniqueEdges(const vtkm::cont::DynamicCellSet& cellSet)
     : CellSet(cellSet)
   {
   }
@@ -131,7 +131,7 @@ struct ExtractEdgesFunctor
     vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Unique<vtkm::Id2>(EdgeIndices);
     return true;
   }
-}; // struct ExtractEdgesFunctor
+}; // struct ExtractUniqueEdges
 } // namespace
 
 struct MapperWireframer::InternalsType
@@ -216,9 +216,9 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   }
 
   // Extract unique edges from the cell set.
-  ExtractEdgesFunctor functor(cellSet);
-  vtkm::cont::TryExecute(functor);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> edgeIndices = functor.EdgeIndices;
+  ExtractUniqueEdges extracter(cellSet);
+  vtkm::cont::TryExecute(extracter);
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> edgeIndices = extracter.EdgeIndices;
 
   Wireframer renderer(this->Internals->Canvas, this->Internals->ShowInternalZones);
   // Render the cell set using a raytracer, on a separate canvas, and use the generated depth

@@ -21,6 +21,7 @@
 #ifndef vtk_m_rendering_Wireframer_h
 #define vtk_m_rendering_Wireframer_h
 
+#include <vtkm/Assert.h>
 #include <vtkm/Math.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
@@ -135,15 +136,14 @@ public:
   typedef void ExecutionSignature(_1, _2, _3);
   using InputDomain = _1;
 
-  vtkm::Vec<vtkm::Float32, 3> Color;
-
   VTKM_CONT
   EdgePlotter(const vtkm::Matrix<vtkm::Float32, 4, 4>& worldToProjection,
               vtkm::Id width,
               vtkm::Id height,
               const vtkm::Range& fieldRange,
               const ColorMapHandle& colorMap,
-              const AtomicPackedFrameBufferHandle& frameBuffer)
+              const AtomicPackedFrameBufferHandle& frameBuffer,
+              const vtkm::Range& clippingRange)
     : WorldToProjection(worldToProjection)
     , Width(width)
     , Height(height)
@@ -153,6 +153,7 @@ public:
     , FieldMin(vtkm::Float32(fieldRange.Min))
   {
     InverseFieldDelta = 1.0f / vtkm::Float32(fieldRange.Length());
+    Offset = vtkm::Max(0.03f / vtkm::Float32(clippingRange.Length()), 0.000001f);
   }
 
   template <typename CoordinatesPortalType, typename ScalarFieldPortalType>
@@ -285,7 +286,7 @@ private:
     point[2] = point[2] * 0.5f + 0.5f;
     // Offset the point to a bit towards the camera. This is to ensure that the front faces of
     // the wireframe wins the z-depth check against the surface render.
-    point[2] -= 0.001f;
+    point[2] -= Offset;
   }
 
   VTKM_EXEC vtkm::Vec<vtkm::Float32, 4> GetColor(vtkm::Float64 fieldValue) const
@@ -312,13 +313,14 @@ private:
     current.Raw = ClearValue;
     next.Floats.Depth = depth;
     vtkm::Vec<vtkm::Float32, 3> blendedColor;
-    vtkm::Vec<vtkm::Float32, 4> srcColor;
+    vtkm::Vec<vtkm::Float32, 3> srcColor;
     do
     {
       UnpackColor(current.Ints.Color, srcColor[0], srcColor[1], srcColor[2]);
-      blendedColor[0] = color[0] * intensity + srcColor[0] * (1.0f - intensity);
-      blendedColor[1] = color[1] * intensity + srcColor[1] * (1.0f - intensity);
-      blendedColor[2] = color[2] * intensity + srcColor[2] * (1.0f - intensity);
+      vtkm::Float32 inverseIntensity = (1.0f - intensity);
+      blendedColor[0] = color[0] * intensity + srcColor[0] * inverseIntensity;
+      blendedColor[1] = color[1] * intensity + srcColor[1] * inverseIntensity;
+      blendedColor[2] = color[2] * intensity + srcColor[2] * inverseIntensity;
       next.Ints.Color = PackColor(blendedColor[0], blendedColor[1], blendedColor[2]);
       current.Raw = FrameBuffer.CompareAndSwap(index, next.Raw, current.Raw);
     } while (current.Floats.Depth > next.Floats.Depth);
@@ -332,13 +334,17 @@ private:
   AtomicPackedFrameBufferHandle FrameBuffer;
   vtkm::Float32 FieldMin;
   vtkm::Float32 InverseFieldDelta;
+  vtkm::Float32 Offset;
 };
 
 struct BufferConverter : public vtkm::worklet::WorkletMapField
 {
 public:
   VTKM_CONT
-  BufferConverter() {}
+  BufferConverter(vtkm::Vec<vtkm::Float32, 4> backgroundColor)
+    : BackgroundColor(backgroundColor)
+  {
+  }
 
   typedef void ControlSignature(FieldIn<>, ExecObject, ExecObject);
   typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
@@ -362,9 +368,12 @@ public:
     }
     else
     {
-      colorBuffer.Set(index, vtkm::make_Vec(1.0f, 1.0f, 1.0f, 1.0f));
+      colorBuffer.Set(index, BackgroundColor);
     }
   }
+
+private:
+  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
 };
 
 } // namespace
@@ -407,10 +416,6 @@ public:
   VTKM_CONT
   void Render()
   {
-    WorldToProjection =
-      vtkm::MatrixMultiply(Camera.CreateProjectionMatrix(Canvas->GetWidth(), Canvas->GetHeight()),
-                           Camera.CreateViewMatrix());
-
     RenderWithDeviceFunctor functor(this);
     vtkm::cont::TryExecute(functor);
   }
@@ -424,33 +429,43 @@ private:
       throw vtkm::cont::ErrorBadValue("Field is not associated with points");
     }
 
+    vtkm::Matrix<vtkm::Float32, 4, 4> WorldToProjection =
+      vtkm::MatrixMultiply(Camera.CreateProjectionMatrix(Canvas->GetWidth(), Canvas->GetHeight()),
+                           Camera.CreateViewMatrix());
     vtkm::Id width = static_cast<vtkm::Id>(Canvas->GetWidth());
     vtkm::Id height = static_cast<vtkm::Id>(Canvas->GetHeight());
     vtkm::Id pixelCount = width * height;
     FrameBuffer.PrepareForOutput(pixelCount, DeviceTag());
 
+    vtkm::Vec<vtkm::Float32, 4> clearColor = Canvas->GetBackgroundColor().Components;
+    vtkm::UInt32 packedClearColor = PackColor(clearColor[0], clearColor[1], clearColor[2]);
     if (ShowInternalZones)
     {
       using MemSet =
         typename vtkm::rendering::Triangulator<DeviceTag>::template MemSet<vtkm::Int64>;
-      MemSet memSet(ClearValue);
+      vtkm::Int64 clearValue = (static_cast<vtkm::Int64>(0x3F800000) << 32) | packedClearColor;
+      MemSet memSet(clearValue);
       vtkm::worklet::DispatcherMapField<MemSet>(memSet).Invoke(FrameBuffer);
     }
     else
     {
-      vtkm::Vec<vtkm::Float32, 4> clearColor = Canvas->GetBackgroundColor().Components;
-      vtkm::UInt32 packedClearColor = PackColor(clearColor[0], clearColor[1], clearColor[2]);
+      VTKM_ASSERT(SolidDepthBuffer.GetNumberOfValues() == pixelCount);
       DepthBufferCopy bufferCopy(packedClearColor);
       vtkm::worklet::DispatcherMapField<DepthBufferCopy>(bufferCopy)
         .Invoke(SolidDepthBuffer, FrameBuffer);
     }
 
-    EdgePlotter<DeviceTag> plotter(
-      WorldToProjection, width, height, ScalarFieldRange, ColorMap, FrameBuffer);
+    EdgePlotter<DeviceTag> plotter(WorldToProjection,
+                                   width,
+                                   height,
+                                   ScalarFieldRange,
+                                   ColorMap,
+                                   FrameBuffer,
+                                   Camera.GetClippingRange());
     vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>, DeviceTag>(plotter).Invoke(
       PointIndices, Coordinates, ScalarField.GetData());
 
-    BufferConverter converter;
+    BufferConverter converter(clearColor);
     vtkm::worklet::DispatcherMapField<BufferConverter, DeviceTag>(converter).Invoke(
       FrameBuffer,
       vtkm::exec::ExecutionWholeArray<vtkm::Float32>(Canvas->GetDepthBuffer()),
@@ -486,7 +501,6 @@ private:
   vtkm::cont::Field ScalarField;
   vtkm::Range ScalarFieldRange;
   vtkm::cont::ArrayHandle<vtkm::Float32> SolidDepthBuffer;
-  vtkm::Matrix<vtkm::Float32, 4, 4> WorldToProjection;
   PackedFrameBufferHandle FrameBuffer;
 }; // class Wireframer
 }
