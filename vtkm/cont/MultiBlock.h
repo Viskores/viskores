@@ -36,15 +36,16 @@ namespace cont
 class VTKM_CONT_EXPORT MultiBlock
 {
 public:
+  /// creat a new MultiBlcok containng a single DataSet "ds"
   VTKM_CONT
   MultiBlock(const vtkm::cont::DataSet& ds);
-
+  /// creat a new MultiBlcok with the exisiting one "src"
   VTKM_CONT
   MultiBlock(const vtkm::cont::MultiBlock& src);
-
+  /// creat a new MultiBlcok with a DataSet vector "mblocks"
   VTKM_CONT
   MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks);
-
+  /// creat a new MultiBlcok with the capacity set to be "size"
   VTKM_CONT
   MultiBlock(vtkm::Id size);
 
@@ -56,9 +57,9 @@ public:
 
   VTKM_CONT
   ~MultiBlock();
-
+  /// get the field "field_name" from blcok "block_index"
   VTKM_CONT
-  vtkm::cont::Field GetField(const std::string& field_name, const int& domain_index);
+  vtkm::cont::Field GetField(const std::string& field_name, const int& block_index);
 
   VTKM_CONT
   vtkm::Id GetNumberOfBlocks() const;
@@ -74,19 +75,19 @@ public:
 
   VTKM_CONT
   const std::vector<vtkm::cont::DataSet>& GetBlocks() const;
-
+  /// add DataSet "ds" to the end of the contained DataSet vector
   VTKM_CONT
   void AddBlock(vtkm::cont::DataSet& ds);
-
+  /// add DataSet "ds" to position "index" of the contained DataSet vector
   VTKM_CONT
   void InsertBlock(vtkm::Id index, vtkm::cont::DataSet& ds);
-
+  /// replace the "index" positioned element of the contained DataSet vector with "ds"
   VTKM_CONT
   void OverWriteBlock(vtkm::Id index, vtkm::cont::DataSet& ds);
-
+  /// append the DataSet vector "mblocks"  to the end of the contained one
   VTKM_CONT
   void AddBlocks(std::vector<vtkm::cont::DataSet>& mblocks);
-
+  /// get the unified bounds of the same indexed coordinate system within all contained DataSet
   VTKM_CONT
   vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
 
@@ -95,7 +96,7 @@ public:
 
   template <typename TypeList, typename StorageList>
   VTKM_CONT vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index, TypeList, StorageList) const;
-
+  /// get the bounds of a coordinate system within a given DataSet
   VTKM_CONT
   vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
                               vtkm::Id coordinate_system_index = 0) const;
@@ -110,7 +111,7 @@ public:
                                         vtkm::Id coordinate_system_index,
                                         TypeList,
                                         StorageList) const;
-
+  /// get the unified range of the same feild within all contained DataSet
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name) const;
 
