@@ -133,8 +133,11 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == ARRAY_SIZE,
                      "Array not properly allocated.");
     // This call steals the array and prevents deallocation.
+    VTKM_TEST_ASSERT(stealMyArray.WillDeallocate() == true,
+                     "Array to be stolen needs to be owned by VTK-m");
     stolenArray = stealMyArray.StealArray();
-    VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == 0, "StealArray did not let go of array.");
+    VTKM_TEST_ASSERT(stealMyArray.WillDeallocate() == false,
+                     "Stolen array should not be owned by VTK-m");
 
     return stolenArray;
   }
