@@ -137,22 +137,24 @@ struct ExtractUniqueEdges
 struct MapperWireframer::InternalsType
 {
   InternalsType()
-    : InternalsType(nullptr, false)
+    : InternalsType(nullptr, false, false)
   {
   }
 
-  InternalsType(vtkm::rendering::Canvas* canvas, bool showInternalZones)
+  InternalsType(vtkm::rendering::Canvas* canvas, bool showInternalZones, bool isOverlay)
     : Canvas(canvas)
     , ShowInternalZones(showInternalZones)
+    , IsOverlay(isOverlay)
   {
   }
 
   vtkm::rendering::Canvas* Canvas;
   bool ShowInternalZones;
+  bool IsOverlay;
 }; // struct MapperWireframer::InternalsType
 
 MapperWireframer::MapperWireframer()
-  : Internals(new InternalsType(nullptr, false))
+  : Internals(new InternalsType(nullptr, false, false))
 {
 }
 
@@ -180,6 +182,16 @@ void MapperWireframer::SetShowInternalZones(bool showInternalZones)
   this->Internals->ShowInternalZones = showInternalZones;
 }
 
+bool MapperWireframer::GetIsOverlay() const
+{
+  return this->Internals->IsOverlay;
+}
+
+void MapperWireframer::SetIsOverlay(bool isOverlay)
+{
+  this->Internals->IsOverlay = isOverlay;
+}
+
 void MapperWireframer::StartScene()
 {
   // Nothing needs to be done.
@@ -201,8 +213,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   vtkm::cont::Field field = inScalarField;
   if (!(this->Internals->ShowInternalZones))
   {
-    // If internal zones are to be hidden, the number of edges processed can be reduced by first
-    // running the external faces filter on the input cell set and using the resulting cell set.
+    // If internal zones are to be hidden, the number of edges processed can be reduced by
+    // running the external faces filter on the input cell set.
     vtkm::cont::DataSet dataSet;
     dataSet.AddCoordinateSystem(coords);
     dataSet.AddCellSet(inCellSet);
@@ -220,10 +232,11 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   vtkm::cont::TryExecute(extracter);
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>> edgeIndices = extracter.EdgeIndices;
 
-  Wireframer renderer(this->Internals->Canvas, this->Internals->ShowInternalZones);
+  Wireframer renderer(
+    this->Internals->Canvas, this->Internals->ShowInternalZones, this->Internals->IsOverlay);
   // Render the cell set using a raytracer, on a separate canvas, and use the generated depth
   // buffer, which represents the solid mesh, to avoid drawing on the internal zones
-  if (!(this->Internals->ShowInternalZones))
+  if (!(this->Internals->ShowInternalZones) && !(this->Internals->IsOverlay))
   {
     CanvasRayTracer canvas(this->Internals->Canvas->GetWidth(),
                            this->Internals->Canvas->GetHeight());
@@ -237,6 +250,10 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     raytracer.RenderCells(cellSet, coords, field, colorTable, camera, scalarRange);
     renderer.SetSolidDepthBuffer(canvas.GetDepthBuffer());
   }
+  else if (this->Internals->IsOverlay)
+  {
+    renderer.SetSolidDepthBuffer(this->Internals->Canvas->GetDepthBuffer());
+  }
 
   renderer.SetCamera(camera);
   renderer.SetColorMap(this->ColorMap);
@@ -249,4 +266,4 @@ vtkm::rendering::Mapper* MapperWireframer::NewCopy() const
   return new vtkm::rendering::MapperWireframer(*this);
 }
 }
-} // vtkm::rendering
+} // namespace vtkm::rendering

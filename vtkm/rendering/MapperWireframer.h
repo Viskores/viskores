@@ -48,6 +48,9 @@ public:
   bool GetShowInternalZones() const;
   void SetShowInternalZones(bool showInternalZones);
 
+  bool GetIsOverlay() const;
+  void SetIsOverlay(bool isOverlay);
+
   virtual void StartScene() VTKM_OVERRIDE;
   virtual void EndScene() VTKM_OVERRIDE;
 

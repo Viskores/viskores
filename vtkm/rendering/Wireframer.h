@@ -44,6 +44,8 @@ using ColorMapHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
 using IndicesHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 2>>;
 using PackedFrameBufferHandle = vtkm::cont::ArrayHandle<vtkm::Int64>;
 
+// Depth value of 1.0f
+const vtkm::Int64 ClearDepth = 0x3F800000;
 // Packed frame buffer value with color set as white and depth as 1.0f
 const vtkm::Int64 ClearValue = 0x3F800000FFFFFFFF;
 
@@ -66,27 +68,53 @@ vtkm::Float32 ReverseFractionalPart(vtkm::Float32 x)
 }
 
 VTKM_EXEC_CONT
-vtkm::UInt32 ComponentAsUInt32(vtkm::Float32 c)
+vtkm::UInt32 ScaleColorComponent(vtkm::Float32 c)
 {
   vtkm::Int32 t = vtkm::Int32(c * 256.0f);
   return vtkm::UInt32(t < 0 ? 0 : (t > 255 ? 255 : t));
 }
 
+vtkm::UInt32 PackColor(vtkm::Float32 r, vtkm::Float32 g, vtkm::Float32 b, vtkm::Float32 a);
+
 VTKM_EXEC_CONT
-vtkm::UInt32 PackColor(vtkm::Float32 r, vtkm::Float32 g, vtkm::Float32 b)
+vtkm::UInt32 PackColor(const vtkm::Vec<vtkm::Float32, 4>& color)
 {
-  vtkm::UInt32 packed = (ComponentAsUInt32(r) << 16);
-  packed |= (ComponentAsUInt32(g) << 8);
-  packed |= ComponentAsUInt32(b);
-  return packed;
+  return PackColor(color[0], color[1], color[2], color[3]);
 }
 
 VTKM_EXEC_CONT
-void UnpackColor(vtkm::UInt32 color, vtkm::Float32& r, vtkm::Float32& g, vtkm::Float32& b)
+vtkm::UInt32 PackColor(vtkm::Float32 r, vtkm::Float32 g, vtkm::Float32 b, vtkm::Float32 a)
 {
-  r = vtkm::Float32((color & 0x00FF0000) >> 16) / 255.0f;
-  g = vtkm::Float32((color & 0x0000FF00) >> 8) / 255.0f;
-  b = vtkm::Float32((color & 0x000000FF)) / 255.0f;
+  vtkm::UInt32 packed = (ScaleColorComponent(r) << 24);
+  packed |= (ScaleColorComponent(g) << 16);
+  packed |= (ScaleColorComponent(b) << 8);
+  packed |= ScaleColorComponent(a);
+  return packed;
+}
+
+void UnpackColor(vtkm::UInt32 color,
+                 vtkm::Float32& r,
+                 vtkm::Float32& g,
+                 vtkm::Float32& b,
+                 vtkm::Float32& a);
+
+VTKM_EXEC_CONT
+void UnpackColor(vtkm::UInt32 packedColor, vtkm::Vec<vtkm::Float32, 4>& color)
+{
+  UnpackColor(packedColor, color[0], color[1], color[2], color[3]);
+}
+
+VTKM_EXEC_CONT
+void UnpackColor(vtkm::UInt32 color,
+                 vtkm::Float32& r,
+                 vtkm::Float32& g,
+                 vtkm::Float32& b,
+                 vtkm::Float32& a)
+{
+  r = vtkm::Float32((color & 0xFF000000) >> 24) / 255.0f;
+  g = vtkm::Float32((color & 0x00FF0000) >> 16) / 255.0f;
+  b = vtkm::Float32((color & 0x0000FF00) >> 8) / 255.0f;
+  a = vtkm::Float32((color & 0x000000FF)) / 255.0f;
 }
 
 union PackedValue {
@@ -103,28 +131,25 @@ union PackedValue {
   vtkm::Int64 Raw;
 }; // union PackedValue
 
-struct DepthBufferCopy : public vtkm::worklet::WorkletMapField
+struct CopyIntoFrameBuffer : public vtkm::worklet::WorkletMapField
 {
-  vtkm::UInt32 ClearColor;
+  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
+  typedef void ExecutionSignature(_1, _2, _3);
 
   VTKM_CONT
-  DepthBufferCopy(vtkm::UInt32 clearColor)
-    : ClearColor(clearColor)
-  {
-  }
-
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  CopyIntoFrameBuffer() {}
 
   VTKM_EXEC
-  void operator()(const vtkm::Float32& depth, vtkm::Int64& outValue) const
+  void operator()(const vtkm::Vec<vtkm::Float32, 4>& color,
+                  const vtkm::Float32& depth,
+                  vtkm::Int64& outValue) const
   {
     PackedValue packed;
-    packed.Ints.Color = ClearColor;
+    packed.Ints.Color = PackColor(color);
     packed.Floats.Depth = depth;
     outValue = packed.Raw;
   }
-}; //struct DepthBufferCopy
+}; //struct CopyIntoFrameBuffer
 
 template <typename DeviceTag>
 class EdgePlotter : public vtkm::worklet::WorkletMapField
@@ -312,16 +337,18 @@ private:
     PackedValue current, next;
     current.Raw = ClearValue;
     next.Floats.Depth = depth;
-    vtkm::Vec<vtkm::Float32, 3> blendedColor;
-    vtkm::Vec<vtkm::Float32, 3> srcColor;
+    vtkm::Vec<vtkm::Float32, 4> blendedColor;
+    vtkm::Vec<vtkm::Float32, 4> srcColor;
     do
     {
-      UnpackColor(current.Ints.Color, srcColor[0], srcColor[1], srcColor[2]);
+      UnpackColor(current.Ints.Color, srcColor);
       vtkm::Float32 inverseIntensity = (1.0f - intensity);
-      blendedColor[0] = color[0] * intensity + srcColor[0] * inverseIntensity;
-      blendedColor[1] = color[1] * intensity + srcColor[1] * inverseIntensity;
-      blendedColor[2] = color[2] * intensity + srcColor[2] * inverseIntensity;
-      next.Ints.Color = PackColor(blendedColor[0], blendedColor[1], blendedColor[2]);
+      vtkm::Float32 alpha = srcColor[3] * inverseIntensity;
+      blendedColor[0] = color[0] * intensity + srcColor[0] * alpha;
+      blendedColor[1] = color[1] * intensity + srcColor[1] * alpha;
+      blendedColor[2] = color[2] * intensity + srcColor[2] * alpha;
+      blendedColor[3] = alpha + intensity;
+      next.Ints.Color = PackColor(blendedColor);
       current.Raw = FrameBuffer.CompareAndSwap(index, next.Raw, current.Raw);
     } while (current.Floats.Depth > next.Floats.Depth);
   }
@@ -360,15 +387,10 @@ public:
     float depth = packed.Floats.Depth;
     if (depth <= depthBuffer.Get(index))
     {
-      depthBuffer.Set(index, depth);
       vtkm::Vec<vtkm::Float32, 4> color;
-      UnpackColor(packed.Ints.Color, color[0], color[1], color[2]);
-      color[3] = 1.0f;
+      UnpackColor(packed.Ints.Color, color);
       colorBuffer.Set(index, color);
-    }
-    else
-    {
-      colorBuffer.Set(index, BackgroundColor);
+      depthBuffer.Set(index, depth);
     }
   }
 
@@ -382,9 +404,10 @@ class Wireframer
 {
 public:
   VTKM_CONT
-  Wireframer(vtkm::rendering::Canvas* canvas, bool showInternalZones)
+  Wireframer(vtkm::rendering::Canvas* canvas, bool showInternalZones, bool isOverlay)
     : Canvas(canvas)
     , ShowInternalZones(showInternalZones)
+    , IsOverlay(isOverlay)
   {
   }
 
@@ -438,21 +461,21 @@ private:
     FrameBuffer.PrepareForOutput(pixelCount, DeviceTag());
 
     vtkm::Vec<vtkm::Float32, 4> clearColor = Canvas->GetBackgroundColor().Components;
-    vtkm::UInt32 packedClearColor = PackColor(clearColor[0], clearColor[1], clearColor[2]);
-    if (ShowInternalZones)
+    vtkm::UInt32 packedClearColor = PackColor(clearColor);
+    if (ShowInternalZones && !IsOverlay)
     {
       using MemSet =
         typename vtkm::rendering::Triangulator<DeviceTag>::template MemSet<vtkm::Int64>;
-      vtkm::Int64 clearValue = (static_cast<vtkm::Int64>(0x3F800000) << 32) | packedClearColor;
+      vtkm::Int64 clearValue = (ClearDepth << 32) | packedClearColor;
       MemSet memSet(clearValue);
       vtkm::worklet::DispatcherMapField<MemSet>(memSet).Invoke(FrameBuffer);
     }
     else
     {
       VTKM_ASSERT(SolidDepthBuffer.GetNumberOfValues() == pixelCount);
-      DepthBufferCopy bufferCopy(packedClearColor);
-      vtkm::worklet::DispatcherMapField<DepthBufferCopy>(bufferCopy)
-        .Invoke(SolidDepthBuffer, FrameBuffer);
+      CopyIntoFrameBuffer bufferCopy;
+      vtkm::worklet::DispatcherMapField<CopyIntoFrameBuffer>(bufferCopy)
+        .Invoke(Canvas->GetColorBuffer(), SolidDepthBuffer, FrameBuffer);
     }
 
     EdgePlotter<DeviceTag> plotter(WorldToProjection,
@@ -495,6 +518,7 @@ private:
   vtkm::rendering::Camera Camera;
   vtkm::rendering::Canvas* Canvas;
   bool ShowInternalZones;
+  bool IsOverlay;
   ColorMapHandle ColorMap;
   vtkm::cont::DynamicArrayHandleCoordinateSystem Coordinates;
   IndicesHandle PointIndices;
