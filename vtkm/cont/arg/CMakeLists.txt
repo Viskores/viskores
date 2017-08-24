@@ -39,6 +39,7 @@ set(headers
   TypeCheckTagArray.h
   TypeCheckTagAtomicArray.h
   TypeCheckTagCellSet.h
+  TypeCheckTagCellSetStructured.h
   TypeCheckTagExecObject.h
   TypeCheckTagKeys.h
   )

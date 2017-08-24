@@ -54,8 +54,10 @@ set(unit_tests
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldWholeArray.cxx
+  UnitTestWorkletMapPointNeighborhood.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyUniform.cxx
+
   UnitTestWorkletReduceByKey.cxx
   UnitTestVertexClustering.cxx
   UnitTestWaveletCompressor.cxx

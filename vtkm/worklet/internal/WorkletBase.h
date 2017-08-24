@@ -118,7 +118,7 @@ public:
   ///
   typedef vtkm::exec::arg::InputIndex InputIndex;
 
-  /// \c ExecutionSignature tag for getting the input index.
+  /// \c ExecutionSignature tag for getting the output index.
   ///
   typedef vtkm::exec::arg::OutputIndex OutputIndex;
 
