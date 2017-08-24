@@ -33,6 +33,7 @@ set(unit_tests
   UnitTestBounds.cxx
   UnitTestCellShape.cxx
   UnitTestExceptions.cxx
+  UnitTestHash.cxx
   UnitTestListTag.cxx
   UnitTestMath.cxx
   UnitTestMatrix.cxx

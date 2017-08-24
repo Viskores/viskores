@@ -34,6 +34,7 @@ set(headers
   Bounds.h
   CellShape.h
   CellTraits.h
+  Hash.h
   ListTag.h
   Math.h
   Matrix.h
