@@ -135,13 +135,7 @@ void TestMultiBlockFilters()
   return;
 }
 
-
-
-<<<<<<< HEAD
 int UnitTestMultiBlockFilters(int, char* [])
-=======
-int UnitTestMultiBlockFilters(int, char* [])
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
 {
   return vtkm::cont::testing::Testing::Run(TestMultiBlockFilters);
 }
