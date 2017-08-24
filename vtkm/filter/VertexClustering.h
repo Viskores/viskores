@@ -84,6 +84,7 @@ public:
                             const DeviceAdapter& tag);
 
 private:
+  vtkm::worklet::VertexClustering Worklet;
   vtkm::Id3 NumberOfDivisions;
 };
 }

@@ -39,31 +39,48 @@ inline VTKM_CONT vtkm::filter::Result VertexClustering::DoExecute(
 {
   // todo this code needs to obey the policy for what storage types
   // the output should use
-  vtkm::worklet::VertexClustering clustering;
-
   //need to compute bounds first
   vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds(
     typename DerivedPolicy::CoordinateTypeList(), typename DerivedPolicy::CoordinateStorageList());
 
   vtkm::cont::DataSet outDataSet =
-    clustering.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
-                   vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy),
-                   bounds,
-                   this->GetNumberOfDivisions(),
-                   tag);
+    this->Worklet.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
+                      vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy),
+                      bounds,
+                      this->GetNumberOfDivisions(),
+                      tag);
 
   return vtkm::filter::Result(outDataSet);
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT bool VertexClustering::DoMapField(vtkm::filter::Result&,
-                                                   const vtkm::cont::ArrayHandle<T, StorageType>&,
-                                                   const vtkm::filter::FieldMetadata&,
-                                                   const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                                   const DeviceAdapter&)
+inline VTKM_CONT bool VertexClustering::DoMapField(
+  vtkm::filter::Result& result,
+  const vtkm::cont::ArrayHandle<T, StorageType>& input,
+  const vtkm::filter::FieldMetadata& fieldMeta,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  const DeviceAdapter& device)
 {
-  return false;
+  vtkm::cont::ArrayHandle<T> fieldArray;
+
+  if (fieldMeta.IsPointField())
+  {
+    fieldArray = this->Worklet.ProcessPointField(input, device);
+  }
+  else if (fieldMeta.IsCellField())
+  {
+    fieldArray = this->Worklet.ProcessCellField(input, device);
+  }
+  else
+  {
+    return false;
+  }
+
+  //use the same meta data as the input so we get the same field name, etc.
+  result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
+
+  return true;
 }
 }
 }

@@ -20,11 +20,14 @@
 #ifndef vtk_m_worklet_VertexClustering_h
 #define vtk_m_worklet_VertexClustering_h
 
+#include <vtkm/BinaryOperators.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleDiscard.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
@@ -299,6 +302,7 @@ public:
                           const vtkm::Id3& nDivisions,
                           DeviceAdapter)
   {
+    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     /// determine grid resolution for clustering
     GridInfo gridInfo;
@@ -377,6 +381,21 @@ public:
     vtkm::worklet::DispatcherMapTopology<MapCellsWorklet, DeviceAdapter>(MapCellsWorklet())
       .Invoke(cellSet, pointCidArray, cid3Array);
 
+    // Generate the point map before releasing pointCidArray. Just grab any value
+    // from the cluster -- this matches vtkQuadricClustering's behavior.
+    {
+      vtkm::cont::ArrayHandleDiscard<vtkm::Id> discard;
+
+      vtkm::cont::ArrayHandleIndex indexSrc(pointCidArray.GetNumberOfValues());
+      vtkm::cont::ArrayHandle<vtkm::Id> index;
+      Algo::Copy(indexSrc, index); // Need a real array for SortByKey
+
+      // Mimics the behavior of AverageByKey to get the original cellIds in the
+      // same order as pointCidArrayReduced.
+      Algo::SortByKey(pointCidArray, index, vtkm::SortLess());
+      Algo::ReduceByKey(pointCidArray, index, discard, this->PointIdMap, vtkm::Minimum());
+    }
+
     pointCidArray.ReleaseResources();
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
@@ -391,7 +410,8 @@ public:
 
     ///
     /// map: convert each triangle vertices from original point id to the new cluster indexes
-    ///      If the triangle is degenerated, set the ids to <-1, -1, -1>
+    ///      If the triangle is degenerated, set the ids to <nPoints, nPoints, nPoints>
+    ///      This ensures it will be placed at the end of the array when sorted.
     ///
     vtkm::Id nPoints = repPointArray.GetNumberOfValues();
 
@@ -416,13 +436,22 @@ public:
 
       pointId3Array.ReleaseResources();
 
+      // These are used to generate the CellIdMap:
+      vtkm::cont::ArrayHandleIndex indexSrc(pointId3HashArray.GetNumberOfValues());
+      vtkm::cont::ArrayHandle<vtkm::Id> index;
+      Algo::Copy(indexSrc, index);
+
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
 #endif
 
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(pointId3HashArray);
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(pointId3HashArray);
+      Algo::SortByKey(pointId3HashArray, index);
+      {
+        vtkm::cont::ArrayHandle<vtkm::Int64> tmp;
+        Algo::ReduceByKey(pointId3HashArray, index, tmp, this->CellIdMap, vtkm::Minimum());
+        pointId3HashArray = tmp;
+      }
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique with hashing (s): " << timer.GetElapsedTime()
@@ -436,14 +465,22 @@ public:
     }
     else
     {
+      // These are used to generate the CellIdMap:
+      vtkm::cont::ArrayHandleIndex indexSrc(pointId3Array.GetNumberOfValues());
+      vtkm::cont::ArrayHandle<vtkm::Id> index;
+      Algo::Copy(indexSrc, index);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
 #endif
 
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(pointId3Array);
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(pointId3Array);
+      Algo::SortByKey(pointId3Array, index);
+      {
+        vtkm::cont::ArrayHandle<vtkm::Id3> tmp;
+        Algo::ReduceByKey(pointId3Array, index, tmp, this->CellIdMap, vtkm::Minimum());
+        pointId3Array = tmp;
+      }
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique [no hashing] (s): " << timer.GetElapsedTime()
@@ -457,6 +494,7 @@ public:
     {
       cells--;
       pointId3Array.Shrink(cells);
+      this->CellIdMap.Shrink(cells);
     }
 
     /// output
@@ -480,6 +518,44 @@ public:
 
     return output;
   }
+
+  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input,
+    const DeviceAdapter&) const
+  {
+    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+
+    // Use a temporary permutation array to simplify the mapping:
+    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->PointIdMap, input);
+
+    // Copy into an array with default storage:
+    vtkm::cont::ArrayHandle<ValueType> result;
+    Algo::Copy(tmp, result);
+
+    return result;
+  }
+
+  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input,
+    const DeviceAdapter&) const
+  {
+    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+
+    // Use a temporary permutation array to simplify the mapping:
+    auto tmp = vtkm::cont::make_ArrayHandlePermutation(this->CellIdMap, input);
+
+    // Copy into an array with default storage:
+    vtkm::cont::ArrayHandle<ValueType> result;
+    Algo::Copy(tmp, result);
+
+    return result;
+  }
+
+private:
+  vtkm::cont::ArrayHandle<vtkm::Id> PointIdMap;
+  vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
 }; // struct VertexClustering
 }
 } // namespace vtkm::worklet

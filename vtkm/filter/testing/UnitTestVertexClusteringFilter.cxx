@@ -41,10 +41,18 @@ void TestVertexClustering()
   result = clustering.Execute(dataSet);
 
   VTKM_TEST_ASSERT(result.IsValid(), "results should be valid");
+  VTKM_TEST_ASSERT(clustering.MapFieldOntoOutput(result, dataSet.GetPointField("pointvar")),
+                   "Point field mapping failed.");
+  VTKM_TEST_ASSERT(clustering.MapFieldOntoOutput(result, dataSet.GetCellField("cellvar")),
+                   "Cell field mapping failed.");
 
   vtkm::cont::DataSet output = result.GetDataSet();
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Number of output coordinate systems mismatch");
+
+  using FieldArrayType = vtkm::cont::ArrayHandle<vtkm::Float32>;
+  FieldArrayType pointvar = output.GetPointField("pointvar").GetData().Cast<FieldArrayType>();
+  FieldArrayType cellvar = output.GetCellField("cellvar").GetData().Cast<FieldArrayType>();
 
   // test
   const vtkm::Id output_points = 6;
@@ -53,6 +61,9 @@ void TestVertexClustering()
     { 0.0268670674, 0.246195346, 0.119720004 },   { 0.00215422804, 0.0340906903, 0.180881709 },
     { 0.0108188, 0.152774006, 0.167914003 },      { 0.0202241503, 0.225427493, 0.140208006 }
   };
+
+  vtkm::Float32 output_pointvar[output_points] = { 28.f, 15.f, 16.f, 21.f, 30.f, 17.f };
+  vtkm::Float32 output_cellvar[3] = { 140.f, 144.f, 132.f };
 
   typedef vtkm::Vec<vtkm::Float64, 3> PointType;
   vtkm::cont::ArrayHandle<PointType> pointArray;
@@ -65,6 +76,24 @@ void TestVertexClustering()
     PointType p2 = vtkm::make_Vec(output_point[i][0], output_point[i][1], output_point[i][2]);
     std::cout << "point: " << p1 << " " << p2 << std::endl;
     VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
+  }
+
+  {
+    auto portal = pointvar.GetPortalConstControl();
+    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == output_points, "Point field size mismatch.");
+    for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
+    {
+      VTKM_TEST_ASSERT(test_equal(portal.Get(i), output_pointvar[i]), "Point field mismatch.");
+    }
+  }
+
+  {
+    auto portal = cellvar.GetPortalConstControl();
+    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 3, "Cell field size mismatch.");
+    for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
+    {
+      VTKM_TEST_ASSERT(test_equal(portal.Get(i), output_cellvar[i]), "Cell field mismatch.");
+    }
   }
 }
 
