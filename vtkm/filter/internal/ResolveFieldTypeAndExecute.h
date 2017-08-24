@@ -81,7 +81,7 @@ private:
     {
       this->Instance.Result = this->Instance.DerivedClass->DoExecute(
         this->Instance.InputData, this->Field, this->Instance.Metadata, this->Instance.Policy, tag);
-      return this->Instance.Result.IsFieldValid();
+      return this->Instance.Result.IsValid();
     }
 
   private:

@@ -122,7 +122,7 @@ public:
     thresholdPoints.SetThresholdBetween(500.0, 600.0);
     result = thresholdPoints.Execute(dataset, std::string("pointvar"));
 
-    VTKM_TEST_ASSERT(result.IsDataSetValid(), "threshold algorithm should return true");
+    VTKM_TEST_ASSERT(result.IsValid(), "threshold algorithm should return true");
 
     thresholdPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
 

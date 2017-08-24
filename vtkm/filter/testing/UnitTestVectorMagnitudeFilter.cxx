@@ -52,7 +52,7 @@ void TestVectorMagnitude()
 
   result = vm.Execute(dataSet, dataSet.GetField("double_vec_pointvar"));
 
-  VTKM_TEST_ASSERT(result.IsDataSetValid(), "result should be valid");
+  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
   VTKM_TEST_ASSERT(result.GetField().GetName() == "magnitude", "Output field has wrong name.");
   VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
                    "Output field has wrong association");
