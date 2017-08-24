@@ -115,16 +115,30 @@ static void MultiBlockTest()
   multiblock.GetBlock(0).GetField("cellvar").GetRange(&TestRange);
   VTKM_TEST_ASSERT(TestRange == SourceRange, "Local field value info incorrect");
 
-  multiblock.OverWriteBlock(0, TDset2);
-  TestDSet = multiblock.GetBlock(0);
-  DataSet_Compare(TDset2, TestDSet);
-  multiblock.OverWriteBlock(0, TDset1);
-  TestDSet = multiblock.GetBlock(0);
+  vtkm::cont::MultiBlock testblocks1;
+  std::vector<vtkm::cont::DataSet> blocks = multiblock.GetBlocks();
+  testblocks1.AddBlocks(blocks);
+  VTKM_TEST_ASSERT(multiblock.GetNumberOfBlocks() == testblocks1.GetNumberOfBlocks(),
+                   "inconsistent number of blocks");
+
+  vtkm::cont::MultiBlock testblocks2(2);
+  testblocks2.InsertBlock(0, TDset1);
+  testblocks2.InsertBlock(1, TDset2);
+
+  TestDSet = testblocks2.GetBlock(0);
   DataSet_Compare(TDset1, TestDSet);
-  multiblock.SetCapacity(3);
-  std::cout << "capacity updated\n";
-  multiblock.SetCapacity(2);
-  std::cout << "structure capacity" << multiblock.GetCapacity() << "\n";
+
+  TestDSet = testblocks2.GetBlock(1);
+  DataSet_Compare(TDset2, TestDSet);
+
+  testblocks2.ReplaceBlock(0, TDset2);
+  testblocks2.ReplaceBlock(1, TDset1);
+
+  TestDSet = testblocks2.GetBlock(0);
+  DataSet_Compare(TDset2, TestDSet);
+
+  TestDSet = testblocks2.GetBlock(1);
+  DataSet_Compare(TDset1, TestDSet);
 }
 
 void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet)

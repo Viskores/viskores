@@ -65,9 +65,6 @@ public:
   vtkm::Id GetNumberOfBlocks() const;
 
   VTKM_CONT
-  vtkm::Id GetCapacity();
-
-  VTKM_CONT
   void SetCapacity(vtkm::Id size);
 
   VTKM_CONT
@@ -83,7 +80,7 @@ public:
   void InsertBlock(vtkm::Id index, vtkm::cont::DataSet& ds);
   /// replace the "index" positioned element of the contained DataSet vector with "ds"
   VTKM_CONT
-  void OverWriteBlock(vtkm::Id index, vtkm::cont::DataSet& ds);
+  void ReplaceBlock(vtkm::Id index, vtkm::cont::DataSet& ds);
   /// append the DataSet vector "mblocks"  to the end of the contained one
   VTKM_CONT
   void AddBlocks(std::vector<vtkm::cont::DataSet>& mblocks);
@@ -140,9 +137,6 @@ public:
 
 private:
   std::vector<vtkm::cont::DataSet> blocks;
-  vtkm::Id capacity;
-  bool capacitytag;
-  std::vector<vtkm::Id> block_ids;
 };
 }
 } // namespace vtkm::cont

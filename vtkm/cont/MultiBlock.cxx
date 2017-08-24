@@ -33,21 +33,18 @@ namespace cont
 
 VTKM_CONT
 MultiBlock::MultiBlock(const vtkm::cont::DataSet& ds)
-  : capacitytag(false)
 {
   this->blocks.insert(blocks.end(), ds);
 }
 
 VTKM_CONT
 MultiBlock::MultiBlock(const vtkm::cont::MultiBlock& src)
-  : capacitytag(false)
 {
   this->blocks = src.GetBlocks();
 }
 
 VTKM_CONT
 MultiBlock::MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks)
-  : capacitytag(false)
 {
   this->blocks = mblocks;
 }
@@ -55,14 +52,11 @@ MultiBlock::MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks)
 VTKM_CONT
 MultiBlock::MultiBlock(vtkm::Id size)
 {
-  this->capacity = size;
-  this->capacitytag = true;
   this->blocks.reserve(static_cast<std::size_t>(size));
 }
 
 VTKM_CONT
 MultiBlock::MultiBlock()
-  : capacitytag(false)
 {
 }
 
@@ -93,32 +87,6 @@ vtkm::Id MultiBlock::GetNumberOfBlocks() const
 }
 
 VTKM_CONT
-vtkm::Id MultiBlock::GetCapacity()
-{
-  if (this->capacitytag)
-    return this->capacity;
-  else
-    std::cout << "structure capacity not set yet\n";
-  return 0;
-}
-
-
-VTKM_CONT
-void MultiBlock::SetCapacity(vtkm::Id size)
-{
-  if (static_cast<vtkm::Id>(this->blocks.capacity()) < size)
-  {
-    this->capacity = size;
-    this->capacitytag = true;
-    this->blocks.reserve(static_cast<std::size_t>(size));
-  }
-  else
-  {
-    std::cout << "required size is too small and rejected<<\n";
-  }
-}
-
-VTKM_CONT
 const vtkm::cont::DataSet& MultiBlock::GetBlock(vtkm::Id blockId) const
 {
   return this->blocks[static_cast<std::size_t>(blockId)];
@@ -139,29 +107,32 @@ void MultiBlock::AddBlock(vtkm::cont::DataSet& ds)
 VTKM_CONT
 void MultiBlock::AddBlocks(std::vector<vtkm::cont::DataSet>& mblocks)
 {
-  for (std::size_t i = 0; i < mblocks.size(); i++)
-  {
-    AddBlock(mblocks[i]);
-  }
+  this->blocks.insert(blocks.end(), mblocks.begin(), mblocks.end());
   return;
 }
 
 VTKM_CONT
 void MultiBlock::InsertBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
 {
-  if (index < static_cast<vtkm::Id>(blocks.size()))
+  if (index <= static_cast<vtkm::Id>(blocks.size()))
     this->blocks.insert(blocks.begin() + index, ds);
   else
-    std::cout << "insertion failure, invalid insertion posotion\n";
+  {
+    std::string msg = "invalid insert position\n ";
+    throw ErrorExecution(msg);
+  }
 }
 
 VTKM_CONT
-void MultiBlock::OverWriteBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
+void MultiBlock::ReplaceBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
 {
   if (index < static_cast<vtkm::Id>(blocks.size()))
     this->blocks.at(static_cast<std::size_t>(index)) = ds;
   else
-    std::cout << "invalid overwrite posotion\n";
+  {
+    std::string msg = "invalid replace position\n ";
+    throw ErrorExecution(msg);
+  }
 }
 
 VTKM_CONT
