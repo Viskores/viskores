@@ -21,6 +21,7 @@
 #define vtk_m_worklet_ExternalFaces_h
 
 #include <vtkm/CellShape.h>
+#include <vtkm/Hash.h>
 #include <vtkm/Math.h>
 
 #include <vtkm/exec/CellFace.h>
@@ -46,8 +47,6 @@
 #include <vtkm/worklet/WorkletMapTopology.h>
 #include <vtkm/worklet/WorkletReduceByKey.h>
 
-// #define __VTKM_EXTERNAL_FACES_BENCHMARK
-
 namespace vtkm
 {
 namespace worklet
@@ -55,50 +54,6 @@ namespace worklet
 
 struct ExternalFaces
 {
-  vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
-  bool PassPolyData;
-
-  //Unary predicate operator
-  //Returns True if the argument is equal to 1; False otherwise.
-  struct IsUnity
-  {
-    template <typename T>
-    VTKM_EXEC_CONT bool operator()(const T& x) const
-    {
-      return x == T(1);
-    }
-  };
-
-  //Returns True if the first vector argument is less than the second
-  //vector argument; otherwise, False
-  struct Id3LessThan
-  {
-    template <typename T>
-    VTKM_EXEC_CONT bool operator()(const vtkm::Vec<T, 3>& a, const vtkm::Vec<T, 3>& b) const
-    {
-      bool isLessThan = false;
-      if (a[0] < b[0])
-      {
-        isLessThan = true;
-      }
-      else if (a[0] == b[0])
-      {
-        if (a[1] < b[1])
-        {
-          isLessThan = true;
-        }
-        else if (a[1] == b[1])
-        {
-          if (a[2] < b[2])
-          {
-            isLessThan = true;
-          }
-        }
-      }
-      return isLessThan;
-    }
-  };
-
   //Worklet that returns the number of external faces for each structured cell
   class NumExternalFacesPerStructuredCell : public vtkm::worklet::WorkletMapPointToCell
   {
@@ -387,7 +342,7 @@ struct ExternalFaces
     }
   };
 
-  //Worklet that identifies a cell face by 3 cononical points
+  //Worklet that identifies a cell face by a hash value. Not necessarily completely unique.
   class FaceHash : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
@@ -417,7 +372,7 @@ struct ExternalFaces
     }
 
     template <typename CellShapeTag, typename CellNodeVecType>
-    VTKM_EXEC void operator()(vtkm::Id3& faceHash,
+    VTKM_EXEC void operator()(vtkm::HashType& faceHash,
                               vtkm::Id& cellIndex,
                               vtkm::IdComponent& faceIndex,
                               CellShapeTag shape,
@@ -425,72 +380,7 @@ struct ExternalFaces
                               vtkm::Id inputIndex,
                               vtkm::IdComponent visitIndex) const
     {
-      vtkm::VecCConst<vtkm::IdComponent> localFaceIndices =
-        vtkm::exec::CellFaceLocalIndices(visitIndex, shape, *this);
-
-      VTKM_ASSERT(localFaceIndices.GetNumberOfComponents() >= 3);
-
-      //Assign cell points/nodes to this face
-      vtkm::Id faceP1 = cellNodeIds[localFaceIndices[0]];
-      vtkm::Id faceP2 = cellNodeIds[localFaceIndices[1]];
-      vtkm::Id faceP3 = cellNodeIds[localFaceIndices[2]];
-
-      //Sort the first 3 face points/nodes in ascending order
-      vtkm::Id sorted[3] = { faceP1, faceP2, faceP3 };
-      vtkm::Id temp;
-      if (sorted[0] > sorted[2])
-      {
-        temp = sorted[0];
-        sorted[0] = sorted[2];
-        sorted[2] = temp;
-      }
-      if (sorted[0] > sorted[1])
-      {
-        temp = sorted[0];
-        sorted[0] = sorted[1];
-        sorted[1] = temp;
-      }
-      if (sorted[1] > sorted[2])
-      {
-        temp = sorted[1];
-        sorted[1] = sorted[2];
-        sorted[2] = temp;
-      }
-
-      // Check the rest of the points to see if they are in the lowest 3
-      vtkm::IdComponent numPointsInFace = localFaceIndices.GetNumberOfComponents();
-      for (vtkm::IdComponent pointIndex = 3; pointIndex < numPointsInFace; pointIndex++)
-      {
-        vtkm::Id nextPoint = cellNodeIds[localFaceIndices[pointIndex]];
-        if (nextPoint < sorted[2])
-        {
-          if (nextPoint < sorted[1])
-          {
-            sorted[2] = sorted[1];
-            if (nextPoint < sorted[0])
-            {
-              sorted[1] = sorted[0];
-              sorted[0] = nextPoint;
-            }
-            else // nextPoint > P0, nextPoint < P1
-            {
-              sorted[1] = nextPoint;
-            }
-          }
-          else // nextPoint > P1, nextPoint < P2
-          {
-            sorted[2] = nextPoint;
-          }
-        }
-        else // nextPoint > P2
-        {
-          // Do nothing. nextPoint not in top 3.
-        }
-      }
-
-      faceHash[0] = sorted[0];
-      faceHash[1] = sorted[1];
-      faceHash[2] = sorted[2];
+      faceHash = vtkm::Hash(vtkm::exec::CellFaceCononicalId(visitIndex, shape, cellNodeIds, *this));
 
       cellIndex = inputIndex;
       faceIndex = visitIndex;
@@ -500,31 +390,127 @@ struct ExternalFaces
     ScatterType Scatter;
   };
 
-  // Worklet that identifies the number of cells written out per face, which
-  // is 1 for faces that belong to only one cell (external face) or 0 for
-  // faces that belong to more than one cell (internal face).
+  // Worklet that identifies the number of cells written out per face.
+  // Because there can be collisions in the face ids, this instance might
+  // represent multiple faces, which have to be checked. The resulting
+  // number is the total number of external faces.
   class FaceCounts : public vtkm::worklet::WorkletReduceByKey
   {
   public:
-    typedef void ControlSignature(KeysIn keys, ReducedValuesOut<> numOutputCells);
-    typedef _2 ExecutionSignature(ValueCount);
+    typedef void ControlSignature(KeysIn keys,
+                                  WholeCellSetIn<> inputCells,
+                                  ValuesIn<> originCells,
+                                  ValuesIn<> originFaces,
+                                  ReducedValuesOut<> numOutputCells);
+    typedef _5 ExecutionSignature(_2, _3, _4);
     using InputDomain = _1;
 
-    VTKM_EXEC
-    vtkm::IdComponent operator()(vtkm::IdComponent numCellsOnFace) const
+    template <typename CellSetType, typename OriginCellsType, typename OriginFacesType>
+    VTKM_EXEC vtkm::IdComponent operator()(const CellSetType& cellSet,
+                                           const OriginCellsType& originCells,
+                                           const OriginFacesType& originFaces) const
     {
-      if (numCellsOnFace == 1)
+      vtkm::IdComponent numCellsOnHash = originCells.GetNumberOfComponents();
+      VTKM_ASSERT(originFaces.GetNumberOfComponents() == numCellsOnHash);
+
+      // Start by assuming all faces are unique, then remove one for each
+      // face we find a duplicate for.
+      vtkm::IdComponent numExternalFaces = numCellsOnHash;
+
+      for (vtkm::IdComponent myIndex = 0;
+           myIndex < numCellsOnHash - 1; // Don't need to check last face
+           myIndex++)
       {
-        return 1;
+        vtkm::Id3 myFace =
+          vtkm::exec::CellFaceCononicalId(originFaces[myIndex],
+                                          cellSet.GetCellShape(originCells[myIndex]),
+                                          cellSet.GetIndices(originCells[myIndex]),
+                                          *this);
+        for (vtkm::IdComponent otherIndex = myIndex + 1; otherIndex < numCellsOnHash; otherIndex++)
+        {
+          vtkm::Id3 otherFace =
+            vtkm::exec::CellFaceCononicalId(originFaces[otherIndex],
+                                            cellSet.GetCellShape(originCells[otherIndex]),
+                                            cellSet.GetIndices(originCells[otherIndex]),
+                                            *this);
+          if (myFace == otherFace)
+          {
+            // Faces are the same. Must be internal. Remove 2, one for each face. We don't have to
+            // worry about otherFace matching anything else because a proper topology will have at
+            // most 2 cells sharing a face, so there should be no more matches.
+            numExternalFaces -= 2;
+            break;
+          }
+        }
       }
-      else
-      {
-        return 0;
-      }
+
+      return numExternalFaces;
     }
   };
 
-  // Worklet that returns the number of points for each outputted face
+private:
+  // Resolves duplicate hashes by finding a specified unique face for a given hash.
+  // Given a cell set (from a WholeCellSetIn) and the cell/face id pairs for each face
+  // associated with a given hash, returns the index of the cell/face provided of the
+  // visitIndex-th unique face. Basically, this method searches through all the cell/face
+  // pairs looking for unique sets and returns the one associated with visitIndex.
+  template <typename CellSetType, typename OriginCellsType, typename OriginFacesType>
+  VTKM_EXEC static vtkm::IdComponent FindUniqueFace(const CellSetType& cellSet,
+                                                    const OriginCellsType& originCells,
+                                                    const OriginFacesType& originFaces,
+                                                    vtkm::IdComponent visitIndex,
+                                                    const vtkm::exec::FunctorBase* self)
+  {
+    vtkm::IdComponent numCellsOnHash = originCells.GetNumberOfComponents();
+    VTKM_ASSERT(originFaces.GetNumberOfComponents() == numCellsOnHash);
+
+    // Find the visitIndex-th unique face.
+    vtkm::IdComponent numFound = 0;
+    vtkm::IdComponent myIndex = 0;
+    while (true)
+    {
+      VTKM_ASSERT(myIndex < numCellsOnHash);
+      vtkm::Id3 myFace = vtkm::exec::CellFaceCononicalId(originFaces[myIndex],
+                                                         cellSet.GetCellShape(originCells[myIndex]),
+                                                         cellSet.GetIndices(originCells[myIndex]),
+                                                         *self);
+      bool foundPair = false;
+      for (vtkm::IdComponent otherIndex = myIndex + 1; otherIndex < numCellsOnHash; otherIndex++)
+      {
+        vtkm::Id3 otherFace =
+          vtkm::exec::CellFaceCononicalId(originFaces[otherIndex],
+                                          cellSet.GetCellShape(originCells[otherIndex]),
+                                          cellSet.GetIndices(originCells[otherIndex]),
+                                          *self);
+        if (myFace == otherFace)
+        {
+          // Faces are the same. Must be internal.
+          foundPair = true;
+          break;
+        }
+      }
+
+      if (!foundPair)
+      {
+        if (numFound == visitIndex)
+        {
+          break;
+        }
+        else
+        {
+          numFound++;
+        }
+      }
+
+      myIndex++;
+    }
+
+    return myIndex;
+  }
+
+public:
+  // Worklet that returns the number of points for each outputted face.
+  // Have to manage the case where multiple faces have the same hash.
   class NumPointsPerFace : public vtkm::worklet::WorkletReduceByKey
   {
   public:
@@ -533,7 +519,7 @@ struct ExternalFaces
                                   ValuesIn<> originCells,
                                   ValuesIn<> originFaces,
                                   ReducedValuesOut<> numPointsInFace);
-    typedef _5 ExecutionSignature(_2, _3, _4);
+    typedef _5 ExecutionSignature(_2, _3, _4, VisitIndex);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -557,12 +543,14 @@ struct ExternalFaces
     template <typename CellSetType, typename OriginCellsType, typename OriginFacesType>
     VTKM_EXEC vtkm::IdComponent operator()(const CellSetType& cellSet,
                                            const OriginCellsType& originCells,
-                                           const OriginFacesType& originFaces) const
+                                           const OriginFacesType& originFaces,
+                                           vtkm::IdComponent visitIndex) const
     {
-      VTKM_ASSERT(originCells.GetNumberOfComponents() == 1);
-      VTKM_ASSERT(originFaces.GetNumberOfComponents() == 1);
+      vtkm::IdComponent myIndex =
+        ExternalFaces::FindUniqueFace(cellSet, originCells, originFaces, visitIndex, this);
+
       return vtkm::exec::CellFaceNumberOfPoints(
-        originFaces[0], cellSet.GetCellShape(originCells[0]), *this);
+        originFaces[myIndex], cellSet.GetCellShape(originCells[myIndex]), *this);
     }
 
   private:
@@ -580,7 +568,7 @@ struct ExternalFaces
                                   ReducedValuesOut<> shapesOut,
                                   ReducedValuesOut<> connectivityOut,
                                   ReducedValuesOut<> cellIdMapOut);
-    typedef void ExecutionSignature(_2, _3, _4, _5, _6, _7);
+    typedef void ExecutionSignature(_2, _3, _4, VisitIndex, _5, _6, _7);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -608,23 +596,24 @@ struct ExternalFaces
     VTKM_EXEC void operator()(const CellSetType& cellSet,
                               const OriginCellsType& originCells,
                               const OriginFacesType& originFaces,
+                              vtkm::IdComponent visitIndex,
                               vtkm::UInt8& shapeOut,
                               ConnectivityType& connectivityOut,
                               vtkm::Id& cellIdMapOut) const
     {
-      VTKM_ASSERT(originCells.GetNumberOfComponents() == 1);
-      VTKM_ASSERT(originFaces.GetNumberOfComponents() == 1);
+      vtkm::IdComponent myIndex =
+        ExternalFaces::FindUniqueFace(cellSet, originCells, originFaces, visitIndex, this);
 
-      typename CellSetType::CellShapeTag shapeIn = cellSet.GetCellShape(originCells[0]);
-      shapeOut = vtkm::exec::CellFaceShape(originFaces[0], shapeIn, *this);
-      cellIdMapOut = originCells[0];
+      typename CellSetType::CellShapeTag shapeIn = cellSet.GetCellShape(originCells[myIndex]);
+      shapeOut = vtkm::exec::CellFaceShape(originFaces[myIndex], shapeIn, *this);
+      cellIdMapOut = originCells[myIndex];
 
       vtkm::VecCConst<vtkm::IdComponent> localFaceIndices =
-        vtkm::exec::CellFaceLocalIndices(originFaces[0], shapeIn, *this);
+        vtkm::exec::CellFaceLocalIndices(originFaces[myIndex], shapeIn, *this);
       vtkm::IdComponent numFacePoints = localFaceIndices.GetNumberOfComponents();
       VTKM_ASSERT(numFacePoints == connectivityOut.GetNumberOfComponents());
 
-      typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(originCells[0]);
+      typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(originCells[myIndex]);
 
       for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
       {
@@ -755,6 +744,9 @@ public:
   VTKM_CONT
   void SetPassPolyData(bool flag) { this->PassPolyData = flag; }
 
+  VTKM_CONT
+  bool GetPassPolyData() const { return this->PassPolyData; }
+
   //----------------------------------------------------------------------------
   template <typename ValueType, typename StorageType, typename DeviceAdapter>
   vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
@@ -852,30 +844,12 @@ public:
     vtkm::worklet::DispatcherMapTopology<NumExternalFacesPerStructuredCell>
       numExternalFacesDispatcher((NumExternalFacesPerStructuredCell(MinPoint, MaxPoint)));
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    vtkm::cont::Timer<DeviceAdapter> timer;
-#endif
     numExternalFacesDispatcher.Invoke(inCellSet, numExternalFaces, coord.GetData());
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "NumExternalFacesPerStructuredCell_Worklet," << timer.GetElapsedTime() << "\n";
-#endif
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
     vtkm::Id numberOfExternalFaces = DeviceAlgorithms::Reduce(numExternalFaces, 0, vtkm::Sum());
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "numberOfExternalFaces_Reduce," << timer.GetElapsedTime() << "\n";
-#endif
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
     vtkm::worklet::ScatterCounting scatterCellToExternalFace(numExternalFaces, DeviceAdapter());
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "numExternalFaces_ScatterCounting," << timer.GetElapsedTime() << "\n";
-#endif
 
     // Maps output cells to input cells. Store this for cell field mapping.
     this->CellIdMap = scatterCellToExternalFace.GetOutputToInputMap();
@@ -894,9 +868,6 @@ public:
       buildConnectivityStructuredDispatcher(
         (BuildConnectivityStructured(MinPoint, MaxPoint, scatterCellToExternalFace)));
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
     buildConnectivityStructuredDispatcher.Invoke(
       inCellSet,
       inCellSet,
@@ -904,13 +875,7 @@ public:
       facePointCount,
       vtkm::cont::make_ArrayHandleGroupVec<4>(faceConnectivity),
       coord.GetData());
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "BuildConnectivityStructured_Worklet," << timer.GetElapsedTime() << "\n";
-#endif
     outCellSet.Fill(inCellSet.GetNumberOfPoints(), faceShapes, facePointCount, faceConnectivity);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "Total External Faces = " << outCellSet.GetNumberOfCells() << std::endl;
-#endif
   }
 
   ///////////////////////////////////////////////////
@@ -928,59 +893,34 @@ public:
                                                  OffsetsStorage>& outCellSet,
                      DeviceAdapter)
   {
-    typedef vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage> PointCountArrayType;
-    typedef vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage> ShapeArrayType;
-    typedef vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage> OffsetsArrayType;
-    typedef vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorage> ConnectivityArrayType;
-    typedef vtkm::cont::ArrayHandle<vtkm::Id> CellIdArrayType;
+    using PointCountArrayType = vtkm::cont::ArrayHandle<vtkm::IdComponent, NumIndicesStorage>;
+    using ShapeArrayType = vtkm::cont::ArrayHandle<vtkm::UInt8, ShapeStorage>;
+    using OffsetsArrayType = vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>;
+    using ConnectivityArrayType = vtkm::cont::ArrayHandle<vtkm::Id, ConnectivityStorage>;
 
     //Create a worklet to map the number of faces to each cell
     vtkm::cont::ArrayHandle<vtkm::IdComponent> facesPerCell;
     vtkm::worklet::DispatcherMapTopology<NumFacesPerCell> numFacesDispatcher;
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    vtkm::cont::Timer<DeviceAdapter> timer;
-#endif
     numFacesDispatcher.Invoke(inCellSet, facesPerCell);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "NumFacesPerCell_Worklet," << timer.GetElapsedTime() << "\n";
-#endif
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
     vtkm::worklet::ScatterCounting scatterCellToFace(facesPerCell, DeviceAdapter());
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "FaceInputCount_ScatterCounting," << timer.GetElapsedTime() << "\n";
-#endif
     facesPerCell.ReleaseResources();
 
     PointCountArrayType polyDataPointCount;
     ShapeArrayType polyDataShapes;
     OffsetsArrayType polyDataOffsets;
     ConnectivityArrayType polyDataConnectivity;
-    CellIdArrayType polyDataCellIdMap;
+    vtkm::cont::ArrayHandle<vtkm::Id> polyDataCellIdMap;
     vtkm::Id polyDataConnectivitySize = 0;
     if (this->PassPolyData)
     {
       vtkm::cont::ArrayHandle<vtkm::IdComponent> isPolyDataCell;
       vtkm::worklet::DispatcherMapTopology<IsPolyDataCell> isPolyDataCellDispatcher;
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-      timer.Reset();
-#endif
       isPolyDataCellDispatcher.Invoke(inCellSet, isPolyDataCell);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-      std::cout << "IsPolyDataCell_Worklet," << timer.GetElapsedTime() << "\n";
-#endif
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-      timer.Reset();
-#endif
       vtkm::worklet::ScatterCounting scatterPolyDataCells(isPolyDataCell, DeviceAdapter());
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-      std::cout << "scatterPolyDataCells_ScatterCounting," << timer.GetElapsedTime() << "\n";
-#endif
 
       isPolyDataCell.ReleaseResources();
 
@@ -989,13 +929,7 @@ public:
         vtkm::worklet::DispatcherMapTopology<CountPolyDataCellPoints, DeviceAdapter>
           countPolyDataCellPointsDispatcher((CountPolyDataCellPoints(scatterPolyDataCells)));
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-        timer.Reset();
-#endif
         countPolyDataCellPointsDispatcher.Invoke(inCellSet, polyDataPointCount);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-        std::cout << "CountPolyDataCellPoints_Worklet" << timer.GetElapsedTime() << "\n";
-#endif
 
         vtkm::cont::ConvertNumComponentsToOffsets(
           polyDataPointCount, polyDataOffsets, polyDataConnectivitySize);
@@ -1005,17 +939,11 @@ public:
 
         polyDataConnectivity.Allocate(polyDataConnectivitySize);
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-        timer.Reset();
-#endif
         passPolyDataCellsDispatcher.Invoke(
           inCellSet,
           polyDataShapes,
           vtkm::cont::make_ArrayHandleGroupVecVariable(polyDataConnectivity, polyDataOffsets),
           polyDataCellIdMap);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-        std::cout << "PassPolyDataCells_Worklet," << timer.GetElapsedTime() << "\n";
-#endif
       }
     }
 
@@ -1041,70 +969,34 @@ public:
       }
     }
 
-    vtkm::cont::ArrayHandle<vtkm::Id3> faceHashes;
+    vtkm::cont::ArrayHandle<vtkm::HashType> faceHashes;
     vtkm::cont::ArrayHandle<vtkm::Id> originCells;
     vtkm::cont::ArrayHandle<vtkm::IdComponent> originFaces;
     vtkm::worklet::DispatcherMapTopology<FaceHash, DeviceAdapter> faceHashDispatcher(
       (FaceHash(scatterCellToFace)));
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
     faceHashDispatcher.Invoke(inCellSet, faceHashes, originCells, originFaces);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "FaceHash_Worklet," << timer.GetElapsedTime() << "\n";
-#endif
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
-    vtkm::worklet::Keys<vtkm::Id3> faceKeys(faceHashes, DeviceAdapter());
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "Keys_BuildArrays," << timer.GetElapsedTime() << "\n";
-#endif
+    vtkm::worklet::Keys<vtkm::HashType> faceKeys(faceHashes, DeviceAdapter());
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> faceOutputCount;
     vtkm::worklet::DispatcherReduceByKey<FaceCounts, DeviceAdapter> faceCountDispatcher;
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
-    faceCountDispatcher.Invoke(faceKeys, faceOutputCount);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "FaceCount_Worklet," << timer.GetElapsedTime() << "\n";
-#endif
+    faceCountDispatcher.Invoke(faceKeys, inCellSet, originCells, originFaces, faceOutputCount);
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
     vtkm::worklet::ScatterCounting scatterCullInternalFaces(faceOutputCount, DeviceAdapter());
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "FaceOutputCount_ScatterCounting," << timer.GetElapsedTime() << "\n";
-#endif
 
     PointCountArrayType facePointCount;
     vtkm::worklet::DispatcherReduceByKey<NumPointsPerFace, DeviceAdapter> pointsPerFaceDispatcher(
       scatterCullInternalFaces);
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
     pointsPerFaceDispatcher.Invoke(faceKeys, inCellSet, originCells, originFaces, facePointCount);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "PointsPerFaceCount_Worklet," << timer.GetElapsedTime() << "\n";
-#endif
 
     ShapeArrayType faceShapes;
 
     OffsetsArrayType faceOffsets;
     vtkm::Id connectivitySize;
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
     vtkm::cont::ConvertNumComponentsToOffsets(facePointCount, faceOffsets, connectivitySize);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "FacePointCount_ScanExclusive," << timer.GetElapsedTime() << "\n";
-#endif
 
     ConnectivityArrayType faceConnectivity;
     // Must pre allocate because worklet invocation will not have enough
@@ -1114,11 +1006,8 @@ public:
     vtkm::worklet::DispatcherReduceByKey<BuildConnectivity, DeviceAdapter>
       buildConnectivityDispatcher(scatterCullInternalFaces);
 
-    CellIdArrayType faceToCellIdMap;
+    vtkm::cont::ArrayHandle<vtkm::Id> faceToCellIdMap;
 
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    timer.Reset();
-#endif
     buildConnectivityDispatcher.Invoke(
       faceKeys,
       inCellSet,
@@ -1127,9 +1016,6 @@ public:
       faceShapes,
       vtkm::cont::make_ArrayHandleGroupVecVariable(faceConnectivity, faceOffsets),
       faceToCellIdMap);
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "BuildConnectivity_Worklet," << timer.GetElapsedTime() << "\n";
-#endif
 
     if (!polyDataConnectivitySize)
     {
@@ -1168,9 +1054,10 @@ public:
       OffsetsArrayType joinedOffsets;
       DeviceAlgorithm::Copy(offsetsArray, joinedOffsets);
 
-      vtkm::cont::ArrayHandleConcatenate<CellIdArrayType, CellIdArrayType> cellIdMapArray(
-        faceToCellIdMap, polyDataCellIdMap);
-      CellIdArrayType joinedCellIdMap;
+      vtkm::cont::ArrayHandleConcatenate<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                         vtkm::cont::ArrayHandle<vtkm::Id>>
+        cellIdMapArray(faceToCellIdMap, polyDataCellIdMap);
+      vtkm::cont::ArrayHandle<vtkm::Id> joinedCellIdMap;
       DeviceAlgorithm::Copy(cellIdMapArray, joinedCellIdMap);
 
       outCellSet.Fill(inCellSet.GetNumberOfPoints(),
@@ -1180,11 +1067,11 @@ public:
                       joinedOffsets);
       this->CellIdMap = joinedCellIdMap;
     }
-
-#ifdef __VTKM_EXTERNAL_FACES_BENCHMARK
-    std::cout << "Total External Faces = " << outCellSet.GetNumberOfCells() << std::endl;
-#endif
   }
+
+private:
+  vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
+  bool PassPolyData;
 
 }; //struct ExternalFaces
 }
