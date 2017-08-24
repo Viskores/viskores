@@ -286,23 +286,6 @@ struct VertexClustering
     }
   };
 
-  class Id3Less
-  {
-  public:
-    VTKM_EXEC
-    bool operator()(const vtkm::Id3& a, const vtkm::Id3& b) const
-    {
-      if (a[0] < 0)
-      {
-        // invalid id: place at the last after sorting
-        // (comparing to 0 is faster than matching -1)
-        return false;
-      }
-      return b[0] < 0 || a[0] < b[0] || (a[0] == b[0] && a[1] < b[1]) ||
-        (a[0] == b[0] && a[1] == b[1] && a[2] < b[2]);
-    }
-  };
-
 public:
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
