@@ -76,7 +76,7 @@ void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
   externalFaces.SetPassPolyData(passPolyData);
   vtkm::filter::Result result = externalFaces.Execute(ds);
 
-  VTKM_TEST_ASSERT(result.IsDataSetValid(), "Results should be valid");
+  VTKM_TEST_ASSERT(result.IsValid(), "Results should be valid");
 
   // map fields
   for (vtkm::IdComponent i = 0; i < ds.GetNumberOfFields(); ++i)

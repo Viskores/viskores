@@ -35,7 +35,7 @@ void TestUniformGrid(vtkm::filter::CleanGrid clean)
   vtkm::cont::DataSet inData = makeData.Make2DUniformDataSet0();
 
   vtkm::filter::Result result = clean.Execute(inData);
-  VTKM_TEST_ASSERT(result.IsDataSetValid(), "Filter failed to execute");
+  VTKM_TEST_ASSERT(result.IsValid(), "Filter failed to execute");
 
   bool success;
   success = clean.MapFieldOntoOutput(result, inData.GetField("pointvar"));

@@ -32,6 +32,9 @@ namespace filter
 
 /// \brief Storage for DataSet and/or Field results returned from a filter.
 ///
+/// Use the \c IsValid() method to determine whether or not the filter execution
+/// was successful.
+///
 /// \c Result can store either a \c DataSet, or a \c DataSet and \c Field, depending
 /// on the type of filter that produced it. Use \c IsDataSetValid() and
 /// \c IsFieldValid() to identify what is stored in the \c Result.
@@ -179,6 +182,16 @@ public:
   /// filter.
   ///
   VTKM_CONT
+  bool IsValid() const
+  {
+    // At this time, IsDataSetValid properly indicates whether or not a filter
+    // ran successfully since all filters output a valid dataset on success.
+    return this->IsDataSetValid();
+  }
+
+  /// Indicates whether or not it's safe to call GetDataSet().
+  ///
+  VTKM_CONT
   bool IsDataSetValid() const { return this->DataSetValid; }
 
   /// Returns the results of the filter in terms of a \c DataSet.
@@ -198,6 +211,8 @@ public:
   VTKM_CONT
   vtkm::cont::DataSet& GetDataSet() { return this->Data; }
 
+  /// Indicates whether or not it's safe to call GetField().
+  ///
   VTKM_CONT
   bool IsFieldValid() const { return this->FieldValid; }
 

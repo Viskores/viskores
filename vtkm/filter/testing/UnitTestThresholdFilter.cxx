@@ -124,7 +124,7 @@ public:
     threshold.SetUpperThreshold(500.1);
     result = threshold.Execute(dataset, std::string("pointvar"));
 
-    VTKM_TEST_ASSERT(result.IsDataSetValid(), "threshold algorithm should return true");
+    VTKM_TEST_ASSERT(result.IsValid(), "threshold algorithm should return true");
 
     threshold.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
 

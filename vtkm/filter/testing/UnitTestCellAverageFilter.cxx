@@ -96,11 +96,11 @@ void TestCellAverageRegular2D()
   VTKM_TEST_ASSERT(result.GetField().GetName() == "pointvar", "Field was given the wrong name.");
   VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
                    "Field was given the wrong association.");
-  vtkm::cont::Field Result = result.GetField();
+  vtkm::cont::Field resultField = result.GetField();
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  Result.GetData().CopyTo(resultArrayHandle);
+  resultField.GetData().CopyTo(resultArrayHandle);
 
-  if (result.IsDataSetValid())
+  if (result.IsValid())
   {
     vtkm::Float32 expected[2] = { 30.1f, 40.1f };
     for (int i = 0; i < 2; ++i)

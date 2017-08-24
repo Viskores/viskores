@@ -77,7 +77,7 @@ void TestPointAverageRegular3D()
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   Result.GetData().CopyTo(resultArrayHandle);
 
-  if (result.IsDataSetValid())
+  if (result.IsValid())
   {
     vtkm::Float32 expected[18] = { 0.f, 0.5f, 1.f, 0.f, 0.5f, 1.f, 1.f, 1.5f, 2.f,
                                    1.f, 1.5f, 2.f, 2.f, 2.5f, 3.f, 2.f, 2.5f, 3.f };

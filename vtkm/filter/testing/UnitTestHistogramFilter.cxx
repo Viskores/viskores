@@ -263,7 +263,7 @@ void VerifyHistogram(const vtkm::filter::Result& result,
                      vtkm::Float64 delta,
                      bool output = true)
 {
-  VTKM_TEST_ASSERT(result.IsDataSetValid(), "result should be valid");
+  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
   VTKM_TEST_ASSERT(result.GetField().GetName() == "histogram", "Output field has wrong name.");
 
   vtkm::cont::ArrayHandle<vtkm::Id> bins;

@@ -95,7 +95,7 @@ struct FilterDataSetPrepareForExecutionFunctor
   VTKM_CONT bool operator()(Device)
   {
     this->Result = this->Self->DoExecute(this->Input, this->Policy, Device());
-    return this->Result.IsDataSetValid();
+    return this->Result.IsValid();
   }
 
 private:
@@ -135,7 +135,7 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   bool valid = false;
-  if (result.IsDataSetValid())
+  if (result.IsValid())
   {
     vtkm::filter::FieldMetadata metaData(field);
     typedef internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy> FunctorType;
