@@ -80,7 +80,7 @@ public:
     typedef typename ValueArrayIn::ValueType ValueType;
 
     vtkm::cont::ArrayHandle<ValueType> outArray;
-    vtkm::worklet::AverageByKey(
+    vtkm::worklet::AverageByKey::Run(
       InputKeys, coordinates, *(this->OutputKeys), outArray, DeviceAdapter());
     *(this->OutputValues) = vtkm::cont::DynamicArrayHandle(outArray);
   }
