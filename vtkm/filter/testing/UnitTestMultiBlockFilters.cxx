@@ -19,8 +19,6 @@
 //============================================================================
 
 #include <vtkm/CellShape.h>
-
-<<<<<<< HEAD
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetStructured.h>
@@ -36,23 +34,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/CellAverage.h>
 #include <vtkm/filter/Histogram.h>
-=======
-#include <vtkm/VectorAnalysis.h>
-#include <vtkm/cont/ArrayHandle.h>
-#include <vtkm/cont/CellSetStructured.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DataSetFieldAdd.h>
-#include <vtkm/cont/DynamicArrayHandle.h>
 
-#include <vtkm/cont/MultiBlock.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-#include <vtkm/exec/ConnectivityStructured.h>
-
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
-#include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Histogram.h>
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
 
 template <typename T>
 vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum, std::string FieldName)
@@ -60,7 +42,7 @@ vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum, std::string Field
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetFieldAdd dsf;
-<<<<<<< HEAD
+
   vtkm::Vec<T, 2> origin(0);
   vtkm::Vec<T, 2> spacing(1);
   vtkm::cont::MultiBlock Blocks;
@@ -71,39 +53,19 @@ vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum, std::string Field
     if (FieldName == "cellvar")
     {
       vtkm::Id numCells = (dimensions[0] - 1) * (dimensions[1] - 1);
-=======
-  vtkm::Vec<T, 2> origin(0);
-  vtkm::Vec<T, 2> spacing(1);
-  vtkm::cont::MultiBlock Blocks;
-  for (vtkm::Id BlockId = 0; BlockId < static_cast<vtkm::Id>(BlockNum); BlockId++)
-  {
-    vtkm::Id2 dimensions((BlockId + 2) * (BlockId + 2), (BlockId + 2) * (BlockId + 2));
 
-    if (FieldName == "cellvar")
-    {
-      vtkm::Id numCells = (dimensions[0] - 1) * (dimensions[1] - 1);
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
       std::vector<T> varC2D(static_cast<std::size_t>(numCells));
       for (vtkm::Id i = 0; i < numCells; i++)
       {
         varC2D[static_cast<std::size_t>(i)] = static_cast<T>(BlockId * i);
       }
       dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
-<<<<<<< HEAD
                                       vtkm::Vec<T, 2>(origin[0], origin[1]),
                                       vtkm::Vec<T, 2>(spacing[0], spacing[1]));
       dsf.AddCellField(dataSet, "cellvar", varC2D);
     }
 
     if (FieldName == "pointvar")
-=======
-                                      vtkm::Vec<T, 2>(origin[0], origin[1]),
-                                      vtkm::Vec<T, 2>(spacing[0], spacing[1]));
-      dsf.AddCellField(dataSet, "cellvar", varC2D);
-    }
-
-    if (FieldName == "pointvar")
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
     {
       vtkm::Id numPoints = dimensions[0] * dimensions[1];
       std::vector<T> varP2D(static_cast<std::size_t>(numPoints));
@@ -112,29 +74,19 @@ vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum, std::string Field
         varP2D[static_cast<std::size_t>(i)] = static_cast<T>(BlockId);
       }
       dataSet = dataSetBuilder.Create(vtkm::Id2(dimensions[0], dimensions[1]),
-<<<<<<< HEAD
                                       vtkm::Vec<T, 2>(origin[0], origin[1]),
                                       vtkm::Vec<T, 2>(spacing[0], spacing[1]));
-=======
-                                      vtkm::Vec<T, 2>(origin[0], origin[1]),
-                                      vtkm::Vec<T, 2>(spacing[0], spacing[1]));
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
       dsf.AddPointField(dataSet, "pointvar", varP2D);
     }
 
     Blocks.AddBlock(dataSet);
-<<<<<<< HEAD
   }
-=======
-  }
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
   return Blocks;
 }
 template <typename T, typename D>
 void Result_Verify(T ResultVec, D Filter, vtkm::cont::MultiBlock& Blocks, std::string FieldName)
 {
   VTKM_TEST_ASSERT(ResultVec.size() == static_cast<std::size_t>(Blocks.GetNumberOfBlocks()),
-<<<<<<< HEAD
                    "result block number incorrect");
   for (vtkm::Id j = 0; static_cast<std::size_t>(j) < ResultVec.size(); j++)
   {
@@ -144,24 +96,12 @@ void Result_Verify(T ResultVec, D Filter, vtkm::cont::MultiBlock& Blocks, std::s
       ResultVec[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues() ==
         BlockResult.GetField().GetData().GetNumberOfValues(),
       "result vectors' size incorrect");
-=======
-                   "result block number incorrect");
-  for (vtkm::Id j = 0; static_cast<std::size_t>(j) < ResultVec.size(); j++)
-  {
-    vtkm::filter::ResultField BlockResult = Filter.Execute(Blocks.GetBlock(j), FieldName);
-
-    VTKM_TEST_ASSERT(
-      ResultVec[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues() ==
-        BlockResult.GetField().GetData().GetNumberOfValues(),
-      "result vectors' size incorrect");
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
 
     vtkm::cont::ArrayHandle<vtkm::Id> MBlockArray;
     ResultVec[static_cast<std::size_t>(j)].GetField().GetData().CopyTo(MBlockArray);
     vtkm::cont::ArrayHandle<vtkm::Id> SDataSetArray;
     BlockResult.GetField().GetData().CopyTo(SDataSetArray);
 
-<<<<<<< HEAD
     for (vtkm::Id i = 0;
          i < ResultVec[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues();
          i++)
@@ -172,28 +112,12 @@ void Result_Verify(T ResultVec, D Filter, vtkm::cont::MultiBlock& Blocks, std::s
     }
   }
   return;
-
-=======
-    for (vtkm::Id i = 0;
-         i < ResultVec[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues();
-         i++)
-    {
-      VTKM_TEST_ASSERT(MBlockArray.GetPortalConstControl().Get(i) ==
-                         SDataSetArray.GetPortalConstControl().Get(i),
-                       "result values incorrect");
-    }
-  }
-  return;
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
 }
 
 void TestMultiBlockFilters()
 {
-<<<<<<< HEAD
   std::size_t BlockNum = 7;
-=======
-  std::size_t BlockNum = 7;
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
+
   std::vector<vtkm::filter::ResultField> results;
   vtkm::cont::MultiBlock Blocks;
 
@@ -208,11 +132,7 @@ void TestMultiBlockFilters()
 
   Result_Verify(results, cellAverage, Blocks, std::string("pointvar"));
 
-<<<<<<< HEAD
   return;
-=======
-  return;
->>>>>>> 1d80d5b69c385b42250a45bb12b33574fc5c764d
 }
 
 
