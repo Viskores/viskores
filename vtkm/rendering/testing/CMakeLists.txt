@@ -29,6 +29,7 @@ set(unit_tests
   UnitTestMultiMapper.cxx
   UnitTestMapperRayTracer.cxx
   UnitTestMapperVolume.cxx
+  UnitTestMapperWireframer.cxx
 )
 
 VTKm_unit_tests(SOURCES ${unit_tests})

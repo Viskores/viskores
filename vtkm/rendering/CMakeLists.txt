@@ -41,6 +41,7 @@ set(headers
   MapperRayTracer.h
   MapperVolume.h
   MapperConnectivity.h
+  MapperWireframer.h
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
@@ -73,6 +74,7 @@ set(sources
   MapperRayTracer.cxx
   MapperVolume.cxx
   MapperConnectivity.cxx
+  MapperWireframer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
@@ -126,6 +128,8 @@ set(osmesa_sources
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
+  Mapper.cxx
+  MapperWireframer.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx
   raytracing/BoundingVolumeHierarchy.cxx
