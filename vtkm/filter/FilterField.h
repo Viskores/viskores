@@ -80,12 +80,6 @@ public:
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT std::vector<vtkm::filter::ResultField> Execute(
-    const vtkm::cont::MultiBlock& input,
-    const std::string& inFieldName,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  template <typename DerivedPolicy>
   VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input,
                                 const std::string& inFieldName,
                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
