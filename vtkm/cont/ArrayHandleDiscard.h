@@ -22,6 +22,7 @@
 
 #include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/internal/Unreachable.h>
 
 #include <type_traits>
 
@@ -66,11 +67,9 @@ public:
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
-  ValueType Get(vtkm::Id index) const
+  ValueType Get(vtkm::Id) const
   {
-    VTKM_ASSERT(index < this->GetNumberOfValues());
-    VTKM_ASSERT("Method not supported for ArrayPortalDiscard." && false);
-    (void)index;
+    VTKM_UNREACHABLE("Cannot read from ArrayHandleDiscard.");
     return vtkm::TypeTraits<ValueType>::ZeroInitialization();
   }
 
