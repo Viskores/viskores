@@ -147,12 +147,10 @@ public:
   template <typename IntegratorType,
             typename FieldType,
             typename PointStorage,
-            typename FieldStorage,
             typename DeviceAdapter>
   StreamlineResult<FieldType> Run(
     const IntegratorType& it,
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& seedArray,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage>& fieldArray,
     const vtkm::Id& nSteps,
     const DeviceAdapter&)
   {
@@ -165,17 +163,18 @@ public:
 
     //Allocate status and steps arrays.
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
-    vtkm::Id val = vtkm::worklet::particleadvection::ParticleStatus::OK;
-    vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage> status, steps;
+    vtkm::Id val = vtkm::worklet::particleadvection::ParticleStatus::STATUS_OK;
+    vtkm::cont::ArrayHandle<vtkm::Id> status, steps;
     vtkm::cont::ArrayHandleConstant<vtkm::Id> ok(val, numSeeds);
     status.Allocate(numSeeds);
+
     DeviceAlgorithm::Copy(ok, status);
 
     vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds);
     steps.Allocate(numSeeds);
     DeviceAlgorithm::Copy(zero, steps);
 
-    worklet.Run(it, seedArray, fieldArray, nSteps, positions, polyLines, status, steps);
+    worklet.Run(it, seedArray, nSteps, positions, polyLines, status, steps);
 
     StreamlineResult<FieldType> res(positions, polyLines, status, steps);
     return res;

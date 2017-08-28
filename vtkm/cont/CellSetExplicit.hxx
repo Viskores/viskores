@@ -216,6 +216,25 @@ CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, O
   }
 }
 
+template <typename ShapeStorageTag,
+          typename NumIndicesStorageTag,
+          typename ConnectivityStorageTag,
+          typename OffsetsStorageTag>
+VTKM_CONT void
+CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
+  GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
+{
+  this->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
+  ids.Allocate(numIndices);
+  vtkm::Id start = this->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
+  vtkm::cont::ArrayHandle<vtkm::Id>::PortalControl idPortal = ids.GetPortalControl();
+  auto PtCellPortal = this->PointToCell.Connectivity.GetPortalConstControl();
+
+  for (vtkm::IdComponent i = 0; i < numIndices && i < numIndices; i++)
+    idPortal.Set(i, PtCellPortal.Get(start + i));
+}
+
 //----------------------------------------------------------------------------
 
 template <typename ShapeStorageTag,

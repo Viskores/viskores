@@ -242,15 +242,17 @@ public:
                           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
+                          vtkm::cont::ArrayHandle<vtkm::Id>& validPointArray,
                           const vtkm::Id& _maxSteps)
   {
     this->Pos = posArray.PrepareForInPlace(DeviceAdapterTag());
     this->Steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
     this->Status = statusArray.PrepareForInPlace(DeviceAdapterTag());
+    this->ValidPoint = validPointArray.PrepareForInPlace(DeviceAdapterTag());
     this->MaxSteps = _maxSteps;
     HistSize = _maxSteps;
     NumPos = posArray.GetNumberOfValues();
-    History = HistoryArray.PrepareForOutput(NumPos * HistSize, DeviceAdapterTag());
+    History = historyArray.PrepareForOutput(NumPos * HistSize, DeviceAdapterTag());
   }
 
   VTKM_EXEC_CONT
@@ -266,10 +268,11 @@ public:
     this->Pos = posArray.PrepareForInPlace(DeviceAdapterTag());
     this->Steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
     this->Status = statusArray.PrepareForInPlace(DeviceAdapterTag());
+    this->ValidPoint = validPointArray.PrepareForInPlace(DeviceAdapterTag());
     this->MaxSteps = _maxSteps;
     HistSize = _histSize;
     NumPos = posArray.GetNumberOfValues();
-    History = HistoryArray.PrepareForOutput(NumPos * HistSize, DeviceAdapterTag());
+    History = historyArray.PrepareForOutput(NumPos * HistSize, DeviceAdapterTag());
   }
 
   VTKM_EXEC_CONT
@@ -296,10 +299,8 @@ public:
 
 private:
   vtkm::Id NumPos, HistSize;
+  IdPortal ValidPoint;
   PosPortal History;
-
-public:
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> HistoryArray;
 };
 
 } //namespace particleadvection

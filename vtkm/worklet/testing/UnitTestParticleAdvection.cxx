@@ -456,14 +456,11 @@ void TestParticleWorklets()
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
     seeds = vtkm::cont::make_ArrayHandle(pts);
 
-    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
-    fieldArray = vtkm::cont::make_ArrayHandle(field);
-
     if (i == 0)
     {
       vtkm::worklet::ParticleAdvection particleAdvection;
       vtkm::worklet::ParticleAdvectionResult<FieldType> res;
-      res = particleAdvection.Run(rk4, seeds, fieldArray, 1000, DeviceAdapter());
+      res = particleAdvection.Run(rk4, seeds, 1000, DeviceAdapter());
       VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
                        "Number of output particles does not match input.");
     }
@@ -471,10 +468,11 @@ void TestParticleWorklets()
     {
       vtkm::worklet::Streamline streamline;
       vtkm::worklet::StreamlineResult<FieldType> res;
-      res = streamline.Run(rk4, seeds, fieldArray, 1000, DeviceAdapter());
-      //          VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
-      //                           "Number of output particles does not match input.");
+      res = streamline.Run(rk4, seeds, 1000, DeviceAdapter());
+      VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
+                       "Number of output particles does not match input.");
 
+      /*
       printSummary_ArrayHandle(res.positions, std::cout);
       printSummary_ArrayHandle(res.status, std::cout, true);
       printSummary_ArrayHandle(res.stepsTaken, std::cout, true);
@@ -486,9 +484,7 @@ void TestParticleWorklets()
       Output.AddField(vtkm::cont::Field("status", vtkm::cont::Field::ASSOC_POINTS, res.status));
       Output.AddField(vtkm::cont::Field("steps", vtkm::cont::Field::ASSOC_POINTS, res.stepsTaken));
       Output.PrintSummary(std::cout);
-
-      vtkm::io::writer::VTKDataSetWriter writer("streamlines.vtk");
-      writer.WriteDataSet(Output);
+      */
     }
   }
 }

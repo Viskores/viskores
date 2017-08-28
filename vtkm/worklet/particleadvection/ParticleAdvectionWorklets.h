@@ -87,6 +87,7 @@ template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag
 class ParticleAdvectionWorklet
 {
 public:
+  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> DeviceAlgorithm;
   typedef vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType,
                                                                   FieldType,
                                                                   DeviceAdapterTag>
@@ -162,7 +163,6 @@ public:
   template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
            const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-           const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
            const vtkm::Id& nSteps,
            vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines,
@@ -172,7 +172,6 @@ public:
     integrator = it;
     seedArray = pts;
     maxSteps = nSteps;
-    field = fieldArray.PrepareForInput(DeviceAdapterTag());
 
     run(positions, polyLines, statusArray, stepsTaken);
   }
@@ -214,6 +213,7 @@ private:
     //Compact history into positions.
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> history;
     StreamlineType streamlines(seedArray, history, stepsTaken, status, validPoint, maxSteps);
+
     particleWorkletDispatch.Invoke(idxArray, streamlines);
     DeviceAlgorithm::CopyIf(history, validPoint, positions, IsOne());
 
@@ -241,7 +241,6 @@ private:
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
   vtkm::cont::DataSet ds;
   vtkm::Id maxSteps;
-  FieldPortalConstType field;
 };
 }
 }
