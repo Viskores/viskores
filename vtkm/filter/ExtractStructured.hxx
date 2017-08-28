@@ -37,7 +37,7 @@ inline VTKM_CONT ExtractStructured::ExtractStructured()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet ExtractStructured::DoExecute(
+inline VTKM_CONT vtkm::filter::Result ExtractStructured::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
@@ -60,13 +60,13 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExtractStructured::DoExecute(
   vtkm::cont::DataSet output;
   output.AddCellSet(vtkm::cont::DynamicCellSet(cellset));
   output.AddCoordinateSystem(outputCoordinates);
-  return vtkm::filter::ResultDataSet(output);
+  return vtkm::filter::Result(output);
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExtractStructured::DoMapField(
-  vtkm::filter::ResultDataSet& result,
+  vtkm::filter::Result& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,

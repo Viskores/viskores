@@ -43,7 +43,7 @@ namespace internal
 template <class ArrayPortalType>
 struct PortalValue
 {
-  typedef typename ArrayPortalType::ValueType ValueType;
+  using ValueType = typename ArrayPortalType::ValueType;
 
   VTKM_EXEC_CONT
   PortalValue(const ArrayPortalType& portal, vtkm::Id index)

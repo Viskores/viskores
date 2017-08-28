@@ -46,6 +46,7 @@ protected:
   ColorMapType ColorMap;
   vtkm::cont::DataSet Dataset;
   vtkm::Range ScalarRange;
+  bool CompositeBackground;
 
   struct BoundsFunctor
   {
@@ -77,12 +78,15 @@ public:
     Cells = dataSet.GetCellSet();
     Coords = dataSet.GetCoordinateSystem();
     Mode = VOLUME_MODE;
-
+    CompositeBackground = true;
     //
     // Just grab a default scalar field
     //
 
-    this->SetScalarField(Dataset.GetField(0).GetName());
+    if (Dataset.GetNumberOfFields() > 0)
+    {
+      this->SetScalarField(Dataset.GetField(0).GetName());
+    }
 
     Tracer = raytracing::ConnectivityTracerFactory::CreateTracer(Cells, Coords);
   }
@@ -120,7 +124,7 @@ public:
   }
 
   VTKM_CONT
-  void SetCompositeBackground(bool on) { Tracer->SetCompositeBackground(on); }
+  void SetCompositeBackground(bool on) { CompositeBackground = on; }
 
   VTKM_CONT
   void SetEmissionField(const std::string& fieldName)
@@ -130,7 +134,6 @@ public:
       std::cout << "Volume Tracer Error: must set energy mode before setting emission field\n";
       return;
     }
-
     EmissionField = Dataset.GetField(fieldName);
   }
 
@@ -153,7 +156,8 @@ public:
     }
     else
     {
-      Tracer->SetEnergyData(this->ScalarField, rays.Buffers.at(0).GetNumChannels());
+      Tracer->SetEnergyData(
+        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
     }
 
     Tracer->Trace(rays);
@@ -168,7 +172,8 @@ public:
     }
     else
     {
-      Tracer->SetEnergyData(this->ScalarField, rays.Buffers.at(0).GetNumChannels());
+      Tracer->SetEnergyData(
+        this->ScalarField, rays.Buffers.at(0).GetNumChannels(), this->EmissionField);
     }
     Tracer->Trace(rays);
   }
@@ -180,13 +185,14 @@ public:
     if (canvas == NULL)
     {
       std::cout << "Conn proxy: canvas is NULL\n";
-      return;
+      throw vtkm::cont::ErrorBadValue("Conn Proxy: null canvas");
     }
     vtkm::rendering::raytracing::Camera rayCamera;
     rayCamera.SetParameters(camera, *canvas);
     vtkm::rendering::raytracing::Ray<vtkm::Float32> rays;
     rayCamera.CreateRays(rays, this->Coords);
-
+    rays.Buffers.at(0).InitConst(0.f);
+    raytracing::RayOperations::MapCanvasToRays(rays, camera, *canvas);
 
     if (Mode == VOLUME_MODE)
     {
@@ -194,12 +200,16 @@ public:
     }
     else
     {
-      std::cout << "ENGERY MODE Not implementedd yet\n";
+      throw vtkm::cont::ErrorBadValue("ENGERY MODE Not implemented for this use case\n");
     }
 
     Tracer->Trace(rays);
 
-    canvas->WriteToCanvas(rays.PixelIdx, rays.Distance, rays.Buffers.at(0).Buffer, camera);
+    canvas->WriteToCanvas(rays, rays.Buffers.at(0).Buffer, camera);
+    if (CompositeBackground)
+    {
+      canvas->BlendBackground();
+    }
   }
 };
 

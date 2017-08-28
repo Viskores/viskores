@@ -121,28 +121,25 @@ template <typename ThreadIndicesType,
           vtkm::IdComponent ExecutionParameterIndex>
 struct InvocationToFetch
 {
-  typedef
-    typename Invocation::ExecutionInterface::template ParameterType<ExecutionParameterIndex>::type
-      ExecutionSignatureTag;
+  using ExecutionSignatureTag =
+    typename Invocation::ExecutionInterface::template ParameterType<ExecutionParameterIndex>::type;
 
   // Expected fields from ExecutionSignatureTag. If these do not exist in
   // ExecutionSignatureTag, then something that is not really an execution
   // signature tag was used in an ExecutionSignature.
   static const vtkm::IdComponent ControlParameterIndex = ExecutionSignatureTag::INDEX;
-  typedef typename ExecutionSignatureTag::AspectTag AspectTag;
+  using AspectTag = typename ExecutionSignatureTag::AspectTag;
 
   // Find the fetch tag from the control signature tag pointed to by
   // ParameterIndex.
-  typedef typename Invocation::ControlInterface ControlInterface;
-  typedef typename ControlInterface::template ParameterType<ControlParameterIndex>::type
-    ControlSignatureTag;
-  typedef typename ControlSignatureTag::FetchTag FetchTag;
+  using ControlInterface = typename Invocation::ControlInterface;
+  using ControlSignatureTag = typename ControlInterface::template ParameterType<ControlParameterIndex>::type;
+  using FetchTag = typename ControlSignatureTag::FetchTag;
 
-  typedef
-    typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type
-      ExecObjectType;
+  using ExecObjectType =
+    typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type;
 
-  typedef vtkm::exec::arg::Fetch<FetchTag, AspectTag, ThreadIndicesType, ExecObjectType> type;
+  using type = vtkm::exec::arg::Fetch<FetchTag, AspectTag, ThreadIndicesType, ExecObjectType>;
 };
 
 // clang-format off
@@ -166,26 +163,24 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<$signature(num_params)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<$signature(num_params)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 $for(param_index in range(1, num_params+1))\
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)> FetchInfo$(param_index);
-  typedef typename FetchInfo$(param_index)::type FetchType$(param_index);
+  using FetchInfo$(param_index) = InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)>;
+  using FetchType$(param_index) = typename FetchInfo$(param_index)::type;
   FetchType$(param_index) fetch$(param_index);
   typename FetchType$(param_index)::ValueType $pname(param_index) =
     fetch$(param_index).Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo$(param_index)::ControlParameterIndex>());
 $endfor\
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -196,7 +191,7 @@ $endfor\
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType $pname(0) = ReturnValueType(worklet($arg_list(num_params)));
+  auto $pname(0) = typename ReturnFetchType::ValueType(worklet($arg_list(num_params)));
 
   returnFetch.Store(
     threadIndices,
@@ -237,8 +232,8 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
     Invocation;
 $for(param_index in range(1, num_params+1))\
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)> FetchInfo$(param_index);
-  typedef typename FetchInfo$(param_index)::type FetchType$(param_index);
+  using FetchInfo$(param_index) = InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)>;
+  using FetchType$(param_index) = typename FetchInfo$(param_index)::type;
   FetchType$(param_index) fetch$(param_index);
   typename FetchType$(param_index)::ValueType $pname(param_index) =
     fetch$(param_index).Load(threadIndices,

@@ -22,6 +22,9 @@
 #define vtk_m_worklet_particleadvection_Integrators_h
 
 #include <vtkm/Types.h>
+#include <vtkm/VectorAnalysis.h>
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/worklet/particleadvection/Particles.h>
 
 namespace vtkm
 {
@@ -30,75 +33,177 @@ namespace worklet
 namespace particleadvection
 {
 
+template <typename FieldEvaluateType,
+          typename FieldType,
+          template <typename, typename> class IntegratorType>
+class Integrator
+{
+protected:
+  VTKM_EXEC_CONT
+  Integrator()
+    : StepLength(0)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  Integrator(const FieldEvaluateType& evaluator, FieldType stepLength)
+    : Evaluator(evaluator)
+    , StepLength(stepLength)
+  {
+  }
+
+public:
+  VTKM_EXEC
+  ParticleStatus Step(const vtkm::Vec<FieldType, 3>& inpos, vtkm::Vec<FieldType, 3>& outpos) const
+  {
+    vtkm::Vec<FieldType, 3> velocity;
+    ParticleStatus status = this->CheckStep(inpos, this->StepLength, velocity);
+    if (status == ParticleStatus::STATUS_OK)
+    {
+      outpos = inpos + this->StepLength * velocity;
+    }
+    else
+    {
+      outpos = inpos;
+    }
+    return status;
+  }
+
+  VTKM_EXEC
+  ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
+                           FieldType stepLength,
+                           vtkm::Vec<FieldType, 3>& velocity) const
+  {
+    using ConcreteType = IntegratorType<FieldEvaluateType, FieldType>;
+    return static_cast<const ConcreteType*>(this)->CheckStep(inpos, stepLength, velocity);
+  }
+
+  VTKM_EXEC
+  FieldType GetEscapeStepLength(const vtkm::Vec<FieldType, 3>& inpos,
+                                FieldType stepLength,
+                                vtkm::Vec<FieldType, 3>& velocity) const
+  {
+    this->CheckStep(inpos, stepLength, velocity);
+    FieldType magnitude = vtkm::Magnitude(velocity);
+    vtkm::Vec<FieldType, 3> dir = velocity / magnitude;
+    vtkm::Vec<FieldType, 3> dirBounds;
+    this->Evaluator.GetBoundary(dir, dirBounds);
+    /*Add a fraction just push the particle beyond the bounds*/
+    FieldType hx = (std::abs(dirBounds[0] - inpos[0]) + this->Tolerance) / std::abs(velocity[0]);
+    FieldType hy = (std::abs(dirBounds[1] - inpos[1]) + this->Tolerance) / std::abs(velocity[1]);
+    FieldType hz = (std::abs(dirBounds[2] - inpos[2]) + this->Tolerance) / std::abs(velocity[2]);
+    return vtkm::Min(hx, vtkm::Min(hy, hz));
+  }
+
+  VTKM_EXEC
+  ParticleStatus PushOutOfDomain(vtkm::Vec<FieldType, 3> inpos,
+                                 vtkm::Id numSteps,
+                                 vtkm::Vec<FieldType, 3>& outpos) const
+  {
+    numSteps = (numSteps == 0) ? 1 : numSteps;
+    FieldType totalTime = static_cast<FieldType>(numSteps) * this->StepLength;
+    FieldType timeFraction = totalTime * this->Tolerance;
+    FieldType stepLength = this->StepLength / 2;
+    vtkm::Vec<FieldType, 3> velocity;
+    if (this->ShortStepsSupported)
+    {
+      do
+      {
+        ParticleStatus status = this->CheckStep(inpos, stepLength, velocity);
+        if (status == ParticleStatus::STATUS_OK)
+        {
+          inpos = inpos + stepLength * velocity;
+        }
+        stepLength = stepLength / 2;
+      } while (stepLength > timeFraction);
+    }
+    stepLength = GetEscapeStepLength(inpos, stepLength, velocity);
+    outpos = inpos + stepLength * velocity;
+    return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
+  }
+
+protected:
+  FieldEvaluateType Evaluator;
+  FieldType StepLength;
+  FieldType Tolerance = static_cast<FieldType>(1e-6);
+  bool ShortStepsSupported = false;
+};
+
 template <typename FieldEvaluateType, typename FieldType>
-class RK4Integrator
+class RK4Integrator : public Integrator<FieldEvaluateType, FieldType, RK4Integrator>
 {
 public:
   VTKM_EXEC_CONT
   RK4Integrator()
-    : h(0)
-    , h_2(0)
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>()
   {
+    this->ShortStepsSupported = true;
   }
 
   VTKM_EXEC_CONT
-  RK4Integrator(const FieldEvaluateType& field, FieldType _h)
-    : f(field)
-    , h(_h)
-    , h_2(_h / 2.f)
+  RK4Integrator(const FieldEvaluateType& evaluator, FieldType stepLength)
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>(
+        evaluator,
+        stepLength)
   {
+    this->ShortStepsSupported = true;
   }
 
-  template <typename PortalType>
-  VTKM_EXEC bool Step(const vtkm::Vec<FieldType, 3>& pos,
-                      const PortalType& field,
-                      vtkm::Vec<FieldType, 3>& out) const
+  VTKM_EXEC
+  ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
+                           FieldType stepLength,
+                           vtkm::Vec<FieldType, 3>& velocity) const
   {
-    vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
-
-    if (f.Evaluate(pos, field, k1) && f.Evaluate(pos + h_2 * k1, field, k2) &&
-        f.Evaluate(pos + h_2 * k2, field, k3) && f.Evaluate(pos + h * k3, field, k4))
+    if (!this->Evaluator.IsWithinBoundary(inpos))
     {
-      out = pos + h / 6.0f * (k1 + 2 * k2 + 2 * k3 + k4);
-      return true;
+      return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
     }
-    return false;
+    vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
+    bool firstOrderValid = this->Evaluator.Evaluate(inpos, k1);
+    bool secondOrderValid = this->Evaluator.Evaluate(inpos + (stepLength / 2) * k1, k2);
+    bool thirdOrderValid = this->Evaluator.Evaluate(inpos + (stepLength / 2) * k2, k3);
+    bool fourthOrderValid = this->Evaluator.Evaluate(inpos + stepLength * k3, k4);
+    velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
+    if (firstOrderValid && secondOrderValid && thirdOrderValid && fourthOrderValid)
+    {
+      return ParticleStatus::STATUS_OK;
+    }
+    else
+    {
+      return ParticleStatus::AT_SPATIAL_BOUNDARY;
+    }
   }
-
-  FieldEvaluateType f;
-  FieldType h, h_2;
 };
 
 template <typename FieldEvaluateType, typename FieldType>
-class EulerIntegrator
+class EulerIntegrator : public Integrator<FieldEvaluateType, FieldType, EulerIntegrator>
 {
 public:
   VTKM_EXEC_CONT
-  EulerIntegrator(const FieldEvaluateType& field, FieldType _h)
-    : f(field)
-    , h(_h)
+  EulerIntegrator(const FieldEvaluateType& evaluator, FieldType field)
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::EulerIntegrator>(
+        evaluator,
+        field)
   {
+    this->ShortStepsSupported = false;
   }
 
-  template <typename PortalType>
-  VTKM_EXEC bool Step(const vtkm::Vec<FieldType, 3>& pos,
-                      const PortalType& field,
-                      vtkm::Vec<FieldType, 3>& out) const
+  VTKM_EXEC
+  ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
+                           FieldType stepLength,
+                           vtkm::Vec<FieldType, 3>& velocity)
   {
-    vtkm::Vec<FieldType, 3> vCur;
-    if (f.Evaluate(pos, field, vCur))
-    {
-      out = pos + h * vCur;
-      return true;
-    }
-    return false;
+    stepLength = 0;
+    bool isValidPos = this->Evaluator.Evaluate(inpos, velocity);
+    if (isValidPos)
+      return ParticleStatus::STATUS_OK;
+    else
+      return ParticleStatus::AT_SPATIAL_BOUNDARY;
   }
+}; //EulerIntegrator
 
-  FieldEvaluateType f;
-  FieldType h;
-};
-}
-}
-}
+} //namespace particleadvection
+} //namespace worklet
+} //namespace vtkm
 
 #endif // vtk_m_worklet_particleadvection_Integrators_h

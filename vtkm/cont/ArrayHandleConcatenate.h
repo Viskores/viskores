@@ -35,7 +35,7 @@ template <typename PortalType1, typename PortalType2>
 class VTKM_ALWAYS_EXPORT ArrayPortalConcatenate
 {
 public:
-  typedef typename PortalType1::ValueType ValueType;
+  using ValueType = typename PortalType1::ValueType;
 
   VTKM_EXEC_CONT
   ArrayPortalConcatenate()
@@ -109,13 +109,11 @@ class Storage<typename ArrayHandleType1::ValueType,
               StorageTagConcatenate<ArrayHandleType1, ArrayHandleType2>>
 {
 public:
-  typedef typename ArrayHandleType1::ValueType ValueType;
-  typedef ArrayPortalConcatenate<typename ArrayHandleType1::PortalControl,
-                                 typename ArrayHandleType2::PortalControl>
-    PortalType;
-  typedef ArrayPortalConcatenate<typename ArrayHandleType1::PortalConstControl,
-                                 typename ArrayHandleType2::PortalConstControl>
-    PortalConstType;
+  using ValueType = typename ArrayHandleType1::ValueType;
+  using PortalType = ArrayPortalConcatenate<typename ArrayHandleType1::PortalControl,
+                                            typename ArrayHandleType2::PortalControl>;
+  using PortalConstType = ArrayPortalConcatenate<typename ArrayHandleType1::PortalConstControl,
+                                                 typename ArrayHandleType2::PortalConstControl>;
 
   VTKM_CONT
   Storage()
@@ -204,23 +202,22 @@ class ArrayTransfer<typename ArrayHandleType1::ValueType,
                     Device>
 {
 public:
-  typedef typename ArrayHandleType1::ValueType ValueType;
+  using ValueType = typename ArrayHandleType1::ValueType;
 
 private:
-  typedef StorageTagConcatenate<ArrayHandleType1, ArrayHandleType2> StorageTag;
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageTag = StorageTagConcatenate<ArrayHandleType1, ArrayHandleType2>;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
-  typedef ArrayPortalConcatenate<typename ArrayHandleType1::template ExecutionTypes<Device>::Portal,
-                                 typename ArrayHandleType2::template ExecutionTypes<Device>::Portal>
-    PortalExecution;
-  typedef ArrayPortalConcatenate<
-    typename ArrayHandleType1::template ExecutionTypes<Device>::PortalConst,
-    typename ArrayHandleType2::template ExecutionTypes<Device>::PortalConst>
-    PortalConstExecution;
+  using PortalExecution =
+    ArrayPortalConcatenate<typename ArrayHandleType1::template ExecutionTypes<Device>::Portal,
+                           typename ArrayHandleType2::template ExecutionTypes<Device>::Portal>;
+  using PortalConstExecution =
+    ArrayPortalConcatenate<typename ArrayHandleType1::template ExecutionTypes<Device>::PortalConst,
+                           typename ArrayHandleType2::template ExecutionTypes<Device>::PortalConst>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -306,7 +303,7 @@ public:
                              StorageTagConcatenate<ArrayHandleType1, ArrayHandleType2>>));
 
 protected:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   VTKM_CONT

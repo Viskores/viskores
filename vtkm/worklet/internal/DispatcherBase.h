@@ -445,7 +445,7 @@ private:
             typename DeviceAdapter>
   VTKM_CONT void InvokeTransportParameters(const Invocation& invocation,
                                            const InputRangeType& inputRange,
-                                           const OutputRangeType& outputRange,
+                                           OutputRangeType&& outputRange,
                                            DeviceAdapter device) const
   {
     // The first step in invoking a worklet is to transport the arguments to

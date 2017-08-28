@@ -123,7 +123,7 @@ struct TryExecuteImpl
   {
     if (!this->Success)
     {
-      typedef vtkm::cont::DeviceAdapterTraits<Device> DeviceTraits;
+      using DeviceTraits = vtkm::cont::DeviceAdapterTraits<Device>;
 
       this->Success = detail::TryExecuteRunIfValid<FunctorType, Device, DeviceTraits::Valid>::Run(
         this->Functor, this->Tracker);

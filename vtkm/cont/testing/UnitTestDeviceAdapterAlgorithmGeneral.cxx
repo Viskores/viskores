@@ -48,9 +48,9 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
       vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
 {
 private:
-  typedef vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>;
 
-  typedef vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral DeviceAdapterTagTestAlgorithmGeneral;
+  using DeviceAdapterTagTestAlgorithmGeneral = vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral;
 
 public:
   template <class Functor>
@@ -78,13 +78,11 @@ class ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagTestAlgor
                                                        vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
-  typedef vtkm::cont::internal::ArrayManagerExecution<T,
-                                                      StorageTag,
-                                                      vtkm::cont::DeviceAdapterTagSerial>
-    Superclass;
-  typedef typename Superclass::ValueType ValueType;
-  typedef typename Superclass::PortalType PortalType;
-  typedef typename Superclass::PortalConstType PortalConstType;
+  using Superclass =
+    vtkm::cont::internal::ArrayManagerExecution<T, StorageTag, vtkm::cont::DeviceAdapterTagSerial>;
+  using ValueType = typename Superclass::ValueType;
+  using PortalType = typename Superclass::PortalType;
+  using PortalConstType = typename Superclass::PortalConstType;
 
   ArrayManagerExecution(vtkm::cont::internal::Storage<T, StorageTag>* storage)
     : Superclass(storage)

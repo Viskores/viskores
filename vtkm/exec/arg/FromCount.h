@@ -51,7 +51,7 @@ struct AspectTagFromCount
 struct FromCount : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagFromCount AspectTag;
+  using AspectTag = vtkm::exec::arg::AspectTagFromCount;
 };
 
 template <typename FetchTag, typename ConnectivityType, typename ExecObjectType>
@@ -60,9 +60,9 @@ struct Fetch<FetchTag,
              vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
              ExecObjectType>
 {
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
-  typedef vtkm::IdComponent ValueType;
+  using ValueType = vtkm::IdComponent;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC

@@ -32,7 +32,7 @@
 namespace ArrayHandleCartesianProductNamespace
 {
 
-typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DFA;
+using DFA = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
 
 template <typename T>
 void ArrayHandleCPBasic(vtkm::cont::ArrayHandle<T> x,

@@ -136,11 +136,11 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
                              BinaryCompare binary_compare)
   {
-    typedef typename vtkm::cont::ArrayHandle<T, Container>::template ExecutionTypes<
-      vtkm::cont::DeviceAdapterTagTBB>::Portal PortalType;
+    using PortalType = typename vtkm::cont::ArrayHandle<T, Container>::template ExecutionTypes<
+      vtkm::cont::DeviceAdapterTagTBB>::Portal;
     PortalType arrayPortal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagTBB());
 
-    typedef vtkm::cont::ArrayPortalToIterators<PortalType> IteratorsType;
+    using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
     IteratorsType iterators(arrayPortal);
 
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
@@ -159,15 +159,15 @@ public:
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   Compare comp)
   {
-    typedef vtkm::cont::ArrayHandle<T, StorageT> KeyType;
+    using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
     if (sizeof(U) > sizeof(vtkm::Id))
     {
       /// More efficient sort:
       /// Move value indexes when sorting and reorder the value array at last
 
-      typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
-      typedef vtkm::cont::ArrayHandle<vtkm::Id> IndexType;
-      typedef vtkm::cont::ArrayHandleZip<KeyType, IndexType> ZipHandleType;
+      using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
+      using IndexType = vtkm::cont::ArrayHandle<vtkm::Id>;
+      using ZipHandleType = vtkm::cont::ArrayHandleZip<KeyType, IndexType>;
 
       IndexType indexArray;
       ValueType valuesScattered;
@@ -186,8 +186,8 @@ public:
     }
     else
     {
-      typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
-      typedef vtkm::cont::ArrayHandleZip<KeyType, ValueType> ZipHandleType;
+      using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
+      using ZipHandleType = vtkm::cont::ArrayHandleZip<KeyType, ValueType>;
 
       ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
       Sort(zipHandle, vtkm::cont::internal::KeyCompare<T, U, Compare>(comp));

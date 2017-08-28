@@ -45,7 +45,7 @@ template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 class Matrix
 {
 public:
-  typedef T ComponentType;
+  using ComponentType = T;
   static const vtkm::IdComponent NUM_ROWS = NumRow;
   static const vtkm::IdComponent NUM_COLUMNS = NumCol;
 
@@ -533,8 +533,8 @@ struct TypeTraitsMatrixTag
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 struct TypeTraits<vtkm::Matrix<T, NumRow, NumCol>>
 {
-  typedef typename TypeTraits<T>::NumericTag NumericTag;
-  typedef TypeTraitsMatrixTag DimensionalityTag;
+  using NumericTag = typename TypeTraits<T>::NumericTag;
+  using DimensionalityTag = vtkm::TypeTraitsMatrixTag;
 };
 
 /// A matrix has vector traits to implement component-wise operations.
@@ -543,13 +543,13 @@ template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 struct VecTraits<vtkm::Matrix<T, NumRow, NumCol>>
 {
 private:
-  typedef vtkm::Matrix<T, NumRow, NumCol> MatrixType;
+  using MatrixType = vtkm::Matrix<T, NumRow, NumCol>;
 
 public:
-  typedef T ComponentType;
+  using ComponentType = T;
   static const vtkm::IdComponent NUM_COMPONENTS = NumRow * NumCol;
-  typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
-  typedef vtkm::VecTraitsTagSizeStatic IsSizeStatic;
+  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 
   VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const MatrixType&) { return NUM_COMPONENTS; }

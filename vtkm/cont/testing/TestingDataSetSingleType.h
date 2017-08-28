@@ -68,7 +68,7 @@ private:
 
   static inline vtkm::cont::DataSet make_SingleTypeDataSet()
   {
-    typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
+    using CoordType = vtkm::Vec<vtkm::Float32, 3>;
     std::vector<CoordType> coordinates;
     coordinates.push_back(CoordType(0, 0, 0));
     coordinates.push_back(CoordType(1, 0, 0));
@@ -111,12 +111,6 @@ private:
     //verify that we can get a CellSetSingleType from a dataset
     vtkm::cont::CellSetSingleType<> cellset;
     dataSet.GetCellSet(0).CopyTo(cellset);
-
-    //verify that we can compute the cell to point connectivity
-    cellset.BuildConnectivity(
-      DeviceAdapterTag(), vtkm::TopologyElementTagCell(), vtkm::TopologyElementTagPoint());
-
-    dataSet.PrintSummary(std::cout);
 
     //verify that the point to cell connectivity types are correct
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapesPointToCell =

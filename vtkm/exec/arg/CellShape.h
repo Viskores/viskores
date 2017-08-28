@@ -45,7 +45,7 @@ struct AspectTagCellShape
 struct CellShape : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagCellShape AspectTag;
+  using AspectTag = vtkm::exec::arg::AspectTagCellShape;
 };
 
 template <typename FetchTag, typename ConnectivityType, typename ExecObjectType>
@@ -54,9 +54,9 @@ struct Fetch<FetchTag,
              vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
              ExecObjectType>
 {
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
-  typedef typename ThreadIndicesType::CellShapeTag ValueType;
+  using ValueType = typename ThreadIndicesType::CellShapeTag;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC

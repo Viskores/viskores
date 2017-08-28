@@ -162,7 +162,7 @@ struct HelloVTKMInterop
 
   void renderFrame()
   {
-    typedef vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet> DispatcherType;
+    using DispatcherType = vtkm::worklet::DispatcherMapField<GenerateSurfaceWorklet>;
 
     vtkm::Float32 t = static_cast<vtkm::Float32>(this->Timer.GetElapsedTime());
 
@@ -181,7 +181,7 @@ struct HelloVTKMInterop
 };
 
 //global static so that glut callback can access it
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 HelloVTKMInterop<DeviceAdapter, vtkm::Float32>* helloWorld = nullptr;
 
 // Render the output using simple OpenGL
@@ -198,7 +198,7 @@ void idle()
 
 int main(int argc, char** argv)
 {
-  typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapter> DeviceAdapterTraits;
+  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
   std::cout << "Running Hello World example on device adapter: " << DeviceAdapterTraits::GetName()
             << std::endl;
 

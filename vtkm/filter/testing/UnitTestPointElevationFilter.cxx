@@ -77,7 +77,7 @@ void TestPointElevationNoPolicy()
   filter.SetRange(0.0, 2.0);
 
   filter.SetOutputFieldName("height");
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   result = filter.Execute(inputData, inputData.GetCoordinateSystem());
 
   //verify the result
@@ -115,7 +115,7 @@ void TestPointElevationWithPolicy()
   filter.SetHighPoint(0.0, 1.0, 0.0);
   filter.SetRange(0.0, 2.0);
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
 
   vtkm::filter::PolicyDefault p;
   result = filter.Execute(inputData, inputData.GetCoordinateSystem(), p);

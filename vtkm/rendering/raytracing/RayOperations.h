@@ -20,6 +20,10 @@
 #ifndef vtk_m_rendering_raytracing_Ray_Operations_h
 #define vtk_m_rendering_raytracing_Ray_Operations_h
 
+#include <vtkm/Matrix.h>
+#include <vtkm/cont/TryExecute.h>
+#include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/raytracing/ChannelBufferOperations.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/Worklets.h>
@@ -51,8 +55,62 @@ public:
   }
 }; //class RayStatusFileter
 
-} // namespace detail
+class RayMapCanvas : public vtkm::worklet::WorkletMapField
+{
+protected:
+  vtkm::Matrix<vtkm::Float32, 4, 4> InverseProjView;
+  vtkm::Id Width;
+  vtkm::Float32 DoubleInvHeight;
+  vtkm::Float32 DoubleInvWidth;
+  vtkm::Vec<vtkm::Float32, 3> Origin;
 
+public:
+  VTKM_CONT
+  RayMapCanvas(const vtkm::Matrix<vtkm::Float32, 4, 4>& inverseProjView,
+               const vtkm::Id width,
+               const vtkm::Id height,
+               const vtkm::Vec<vtkm::Float32, 3>& origin)
+    : InverseProjView(inverseProjView)
+    , Width(width)
+    , Origin(origin)
+  {
+    VTKM_ASSERT(width > 0);
+    VTKM_ASSERT(height > 0);
+    DoubleInvHeight = 2.f / static_cast<vtkm::Float32>(height);
+    DoubleInvWidth = 2.f / static_cast<vtkm::Float32>(width);
+  }
+
+  typedef void ControlSignature(FieldIn<>, FieldInOut<>, WholeArrayIn<>);
+  typedef void ExecutionSignature(_1, _2, _3);
+
+  template <typename Precision, typename DepthPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& pixelId,
+                            Precision& maxDistance,
+                            const DepthPortalType& depths) const
+  {
+    vtkm::Vec<vtkm::Float32, 4> position;
+    position[0] = static_cast<vtkm::Float32>(pixelId % Width);
+    position[1] = static_cast<vtkm::Float32>(pixelId / Width);
+    position[2] = static_cast<vtkm::Float32>(depths.Get(pixelId));
+    position[3] = 1;
+    // transform into normalized device coordinates (-1,1)
+    position[0] = position[0] * DoubleInvWidth - 1.f;
+    position[1] = position[1] * DoubleInvHeight - 1.f;
+    position[2] = 2.f * position[2] - 1.f;
+    // offset so we don't go all the way to the same point
+    position[2] -= 0.00001f;
+    position = vtkm::MatrixMultiply(InverseProjView, position);
+    vtkm::Vec<vtkm::Float32, 3> p;
+    p[0] = position[0] / position[3];
+    p[1] = position[1] / position[3];
+    p[2] = position[2] / position[3];
+    p = p - Origin;
+
+    maxDistance = vtkm::Magnitude(p);
+  }
+}; //class RayMapMinDistances
+
+} // namespace detail
 class RayOperations
 {
 public:
@@ -74,6 +132,10 @@ public:
     vtkm::worklet::DispatcherMapField<detail::RayStatusFilter, Device>(detail::RayStatusFilter())
       .Invoke(rays.HitIdx, rays.Status);
   }
+
+  static void MapCanvasToRays(Ray<vtkm::Float32>& rays,
+                              const vtkm::rendering::Camera& camera,
+                              const vtkm::rendering::CanvasRayTracer& canvas);
 
   template <typename Device, typename T>
   static vtkm::Id RaysInMesh(Ray<T>& rays, Device)

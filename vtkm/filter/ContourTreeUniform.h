@@ -88,12 +88,11 @@ public:
 
   /// Output field
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::ResultField DoExecute(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::ArrayHandle<T, StorageType>& field,
-    const vtkm::filter::FieldMetadata& fieldMeta,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter& tag);
+  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
+                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                           const vtkm::filter::FieldMetadata& fieldMeta,
+                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                           const DeviceAdapter& tag);
 };
 
 template <>
@@ -117,12 +116,11 @@ public:
 
   /// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::ResultField DoExecute(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::ArrayHandle<T, StorageType>& field,
-    const vtkm::filter::FieldMetadata& fieldMeta,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter& tag);
+  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
+                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                           const vtkm::filter::FieldMetadata& fieldMeta,
+                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                           const DeviceAdapter& tag);
 };
 
 template <>

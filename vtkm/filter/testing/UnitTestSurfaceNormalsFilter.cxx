@@ -71,7 +71,7 @@ void TestSurfaceNormals()
   vtkm::cont::DataSet ds = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
 
   vtkm::filter::SurfaceNormals filter;
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
 
   std::cout << "testing default output (generate only point normals):\n";
   result = filter.Execute(ds);

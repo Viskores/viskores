@@ -47,7 +47,7 @@ public:
       vtkm::cont::StorageTagImplicit<vtkm::internal::ArrayPortalUniformPointCoordinates>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   VTKM_CONT

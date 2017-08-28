@@ -56,10 +56,10 @@ struct Transport<vtkm::cont::arg::TransportTagWholeArrayOut, ContObjectType, Dev
   // is not an array handle as an argument that is expected to be one.
   VTKM_IS_ARRAY_HANDLE(ContObjectType);
 
-  typedef typename ContObjectType::ValueType ValueType;
-  typedef typename ContObjectType::StorageTag StorageTag;
+  using ValueType = typename ContObjectType::ValueType;
+  using StorageTag = typename ContObjectType::StorageTag;
 
-  typedef vtkm::exec::ExecutionWholeArray<ValueType, StorageTag, Device> ExecObjectType;
+  using ExecObjectType = vtkm::exec::ExecutionWholeArray<ValueType, StorageTag, Device>;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType

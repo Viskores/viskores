@@ -39,6 +39,56 @@ namespace rendering
 namespace raytracing
 {
 
+template <typename Precision, typename OpWorklet>
+struct BufferMathFunctor
+{
+  ChannelBuffer<Precision>* Self;
+  const ChannelBuffer<Precision>* Other;
+  BufferMathFunctor(ChannelBuffer<Precision>* self, const ChannelBuffer<Precision>* other)
+    : Self(self)
+    , Other(other)
+  {
+  }
+
+  template <typename Device>
+  bool operator()(Device vtkmNotUsed(device))
+  {
+    vtkm::worklet::DispatcherMapField<OpWorklet, Device>(OpWorklet())
+      .Invoke(Other->Buffer, Self->Buffer);
+    return true;
+  }
+};
+
+class BufferAddition : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  BufferAddition() {}
+  typedef void ControlSignature(FieldIn<>, FieldInOut<>);
+  typedef void ExecutionSignature(_1, _2);
+
+  template <typename ValueType>
+  VTKM_EXEC void operator()(const ValueType& value1, ValueType& value2) const
+  {
+    value2 += value1;
+  }
+}; //class BufferAddition
+
+class BufferMultiply : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  BufferMultiply() {}
+  typedef void ControlSignature(FieldIn<>, FieldInOut<>);
+  typedef void ExecutionSignature(_1, _2);
+
+  template <typename ValueType>
+  VTKM_EXEC void operator()(const ValueType& value1, ValueType& value2) const
+  {
+    value2 *= value1;
+  }
+}; //class BufferMultiply
+
 template <typename Precision>
 ChannelBuffer<Precision>::ChannelBuffer()
 {
@@ -89,6 +139,31 @@ template <typename Precision>
 std::string ChannelBuffer<Precision>::GetName() const
 {
   return this->Name;
+}
+
+
+template <typename Precision>
+void ChannelBuffer<Precision>::AddBuffer(const ChannelBuffer<Precision>& other)
+{
+  if (this->NumChannels != other.GetNumChannels())
+    throw vtkm::cont::ErrorBadValue("ChannelBuffer add: number of channels must be equal");
+  if (this->Size != other.GetSize())
+    throw vtkm::cont::ErrorBadValue("ChannelBuffer add: size must be equal");
+
+  BufferMathFunctor<Precision, BufferAddition> functor(this, &other);
+  vtkm::cont::TryExecute(functor);
+}
+
+template <typename Precision>
+void ChannelBuffer<Precision>::MultiplyBuffer(const ChannelBuffer<Precision>& other)
+{
+  if (this->NumChannels != other.GetNumChannels())
+    throw vtkm::cont::ErrorBadValue("ChannelBuffer add: number of channels must be equal");
+  if (this->Size != other.GetSize())
+    throw vtkm::cont::ErrorBadValue("ChannelBuffer add: size must be equal");
+
+  BufferMathFunctor<Precision, BufferMultiply> functor(this, &other);
+  vtkm::cont::TryExecute(functor);
 }
 
 template <typename Precision>
@@ -333,7 +408,6 @@ struct NormalizeFunctor
     asField.GetRange(&range);
     Precision minScalar = static_cast<Precision>(range.Min);
     Precision maxScalar = static_cast<Precision>(range.Max);
-
     vtkm::worklet::DispatcherMapField<NormalizeBuffer<Precision>, Device>(
       NormalizeBuffer<Precision>(minScalar, maxScalar, Invert))
       .Invoke(Input);

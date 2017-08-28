@@ -300,7 +300,7 @@ void TestMarchingCubesUniformGrid()
   vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-  vtkm::filter::ResultDataSet result;
+  vtkm::filter::Result result;
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals(true);
@@ -369,7 +369,7 @@ void TestMarchingCubesCustomPolicy()
 
   vtkm::cont::Field contourField = dataSet.GetField("distanceToOrigin");
 
-  vtkm::filter::ResultDataSet result;
+  vtkm::filter::Result result;
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals(false);

@@ -33,8 +33,8 @@ struct TemplatedTests
 {
   static const vtkm::Id ARRAY_SIZE = 10;
 
-  typedef T ValueType;
-  typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+  using ValueType = T;
+  using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
 
   ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {
@@ -79,7 +79,7 @@ struct TemplatedTests
   template <class ArrayPortalType>
   void TestIteratorRead(ArrayPortalType portal)
   {
-    typedef vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalType> IteratorType;
+    using IteratorType = vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalType>;
 
     IteratorType begin = vtkm::cont::internal::make_IteratorBegin(portal);
     IteratorType end = vtkm::cont::internal::make_IteratorEnd(portal);
@@ -110,7 +110,7 @@ struct TemplatedTests
   template <class ArrayPortalType>
   void TestIteratorWrite(ArrayPortalType portal)
   {
-    typedef vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalType> IteratorType;
+    using IteratorType = vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalType>;
 
     IteratorType begin = vtkm::cont::internal::make_IteratorBegin(portal);
     IteratorType end = vtkm::cont::internal::make_IteratorEnd(portal);

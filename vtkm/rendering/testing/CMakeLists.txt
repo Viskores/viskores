@@ -26,8 +26,10 @@ vtkm_declare_headers(${headers})
 
 set(unit_tests
   UnitTestMapperConnectivity.cxx
+  UnitTestMultiMapper.cxx
   UnitTestMapperRayTracer.cxx
   UnitTestMapperVolume.cxx
+  UnitTestMapperWireframer.cxx
 )
 
 VTKm_unit_tests(SOURCES ${unit_tests})

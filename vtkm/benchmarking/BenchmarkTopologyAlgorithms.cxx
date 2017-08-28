@@ -88,12 +88,15 @@ public:
                             const vtkm::IdComponent& numCellIDs) const
   {
     //simple functor that returns the average cell Value.
-    avgVal = static_cast<OutType>(cellValues[0]);
-    for (vtkm::IdComponent cellIndex = 1; cellIndex < numCellIDs; ++cellIndex)
+    avgVal = vtkm::TypeTraits<OutType>::ZeroInitialization();
+    if (numCellIDs != 0)
     {
-      avgVal += static_cast<OutType>(cellValues[cellIndex]);
+      for (vtkm::IdComponent cellIndex = 0; cellIndex < numCellIDs; ++cellIndex)
+      {
+        avgVal += static_cast<OutType>(cellValues[cellIndex]);
+      }
+      avgVal = avgVal / static_cast<OutType>(numCellIDs);
     }
-    avgVal = avgVal / static_cast<OutType>(numCellIDs);
   }
 };
 

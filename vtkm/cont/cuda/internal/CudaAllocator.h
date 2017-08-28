@@ -35,9 +35,19 @@ namespace cuda
 namespace internal
 {
 
+/// Collection of cuda-specific memory management operations.
 struct VTKM_CONT_EXPORT CudaAllocator
 {
+  /// Returns true if all detected CUDA devices support pageable managed memory
+  /// that can be accessed concurrently by the CPU and GPUs.
   static VTKM_CONT bool UsingManagedMemory();
+
+  /// Returns true if the pointer is accessable from a CUDA device.
+  static VTKM_CONT bool IsDevicePointer(const void* ptr);
+
+  /// Returns true if the pointer is a CUDA pointer allocated with
+  /// cudaMallocManaged.
+  static VTKM_CONT bool IsManagedPointer(const void* ptr);
 
   static VTKM_CONT void* Allocate(std::size_t numBytes);
   static VTKM_CONT void Free(void* ptr);

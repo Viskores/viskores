@@ -40,7 +40,7 @@ struct TestKernelIn : public vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id index) const
   {
-    typedef typename PortalType::ValueType ValueType;
+    using ValueType = typename PortalType::ValueType;
     if (!test_equal(this->Portal.Get(index), TestValue(index, ValueType())))
     {
       this->RaiseError("Got bad execution object.");
@@ -60,10 +60,10 @@ struct TryArrayInType
       array[index] = TestValue(index, T());
     }
 
-    typedef vtkm::cont::ArrayHandle<T> ArrayHandleType;
+    using ArrayHandleType = vtkm::cont::ArrayHandle<T>;
     ArrayHandleType handle = vtkm::cont::make_ArrayHandle(array, ARRAY_SIZE);
 
-    typedef typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst PortalType;
+    using PortalType = typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst;
 
     vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagArrayIn, ArrayHandleType, Device>
       transport;

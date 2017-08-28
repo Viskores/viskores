@@ -46,6 +46,25 @@ DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::GetDeviceId(
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecutionArray& execArray,
                                                                   vtkm::Id numBytes) const
 {
+  // Detect if we can reuse a device-accessible pointer from the control env:
+  if (CudaAllocator::IsDevicePointer(execArray.ArrayControl))
+  {
+    const vtkm::Id managedCapacity = static_cast<const char*>(execArray.ArrayControlCapacity) -
+      static_cast<const char*>(execArray.ArrayControl);
+    if (managedCapacity >= numBytes)
+    {
+      if (execArray.Array && execArray.Array != execArray.ArrayControl)
+      {
+        this->Free(execArray);
+      }
+
+      execArray.Array = const_cast<void*>(execArray.ArrayControl);
+      execArray.ArrayEnd = static_cast<char*>(execArray.Array) + numBytes;
+      execArray.ArrayCapacity = const_cast<void*>(execArray.ArrayControlCapacity);
+      return;
+    }
+  }
+
   if (execArray.Array != nullptr)
   {
     const vtkm::Id cap =
@@ -84,6 +103,17 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Free(
   TypelessExecutionArray& execArray) const
 {
+  // If we're sharing a device-accessible pointer between control/exec, don't
+  // actually free it -- just null the pointers here:
+  if (execArray.Array == execArray.ArrayControl &&
+      CudaAllocator::IsDevicePointer(execArray.ArrayControl))
+  {
+    execArray.Array = nullptr;
+    execArray.ArrayEnd = nullptr;
+    execArray.ArrayCapacity = nullptr;
+    return;
+  }
+
   if (execArray.Array != nullptr)
   {
     CudaAllocator::Free(execArray.Array);
@@ -97,16 +127,45 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(const v
                                                                          void* executionPtr,
                                                                          vtkm::Id numBytes) const
 {
-  VTKM_CUDA_CALL(cudaMemcpy(
-    executionPtr, controlPtr, static_cast<std::size_t>(numBytes), cudaMemcpyHostToDevice));
+  // Do nothing if we're sharing a device-accessible pointer between control and
+  // execution:
+  if (controlPtr == executionPtr && CudaAllocator::IsDevicePointer(controlPtr))
+  {
+    return;
+  }
+
+  VTKM_CUDA_CALL(cudaMemcpyAsync(executionPtr,
+                                 controlPtr,
+                                 static_cast<std::size_t>(numBytes),
+                                 cudaMemcpyHostToDevice,
+                                 cudaStreamPerThread));
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const void* executionPtr,
                                                                        void* controlPtr,
                                                                        vtkm::Id numBytes) const
 {
-  VTKM_CUDA_CALL(cudaMemcpy(
-    controlPtr, executionPtr, static_cast<std::size_t>(numBytes), cudaMemcpyDeviceToHost));
+  // Do nothing if we're sharing a cuda managed pointer between control and execution:
+  if (controlPtr == executionPtr && CudaAllocator::IsDevicePointer(controlPtr))
+  {
+    // If we're trying to copy a shared, non-managed device pointer back to
+    // control throw an exception -- the pointer cannot be read from control,
+    // so this operation is invalid.
+    if (!CudaAllocator::IsManagedPointer(controlPtr))
+    {
+      throw vtkm::cont::ErrorBadValue(
+        "Control pointer is a CUDA device pointer that does not supported managed access.");
+    }
+
+    // If it is managed, just return and let CUDA handle the migration for us.
+    return;
+  }
+
+  VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
+                                 executionPtr,
+                                 static_cast<std::size_t>(numBytes),
+                                 cudaMemcpyDeviceToHost,
+                                 cudaStreamPerThread));
 }
 
 } // end namespace internal

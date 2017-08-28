@@ -23,26 +23,19 @@
 #path so that our examples can find VTK-m
 set(CMAKE_PREFIX_PATH ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR})
 
-#add_subdirectory(clipping)
-#add_subdirectory(contour_tree)
-#add_subdirectory(demo)
-#add_subdirectory(dynamic_dispatcher)
-#add_subdirectory(hello_world)
-#add_subdirectory(isosurface)
-#add_subdirectory(multi_backend)
+add_subdirectory(clipping)
+add_subdirectory(contour_tree)
+add_subdirectory(demo)
+add_subdirectory(dynamic_dispatcher)
+add_subdirectory(game_of_life)
+add_subdirectory(hello_world)
+add_subdirectory(isosurface)
+add_subdirectory(multi_backend)
 add_subdirectory(streamline)
-<<<<<<< HEAD
-#add_subdirectory(tetrahedra)
-add_subdirectory(tau_timing)
-#if(VTKm_ENABLE_RENDERING)
-#  add_subdirectory(rendering)
-#endif()
-=======
 add_subdirectory(tetrahedra)
 add_subdirectory(particle_advection)
 if(VTKm_ENABLE_RENDERING)
   add_subdirectory(rendering)
 endif()
 add_subdirectory(unified_memory)
->>>>>>> 2481dd62487217228bde311ed335acc32917cfc6
 

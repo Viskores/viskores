@@ -54,11 +54,11 @@ template <typename T, typename DeviceAdapterTag>
 class AtomicArray : public vtkm::exec::ExecutionObjectBase
 {
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
   VTKM_CONT
   AtomicArray()
-    : AtomicImplementation(vtkm::cont::make_ArrayHandle((T*)nullptr, 0))
+    : AtomicImplementation((vtkm::cont::ArrayHandle<T>()))
   {
   }
 

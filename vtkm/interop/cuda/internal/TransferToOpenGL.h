@@ -33,6 +33,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/copy.h>
 #include <thrust/device_ptr.h>
 #include <thrust/system/cuda/execution_policy.h>
+#include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
@@ -193,16 +194,14 @@ public:
     ValueType* beginPointer = this->Resource->GetMappedPoiner<ValueType>(size);
 
     //get the device pointers
-    typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> HandleType;
-    typedef typename HandleType::template ExecutionTypes<DeviceAdapterTag>::PortalConst PortalType;
-    PortalType portal = handle.PrepareForInput(DeviceAdapterTag());
+    auto portal = handle.PrepareForInput(DeviceAdapterTag());
 
     //Copy the data into memory that opengl owns, since we can't
     //give memory from cuda to opengl
 
     //Perhaps a direct call to thrust copy should be wrapped in a vtkm
     //compatble function
-    ::thrust::copy(thrust::cuda::par,
+    ::thrust::copy(ThrustCudaPolicyPerThread,
                    vtkm::cont::cuda::internal::IteratorBegin(portal),
                    vtkm::cont::cuda::internal::IteratorEnd(portal),
                    thrust::cuda::pointer<ValueType>(beginPointer));
