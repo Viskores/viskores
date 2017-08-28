@@ -197,6 +197,20 @@ public:
   }
 
 
+  VTKM_CONT void GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
+  {
+    this->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    vtkm::IdComponent numIndices = this->GetNumberOfPointsInCell(index);
+    ids.Allocate(numIndices);
+    vtkm::Id start = this->PointToCell.IndexOffsets.GetPortalConstControl().Get(index);
+    vtkm::cont::ArrayHandle<vtkm::Id>::PortalControl idPortal = ids.GetPortalControl();
+    auto PtCellPortal = this->PointToCell.Connectivity.GetPortalConstControl();
+
+    for (vtkm::IdComponent i = 0; i < numIndices && i < numIndices; i++)
+      idPortal.Set(i, PtCellPortal.Get(start + i));
+  }
+
+
   /// First method to add cells -- one at a time.
   VTKM_CONT
   void PrepareToAddCells(vtkm::Id numCells, vtkm::Id connectivityMaxLen)
