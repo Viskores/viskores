@@ -35,7 +35,7 @@ public:
   {
     std::cout << "Testing triangulate structured" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::Triangulate triangulate;
 
@@ -63,7 +63,7 @@ public:
   {
     std::cout << "Testing triangulate explicit" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DExplicitDataSet0();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::Triangulate triangulate;
 

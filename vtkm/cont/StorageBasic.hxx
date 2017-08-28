@@ -30,12 +30,20 @@ namespace internal
 {
 
 template <typename T>
+Storage<T, vtkm::cont::StorageTagBasic>::Storage()
+  : Array(nullptr)
+  , NumberOfValues(0)
+  , AllocatedSize(0)
+  , DeallocateOnRelease(true)
+{
+}
+
+template <typename T>
 Storage<T, vtkm::cont::StorageTagBasic>::Storage(const T* array, vtkm::Id numberOfValues)
   : Array(const_cast<T*>(array))
   , NumberOfValues(numberOfValues)
   , AllocatedSize(numberOfValues)
-  , DeallocateOnRelease(false)
-  , UserProvidedMemory(array == nullptr ? false : true)
+  , DeallocateOnRelease(array == nullptr ? true : false)
 {
 }
 
@@ -50,8 +58,7 @@ Storage<T, vtkm::cont::StorageTagBasic>::Storage(const Storage<T, StorageTagBasi
   : Array(src.Array)
   , NumberOfValues(src.NumberOfValues)
   , AllocatedSize(src.AllocatedSize)
-  , DeallocateOnRelease(false)
-  , UserProvidedMemory(src.UserProvidedMemory)
+  , DeallocateOnRelease(src.DeallocateOnRelease)
 {
   if (src.DeallocateOnRelease)
   {
@@ -77,7 +84,6 @@ Storage<T, vtkm::cont::StorageTagBasic>& Storage<T, vtkm::cont::StorageTagBasic>
   this->NumberOfValues = src.NumberOfValues;
   this->AllocatedSize = src.AllocatedSize;
   this->DeallocateOnRelease = src.DeallocateOnRelease;
-  this->UserProvidedMemory = src.UserProvidedMemory;
 
   return *this;
 }
@@ -139,7 +145,7 @@ void Storage<T, vtkm::cont::StorageTagBasic>::AllocateBytes(vtkm::Id numberOfByt
     return;
   }
 
-  if (this->UserProvidedMemory)
+  if (!this->DeallocateOnRelease)
   {
     throw vtkm::cont::ErrorBadValue("User allocated arrays cannot be reallocated.");
   }
@@ -170,7 +176,6 @@ void Storage<T, vtkm::cont::StorageTagBasic>::AllocateBytes(vtkm::Id numberOfByt
   }
 
   this->DeallocateOnRelease = true;
-  this->UserProvidedMemory = false;
 }
 
 template <typename T>
@@ -193,11 +198,8 @@ void Storage<T, vtkm::cont::StorageTagBasic>::ShrinkBytes(vtkm::Id numberOfBytes
 template <typename T>
 T* Storage<T, vtkm::cont::StorageTagBasic>::StealArray()
 {
-  T* saveArray = this->Array;
-  this->Array = nullptr;
-  this->NumberOfValues = 0;
-  this->AllocatedSize = 0;
-  return saveArray;
+  this->DeallocateOnRelease = false;
+  return this->Array;
 }
 
 } // namespace internal

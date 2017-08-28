@@ -50,11 +50,14 @@ set(unit_tests
   UnitTestThreshold.cxx
   UnitTestThresholdPoints.cxx
   UnitTestTriangulate.cxx
+  UnitTestWholeCellSetIn.cxx
   UnitTestWorkletMapField.cxx
   UnitTestWorkletMapFieldExecArg.cxx
   UnitTestWorkletMapFieldWholeArray.cxx
+  UnitTestWorkletMapPointNeighborhood.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyUniform.cxx
+
   UnitTestWorkletReduceByKey.cxx
   UnitTestVertexClustering.cxx
   UnitTestWaveletCompressor.cxx

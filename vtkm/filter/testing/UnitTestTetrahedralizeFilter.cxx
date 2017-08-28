@@ -35,7 +35,7 @@ public:
   {
     std::cout << "Testing tetrahedralize structured" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::Tetrahedralize tetrahedralize;
 
@@ -64,7 +64,7 @@ public:
   {
     std::cout << "Testing tetrahedralize explicit" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::Tetrahedralize tetrahedralize;
 

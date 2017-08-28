@@ -46,7 +46,7 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayDirectIn,
              ThreadIndicesType,
              ExecObjectType>
 {
-  typedef typename ExecObjectType::ValueType ValueType;
+  using ValueType = typename ExecObjectType::ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC

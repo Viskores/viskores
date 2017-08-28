@@ -54,7 +54,7 @@ struct IndexSquared
   VTKM_EXEC_CONT
   ValueType operator()(vtkm::Id index) const
   {
-    typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+    using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
     return ValueType(static_cast<ComponentType>(index * index));
   }
 };
@@ -84,8 +84,8 @@ struct ValueScale
   template <typename ValueType>
   VTKM_EXEC_CONT ValueType operator()(const ValueType& v) const
   {
-    typedef vtkm::VecTraits<ValueType> Traits;
-    typedef typename Traits::ComponentType ComponentType;
+    using Traits = vtkm::VecTraits<ValueType>;
+    using ComponentType = typename Traits::ComponentType;
 
     ValueType result;
     for (vtkm::IdComponent i = 0; i < Traits::GetNumberOfComponents(v); ++i)
@@ -156,10 +156,10 @@ private:
       //hard-coded to make a vtkm::Vec<ValueType,3> composite vector
       //for each ValueType.
 
-      typedef typename vtkm::cont::ArrayHandleCompositeVectorType<
+      using CompositeHandleType = typename vtkm::cont::ArrayHandleCompositeVectorType<
         vtkm::cont::ArrayHandle<ValueType>,
         vtkm::cont::ArrayHandle<ValueType>,
-        vtkm::cont::ArrayHandle<ValueType>>::type CompositeHandleType;
+        vtkm::cont::ArrayHandle<ValueType>>::type;
 
       const ValueType value = TestValue(13, ValueType());
       std::vector<ValueType> compositeData(ARRAY_SIZE, value);
@@ -224,7 +224,7 @@ private:
     template <typename ValueType>
     VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+      using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
 
       const vtkm::Id length = ARRAY_SIZE;
 
@@ -262,7 +262,7 @@ private:
     VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
       const vtkm::Id length = ARRAY_SIZE;
-      typedef ::fancy_array_detail::IndexSquared<ValueType> FunctorType;
+      using FunctorType = ::fancy_array_detail::IndexSquared<ValueType>;
       FunctorType functor;
 
       vtkm::cont::ArrayHandleImplicit<FunctorType> implicit =
@@ -295,12 +295,12 @@ private:
     {
       const vtkm::Id length = ARRAY_SIZE;
 
-      typedef ::fancy_array_detail::IndexSquared<ValueType> FunctorType;
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+      using FunctorType = ::fancy_array_detail::IndexSquared<ValueType>;
+      using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
 
-      typedef vtkm::cont::ArrayHandleImplicit<FunctorType> ValueHandleType;
-      typedef vtkm::cont::ArrayHandle<ValueType> BasicArrayType;
-      typedef vtkm::cont::ArrayHandleConcatenate<ValueHandleType, BasicArrayType> ConcatenateType;
+      using ValueHandleType = vtkm::cont::ArrayHandleImplicit<FunctorType>;
+      using BasicArrayType = vtkm::cont::ArrayHandle<ValueType>;
+      using ConcatenateType = vtkm::cont::ArrayHandleConcatenate<ValueHandleType, BasicArrayType>;
 
       FunctorType functor;
       for (vtkm::Id start_pos = 0; start_pos < length; start_pos += length / 4)
@@ -355,12 +355,12 @@ private:
     {
       const vtkm::Id length = ARRAY_SIZE;
 
-      typedef ::fancy_array_detail::IndexSquared<ValueType> FunctorType;
+      using FunctorType = ::fancy_array_detail::IndexSquared<ValueType>;
 
-      typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> KeyHandleType;
-      typedef vtkm::cont::ArrayHandleImplicit<FunctorType> ValueHandleType;
-      typedef vtkm::cont::ArrayHandlePermutation<KeyHandleType, ValueHandleType>
-        PermutationHandleType;
+      using KeyHandleType = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
+      using ValueHandleType = vtkm::cont::ArrayHandleImplicit<FunctorType>;
+      using PermutationHandleType =
+        vtkm::cont::ArrayHandlePermutation<KeyHandleType, ValueHandleType>;
 
       FunctorType functor;
       for (vtkm::Id start_pos = 0; start_pos < length; start_pos += length / 4)
@@ -404,7 +404,7 @@ private:
     template <typename ValueType>
     VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
-      typedef fancy_array_detail::ValueScale FunctorType;
+      using FunctorType = fancy_array_detail::ValueScale;
 
       const vtkm::Id length = ARRAY_SIZE;
       FunctorType functor(2.0);
@@ -441,9 +441,9 @@ private:
     template <typename ValueType>
     VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
-      typedef ComponentType OutputValueType;
-      typedef fancy_array_detail::ValueSquared<OutputValueType> FunctorType;
+      using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
+      using OutputValueType = ComponentType;
+      using FunctorType = fancy_array_detail::ValueSquared<OutputValueType>;
 
       vtkm::Id length = ARRAY_SIZE;
       FunctorType functor;
@@ -485,7 +485,7 @@ private:
     template <typename CastToType>
     VTKM_CONT void operator()(CastToType vtkmNotUsed(type)) const
     {
-      typedef vtkm::cont::ArrayHandleIndex InputArrayType;
+      using InputArrayType = vtkm::cont::ArrayHandleIndex;
 
       InputArrayType input(ARRAY_SIZE);
       vtkm::cont::ArrayHandleCast<CastToType, InputArrayType> castArray =
@@ -515,7 +515,7 @@ private:
     template <typename ComponentType>
     VTKM_CONT void operator()(ComponentType) const
     {
-      typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
+      using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
 
       ComponentType testValues[ARRAY_SIZE * NUM_COMPONENTS];
 
@@ -564,7 +564,7 @@ private:
     template <typename ComponentType>
     VTKM_CONT void operator()(ComponentType) const
     {
-      typedef vtkm::Vec<ComponentType, NUM_COMPONENTS> ValueType;
+      using ValueType = vtkm::Vec<ComponentType, NUM_COMPONENTS>;
 
       vtkm::cont::ArrayHandle<ValueType> baseArray;
       baseArray.Allocate(ARRAY_SIZE);
@@ -721,9 +721,9 @@ private:
     template <typename KeyType, typename ValueType>
     VTKM_CONT void operator()(vtkm::Pair<KeyType, ValueType> vtkmNotUsed(pair)) const
     {
-      typedef vtkm::Pair<KeyType, ValueType> PairType;
-      typedef typename vtkm::VecTraits<KeyType>::ComponentType KeyComponentType;
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType ValueComponentType;
+      using PairType = vtkm::Pair<KeyType, ValueType>;
+      using KeyComponentType = typename vtkm::VecTraits<KeyType>::ComponentType;
+      using ValueComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
 
       KeyType testKeys[ARRAY_SIZE];
       ValueType testValues[ARRAY_SIZE];
@@ -768,7 +768,7 @@ private:
       using DiscardHandleType = vtkm::cont::ArrayHandleDiscard<ValueType>;
       using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
 
-      typedef typename vtkm::cont::ArrayHandle<ValueType>::PortalControl Portal;
+      using Portal = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
 
       const vtkm::Id length = ARRAY_SIZE;
 
@@ -798,14 +798,14 @@ private:
     {
       const vtkm::Id length = ARRAY_SIZE;
 
-      typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> KeyHandleType;
-      typedef vtkm::cont::ArrayHandle<ValueType> ValueHandleType;
-      typedef vtkm::cont::ArrayHandlePermutation<KeyHandleType, ValueHandleType>
-        PermutationHandleType;
+      using KeyHandleType = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
+      using ValueHandleType = vtkm::cont::ArrayHandle<ValueType>;
+      using PermutationHandleType =
+        vtkm::cont::ArrayHandlePermutation<KeyHandleType, ValueHandleType>;
 
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+      using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
       vtkm::cont::ArrayHandle<ValueType> input;
-      typedef typename vtkm::cont::ArrayHandle<ValueType>::PortalControl Portal;
+      using Portal = typename vtkm::cont::ArrayHandle<ValueType>::PortalControl;
       input.Allocate(length);
       Portal inputPortal = input.GetPortalControl();
       for (vtkm::Id i = 0; i < length; ++i)
@@ -841,9 +841,9 @@ private:
     template <typename KeyType, typename ValueType>
     VTKM_CONT void operator()(vtkm::Pair<KeyType, ValueType> vtkmNotUsed(pair)) const
     {
-      typedef vtkm::Pair<KeyType, ValueType> PairType;
-      typedef typename vtkm::VecTraits<KeyType>::ComponentType KeyComponentType;
-      typedef typename vtkm::VecTraits<ValueType>::ComponentType ValueComponentType;
+      using PairType = vtkm::Pair<KeyType, ValueType>;
+      using KeyComponentType = typename vtkm::VecTraits<KeyType>::ComponentType;
+      using ValueComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
 
       PairType testKeysAndValues[ARRAY_SIZE];
       for (vtkm::Id i = 0; i < ARRAY_SIZE; ++i)

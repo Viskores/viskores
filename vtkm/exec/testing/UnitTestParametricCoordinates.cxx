@@ -65,7 +65,7 @@ static void CompareCoordinates(const PointWCoordsType& pointWCoords,
                                vtkm::Vec<T, 3> trueWCoords,
                                CellShapeTag shape)
 {
-  typedef vtkm::Vec<T, 3> Vector3;
+  using Vector3 = vtkm::Vec<T, 3>;
 
   // Stuff to fake running in the execution environment.
   char messageBuffer[256];
@@ -90,8 +90,8 @@ static void CompareCoordinates(const PointWCoordsType& pointWCoords,
 template <typename PointWCoordsType, typename CellShapeTag>
 void TestPCoordsSpecial(const PointWCoordsType& pointWCoords, CellShapeTag shape)
 {
-  typedef typename PointWCoordsType::ComponentType Vector3;
-  typedef typename Vector3::ComponentType T;
+  using Vector3 = typename PointWCoordsType::ComponentType;
+  using T = typename Vector3::ComponentType;
 
   // Stuff to fake running in the execution environment.
   char messageBuffer[256];
@@ -130,7 +130,7 @@ void TestPCoordsSpecial(const PointWCoordsType& pointWCoords, CellShapeTag shape
 template <typename PointWCoordsType, typename CellShapeTag>
 void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
 {
-  typedef typename PointWCoordsType::ComponentType Vector3;
+  using Vector3 = typename PointWCoordsType::ComponentType;
 
   // Stuff to fake running in the execution environment.
   char messageBuffer[256];
@@ -185,8 +185,8 @@ static void TestPCoords(const PointWCoordsType& pointWCoords, CellShellTag shape
 template <typename T>
 struct TestPCoordsFunctor
 {
-  typedef vtkm::Vec<T, 3> Vector3;
-  typedef vtkm::VecVariable<Vector3, MAX_POINTS> PointWCoordType;
+  using Vector3 = vtkm::Vec<T, 3>;
+  using PointWCoordType = vtkm::VecVariable<Vector3, MAX_POINTS>;
 
   template <typename CellShapeTag>
   PointWCoordType MakePointWCoords(CellShapeTag, vtkm::IdComponent numPoints) const

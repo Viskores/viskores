@@ -48,7 +48,7 @@ namespace exec
 namespace internal
 {
 
-typedef vtkm::cont::internal::NullFunctorType NullFunctorType;
+using NullFunctorType = vtkm::cont::internal::NullFunctorType;
 
 /// \brief An array portal that transforms a value from another portal.
 ///
@@ -63,9 +63,9 @@ class VTKM_ALWAYS_EXPORT
   ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>
 {
 public:
-  typedef PortalType_ PortalType;
-  typedef ValueType_ ValueType;
-  typedef FunctorType_ FunctorType;
+  using PortalType = PortalType_;
+  using ValueType = ValueType_;
+  using FunctorType = FunctorType_;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -127,11 +127,11 @@ class VTKM_ALWAYS_EXPORT ArrayPortalTransform
   : public ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>
 {
 public:
-  typedef ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType> Superclass;
-  typedef PortalType_ PortalType;
-  typedef ValueType_ ValueType;
-  typedef FunctorType_ FunctorType;
-  typedef InverseFunctorType_ InverseFunctorType;
+  using Superclass = ArrayPortalTransform<ValueType_, PortalType_, FunctorType_, NullFunctorType>;
+  using PortalType = PortalType_;
+  using ValueType = ValueType_;
+  using FunctorType = FunctorType_;
+  using InverseFunctorType = InverseFunctorType_;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -199,20 +199,20 @@ class Storage<typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueT
               StorageTagTransform<ArrayHandleType, FunctorType>>
 {
 public:
-  typedef typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType ValueType;
+  using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
 
   // This is meant to be invalid. Because Transform arrays are read only, you
   // should only be able to use the const version.
   struct PortalType
   {
-    typedef void* ValueType;
-    typedef void* IteratorType;
+    using ValueType = void*;
+    using IteratorType = void*;
   };
 
-  typedef vtkm::exec::internal::ArrayPortalTransform<ValueType,
-                                                     typename ArrayHandleType::PortalConstControl,
-                                                     FunctorType>
-    PortalConstType;
+  using PortalConstType =
+    vtkm::exec::internal::ArrayPortalTransform<ValueType,
+                                               typename ArrayHandleType::PortalConstControl,
+                                               FunctorType>;
 
   VTKM_CONT
   Storage()
@@ -291,19 +291,19 @@ class Storage<
   StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>
 {
 public:
-  typedef typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType
-    ValueType;
+  using ValueType =
+    typename StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>::ValueType;
 
-  typedef vtkm::exec::internal::ArrayPortalTransform<ValueType,
-                                                     typename ArrayHandleType::PortalControl,
-                                                     FunctorType,
-                                                     InverseFunctorType>
-    PortalType;
-  typedef vtkm::exec::internal::ArrayPortalTransform<ValueType,
-                                                     typename ArrayHandleType::PortalConstControl,
-                                                     FunctorType,
-                                                     InverseFunctorType>
-    PortalConstType;
+  using PortalType =
+    vtkm::exec::internal::ArrayPortalTransform<ValueType,
+                                               typename ArrayHandleType::PortalControl,
+                                               FunctorType,
+                                               InverseFunctorType>;
+  using PortalConstType =
+    vtkm::exec::internal::ArrayPortalTransform<ValueType,
+                                               typename ArrayHandleType::PortalConstControl,
+                                               FunctorType,
+                                               InverseFunctorType>;
 
   VTKM_CONT
   Storage()
@@ -386,22 +386,21 @@ class ArrayTransfer<typename StorageTagTransform<ArrayHandleType, FunctorType>::
                     StorageTagTransform<ArrayHandleType, FunctorType>,
                     Device>
 {
-  typedef StorageTagTransform<ArrayHandleType, FunctorType> StorageTag;
+  using StorageTag = StorageTagTransform<ArrayHandleType, FunctorType>;
 
 public:
-  typedef typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType ValueType;
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
   //meant to be an invalid writeable execution portal
-  typedef typename StorageType::PortalType PortalExecution;
-  typedef vtkm::exec::internal::ArrayPortalTransform<
+  using PortalExecution = typename StorageType::PortalType;
+  using PortalConstExecution = vtkm::exec::internal::ArrayPortalTransform<
     ValueType,
     typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
-    FunctorType>
-    PortalConstExecution;
+    FunctorType>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -464,27 +463,25 @@ class ArrayTransfer<
   StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>,
   Device>
 {
-  typedef StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType> StorageTag;
+  using StorageTag = StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>;
 
 public:
-  typedef typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType ValueType;
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using ValueType = typename StorageTagTransform<ArrayHandleType, FunctorType>::ValueType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
-  typedef vtkm::exec::internal::ArrayPortalTransform<
+  using PortalExecution = vtkm::exec::internal::ArrayPortalTransform<
     ValueType,
     typename ArrayHandleType::template ExecutionTypes<Device>::Portal,
     FunctorType,
-    InverseFunctorType>
-    PortalExecution;
-  typedef vtkm::exec::internal::ArrayPortalTransform<
+    InverseFunctorType>;
+  using PortalConstExecution = vtkm::exec::internal::ArrayPortalTransform<
     ValueType,
     typename ArrayHandleType::template ExecutionTypes<Device>::PortalConst,
     FunctorType,
-    InverseFunctorType>
-    PortalConstExecution;
+    InverseFunctorType>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -574,7 +571,7 @@ public:
       internal::StorageTagTransform<ArrayHandleType, FunctorType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   VTKM_CONT
@@ -616,7 +613,7 @@ public:
       internal::StorageTagTransform<ArrayHandleType, FunctorType, InverseFunctorType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   ArrayHandleTransform(const ArrayHandleType& handle,

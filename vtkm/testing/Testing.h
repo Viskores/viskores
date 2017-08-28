@@ -137,7 +137,7 @@ private:
   template <typename FunctionType>
   void PrintAndInvoke(const FunctionType& function, std::true_type) const
   {
-    typedef typename vtkm::CellShapeIdToTag<cellShapeId>::Tag CellShapeTag;
+    using CellShapeTag = typename vtkm::CellShapeIdToTag<cellShapeId>::Tag;
     std::cout << "*** " << vtkm::GetCellShapeName(CellShapeTag()) << " ***************"
               << std::endl;
     function(CellShapeTag());
@@ -508,6 +508,13 @@ static inline VTKM_EXEC_CONT bool test_equal(const vtkm::Bounds& bounds1,
           test_equal(bounds1.Z, bounds2.Z, tolerance));
 }
 
+/// Special implementation of test_equal for booleans.
+///
+static inline VTKM_EXEC_CONT bool test_equal(bool bool1, bool bool2)
+{
+  return bool1 == bool2;
+}
+
 template <typename T>
 static inline VTKM_EXEC_CONT T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
 {
@@ -562,7 +569,7 @@ static inline VTKM_CONT std::string TestValue(vtkm::Id index, std::string)
 template <typename PortalType>
 static inline VTKM_CONT void CheckPortal(const PortalType& portal)
 {
-  typedef typename PortalType::ValueType ValueType;
+  using ValueType = typename PortalType::ValueType;
 
   for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
   {
@@ -584,12 +591,34 @@ static inline VTKM_CONT void CheckPortal(const PortalType& portal)
 template <typename PortalType>
 static inline VTKM_CONT void SetPortal(const PortalType& portal)
 {
-  typedef typename PortalType::ValueType ValueType;
+  using ValueType = typename PortalType::ValueType;
 
   for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
   {
     portal.Set(index, TestValue(index, ValueType()));
   }
+}
+
+/// Verifies that the contents of the two portals are the same.
+///
+template <typename PortalType1, typename PortalType2>
+static inline VTKM_CONT bool test_equal_portals(const PortalType1& portal1,
+                                                const PortalType2& portal2)
+{
+  if (portal1.GetNumberOfValues() != portal2.GetNumberOfValues())
+  {
+    return false;
+  }
+
+  for (vtkm::Id index = 0; index < portal1.GetNumberOfValues(); index++)
+  {
+    if (!test_equal(portal1.Get(index), portal2.Get(index)))
+    {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 #endif //vtk_m_testing_Testing_h

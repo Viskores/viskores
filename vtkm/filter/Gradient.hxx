@@ -25,7 +25,7 @@ namespace
 {
 //-----------------------------------------------------------------------------
 template <typename HandleType>
-inline void add_field(vtkm::filter::ResultField& result,
+inline void add_field(vtkm::filter::Result& result,
                       const HandleType& handle,
                       const std::string name)
 {
@@ -80,7 +80,7 @@ Gradient::Gradient()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline vtkm::filter::ResultField Gradient::DoExecute(
+inline vtkm::filter::Result Gradient::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
@@ -92,7 +92,7 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
     //we currently only support point fields, as we need to write the
     //worklet to efficiently map a cell field to the points of a cell
     //without doing a memory explosion
-    return vtkm::filter::ResultField();
+    return vtkm::filter::Result();
   }
 
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -141,7 +141,7 @@ inline vtkm::filter::ResultField Gradient::DoExecute(
   vtkm::cont::Field::AssociationEnum fieldAssociation(this->ComputePointGradient
                                                         ? vtkm::cont::Field::ASSOC_POINTS
                                                         : vtkm::cont::Field::ASSOC_CELL_SET);
-  vtkm::filter::ResultField result(input, outArray, outputName, fieldAssociation, cells.GetName());
+  vtkm::filter::Result result(input, outArray, outputName, fieldAssociation, cells.GetName());
 
   if (this->GetComputeDivergence() && isVector)
   {

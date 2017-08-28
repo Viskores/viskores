@@ -50,7 +50,7 @@ struct AspectTagValueCount
 struct ValueCount : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagValueCount AspectTag;
+  using AspectTag = vtkm::exec::arg::AspectTagValueCount;
 };
 
 template <typename FetchTag, typename ExecObjectType>

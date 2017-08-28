@@ -226,11 +226,11 @@ void TestPointGradientExplicit()
 void TestPointGradient()
 {
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  TestPointGradientUniform2D<DeviceAdapter>();
+  // TestPointGradientUniform2D<DeviceAdapter>();
   TestPointGradientUniform3D<DeviceAdapter>();
-  TestPointGradientUniform3DWithVectorField<DeviceAdapter>();
-  TestPointGradientUniform3DWithVectorField2<DeviceAdapter>();
-  TestPointGradientExplicit<DeviceAdapter>();
+  // TestPointGradientUniform3DWithVectorField<DeviceAdapter>();
+  // TestPointGradientUniform3DWithVectorField2<DeviceAdapter>();
+  // TestPointGradientExplicit<DeviceAdapter>();
 }
 }
 

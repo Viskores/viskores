@@ -21,9 +21,10 @@
 #ifndef vtk_m_exec_ConnectivityPermuted_h
 #define vtk_m_exec_ConnectivityPermuted_h
 
+#include <vtkm/CellShape.h>
 #include <vtkm/TopologyElementTag.h>
 #include <vtkm/Types.h>
-#include <vtkm/exec/ConnectivityStructured.h>
+#include <vtkm/VecFromPortal.h>
 
 namespace vtkm
 {
@@ -31,34 +32,37 @@ namespace exec
 {
 
 template <typename PermutationPortal, typename OriginalConnectivity>
-class ConnectivityPermuted
+class ConnectivityPermutedPointToCell
 {
 public:
-  typedef typename OriginalConnectivity::SchedulingRangeType SchedulingRangeType;
+  using SchedulingRangeType = typename OriginalConnectivity::SchedulingRangeType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
-  ConnectivityPermuted()
+  ConnectivityPermutedPointToCell()
     : Portal()
     , Connectivity()
   {
   }
 
   VTKM_EXEC_CONT
-  ConnectivityPermuted(const PermutationPortal& portal, const OriginalConnectivity& src)
+  ConnectivityPermutedPointToCell(const PermutationPortal& portal, const OriginalConnectivity& src)
     : Portal(portal)
     , Connectivity(src)
   {
   }
 
   VTKM_EXEC_CONT
-  ConnectivityPermuted(const ConnectivityPermuted& src)
+  ConnectivityPermutedPointToCell(const ConnectivityPermutedPointToCell& src)
     : Portal(src.Portal)
     , Connectivity(src.Connectivity)
   {
   }
 
-  typedef typename OriginalConnectivity::CellShapeTag CellShapeTag;
+  VTKM_EXEC
+  vtkm::Id GetNumberOfElements() const { return this->Portal.GetNumberOfValues(); }
+
+  using CellShapeTag = typename OriginalConnectivity::CellShapeTag;
 
   VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id index) const
@@ -67,7 +71,13 @@ public:
     return this->Connectivity.GetCellShape(pIndex);
   }
 
-  typedef typename OriginalConnectivity::IndicesType IndicesType;
+  VTKM_EXEC
+  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const
+  {
+    return this->Connectivity.GetNumberOfIndices(this->Portal.Get(index));
+  }
+
+  using IndicesType = typename OriginalConnectivity::IndicesType;
 
   template <typename IndexType>
   VTKM_EXEC IndicesType GetIndices(const IndexType& index) const
@@ -77,6 +87,47 @@ public:
 
   PermutationPortal Portal;
   OriginalConnectivity Connectivity;
+};
+
+template <typename ConnectivityPortalType,
+          typename NumIndicesPortalType,
+          typename IndexOffsetPortalType>
+class ConnectivityPermutedCellToPoint
+{
+public:
+  using SchedulingRangeType = vtkm::Id;
+  using IndicesType = vtkm::VecFromPortal<ConnectivityPortalType>;
+  using CellShapeTag = vtkm::CellShapeTagVertex;
+
+  ConnectivityPermutedCellToPoint() = default;
+
+  ConnectivityPermutedCellToPoint(const ConnectivityPortalType& connectivity,
+                                  const NumIndicesPortalType& numIndices,
+                                  const IndexOffsetPortalType& indexOffset)
+    : Connectivity(connectivity)
+    , NumIndices(numIndices)
+    , IndexOffset(indexOffset)
+  {
+  }
+
+  VTKM_EXEC
+  SchedulingRangeType GetNumberOfElements() const { return this->NumIndices.GetNumberOfValues(); }
+
+  VTKM_EXEC CellShapeTag GetCellShape(vtkm::Id) const { return CellShapeTag(); }
+
+  VTKM_EXEC
+  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const { return this->NumIndices.Get(index); }
+
+  VTKM_EXEC IndicesType GetIndices(vtkm::Id index) const
+  {
+    return IndicesType(
+      this->Connectivity, this->NumIndices.Get(index), this->IndexOffset.Get(index));
+  }
+
+private:
+  ConnectivityPortalType Connectivity;
+  NumIndicesPortalType NumIndices;
+  IndexOffsetPortalType IndexOffset;
 };
 }
 } // namespace vtkm::exec

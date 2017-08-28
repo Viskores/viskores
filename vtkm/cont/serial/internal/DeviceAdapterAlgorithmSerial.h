@@ -47,7 +47,7 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>
       vtkm::cont::DeviceAdapterTagSerial>
 {
 private:
-  typedef vtkm::cont::DeviceAdapterTagSerial Device;
+  using Device = vtkm::cont::DeviceAdapterTagSerial;
 
 public:
   template <typename T, typename U, class CIn>
@@ -61,11 +61,8 @@ public:
                             U initialValue,
                             BinaryFunctor binary_functor)
   {
-    typedef typename vtkm::cont::ArrayHandle<T, CIn>::template ExecutionTypes<Device>::PortalConst
-      PortalIn;
-
     internal::WrappedBinaryOperator<U, BinaryFunctor> wrappedOp(binary_functor);
-    PortalIn inputPortal = input.PrepareForInput(Device());
+    auto inputPortal = input.PrepareForInput(Device());
     return std::accumulate(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
                            vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
                            initialValue,
@@ -85,22 +82,12 @@ public:
                                     vtkm::cont::ArrayHandle<U, VOut>& values_output,
                                     BinaryFunctor binary_functor)
   {
-    typedef typename vtkm::cont::ArrayHandle<T, KIn>::template ExecutionTypes<Device>::PortalConst
-      PortalKIn;
-    typedef typename vtkm::cont::ArrayHandle<U, VIn>::template ExecutionTypes<Device>::PortalConst
-      PortalVIn;
-
-    typedef
-      typename vtkm::cont::ArrayHandle<T, KOut>::template ExecutionTypes<Device>::Portal PortalKOut;
-    typedef
-      typename vtkm::cont::ArrayHandle<U, VOut>::template ExecutionTypes<Device>::Portal PortalVOut;
-
-    PortalKIn keysPortalIn = keys.PrepareForInput(Device());
-    PortalVIn valuesPortalIn = values.PrepareForInput(Device());
+    auto keysPortalIn = keys.PrepareForInput(Device());
+    auto valuesPortalIn = values.PrepareForInput(Device());
 
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
-    PortalKOut keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device());
-    PortalVOut valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device());
+    auto keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device());
+    auto valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device());
 
     vtkm::Id writePos = 0;
     vtkm::Id readPos = 0;
@@ -141,15 +128,10 @@ public:
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    typedef
-      typename vtkm::cont::ArrayHandle<T, COut>::template ExecutionTypes<Device>::Portal PortalOut;
-    typedef typename vtkm::cont::ArrayHandle<T, CIn>::template ExecutionTypes<Device>::PortalConst
-      PortalIn;
-
     vtkm::Id numberOfValues = input.GetNumberOfValues();
 
-    PortalIn inputPortal = input.PrepareForInput(Device());
-    PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
+    auto inputPortal = input.PrepareForInput(Device());
+    auto outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
     if (numberOfValues <= 0)
     {
@@ -169,17 +151,12 @@ public:
                                    vtkm::cont::ArrayHandle<T, COut>& output,
                                    BinaryFunctor binary_functor)
   {
-    typedef
-      typename vtkm::cont::ArrayHandle<T, COut>::template ExecutionTypes<Device>::Portal PortalOut;
-    typedef typename vtkm::cont::ArrayHandle<T, CIn>::template ExecutionTypes<Device>::PortalConst
-      PortalIn;
-
     internal::WrappedBinaryOperator<T, BinaryFunctor> wrappedBinaryOp(binary_functor);
 
     vtkm::Id numberOfValues = input.GetNumberOfValues();
 
-    PortalIn inputPortal = input.PrepareForInput(Device());
-    PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
+    auto inputPortal = input.PrepareForInput(Device());
+    auto outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
     if (numberOfValues <= 0)
     {
@@ -201,17 +178,12 @@ public:
                                    BinaryFunctor binaryFunctor,
                                    const T& initialValue)
   {
-    typedef
-      typename vtkm::cont::ArrayHandle<T, COut>::template ExecutionTypes<Device>::Portal PortalOut;
-    typedef typename vtkm::cont::ArrayHandle<T, CIn>::template ExecutionTypes<Device>::PortalConst
-      PortalIn;
-
     internal::WrappedBinaryOperator<T, BinaryFunctor> wrappedBinaryOp(binaryFunctor);
 
     vtkm::Id numberOfValues = input.GetNumberOfValues();
 
-    PortalIn inputPortal = input.PrepareForInput(Device());
-    PortalOut outputPortal = output.PrepareForOutput(numberOfValues, Device());
+    auto inputPortal = input.PrepareForInput(Device());
+    auto outputPortal = output.PrepareForOutput(numberOfValues, Device());
 
     if (numberOfValues <= 0)
     {
@@ -277,21 +249,12 @@ private:
                                 vtkm::cont::ArrayHandle<I, StorageI>& index,
                                 vtkm::cont::ArrayHandle<Vout, StorageVout>& values_out)
   {
-    typedef typename vtkm::cont::ArrayHandle<Vin, StorageVin>::template ExecutionTypes<
-      Device>::PortalConst PortalVIn;
-    typedef
-      typename vtkm::cont::ArrayHandle<I, StorageI>::template ExecutionTypes<Device>::PortalConst
-        PortalI;
-    typedef
-      typename vtkm::cont::ArrayHandle<Vout, StorageVout>::template ExecutionTypes<Device>::Portal
-        PortalVout;
-
     const vtkm::Id n = values.GetNumberOfValues();
     VTKM_ASSERT(n == index.GetNumberOfValues());
 
-    PortalVIn valuesPortal = values.PrepareForInput(Device());
-    PortalI indexPortal = index.PrepareForInput(Device());
-    PortalVout valuesOutPortal = values_out.PrepareForOutput(n, Device());
+    auto valuesPortal = values.PrepareForInput(Device());
+    auto indexPortal = index.PrepareForInput(Device());
+    auto valuesOutPortal = values_out.PrepareForOutput(n, Device());
 
     for (vtkm::Id i = 0; i < n; i++)
     {
@@ -310,11 +273,7 @@ private:
     //we than need to specify a custom compare function wrapper
     //that only checks for key side of the pair, using the custom compare
     //functor that the user passed in
-    typedef vtkm::cont::ArrayHandle<T, StorageT> KeyType;
-    typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
-    typedef vtkm::cont::ArrayHandleZip<KeyType, ValueType> ZipHandleType;
-
-    ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
+    auto zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
     Sort(zipHandle, internal::KeyCompare<T, U, BinaryCompare>(binary_compare));
   }
 
@@ -336,11 +295,8 @@ public:
     {
       /// More efficient sort:
       /// Move value indexes when sorting and reorder the value array at last
-      typedef vtkm::cont::ArrayHandle<U, StorageU> ValueType;
-      typedef vtkm::cont::ArrayHandle<vtkm::Id> IndexType;
-
-      IndexType indexArray;
-      ValueType valuesScattered;
+      vtkm::cont::ArrayHandle<vtkm::Id> indexArray;
+      vtkm::cont::ArrayHandle<U, StorageU> valuesScattered;
 
       Copy(ArrayHandleIndex(keys.GetNumberOfValues()), indexArray);
       SortByKeyDirect(keys, indexArray, wrappedCompare);
@@ -363,11 +319,8 @@ public:
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Storage>& values,
                              BinaryCompare binary_compare)
   {
-    typedef typename vtkm::cont::ArrayHandle<T, Storage>::template ExecutionTypes<Device>::Portal
-      PortalType;
-
-    PortalType arrayPortal = values.PrepareForInPlace(Device());
-    vtkm::cont::ArrayPortalToIterators<PortalType> iterators(arrayPortal);
+    auto arrayPortal = values.PrepareForInPlace(Device());
+    vtkm::cont::ArrayPortalToIterators<decltype(arrayPortal)> iterators(arrayPortal);
 
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
     std::sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);

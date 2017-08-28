@@ -35,7 +35,7 @@ static const vtkm::Id ARRAY_SIZE = 10;
 template <typename T>
 struct TestPortal
 {
-  typedef T ValueType;
+  using ValueType = T;
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
@@ -51,7 +51,7 @@ struct TestPortal
 
 struct TestIndexPortal
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
 
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const { return index; }
@@ -59,7 +59,7 @@ struct TestIndexPortal
 
 struct TestZeroPortal
 {
-  typedef vtkm::IdComponent ValueType;
+  using ValueType = vtkm::IdComponent;
 
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id) const { return 0; }
@@ -72,14 +72,13 @@ struct FetchArrayTopologyMapInTests
   template <typename Invocation>
   void TryInvocation(const Invocation& invocation) const
   {
-    typedef typename Invocation::InputDomainType ConnectivityType;
-    typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
+    using ConnectivityType = typename Invocation::InputDomainType;
+    using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
-    typedef vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
-                                   vtkm::exec::arg::AspectTagDefault,
-                                   ThreadIndicesType,
-                                   TestPortal<T>>
-      FetchType;
+    using FetchType = vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
+                                             vtkm::exec::arg::AspectTagDefault,
+                                             ThreadIndicesType,
+                                             TestPortal<T>>;
 
     FetchType fetch;
 
@@ -147,8 +146,8 @@ struct TryType
 template <vtkm::IdComponent NumDimensions, vtkm::IdComponent ParamIndex, typename Invocation>
 void TryStructuredPointCoordinatesInvocation(const Invocation& invocation)
 {
-  typedef typename Invocation::InputDomainType ConnectivityType;
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
+  using ConnectivityType = typename Invocation::InputDomainType;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
   vtkm::exec::arg::Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
                          vtkm::exec::arg::AspectTagDefault,

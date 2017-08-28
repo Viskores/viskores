@@ -31,37 +31,33 @@ namespace worklet
 class KdTree3D
 {
 public:
-  KdTree3D() {}
+  KdTree3D() = default;
 
-  // Execute the 3d kd tree construction given x y z coordinate vectors
-  // Returns:
-  // Leaf Node vector and internal node (split) vectpr
-  template <typename CoordiType, typename TreeIdType, typename DeviceAdapter>
-  void Run(vtkm::cont::ArrayHandle<vtkm::Vec<CoordiType, 3>>& coordi_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& pointId_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& splitId_Handle,
-           DeviceAdapter device)
+  template <typename CoordType, typename CoordStorageTag, typename DeviceAdapter>
+  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag>& coords,
+             DeviceAdapter device)
   {
-    vtkm::worklet::spatialstructure::KdTree3DConstruction kdtree3DConstruction;
-    kdtree3DConstruction.Run(coordi_Handle, pointId_Handle, splitId_Handle, device);
+    vtkm::worklet::spatialstructure::KdTree3DConstruction().Run(
+      coords, this->PointIds, this->SplitIds, device);
   }
 
-  // Execute the Neaseat Neighbor Search given kdtree and search points
-  // Returns:
-  // Vectors of NN point index and NNpoint distance
-  template <typename CoordiType, typename TreeIdType, typename DeviceAdapter>
-  void Run(vtkm::cont::ArrayHandle<vtkm::Vec<CoordiType, 3>>& coordi_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& pointId_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& splitId_Handle,
-           vtkm::cont::ArrayHandle<vtkm::Vec<CoordiType, 3>>& qc_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& nnId_Handle,
-           vtkm::cont::ArrayHandle<CoordiType>& nnDis_Handle,
+  template <typename CoordType,
+            typename CoordStorageTag1,
+            typename CoordStorageTag2,
+            typename DeviceAdapter>
+  void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag1>& coords,
+           const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag2>& queryPoints,
+           vtkm::cont::ArrayHandle<vtkm::Id>& nearestNeighborIds,
+           vtkm::cont::ArrayHandle<CoordType>& distances,
            DeviceAdapter device)
   {
-    vtkm::worklet::spatialstructure::KdTree3DNNSearch kdtree3DNNS;
-    kdtree3DNNS.Run(
-      coordi_Handle, pointId_Handle, splitId_Handle, qc_Handle, nnId_Handle, nnDis_Handle, device);
+    vtkm::worklet::spatialstructure::KdTree3DNNSearch().Run(
+      coords, this->PointIds, this->SplitIds, queryPoints, nearestNeighborIds, distances, device);
   }
+
+private:
+  vtkm::cont::ArrayHandle<vtkm::Id> PointIds;
+  vtkm::cont::ArrayHandle<vtkm::Id> SplitIds;
 };
 }
 } // namespace vtkm::worklet

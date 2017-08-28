@@ -66,15 +66,15 @@ public:
 
   /// Execute the filter using the active coordinate system.
   VTKM_CONT
-  vtkm::filter::ResultField Execute(const vtkm::cont::DataSet& input);
+  vtkm::filter::Result Execute(const vtkm::cont::DataSet& input);
 
   /// Execute the filter using the active coordinate system.
   template <typename DerivedPolicy>
-  VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
+                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  vtkm::filter::ResultField DoExecute(
+  vtkm::filter::Result DoExecute(
     const vtkm::cont::DataSet& input,
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
     const vtkm::filter::FieldMetadata& fieldMeta,

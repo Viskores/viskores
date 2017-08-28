@@ -44,7 +44,7 @@
 
 #include "../isosurface/quaternion.h"
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 namespace
 {
@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
 
   // Convert cells to tetrahedra
   vtkm::filter::Tetrahedralize tetrahedralize;
-  vtkm::filter::ResultDataSet result = tetrahedralize.Execute(inDataSet);
+  vtkm::filter::Result result = tetrahedralize.Execute(inDataSet);
 
   outDataSet = result.GetDataSet();
 

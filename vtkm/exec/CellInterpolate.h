@@ -104,8 +104,8 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
   // similarly.
   //
 
-  typedef typename WorldCoordVector::ComponentType Vector3;
-  typedef typename Vector3::ComponentType T;
+  using Vector3 = typename WorldCoordVector::ComponentType;
+  using T = typename Vector3::ComponentType;
 
   Vector3 pcoords(T(0));
   Vector3 triangleNormal = vtkm::TriangleNormal(pointWCoords[0], pointWCoords[1], pointWCoords[2]);
@@ -193,7 +193,7 @@ VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
   vtkm::CellShapeTagLine,
   const vtkm::exec::FunctorBase&)
 {
-  typedef vtkm::Vec<vtkm::FloatDefault, 3> T;
+  using T = vtkm::Vec<vtkm::FloatDefault, 3>;
 
   const T& origin = field.GetOrigin();
   const T& spacing = field.GetSpacing();
@@ -211,7 +211,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 3);
-  typedef typename FieldVecType::ComponentType T;
+  using T = typename FieldVecType::ComponentType;
   return static_cast<T>((field[0] * (1 - pcoords[0] - pcoords[1])) + (field[1] * pcoords[0]) +
                         (field[2] * pcoords[1]));
 }
@@ -248,7 +248,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   // have a non 1 to 1 mapping between parametric coordinates world coordinates
   // if the polygon is not planar or convex.
 
-  typedef typename FieldVecType::ComponentType FieldType;
+  using FieldType = typename FieldVecType::ComponentType;
 
   // Find the interpolation for the center point.
   FieldType fieldCenter = field[0];
@@ -321,7 +321,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 4);
 
-  typedef typename FieldVecType::ComponentType T;
+  using T = typename FieldVecType::ComponentType;
 
   T bottomInterp = vtkm::Lerp(field[0], field[1], pcoords[0]);
   T topInterp = vtkm::Lerp(field[3], field[2], pcoords[0]);
@@ -336,7 +336,7 @@ VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> CellInterpolate(
   vtkm::CellShapeTagQuad,
   const vtkm::exec::FunctorBase&)
 {
-  typedef vtkm::Vec<vtkm::FloatDefault, 3> T;
+  using T = vtkm::Vec<vtkm::FloatDefault, 3>;
 
   const T& origin = field.GetOrigin();
   const T& spacing = field.GetSpacing();
@@ -355,7 +355,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 4);
-  typedef typename FieldVecType::ComponentType T;
+  using T = typename FieldVecType::ComponentType;
   return static_cast<T>((field[0] * (1 - pcoords[0] - pcoords[1] - pcoords[2])) +
                         (field[1] * pcoords[0]) + (field[2] * pcoords[1]) +
                         (field[3] * pcoords[2]));
@@ -371,7 +371,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 8);
 
-  typedef typename FieldVecType::ComponentType T;
+  using T = typename FieldVecType::ComponentType;
 
   T bottomFrontInterp = vtkm::Lerp(field[0], field[1], pcoords[0]);
   T bottomBackInterp = vtkm::Lerp(field[3], field[2], pcoords[0]);
@@ -408,7 +408,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 6);
 
-  typedef typename FieldVecType::ComponentType T;
+  using T = typename FieldVecType::ComponentType;
 
   T bottomInterp = static_cast<T>((field[0] * (1 - pcoords[0] - pcoords[1])) +
                                   (field[1] * pcoords[1]) + (field[2] * pcoords[0]));
@@ -429,7 +429,7 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 {
   VTKM_ASSERT(field.GetNumberOfComponents() == 5);
 
-  typedef typename FieldVecType::ComponentType T;
+  using T = typename FieldVecType::ComponentType;
 
   T frontInterp = vtkm::Lerp(field[0], field[1], pcoords[0]);
   T backInterp = vtkm::Lerp(field[3], field[2], pcoords[0]);

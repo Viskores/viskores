@@ -64,14 +64,14 @@ namespace detail
 template <typename ConnectivityType, typename FieldExecObjectType>
 struct FetchArrayTopologyMapInImplementation
 {
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
   // ThreadIndicesTopologyMap has special "from" indices that are stored in a
   // Vec-like object.
-  typedef typename ThreadIndicesType::IndicesFromType IndexVecType;
+  using IndexVecType = typename ThreadIndicesType::IndicesFromType;
 
   // The FieldExecObjectType is expected to behave like an ArrayPortal.
-  typedef FieldExecObjectType PortalType;
+  using PortalType = FieldExecObjectType;
 
   using ValueType = vtkm::VecFromPortalPermute<IndexVecType, PortalType>;
 
@@ -137,13 +137,12 @@ struct FetchArrayTopologyMapInImplementation<
   vtkm::internal::ArrayPortalUniformPointCoordinates>
 
 {
-  typedef vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                             vtkm::TopologyElementTagCell,
-                                             NumDimensions>
-    ConnectivityType;
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
+  using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                                              vtkm::TopologyElementTagCell,
+                                                              NumDimensions>;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
-  typedef vtkm::VecAxisAlignedPointCoordinates<NumDimensions> ValueType;
+  using ValueType = vtkm::VecAxisAlignedPointCoordinates<NumDimensions>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
@@ -159,22 +158,22 @@ struct FetchArrayTopologyMapInImplementation<
 
 template <typename PermutationPortal, vtkm::IdComponent NumDimensions>
 struct FetchArrayTopologyMapInImplementation<
-  vtkm::exec::ConnectivityPermuted<PermutationPortal,
-                                   vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                                                      vtkm::TopologyElementTagCell,
-                                                                      NumDimensions>>,
-  vtkm::internal::ArrayPortalUniformPointCoordinates>
-
-{
-  typedef vtkm::exec::ConnectivityPermuted<
+  vtkm::exec::ConnectivityPermutedPointToCell<
     PermutationPortal,
     vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
                                        vtkm::TopologyElementTagCell,
-                                       NumDimensions>>
-    ConnectivityType;
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
+                                       NumDimensions>>,
+  vtkm::internal::ArrayPortalUniformPointCoordinates>
 
-  typedef vtkm::VecAxisAlignedPointCoordinates<NumDimensions> ValueType;
+{
+  using ConnectivityType = vtkm::exec::ConnectivityPermutedPointToCell<
+    PermutationPortal,
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                       vtkm::TopologyElementTagCell,
+                                       NumDimensions>>;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
+
+  using ValueType = vtkm::VecAxisAlignedPointCoordinates<NumDimensions>;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
@@ -199,12 +198,12 @@ struct Fetch<vtkm::exec::arg::FetchTagArrayTopologyMapIn,
              vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
              ExecObjectType>
 {
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
-  typedef detail::FetchArrayTopologyMapInImplementation<ConnectivityType, ExecObjectType>
-    Implementation;
+  using Implementation =
+    detail::FetchArrayTopologyMapInImplementation<ConnectivityType, ExecObjectType>;
 
-  typedef typename Implementation::ValueType ValueType;
+  using ValueType = typename Implementation::ValueType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC

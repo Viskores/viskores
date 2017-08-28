@@ -31,8 +31,8 @@ struct TemplatedTests
 {
   static const vtkm::Id ARRAY_SIZE = 10;
 
-  typedef T ValueType;
-  typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+  using ValueType = T;
+  using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
 
   ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {

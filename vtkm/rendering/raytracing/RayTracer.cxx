@@ -283,7 +283,6 @@ public:
     vtkm::Float32 SpecularExponent;
     vtkm::Vec<vtkm::Float32, 3> CameraPosition;
     vtkm::Vec<vtkm::Float32, 3> LookAt;
-    vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
 
   public:
     VTKM_CONT
@@ -291,14 +290,12 @@ public:
                      const vtkm::Int32& colorMapSize,
                      const vtkm::Vec<vtkm::Float32, 3>& lightPosition,
                      const vtkm::Vec<vtkm::Float32, 3>& cameraPosition,
-                     const vtkm::Vec<vtkm::Float32, 3>& lookAt,
-                     const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
+                     const vtkm::Vec<vtkm::Float32, 3>& lookAt)
       : ColorMap(colorMap.PrepareForInput(Device()))
       , ColorMapSize(colorMapSize)
       , LightPosition(lightPosition)
       , CameraPosition(cameraPosition)
       , LookAt(lookAt)
-      , BackgroundColor(backgroundColor)
     {
       //Set up some default lighting parameters for now
       LightAbmient[0] = .5f;
@@ -327,11 +324,6 @@ public:
 
       if (hitIdx < 0)
       {
-        color = BackgroundColor;
-        colors.Set(offset + 0, color[0]);
-        colors.Set(offset + 1, color[1]);
-        colors.Set(offset + 2, color[2]);
-        colors.Set(offset + 3, color[3]);
         return;
       }
 
@@ -380,20 +372,15 @@ public:
   template <typename Precision>
   VTKM_CONT void run(Ray<Precision>& rays,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap,
-                     const vtkm::rendering::raytracing::Camera& camera,
-                     const vtkm::Vec<vtkm::Float32, 4> backgroundColor)
+                     const vtkm::rendering::raytracing::Camera& camera)
   {
     // TODO: support light positions
     vtkm::Vec<vtkm::Float32, 3> scale(5, 5, 5);
     vtkm::Vec<vtkm::Float32, 3> lightPosition = camera.GetPosition() + scale * camera.GetUp();
     const vtkm::Int32 colorMapSize = vtkm::Int32(colorMap.GetNumberOfValues());
     vtkm::worklet::DispatcherMapField<MapScalarToColor, Device>(
-      MapScalarToColor(colorMap,
-                       colorMapSize,
-                       lightPosition,
-                       camera.GetPosition(),
-                       camera.GetLookAt(),
-                       backgroundColor))
+      MapScalarToColor(
+        colorMap, colorMapSize, lightPosition, camera.GetPosition(), camera.GetLookAt()))
       .Invoke(rays.HitIdx, rays.Scalar, rays.Normal, rays.Intersection, rays.Buffers.at(0).Buffer);
   }
 }; // class SurfaceColor
@@ -402,11 +389,6 @@ public:
 
 RayTracer::RayTracer()
 {
-}
-
-void RayTracer::SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
-{
-  BackgroundColor = backgroundColor;
 }
 
 Camera& RayTracer::GetCamera()
@@ -526,7 +508,7 @@ void RayTracer::RenderOnDevice(Ray<Precision>& rays, Device)
 
     // Calculate the color at the intersection  point
     detail::SurfaceColor<Device> surfaceColor;
-    surfaceColor.run(rays, ColorMap, camera, BackgroundColor);
+    surfaceColor.run(rays, ColorMap, camera);
 
     time = timer.GetElapsedTime();
     logger->AddLogData("shade", time);

@@ -59,7 +59,7 @@ struct ArrayRangeComputeFunctor
     using VecTraits = vtkm::VecTraits<ValueType>;
     const vtkm::IdComponent NumberOfComponents = VecTraits::NUM_COMPONENTS;
 
-    typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
     this->RangeArray.Allocate(NumberOfComponents);
 

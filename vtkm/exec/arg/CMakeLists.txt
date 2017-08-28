@@ -27,6 +27,7 @@ set(headers
   FetchTagArrayDirectIn.h
   FetchTagArrayDirectInOut.h
   FetchTagArrayDirectOut.h
+  FetchTagArrayNeighborhoodIn.h
   FetchTagArrayTopologyMapIn.h
   FetchTagExecObject.h
   FetchTagCellSetIn.h
@@ -35,9 +36,11 @@ set(headers
   FromCount.h
   FromIndices.h
   InputIndex.h
+  OnBoundary.h
   OutputIndex.h
   ThreadIndices.h
   ThreadIndicesBasic.h
+  ThreadIndicesPointNeighborhood.h
   ThreadIndicesReduceByKey.h
   ThreadIndicesTopologyMap.h
   ValueCount.h

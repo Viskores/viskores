@@ -47,7 +47,7 @@ void TestVectorMagnitude()
 
   vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "double_vec_pointvar", finput);
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::VectorMagnitude vm;
 
   result = vm.Execute(dataSet, dataSet.GetField("double_vec_pointvar"));

@@ -70,7 +70,7 @@ destructive_accumulate_n(ConcurrentGroup& g,
                          T init,
                          vtkm::exec::cuda::internal::WrappedBinaryOperator<T, F> binary_op)
 {
-  typedef typename ConcurrentGroup::size_type size_type;
+  using size_type = typename ConcurrentGroup::size_type;
 
   size_type tid = g.this_exec.index();
 

@@ -53,7 +53,12 @@ public:
       std::integral_constant<vtkm::IdComponent, vtkm::VecTraits<OutType>::NUM_COMPONENTS>;
     using SameLengthVectors = typename std::is_same<InVecSize, OutVecSize>::type;
 
-    this->DoAverage(numCells, cellValues, average, SameLengthVectors());
+
+    average = vtkm::TypeTraits<OutType>::ZeroInitialization();
+    if (numCells != 0)
+    {
+      this->DoAverage(numCells, cellValues, average, SameLengthVectors());
+    }
   }
 
 private:

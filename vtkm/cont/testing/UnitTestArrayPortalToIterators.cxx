@@ -32,8 +32,8 @@ struct TemplatedTests
 {
   static const vtkm::Id ARRAY_SIZE = 10;
 
-  typedef T ValueType;
-  typedef typename vtkm::VecTraits<ValueType>::ComponentType ComponentType;
+  using ValueType = T;
+  using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
 
   static ValueType ExpectedValue(vtkm::Id index, ComponentType value)
   {
@@ -43,7 +43,7 @@ struct TemplatedTests
   class ReadOnlyArrayPortal
   {
   public:
-    typedef T ValueType;
+    using ValueType = T;
 
     VTKM_CONT
     ReadOnlyArrayPortal(ComponentType value)
@@ -64,7 +64,7 @@ struct TemplatedTests
   class WriteOnlyArrayPortal
   {
   public:
-    typedef T ValueType;
+    using ValueType = T;
 
     VTKM_CONT
     WriteOnlyArrayPortal(ComponentType value)
@@ -122,8 +122,8 @@ struct TemplatedTests
 
   void TestIteratorRead()
   {
-    typedef ReadOnlyArrayPortal ArrayPortalType;
-    typedef vtkm::cont::ArrayPortalToIterators<ArrayPortalType> GetIteratorsType;
+    using ArrayPortalType = ReadOnlyArrayPortal;
+    using GetIteratorsType = vtkm::cont::ArrayPortalToIterators<ArrayPortalType>;
 
     static const ComponentType READ_VALUE = 23;
     ArrayPortalType portal(READ_VALUE);
@@ -140,8 +140,8 @@ struct TemplatedTests
 
   void TestIteratorWrite()
   {
-    typedef WriteOnlyArrayPortal ArrayPortalType;
-    typedef vtkm::cont::ArrayPortalToIterators<ArrayPortalType> GetIteratorsType;
+    using ArrayPortalType = WriteOnlyArrayPortal;
+    using GetIteratorsType = vtkm::cont::ArrayPortalToIterators<ArrayPortalType>;
 
     static const ComponentType WRITE_VALUE = 63;
     ArrayPortalType portal(WRITE_VALUE);

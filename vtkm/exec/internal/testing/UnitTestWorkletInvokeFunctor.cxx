@@ -53,14 +53,14 @@ struct TestExecObject
 
 struct MyOutputToInputMapPortal
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
   VTKM_EXEC_CONT
   vtkm::Id Get(vtkm::Id index) const { return index; }
 };
 
 struct MyVisitArrayPortal
 {
-  typedef vtkm::IdComponent ValueType;
+  using ValueType = vtkm::IdComponent;
   vtkm::IdComponent Get(vtkm::Id) const { return 1; }
 };
 
@@ -74,11 +74,11 @@ struct TestFetchTagOutput
 // Missing TransportTag, but we are not testing that so we can leave it out.
 struct TestControlSignatureTagInput
 {
-  typedef TestFetchTagInput FetchTag;
+  using FetchTag = TestFetchTagInput;
 };
 struct TestControlSignatureTagOutput
 {
-  typedef TestFetchTagOutput FetchTag;
+  using FetchTag = TestFetchTagOutput;
 };
 
 } // anonymous namespace
@@ -96,7 +96,7 @@ struct Fetch<TestFetchTagInput,
              vtkm::exec::arg::ThreadIndicesBasic,
              TestExecObject>
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
 
   VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic& indices,
@@ -118,7 +118,7 @@ struct Fetch<TestFetchTagOutput,
              vtkm::exec::arg::ThreadIndicesBasic,
              TestExecObject>
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
 
   VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic&, const TestExecObject&) const
@@ -143,13 +143,13 @@ namespace
 {
 
 typedef void TestControlSignature(TestControlSignatureTagInput, TestControlSignatureTagOutput);
-typedef vtkm::internal::FunctionInterface<TestControlSignature> TestControlInterface;
+using TestControlInterface = vtkm::internal::FunctionInterface<TestControlSignature>;
 
 typedef void TestExecutionSignature1(vtkm::exec::arg::BasicArg<1>, vtkm::exec::arg::BasicArg<2>);
-typedef vtkm::internal::FunctionInterface<TestExecutionSignature1> TestExecutionInterface1;
+using TestExecutionInterface1 = vtkm::internal::FunctionInterface<TestExecutionSignature1>;
 
 typedef vtkm::exec::arg::BasicArg<2> TestExecutionSignature2(vtkm::exec::arg::BasicArg<1>);
-typedef vtkm::internal::FunctionInterface<TestExecutionSignature2> TestExecutionInterface2;
+using TestExecutionInterface2 = vtkm::internal::FunctionInterface<TestExecutionSignature2>;
 
 // Not a full worklet, but provides operators that we expect in a worklet.
 struct TestWorkletProxy : vtkm::exec::FunctorBase

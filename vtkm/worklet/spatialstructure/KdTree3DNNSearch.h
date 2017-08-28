@@ -192,13 +192,16 @@ public:
   // Execute the Neaseat Neighbor Search given kdtree and search points
   // Returns:
   // Vectors of NN point index and NNpoint distance
-  template <typename CoordiType, typename TreeIdType, typename DeviceAdapter>
-  void Run(vtkm::cont::ArrayHandle<vtkm::Vec<CoordiType, 3>>& coordi_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& pointId_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& splitId_Handle,
-           vtkm::cont::ArrayHandle<vtkm::Vec<CoordiType, 3>>& qc_Handle,
-           vtkm::cont::ArrayHandle<TreeIdType>& nnId_Handle,
-           vtkm::cont::ArrayHandle<CoordiType>& nnDis_Handle,
+  template <typename CoordType,
+            typename CoordStorageTag1,
+            typename CoordStorageTag2,
+            typename DeviceAdapter>
+  void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag1>& coordi_Handle,
+           vtkm::cont::ArrayHandle<vtkm::Id>& pointId_Handle,
+           vtkm::cont::ArrayHandle<vtkm::Id>& splitId_Handle,
+           const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag2>& qc_Handle,
+           vtkm::cont::ArrayHandle<vtkm::Id>& nnId_Handle,
+           vtkm::cont::ArrayHandle<CoordType>& nnDis_Handle,
            DeviceAdapter vtkmNotUsed(device))
   {
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA

@@ -71,7 +71,7 @@ struct CellShapeInitializer<vtkm::CellShapeTagGeneric>
 template <typename ConnectivityType>
 class ThreadIndicesTopologyMap : public vtkm::exec::arg::ThreadIndicesBasic
 {
-  typedef vtkm::exec::arg::ThreadIndicesBasic Superclass;
+  using Superclass = vtkm::exec::arg::ThreadIndicesBasic;
 
 public:
   using IndicesFromType = typename ConnectivityType::IndicesType;
@@ -347,18 +347,20 @@ private:
 };
 
 // Specialization for permuted structured connectivity types.
-template <typename PermutationPortal,
-          typename FromTopology,
-          typename ToTopology,
-          vtkm::IdComponent Dimension>
-class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityPermuted<
+template <typename PermutationPortal, vtkm::IdComponent Dimension>
+class ThreadIndicesTopologyMap<vtkm::exec::ConnectivityPermutedPointToCell<
   PermutationPortal,
-  vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>>>
+  vtkm::exec::
+    ConnectivityStructured<vtkm::TopologyElementTagPoint, vtkm::TopologyElementTagCell, Dimension>>>
 {
-  using PermutedConnectivityType = vtkm::exec::ConnectivityPermuted<
+  using PermutedConnectivityType = vtkm::exec::ConnectivityPermutedPointToCell<
     PermutationPortal,
-    vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>>;
-  using ConnectivityType = vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>;
+    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                       vtkm::TopologyElementTagCell,
+                                       Dimension>>;
+  using ConnectivityType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                                              vtkm::TopologyElementTagCell,
+                                                              Dimension>;
 
 public:
   using IndicesFromType = typename ConnectivityType::IndicesType;

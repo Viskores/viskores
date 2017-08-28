@@ -41,7 +41,7 @@
 #include <GL/glut.h>
 #endif
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 // Default size of the example
 static vtkm::Id2 dims(4, 4);
@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
 
   // Convert uniform quad to triangle
   vtkm::filter::Triangulate triangulate;
-  vtkm::filter::ResultDataSet result = triangulate.Execute(inDataSet);
+  vtkm::filter::Result result = triangulate.Execute(inDataSet);
 
   triDataSet = result.GetDataSet();
 

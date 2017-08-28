@@ -35,6 +35,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <vtkm/cont/cuda/ErrorCuda.h>
+#include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
 
@@ -58,14 +59,14 @@ template <typename T, class StorageTag>
 class ArrayManagerExecutionThrustDevice
 {
 public:
-  typedef T ValueType;
-  typedef typename thrust::system::cuda::pointer<ValueType> PointerType;
-  typedef typename PointerType::difference_type difference_type;
+  using ValueType = T;
+  using PointerType = typename thrust::system::cuda::pointer<ValueType>;
+  using difference_type = typename PointerType::difference_type;
 
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
-  typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust<T> PortalType;
-  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T> PortalConstType;
+  using PortalType = vtkm::exec::cuda::internal::ArrayPortalFromThrust<T>;
+  using PortalConstType = vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T>;
 
   VTKM_CONT
   ArrayManagerExecutionThrustDevice(StorageType* storage)
@@ -172,17 +173,8 @@ public:
     // Attempt to allocate:
     try
     {
-      ValueType* tmp;
-#ifdef VTKM_USE_UNIFIED_MEMORY
-      int dev;
-      VTKM_CUDA_CALL(cudaGetDevice(&dev));
-      VTKM_CUDA_CALL(cudaMallocManaged(&tmp, bufferSize));
-      VTKM_CUDA_CALL(cudaMemAdvise(tmp, bufferSize, cudaMemAdviseSetPreferredLocation, dev));
-      VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, bufferSize, dev, 0));
-      VTKM_CUDA_CALL(cudaStreamSynchronize(0));
-#else
-      VTKM_CUDA_CALL(cudaMalloc(&tmp, bufferSize));
-#endif
+      ValueType* tmp =
+        static_cast<ValueType*>(vtkm::cont::cuda::internal::CudaAllocator::Allocate(bufferSize));
       this->Begin = PointerType(tmp);
     }
     catch (const std::exception& error)
@@ -214,9 +206,6 @@ public:
     storage->Allocate(this->GetNumberOfValues());
     try
     {
-#ifdef VTKM_USE_UNIFIED_MEMORY
-      cudaDeviceSynchronize();
-#endif
       ::thrust::copy(
         this->Begin, this->End, vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
     }
@@ -254,7 +243,7 @@ public:
   {
     if (this->Begin.get() != nullptr)
     {
-      VTKM_CUDA_CALL(cudaFree(this->Begin.get()));
+      vtkm::cont::cuda::internal::CudaAllocator::Free(this->Begin.get());
       this->Begin = PointerType(static_cast<ValueType*>(nullptr));
       this->End = PointerType(static_cast<ValueType*>(nullptr));
       this->Capacity = PointerType(static_cast<ValueType*>(nullptr));

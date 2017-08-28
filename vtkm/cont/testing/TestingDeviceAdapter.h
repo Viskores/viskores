@@ -70,22 +70,22 @@ template <class DeviceAdapterTag>
 struct TestingDeviceAdapter
 {
 private:
-  typedef vtkm::cont::StorageTagBasic StorageTag;
+  using StorageTag = vtkm::cont::StorageTagBasic;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag> IdArrayHandle;
+  using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id, StorageTag>;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag> ScalarArrayHandle;
+  using ScalarArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag>;
 
-  typedef vtkm::cont::internal::ArrayManagerExecution<vtkm::Id, StorageTag, DeviceAdapterTag>
-    IdArrayManagerExecution;
+  using IdArrayManagerExecution =
+    vtkm::cont::internal::ArrayManagerExecution<vtkm::Id, StorageTag, DeviceAdapterTag>;
 
-  typedef vtkm::cont::internal::Storage<vtkm::Id, StorageTag> IdStorage;
+  using IdStorage = vtkm::cont::internal::Storage<vtkm::Id, StorageTag>;
 
-  typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal IdPortalType;
-  typedef typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-    IdPortalConstType;
+  using IdPortalType = typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
+  using IdPortalConstType =
+    typename IdArrayHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
 public:
   // Cuda kernels have to be public (in Cuda 4.0).
@@ -362,8 +362,8 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing device adapter tag" << std::endl;
 
-    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> Traits;
-    typedef vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError> ErrorTraits;
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    using ErrorTraits = vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagError>;
 
     VTKM_TEST_ASSERT(Traits::GetId() == Traits::GetId(),
                      "Device adapter Id does not equal itself.");
@@ -385,10 +385,10 @@ private:
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing ArrayManagerExecution" << std::endl;
 
-    typedef vtkm::cont::internal::ArrayManagerExecution<vtkm::Id, StorageTagBasic, DeviceAdapterTag>
-      ArrayManagerExecution;
+    using ArrayManagerExecution =
+      vtkm::cont::internal::ArrayManagerExecution<vtkm::Id, StorageTagBasic, DeviceAdapterTag>;
 
-    typedef vtkm::cont::internal::Storage<vtkm::Id, StorageTagBasic> StorageType;
+    using StorageType = vtkm::cont::internal::Storage<vtkm::Id, StorageTagBasic>;
 
     // Create original input array.
     StorageType storage;
@@ -907,8 +907,8 @@ private:
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Sort by keys" << std::endl;
 
-    typedef vtkm::Vec<FloatDefault, 3> Vec3;
-    typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>, StorageTag> Vec3ArrayHandle;
+    using Vec3 = vtkm::Vec<FloatDefault, 3>;
+    using Vec3ArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>, StorageTag>;
 
     std::vector<vtkm::Id> testKeys(ARRAY_SIZE);
     std::vector<Vec3> testValues(testKeys.size());
@@ -1134,7 +1134,7 @@ private:
       vtkm::cont::ArrayHandleZip<IdArrayHandle, IdArrayHandle> zipped(keys, values);
 
       //the output of reduce and scan inclusive should be the same
-      typedef vtkm::Pair<vtkm::Id, vtkm::Id> ResultType;
+      using ResultType = vtkm::Pair<vtkm::Id, vtkm::Id>;
       ResultType reduce_sum_with_intial_value =
         Algorithm::Reduce(zipped, ResultType(ARRAY_SIZE, ARRAY_SIZE));
 
@@ -1150,7 +1150,7 @@ private:
       //and a custom reduce binary functor
       const vtkm::Id indexLength = 30;
       const vtkm::Id valuesLength = 10;
-      typedef vtkm::Float32 ValueType;
+      using ValueType = vtkm::Float32;
 
       vtkm::Id indexs[indexLength] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
                                        5, 5, 5, 1, 4, 9, 7, 7, 7, 8, 8, 8, 0, 1, 2 };
@@ -1256,7 +1256,7 @@ private:
     //and a custom reduce binary functor
     const vtkm::Id inputLength = 30;
     const vtkm::Id expectedLength = 10;
-    typedef vtkm::Float32 ValueType;
+    using ValueType = vtkm::Float32;
     vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4,
                                         5, 5, 5, 6, 6, 6, 7, 7, 7, 8, 8, 8, 9, 9, 9 }; // input keys
     ValueType inputValues1[inputLength] = {
@@ -1272,9 +1272,9 @@ private:
     }; // output values 2
 
     IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
-    typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ValueArrayType;
+    using ValueArrayType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
     ValueArrayType values1 = vtkm::cont::make_ArrayHandle(inputValues1, inputLength);
-    typedef vtkm::cont::ArrayHandleConstant<ValueType> ConstValueArrayType;
+    using ConstValueArrayType = vtkm::cont::ArrayHandleConstant<ValueType>;
     ConstValueArrayType constOneArray(1.f, inputLength);
 
     vtkm::cont::ArrayHandleZip<ValueArrayType, ConstValueArrayType> valuesZip;
@@ -1625,8 +1625,8 @@ private:
     std::cout << "Testing Inclusive Scan with a vtkm::Vec" << std::endl;
 
     {
-      typedef vtkm::Vec<Float64, 3> Vec3;
-      typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> Vec3ArrayHandle;
+      using Vec3 = vtkm::Vec<Float64, 3>;
+      using Vec3ArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag>;
 
       std::vector<Vec3> testValues(ARRAY_SIZE);
 
@@ -1762,8 +1762,8 @@ private:
     std::cout << "Testing Exclusive Scan with a vtkm::Vec" << std::endl;
 
     {
-      typedef vtkm::Vec<Float64, 3> Vec3;
-      typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag> Vec3ArrayHandle;
+      using Vec3 = vtkm::Vec<Float64, 3>;
+      using Vec3ArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag>;
 
       std::vector<Vec3> testValues(ARRAY_SIZE);
 

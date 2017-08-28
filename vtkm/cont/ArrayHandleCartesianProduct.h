@@ -41,11 +41,11 @@ template <typename ValueType_,
 class VTKM_ALWAYS_EXPORT ArrayPortalCartesianProduct
 {
 public:
-  typedef ValueType_ ValueType;
-  typedef ValueType_ IteratorType;
-  typedef PortalTypeFirst_ PortalTypeFirst;
-  typedef PortalTypeSecond_ PortalTypeSecond;
-  typedef PortalTypeThird_ PortalTypeThird;
+  using ValueType = ValueType_;
+  using IteratorType = ValueType_;
+  using PortalTypeFirst = PortalTypeFirst_;
+  using PortalTypeSecond = PortalTypeSecond_;
+  using PortalTypeThird = PortalTypeThird_;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -170,15 +170,15 @@ struct ArrayHandleCartesianProductTraits
 {
   /// The ValueType (a pair containing the value types of the two arrays).
   ///
-  typedef vtkm::Vec<typename FirstHandleType::ValueType, 3> ValueType;
+  using ValueType = vtkm::Vec<typename FirstHandleType::ValueType, 3>;
 
   /// The appropriately templated tag.
   ///
-  typedef StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType> Tag;
+  using Tag = StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>;
 
   /// The superclass for ArrayHandleCartesianProduct.
   ///
-  typedef vtkm::cont::ArrayHandle<ValueType, Tag> Superclass;
+  using Superclass = vtkm::cont::ArrayHandle<ValueType, Tag>;
 };
 
 template <typename T, typename FirstHandleType, typename SecondHandleType, typename ThirdHandleType>
@@ -189,20 +189,18 @@ class Storage<T, StorageTagCartesianProduct<FirstHandleType, SecondHandleType, T
   VTKM_IS_ARRAY_HANDLE(ThirdHandleType);
 
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
-  typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
-    ValueType,
-    typename FirstHandleType::PortalControl,
-    typename SecondHandleType::PortalControl,
-    typename ThirdHandleType::PortalControl>
-    PortalType;
-  typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
-    ValueType,
-    typename FirstHandleType::PortalConstControl,
-    typename SecondHandleType::PortalConstControl,
-    typename ThirdHandleType::PortalConstControl>
-    PortalConstType;
+  using PortalType =
+    vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
+                                                      typename FirstHandleType::PortalControl,
+                                                      typename SecondHandleType::PortalControl,
+                                                      typename ThirdHandleType::PortalControl>;
+  using PortalConstType =
+    vtkm::exec::internal::ArrayPortalCartesianProduct<ValueType,
+                                                      typename FirstHandleType::PortalConstControl,
+                                                      typename SecondHandleType::PortalConstControl,
+                                                      typename ThirdHandleType::PortalConstControl>;
 
   VTKM_CONT
   Storage()
@@ -288,28 +286,26 @@ class ArrayTransfer<T,
                     StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>,
                     Device>
 {
-  typedef StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType> StorageTag;
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  using StorageTag = StorageTagCartesianProduct<FirstHandleType, SecondHandleType, ThirdHandleType>;
+  using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
 
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
-  typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
+  using PortalExecution = vtkm::exec::internal::ArrayPortalCartesianProduct<
     ValueType,
     typename FirstHandleType::template ExecutionTypes<Device>::Portal,
     typename SecondHandleType::template ExecutionTypes<Device>::Portal,
-    typename ThirdHandleType::template ExecutionTypes<Device>::Portal>
-    PortalExecution;
+    typename ThirdHandleType::template ExecutionTypes<Device>::Portal>;
 
-  typedef vtkm::exec::internal::ArrayPortalCartesianProduct<
+  using PortalConstExecution = vtkm::exec::internal::ArrayPortalCartesianProduct<
     ValueType,
     typename FirstHandleType::template ExecutionTypes<Device>::PortalConst,
     typename SecondHandleType::template ExecutionTypes<Device>::PortalConst,
-    typename ThirdHandleType::template ExecutionTypes<Device>::PortalConst>
-    PortalConstExecution;
+    typename ThirdHandleType::template ExecutionTypes<Device>::PortalConst>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
@@ -404,7 +400,7 @@ public:
                                                           ThirdHandleType>::Superclass));
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   VTKM_CONT

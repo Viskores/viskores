@@ -88,6 +88,24 @@ private:
       std::cout << bvError.GetMessage() << std::endl;
       VTKM_TEST_ASSERT(true == false, "Got an unexpected Bad Value error transferring to openGL");
     }
+
+    // Test device adapter deduction:
+    try
+    {
+      vtkm::interop::BufferState state(handle);
+      vtkm::interop::TransferToOpenGL(array, state);
+    }
+    catch (vtkm::cont::ErrorBadAllocation& error)
+    {
+      std::cout << error.GetMessage() << std::endl;
+      VTKM_TEST_ASSERT(true == false,
+                       "Got an unexpected Out Of Memory error transferring to openGL");
+    }
+    catch (vtkm::cont::ErrorBadValue& bvError)
+    {
+      std::cout << bvError.GetMessage() << std::endl;
+      VTKM_TEST_ASSERT(true == false, "Got an unexpected Bad Value error transferring to openGL");
+    }
   }
 
   template <typename ArrayHandleType>
@@ -97,6 +115,24 @@ private:
     {
       vtkm::interop::BufferState state(handle, type);
       vtkm::interop::TransferToOpenGL(array, state, DeviceAdapterTag());
+    }
+    catch (vtkm::cont::ErrorBadAllocation& error)
+    {
+      std::cout << error.GetMessage() << std::endl;
+      VTKM_TEST_ASSERT(true == false,
+                       "Got an unexpected Out Of Memory error transferring to openGL");
+    }
+    catch (vtkm::cont::ErrorBadValue& bvError)
+    {
+      std::cout << bvError.GetMessage() << std::endl;
+      VTKM_TEST_ASSERT(true == false, "Got an unexpected Bad Value error transferring to openGL");
+    }
+
+    // Test device adapter deduction
+    try
+    {
+      vtkm::interop::BufferState state(handle, type);
+      vtkm::interop::TransferToOpenGL(array, state);
     }
     catch (vtkm::cont::ErrorBadAllocation& error)
     {

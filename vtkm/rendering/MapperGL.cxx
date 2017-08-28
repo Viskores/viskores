@@ -86,39 +86,54 @@ public:
     vtkm::Vec<vtkm::Float32, 3> p3 = verts.Get(idx[3]);
 
     vtkm::Float32 s;
-    vtkm::rendering::Color color;
+    vtkm::rendering::Color color1;
+    vtkm::rendering::Color color2;
+    vtkm::rendering::Color color3;
+
+    if (SDiff == 0)
+    {
+      s = 0;
+      color1 = ColorTable.MapRGB(s);
+      color2 = ColorTable.MapRGB(s);
+      color3 = ColorTable.MapRGB(s);
+    }
+    else
+    {
+      s = scalar.Get(i1);
+      s = (s - SMin) / SDiff;
+      color1 = ColorTable.MapRGB(s);
+
+      s = scalar.Get(i2);
+      s = (s - SMin) / SDiff;
+      color2 = ColorTable.MapRGB(s);
+
+      s = scalar.Get(i3);
+      s = (s - SMin) / SDiff;
+      color3 = ColorTable.MapRGB(s);
+    }
 
     const vtkm::Id offset = 9;
 
-    s = scalar.Get(i1);
-    s = (s - SMin) / SDiff;
-    color = ColorTable.MapRGB(s);
     v_array.Set(i * offset, p1[0]);
     v_array.Set(i * offset + 1, p1[1]);
     v_array.Set(i * offset + 2, p1[2]);
-    c_array.Set(i * offset, color.Components[0]);
-    c_array.Set(i * offset + 1, color.Components[1]);
-    c_array.Set(i * offset + 2, color.Components[2]);
+    c_array.Set(i * offset, color1.Components[0]);
+    c_array.Set(i * offset + 1, color1.Components[1]);
+    c_array.Set(i * offset + 2, color1.Components[2]);
 
-    s = scalar.Get(i2);
-    s = (s - SMin) / SDiff;
-    color = ColorTable.MapRGB(s);
     v_array.Set(i * offset + 3, p2[0]);
     v_array.Set(i * offset + 4, p2[1]);
     v_array.Set(i * offset + 5, p2[2]);
-    c_array.Set(i * offset + 3, color.Components[0]);
-    c_array.Set(i * offset + 4, color.Components[1]);
-    c_array.Set(i * offset + 5, color.Components[2]);
+    c_array.Set(i * offset + 3, color2.Components[0]);
+    c_array.Set(i * offset + 4, color2.Components[1]);
+    c_array.Set(i * offset + 5, color2.Components[2]);
 
-    s = scalar.Get(i3);
-    s = (s - SMin) / SDiff;
-    color = ColorTable.MapRGB(s);
     v_array.Set(i * offset + 6, p3[0]);
     v_array.Set(i * offset + 7, p3[1]);
     v_array.Set(i * offset + 8, p3[2]);
-    c_array.Set(i * offset + 6, color.Components[0]);
-    c_array.Set(i * offset + 7, color.Components[1]);
-    c_array.Set(i * offset + 8, color.Components[2]);
+    c_array.Set(i * offset + 6, color3.Components[0]);
+    c_array.Set(i * offset + 7, color3.Components[1]);
+    c_array.Set(i * offset + 8, color3.Components[2]);
   }
 };
 
@@ -178,18 +193,24 @@ struct MapColorAndVerticesInvokeFunctor
 template <typename PtType>
 VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
                                             const PtType& verts,
-                                            const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar)
+                                            const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
+                                            vtkm::rendering::ColorTable ct,
+                                            bool logY)
 {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glLineWidth(1);
-  glColor3f(1.0, 1.0, 1.0);
+  vtkm::UInt8 r, g, b, a;
+  ct.MapRGB(0).GetRGBA(r, g, b, a);
 
+  glColor4ub(r, g, b, a);
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
     vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
     vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    if (logY)
+      s = vtkm::Float32(log10(s));
     glVertex3f(pt[0], s, 0.0f);
   }
   glEnd();
@@ -198,18 +219,24 @@ VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
 template <typename PtType>
 VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts,
                                           const PtType& verts,
-                                          const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar)
+                                          const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
+                                          vtkm::rendering::ColorTable ct,
+                                          bool logY)
 {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glLineWidth(1);
-  glColor3f(1.0, 1.0, 1.0);
+  vtkm::UInt8 r, g, b, a;
+  ct.MapRGB(0).GetRGBA(r, g, b, a);
 
+  glColor4ub(r, g, b, a);
   glBegin(GL_LINE_STRIP);
   for (int i = 0; i < numVerts; i++)
   {
     vtkm::Vec<vtkm::Float32, 3> pt = verts.GetPortalConstControl().Get(i);
     vtkm::Float32 s = scalar.GetPortalConstControl().Get(i);
+    if (logY)
+      s = vtkm::Float32(log10(s));
     glVertex3f(pt[0], s, 0.0f);
   }
   glEnd();
@@ -247,6 +274,7 @@ VTKM_CONT void RenderTriangles(MapperGL& mapper,
 
     vtkm::cont::TryExecute(MapColorAndVerticesInvokeFunctor<PtType>(
       indices, ct, scalar, scalarRange, verts, sMin, sMax, out_color, out_vertices));
+
 
     vtkm::Id vtx_cnt = out_vertices.GetNumberOfValues();
     vtkm::Float32* v_ptr = out_vertices.GetStorage().StealArray();
@@ -412,7 +440,7 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   {
     vtkm::cont::ArrayHandleUniformPointCoordinates verts;
     verts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-    RenderStructuredLineSegments(numVerts, verts, sf);
+    RenderStructuredLineSegments(numVerts, verts, sf, colorTable, this->LogarithmY);
   }
   else if (cellset.IsSameType(vtkm::cont::CellSetSingleType<>()) &&
            cellset.Cast<vtkm::cont::CellSetSingleType<>>().GetCellShapeAsId() ==
@@ -420,7 +448,7 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
   {
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verts;
     verts = dcoords.Cast<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>();
-    RenderExplicitLineSegments(numVerts, verts, sf);
+    RenderExplicitLineSegments(numVerts, verts, sf, colorTable, this->LogarithmY);
   }
   else
   {

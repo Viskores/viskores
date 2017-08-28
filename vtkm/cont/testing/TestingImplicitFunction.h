@@ -71,7 +71,7 @@ void EvaluateOnCoordinates(vtkm::cont::CoordinateSystem points,
                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>& values,
                            DeviceAdapter device)
 {
-  typedef vtkm::worklet::DispatcherMapField<EvaluateImplicitFunction, DeviceAdapter> EvalDispatcher;
+  using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvaluateImplicitFunction, DeviceAdapter>;
 
   EvaluateImplicitFunction eval(function.PrepareForExecution(device));
   EvalDispatcher(eval).Invoke(points, values);

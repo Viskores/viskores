@@ -412,7 +412,7 @@ namespace internal
 template <>
 struct DynamicTransformTraits<vtkm::cont::Field>
 {
-  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
 
 } // namespace internal

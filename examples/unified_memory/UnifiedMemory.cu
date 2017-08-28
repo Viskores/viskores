@@ -30,6 +30,7 @@
 #include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Timer.h>
+#include <vtkm/cont/cuda/internal/CudaAllocator.h>
 
 namespace
 {
@@ -40,7 +41,7 @@ class TangleField : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
   const vtkm::Float32 xmin, ymin, zmin, xmax, ymax, zmax;
@@ -92,8 +93,8 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::Float32 maxs[3] = { 1.0f, 1.0f, 1.0f };
 
   vtkm::cont::ArrayHandle<vtkm::Float32> fieldArray;
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(0, 1, vdims[0] * vdims[1] *
-                                                                       vdims[2]);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> vertexCountImplicitArray(
+    0, 1, vdims[0] * vdims[1] * vdims[2]);
   vtkm::worklet::DispatcherMapField<TangleField> tangleFieldDispatcher(
     TangleField(vdims, mins, maxs));
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, fieldArray);
@@ -150,40 +151,42 @@ int main(int argc, char* argv[])
     data[i] = i;
   input = vtkm::cont::make_ArrayHandle(data);
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAlgorithms;
+  using DeviceAlgorithms = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
   vtkm::worklet::SineWorklet sineWorklet;
 
-#ifdef VTKM_USE_UNIFIED_MEMORY
-  std::cout << "Testing with unified memory" << std::endl;
+  bool usingManagedMemory = vtkm::cont::cuda::internal::CudaAllocator::UsingManagedMemory();
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
+  if (usingManagedMemory)
+  {
+    std::cout << "Testing with unified memory" << std::endl;
 
-  vtkm::cont::Timer<> timer;
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
 
-  dispatcher.Invoke(input, output);
-  std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues() - 1) << std::endl;
+    vtkm::cont::Timer<> timer;
 
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
-  std::cout << "Time: " << elapsedTime << std::endl;
+    dispatcher.Invoke(input, output);
+    std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues() - 1) << std::endl;
 
-#else
+    vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+    std::cout << "Time: " << elapsedTime << std::endl;
+  }
+  else
+  {
+    vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
+    vtkm::Id NBlocks = N / (1024 * 1024 * 1024);
+    NBlocks *= 2;
+    dispatcher.SetNumberOfBlocks(NBlocks);
+    std::cout << "Testing with streaming (without unified memory) with " << NBlocks << " blocks"
+              << std::endl;
 
-  vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
-  vtkm::Id NBlocks = N / (1024 * 1024 * 1024);
-  NBlocks *= 2;
-  dispatcher.SetNumberOfBlocks(NBlocks);
-  std::cout << "Testing with streaming (without unified memory) with " << NBlocks << " blocks"
-            << std::endl;
+    vtkm::cont::Timer<> timer;
 
-  vtkm::cont::Timer<> timer;
+    dispatcher.Invoke(input, output);
+    std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues() - 1) << std::endl;
 
-  dispatcher.Invoke(input, output);
-  std::cout << output.GetPortalConstControl().Get(output.GetNumberOfValues() - 1) << std::endl;
-
-  vtkm::Float64 elapsedTime = timer.GetElapsedTime();
-  std::cout << "Time: " << elapsedTime << std::endl;
-
-#endif
+    vtkm::Float64 elapsedTime = timer.GetElapsedTime();
+    std::cout << "Time: " << elapsedTime << std::endl;
+  }
 
   int dim = 128;
   if (argc > 2)
@@ -199,14 +202,14 @@ int main(int argc, char* argv[])
   filter.SetGenerateNormals(true);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0.5);
-  vtkm::filter::ResultDataSet result = filter.Execute(dataSet, dataSet.GetField("nodevar"));
+  vtkm::filter::Result result = filter.Execute(dataSet, dataSet.GetField("nodevar"));
 
   filter.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));
 
   //need to extract vertices, normals, and scalars
   vtkm::cont::DataSet& outputData = result.GetDataSet();
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> VertType;
+  using VertType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
 
   verticesArray = coords.GetData().Cast<VertType>();

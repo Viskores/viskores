@@ -29,6 +29,7 @@
 #include <vtkm/testing/Testing.h>
 
 #include <set>
+#include <vector>
 
 namespace
 {
@@ -57,6 +58,13 @@ struct TestCellFacesFunctor
     vtkm::exec::FunctorBase workletProxy;
     workletProxy.SetErrorMessageBuffer(errorMessage);
 
+    std::vector<vtkm::Id> pointIndexProxyBuffer(static_cast<std::size_t>(numPoints));
+    for (std::size_t index = 0; index < pointIndexProxyBuffer.size(); ++index)
+    {
+      pointIndexProxyBuffer[index] = static_cast<vtkm::Id>(1000000 - index);
+    }
+    vtkm::VecCConst<vtkm::Id> pointIndexProxy(&pointIndexProxyBuffer.at(0), numPoints);
+
     vtkm::IdComponent numEdges = vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, workletProxy);
     VTKM_TEST_ASSERT(numEdges > 0, "No edges?");
 
@@ -73,6 +81,11 @@ struct TestCellFacesFunctor
       VTKM_TEST_ASSERT(edge[0] < edge[1], "Internal test error: MakeEdgeCononical failed");
       VTKM_TEST_ASSERT(edgeSet.find(edge) == edgeSet.end(), "Found duplicate edge");
       edgeSet.insert(edge);
+
+      vtkm::Id2 cononicalEdgeId =
+        vtkm::exec::CellEdgeCononicalId(numPoints, edgeIndex, shape, pointIndexProxy, workletProxy);
+      VTKM_TEST_ASSERT(cononicalEdgeId[0] > 0, "Not using global ids?");
+      VTKM_TEST_ASSERT(cononicalEdgeId[0] < cononicalEdgeId[1], "Bad order.");
     }
 
     vtkm::IdComponent numFaces = vtkm::exec::CellFaceNumberOfFaces(shape, workletProxy);
@@ -103,6 +116,12 @@ struct TestCellFacesFunctor
         VTKM_TEST_ASSERT(edgeSet.find(edge) != edgeSet.end(), "Edge in face not in cell's edges");
         edgesFoundInFaces.insert(edge);
       }
+
+      vtkm::Id3 cononicalFaceId =
+        vtkm::exec::CellFaceCononicalId(faceIndex, shape, pointIndexProxy, workletProxy);
+      VTKM_TEST_ASSERT(cononicalFaceId[0] > 0, "Not using global ids?");
+      VTKM_TEST_ASSERT(cononicalFaceId[0] < cononicalFaceId[1], "Bad order.");
+      VTKM_TEST_ASSERT(cononicalFaceId[1] < cononicalFaceId[2], "Bad order.");
     }
     VTKM_TEST_ASSERT(edgesFoundInFaces.size() == edgeSet.size(),
                      "Faces did not contain all edges in cell");
@@ -121,6 +140,13 @@ struct TestCellFacesFunctor
     vtkm::exec::FunctorBase workletProxy;
     workletProxy.SetErrorMessageBuffer(errorMessage);
 
+    std::vector<vtkm::Id> pointIndexProxyBuffer(static_cast<std::size_t>(numPoints));
+    for (std::size_t index = 0; index < pointIndexProxyBuffer.size(); ++index)
+    {
+      pointIndexProxyBuffer[index] = static_cast<vtkm::Id>(1000000 - index);
+    }
+    vtkm::VecCConst<vtkm::Id> pointIndexProxy(&pointIndexProxyBuffer.at(0), numPoints);
+
     vtkm::IdComponent numEdges = vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, workletProxy);
     VTKM_TEST_ASSERT(numEdges == numPoints, "Polygons should have same number of points and edges");
 
@@ -137,6 +163,11 @@ struct TestCellFacesFunctor
       VTKM_TEST_ASSERT(edge[0] < edge[1], "Internal test error: MakeEdgeCononical failed");
       VTKM_TEST_ASSERT(edgeSet.find(edge) == edgeSet.end(), "Found duplicate edge");
       edgeSet.insert(edge);
+
+      vtkm::Id2 cononicalEdgeId =
+        vtkm::exec::CellEdgeCononicalId(numPoints, edgeIndex, shape, pointIndexProxy, workletProxy);
+      VTKM_TEST_ASSERT(cononicalEdgeId[0] > 0, "Not using global ids?");
+      VTKM_TEST_ASSERT(cononicalEdgeId[0] < cononicalEdgeId[1], "Bad order.");
     }
 
     vtkm::IdComponent numFaces = vtkm::exec::CellFaceNumberOfFaces(shape, workletProxy);

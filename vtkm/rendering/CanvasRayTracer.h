@@ -23,6 +23,8 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/rendering/Canvas.h>
+#include <vtkm/rendering/raytracing/Ray.h>
+
 namespace vtkm
 {
 namespace rendering
@@ -45,16 +47,17 @@ public:
 
   vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
 
-  void WriteToCanvas(const vtkm::cont::ArrayHandle<vtkm::Id>& pixelIds,
-                     const vtkm::cont::ArrayHandle<vtkm::Float32>& distances,
+  void BlendBackground();
+
+  void WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays,
                      const vtkm::cont::ArrayHandle<vtkm::Float32>& colors,
                      const vtkm::rendering::Camera& camera);
 
-  void WriteToCanvas(const vtkm::cont::ArrayHandle<vtkm::Id>& pixelIds,
-                     const vtkm::cont::ArrayHandle<vtkm::Float64>& distances,
+  void WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays,
                      const vtkm::cont::ArrayHandle<vtkm::Float64>& colors,
                      const vtkm::rendering::Camera& camera);
 
+protected:
   void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
                const vtkm::Vec<vtkm::Float64, 2>& point1,
                vtkm::Float32 linewidth,
@@ -64,6 +67,11 @@ public:
                    const vtkm::rendering::ColorTable& colorTable,
                    bool horizontal) const VTKM_OVERRIDE;
 
+  void AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
+                      const vtkm::Vec<vtkm::Float64, 2>& point1,
+                      const vtkm::Vec<vtkm::Float64, 2>& point2,
+                      const vtkm::Vec<vtkm::Float64, 2>& point3,
+                      const vtkm::rendering::Color& color) const VTKM_OVERRIDE;
 
   void AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
                vtkm::Float32 scale,
