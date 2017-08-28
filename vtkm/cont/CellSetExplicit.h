@@ -196,7 +196,6 @@ public:
       idPortal.Set(i, PtCellPortal.Get(start + i));
   }
 
-
   VTKM_CONT void GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const
   {
     this->PointToCell.BuildIndexOffsets(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
