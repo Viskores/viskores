@@ -38,6 +38,7 @@ set(unit_tests
   UnitTestMath.cxx
   UnitTestMatrix.cxx
   UnitTestNewtonsMethod.cxx
+  UnitTestNoAssert.cxx
   UnitTestPair.cxx
   UnitTestRange.cxx
   UnitTestTesting.cxx
