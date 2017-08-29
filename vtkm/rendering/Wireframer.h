@@ -178,7 +178,7 @@ public:
     , FieldMin(vtkm::Float32(fieldRange.Min))
   {
     InverseFieldDelta = 1.0f / vtkm::Float32(fieldRange.Length());
-    Offset = vtkm::Max(0.03f / vtkm::Float32(clippingRange.Length()), 0.000001f);
+    Offset = vtkm::Max(0.03f / vtkm::Float32(clippingRange.Length()), 0.0001f);
   }
 
   template <typename CoordinatesPortalType, typename ScalarFieldPortalType>
@@ -194,11 +194,11 @@ public:
     TransformWorldToViewport(point1);
     TransformWorldToViewport(point2);
 
-    vtkm::Float32 x1 = point1[0];
-    vtkm::Float32 y1 = point1[1];
+    vtkm::Float32 x1 = vtkm::Round(point1[0]);
+    vtkm::Float32 y1 = vtkm::Round(point1[1]);
     vtkm::Float32 z1 = point1[2];
-    vtkm::Float32 x2 = point2[0];
-    vtkm::Float32 y2 = point2[1];
+    vtkm::Float32 x2 = vtkm::Round(point2[0]);
+    vtkm::Float32 y2 = vtkm::Round(point2[1]);
     vtkm::Float32 z2 = point2[2];
     // If the line is steep, i.e., the height is greater than the width, then
     // transpose the co-ordinates to prevent "holes" in the line. This ensures
@@ -224,8 +224,8 @@ public:
 
     vtkm::Float32 xEnd = vtkm::Round(x1);
     vtkm::Float32 yEnd = y1 + gradient * (xEnd - x1);
-    vtkm::Float32 xGap = ReverseFractionalPart(x1 + 0.5f);
     vtkm::Float32 xPxl1 = xEnd, yPxl1 = IntegerPart(yEnd);
+    vtkm::Float32 zPxl1 = vtkm::Lerp(z1, z2, (xPxl1 - x1) / dx);
     vtkm::Float64 point1Field = fieldPortal.Get(point1Idx);
     vtkm::Float64 point2Field = fieldPortal.Get(point2Idx);
 
@@ -233,32 +233,28 @@ public:
     vtkm::Vec<vtkm::Float32, 4> color = GetColor(point1Field);
     if (transposed)
     {
-      Plot(yPxl1, xPxl1, z1, color, ReverseFractionalPart(yEnd) * xGap);
-      Plot(yPxl1 + 1, xPxl1, z1, color, FractionalPart(yEnd) * xGap);
+      Plot(yPxl1, xPxl1, zPxl1, color, 1.0f);
     }
     else
     {
-      Plot(xPxl1, yPxl1, z1, color, ReverseFractionalPart(yEnd) * xGap);
-      Plot(xPxl1, yPxl1 + 1, z1, color, FractionalPart(yEnd) * xGap);
+      Plot(xPxl1, yPxl1, zPxl1, color, 1.0f);
     }
 
     vtkm::Float32 interY = yEnd + gradient;
     xEnd = vtkm::Round(x2);
     yEnd = y2 + gradient * (xEnd - x2);
-    xGap = FractionalPart(x2 + 0.5f);
     vtkm::Float32 xPxl2 = xEnd, yPxl2 = IntegerPart(yEnd);
+    vtkm::Float32 zPxl2 = vtkm::Lerp(z1, z2, (xPxl2 - x1) / dx);
 
     // Plot second endpoint
     color = GetColor(point2Field);
     if (transposed)
     {
-      Plot(yPxl2, xPxl2, z2, color, ReverseFractionalPart(yEnd) * xGap);
-      Plot(yPxl2 + 1, xPxl2, z2, color, FractionalPart(yEnd) * xGap);
+      Plot(yPxl2, xPxl2, zPxl2, color, 1.0f);
     }
     else
     {
-      Plot(xPxl2, yPxl2, z2, color, ReverseFractionalPart(yEnd) * xGap);
-      Plot(xPxl2, yPxl2 + 1, z2, color, FractionalPart(yEnd) * xGap);
+      Plot(xPxl2, yPxl2, zPxl2, color, 1.0f);
     }
 
     // Plot rest of the line
@@ -268,7 +264,7 @@ public:
       {
         vtkm::Float32 t = IntegerPart(interY);
         vtkm::Float32 factor = (x - x1) / dx;
-        vtkm::Float32 depth = vtkm::Lerp(z1, z2, factor);
+        vtkm::Float32 depth = vtkm::Lerp(zPxl1, zPxl2, factor);
         vtkm::Float64 fieldValue = vtkm::Lerp(point1Field, point2Field, factor);
         color = GetColor(fieldValue);
         Plot(t, x, depth, color, ReverseFractionalPart(interY));
@@ -282,7 +278,7 @@ public:
       {
         vtkm::Float32 t = IntegerPart(interY);
         vtkm::Float32 factor = (x - x1) / dx;
-        vtkm::Float32 depth = vtkm::Lerp(z1, z2, factor);
+        vtkm::Float32 depth = vtkm::Lerp(zPxl1, zPxl2, factor);
         vtkm::Float64 fieldValue = vtkm::Lerp(point1Field, point2Field, factor);
         color = GetColor(fieldValue);
         Plot(x, t, depth, color, ReverseFractionalPart(interY));
@@ -310,7 +306,8 @@ private:
     // Convert from -1/+1 to 0/+1 range
     point[2] = point[2] * 0.5f + 0.5f;
     // Offset the point to a bit towards the camera. This is to ensure that the front faces of
-    // the wireframe wins the z-depth check against the surface render.
+    // the wireframe wins the z-depth check against the surface render, and is in addition to the
+    // existing camera space offset.
     point[2] -= Offset;
   }
 
@@ -452,9 +449,23 @@ private:
       throw vtkm::cont::ErrorBadValue("Field is not associated with points");
     }
 
-    vtkm::Matrix<vtkm::Float32, 4, 4> WorldToProjection =
-      vtkm::MatrixMultiply(Camera.CreateProjectionMatrix(Canvas->GetWidth(), Canvas->GetHeight()),
-                           Camera.CreateViewMatrix());
+    // The wireframe should appear on top of any prerendered data, and hide away the internal
+    // zones if `ShowInternalZones` is set to false. Since the prerendered data (or the solid
+    // depth buffer) could cause z-fighting with the wireframe, we will offset all the edges in Z
+    // by a small amount, proportional to distance between the near and far camera planes, in the
+    // camera space.
+    vtkm::Range clippingRange = Camera.GetClippingRange();
+    vtkm::Float64 offset1 = (clippingRange.Max - clippingRange.Min) / 1.0e4;
+    vtkm::Float64 offset2 = clippingRange.Min / 2.0;
+    vtkm::Float32 offset = static_cast<vtkm::Float32>(vtkm::Min(offset1, offset2));
+    vtkm::Matrix<vtkm::Float32, 4, 4> modelMatrix;
+    vtkm::MatrixIdentity(modelMatrix);
+    modelMatrix[2][3] = offset;
+    vtkm::Matrix<vtkm::Float32, 4, 4> worldToCamera =
+      vtkm::MatrixMultiply(modelMatrix, Camera.CreateViewMatrix());
+    vtkm::Matrix<vtkm::Float32, 4, 4> WorldToProjection = vtkm::MatrixMultiply(
+      Camera.CreateProjectionMatrix(Canvas->GetWidth(), Canvas->GetHeight()), worldToCamera);
+
     vtkm::Id width = static_cast<vtkm::Id>(Canvas->GetWidth());
     vtkm::Id height = static_cast<vtkm::Id>(Canvas->GetHeight());
     vtkm::Id pixelCount = width * height;
