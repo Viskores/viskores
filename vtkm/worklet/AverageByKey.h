@@ -50,10 +50,12 @@ struct AverageByKey
     template <typename ValuesVecType>
     VTKM_EXEC typename ValuesVecType::ComponentType operator()(const ValuesVecType& valuesIn) const
     {
-      typename ValuesVecType::ComponentType sum = valuesIn[0];
+      using ComponentType = typename ValuesVecType::ComponentType;
+      ComponentType sum = valuesIn[0];
       for (vtkm::IdComponent index = 1; index < valuesIn.GetNumberOfComponents(); ++index)
       {
-        sum = sum + valuesIn[index];
+        ComponentType component = valuesIn[index];
+        sum = sum + component;
       }
       return sum / valuesIn.GetNumberOfComponents();
     }
