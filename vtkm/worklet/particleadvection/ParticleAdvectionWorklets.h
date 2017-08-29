@@ -200,7 +200,7 @@ private:
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
 
     vtkm::cont::ArrayHandle<vtkm::Id> validPoint;
-    std::vector<vtkm::Id> vpa(numSeeds * maxSteps, 0);
+    std::vector<vtkm::Id> vpa(static_cast<std::size_t>(numSeeds * maxSteps), 0);
     validPoint = vtkm::cont::make_ArrayHandle(vpa);
 
     //Compact history into positions.

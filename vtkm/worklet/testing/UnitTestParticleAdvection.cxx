@@ -453,6 +453,7 @@ void TestParticleWorklets()
     pts.push_back(vtkm::Vec<FieldType, 3>(2, 2, 2));
     pts.push_back(vtkm::Vec<FieldType, 3>(3, 3, 3));
 
+    vtkm::Id maxSteps = 100;
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
     seeds = vtkm::cont::make_ArrayHandle(pts);
 
@@ -460,7 +461,7 @@ void TestParticleWorklets()
     {
       vtkm::worklet::ParticleAdvection particleAdvection;
       vtkm::worklet::ParticleAdvectionResult<FieldType> res;
-      res = particleAdvection.Run(rk4, seeds, 100, DeviceAdapter());
+      res = particleAdvection.Run(rk4, seeds, maxSteps, DeviceAdapter());
       VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
                        "Number of output particles does not match input.");
     }
@@ -468,7 +469,7 @@ void TestParticleWorklets()
     {
       vtkm::worklet::Streamline streamline;
       vtkm::worklet::StreamlineResult<FieldType> res;
-      res = streamline.Run(rk4, seeds, 100, DeviceAdapter());
+      res = streamline.Run(rk4, seeds, maxSteps, DeviceAdapter());
 
       //Make sure we have the right number of streamlines.
       VTKM_TEST_ASSERT(res.polyLines.GetNumberOfCells() == seeds.GetNumberOfValues(),
