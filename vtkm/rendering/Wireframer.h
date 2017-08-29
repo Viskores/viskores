@@ -46,8 +46,8 @@ using PackedFrameBufferHandle = vtkm::cont::ArrayHandle<vtkm::Int64>;
 
 // Depth value of 1.0f
 const vtkm::Int64 ClearDepth = 0x3F800000;
-// Packed frame buffer value with color set as white and depth as 1.0f
-const vtkm::Int64 ClearValue = 0x3F800000FFFFFFFF;
+// Packed frame buffer value with color set as black and depth as 1.0f
+const vtkm::Int64 ClearValue = 0x3F800000000000FF;
 
 VTKM_EXEC_CONT
 vtkm::Float32 IntegerPart(vtkm::Float32 x)
@@ -365,10 +365,7 @@ struct BufferConverter : public vtkm::worklet::WorkletMapField
 {
 public:
   VTKM_CONT
-  BufferConverter(vtkm::Vec<vtkm::Float32, 4> backgroundColor)
-    : BackgroundColor(backgroundColor)
-  {
-  }
+  BufferConverter() {}
 
   typedef void ControlSignature(FieldIn<>, ExecObject, ExecObject);
   typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
@@ -390,9 +387,6 @@ public:
       depthBuffer.Set(index, depth);
     }
   }
-
-private:
-  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
 };
 
 } // namespace
@@ -471,14 +465,11 @@ private:
     vtkm::Id pixelCount = width * height;
     FrameBuffer.PrepareForOutput(pixelCount, DeviceTag());
 
-    vtkm::Vec<vtkm::Float32, 4> clearColor = Canvas->GetBackgroundColor().Components;
-    vtkm::UInt32 packedClearColor = PackColor(clearColor);
     if (ShowInternalZones && !IsOverlay)
     {
       using MemSet =
         typename vtkm::rendering::Triangulator<DeviceTag>::template MemSet<vtkm::Int64>;
-      vtkm::Int64 clearValue = (ClearDepth << 32) | packedClearColor;
-      MemSet memSet(clearValue);
+      MemSet memSet(ClearValue);
       vtkm::worklet::DispatcherMapField<MemSet>(memSet).Invoke(FrameBuffer);
     }
     else
@@ -499,7 +490,7 @@ private:
     vtkm::worklet::DispatcherMapField<EdgePlotter<DeviceTag>, DeviceTag>(plotter).Invoke(
       PointIndices, Coordinates, ScalarField.GetData());
 
-    BufferConverter converter(clearColor);
+    BufferConverter converter;
     vtkm::worklet::DispatcherMapField<BufferConverter, DeviceTag>(converter).Invoke(
       FrameBuffer,
       vtkm::exec::ExecutionWholeArray<vtkm::Float32>(Canvas->GetDepthBuffer()),
