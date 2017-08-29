@@ -112,6 +112,9 @@ option(VTKm_USE_DOUBLE_PRECISION
   )
 option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
+option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
+mark_as_advanced(VTKm_NO_ASSERT)
+
 option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 

@@ -36,7 +36,9 @@
 /// in non-debug mode (specifically when NDEBUG is defined), so be prepared
 /// for the possibility that the condition is never evaluated.
 ///
-#if !defined(NDEBUG)
+/// The VTKM_NO_ASSERT cmake and preprocessor option allows debugging builds
+/// to remove assertions for performance reasons.
+#if !defined(NDEBUG) && !defined(VTKM_NO_ASSERT)
 #define VTKM_ASSERT(condition) assert(condition)
 #else
 #define VTKM_ASSERT(condition) (void)(condition)
