@@ -25,8 +25,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/Field.h>
+#include <vtkm/cont/CellSetExplicit.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -125,10 +124,6 @@ private:
     statusArray.Allocate(numSeeds);
     DeviceAlgorithm::Copy(ok, statusArray);
 
-    /*vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds);
-    stepsTaken.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(zero, stepsTaken);*/
-
     //Create and invoke the particle advection.
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
     ParticleType particles(seedArray, stepsTaken, statusArray, maxSteps);
@@ -140,7 +135,6 @@ private:
 
   IntegratorType integrator;
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
-  vtkm::cont::DataSet ds;
   vtkm::Id maxSteps;
 };
 
@@ -206,9 +200,8 @@ private:
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
 
     vtkm::cont::ArrayHandle<vtkm::Id> validPoint;
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds * maxSteps);
-    validPoint.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(zero, validPoint);
+    std::vector<vtkm::Id> vpa(numSeeds * maxSteps, 0);
+    validPoint = vtkm::cont::make_ArrayHandle(vpa);
 
     //Compact history into positions.
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> history;
@@ -239,7 +232,6 @@ private:
 
   IntegratorType integrator;
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
-  vtkm::cont::DataSet ds;
   vtkm::Id maxSteps;
 };
 }

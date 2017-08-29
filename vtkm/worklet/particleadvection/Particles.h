@@ -212,16 +212,18 @@ public:
   VTKM_EXEC_CONT
   StateRecordingParticles(const StateRecordingParticles& s)
     : Particles<T, DeviceAdapterTag>(s.Pos, s.Steps, s.Status, s.MaxSteps)
-    , HistSize(s.HistSize)
+    , ValidPoint(s.ValidPoint)
     , History(s.History)
+    , HistSize(s.HistSize)
   {
   }
 
   VTKM_EXEC_CONT
   StateRecordingParticles()
     : Particles<T, DeviceAdapterTag>()
-    , HistSize(-1)
+    , ValidPoint()
     , History()
+    , HistSize(-1)
   {
   }
 
@@ -232,8 +234,9 @@ public:
                           const IdPortal& _validPoint,
                           const vtkm::Id& _maxSteps)
     : Particles<T, DeviceAdapterTag>(_pos, _steps, _status, _maxSteps)
-    , HistSize()
+    , ValidPoint(_validPoint)
     , History()
+    , HistSize()
   {
   }
 
@@ -251,7 +254,7 @@ public:
     this->ValidPoint = validPointArray.PrepareForInPlace(DeviceAdapterTag());
     this->MaxSteps = _maxSteps;
     HistSize = _maxSteps;
-    NumPos = posArray.GetNumberOfValues();
+    vtkm::Id NumPos = posArray.GetNumberOfValues();
     History = historyArray.PrepareForOutput(NumPos * HistSize, DeviceAdapterTag());
   }
 
@@ -271,7 +274,7 @@ public:
     this->ValidPoint = validPointArray.PrepareForInPlace(DeviceAdapterTag());
     this->MaxSteps = _maxSteps;
     HistSize = _histSize;
-    NumPos = posArray.GetNumberOfValues();
+    vtkm::Id NumPos = posArray.GetNumberOfValues();
     History = historyArray.PrepareForOutput(NumPos * HistSize, DeviceAdapterTag());
   }
 
@@ -282,7 +285,8 @@ public:
       return;
     vtkm::Id nSteps = this->Steps.Get(idx);
     vtkm::Id loc = idx * HistSize + nSteps;
-    History.Set(loc, pt);
+    this->History.Set(loc, pt);
+    this->ValidPoint.Set(loc, 1);
     nSteps = nSteps + 1;
     this->Steps.Set(idx, nSteps);
     if (nSteps == this->MaxSteps)
@@ -298,9 +302,9 @@ public:
   bool Done(const vtkm::Id& idx) { return !this->Integrateable(idx); }
 
 private:
-  vtkm::Id NumPos, HistSize;
   IdPortal ValidPoint;
   PosPortal History;
+  vtkm::Id HistSize;
 };
 
 } //namespace particleadvection

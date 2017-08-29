@@ -460,7 +460,7 @@ void TestParticleWorklets()
     {
       vtkm::worklet::ParticleAdvection particleAdvection;
       vtkm::worklet::ParticleAdvectionResult<FieldType> res;
-      res = particleAdvection.Run(rk4, seeds, 1000, DeviceAdapter());
+      res = particleAdvection.Run(rk4, seeds, 100, DeviceAdapter());
       VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
                        "Number of output particles does not match input.");
     }
@@ -468,23 +468,20 @@ void TestParticleWorklets()
     {
       vtkm::worklet::Streamline streamline;
       vtkm::worklet::StreamlineResult<FieldType> res;
-      res = streamline.Run(rk4, seeds, 1000, DeviceAdapter());
-      VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
-                       "Number of output particles does not match input.");
+      res = streamline.Run(rk4, seeds, 100, DeviceAdapter());
 
-      /*
-      printSummary_ArrayHandle(res.positions, std::cout);
-      printSummary_ArrayHandle(res.status, std::cout, true);
-      printSummary_ArrayHandle(res.stepsTaken, std::cout, true);
-      res.polyLines.PrintSummary(std::cout);
+      //Make sure we have the right number of streamlines.
+      VTKM_TEST_ASSERT(res.polyLines.GetNumberOfCells() == seeds.GetNumberOfValues(),
+                       "Number of output streamlines does not match input.");
 
-      vtkm::cont::DataSet Output;
-      Output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", res.positions));
-      Output.AddCellSet(res.polyLines);
-      Output.AddField(vtkm::cont::Field("status", vtkm::cont::Field::ASSOC_POINTS, res.status));
-      Output.AddField(vtkm::cont::Field("steps", vtkm::cont::Field::ASSOC_POINTS, res.stepsTaken));
-      Output.PrintSummary(std::cout);
-      */
+      //Make sure we have the right number of samples in each streamline.
+      vtkm::Id nSeeds = static_cast<vtkm::Id>(pts.size());
+      for (vtkm::Id j = 0; j < nSeeds; j++)
+      {
+        vtkm::Id numPoints = static_cast<vtkm::Id>(res.polyLines.GetNumberOfPointsInCell(j));
+        vtkm::Id numSteps = res.stepsTaken.GetPortalConstControl().Get(j);
+        VTKM_TEST_ASSERT(numPoints == numSteps, "Invalid number of points in streamline.");
+      }
     }
   }
 }
