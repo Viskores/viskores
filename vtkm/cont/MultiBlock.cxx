@@ -97,6 +97,7 @@ const std::vector<vtkm::cont::DataSet>& MultiBlock::GetBlocks() const
 {
   return this->blocks;
 }
+
 VTKM_CONT
 void MultiBlock::AddBlock(vtkm::cont::DataSet& ds)
 {
@@ -104,7 +105,6 @@ void MultiBlock::AddBlock(vtkm::cont::DataSet& ds)
   return;
 }
 
-VTKM_CONT
 void MultiBlock::AddBlocks(std::vector<vtkm::cont::DataSet>& mblocks)
 {
   this->blocks.insert(blocks.end(), mblocks.begin(), mblocks.end());
@@ -150,7 +150,6 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index, T
   return this->GetBounds(
     coordinate_system_index, TypeList(), VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
 }
-
 template <typename TypeList, typename StorageList>
 VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index,
                                              TypeList,

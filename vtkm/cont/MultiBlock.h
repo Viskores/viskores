@@ -65,9 +65,6 @@ public:
   vtkm::Id GetNumberOfBlocks() const;
 
   VTKM_CONT
-  void SetCapacity(vtkm::Id size);
-
-  VTKM_CONT
   const vtkm::cont::DataSet& GetBlock(vtkm::Id blockId) const;
 
   VTKM_CONT

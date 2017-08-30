@@ -117,7 +117,6 @@ void Result_Verify(T ResultVec, D Filter, vtkm::cont::MultiBlock& Blocks, std::s
 void TestMultiBlockFilters()
 {
   std::size_t BlockNum = 7;
-
   std::vector<vtkm::filter::Result> results;
   vtkm::cont::MultiBlock Blocks;
 
