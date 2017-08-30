@@ -68,6 +68,7 @@ set(headers
   ErrorInternal.h
   Field.h
   ImplicitFunction.h
+  MultiBlock.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Storage.h
@@ -97,6 +98,7 @@ set(sources
   Field.cxx
   ImplicitFunction.cxx
   internal/SimplePolymorphicContainer.cxx
+  MultiBlock.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
   StorageBasic.cxx
   )
