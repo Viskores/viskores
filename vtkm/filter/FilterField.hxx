@@ -52,23 +52,23 @@ inline VTKM_CONT FilterField<Derived>::~FilterField()
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
-                                                           const std::string& inFieldName)
+inline VTKM_CONT Result FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                                                      const std::string& inFieldName)
 {
   return this->Execute(input, input.GetField(inFieldName), vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT std::vector<vtkm::filter::ResultField> FilterField<Derived>::Execute(
+inline VTKM_CONT std::vector<vtkm::filter::Result> FilterField<Derived>::Execute(
   const vtkm::cont::MultiBlock& input,
   const std::string& inFieldName)
 {
-  std::vector<vtkm::filter::ResultField> results;
+  std::vector<vtkm::filter::Result> results;
 
   for (vtkm::Id j = 0; j < input.GetNumberOfBlocks(); j++)
   {
-    vtkm::filter::ResultField result = this->Execute(
+    vtkm::filter::Result result = this->Execute(
       input.GetBlock(j), input.GetBlock(j).GetField(inFieldName), vtkm::filter::PolicyDefault());
     results.push_back(result);
   }
@@ -78,16 +78,16 @@ inline VTKM_CONT std::vector<vtkm::filter::ResultField> FilterField<Derived>::Ex
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT std::vector<vtkm::filter::ResultField> FilterField<Derived>::Execute(
+inline VTKM_CONT std::vector<vtkm::filter::Result> FilterField<Derived>::Execute(
   const vtkm::cont::MultiBlock& input,
   const std::string& inFieldName,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  std::vector<vtkm::filter::ResultField> results;
+  std::vector<vtkm::filter::Result> results;
 
   for (vtkm::Id j = 0; j < input.GetNumberOfBlocks(); j++)
   {
-    vtkm::filter::ResultField result =
+    vtkm::filter::Result result =
       this->Execute(input.GetBlock(j), input.GetBlock(j).GetField(inFieldName), policy);
     results.push_back(result);
   }
@@ -97,17 +97,17 @@ inline VTKM_CONT std::vector<vtkm::filter::ResultField> FilterField<Derived>::Ex
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT ResultField FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
-                                                           const vtkm::cont::Field& field)
+inline VTKM_CONT Result FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                                                      const vtkm::cont::Field& field)
+
 {
   return this->Execute(input, field, vtkm::filter::PolicyDefault());
 }
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT ResultField
-FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
-                              const vtkm::cont::CoordinateSystem& field)
+inline VTKM_CONT Result FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
+                                                      const vtkm::cont::CoordinateSystem& field)
 {
   return this->Execute(input, field, vtkm::filter::PolicyDefault());
 }
@@ -115,7 +115,7 @@ FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultField
+inline VTKM_CONT Result
 FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
                               const std::string& inFieldName,
                               const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
@@ -126,7 +126,7 @@ FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultField
+inline VTKM_CONT Result
 FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
                               const vtkm::cont::Field& field,
                               const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
@@ -137,7 +137,7 @@ FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultField
+inline VTKM_CONT Result
 FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
                               const vtkm::cont::CoordinateSystem& field,
                               const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
@@ -150,15 +150,15 @@ FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultField
+inline VTKM_CONT Result
 FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::Field& field,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   vtkm::filter::FieldMetadata metaData(field);
-  ResultField result;
+  Result result;
 
-  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, ResultField> FunctorType;
+  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result> FunctorType;
   FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, this->Tracker, result);
 
   typedef vtkm::filter::FilterTraits<Derived> Traits;
@@ -169,7 +169,7 @@ FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
 //-----------------------------------------------------------------------------
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT ResultField
+inline VTKM_CONT Result
 FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
                                           const vtkm::cont::CoordinateSystem& field,
                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
@@ -178,9 +178,9 @@ FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
   //the policy for the storage types and value types just for coordinate systems
 
   vtkm::filter::FieldMetadata metaData(field);
-  ResultField result;
+  Result result;
 
-  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, ResultField> FunctorType;
+  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result> FunctorType;
   FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, this->Tracker, result);
 
   typedef vtkm::filter::FilterTraits<Derived> Traits;

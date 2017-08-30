@@ -46,7 +46,7 @@ struct Invocation
   /// \c ParameterInterface is (expected to be) a \c FunctionInterface class
   /// that lists the types of the parameters for the invocation.
   ///
-  typedef _ParameterInterface ParameterInterface;
+  using ParameterInterface = _ParameterInterface;
 
   /// \brief The tags of the \c ControlSignature.
   ///
@@ -54,7 +54,7 @@ struct Invocation
   /// represents the \c ControlSignature of a worklet (although dispatchers
   /// might modify the control signature to provide auxiliary information).
   ///
-  typedef _ControlInterface ControlInterface;
+  using ControlInterface = _ControlInterface;
 
   /// \brief The tags of the \c ExecutionSignature.
   ///
@@ -62,7 +62,7 @@ struct Invocation
   /// represents the \c ExecutionSignature of a worklet (although dispatchers
   /// might modify the execution signature to provide auxiliary information).
   ///
-  typedef _ExecutionInterface ExecutionInterface;
+  using ExecutionInterface = _ExecutionInterface;
 
   /// \brief The index of the input domain.
   ///
@@ -79,7 +79,7 @@ struct Invocation
   /// represented with a map where each output points to an input that creates
   /// it.
   ///
-  typedef _OutputToInputMapType OutputToInputMapType;
+  using OutputToInputMapType = _OutputToInputMapType;
 
   /// \brief An array containing visit indices.
   ///
@@ -88,7 +88,7 @@ struct Invocation
   /// multiple outputs may point to the same input. The visit index uniquely
   /// identifies which instance each is.
   ///
-  typedef _VisitArrayType VisitArrayType;
+  using VisitArrayType = _VisitArrayType;
 
   /// \brief Default Invocation constructors that holds the given parameters
   /// by reference.
@@ -108,13 +108,12 @@ struct Invocation
   template <typename NewParameterInterface>
   struct ChangeParametersType
   {
-    typedef Invocation<NewParameterInterface,
-                       ControlInterface,
-                       ExecutionInterface,
-                       InputDomainIndex,
-                       OutputToInputMapType,
-                       VisitArrayType>
-      type;
+    using type = Invocation<NewParameterInterface,
+                            ControlInterface,
+                            ExecutionInterface,
+                            InputDomainIndex,
+                            OutputToInputMapType,
+                            VisitArrayType>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -134,11 +133,8 @@ struct Invocation
   template <typename NewControlInterface>
   struct ChangeControlInterfaceType
   {
-    typedef Invocation<ParameterInterface,
-                       NewControlInterface,
-                       ExecutionInterface,
-                       InputDomainIndex>
-      type;
+    using type =
+      Invocation<ParameterInterface, NewControlInterface, ExecutionInterface, InputDomainIndex>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -158,11 +154,8 @@ struct Invocation
   template <typename NewExecutionInterface>
   struct ChangeExecutionInterfaceType
   {
-    typedef Invocation<ParameterInterface,
-                       NewExecutionInterface,
-                       ExecutionInterface,
-                       InputDomainIndex>
-      type;
+    using type =
+      Invocation<ParameterInterface, NewExecutionInterface, ExecutionInterface, InputDomainIndex>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -182,11 +175,8 @@ struct Invocation
   template <vtkm::IdComponent NewInputDomainIndex>
   struct ChangeInputDomainIndexType
   {
-    typedef Invocation<ParameterInterface,
-                       ControlInterface,
-                       ExecutionInterface,
-                       NewInputDomainIndex>
-      type;
+    using type =
+      Invocation<ParameterInterface, ControlInterface, ExecutionInterface, NewInputDomainIndex>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -206,13 +196,12 @@ struct Invocation
   template <typename NewOutputToInputMapType>
   struct ChangeOutputToInputMapType
   {
-    typedef Invocation<ParameterInterface,
-                       ControlInterface,
-                       ExecutionInterface,
-                       InputDomainIndex,
-                       NewOutputToInputMapType,
-                       VisitArrayType>
-      type;
+    using type = Invocation<ParameterInterface,
+                            ControlInterface,
+                            ExecutionInterface,
+                            InputDomainIndex,
+                            NewOutputToInputMapType,
+                            VisitArrayType>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -232,13 +221,12 @@ struct Invocation
   template <typename NewVisitArrayType>
   struct ChangeVisitArrayType
   {
-    typedef Invocation<ParameterInterface,
-                       ControlInterface,
-                       ExecutionInterface,
-                       InputDomainIndex,
-                       OutputToInputMapType,
-                       NewVisitArrayType>
-      type;
+    using type = Invocation<ParameterInterface,
+                            ControlInterface,
+                            ExecutionInterface,
+                            InputDomainIndex,
+                            OutputToInputMapType,
+                            NewVisitArrayType>;
   };
 
   /// Returns a new \c Invocation that is the same as this one except that the
@@ -252,12 +240,12 @@ struct Invocation
       this->Parameters, this->OutputToInputMap, newVisitArray);
   }
 
-  /// A convenience typedef for the input domain type.
+  /// A convenience alias for the input domain type.
   ///
   using InputDomainType =
     typename ParameterInterface::template ParameterType<InputDomainIndex>::type;
 
-  /// A convenience typedef for the control signature tag of the input domain.
+  /// A convenience alias for the control signature tag of the input domain.
   ///
   using InputDomainTag = typename ControlInterface::template ParameterType<InputDomainIndex>::type;
 

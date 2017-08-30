@@ -68,7 +68,7 @@ struct Fetch
   /// ValueType that is the type of object returned from \c Load and passed to
   /// \c Store.
   ///
-  typedef typename ExecObjectType::ValueType ValueType;
+  using ValueType = typename ExecObjectType::ValueType;
 
   /// \brief Load data for a work instance.
   ///

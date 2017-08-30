@@ -23,8 +23,9 @@ set(headers
   Divergence.h
   GradientOutput.h
   PointGradient.h
-  Transpose.h
   QCriterion.h
+  StructuredPointGradient.h
+  Transpose.h
   Vorticity.h
   )
 

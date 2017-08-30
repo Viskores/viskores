@@ -48,7 +48,7 @@
 
 #include "../isosurface/quaternion.h"
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 // Output data set shared with opengl
 static vtkm::worklet::StreamLineFilterUniformGrid<vtkm::Float32, DeviceAdapter>* streamLineFilter;

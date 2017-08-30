@@ -407,6 +407,7 @@ public:
 
     for (segment = 0; index >= Segments[segment + 1]; ++segment)
       ;
+
     if (segment >= 6)
     {
       printf("OUT OF BOUDNS %d", (int)index);
@@ -653,7 +654,6 @@ public:
 
     vtkm::Float64 time = timer.GetElapsedTime();
     Logger::GetInstance()->AddLogData("structured_external_faces", time);
-    ;
 
     return triangles;
   }

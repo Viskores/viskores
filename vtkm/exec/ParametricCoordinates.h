@@ -593,10 +593,10 @@ namespace detail
 template <typename WorldCoordVector, typename CellShapeTag>
 class JacobianFunctorQuad
 {
-  typedef typename WorldCoordVector::ComponentType::ComponentType T;
-  typedef vtkm::Vec<T, 2> Vector2;
-  typedef vtkm::Matrix<T, 2, 2> Matrix2x2;
-  typedef vtkm::exec::internal::Space2D<T> SpaceType;
+  using T = typename WorldCoordVector::ComponentType::ComponentType;
+  using Vector2 = vtkm::Vec<T, 2>;
+  using Matrix2x2 = vtkm::Matrix<T, 2, 2>;
+  using SpaceType = vtkm::exec::internal::Space2D<T>;
 
   const WorldCoordVector* PointWCoords;
   const SpaceType* Space;
@@ -625,10 +625,10 @@ public:
 template <typename WorldCoordVector, typename CellShapeTag>
 class CoordinatesFunctorQuad
 {
-  typedef typename WorldCoordVector::ComponentType::ComponentType T;
-  typedef vtkm::Vec<T, 2> Vector2;
-  typedef vtkm::Vec<T, 3> Vector3;
-  typedef vtkm::exec::internal::Space2D<T> SpaceType;
+  using T = typename WorldCoordVector::ComponentType::ComponentType;
+  using Vector2 = vtkm::Vec<T, 2>;
+  using Vector3 = vtkm::Vec<T, 3>;
+  using SpaceType = vtkm::exec::internal::Space2D<T>;
 
   const WorldCoordVector* PointWCoords;
   const SpaceType* Space;
@@ -658,9 +658,9 @@ public:
 template <typename WorldCoordVector, typename CellShapeTag>
 class JacobianFunctor3DCell
 {
-  typedef typename WorldCoordVector::ComponentType::ComponentType T;
-  typedef vtkm::Vec<T, 3> Vector3;
-  typedef vtkm::Matrix<T, 3, 3> Matrix3x3;
+  using T = typename WorldCoordVector::ComponentType::ComponentType;
+  using Vector3 = vtkm::Vec<T, 3>;
+  using Matrix3x3 = vtkm::Matrix<T, 3, 3>;
 
   const WorldCoordVector* PointWCoords;
 
@@ -683,8 +683,8 @@ public:
 template <typename WorldCoordVector, typename CellShapeTag>
 class CoordinatesFunctor3DCell
 {
-  typedef typename WorldCoordVector::ComponentType::ComponentType T;
-  typedef vtkm::Vec<T, 3> Vector3;
+  using T = typename WorldCoordVector::ComponentType::ComponentType;
+  using Vector3 = vtkm::Vec<T, 3>;
 
   const WorldCoordVector* PointWCoords;
   const vtkm::exec::FunctorBase* Worklet;
@@ -784,8 +784,8 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   // of this over the length of the segment, which is mag(vec). Thus, the
   // parametric coordinate is dot(vec,wcoords-pointWCoords[0])/mag(vec)^2.
 
-  typedef typename WorldCoordVector::ComponentType Vector3;
-  typedef typename Vector3::ComponentType T;
+  using Vector3 = typename WorldCoordVector::ComponentType;
+  using T = typename Vector3::ComponentType;
 
   Vector3 vec = pointWCoords[1] - pointWCoords[0];
   T numerator = vtkm::dot(vec, wcoords - pointWCoords[0]);
@@ -848,7 +848,7 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   // have a non 1 to 1 mapping between parametric coordinates world coordinates
   // if the polygon is not planar or convex.
 
-  typedef typename WorldCoordVector::ComponentType WCoordType;
+  using WCoordType = typename WorldCoordVector::ComponentType;
 
   // Find the position of the center point.
   WCoordType wcoordCenter = pointWCoords[0];
@@ -944,9 +944,9 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
 {
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 4);
 
-  typedef typename WorldCoordVector::ComponentType::ComponentType T;
-  typedef vtkm::Vec<T, 2> Vector2;
-  typedef vtkm::Vec<T, 3> Vector3;
+  using T = typename WorldCoordVector::ComponentType::ComponentType;
+  using Vector2 = vtkm::Vec<T, 2>;
+  using Vector3 = vtkm::Vec<T, 3>;
 
   // We have an underdetermined system in 3D, so create a 2D space in the
   // plane that the polygon sits.
@@ -1003,7 +1003,7 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
   //
 
-  typedef typename WorldCoordVector::ComponentType Vector3;
+  using Vector3 = typename WorldCoordVector::ComponentType;
 
   Vector3 pcoords;
 

@@ -137,7 +137,7 @@ private:
   template <typename FunctionType>
   void PrintAndInvoke(const FunctionType& function, std::true_type) const
   {
-    typedef typename vtkm::CellShapeIdToTag<cellShapeId>::Tag CellShapeTag;
+    using CellShapeTag = typename vtkm::CellShapeIdToTag<cellShapeId>::Tag;
     std::cout << "*** " << vtkm::GetCellShapeName(CellShapeTag()) << " ***************"
               << std::endl;
     function(CellShapeTag());
@@ -508,6 +508,13 @@ static inline VTKM_EXEC_CONT bool test_equal(const vtkm::Bounds& bounds1,
           test_equal(bounds1.Z, bounds2.Z, tolerance));
 }
 
+/// Special implementation of test_equal for booleans.
+///
+static inline VTKM_EXEC_CONT bool test_equal(bool bool1, bool bool2)
+{
+  return bool1 == bool2;
+}
+
 template <typename T>
 static inline VTKM_EXEC_CONT T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
 {
@@ -562,7 +569,7 @@ static inline VTKM_CONT std::string TestValue(vtkm::Id index, std::string)
 template <typename PortalType>
 static inline VTKM_CONT void CheckPortal(const PortalType& portal)
 {
-  typedef typename PortalType::ValueType ValueType;
+  using ValueType = typename PortalType::ValueType;
 
   for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
   {
@@ -584,7 +591,7 @@ static inline VTKM_CONT void CheckPortal(const PortalType& portal)
 template <typename PortalType>
 static inline VTKM_CONT void SetPortal(const PortalType& portal)
 {
-  typedef typename PortalType::ValueType ValueType;
+  using ValueType = typename PortalType::ValueType;
 
   for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
   {

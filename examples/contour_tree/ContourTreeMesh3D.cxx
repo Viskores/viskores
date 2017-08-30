@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
   dsf.AddPointField(inDataSet, "values", values);
 
   // Output data set is pairs of saddle and peak vertex IDs
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
 
   // Convert 3D mesh of values into contour tree, pairs of vertex ids
   vtkm::filter::ContourTreeMesh3D filter;

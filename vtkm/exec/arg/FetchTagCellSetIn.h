@@ -47,9 +47,9 @@ struct Fetch<vtkm::exec::arg::FetchTagCellSetIn,
              vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>,
              ExecObjectType>
 {
-  typedef vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType> ThreadIndicesType;
+  using ThreadIndicesType = vtkm::exec::arg::ThreadIndicesTopologyMap<ConnectivityType>;
 
-  typedef typename ThreadIndicesType::CellShapeTag ValueType;
+  using ValueType = typename ThreadIndicesType::CellShapeTag;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC

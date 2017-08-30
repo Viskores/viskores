@@ -53,24 +53,24 @@ class ArrayManagerExecution
 #ifdef VTKM_DOXYGEN_ONLY
 {
 private:
-  typedef vtkm::cont::internal::Storage<T, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<T, StorageTag>;
 
 public:
   /// The type of value held in the array (vtkm::FloatDefault, vtkm::Vec, etc.)
   ///
-  typedef T ValueType;
+  using ValueType = T;
 
   /// An array portal that can be used in the execution environment to access
   /// portions of the arrays. This example defines the portal with a pointer,
   /// but any portal with methods that can be called and data that can be
   /// accessed from the execution environment can be used.
   ///
-  typedef vtkm::exec::internal::ArrayPortalFromIterators<ValueType*> PortalType;
+  using PortalType = vtkm::exec::internal::ArrayPortalFromIterators<ValueType*>;
 
   /// Const version of PortalType.  You must be able to cast PortalType to
   /// PortalConstType.
   ///
-  typedef vtkm::exec::internal::ArrayPortalFromIterators<const ValueType*> PortalConstType;
+  using PortalConstType = vtkm::exec::internal::ArrayPortalFromIterators<const ValueType*>;
 
   /// All ArrayManagerExecution classes must have a constructor that takes a
   /// storage reference. The reference may be saved (and will remain valid

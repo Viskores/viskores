@@ -354,6 +354,35 @@ static inline VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 2> CellEdgeLocalIndices(
                           detail::PointsInEdge[shape.Id][edgeIndex][1]);
   }
 }
+
+/// \brief Returns a cononical identifier for a cell edge
+///
+/// Given information about a cell edge and the global point indices for that cell, returns a
+/// vtkm::Id2 that contains values that are unique to that edge. The values for two edges will be
+/// the same if and only if the edges contain the same points.
+///
+template <typename CellShapeTag, typename GlobalPointIndicesVecType>
+static inline VTKM_EXEC vtkm::Id2 CellEdgeCononicalId(
+  vtkm::IdComponent numPoints,
+  vtkm::IdComponent edgeIndex,
+  CellShapeTag shape,
+  const GlobalPointIndicesVecType& globalPointIndicesVec,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  vtkm::Vec<vtkm::IdComponent, 2> localPointIndices =
+    vtkm::exec::CellEdgeLocalIndices(numPoints, edgeIndex, shape, worklet);
+
+  vtkm::Id pointIndex0 = globalPointIndicesVec[localPointIndices[0]];
+  vtkm::Id pointIndex1 = globalPointIndicesVec[localPointIndices[1]];
+  if (pointIndex0 < pointIndex1)
+  {
+    return vtkm::Id2(pointIndex0, pointIndex1);
+  }
+  else
+  {
+    return vtkm::Id2(pointIndex1, pointIndex0);
+  }
+}
 }
 } // namespace vtkm::exec
 

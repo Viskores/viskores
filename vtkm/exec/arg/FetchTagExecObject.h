@@ -59,7 +59,7 @@ struct Fetch<vtkm::exec::arg::FetchTagExecObject,
     std::is_base_of<vtkm::exec::ExecutionObjectBase, ExecObjectType>::value,
     "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectBase");
 
-  typedef ExecObjectType ValueType;
+  using ValueType = ExecObjectType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC

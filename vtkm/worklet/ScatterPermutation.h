@@ -70,7 +70,7 @@ public:
   VTKM_CONT OutputToInputMapType GetOutputToInputMap() const { return this->Permutation; }
 
   VTKM_CONT
-  VisitArrayType GetVisitArray(vtkm::Id inputRange) const { return VisitArrayType(1, inputRange); }
+  VisitArrayType GetVisitArray(vtkm::Id inputRange) const { return VisitArrayType(0, inputRange); }
 
   VTKM_CONT
   VisitArrayType GetVisitArray(vtkm::Id3 inputRange) const

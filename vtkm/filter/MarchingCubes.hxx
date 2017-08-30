@@ -102,7 +102,7 @@ inline vtkm::Float64 MarchingCubes::GetIsoValue(vtkm::Id index) const
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
+inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -113,12 +113,12 @@ inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
   {
     //todo: we need to mark this as a failure of input, not a failure
     //of the algorithm
-    return vtkm::filter::ResultDataSet();
+    return vtkm::filter::Result();
   }
 
   if (this->IsoValues.size() == 0)
   {
-    return vtkm::filter::ResultDataSet();
+    return vtkm::filter::Result();
   }
 
   // Check the fields of the dataset to see what kinds of fields are present so
@@ -212,13 +212,13 @@ inline VTKM_CONT vtkm::filter::ResultDataSet MarchingCubes::DoExecute(
     this->Worklet.ReleaseCellMapArrays();
   }
 
-  return vtkm::filter::ResultDataSet(output);
+  return vtkm::filter::Result(output);
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool MarchingCubes::DoMapField(
-  vtkm::filter::ResultDataSet& result,
+  vtkm::filter::Result& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,

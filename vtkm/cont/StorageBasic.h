@@ -59,20 +59,20 @@ void free_aligned(void* mem);
 template <typename T, size_t Alignment>
 struct AlignedAllocator
 {
-  typedef T value_type;
-  typedef T& reference;
-  typedef const T& const_reference;
-  typedef T* pointer;
-  typedef const T* const_pointer;
-  typedef void* void_pointer;
-  typedef const void* const_void_pointer;
-  typedef std::ptrdiff_t difference_type;
-  typedef std::size_t size_type;
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+  using pointer = T*;
+  using const_pointer = const T*;
+  using void_pointer = void*;
+  using const_void_pointer = const void*;
+  using difference_type = std::ptrdiff_t;
+  using size_type = std::size_t;
 
   template <typename U>
   struct rebind
   {
-    typedef AlignedAllocator<U, Alignment> other;
+    using other = AlignedAllocator<U, Alignment>;
   };
 
   AlignedAllocator() {}
@@ -172,9 +172,9 @@ template <typename ValueT>
 class VTKM_ALWAYS_EXPORT Storage<ValueT, vtkm::cont::StorageTagBasic> : public StorageBasicBase
 {
 public:
-  typedef ValueT ValueType;
-  typedef vtkm::cont::internal::ArrayPortalFromIterators<ValueType*> PortalType;
-  typedef vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*> PortalConstType;
+  using ValueType = ValueT;
+  using PortalType = vtkm::cont::internal::ArrayPortalFromIterators<ValueType*>;
+  using PortalConstType = vtkm::cont::internal::ArrayPortalFromIterators<const ValueType*>;
 
   /// The original design of this class provided an allocator as a template
   /// parameters. That messed things up, though, because other templated
@@ -183,11 +183,16 @@ public:
   /// whether that would ever be useful. So, instead of jumping through hoops
   /// implementing them, just fix the allocator for now.
   ///
-  typedef AlignedAllocator<ValueType, VTKM_CACHE_LINE_SIZE> AllocatorType;
+  using AllocatorType = AlignedAllocator<ValueType, VTKM_CACHE_LINE_SIZE>;
 
 public:
+  /// \brief construct storage that VTK-m is responsible for
   VTKM_CONT
-  Storage(const ValueType* array = nullptr, vtkm::Id numberOfValues = 0);
+  Storage();
+
+  /// \brief construct storage that VTK-m is not responsible for
+  VTKM_CONT
+  Storage(const ValueType* array, vtkm::Id numberOfValues = 0);
 
   VTKM_CONT
   ~Storage();
@@ -245,14 +250,21 @@ public:
   /// \brief Take the reference away from this object.
   ///
   /// This method returns the pointer to the array held by this array. It then
-  /// clears the internal array pointer to nullptr, thereby ensuring that the
-  /// Storage will never deallocate the array. This is helpful for taking a
-  /// reference for an array created internally by VTK-m and not having to keep
-  /// a VTK-m object around. Obviously the caller becomes responsible for
-  /// destroying the memory.
+  /// clears the internal ownership flags, thereby ensuring that the
+  /// Storage will never deallocate the array or be able to reallocate it. This
+  /// is helpful for taking a reference for an array created internally by
+  /// VTK-m and not having to keep a VTK-m object around. Obviously the caller
+  /// becomes responsible for destroying the memory.
   ///
   VTKM_CONT
   ValueType* StealArray();
+
+  /// \brief Returns if vtkm will deallocate this memory. VTK-m StorageBasic
+  /// is designed that VTK-m will not deallocate user passed memory, or
+  /// instances that have been stolen (\c StealArray)
+  VTKM_CONT
+  bool WillDeallocate() const { return this->DeallocateOnRelease; }
+
 
   VTKM_CONT
   void* GetBasePointer() const final { return static_cast<void*>(this->Array); }
@@ -274,7 +286,6 @@ private:
   vtkm::Id NumberOfValues;
   vtkm::Id AllocatedSize;
   bool DeallocateOnRelease;
-  bool UserProvidedMemory;
 };
 
 } // namespace internal

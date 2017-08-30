@@ -226,7 +226,7 @@ int DecodePNG(std::vector<unsigned char>& out_image,
                               HuffmanTree& treeD) //get the tree of a deflated block with fixed tree
       {
         std::vector<unsigned long> bitlen(288, 8), bitlenD(32, 5);
-        ;
+
         for (std::size_t i = 144; i <= 255; i++)
           bitlen[i] = 9;
         for (std::size_t i = 256; i <= 279; i++)

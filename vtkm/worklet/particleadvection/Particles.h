@@ -36,9 +36,11 @@ enum ParticleStatus
 {
   STATUS_OK = 1,
   TERMINATED = 1 << 1,
-  EXITED_SPATIAL_BOUNDARY = 1 << 2,
-  EXITED_TEMPORAL_BOUNDARY = 1 << 3,
-  STATUS_ERROR = 1 << 4
+  AT_SPATIAL_BOUNDARY = 1 << 2,
+  AT_TEMPORAL_BOUNDARY = 1 << 3,
+  EXITED_SPATIAL_BOUNDARY = 1 << 4,
+  EXITED_TEMPORAL_BOUNDARY = 1 << 5,
+  STATUS_ERROR = 1 << 6
 };
 
 template <typename T, typename DeviceAdapterTag>
@@ -96,14 +98,22 @@ public:
   }
 
   VTKM_EXEC
-  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt)
+  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
   {
-    Pos.Set(idx, pt);
-    vtkm::Id nSteps = Steps.Get(idx);
-    nSteps = nSteps + 1;
-    Steps.Set(idx, nSteps);
-    if (nSteps == MaxSteps)
-      SetTerminated(idx);
+    if (status == ParticleStatus::STATUS_OK)
+    {
+      Pos.Set(idx, pt);
+      vtkm::Id nSteps = Steps.Get(idx);
+      nSteps = nSteps + 1;
+      Steps.Set(idx, nSteps);
+      if (nSteps == MaxSteps)
+        SetTerminated(idx);
+    }
+    else
+    {
+      Pos.Set(idx, pt);
+      SetExitedSpatialBoundary(idx);
+    }
   }
 
   /* Set/Change Status */
@@ -257,8 +267,10 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt)
+  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
   {
+    if (status != ParticleStatus::STATUS_OK)
+      return;
     vtkm::Id nSteps = this->Steps.Get(idx);
     vtkm::Id loc = idx * HistSize + nSteps;
     History.Set(loc, pt);
@@ -354,8 +366,10 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt)
+  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
   {
+    if (status != ParticleStatus::STATUS_OK)
+      return;
     vtkm::Id nSteps = this->Steps.Get(idx);
     vtkm::Id loc = idx * HistSize + (nSteps - Offset);
     History.Set(loc, pt);

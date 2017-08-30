@@ -68,13 +68,13 @@ inline SurfaceNormals::SurfaceNormals()
 {
 }
 
-inline vtkm::filter::ResultField SurfaceNormals::Execute(const vtkm::cont::DataSet& input)
+inline vtkm::filter::Result SurfaceNormals::Execute(const vtkm::cont::DataSet& input)
 {
   return this->Execute(input, input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 }
 
 template <typename DerivedPolicy>
-inline vtkm::filter::ResultField SurfaceNormals::Execute(
+inline vtkm::filter::Result SurfaceNormals::Execute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
@@ -83,7 +83,7 @@ inline vtkm::filter::ResultField SurfaceNormals::Execute(
 }
 
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline vtkm::filter::ResultField SurfaceNormals::DoExecute(
+inline vtkm::filter::Result SurfaceNormals::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -94,7 +94,7 @@ inline vtkm::filter::ResultField SurfaceNormals::DoExecute(
 
   if (!this->GenerateCellNormals && !this->GeneratePointNormals)
   {
-    return vtkm::filter::ResultField();
+    return vtkm::filter::Result();
   }
 
   const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -104,17 +104,17 @@ inline vtkm::filter::ResultField SurfaceNormals::DoExecute(
   faceted.SetNormalize(this->NormalizeCellNormals);
   faceted.Run(vtkm::filter::ApplyPolicy(cellset, policy), points, faceNormals, device);
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   if (this->GeneratePointNormals)
   {
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> pointNormals;
     vtkm::worklet::SmoothSurfaceNormals smooth;
     smooth.Run(vtkm::filter::ApplyPolicy(cellset, policy), faceNormals, pointNormals, device);
 
-    result = vtkm::filter::ResultField(input,
-                                       pointNormals,
-                                       internal::ComputePointNormalsName(this),
-                                       vtkm::cont::Field::ASSOC_POINTS);
+    result = vtkm::filter::Result(input,
+                                  pointNormals,
+                                  internal::ComputePointNormalsName(this),
+                                  vtkm::cont::Field::ASSOC_POINTS);
     if (this->GenerateCellNormals)
     {
       result.GetDataSet().AddField(vtkm::cont::Field(internal::ComputeCellNormalsName(this),
@@ -125,11 +125,11 @@ inline vtkm::filter::ResultField SurfaceNormals::DoExecute(
   }
   else
   {
-    result = vtkm::filter::ResultField(input,
-                                       faceNormals,
-                                       internal::ComputeCellNormalsName(this),
-                                       vtkm::cont::Field::ASSOC_CELL_SET,
-                                       cellset.GetName());
+    result = vtkm::filter::Result(input,
+                                  faceNormals,
+                                  internal::ComputeCellNormalsName(this),
+                                  vtkm::cont::Field::ASSOC_CELL_SET,
+                                  cellset.GetName());
   }
 
   return result;

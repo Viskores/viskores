@@ -702,7 +702,6 @@ void Camera::FindSubset(const vtkm::Bounds& bounds)
     return;
   }
 
-  //std::cout<<"Bounds ("<<x[0]<<","<<y[0]<<","<<z[0]<<")-("<<x[1]<<","<<y[1]<<","<<z[1]<<std::endl;
   vtkm::Float32 xmin, ymin, xmax, ymax, zmin, zmax;
   xmin = vtkm::Infinity32();
   ymin = vtkm::Infinity32();
@@ -751,10 +750,14 @@ void Camera::FindSubset(const vtkm::Bounds& bounds)
   ymin = vtkm::Floor(vtkm::Min(vtkm::Max(0.f, ymin), vtkm::Float32(Height)));
   ymax = vtkm::Ceil(vtkm::Min(vtkm::Max(0.f, ymax), vtkm::Float32(Height)));
 
-  //printf("Pixel range = (%f,%f,%f), (%f,%f,%f)\n", xmin, ymin,zmin, xmax,ymax,zmax);
+  Logger* logger = Logger::GetInstance();
+  std::stringstream ss;
+  ss << "(" << xmin << "," << ymin << "," << zmin << ")-";
+  ss << "(" << xmax << "," << ymax << "," << zmax << ")";
+  logger->AddLogData("pixel_range", ss.str());
+
   vtkm::Int32 dx = vtkm::Int32(xmax) - vtkm::Int32(xmin);
   vtkm::Int32 dy = vtkm::Int32(ymax) - vtkm::Int32(ymin);
-
   //
   //  scene is behind the camera
   //
@@ -772,6 +775,8 @@ void Camera::FindSubset(const vtkm::Bounds& bounds)
     this->SubsetMinX = vtkm::Int32(xmin);
     this->SubsetMinY = vtkm::Int32(ymin);
   }
+  logger->AddLogData("subset_width", dx);
+  logger->AddLogData("subset_height", dy);
 }
 
 template <typename Device, typename Precision>
@@ -781,7 +786,6 @@ VTKM_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
 {
   // If bounds have been provided, only cast rays that could hit the data
   bool imageSubsetModeOn = boundingBox.IsNonEmpty();
-
   //Create a transform matrix using the rendering::camera class
   vtkm::rendering::Camera camera;
   camera.SetFieldOfView(this->GetFieldOfView());
@@ -808,15 +812,16 @@ VTKM_CONT void Camera::UpdateDimensions(Ray<Precision>& rays,
   {
     this->FindSubset(boundingBox);
   }
+  else
+  {
+    //Update the image dimensions
+    this->SubsetWidth = this->Width;
+    this->SubsetHeight = this->Height;
+    this->SubsetMinY = 0;
+    this->SubsetMinX = 0;
+  }
 
-  //Update the image dimensions
-  this->SubsetWidth = this->Width;
-  this->SubsetHeight = this->Height;
-  this->SubsetMinY = 0;
-  this->SubsetMinX = 0;
   // resize rays and buffers
-
-
   if (rays.NumRays != SubsetWidth * SubsetHeight)
   {
     RayOperations::Resize(rays, this->SubsetHeight * this->SubsetWidth, Device());

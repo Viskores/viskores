@@ -44,9 +44,9 @@ const vtkm::Id ARRAY_SIZE = 10;
 template <typename T>
 struct TemplatedTests
 {
-  typedef vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic> StorageType;
-  typedef typename StorageType::ValueType ValueType;
-  typedef typename StorageType::PortalType PortalType;
+  using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>;
+  using ValueType = typename StorageType::ValueType;
+  using PortalType = typename StorageType::PortalType;
 
   void SetStorage(StorageType& array, const ValueType& value)
   {
@@ -74,7 +74,7 @@ struct TemplatedTests
 
   void TestAlignedAllocatorSTL()
   {
-    typedef typename StorageType::AllocatorType Allocator;
+    using Allocator = typename StorageType::AllocatorType;
     std::vector<ValueType, Allocator> vec(ARRAY_SIZE, ValueType());
     StorageType store(&vec[0], ARRAY_SIZE);
   }
@@ -83,10 +83,9 @@ struct TemplatedTests
   // STL containers
   void CompileSTLAllocator()
   {
-    typedef typename StorageType::AllocatorType Allocator;
-    typedef
-      typename StorageType::AllocatorType::template rebind<std::pair<ValueType, ValueType>>::other
-        PairAllocator;
+    using Allocator = typename StorageType::AllocatorType;
+    using PairAllocator =
+      typename StorageType::AllocatorType::template rebind<std::pair<ValueType, ValueType>>::other;
     std::vector<ValueType, Allocator> v;
     v.push_back(ValueType());
 
@@ -134,8 +133,11 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == ARRAY_SIZE,
                      "Array not properly allocated.");
     // This call steals the array and prevents deallocation.
+    VTKM_TEST_ASSERT(stealMyArray.WillDeallocate() == true,
+                     "Array to be stolen needs to be owned by VTK-m");
     stolenArray = stealMyArray.StealArray();
-    VTKM_TEST_ASSERT(stealMyArray.GetNumberOfValues() == 0, "StealArray did not let go of array.");
+    VTKM_TEST_ASSERT(stealMyArray.WillDeallocate() == false,
+                     "Stolen array should not be owned by VTK-m");
 
     return stolenArray;
   }

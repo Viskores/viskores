@@ -35,7 +35,7 @@ public:
   {
     std::cout << "Testing threshold points on 2D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdBetween(40.0f, 71.0f);
@@ -61,7 +61,7 @@ public:
   {
     std::cout << "Testing threshold points on 3D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdAbove(1.0f);
@@ -88,7 +88,7 @@ public:
   {
     std::cout << "Testing threshold points on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdBelow(50.0);
@@ -117,7 +117,7 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
     vtkm::filter::ThresholdPoints thresholdPoints;
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     thresholdPoints.SetThresholdBetween(500.0, 600.0);
     result = thresholdPoints.Execute(dataset, std::string("pointvar"));

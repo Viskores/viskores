@@ -60,28 +60,25 @@ template <typename ThreadIndicesType,
           vtkm::IdComponent ExecutionParameterIndex>
 struct InvocationToFetch
 {
-  typedef
-    typename Invocation::ExecutionInterface::template ParameterType<ExecutionParameterIndex>::type
-      ExecutionSignatureTag;
+  using ExecutionSignatureTag =
+    typename Invocation::ExecutionInterface::template ParameterType<ExecutionParameterIndex>::type;
 
   // Expected fields from ExecutionSignatureTag. If these do not exist in
   // ExecutionSignatureTag, then something that is not really an execution
   // signature tag was used in an ExecutionSignature.
   static const vtkm::IdComponent ControlParameterIndex = ExecutionSignatureTag::INDEX;
-  typedef typename ExecutionSignatureTag::AspectTag AspectTag;
+  using AspectTag = typename ExecutionSignatureTag::AspectTag;
 
   // Find the fetch tag from the control signature tag pointed to by
   // ParameterIndex.
-  typedef typename Invocation::ControlInterface ControlInterface;
-  typedef typename ControlInterface::template ParameterType<ControlParameterIndex>::type
-    ControlSignatureTag;
-  typedef typename ControlSignatureTag::FetchTag FetchTag;
+  using ControlInterface = typename Invocation::ControlInterface;
+  using ControlSignatureTag = typename ControlInterface::template ParameterType<ControlParameterIndex>::type;
+  using FetchTag = typename ControlSignatureTag::FetchTag;
 
-  typedef
-    typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type
-      ExecObjectType;
+  using ExecObjectType =
+    typename Invocation::ParameterInterface::template ParameterType<ControlParameterIndex>::type;
 
-  typedef vtkm::exec::arg::Fetch<FetchTag, AspectTag, ThreadIndicesType, ExecObjectType> type;
+  using type = vtkm::exec::arg::Fetch<FetchTag, AspectTag, ThreadIndicesType, ExecObjectType>;
 };
 
 // clang-format off
@@ -105,24 +102,22 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -133,7 +128,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1));
 
   returnFetch.Store(
     threadIndices,
@@ -171,8 +166,8 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
@@ -214,31 +209,29 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1, P2)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1, P2)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -249,7 +242,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1, p2));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1, p2));
 
   returnFetch.Store(
     threadIndices,
@@ -291,15 +284,15 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
@@ -345,38 +338,36 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1, P2, P3)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1, P2, P3)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -387,7 +378,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1, p2, p3));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1, p2, p3));
 
   returnFetch.Store(
     threadIndices,
@@ -433,22 +424,22 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
@@ -498,45 +489,43 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1, P2, P3, P4)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -547,7 +536,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1, p2, p3, p4));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1, p2, p3, p4));
 
   returnFetch.Store(
     threadIndices,
@@ -597,29 +586,29 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
@@ -673,52 +662,50 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -729,7 +716,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1, p2, p3, p4, p5));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1, p2, p3, p4, p5));
 
   returnFetch.Store(
     threadIndices,
@@ -783,36 +770,36 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
@@ -870,59 +857,57 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo6::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -933,7 +918,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1, p2, p3, p4, p5, p6));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1, p2, p3, p4, p5, p6));
 
   returnFetch.Store(
     threadIndices,
@@ -991,43 +976,43 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
@@ -1089,66 +1074,64 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo6::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 7> FetchInfo7;
-  typedef typename FetchInfo7::type FetchType7;
+  using FetchInfo7 = InvocationToFetch<ThreadIndicesType, Invocation, 7>;
+  using FetchType7 = typename FetchInfo7::type;
   FetchType7 fetch7;
   typename FetchType7::ValueType p7 =
     fetch7.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo7::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -1159,7 +1142,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1, p2, p3, p4, p5, p6, p7));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1, p2, p3, p4, p5, p6, p7));
 
   returnFetch.Store(
     threadIndices,
@@ -1221,50 +1204,50 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo6::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 7> FetchInfo7;
-  typedef typename FetchInfo7::type FetchType7;
+  using FetchInfo7 = InvocationToFetch<ThreadIndicesType, Invocation, 7>;
+  using FetchType7 = typename FetchInfo7::type;
   FetchType7 fetch7;
   typename FetchType7::ValueType p7 =
     fetch7.Load(threadIndices,
@@ -1330,73 +1313,71 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo6::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 7> FetchInfo7;
-  typedef typename FetchInfo7::type FetchType7;
+  using FetchInfo7 = InvocationToFetch<ThreadIndicesType, Invocation, 7>;
+  using FetchType7 = typename FetchInfo7::type;
   FetchType7 fetch7;
   typename FetchType7::ValueType p7 =
     fetch7.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo7::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 8> FetchInfo8;
-  typedef typename FetchInfo8::type FetchType8;
+  using FetchInfo8 = InvocationToFetch<ThreadIndicesType, Invocation, 8>;
+  using FetchType8 = typename FetchInfo8::type;
   FetchType8 fetch8;
   typename FetchType8::ValueType p8 =
     fetch8.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo8::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -1407,7 +1388,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1, p2, p3, p4, p5, p6, p7, p8));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1, p2, p3, p4, p5, p6, p7, p8));
 
   returnFetch.Store(
     threadIndices,
@@ -1473,57 +1454,57 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo6::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 7> FetchInfo7;
-  typedef typename FetchInfo7::type FetchType7;
+  using FetchInfo7 = InvocationToFetch<ThreadIndicesType, Invocation, 7>;
+  using FetchType7 = typename FetchInfo7::type;
   FetchType7 fetch7;
   typename FetchType7::ValueType p7 =
     fetch7.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo7::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 8> FetchInfo8;
-  typedef typename FetchInfo8::type FetchType8;
+  using FetchInfo8 = InvocationToFetch<ThreadIndicesType, Invocation, 8>;
+  using FetchType8 = typename FetchInfo8::type;
   FetchType8 fetch8;
   typename FetchType8::ValueType p8 =
     fetch8.Load(threadIndices,
@@ -1593,80 +1574,78 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo6::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 7> FetchInfo7;
-  typedef typename FetchInfo7::type FetchType7;
+  using FetchInfo7 = InvocationToFetch<ThreadIndicesType, Invocation, 7>;
+  using FetchType7 = typename FetchInfo7::type;
   FetchType7 fetch7;
   typename FetchType7::ValueType p7 =
     fetch7.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo7::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 8> FetchInfo8;
-  typedef typename FetchInfo8::type FetchType8;
+  using FetchInfo8 = InvocationToFetch<ThreadIndicesType, Invocation, 8>;
+  using FetchType8 = typename FetchInfo8::type;
   FetchType8 fetch8;
   typename FetchType8::ValueType p8 =
     fetch8.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo8::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 9> FetchInfo9;
-  typedef typename FetchInfo9::type FetchType9;
+  using FetchInfo9 = InvocationToFetch<ThreadIndicesType, Invocation, 9>;
+  using FetchType9 = typename FetchInfo9::type;
   FetchType9 fetch9;
   typename FetchType9::ValueType p9 =
     fetch9.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo9::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -1677,7 +1656,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1, p2, p3, p4, p5, p6, p7, p8, p9));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1, p2, p3, p4, p5, p6, p7, p8, p9));
 
   returnFetch.Store(
     threadIndices,
@@ -1747,64 +1726,64 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo6::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 7> FetchInfo7;
-  typedef typename FetchInfo7::type FetchType7;
+  using FetchInfo7 = InvocationToFetch<ThreadIndicesType, Invocation, 7>;
+  using FetchType7 = typename FetchInfo7::type;
   FetchType7 fetch7;
   typename FetchType7::ValueType p7 =
     fetch7.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo7::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 8> FetchInfo8;
-  typedef typename FetchInfo8::type FetchType8;
+  using FetchInfo8 = InvocationToFetch<ThreadIndicesType, Invocation, 8>;
+  using FetchType8 = typename FetchInfo8::type;
   FetchType8 fetch8;
   typename FetchType8::ValueType p8 =
     fetch8.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo8::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 9> FetchInfo9;
-  typedef typename FetchInfo9::type FetchType9;
+  using FetchInfo9 = InvocationToFetch<ThreadIndicesType, Invocation, 9>;
+  using FetchType9 = typename FetchInfo9::type;
   FetchType9 fetch9;
   typename FetchType9::ValueType p9 =
     fetch9.Load(threadIndices,
@@ -1878,87 +1857,85 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =  vtkm::internal::Invocation<ParameterInterface,
+                                                 ControlInterface,
+                                                 vtkm::internal::FunctionInterface<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>,
+                                                 InputDomainIndex,
+                                                 OutputToInputMapType,
+                                                 VisitArrayType>;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo6::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 7> FetchInfo7;
-  typedef typename FetchInfo7::type FetchType7;
+  using FetchInfo7 = InvocationToFetch<ThreadIndicesType, Invocation, 7>;
+  using FetchType7 = typename FetchInfo7::type;
   FetchType7 fetch7;
   typename FetchType7::ValueType p7 =
     fetch7.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo7::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 8> FetchInfo8;
-  typedef typename FetchInfo8::type FetchType8;
+  using FetchInfo8 = InvocationToFetch<ThreadIndicesType, Invocation, 8>;
+  using FetchType8 = typename FetchInfo8::type;
   FetchType8 fetch8;
   typename FetchType8::ValueType p8 =
     fetch8.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo8::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 9> FetchInfo9;
-  typedef typename FetchInfo9::type FetchType9;
+  using FetchInfo9 = InvocationToFetch<ThreadIndicesType, Invocation, 9>;
+  using FetchType9 = typename FetchInfo9::type;
   FetchType9 fetch9;
   typename FetchType9::ValueType p9 =
     fetch9.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo9::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 10> FetchInfo10;
-  typedef typename FetchInfo10::type FetchType10;
+  using FetchInfo10 = InvocationToFetch<ThreadIndicesType, Invocation, 10>;
+  using FetchType10 = typename FetchInfo10::type;
   FetchType10 fetch10;
   typename FetchType10::ValueType p10 =
     fetch10.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo10::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 0> FetchInfo0;
-  typedef typename FetchInfo0::type ReturnFetchType;
-  typedef typename ReturnFetchType::ValueType ReturnValueType;
+  using FetchInfo0 = InvocationToFetch<ThreadIndicesType, Invocation, 0>;
+  using ReturnFetchType = typename FetchInfo0::type;
   ReturnFetchType returnFetch;
   // If you got a compile error on the following line, it probably means that
   // the operator() of a worklet does not match the definition expected. One
@@ -1969,7 +1946,7 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
   // that the types of the worklet operator() parameters match those in the
   // ExecutionSignature. The compiler error might help you narrow down which
   // parameter is wrong and the types that did not match.
-  ReturnValueType r = ReturnValueType(worklet(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10));
+  auto r = typename ReturnFetchType::ValueType(worklet(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10));
 
   returnFetch.Store(
     threadIndices,
@@ -2043,71 +2020,71 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                      VisitArrayType>
     Invocation;
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 1> FetchInfo1;
-  typedef typename FetchInfo1::type FetchType1;
+  using FetchInfo1 = InvocationToFetch<ThreadIndicesType, Invocation, 1>;
+  using FetchType1 = typename FetchInfo1::type;
   FetchType1 fetch1;
   typename FetchType1::ValueType p1 =
     fetch1.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo1::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 2> FetchInfo2;
-  typedef typename FetchInfo2::type FetchType2;
+  using FetchInfo2 = InvocationToFetch<ThreadIndicesType, Invocation, 2>;
+  using FetchType2 = typename FetchInfo2::type;
   FetchType2 fetch2;
   typename FetchType2::ValueType p2 =
     fetch2.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo2::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 3> FetchInfo3;
-  typedef typename FetchInfo3::type FetchType3;
+  using FetchInfo3 = InvocationToFetch<ThreadIndicesType, Invocation, 3>;
+  using FetchType3 = typename FetchInfo3::type;
   FetchType3 fetch3;
   typename FetchType3::ValueType p3 =
     fetch3.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo3::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 4> FetchInfo4;
-  typedef typename FetchInfo4::type FetchType4;
+  using FetchInfo4 = InvocationToFetch<ThreadIndicesType, Invocation, 4>;
+  using FetchType4 = typename FetchInfo4::type;
   FetchType4 fetch4;
   typename FetchType4::ValueType p4 =
     fetch4.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo4::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 5> FetchInfo5;
-  typedef typename FetchInfo5::type FetchType5;
+  using FetchInfo5 = InvocationToFetch<ThreadIndicesType, Invocation, 5>;
+  using FetchType5 = typename FetchInfo5::type;
   FetchType5 fetch5;
   typename FetchType5::ValueType p5 =
     fetch5.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo5::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 6> FetchInfo6;
-  typedef typename FetchInfo6::type FetchType6;
+  using FetchInfo6 = InvocationToFetch<ThreadIndicesType, Invocation, 6>;
+  using FetchType6 = typename FetchInfo6::type;
   FetchType6 fetch6;
   typename FetchType6::ValueType p6 =
     fetch6.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo6::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 7> FetchInfo7;
-  typedef typename FetchInfo7::type FetchType7;
+  using FetchInfo7 = InvocationToFetch<ThreadIndicesType, Invocation, 7>;
+  using FetchType7 = typename FetchInfo7::type;
   FetchType7 fetch7;
   typename FetchType7::ValueType p7 =
     fetch7.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo7::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 8> FetchInfo8;
-  typedef typename FetchInfo8::type FetchType8;
+  using FetchInfo8 = InvocationToFetch<ThreadIndicesType, Invocation, 8>;
+  using FetchType8 = typename FetchInfo8::type;
   FetchType8 fetch8;
   typename FetchType8::ValueType p8 =
     fetch8.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo8::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 9> FetchInfo9;
-  typedef typename FetchInfo9::type FetchType9;
+  using FetchInfo9 = InvocationToFetch<ThreadIndicesType, Invocation, 9>;
+  using FetchType9 = typename FetchInfo9::type;
   FetchType9 fetch9;
   typename FetchType9::ValueType p9 =
     fetch9.Load(threadIndices,
                 invocation.Parameters.template GetParameter<FetchInfo9::ControlParameterIndex>());
 
-  typedef InvocationToFetch<ThreadIndicesType, Invocation, 10> FetchInfo10;
-  typedef typename FetchInfo10::type FetchType10;
+  using FetchInfo10 = InvocationToFetch<ThreadIndicesType, Invocation, 10>;
+  using FetchType10 = typename FetchInfo10::type;
   FetchType10 fetch10;
   typename FetchType10::ValueType p10 =
     fetch10.Load(threadIndices,

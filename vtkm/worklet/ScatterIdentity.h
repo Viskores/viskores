@@ -54,7 +54,7 @@ struct ScatterIdentity
 
   typedef vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> VisitArrayType;
   VTKM_CONT
-  VisitArrayType GetVisitArray(vtkm::Id inputRange) const { return VisitArrayType(1, inputRange); }
+  VisitArrayType GetVisitArray(vtkm::Id inputRange) const { return VisitArrayType(0, inputRange); }
   VTKM_CONT
   VisitArrayType GetVisitArray(vtkm::Id3 inputRange) const
   {

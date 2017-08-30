@@ -22,16 +22,19 @@
 #define vtk_m_worklet_Gradient_h
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/worklet/WorkletMapField.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/DispatcherPointNeighborhood.h>
 
 #include <vtkm/worklet/gradient/CellGradient.h>
 #include <vtkm/worklet/gradient/Divergence.h>
 #include <vtkm/worklet/gradient/GradientOutput.h>
 #include <vtkm/worklet/gradient/PointGradient.h>
 #include <vtkm/worklet/gradient/QCriterion.h>
+#include <vtkm/worklet/gradient/StructuredPointGradient.h>
 #include <vtkm/worklet/gradient/Transpose.h>
 #include <vtkm/worklet/gradient/Vorticity.h>
+
+#include <vtkm/cont/Timer.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 namespace vtkm
 {
@@ -63,6 +66,24 @@ struct DeducedPointGrad
     vtkm::worklet::DispatcherMapTopology<PointGradient<T>, Device> dispatcher;
     dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       cellset, //whole cellset in
+                      *this->Points,
+                      *this->Field,
+                      *this->Result);
+  }
+
+  void operator()(const vtkm::cont::CellSetStructured<3>& cellset) const
+  {
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    dispatcher.Invoke(cellset, //topology to iterate on a per point basis
+                      *this->Points,
+                      *this->Field,
+                      *this->Result);
+  }
+
+  void operator()(const vtkm::cont::CellSetStructured<2>& cellset) const
+  {
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    dispatcher.Invoke(cellset, //topology to iterate on a per point basis
                       *this->Points,
                       *this->Field,
                       *this->Result);

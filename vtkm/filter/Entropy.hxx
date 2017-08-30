@@ -21,29 +21,26 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/FieldEntropy.h>
 
-namespace vtkm {
-namespace filter {
+namespace vtkm
+{
+namespace filter
+{
 
 //-----------------------------------------------------------------------------
-inline VTKM_CONT
-Entropy::Entropy():
-  NumberOfBins(10)
+inline VTKM_CONT Entropy::Entropy()
+  : NumberOfBins(10)
 {
   this->SetOutputFieldName("entropy");
 }
 
 //-----------------------------------------------------------------------------
-template<typename T,
-         typename StorageType,
-         typename DerivedPolicy,
-         typename DeviceAdapter>
-inline VTKM_CONT
-vtkm::filter::ResultField
-Entropy::DoExecute(const vtkm::cont::DataSet &inDataSet,
-                          const vtkm::cont::ArrayHandle<T,StorageType> &field,
-                          const vtkm::filter::FieldMetadata &fieldMetadata,
-                          const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                          const DeviceAdapter& device)
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT vtkm::filter::Result Entropy::DoExecute(
+  const vtkm::cont::DataSet& inDataSet,
+  const vtkm::cont::ArrayHandle<T, StorageType>& field,
+  const vtkm::filter::FieldMetadata& fieldMetadata,
+  const vtkm::filter::PolicyBase<DerivedPolicy>&,
+  const DeviceAdapter& device)
 {
   vtkm::worklet::FieldEntropy worklet;
 
@@ -54,11 +51,11 @@ Entropy::DoExecute(const vtkm::cont::DataSet &inDataSet,
   entropy.Allocate(1);
   entropy.GetPortalControl().Set(0, e);
 
-  return vtkm::filter::ResultField(inDataSet,
-                                   entropy,
-                                   this->GetOutputFieldName(),
-                                   fieldMetadata.GetAssociation(),
-                                   fieldMetadata.GetCellSetName());
+  return vtkm::filter::Result(inDataSet,
+                              entropy,
+                              this->GetOutputFieldName(),
+                              fieldMetadata.GetAssociation(),
+                              fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

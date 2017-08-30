@@ -74,13 +74,13 @@ public:
   /// \brief A tag to determing whether the type is integer or real.
   ///
   /// This tag is either TypeTraitsRealTag or TypeTraitsIntegerTag.
-  typedef TypeTraitsUnknownTag NumericTag;
+  using NumericTag = vtkm::TypeTraitsUnknownTag;
 
   /// \brief A tag to determine whether the type has multiple components.
   ///
   /// This tag is either TypeTraitsScalarTag or TypeTraitsVectorTag. Scalars can
   /// also be treated as vectors.
-  typedef TypeTraitsUnknownTag DimensionalityTag;
+  using DimensionalityTag = vtkm::TypeTraitsUnknownTag;
 
   VTKM_EXEC_CONT static T ZeroInitialization() { return T(); }
 };
@@ -96,8 +96,8 @@ struct TypeTraits<const T> : TypeTraits<T>
   template <>                                                                                      \
   struct TypeTraits<T>                                                                             \
   {                                                                                                \
-    typedef TypeTraitsRealTag NumericTag;                                                          \
-    typedef TypeTraitsScalarTag DimensionalityTag;                                                 \
+    using NumericTag = TypeTraitsRealTag;                                                          \
+    using DimensionalityTag = TypeTraitsScalarTag;                                                 \
     VTKM_EXEC_CONT static T ZeroInitialization() { return T(); }                                   \
   };
 
@@ -105,11 +105,11 @@ struct TypeTraits<const T> : TypeTraits<T>
   template <>                                                                                      \
   struct TypeTraits<T>                                                                             \
   {                                                                                                \
-    typedef TypeTraitsIntegerTag NumericTag;                                                       \
-    typedef TypeTraitsScalarTag DimensionalityTag;                                                 \
+    using NumericTag = TypeTraitsIntegerTag;                                                       \
+    using DimensionalityTag = TypeTraitsScalarTag;                                                 \
     VTKM_EXEC_CONT static T ZeroInitialization()                                                   \
     {                                                                                              \
-      typedef T ReturnType;                                                                        \
+      using ReturnType = T;                                                                        \
       return ReturnType();                                                                         \
     }                                                                                              \
   };
@@ -140,8 +140,8 @@ VTKM_BASIC_INTEGER_TYPE(unsigned long long)
 template <typename T, vtkm::IdComponent Size>
 struct TypeTraits<vtkm::Vec<T, Size>>
 {
-  typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
-  typedef TypeTraitsVectorTag DimensionalityTag;
+  using NumericTag = typename vtkm::TypeTraits<T>::NumericTag;
+  using DimensionalityTag = vtkm::TypeTraitsVectorTag;
 
   VTKM_EXEC_CONT
   static vtkm::Vec<T, Size> ZeroInitialization()
@@ -179,8 +179,8 @@ struct TypeTraits<vtkm::VecC<T>>
 template <typename T, typename U>
 struct TypeTraits<vtkm::Pair<T, U>>
 {
-  typedef TypeTraitsUnknownTag NumericTag;
-  typedef TypeTraitsScalarTag DimensionalityTag;
+  using NumericTag = vtkm::TypeTraitsUnknownTag;
+  using DimensionalityTag = vtkm::TypeTraitsScalarTag;
 
   VTKM_EXEC_CONT
   static vtkm::Pair<T, U> ZeroInitialization()

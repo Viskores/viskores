@@ -38,9 +38,13 @@ set(VTKm_EXPORT_NAME "VTKmTargets")
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
+# Setup default build types
+include(VTKmBuildType)
+
 # Determine VTK-m version
 include(Utilities/Git/Git.cmake)
 include(VTKmDetermineVersion)
+
 # Load hardcoded version in case this is not a Git repository
 file(STRINGS version.txt version_txt)
 extract_version_components("${version_txt}" "VTKm")
@@ -107,6 +111,9 @@ option(VTKm_USE_DOUBLE_PRECISION
   OFF
   )
 option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
+
+option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
+mark_as_advanced(VTKm_NO_ASSERT)
 
 option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})

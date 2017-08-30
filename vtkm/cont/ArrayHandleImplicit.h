@@ -91,8 +91,8 @@ public:
 #endif
   }
 
-  typedef vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalImplicit<FunctorType>>
-    IteratorType;
+  using IteratorType =
+    vtkm::cont::internal::IteratorFromArrayPortal<ArrayPortalImplicit<FunctorType>>;
 
   VTKM_CONT
   IteratorType GetIteratorBegin() const { return IteratorType(*this); }
@@ -115,7 +115,7 @@ template <class FunctorType>
 class ArrayHandleImplicit : public detail::ArrayHandleImplicitTraits<FunctorType>::Superclass
 {
 private:
-  typedef typename detail::ArrayHandleImplicitTraits<FunctorType> ArrayTraits;
+  using ArrayTraits = typename detail::ArrayHandleImplicitTraits<FunctorType>;
 
 public:
   VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleImplicit,

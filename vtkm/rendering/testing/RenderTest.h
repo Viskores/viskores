@@ -108,6 +108,14 @@ void Render(const vtkm::cont::DataSet& ds,
   SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds());
   ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
 
+  // Print the title
+  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+    new vtkm::rendering::TextAnnotationScreen("Test Plot",
+                                              vtkm::rendering::Color(1, 1, 1, 1),
+                                              .075f,
+                                              vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
+                                              0.f);
+  view.AddAnnotation(titleAnnotation);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
 }
 
@@ -115,7 +123,8 @@ template <typename MapperType, typename CanvasType, typename ViewType>
 void Render(const vtkm::cont::DataSet& ds,
             const std::string& fieldNm,
             const vtkm::rendering::Color& color,
-            const std::string& outputFile)
+            const std::string& outputFile,
+            const bool logY = false)
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
@@ -136,7 +145,52 @@ void Render(const vtkm::cont::DataSet& ds,
                                               vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f),
                                               0.f);
   view.AddAnnotation(titleAnnotation);
+  view.SetLogY(logY);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
+}
+
+template <typename MapperType1, typename MapperType2, typename CanvasType, typename ViewType>
+void MultiMapperRender(const vtkm::cont::DataSet& ds1,
+                       const vtkm::cont::DataSet& ds2,
+                       const std::string& fieldNm,
+                       const vtkm::rendering::ColorTable& colorTable1,
+                       const vtkm::rendering::ColorTable& colorTable2,
+                       const std::string& outputFile)
+{
+  MapperType1 mapper1;
+  MapperType2 mapper2;
+
+  CanvasType canvas(512, 512);
+  canvas.SetBackgroundColor(vtkm::rendering::Color(0.8f, 0.8f, 0.8f, 1.0f));
+  canvas.Clear();
+
+  vtkm::Bounds totalBounds =
+    ds1.GetCoordinateSystem().GetBounds() + ds2.GetCoordinateSystem().GetBounds();
+  vtkm::rendering::Camera camera;
+  SetCamera<ViewType>(camera, totalBounds);
+
+  mapper1.SetCanvas(&canvas);
+  mapper1.SetActiveColorTable(colorTable1);
+  mapper1.SetCompositeBackground(false);
+
+  mapper2.SetCanvas(&canvas);
+  mapper2.SetActiveColorTable(colorTable2);
+
+  const vtkm::cont::Field field1 = ds1.GetField(fieldNm);
+  vtkm::Range range1;
+  field1.GetRange(&range1);
+
+  const vtkm::cont::Field field2 = ds2.GetField(fieldNm);
+  vtkm::Range range2;
+  field2.GetRange(&range2);
+
+  mapper1.RenderCells(
+    ds1.GetCellSet(), ds1.GetCoordinateSystem(), field1, colorTable1, camera, range1);
+
+  mapper2.RenderCells(
+    ds2.GetCellSet(), ds2.GetCoordinateSystem(), field2, colorTable2, camera, range2);
+
+  canvas.SaveAs(outputFile);
 }
 }
 }

@@ -55,8 +55,13 @@ public:
 
   virtual vtkm::rendering::Mapper* NewCopy() const = 0;
 
+  virtual void SetLogarithmX(bool l);
+  virtual void SetLogarithmY(bool l);
+
 protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
+  bool LogarithmX = false;
+  bool LogarithmY = false;
 };
 }
 } //namespace vtkm::rendering

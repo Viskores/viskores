@@ -41,7 +41,7 @@ namespace
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-typedef vtkm::cont::StorageTagBasic StorageTag;
+using StorageTag = vtkm::cont::StorageTagBasic;
 
 vtkm::FloatDefault TestValue3Ids(vtkm::Id index, vtkm::IdComponent inComponentIndex, int inArrayId)
 {
@@ -52,7 +52,7 @@ vtkm::FloatDefault TestValue3Ids(vtkm::Id index, vtkm::IdComponent inComponentIn
 template <typename ValueType>
 vtkm::cont::ArrayHandle<ValueType, StorageTag> MakeInputArray(int arrayId)
 {
-  typedef vtkm::VecTraits<ValueType> VTraits;
+  using VTraits = vtkm::VecTraits<ValueType>;
 
   // Create a buffer with valid test values.
   ValueType buffer[ARRAY_SIZE];
@@ -67,7 +67,7 @@ vtkm::cont::ArrayHandle<ValueType, StorageTag> MakeInputArray(int arrayId)
   }
 
   // Make an array handle that points to this buffer.
-  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ArrayHandleType;
+  using ArrayHandleType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
   ArrayHandleType bufferHandle = vtkm::cont::make_ArrayHandle(buffer, ARRAY_SIZE);
 
   // When this function returns, the array is going to go out of scope, which
@@ -87,12 +87,12 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType, C>& outArray,
 {
   // ArrayHandleCompositeVector currently does not implement the ability to
   // get to values on the control side, so copy to an array that is accessible.
-  typedef vtkm::cont::ArrayHandle<ValueType, StorageTag> ArrayHandleType;
+  using ArrayHandleType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
   ArrayHandleType arrayCopy;
   vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::Copy(outArray, arrayCopy);
 
   typename ArrayHandleType::PortalConstControl portal = arrayCopy.GetPortalConstControl();
-  typedef vtkm::VecTraits<ValueType> VTraits;
+  using VTraits = vtkm::VecTraits<ValueType>;
   for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
   {
     ValueType retreivedValue = portal.Get(index);
@@ -113,12 +113,12 @@ void TryScalarArray()
   std::cout << "Creating a scalar array from one of " << inComponents << " components."
             << std::endl;
 
-  typedef vtkm::Vec<vtkm::FloatDefault, inComponents> InValueType;
-  typedef vtkm::cont::ArrayHandle<InValueType, StorageTag> InArrayType;
+  using InValueType = vtkm::Vec<vtkm::FloatDefault, inComponents>;
+  using InArrayType = vtkm::cont::ArrayHandle<InValueType, StorageTag>;
   int inArrayId = 0;
   InArrayType inArray = MakeInputArray<InValueType>(inArrayId);
 
-  typedef typename vtkm::cont::ArrayHandleCompositeVectorType<InArrayType>::type OutArrayType;
+  using OutArrayType = typename vtkm::cont::ArrayHandleCompositeVectorType<InArrayType>::type;
   for (vtkm::IdComponent inComponentIndex = 0; inComponentIndex < inComponents; inComponentIndex++)
   {
     OutArrayType outArray = vtkm::cont::make_ArrayHandleCompositeVector(inArray, inComponentIndex);
@@ -253,14 +253,14 @@ void TrySpecialArrays()
 {
   std::cout << "Trying special arrays." << std::endl;
 
-  typedef vtkm::cont::ArrayHandleIndex ArrayType1;
+  using ArrayType1 = vtkm::cont::ArrayHandleIndex;
   ArrayType1 array1(ARRAY_SIZE);
 
-  typedef vtkm::cont::ArrayHandleConstant<vtkm::Id> ArrayType2;
+  using ArrayType2 = vtkm::cont::ArrayHandleConstant<vtkm::Id>;
   ArrayType2 array2(295, ARRAY_SIZE);
 
-  typedef vtkm::cont::ArrayHandleCompositeVectorType<ArrayType1, ArrayType2>::type
-    CompositeArrayType;
+  using CompositeArrayType =
+    vtkm::cont::ArrayHandleCompositeVectorType<ArrayType1, ArrayType2>::type;
 
   CompositeArrayType compositeArray =
     vtkm::cont::make_ArrayHandleCompositeVector(array1, 0, array2, 0);
@@ -281,7 +281,7 @@ void TestBadArrayLengths()
 {
   std::cout << "Checking behavior when size of input arrays do not agree." << std::endl;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag> InArrayType;
+  using InArrayType = vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag>;
   InArrayType longInArray = MakeInputArray<vtkm::FloatDefault>(0);
   InArrayType shortInArray = MakeInputArray<vtkm::FloatDefault>(1);
   shortInArray.Shrink(ARRAY_SIZE / 2);

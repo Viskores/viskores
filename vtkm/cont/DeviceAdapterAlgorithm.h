@@ -583,7 +583,7 @@ public:
   ///
   VTKM_CONT bool Exists() const
   {
-    typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> DeviceAdapterTraits;
+    using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
     return DeviceAdapterTraits::Valid;
   }
 };

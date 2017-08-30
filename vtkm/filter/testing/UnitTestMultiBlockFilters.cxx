@@ -90,7 +90,7 @@ void Result_Verify(T ResultVec, D Filter, vtkm::cont::MultiBlock& Blocks, std::s
                    "result block number incorrect");
   for (vtkm::Id j = 0; static_cast<std::size_t>(j) < ResultVec.size(); j++)
   {
-    vtkm::filter::ResultField BlockResult = Filter.Execute(Blocks.GetBlock(j), FieldName);
+    vtkm::filter::Result BlockResult = Filter.Execute(Blocks.GetBlock(j), FieldName);
 
     VTKM_TEST_ASSERT(
       ResultVec[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues() ==
@@ -118,7 +118,7 @@ void TestMultiBlockFilters()
 {
   std::size_t BlockNum = 7;
 
-  std::vector<vtkm::filter::ResultField> results;
+  std::vector<vtkm::filter::Result> results;
   vtkm::cont::MultiBlock Blocks;
 
   Blocks = MultiBlockBuilder<vtkm::Float64>(BlockNum, "cellvar");

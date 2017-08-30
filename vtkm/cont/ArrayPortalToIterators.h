@@ -57,7 +57,7 @@ public:
 
   /// The type of the iterator.
   ///
-  typedef vtkm::cont::internal::IteratorFromArrayPortal<PortalType> IteratorType;
+  using IteratorType = vtkm::cont::internal::IteratorFromArrayPortal<PortalType>;
 
   /// Returns an iterator pointing to the beginning of the ArrayPortal.
   ///

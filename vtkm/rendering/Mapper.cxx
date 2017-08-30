@@ -33,5 +33,15 @@ void Mapper::SetActiveColorTable(const vtkm::rendering::ColorTable& colorTable)
 {
   colorTable.Sample(1024, this->ColorMap);
 }
+
+void Mapper::SetLogarithmX(bool l)
+{
+  this->LogarithmX = l;
+}
+
+void Mapper::SetLogarithmY(bool l)
+{
+  this->LogarithmY = l;
+}
 }
 }

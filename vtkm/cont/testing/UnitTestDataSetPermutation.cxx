@@ -56,7 +56,7 @@ bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
 
 inline vtkm::cont::DataSet make_SingleTypeDataSet()
 {
-  typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
+  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
   std::vector<CoordType> coordinates;
   coordinates.push_back(CoordType(0, 0, 0));
   coordinates.push_back(CoordType(1, 0, 0));
@@ -108,15 +108,15 @@ void TestDataSet_Explicit()
   dataSet.GetCellSet(0).CopyTo(cellSet);
 
   //verify that we can create a subset of a singlset
-  typedef vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>> SubsetType;
+  using SubsetType = vtkm::cont::CellSetPermutation<vtkm::cont::CellSetSingleType<>>;
   SubsetType subset;
   subset.Fill(validCellIds, cellSet);
 
   subset.PrintSummary(std::cout);
 
-  typedef SubsetType::ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial,
-                                     vtkm::TopologyElementTagPoint,
-                                     vtkm::TopologyElementTagCell>::ExecObjectType ExecObjectType;
+  using ExecObjectType = SubsetType::ExecutionTypes<vtkm::cont::DeviceAdapterTagSerial,
+                                                    vtkm::TopologyElementTagPoint,
+                                                    vtkm::TopologyElementTagCell>::ExecObjectType;
 
   ExecObjectType execConnectivity;
   execConnectivity = subset.PrepareForInput(vtkm::cont::DeviceAdapterTagSerial(),
@@ -160,7 +160,7 @@ void TestDataSet_Structured2D()
   subset.PrintSummary(std::cout);
 
   //verify that we can call PrepareForInput on CellSetSingleType
-  typedef vtkm::cont::DeviceAdapterTagSerial DeviceAdapterTag;
+  using DeviceAdapterTag = vtkm::cont::DeviceAdapterTagSerial;
 
   //verify that PrepareForInput exists
   subset.PrepareForInput(

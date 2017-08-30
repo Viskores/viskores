@@ -44,15 +44,15 @@ namespace cont
 namespace detail
 {
 
-typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float32>>::type
-  ArrayHandleCompositeVectorFloat32_3Default;
+using ArrayHandleCompositeVectorFloat32_3Default =
+  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                             vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                             vtkm::cont::ArrayHandle<vtkm::Float32>>::type;
 
-typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float64>>::type
-  ArrayHandleCompositeVectorFloat64_3Default;
+using ArrayHandleCompositeVectorFloat64_3Default =
+  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                             vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                             vtkm::cont::ArrayHandle<vtkm::Float64>>::type;
 
 } // namespace detail
 
@@ -73,13 +73,13 @@ struct StorageListTagCoordinateSystemDefault
 {
 };
 
-typedef vtkm::cont::DynamicArrayHandleBase<VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG,
-                                           VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>
-  DynamicArrayHandleCoordinateSystem;
+using DynamicArrayHandleCoordinateSystem =
+  vtkm::cont::DynamicArrayHandleBase<VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG,
+                                     VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>;
 
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
-  typedef vtkm::cont::Field Superclass;
+  using Superclass = vtkm::cont::Field;
 
 public:
   VTKM_CONT
@@ -226,7 +226,7 @@ namespace internal
 template <>
 struct DynamicTransformTraits<vtkm::cont::CoordinateSystem>
 {
-  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
 
 } // namespace internal

@@ -39,28 +39,28 @@ template <typename T, typename Storage>
 class ArrayHandleExecutionManagerBase
 {
 private:
-  typedef vtkm::cont::internal::Storage<T, Storage> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<T, Storage>;
 
 public:
   template <typename DeviceAdapter>
   struct ExecutionTypes
   {
   private:
-    typedef vtkm::cont::internal::ArrayTransfer<T, Storage, DeviceAdapter> ArrayTransferType;
+    using ArrayTransferType = vtkm::cont::internal::ArrayTransfer<T, Storage, DeviceAdapter>;
 
   public:
-    typedef typename ArrayTransferType::PortalExecution Portal;
-    typedef typename ArrayTransferType::PortalConstExecution PortalConst;
+    using Portal = typename ArrayTransferType::PortalExecution;
+    using PortalConst = typename ArrayTransferType::PortalConstExecution;
   };
 
   /// The type of value held in the array (vtkm::FloatDefault, vtkm::Vec, etc.)
   ///
-  typedef T ValueType;
+  using ValueType = T;
 
   /// An array portal that can be used in the control environment.
   ///
-  typedef typename StorageType::PortalType PortalControl;
-  typedef typename StorageType::PortalConstType PortalConstControl;
+  using PortalControl = typename StorageType::PortalType;
+  using PortalConstControl = typename StorageType::PortalConstType;
 
   VTKM_CONT
   virtual ~ArrayHandleExecutionManagerBase() {}
@@ -157,6 +157,9 @@ public:
     return this->IsDeviceAdapterImpl(vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId());
   }
 
+  VTKM_CONT
+  DeviceAdapterId GetDeviceAdapterId() const { return this->GetDeviceAdapterIdImpl(); }
+
 protected:
   virtual vtkm::Id GetNumberOfValuesImpl() const = 0;
 
@@ -173,6 +176,8 @@ protected:
   virtual void ReleaseResourcesImpl() = 0;
 
   virtual bool IsDeviceAdapterImpl(const vtkm::cont::DeviceAdapterId& id) const = 0;
+
+  virtual DeviceAdapterId GetDeviceAdapterIdImpl() const = 0;
 
 private:
   template <typename DeviceAdapter>
@@ -195,16 +200,16 @@ private:
 template <typename T, typename Storage, typename DeviceAdapter>
 class ArrayHandleExecutionManager : public ArrayHandleExecutionManagerBase<T, Storage>
 {
-  typedef ArrayHandleExecutionManagerBase<T, Storage> Superclass;
-  typedef vtkm::cont::internal::ArrayTransfer<T, Storage, DeviceAdapter> ArrayTransferType;
-  typedef vtkm::cont::internal::Storage<T, Storage> StorageType;
+  using Superclass = ArrayHandleExecutionManagerBase<T, Storage>;
+  using ArrayTransferType = vtkm::cont::internal::ArrayTransfer<T, Storage, DeviceAdapter>;
+  using StorageType = vtkm::cont::internal::Storage<T, Storage>;
 
 public:
-  typedef typename ArrayTransferType::PortalControl PortalControl;
-  typedef typename ArrayTransferType::PortalConstControl PortalConstControl;
+  using PortalControl = typename ArrayTransferType::PortalControl;
+  using PortalConstControl = typename ArrayTransferType::PortalConstControl;
 
-  typedef typename ArrayTransferType::PortalExecution PortalExecution;
-  typedef typename ArrayTransferType::PortalConstExecution PortalConstExecution;
+  using PortalExecution = typename ArrayTransferType::PortalExecution;
+  using PortalConstExecution = typename ArrayTransferType::PortalConstExecution;
 
   VTKM_CONT
   ArrayHandleExecutionManager(StorageType* storage)
@@ -259,6 +264,12 @@ protected:
   bool IsDeviceAdapterImpl(const DeviceAdapterId& id) const
   {
     return id == vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
+  }
+
+  VTKM_CONT
+  DeviceAdapterId GetDeviceAdapterIdImpl() const
+  {
+    return vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetId();
   }
 
 private:

@@ -442,7 +442,7 @@ public:
     vtkm::cont::ArrayHandle<ClipStats> stats;
 
     ComputeStats<DeviceAdapter> computeStats(value, clipTablesDevicePortal);
-    DispatcherMapTopology<ComputeStats<DeviceAdapter>>(computeStats)
+    DispatcherMapTopology<ComputeStats<DeviceAdapter>, DeviceAdapter>(computeStats)
       .Invoke(cellSet, scalars, clipTableIdxs, stats);
 
     // compute offsets for each invocation
@@ -471,7 +471,7 @@ public:
     this->CellIdMap.Allocate(total.NumberOfCells);
 
     GenerateCellSet<DeviceAdapter> generateCellSet(value, clipTablesDevicePortal);
-    DispatcherMapTopology<GenerateCellSet<DeviceAdapter>>(generateCellSet)
+    DispatcherMapTopology<GenerateCellSet<DeviceAdapter>, DeviceAdapter>(generateCellSet)
       .Invoke(cellSet,
               scalars,
               clipTableIdxs,

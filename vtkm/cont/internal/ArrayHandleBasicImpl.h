@@ -39,16 +39,25 @@ namespace internal
 struct VTKM_ALWAYS_EXPORT TypelessExecutionArray
 {
   VTKM_CONT
-  TypelessExecutionArray(void*& array, void*& arrayEnd, void*& arrayCapacity)
+  TypelessExecutionArray(void*& array,
+                         void*& arrayEnd,
+                         void*& arrayCapacity,
+                         const void* arrayControl,
+                         const void* arrayControlCapacity)
     : Array(array)
     , ArrayEnd(arrayEnd)
     , ArrayCapacity(arrayCapacity)
+    , ArrayControl(arrayControl)
+    , ArrayControlCapacity(arrayControlCapacity)
   {
   }
 
   void*& Array;
   void*& ArrayEnd;
   void*& ArrayCapacity;
+  // Used by cuda to detect and share managed memory allocations.
+  const void* ArrayControl;
+  const void* ArrayControlCapacity;
 };
 
 /// Factory that generates execution portals for basic storage.
@@ -185,6 +194,8 @@ public:
   template <typename DeviceAdapterTag>
   VTKM_CONT void PrepareForDevice(DeviceAdapterTag) const;
 
+  VTKM_CONT DeviceAdapterId GetDeviceAdapterId() const;
+
   VTKM_CONT void SyncControlArray() const;
   VTKM_CONT void ReleaseResourcesExecutionInternal();
 
@@ -219,7 +230,9 @@ public:
         internal::TypelessExecutionArray execArray(
           reinterpret_cast<void*&>(this->ExecutionArray),
           reinterpret_cast<void*&>(this->ExecutionArrayEnd),
-          reinterpret_cast<void*&>(this->ExecutionArrayCapacity));
+          reinterpret_cast<void*&>(this->ExecutionArrayCapacity),
+          this->ControlArray.GetBasePointer(),
+          this->ControlArray.GetCapacityPointer());
         this->ExecutionInterface->Free(execArray);
       }
 

@@ -59,17 +59,17 @@ struct ThrustIteratorDevicePtrTag
 template <typename IteratorType>
 struct ThrustIteratorTag
 {
-  typedef ThrustIteratorFromArrayPortalTag Type;
+  using Type = ThrustIteratorFromArrayPortalTag;
 };
 template <typename T>
 struct ThrustIteratorTag<thrust::system::cuda::pointer<T>>
 {
-  typedef ThrustIteratorDevicePtrTag Type;
+  using Type = ThrustIteratorDevicePtrTag;
 };
 template <typename T>
 struct ThrustIteratorTag<thrust::system::cuda::pointer<const T>>
 {
-  typedef ThrustIteratorDevicePtrTag Type;
+  using Type = ThrustIteratorDevicePtrTag;
 };
 
 template <typename PortalType, typename Tag>
@@ -77,22 +77,22 @@ struct IteratorChooser;
 template <typename PortalType>
 struct IteratorChooser<PortalType, detail::ThrustIteratorFromArrayPortalTag>
 {
-  typedef vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType> Type;
+  using Type = vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType>;
 };
 template <typename PortalType>
 struct IteratorChooser<PortalType, detail::ThrustIteratorDevicePtrTag>
 {
-  typedef vtkm::cont::ArrayPortalToIterators<PortalType> PortalToIteratorType;
+  using PortalToIteratorType = vtkm::cont::ArrayPortalToIterators<PortalType>;
 
-  typedef typename PortalToIteratorType::IteratorType Type;
+  using Type = typename PortalToIteratorType::IteratorType;
 };
 
 template <typename PortalType>
 struct IteratorTraits
 {
-  typedef vtkm::cont::ArrayPortalToIterators<PortalType> PortalToIteratorType;
-  typedef typename detail::ThrustIteratorTag<typename PortalToIteratorType::IteratorType>::Type Tag;
-  typedef typename IteratorChooser<PortalType, Tag>::Type IteratorType;
+  using PortalToIteratorType = vtkm::cont::ArrayPortalToIterators<PortalType>;
+  using Tag = typename detail::ThrustIteratorTag<typename PortalToIteratorType::IteratorType>::Type;
+  using IteratorType = typename IteratorChooser<PortalType, Tag>::Type;
 };
 
 template <typename PortalType>
@@ -136,14 +136,14 @@ VTKM_CONT typename IteratorTraits<PortalType>::IteratorType MakeIteratorEnd(
 template <typename PortalType>
 VTKM_CONT typename detail::IteratorTraits<PortalType>::IteratorType IteratorBegin(PortalType portal)
 {
-  typedef typename detail::IteratorTraits<PortalType>::Tag IteratorTag;
+  using IteratorTag = typename detail::IteratorTraits<PortalType>::Tag;
   return detail::MakeIteratorBegin(portal, IteratorTag());
 }
 
 template <typename PortalType>
 VTKM_CONT typename detail::IteratorTraits<PortalType>::IteratorType IteratorEnd(PortalType portal)
 {
-  typedef typename detail::IteratorTraits<PortalType>::Tag IteratorTag;
+  using IteratorTag = typename detail::IteratorTraits<PortalType>::Tag;
   return detail::MakeIteratorEnd(portal, IteratorTag());
 }
 }
