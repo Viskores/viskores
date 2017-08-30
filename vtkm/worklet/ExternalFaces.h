@@ -380,7 +380,7 @@ struct ExternalFaces
                               vtkm::Id inputIndex,
                               vtkm::IdComponent visitIndex) const
     {
-      faceHash = vtkm::Hash(vtkm::exec::CellFaceCononicalId(visitIndex, shape, cellNodeIds, *this));
+      faceHash = vtkm::Hash(vtkm::exec::CellFaceCanonicalId(visitIndex, shape, cellNodeIds, *this));
 
       cellIndex = inputIndex;
       faceIndex = visitIndex;
@@ -422,14 +422,14 @@ struct ExternalFaces
            myIndex++)
       {
         vtkm::Id3 myFace =
-          vtkm::exec::CellFaceCononicalId(originFaces[myIndex],
+          vtkm::exec::CellFaceCanonicalId(originFaces[myIndex],
                                           cellSet.GetCellShape(originCells[myIndex]),
                                           cellSet.GetIndices(originCells[myIndex]),
                                           *this);
         for (vtkm::IdComponent otherIndex = myIndex + 1; otherIndex < numCellsOnHash; otherIndex++)
         {
           vtkm::Id3 otherFace =
-            vtkm::exec::CellFaceCononicalId(originFaces[otherIndex],
+            vtkm::exec::CellFaceCanonicalId(originFaces[otherIndex],
                                             cellSet.GetCellShape(originCells[otherIndex]),
                                             cellSet.GetIndices(originCells[otherIndex]),
                                             *this);
@@ -470,7 +470,7 @@ private:
     while (true)
     {
       VTKM_ASSERT(myIndex < numCellsOnHash);
-      vtkm::Id3 myFace = vtkm::exec::CellFaceCononicalId(originFaces[myIndex],
+      vtkm::Id3 myFace = vtkm::exec::CellFaceCanonicalId(originFaces[myIndex],
                                                          cellSet.GetCellShape(originCells[myIndex]),
                                                          cellSet.GetIndices(originCells[myIndex]),
                                                          *self);
@@ -478,7 +478,7 @@ private:
       for (vtkm::IdComponent otherIndex = myIndex + 1; otherIndex < numCellsOnHash; otherIndex++)
       {
         vtkm::Id3 otherFace =
-          vtkm::exec::CellFaceCononicalId(originFaces[otherIndex],
+          vtkm::exec::CellFaceCanonicalId(originFaces[otherIndex],
                                           cellSet.GetCellShape(originCells[otherIndex]),
                                           cellSet.GetIndices(originCells[otherIndex]),
                                           *self);
