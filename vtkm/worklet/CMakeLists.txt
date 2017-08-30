@@ -53,6 +53,7 @@ set(headers
   NDimsHistogram.h
   NDimsHistMarginalization.h
   Normalize.h
+  OscillatorSource.h
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h

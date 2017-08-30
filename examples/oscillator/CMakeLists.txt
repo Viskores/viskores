@@ -19,25 +19,28 @@
 ##  this software.
 ##
 ##=============================================================================
-#add the directory that contains the VTK-m config file to the cmake
-#path so that our examples can find VTK-m
-set(CMAKE_PREFIX_PATH ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR})
+cmake_minimum_required(VERSION 3.3...3.12 FATAL_ERROR)
+project(Oscillator CXX)
 
-add_subdirectory(clipping)
-add_subdirectory(contour_tree)
-add_subdirectory(cosmotools)
-add_subdirectory(demo)
-add_subdirectory(dynamic_dispatcher)
-add_subdirectory(game_of_life)
-add_subdirectory(hello_world)
-add_subdirectory(histogram)
-add_subdirectory(isosurface)
-add_subdirectory(multi_backend)
-add_subdirectory(oscillator)
-add_subdirectory(particle_advection)
-add_subdirectory(temporal_advection)
-add_subdirectory(redistribute_points)
-add_subdirectory(rendering)
-add_subdirectory(streamline)
-add_subdirectory(tetrahedra)
-add_subdirectory(unified_memory)
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET)
+
+add_executable(Oscillator_SERIAL Oscillator.cxx)
+target_compile_definitions(Oscillator_SERIAL PRIVATE
+  "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
+target_link_libraries(Oscillator_SERIAL PRIVATE vtkm_cont)
+
+if (TARGET vtkm::tbb)
+  add_executable(Oscillator_TBB Oscillator.cxx)
+  target_compile_definitions(Oscillator_TBB PRIVATE
+    "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
+  target_link_libraries(Oscillator_TBB PRIVATE vtkm_cont)
+endif()
+
+if (TARGET vtkm::cuda)
+  vtkm_compile_as_cuda(oscillatorCudaSrc Oscillator.cxx)
+  add_executable(Oscillator_CUDA ${oscillatorCudaSrc})
+  target_compile_definitions(Oscillator_CUDA PRIVATE
+    "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+  target_link_libraries(Oscillator_CUDA PRIVATE vtkm_cont)
+endif()
