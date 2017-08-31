@@ -20,6 +20,7 @@
 
 #include <vtkm/rendering/Canvas.h>
 
+#include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -133,6 +134,87 @@ struct BlendBackgroundExecutor
     return true;
   }
 }; // struct BlendBackgroundExecutor
+
+struct DrawColorBar : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
+  typedef void ExecutionSignature(_1, _2, _3);
+
+  VTKM_CONT
+  DrawColorBar(vtkm::Id2 dims, vtkm::Id2 xBounds, vtkm::Id2 yBounds, bool horizontal)
+    : Horizontal(horizontal)
+  {
+    ImageWidth = dims[0];
+    ImageHeight = dims[1];
+    BarBottomLeft[0] = xBounds[0];
+    BarBottomLeft[1] = yBounds[0];
+    BarWidth = xBounds[1] - xBounds[0];
+  }
+
+  template <typename FrameBuffer, typename ColorMap>
+  VTKM_EXEC void operator()(const vtkm::Id& index,
+                            FrameBuffer& frameBuffer,
+                            const ColorMap& colorMap) const
+  {
+    // local bar coord
+    vtkm::Id x = index % BarWidth;
+    vtkm::Id y = index / BarWidth;
+    vtkm::Id sample = Horizontal ? x : y;
+    vtkm::Vec<vtkm::Float32, 4> color = colorMap.Get(sample);
+
+    // offset to global image coord
+    x += BarBottomLeft[0];
+    y += BarBottomLeft[1];
+
+    vtkm::Id offset = y * ImageWidth + x;
+    frameBuffer.Set(offset, color);
+  }
+
+  vtkm::Id ImageWidth;
+  vtkm::Id ImageHeight;
+  vtkm::Id2 BarBottomLeft;
+  vtkm::Id BarWidth;
+  bool Horizontal;
+}; // struct DrawColorBar
+
+struct ColorBarExecutor
+{
+  VTKM_CONT
+  ColorBarExecutor(vtkm::Id2 dims,
+                   vtkm::Id2 xBounds,
+                   vtkm::Id2 yBounds,
+                   bool horizontal,
+                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap,
+                   const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorBuffer)
+    : Dims(dims)
+    , XBounds(xBounds)
+    , YBounds(yBounds)
+    , Horizontal(horizontal)
+    , ColorMap(colorMap)
+    , ColorBuffer(colorBuffer)
+  {
+  }
+
+  template <typename Device>
+  VTKM_CONT bool operator()(Device) const
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+    vtkm::Id totalPixels = (XBounds[1] - XBounds[0]) * (YBounds[1] - YBounds[0]);
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> iterator(0, 1, totalPixels);
+    vtkm::worklet::DispatcherMapField<DrawColorBar, Device> dispatcher(
+      DrawColorBar(this->Dims, this->XBounds, this->YBounds, this->Horizontal));
+    dispatcher.Invoke(iterator, this->ColorBuffer, this->ColorMap);
+    return true;
+  }
+
+  vtkm::Id2 Dims;
+  vtkm::Id2 XBounds;
+  vtkm::Id2 YBounds;
+  bool Horizontal;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorMap;
+  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorBuffer;
+};
 
 } // namespace internal
 
@@ -253,11 +335,28 @@ void Canvas::AddLine(vtkm::Float64 x0,
   this->AddLine(vtkm::make_Vec(x0, y0), vtkm::make_Vec(x1, y1), linewidth, color);
 }
 
-void Canvas::AddColorBar(const vtkm::Bounds& vtkmNotUsed(bounds),
-                         const vtkm::rendering::ColorTable& vtkmNotUsed(colorTable),
-                         bool vtkmNotUsed(horizontal)) const
+void Canvas::AddColorBar(const vtkm::Bounds& bounds,
+                         const vtkm::rendering::ColorTable& colorTable,
+                         bool horizontal) const
 {
-  // Not implemented
+  vtkm::Float64 width = static_cast<vtkm::Float64>(this->GetWidth());
+  vtkm::Float64 height = static_cast<vtkm::Float64>(this->GetHeight());
+
+  vtkm::Id2 x, y;
+  x[0] = static_cast<vtkm::Id>(((bounds.X.Min + 1.) / 2.) * width + .5);
+  x[1] = static_cast<vtkm::Id>(((bounds.X.Max + 1.) / 2.) * width + .5);
+  y[0] = static_cast<vtkm::Id>(((bounds.Y.Min + 1.) / 2.) * height + .5);
+  y[1] = static_cast<vtkm::Id>(((bounds.Y.Max + 1.) / 2.) * height + .5);
+  vtkm::Id barWidth = x[1] - x[0];
+  vtkm::Id barHeight = y[1] - y[0];
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> colorMap;
+  vtkm::Id numSamples = horizontal ? barWidth : barHeight;
+  colorTable.Sample(static_cast<vtkm::Int32>(numSamples), colorMap);
+
+  vtkm::Id2 dims(this->GetWidth(), this->GetHeight());
+  vtkm::cont::TryExecute(
+    internal::ColorBarExecutor(dims, x, y, horizontal, colorMap, this->GetColorBuffer()));
 }
 
 void Canvas::AddColorBar(vtkm::Float32 x,
