@@ -86,17 +86,7 @@ struct ListTagIntersect : detail::ListRoot
 /// default instance of that type.
 ///
 template <typename Functor, typename ListTag>
-VTKM_CONT void ListForEach(Functor& f, ListTag)
-{
-  VTKM_IS_LIST_TAG(ListTag);
-  detail::ListForEachImpl(f, typename ListTag::list());
-}
-
-/// For each typename represented by the list tag, call the functor with a
-/// default instance of that type.
-///
-template <typename Functor, typename ListTag>
-VTKM_CONT void ListForEach(const Functor& f, ListTag)
+VTKM_CONT void ListForEach(Functor&& f, ListTag)
 {
   VTKM_IS_LIST_TAG(ListTag);
   detail::ListForEachImpl(f, typename ListTag::list());
