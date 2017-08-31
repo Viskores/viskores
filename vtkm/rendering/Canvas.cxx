@@ -20,6 +20,10 @@
 
 #include <vtkm/rendering/Canvas.h>
 
+#include <vtkm/cont/TryExecute.h>
+#include <vtkm/worklet/DispatcherMapField.h>
+#include <vtkm/worklet/WorkletMapField.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -27,6 +31,110 @@ namespace vtkm
 {
 namespace rendering
 {
+namespace internal
+{
+
+struct ClearBuffers : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldOut<>, FieldOut<>);
+  typedef void ExecutionSignature(_1, _2);
+
+  VTKM_CONT
+  ClearBuffers() {}
+
+  VTKM_EXEC
+  void operator()(vtkm::Vec<vtkm::Float32, 4>& color, vtkm::Float32& depth) const
+  {
+    color[0] = 0.f;
+    color[1] = 0.f;
+    color[2] = 0.f;
+    color[3] = 0.f;
+    // The depth is set to slightly larger than 1.0f, ensuring this color value always fails a
+    // depth check
+    depth = 1.001f;
+  }
+}; // struct ClearBuffers
+
+struct ClearBuffersExecutor
+{
+  typedef vtkm::rendering::Canvas::ColorBufferType ColorBufferType;
+  typedef vtkm::rendering::Canvas::DepthBufferType DepthBufferType;
+
+  ColorBufferType ColorBuffer;
+  DepthBufferType DepthBuffer;
+
+  VTKM_CONT
+  ClearBuffersExecutor(const ColorBufferType& colorBuffer, const DepthBufferType& depthBuffer)
+    : ColorBuffer(colorBuffer)
+    , DepthBuffer(depthBuffer)
+  {
+  }
+
+  template <typename Device>
+  VTKM_CONT bool operator()(Device) const
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+    ClearBuffers worklet;
+    vtkm::worklet::DispatcherMapField<ClearBuffers, Device> dispatcher(worklet);
+    dispatcher.Invoke(this->ColorBuffer, this->DepthBuffer);
+    return true;
+  }
+}; // struct ClearBuffersExecutor
+
+struct BlendBackground : public vtkm::worklet::WorkletMapField
+{
+  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
+
+  VTKM_CONT
+  BlendBackground(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
+    : BackgroundColor(backgroundColor)
+  {
+  }
+
+  typedef void ControlSignature(FieldInOut<>);
+  typedef void ExecutionSignature(_1);
+
+  VTKM_EXEC void operator()(vtkm::Vec<vtkm::Float32, 4>& color) const
+  {
+    if (color[3] >= 1.f)
+      return;
+
+    vtkm::Float32 alpha = BackgroundColor[3] * (1.f - color[3]);
+    color[0] = color[0] + BackgroundColor[0] * alpha;
+    color[1] = color[1] + BackgroundColor[1] * alpha;
+    color[2] = color[2] + BackgroundColor[2] * alpha;
+    color[3] = alpha + color[3];
+  }
+}; // struct BlendBackground
+
+struct BlendBackgroundExecutor
+{
+  typedef vtkm::rendering::Canvas::ColorBufferType ColorBufferType;
+
+  ColorBufferType ColorBuffer;
+  BlendBackground Worklet;
+
+  VTKM_CONT
+  BlendBackgroundExecutor(const ColorBufferType& colorBuffer,
+                          const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
+    : ColorBuffer(colorBuffer)
+    , Worklet(backgroundColor)
+  {
+  }
+
+  template <typename Device>
+  VTKM_CONT bool operator()(Device) const
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+    vtkm::worklet::DispatcherMapField<BlendBackground, Device> dispatcher(this->Worklet);
+    dispatcher.Invoke(this->ColorBuffer);
+    return true;
+  }
+}; // struct BlendBackgroundExecutor
+
+} // namespace internal
 
 Canvas::Canvas(vtkm::Id width, vtkm::Id height)
   : Width(0)
@@ -37,6 +145,161 @@ Canvas::Canvas(vtkm::Id width, vtkm::Id height)
 
 Canvas::~Canvas()
 {
+}
+
+vtkm::rendering::Canvas* Canvas::NewCopy() const
+{
+  return new vtkm::rendering::Canvas(*this);
+}
+
+void Canvas::Initialize()
+{
+}
+
+void Canvas::Activate()
+{
+}
+
+void Canvas::Clear()
+{
+  // TODO: Should the rendering library support policies or some other way to
+  // configure with custom devices?
+  vtkm::cont::TryExecute(
+    internal::ClearBuffersExecutor(this->GetColorBuffer(), this->GetDepthBuffer()));
+}
+
+void Canvas::Finish()
+{
+}
+
+void Canvas::BlendBackground()
+{
+  vtkm::cont::TryExecute(internal::BlendBackgroundExecutor(this->GetColorBuffer(),
+                                                           this->GetBackgroundColor().Components));
+}
+
+void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
+                            const vtkm::Vec<vtkm::Float64, 2>& point1,
+                            const vtkm::Vec<vtkm::Float64, 2>& point2,
+                            const vtkm::Vec<vtkm::Float64, 2>& point3,
+                            const vtkm::rendering::Color& color) const
+{
+}
+
+void Canvas::AddColorSwatch(const vtkm::Float64 x0,
+                            const vtkm::Float64 y0,
+                            const vtkm::Float64 x1,
+                            const vtkm::Float64 y1,
+                            const vtkm::Float64 x2,
+                            const vtkm::Float64 y2,
+                            const vtkm::Float64 x3,
+                            const vtkm::Float64 y3,
+                            const vtkm::rendering::Color& color) const
+{
+  this->AddColorSwatch(vtkm::make_Vec(x0, y0),
+                       vtkm::make_Vec(x1, y1),
+                       vtkm::make_Vec(x2, y2),
+                       vtkm::make_Vec(x3, y3),
+                       color);
+}
+
+void Canvas::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
+                     const vtkm::Vec<vtkm::Float64, 2>& point1,
+                     vtkm::Float32 linewidth,
+                     const vtkm::rendering::Color& color) const
+{
+  const vtkm::Float32 width = static_cast<vtkm::Float32>(this->Width);
+  const vtkm::Float32 height = static_cast<vtkm::Float32>(this->Height);
+  vtkm::Id x0 = static_cast<vtkm::Id>(vtkm::Round((point0[0] * 0.5f + 0.5f) * width));
+  vtkm::Id y0 = static_cast<vtkm::Id>(vtkm::Round((point0[1] * 0.5f + 0.5f) * height));
+  vtkm::Id x1 = static_cast<vtkm::Id>(vtkm::Round((point1[0] * 0.5f + 0.5f) * width));
+  vtkm::Id y1 = static_cast<vtkm::Id>(vtkm::Round((point1[1] * 0.5f + 0.5f) * height));
+  vtkm::Id dx = vtkm::Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+  vtkm::Id dy = -vtkm::Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+  vtkm::Id err = dx + dy, err2 = 0;
+  ColorBufferType::PortalControl colorPortal =
+    ColorBufferType(this->ColorBuffer).GetPortalControl();
+
+  while (true)
+  {
+    vtkm::Id index = y0 * this->Width + x0;
+    colorPortal.Set(index, color.Components);
+    if (x0 == x1 && y0 == y1)
+    {
+      break;
+    }
+    err2 = err * 2;
+    if (err2 >= dy)
+    {
+      err += dy;
+      x0 += sx;
+    }
+    if (err2 <= dx)
+    {
+      err += dx;
+      y0 += sy;
+    }
+  }
+}
+
+void Canvas::AddLine(vtkm::Float64 x0,
+                     vtkm::Float64 y0,
+                     vtkm::Float64 x1,
+                     vtkm::Float64 y1,
+                     vtkm::Float32 linewidth,
+                     const vtkm::rendering::Color& color) const
+{
+  this->AddLine(vtkm::make_Vec(x0, y0), vtkm::make_Vec(x1, y1), linewidth, color);
+}
+
+void Canvas::AddColorBar(const vtkm::Bounds& bounds,
+                         const vtkm::rendering::ColorTable& colorTable,
+                         bool horizontal) const
+{
+  // Not implemented
+}
+
+void Canvas::AddColorBar(vtkm::Float32 x,
+                         vtkm::Float32 y,
+                         vtkm::Float32 width,
+                         vtkm::Float32 height,
+                         const vtkm::rendering::ColorTable& colorTable,
+                         bool horizontal) const
+{
+  this->AddColorBar(
+    vtkm::Bounds(vtkm::Range(x, x + width), vtkm::Range(y, y + height), vtkm::Range(0, 0)),
+    colorTable,
+    horizontal);
+}
+
+void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
+                     vtkm::Float32 scale,
+                     vtkm::Float32 angle,
+                     vtkm::Float32 windowAspect,
+                     const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                     const vtkm::rendering::Color& color,
+                     const std::string& text) const
+{
+  // Not implemented
+}
+
+void Canvas::AddText(vtkm::Float32 x,
+                     vtkm::Float32 y,
+                     vtkm::Float32 scale,
+                     vtkm::Float32 angle,
+                     vtkm::Float32 windowAspect,
+                     vtkm::Float32 anchorX,
+                     vtkm::Float32 anchorY,
+                     const vtkm::rendering::Color& color,
+                     const std::string& text) const
+{
+  this->AddText(vtkm::make_Vec(x, y),
+                scale,
+                angle,
+                windowAspect,
+                vtkm::make_Vec(anchorX, anchorY),
+                color,
+                text);
 }
 
 void Canvas::SaveAs(const std::string& fileName) const

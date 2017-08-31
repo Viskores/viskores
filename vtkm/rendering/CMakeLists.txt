@@ -130,6 +130,7 @@ set(osmesa_sources
 set(device_sources
   Mapper.cxx
   MapperWireframer.cxx
+  Canvas.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx
   raytracing/BoundingVolumeHierarchy.cxx
