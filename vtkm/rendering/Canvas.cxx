@@ -178,12 +178,13 @@ void Canvas::BlendBackground()
                                                            this->GetBackgroundColor().Components));
 }
 
-void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                            const vtkm::Vec<vtkm::Float64, 2>& point1,
-                            const vtkm::Vec<vtkm::Float64, 2>& point2,
-                            const vtkm::Vec<vtkm::Float64, 2>& point3,
-                            const vtkm::rendering::Color& color) const
+void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point0),
+                            const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point1),
+                            const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point2),
+                            const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point3),
+                            const vtkm::rendering::Color& vtkmNotUsed(color)) const
 {
+  // Not implemented
 }
 
 void Canvas::AddColorSwatch(const vtkm::Float64 x0,
@@ -205,7 +206,7 @@ void Canvas::AddColorSwatch(const vtkm::Float64 x0,
 
 void Canvas::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
                      const vtkm::Vec<vtkm::Float64, 2>& point1,
-                     vtkm::Float32 linewidth,
+                     vtkm::Float32 vtkmNotUsed(linewidth),
                      const vtkm::rendering::Color& color) const
 {
   const vtkm::Float32 width = static_cast<vtkm::Float32>(this->Width);
@@ -252,9 +253,9 @@ void Canvas::AddLine(vtkm::Float64 x0,
   this->AddLine(vtkm::make_Vec(x0, y0), vtkm::make_Vec(x1, y1), linewidth, color);
 }
 
-void Canvas::AddColorBar(const vtkm::Bounds& bounds,
-                         const vtkm::rendering::ColorTable& colorTable,
-                         bool horizontal) const
+void Canvas::AddColorBar(const vtkm::Bounds& vtkmNotUsed(bounds),
+                         const vtkm::rendering::ColorTable& vtkmNotUsed(colorTable),
+                         bool vtkmNotUsed(horizontal)) const
 {
   // Not implemented
 }
@@ -272,13 +273,13 @@ void Canvas::AddColorBar(vtkm::Float32 x,
     horizontal);
 }
 
-void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
-                     vtkm::Float32 scale,
-                     vtkm::Float32 angle,
-                     vtkm::Float32 windowAspect,
-                     const vtkm::Vec<vtkm::Float32, 2>& anchor,
-                     const vtkm::rendering::Color& color,
-                     const std::string& text) const
+void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& vtkmNotUsed(position),
+                     vtkm::Float32 vtkmNotUsed(scale),
+                     vtkm::Float32 vtkmNotUsed(angle),
+                     vtkm::Float32 vtkmNotUsed(windowAspect),
+                     const vtkm::Vec<vtkm::Float32, 2>& vtkmNotUsed(anchor),
+                     const vtkm::rendering::Color& vtkmNotUsed(color),
+                     const std::string& vtkmNotUsed(text)) const
 {
   // Not implemented
 }
