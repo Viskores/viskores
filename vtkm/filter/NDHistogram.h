@@ -50,9 +50,9 @@ public:
   void AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins);
 
   template <typename Policy, typename Device>
-  VTKM_CONT vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& inData,
-                                                  vtkm::filter::PolicyBase<Policy> policy,
-                                                  Device);
+  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& inData,
+                                           vtkm::filter::PolicyBase<Policy> policy,
+                                           Device);
 
   // This index is the field position in FieldNames
   // (or the input _fieldName string vector of SetFields() Function)
