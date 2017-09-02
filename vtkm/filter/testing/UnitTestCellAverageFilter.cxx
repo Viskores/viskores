@@ -32,7 +32,7 @@ void TestCellAverageRegular3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::CellAverage cellAverage;
   cellAverage.SetOutputFieldName("avgvals");
 
@@ -87,7 +87,7 @@ void TestCellAverageRegular2D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::CellAverage cellAverage;
 
   result = cellAverage.Execute(dataSet, dataSet.GetField("pointvar"));
@@ -118,7 +118,7 @@ void TestCellAverageExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::ResultField result;
+  vtkm::filter::Result result;
   vtkm::filter::CellAverage cellAverage;
 
   result = cellAverage.Execute(dataSet, dataSet.GetField("pointvar"));

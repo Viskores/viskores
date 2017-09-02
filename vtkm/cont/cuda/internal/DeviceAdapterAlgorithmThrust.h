@@ -63,6 +63,8 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/system/cuda/execution_policy.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
+#include <atomic>
+
 namespace vtkm
 {
 namespace cont
@@ -201,7 +203,7 @@ private:
     try
     {
       ::thrust::copy(
-        thrust::cuda::par, IteratorBegin(input), IteratorEnd(input), IteratorBegin(output));
+        ThrustCudaPolicyPerThread, IteratorBegin(input), IteratorEnd(input), IteratorBegin(output));
     }
     catch (...)
     {
@@ -216,19 +218,18 @@ private:
                                          OutputPortal output,
                                          UnaryPredicate unary_predicate)
   {
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
-
+    using IteratorType = typename detail::IteratorTraits<OutputPortal>::IteratorType;
     IteratorType outputBegin = IteratorBegin(output);
 
-    typedef typename StencilPortal::ValueType ValueType;
+    using ValueType = typename StencilPortal::ValueType;
 
     vtkm::exec::cuda::internal::WrappedUnaryPredicate<ValueType, UnaryPredicate> up(
       unary_predicate);
 
     try
     {
-      IteratorType newLast = ::thrust::copy_if(
-        thrust::cuda::par, valuesBegin, valuesEnd, IteratorBegin(stencil), outputBegin, up);
+      auto newLast = ::thrust::copy_if(
+        ThrustCudaPolicyPerThread, valuesBegin, valuesEnd, IteratorBegin(stencil), outputBegin, up);
       return static_cast<vtkm::Id>(::thrust::distance(outputBegin, newLast));
     }
     catch (...)
@@ -257,7 +258,7 @@ private:
   {
     try
     {
-      ::thrust::copy_n(thrust::cuda::par,
+      ::thrust::copy_n(ThrustCudaPolicyPerThread,
                        IteratorBegin(input) + inputOffset,
                        static_cast<std::size_t>(size),
                        IteratorBegin(output) + outputOffset);
@@ -273,7 +274,7 @@ private:
                                           const ValuesPortal& values,
                                           const OutputPortal& output)
   {
-    typedef typename ValuesPortal::ValueType ValueType;
+    using ValueType = typename ValuesPortal::ValueType;
     LowerBoundsPortal(input, values, output, ::thrust::less<ValueType>());
   }
 
@@ -281,7 +282,7 @@ private:
   VTKM_CONT static void LowerBoundsPortal(const InputPortal& input,
                                           const OutputPortal& values_output)
   {
-    typedef typename InputPortal::ValueType ValueType;
+    using ValueType = typename InputPortal::ValueType;
     LowerBoundsPortal(input, values_output, values_output, ::thrust::less<ValueType>());
   }
 
@@ -291,13 +292,13 @@ private:
                                           const OutputPortal& output,
                                           BinaryCompare binary_compare)
   {
-    typedef typename InputPortal::ValueType ValueType;
+    using ValueType = typename InputPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);
 
     try
     {
-      ::thrust::lower_bound(thrust::cuda::par,
+      ::thrust::lower_bound(ThrustCudaPolicyPerThread,
                             IteratorBegin(input),
                             IteratorEnd(input),
                             IteratorBegin(values),
@@ -339,7 +340,7 @@ private:
     try
     {
       return ::thrust::reduce(
-        thrust::cuda::par, IteratorBegin(input), IteratorEnd(input), initialValue, bop);
+        ThrustCudaPolicyPerThread, IteratorBegin(input), IteratorEnd(input), initialValue, bop);
     }
     catch (...)
     {
@@ -366,8 +367,11 @@ private:
 
     try
     {
-      return ::thrust::reduce(
-        thrust::cuda::par, IteratorBegin(castPortal), IteratorEnd(castPortal), initialValue, bop);
+      return ::thrust::reduce(ThrustCudaPolicyPerThread,
+                              IteratorBegin(castPortal),
+                              IteratorEnd(castPortal),
+                              initialValue,
+                              bop);
     }
     catch (...)
     {
@@ -388,17 +392,14 @@ private:
                                               const ValueOutputPortal& values_output,
                                               BinaryFunctor binary_functor)
   {
-    typedef typename detail::IteratorTraits<KeysOutputPortal>::IteratorType KeysIteratorType;
-    typedef typename detail::IteratorTraits<ValueOutputPortal>::IteratorType ValuesIteratorType;
+    auto keys_out_begin = IteratorBegin(keys_output);
+    auto values_out_begin = IteratorBegin(values_output);
 
-    KeysIteratorType keys_out_begin = IteratorBegin(keys_output);
-    ValuesIteratorType values_out_begin = IteratorBegin(values_output);
-
-    ::thrust::pair<KeysIteratorType, ValuesIteratorType> result_iterators;
+    ::thrust::pair<decltype(keys_out_begin), decltype(values_out_begin)> result_iterators;
 
     ::thrust::equal_to<typename KeysPortal::ValueType> binaryPredicate;
 
-    typedef typename ValuesPortal::ValueType ValueType;
+    using ValueType = typename ValuesPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(binary_functor);
 
     try
@@ -424,7 +425,7 @@ private:
   VTKM_CONT static typename InputPortal::ValueType ScanExclusivePortal(const InputPortal& input,
                                                                        const OutputPortal& output)
   {
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
 
     return ScanExclusivePortal(input,
                                output,
@@ -441,7 +442,7 @@ private:
   {
     // Use iterator to get value so that thrust device_ptr has chance to handle
     // data on device.
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
 
     //we have size three so that we can store the origin end value, the
     //new end value, and the sum of those two
@@ -452,25 +453,24 @@ private:
       //store the current value of the last position array in a separate cuda
       //memory location since the exclusive_scan will overwrite that value
       //once run
-      ::thrust::copy_n(thrust::cuda::par, IteratorEnd(input) - 1, 1, sum.begin());
+      ::thrust::copy_n(ThrustCudaPolicyPerThread, IteratorEnd(input) - 1, 1, sum.begin());
 
       vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(binaryOp);
 
-      typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
-      IteratorType end = ::thrust::exclusive_scan(thrust::cuda::par,
-                                                  IteratorBegin(input),
-                                                  IteratorEnd(input),
-                                                  IteratorBegin(output),
-                                                  initialValue,
-                                                  bop);
+      auto end = ::thrust::exclusive_scan(ThrustCudaPolicyPerThread,
+                                          IteratorBegin(input),
+                                          IteratorEnd(input),
+                                          IteratorBegin(output),
+                                          initialValue,
+                                          bop);
 
       //Store the new value for the end of the array. This is done because
       //with items such as the transpose array it is unsafe to pass the
       //portal to the SumExclusiveScan
-      ::thrust::copy_n(thrust::cuda::par, (end - 1), 1, sum.begin() + 1);
+      ::thrust::copy_n(ThrustCudaPolicyPerThread, (end - 1), 1, sum.begin() + 1);
 
       //execute the binaryOp one last time on the device.
-      SumExclusiveScan<<<1, 1>>>(sum[0], sum[1], sum[2], bop);
+      SumExclusiveScan<<<1, 1, 0, cudaStreamPerThread>>>(sum[0], sum[1], sum[2], bop);
     }
     catch (...)
     {
@@ -483,7 +483,7 @@ private:
   VTKM_CONT static typename InputPortal::ValueType ScanInclusivePortal(const InputPortal& input,
                                                                        const OutputPortal& output)
   {
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     return ScanInclusivePortal(input, output, ::thrust::plus<ValueType>());
   }
 
@@ -492,15 +492,16 @@ private:
                                                                        const OutputPortal& output,
                                                                        BinaryFunctor binary_functor)
   {
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, BinaryFunctor> bop(binary_functor);
-
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
 
     try
     {
-      IteratorType end = ::thrust::inclusive_scan(
-        thrust::cuda::par, IteratorBegin(input), IteratorEnd(input), IteratorBegin(output), bop);
+      auto end = ::thrust::inclusive_scan(ThrustCudaPolicyPerThread,
+                                          IteratorBegin(input),
+                                          IteratorEnd(input),
+                                          IteratorBegin(output),
+                                          bop);
       return *(end - 1);
     }
     catch (...)
@@ -518,7 +519,7 @@ private:
                                                  const OutputPortal& output)
   {
     using KeyType = typename KeysPortal::ValueType;
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     ScanInclusiveByKeyPortal(
       keys, values, output, ::thrust::equal_to<KeyType>(), ::thrust::plus<ValueType>());
   }
@@ -534,17 +535,16 @@ private:
                                                  BinaryPredicate binary_predicate,
                                                  AssociativeOperator binary_operator)
   {
-    typedef typename KeysPortal::ValueType KeyType;
+    using KeyType = typename KeysPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType, BinaryPredicate> bpred(
       binary_predicate);
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, AssociativeOperator> bop(
       binary_operator);
 
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
     try
     {
-      ::thrust::inclusive_scan_by_key(thrust::cuda::par,
+      ::thrust::inclusive_scan_by_key(ThrustCudaPolicyPerThread,
                                       IteratorBegin(keys),
                                       IteratorEnd(keys),
                                       IteratorBegin(values),
@@ -564,7 +564,7 @@ private:
                                                  const OutputPortal& output)
   {
     using KeyType = typename KeysPortal::ValueType;
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     ScanExclusiveByKeyPortal(keys,
                              values,
                              output,
@@ -586,17 +586,15 @@ private:
                                                  BinaryPredicate binary_predicate,
                                                  AssociativeOperator binary_operator)
   {
-    typedef typename KeysPortal::ValueType KeyType;
+    using KeyType = typename KeysPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<KeyType, BinaryPredicate> bpred(
       binary_predicate);
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryOperator<ValueType, AssociativeOperator> bop(
       binary_operator);
-
-    typedef typename detail::IteratorTraits<OutputPortal>::IteratorType IteratorType;
     try
     {
-      ::thrust::exclusive_scan_by_key(thrust::cuda::par,
+      ::thrust::exclusive_scan_by_key(ThrustCudaPolicyPerThread,
                                       IteratorBegin(keys),
                                       IteratorEnd(keys),
                                       IteratorBegin(values),
@@ -614,14 +612,14 @@ private:
   template <class ValuesPortal>
   VTKM_CONT static void SortPortal(const ValuesPortal& values)
   {
-    typedef typename ValuesPortal::ValueType ValueType;
+    using ValueType = typename ValuesPortal::ValueType;
     SortPortal(values, ::thrust::less<ValueType>());
   }
 
   template <class ValuesPortal, class BinaryCompare>
   VTKM_CONT static void SortPortal(const ValuesPortal& values, BinaryCompare binary_compare)
   {
-    typedef typename ValuesPortal::ValueType ValueType;
+    using ValueType = typename ValuesPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);
     try
@@ -637,7 +635,7 @@ private:
   template <class KeysPortal, class ValuesPortal>
   VTKM_CONT static void SortByKeyPortal(const KeysPortal& keys, const ValuesPortal& values)
   {
-    typedef typename KeysPortal::ValueType ValueType;
+    using ValueType = typename KeysPortal::ValueType;
     SortByKeyPortal(keys, values, ::thrust::less<ValueType>());
   }
 
@@ -646,7 +644,7 @@ private:
                                         const ValuesPortal& values,
                                         BinaryCompare binary_compare)
   {
-    typedef typename KeysPortal::ValueType ValueType;
+    using ValueType = typename KeysPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);
     try
@@ -663,11 +661,10 @@ private:
   template <class ValuesPortal>
   VTKM_CONT static vtkm::Id UniquePortal(const ValuesPortal values)
   {
-    typedef typename detail::IteratorTraits<ValuesPortal>::IteratorType IteratorType;
     try
     {
-      IteratorType begin = IteratorBegin(values);
-      IteratorType newLast = ::thrust::unique(thrust::cuda::par, begin, IteratorEnd(values));
+      auto begin = IteratorBegin(values);
+      auto newLast = ::thrust::unique(ThrustCudaPolicyPerThread, begin, IteratorEnd(values));
       return static_cast<vtkm::Id>(::thrust::distance(begin, newLast));
     }
     catch (...)
@@ -680,15 +677,13 @@ private:
   template <class ValuesPortal, class BinaryCompare>
   VTKM_CONT static vtkm::Id UniquePortal(const ValuesPortal values, BinaryCompare binary_compare)
   {
-    typedef typename detail::IteratorTraits<ValuesPortal>::IteratorType IteratorType;
-    typedef typename ValuesPortal::ValueType ValueType;
-
+    using ValueType = typename ValuesPortal::ValueType;
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);
     try
     {
-      IteratorType begin = IteratorBegin(values);
-      IteratorType newLast = ::thrust::unique(thrust::cuda::par, begin, IteratorEnd(values), bop);
+      auto begin = IteratorBegin(values);
+      auto newLast = ::thrust::unique(ThrustCudaPolicyPerThread, begin, IteratorEnd(values), bop);
       return static_cast<vtkm::Id>(::thrust::distance(begin, newLast));
     }
     catch (...)
@@ -705,7 +700,7 @@ private:
   {
     try
     {
-      ::thrust::upper_bound(thrust::cuda::par,
+      ::thrust::upper_bound(ThrustCudaPolicyPerThread,
                             IteratorBegin(input),
                             IteratorEnd(input),
                             IteratorBegin(values),
@@ -724,13 +719,13 @@ private:
                                           const OutputPortal& output,
                                           BinaryCompare binary_compare)
   {
-    typedef typename OutputPortal::ValueType ValueType;
+    using ValueType = typename OutputPortal::ValueType;
 
     vtkm::exec::cuda::internal::WrappedBinaryPredicate<ValueType, BinaryCompare> bop(
       binary_compare);
     try
     {
-      ::thrust::upper_bound(thrust::cuda::par,
+      ::thrust::upper_bound(ThrustCudaPolicyPerThread,
                             IteratorBegin(input),
                             IteratorEnd(input),
                             IteratorBegin(values),
@@ -750,7 +745,7 @@ private:
   {
     try
     {
-      ::thrust::upper_bound(thrust::cuda::par,
+      ::thrust::upper_bound(ThrustCudaPolicyPerThread,
                             IteratorBegin(input),
                             IteratorEnd(input),
                             IteratorBegin(values_output),
@@ -949,8 +944,8 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    input.PrepareForInput(DeviceAdapterTag());
-    return ScanExclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
+    return ScanExclusivePortal(inputPortal,
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
@@ -971,8 +966,8 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    input.PrepareForInput(DeviceAdapterTag());
-    return ScanExclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
+    return ScanExclusivePortal(inputPortal,
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                                binary_functor,
                                initialValue);
@@ -993,8 +988,8 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    input.PrepareForInput(DeviceAdapterTag());
-    return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
+    return ScanInclusivePortal(inputPortal,
                                output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
@@ -1014,10 +1009,9 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    input.PrepareForInput(DeviceAdapterTag());
-    return ScanInclusivePortal(input.PrepareForInput(DeviceAdapterTag()),
-                               output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
-                               binary_functor);
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTag());
+    return ScanInclusivePortal(
+      inputPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTag()), binary_functor);
   }
 
   template <typename T, typename U, typename KIn, typename VIn, typename VOut>
@@ -1035,11 +1029,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    keys.PrepareForInput(DeviceAdapterTag());
-    values.PrepareForInput(DeviceAdapterTag());
-    ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                             values.PrepareForInput(DeviceAdapterTag()),
-                             output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTag());
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
+    ScanInclusiveByKeyPortal(
+      keysPortal, valuesPortal, output.PrepareForOutput(numberOfValues, DeviceAdapterTag()));
   }
 
   template <typename T,
@@ -1063,10 +1056,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    keys.PrepareForInput(DeviceAdapterTag());
-    values.PrepareForInput(DeviceAdapterTag());
-    ScanInclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                             values.PrepareForInput(DeviceAdapterTag()),
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTag());
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
+    ScanInclusiveByKeyPortal(keysPortal,
+                             valuesPortal,
                              output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                              ::thrust::equal_to<T>(),
                              binary_functor);
@@ -1088,10 +1081,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    keys.PrepareForInput(DeviceAdapterTag());
-    values.PrepareForInput(DeviceAdapterTag());
-    ScanExnclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                              values.PrepareForInput(DeviceAdapterTag()),
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTag());
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
+    ScanExnclusiveByKeyPortal(keysPortal,
+                              valuesPortal,
                               output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                               vtkm::TypeTraits<T>::ZeroInitialization(),
                               vtkm::Add());
@@ -1120,10 +1113,10 @@ public:
     //function. The order of execution of parameters of a function is undefined
     //so we need to make sure input is called before output, or else in-place
     //use case breaks.
-    keys.PrepareForInput(DeviceAdapterTag());
-    values.PrepareForInput(DeviceAdapterTag());
-    ScanExclusiveByKeyPortal(keys.PrepareForInput(DeviceAdapterTag()),
-                             values.PrepareForInput(DeviceAdapterTag()),
+    auto keysPortal = keys.PrepareForInput(DeviceAdapterTag());
+    auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
+    ScanExclusiveByKeyPortal(keysPortal,
+                             valuesPortal,
                              output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
                              initialValue,
                              ::thrust::equal_to<T>(),
@@ -1163,11 +1156,12 @@ private:
   VTKM_CONT
   static vtkm::Vec<vtkm::UInt32, 3> GetMaxGridOfThreadBlocks()
   {
-    static bool gridQueryInit = false;
+    static std::atomic<bool> gridQueryInit(false);
     static vtkm::Vec<vtkm::UInt32, 3> maxGridSize;
+    // NOTE: The following code may still be executed by multiple threads
+    // but it should not cause any correctness issues.
     if (!gridQueryInit)
     {
-      gridQueryInit = true;
       int currDevice;
       VTKM_CUDA_CALL(cudaGetDevice(&currDevice)); //get deviceid from cuda
 
@@ -1187,10 +1181,14 @@ private:
 
       vtkm::UInt32* dev_actual_size;
       VTKM_CUDA_CALL(cudaMalloc((void**)&dev_actual_size, sizeof(vtkm::UInt32)));
-      DetermineProperXGridSize<<<1, 1>>>(maxGridSize[0], dev_actual_size);
-      VTKM_CUDA_CALL(cudaDeviceSynchronize());
-      VTKM_CUDA_CALL(
-        cudaMemcpy(&maxGridSize[0], dev_actual_size, sizeof(vtkm::UInt32), cudaMemcpyDeviceToHost));
+      DetermineProperXGridSize<<<1, 1, 0, cudaStreamPerThread>>>(maxGridSize[0], dev_actual_size);
+      VTKM_CUDA_CALL(cudaMemcpyAsync(&maxGridSize[0],
+                                     dev_actual_size,
+                                     sizeof(vtkm::UInt32),
+                                     cudaMemcpyDeviceToHost,
+                                     cudaStreamPerThread));
+      VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
+      gridQueryInit = true;
       VTKM_CUDA_CALL(cudaFree(dev_actual_size));
     }
     return maxGridSize;
@@ -1239,7 +1237,7 @@ public:
     //handle datasets larger than 2B, we need to execute multiple kernels
     if (totalBlocks < maxblocksPerLaunch)
     {
-      Schedule1DIndexKernel<Functor><<<totalBlocks, blockSize>>>(
+      Schedule1DIndexKernel<Functor><<<totalBlocks, blockSize, 0, cudaStreamPerThread>>>(
         functor, vtkm::Id(0), numInstances);
     }
     else
@@ -1249,7 +1247,7 @@ public:
       for (vtkm::Id numberOfKernelsInvoked = 0; numberOfKernelsInvoked < numInstances;
            numberOfKernelsInvoked += numberOfKernelsToRun)
       {
-        Schedule1DIndexKernel<Functor><<<maxblocksPerLaunch, blockSize>>>(
+        Schedule1DIndexKernel<Functor><<<maxblocksPerLaunch, blockSize, 0, cudaStreamPerThread>>>(
           functor, numberOfKernelsInvoked, numInstances);
       }
     }
@@ -1258,7 +1256,7 @@ public:
     //In the future I want move this before the schedule call, and throwing
     //an exception if the previous schedule wrote an error. This would help
     //cuda to run longer before we hard sync.
-    VTKM_CUDA_CALL(cudaDeviceSynchronize());
+    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
 
     //check what the value is
     if (hostErrorPtr[0] != '\0')
@@ -1318,13 +1316,14 @@ public:
     dim3 gridSize3d;
     compute_block_size(ranges, blockSize3d, gridSize3d);
 
-    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d>>>(functor, ranges);
+    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d, 0, cudaStreamPerThread>>>(functor,
+                                                                                        ranges);
 
     //sync so that we can check the results of the call.
     //In the future I want move this before the schedule call, and throwing
     //an exception if the previous schedule wrote an error. This would help
     //cuda to run longer before we hard sync.
-    VTKM_CUDA_CALL(cudaDeviceSynchronize());
+    VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
 
     //check what the value is
     if (hostErrorPtr[0] != '\0')

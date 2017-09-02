@@ -32,7 +32,7 @@ inline VTKM_CONT VertexClustering::VertexClustering()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet VertexClustering::DoExecute(
+inline VTKM_CONT vtkm::filter::Result VertexClustering::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& tag)
@@ -52,12 +52,12 @@ inline VTKM_CONT vtkm::filter::ResultDataSet VertexClustering::DoExecute(
                    this->GetNumberOfDivisions(),
                    tag);
 
-  return vtkm::filter::ResultDataSet(outDataSet);
+  return vtkm::filter::Result(outDataSet);
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT bool VertexClustering::DoMapField(vtkm::filter::ResultDataSet&,
+inline VTKM_CONT bool VertexClustering::DoMapField(vtkm::filter::Result&,
                                                    const vtkm::cont::ArrayHandle<T, StorageType>&,
                                                    const vtkm::filter::FieldMetadata&,
                                                    const vtkm::filter::PolicyBase<DerivedPolicy>&,

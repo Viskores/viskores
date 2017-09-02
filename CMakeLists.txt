@@ -27,20 +27,34 @@ cmake_minimum_required(VERSION 3.3)
 
 project (VTKm)
 
-set(VTKm_INSTALL_INCLUDE_DIR "include")
-set(VTKm_INSTALL_CONFIG_DIR "lib")
-set(VTKm_INSTALL_LIB_DIR "lib")
-set(VTKm_INSTALL_BIN_DIR "bin")
-set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
+if (NOT DEFINED VTKm_INSTALL_INCLUDE_DIR)
+  set(VTKm_INSTALL_INCLUDE_DIR "include")
+endif()
+if (NOT DEFINED VTKm_INSTALL_CONFIG_DIR)
+  set(VTKm_INSTALL_CONFIG_DIR "lib")
+endif()
+if (NOT DEFINED VTKm_INSTALL_LIB_DIR)
+  set(VTKm_INSTALL_LIB_DIR "lib")
+endif()
+if (NOT DEFINED VTKm_INSTALL_BIN_DIR)
+  set(VTKm_INSTALL_BIN_DIR "bin")
+endif()
+if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
+  set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
+endif()
 
 set(VTKm_EXPORT_NAME "VTKmTargets")
 
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
+# Setup default build types
+include(VTKmBuildType)
+
 # Determine VTK-m version
 include(Utilities/Git/Git.cmake)
 include(VTKmDetermineVersion)
+
 # Load hardcoded version in case this is not a Git repository
 file(STRINGS version.txt version_txt)
 extract_version_components("${version_txt}" "VTKm")
@@ -108,17 +122,8 @@ option(VTKm_USE_DOUBLE_PRECISION
   )
 option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
-if (VTKm_ENABLE_CUDA)
-  option(VTKm_USE_UNIFIED_MEMORY
-    "Use CUDA unified memory"
-    OFF
-    )
-endif (VTKm_ENABLE_CUDA)
-
-if (VTKm_USE_UNIFIED_MEMORY)
-  set(CMAKE_CXX_FLAGS "-DVTKM_USE_UNIFIED_MEMORY ${CMAKE_CXX_FLAGS}")
-endif()
-
+option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
+mark_as_advanced(VTKm_NO_ASSERT)
 
 option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
@@ -152,21 +157,21 @@ endif (VTKm_ENABLE_CUDA)
 #-----------------------------------------------------------------------------
 
 ## Set the directory where the binaries will be stored
-set( EXECUTABLE_OUTPUT_PATH
+set( VTKm_EXECUTABLE_OUTPUT_PATH
   ${PROJECT_BINARY_DIR}/bin
   CACHE PATH
   "Directory where all executable will be stored"
 )
 
 ## Set the directory where the libraries will be stored
-set( LIBRARY_OUTPUT_PATH
+set( VTKm_LIBRARY_OUTPUT_PATH
   ${PROJECT_BINARY_DIR}/lib
   CACHE PATH
   "Directory where all the libraries will be stored"
 )
 mark_as_advanced(
-  EXECUTABLE_OUTPUT_PATH
-  LIBRARY_OUTPUT_PATH)
+  VTKm_EXECUTABLE_OUTPUT_PATH
+  VTKm_LIBRARY_OUTPUT_PATH)
 
 #-----------------------------------------------------------------------------
 # Add "meta" tests that check the state of the repository

@@ -24,8 +24,6 @@
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
@@ -44,10 +42,6 @@ template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef typename FieldHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-    FieldPortalConstType;
-
   typedef void ControlSignature(FieldIn<IdType> idx, ExecObject ic);
   typedef void ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
@@ -55,31 +49,36 @@ public:
   template <typename IntegralCurveType>
   VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
   {
-    vtkm::Vec<FieldType, 3> p = ic.GetPos(idx);
-    vtkm::Vec<FieldType, 3> p2;
+    vtkm::Vec<FieldType, 3> inpos = ic.GetPos(idx);
+    vtkm::Vec<FieldType, 3> outpos;
 
     while (!ic.Done(idx))
     {
-      if (integrator.Step(p, field, p2))
+      ParticleStatus status = integrator.Step(inpos, outpos);
+      if (status == ParticleStatus::STATUS_OK)
       {
-        ic.TakeStep(idx, p2);
-        p = p2;
+        ic.TakeStep(idx, outpos, status);
+        inpos = outpos;
       }
-      else
+      if (status == ParticleStatus::AT_SPATIAL_BOUNDARY)
       {
-        ic.SetStatusOutOfBounds(idx);
+        vtkm::Id numSteps = ic.GetStep(idx);
+        status = integrator.PushOutOfDomain(inpos, numSteps, outpos);
+      }
+      if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
+      {
+        ic.TakeStep(idx, outpos, status);
+        ic.SetExitedSpatialBoundary(idx);
       }
     }
   }
 
-  ParticleAdvectWorklet(const IntegratorType& it, const FieldPortalConstType& f)
+  ParticleAdvectWorklet(const IntegratorType& it)
     : integrator(it)
-    , field(f)
   {
   }
 
   IntegratorType integrator;
-  FieldPortalConstType field;
 };
 
 
@@ -87,9 +86,6 @@ template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag
 class ParticleAdvectionWorklet
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef typename FieldHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-    FieldPortalConstType;
   typedef vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType,
                                                                   FieldType,
                                                                   DeviceAdapterTag>
@@ -98,68 +94,53 @@ public:
   ParticleAdvectionWorklet() {}
 
   template <typename PointStorage, typename FieldStorage>
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage> Run(
-    const IntegratorType& it,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
-    const vtkm::Id& nSteps,
-    const vtkm::Id& particlesPerRound = -1)
+  void Run(const IntegratorType& it,
+           const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
+           const vtkm::Id& nSteps,
+           vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
+           vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken)
   {
     integrator = it;
     seedArray = pts;
     maxSteps = nSteps;
-    ParticlesPerRound = particlesPerRound;
-    field = fieldArray.PrepareForInput(DeviceAdapterTag());
-    return run();
+    run(statusArray, stepsTaken);
   }
 
   ~ParticleAdvectionWorklet() {}
 
 private:
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> run(bool dumpOutput = false)
+  template <typename FieldStorage>
+  void run(vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
+           vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken)
   {
     typedef typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>
       ParticleWorkletDispatchType;
     typedef vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag> ParticleType;
+    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> DeviceAlgorithm;
 
-    vtkm::Id totNumSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
-    vtkm::Id numSeeds = totNumSeeds;
-    if (ParticlesPerRound == -1 || ParticlesPerRound > totNumSeeds)
-      numSeeds = totNumSeeds;
-    else
-      numSeeds = ParticlesPerRound;
+    vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
+    //Allocate status and steps arrays.
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> ok(ParticleStatus::STATUS_OK, numSeeds);
+    statusArray.Allocate(numSeeds);
+    DeviceAlgorithm::Copy(ok, statusArray);
 
-    std::vector<vtkm::Id> steps(static_cast<size_t>(numSeeds), 0),
-      status(static_cast<size_t>(numSeeds), ParticleStatus::OK);
-    vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], numSeeds);
-    vtkm::cont::ArrayHandle<vtkm::Id> statusArray =
-      vtkm::cont::make_ArrayHandle(&status[0], numSeeds);
+    /*vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds);
+    stepsTaken.Allocate(numSeeds);
+    DeviceAlgorithm::Copy(zero, stepsTaken);*/
+
+    //Create and invoke the particle advection.
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
+    ParticleType particles(seedArray, stepsTaken, statusArray, maxSteps);
 
-    ParticleType particles(seedArray, stepArray, statusArray, maxSteps);
-
-    ParticleAdvectWorkletType particleWorklet(integrator, field);
+    ParticleAdvectWorkletType particleWorklet(integrator);
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
     particleWorkletDispatch.Invoke(idxArray, particles);
-
-    if (dumpOutput)
-    {
-      for (vtkm::Id i = 0; i < numSeeds; i++)
-      {
-        vtkm::Vec<FieldType, 3> p = particles.GetPos(i);
-        std::cout << p[0] << " " << p[1] << " " << p[2] << std::endl;
-      }
-    }
-
-    return seedArray;
   }
 
   IntegratorType integrator;
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
   vtkm::cont::DataSet ds;
   vtkm::Id maxSteps;
-  vtkm::Id ParticlesPerRound;
-  FieldPortalConstType field;
 };
 
 
@@ -212,7 +193,7 @@ private:
     if (!(ParticlesPerRound == -1 || ParticlesPerRound > totNumSeeds))
       NeedParticleRounds = true;
 
-    ParticleAdvectWorkletType particleWorklet(integrator, field);
+    ParticleAdvectWorkletType particleWorklet(integrator);
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
 
     //Brute force method, or rounds.
@@ -229,7 +210,7 @@ private:
         if (NeedParticleRounds && num > ParticlesPerRound)
           num = ParticlesPerRound;
 
-        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::OK);
+        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::STATUS_OK);
         vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], num);
         vtkm::cont::ArrayHandle<vtkm::Id> statusArray =
           vtkm::cont::make_ArrayHandle(&status[0], num);
@@ -269,7 +250,7 @@ private:
         if (NeedParticleRounds && num > ParticlesPerRound)
           num = ParticlesPerRound;
 
-        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::OK);
+        std::vector<vtkm::Id> steps((size_t)num, 0), status((size_t)num, ParticleStatus::STATUS_OK);
         vtkm::cont::ArrayHandle<vtkm::Id> stepArray = vtkm::cont::make_ArrayHandle(&steps[0], num);
         vtkm::cont::ArrayHandle<vtkm::Id> statusArray =
           vtkm::cont::make_ArrayHandle(&status[0], num);
@@ -290,7 +271,7 @@ private:
             seedArray, stepArray, statusArray, numSteps, StepsPerRound, stepOffset, maxSteps);
           particleWorkletDispatch.Invoke(idxArray, streamlines);
 
-          auto historyPortal = streamlines.historyArray.GetPortalConstControl();
+          auto historyPortal = streamlines.HistoryArray.GetPortalConstControl();
           if (dumpOutput)
           {
             for (vtkm::Id i = 0; i < num; i++)

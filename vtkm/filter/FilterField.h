@@ -24,10 +24,11 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/MultiBlock.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/ResultField.h>
+#include <vtkm/filter/Result.h>
 
 namespace vtkm
 {
@@ -60,39 +61,49 @@ public:
   const vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker() const { return this->Tracker; }
 
   VTKM_CONT
-  ResultField Execute(const vtkm::cont::DataSet& input, const std::string& inFieldName);
+  Result Execute(const vtkm::cont::DataSet& input, const std::string& inFieldName);
 
   VTKM_CONT
-  ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field);
+  Result Execute(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field);
 
   VTKM_CONT
-  ResultField Execute(const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field);
+  Result Execute(const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field);
+
+  VTKM_CONT
+  std::vector<vtkm::filter::Result> Execute(const vtkm::cont::MultiBlock& input,
+                                            const std::string& inFieldName);
 
   template <typename DerivedPolicy>
-  VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input,
-                                const std::string& inFieldName,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT std::vector<vtkm::filter::Result> Execute(
+    const vtkm::cont::MultiBlock& input,
+    const std::string& inFieldName,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input,
-                                const vtkm::cont::Field& field,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
+                           const std::string& inFieldName,
+                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT ResultField Execute(const vtkm::cont::DataSet& input,
-                                const vtkm::cont::CoordinateSystem& field,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
+                           const vtkm::cont::Field& field,
+                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+
+  template <typename DerivedPolicy>
+  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
+                           const vtkm::cont::CoordinateSystem& field,
+                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   template <typename DerivedPolicy>
-  VTKM_CONT ResultField PrepareForExecution(const vtkm::cont::DataSet& input,
-                                            const vtkm::cont::Field& field,
-                                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
+                                       const vtkm::cont::Field& field,
+                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT ResultField PrepareForExecution(const vtkm::cont::DataSet& input,
-                                            const vtkm::cont::CoordinateSystem& field,
-                                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
+                                       const vtkm::cont::CoordinateSystem& field,
+                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
   vtkm::cont::RuntimeDeviceTracker Tracker;

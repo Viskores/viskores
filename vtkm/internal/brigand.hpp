@@ -10,7 +10,28 @@
 #define BRIGAND_NO_BOOST_SUPPORT
 #endif
 
-#include <type_traits>
+#if defined(_MSC_VER) && !defined(__GNUC__) && !defined(__clang__)
+#define BRIGAND_COMP_MSVC
+#if _MSC_VER == 1900
+#define BRIGAND_COMP_MSVC_2015
+#elif _MSC_VER == 1800
+#define BRIGAND_COMP_MSVC_2013
+#endif
+#elif __INTEL_COMPILER
+#define BRIGAND_COMP_INTEL
+#elif __GNUC__
+#ifndef __clang__
+#define BRIGAND_COMP_GCC
+#else
+#define BRIGAND_COMP_CLANG
+#endif
+#endif
+#if defined(__CUDACC__)
+#if (__CUDACC_VER_MAJOR__ == 9 && __CUDACC_VER_MINOR__ == 0 && __CUDACC_VER_BUILD__ <= 102)
+#define BRIGAND_COMP_CUDA_9_RC
+#endif
+#define BRIGAND_COMP_CUDA
+#endif
 #include <type_traits>
 namespace brigand
 {
@@ -221,13 +242,32 @@ namespace brigand
     struct element_at<list<Ts...>>
     {
       template<class T> type_<T> static at(Ts..., type_<T>*, ...);
+
+      //CUDA 9 version that is required
+      template<class R, class... Other> type_<R> static at_with_type(Ts..., R, Other...);
     };
+
+    template<class T> T extract_type(type_<T>*);
+
     template<std::size_t N, typename Seq> struct at_impl;
-    template<std::size_t N, template<typename...> class L, class... Ts>
-    struct at_impl<N,L<Ts...>>
-    : decltype(element_at<brigand::filled_list<void const *, N>>::at(static_cast<type_<Ts>*>(nullptr)...))
+#if defined(BRIGAND_COMP_CUDA_9_RC)
+    //Only needed for CUDA 9 RC1 as it has some compiler bugs
+    template <std::size_t N, template <typename...> class L, class... Ts>
+    struct at_impl<N, L<Ts...>>
+    {
+      using base_with_type = decltype(
+        element_at<filled_list<void const*, N>>::at_with_type(static_cast<type_<Ts>*>(nullptr)...));
+      using type = decltype(extract_type(typename base_with_type::type{}));
+    };
+#else
+    // This is the original implementation
+    template <std::size_t N, template <typename...> class L, class... Ts>
+    struct at_impl<N, L<Ts...>> : decltype(element_at<brigand::filled_list<void const*, N>>::at(
+                                    static_cast<type_<Ts>*>(nullptr)...))
     {
     };
+#endif
+
   }
   template <class L, std::size_t Index>
   using at_c = typename detail::at_impl<Index, L>::type;
@@ -408,25 +448,7 @@ namespace brigand
   template<std::ptrdiff_t V>
   using ptrdiff_t = std::integral_constant<std::ptrdiff_t, V>;
 }
-#if defined(_MSC_VER) && !defined(__GNUC__) && !defined(__clang__)
-#define BRIGAND_COMP_MSVC
-#if _MSC_VER == 1900
-#define BRIGAND_COMP_MSVC_2015
-#elif _MSC_VER == 1800
-#define BRIGAND_COMP_MSVC_2013
-#endif
-#elif __INTEL_COMPILER
-#define BRIGAND_COMP_INTEL
-#elif __GNUC__
-#ifndef __clang__
-#define BRIGAND_COMP_GCC
-#else
-#define BRIGAND_COMP_CLANG
-#endif
-#endif
-#if defined(__CUDACC__)
-#define BRIGAND_COMP_CUDA
-#endif
+
 #include <type_traits>
 namespace brigand
 {
@@ -470,7 +492,22 @@ namespace lazy
     {
         using type = ::brigand::size_t<0>;
     };
-#if defined(BRIGAND_COMP_GCC) || defined(BRIGAND_COMP_CLANG)
+
+#if defined(BRIGAND_COMP_CUDA_9_RC)
+  //This was added for CUDA 9 RC1 and most likely will need CUDA
+  //version guards
+  template<class P, class T>
+  struct count_all_helper : ::brigand::apply<P, T>
+  {};
+
+  template <template <typename...> class S, typename... Ts, typename Pred>
+  struct count_if<S<Ts...>, Pred>
+  {
+    using type = typename ::brigand::detail::template_count_bools<
+          count_all_helper<Pred,Ts>::value...>::type;
+  };
+
+#elif defined(BRIGAND_COMP_GCC) || defined(BRIGAND_COMP_CLANG)
   template <template <typename...> class S, template <typename...> class F>
   struct count_if<S<>, bind<F, _1>>
   {
@@ -487,18 +524,18 @@ namespace lazy
     static constexpr bool s_v[] = { ::brigand::apply<Pred, Ts>::type::value... };
     using type = brigand::size_t< ::brigand::detail::count_bools(s_v, s_v + sizeof...(Ts), 0u)>;
   };
-    template <template <typename...> class S, typename... Ts, template <typename...> class F>
-    struct count_if<S<Ts...>, bind<F, _1>>
-    {
-    static constexpr bool s_v[] = { F<Ts>::value... };
-    using type = brigand::size_t< ::brigand::detail::count_bools(s_v, s_v + sizeof...(Ts), 0u)>;
-    };
-    template <template <typename...> class S, typename... Ts, template <typename...> class F>
-    struct count_if<S<Ts...>, F<_1>>
-    {
-    static constexpr bool s_v[] = { F<Ts>::type::value... };
-    using type = brigand::size_t< ::brigand::detail::count_bools(s_v, s_v + sizeof...(Ts), 0u)>;
-    };
+  template <template <typename...> class S, typename... Ts, template <typename...> class F>
+  struct count_if<S<Ts...>, bind<F, _1>>
+  {
+  static constexpr bool s_v[] = { F<Ts>::value... };
+  using type = brigand::size_t< ::brigand::detail::count_bools(s_v, s_v + sizeof...(Ts), 0u)>;
+  };
+  template <template <typename...> class S, typename... Ts, template <typename...> class F>
+  struct count_if<S<Ts...>, F<_1>>
+  {
+  static constexpr bool s_v[] = { F<Ts>::type::value... };
+  using type = brigand::size_t< ::brigand::detail::count_bools(s_v, s_v + sizeof...(Ts), 0u)>;
+  };
 #else
   #if defined(BRIGAND_COMP_MSVC_2015)
     template <template <typename...> class S, typename... Ts, typename Pred>
@@ -915,13 +952,16 @@ namespace brigand
 #if defined(BRIGAND_COMP_MSVC_2013) || defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
   namespace detail
   {
+    template<typename T>
+    using type_impl = brigand::bool_<!T::value>;
+
     template<typename Sequence, typename Pred> struct none_impl
     {
       template<typename T>
       struct nope
       {
         using that = brigand::apply<Pred, T>;
-        using type = bool_<!that::value>;
+        using type = type_impl<that>;
       };
       using type = all<Sequence, nope<_1>>;
     };
@@ -1530,7 +1570,8 @@ namespace detail
 #include <type_traits>
 namespace brigand
 {
-#if defined(BRIGAND_COMP_GCC) || defined(BRIGAND_COMP_CLANG)
+
+#if (defined(BRIGAND_COMP_GCC) || defined(BRIGAND_COMP_CLANG)) && !defined(BRIGAND_COMP_CUDA_9_RC)
   namespace lazy
   {
     template <typename L, typename Pred>

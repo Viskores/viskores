@@ -61,7 +61,7 @@ class ArrayPortal
 public:
   /// The type of each value in the array.
   ///
-  typedef T ValueType;
+  using ValueType = T;
 
   /// The total number of values in the array. They are index from 0 to
   /// GetNumberOfValues()-1.

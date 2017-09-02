@@ -21,13 +21,41 @@
 #define vtk_m_interop_TransferToOpenGL_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/TryExecute.h>
 #include <vtkm/interop/BufferState.h>
 #include <vtkm/interop/internal/TransferToOpenGL.h>
+
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 namespace vtkm
 {
 namespace interop
 {
+
+namespace detail
+{
+template <typename ArrayT>
+struct PrepareForInteropFunctor
+{
+  ArrayT& Array;
+  PrepareForInteropFunctor(ArrayT& array)
+    : Array(array)
+  {
+  }
+
+  template <typename DeviceAdapterTag>
+  bool operator()(DeviceAdapterTag) const
+  {
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    this->Array.PrepareForInput(DeviceAdapterTag());
+    return this->Array.GetDeviceAdapterId() == Traits::GetId();
+  }
+};
+}
 
 /// \brief Manages transferring an ArrayHandle to opengl .
 ///
@@ -49,6 +77,54 @@ VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> h
 {
   vtkm::interop::internal::TransferToOpenGL<ValueType, DeviceAdapterTag> toGL(state);
   return toGL.Transfer(handle);
+}
+
+/// Dispatch overload for TransferToOpenGL that deduces the DeviceAdapter for
+/// the given ArrayHandle.
+///
+/// \overload
+///
+template <typename ValueType, class StorageTag>
+VTKM_CONT void TransferToOpenGL(vtkm::cont::ArrayHandle<ValueType, StorageTag> handle,
+                                BufferState& state)
+{
+  vtkm::cont::DeviceAdapterId devId = handle.GetDeviceAdapterId();
+
+  if (devId == VTKM_DEVICE_ADAPTER_UNDEFINED)
+  {
+    using ArrayT = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
+    using Functor = detail::PrepareForInteropFunctor<ArrayT>;
+    // Undefined device means that the array is not in an execution environment.
+    // In this case, call PrepareForInput using the devices in the tracker
+    // to move the data onto a device. This is required for a CUDA usecase
+    // where a device pointer is set as control memory to reuse an already
+    // allocated buffer. PrepareForInput on CUDA will detect this and set the
+    // execution pointer to match the control pointer.
+    vtkm::cont::TryExecute(Functor(handle));
+    devId = handle.GetDeviceAdapterId();
+  }
+
+  switch (devId)
+  {
+    case VTKM_DEVICE_ADAPTER_SERIAL:
+      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagSerial());
+      break;
+
+#ifdef VTKM_ENABLE_TBB
+    case VTKM_DEVICE_ADAPTER_TBB:
+      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagTBB());
+      break;
+#endif
+
+#ifdef VTKM_CUDA
+    case VTKM_DEVICE_ADAPTER_CUDA:
+      TransferToOpenGL(handle, state, vtkm::cont::DeviceAdapterTagCuda());
+      break;
+#endif
+
+    default:
+      throw vtkm::cont::ErrorBadValue("Unknown device id.");
+  }
 }
 }
 }

@@ -336,7 +336,9 @@ macro(vtkm_configure_component_CUDA)
     # 5 - pascal
     #   - Uses: --generate-code=arch=compute_60,code=compute_60
     #   - Uses: --generate-code=arch=compute_61,code=compute_61
-    # 6 - all
+    # 6 - volta
+    #   - Uses: --generate-code=arch=compute_70,code=compute_70
+    # 7 - all
     #   - Uses: --generate-code=arch=compute_20,code=compute_20
     #   - Uses: --generate-code=arch=compute_30,code=compute_30
     #   - Uses: --generate-code=arch=compute_35,code=compute_35
@@ -344,11 +346,12 @@ macro(vtkm_configure_component_CUDA)
     #   - Uses: --generate-code=arch=compute_52,code=compute_52
     #   - Uses: --generate-code=arch=compute_60,code=compute_60
     #   - Uses: --generate-code=arch=compute_61,code=compute_61
+    #   - Uses: --generate-code=arch=compute_70,code=compute_70
     #
 
     #specify the property
     set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
-    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal all)
+    set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta all)
 
     #detect what the propery is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
@@ -403,6 +406,8 @@ macro(vtkm_configure_component_CUDA)
     elseif(VTKm_CUDA_Architecture STREQUAL "pascal")
       list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_60,code=compute_60")
       list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_61,code=compute_61")
+    elseif(VTKm_CUDA_Architecture STREQUAL "volta")
+      list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_70,code=compute_70")
     elseif(VTKm_CUDA_Architecture STREQUAL "all")
       list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_20,code=compute_20")
       list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_30,code=compute_30")

@@ -51,7 +51,7 @@ struct TryExecuteTestFunctor
   template <typename Device>
   VTKM_CONT bool operator()(Device)
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<Device> Algorithm;
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
     Algorithm::Copy(this->InArray, this->OutArray);
     this->NumCalls++;
     return true;
@@ -85,23 +85,23 @@ void TryExecuteWithList(DeviceList, bool expectSuccess)
 
 static void Run()
 {
-  typedef vtkm::cont::DeviceAdapterTagSerial ValidDevice;
-  typedef vtkm::cont::DeviceAdapterTagError InvalidDevice;
+  using ValidDevice = vtkm::cont::DeviceAdapterTagSerial;
+  using InvalidDevice = vtkm::cont::DeviceAdapterTagError;
 
   std::cout << "Try a list with a single entry." << std::endl;
-  typedef vtkm::ListTagBase<ValidDevice> SingleValidList;
+  using SingleValidList = vtkm::ListTagBase<ValidDevice>;
   TryExecuteWithList(SingleValidList(), true);
 
   std::cout << "Try a list with two valid devices." << std::endl;
-  typedef vtkm::ListTagBase<ValidDevice, ValidDevice> DoubleValidList;
+  using DoubleValidList = vtkm::ListTagBase<ValidDevice, ValidDevice>;
   TryExecuteWithList(DoubleValidList(), true);
 
   std::cout << "Try a list with only invalid device." << std::endl;
-  typedef vtkm::ListTagBase<InvalidDevice> SingleInvalidList;
+  using SingleInvalidList = vtkm::ListTagBase<InvalidDevice>;
   TryExecuteWithList(SingleInvalidList(), false);
 
   std::cout << "Try a list with an invalid and valid device." << std::endl;
-  typedef vtkm::ListTagBase<InvalidDevice, ValidDevice> InvalidAndValidList;
+  using InvalidAndValidList = vtkm::ListTagBase<InvalidDevice, ValidDevice>;
   TryExecuteWithList(InvalidAndValidList(), true);
 }
 

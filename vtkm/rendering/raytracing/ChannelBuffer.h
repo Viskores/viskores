@@ -93,7 +93,8 @@ public:
   vtkm::Id GetSize() const;
   vtkm::Id GetBufferLength() const;
   std::string GetName() const;
-
+  void AddBuffer(const ChannelBuffer<Precision>& other);
+  void MultiplyBuffer(const ChannelBuffer<Precision>& other);
   /// Functions that are calleble within vtkm where the device is already known
   ///
   template <typename Device>

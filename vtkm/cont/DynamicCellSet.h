@@ -312,7 +312,7 @@ template <typename CellSetList>
 template <typename Functor>
 VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor& f) const
 {
-  typedef detail::DynamicCellSetTryCellSet<Functor> TryCellSetType;
+  using TryCellSetType = detail::DynamicCellSetTryCellSet<Functor>;
   TryCellSetType tryCellSet = TryCellSetType(this->CellSetContainer.get(), f);
 
   vtkm::ListForEach(tryCellSet, CellSetList());
@@ -322,7 +322,7 @@ VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor& f) co
   }
 }
 
-typedef DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST_TAG> DynamicCellSet;
+using DynamicCellSet = DynamicCellSetBase<VTKM_DEFAULT_CELL_SET_LIST_TAG>;
 
 namespace internal
 {
@@ -330,7 +330,7 @@ namespace internal
 template <typename CellSetList>
 struct DynamicTransformTraits<vtkm::cont::DynamicCellSetBase<CellSetList>>
 {
-  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
 
 } // namespace internal

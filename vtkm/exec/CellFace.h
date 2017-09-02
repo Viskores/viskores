@@ -245,6 +245,86 @@ static inline VTKM_EXEC vtkm::VecCConst<vtkm::IdComponent> CellFaceLocalIndices(
 
   return vtkm::make_VecC(detail::PointsInFace[shape.Id][faceIndex], numPointsInFace);
 }
+
+/// \brief Returns a canonical identifer for a cell face
+///
+/// Given information about a cell face and the global point indices for that cell, returns a
+/// vtkm::Id3 that contains values that are unique to that face. The values for two faces will be
+/// the same if and only if the faces contain the same points.
+///
+/// Note that this property is only true if the mesh is conforming. That is, any two neighboring
+/// cells that share a face have the same points on that face. This preculdes 2 faces sharing more
+/// than a single point or single edge.
+///
+template <typename CellShapeTag, typename GlobalPointIndicesVecType>
+static inline VTKM_EXEC vtkm::Id3 CellFaceCanonicalId(
+  vtkm::IdComponent faceIndex,
+  CellShapeTag shape,
+  const GlobalPointIndicesVecType& globalPointIndicesVec,
+  const vtkm::exec::FunctorBase& worklet)
+{
+  vtkm::VecCConst<vtkm::IdComponent> localPointIndices =
+    vtkm::exec::CellFaceLocalIndices(faceIndex, shape, worklet);
+
+  VTKM_ASSERT(localPointIndices.GetNumberOfComponents() >= 3);
+
+  //Sort the first 3 face points/nodes in ascending order
+  vtkm::Id3 sorted(globalPointIndicesVec[localPointIndices[0]],
+                   globalPointIndicesVec[localPointIndices[1]],
+                   globalPointIndicesVec[localPointIndices[2]]);
+  vtkm::Id temp;
+  if (sorted[0] > sorted[2])
+  {
+    temp = sorted[0];
+    sorted[0] = sorted[2];
+    sorted[2] = temp;
+  }
+  if (sorted[0] > sorted[1])
+  {
+    temp = sorted[0];
+    sorted[0] = sorted[1];
+    sorted[1] = temp;
+  }
+  if (sorted[1] > sorted[2])
+  {
+    temp = sorted[1];
+    sorted[1] = sorted[2];
+    sorted[2] = temp;
+  }
+
+  // Check the rest of the points to see if they are in the lowest 3
+  vtkm::IdComponent numPointsInFace = localPointIndices.GetNumberOfComponents();
+  for (vtkm::IdComponent pointIndex = 3; pointIndex < numPointsInFace; pointIndex++)
+  {
+    vtkm::Id nextPoint = globalPointIndicesVec[localPointIndices[pointIndex]];
+    if (nextPoint < sorted[2])
+    {
+      if (nextPoint < sorted[1])
+      {
+        sorted[2] = sorted[1];
+        if (nextPoint < sorted[0])
+        {
+          sorted[1] = sorted[0];
+          sorted[0] = nextPoint;
+        }
+        else // nextPoint > P0, nextPoint < P1
+        {
+          sorted[1] = nextPoint;
+        }
+      }
+      else // nextPoint > P1, nextPoint < P2
+      {
+        sorted[2] = nextPoint;
+      }
+    }
+    else // nextPoint > P2
+    {
+      // Do nothing. nextPoint not in top 3.
+    }
+  }
+
+  return sorted;
+}
 }
 } // namespace vtkm::exec
 

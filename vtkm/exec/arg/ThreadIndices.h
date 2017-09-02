@@ -56,13 +56,13 @@ struct ThreadIndices : vtkm::exec::arg::ExecutionSignatureTagBase
   // whether we use it or not. 1 should be guaranteed to be valid since you
   // need at least one argument for the input domain.
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagThreadIndices AspectTag;
+  using AspectTag = vtkm::exec::arg::AspectTagThreadIndices;
 };
 
 template <typename FetchTag, typename ThreadIndicesType, typename ExecObjectType>
 struct Fetch<FetchTag, vtkm::exec::arg::AspectTagThreadIndices, ThreadIndicesType, ExecObjectType>
 {
-  typedef const ThreadIndicesType& ValueType;
+  using ValueType = const ThreadIndicesType&;
 
   VTKM_EXEC
   const ThreadIndicesType& Load(const ThreadIndicesType& indices, const ExecObjectType&) const

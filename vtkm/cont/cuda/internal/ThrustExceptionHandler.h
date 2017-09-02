@@ -58,4 +58,4 @@ static inline void throwAsVTKmException()
 }
 }
 
-#endif
+#endif //vtk_m_cont_cuda_interal_ThrustExecptionHandler_h

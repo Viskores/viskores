@@ -65,7 +65,7 @@ inline VTKM_CONT ClipWithField::ClipWithField()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet ClipWithField::DoExecute(
+inline VTKM_CONT vtkm::filter::Result ClipWithField::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -78,7 +78,7 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ClipWithField::DoExecute(
   {
     //todo: we need to mark this as a failure of input, not a failure
     //of the algorithm
-    return vtkm::filter::ResultDataSet();
+    return vtkm::filter::Result();
   }
 
   //get the cells and coordinates of the dataset
@@ -100,7 +100,7 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ClipWithField::DoExecute(
   vtkm::filter::ApplyPolicy(inputCoords, policy).CastAndCall(pointMapper);
   vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(), outputCoordsArray);
   output.AddCoordinateSystem(outputCoords);
-  vtkm::filter::ResultDataSet result(output);
+  vtkm::filter::Result result(output);
 
   return result;
 }
@@ -108,7 +108,7 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ClipWithField::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ClipWithField::DoMapField(
-  vtkm::filter::ResultDataSet& result,
+  vtkm::filter::Result& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,

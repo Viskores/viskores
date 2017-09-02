@@ -58,10 +58,10 @@ void TestConcatenateEmptyArray()
   for (vtkm::Id i = 0; i < ARRAY_SIZE; i++)
     vec.push_back(vtkm::Float64(i) * 1.5);
 
-  typedef vtkm::Float64 CoeffValueType;
-  typedef vtkm::cont::ArrayHandle<CoeffValueType> CoeffArrayTypeTmp;
-  typedef vtkm::cont::ArrayHandleConcatenate<CoeffArrayTypeTmp, CoeffArrayTypeTmp> ArrayConcat;
-  typedef vtkm::cont::ArrayHandleConcatenate<ArrayConcat, CoeffArrayTypeTmp> ArrayConcat2;
+  using CoeffValueType = vtkm::Float64;
+  using CoeffArrayTypeTmp = vtkm::cont::ArrayHandle<CoeffValueType>;
+  using ArrayConcat = vtkm::cont::ArrayHandleConcatenate<CoeffArrayTypeTmp, CoeffArrayTypeTmp>;
+  using ArrayConcat2 = vtkm::cont::ArrayHandleConcatenate<ArrayConcat, CoeffArrayTypeTmp>;
 
   CoeffArrayTypeTmp arr1 = vtkm::cont::make_ArrayHandle(vec);
   CoeffArrayTypeTmp arr2, arr3;

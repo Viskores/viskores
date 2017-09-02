@@ -151,6 +151,95 @@ void AxisAnnotation::CalculateTicks(const vtkm::Range& range,
   }
 }
 
+void AxisAnnotation::CalculateTicksLogarithmic(const vtkm::Range& range,
+                                               bool minor,
+                                               std::vector<vtkm::Float64>& positions,
+                                               std::vector<vtkm::Float64>& proportions) const
+{
+  positions.clear();
+  proportions.clear();
+
+  // Sort the min and max range to account for range modification due to log functions
+  vtkm::Range sortedRange;
+  sortedRange.Min = range.Min < range.Max ? range.Min : range.Max;
+  sortedRange.Max = range.Min > range.Max ? range.Min : range.Max;
+
+  if (!sortedRange.IsNonEmpty())
+  {
+    return;
+  }
+
+  vtkm::Float64 first_log = ceil(sortedRange.Min);
+  vtkm::Float64 last_log = floor(sortedRange.Max);
+
+  if (last_log <= first_log)
+  {
+    last_log = first_log + 1;
+  }
+  vtkm::Float64 diff_log = last_log - first_log;
+  vtkm::Int32 step = vtkm::Int32((diff_log + 9) / 10);
+
+  if (minor)
+  {
+    first_log -= step;
+    last_log += step;
+  }
+
+  for (vtkm::Int32 i = vtkm::Int32(first_log); i <= last_log; i += step)
+  {
+    vtkm::Float64 logpos = i;
+    vtkm::Float64 pos = pow(10, logpos);
+    if (minor)
+    {
+      // If we're showing major tickmarks for every power of 10,
+      // then show 2x10^n, 3x10^n, ..., 9x10^n for minor ticks.
+      // If we're skipping some powers of 10, then use the minor
+      // ticks to show where those skipped ones are.  (Beyond
+      // a range of 100 orders of magnitude, we get more than 10
+      // minor ticks per major tick, but that's awfully rare.)
+      if (step == 1)
+      {
+        for (vtkm::Int32 j = 1; j < 10; ++j)
+        {
+          vtkm::Float64 minor_pos = vtkm::Float64(j) * vtkm::Float64(pos);
+          vtkm::Float64 minor_logpos = log10(minor_pos);
+          if (minor_logpos < sortedRange.Min || minor_logpos > sortedRange.Max)
+          {
+            continue;
+          }
+          positions.push_back(minor_pos);
+          proportions.push_back((minor_logpos - sortedRange.Min) /
+                                (sortedRange.Max - sortedRange.Max));
+        }
+      }
+      else
+      {
+        for (vtkm::Int32 j = 1; j < step; ++j)
+        {
+          vtkm::Float64 minor_logpos = logpos + j;
+          vtkm::Float64 minor_pos = pow(10., minor_logpos);
+          if (minor_logpos < sortedRange.Min || minor_logpos > sortedRange.Max)
+          {
+            continue;
+          }
+          positions.push_back(minor_pos);
+          proportions.push_back((minor_logpos - sortedRange.Min) /
+                                (sortedRange.Max - sortedRange.Min));
+        }
+      }
+    }
+    else
+    {
+      if (logpos > sortedRange.Max)
+      {
+        break;
+      }
+      positions.push_back(pos);
+      proportions.push_back((logpos - sortedRange.Min) / (sortedRange.Max - sortedRange.Min));
+    }
+  }
+}
+
 AxisAnnotation::AxisAnnotation()
 {
 }

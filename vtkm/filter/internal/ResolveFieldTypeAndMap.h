@@ -33,7 +33,7 @@ namespace vtkm
 {
 namespace filter
 {
-class ResultDataSet;
+class Result;
 }
 }
 
@@ -50,14 +50,14 @@ struct ResolveFieldTypeAndMap
   typedef ResolveFieldTypeAndMap<Derived, DerivedPolicy> Self;
 
   Derived* DerivedClass;
-  vtkm::filter::ResultDataSet& InputResult;
+  vtkm::filter::Result& InputResult;
   const vtkm::filter::FieldMetadata& Metadata;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
   vtkm::cont::RuntimeDeviceTracker Tracker;
   bool& RanProperly;
 
   ResolveFieldTypeAndMap(Derived* derivedClass,
-                         vtkm::filter::ResultDataSet& inResult,
+                         vtkm::filter::Result& inResult,
                          const vtkm::filter::FieldMetadata& fieldMeta,
                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                          const vtkm::cont::RuntimeDeviceTracker& tracker,

@@ -37,13 +37,13 @@ template <vtkm::IdComponent DIMENSION>
 class VTKM_ALWAYS_EXPORT CellSetStructured : public CellSet
 {
 private:
-  typedef vtkm::cont::CellSetStructured<DIMENSION> Thisclass;
-  typedef vtkm::internal::ConnectivityStructuredInternals<DIMENSION> InternalsType;
+  using Thisclass = vtkm::cont::CellSetStructured<DIMENSION>;
+  using InternalsType = vtkm::internal::ConnectivityStructuredInternals<DIMENSION>;
 
 public:
   static const vtkm::IdComponent Dimension = DIMENSION;
 
-  typedef typename InternalsType::SchedulingRangeType SchedulingRangeType;
+  using SchedulingRangeType = typename InternalsType::SchedulingRangeType;
 
   CellSetStructured(const std::string& name = std::string())
     : CellSet(name)
@@ -88,7 +88,7 @@ public:
     VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapter);
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(FromTopology);
     VTKM_IS_TOPOLOGY_ELEMENT_TAG(ToTopology);
-    typedef vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension> ExecObjectType;
+    using ExecObjectType = vtkm::exec::ConnectivityStructured<FromTopology, ToTopology, Dimension>;
   };
 
   template <typename DeviceAdapter, typename FromTopology, typename ToTopology>

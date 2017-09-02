@@ -58,12 +58,12 @@ public:
   void SetCompactPointFields(bool flag) { this->CompactPointFields = flag; }
 
   template <typename Policy, typename Device>
-  VTKM_CONT vtkm::filter::ResultDataSet DoExecute(const vtkm::cont::DataSet& inData,
-                                                  vtkm::filter::PolicyBase<Policy> policy,
-                                                  Device);
+  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& inData,
+                                           vtkm::filter::PolicyBase<Policy> policy,
+                                           Device);
 
   template <typename ValueType, typename Storage, typename Policy, typename Device>
-  VTKM_CONT bool DoMapField(vtkm::filter::ResultDataSet& result,
+  VTKM_CONT bool DoMapField(vtkm::filter::Result& result,
                             const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             vtkm::filter::PolicyBase<Policy>,

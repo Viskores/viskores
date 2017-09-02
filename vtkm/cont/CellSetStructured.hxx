@@ -54,8 +54,8 @@ typename CellSetStructured<
   DIMENSION>::template ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType
   CellSetStructured<DIMENSION>::PrepareForInput(DeviceAdapter, FromTopology, ToTopology) const
 {
-  typedef typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType
-    ConnectivityType;
+  using ConnectivityType =
+    typename ExecutionTypes<DeviceAdapter, FromTopology, ToTopology>::ExecObjectType;
   return ConnectivityType(this->Structure);
 }
 

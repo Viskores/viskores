@@ -28,7 +28,7 @@
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/ResultDataSet.h>
+#include <vtkm/filter/Result.h>
 
 namespace vtkm
 {
@@ -67,11 +67,11 @@ public:
   const vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker() const { return this->Tracker; }
 
   VTKM_CONT
-  ResultDataSet Execute(const vtkm::cont::DataSet& input);
+  Result Execute(const vtkm::cont::DataSet& input);
 
   template <typename DerivedPolicy>
-  VTKM_CONT ResultDataSet Execute(const vtkm::cont::DataSet& input,
-                                  const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
+                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //From the field we can extract the association component
   // ASSOC_ANY -> unable to map
@@ -80,18 +80,17 @@ public:
   // ASSOC_CELL_SET -> how do we map this?
   // ASSOC_LOGICAL_DIM -> unable to map?
   VTKM_CONT
-  bool MapFieldOntoOutput(ResultDataSet& result, const vtkm::cont::Field& field);
+  bool MapFieldOntoOutput(Result& result, const vtkm::cont::Field& field);
 
   template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(ResultDataSet& result,
+  VTKM_CONT bool MapFieldOntoOutput(Result& result,
                                     const vtkm::cont::Field& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
   template <typename DerivedPolicy>
-  VTKM_CONT ResultDataSet
-  PrepareForExecution(const vtkm::cont::DataSet& input,
-                      const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
+                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
   vtkm::Id CellSetIndex;

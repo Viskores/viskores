@@ -79,10 +79,6 @@ void TestKdTreeBuildNNS()
   vtkm::Int32 nTrainingPoints = 1000;
   vtkm::Int32 nTestingPoint = 1000;
 
-  std::vector<vtkm::Float32> xcoordi;
-  std::vector<vtkm::Float32> ycoordi;
-  std::vector<vtkm::Float32> zcoordi;
-
   std::vector<vtkm::Vec<vtkm::Float32, 3>> coordi;
 
   ///// randomly genarate training points/////
@@ -91,53 +87,32 @@ void TestKdTreeBuildNNS()
 
   for (vtkm::Int32 i = 0; i < nTrainingPoints; i++)
   {
-    xcoordi.push_back(dr(dre));
-    ycoordi.push_back(dr(dre));
-    zcoordi.push_back(dr(dre));
-    vtkm::Vec<vtkm::Float32, 3> c;
-    c[0] = xcoordi[xcoordi.size() - 1];
-    c[1] = ycoordi[ycoordi.size() - 1];
-    c[2] = zcoordi[zcoordi.size() - 1];
-    coordi.push_back(c);
+    coordi.push_back(vtkm::make_Vec(dr(dre), dr(dre), dr(dre)));
   }
 
   ///// preprare data to build 3D kd tree /////
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> coordi_Handle;
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(coordi), coordi_Handle);
-
-  vtkm::cont::ArrayHandle<vtkm::Id> pointId_Handle;
-  vtkm::cont::ArrayHandle<vtkm::Id> splitId_Handle;
+  auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi);
 
   // Run data
   vtkm::worklet::KdTree3D kdtree3d;
-  kdtree3d.Run(coordi_Handle, pointId_Handle, splitId_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  kdtree3d.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   //Nearest Neighbor worklet Testing
   /// randomly generate testing points /////
   std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
   for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
   {
-    vtkm::Vec<vtkm::Float32, 3> qc;
-    qc[0] = dr(dre);
-    qc[1] = dr(dre);
-    qc[2] = dr(dre);
-    qcVec.push_back(qc);
+    qcVec.push_back(vtkm::make_Vec(dr(dre), dr(dre), dr(dre)));
   }
 
   ///// preprare testing data /////
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> qc_Handle;
-  Algorithm::Copy(vtkm::cont::make_ArrayHandle(qcVec), qc_Handle);
+  auto qc_Handle = vtkm::cont::make_ArrayHandle(qcVec);
 
   vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
 
-  kdtree3d.Run(coordi_Handle,
-               pointId_Handle,
-               splitId_Handle,
-               qc_Handle,
-               nnId_Handle,
-               nnDis_Handle,
-               VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  kdtree3d.Run(
+    coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
   vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;

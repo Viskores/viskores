@@ -54,14 +54,14 @@ struct TestExecObject
 
 struct MyOutputToInputMapPortal
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
   VTKM_EXEC_CONT
   vtkm::Id Get(vtkm::Id index) const { return index; }
 };
 
 struct MyVisitArrayPortal
 {
-  typedef vtkm::IdComponent ValueType;
+  using ValueType = vtkm::IdComponent;
   vtkm::IdComponent Get(vtkm::Id) const { return 1; }
 };
 
@@ -75,11 +75,11 @@ struct TestFetchTagOutput
 // Missing TransportTag, but we are not testing that so we can leave it out.
 struct TestControlSignatureTagInput
 {
-  typedef TestFetchTagInput FetchTag;
+  using FetchTag = TestFetchTagInput;
 };
 struct TestControlSignatureTagOutput
 {
-  typedef TestFetchTagOutput FetchTag;
+  using FetchTag = TestFetchTagOutput;
 };
 
 } // anonymous namespace
@@ -92,10 +92,12 @@ namespace arg
 {
 
 template <>
-struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic, TestExecObject>
+struct Fetch<TestFetchTagInput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
 
   VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic& indices,
@@ -112,10 +114,12 @@ struct Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault,
 };
 
 template <>
-struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault,
-             vtkm::exec::arg::ThreadIndicesBasic, TestExecObject>
+struct Fetch<TestFetchTagOutput,
+             vtkm::exec::arg::AspectTagDefault,
+             vtkm::exec::arg::ThreadIndicesBasic,
+             TestExecObject>
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
 
   VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic&, const TestExecObject&) const
@@ -125,7 +129,8 @@ struct Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault,
   }
 
   VTKM_EXEC
-  void Store(const vtkm::exec::arg::ThreadIndicesBasic& indices, const TestExecObject& execObject,
+  void Store(const vtkm::exec::arg::ThreadIndicesBasic& indices,
+             const TestExecObject& execObject,
              ValueType value) const
   {
     execObject.Portal.Set(indices.GetOutputIndex(), value + 20 * indices.GetOutputIndex());
@@ -139,26 +144,30 @@ namespace
 {
 
 typedef void TestControlSignature(TestControlSignatureTagInput, TestControlSignatureTagOutput);
-typedef vtkm::internal::FunctionInterface<TestControlSignature> TestControlInterface;
+using TestControlInterface = vtkm::internal::FunctionInterface<TestControlSignature>;
 
 typedef void TestExecutionSignature1(vtkm::exec::arg::BasicArg<1>, vtkm::exec::arg::BasicArg<2>);
-typedef vtkm::internal::FunctionInterface<TestExecutionSignature1> TestExecutionInterface1;
+using TestExecutionInterface1 = vtkm::internal::FunctionInterface<TestExecutionSignature1>;
 
 typedef vtkm::exec::arg::BasicArg<2> TestExecutionSignature2(vtkm::exec::arg::BasicArg<1>);
-typedef vtkm::internal::FunctionInterface<TestExecutionSignature2> TestExecutionInterface2;
+using TestExecutionInterface2 = vtkm::internal::FunctionInterface<TestExecutionSignature2>;
 
 typedef vtkm::internal::FunctionInterface<void(TestExecObject, TestExecObject)>
   ExecutionParameterInterface;
 
-typedef vtkm::internal::Invocation<ExecutionParameterInterface, TestControlInterface,
-                                   TestExecutionInterface1, 1, MyOutputToInputMapPortal,
-                                   MyVisitArrayPortal>
-  InvocationType1;
+using InvocationType1 = vtkm::internal::Invocation<ExecutionParameterInterface,
+                                                   TestControlInterface,
+                                                   TestExecutionInterface1,
+                                                   1,
+                                                   MyOutputToInputMapPortal,
+                                                   MyVisitArrayPortal>;
 
-typedef vtkm::internal::Invocation<ExecutionParameterInterface, TestControlInterface,
-                                   TestExecutionInterface2, 1, MyOutputToInputMapPortal,
-                                   MyVisitArrayPortal>
-  InvocationType2;
+using InvocationType2 = vtkm::internal::Invocation<ExecutionParameterInterface,
+                                                   TestControlInterface,
+                                                   TestExecutionInterface2,
+                                                   1,
+                                                   MyOutputToInputMapPortal,
+                                                   MyVisitArrayPortal>;
 
 template <typename TaskType>
 static __global__ void ScheduleTaskSingular(TaskType task, vtkm::Id start, vtkm::Id end)
@@ -181,14 +190,20 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
   VTKM_EXEC
   vtkm::Id operator()(vtkm::Id input) const { return input + 200; }
 
-  template <typename T, typename OutToInArrayType, typename VisitArrayType,
-            typename InputDomainType, typename G>
+  template <typename T,
+            typename OutToInArrayType,
+            typename VisitArrayType,
+            typename InputDomainType,
+            typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
-    const T& threadIndex, const OutToInArrayType& outToIn, const VisitArrayType& visit,
-    const InputDomainType&, const G& globalThreadIndexOffset) const
+    const T& threadIndex,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const InputDomainType&,
+    const G& globalThreadIndexOffset) const
   {
-    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, outToIn.Get(threadIndex),
-                                               visit.Get(threadIndex), globalThreadIndexOffset);
+    return vtkm::exec::arg::ThreadIndicesBasic(
+      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
   }
 };
 
@@ -200,39 +215,48 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
   VTKM_EXEC
   void operator()(vtkm::Id, vtkm::Id) const { this->RaiseError(ERROR_MESSAGE); }
 
-  template <typename T, typename OutToInArrayType, typename VisitArrayType,
-            typename InputDomainType, typename G>
+  template <typename T,
+            typename OutToInArrayType,
+            typename VisitArrayType,
+            typename InputDomainType,
+            typename G>
   VTKM_EXEC vtkm::exec::arg::ThreadIndicesBasic GetThreadIndices(
-    const T& threadIndex, const OutToInArrayType& outToIn, const VisitArrayType& visit,
-    const InputDomainType&, const G& globalThreadIndexOffset) const
+    const T& threadIndex,
+    const OutToInArrayType& outToIn,
+    const VisitArrayType& visit,
+    const InputDomainType&,
+    const G& globalThreadIndexOffset) const
   {
-    return vtkm::exec::arg::ThreadIndicesBasic(threadIndex, outToIn.Get(threadIndex),
-                                               visit.Get(threadIndex), globalThreadIndexOffset);
+    return vtkm::exec::arg::ThreadIndicesBasic(
+      threadIndex, outToIn.Get(threadIndex), visit.Get(threadIndex), globalThreadIndexOffset);
   }
 };
 
 // Check behavior of InvocationToFetch helper class.
 
 VTKM_STATIC_ASSERT(
-  (std::is_same<
-    vtkm::exec::internal::detail::InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic,
-                                                    InvocationType1, 1>::type,
-    vtkm::exec::arg::Fetch<TestFetchTagInput, vtkm::exec::arg::AspectTagDefault,
-                           vtkm::exec::arg::ThreadIndicesBasic, TestExecObject>>::type::value));
+  (std::is_same<vtkm::exec::internal::detail::
+                  InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 1>::type,
+                vtkm::exec::arg::Fetch<TestFetchTagInput,
+                                       vtkm::exec::arg::AspectTagDefault,
+                                       vtkm::exec::arg::ThreadIndicesBasic,
+                                       TestExecObject>>::type::value));
 
 VTKM_STATIC_ASSERT(
-  (std::is_same<
-    vtkm::exec::internal::detail::InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic,
-                                                    InvocationType1, 2>::type,
-    vtkm::exec::arg::Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault,
-                           vtkm::exec::arg::ThreadIndicesBasic, TestExecObject>>::type::value));
+  (std::is_same<vtkm::exec::internal::detail::
+                  InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType1, 2>::type,
+                vtkm::exec::arg::Fetch<TestFetchTagOutput,
+                                       vtkm::exec::arg::AspectTagDefault,
+                                       vtkm::exec::arg::ThreadIndicesBasic,
+                                       TestExecObject>>::type::value));
 
 VTKM_STATIC_ASSERT(
-  (std::is_same<
-    vtkm::exec::internal::detail::InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic,
-                                                    InvocationType2, 0>::type,
-    vtkm::exec::arg::Fetch<TestFetchTagOutput, vtkm::exec::arg::AspectTagDefault,
-                           vtkm::exec::arg::ThreadIndicesBasic, TestExecObject>>::type::value));
+  (std::is_same<vtkm::exec::internal::detail::
+                  InvocationToFetch<vtkm::exec::arg::ThreadIndicesBasic, InvocationType2, 0>::type,
+                vtkm::exec::arg::Fetch<TestFetchTagOutput,
+                                       vtkm::exec::arg::AspectTagDefault,
+                                       vtkm::exec::arg::ThreadIndicesBasic,
+                                       TestExecObject>>::type::value));
 
 template <typename DeviceAdapter>
 void TestNormalFunctorInvoke()
@@ -253,7 +277,7 @@ void TestNormalFunctorInvoke()
       TestExecObject(output.PrepareForOutput(3, DeviceAdapter())));
 
   std::cout << "  Try void return." << std::endl;
-  typedef vtkm::exec::internal::TaskSingular<TestWorkletProxy, InvocationType1> TaskSingular1;
+  using TaskSingular1 = vtkm::exec::internal::TaskSingular<TestWorkletProxy, InvocationType1>;
   TestWorkletProxy worklet;
   InvocationType1 invocation1(execObjects);
 
@@ -277,7 +301,7 @@ void TestNormalFunctorInvoke()
     TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
     TestExecObject(output.PrepareForOutput(3, DeviceAdapter())));
 
-  typedef vtkm::exec::internal::TaskSingular<TestWorkletProxy, InvocationType2> TaskSingular2;
+  using TaskSingular2 = vtkm::exec::internal::TaskSingular<TestWorkletProxy, InvocationType2>;
   InvocationType2 invocation2(execObjects);
 
   using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
@@ -311,7 +335,7 @@ void TestErrorFunctorInvoke()
       TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
       TestExecObject(output.PrepareForInPlace(DeviceAdapter())));
 
-  typedef vtkm::exec::internal::TaskSingular<TestWorkletErrorProxy, InvocationType1> TaskSingular1;
+  using TaskSingular1 = vtkm::exec::internal::TaskSingular<TestWorkletErrorProxy, InvocationType1>;
   TestWorkletErrorProxy worklet;
   InvocationType1 invocation(execObjects);
 

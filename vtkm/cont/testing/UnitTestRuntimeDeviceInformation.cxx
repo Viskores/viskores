@@ -36,7 +36,7 @@ struct DoesExist;
 template <typename DeviceAdapterTag>
 void detect_if_exists(DeviceAdapterTag tag)
 {
-  typedef vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag> DeviceAdapterTraits;
+  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
   DoesExist<DeviceAdapterTraits::Valid>::Exist(tag);
 }
 
@@ -68,9 +68,9 @@ struct DoesExist<true>
 
 void Detection()
 {
-  typedef ::vtkm::cont::DeviceAdapterTagSerial SerialTag;
-  typedef ::vtkm::cont::DeviceAdapterTagTBB TBBTag;
-  typedef ::vtkm::cont::DeviceAdapterTagCuda CudaTag;
+  using SerialTag = ::vtkm::cont::DeviceAdapterTagSerial;
+  using TBBTag = ::vtkm::cont::DeviceAdapterTagTBB;
+  using CudaTag = ::vtkm::cont::DeviceAdapterTagCuda;
 
   //Verify that for each device adapter we compile code for, that it
   //has valid runtime support.

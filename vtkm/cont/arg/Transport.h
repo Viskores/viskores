@@ -55,8 +55,8 @@ struct Transport
   /// For example, for an \c ArrayHandle, the \c ExecObjectType is the portal
   /// used in the execution environment.
   ///
-  typedef
-    typename ContObjectType::template ExecutionTypes<DeviceAdapterTag>::PortalConst ExecObjectType;
+  using ExecObjectType =
+    typename ContObjectType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
 
   /// \brief Send data to the execution environment.
   ///

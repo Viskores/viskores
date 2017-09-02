@@ -171,6 +171,27 @@ void CanvasGL::RefreshDepthBuffer() const
                const_cast<vtkm::Float32*>(this->GetDepthBuffer().GetStorage().GetArray()));
 }
 
+void CanvasGL::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
+                              const vtkm::Vec<vtkm::Float64, 2>& point1,
+                              const vtkm::Vec<vtkm::Float64, 2>& point2,
+                              const vtkm::Vec<vtkm::Float64, 2>& point3,
+                              const vtkm::rendering::Color& color) const
+{
+  glDisable(GL_DEPTH_TEST);
+  glDisable(GL_LIGHTING);
+
+  glBegin(GL_QUADS);
+  glColor3f(color.Components[0], color.Components[1], color.Components[2]);
+  glTexCoord1f(0);
+  glVertex3f(float(point0[0]), float(point0[1]), .99f);
+  glVertex3f(float(point1[0]), float(point1[1]), .99f);
+
+  glTexCoord1f(1);
+  glVertex3f(float(point2[0]), float(point2[1]), .99f);
+  glVertex3f(float(point3[0]), float(point3[1]), .99f);
+  glEnd();
+}
+
 void CanvasGL::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
                        const vtkm::Vec<vtkm::Float64, 2>& point1,
                        vtkm::Float32 linewidth,

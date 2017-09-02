@@ -43,7 +43,7 @@ class DataSetBuilderRectilinear
   VTKM_CONT static void CopyInto(const vtkm::cont::ArrayHandle<T>& input,
                                  vtkm::cont::ArrayHandle<U>& output)
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial> Algorithm;
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>;
     Algorithm::Copy(input, output);
   }
 

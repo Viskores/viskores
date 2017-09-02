@@ -37,7 +37,7 @@ template <typename ShapePortalType,
 class ConnectivityExplicit
 {
 public:
-  typedef typename vtkm::Id SchedulingRangeType;
+  using SchedulingRangeType = vtkm::Id;
 
   ConnectivityExplicit() {}
 
@@ -55,10 +55,13 @@ public:
   VTKM_EXEC
   SchedulingRangeType GetNumberOfElements() const { return this->Shapes.GetNumberOfValues(); }
 
-  typedef vtkm::CellShapeTagGeneric CellShapeTag;
+  using CellShapeTag = vtkm::CellShapeTagGeneric;
 
   VTKM_EXEC
   CellShapeTag GetCellShape(vtkm::Id index) const { return CellShapeTag(this->Shapes.Get(index)); }
+
+  VTKM_EXEC
+  vtkm::IdComponent GetNumberOfIndices(vtkm::Id index) const { return this->NumIndices.Get(index); }
 
   using IndicesType = vtkm::VecFromPortal<ConnectivityPortalType>;
 

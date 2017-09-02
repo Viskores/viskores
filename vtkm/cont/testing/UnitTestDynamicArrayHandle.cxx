@@ -71,7 +71,7 @@ struct TypeListTagString : vtkm::ListTagBase<std::string>
 template <typename T>
 struct UnusualPortal
 {
-  typedef T ValueType;
+  using ValueType = T;
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
@@ -84,7 +84,7 @@ template <typename T>
 class ArrayHandleWithUnusualStorage
   : public vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T>>>
 {
-  typedef vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T>>> Superclass;
+  using Superclass = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagImplicit<UnusualPortal<T>>>;
 
 public:
   VTKM_CONT

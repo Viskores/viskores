@@ -39,14 +39,18 @@ set(unit_tests
   UnitTestArrayHandleCompositeVector.cxx
   UnitTestArrayHandleCounting.cxx
   UnitTestArrayHandleDiscard.cxx
+  UnitTestArrayHandleExtractComponent.cxx
   UnitTestArrayHandleImplicit.cxx
   UnitTestArrayHandleIndex.cxx
   UnitTestArrayHandleReverse.cxx
   UnitTestArrayHandlePermutation.cxx
+  UnitTestArrayHandleSwizzle.cxx
   UnitTestArrayHandleTransform.cxx
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayPortalToIterators.cxx
+  UnitTestCellSetExplicit.cxx
+  UnitTestCellSetPermutation.cxx
   UnitTestContTesting.cxx
   UnitTestDataSetBuilderExplicit.cxx
   UnitTestDataSetBuilderRectilinear.cxx
@@ -58,6 +62,7 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
+  UnitTestMultiBlock.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx

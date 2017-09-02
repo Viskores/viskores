@@ -35,7 +35,7 @@ public:
   {
     std::cout << "Testing mask cells uniform grid :" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     // Setup and run filter to extract by stride
     vtkm::filter::Mask mask;
@@ -67,7 +67,7 @@ public:
   {
     std::cout << "Testing mask cells uniform grid :" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     // Setup and run filter to extract by stride
     vtkm::filter::Mask mask;
@@ -98,7 +98,7 @@ public:
   {
     std::cout << "Testing mask cells explicit:" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::ResultDataSet result;
+    vtkm::filter::Result result;
 
     // Setup and run filter to extract by stride
     vtkm::filter::Mask mask;

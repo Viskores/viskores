@@ -34,8 +34,8 @@ template <typename P>
 class VTKM_ALWAYS_EXPORT ArrayPortalStreaming
 {
 public:
-  typedef P PortalType;
-  typedef typename PortalType::ValueType ValueType;
+  using PortalType = P;
+  using ValueType = typename PortalType::ValueType;
 
   VTKM_CONT
   ArrayPortalStreaming()
@@ -124,13 +124,12 @@ template <typename ArrayHandleInputType>
 class Storage<typename ArrayHandleInputType::ValueType, StorageTagStreaming<ArrayHandleInputType>>
 {
 public:
-  typedef typename ArrayHandleInputType::ValueType ValueType;
+  using ValueType = typename ArrayHandleInputType::ValueType;
 
-  typedef vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalControl>
-    PortalType;
-  typedef vtkm::cont::internal::ArrayPortalStreaming<
-    typename ArrayHandleInputType::PortalConstControl>
-    PortalConstType;
+  using PortalType =
+    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalControl>;
+  using PortalConstType =
+    vtkm::cont::internal::ArrayPortalStreaming<typename ArrayHandleInputType::PortalConstControl>;
 
   VTKM_CONT
   Storage()
@@ -236,7 +235,7 @@ public:
                                                       StorageTagStreaming<ArrayHandleInputType>>));
 
 private:
-  typedef vtkm::cont::internal::Storage<ValueType, StorageTag> StorageType;
+  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
 public:
   VTKM_CONT

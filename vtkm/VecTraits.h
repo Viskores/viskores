@@ -58,13 +58,13 @@ namespace internal
 template <vtkm::IdComponent numComponents>
 struct VecTraitsMultipleComponentChooser
 {
-  typedef VecTraitsTagMultipleComponents Type;
+  using Type = vtkm::VecTraitsTagMultipleComponents;
 };
 
 template <>
 struct VecTraitsMultipleComponentChooser<1>
 {
-  typedef VecTraitsTagSingleComponent Type;
+  using Type = vtkm::VecTraitsTagSingleComponent;
 };
 
 } // namespace detail
@@ -78,7 +78,7 @@ struct VecTraits
 {
   /// Type of the components in the vector.
   ///
-  typedef typename VecType::ComponentType ComponentType;
+  using ComponentType = typename VecType::ComponentType;
 
   /// \brief Number of components in the vector.
   ///
@@ -95,8 +95,8 @@ struct VecTraits
   /// This tag can be useful for creating specialized functions when a vector
   /// is really just a scalar.
   ///
-  typedef typename internal::VecTraitsMultipleComponentChooser<NUM_COMPONENTS>::Type
-    HasMultipleComponents;
+  using HasMultipleComponents =
+    typename internal::VecTraitsMultipleComponentChooser<NUM_COMPONENTS>::Type;
 
   /// \brief A tag specifying whether the size of this vector is known at compile time.
   ///
@@ -104,7 +104,7 @@ struct VecTraits
   /// set to \c VecTraitsTagSizeVariable, then the number of components is not
   /// known at compile time and must be queried with \c GetNumberOfComponents.
   ///
-  typedef vtkm::VecTraitsTagSizeStatic IsSizeStatic;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 
   /// Returns the value in a given component of the vector.
   ///
@@ -141,11 +141,11 @@ struct VecTraits<const T> : VecTraits<T>
 template <typename T, vtkm::IdComponent Size>
 struct VecTraits<vtkm::Vec<T, Size>>
 {
-  typedef vtkm::Vec<T, Size> VecType;
+  using VecType = vtkm::Vec<T, Size>;
 
   /// Type of the components in the vector.
   ///
-  typedef typename VecType::ComponentType ComponentType;
+  using ComponentType = typename VecType::ComponentType;
 
   /// Number of components in the vector.
   ///
@@ -160,8 +160,8 @@ struct VecTraits<vtkm::Vec<T, Size>>
   /// "real" vector). This tag can be useful for creating specialized functions
   /// when a vector is really just a scalar.
   ///
-  typedef typename internal::VecTraitsMultipleComponentChooser<NUM_COMPONENTS>::Type
-    HasMultipleComponents;
+  using HasMultipleComponents =
+    typename internal::VecTraitsMultipleComponentChooser<NUM_COMPONENTS>::Type;
 
   /// A tag specifying whether the size of this vector is known at compile
   /// time. If set to \c VecTraitsTagSizeStatic, then \c NUM_COMPONENTS is set.
@@ -169,7 +169,7 @@ struct VecTraits<vtkm::Vec<T, Size>>
   /// not known at compile time and must be queried with \c
   /// GetNumberOfComponents.
   ///
-  typedef vtkm::VecTraitsTagSizeStatic IsSizeStatic;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 
   /// Returns the value in a given component of the vector.
   ///
@@ -334,10 +334,10 @@ namespace internal
 template <typename ScalarType>
 struct VecTraitsBasic
 {
-  typedef ScalarType ComponentType;
+  using ComponentType = ScalarType;
   static const vtkm::IdComponent NUM_COMPONENTS = 1;
-  typedef VecTraitsTagSingleComponent HasMultipleComponents;
-  typedef vtkm::VecTraitsTagSizeStatic IsSizeStatic;
+  using HasMultipleComponents = vtkm::VecTraitsTagSingleComponent;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 
   VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const ScalarType&) { return 1; }

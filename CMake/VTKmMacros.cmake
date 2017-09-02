@@ -135,9 +135,9 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   # Send the libraries created for test builds to their own directory so as to
   # not polute the directory with useful libraries.
   set_target_properties(TestBuild_${name} PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
-    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
-    RUNTIME_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}/testbuilds
+    ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+    LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+    RUNTIME_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
     )
 endfunction(vtkm_add_header_build_test)
 
@@ -287,6 +287,12 @@ function(vtkm_unit_tests)
       add_executable(${test_prog} ${TestSources})
     endif (VTKm_UT_CUDA)
 
+    set_target_properties(${test_prog} PROPERTIES
+      ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+      LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+      RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
+      )
+
     #do it as a property value so we don't pollute the include_directories
     #for any other targets
     target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
@@ -420,6 +426,12 @@ function(vtkm_worklet_unit_tests device_adapter)
     else()
       add_executable(${test_prog} ${unit_test_drivers} ${unit_test_srcs})
     endif()
+
+    set_target_properties(${test_prog} PROPERTIES
+      ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+      LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+      RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
+      )
     target_include_directories(${test_prog} PRIVATE ${VTKm_INCLUDE_DIRS})
     target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_LIBRARIES})
 
@@ -548,6 +560,12 @@ function(vtkm_benchmarks device_adapter)
       else()
         add_executable(${benchmark_prog} ${file} ${benchmark_headers})
       endif()
+
+      set_target_properties(${benchmark_prog} PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+        LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+        RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
+        )
 
       set_source_files_properties(${benchmark_headers}
         PROPERTIES HEADER_FILE_ONLY TRUE)
@@ -686,9 +704,9 @@ function(vtkm_library)
   # Make sure libraries go to lib directory and dll go to bin directory.
   # Mostly important on Windows.
   set_target_properties(${lib_name} PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH}
-    RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH}
+    ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+    LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+    RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
     )
 
   if(MSVC)
@@ -725,7 +743,7 @@ function(vtkm_library)
 
   configure_file(
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
-      ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+      ${VTKm_BINARY_DIR}/include/${dir_prefix}/${lib_name}_export.h
     @ONLY)
 
   unset(EXPORT_MACRO_NAME)
@@ -739,7 +757,7 @@ function(vtkm_library)
     RUNTIME DESTINATION ${VTKm_INSTALL_BIN_DIR}
     )
   vtkm_install_headers("${dir_prefix}"
-    ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
+    ${VTKm_BINARY_DIR}/include/${dir_prefix}/${lib_name}_export.h
     ${VTKm_LIB_HEADERS}
     )
 endfunction(vtkm_library)

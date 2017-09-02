@@ -23,6 +23,7 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/Actor.h>
 #include <vtkm/rendering/CanvasOSMesa.h>
+#include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/Scene.h>
 #include <vtkm/rendering/View2D.h>
@@ -52,9 +53,9 @@ void RenderTests()
   vtkm::rendering::testing::Render<M, C, V2>(
     maker.Make2DRectilinearDataSet0(), "pointvar", colorTable, "rect2D.pnm");
   vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DUniformDataSet0(), "pointvar", "uniform1D.pnm");
+    maker.Make1DUniformDataSet0(), "pointvar", vtkm::rendering::Color(1, 1, 1, 1), "uniform1D.pnm");
   vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DExplicitDataSet0(), "pointvar", "expl1D.pnm");
+    maker.Make1DExplicitDataSet0(), "pointvar", vtkm::rendering::Color(1, 1, 1, 1), "expl1D.pnm");
 }
 
 } //namespace

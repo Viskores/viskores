@@ -252,6 +252,46 @@ public:
     this->Buffers.push_back(buffer);
   }
 
+  VTKM_CONT
+  bool HasBuffer(const std::string name)
+  {
+    vtkm::Id numBuffers = static_cast<vtkm::Id>(this->Buffers.size());
+    bool found = false;
+    for (vtkm::Id i = 0; i < numBuffers; ++i)
+    {
+      if (this->Buffers[i].GetName() == name)
+      {
+        found = true;
+        break;
+      }
+    }
+    return found;
+  }
+
+  VTKM_CONT
+  ChannelBuffer<Precision>& GetBuffer(const std::string name)
+  {
+    const size_t numBuffers = this->Buffers.size();
+    bool found = false;
+    size_t index;
+    for (size_t i = 0; i < numBuffers; ++i)
+    {
+      if (this->Buffers[i].GetName() == name)
+      {
+        found = true;
+        index = i;
+      }
+    }
+    if (found)
+    {
+      return this->Buffers.at(index);
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadValue("No channel buffer with requested name: " + name);
+    }
+  }
+
   friend class RayOperations;
 }; // class ray
 }

@@ -279,9 +279,9 @@ public:
     if (temp[0] == vtkm::Float32(PointDimensions[0] - 1))
       temp[0] = vtkm::Float32(PointDimensions[0] - 2);
     if (temp[1] == vtkm::Float32(PointDimensions[1] - 1))
-      temp[0] = vtkm::Float32(PointDimensions[1] - 2);
+      temp[1] = vtkm::Float32(PointDimensions[1] - 2);
     if (temp[2] == vtkm::Float32(PointDimensions[2] - 1))
-      temp[0] = vtkm::Float32(PointDimensions[2] - 2);
+      temp[2] = vtkm::Float32(PointDimensions[2] - 2);
     cell = temp;
     invSpacing = InvSpacing;
   }
@@ -365,7 +365,9 @@ public:
     color[3] = colorBuffer.Get(pixelIndex * 4 + 3);
 
     if (minDistance == -1.f)
+    {
       return; //TODO: Compact? or just image subset...
+    }
     //get the initial sample position;
     vtkm::Vec<vtkm::Float32, 3> sampleLocation;
     sampleLocation = rayOrigin + (0.0001f + minDistance) * rayDir;
@@ -654,11 +656,12 @@ public:
   VTKM_EXEC
   vtkm::Float32 rcp_safe(vtkm::Float32 f) const { return rcp((fabs(f) < 1e-8f) ? 1e-8f : f); }
 
-  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldOut<>, FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldInOut<>, FieldInOut<>, FieldIn<>);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
   template <typename Precision>
   VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& rayDir,
                             vtkm::Float32& minDistance,
+                            vtkm::Float32& distance,
                             vtkm::Float32& maxDistance,
                             const vtkm::Vec<Precision, 3>& rayOrigin) const
   {
@@ -688,79 +691,25 @@ public:
     minDistance = vtkm::Max(
       vtkm::Max(vtkm::Max(vtkm::Min(ymin, ymax), vtkm::Min(xmin, xmax)), vtkm::Min(zmin, zmax)),
       0.f);
-    maxDistance =
+    vtkm::Float32 exitDistance =
       vtkm::Min(vtkm::Min(vtkm::Max(ymin, ymax), vtkm::Max(xmin, xmax)), vtkm::Max(zmin, zmax));
+    maxDistance = vtkm::Min(maxDistance, exitDistance);
     if (maxDistance < minDistance)
     {
       minDistance = -1.f; //flag for miss
     }
+    else
+    {
+      distance = minDistance;
+    }
   }
 }; //class CalcRayStart
-
-class CompositeBackground : public vtkm::worklet::WorkletMapField
-{
-  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
-
-public:
-  VTKM_CONT
-  CompositeBackground(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
-    : BackgroundColor(backgroundColor)
-  {
-  }
-
-  typedef void ControlSignature(FieldIn<>, WholeArrayInOut<>);
-  typedef void ExecutionSignature(_1, _2);
-
-  template <typename ColorBufferType>
-  VTKM_EXEC void operator()(const vtkm::Id& pixelIndex, ColorBufferType& colorBuffer) const
-  {
-
-    vtkm::Vec<vtkm::Float32, 4> color;
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 0);
-    color[0] = colorBuffer.Get(pixelIndex * 4 + 0);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 1);
-    color[1] = colorBuffer.Get(pixelIndex * 4 + 1);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 2);
-    color[2] = colorBuffer.Get(pixelIndex * 4 + 2);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 3);
-    color[3] = colorBuffer.Get(pixelIndex * 4 + 3);
-
-    if (color[3] >= 1.f)
-      return;
-
-    vtkm::Float32 alpha = BackgroundColor[3] * (1.f - color[3]);
-    color[0] = color[0] + BackgroundColor[0] * alpha;
-    color[1] = color[1] + BackgroundColor[1] * alpha;
-    color[2] = color[2] + BackgroundColor[2] * alpha;
-    color[3] = alpha + color[3];
-
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 0);
-    colorBuffer.Set(pixelIndex * 4 + 0, color[0]);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 1);
-    colorBuffer.Set(pixelIndex * 4 + 1, color[1]);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 2);
-    colorBuffer.Set(pixelIndex * 4 + 2, color[2]);
-    BOUNDS_CHECK(colorBuffer, pixelIndex * 4 + 3);
-    colorBuffer.Set(pixelIndex * 4 + 3, color[3]);
-  }
-}; //class CompositeBackground
 
 VolumeRendererStructured::VolumeRendererStructured()
 {
   IsSceneDirty = false;
-  DoCompositeBackground = true;
   IsUniformDataSet = true;
   SampleDistance = -1.f;
-}
-
-void VolumeRendererStructured::EnableCompositeBackground()
-{
-  DoCompositeBackground = true;
-}
-
-void VolumeRendererStructured::DisableCompositeBackground()
-{
-  DoCompositeBackground = false;
 }
 
 void VolumeRendererStructured::SetColorMap(
@@ -844,7 +793,7 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
 
   vtkm::cont::Timer<Device> timer;
   vtkm::worklet::DispatcherMapField<CalcRayStart, Device>(CalcRayStart(this->SpatialExtent))
-    .Invoke(rays.Dir, rays.MinDistance, rays.MaxDistance, rays.Origin);
+    .Invoke(rays.Dir, rays.MinDistance, rays.Distance, rays.MaxDistance, rays.Origin);
 
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->AddLogData("calc_ray_start", time);
@@ -915,17 +864,6 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
   logger->AddLogData("sample", time);
   timer.Reset();
 
-  if (DoCompositeBackground)
-  {
-    vtkm::cont::ArrayHandleCounting<vtkm::Id> rayIterator(0, 1, rays.NumRays);
-    vtkm::worklet::DispatcherMapField<CompositeBackground>(CompositeBackground(BackgroundColor))
-      .Invoke(rayIterator, rays.Buffers.at(0).Buffer);
-
-    time = timer.GetElapsedTime();
-    logger->AddLogData("compsosite_background", time);
-    timer.Reset();
-  }
-
   time = renderTimer.GetElapsedTime();
   logger->CloseLogEntry(time);
 } //Render
@@ -935,12 +873,6 @@ void VolumeRendererStructured::SetSampleDistance(const vtkm::Float32& distance)
   if (distance <= 0.f)
     throw vtkm::cont::ErrorBadValue("Sample distance must be positive.");
   SampleDistance = distance;
-}
-
-void VolumeRendererStructured::SetBackgroundColor(
-  const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
-{
-  BackgroundColor = backgroundColor;
 }
 }
 }

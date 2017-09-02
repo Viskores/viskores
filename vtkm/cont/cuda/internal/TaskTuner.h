@@ -128,10 +128,10 @@ static void compare_1d_dynamic_block_picker(Functor functor,
     VTKM_CUDA_CALL(cudaEventCreate(&start));
     VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
-    VTKM_CUDA_CALL(cudaEventRecord(start, 0));
-    Schedule1DIndexKernel<Functor><<<currentGridSize, currentBlockSize>>>(
+    VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
+    Schedule1DIndexKernel<Functor><<<currentGridSize, currentBlockSize, 0, cudaStreamPerThread>>>(
       functor, vtkm::Id(0), size);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
+    VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
 
     VTKM_CUDA_CALL(cudaEventSynchronize(stop));
     float elapsedTimeMilliseconds;
@@ -157,9 +157,10 @@ static void compare_1d_dynamic_block_picker(Functor functor,
     VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
 
-    VTKM_CUDA_CALL(cudaEventRecord(start, 0));
-    Schedule1DIndexKernel2<Functor><<<grids, blocks>>>(functor, vtkm::Id(0), size);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
+    VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
+    Schedule1DIndexKernel2<Functor><<<grids, blocks, 0, cudaStreamPerThread>>>(
+      functor, vtkm::Id(0), size);
+    VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
 
     VTKM_CUDA_CALL(cudaEventSynchronize(stop));
     float elapsedTimeMilliseconds;
@@ -188,9 +189,10 @@ static void compare_3d_dynamic_block_picker(Functor functor,
     VTKM_CUDA_CALL(cudaEventCreate(&start));
     VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
-    VTKM_CUDA_CALL(cudaEventRecord(start, 0));
-    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d>>>(functor, ranges);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
+    VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
+    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d, 0, cudaStreamPerThread>>>(functor,
+                                                                                        ranges);
+    VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
 
     VTKM_CUDA_CALL(cudaEventSynchronize(stop));
     float elapsedTimeMilliseconds;
@@ -269,9 +271,10 @@ static void parameter_sweep_3d_schedule(Functor functor, const vtkm::Id3& rangeM
         }
 
         compute_block_size(ranges, blockSize3d, gridSize3d);
-        VTKM_CUDA_CALL(cudaEventRecord(start, 0));
-        Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d>>>(functor, ranges);
-        VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
+        VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
+        Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d, 0, cudaStreamPerThread>>>(functor,
+                                                                                            ranges);
+        VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
 
         VTKM_CUDA_CALL(cudaEventSynchronize(stop));
         float elapsedTimeMilliseconds;
@@ -309,9 +312,10 @@ static void parameter_sweep_3d_schedule(Functor functor, const vtkm::Id3& rangeM
     dim3 gridSize3d;
 
     compute_block_size(ranges, blockSize3d, gridSize3d);
-    VTKM_CUDA_CALL(cudaEventRecord(start, 0));
-    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d>>>(functor, ranges);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
+    VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
+    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d, 0, cudaStreamPerThread>>>(functor,
+                                                                                        ranges);
+    VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
 
     VTKM_CUDA_CALL(cudaEventSynchronize(stop));
     float elapsedTimeMilliseconds;

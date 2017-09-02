@@ -27,7 +27,9 @@ namespace filter
 inline VTKM_CONT ExternalFaces::ExternalFaces()
   : vtkm::filter::FilterDataSet<ExternalFaces>()
   , CompactPoints(false)
+  , Worklet()
 {
+  this->SetPassPolyData(true);
 }
 
 namespace
@@ -50,7 +52,7 @@ inline vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>> GetCellSet
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
+inline VTKM_CONT vtkm::filter::Result ExternalFaces::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
@@ -61,10 +63,39 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
   //2. using the policy convert the dynamic cell set, and run the
   // external faces worklet
   vtkm::cont::CellSetExplicit<> outCellSet(cells.GetName());
-  vtkm::worklet::ExternalFaces exfaces;
-  exfaces.Run(vtkm::filter::ApplyPolicyUnstructured(cells, policy), outCellSet, DeviceAdapter());
 
-  //3. create the output dataset
+  if (cells.IsSameType(vtkm::cont::CellSetStructured<3>()))
+  {
+    this->Worklet.Run(cells.Cast<vtkm::cont::CellSetStructured<3>>(),
+                      input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()),
+                      outCellSet,
+                      DeviceAdapter());
+  }
+  else
+  {
+    this->Worklet.Run(
+      vtkm::filter::ApplyPolicyUnstructured(cells, policy), outCellSet, DeviceAdapter());
+  }
+
+  //3. Check the fields of the dataset to see what kinds of fields are present so
+  //   we can free the cell mapping array if it won't be needed.
+  const vtkm::Id numFields = input.GetNumberOfFields();
+  bool hasCellFields = false;
+  for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
+  {
+    auto f = input.GetField(fieldIdx);
+    if (f.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET)
+    {
+      hasCellFields = true;
+    }
+  }
+
+  if (!hasCellFields)
+  {
+    this->Worklet.ReleaseCellMapArrays();
+  }
+
+  //4. create the output dataset
   vtkm::cont::DataSet output;
   output.AddCellSet(outCellSet);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
@@ -76,18 +107,18 @@ inline VTKM_CONT vtkm::filter::ResultDataSet ExternalFaces::DoExecute(
   }
   else
   {
-    return vtkm::filter::ResultDataSet(output);
+    return vtkm::filter::Result(output);
   }
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExternalFaces::DoMapField(
-  vtkm::filter::ResultDataSet& result,
+  vtkm::filter::Result& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter&)
+  const DeviceAdapter& device)
 {
   if (fieldMeta.IsPointField())
   {
@@ -101,6 +132,14 @@ inline VTKM_CONT bool ExternalFaces::DoMapField(
       return true;
     }
   }
+  else if (fieldMeta.IsCellField())
+  {
+    vtkm::cont::ArrayHandle<T> fieldArray;
+    fieldArray = this->Worklet.ProcessCellField(input, device);
+    result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
+    return true;
+  }
+
 
   return false;
 }

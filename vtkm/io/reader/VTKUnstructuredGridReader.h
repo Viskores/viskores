@@ -79,7 +79,8 @@ private:
     vtkm::io::internal::FixupCellSet(connectivity, numIndices, shapes, permutation);
     this->SetCellsPermutation(permutation);
 
-    if (vtkm::io::internal::IsSingleShape(shapes))
+    //DRP
+    if (false) //vtkm::io::internal::IsSingleShape(shapes))
     {
       vtkm::cont::CellSetSingleType<> cellSet("cells");
       cellSet.Fill(numPoints,

@@ -49,13 +49,15 @@ struct VirtualObjectTransfer<VirtualObject, TargetClass, vtkm::cont::DeviceAdapt
   {
     TargetClass* cutarget;
     VTKM_CUDA_CALL(cudaMalloc(&cutarget, sizeof(TargetClass)));
-    VTKM_CUDA_CALL(cudaMemcpy(cutarget, target, sizeof(TargetClass), cudaMemcpyHostToDevice));
+    VTKM_CUDA_CALL(cudaMemcpyAsync(
+      cutarget, target, sizeof(TargetClass), cudaMemcpyHostToDevice, cudaStreamPerThread));
 
     VirtualObject* cuobject;
     VTKM_CUDA_CALL(cudaMalloc(&cuobject, sizeof(VirtualObject)));
-    detail::CreateKernel<<<1, 1>>>(cuobject, cutarget);
+    detail::CreateKernel<<<1, 1, 0, cudaStreamPerThread>>>(cuobject, cutarget);
     VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
-    VTKM_CUDA_CALL(cudaMemcpy(&object, cuobject, sizeof(VirtualObject), cudaMemcpyDeviceToHost));
+    VTKM_CUDA_CALL(cudaMemcpyAsync(
+      &object, cuobject, sizeof(VirtualObject), cudaMemcpyDeviceToHost, cudaStreamPerThread));
     VTKM_CUDA_CALL(cudaFree(cuobject));
 
     return cutarget;
@@ -63,7 +65,8 @@ struct VirtualObjectTransfer<VirtualObject, TargetClass, vtkm::cont::DeviceAdapt
 
   static void Update(void* deviceState, const void* target)
   {
-    VTKM_CUDA_CALL(cudaMemcpy(deviceState, target, sizeof(TargetClass), cudaMemcpyHostToDevice));
+    VTKM_CUDA_CALL(cudaMemcpyAsync(
+      deviceState, target, sizeof(TargetClass), cudaMemcpyHostToDevice, cudaStreamPerThread));
   }
 
   static void Cleanup(void* deviceState) { VTKM_CUDA_CALL(cudaFree(deviceState)); }

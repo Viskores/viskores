@@ -70,9 +70,6 @@ public:
   VTKM_CONT
   void SetSampleDistance(const vtkm::Float32& distance);
 
-  VTKM_CONT
-  void SetBackgroundColor(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor);
-
 protected:
   template <typename Precision, typename Device>
   VTKM_CONT void RenderOnDevice(vtkm::rendering::raytracing::Ray<Precision>& rays, Device);
@@ -80,7 +77,6 @@ protected:
   struct RenderFunctor;
 
   bool IsSceneDirty;
-  bool DoCompositeBackground;
   bool IsUniformDataSet;
   vtkm::Bounds SpatialExtent;
   vtkm::cont::DynamicArrayHandleCoordinateSystem Coordinates;
@@ -88,7 +84,6 @@ protected:
   const vtkm::cont::Field* ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;
   vtkm::Float32 SampleDistance;
-  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
   vtkm::Range ScalarRange;
 };
 }

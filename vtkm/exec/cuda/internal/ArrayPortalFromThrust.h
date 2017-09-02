@@ -201,7 +201,7 @@ struct load_through_texture<
 {
   static const vtkm::IdComponent WillUseTexture = 1;
 
-  typedef typename std::remove_const<T>::type NonConstT;
+  using NonConstT = typename std::remove_const<T>::type;
 
   __device__ static T get(const thrust::system::cuda::pointer<const T>& data)
   {
@@ -217,7 +217,7 @@ struct load_through_texture<
   {
     //we need to fetch each component individually
     const vtkm::IdComponent NUM_COMPONENTS = T::NUM_COMPONENTS;
-    typedef typename T::ComponentType ComponentType;
+    using ComponentType = typename T::ComponentType;
     const ComponentType* recasted_data = (const ComponentType*)(data.get());
     NonConstT result;
 #pragma unroll
@@ -240,8 +240,8 @@ template <typename T>
 class ArrayPortalFromThrust : public ArrayPortalFromThrustBase
 {
 public:
-  typedef T ValueType;
-  typedef thrust::system::cuda::pointer<T> IteratorType;
+  using ValueType = T;
+  using IteratorType = thrust::system::cuda::pointer<T>;
 
   VTKM_EXEC_CONT ArrayPortalFromThrust() {}
 
@@ -274,14 +274,14 @@ public:
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
-    typedef typename ::thrust::iterator_traits<IteratorType>::difference_type SizeType;
+    using SizeType = typename ::thrust::iterator_traits<IteratorType>::difference_type;
     return *(this->BeginIterator + static_cast<SizeType>(index));
   }
 
   VTKM_EXEC_CONT
   void Set(vtkm::Id index, ValueType value) const
   {
-    typedef typename ::thrust::iterator_traits<IteratorType>::difference_type SizeType;
+    using SizeType = typename ::thrust::iterator_traits<IteratorType>::difference_type;
     *(this->BeginIterator + static_cast<SizeType>(index)) = value;
   }
 
@@ -300,8 +300,8 @@ template <typename T>
 class ConstArrayPortalFromThrust : public ArrayPortalFromThrustBase
 {
 public:
-  typedef T ValueType;
-  typedef thrust::system::cuda::pointer<const T> IteratorType;
+  using ValueType = T;
+  using IteratorType = thrust::system::cuda::pointer<const T>;
 
   VTKM_EXEC_CONT ConstArrayPortalFromThrust() {}
 
@@ -385,10 +385,10 @@ namespace cont
 template <typename T>
 class ArrayPortalToIterators<vtkm::exec::cuda::internal::ArrayPortalFromThrust<T>>
 {
-  typedef vtkm::exec::cuda::internal::ArrayPortalFromThrust<T> PortalType;
+  using PortalType = vtkm::exec::cuda::internal::ArrayPortalFromThrust<T>;
 
 public:
-  typedef typename PortalType::IteratorType IteratorType;
+  using IteratorType = typename PortalType::IteratorType;
 
   VTKM_CONT
   ArrayPortalToIterators(const PortalType& portal)
@@ -416,10 +416,10 @@ private:
 template <typename T>
 class ArrayPortalToIterators<vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T>>
 {
-  typedef vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T> PortalType;
+  using PortalType = vtkm::exec::cuda::internal::ConstArrayPortalFromThrust<T>;
 
 public:
-  typedef typename PortalType::IteratorType IteratorType;
+  using IteratorType = typename PortalType::IteratorType;
 
   VTKM_CONT
   ArrayPortalToIterators(const PortalType& portal)

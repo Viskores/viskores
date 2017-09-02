@@ -82,7 +82,7 @@ void TestArrayHandleReverseScanInclusiveByKey()
   vtkm::cont::ArrayHandleReverse<vtkm::cont::ArrayHandle<vtkm::Id>> reversed =
     vtkm::cont::make_ArrayHandleReverse(output);
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>;
   Algorithm::ScanInclusiveByKey(keys, values, reversed);
 
   vtkm::Id expected[] = { 0, 1, 3, 6, 4, 9, 6, 7, 15, 9 };

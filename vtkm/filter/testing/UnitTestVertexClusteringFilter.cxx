@@ -35,7 +35,7 @@ void TestVertexClustering()
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose();
 
   vtkm::filter::VertexClustering clustering;
-  vtkm::filter::ResultDataSet result;
+  vtkm::filter::Result result;
 
   clustering.SetNumberOfDivisions(vtkm::Id3(3, 3, 3));
   result = clustering.Execute(dataSet);
