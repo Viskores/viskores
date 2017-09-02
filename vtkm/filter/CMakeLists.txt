@@ -40,6 +40,8 @@ set(headers
   MarchingCubes.h
   Mask.h
   MaskPoints.h
+  NDEntropy.h
+  NDHistogram.h
   PointAverage.h
   PointElevation.h
   PolicyBase.h
@@ -76,6 +78,8 @@ set(header_template_sources
   MarchingCubes.hxx
   Mask.hxx
   MaskPoints.hxx
+  NDEntropy.hxx
+  NDHistogram.hxx
   PointAverage.hxx
   PointElevation.hxx
   SurfaceNormals.hxx

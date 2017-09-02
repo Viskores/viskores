@@ -66,9 +66,11 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
   {
     char* tmp;
 #ifdef VTKM_USE_UNIFIED_MEMORY
+    int dev;
+    VTKM_CUDA_CALL(cudaGetDevice(&dev));
     VTKM_CUDA_CALL(cudaMallocManaged(&tmp, numBytes));
-    VTKM_CUDA_CALL(cudaMemAdvise(tmp, numBytes, cudaMemAdviseSetPreferredLocation, 0));
-    VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, numBytes, 0, 0));
+    VTKM_CUDA_CALL(cudaMemAdvise(tmp, numBytes, cudaMemAdviseSetPreferredLocation, dev));
+    VTKM_CUDA_CALL(cudaMemPrefetchAsync(tmp, numBytes, dev, 0));
     VTKM_CUDA_CALL(cudaStreamSynchronize(0));
 #else
     VTKM_CUDA_CALL(cudaMalloc(&tmp, numBytes));

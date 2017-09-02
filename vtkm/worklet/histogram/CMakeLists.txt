@@ -18,27 +18,10 @@
 ##  this software.
 ##============================================================================
 
-set(benchmark_srcs
-  BenchmarkArrayTransfer.cxx
-  BenchmarkDeviceAdapter.cxx
-  BenchmarkFieldAlgorithms.cxx
-  BenchmarkTopologyAlgorithms.cxx
+set(headers
+  ComputeNDEntropy.h
+  ComputeNDHistogram.h
+  MarginalizeNDHistogram.h
   )
 
-set(benchmark_headers
-  Benchmarker.h
-  )
-
-vtkm_save_benchmarks(${benchmark_srcs}
-  HEADERS ${benchmark_headers}
-  )
-
-vtkm_benchmarks(VTKM_DEVICE_ADAPTER_SERIAL)
-
-if (VTKm_ENABLE_CUDA)
-  vtkm_benchmarks(VTKM_DEVICE_ADAPTER_CUDA)
-endif()
-if (VTKm_ENABLE_TBB)
-  vtkm_benchmarks(VTKM_DEVICE_ADAPTER_TBB)
-endif()
-
+vtkm_declare_headers(${headers})
