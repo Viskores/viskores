@@ -142,10 +142,13 @@ public:
     ymax = vtkm::Max(ymax, point[1]);
     zmax = vtkm::Max(zmax, point[2]);
 
-    vtkm::Float32 xEpsilon = (xmax - xmin) * AABB_EPSILON;
-    vtkm::Float32 yEpsilon = (ymax - ymin) * AABB_EPSILON;
-    vtkm::Float32 zEpsilon = (zmax - zmin) * AABB_EPSILON;
 
+    vtkm::Float32 xEpsilon, yEpsilon, zEpsilon;
+    const vtkm::Float32 minEpsilon = 1e-6f;
+    xEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (xmax - xmin));
+    yEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (ymax - ymin));
+    zEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (zmax - zmin));
+    //if(xEpsilon == minEpsilon) std::cout<<"m";
     xmin -= xEpsilon;
     ymin -= yEpsilon;
     zmin -= zEpsilon;
