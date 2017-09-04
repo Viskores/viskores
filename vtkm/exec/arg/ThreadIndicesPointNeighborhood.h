@@ -266,7 +266,26 @@ public:
             NeighborhoodSize)
     , InputIndex(outToIn.Get(outIndex))
     , OutputIndex(outIndex)
-    , VisitIndex(static_cast<vtkm::IdComponent>(visit.Get(this->OutputIndex)))
+    , VisitIndex(static_cast<vtkm::IdComponent>(visit.Get(outIndex)))
+    , GlobalThreadIndexOffset(globalThreadIndexOffset)
+  {
+  }
+
+  template <vtkm::IdComponent Dimension>
+  VTKM_EXEC ThreadIndicesPointNeighborhood(
+    const vtkm::Id& outIndex,
+    const vtkm::Id& inIndex,
+    const vtkm::IdComponent& visitIndex,
+    const vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagCell,
+                                             vtkm::TopologyElementTagPoint,
+                                             Dimension>& connectivity,
+    vtkm::Id globalThreadIndexOffset = 0)
+    : State(detail::To3D(connectivity.FlatToLogicalToIndex(inIndex)),
+            detail::To3D(connectivity.GetPointDimensions()),
+            NeighborhoodSize)
+    , InputIndex(inIndex)
+    , OutputIndex(outIndex)
+    , VisitIndex(visitIndex)
     , GlobalThreadIndexOffset(globalThreadIndexOffset)
   {
   }

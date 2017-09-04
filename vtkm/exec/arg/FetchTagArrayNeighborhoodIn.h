@@ -46,7 +46,7 @@ template <int NeighborhoodSize, typename ExecObjectType>
 struct Neighborhood
 {
   VTKM_EXEC
-  Neighborhood(ExecObjectType portal, const vtkm::exec::arg::BoundaryState& boundary)
+  Neighborhood(const ExecObjectType& portal, const vtkm::exec::arg::BoundaryState& boundary)
     : Boundary(&boundary)
     , Portal(portal)
   {
@@ -83,7 +83,7 @@ template <int NeighborhoodSize>
 struct Neighborhood<NeighborhoodSize, vtkm::internal::ArrayPortalUniformPointCoordinates>
 {
   VTKM_EXEC
-  Neighborhood(vtkm::internal::ArrayPortalUniformPointCoordinates portal,
+  Neighborhood(const vtkm::internal::ArrayPortalUniformPointCoordinates& portal,
                const vtkm::exec::arg::BoundaryState& boundary)
     : Boundary(&boundary)
     , Portal(portal)
