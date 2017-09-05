@@ -96,7 +96,9 @@ public:
   {
     vtkm::Id minParticleIndx = 0;
     if (fabs(potential1 - potential2) < 0.000000000001)
+    {
       minParticleIndx = partId;
+    }
     return minParticleIndx;
   }
 }; // EqualsMinimumPotential
