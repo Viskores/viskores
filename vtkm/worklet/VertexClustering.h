@@ -41,7 +41,10 @@
 #include <vtkm/worklet/WorkletMapTopology.h>
 
 //#define __VTKM_VERTEX_CLUSTERING_BENCHMARK
-//#include <vtkm/cont/Timer.h>
+
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+#include <vtkm/cont/Timer.h>
+#endif
 
 namespace vtkm
 {
@@ -481,6 +484,7 @@ public:
     }
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+    vtkm::cont::Timer<> totalTimer;
     vtkm::cont::Timer<> timer;
 #endif
 
@@ -497,6 +501,7 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
+    timer.Reset();
 #endif
 
     /// pass 2 : compute average point position for each cluster,
@@ -513,6 +518,7 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;
+    timer.Reset();
 #endif
 
     /// Pass 3 : Decimated mesh generation
@@ -525,6 +531,11 @@ public:
 
     vtkm::worklet::DispatcherMapTopology<MapCellsWorklet, DeviceAdapter>(MapCellsWorklet())
       .Invoke(cellSet, pointCidArray, cid3Array);
+
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+    std::cout << "Time after clustering cells (s): " << timer.GetElapsedTime() << std::endl;
+    timer.Reset();
+#endif
 
     // Generate the point map before releasing pointCidArray. Just grab any value
     // from the cluster -- this matches vtkQuadricClustering's behavior.
@@ -540,6 +551,11 @@ public:
       Algo::SortByKey(pointCidArray, index, vtkm::SortLess());
       Algo::ReduceByKey(pointCidArray, index, discard, this->PointIdMap, vtkm::Minimum());
     }
+
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+    std::cout << "Time after generating PointIdMap (s): " << timer.GetElapsedTime() << std::endl;
+    timer.Reset();
+#endif
 
     pointCidArray.ReleaseResources();
 
@@ -584,6 +600,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
+      timer.Reset();
 #endif
 
       this->CellIdMap = internal::SortAndUniqueIndices(pointId3HashArray, DeviceAdapter());
@@ -591,6 +608,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
+      timer.Reset();
 #endif
 
       // Create a temporary permutation array and use that for unhashing.
@@ -606,6 +624,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
+      timer.Reset();
 #endif
 
       this->CellIdMap = internal::SortAndUniqueIndices(pointId3Array, DeviceAdapter());
@@ -613,6 +632,7 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
+      timer.Reset();
 #endif
 
       // Permute the connectivity array into a basic array handle:
@@ -645,7 +665,8 @@ public:
     output.AddCellSet(triangles);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    vtkm::Float64 t = timer.GetElapsedTime();
+    std::cout << "Wrap-up (s): " << timer.GetElapsedTime() << std::endl;
+    vtkm::Float64 t = totalTimer.GetElapsedTime();
     std::cout << "Time (s): " << t << std::endl;
     std::cout << "number of output points: " << repPointArray.GetNumberOfValues() << std::endl;
     std::cout << "number of output cells: " << pointId3Array.GetNumberOfValues() << std::endl;
