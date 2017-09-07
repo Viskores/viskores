@@ -34,7 +34,6 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
-#include <vtkm/worklet/AverageByKey.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -220,40 +219,6 @@ vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> 
   vtkm::cont::ArrayCopy(mem, result, DeviceAdapter());
   return result;
 }
-
-template <typename KeyArrayIn, typename KeyArrayOut, typename DeviceAdapter>
-class AverageByKeyDynamicValue
-{
-private:
-  typedef typename KeyArrayIn::ValueType KeyType;
-
-public:
-  VTKM_CONT
-  AverageByKeyDynamicValue(const KeyArrayIn& inputKeys,
-                           KeyArrayOut& outputKeys,
-                           vtkm::cont::DynamicArrayHandle& outputValues)
-    : InputKeys(inputKeys)
-    , OutputKeys(&outputKeys)
-    , OutputValues(&outputValues)
-  {
-  }
-
-  template <typename ValueArrayIn>
-  VTKM_CONT void operator()(const ValueArrayIn& coordinates) const
-  {
-    typedef typename ValueArrayIn::ValueType ValueType;
-
-    vtkm::cont::ArrayHandle<ValueType> outArray;
-    vtkm::worklet::AverageByKey::Run(
-      InputKeys, coordinates, *(this->OutputKeys), outArray, DeviceAdapter());
-    *(this->OutputValues) = vtkm::cont::DynamicArrayHandle(outArray);
-  }
-
-private:
-  KeyArrayIn InputKeys;
-  KeyArrayOut* OutputKeys;
-  vtkm::cont::DynamicArrayHandle* OutputValues;
-};
 
 } // namespace internal
 
@@ -504,17 +469,20 @@ public:
     timer.Reset();
 #endif
 
-    /// pass 2 : compute average point position for each cluster,
-    ///          using pointCidArray as the key
-    ///
-    vtkm::cont::ArrayHandle<vtkm::Id> pointCidArrayReduced;
-    vtkm::cont::DynamicArrayHandle repPointArray; // representative point
+    /// pass 2 : Reduce each cluster to a single point from the cluster.
+    ///          Choosing a random point from the input gives a better visual
+    ///          result than a simple average in the common case of surface
+    ///          geometry, as the average results in a blocky output with
+    ///          obvious grid artifacts.
+    vtkm::cont::DynamicArrayHandle repPointArray;       // representative points
+    vtkm::cont::ArrayHandle<vtkm::Id> repPointCidArray; // rep point cluster ids
+    {
+      auto tmp = internal::SortAndUniqueIndices(pointCidArray, DeviceAdapter());
+      repPointCidArray = internal::ConcretePermutationArray(tmp, pointCidArray, DeviceAdapter());
 
-    internal::AverageByKeyDynamicValue<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                       vtkm::cont::ArrayHandle<vtkm::Id>,
-                                       DeviceAdapter>
-      averageByKey(pointCidArray, pointCidArrayReduced, repPointArray);
-    CastAndCall(coordinates, averageByKey);
+      internal::DynamicPermutationFunctor<DeviceAdapter> functor(tmp, repPointArray);
+      CastAndCall(coordinates, functor);
+    }
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;
@@ -564,10 +532,10 @@ public:
     cidIndexArray.PrepareForOutput(gridInfo.dim[0] * gridInfo.dim[1] * gridInfo.dim[2],
                                    DeviceAdapter());
 
-    vtkm::worklet::DispatcherMapField<IndexingWorklet, DeviceAdapter>().Invoke(pointCidArrayReduced,
+    vtkm::worklet::DispatcherMapField<IndexingWorklet, DeviceAdapter>().Invoke(repPointCidArray,
                                                                                cidIndexArray);
 
-    pointCidArrayReduced.ReleaseResources();
+    repPointCidArray.ReleaseResources();
 
     ///
     /// map: convert each triangle vertices from original point id to the new cluster indexes
