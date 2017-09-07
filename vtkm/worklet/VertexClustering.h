@@ -101,10 +101,10 @@ struct VertexClustering
 {
   struct GridInfo
   {
-    vtkm::Id dim[3];
+    vtkm::Vec<vtkm::Id, 3> dim;
     vtkm::Vec<vtkm::Float64, 3> origin;
-    vtkm::Float64 grid_width;
-    vtkm::Float64 inv_grid_width; // = 1/grid_width
+    vtkm::Vec<vtkm::Float64, 3> bin_size;
+    vtkm::Vec<vtkm::Float64, 3> inv_bin_size;
   };
 
   // input: points  output: cid of the points
@@ -132,10 +132,12 @@ struct VertexClustering
                            static_cast<ComponentType>(this->Grid.origin[1]),
                            static_cast<ComponentType>(this->Grid.origin[2]));
 
-      PointType p_rel = (p - gridOrigin) * static_cast<ComponentType>(this->Grid.inv_grid_width);
-      vtkm::Id x = vtkm::Min((vtkm::Id)p_rel[0], this->Grid.dim[0] - 1);
-      vtkm::Id y = vtkm::Min((vtkm::Id)p_rel[1], this->Grid.dim[1] - 1);
-      vtkm::Id z = vtkm::Min((vtkm::Id)p_rel[2], this->Grid.dim[2] - 1);
+      PointType p_rel = (p - gridOrigin) * this->Grid.inv_bin_size;
+
+      vtkm::Id x = vtkm::Min(static_cast<vtkm::Id>(p_rel[0]), this->Grid.dim[0] - 1);
+      vtkm::Id y = vtkm::Min(static_cast<vtkm::Id>(p_rel[1]), this->Grid.dim[1] - 1);
+      vtkm::Id z = vtkm::Min(static_cast<vtkm::Id>(p_rel[2]), this->Grid.dim[2] - 1);
+
       return x + this->Grid.dim[0] * (y + this->Grid.dim[1] * z); // get a unique hash value
     }
 
@@ -307,34 +309,20 @@ public:
     /// determine grid resolution for clustering
     GridInfo gridInfo;
     {
-      vtkm::Vec<vtkm::Float64, 3> res(bounds.X.Length() / static_cast<vtkm::Float64>(nDivisions[0]),
-                                      bounds.Y.Length() / static_cast<vtkm::Float64>(nDivisions[1]),
-                                      bounds.Z.Length() /
-                                        static_cast<vtkm::Float64>(nDivisions[2]));
-      gridInfo.grid_width = vtkm::Max(res[0], vtkm::Max(res[1], res[2]));
-
-      vtkm::Float64 inv_grid_width = gridInfo.inv_grid_width =
-        vtkm::Float64(1) / gridInfo.grid_width;
-
-      //printf("Bounds: %lf, %lf, %lf, %lf, %lf, %lf\n", bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-      gridInfo.dim[0] =
-        vtkm::Min((vtkm::Id)vtkm::Ceil((bounds.X.Length()) * inv_grid_width), nDivisions[0]);
-      gridInfo.dim[1] =
-        vtkm::Min((vtkm::Id)vtkm::Ceil((bounds.Y.Length()) * inv_grid_width), nDivisions[1]);
-      gridInfo.dim[2] =
-        vtkm::Min((vtkm::Id)vtkm::Ceil((bounds.Z.Length()) * inv_grid_width), nDivisions[2]);
-
-      // center the mesh in the grids
-      vtkm::Vec<vtkm::Float64, 3> center = bounds.Center();
-      gridInfo.origin[0] =
-        center[0] - gridInfo.grid_width * static_cast<vtkm::Float64>(gridInfo.dim[0]) * .5;
-      gridInfo.origin[1] =
-        center[1] - gridInfo.grid_width * static_cast<vtkm::Float64>(gridInfo.dim[1]) * .5;
-      gridInfo.origin[2] =
-        center[2] - gridInfo.grid_width * static_cast<vtkm::Float64>(gridInfo.dim[2]) * .5;
+      gridInfo.origin[0] = bounds.X.Min;
+      gridInfo.origin[1] = bounds.Y.Min;
+      gridInfo.origin[2] = bounds.Z.Min;
+      gridInfo.dim[0] = nDivisions[0];
+      gridInfo.dim[1] = nDivisions[1];
+      gridInfo.dim[2] = nDivisions[2];
+      gridInfo.bin_size[0] = bounds.X.Length() / static_cast<vtkm::Float64>(nDivisions[0]);
+      gridInfo.bin_size[1] = bounds.Y.Length() / static_cast<vtkm::Float64>(nDivisions[1]);
+      gridInfo.bin_size[2] = bounds.Z.Length() / static_cast<vtkm::Float64>(nDivisions[2]);
+      gridInfo.inv_bin_size[0] = 1. / gridInfo.bin_size[0];
+      gridInfo.inv_bin_size[1] = 1. / gridInfo.bin_size[1];
+      gridInfo.inv_bin_size[2] = 1. / gridInfo.bin_size[2];
     }
 
-//construct the scheduler that will execute all the worklets
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     vtkm::cont::Timer<> timer;
 #endif
