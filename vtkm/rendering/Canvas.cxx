@@ -22,6 +22,9 @@
 
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/TryExecute.h>
+#include <vtkm/rendering/BitmapFontFactory.h>
+#include <vtkm/rendering/DecodePNG.h>
+#include <vtkm/rendering/TextRenderer.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -214,7 +217,7 @@ struct ColorBarExecutor
   bool Horizontal;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorMap;
   const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorBuffer;
-};
+}; // struct ColorBarExecutor
 
 } // namespace internal
 
@@ -372,15 +375,41 @@ void Canvas::AddColorBar(vtkm::Float32 x,
     horizontal);
 }
 
-void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& vtkmNotUsed(position),
-                     vtkm::Float32 vtkmNotUsed(scale),
-                     vtkm::Float32 vtkmNotUsed(angle),
-                     vtkm::Float32 vtkmNotUsed(windowAspect),
-                     const vtkm::Vec<vtkm::Float32, 2>& vtkmNotUsed(anchor),
-                     const vtkm::rendering::Color& vtkmNotUsed(color),
-                     const std::string& vtkmNotUsed(text)) const
+vtkm::Id2 Canvas::GetScreenPoint(vtkm::Float32 x,
+                                 vtkm::Float32 y,
+                                 vtkm::Float32 z,
+                                 const vtkm::Matrix<vtkm::Float32, 4, 4>& transform) const
 {
-  // Not implemented
+  vtkm::Vec<vtkm::Float32, 4> point(x, y, z, 1.0f);
+  point = vtkm::MatrixMultiply(transform, point);
+
+  vtkm::Id2 pixelPos;
+  vtkm::Float32 width = static_cast<vtkm::Float32>(this->Width);
+  vtkm::Float32 height = static_cast<vtkm::Float32>(this->Height);
+  pixelPos[0] = static_cast<vtkm::Id>(vtkm::Round((1.0f + point[0]) * width * 0.5f + 0.5f));
+  pixelPos[1] = static_cast<vtkm::Id>(vtkm::Round((1.0f + point[1]) * height * 0.5f + 0.5f));
+  return pixelPos;
+}
+
+void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
+                     vtkm::Float32 scale,
+                     vtkm::Float32 angle,
+                     vtkm::Float32 windowAspect,
+                     const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                     const vtkm::rendering::Color& color,
+                     const std::string& text) const
+{
+  if (!FontTexture.IsValid())
+  {
+    if (!LoadFont())
+    {
+      return;
+    }
+  }
+
+  vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
+  TextRenderer fontRenderer(self, Font, FontTexture);
+  fontRenderer.RenderText(position, scale, angle, windowAspect, anchor, color, text);
 }
 
 void Canvas::AddText(vtkm::Float32 x,
@@ -400,6 +429,31 @@ void Canvas::AddText(vtkm::Float32 x,
                 vtkm::make_Vec(anchorX, anchorY),
                 color,
                 text);
+}
+
+bool Canvas::LoadFont() const
+{
+  this->Font = BitmapFontFactory::CreateLiberation2Sans();
+  const std::vector<unsigned char>& rawPNG = this->Font.GetRawImageData();
+  std::vector<unsigned char> rgba;
+  unsigned long textureWidth, textureHeight;
+  int error = DecodePNG(rgba, textureWidth, textureHeight, &rawPNG[0], rawPNG.size());
+  if (error != 0)
+  {
+    return false;
+  }
+  std::size_t numValues = textureWidth * textureHeight;
+  std::vector<unsigned char> alpha(numValues);
+  for (std::size_t i = 0; i < numValues; ++i)
+  {
+    alpha[i] = rgba[i * 4 + 3];
+  }
+  vtkm::cont::ArrayHandle<vtkm::UInt8> textureHandle = vtkm::cont::make_ArrayHandle(alpha);
+  this->FontTexture =
+    FontTextureType(vtkm::Id(textureWidth), vtkm::Id(textureHeight), textureHandle);
+  this->FontTexture.SetFilterMode(TextureFilterMode::Linear);
+  this->FontTexture.SetWrapMode(TextureWrapMode::Clamp);
+  return true;
 }
 
 void Canvas::SaveAs(const std::string& fileName) const

@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
+//  Copyright 2017 Sandia Corporation.
+//  Copyright 2017 UT-Battelle, LLC.
+//  Copyright 2017 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 //  the U.S. Government retains certain rights in this software.
@@ -23,9 +23,11 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/Types.h>
+#include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/ColorTable.h>
+#include <vtkm/rendering/Texture2D.h>
 #include <vtkm/rendering/WorldAnnotator.h>
 
 namespace vtkm
@@ -38,6 +40,7 @@ class VTKM_RENDERING_EXPORT Canvas
 public:
   using ColorBufferType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
   using DepthBufferType = vtkm::cont::ArrayHandle<vtkm::Float32>;
+  using FontTextureType = vtkm::rendering::Texture2D<1>;
 
   Canvas(vtkm::Id width = 1024, vtkm::Id height = 1024);
   virtual ~Canvas();
@@ -97,6 +100,12 @@ public:
 
   VTKM_CONT
   void SetBackgroundColor(const vtkm::rendering::Color& color) { this->BackgroundColor = color; }
+
+  VTKM_CONT
+  vtkm::Id2 GetScreenPoint(vtkm::Float32 x,
+                           vtkm::Float32 y,
+                           vtkm::Float32 z,
+                           const vtkm::Matrix<vtkm::Float32, 4, 4>& transfor) const;
 
   // If a subclass uses a system that renderers to different buffers, then
   // these should be overridden to copy the data to the buffers.
@@ -188,11 +197,15 @@ public:
   friend class TextAnnotationScreen;
 
 private:
+  bool LoadFont() const;
+
   vtkm::Id Width;
   vtkm::Id Height;
   vtkm::rendering::Color BackgroundColor;
   ColorBufferType ColorBuffer;
   DepthBufferType DepthBuffer;
+  mutable vtkm::rendering::BitmapFont Font;
+  mutable FontTextureType FontTexture;
 };
 }
 } //namespace vtkm::rendering

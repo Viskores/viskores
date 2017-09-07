@@ -45,6 +45,7 @@ set(headers
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
+  TextRenderer.h
   Triangulator.h
   View.h
   View1D.h
@@ -79,6 +80,7 @@ set(sources
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
+  TextRenderer.cxx
   View.cxx
   View1D.cxx
   View2D.cxx
@@ -133,6 +135,7 @@ set(device_sources
   Canvas.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx
+  TextRenderer.cxx
   raytracing/BoundingVolumeHierarchy.cxx
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
