@@ -83,7 +83,9 @@ public:
                                 FieldType stepLength,
                                 vtkm::Vec<FieldType, 3>& velocity) const
   {
-    this->CheckStep(inpos, stepLength, velocity);
+    ParticleStatus status = this->CheckStep(inpos, stepLength, velocity);
+    if (status == ParticleStatus::STATUS_OK)
+      return stepLength;
     FieldType magnitude = vtkm::Magnitude(velocity);
     vtkm::Vec<FieldType, 3> dir = velocity / magnitude;
     vtkm::Vec<FieldType, 3> dirBounds;
@@ -96,7 +98,7 @@ public:
   }
 
   VTKM_EXEC
-  ParticleStatus PushOutOfDomain(vtkm::Vec<FieldType, 3> inpos,
+  ParticleStatus PushOutOfDomain(vtkm::Vec<FieldType, 3>& inpos,
                                  vtkm::Id numSteps,
                                  vtkm::Vec<FieldType, 3>& outpos) const
   {

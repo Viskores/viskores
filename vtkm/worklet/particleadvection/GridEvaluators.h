@@ -57,7 +57,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void GetBoundary(vtkm::Vec<FieldType, 3> dir, vtkm::Vec<FieldType, 3> dirBounds) const
+  void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
   {
     dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
     dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
@@ -101,7 +101,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void GetBoundary(vtkm::Vec<FieldType, 3> dir, vtkm::Vec<FieldType, 3> dirBounds) const
+  void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
   {
     dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
     dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
@@ -210,7 +210,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void GetBoundary(vtkm::Vec<FieldType, 3> dir, vtkm::Vec<FieldType, 3> dirBounds) const
+  void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
   {
     dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
     dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
@@ -378,7 +378,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void GetBoundary(vtkm::Vec<FieldType, 3> dir, vtkm::Vec<FieldType, 3> dirBounds) const
+  void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
   {
     dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
     dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
