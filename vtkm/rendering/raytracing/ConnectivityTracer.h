@@ -459,6 +459,40 @@ public:
   };  //class RayBumper
 
   template <typename FloatType>
+  class AddPathLengths : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    VTKM_CONT
+    AddPathLengths() {}
+
+    typedef void ControlSignature(FieldIn<RayStatusType>,            // ray status
+                                  FieldIn<ScalarRenderingTypes>,     // cell enter distance
+                                  FieldIn<ScalarRenderingTypes>,     // cell exit distance
+                                  FieldInOut<ScalarRenderingTypes>); // ray absorption data
+
+    typedef void ExecutionSignature(_1, _2, _3, _4);
+
+    VTKM_EXEC inline void operator()(const vtkm::UInt8& rayStatus,
+                                     const FloatType& enterDistance,
+                                     const FloatType& exitDistance,
+                                     FloatType& distance) const
+    {
+      if (rayStatus != RAY_ACTIVE)
+      {
+        return;
+      }
+
+      if (exitDistance <= enterDistance)
+      {
+        return;
+      }
+
+      FloatType segmentLength = exitDistance - enterDistance;
+      distance += segmentLength;
+    }
+  };
+
+  template <typename FloatType>
   class Integrate : public vtkm::worklet::WorkletMapField
   {
   private:
@@ -1139,6 +1173,17 @@ public:
   }
 
   template <typename FloatType, typename Device>
+  void AccumulatePathLengths(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device)
+  {
+    vtkm::worklet::DispatcherMapField<AddPathLengths<FloatType>, Device>(
+      AddPathLengths<FloatType>())
+      .Invoke(rays.Status,
+              *(tracker.EnterDist),
+              *(tracker.ExitDist),
+              rays.GetBuffer("path_lengths").Buffer);
+  }
+
+  template <typename FloatType, typename Device>
   void FindLostRays(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device)
   {
     vtkm::cont::Timer<Device> timer;
@@ -1303,6 +1348,7 @@ public:
 
     this->SetBoundingBox(Device());
 
+    bool hasPathLengths = rays.HasBuffer("path_lengths");
 
     vtkm::cont::Timer<Device> timer;
     this->Init(Device());
@@ -1377,6 +1423,10 @@ public:
         else
           this->IntegrateCells(rays, rayTracker, Device());
 
+        if (hasPathLengths)
+        {
+          this->AccumulatePathLengths(rays, rayTracker, Device());
+        }
         //swap enter and exit distances
         rayTracker.Swap();
         if (this->CountRayStatus)
