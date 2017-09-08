@@ -50,17 +50,40 @@ void TestVertexClustering()
     dataSet.GetCellField("cellvar").GetData().Cast<FieldArrayType>(), device);
 
   // test
-  const vtkm::Id output_pointIds = 9;
-  vtkm::Id output_pointId[output_pointIds] = { 0, 1, 3, 1, 5, 4, 1, 2, 5 };
-  const vtkm::Id output_points = 6;
+  const vtkm::Id output_pointIds = 18;
+  vtkm::Id output_pointId[output_pointIds] = {
+    0, 1, 3, 1, 4, 3, 2, 5, 3, 0, 3, 5, 2, 3, 6, 3, 4, 6
+  };
+  const vtkm::Id output_points = 7;
   vtkm::Float64 output_point[output_points][3] = {
-    { 0.0174716003, 0.0501927994, 0.0930275023 }, { 0.0320714004, 0.14704667, 0.0952706337 },
-    { 0.0268670674, 0.246195346, 0.119720004 },   { 0.00215422804, 0.0340906903, 0.180881709 },
-    { 0.0108188, 0.152774006, 0.167914003 },      { 0.0202241503, 0.225427493, 0.140208006 }
+    { 0.0174716, 0.0501928, 0.0930275 }, { 0.0307091, 0.15214200, 0.0539249 },
+    { 0.0174172, 0.1371240, 0.1245530 }, { 0.0480879, 0.15187400, 0.1073340 },
+    { 0.0293568, 0.2455320, 0.1253370 }, { 5.41687e-05, 0.00137834, 0.1751190 },
+    { 0.0108188, 0.1527740, 0.1679140 }
   };
 
-  vtkm::Float32 output_pointvar[output_points] = { 28.f, 15.f, 16.f, 21.f, 30.f, 17.f };
-  vtkm::Float32 output_cellvar[output_pointIds / 3] = { 140.f, 144.f, 132.f };
+  vtkm::Float32 output_pointvar[output_points] = { 28.f, 19.f, 25.f, 15.f, 16.f, 31.f, 30.f };
+  vtkm::Float32 output_cellvar[output_pointIds / 3] = { 145.f, 134.f, 138.f, 140.f, 149.f, 144.f };
+
+  //  {
+  //    typedef vtkm::cont::CellSetSingleType<> CellSetType;
+  //    CellSetType cellSet;
+  //    outDataSet.GetCellSet(0).CopyTo(cellSet);
+  //    auto cellArray = cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+  //    std::cerr << "output_pointIds = " << cellArray.GetNumberOfValues() << "\n";
+  //    std::cerr << "output_pointId[] = ";
+  //    vtkm::cont::printSummary_ArrayHandle(cellArray, std::cerr, true);
+  //  }
+
+
+  //  {
+  //    typedef vtkm::Vec<vtkm::Float64, 3> PointType;
+  //    vtkm::cont::ArrayHandle<PointType> pointArray;
+  //    outDataSet.GetCoordinateSystem(0).GetData().CopyTo(pointArray);
+  //    std::cerr << "output_points = " << pointArray.GetNumberOfValues() << "\n";
+  //    std::cerr << "output_point[] = ";
+  //    vtkm::cont::printSummary_ArrayHandle(pointArray, std::cerr, true);
+  //  }
 
   vtkm::cont::printSummary_ArrayHandle(pointvar, std::cerr, true);
   vtkm::cont::printSummary_ArrayHandle(cellvar, std::cerr, true);

@@ -474,15 +474,16 @@ public:
     ///          result than a simple average in the common case of surface
     ///          geometry, as the average results in a blocky output with
     ///          obvious grid artifacts.
-    vtkm::cont::DynamicArrayHandle repPointArray;       // representative points
-    vtkm::cont::ArrayHandle<vtkm::Id> repPointCidArray; // rep point cluster ids
-    {
-      auto tmp = internal::SortAndUniqueIndices(pointCidArray, DeviceAdapter());
-      repPointCidArray = internal::ConcretePermutationArray(tmp, pointCidArray, DeviceAdapter());
+    this->PointIdMap = internal::SortAndUniqueIndices(pointCidArray, DeviceAdapter());
 
-      internal::DynamicPermutationFunctor<DeviceAdapter> functor(tmp, repPointArray);
-      CastAndCall(coordinates, functor);
-    }
+    using RepPointCidType = vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                                               vtkm::cont::ArrayHandle<vtkm::Id>>;
+    RepPointCidType repPointCidArray =
+      vtkm::cont::make_ArrayHandlePermutation(this->PointIdMap, pointCidArray);
+
+    // representative points
+    vtkm::cont::DynamicArrayHandle repPointArray =
+      internal::DynamicPermutationFunctor<DeviceAdapter>::Run(this->PointIdMap, coordinates);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;
@@ -505,27 +506,6 @@ public:
     timer.Reset();
 #endif
 
-    // Generate the point map before releasing pointCidArray. Just grab any value
-    // from the cluster -- this matches vtkQuadricClustering's behavior.
-    {
-      vtkm::cont::ArrayHandleDiscard<vtkm::Id> discard;
-
-      vtkm::cont::ArrayHandleIndex indexSrc(pointCidArray.GetNumberOfValues());
-      vtkm::cont::ArrayHandle<vtkm::Id> index;
-      Algo::Copy(indexSrc, index); // Need a real array for SortByKey
-
-      // Mimics the behavior of AverageByKey to get the original cellIds in the
-      // same order as pointCidArrayReduced.
-      Algo::SortByKey(pointCidArray, index, vtkm::SortLess());
-      Algo::ReduceByKey(pointCidArray, index, discard, this->PointIdMap, vtkm::Minimum());
-    }
-
-#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    std::cout << "Time after generating PointIdMap (s): " << timer.GetElapsedTime() << std::endl;
-    timer.Reset();
-#endif
-
-    pointCidArray.ReleaseResources();
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
     vtkm::cont::ArrayHandle<vtkm::Id> cidIndexArray;
@@ -535,6 +515,7 @@ public:
     vtkm::worklet::DispatcherMapField<IndexingWorklet, DeviceAdapter>().Invoke(repPointCidArray,
                                                                                cidIndexArray);
 
+    pointCidArray.ReleaseResources();
     repPointCidArray.ReleaseResources();
 
     ///
