@@ -72,7 +72,6 @@ public:
 
     intersector.IntersectTri(a, b, c, dirx, diry, dirz, distance, u, v, originX, originY, originZ);
 
-
     if (distance != -1. && distance < closestDistance && distance > minDistance)
     {
       closestDistance = distance;
@@ -103,7 +102,6 @@ public:
     vtkm::Vec<Precision, 3> e1 = b - a;
     vtkm::Vec<Precision, 3> e2 = c - a;
 
-
     vtkm::Vec<Precision, 3> p;
     p[0] = diry * e2[2] - dirz * e2[1];
     p[1] = dirz * e2[0] - dirx * e2[2];
@@ -126,7 +124,6 @@ public:
         q[1] = t[2] * e1[0] - t[0] * e1[2];
         q[2] = t[0] * e1[1] - t[1] * e1[0];
         v = (dirx * q[0] + diry * q[1] + dirz * q[2]) * dot;
-
         if (v >= (0.f - EPSILON2) && v <= (1.f + EPSILON2) && !(u + v > 1.f))
         {
           distance = (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) * dot;
@@ -808,7 +805,6 @@ public:
                                            hitRightChild,
                                            minDistance);
 
-
           if (!hitLeftChild && !hitRightChild)
           {
             currentNode = todo[stackptr];
@@ -843,7 +839,6 @@ public:
         if (currentNode < 0 && currentNode != barrier) //check register usage
         {
           currentNode = -currentNode - 1; //swap the neg address
-
           LeafIntersector.IntersectLeaf(currentNode,
                                         originX,
                                         originY,
@@ -865,7 +860,6 @@ public:
       } //while
       if (hitIndex != -1)
         distance = closestDistance;
-
     } // ()
   };
   template <typename Precision>

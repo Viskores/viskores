@@ -355,6 +355,7 @@ static vtkm::Int32 SegmentDirections[6][2] = { { 0, 2 }, //face 0 and 2 have the
                                                { 0, 2 }, { 1, 2 }, //1 and 3
                                                { 1, 2 }, { 0, 1 }, // 4 and 5
                                                { 0, 1 } };
+
 class StructuredExternalTriangles : public vtkm::worklet::WorkletMapField
 {
 protected:

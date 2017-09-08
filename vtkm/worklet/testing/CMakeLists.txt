@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestAverageByKey.cxx
   UnitTestCellAverage.cxx
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx

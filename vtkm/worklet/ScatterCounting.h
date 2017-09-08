@@ -180,6 +180,11 @@ struct ScatterCounting
     this->BuildArrays(countArray, Device(), saveInputToOutputMap);
   }
 
+  VTKM_CONT ScatterCounting()
+    : InputRange(0)
+  {
+  }
+
   typedef vtkm::cont::ArrayHandle<vtkm::Id> OutputToInputMapType;
 
   template <typename RangeType>

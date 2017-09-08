@@ -279,9 +279,9 @@ public:
     if (temp[0] == vtkm::Float32(PointDimensions[0] - 1))
       temp[0] = vtkm::Float32(PointDimensions[0] - 2);
     if (temp[1] == vtkm::Float32(PointDimensions[1] - 1))
-      temp[0] = vtkm::Float32(PointDimensions[1] - 2);
+      temp[1] = vtkm::Float32(PointDimensions[1] - 2);
     if (temp[2] == vtkm::Float32(PointDimensions[2] - 1))
-      temp[0] = vtkm::Float32(PointDimensions[2] - 2);
+      temp[2] = vtkm::Float32(PointDimensions[2] - 2);
     cell = temp;
     invSpacing = InvSpacing;
   }
