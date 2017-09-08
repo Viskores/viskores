@@ -123,7 +123,6 @@ void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
   {
     throw ErrorBadAllocation("Requested allocation exceeds size_t capacity.");
   }
-
   this->AllocateBytes(numberOfValues * static_cast<vtkm::Id>(sizeof(T)));
 }
 

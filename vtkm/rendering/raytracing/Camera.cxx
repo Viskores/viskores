@@ -844,7 +844,6 @@ void Camera::CreateDebugRayImp(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<Precision>& 
   RayOperations::Resize(rays, 1, vtkm::cont::DeviceAdapterTagSerial());
   vtkm::Int32 pixelIndex = this->Width * (this->Height - pixel[1]) + pixel[0];
   rays.PixelIdx.GetPortalControl().Set(0, pixelIndex);
-
   rays.OriginX.GetPortalControl().Set(0, this->Position[0]);
   rays.OriginY.GetPortalControl().Set(0, this->Position[1]);
   rays.OriginZ.GetPortalControl().Set(0, this->Position[2]);
@@ -884,7 +883,6 @@ void Camera::CreateDebugRayImp(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<Precision>& 
   vtkm::Vec<Precision, 3> ray_dir;
   int i = vtkm::Int32(pixelIndex) % this->Width;
   int j = vtkm::Int32(pixelIndex) / this->Height;
-
   ray_dir = nlook + delta_x * ((2.f * Precision(i) - Precision(this->Width)) / 2.0f) +
     delta_y * ((2.f * Precision(j) - Precision(this->Height)) / 2.0f);
 

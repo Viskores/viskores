@@ -36,7 +36,7 @@ namespace
 
 using EdgeType = vtkm::Vec<vtkm::IdComponent, 2>;
 
-void MakeEdgeCononical(EdgeType& edge)
+void MakeEdgeCanonical(EdgeType& edge)
 {
   if (edge[1] < edge[0])
   {
@@ -77,15 +77,15 @@ struct TestCellFacesFunctor
       VTKM_TEST_ASSERT(edge[1] >= 0, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[1] < numPoints, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[0] != edge[1], "Degenerate edge.");
-      MakeEdgeCononical(edge);
-      VTKM_TEST_ASSERT(edge[0] < edge[1], "Internal test error: MakeEdgeCononical failed");
+      MakeEdgeCanonical(edge);
+      VTKM_TEST_ASSERT(edge[0] < edge[1], "Internal test error: MakeEdgeCanonical failed");
       VTKM_TEST_ASSERT(edgeSet.find(edge) == edgeSet.end(), "Found duplicate edge");
       edgeSet.insert(edge);
 
-      vtkm::Id2 cononicalEdgeId =
-        vtkm::exec::CellEdgeCononicalId(numPoints, edgeIndex, shape, pointIndexProxy, workletProxy);
-      VTKM_TEST_ASSERT(cononicalEdgeId[0] > 0, "Not using global ids?");
-      VTKM_TEST_ASSERT(cononicalEdgeId[0] < cononicalEdgeId[1], "Bad order.");
+      vtkm::Id2 canonicalEdgeId =
+        vtkm::exec::CellEdgeCanonicalId(numPoints, edgeIndex, shape, pointIndexProxy, workletProxy);
+      VTKM_TEST_ASSERT(canonicalEdgeId[0] > 0, "Not using global ids?");
+      VTKM_TEST_ASSERT(canonicalEdgeId[0] < canonicalEdgeId[1], "Bad order.");
     }
 
     vtkm::IdComponent numFaces = vtkm::exec::CellFaceNumberOfFaces(shape, workletProxy);
@@ -112,16 +112,16 @@ struct TestCellFacesFunctor
         {
           edge = EdgeType(facePoints[0], facePoints[pointIndex]);
         }
-        MakeEdgeCononical(edge);
+        MakeEdgeCanonical(edge);
         VTKM_TEST_ASSERT(edgeSet.find(edge) != edgeSet.end(), "Edge in face not in cell's edges");
         edgesFoundInFaces.insert(edge);
       }
 
-      vtkm::Id3 cononicalFaceId =
-        vtkm::exec::CellFaceCononicalId(faceIndex, shape, pointIndexProxy, workletProxy);
-      VTKM_TEST_ASSERT(cononicalFaceId[0] > 0, "Not using global ids?");
-      VTKM_TEST_ASSERT(cononicalFaceId[0] < cononicalFaceId[1], "Bad order.");
-      VTKM_TEST_ASSERT(cononicalFaceId[1] < cononicalFaceId[2], "Bad order.");
+      vtkm::Id3 canonicalFaceId =
+        vtkm::exec::CellFaceCanonicalId(faceIndex, shape, pointIndexProxy, workletProxy);
+      VTKM_TEST_ASSERT(canonicalFaceId[0] > 0, "Not using global ids?");
+      VTKM_TEST_ASSERT(canonicalFaceId[0] < canonicalFaceId[1], "Bad order.");
+      VTKM_TEST_ASSERT(canonicalFaceId[1] < canonicalFaceId[2], "Bad order.");
     }
     VTKM_TEST_ASSERT(edgesFoundInFaces.size() == edgeSet.size(),
                      "Faces did not contain all edges in cell");
@@ -159,15 +159,15 @@ struct TestCellFacesFunctor
       VTKM_TEST_ASSERT(edge[1] >= 0, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[1] < numPoints, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[0] != edge[1], "Degenerate edge.");
-      MakeEdgeCononical(edge);
-      VTKM_TEST_ASSERT(edge[0] < edge[1], "Internal test error: MakeEdgeCononical failed");
+      MakeEdgeCanonical(edge);
+      VTKM_TEST_ASSERT(edge[0] < edge[1], "Internal test error: MakeEdgeCanonical failed");
       VTKM_TEST_ASSERT(edgeSet.find(edge) == edgeSet.end(), "Found duplicate edge");
       edgeSet.insert(edge);
 
-      vtkm::Id2 cononicalEdgeId =
-        vtkm::exec::CellEdgeCononicalId(numPoints, edgeIndex, shape, pointIndexProxy, workletProxy);
-      VTKM_TEST_ASSERT(cononicalEdgeId[0] > 0, "Not using global ids?");
-      VTKM_TEST_ASSERT(cononicalEdgeId[0] < cononicalEdgeId[1], "Bad order.");
+      vtkm::Id2 canonicalEdgeId =
+        vtkm::exec::CellEdgeCanonicalId(numPoints, edgeIndex, shape, pointIndexProxy, workletProxy);
+      VTKM_TEST_ASSERT(canonicalEdgeId[0] > 0, "Not using global ids?");
+      VTKM_TEST_ASSERT(canonicalEdgeId[0] < canonicalEdgeId[1], "Bad order.");
     }
 
     vtkm::IdComponent numFaces = vtkm::exec::CellFaceNumberOfFaces(shape, workletProxy);

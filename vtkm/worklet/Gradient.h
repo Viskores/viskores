@@ -33,9 +33,6 @@
 #include <vtkm/worklet/gradient/Transpose.h>
 #include <vtkm/worklet/gradient/Vorticity.h>
 
-#include <vtkm/cont/Timer.h>
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
-
 namespace vtkm
 {
 namespace worklet
@@ -80,6 +77,17 @@ struct DeducedPointGrad
                       *this->Result);
   }
 
+  template <typename PermIterType>
+  void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<3>,
+                                                       PermIterType>& cellset) const
+  {
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    dispatcher.Invoke(cellset, //topology to iterate on a per point basis
+                      *this->Points,
+                      *this->Field,
+                      *this->Result);
+  }
+
   void operator()(const vtkm::cont::CellSetStructured<2>& cellset) const
   {
     vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
@@ -88,6 +96,18 @@ struct DeducedPointGrad
                       *this->Field,
                       *this->Result);
   }
+
+  template <typename PermIterType>
+  void operator()(const vtkm::cont::CellSetPermutation<vtkm::cont::CellSetStructured<2>,
+                                                       PermIterType>& cellset) const
+  {
+    vtkm::worklet::DispatcherPointNeighborhood<StructuredPointGradient<T>, Device> dispatcher;
+    dispatcher.Invoke(cellset, //topology to iterate on a per point basis
+                      *this->Points,
+                      *this->Field,
+                      *this->Result);
+  }
+
 
   const CoordinateSystem* const Points;
   const vtkm::cont::ArrayHandle<T, S>* const Field;

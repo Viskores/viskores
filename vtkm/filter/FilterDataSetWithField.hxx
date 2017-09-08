@@ -80,6 +80,43 @@ FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet& input,
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
+inline VTKM_CONT std::vector<vtkm::filter::Result> FilterDataSetWithField<Derived>::Execute(
+  const vtkm::cont::MultiBlock& input,
+  const std::string& inFieldName)
+{
+  std::vector<vtkm::filter::Result> results;
+
+  for (vtkm::Id j = 0; j < input.GetNumberOfBlocks(); j++)
+  {
+    vtkm::filter::Result result = this->Execute(
+      input.GetBlock(j), input.GetBlock(j).GetField(inFieldName), vtkm::filter::PolicyDefault());
+    results.push_back(result);
+  }
+
+  return results;
+}
+//-----------------------------------------------------------------------------
+template <typename Derived>
+template <typename DerivedPolicy>
+inline VTKM_CONT std::vector<vtkm::filter::Result> FilterDataSetWithField<Derived>::Execute(
+  const vtkm::cont::MultiBlock& input,
+  const std::string& inFieldName,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+{
+  std::vector<vtkm::filter::Result> results;
+
+  for (vtkm::Id j = 0; j < input.GetNumberOfBlocks(); j++)
+  {
+    vtkm::filter::Result result =
+      this->Execute(input.GetBlock(j), input.GetBlock(j).GetField(inFieldName), policy);
+    results.push_back(result);
+  }
+
+  return results;
+}
+
+//-----------------------------------------------------------------------------
+template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT Result
 FilterDataSetWithField<Derived>::Execute(const vtkm::cont::DataSet& input,
