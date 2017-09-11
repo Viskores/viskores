@@ -79,7 +79,7 @@ public:
   }
 
   VTKM_EXEC
-  ParticleStatus GetEscapeStepLength(vtkm::Vec<FieldType, 3>& inpos,
+  ParticleStatus GetEscapeStepLength(const vtkm::Vec<FieldType, 3>& inpos,
                                      FieldType& stepLength,
                                      vtkm::Vec<FieldType, 3>& velocity) const
   {
@@ -102,17 +102,18 @@ public:
   }
 
   VTKM_EXEC
-  ParticleStatus PushOutOfDomain(vtkm::Vec<FieldType, 3>& inpos,
+  ParticleStatus PushOutOfDomain(const vtkm::Vec<FieldType, 3>& inpos,
                                  vtkm::Id numSteps,
                                  vtkm::Vec<FieldType, 3>& outpos) const
   {
     ParticleStatus status;
+    outpos = inpos;
     numSteps = (numSteps == 0) ? 1 : numSteps;
     FieldType totalTime = static_cast<FieldType>(numSteps) * this->StepLength;
     FieldType timeFraction = totalTime * this->Tolerance;
     FieldType stepLength = this->StepLength / 2;
-    vtkm::Vec<FieldType, 3> velocity, escapeVelocity;
-    this->CheckStep(inpos, 0.0f, escapeVelocity);
+    vtkm::Vec<FieldType, 3> velocity, currentVelocity;
+    this->CheckStep(inpos, 0.0f, currentVelocity);
     if (this->ShortStepsSupported)
     {
       do
@@ -120,17 +121,17 @@ public:
         status = this->CheckStep(inpos, stepLength, velocity);
         if (status == ParticleStatus::STATUS_OK)
         {
-          inpos = inpos + stepLength * velocity;
-          escapeVelocity = velocity;
+          outpos = outpos + stepLength * velocity;
+          currentVelocity = velocity;
         }
         stepLength = stepLength / 2;
       } while (stepLength > timeFraction);
     }
     status = GetEscapeStepLength(inpos, stepLength, velocity);
     if (status != ParticleStatus::STATUS_OK)
-      outpos = inpos + stepLength * escapeVelocity;
+      outpos = outpos + stepLength * currentVelocity;
     else
-      outpos = inpos + stepLength * velocity;
+      outpos = outpos + stepLength * velocity;
     return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
   }
 
