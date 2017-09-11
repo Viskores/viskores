@@ -696,8 +696,8 @@ private:
       vtkm::Id sourceArraySize;
 
       vtkm::cont::ArrayHandleCounting<vtkm::IdComponent> numComponentsArray(1, 1, ARRAY_SIZE);
-      vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray =
-        vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, sourceArraySize);
+      vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray = vtkm::cont::ConvertNumComponentsToOffsets(
+        numComponentsArray, sourceArraySize, DeviceAdapterTag());
 
       vtkm::cont::ArrayHandle<ComponentType> sourceArray;
       sourceArray.Allocate(sourceArraySize);
