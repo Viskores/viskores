@@ -39,7 +39,7 @@ public:
   ~FilterCell();
 
   VTKM_CONT
-  void SetActiveCellSet(vtkm::Id index) { this->CellSetIndex = index; }
+  void SetActiveCellSetIndex(vtkm::Id index) { this->CellSetIndex = index; }
 
   VTKM_CONT
   vtkm::Id GetActiveCellSetIndex() const { return this->CellSetIndex; }
