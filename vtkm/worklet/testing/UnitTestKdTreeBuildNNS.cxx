@@ -76,8 +76,8 @@ public:
 
 void TestKdTreeBuildNNS()
 {
-  vtkm::Int32 nTrainingPoints = 1000;
-  vtkm::Int32 nTestingPoint = 1000;
+  vtkm::Int32 nTrainingPoints = 100000;
+  vtkm::Int32 nTestingPoint = 1;
 
   std::vector<vtkm::Vec<vtkm::Float32, 3>> coordi;
 
