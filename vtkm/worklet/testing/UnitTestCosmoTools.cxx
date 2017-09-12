@@ -233,7 +233,7 @@ void TestCosmo_2DHaloFind()
                            resultHaloId,
                            resultMBP,
                            resultPot,
-                           DeviceAdapter());
+                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   VTKM_TEST_ASSERT(TestArrayHandle(haloIdArray, resultHaloId, nCells), "Incorrect Halo Ids");
   VTKM_TEST_ASSERT(TestArrayHandle(mbpArray, resultMBP, nCells), "Incorrect MBP Ids");
@@ -286,7 +286,7 @@ void TestCosmo_3DHaloFind()
                            resultHaloId,
                            resultMBP,
                            resultPot,
-                           DeviceAdapter());
+                           VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   VTKM_TEST_ASSERT(TestArrayHandle(haloIdArray, resultHaloId, nCells), "Incorrect Halo Ids");
   VTKM_TEST_ASSERT(TestArrayHandle(mbpArray, resultMBP, nCells), "Incorrect MBP Ids");
@@ -322,11 +322,21 @@ void TestCosmo_3DCenterFind()
   vtkm::Float32 particleMass = 1.0f;
 
   vtkm::worklet::CosmoTools cosmoTools;
-  cosmoTools.RunMBPCenterFinderNxN(
-    xLocArray, yLocArray, zLocArray, nCells, particleMass, nxnResult, DeviceAdapter());
+  cosmoTools.RunMBPCenterFinderNxN(xLocArray,
+                                   yLocArray,
+                                   zLocArray,
+                                   nCells,
+                                   particleMass,
+                                   nxnResult,
+                                   VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
-  cosmoTools.RunMBPCenterFinderMxN(
-    xLocArray, yLocArray, zLocArray, nCells, particleMass, mxnResult, DeviceAdapter());
+  cosmoTools.RunMBPCenterFinderMxN(xLocArray,
+                                   yLocArray,
+                                   zLocArray,
+                                   nCells,
+                                   particleMass,
+                                   mxnResult,
+                                   VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   VTKM_TEST_ASSERT(test_equal(nxnResult.first, mxnResult.first),
                    "NxN and MxN got different results");
