@@ -49,36 +49,6 @@ private:
   vtkm::Float64 Upper;
 };
 
-template <typename ValueType, typename StorageTag, typename DeviceTag>
-struct CallWorklet
-{
-  vtkm::cont::DynamicCellSet& Output;
-  vtkm::worklet::Threshold& Worklet;
-  const vtkm::cont::ArrayHandle<ValueType, StorageTag>& Field;
-  const vtkm::cont::Field::AssociationEnum FieldType;
-  const ThresholdRange& Predicate;
-
-  CallWorklet(vtkm::cont::DynamicCellSet& output,
-              vtkm::worklet::Threshold& worklet,
-              const vtkm::cont::ArrayHandle<ValueType, StorageTag>& field,
-              const vtkm::cont::Field::AssociationEnum fieldType,
-              const ThresholdRange& predicate)
-    : Output(output)
-    , Worklet(worklet)
-    , Field(field)
-    , FieldType(fieldType)
-    , Predicate(predicate)
-  {
-  }
-
-  template <typename CellSetType>
-  void operator()(const CellSetType& cellSet) const
-  {
-    this->Output =
-      this->Worklet.Run(cellSet, this->Field, this->FieldType, this->Predicate, DeviceTag());
-  }
-};
-
 } // end anon namespace
 
 namespace vtkm
@@ -101,22 +71,21 @@ inline VTKM_CONT vtkm::filter::Result Threshold::DoExecute(
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const DeviceAdapter&)
+  DeviceAdapter)
 {
-  using Worker = CallWorklet<T, StorageType, DeviceAdapter>;
-
   //get the cells and coordinates of the dataset
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
-
-  vtkm::cont::DynamicCellSet cellOut;
   ThresholdRange predicate(this->GetLowerThreshold(), this->GetUpperThreshold());
-  Worker worker(cellOut, this->Worklet, field, fieldMeta.GetAssociation(), predicate);
-  vtkm::filter::ApplyPolicy(cells, policy).CastAndCall(worker);
+  vtkm::cont::DynamicCellSet cellOut = this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
+                                                         field,
+                                                         fieldMeta.GetAssociation(),
+                                                         predicate,
+                                                         DeviceAdapter());
 
   vtkm::cont::DataSet output;
+  output.AddCellSet(cellOut);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-  output.AddCellSet(worker.Output);
 
   return output;
 }
@@ -127,7 +96,7 @@ inline VTKM_CONT bool Threshold::DoMapField(vtkm::filter::Result& result,
                                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                             const vtkm::filter::FieldMetadata& fieldMeta,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                            const DeviceAdapter& device)
+                                            DeviceAdapter device)
 {
   if (fieldMeta.IsPointField())
   {
