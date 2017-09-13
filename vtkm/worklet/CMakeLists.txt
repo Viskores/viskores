@@ -24,6 +24,7 @@ set(headers
   CellDeepCopy.h
   Clip.h
   ContourTreeUniform.h
+  CosmoTools.h
   DispatcherMapField.h
   DispatcherMapTopology.h
   DispatcherPointNeighborhood.h
@@ -70,6 +71,7 @@ set(headers
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(contourtree)
+add_subdirectory(cosmotools)
 add_subdirectory(gradient)
 add_subdirectory(splatkernels)
 add_subdirectory(spatialstructure)

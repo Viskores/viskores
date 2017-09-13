@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestCellGradient.cxx
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
+  UnitTestCosmoTools.cxx
   UnitTestExternalFaces.cxx
   UnitTestExtractGeometry.cxx
   UnitTestExtractPoints.cxx
