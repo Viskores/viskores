@@ -22,6 +22,7 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
+#include <vtkm/Matrix.h>
 #include <vtkm/Types.h>
 #include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/Camera.h>
@@ -112,8 +113,8 @@ public:
   virtual void RefreshColorBuffer() const {}
   virtual void RefreshDepthBuffer() const {}
 
-  virtual void SetViewToWorldSpace(const vtkm::rendering::Camera&, bool) {}
-  virtual void SetViewToScreenSpace(const vtkm::rendering::Camera&, bool) {}
+  virtual void SetViewToWorldSpace(const vtkm::rendering::Camera& camera, bool clip);
+  virtual void SetViewToScreenSpace(const vtkm::rendering::Camera& camera, bool clip);
   virtual void SetViewportClipping(const vtkm::rendering::Camera&, bool) {}
 
   virtual void SaveAs(const std::string& fileName) const;
@@ -206,6 +207,7 @@ private:
   DepthBufferType DepthBuffer;
   mutable vtkm::rendering::BitmapFont Font;
   mutable FontTextureType FontTexture;
+  vtkm::Matrix<vtkm::Float32, 4, 4> Transform;
 };
 }
 } //namespace vtkm::rendering

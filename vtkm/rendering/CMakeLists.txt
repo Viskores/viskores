@@ -35,6 +35,7 @@ set(headers
   ColorTable.h
   ConnectivityProxy.h
   DecodePNG.h
+  LineRenderer.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
@@ -71,6 +72,7 @@ set(sources
   ColorTable.cxx
   ConnectivityProxy.cxx
   DecodePNG.cxx
+  LineRenderer.cxx
   Mapper.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx

@@ -24,6 +24,7 @@
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/rendering/BitmapFontFactory.h>
 #include <vtkm/rendering/DecodePNG.h>
+#include <vtkm/rendering/LineRenderer.h>
 #include <vtkm/rendering/TextRenderer.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
@@ -225,6 +226,7 @@ Canvas::Canvas(vtkm::Id width, vtkm::Id height)
   : Width(0)
   , Height(0)
 {
+  vtkm::MatrixIdentity(Transform);
   this->ResizeBuffers(width, height);
 }
 
@@ -291,41 +293,12 @@ void Canvas::AddColorSwatch(const vtkm::Float64 x0,
 
 void Canvas::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
                      const vtkm::Vec<vtkm::Float64, 2>& point1,
-                     vtkm::Float32 vtkmNotUsed(linewidth),
+                     vtkm::Float32 linewidth,
                      const vtkm::rendering::Color& color) const
 {
-  const vtkm::Float32 width = static_cast<vtkm::Float32>(this->Width);
-  const vtkm::Float32 height = static_cast<vtkm::Float32>(this->Height);
-  vtkm::Id x0 = static_cast<vtkm::Id>(vtkm::Round((point0[0] * 0.5f + 0.5f) * width));
-  vtkm::Id y0 = static_cast<vtkm::Id>(vtkm::Round((point0[1] * 0.5f + 0.5f) * height));
-  vtkm::Id x1 = static_cast<vtkm::Id>(vtkm::Round((point1[0] * 0.5f + 0.5f) * width));
-  vtkm::Id y1 = static_cast<vtkm::Id>(vtkm::Round((point1[1] * 0.5f + 0.5f) * height));
-  vtkm::Id dx = vtkm::Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-  vtkm::Id dy = -vtkm::Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-  vtkm::Id err = dx + dy, err2 = 0;
-  ColorBufferType::PortalControl colorPortal =
-    ColorBufferType(this->ColorBuffer).GetPortalControl();
-
-  while (true)
-  {
-    vtkm::Id index = y0 * this->Width + x0;
-    colorPortal.Set(index, color.Components);
-    if (x0 == x1 && y0 == y1)
-    {
-      break;
-    }
-    err2 = err * 2;
-    if (err2 >= dy)
-    {
-      err += dy;
-      x0 += sx;
-    }
-    if (err2 <= dx)
-    {
-      err += dx;
-      y0 += sy;
-    }
-  }
+  vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
+  LineRenderer renderer(self, Transform);
+  renderer.RenderLine(point0, point1, linewidth, color);
 }
 
 void Canvas::AddLine(vtkm::Float64 x0,
@@ -454,6 +427,20 @@ bool Canvas::LoadFont() const
   this->FontTexture.SetFilterMode(TextureFilterMode::Linear);
   this->FontTexture.SetWrapMode(TextureWrapMode::Clamp);
   return true;
+}
+
+void Canvas::SetViewToWorldSpace(const vtkm::rendering::Camera& camera, bool clip)
+{
+  Transform = vtkm::MatrixMultiply(camera.CreateProjectionMatrix(this->Width, this->Height),
+                                   camera.CreateViewMatrix());
+}
+
+void Canvas::SetViewToScreenSpace(const vtkm::rendering::Camera& camera, bool clip)
+{
+  vtkm::Matrix<vtkm::Float32, 4, 4> projection;
+  vtkm::MatrixIdentity(projection);
+  projection[2][2] = -1.0f;
+  Transform = projection;
 }
 
 void Canvas::SaveAs(const std::string& fileName) const
