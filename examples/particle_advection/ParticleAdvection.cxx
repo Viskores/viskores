@@ -60,8 +60,6 @@ void RunTest(const std::string& fname,
              vtkm::Float32 stepSize,
              vtkm::Id numThreads,
              vtkm::Id advectType,
-             vtkm::Id stepsPerRound,
-             vtkm::Id particlesPerRound,
              vtkm::Id seeding)
 {
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
@@ -170,8 +168,7 @@ void RunTest(const std::string& fname,
   else
   {
     vtkm::worklet::Streamline streamline;
-    streamline.Run(
-      rk4, seedArray, fieldArray, numSteps, stepsPerRound, particlesPerRound, DeviceAdapter());
+    streamline.Run(rk4, seedArray, fieldArray, numSteps, DeviceAdapter());
   }
 
   auto t1 = std::chrono::high_resolution_clock::now() - t0;
@@ -317,14 +314,6 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  RunTest(dataFile,
-          numSeeds,
-          numSteps,
-          stepSize,
-          numThreads,
-          advectType,
-          stepsPerRound,
-          particlesPerRound,
-          seeding);
+  RunTest(dataFile, numSeeds, numSteps, stepSize, numThreads, advectType, seeding);
   return 0;
 }

@@ -18,45 +18,44 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_CellFilter_h
-#define vtk_m_filter_CellFilter_h
+#ifndef vtk_m_worklet_ComputeNDEntropy_h
+#define vtk_m_worklet_ComputeNDEntropy_h
 
-#include <vtkm/filter/FilterField.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 
 namespace vtkm
 {
-namespace filter
+namespace worklet
 {
-
-template <class Derived>
-class FilterCell : public vtkm::filter::FilterField<Derived>
+namespace histogram
+{
+// For each bin, calculate its information content (log2)
+class SetBinInformationContent : public vtkm::worklet::WorkletMapField
 {
 public:
-  VTKM_CONT
-  FilterCell();
+  typedef void ControlSignature(FieldIn<> freq, FieldOut<> informationContent);
+  typedef void ExecutionSignature(_1, _2);
+
+  vtkm::Float64 FreqSum;
 
   VTKM_CONT
-  ~FilterCell();
+  SetBinInformationContent(vtkm::Float64 _freqSum)
+    : FreqSum(_freqSum)
+  {
+  }
 
-  VTKM_CONT
-  void SetActiveCellSetIndex(vtkm::Id index) { this->CellSetIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCellSetIndex() const { return this->CellSetIndex; }
-
-  VTKM_CONT
-  void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
-
-protected:
-  vtkm::Id CellSetIndex;
-  vtkm::Id CoordinateSystemIndex;
+  template <typename FreqType>
+  VTKM_EXEC void operator()(const FreqType& freq, vtkm::Float64& informationContent) const
+  {
+    vtkm::Float64 p = ((vtkm::Float64)freq) / FreqSum;
+    if (p > 0)
+      informationContent = -1 * p * vtkm::Log2(p);
+    else
+      informationContent = 0;
+  }
 };
 }
-} // namespace vtkm::filter
+}
+} // namespace vtkm::worklet
 
-#include <vtkm/filter/FilterCell.hxx>
-
-#endif // vtk_m_filter_CellFilter_h
+#endif // vtk_m_worklet_ComputeNDEntropy_h

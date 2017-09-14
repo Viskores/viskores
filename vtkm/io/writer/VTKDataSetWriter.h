@@ -187,14 +187,14 @@ private:
 
     out << "CELLS " << nCells << " " << conn_length << std::endl;
 
-    vtkm::Vec<vtkm::Id, 8> ids;
     for (vtkm::Id i = 0; i < nCells; ++i)
     {
+      vtkm::cont::ArrayHandle<vtkm::Id> ids;
       vtkm::Id nids = cellSet.GetNumberOfPointsInCell(i);
       cellSet.GetIndices(i, ids);
       out << nids;
       for (int j = 0; j < nids; ++j)
-        out << " " << ids[j];
+        out << " " << ids.GetPortalControl().Get(j);
       out << std::endl;
     }
 

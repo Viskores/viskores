@@ -122,6 +122,8 @@ public:
   template <vtkm::IdComponent ItemTupleLength>
   VTKM_CONT void GetIndices(vtkm::Id index, vtkm::Vec<vtkm::Id, ItemTupleLength>& ids) const;
 
+  VTKM_CONT void GetIndices(vtkm::Id index, vtkm::cont::ArrayHandle<vtkm::Id>& ids) const;
+
   /// First method to add cells -- one at a time.
   VTKM_CONT void PrepareToAddCells(vtkm::Id numCells, vtkm::Id connectivityMaxLen);
 

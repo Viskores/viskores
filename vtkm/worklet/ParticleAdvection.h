@@ -124,6 +124,34 @@ public:
   }
 };
 
+template <typename FieldType>
+struct StreamlineResult
+{
+  StreamlineResult()
+    : positions()
+    , polyLines()
+    , status()
+    , stepsTaken()
+  {
+  }
+
+  StreamlineResult(const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>& pos,
+                   const vtkm::cont::CellSetExplicit<>& lines,
+                   const vtkm::cont::ArrayHandle<vtkm::Id>& stat,
+                   const vtkm::cont::ArrayHandle<vtkm::Id>& steps)
+    : positions(pos)
+    , polyLines(lines)
+    , status(stat)
+    , stepsTaken(steps)
+  {
+  }
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> positions;
+  vtkm::cont::CellSetExplicit<> polyLines;
+  vtkm::cont::ArrayHandle<vtkm::Id> status;
+  vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken;
+};
+
 class Streamline
 {
 public:
@@ -132,20 +160,37 @@ public:
   template <typename IntegratorType,
             typename FieldType,
             typename PointStorage,
-            typename FieldStorage,
             typename DeviceAdapter>
-  void Run(const IntegratorType& it,
-           const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-           vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, FieldStorage> fieldArray,
-           const vtkm::Id& nSteps,
-           const vtkm::Id& stepsPerRound,
-           const vtkm::Id& particlesPerRound,
-           const DeviceAdapter&)
+  StreamlineResult<FieldType> Run(
+    const IntegratorType& it,
+    const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& seedArray,
+    const vtkm::Id& nSteps,
+    const DeviceAdapter&)
   {
+    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
     vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType, FieldType, DeviceAdapter>
       worklet;
 
-    worklet.Run(it, pts, fieldArray, nSteps, stepsPerRound, particlesPerRound);
+    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage> positions;
+    vtkm::cont::CellSetExplicit<> polyLines;
+
+    //Allocate status and steps arrays.
+    vtkm::Id numSeeds = seedArray.GetNumberOfValues();
+    vtkm::Id val = vtkm::worklet::particleadvection::ParticleStatus::STATUS_OK;
+    vtkm::cont::ArrayHandle<vtkm::Id> status, steps;
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> ok(val, numSeeds);
+    status.Allocate(numSeeds);
+
+    DeviceAlgorithm::Copy(ok, status);
+
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds);
+    steps.Allocate(numSeeds);
+    DeviceAlgorithm::Copy(zero, steps);
+
+    worklet.Run(it, seedArray, nSteps, positions, polyLines, status, steps);
+
+    StreamlineResult<FieldType> res(positions, polyLines, status, steps);
+    return res;
   }
 };
 }

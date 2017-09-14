@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <typeinfo>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetBuilderRectilinear.h>
@@ -29,9 +30,6 @@
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
-
-
-#include <typeinfo>
 
 namespace
 {
@@ -418,7 +416,7 @@ void TestParticleWorklets()
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
   typedef FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
 
-  FieldType stepSize = 0.01f;
+  FieldType stepSize = 0.05f;
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
 
@@ -448,19 +446,45 @@ void TestParticleWorklets()
   RGEvalType eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
   RK4RGType rk4(eval, stepSize);
 
-  std::vector<vtkm::Vec<FieldType, 3>> pts;
-  pts.push_back(vtkm::Vec<FieldType, 3>(1, 1, 1));
-  pts.push_back(vtkm::Vec<FieldType, 3>(2, 2, 2));
-  pts.push_back(vtkm::Vec<FieldType, 3>(3, 3, 3));
+  for (int i = 0; i < 2; i++)
+  {
+    std::vector<vtkm::Vec<FieldType, 3>> pts;
+    pts.push_back(vtkm::Vec<FieldType, 3>(1, 1, 1));
+    pts.push_back(vtkm::Vec<FieldType, 3>(2, 2, 2));
+    pts.push_back(vtkm::Vec<FieldType, 3>(3, 3, 3));
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
-  seeds = vtkm::cont::make_ArrayHandle(pts);
+    vtkm::Id maxSteps = 100;
+    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
+    seeds = vtkm::cont::make_ArrayHandle(pts);
 
-  vtkm::worklet::ParticleAdvection particleAdvection;
-  vtkm::worklet::ParticleAdvectionResult<FieldType> res;
-  res = particleAdvection.Run(rk4, seeds, 1000, DeviceAdapter());
-  VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
-                   "Number of output particles does not match input.");
+    if (i == 0)
+    {
+      vtkm::worklet::ParticleAdvection particleAdvection;
+      vtkm::worklet::ParticleAdvectionResult<FieldType> res;
+      res = particleAdvection.Run(rk4, seeds, maxSteps, DeviceAdapter());
+      VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
+                       "Number of output particles does not match input.");
+    }
+    else if (i == 1)
+    {
+      vtkm::worklet::Streamline streamline;
+      vtkm::worklet::StreamlineResult<FieldType> res;
+      res = streamline.Run(rk4, seeds, maxSteps, DeviceAdapter());
+
+      //Make sure we have the right number of streamlines.
+      VTKM_TEST_ASSERT(res.polyLines.GetNumberOfCells() == seeds.GetNumberOfValues(),
+                       "Number of output streamlines does not match input.");
+
+      //Make sure we have the right number of samples in each streamline.
+      vtkm::Id nSeeds = static_cast<vtkm::Id>(pts.size());
+      for (vtkm::Id j = 0; j < nSeeds; j++)
+      {
+        vtkm::Id numPoints = static_cast<vtkm::Id>(res.polyLines.GetNumberOfPointsInCell(j));
+        vtkm::Id numSteps = res.stepsTaken.GetPortalConstControl().Get(j);
+        VTKM_TEST_ASSERT(numPoints == numSteps, "Invalid number of points in streamline.");
+      }
+    }
+  }
 }
 
 void TestParticleAdvection()

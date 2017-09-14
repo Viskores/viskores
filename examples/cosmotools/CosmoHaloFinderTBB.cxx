@@ -18,45 +18,6 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_filter_CellFilter_h
-#define vtk_m_filter_CellFilter_h
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_TBB
 
-#include <vtkm/filter/FilterField.h>
-
-namespace vtkm
-{
-namespace filter
-{
-
-template <class Derived>
-class FilterCell : public vtkm::filter::FilterField<Derived>
-{
-public:
-  VTKM_CONT
-  FilterCell();
-
-  VTKM_CONT
-  ~FilterCell();
-
-  VTKM_CONT
-  void SetActiveCellSetIndex(vtkm::Id index) { this->CellSetIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCellSetIndex() const { return this->CellSetIndex; }
-
-  VTKM_CONT
-  void SetActiveCoordinateSystem(vtkm::Id index) { this->CoordinateSystemIndex = index; }
-
-  VTKM_CONT
-  vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
-
-protected:
-  vtkm::Id CellSetIndex;
-  vtkm::Id CoordinateSystemIndex;
-};
-}
-} // namespace vtkm::filter
-
-#include <vtkm/filter/FilterCell.hxx>
-
-#endif // vtk_m_filter_CellFilter_h
+#include "CosmoHaloFinder.cxx"
