@@ -113,25 +113,16 @@ private:
   void run(vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken)
   {
-    typedef typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>
-      ParticleWorkletDispatchType;
-    typedef vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag> ParticleType;
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> DeviceAlgorithm;
+    using ParticleWorkletDispatchType =
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
+    using ParticleType = vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
-    //Allocate status and steps arrays.
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> ok(ParticleStatus::STATUS_OK, numSeeds);
-    statusArray.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(ok, statusArray);
-
-    /*vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds);
-    stepsTaken.Allocate(numSeeds);
-    DeviceAlgorithm::Copy(zero, stepsTaken);*/
-
     //Create and invoke the particle advection.
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
     ParticleType particles(seedArray, stepsTaken, statusArray, maxSteps);
 
+    //Invoke particle advection worklet
     ParticleAdvectWorkletType particleWorklet(integrator);
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
     particleWorkletDispatch.Invoke(idxArray, particles);
