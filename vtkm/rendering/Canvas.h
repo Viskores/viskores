@@ -29,12 +29,13 @@
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Texture2D.h>
-#include <vtkm/rendering/WorldAnnotator.h>
 
 namespace vtkm
 {
 namespace rendering
 {
+
+class WorldAnnotator;
 
 class VTKM_RENDERING_EXPORT Canvas
 {
@@ -196,6 +197,8 @@ public:
   friend class ColorBarAnnotation;
   friend class ColorLegendAnnotation;
   friend class TextAnnotationScreen;
+  friend class TextRenderer;
+  friend class WorldAnnotator;
 
 private:
   bool LoadFont() const;
@@ -207,7 +210,8 @@ private:
   DepthBufferType DepthBuffer;
   mutable vtkm::rendering::BitmapFont Font;
   mutable FontTextureType FontTexture;
-  vtkm::Matrix<vtkm::Float32, 4, 4> Transform;
+  vtkm::Matrix<vtkm::Float32, 4, 4> ModelView;
+  vtkm::Matrix<vtkm::Float32, 4, 4> Projection;
 };
 }
 } //namespace vtkm::rendering

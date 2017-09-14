@@ -34,6 +34,11 @@ namespace vtkm
 namespace rendering
 {
 
+WorldAnnotatorGL::WorldAnnotatorGL(const vtkm::rendering::Canvas* canvas)
+  : WorldAnnotator(canvas)
+{
+}
+
 WorldAnnotatorGL::~WorldAnnotatorGL()
 {
 }

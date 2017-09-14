@@ -37,7 +37,7 @@ class VTKM_RENDERING_EXPORT TextRenderer
 {
 public:
   VTKM_CONT
-  TextRenderer(vtkm::rendering::Canvas* canvas,
+  TextRenderer(const vtkm::rendering::Canvas* canvas,
                const vtkm::rendering::BitmapFont& font,
                const vtkm::rendering::Canvas::FontTextureType& fontTexture);
 
@@ -67,7 +67,7 @@ public:
                   const std::string& text);
 
 private:
-  vtkm::rendering::Canvas* Canvas;
+  const vtkm::rendering::Canvas* Canvas;
   vtkm::rendering::BitmapFont Font;
   vtkm::rendering::Canvas::FontTextureType FontTexture;
 };

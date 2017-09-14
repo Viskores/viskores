@@ -35,7 +35,7 @@ class VTKM_RENDERING_EXPORT LineRenderer
 {
 public:
   VTKM_CONT
-  LineRenderer(vtkm::rendering::Canvas* canvas, vtkm::Matrix<vtkm::Float32, 4, 4> transform);
+  LineRenderer(const vtkm::rendering::Canvas* canvas, vtkm::Matrix<vtkm::Float32, 4, 4> transform);
 
   VTKM_CONT
   void RenderLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
@@ -53,7 +53,7 @@ private:
   VTKM_CONT
   vtkm::Vec<vtkm::Float32, 3> TransformPoint(const vtkm::Vec<vtkm::Float64, 3>& point) const;
 
-  vtkm::rendering::Canvas* Canvas;
+  const vtkm::rendering::Canvas* Canvas;
   vtkm::Matrix<vtkm::Float32, 4, 4> Transform;
 }; // class LineRenderer
 }

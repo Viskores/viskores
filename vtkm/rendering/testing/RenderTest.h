@@ -98,7 +98,7 @@ void Render(const vtkm::cont::DataSet& ds,
             const std::string& outputFile)
 {
   MapperType mapper;
-  CanvasType canvas(512, 512);
+  CanvasType canvas(1024, 1024);
   canvas.SetBackgroundColor(vtkm::rendering::Color::white);
   vtkm::rendering::Scene scene;
 
@@ -127,7 +127,7 @@ void Render(const vtkm::cont::DataSet& ds,
             const bool logY = false)
 {
   MapperType mapper;
-  CanvasType canvas(512, 512);
+  CanvasType canvas(1024, 1024);
   canvas.SetBackgroundColor(vtkm::rendering::Color::white);
   vtkm::rendering::Scene scene;
 
@@ -160,7 +160,7 @@ void MultiMapperRender(const vtkm::cont::DataSet& ds1,
   MapperType1 mapper1;
   MapperType2 mapper2;
 
-  CanvasType canvas(512, 512);
+  CanvasType canvas(1024, 1024);
   canvas.SetBackgroundColor(vtkm::rendering::Color(0.8f, 0.8f, 0.8f, 1.0f));
   canvas.Clear();
 

@@ -30,7 +30,7 @@ namespace vtkm
 namespace rendering
 {
 
-LineRenderer::LineRenderer(vtkm::rendering::Canvas* canvas,
+LineRenderer::LineRenderer(const vtkm::rendering::Canvas* canvas,
                            vtkm::Matrix<vtkm::Float32, 4, 4> transform)
   : Canvas(canvas)
   , Transform(transform)
@@ -66,16 +66,16 @@ void LineRenderer::RenderLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
   vtkm::Id dy = -vtkm::Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
   vtkm::Id err = dx + dy, err2 = 0;
   vtkm::rendering::Canvas::ColorBufferType::PortalControl colorPortal =
-    Canvas->GetColorBuffer().GetPortalControl();
+    vtkm::rendering::Canvas::ColorBufferType(Canvas->GetColorBuffer()).GetPortalControl();
   vtkm::rendering::Canvas::DepthBufferType::PortalControl depthPortal =
-    Canvas->GetDepthBuffer().GetPortalControl();
+    vtkm::rendering::Canvas::DepthBufferType(Canvas->GetDepthBuffer()).GetPortalControl();
   vtkm::Vec<vtkm::Float32, 4> colorC = color.Components;
-  while (true)
+  while (x0 >= 0 && x0 < Canvas->GetWidth() && y0 >= 0 && y0 < Canvas->GetHeight())
   {
     vtkm::Float32 t = (dx == 0) ? 1.0f : (static_cast<vtkm::Float32>(x0) - p0[0]) / (p1[0] - p0[0]);
     vtkm::Float32 z = vtkm::Lerp(z0, z1, t);
     vtkm::Id index = y0 * Canvas->GetWidth() + x0;
-    if (depthPortal.Get(index) >= z)
+    if (depthPortal.Get(index) > z)
     {
       depthPortal.Set(index, z);
       colorPortal.Set(index, colorC);
@@ -113,6 +113,7 @@ vtkm::Vec<vtkm::Float32, 3> LineRenderer::TransformPoint(
   }
   p[0] = (p[0] * 0.5f + 0.5f) * static_cast<vtkm::Float32>(Canvas->GetWidth());
   p[1] = (p[1] * 0.5f + 0.5f) * static_cast<vtkm::Float32>(Canvas->GetHeight());
+  p[2] = (p[2] * 0.5f + 0.5f) - 0.001f;
   return p;
 }
 }

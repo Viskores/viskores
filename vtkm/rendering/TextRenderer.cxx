@@ -153,7 +153,7 @@ struct RenderBitmapFontExecutor
 }; // struct RenderBitmapFontExecutor
 } // namespace internal
 
-TextRenderer::TextRenderer(vtkm::rendering::Canvas* canvas,
+TextRenderer::TextRenderer(const vtkm::rendering::Canvas* canvas,
                            const vtkm::rendering::BitmapFont& font,
                            const vtkm::rendering::Canvas::FontTextureType& fontTexture)
   : Canvas(canvas)
@@ -192,6 +192,8 @@ void TextRenderer::RenderText(const vtkm::Vec<vtkm::Float32, 3>& origin,
   vtkm::Normalize(n);
 
   vtkm::Matrix<vtkm::Float32, 4, 4> transform = MatrixHelpers::WorldMatrix(origin, right, up, n);
+  transform = vtkm::MatrixMultiply(Canvas->ModelView, transform);
+  transform = vtkm::MatrixMultiply(Canvas->Projection, transform);
   RenderText(transform, scale, anchor, color, text);
 }
 

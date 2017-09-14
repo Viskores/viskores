@@ -26,6 +26,7 @@
 #include <vtkm/rendering/DecodePNG.h>
 #include <vtkm/rendering/LineRenderer.h>
 #include <vtkm/rendering/TextRenderer.h>
+#include <vtkm/rendering/WorldAnnotator.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
@@ -226,7 +227,8 @@ Canvas::Canvas(vtkm::Id width, vtkm::Id height)
   : Width(0)
   , Height(0)
 {
-  vtkm::MatrixIdentity(Transform);
+  vtkm::MatrixIdentity(ModelView);
+  vtkm::MatrixIdentity(Projection);
   this->ResizeBuffers(width, height);
 }
 
@@ -297,7 +299,7 @@ void Canvas::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
                      const vtkm::rendering::Color& color) const
 {
   vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
-  LineRenderer renderer(self, Transform);
+  LineRenderer renderer(self, vtkm::MatrixMultiply(Projection, ModelView));
   renderer.RenderLine(point0, point1, linewidth, color);
 }
 
@@ -429,18 +431,18 @@ bool Canvas::LoadFont() const
   return true;
 }
 
-void Canvas::SetViewToWorldSpace(const vtkm::rendering::Camera& camera, bool clip)
+void Canvas::SetViewToWorldSpace(const vtkm::rendering::Camera& camera, bool vtkmNotUsed(clip))
 {
-  Transform = vtkm::MatrixMultiply(camera.CreateProjectionMatrix(this->Width, this->Height),
-                                   camera.CreateViewMatrix());
+  ModelView = camera.CreateViewMatrix();
+  Projection = camera.CreateProjectionMatrix(this->Width, this->Height);
 }
 
-void Canvas::SetViewToScreenSpace(const vtkm::rendering::Camera& camera, bool clip)
+void Canvas::SetViewToScreenSpace(const vtkm::rendering::Camera& vtkmNotUsed(camera),
+                                  bool vtkmNotUsed(clip))
 {
-  vtkm::Matrix<vtkm::Float32, 4, 4> projection;
-  vtkm::MatrixIdentity(projection);
-  projection[2][2] = -1.0f;
-  Transform = projection;
+  vtkm::MatrixIdentity(ModelView);
+  vtkm::MatrixIdentity(Projection);
+  Projection[2][2] = -1.0f;
 }
 
 void Canvas::SaveAs(const std::string& fileName) const
@@ -464,7 +466,7 @@ void Canvas::SaveAs(const std::string& fileName) const
 
 vtkm::rendering::WorldAnnotator* Canvas::CreateWorldAnnotator() const
 {
-  return new vtkm::rendering::WorldAnnotator;
+  return new vtkm::rendering::WorldAnnotator(this);
 }
 }
 } // vtkm::rendering

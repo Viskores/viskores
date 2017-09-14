@@ -23,16 +23,23 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/Types.h>
+#include <vtkm/rendering/BitmapFont.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
+#include <vtkm/rendering/Texture2D.h>
 
 namespace vtkm
 {
 namespace rendering
 {
 
+class Canvas;
+
 class VTKM_RENDERING_EXPORT WorldAnnotator
 {
 public:
+  WorldAnnotator(const vtkm::rendering::Canvas* canvas);
+
   virtual ~WorldAnnotator();
 
   virtual void AddLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
@@ -88,6 +95,15 @@ public:
                   color,
                   text);
   }
+
+protected:
+  mutable BitmapFont Font;
+
+private:
+  bool LoadFont() const;
+
+  const vtkm::rendering::Canvas* Canvas;
+  mutable vtkm::rendering::Canvas::FontTextureType FontTexture;
 };
 }
 } //namespace vtkm::rendering
