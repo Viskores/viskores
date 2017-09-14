@@ -32,7 +32,7 @@
 #include <stdexcept>
 #include <string>
 
-typedef vtkm::Vec<vtkm::Float32, 3> FloatVec3;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 void TestCosmoHaloFinder(const char* fileName)
 {
@@ -122,9 +122,6 @@ int main(int argc, char* argv[])
     std::cout << "Usage: " << std::endl << "$ " << argv[0] << " <input_file>" << std::endl;
     return 1;
   }
-
-  std::cout << "Device Adapter Name: " << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName()
-            << std::endl;
 
   TestCosmoHaloFinder(argv[1]);
 
