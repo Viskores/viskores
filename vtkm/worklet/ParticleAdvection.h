@@ -80,8 +80,12 @@ public:
     vtkm::cont::ArrayHandleConstant<vtkm::Id> init(0, numSeeds);
     stepsTaken.Allocate(numSeeds);
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(init, stepsTaken);
-    worklet.Run(it, pts, nSteps, status, stepsTaken);
 
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
+    status.Allocate(numSeeds);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(statusOK, status);
+
+    worklet.Run(it, pts, nSteps, status, stepsTaken);
     //Create output.
     ParticleAdvectionResult<FieldType> res(pts, status, stepsTaken);
     return res;
@@ -94,7 +98,7 @@ public:
   ParticleAdvectionResult<FieldType> Run(
     const IntegratorType& it,
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-    vtkm::cont::ArrayHandle<vtkm::Id>& stepsTaken,
+    const vtkm::cont::ArrayHandle<vtkm::Id>& stepsAlreadyTaken,
     const vtkm::Id& nSteps,
     const DeviceAdapter&)
   {
@@ -102,9 +106,18 @@ public:
                                                                FieldType,
                                                                DeviceAdapter>
       worklet;
-    vtkm::cont::ArrayHandle<vtkm::Id> status;
-    worklet.Run(it, pts, nSteps, status, stepsTaken);
 
+    vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken, status;
+    vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
+    //Allocate status and steps arrays.
+    stepsTaken.Allocate(numSeeds);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(stepsAlreadyTaken, stepsTaken);
+
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
+    status.Allocate(numSeeds);
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(statusOK, status);
+
+    worklet.Run(it, pts, nSteps, status, stepsTaken);
     //Create output.
     ParticleAdvectionResult<FieldType> res(pts, status, stepsTaken);
     return res;
