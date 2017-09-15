@@ -1562,9 +1562,9 @@ namespace detail
 }
   template<class... Ts>
 #ifdef BRIGAND_COMP_MSVC_2013
-  using is_set = typename detail::is_set_impl<range<int, 0, sizeof...(Ts)>, detail::msvc_quali_ref<Ts>...>::type;
+  using is_set = typename detail::is_set_impl<range<int, 0, static_cast<int>(sizeof...(Ts))>, detail::msvc_quali_ref<Ts>...>::type;
 #else
-  using is_set = typename detail::is_set_impl<range<int, 0, sizeof...(Ts)>, Ts...>::type;
+  using is_set = typename detail::is_set_impl<range<int, 0, static_cast<int>(sizeof...(Ts))>, Ts...>::type;
 #endif
 }
 #include <type_traits>
