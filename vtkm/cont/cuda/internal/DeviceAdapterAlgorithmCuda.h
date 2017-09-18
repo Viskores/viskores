@@ -83,8 +83,12 @@ public:
   }
   VTKM_CONT ~DeviceAdapterTimerImplementation()
   {
-    VTKM_CUDA_CALL(cudaEventDestroy(this->StartEvent));
-    VTKM_CUDA_CALL(cudaEventDestroy(this->EndEvent));
+    // These aren't wrapped in VTKM_CUDA_CALL because we can't throw errors
+    // from destructors. We're relying on cudaGetLastError in the
+    // VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR catching any issues from these calls
+    // later.
+    cudaEventDestroy(this->StartEvent);
+    cudaEventDestroy(this->EndEvent);
   }
 
   VTKM_CONT void Reset()
