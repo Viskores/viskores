@@ -500,6 +500,251 @@ VTKM_CONT static void ScatterPortal(InputPortalType inputPortal,
   ::tbb::blocked_range<vtkm::Id> range(0, size, TBB_GRAIN_SIZE);
   ::tbb::parallel_for(range, scatter);
 }
+
+template <typename PortalType, typename BinaryOperationType>
+struct UniqueBody
+{
+  using ValueType = typename PortalType::ValueType;
+
+  struct Range
+  {
+    vtkm::Id InputBegin;
+    vtkm::Id InputEnd;
+    vtkm::Id OutputBegin;
+    vtkm::Id OutputEnd;
+
+    VTKM_SUPPRESS_EXEC_WARNINGS
+    VTKM_EXEC_CONT
+    Range()
+      : InputBegin(-1)
+      , InputEnd(-1)
+      , OutputBegin(-1)
+      , OutputEnd(-1)
+    {
+    }
+
+    VTKM_SUPPRESS_EXEC_WARNINGS
+    VTKM_EXEC_CONT
+    Range(vtkm::Id inputBegin, vtkm::Id inputEnd, vtkm::Id outputBegin, vtkm::Id outputEnd)
+      : InputBegin(inputBegin)
+      , InputEnd(inputEnd)
+      , OutputBegin(outputBegin)
+      , OutputEnd(outputEnd)
+    {
+      this->AssertSane();
+    }
+
+    VTKM_SUPPRESS_EXEC_WARNINGS
+    VTKM_EXEC_CONT
+    void AssertSane() const
+    {
+      VTKM_ASSERT("Input begin precedes end" && this->InputBegin <= this->InputEnd);
+      VTKM_ASSERT("Output begin precedes end" && this->OutputBegin <= this->OutputEnd);
+      VTKM_ASSERT("Output not past input" && this->OutputBegin <= this->InputBegin &&
+                  this->OutputEnd <= this->InputEnd);
+      VTKM_ASSERT("Output smaller than input" &&
+                  (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
+    }
+
+    VTKM_SUPPRESS_EXEC_WARNINGS
+    VTKM_EXEC_CONT
+    bool IsNext(const Range& next) const { return this->InputEnd == next.InputBegin; }
+  };
+
+  PortalType Portal;
+  BinaryOperationType BinaryOperation;
+  Range Ranges;
+
+  VTKM_CONT
+  UniqueBody(const PortalType& portal, BinaryOperationType binaryOperation)
+    : Portal(portal)
+    , BinaryOperation(binaryOperation)
+  {
+  }
+
+  VTKM_CONT
+  UniqueBody(const UniqueBody& body, ::tbb::split)
+    : Portal(body.Portal)
+    , BinaryOperation(body.BinaryOperation)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range)
+  {
+    if (range.empty())
+    {
+      return;
+    }
+
+    bool firstRun = this->Ranges.OutputBegin < 0; // First use of this body object
+    if (firstRun)
+    {
+      this->Ranges.InputBegin = range.begin();
+    }
+    else
+    {
+      // Must be a continuation of the previous input range:
+      VTKM_ASSERT(this->Ranges.InputEnd == range.begin());
+    }
+    this->Ranges.InputEnd = range.end();
+    this->Ranges.AssertSane();
+
+    using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
+    using IteratorType = typename IteratorsType::IteratorType;
+
+    IteratorsType iters(this->Portal);
+    IteratorType data = iters.GetBegin();
+
+    vtkm::Id readPos = range.begin();
+    const vtkm::Id readEnd = range.end();
+
+    // Determine output index. If we're reusing the body, pick up where the
+    // last block left off. If not, use the input range.
+    vtkm::Id writePos;
+    if (firstRun)
+    {
+      this->Ranges.OutputBegin = range.begin();
+      this->Ranges.OutputEnd = range.begin();
+      writePos = range.begin();
+    }
+    else
+    {
+      writePos = this->Ranges.OutputEnd;
+    }
+    this->Ranges.AssertSane();
+
+    // We're either writing at the end of a previous block, or at the input
+    // location. Either way, the write position will never be greater than
+    // the read position.
+    VTKM_ASSERT(writePos <= readPos);
+
+    // Initialize loop variables:
+    BinaryOperationType functor(this->BinaryOperation);
+    ValueType current = data[readPos];
+    ++readPos;
+
+    // If the start of the current range continues a previous block of
+    // identical elements, initialize with the previous result and decrement
+    // the write index.
+    VTKM_ASSERT(firstRun || writePos > 0);
+    if (!firstRun && functor(data[writePos - 1], current))
+    {
+      // Ensure that we'll overwrite the duplicate value:
+      --writePos;
+
+      // Copy the last data value into current. TestingDeviceAdapter's test
+      // using the FuseAll functor requires that the first value in a set of
+      // duplicates must be used, and this ensures that condition is met.
+      current = data[writePos];
+    }
+
+    // Special case: single value in range
+    if (readPos >= readEnd)
+    {
+      data[writePos] = current;
+      ++writePos;
+
+      this->Ranges.OutputEnd = writePos;
+      return;
+    }
+
+    for (;;)
+    {
+      // Advance readPos until the value changes
+      while (readPos < readEnd && functor(current, data[readPos]))
+      {
+        ++readPos;
+      }
+
+      // Write out the unique value
+      VTKM_ASSERT(writePos <= readPos);
+      data[writePos] = current;
+      ++writePos;
+
+      // Update the current value if there are more entries
+      if (readPos < readEnd)
+      {
+        current = data[readPos];
+        ++readPos;
+        continue;
+      }
+
+      // Input range is exhausted if we reach this point.
+      break;
+    }
+
+    this->Ranges.OutputEnd = writePos;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void join(const UniqueBody& rhs)
+  {
+    using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
+    using IteratorType = typename IteratorsType::IteratorType;
+
+    this->Ranges.AssertSane();
+    rhs.Ranges.AssertSane();
+
+    // Ensure that we're joining two consecutive subsets of the input:
+    VTKM_ASSERT(this->Ranges.IsNext(rhs.Ranges));
+
+    IteratorsType iters(this->Portal);
+    IteratorType data = iters.GetBegin();
+    BinaryOperationType functor(this->BinaryOperation);
+
+    const vtkm::Id dstBegin = this->Ranges.OutputEnd;
+    const vtkm::Id lastDstIdx = this->Ranges.OutputEnd - 1;
+
+    vtkm::Id srcBegin = rhs.Ranges.OutputBegin;
+    const vtkm::Id srcEnd = rhs.Ranges.OutputEnd;
+
+    // Merge boundaries if needed:
+    if (functor(data[srcBegin], data[lastDstIdx]))
+    {
+      ++srcBegin; // Don't copy the duplicate value
+    }
+
+    // move data:
+    if (srcBegin != dstBegin && srcBegin != srcEnd)
+    {
+      // Sanity check:
+      VTKM_ASSERT(srcBegin < srcEnd);
+      std::copy(data + srcBegin, data + srcEnd, data + dstBegin);
+    }
+
+    this->Ranges.InputEnd = rhs.Ranges.InputEnd;
+    this->Ranges.OutputEnd += srcEnd - srcBegin;
+    this->Ranges.AssertSane();
+  }
+};
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename PortalType, typename BinaryOperationType>
+VTKM_CONT vtkm::Id UniquePortals(PortalType portal, BinaryOperationType binaryOperation)
+{
+  const vtkm::Id inputLength = portal.GetNumberOfValues();
+  if (inputLength == 0)
+  {
+    return 0;
+  }
+
+  using WrappedBinaryOp = internal::WrappedBinaryOperator<bool, BinaryOperationType>;
+  WrappedBinaryOp wrappedBinaryOp(binaryOperation);
+
+  UniqueBody<PortalType, WrappedBinaryOp> body(portal, wrappedBinaryOp);
+  ::tbb::blocked_range<vtkm::Id> range(0, inputLength, TBB_GRAIN_SIZE);
+
+  ::tbb::parallel_reduce(range, body);
+
+  body.Ranges.AssertSane();
+  VTKM_ASSERT(body.Ranges.InputBegin == 0 && body.Ranges.InputEnd == inputLength &&
+              body.Ranges.OutputBegin == 0 && body.Ranges.OutputEnd <= inputLength);
+
+  return body.Ranges.OutputEnd;
+}
 }
 }
 }

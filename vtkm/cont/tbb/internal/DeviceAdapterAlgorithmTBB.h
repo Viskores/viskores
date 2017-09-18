@@ -194,6 +194,21 @@ public:
     }
   }
 
+  template <typename T, class Storage>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
+  {
+    Unique(values, std::equal_to<T>());
+  }
+
+  template <typename T, class Storage, class BinaryCompare>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
+                               BinaryCompare binary_compare)
+  {
+    vtkm::Id outputSize =
+      tbb::UniquePortals(values.PrepareForInPlace(DeviceAdapterTagTBB()), binary_compare);
+    values.Shrink(outputSize);
+  }
+
   VTKM_CONT static void Synchronize()
   {
     // Nothing to do. This device schedules all of its operations using a
