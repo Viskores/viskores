@@ -239,8 +239,8 @@ void TextRenderer::RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform
     vtkm::Id2 p0 = Canvas->GetScreenPoint(charVertices[0], charVertices[3], fz, transform);
     vtkm::Id2 p1 = Canvas->GetScreenPoint(charVertices[2], charVertices[1], fz, transform);
     charCoords = vtkm::Vec<vtkm::Id, 4>(p0[0], p1[1], p1[0], p0[1]);
-    screenCoordsPortal.Set(i, charCoords);
-    textureCoordsPortal.Set(i, charUVs);
+    screenCoordsPortal.Set(static_cast<vtkm::Id>(i), charCoords);
+    textureCoordsPortal.Set(static_cast<vtkm::Id>(i), charUVs);
   }
 
   vtkm::cont::TryExecute(internal::RenderBitmapFontExecutor(screenCoords,

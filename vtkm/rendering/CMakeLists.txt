@@ -47,6 +47,7 @@ set(headers
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
   TextRenderer.h
+  Texture2D.h
   Triangulator.h
   View.h
   View1D.h
