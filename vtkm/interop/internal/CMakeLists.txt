@@ -25,6 +25,9 @@ set(headers
   )
 
 #-----------------------------------------------------------------------------
-vtkm_declare_headers(${headers})
+vtkm_declare_headers(${headers} TESTABLE FALSE)
 
-add_subdirectory(testing)
+#-----------------------------------------------------------------------------
+if(VTKm_OpenGL_FOUND)
+  add_subdirectory(testing)
+endif()

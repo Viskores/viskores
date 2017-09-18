@@ -255,11 +255,6 @@
 #cmakedefine VTKM_ENABLE_TBB
 #endif
 
-//Mark if we are building with interop enabled
-#ifndef VTKM_ENABLE_OPENGL_INTEROP
-#cmakedefine VTKM_ENABLE_OPENGL_INTEROP
-#endif
-
 #if __cplusplus >= 201103L || \
     ( defined(VTKM_MSVC) && _MSC_VER >= 1800  ) || \
     ( defined(VTKM_ICC)  && defined(__INTEL_CXX11_MODE__) )

@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <GL/glew.h>
 #include <vtkm/interop/testing/TestingTransferFancyHandles.h>
 #include <vtkm/rendering/CanvasOSMesa.h>
 

@@ -17,7 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
+#include <GL/glew.h>
 #include <vtkm/interop/testing/TestingTransferFancyHandles.h>
 #include <vtkm/rendering/CanvasEGL.h>
 

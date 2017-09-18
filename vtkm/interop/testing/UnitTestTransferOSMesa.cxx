@@ -17,12 +17,12 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
-//This sets up testing with the default device adapter and array container
-
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <GL/glew.h>
 #include <vtkm/interop/testing/TestingOpenGLInterop.h>
 #include <vtkm/rendering/CanvasOSMesa.h>
+
+//This sets up testing with the default device adapter and array container
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 int UnitTestTransferOSMesa(int, char* [])
 {

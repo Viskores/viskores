@@ -41,7 +41,6 @@ set(VTKm_AVAILABLE_COMPONENTS
   EGL
   GLFW
   GLUT
-  Interop
   Rendering
   TBB
   CUDA
@@ -162,7 +161,6 @@ macro(vtkm_configure_component_OpenGL)
   #explicitly or else in release mode we get sigsegv on launch
   if(UNIX)
     find_package(Threads ${VTKm_FIND_PACKAGE_QUIETLY})
-    list(APPEND vtkm_interop_dependent_vars CMAKE_USE_PTHREADS_INIT)
     list(APPEND vtkm_opengl_libraries ${CMAKE_THREAD_LIBS_INIT})
   endif()
 
@@ -231,14 +229,6 @@ macro(vtkm_configure_component_GLUT)
     ADD_LIBRARIES ${GLUT_LIBRARIES}
     )
 endmacro(vtkm_configure_component_GLUT)
-
-macro(vtkm_configure_component_Interop)
-  vtkm_configure_component_OpenGL()
-
-  vtkm_finish_configure_component(Interop
-    DEPENDENT_VARIABLES VTKm_OpenGL_FOUND VTKm_ENABLE_OPENGL_INTEROP
-    )
-endmacro(vtkm_configure_component_Interop)
 
 macro(vtkm_configure_component_Rendering)
   if(VTKm_ENABLE_RENDERING)

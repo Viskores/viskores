@@ -25,7 +25,7 @@ project(GameOfLife CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED
-  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT Interop
+  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
   )
 
 if(VTKm_CUDA_FOUND)

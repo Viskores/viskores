@@ -22,10 +22,10 @@
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT Interop
+  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
   )
 
-if(VTKm_Interop_FOUND AND VTKm_OpenGL_FOUND AND VTKm_GLUT_FOUND)
+if(VTKm_OpenGL_FOUND AND VTKm_GLUT_FOUND)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR})
   add_executable(HelloWorld_SERIAL HelloWorld.cxx LoadShaders.h)
   set_source_files_properties(LoadShaders.h PROPERTIES HEADER_FILE_ONLY TRUE)
