@@ -472,9 +472,6 @@ struct ReduceByKeyBody
     {
       // Sanity check:
       VTKM_ASSERT(srcBegin < srcEnd);
-      // Not necessary for the copy call to be safe, but if the src range
-      // overlaps with the dst range there's a problem with the algorithm:
-      VTKM_ASSERT(dstBegin + (srcEnd - srcBegin) <= srcBegin);
       std::copy(keys + srcBegin, keys + srcEnd, keys + dstBegin);
       std::copy(values + srcBegin, values + srcEnd, values + dstBegin);
     }
