@@ -192,8 +192,8 @@ void TextRenderer::RenderText(const vtkm::Vec<vtkm::Float32, 3>& origin,
   vtkm::Normalize(n);
 
   vtkm::Matrix<vtkm::Float32, 4, 4> transform = MatrixHelpers::WorldMatrix(origin, right, up, n);
-  transform = vtkm::MatrixMultiply(Canvas->ModelView, transform);
-  transform = vtkm::MatrixMultiply(Canvas->Projection, transform);
+  transform = vtkm::MatrixMultiply(Canvas->GetModelView(), transform);
+  transform = vtkm::MatrixMultiply(Canvas->GetProjection(), transform);
   RenderText(transform, scale, anchor, color, text);
 }
 

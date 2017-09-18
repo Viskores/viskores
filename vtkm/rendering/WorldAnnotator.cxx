@@ -48,7 +48,7 @@ void WorldAnnotator::AddLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
   // all subclasses to implement this? We would have to implement a
   // WorldAnnotator for ray tracing first.
   vtkm::Matrix<vtkm::Float32, 4, 4> transform =
-    vtkm::MatrixMultiply(Canvas->Projection, Canvas->ModelView);
+    vtkm::MatrixMultiply(Canvas->GetProjection(), Canvas->GetModelView());
   LineRenderer renderer(Canvas, transform);
   renderer.RenderLine(point0, point1, lineWidth, color);
 }

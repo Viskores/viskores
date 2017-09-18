@@ -223,12 +223,31 @@ struct ColorBarExecutor
 
 } // namespace internal
 
-Canvas::Canvas(vtkm::Id width, vtkm::Id height)
-  : Width(0)
-  , Height(0)
+struct Canvas::CanvasInternals
 {
-  vtkm::MatrixIdentity(ModelView);
-  vtkm::MatrixIdentity(Projection);
+
+  CanvasInternals(vtkm::Id width, vtkm::Id height)
+    : Width(width)
+    , Height(height)
+  {
+  }
+
+  vtkm::Id Width;
+  vtkm::Id Height;
+  vtkm::rendering::Color BackgroundColor;
+  ColorBufferType ColorBuffer;
+  DepthBufferType DepthBuffer;
+  vtkm::rendering::BitmapFont Font;
+  FontTextureType FontTexture;
+  vtkm::Matrix<vtkm::Float32, 4, 4> ModelView;
+  vtkm::Matrix<vtkm::Float32, 4, 4> Projection;
+};
+
+Canvas::Canvas(vtkm::Id width, vtkm::Id height)
+  : Internals(new CanvasInternals(0, 0))
+{
+  vtkm::MatrixIdentity(Internals->ModelView);
+  vtkm::MatrixIdentity(Internals->Projection);
   this->ResizeBuffers(width, height);
 }
 
@@ -240,6 +259,47 @@ vtkm::rendering::Canvas* Canvas::NewCopy() const
 {
   return new vtkm::rendering::Canvas(*this);
 }
+
+vtkm::Id Canvas::GetWidth() const
+{
+  return Internals->Width;
+}
+
+vtkm::Id Canvas::GetHeight() const
+{
+  return Internals->Height;
+}
+
+const Canvas::ColorBufferType& Canvas::GetColorBuffer() const
+{
+  return Internals->ColorBuffer;
+}
+
+Canvas::ColorBufferType& Canvas::GetColorBuffer()
+{
+  return Internals->ColorBuffer;
+}
+
+const Canvas::DepthBufferType& Canvas::GetDepthBuffer() const
+{
+  return Internals->DepthBuffer;
+}
+
+Canvas::DepthBufferType& Canvas::GetDepthBuffer()
+{
+  return Internals->DepthBuffer;
+}
+
+const vtkm::rendering::Color& Canvas::GetBackgroundColor() const
+{
+  return Internals->BackgroundColor;
+}
+
+void Canvas::SetBackgroundColor(const vtkm::rendering::Color& color)
+{
+  Internals->BackgroundColor = color;
+}
+
 
 void Canvas::Initialize()
 {
@@ -253,8 +313,7 @@ void Canvas::Clear()
 {
   // TODO: Should the rendering library support policies or some other way to
   // configure with custom devices?
-  vtkm::cont::TryExecute(
-    internal::ClearBuffersExecutor(this->GetColorBuffer(), this->GetDepthBuffer()));
+  vtkm::cont::TryExecute(internal::ClearBuffersExecutor(GetColorBuffer(), GetDepthBuffer()));
 }
 
 void Canvas::Finish()
@@ -263,8 +322,27 @@ void Canvas::Finish()
 
 void Canvas::BlendBackground()
 {
-  vtkm::cont::TryExecute(internal::BlendBackgroundExecutor(this->GetColorBuffer(),
-                                                           this->GetBackgroundColor().Components));
+  vtkm::cont::TryExecute(
+    internal::BlendBackgroundExecutor(GetColorBuffer(), GetBackgroundColor().Components));
+}
+
+void Canvas::ResizeBuffers(vtkm::Id width, vtkm::Id height)
+{
+  VTKM_ASSERT(width >= 0);
+  VTKM_ASSERT(height >= 0);
+
+  vtkm::Id numPixels = width * height;
+  if (Internals->ColorBuffer.GetNumberOfValues() != numPixels)
+  {
+    Internals->ColorBuffer.Allocate(numPixels);
+  }
+  if (Internals->DepthBuffer.GetNumberOfValues() != numPixels)
+  {
+    Internals->DepthBuffer.Allocate(numPixels);
+  }
+
+  Internals->Width = width;
+  Internals->Height = height;
 }
 
 void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point0),
@@ -299,7 +377,7 @@ void Canvas::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
                      const vtkm::rendering::Color& color) const
 {
   vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
-  LineRenderer renderer(self, vtkm::MatrixMultiply(Projection, ModelView));
+  LineRenderer renderer(self, vtkm::MatrixMultiply(Internals->Projection, Internals->ModelView));
   renderer.RenderLine(point0, point1, linewidth, color);
 }
 
@@ -359,8 +437,8 @@ vtkm::Id2 Canvas::GetScreenPoint(vtkm::Float32 x,
   point = vtkm::MatrixMultiply(transform, point);
 
   vtkm::Id2 pixelPos;
-  vtkm::Float32 width = static_cast<vtkm::Float32>(this->Width);
-  vtkm::Float32 height = static_cast<vtkm::Float32>(this->Height);
+  vtkm::Float32 width = static_cast<vtkm::Float32>(Internals->Width);
+  vtkm::Float32 height = static_cast<vtkm::Float32>(Internals->Height);
   pixelPos[0] = static_cast<vtkm::Id>(vtkm::Round((1.0f + point[0]) * width * 0.5f + 0.5f));
   pixelPos[1] = static_cast<vtkm::Id>(vtkm::Round((1.0f + point[1]) * height * 0.5f + 0.5f));
   return pixelPos;
@@ -374,7 +452,7 @@ void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
                      const vtkm::rendering::Color& color,
                      const std::string& text) const
 {
-  if (!FontTexture.IsValid())
+  if (!Internals->FontTexture.IsValid())
   {
     if (!LoadFont())
     {
@@ -383,7 +461,7 @@ void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
   }
 
   vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
-  TextRenderer fontRenderer(self, Font, FontTexture);
+  TextRenderer fontRenderer(self, Internals->Font, Internals->FontTexture);
   fontRenderer.RenderText(position, scale, angle, windowAspect, anchor, color, text);
 }
 
@@ -408,8 +486,8 @@ void Canvas::AddText(vtkm::Float32 x,
 
 bool Canvas::LoadFont() const
 {
-  this->Font = BitmapFontFactory::CreateLiberation2Sans();
-  const std::vector<unsigned char>& rawPNG = this->Font.GetRawImageData();
+  Internals->Font = BitmapFontFactory::CreateLiberation2Sans();
+  const std::vector<unsigned char>& rawPNG = Internals->Font.GetRawImageData();
   std::vector<unsigned char> rgba;
   unsigned long textureWidth, textureHeight;
   int error = DecodePNG(rgba, textureWidth, textureHeight, &rawPNG[0], rawPNG.size());
@@ -424,38 +502,50 @@ bool Canvas::LoadFont() const
     alpha[i] = rgba[i * 4 + 3];
   }
   vtkm::cont::ArrayHandle<vtkm::UInt8> textureHandle = vtkm::cont::make_ArrayHandle(alpha);
-  this->FontTexture =
+  Internals->FontTexture =
     FontTextureType(vtkm::Id(textureWidth), vtkm::Id(textureHeight), textureHandle);
-  this->FontTexture.SetFilterMode(TextureFilterMode::Linear);
-  this->FontTexture.SetWrapMode(TextureWrapMode::Clamp);
+  Internals->FontTexture.SetFilterMode(TextureFilterMode::Linear);
+  Internals->FontTexture.SetWrapMode(TextureWrapMode::Clamp);
   return true;
+}
+
+const vtkm::Matrix<vtkm::Float32, 4, 4>& Canvas::GetModelView() const
+{
+  return Internals->ModelView;
+}
+
+const vtkm::Matrix<vtkm::Float32, 4, 4>& Canvas::GetProjection() const
+{
+  return Internals->Projection;
 }
 
 void Canvas::SetViewToWorldSpace(const vtkm::rendering::Camera& camera, bool vtkmNotUsed(clip))
 {
-  ModelView = camera.CreateViewMatrix();
-  Projection = camera.CreateProjectionMatrix(this->Width, this->Height);
+  Internals->ModelView = camera.CreateViewMatrix();
+  Internals->Projection = camera.CreateProjectionMatrix(GetWidth(), GetHeight());
 }
 
 void Canvas::SetViewToScreenSpace(const vtkm::rendering::Camera& vtkmNotUsed(camera),
                                   bool vtkmNotUsed(clip))
 {
-  vtkm::MatrixIdentity(ModelView);
-  vtkm::MatrixIdentity(Projection);
-  Projection[2][2] = -1.0f;
+  vtkm::MatrixIdentity(Internals->ModelView);
+  vtkm::MatrixIdentity(Internals->Projection);
+  Internals->Projection[2][2] = -1.0f;
 }
 
 void Canvas::SaveAs(const std::string& fileName) const
 {
   this->RefreshColorBuffer();
   std::ofstream of(fileName.c_str(), std::ios_base::binary | std::ios_base::out);
-  of << "P6" << std::endl << this->Width << " " << this->Height << std::endl << 255 << std::endl;
-  ColorBufferType::PortalConstControl colorPortal = this->ColorBuffer.GetPortalConstControl();
-  for (vtkm::Id yIndex = this->Height - 1; yIndex >= 0; yIndex--)
+  vtkm::Id width = GetWidth();
+  vtkm::Id height = GetHeight();
+  of << "P6" << std::endl << width << " " << height << std::endl << 255 << std::endl;
+  ColorBufferType::PortalConstControl colorPortal = GetColorBuffer().GetPortalConstControl();
+  for (vtkm::Id yIndex = height - 1; yIndex >= 0; yIndex--)
   {
-    for (vtkm::Id xIndex = 0; xIndex < this->Width; xIndex++)
+    for (vtkm::Id xIndex = 0; xIndex < width; xIndex++)
     {
-      vtkm::Vec<vtkm::Float32, 4> tuple = colorPortal.Get(yIndex * this->Width + xIndex);
+      vtkm::Vec<vtkm::Float32, 4> tuple = colorPortal.Get(yIndex * width + xIndex);
       of << (unsigned char)(tuple[0] * 255);
       of << (unsigned char)(tuple[1] * 255);
       of << (unsigned char)(tuple[2] * 255);

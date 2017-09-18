@@ -60,48 +60,31 @@ public:
   virtual void BlendBackground();
 
   VTKM_CONT
-  vtkm::Id GetWidth() const { return this->Width; }
+  vtkm::Id GetWidth() const;
 
   VTKM_CONT
-  vtkm::Id GetHeight() const { return this->Height; }
+  vtkm::Id GetHeight() const;
 
   VTKM_CONT
-  const ColorBufferType& GetColorBuffer() const { return this->ColorBuffer; }
+  const ColorBufferType& GetColorBuffer() const;
 
   VTKM_CONT
-  ColorBufferType& GetColorBuffer() { return this->ColorBuffer; }
+  ColorBufferType& GetColorBuffer();
 
   VTKM_CONT
-  const DepthBufferType& GetDepthBuffer() const { return this->DepthBuffer; }
+  const DepthBufferType& GetDepthBuffer() const;
 
   VTKM_CONT
-  DepthBufferType& GetDepthBuffer() { return this->DepthBuffer; }
+  DepthBufferType& GetDepthBuffer();
 
   VTKM_CONT
-  void ResizeBuffers(vtkm::Id width, vtkm::Id height)
-  {
-    VTKM_ASSERT(width >= 0);
-    VTKM_ASSERT(height >= 0);
-
-    vtkm::Id numPixels = width * height;
-    if (this->ColorBuffer.GetNumberOfValues() != numPixels)
-    {
-      this->ColorBuffer.Allocate(numPixels);
-    }
-    if (this->DepthBuffer.GetNumberOfValues() != numPixels)
-    {
-      this->DepthBuffer.Allocate(numPixels);
-    }
-
-    this->Width = width;
-    this->Height = height;
-  }
+  void ResizeBuffers(vtkm::Id width, vtkm::Id height);
 
   VTKM_CONT
-  const vtkm::rendering::Color& GetBackgroundColor() const { return this->BackgroundColor; }
+  const vtkm::rendering::Color& GetBackgroundColor() const;
 
   VTKM_CONT
-  void SetBackgroundColor(const vtkm::rendering::Color& color) { this->BackgroundColor = color; }
+  void SetBackgroundColor(const vtkm::rendering::Color& color);
 
   VTKM_CONT
   vtkm::Id2 GetScreenPoint(vtkm::Float32 x,
@@ -203,15 +186,12 @@ public:
 private:
   bool LoadFont() const;
 
-  vtkm::Id Width;
-  vtkm::Id Height;
-  vtkm::rendering::Color BackgroundColor;
-  ColorBufferType ColorBuffer;
-  DepthBufferType DepthBuffer;
-  mutable vtkm::rendering::BitmapFont Font;
-  mutable FontTextureType FontTexture;
-  vtkm::Matrix<vtkm::Float32, 4, 4> ModelView;
-  vtkm::Matrix<vtkm::Float32, 4, 4> Projection;
+  const vtkm::Matrix<vtkm::Float32, 4, 4>& GetModelView() const;
+
+  const vtkm::Matrix<vtkm::Float32, 4, 4>& GetProjection() const;
+
+  struct CanvasInternals;
+  std::shared_ptr<CanvasInternals> Internals;
 };
 }
 } //namespace vtkm::rendering
