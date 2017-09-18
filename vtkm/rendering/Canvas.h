@@ -176,6 +176,14 @@ public:
                const vtkm::rendering::Color& color,
                const std::string& text) const;
 
+  VTKM_CONT
+  void AddText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
+               vtkm::Float32 scale,
+               const vtkm::Vec<vtkm::Float32, 2>& anchor,
+               const vtkm::rendering::Color& color,
+               const std::string& text) const;
+
+
   friend class AxisAnnotation2D;
   friend class ColorBarAnnotation;
   friend class ColorLegendAnnotation;

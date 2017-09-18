@@ -53,6 +53,7 @@ public:
                const std::string& text) const VTKM_OVERRIDE;
 
 private:
+  BitmapFont Font;
   TextureGL FontTexture;
 
   void RenderText(vtkm::Float32 scale,

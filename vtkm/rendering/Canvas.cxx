@@ -300,7 +300,6 @@ void Canvas::SetBackgroundColor(const vtkm::rendering::Color& color)
   Internals->BackgroundColor = color;
 }
 
-
 void Canvas::Initialize()
 {
 }
@@ -444,10 +443,8 @@ vtkm::Id2 Canvas::GetScreenPoint(vtkm::Float32 x,
   return pixelPos;
 }
 
-void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
+void Canvas::AddText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
                      vtkm::Float32 scale,
-                     vtkm::Float32 angle,
-                     vtkm::Float32 windowAspect,
                      const vtkm::Vec<vtkm::Float32, 2>& anchor,
                      const vtkm::rendering::Color& color,
                      const std::string& text) const
@@ -462,7 +459,26 @@ void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
 
   vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
   TextRenderer fontRenderer(self, Internals->Font, Internals->FontTexture);
-  fontRenderer.RenderText(position, scale, angle, windowAspect, anchor, color, text);
+  fontRenderer.RenderText(transform, scale, anchor, color, text);
+}
+
+void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
+                     vtkm::Float32 scale,
+                     vtkm::Float32 angle,
+                     vtkm::Float32 windowAspect,
+                     const vtkm::Vec<vtkm::Float32, 2>& anchor,
+                     const vtkm::rendering::Color& color,
+                     const std::string& text) const
+{
+  vtkm::Matrix<vtkm::Float32, 4, 4> translationMatrix =
+    Transform3DTranslate(position[0], position[1], 0.f);
+  vtkm::Matrix<vtkm::Float32, 4, 4> scaleMatrix = Transform3DScale(1.0f / windowAspect, 1.0f, 1.0f);
+  vtkm::Vec<vtkm::Float32, 3> rotationAxis(0.0f, 0.0f, 1.0f);
+  vtkm::Matrix<vtkm::Float32, 4, 4> rotationMatrix = Transform3DRotate(angle, rotationAxis);
+  vtkm::Matrix<vtkm::Float32, 4, 4> transform =
+    vtkm::MatrixMultiply(translationMatrix, vtkm::MatrixMultiply(scaleMatrix, rotationMatrix));
+
+  this->AddText(transform, scale, anchor, color, text);
 }
 
 void Canvas::AddText(vtkm::Float32 x,
