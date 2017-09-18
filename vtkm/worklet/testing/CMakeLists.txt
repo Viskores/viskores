@@ -38,6 +38,9 @@ set(unit_tests
   UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
   UnitTestMaskPoints.cxx
+  UnitTestNDimsEntropy.cxx
+  UnitTestNDimsHistogram.cxx
+  UnitTestNDimsHistMarginalization.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx

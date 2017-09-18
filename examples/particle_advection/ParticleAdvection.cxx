@@ -168,7 +168,7 @@ void RunTest(const std::string& fname,
   else
   {
     vtkm::worklet::Streamline streamline;
-    streamline.Run(rk4, seedArray, fieldArray, numSteps, DeviceAdapter());
+    streamline.Run(rk4, seedArray, numSteps, DeviceAdapter());
   }
 
   auto t1 = std::chrono::high_resolution_clock::now() - t0;

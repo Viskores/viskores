@@ -46,6 +46,9 @@ set(headers
   MarchingCubesDataTables.h
   Mask.h
   MaskPoints.h
+  NDimsEntropy.h
+  NDimsHistogram.h
+  NDimsHistMarginalization.h
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
