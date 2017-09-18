@@ -203,7 +203,7 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static void ReduceByKey(const vtkm::cont::ArrayHandle<T, CKeyIn>& keys,
                                     const vtkm::cont::ArrayHandle<U, CValIn>& values,
                                     vtkm::cont::ArrayHandle<T, CKeyOut>& keys_output,
-                                    vtkm::cont::ArrayHandle<T, CValOut>& values_output,
+                                    vtkm::cont::ArrayHandle<U, CValOut>& values_output,
                                     BinaryFunctor binary_functor);
 
   /// \brief Compute an inclusive prefix sum operation on the input ArrayHandle.
