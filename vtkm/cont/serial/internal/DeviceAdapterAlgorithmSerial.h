@@ -326,6 +326,24 @@ public:
     std::sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
   }
 
+  template <typename T, class Storage>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
+  {
+    Unique(values, std::equal_to<T>());
+  }
+
+  template <typename T, class Storage, class BinaryCompare>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
+                               BinaryCompare binary_compare)
+  {
+    auto arrayPortal = values.PrepareForInPlace(Device());
+    vtkm::cont::ArrayPortalToIterators<decltype(arrayPortal)> iterators(arrayPortal);
+    internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
+
+    auto end = std::unique(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
+    values.Shrink(static_cast<vtkm::Id>(end - iterators.GetBegin()));
+  }
+
   VTKM_CONT static void Synchronize()
   {
     // Nothing to do. This device is serial and has no asynchronous operations.
