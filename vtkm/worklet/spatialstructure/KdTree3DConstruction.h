@@ -58,7 +58,7 @@ public:
     template <typename T>
     VTKM_EXEC void operator()(const T& rank, const T& pointCountInSeg, T& flag) const
     {
-      if (rank >= pointCountInSeg / 2)
+      if (rank >= pointCountInSeg / 2.0f)
         flag = 1; //right subtree
       else
         flag = 0; //left subtree
