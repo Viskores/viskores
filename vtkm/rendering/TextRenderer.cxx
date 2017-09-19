@@ -115,8 +115,8 @@ struct RenderBitmapFontExecutor
 {
   using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
   using FontTextureType = vtkm::rendering::Canvas::FontTextureType;
-  using ScreenCoordsArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
-  using TextureCoordsArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using ScreenCoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using TextureCoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
 
   VTKM_CONT
   RenderBitmapFontExecutor(const ScreenCoordsArrayHandle& screenCoords,
@@ -208,10 +208,8 @@ void TextRenderer::RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform
   vtkm::Float32 fy = -(0.5f + 0.5f * anchor[1]);
   vtkm::Float32 fz = 0;
 
-  using ScreenCoordsArrayHandle =
-    typename internal::RenderBitmapFontExecutor::ScreenCoordsArrayHandle;
-  using TextureCoordsArrayHandle =
-    typename internal::RenderBitmapFontExecutor::TextureCoordsArrayHandle;
+  using ScreenCoordsArrayHandle = internal::RenderBitmapFontExecutor::ScreenCoordsArrayHandle;
+  using TextureCoordsArrayHandle = internal::RenderBitmapFontExecutor::TextureCoordsArrayHandle;
   ScreenCoordsArrayHandle screenCoords;
   TextureCoordsArrayHandle textureCoords;
   screenCoords.Allocate(static_cast<vtkm::Id>(text.length()));
