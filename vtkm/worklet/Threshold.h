@@ -29,6 +29,7 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
+#include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
 
 namespace vtkm
@@ -128,10 +129,9 @@ public:
     const vtkm::cont::ArrayHandle<ValueType, StorageType>& field,
     const vtkm::cont::Field::AssociationEnum fieldType,
     const UnaryPredicate& predicate,
-    DeviceAdapter device)
+    DeviceAdapter)
   {
-    (void)device;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
+    using OutputType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     vtkm::cont::ArrayHandle<bool> passFlags;
     switch (fieldType)
@@ -165,6 +165,59 @@ public:
       indices, passFlags, this->ValidCellIds);
 
     return OutputType(this->ValidCellIds, cellSet, cellSet.GetName());
+  }
+
+  template <typename CellSetList, typename FieldArrayType, typename UnaryPredicate, typename Device>
+  struct CallWorklet
+  {
+    vtkm::cont::DynamicCellSet& Output;
+    vtkm::worklet::Threshold& Worklet;
+    const FieldArrayType& Field;
+    const vtkm::cont::Field::AssociationEnum FieldType;
+    const UnaryPredicate& Predicate;
+
+    CallWorklet(vtkm::cont::DynamicCellSet& output,
+                vtkm::worklet::Threshold& worklet,
+                const FieldArrayType& field,
+                const vtkm::cont::Field::AssociationEnum fieldType,
+                const UnaryPredicate& predicate)
+      : Output(output)
+      , Worklet(worklet)
+      , Field(field)
+      , FieldType(fieldType)
+      , Predicate(predicate)
+    {
+    }
+
+    template <typename CellSetType>
+    void operator()(const CellSetType& cellSet) const
+    {
+      this->Output =
+        this->Worklet.Run(cellSet, this->Field, this->FieldType, this->Predicate, Device());
+    }
+  };
+
+  template <typename CellSetList,
+            typename ValueType,
+            typename StorageType,
+            typename UnaryPredicate,
+            typename Device>
+  vtkm::cont::DynamicCellSet Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
+                                 const vtkm::cont::ArrayHandle<ValueType, StorageType>& field,
+                                 const vtkm::cont::Field::AssociationEnum fieldType,
+                                 const UnaryPredicate& predicate,
+                                 Device)
+  {
+    using Worker = CallWorklet<CellSetList,
+                               vtkm::cont::ArrayHandle<ValueType, StorageType>,
+                               UnaryPredicate,
+                               Device>;
+
+    vtkm::cont::DynamicCellSet output;
+    Worker worker(output, *this, field, fieldType, predicate);
+    cellSet.CastAndCall(worker);
+
+    return output;
   }
 
   template <typename ValueType, typename StorageTag, typename DeviceTag>
