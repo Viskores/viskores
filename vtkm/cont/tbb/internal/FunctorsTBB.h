@@ -88,6 +88,221 @@ using WrappedBinaryOperator = vtkm::cont::internal::WrappedBinaryOperator<Result
 // into picking this size.
 static const vtkm::Id TBB_GRAIN_SIZE = 1024;
 
+template <typename InputPortalType,
+          typename StencilPortalType,
+          typename OutputPortalType,
+          typename UnaryPredicateType>
+struct CopyIfBody
+{
+  using ValueType = typename InputPortalType::ValueType;
+  using StencilType = typename StencilPortalType::ValueType;
+
+  struct Range
+  {
+    vtkm::Id InputBegin;
+    vtkm::Id InputEnd;
+    vtkm::Id OutputBegin;
+    vtkm::Id OutputEnd;
+
+    VTKM_EXEC_CONT
+    Range()
+      : InputBegin(-1)
+      , InputEnd(-1)
+      , OutputBegin(-1)
+      , OutputEnd(-1)
+    {
+    }
+
+    VTKM_EXEC_CONT
+    Range(vtkm::Id inputBegin, vtkm::Id inputEnd, vtkm::Id outputBegin, vtkm::Id outputEnd)
+      : InputBegin(inputBegin)
+      , InputEnd(inputEnd)
+      , OutputBegin(outputBegin)
+      , OutputEnd(outputEnd)
+    {
+      this->AssertSane();
+    }
+
+    VTKM_EXEC_CONT
+    void AssertSane() const
+    {
+      VTKM_ASSERT("Input begin precedes end" && this->InputBegin <= this->InputEnd);
+      VTKM_ASSERT("Output begin precedes end" && this->OutputBegin <= this->OutputEnd);
+      VTKM_ASSERT("Output not past input" && this->OutputBegin <= this->InputBegin &&
+                  this->OutputEnd <= this->InputEnd);
+      VTKM_ASSERT("Output smaller than input" &&
+                  (this->OutputEnd - this->OutputBegin) <= (this->InputEnd - this->InputBegin));
+    }
+
+    VTKM_EXEC_CONT
+    bool IsNext(const Range& next) const { return this->InputEnd == next.InputBegin; }
+  };
+
+  InputPortalType InputPortal;
+  StencilPortalType StencilPortal;
+  OutputPortalType OutputPortal;
+  UnaryPredicateType UnaryPredicate;
+  Range Ranges;
+
+  VTKM_CONT
+  CopyIfBody(const InputPortalType& inputPortal,
+             const StencilPortalType& stencilPortal,
+             const OutputPortalType& outputPortal,
+             UnaryPredicateType unaryPredicate)
+    : InputPortal(inputPortal)
+    , StencilPortal(stencilPortal)
+    , OutputPortal(outputPortal)
+    , UnaryPredicate(unaryPredicate)
+  {
+  }
+
+  VTKM_EXEC_CONT
+  CopyIfBody(const CopyIfBody& body, ::tbb::split)
+    : InputPortal(body.InputPortal)
+    , StencilPortal(body.StencilPortal)
+    , OutputPortal(body.OutputPortal)
+    , UnaryPredicate(body.UnaryPredicate)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range)
+  {
+    if (range.empty())
+    {
+      return;
+    }
+
+    bool firstRun = this->Ranges.OutputBegin < 0; // First use of this body object
+    if (firstRun)
+    {
+      this->Ranges.InputBegin = range.begin();
+    }
+    else
+    {
+      // Must be a continuation of the previous input range:
+      VTKM_ASSERT(this->Ranges.InputEnd == range.begin());
+    }
+    this->Ranges.InputEnd = range.end();
+    this->Ranges.AssertSane();
+
+    using InputIteratorsType = vtkm::cont::ArrayPortalToIterators<InputPortalType>;
+    using StencilIteratorsType = vtkm::cont::ArrayPortalToIterators<StencilPortalType>;
+    using OutputIteratorsType = vtkm::cont::ArrayPortalToIterators<OutputPortalType>;
+
+    InputIteratorsType inputIters(this->InputPortal);
+    StencilIteratorsType stencilIters(this->StencilPortal);
+    OutputIteratorsType outputIters(this->OutputPortal);
+
+    using InputIteratorType = typename InputIteratorsType::IteratorType;
+    using StencilIteratorType = typename StencilIteratorsType::IteratorType;
+    using OutputIteratorType = typename OutputIteratorsType::IteratorType;
+
+    InputIteratorType inIter = inputIters.GetBegin();
+    StencilIteratorType stencilIter = stencilIters.GetBegin();
+    OutputIteratorType outIter = outputIters.GetBegin();
+
+    vtkm::Id readPos = range.begin();
+    const vtkm::Id readEnd = range.end();
+
+    // Determine output index. If we're reusing the body, pick up where the
+    // last block left off. If not, use the input range.
+    vtkm::Id writePos;
+    if (firstRun)
+    {
+      this->Ranges.OutputBegin = range.begin();
+      this->Ranges.OutputEnd = range.begin();
+      writePos = range.begin();
+    }
+    else
+    {
+      writePos = this->Ranges.OutputEnd;
+    }
+    this->Ranges.AssertSane();
+
+    // We're either writing at the end of a previous block, or at the input
+    // location. Either way, the write position will never be greater than
+    // the read position.
+    VTKM_ASSERT(writePos <= readPos);
+
+    UnaryPredicateType predicate(this->UnaryPredicate);
+    for (; readPos < readEnd; ++readPos)
+    {
+      if (predicate(stencilIter[readPos]))
+      {
+        outIter[writePos] = inIter[readPos];
+        ++writePos;
+      }
+    }
+
+    this->Ranges.OutputEnd = writePos;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC_CONT
+  void join(const CopyIfBody& rhs)
+  {
+    using OutputIteratorsType = vtkm::cont::ArrayPortalToIterators<OutputPortalType>;
+    using OutputIteratorType = typename OutputIteratorsType::IteratorType;
+
+    OutputIteratorsType outputIters(this->OutputPortal);
+    OutputIteratorType outIter = outputIters.GetBegin();
+
+    this->Ranges.AssertSane();
+    rhs.Ranges.AssertSane();
+    // Ensure that we're joining two consecutive subsets of the input:
+    VTKM_ASSERT(this->Ranges.IsNext(rhs.Ranges));
+
+    vtkm::Id srcBegin = rhs.Ranges.OutputBegin;
+    const vtkm::Id srcEnd = rhs.Ranges.OutputEnd;
+    const vtkm::Id dstBegin = this->Ranges.OutputEnd;
+
+    // move data:
+    if (srcBegin != dstBegin && srcBegin != srcEnd)
+    {
+      // Sanity check:
+      VTKM_ASSERT(srcBegin < srcEnd);
+      std::copy(outIter + srcBegin, outIter + srcEnd, outIter + dstBegin);
+    }
+
+    this->Ranges.InputEnd = rhs.Ranges.InputEnd;
+    this->Ranges.OutputEnd += srcEnd - srcBegin;
+    this->Ranges.AssertSane();
+  }
+};
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename InputPortalType,
+          typename StencilPortalType,
+          typename OutputPortalType,
+          typename UnaryPredicateType>
+VTKM_CONT vtkm::Id CopyIfPortals(InputPortalType inputPortal,
+                                 StencilPortalType stencilPortal,
+                                 OutputPortalType outputPortal,
+                                 UnaryPredicateType unaryPredicate)
+{
+  const vtkm::Id inputLength = inputPortal.GetNumberOfValues();
+  VTKM_ASSERT(inputLength == stencilPortal.GetNumberOfValues());
+
+  if (inputLength == 0)
+  {
+    return 0;
+  }
+
+  CopyIfBody<InputPortalType, StencilPortalType, OutputPortalType, UnaryPredicateType> body(
+    inputPortal, stencilPortal, outputPortal, unaryPredicate);
+  ::tbb::blocked_range<vtkm::Id> range(0, inputLength, TBB_GRAIN_SIZE);
+
+  ::tbb::parallel_reduce(range, body);
+
+  body.Ranges.AssertSane();
+  VTKM_ASSERT(body.Ranges.InputBegin == 0 && body.Ranges.InputEnd == inputLength &&
+              body.Ranges.OutputBegin == 0 && body.Ranges.OutputEnd <= inputLength);
+
+  return body.Ranges.OutputEnd;
+}
+
 template <class InputPortalType, class T, class BinaryOperationType>
 struct ReduceBody
 {
