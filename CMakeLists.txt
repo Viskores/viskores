@@ -27,11 +27,21 @@ cmake_minimum_required(VERSION 3.3)
 
 project (VTKm)
 
-set(VTKm_INSTALL_INCLUDE_DIR "include")
-set(VTKm_INSTALL_CONFIG_DIR "lib")
-set(VTKm_INSTALL_LIB_DIR "lib")
-set(VTKm_INSTALL_BIN_DIR "bin")
-set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
+if (NOT DEFINED VTKm_INSTALL_INCLUDE_DIR)
+  set(VTKm_INSTALL_INCLUDE_DIR "include")
+endif()
+if (NOT DEFINED VTKm_INSTALL_CONFIG_DIR)
+  set(VTKm_INSTALL_CONFIG_DIR "lib")
+endif()
+if (NOT DEFINED VTKm_INSTALL_LIB_DIR)
+  set(VTKm_INSTALL_LIB_DIR "lib")
+endif()
+if (NOT DEFINED VTKm_INSTALL_BIN_DIR)
+  set(VTKm_INSTALL_BIN_DIR "bin")
+endif()
+if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
+  set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
+endif()
 
 set(VTKm_EXPORT_NAME "VTKmTargets")
 
@@ -147,21 +157,21 @@ endif (VTKm_ENABLE_CUDA)
 #-----------------------------------------------------------------------------
 
 ## Set the directory where the binaries will be stored
-set( EXECUTABLE_OUTPUT_PATH
+set( VTKm_EXECUTABLE_OUTPUT_PATH
   ${PROJECT_BINARY_DIR}/bin
   CACHE PATH
   "Directory where all executable will be stored"
 )
 
 ## Set the directory where the libraries will be stored
-set( LIBRARY_OUTPUT_PATH
+set( VTKm_LIBRARY_OUTPUT_PATH
   ${PROJECT_BINARY_DIR}/lib
   CACHE PATH
   "Directory where all the libraries will be stored"
 )
 mark_as_advanced(
-  EXECUTABLE_OUTPUT_PATH
-  LIBRARY_OUTPUT_PATH)
+  VTKm_EXECUTABLE_OUTPUT_PATH
+  VTKm_LIBRARY_OUTPUT_PATH)
 
 #-----------------------------------------------------------------------------
 # Add "meta" tests that check the state of the repository

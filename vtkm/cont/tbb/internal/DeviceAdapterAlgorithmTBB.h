@@ -60,6 +60,31 @@ public:
       input.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()), initialValue, binary_functor);
   }
 
+  template <typename T,
+            typename U,
+            class CKeyIn,
+            class CValIn,
+            class CKeyOut,
+            class CValOut,
+            class BinaryFunctor>
+  VTKM_CONT static void ReduceByKey(const vtkm::cont::ArrayHandle<T, CKeyIn>& keys,
+                                    const vtkm::cont::ArrayHandle<U, CValIn>& values,
+                                    vtkm::cont::ArrayHandle<T, CKeyOut>& keys_output,
+                                    vtkm::cont::ArrayHandle<U, CValOut>& values_output,
+                                    BinaryFunctor binary_functor)
+  {
+    vtkm::Id inputSize = keys.GetNumberOfValues();
+    VTKM_ASSERT(inputSize == values.GetNumberOfValues());
+    vtkm::Id outputSize =
+      tbb::ReduceByKeyPortals(keys.PrepareForInput(DeviceAdapterTagTBB()),
+                              values.PrepareForInput(DeviceAdapterTagTBB()),
+                              keys_output.PrepareForOutput(inputSize, DeviceAdapterTagTBB()),
+                              values_output.PrepareForOutput(inputSize, DeviceAdapterTagTBB()),
+                              binary_functor);
+    keys_output.Shrink(outputSize);
+    values_output.Shrink(outputSize);
+  }
+
   template <typename T, class CIn, class COut>
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)

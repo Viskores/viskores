@@ -27,6 +27,7 @@
 #include <vtkm/cont/Error.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorExecution.h>
+#include <vtkm/cont/MultiBlock.h>
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
@@ -59,8 +60,46 @@ inline VTKM_CONT Result FilterField<Derived>::Execute(const vtkm::cont::DataSet&
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
+inline VTKM_CONT std::vector<vtkm::filter::Result> FilterField<Derived>::Execute(
+  const vtkm::cont::MultiBlock& input,
+  const std::string& inFieldName)
+{
+  std::vector<vtkm::filter::Result> results;
+
+  for (vtkm::Id j = 0; j < input.GetNumberOfBlocks(); j++)
+  {
+    vtkm::filter::Result result = this->Execute(
+      input.GetBlock(j), input.GetBlock(j).GetField(inFieldName), vtkm::filter::PolicyDefault());
+    results.push_back(result);
+  }
+
+  return results;
+}
+//-----------------------------------------------------------------------------
+template <typename Derived>
+template <typename DerivedPolicy>
+inline VTKM_CONT std::vector<vtkm::filter::Result> FilterField<Derived>::Execute(
+  const vtkm::cont::MultiBlock& input,
+  const std::string& inFieldName,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+{
+  std::vector<vtkm::filter::Result> results;
+
+  for (vtkm::Id j = 0; j < input.GetNumberOfBlocks(); j++)
+  {
+    vtkm::filter::Result result =
+      this->Execute(input.GetBlock(j), input.GetBlock(j).GetField(inFieldName), policy);
+    results.push_back(result);
+  }
+
+  return results;
+}
+
+//-----------------------------------------------------------------------------
+template <typename Derived>
 inline VTKM_CONT Result FilterField<Derived>::Execute(const vtkm::cont::DataSet& input,
                                                       const vtkm::cont::Field& field)
+
 {
   return this->Execute(input, field, vtkm::filter::PolicyDefault());
 }

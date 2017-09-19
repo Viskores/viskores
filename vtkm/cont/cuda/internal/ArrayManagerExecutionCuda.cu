@@ -44,13 +44,14 @@ DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::GetDeviceId(
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecutionArray& execArray,
-                                                                  vtkm::Id numBytes) const
+                                                                  vtkm::UInt64 numBytes) const
 {
   // Detect if we can reuse a device-accessible pointer from the control env:
   if (CudaAllocator::IsDevicePointer(execArray.ArrayControl))
   {
-    const vtkm::Id managedCapacity = static_cast<const char*>(execArray.ArrayControlCapacity) -
-      static_cast<const char*>(execArray.ArrayControl);
+    const vtkm::UInt64 managedCapacity =
+      static_cast<vtkm::UInt64>(static_cast<const char*>(execArray.ArrayControlCapacity) -
+                                static_cast<const char*>(execArray.ArrayControl));
     if (managedCapacity >= numBytes)
     {
       if (execArray.Array && execArray.Array != execArray.ArrayControl)
@@ -67,8 +68,8 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
 
   if (execArray.Array != nullptr)
   {
-    const vtkm::Id cap =
-      static_cast<char*>(execArray.ArrayCapacity) - static_cast<char*>(execArray.Array);
+    const vtkm::UInt64 cap = static_cast<vtkm::UInt64>(static_cast<char*>(execArray.ArrayCapacity) -
+                                                       static_cast<char*>(execArray.Array));
 
     if (cap < numBytes)
     { // Current allocation too small -- free & realloc
@@ -123,9 +124,10 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Free(
   }
 }
 
-void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(const void* controlPtr,
-                                                                         void* executionPtr,
-                                                                         vtkm::Id numBytes) const
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(
+  const void* controlPtr,
+  void* executionPtr,
+  vtkm::UInt64 numBytes) const
 {
   // Do nothing if we're sharing a device-accessible pointer between control and
   // execution:
@@ -143,7 +145,7 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(const v
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const void* executionPtr,
                                                                        void* controlPtr,
-                                                                       vtkm::Id numBytes) const
+                                                                       vtkm::UInt64 numBytes) const
 {
   // Do nothing if we're sharing a cuda managed pointer between control and execution:
   if (controlPtr == executionPtr && CudaAllocator::IsDevicePointer(controlPtr))

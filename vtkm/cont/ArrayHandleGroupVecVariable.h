@@ -25,6 +25,7 @@
 #include <vtkm/cont/ArrayPortal.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 
 #include <vtkm/Assert.h>
@@ -438,6 +439,76 @@ make_ArrayHandleGroupVecVariable(const SourceArrayHandleType& sourceArray,
     sourceArray, offsetsArray);
 }
 
+/// \c ConvertNumComponentsToOffsets takes an array of Vec sizes (i.e. the number of components in
+/// each Vec) and returns an array of offsets to a packed array of such Vecs. The resulting array
+/// can be used with \c ArrayHandleGroupVecVariable.
+///
+/// The first parameter is always the input array that specifies the number of components in each
+/// group Vec.
+///
+/// The next parameter is the output \c ArrayHandle, which must have a value type of \c vtkm::Id.
+/// If the output \c ArrayHandle is not given, it is returned.
+///
+/// The next optional parameter is a reference to a \c vtkm::Id and is filled with the expected
+/// size of the source values array.
+///
+/// The final optional parameter is either a device adapter tag or a \c RuntimeDeviceTracker. If a
+/// device is not specified, then devices specified by the global \c RuntimeDeviceTracker are used.
+///
+template <typename NumComponentsArrayType, typename OffsetsStorage, typename Device>
+VTKM_CONT void ConvertNumComponentsToOffsets(
+  const NumComponentsArrayType& numComponentsArray,
+  vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray,
+  vtkm::Id& sourceArraySize,
+  Device)
+{
+  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
+  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+  sourceArraySize = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
+    vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numComponentsArray), offsetsArray);
+}
+
+template <typename NumComponentsArrayType, typename OffsetsStorage, typename Device>
+VTKM_CONT void ConvertNumComponentsToOffsets(
+  const NumComponentsArrayType& numComponentsArray,
+  vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray,
+  Device)
+{
+  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
+  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+  vtkm::Id dummy;
+  vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, offsetsArray, dummy, Device());
+}
+
+template <typename NumComponentsArrayType, typename Device>
+VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
+  const NumComponentsArrayType& numComponentsArray,
+  vtkm::Id& sourceArraySize,
+  Device)
+{
+  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
+  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+  vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray;
+  vtkm::cont::ConvertNumComponentsToOffsets(
+    numComponentsArray, offsetsArray, sourceArraySize, Device());
+  return offsetsArray;
+}
+
+template <typename NumComponentsArrayType, typename Device>
+VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
+  const NumComponentsArrayType& numComponentsArray,
+  Device)
+{
+  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
+  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+  vtkm::Id dummy;
+  return vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, dummy, Device());
+}
+
 namespace detail
 {
 
@@ -458,8 +529,8 @@ struct ConvertNumComponentsToOffsetsFunctor
   template <typename Device>
   VTKM_CONT bool operator()(Device)
   {
-    this->SourceArraySize = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
-      this->NumComponentsArray, this->OffsetsArray);
+    vtkm::cont::ConvertNumComponentsToOffsets(
+      this->NumComponentsArray, this->OffsetsArray, this->SourceArraySize, Device());
 
     return true;
   }
@@ -468,14 +539,15 @@ struct ConvertNumComponentsToOffsetsFunctor
 template <typename NumComponentsArrayType, typename OffsetsArrayType>
 VTKM_CONT void DoConvertNumComponentsToOffsets(const NumComponentsArrayType& numComponentsArray,
                                                OffsetsArrayType& offsetsArray,
-                                               vtkm::Id& sourceArraySize)
+                                               vtkm::Id& sourceArraySize,
+                                               vtkm::cont::RuntimeDeviceTracker tracker)
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
   VTKM_IS_ARRAY_HANDLE(OffsetsArrayType);
 
   detail::ConvertNumComponentsToOffsetsFunctor<NumComponentsArrayType, OffsetsArrayType> functor(
     numComponentsArray);
-  bool success = vtkm::cont::TryExecute(functor);
+  bool success = vtkm::cont::TryExecute(functor, tracker);
 
   if (!success)
   {
@@ -489,50 +561,54 @@ VTKM_CONT void DoConvertNumComponentsToOffsets(const NumComponentsArrayType& num
 
 } // namespace detail
 
-/// \c ConvertNumComponentsToOffsets takes an array of Vec sizes (i.e. the
-/// number of components in each Vec) and returns an array of offsets to a
-/// packed array of such Vecs. The resulting array can be used with
-/// \c ArrayHandleGroupVecVariable.
-///
-/// If an optional second parameter is given, the expected size of the source
-/// values array is returned in it.
-///
 template <typename NumComponentsArrayType, typename OffsetsStorage>
 VTKM_CONT void ConvertNumComponentsToOffsets(
   const NumComponentsArrayType& numComponentsArray,
   vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray,
-  vtkm::Id& sourceArraySize)
+  vtkm::Id& sourceArraySize,
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
   detail::DoConvertNumComponentsToOffsets(
-    vtkm::cont::make_ArrayHandleCast<vtkm::Id>(numComponentsArray), offsetsArray, sourceArraySize);
+    numComponentsArray, offsetsArray, sourceArraySize, tracker);
 }
+
 template <typename NumComponentsArrayType, typename OffsetsStorage>
 VTKM_CONT void ConvertNumComponentsToOffsets(
   const NumComponentsArrayType& numComponentsArray,
-  vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray)
+  vtkm::cont::ArrayHandle<vtkm::Id, OffsetsStorage>& offsetsArray,
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
+  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
+
   vtkm::Id dummy;
-  vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, offsetsArray, dummy);
+  vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, offsetsArray, dummy, tracker);
 }
+
 template <typename NumComponentsArrayType>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
   const NumComponentsArrayType& numComponentsArray,
-  vtkm::Id& sourceArraySize)
+  vtkm::Id& sourceArraySize,
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
   VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
 
   vtkm::cont::ArrayHandle<vtkm::Id> offsetsArray;
-  vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, offsetsArray, sourceArraySize);
+  vtkm::cont::ConvertNumComponentsToOffsets(
+    numComponentsArray, offsetsArray, sourceArraySize, tracker);
   return offsetsArray;
 }
+
 template <typename NumComponentsArrayType>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Id> ConvertNumComponentsToOffsets(
-  const NumComponentsArrayType& numComponentsArray)
+  const NumComponentsArrayType& numComponentsArray,
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
+  VTKM_IS_ARRAY_HANDLE(NumComponentsArrayType);
+
   vtkm::Id dummy;
-  return vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, dummy);
+  return vtkm::cont::ConvertNumComponentsToOffsets(numComponentsArray, dummy, tracker);
 }
 }
 } // namespace vtkm::cont

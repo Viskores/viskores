@@ -22,7 +22,7 @@ Before you begin, perform initial setup:
 3.  Follow the [download instructions](download.md#clone) to create a
     local clone of the main VTK repository:
 
-        $ git clone https://gitlab.kitware.com/vtk/vtk-m.git VTK
+        $ git clone https://gitlab.kitware.com/vtk/vtk-m.git
         $ cd vtk-m
     The main repository will be configured as your `origin` remote.
 
@@ -40,6 +40,10 @@ Before you begin, perform initial setup:
     regression tests.  After registering and signing in, click on
     "All Dashboards" link in the upper left corner, scroll down and click
     "Subscribe to this project" on the right of VTK-m.
+
+6.  (Optional but highly recommended.)
+    [Sign up](http://vtk.org/mailman/listinfo/vtkm) for the VTK-m mailing
+    list to communicate with other developers and users.
 
 [GitLab Access]: https://gitlab.kitware.com/users/sign_in
 [Fork VTK-m]: https://gitlab.kitware.com/vtk/vtk-m/forks/new
@@ -100,9 +104,9 @@ A reader should have a general idea of the feature or fix to be developed given 
         $ git commit
 
     Caveats:
-    * Data files must be placed in either the root data directory, or a
-      folder explicitly named 'data'. This is required as VTK-m uses Git-LFS
-      to efficiently support data files.
+    * Data files must be placed under a folder explicitly named 'data'.
+      This is required as VTK-m uses Git-LFS to efficiently support data
+      files.
 
 
 Guidelines for Commit Messages

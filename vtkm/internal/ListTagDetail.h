@@ -165,31 +165,30 @@ struct ListIntersect<SameListTag, SameListTag>
   using type = SameListTag;
 };
 
-//-----------------------------------------------------------------------------
 template <typename Functor>
-VTKM_CONT void ListForEachImpl(const Functor&, brigand::empty_sequence)
+VTKM_CONT void ListForEachImpl(Functor&&, brigand::empty_sequence)
 {
 }
 
 template <typename Functor, typename T1>
-VTKM_CONT void ListForEachImpl(const Functor& f, brigand::list<T1>)
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1>)
 {
-  f(T1());
+  f(T1{});
 }
 
 template <typename Functor, typename T1, typename T2>
-VTKM_CONT void ListForEachImpl(const Functor& f, brigand::list<T1, T2>)
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2>)
 {
-  f(T1());
-  f(T2());
+  f(T1{});
+  f(T2{});
 }
 
 template <typename Functor, typename T1, typename T2, typename T3>
-VTKM_CONT void ListForEachImpl(const Functor& f, brigand::list<T1, T2, T3>)
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2, T3>)
 {
-  f(T1());
-  f(T2());
-  f(T3());
+  f(T1{});
+  f(T2{});
+  f(T3{});
 }
 
 template <typename Functor,
@@ -198,53 +197,12 @@ template <typename Functor,
           typename T3,
           typename T4,
           typename... ArgTypes>
-VTKM_CONT void ListForEachImpl(const Functor& f, brigand::list<T1, T2, T3, T4, ArgTypes...>)
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2, T3, T4, ArgTypes...>)
 {
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
-  ListForEachImpl(f, brigand::list<ArgTypes...>());
-}
-
-template <typename Functor>
-VTKM_CONT void ListForEachImpl(Functor&, brigand::empty_sequence)
-{
-}
-
-template <typename Functor, typename T1>
-VTKM_CONT void ListForEachImpl(Functor& f, brigand::list<T1>)
-{
-  f(T1());
-}
-
-template <typename Functor, typename T1, typename T2>
-VTKM_CONT void ListForEachImpl(Functor& f, brigand::list<T1, T2>)
-{
-  f(T1());
-  f(T2());
-}
-
-template <typename Functor, typename T1, typename T2, typename T3>
-VTKM_CONT void ListForEachImpl(Functor& f, brigand::list<T1, T2, T3>)
-{
-  f(T1());
-  f(T2());
-  f(T3());
-}
-
-template <typename Functor,
-          typename T1,
-          typename T2,
-          typename T3,
-          typename T4,
-          typename... ArgTypes>
-VTKM_CONT void ListForEachImpl(Functor& f, brigand::list<T1, T2, T3, T4, ArgTypes...>)
-{
-  f(T1());
-  f(T2());
-  f(T3());
-  f(T4());
+  f(T1{});
+  f(T2{});
+  f(T3{});
+  f(T4{});
   ListForEachImpl(f, brigand::list<ArgTypes...>());
 }
 

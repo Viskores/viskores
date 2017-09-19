@@ -59,7 +59,7 @@ public:
                                            const vtkm::cont::ArrayHandle<T, StorageType>& field,
                                            const vtkm::filter::FieldMetadata& fieldMeta,
                                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                           const DeviceAdapter& tag);
+                                           DeviceAdapter tag);
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
@@ -68,7 +68,7 @@ public:
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                            const DeviceAdapter& tag);
+                            DeviceAdapter tag);
 
 private:
   double LowerValue;

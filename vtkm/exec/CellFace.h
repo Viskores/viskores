@@ -246,7 +246,7 @@ static inline VTKM_EXEC vtkm::VecCConst<vtkm::IdComponent> CellFaceLocalIndices(
   return vtkm::make_VecC(detail::PointsInFace[shape.Id][faceIndex], numPointsInFace);
 }
 
-/// \brief Returns a cononical identifer for a cell face
+/// \brief Returns a canonical identifer for a cell face
 ///
 /// Given information about a cell face and the global point indices for that cell, returns a
 /// vtkm::Id3 that contains values that are unique to that face. The values for two faces will be
@@ -257,7 +257,7 @@ static inline VTKM_EXEC vtkm::VecCConst<vtkm::IdComponent> CellFaceLocalIndices(
 /// than a single point or single edge.
 ///
 template <typename CellShapeTag, typename GlobalPointIndicesVecType>
-static inline VTKM_EXEC vtkm::Id3 CellFaceCononicalId(
+static inline VTKM_EXEC vtkm::Id3 CellFaceCanonicalId(
   vtkm::IdComponent faceIndex,
   CellShapeTag shape,
   const GlobalPointIndicesVecType& globalPointIndicesVec,

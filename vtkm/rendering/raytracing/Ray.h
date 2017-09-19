@@ -292,6 +292,24 @@ public:
     }
   }
 
+  void PrintRay(vtkm::Id pixelId)
+  {
+    for (vtkm::Id i = 0; i < NumRays; ++i)
+    {
+      if (PixelIdx.GetPortalControl().Get(i) == pixelId)
+      {
+        std::cout << "Ray " << pixelId << "\n";
+        std::cout << "Origin "
+                  << "[" << OriginX.GetPortalControl().Get(i) << ","
+                  << OriginY.GetPortalControl().Get(i) << "," << OriginZ.GetPortalControl().Get(i)
+                  << "]\n";
+        std::cout << "Dir "
+                  << "[" << DirX.GetPortalControl().Get(i) << "," << DirY.GetPortalControl().Get(i)
+                  << "," << DirZ.GetPortalControl().Get(i) << "]\n";
+      }
+    }
+  }
+
   friend class RayOperations;
 }; // class ray
 }
