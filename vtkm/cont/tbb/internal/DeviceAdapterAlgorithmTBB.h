@@ -45,6 +45,31 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>
       vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
+  template <typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output)
+  {
+    ::vtkm::NotZeroInitialized unary_predicate;
+    CopyIf(input, stencil, output, unary_predicate);
+  }
+
+  template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output,
+                               UnaryPredicate unary_predicate)
+  {
+    vtkm::Id inputSize = input.GetNumberOfValues();
+    VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
+    vtkm::Id outputSize =
+      tbb::CopyIfPortals(input.PrepareForInput(DeviceAdapterTagTBB()),
+                         stencil.PrepareForInput(DeviceAdapterTagTBB()),
+                         output.PrepareForOutput(inputSize, DeviceAdapterTagTBB()),
+                         unary_predicate);
+    output.Shrink(outputSize);
+  }
+
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
