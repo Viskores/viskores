@@ -151,14 +151,14 @@ struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>
 
   VTKM_CONT ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
   VTKM_CONT DeviceAdapterId GetDeviceId() const final;
-  VTKM_CONT void Allocate(TypelessExecutionArray& execArray, vtkm::Id numBytes) const final;
+  VTKM_CONT void Allocate(TypelessExecutionArray& execArray, vtkm::UInt64 numBytes) const final;
   VTKM_CONT void Free(TypelessExecutionArray& execArray) const final;
   VTKM_CONT void CopyFromControl(const void* controlPtr,
                                  void* executionPtr,
-                                 vtkm::Id numBytes) const final;
+                                 vtkm::UInt64 numBytes) const final;
   VTKM_CONT void CopyToControl(const void* executionPtr,
                                void* controlPtr,
-                               vtkm::Id numBytes) const final;
+                               vtkm::UInt64 numBytes) const final;
 };
 } // namespace internal
 

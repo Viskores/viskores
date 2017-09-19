@@ -123,18 +123,15 @@ void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
   {
     throw ErrorBadAllocation("Requested allocation exceeds size_t capacity.");
   }
-  this->AllocateBytes(numberOfValues * static_cast<vtkm::Id>(sizeof(T)));
+  this->AllocateBytes(static_cast<vtkm::UInt64>(numberOfValues) *
+                      static_cast<vtkm::UInt64>(sizeof(T)));
 }
 
 template <typename T>
-void Storage<T, vtkm::cont::StorageTagBasic>::AllocateBytes(vtkm::Id numberOfBytes)
+void Storage<T, vtkm::cont::StorageTagBasic>::AllocateBytes(vtkm::UInt64 numberOfBytes)
 {
-  if (numberOfBytes < 0)
-  {
-    throw vtkm::cont::ErrorBadAllocation("Cannot allocate an array with negative size.");
-  }
-
-  const vtkm::Id numberOfValues = numberOfBytes / static_cast<vtkm::Id>(sizeof(T));
+  const vtkm::Id numberOfValues =
+    static_cast<vtkm::Id>(numberOfBytes / static_cast<vtkm::UInt64>(sizeof(T)));
 
   // If we are allocating less data, just shrink the array.
   // (If allocation empty, drop down so we can deallocate memory.)
@@ -180,18 +177,20 @@ void Storage<T, vtkm::cont::StorageTagBasic>::AllocateBytes(vtkm::Id numberOfByt
 template <typename T>
 void Storage<T, vtkm::cont::StorageTagBasic>::Shrink(vtkm::Id numberOfValues)
 {
-  this->ShrinkBytes(numberOfValues * static_cast<vtkm::Id>(sizeof(T)));
+  this->ShrinkBytes(static_cast<vtkm::UInt64>(numberOfValues) *
+                    static_cast<vtkm::UInt64>(sizeof(T)));
 }
 
 template <typename T>
-void Storage<T, vtkm::cont::StorageTagBasic>::ShrinkBytes(vtkm::Id numberOfBytes)
+void Storage<T, vtkm::cont::StorageTagBasic>::ShrinkBytes(vtkm::UInt64 numberOfBytes)
 {
   if (numberOfBytes > this->GetNumberOfBytes())
   {
     throw vtkm::cont::ErrorBadValue("Shrink method cannot be used to grow array.");
   }
 
-  this->NumberOfValues = numberOfBytes / static_cast<vtkm::Id>(sizeof(T));
+  this->NumberOfValues =
+    static_cast<vtkm::Id>(numberOfBytes / static_cast<vtkm::UInt64>(sizeof(T)));
 }
 
 template <typename T>

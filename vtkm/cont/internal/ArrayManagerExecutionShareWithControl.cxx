@@ -34,7 +34,7 @@ ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareW
 }
 
 void ExecutionArrayInterfaceBasicShareWithControl::Allocate(TypelessExecutionArray& execArray,
-                                                            Id numBytes) const
+                                                            vtkm::UInt64 numBytes) const
 {
   this->ControlStorage.AllocateBytes(numBytes);
 
@@ -54,7 +54,7 @@ void ExecutionArrayInterfaceBasicShareWithControl::Free(TypelessExecutionArray& 
 
 void ExecutionArrayInterfaceBasicShareWithControl::CopyFromControl(const void* src,
                                                                    void* dst,
-                                                                   Id bytes) const
+                                                                   vtkm::UInt64 bytes) const
 {
   if (src != dst)
   {
@@ -67,7 +67,7 @@ void ExecutionArrayInterfaceBasicShareWithControl::CopyFromControl(const void* s
 
 void ExecutionArrayInterfaceBasicShareWithControl::CopyToControl(const void* src,
                                                                  void* dst,
-                                                                 Id bytes) const
+                                                                 vtkm::UInt64 bytes) const
 {
   if (src != dst)
   {
