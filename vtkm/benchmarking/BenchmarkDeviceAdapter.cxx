@@ -298,6 +298,9 @@ private:
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     ValueArrayHandle InputHandle;
+    // We don't actually use this, but we need it to prevent sufficently
+    // smart compilers from optimizing the Reduce call out.
+    Value Result;
 
     VTKM_CONT
     BenchReduce()
@@ -305,14 +308,21 @@ private:
       Algorithm::Schedule(
         FillTestValueKernel<Value>(InputHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
         ARRAY_SIZE);
+      this->Result =
+        Algorithm::Reduce(this->InputHandle, vtkm::TypeTraits<Value>::ZeroInitialization());
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
       Timer timer;
-      Algorithm::Reduce(InputHandle, Value());
-      return timer.GetElapsedTime();
+      Value tmp = Algorithm::Reduce(InputHandle, vtkm::TypeTraits<Value>::ZeroInitialization());
+      vtkm::Float64 time = timer.GetElapsedTime();
+      if (tmp != this->Result)
+      {
+        this->Result = tmp;
+      }
+      return time;
     }
 
     VTKM_CONT
