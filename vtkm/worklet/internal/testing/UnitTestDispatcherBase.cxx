@@ -22,8 +22,6 @@
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
-#include <vtkm/cont/arg/ControlSignatureTagBase.h>
-
 #include <vtkm/worklet/internal/WorkletBase.h>
 
 #include <vtkm/cont/testing/Testing.h>

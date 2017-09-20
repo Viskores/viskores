@@ -441,10 +441,24 @@ public:
   }
 
   /////////////3D construction      /////////////////////
+  /// \brief Segmented split for 3D x, y, z coordinates
+  ///
+  /// Split \c pointId_Handle, \c X_Handle, \c Y_Handle and \c Z_Handle within each segment
+  /// as indicated by \c segId_Handle according to flags in \c flag_Handle.
+  ///
+  /// \tparam T
+  /// \tparam DeviceAdapter
+  /// \param pointId_Handle
+  /// \param flag_Handle
+  /// \param segId_Handle
+  /// \param X_Handle
+  /// \param Y_Handle
+  /// \param Z_Handle
+  /// \param device
   template <typename T, typename DeviceAdapter>
-  void SegmentedSplitProcedure3D(vtkm::cont::ArrayHandle<T>& A_Handle,
-                                 vtkm::cont::ArrayHandle<T>& B_Handle,
-                                 vtkm::cont::ArrayHandle<T>& C_Handle,
+  void SegmentedSplitProcedure3D(vtkm::cont::ArrayHandle<T>& pointId_Handle,
+                                 vtkm::cont::ArrayHandle<T>& flag_Handle,
+                                 vtkm::cont::ArrayHandle<T>& segId_Handle,
                                  vtkm::cont::ArrayHandle<T>& X_Handle,
                                  vtkm::cont::ArrayHandle<T>& Y_Handle,
                                  vtkm::cont::ArrayHandle<T>& Z_Handle,
@@ -454,32 +468,32 @@ public:
 
     vtkm::cont::ArrayHandle<T> D_Handle;
     T initValue = 0;
-    Algorithm::ScanExclusiveByKey(C_Handle, B_Handle, D_Handle, initValue, vtkm::Add());
+    Algorithm::ScanExclusiveByKey(segId_Handle, flag_Handle, D_Handle, initValue, vtkm::Add());
 
-    vtkm::cont::ArrayHandleCounting<T> Ecouting_Handle(0, 1, A_Handle.GetNumberOfValues());
+    vtkm::cont::ArrayHandleCounting<T> Ecouting_Handle(0, 1, pointId_Handle.GetNumberOfValues());
     vtkm::cont::ArrayHandle<T> E_Handle;
     Algorithm::Copy(Ecouting_Handle, E_Handle);
 
     vtkm::cont::ArrayHandle<T> F_Handle;
-    Algorithm::ScanInclusiveByKey(C_Handle, E_Handle, F_Handle, vtkm::Minimum());
+    Algorithm::ScanInclusiveByKey(segId_Handle, E_Handle, F_Handle, vtkm::Minimum());
 
-    vtkm::cont::ArrayHandle<T> InvB_Handle = Inverse01ArrayWrapper(B_Handle, device);
+    vtkm::cont::ArrayHandle<T> InvB_Handle = Inverse01ArrayWrapper(flag_Handle, device);
     vtkm::cont::ArrayHandle<T> G_Handle;
-    Algorithm::ScanInclusiveByKey(C_Handle, InvB_Handle, G_Handle, vtkm::Add());
+    Algorithm::ScanInclusiveByKey(segId_Handle, InvB_Handle, G_Handle, vtkm::Add());
 
     vtkm::cont::ArrayHandle<T> H_Handle =
-      ReverseScanInclusiveByKey(C_Handle, G_Handle, vtkm::Maximum(), device);
+      ReverseScanInclusiveByKey(segId_Handle, G_Handle, vtkm::Maximum(), device);
 
     vtkm::cont::ArrayHandle<T> I_Handle;
     SegmentedSplitTransform sstWorklet;
     vtkm::worklet::DispatcherMapField<SegmentedSplitTransform, DeviceAdapter>
       SegmentedSplitTransformDispatcher(sstWorklet);
     SegmentedSplitTransformDispatcher.Invoke(
-      B_Handle, D_Handle, F_Handle, G_Handle, H_Handle, I_Handle);
+      flag_Handle, D_Handle, F_Handle, G_Handle, H_Handle, I_Handle);
 
-    A_Handle = ScatterArrayWrapper(A_Handle, I_Handle, device);
+    pointId_Handle = ScatterArrayWrapper(pointId_Handle, I_Handle, device);
 
-    B_Handle = ScatterArrayWrapper(B_Handle, I_Handle, device);
+    flag_Handle = ScatterArrayWrapper(flag_Handle, I_Handle, device);
 
     X_Handle = ScatterArrayWrapper(X_Handle, I_Handle, device);
 
@@ -488,6 +502,12 @@ public:
     Z_Handle = ScatterArrayWrapper(Z_Handle, I_Handle, device);
   }
 
+  /// \brief Perform one level of KD-Tree construction
+  ///
+  /// Construct a level of KD-Tree by segemeted splits (partitioning) of \c pointId_Handle,
+  /// \c xrank_Handle, \c yrank_Handle and \c zrank_Handle according to the medium element
+  /// in each segment as indicated by \c segId_Handle alone the axis determined by \c level.
+  /// The split point of each segment will be updated in \c splitId_Handle.
   template <typename T, typename DeviceAdapter>
   void OneLevelSplit3D(vtkm::cont::ArrayHandle<T>& pointId_Handle,
                        vtkm::cont::ArrayHandle<T>& xrank_Handle,
@@ -542,8 +562,17 @@ public:
     }
   }
 
-  // Execute the 3d kd tree construction given x y z coordinate vectors
-  // Returns:
+  /// \breif Construct KdTree from x y z coordinate vector.
+  ///
+  /// This method constructs an array based KD-Tree from x, y, z coordinates of points in \c
+  /// coordi_Handle. The method rotates between x, y and z axis and splits input points into
+  /// equal halves with respect to the split axis at each level of construction. The indices to
+  /// the leaf nodes are returned in \c pointId_Handle and indices to internal nodes (splits)
+  /// are returned in splitId_handle.
+  ///
+  /// \param coordi_Handle (in) x, y, z coordinates of input points
+  /// \param pointId_Handle (out) returns indices to leaf nodes of the KD-tree
+  /// \param splitId_Handle (out) returns indices to internal nodes of the KD-tree
   // Leaf Node vector and internal node (split) vectpr
   template <typename CoordType, typename CoordStorageTag, typename DeviceAdapter>
   void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag>& coordi_Handle,

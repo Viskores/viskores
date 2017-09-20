@@ -62,7 +62,6 @@ set(unit_tests
   UnitTestWorkletMapPointNeighborhood.cxx
   UnitTestWorkletMapTopologyExplicit.cxx
   UnitTestWorkletMapTopologyUniform.cxx
-
   UnitTestWorkletReduceByKey.cxx
   UnitTestVertexClustering.cxx
   UnitTestWaveletCompressor.cxx
