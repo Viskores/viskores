@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestCellGradient.cxx
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
+  UnitTestCosmoTools.cxx
   UnitTestExternalFaces.cxx
   UnitTestExtractGeometry.cxx
   UnitTestExtractPoints.cxx
@@ -37,6 +38,9 @@ set(unit_tests
   UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
   UnitTestMaskPoints.cxx
+  UnitTestNDimsEntropy.cxx
+  UnitTestNDimsHistogram.cxx
+  UnitTestNDimsHistMarginalization.cxx
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx

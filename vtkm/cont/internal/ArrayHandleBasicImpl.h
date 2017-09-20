@@ -94,7 +94,7 @@ struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicBase
   /// If (capacity - base) < @a numBytes, the buffer will be freed and
   /// reallocated. If (capacity - base) >= numBytes, a new end is marked.
   VTKM_CONT
-  virtual void Allocate(TypelessExecutionArray& execArray, vtkm::Id numBytes) const = 0;
+  virtual void Allocate(TypelessExecutionArray& execArray, vtkm::UInt64 numBytes) const = 0;
 
   /// Release the buffer held by @a execArray and reset all pointer to null.
   VTKM_CONT
@@ -104,13 +104,13 @@ struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicBase
   VTKM_CONT
   virtual void CopyFromControl(const void* controlPtr,
                                void* executionPtr,
-                               vtkm::Id numBytes) const = 0;
+                               vtkm::UInt64 numBytes) const = 0;
 
   /// Copy @a numBytes from @a executionPtr to @a controlPtr.
   VTKM_CONT
   virtual void CopyToControl(const void* executionPtr,
                              void* controlPtr,
-                             vtkm::Id numBytes) const = 0;
+                             vtkm::UInt64 numBytes) const = 0;
 
 protected:
   StorageBasicBase& ControlStorage;

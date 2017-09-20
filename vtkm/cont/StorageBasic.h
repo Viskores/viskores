@@ -115,7 +115,7 @@ public:
 
   /// \brief Return the number of bytes allocated for this storage object.
   VTKM_CONT
-  virtual vtkm::Id GetNumberOfBytes() const = 0;
+  virtual vtkm::UInt64 GetNumberOfBytes() const = 0;
 
   /// \brief Allocates an array with the specified size in bytes.
   ///
@@ -125,7 +125,7 @@ public:
   /// ErrorBadValue if the allocation is not feasible (for example, the
   /// array storage is read-only).
   VTKM_CONT
-  virtual void AllocateBytes(vtkm::Id numberOfBytes) = 0;
+  virtual void AllocateBytes(vtkm::UInt64 numberOfBytes) = 0;
 
   /// \brief Reduces the size of the array without changing its values.
   ///
@@ -135,7 +135,7 @@ public:
   /// equal or less than the preexisting size. That is, this method can only be
   /// used to shorten the array, not lengthen.
   VTKM_CONT
-  virtual void ShrinkBytes(vtkm::Id numberOfBytes) = 0;
+  virtual void ShrinkBytes(vtkm::UInt64 numberOfBytes) = 0;
 
   /// \brief Frees any resources (i.e. memory) stored in this array.
   ///
@@ -213,19 +213,20 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
   VTKM_CONT
-  vtkm::Id GetNumberOfBytes() const final
+  vtkm::UInt64 GetNumberOfBytes() const final
   {
-    return this->NumberOfValues * static_cast<vtkm::Id>(sizeof(ValueT));
+    return static_cast<vtkm::UInt64>(this->NumberOfValues) *
+      static_cast<vtkm::UInt64>(sizeof(ValueT));
   }
 
   VTKM_CONT
   void Shrink(vtkm::Id numberOfValues);
 
   VTKM_CONT
-  void AllocateBytes(vtkm::Id) final;
+  void AllocateBytes(vtkm::UInt64) final;
 
   VTKM_CONT
-  void ShrinkBytes(vtkm::Id) final;
+  void ShrinkBytes(vtkm::UInt64) final;
 
   VTKM_CONT
   PortalType GetPortal() { return PortalType(this->Array, this->Array + this->NumberOfValues); }
