@@ -43,11 +43,11 @@ enum class TextureWrapMode
   Repeat,
 }; // enum TextureWrapMode
 
-template <vtkm::IdComponent NumComponents, typename StorageTag = VTKM_DEFAULT_STORAGE_TAG>
+template <vtkm::IdComponent NumComponents>
 class Texture2D
 {
 public:
-  using TextureDataHandle = typename vtkm::cont::ArrayHandle<vtkm::UInt8, StorageTag>;
+  using TextureDataHandle = typename vtkm::cont::ArrayHandle<vtkm::UInt8>;
   using ColorType = vtkm::Vec<vtkm::Float32, NumComponents>;
   template <typename DeviceTag>
   class Texture2DSampler;
