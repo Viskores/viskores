@@ -6,11 +6,11 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 Sandia Corporation.
+##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 ##  Copyright 2014 UT-Battelle, LLC.
 ##  Copyright 2014 Los Alamos National Security.
 ##
-##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+##  Under the terms of Contract DE-NA0003525 with NTESS,
 ##  the U.S. Government retains certain rights in this software.
 ##
 ##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -82,16 +82,7 @@ message("${EXCEPTIONS}")
 
 # Gets the current year (if possible).
 function (get_year var)
-  if (UNIX)
-    execute_process(COMMAND "date" "+%Y" OUTPUT_VARIABLE result)
-    string(REGEX REPLACE "(....).*" "\\1" result "${result}")
-  elseif (WIN32)
-    execute_process(COMMAND "date" "/T" OUTPUT_VARIABLE result)
-    string(REGEX REPLACE ".*../../(....).*" "\\1" result "${result}")
-  else (UNIX)
-    message("Don't know how to get date.")
-    set(result "20XX")
-  endif (UNIX)
+  string(TIMESTAMP result "%Y")
   set(${var} "${result}" PARENT_SCOPE)
 endfunction (get_year)
 

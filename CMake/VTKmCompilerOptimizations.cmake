@@ -6,11 +6,11 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 Sandia Corporation.
+##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 ##  Copyright 2014 UT-Battelle, LLC.
 ##  Copyright 2014 Los Alamos National Security.
 ##
-##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+##  Under the terms of Contract DE-NA0003525 with NTESS,
 ##  the U.S. Government retains certain rights in this software.
 ##
 ##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -40,7 +40,7 @@
 #  but Haswell and newer will not use any AVX2 instructions
 #
 #  4. avx2
-#  Compile with  AVX2/AVX enabled, no AVX512 vectorization will be used.
+#  Compile with  AVX2/AVX enabled, no AVX512 vectorization will be used.
 #  This means that Sandy Bridge, and Ivy Bridge can not run the code.
 #
 #  5. avx512

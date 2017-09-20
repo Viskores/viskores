@@ -2,8 +2,9 @@ VTKm License Version 1.0
 ========================================================================
 
 Copyright (c) 2014,
-Sandia Corporation, Los Alamos National Security, LLC.,
-UT-Battelle, LLC., Kitware Inc., University of California Davis
+National Technology & Engineering Solutions of Sandia, LLC (NTESS),
+Los Alamos National Security, LLC., UT-Battelle, LLC., Kitware Inc.,
+University of California Davis
 All rights reserved.
 
 Sandia National Laboratories, New Mexico
@@ -29,9 +30,8 @@ One Shields Avenue
 Davis, CA 95616
 USA
 
-Under the terms of Contract DE-AC04-94AL85000, there is a
-non-exclusive license for use of this work by or on behalf of the
-U.S. Government.
+Under the terms of Contract DE-NA0003525 with NTESS, the U.S. Government
+retains certain rights in this software.
 
 Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
 Laboratory (LANL), the U.S. Government retains certain rights in
