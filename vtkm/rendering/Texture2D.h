@@ -129,7 +129,7 @@ public:
     }
 
     VTKM_EXEC
-    ColorType GetColor(vtkm::Float32 u, vtkm::Float32 v) const
+    inline ColorType GetColor(vtkm::Float32 u, vtkm::Float32 v) const
     {
       v = 1.0f - v;
       UV_BOUNDS_CHECK(u, v, ColorType);
@@ -148,7 +148,7 @@ public:
 
   private:
     VTKM_EXEC
-    ColorType GetNearestNeighbourFilteredColor(vtkm::Float32 u, vtkm::Float32 v) const
+    inline ColorType GetNearestNeighbourFilteredColor(vtkm::Float32 u, vtkm::Float32 v) const
     {
       vtkm::Id x = static_cast<vtkm::Id>(vtkm::Round(u * (Width - 1)));
       vtkm::Id y = static_cast<vtkm::Id>(vtkm::Round(v * (Height - 1)));
@@ -156,7 +156,7 @@ public:
     }
 
     VTKM_EXEC
-    ColorType GetLinearFilteredColor(vtkm::Float32 u, vtkm::Float32 v) const
+    inline ColorType GetLinearFilteredColor(vtkm::Float32 u, vtkm::Float32 v) const
     {
       u = u * Width - 0.5f;
       v = v * Height - 0.5f;
@@ -176,7 +176,7 @@ public:
     }
 
     VTKM_EXEC
-    ColorType GetColorAtCoords(vtkm::Id x, vtkm::Id y) const
+    inline ColorType GetColorAtCoords(vtkm::Id x, vtkm::Id y) const
     {
       vtkm::Id idx = (y * Width + x) * NumComponents;
       ColorType color;
@@ -188,7 +188,7 @@ public:
     }
 
     VTKM_EXEC
-    void GetNextCoords(vtkm::Id x, vtkm::Id y, vtkm::Id& xn, vtkm::Id& yn) const
+    inline void GetNextCoords(vtkm::Id x, vtkm::Id y, vtkm::Id& xn, vtkm::Id& yn) const
     {
       if (WrapMode == TextureWrapMode::Clamp)
       {
@@ -208,7 +208,6 @@ public:
     TextureFilterMode FilterMode;
     TextureWrapMode WrapMode;
   }; // class Texture2DSampler
-
 
 private:
   vtkm::Id Width;
