@@ -90,8 +90,16 @@ struct AlignedAllocator
   pointer address(reference r) { return &r; }
   const_pointer address(const_reference r) { return &r; }
   size_type max_size() const { return (std::numeric_limits<size_type>::max)() / sizeof(T); }
-  void construct(pointer p, const T& t) { new (p) T(t); }
-  void destroy(pointer p) { p->~T(); }
+  void construct(pointer p, const T& t)
+  {
+    (void)p;
+    new (p) T(t);
+  }
+  void destroy(pointer p)
+  {
+    (void)p;
+    p->~T();
+  }
 };
 
 template <typename T, typename U, size_t AlignA, size_t AlignB>

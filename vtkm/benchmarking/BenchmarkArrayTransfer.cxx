@@ -166,7 +166,8 @@ struct BenchmarkArrayTransfer
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      std::vector<ValueType> vec(this->NumValues, ValueTypeTraits::ZeroInitialization());
+      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
+                                 ValueTypeTraits::ZeroInitialization());
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Time the copy:
@@ -248,7 +249,8 @@ struct BenchmarkArrayTransfer
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      std::vector<ValueType> vec(this->NumValues, ValueTypeTraits::ZeroInitialization());
+      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
+                                 ValueTypeTraits::ZeroInitialization());
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Time the copy:
@@ -291,7 +293,8 @@ struct BenchmarkArrayTransfer
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      std::vector<ValueType> vec(this->NumValues, ValueTypeTraits::ZeroInitialization());
+      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
+                                 ValueTypeTraits::ZeroInitialization());
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Ensure data is in control before we start:
@@ -349,7 +352,8 @@ struct BenchmarkArrayTransfer
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      std::vector<ValueType> vec(this->NumValues, ValueTypeTraits::ZeroInitialization());
+      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
+                                 ValueTypeTraits::ZeroInitialization());
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Ensure data is in control before we start:

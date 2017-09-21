@@ -2021,7 +2021,7 @@ public:
                              DWTMode mode,
                              DeviceTag)
   {
-    VTKM_ASSERT(inPretendDimX = cADimX + cDDimX);
+    VTKM_ASSERT(inPretendDimX == (cADimX + cDDimX));
 
     // determine extension modes
     DWTMode cALeft, cARight, cDLeft, cDRight;
@@ -2182,7 +2182,7 @@ public:
                            DWTMode mode,
                            DeviceTag)
   {
-    VTKM_ASSERT(inPretendDimY = cADimY + cDDimY);
+    VTKM_ASSERT(inPretendDimY == (cADimY + cDDimY));
 
     // determine extension modes
     DWTMode cATopMode, cADownMode, cDTopMode, cDDownMode;
@@ -2343,7 +2343,7 @@ public:
                              DWTMode mode,
                              DeviceTag)
   {
-    VTKM_ASSERT(inPretendDimX = cADimX + cDDimX);
+    VTKM_ASSERT(inPretendDimX == (cADimX + cDDimX));
 
     // determine extension modes
     DWTMode cALeftMode, cARightMode, cDLeftMode, cDRightMode;
@@ -2487,7 +2487,7 @@ public:
                            DWTMode mode,
                            DeviceTag)
   {
-    VTKM_ASSERT(inPretendDimY = cADimY + cDDimY);
+    VTKM_ASSERT(inPretendDimY == (cADimY + cDDimY));
 
     // determine extension modes
     DWTMode cATopMode, cADownMode, cDTopMode, cDDownMode;
@@ -2631,7 +2631,7 @@ public:
                              DWTMode mode,
                              DeviceTag)
   {
-    VTKM_ASSERT(inPretendDimZ = cADimZ + cDDimZ);
+    VTKM_ASSERT(inPretendDimZ == (cADimZ + cDDimZ));
 
     // determine extension modes
     DWTMode cAFrontMode, cABackMode, cDFrontMode, cDBackMode;

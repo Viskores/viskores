@@ -40,7 +40,9 @@
   THRUST_SUBMINOR_VERSION < 3
 // Workaround a bug in thrust 1.8.0 - 1.8.2 scan implementations which produces
 // wrong results
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/detail/type_traits.h>
+VTKM_THIRDPARTY_POST_INCLUDE
 #define THRUST_SCAN_WORKAROUND
 #endif
 
@@ -208,6 +210,7 @@ public:
                               vtkm::Id& clipTableIdx,
                               ClipStats& stats) const
     {
+      (void)shape; // C4100 false positive workaround
       const vtkm::Id mask[] = { 1, 2, 4, 8, 16, 32, 64, 128 };
 
       vtkm::Id caseId = 0;
@@ -289,6 +292,7 @@ public:
       ReverseMapWholeArrayType& newPointsConnectivityReverseMap,
       CellMapType& cellMap) const
     {
+      (void)shape; //C4100 false positive workaround
       vtkm::Id idx = clipTableIdx;
 
       // index of first cell

@@ -72,12 +72,28 @@ public:
                               const PointsVecType& points,
                               vtkm::Vec<T, 3>& normal) const
     {
-      normal = vtkm::TypeTraits<vtkm::Vec<T, 3>>::ZeroInitialization();
-      if (vtkm::CellTraits<CellShapeTag>::TOPOLOGICAL_DIMENSIONS == 2)
-      {
-        normal = this->Normal(vtkm::Cross(points[2] - points[1], points[0] - points[1]));
-      }
+      using CTraits = vtkm::CellTraits<CellShapeTag>;
+      const auto tag = typename CTraits::TopologicalDimensionsTag();
+      this->Compute(tag, points, normal);
     }
+
+    template <vtkm::IdComponent Dim, typename PointsVecType, typename T>
+    VTKM_EXEC void Compute(vtkm::CellTopologicalDimensionsTag<Dim>,
+                           const PointsVecType&,
+                           vtkm::Vec<T, 3>& normal) const
+    {
+      normal = vtkm::TypeTraits<vtkm::Vec<T, 3>>::ZeroInitialization();
+    }
+
+    template <typename PointsVecType, typename T>
+    VTKM_EXEC void Compute(vtkm::CellTopologicalDimensionsTag<2>,
+                           const PointsVecType& points,
+                           vtkm::Vec<T, 3>& normal) const
+    {
+      normal = this->Normal(vtkm::Cross(points[2] - points[1], points[0] - points[1]));
+    }
+
+
 
     template <typename PointsVecType, typename T>
     VTKM_EXEC void operator()(vtkm::CellShapeTagGeneric shape,

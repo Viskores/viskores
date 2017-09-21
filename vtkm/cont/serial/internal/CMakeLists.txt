@@ -24,13 +24,15 @@ set(headers
   DeviceAdapterTagSerial.h
   VirtualObjectTransferSerial.h
   )
+vtkm_declare_headers(${headers})
 
 add_library(vtkm_cont_serial OBJECT
   ArrayManagerExecutionSerial.cxx
   DeviceAdapterAlgorithmSerial.cxx
   )
 
-vtkm_declare_headers(${headers})
+
+vtkm_setup_msvc_properties(vtkm_cont_serial)
 
 target_compile_features(vtkm_cont_serial PRIVATE cxx_auto_type)
 target_compile_definitions(vtkm_cont_serial PRIVATE vtkm_cont_EXPORTS)

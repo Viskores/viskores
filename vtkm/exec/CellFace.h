@@ -191,6 +191,7 @@ template <typename CellShapeTag>
 static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfFaces(CellShapeTag shape,
                                                                 const vtkm::exec::FunctorBase&)
 {
+  (void)shape; //C4100 false positive workaround
   return detail::NumFaces[shape.Id];
 }
 

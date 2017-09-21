@@ -213,13 +213,15 @@
  *     See @ref option::Descriptor::longopt for information on how to collect unknown options.
  *
  */
+#ifndef vtk_m_testing_OPTIONPARSER_H_
+#define vtk_m_testing_OPTIONPARSER_H_
 
 #ifdef _MSC_VER
 #include <intrin.h>
+#pragma warning(push)
+#pragma warning(disable : 4610)
 #endif
 
-#ifndef vtk_m_testing_OPTIONPARSER_H_
-#define vtk_m_testing_OPTIONPARSER_H_
 
 namespace vtkm
 {
@@ -3067,5 +3069,9 @@ void printUsage(Function* prn,
 }
 }
 // namespace vtkm::testing
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif /* OPTIONPARSER_H_ */

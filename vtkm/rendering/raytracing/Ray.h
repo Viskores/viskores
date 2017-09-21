@@ -273,7 +273,7 @@ public:
   {
     const size_t numBuffers = this->Buffers.size();
     bool found = false;
-    size_t index;
+    size_t index = 0;
     for (size_t i = 0; i < numBuffers; ++i)
     {
       if (this->Buffers[i].GetName() == name)

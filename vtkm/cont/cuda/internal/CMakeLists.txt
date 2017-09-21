@@ -55,8 +55,14 @@ if (VTKm_ENABLE_CUDA)
     list(APPEND compile_options -Xcompiler=-fPIC)
   endif()
 
+  vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
+
   cuda_compile(vtkm_cont_cuda_object_files ${sources}
                OPTIONS "${compile_options}")
+
+  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+  set(CMAKE_CXX_FLAGS ${old_cxx_flags})
+
 
   #Setup the dependency chain for the custom object build so that
   add_custom_target(vtkm_cont_cuda DEPENDS ${vtkm_cont_cuda_object_files})

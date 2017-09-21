@@ -21,7 +21,9 @@
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <cuda_runtime.h>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 // These static vars are in an anon namespace to work around MSVC linker issues.
 namespace

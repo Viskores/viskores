@@ -876,7 +876,7 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   // polygon. The point is in the triangle if it is on the correct side of both
   // planes.
   vtkm::IdComponent firstPointIndex;
-  vtkm::IdComponent secondPointIndex;
+  vtkm::IdComponent secondPointIndex = 0;
   bool foundTriangle = false;
   for (firstPointIndex = 0; firstPointIndex < numPoints - 1; firstPointIndex++)
   {

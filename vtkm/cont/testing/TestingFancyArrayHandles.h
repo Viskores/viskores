@@ -85,9 +85,10 @@ struct ValueScale
   VTKM_EXEC_CONT ValueType operator()(const ValueType& v) const
   {
     using Traits = vtkm::VecTraits<ValueType>;
+    using TTraits = vtkm::TypeTraits<ValueType>;
     using ComponentType = typename Traits::ComponentType;
 
-    ValueType result;
+    ValueType result = TTraits::ZeroInitialization();
     for (vtkm::IdComponent i = 0; i < Traits::GetNumberOfComponents(v); ++i)
     {
       vtkm::Float64 vi = static_cast<vtkm::Float64>(Traits::GetComponent(v, i));

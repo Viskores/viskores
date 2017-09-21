@@ -330,7 +330,7 @@ public:
     if (fullSize % numBlocks != 0)
       blockSize += 1;
 
-    U lastResult;
+    U lastResult = vtkm::TypeTraits<U>::ZeroInitialization();
     for (vtkm::Id block = 0; block < numBlocks; block++)
     {
       vtkm::Id numberOfInstances = blockSize;
@@ -539,7 +539,7 @@ public:
     if (fullSize % numBlocks != 0)
       blockSize += 1;
 
-    T lastResult;
+    T lastResult = vtkm::TypeTraits<T>::ZeroInitialization();
     for (vtkm::Id block = 0; block < numBlocks; block++)
     {
       vtkm::Id numberOfInstances = blockSize;

@@ -103,6 +103,7 @@ struct ExternalFaces
     VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag shape,
                                            const PointCoordVecType& pointCoordinates) const
     {
+      (void)shape; // C4100 false positive workaround
       VTKM_ASSERT(shape.Id == CELL_SHAPE_HEXAHEDRON);
 
       vtkm::IdComponent count = 0;

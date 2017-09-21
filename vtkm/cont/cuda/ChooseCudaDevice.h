@@ -25,8 +25,11 @@
 #include <vtkm/cont/cuda/ErrorCuda.h>
 
 #include <algorithm>
-#include <cuda.h>
 #include <vector>
+
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <cuda.h>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
 {
