@@ -63,8 +63,8 @@ private:
     {
       const int VTKDims = 3; // VTK files always require 3 dims for points
 
-      typedef typename PortalType::ValueType ValueType;
-      typedef typename vtkm::VecTraits<ValueType> VecType;
+      using ValueType = typename PortalType::ValueType;
+      using VecType = typename vtkm::VecTraits<ValueType>;
 
       const ValueType& value = portal.Get(index);
 
@@ -105,8 +105,8 @@ private:
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
-      typedef typename PortalType::ValueType ValueType;
-      typedef typename vtkm::VecTraits<ValueType> VecType;
+      using ValueType = typename PortalType::ValueType;
+      using VecType = typename vtkm::VecTraits<ValueType>;
 
       const ValueType& value = portal.Get(index);
 
@@ -144,7 +144,7 @@ public:
   template <typename ArrayHandleType>
   void operator()(const ArrayHandleType&) const
   {
-    typedef typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType DataType;
+    using DataType = typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType;
     *this->Name = vtkm::io::internal::DataTypeName<DataType>::Name();
   }
 

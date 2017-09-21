@@ -64,7 +64,7 @@ public:
   }
 
 private:
-  typedef enum { ByteData, ShortData, IntegerData, FloatData, DoubleData } DataFormat;
+  using DataFormat = enum { ByteData, ShortData, IntegerData, FloatData, DoubleData };
 
   void LoadFile()
   {

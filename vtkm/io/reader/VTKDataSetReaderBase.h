@@ -80,17 +80,17 @@ inline void parseAssert(bool condition)
 template <typename T>
 struct StreamIOType
 {
-  typedef T Type;
+  using Type = T;
 };
 template <>
 struct StreamIOType<vtkm::Int8>
 {
-  typedef vtkm::Int16 Type;
+  using Type = vtkm::Int16;
 };
 template <>
 struct StreamIOType<vtkm::UInt8>
 {
-  typedef vtkm::UInt16 Type;
+  using Type = vtkm::UInt16;
 };
 
 // Since Fields and DataSets store data in the default DynamicArrayHandle, convert
@@ -99,83 +99,83 @@ struct StreamIOType<vtkm::UInt8>
 template <typename T>
 struct ClosestCommonType
 {
-  typedef T Type;
+  using Type = T;
 };
 template <>
 struct ClosestCommonType<vtkm::Int8>
 {
-  typedef vtkm::Int32 Type;
+  using Type = vtkm::Int32;
 };
 template <>
 struct ClosestCommonType<vtkm::UInt8>
 {
-  typedef vtkm::Int32 Type;
+  using Type = vtkm::Int32;
 };
 template <>
 struct ClosestCommonType<vtkm::Int16>
 {
-  typedef vtkm::Int32 Type;
+  using Type = vtkm::Int32;
 };
 template <>
 struct ClosestCommonType<vtkm::UInt16>
 {
-  typedef vtkm::Int32 Type;
+  using Type = vtkm::Int32;
 };
 template <>
 struct ClosestCommonType<vtkm::UInt32>
 {
-  typedef vtkm::Int64 Type;
+  using Type = vtkm::Int64;
 };
 template <>
 struct ClosestCommonType<vtkm::UInt64>
 {
-  typedef vtkm::Int64 Type;
+  using Type = vtkm::Int64;
 };
 
 template <typename T>
 struct ClosestFloat
 {
-  typedef T Type;
+  using Type = T;
 };
 template <>
 struct ClosestFloat<vtkm::Int8>
 {
-  typedef vtkm::Float32 Type;
+  using Type = vtkm::Float32;
 };
 template <>
 struct ClosestFloat<vtkm::UInt8>
 {
-  typedef vtkm::Float32 Type;
+  using Type = vtkm::Float32;
 };
 template <>
 struct ClosestFloat<vtkm::Int16>
 {
-  typedef vtkm::Float32 Type;
+  using Type = vtkm::Float32;
 };
 template <>
 struct ClosestFloat<vtkm::UInt16>
 {
-  typedef vtkm::Float32 Type;
+  using Type = vtkm::Float32;
 };
 template <>
 struct ClosestFloat<vtkm::Int32>
 {
-  typedef vtkm::Float64 Type;
+  using Type = vtkm::Float64;
 };
 template <>
 struct ClosestFloat<vtkm::UInt32>
 {
-  typedef vtkm::Float64 Type;
+  using Type = vtkm::Float64;
 };
 template <>
 struct ClosestFloat<vtkm::Int64>
 {
-  typedef vtkm::Float64 Type;
+  using Type = vtkm::Float64;
 };
 template <>
 struct ClosestFloat<vtkm::UInt64>
 {
-  typedef vtkm::Float64 Type;
+  using Type = vtkm::Float64;
 };
 
 template <typename T>
@@ -185,7 +185,7 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T>& ve
   {
     case 1:
     {
-      typedef typename ClosestCommonType<T>::Type CommonType;
+      using CommonType = typename ClosestCommonType<T>::Type;
       if (!std::is_same<T, CommonType>::value)
       {
         std::cerr << "Type " << vtkm::io::internal::DataTypeName<T>::Name()
@@ -205,9 +205,9 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T>& ve
     case 2:
     case 3:
     {
-      typedef typename vtkm::VecTraits<T>::ComponentType InComponentType;
-      typedef typename ClosestFloat<InComponentType>::Type OutComponentType;
-      typedef vtkm::Vec<OutComponentType, 3> CommonType;
+      using InComponentType = typename vtkm::VecTraits<T>::ComponentType;
+      using OutComponentType = typename ClosestFloat<InComponentType>::Type;
+      using CommonType = vtkm::Vec<OutComponentType, 3>;
       if (!std::is_same<T, CommonType>::value)
       {
         std::cerr << "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name() << "["
@@ -753,7 +753,7 @@ protected:
     }
     else
     {
-      typedef typename vtkm::VecTraits<T>::ComponentType ComponentType;
+      using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
       const vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
 
       for (std::size_t i = 0; i < numElements; ++i)
@@ -794,7 +794,7 @@ protected:
     }
     else
     {
-      typedef typename vtkm::VecTraits<T>::ComponentType ComponentType;
+      using ComponentType = typename vtkm::VecTraits<T>::ComponentType;
       const vtkm::IdComponent numComponents = vtkm::VecTraits<T>::NUM_COMPONENTS;
 
       for (std::size_t i = 0; i < numElements; ++i)
