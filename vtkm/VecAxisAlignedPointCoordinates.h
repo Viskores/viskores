@@ -67,7 +67,7 @@ const vtkm::FloatDefault VecAxisAlignedPointCoordinatesOffsetTable[8][3] = {
 /// \brief An implicit vector for point coordinates in axis aligned cells. For
 /// internal use only.
 ///
-/// The \C VecAxisAlignedPointCoordinates class is a Vec-like class that holds
+/// The \c VecAxisAlignedPointCoordinates class is a Vec-like class that holds
 /// the point coordinates for a axis aligned cell. The class is templated on the
 /// dimensions of the cell, which can be 1 (for a line).
 ///

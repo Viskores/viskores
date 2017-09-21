@@ -266,6 +266,8 @@ struct CellSetExplicitConnectivityChooser<CellSetType,
 
 } // namespace detail
 
+/// \cond
+/// Make doxygen ignore this section
 #ifndef vtk_m_cont_CellSetExplicit_cxx
 extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetExplicit<>; // default
 extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetExplicit<
@@ -274,6 +276,7 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetExplicit<
   VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
   typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>; // CellSetSingleType base
 #endif
+/// \endcond
 }
 } // namespace vtkm::cont
 
