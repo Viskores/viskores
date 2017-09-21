@@ -35,7 +35,7 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::ScheduleTask(
   vtkm::exec::internal::ErrorMessageBuffer errorMessage(errorString, MESSAGE_SIZE);
   functor.SetErrorMessageBuffer(errorMessage);
 
-  ::tbb::blocked_range<vtkm::Id> range(0, size);
+  ::tbb::blocked_range<vtkm::Id> range(0, size, tbb::TBB_GRAIN_SIZE);
 
   ::tbb::parallel_for(
     range, [&](const ::tbb::blocked_range<vtkm::Id>& r) { functor(r.begin(), r.end()); });
