@@ -50,9 +50,11 @@ void View3D::Paint()
 {
   this->GetCanvas().Activate();
   this->GetCanvas().Clear();
+
   this->SetupForWorldSpace();
-  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
   this->RenderWorldAnnotations();
+  this->GetScene().Render(this->GetMapper(), this->GetCanvas(), this->GetCamera());
+
   this->SetupForScreenSpace();
   this->RenderAnnotations();
   this->RenderScreenAnnotations();
