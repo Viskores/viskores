@@ -47,6 +47,7 @@ set(headers
   PolicyBase.h
   PolicyDefault.h
   Result.h
+  Streamline.h
   SurfaceNormals.h
   Tetrahedralize.h
   Threshold.h
@@ -80,6 +81,7 @@ set(header_template_sources
   NDHistogram.hxx
   PointAverage.hxx
   PointElevation.hxx
+  Streamline.hxx
   SurfaceNormals.hxx
   Tetrahedralize.hxx
   Threshold.hxx
