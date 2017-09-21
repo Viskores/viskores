@@ -18,6 +18,8 @@
 //  this software.
 //============================================================================
 #include <vtkm/cont/testing/Testing.h>
+
+#include <GL/glew.h>
 #include <vtkm/interop/internal/BufferTypePicker.h>
 
 namespace

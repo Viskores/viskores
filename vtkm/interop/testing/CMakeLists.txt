@@ -54,7 +54,7 @@ else()
 endif()
 
 
-vtkm_declare_headers(${headers})
+vtkm_declare_headers(${headers} TESTABLE FALSE)
 vtkm_unit_tests(SOURCES ${unit_tests})
 if(needs_rendering)
   target_link_libraries(UnitTests_vtkm_interop_testing PRIVATE vtkm_rendering)

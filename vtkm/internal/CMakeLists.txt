@@ -29,16 +29,12 @@ set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
 set(VTKM_ENABLE_CUDA ${VTKm_ENABLE_CUDA})
 set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
 
-set(VTKM_ENABLE_OPENGL_INTEROP ${VTKm_ENABLE_OPENGL_INTEROP})
-
 vtkm_get_kit_name(kit_name kit_dir)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
   ${VTKm_BINARY_DIR}/include/${kit_dir}/Configure.h
   @ONLY)
 vtkm_install_headers(
   vtkm/internal ${VTKm_BINARY_DIR}/include/${kit_dir}/Configure.h)
-
-unset(VTKM_ENABLE_OPENGL_INTEROP)
 
 unset(VTKM_ENABLE_TBB)
 unset(VTKM_ENABLE_CUDA)

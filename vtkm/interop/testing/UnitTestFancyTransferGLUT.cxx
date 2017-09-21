@@ -17,6 +17,15 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+// OpenGL Graphics includes
+//glew needs to go before glut
+#include <GL/glew.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
 
 #include <vtkm/interop/testing/TestingTransferFancyHandles.h>
 
@@ -24,15 +33,6 @@
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
-// OpenGL Graphics includes
-//glew needs to go before glut
-#include <vtkm/interop/internal/OpenGLHeaders.h>
-#if defined(__APPLE__)
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
 #endif
 
 #if defined(VTKM_GCC) && defined(VTKM_POSIX) && !defined(__APPLE__)
