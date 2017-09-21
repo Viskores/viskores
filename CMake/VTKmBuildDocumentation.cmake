@@ -37,9 +37,14 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/doxyfile.in ${VTKm_DOXYFILE}
 # Run Doxygen
 #-----------------------------------------------------------------------------
 function(vtkm_build_documentation)
+  if(WIN32)
+    set(doxygen_redirect NUL)
+  else()
+    set(doxygen_redirect /dev/null)
+  endif()
   add_custom_command(
     OUTPUT ${VTKm_BINARY_DIR}/docs/doxygen
-    COMMAND ${DOXYGEN_EXECUTABLE} ${VTKm_DOXYFILE} > /dev/null
+    COMMAND ${DOXYGEN_EXECUTABLE} ${VTKm_DOXYFILE} > ${doxygen_redirect}
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/CMake/doxyfile.in
     DEPENDS ${VTKm_DOXYFILE}
     COMMENT "Generating VTKm Documentation"
