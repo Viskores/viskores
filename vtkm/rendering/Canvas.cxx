@@ -154,6 +154,7 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
     BarBottomLeft[0] = xBounds[0];
     BarBottomLeft[1] = yBounds[0];
     BarWidth = xBounds[1] - xBounds[0];
+    BarHeight = yBounds[1] - yBounds[0];
   }
 
   template <typename FrameBuffer, typename ColorMap>
@@ -163,7 +164,7 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
   {
     // local bar coord
     vtkm::Id x = index % BarWidth;
-    vtkm::Id y = index / BarWidth;
+    vtkm::Id y = index / BarWidth, yLocal = y;
     vtkm::Id sample = Horizontal ? x : y;
     vtkm::Vec<vtkm::Float32, 4> color = colorMap.Get(sample);
 
@@ -172,13 +173,33 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
     y += BarBottomLeft[1];
 
     vtkm::Id offset = y * ImageWidth + x;
-    frameBuffer.Set(offset, color);
+    // If the colortable has alpha values, we blend each color sample with translucent white.
+    // The height of the resultant translucent bar indicates the opacity.
+    vtkm::Float32 normalizedHeight = static_cast<vtkm::Float32>(yLocal) / BarHeight;
+    if (color[3] < 1.0f && normalizedHeight <= color[3])
+    {
+      vtkm::Float32 intensity = 0.4f;
+      vtkm::Vec<vtkm::Float32, 4> blendedColor;
+      vtkm::Vec<vtkm::Float32, 4> srcColor = color;
+      vtkm::Float32 inverseIntensity = (1.0f - intensity);
+      vtkm::Float32 alpha = srcColor[3] * inverseIntensity;
+      blendedColor[0] = 1.0f * intensity + srcColor[0] * alpha;
+      blendedColor[1] = 1.0f * intensity + srcColor[1] * alpha;
+      blendedColor[2] = 1.0f * intensity + srcColor[2] * alpha;
+      blendedColor[3] = 1.0f;
+      frameBuffer.Set(offset, blendedColor);
+    }
+    else
+    {
+      frameBuffer.Set(offset, color);
+    }
   }
 
   vtkm::Id ImageWidth;
   vtkm::Id ImageHeight;
   vtkm::Id2 BarBottomLeft;
   vtkm::Id BarWidth;
+  vtkm::Id BarHeight;
   bool Horizontal;
 }; // struct DrawColorBar
 
