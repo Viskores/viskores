@@ -50,7 +50,6 @@ public:
   VTKM_CONT
   void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& seeds);
 
-
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT vtkm::filter::Result DoExecute(
     const vtkm::cont::DataSet& input,
@@ -80,7 +79,9 @@ class FilterTraits<Streamline>
 {
 public:
   struct TypeListTagStreamline
-    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
+    // This is causing some bizarre compiler errors.
+    //      : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,3>, vtkm::Vec<vtkm::Float64,3>>
+    : vtkm::ListTagBase<vtkm::Vec<vtkm::FloatDefault, 3>>
   {
   };
   typedef TypeListTagStreamline InputFieldTypeList;
