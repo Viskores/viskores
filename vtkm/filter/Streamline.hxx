@@ -96,7 +96,12 @@ inline VTKM_CONT vtkm::filter::Result Streamline::DoExecute(
   vtkm::worklet::StreamlineResult<T> res;
   res = Worklet.Run(rk4, this->Seeds, this->NumberOfSteps, device);
 
-  return vtkm::filter::Result();
+  vtkm::cont::DataSet outData;
+  vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
+  outData.AddCellSet(res.polyLines);
+  outData.AddCoordinateSystem(outputCoords);
+
+  return vtkm::filter::Result(outData);
 }
 
 //-----------------------------------------------------------------------------
