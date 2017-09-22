@@ -109,27 +109,6 @@ inline VTKM_CONT bool Streamline::DoMapField(
   const DeviceAdapter& device)
 {
   return true;
-
-
-#if 0
-  vtkm::cont::ArrayHandle<T> fieldArray;
-  if (fieldMeta.IsPointField())
-  {
-    fieldArray = this->Worklet.ProcessPointField(input, device);
-  }
-  else if (fieldMeta.IsCellField())
-  {
-    fieldArray = this->Worklet.ProcessCellField(input, device);
-  }
-  else
-  {
-    return false;
-  }
-
-  //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
-  return true;
-#endif
 }
 }
 } // namespace vtkm::filter
