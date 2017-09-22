@@ -102,11 +102,11 @@ inline VTKM_CONT vtkm::filter::Result Streamline::DoExecute(
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool Streamline::DoMapField(
-  vtkm::filter::Result& result,
-  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& input,
-  const vtkm::filter::FieldMetadata& fieldMeta,
+  vtkm::filter::Result&,
+  const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>&,
+  const vtkm::filter::FieldMetadata&,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
-  const DeviceAdapter& device)
+  const DeviceAdapter&)
 {
   return true;
 }
