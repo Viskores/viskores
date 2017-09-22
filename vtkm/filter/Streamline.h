@@ -79,9 +79,7 @@ class FilterTraits<Streamline>
 {
 public:
   struct TypeListTagStreamline
-    // This is causing some bizarre compiler errors.
-    //      : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32,3>, vtkm::Vec<vtkm::Float64,3>>
-    : vtkm::ListTagBase<vtkm::Vec<vtkm::FloatDefault, 3>>
+    : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
   {
   };
   typedef TypeListTagStreamline InputFieldTypeList;
