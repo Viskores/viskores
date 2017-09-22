@@ -6,17 +6,26 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+// OpenGL Graphics includes
+//glew needs to go before glut
+#include <GL/glew.h>
+#include <vtkm/interop/internal/OpenGLHeaders.h>
+#if defined(__APPLE__)
+#include <GLUT/glut.h>
+#else
+#include <GL/glut.h>
+#endif
 
 //This sets up testing with the default device adapter and array container
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -26,15 +35,6 @@
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-
-// OpenGL Graphics includes
-//glew needs to go before glut
-#include <vtkm/interop/internal/OpenGLHeaders.h>
-#if defined(__APPLE__)
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
 #endif
 
 #if defined(VTKM_GCC) && defined(VTKM_POSIX) && !defined(__APPLE__)

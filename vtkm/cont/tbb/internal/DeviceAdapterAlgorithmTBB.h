@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -45,6 +45,31 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>
       vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
+  template <typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output)
+  {
+    ::vtkm::NotZeroInitialized unary_predicate;
+    CopyIf(input, stencil, output, unary_predicate);
+  }
+
+  template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output,
+                               UnaryPredicate unary_predicate)
+  {
+    vtkm::Id inputSize = input.GetNumberOfValues();
+    VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
+    vtkm::Id outputSize =
+      tbb::CopyIfPortals(input.PrepareForInput(DeviceAdapterTagTBB()),
+                         stencil.PrepareForInput(DeviceAdapterTagTBB()),
+                         output.PrepareForOutput(inputSize, DeviceAdapterTagTBB()),
+                         unary_predicate);
+    output.Shrink(outputSize);
+  }
+
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
@@ -217,6 +242,21 @@ public:
       ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
       Sort(zipHandle, vtkm::cont::internal::KeyCompare<T, U, Compare>(comp));
     }
+  }
+
+  template <typename T, class Storage>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
+  {
+    Unique(values, std::equal_to<T>());
+  }
+
+  template <typename T, class Storage, class BinaryCompare>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
+                               BinaryCompare binary_compare)
+  {
+    vtkm::Id outputSize =
+      tbb::UniquePortals(values.PrepareForInPlace(DeviceAdapterTagTBB()), binary_compare);
+    values.Shrink(outputSize);
   }
 
   VTKM_CONT static void Synchronize()

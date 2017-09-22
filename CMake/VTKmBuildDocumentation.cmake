@@ -6,11 +6,11 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 Sandia Corporation.
+##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 ##  Copyright 2014 UT-Battelle, LLC.
 ##  Copyright 2014 Los Alamos National Security.
 ##
-##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+##  Under the terms of Contract DE-NA0003525 with NTESS,
 ##  the U.S. Government retains certain rights in this software.
 ##
 ##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -37,9 +37,14 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CMake/doxyfile.in ${VTKm_DOXYFILE}
 # Run Doxygen
 #-----------------------------------------------------------------------------
 function(vtkm_build_documentation)
+  if(WIN32)
+    set(doxygen_redirect NUL)
+  else()
+    set(doxygen_redirect /dev/null)
+  endif()
   add_custom_command(
     OUTPUT ${VTKm_BINARY_DIR}/docs/doxygen
-    COMMAND ${DOXYGEN_EXECUTABLE} ${VTKm_DOXYFILE} > /dev/null
+    COMMAND ${DOXYGEN_EXECUTABLE} ${VTKm_DOXYFILE} > ${doxygen_redirect}
     MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/CMake/doxyfile.in
     DEPENDS ${VTKm_DOXYFILE}
     COMMENT "Generating VTKm Documentation"

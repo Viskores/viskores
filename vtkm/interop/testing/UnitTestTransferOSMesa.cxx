@@ -6,23 +6,23 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //o
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
-//This sets up testing with the default device adapter and array container
-
-#include <vtkm/cont/serial/DeviceAdapterSerial.h>
+#include <GL/glew.h>
 #include <vtkm/interop/testing/TestingOpenGLInterop.h>
 #include <vtkm/rendering/CanvasOSMesa.h>
+
+//This sets up testing with the default device adapter and array container
+#include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
 int UnitTestTransferOSMesa(int, char* [])
 {

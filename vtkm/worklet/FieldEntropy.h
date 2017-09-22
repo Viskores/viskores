@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -24,15 +24,17 @@
 #include <vtkm/Math.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
-#include <vtkm/worklet/DispatcherMapField.h>
-#include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/FieldHistogram.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 #include <vtkm/cont/Field.h>
 
-namespace vtkm {
-namespace worklet {
+namespace vtkm
+{
+namespace worklet
+{
 
 //simple functor that returns basic statistics
 class FieldEntropy
@@ -42,21 +44,22 @@ public:
   class SetBinInformationContent : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> freq,
-                                  FieldOut<> informationContent);
-    typedef void ExecutionSignature(_1,_2);
+    typedef void ControlSignature(FieldIn<> freq, FieldOut<> informationContent);
+    typedef void ExecutionSignature(_1, _2);
 
     vtkm::Float64 FreqSum;
 
     VTKM_CONT
-    SetBinInformationContent(vtkm::Float64 _freqSum) : FreqSum(_freqSum) {}
-
-    template<typename FreqType>
-    VTKM_EXEC
-    void operator()(const FreqType &freq, vtkm::Float64 &informationContent) const
+    SetBinInformationContent(vtkm::Float64 _freqSum)
+      : FreqSum(_freqSum)
     {
-      vtkm::Float64 p = ( (vtkm::Float64)freq ) / FreqSum;
-      if( p > 0 )
+    }
+
+    template <typename FreqType>
+    VTKM_EXEC void operator()(const FreqType& freq, vtkm::Float64& informationContent) const
+    {
+      vtkm::Float64 p = ((vtkm::Float64)freq) / FreqSum;
+      if (p > 0)
         informationContent = -1 * p * vtkm::Log2(p);
       else
         informationContent = 0;
@@ -67,10 +70,10 @@ public:
   // Execute the entropy computation filter given data(a field) and number of bins
   // Returns:
   // Entropy (log2) of the field of the data
-  template<typename FieldType, typename Storage, typename DeviceAdapter>
+  template <typename FieldType, typename Storage, typename DeviceAdapter>
   vtkm::Float64 Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray,
-           vtkm::Id numberOfBins,
-           DeviceAdapter device)
+                    vtkm::Id numberOfBins,
+                    DeviceAdapter device)
   {
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
 
@@ -87,18 +90,19 @@ public:
 
     ///// calculate information content of each bin using self-define worklet /////
     vtkm::cont::ArrayHandle<vtkm::Float64> informationContent;
-    SetBinInformationContent binWorklet( static_cast<vtkm::Float64> (freqSum) );
-    vtkm::worklet::DispatcherMapField< SetBinInformationContent > setBinInformationContentDispatcher(binWorklet);
+    SetBinInformationContent binWorklet(static_cast<vtkm::Float64>(freqSum));
+    vtkm::worklet::DispatcherMapField<SetBinInformationContent> setBinInformationContentDispatcher(
+      binWorklet);
     setBinInformationContentDispatcher.Invoke(binArray, informationContent);
 
     ///// calculate entropy by summing up information conetent of all bins /////
     vtkm::Float64 initEntropyValue = 0;
-    vtkm::Float64 entropy = DeviceAlgorithms::Reduce(informationContent, initEntropyValue, vtkm::Sum());
+    vtkm::Float64 entropy =
+      DeviceAlgorithms::Reduce(informationContent, initEntropyValue, vtkm::Sum());
 
     return entropy;
   }
 };
-
 }
 } // namespace vtkm::worklet
 

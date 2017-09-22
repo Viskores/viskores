@@ -6,11 +6,11 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2016 Sandia Corporation.
+##  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 ##  Copyright 2016 UT-Battelle, LLC.
 ##  Copyright 2016 Los Alamos National Security.
 ##
-##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+##  Under the terms of Contract DE-NA0003525 with NTESS,
 ##  the U.S. Government retains certain rights in this software.
 ##
 ##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -41,7 +41,6 @@ set(VTKm_AVAILABLE_COMPONENTS
   EGL
   GLFW
   GLUT
-  Interop
   Rendering
   TBB
   CUDA
@@ -162,7 +161,6 @@ macro(vtkm_configure_component_OpenGL)
   #explicitly or else in release mode we get sigsegv on launch
   if(UNIX)
     find_package(Threads ${VTKm_FIND_PACKAGE_QUIETLY})
-    list(APPEND vtkm_interop_dependent_vars CMAKE_USE_PTHREADS_INIT)
     list(APPEND vtkm_opengl_libraries ${CMAKE_THREAD_LIBS_INIT})
   endif()
 
@@ -231,14 +229,6 @@ macro(vtkm_configure_component_GLUT)
     ADD_LIBRARIES ${GLUT_LIBRARIES}
     )
 endmacro(vtkm_configure_component_GLUT)
-
-macro(vtkm_configure_component_Interop)
-  vtkm_configure_component_OpenGL()
-
-  vtkm_finish_configure_component(Interop
-    DEPENDENT_VARIABLES VTKm_OpenGL_FOUND VTKm_ENABLE_OPENGL_INTEROP
-    )
-endmacro(vtkm_configure_component_Interop)
 
 macro(vtkm_configure_component_Rendering)
   if(VTKm_ENABLE_RENDERING)

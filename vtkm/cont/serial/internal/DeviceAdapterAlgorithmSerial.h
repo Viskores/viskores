@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -50,6 +50,43 @@ private:
   using Device = vtkm::cont::DeviceAdapterTagSerial;
 
 public:
+  template <typename T, typename U, class CIn, class CStencil, class COut>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output)
+  {
+    ::vtkm::NotZeroInitialized unary_predicate;
+    CopyIf(input, stencil, output, unary_predicate);
+  }
+
+  template <typename T, typename U, class CIn, class CStencil, class COut, class UnaryPredicate>
+  VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                               const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
+                               vtkm::cont::ArrayHandle<T, COut>& output,
+                               UnaryPredicate predicate)
+  {
+    vtkm::Id inputSize = input.GetNumberOfValues();
+    VTKM_ASSERT(inputSize == stencil.GetNumberOfValues());
+
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
+    auto stencilPortal = stencil.PrepareForInput(DeviceAdapterTagSerial());
+    auto outputPortal = output.PrepareForOutput(inputSize, DeviceAdapterTagSerial());
+
+    vtkm::Id readPos = 0;
+    vtkm::Id writePos = 0;
+
+    for (; readPos < inputSize; ++readPos)
+    {
+      if (predicate(stencilPortal.Get(readPos)))
+      {
+        outputPortal.Set(writePos, inputPortal.Get(readPos));
+        ++writePos;
+      }
+    }
+
+    output.Shrink(writePos);
+  }
+
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
@@ -324,6 +361,24 @@ public:
 
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
     std::sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
+  }
+
+  template <typename T, class Storage>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
+  {
+    Unique(values, std::equal_to<T>());
+  }
+
+  template <typename T, class Storage, class BinaryCompare>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
+                               BinaryCompare binary_compare)
+  {
+    auto arrayPortal = values.PrepareForInPlace(Device());
+    vtkm::cont::ArrayPortalToIterators<decltype(arrayPortal)> iterators(arrayPortal);
+    internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
+
+    auto end = std::unique(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
+    values.Shrink(static_cast<vtkm::Id>(end - iterators.GetBegin()));
   }
 
   VTKM_CONT static void Synchronize()
