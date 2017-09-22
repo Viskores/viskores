@@ -88,4 +88,12 @@ elseif(CMAKE_COMPILER_IS_ICCXX)
 elseif (CMAKE_COMPILER_IS_MSVCXX)
   #enable large object support so we can have 2^32 addressable sections
   list(APPEND VTKm_COMPILE_OPTIONS "/bigobj")
+
+  # Use the highest warning level for visual c++ compiler.
+  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+  endif()
+
 endif()

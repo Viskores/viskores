@@ -65,7 +65,7 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
                             const WholeFieldIn& inputField,
                             GradientOutType& outputGradient) const
   {
-    using ThreadIndices = vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>;
+    using CellThreadIndices = vtkm::exec::arg::ThreadIndicesTopologyMap<CellSetInType>;
     using ValueType = typename WholeFieldIn::ValueType;
     using CellShapeTag = typename CellSetInType::CellShapeTag;
 
@@ -73,7 +73,7 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
     for (vtkm::IdComponent i = 0; i < numCells; ++i)
     {
       const vtkm::Id cellId = cellIds[i];
-      ThreadIndices cellIndices(cellId, cellId, 0, geometry);
+      CellThreadIndices cellIndices(cellId, cellId, 0, geometry);
 
       const CellShapeTag cellShape = cellIndices.GetCellShape();
 

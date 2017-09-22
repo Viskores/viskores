@@ -110,6 +110,10 @@ public:
         outputIndices.PrepareForOutput(outputIndices.GetNumberOfValues(), Device());
     }
 
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4127) //conditional expression is constant
+#endif
     //TODO: Remove the if/then with templates.
     template <typename CellNodeVecType>
     VTKM_EXEC void operator()(const CellNodeVecType& cellIndices, const vtkm::Id& cellIndex) const
@@ -194,7 +198,11 @@ public:
         OutputIndices.Set(triangleOffset + 11, triangle);
       }
     }
+#if defined(VTKM_MSVC)
+#pragma warning(pop)
+#endif
   };
+
 
   class IndicesSort : public vtkm::worklet::WorkletMapField
   {

@@ -31,7 +31,7 @@ template <typename CoordiVecT, typename CoordiPortalT, typename CoordiT>
 VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, CoordiT& dis)
 {
   dis = std::numeric_limits<CoordiT>::max();
-  vtkm::Id nnpIdx;
+  vtkm::Id nnpIdx = 0;
 
   for (vtkm::Int32 i = 0; i < coordiPortal.GetNumberOfValues(); i++)
   {

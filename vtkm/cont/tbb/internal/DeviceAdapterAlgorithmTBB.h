@@ -210,7 +210,8 @@ public:
                                   Compare comp)
   {
     using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
-    if (sizeof(U) > sizeof(vtkm::Id))
+    VTKM_CONSTEXPR bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
+    if (larger_than_64bits)
     {
       /// More efficient sort:
       /// Move value indexes when sorting and reorder the value array at last

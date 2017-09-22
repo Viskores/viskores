@@ -164,7 +164,14 @@ void Camera::GetRealViewport(vtkm::Id screenWidth,
     vtkm::Float32 daspect =
       (this->Camera2D.Right - this->Camera2D.Left) / (this->Camera2D.Top - this->Camera2D.Bottom);
     daspect *= this->Camera2D.XScale;
-    //cerr << "waspect="<<waspect << "   \tdaspect="<<daspect<<endl;
+//cerr << "waspect="<<waspect << "   \tdaspect="<<daspect<<endl;
+
+//needed as center is a constant value
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4127) // conditional expression is constant
+#endif
+
     const bool center = true; // if false, anchor to bottom-left
     if (waspect > daspect)
     {
@@ -198,6 +205,9 @@ void Camera::GetRealViewport(vtkm::Id screenWidth,
       left = this->ViewportLeft;
       right = this->ViewportRight;
     }
+#if defined(VTKM_MSVC)
+#pragma warning(pop)
+#endif
   }
 }
 

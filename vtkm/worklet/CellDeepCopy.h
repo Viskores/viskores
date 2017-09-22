@@ -60,6 +60,7 @@ struct CellDeepCopy
                               vtkm::UInt8& outShape,
                               OutPointIndexType& outPoints) const
     {
+      (void)inShape; //C4100 false positive workaround
       outShape = inShape.Id;
 
       vtkm::IdComponent numPoints = inPoints.GetNumberOfComponents();

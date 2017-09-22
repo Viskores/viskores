@@ -47,6 +47,8 @@ add_library(vtkm_cont_tbb OBJECT
   DeviceAdapterAlgorithmTBB.cxx
   )
 
+vtkm_setup_msvc_properties(vtkm_cont_tbb)
+
 target_compile_features(vtkm_cont_tbb PRIVATE cxx_auto_type)
 target_compile_definitions(vtkm_cont_tbb PRIVATE vtkm_cont_EXPORTS)
 if(BUILD_SHARED_LIBS)

@@ -301,6 +301,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   const std::string& coordsNm,
   const std::string& cellNm)
 {
+  (void)tag; //C4100 false positive workaround
   vtkm::cont::DataSet dataSet;
 
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordsNm, coords));

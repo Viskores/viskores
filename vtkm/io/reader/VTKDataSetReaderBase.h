@@ -186,7 +186,8 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T>& ve
     case 1:
     {
       using CommonType = typename ClosestCommonType<T>::Type;
-      if (!std::is_same<T, CommonType>::value)
+      VTKM_CONSTEXPR bool not_same = !std::is_same<T, CommonType>::value;
+      if (not_same)
       {
         std::cerr << "Type " << vtkm::io::internal::DataTypeName<T>::Name()
                   << " is currently unsupported. Converting to "
@@ -208,7 +209,8 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T>& ve
       using InComponentType = typename vtkm::VecTraits<T>::ComponentType;
       using OutComponentType = typename ClosestFloat<InComponentType>::Type;
       using CommonType = vtkm::Vec<OutComponentType, 3>;
-      if (!std::is_same<T, CommonType>::value)
+      VTKM_CONSTEXPR bool not_same = !std::is_same<T, CommonType>::value;
+      if (not_same)
       {
         std::cerr << "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name() << "["
                   << vtkm::VecTraits<T>::NUM_COMPONENTS << "] "

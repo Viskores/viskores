@@ -71,10 +71,30 @@ endfunction(vtkm_setup_nvcc_flags)
 #Utility to set MSVC only COMPILE_DEFINITIONS and COMPILE_FLAGS needed to
 #reduce number of warnings and compile issues with Visual Studio
 function(vtkm_setup_msvc_properties target )
+  if(NOT MSVC)
+    return()
+  endif()
+
   #disable MSVC CRT and SCL warnings as they recommend using non standard
   #c++ extensions
   target_compile_definitions(${target} PRIVATE "_SCL_SECURE_NO_WARNINGS"
                                                "_CRT_SECURE_NO_WARNINGS")
+
+  #C4702 Generates numerous false positives with template code about
+  #      unreachable code
+  #C4505 Generates numerous warnings about unused functions being
+  #      removed when doing header test builds.
+  #C4512 Generates numerous warning that implicit assignment operators can't
+  #      be constructed. This is understood and we don't care.
+  #C4510 Generates numerous warning that implicit constructors can't
+  #      be constructed. This is understood and we don't care.
+  target_compile_options(${target} PRIVATE -wd4702 -wd4505 -wd4512 -wd4510)
+
+  # In VS2013 the C4127 warning has a bug in the implementation and
+  # generates false positive warnings for lots of template code
+  if(MSVC_VERSION LESS 1900)
+    target_compile_options(${target} PRIVATE -wd4127 )
+  endif()
 
 endfunction(vtkm_setup_msvc_properties)
 
@@ -105,6 +125,9 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   #test. this might not happen when everything depends on thrust.
   list(LENGTH cxxfiles cxxfiles_len)
   if (use_cuda AND ${cxxfiles_len} GREATER 0)
+
+    vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
+
     # Cuda compiles do not respect target_include_directories
     # and we want system includes so we have to hijack cuda
     # to do it
@@ -119,6 +142,11 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
                             )
 
     cuda_add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
+
+
+    set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+    set(CMAKE_CXX_FLAGS ${old_cxx_flags})
+
   elseif (${cxxfiles_len} GREATER 0)
     add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
     target_include_directories(TestBuild_${name} PRIVATE vtkm ${VTKm_INCLUDE_DIRS})
@@ -128,9 +156,7 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
 
-  if(MSVC)
-    vtkm_setup_msvc_properties(TestBuild_${name})
-  endif()
+  vtkm_setup_msvc_properties(TestBuild_${name})
 
   # Send the libraries created for test builds to their own directory so as to
   # not polute the directory with useful libraries.
@@ -301,9 +327,7 @@ function(vtkm_unit_tests)
 
     target_compile_options(${test_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-    if(MSVC)
-      vtkm_setup_msvc_properties(${test_prog})
-    endif()
+    vtkm_setup_msvc_properties(${test_prog})
 
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
@@ -450,9 +474,7 @@ function(vtkm_worklet_unit_tests device_adapter)
       set_tests_properties("${tname}${device_type}" PROPERTIES TIMEOUT ${timeout})
     endforeach (test)
 
-    if(MSVC)
-      vtkm_setup_msvc_properties(${test_prog})
-    endif()
+    vtkm_setup_msvc_properties(${test_prog})
 
     #set the device adapter on the executable
     target_compile_definitions(${test_prog} PRIVATE "VTKM_DEVICE_ADAPTER=${device_adapter}")
@@ -573,9 +595,7 @@ function(vtkm_benchmarks device_adapter)
       target_include_directories(${benchmark_prog} PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
       target_link_libraries(${benchmark_prog} PRIVATE vtkm_cont ${VTKm_BACKEND_LIBRARIES})
 
-      if(MSVC)
-        vtkm_setup_msvc_properties(${benchmark_prog})
-      endif()
+      vtkm_setup_msvc_properties(${benchmark_prog})
 
       #add the specific compile options for this executable
       target_compile_options(${benchmark_prog} PRIVATE ${VTKm_COMPILE_OPTIONS})
@@ -709,9 +729,7 @@ function(vtkm_library)
     RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
     )
 
-  if(MSVC)
-    vtkm_setup_msvc_properties(${lib_name})
-  endif()
+  vtkm_setup_msvc_properties(${lib_name})
 
   if(VTKm_EXTRA_COMPILER_WARNINGS)
     set(cxx_args ${CMAKE_CXX_FLAGS_WARN_EXTRA})
