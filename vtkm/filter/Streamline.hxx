@@ -90,7 +90,7 @@ inline VTKM_CONT vtkm::filter::Result Streamline::DoExecute(
 
   //RGEvalType eval(input.GetCoordinateSystem(), input.GetCellSet(0), field);
   RGEvalType eval(coords, cells, field);
-  RK4RGType rk4(eval, this->StepSize);
+  RK4RGType rk4(eval, static_cast<vtkm::FloatDefault>(this->StepSize));
 
   vtkm::worklet::Streamline streamline;
   vtkm::worklet::StreamlineResult<T> res;

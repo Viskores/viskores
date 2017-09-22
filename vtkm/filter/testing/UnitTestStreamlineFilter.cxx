@@ -55,6 +55,7 @@ void TestStreamline()
 
   streamline.SetStepSize(0.1);
   streamline.SetNumberOfSteps(20);
+  streamline.SetSeeds(seedArray);
   vtkm::cont::Field vecField = ds.GetField("vector");
 
   ds.PrintSummary(std::cout);
