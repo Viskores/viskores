@@ -33,7 +33,7 @@ void TestStreamline()
   const vtkm::Id3 dims(5, 5, 5);
   vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
 
-  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> vectorField(numPoints);
+  std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> vectorField(static_cast<std::size_t>(numPoints));
   for (vtkm::Id i = 0; i < numPoints; i++)
     vectorField[i] = vtkm::Vec<vtkm::FloatDefault, 3>(1, 0, 0);
 
