@@ -194,7 +194,7 @@ public:
   /// Given x, y, z coordinate of of training data points in \c coordi_Handle, indices to KD-tree
   /// leaf nodes in \c pointId_Handle and indices to internal nodes in \c splitId_Handle, search
   /// for nearest neighbors in the training data points for each of testing points in \c qc_Handle.
-  /// Returns indices to nearest neighbor in \cnnId_Handle and distance to nearest neighbor in
+  /// Returns indices to nearest neighbor in \c nnId_Handle and distance to nearest neighbor in
   /// \c nnDis_Handle.
 
   template <typename CoordType,

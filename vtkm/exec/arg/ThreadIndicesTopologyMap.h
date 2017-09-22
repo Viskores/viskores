@@ -158,32 +158,43 @@ private:
 namespace detail
 {
 
-// Helper function to increase an index to 3D.
+/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+///
 static inline VTKM_EXEC vtkm::Id3 InflateTo3D(vtkm::Id3 index)
 {
   return index;
 }
 
+/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// \overload
 static inline VTKM_EXEC vtkm::Id3 InflateTo3D(vtkm::Id2 index)
 {
   return vtkm::Id3(index[0], index[1], 0);
 }
 
+/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// \overload
 static inline VTKM_EXEC vtkm::Id3 InflateTo3D(vtkm::Vec<vtkm::Id, 1> index)
 {
   return vtkm::Id3(index[0], 0, 0);
 }
 
+/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// \overload
 static inline VTKM_EXEC vtkm::Id3 InflateTo3D(vtkm::Id index)
 {
   return vtkm::Id3(index, 0, 0);
 }
 
+/// Given a vtkm::Id3, reduce down to an identifer of choice.
+///
 static inline VTKM_EXEC vtkm::Id3 Deflate(const vtkm::Id3& index, vtkm::Id3)
 {
   return index;
 }
 
+/// Given a vtkm::Id3, reduce down to an identifer of choice.
+/// \overload
 static inline VTKM_EXEC vtkm::Id2 Deflate(const vtkm::Id3& index, vtkm::Id2)
 {
   return vtkm::Id2(index[0], index[1]);

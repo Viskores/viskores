@@ -562,7 +562,7 @@ public:
     }
   }
 
-  /// \breif Construct KdTree from x y z coordinate vector.
+  /// \brief Construct KdTree from x y z coordinate vector.
   ///
   /// This method constructs an array based KD-Tree from x, y, z coordinates of points in \c
   /// coordi_Handle. The method rotates between x, y and z axis and splits input points into
@@ -573,6 +573,7 @@ public:
   /// \param coordi_Handle (in) x, y, z coordinates of input points
   /// \param pointId_Handle (out) returns indices to leaf nodes of the KD-tree
   /// \param splitId_Handle (out) returns indices to internal nodes of the KD-tree
+  /// \param device the device to run the construction on
   // Leaf Node vector and internal node (split) vectpr
   template <typename CoordType, typename CoordStorageTag, typename DeviceAdapter>
   void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag>& coordi_Handle,

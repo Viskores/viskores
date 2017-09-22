@@ -309,6 +309,8 @@ namespace cont
 namespace internal
 {
 
+/// \cond
+/// Make doxygen ignore this section
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<char, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Int8, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::UInt8, StorageTagBasic>;
@@ -342,6 +344,7 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT
   Storage<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT
   Storage<vtkm::Vec<vtkm::Float64, 4>, StorageTagBasic>;
+/// \endcond
 }
 }
 }

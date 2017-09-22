@@ -96,7 +96,7 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// \brief Holds parameters and result of a function.
 ///
 /// To make VTK-m easier for the end user developer, the
-/// vtkm::cont::Dispatcher*::Invoke() method takes an arbitrary amount of
+/// \c Invoke method of dispatchers takes an arbitrary amount of
 /// arguments that get transformed and swizzled into arguments and return value
 /// for a worklet operator. In between these two invocations a complicated
 /// series of transformations and operations can occur.
