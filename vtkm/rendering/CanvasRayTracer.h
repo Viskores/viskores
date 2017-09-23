@@ -37,17 +37,7 @@ public:
 
   ~CanvasRayTracer();
 
-  void Initialize() VTKM_OVERRIDE;
-
-  void Activate() VTKM_OVERRIDE;
-
-  void Finish() VTKM_OVERRIDE;
-
-  void Clear() VTKM_OVERRIDE;
-
   vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
-
-  void BlendBackground();
 
   void WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays,
                      const vtkm::cont::ArrayHandle<vtkm::Float32>& colors,
@@ -56,32 +46,8 @@ public:
   void WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float64>& rays,
                      const vtkm::cont::ArrayHandle<vtkm::Float64>& colors,
                      const vtkm::rendering::Camera& camera);
-
-protected:
-  void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
-               const vtkm::Vec<vtkm::Float64, 2>& point1,
-               vtkm::Float32 linewidth,
-               const vtkm::rendering::Color& color) const VTKM_OVERRIDE;
-
-  void AddColorBar(const vtkm::Bounds& bounds,
-                   const vtkm::rendering::ColorTable& colorTable,
-                   bool horizontal) const VTKM_OVERRIDE;
-
-  void AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
-                      const vtkm::Vec<vtkm::Float64, 2>& point1,
-                      const vtkm::Vec<vtkm::Float64, 2>& point2,
-                      const vtkm::Vec<vtkm::Float64, 2>& point3,
-                      const vtkm::rendering::Color& color) const VTKM_OVERRIDE;
-
-  void AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
-               vtkm::Float32 scale,
-               vtkm::Float32 angle,
-               vtkm::Float32 windowAspect,
-               const vtkm::Vec<vtkm::Float32, 2>& anchor,
-               const vtkm::rendering::Color& color,
-               const std::string& text) const VTKM_OVERRIDE;
-};
+}; // class CanvasRayTracer
 }
-} //namespace vtkm::rendering
+} // namespace vtkm::rendering
 
 #endif //vtk_m_rendering_CanvasRayTracer_h

@@ -276,7 +276,7 @@ void CanvasGL::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
 
 vtkm::rendering::WorldAnnotator* CanvasGL::CreateWorldAnnotator() const
 {
-  return new vtkm::rendering::WorldAnnotatorGL;
+  return new vtkm::rendering::WorldAnnotatorGL(this);
 }
 
 void CanvasGL::RenderText(vtkm::Float32 scale,

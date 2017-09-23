@@ -23,6 +23,7 @@
 #include <vtkm/rendering/WorldAnnotator.h>
 
 #include <vtkm/rendering/BitmapFont.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/TextureGL.h>
 
 namespace vtkm
@@ -33,6 +34,8 @@ namespace rendering
 class VTKM_RENDERING_EXPORT WorldAnnotatorGL : public WorldAnnotator
 {
 public:
+  WorldAnnotatorGL(const vtkm::rendering::Canvas* canvas);
+
   ~WorldAnnotatorGL();
 
   void AddLine(const vtkm::Vec<vtkm::Float64, 3>& point0,

@@ -35,6 +35,7 @@ set(headers
   ColorTable.h
   ConnectivityProxy.h
   DecodePNG.h
+  LineRenderer.h
   MatrixHelpers.h
   Scene.h
   Mapper.h
@@ -45,6 +46,8 @@ set(headers
   TextAnnotation.h
   TextAnnotationBillboard.h
   TextAnnotationScreen.h
+  TextRenderer.h
+  Texture2D.h
   Triangulator.h
   View.h
   View1D.h
@@ -70,6 +73,7 @@ set(sources
   ColorTable.cxx
   ConnectivityProxy.cxx
   DecodePNG.cxx
+  LineRenderer.cxx
   Mapper.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
@@ -79,6 +83,7 @@ set(sources
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
+  TextRenderer.cxx
   View.cxx
   View1D.cxx
   View2D.cxx
@@ -130,8 +135,10 @@ set(osmesa_sources
 set(device_sources
   Mapper.cxx
   MapperWireframer.cxx
+  Canvas.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx
+  TextRenderer.cxx
   raytracing/BoundingVolumeHierarchy.cxx
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
