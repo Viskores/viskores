@@ -115,7 +115,7 @@ public:
     {
       throw vtkm::cont::ErrorBadValue("Connectivity tracer: cell set type unsupported");
     }
-    return NULL;
+    return nullptr;
   }
 };
 }

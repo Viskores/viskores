@@ -240,7 +240,7 @@ private:
   {
     FILE* fp = fopen(fName.c_str(), "rb");
     size_t readSize = static_cast<size_t>(sz);
-    if (fp == NULL)
+    if (fp == nullptr)
       throw vtkm::io::ErrorIO("Unable to open data file: " + fName);
     buff.resize(readSize);
     size_t nread = fread(&buff[0], sizeof(T), readSize, fp);
