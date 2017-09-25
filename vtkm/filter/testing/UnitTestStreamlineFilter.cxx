@@ -34,7 +34,7 @@ void TestStreamline()
   vtkm::Id numPoints = dims[0] * dims[1] * dims[2];
 
   std::vector<vtkm::Vec<vtkm::FloatDefault, 3>> vectorField(static_cast<std::size_t>(numPoints));
-  for (vtkm::Id i = 0; i < numPoints; i++)
+  for (std::size_t i = 0; i < static_cast<std::size_t>(numPoints); i++)
     vectorField[i] = vtkm::Vec<vtkm::FloatDefault, 3>(1, 0, 0);
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
