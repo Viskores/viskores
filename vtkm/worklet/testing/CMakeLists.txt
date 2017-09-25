@@ -67,13 +67,11 @@ set(unit_tests
   UnitTestWaveletCompressor.cxx
  )
 
-vtkm_save_worklet_unit_tests(${unit_tests})
 
-vtkm_worklet_unit_tests( VTKM_DEVICE_ADAPTER_SERIAL )
-
+vtkm_unit_tests(NAME Worklets BACKEND SERIAL SOURCES ${unit_tests})
 if (VTKm_ENABLE_CUDA)
-  vtkm_worklet_unit_tests( VTKM_DEVICE_ADAPTER_CUDA )
+  vtkm_unit_tests(NAME Worklets  BACKEND CUDA SOURCES ${unit_tests})
 endif()
 if (VTKm_ENABLE_TBB)
-  vtkm_worklet_unit_tests( VTKM_DEVICE_ADAPTER_TBB )
+  vtkm_unit_tests(NAME Worklets  BACKEND TBB SOURCES ${unit_tests})
 endif()

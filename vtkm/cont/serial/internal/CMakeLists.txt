@@ -32,16 +32,11 @@ add_library(vtkm_cont_serial OBJECT
   )
 
 
-vtkm_setup_msvc_properties(vtkm_cont_serial)
+target_compile_options(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm,INTERFACE_COMPILE_OPTIONS>)
+target_compile_definitions(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm,INTERFACE_COMPILE_DEFINITIONS>)
+target_compile_features(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm,INTERFACE_COMPILE_FEATURES>)
+target_include_directories(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm,INTERFACE_INCLUDE_DIRECTORIES>)
 
-target_compile_features(vtkm_cont_serial PRIVATE cxx_auto_type)
-target_compile_definitions(vtkm_cont_serial PRIVATE vtkm_cont_EXPORTS)
 if(BUILD_SHARED_LIBS)
   set_property(TARGET vtkm_cont_serial PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()
-
-target_include_directories(vtkm_cont_serial PRIVATE
-    ${VTKm_BACKEND_INCLUDE_DIRS}
-    ${VTKm_SOURCE_DIR}
-    ${VTKm_BINARY_INCLUDE_DIR}
-  )

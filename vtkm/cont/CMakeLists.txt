@@ -83,7 +83,7 @@ set(headers
   VirtualObjectCache.h
   )
 
-set(header_impls
+set(template_sources
   ArrayHandle.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
@@ -114,41 +114,32 @@ set(device_sources
   RuntimeDeviceTracker.cxx
   )
 
-vtkm_declare_headers(${headers})
-
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(arg)
 
+vtkm_library( NAME vtkm
+              SOURCES ${sources}
+              TEMPLATE_SOURCES ${template_sources}
+              HEADERS ${headers}
+              WRAP_FOR_CUDA ${device_sources}
+            )
+
 add_subdirectory(serial)
-set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_serial>)
+target_sources(vtkm PRIVATE $<TARGET_OBJECTS:vtkm_cont_serial>)
 
 add_subdirectory(tbb)
 if (VTKm_ENABLE_TBB)
-  set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_tbb>)
+  target_sources(vtkm PRIVATE $<TARGET_OBJECTS:vtkm_cont_tbb>)
+  target_link_libraries(vtkm PUBLIC vtkm::tbb)
 endif()
 
 add_subdirectory(cuda)
 if (VTKm_ENABLE_CUDA)
-  get_property(vtkm_cont_cuda_object_files GLOBAL
-               PROPERTY vtkm_cont_cuda_object_files )
-  # mark the file as generated, this needs to be done in this directory
-  # for 'reasons'.
-  set_source_files_properties(${vtkm_cont_cuda_object_files}
-                              PROPERTIES GENERATED TRUE)
-
-  set(sources ${sources} ${vtkm_cont_cuda_object_files})
+  target_sources(vtkm PRIVATE $<TARGET_OBJECTS:vtkm_cont_cuda>)
+  target_link_libraries(vtkm PUBLIC vtkm::cuda)
 endif()
 
-vtkm_library(
-  SOURCES ${sources}
-  WRAP_FOR_CUDA ${device_sources}
-  HEADERS ${header_impls})
-target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
-
-if(VTKm_ENABLE_CUDA)
-  add_dependencies(vtkm_cont vtkm_cont_cuda)
-endif()
-
+target_link_libraries(vtkm PUBLIC vtkm_compiler_flags)
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

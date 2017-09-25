@@ -18,13 +18,15 @@
 ##  this software.
 ##============================================================================
 
-#We require CMake 3.3 for Modern CMake which as features such as:
-# - Better custom command support
-# - Better acting if() argument expansion
-# - Support for usage requirements
-# -
-cmake_minimum_required(VERSION 3.3)
-
+# We require CMake 3.9 for Modern CMake which as features such as:
+#   - Support for OBJECTs in target_sources
+#   - Support for meta level compiler features
+#   - Proper if() argument expansion
+#   - Proper CUDA support
+#   - Support for usage requirements
+#
+# We require CMake 3.9 for CUDA support
+cmake_minimum_required(VERSION 3.9)
 project (VTKm)
 
 # Update module path
@@ -59,53 +61,12 @@ endif()
 
 set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include")
 
-set(VTKm_EXPORT_NAME "VTKmTargets")
-
-# Setup default build types
-include(VTKmBuildType)
-
-# include some vtkm-specific cmake code.
-include(VTKmMacros)
-
-# Create an "interface" target library. This is not a real library but rather
-# holds CMake configuration that is required for CXX targets that use VTK-m
-# headers. In particular, it makes sure the appropriate C++11 version is being
-# used. (The cxx_constexpr and cxx_auto_type features happen to force C++11.
-# Directly asking for C++11 with this interface is not supported in CMake 3.3.)
-# This is also exported so that dependent CMake projects can load the same
-# configuration.
-add_library(vtkm INTERFACE)
-target_compile_features(vtkm INTERFACE cxx_auto_type)
-target_include_directories(vtkm INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<BUILD_INTERFACE:${VTKm_BINARY_INCLUDE_DIR}>
-  $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}>
-  )
-install(TARGETS vtkm EXPORT ${VTKm_EXPORT_NAME})
-
-# Load the base VTK-m configuration, which is required for some of the later
-# config.
-vtkm_configure_component_Base()
-if(NOT VTKm_Base_FOUND)
-  message(SEND_ERROR "Could not load base VTK-m component.")
+if (NOT DEFINED VTKm_EXPORT_NAME)
+  set(VTKm_EXPORT_NAME "VTKmTargets")
 endif()
 
-#-----------------------------------------------------------------------------
-# When using C++11 suport make sure you use the standard C++ extensions rather
-# than compiler-specific versions of the extensions (to preserve portability).
-set(CMAKE_CXX_EXTENSIONS False)
 
-#-----------------------------------------------------------------------------
-# Add supplemental compiler warnings, and GCC visibility support.
-# include export header modules so that we can easily control symbol exporting
-# VTK-m is setup by default not to export symbols unless explicitly stated.
-# We prefer to only export symbols of a small set of user facing classes,
-# rather than exporting all symbols. In practice we will try to not export
-# symbols for any third party library
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
-include(GenerateExportHeader)
-include(CMake/VTKmCompilerExtras.cmake)
+set(VTKm_EXPORT_NAME "VTKmTargets")
 
 #-----------------------------------------------------------------------------
 # Configurable Options
@@ -131,31 +92,35 @@ mark_as_advanced(VTKm_NO_ASSERT)
 option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
+# Setup default build types
+include(VTKmBuildType)
+
+# Determine VTK-m version
+include(Utilities/Git/Git.cmake)
+include(VTKmDetermineVersion)
+
+# Load hardcoded version in case this is not a Git repository
+file(STRINGS version.txt version_txt)
+extract_version_components("${version_txt}" "VTKm")
+# Get the version from git if we can
+determine_version(${VTKm_SOURCE_DIR} ${GIT_EXECUTABLE} "VTKm")
+
+# Create an "interface" target library. This is not a real library but rather
+# holds CMake configuration that is required for CXX targets that use VTK-m
+# headers. In particular, it makes sure the appropriate C++11 version is being
+# used. (The cxx_constexpr and cxx_auto_type features happen to force C++11.
+# Directly asking for C++11 with this interface is not supported in CMake 3.3.)
+# This is also exported so that dependent CMake projects can load the same
+# configuration.
+include(VTKmCompilerFlags)
+include(VTKmWrappers)
+
 if (VTKm_ENABLE_TESTING)
   enable_testing()
   include(CTest)
   configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
 endif()
-
-#-----------------------------------------------------------------------------
-# Set up devices selected.
-vtkm_configure_component_Serial()
-if(NOT VTKm_Serial_FOUND)
-  message(SEND_ERROR "Could not load serial VTK-m component.")
-endif()
-if (VTKm_ENABLE_TBB)
-  vtkm_configure_component_TBB()
-  if(NOT VTKm_TBB_FOUND)
-    message(SEND_ERROR "Could not load TBB configuration. If TBB is not available, turn off VTKm_ENABLE_TBB.")
-  endif()
-endif (VTKm_ENABLE_TBB)
-if (VTKm_ENABLE_CUDA)
-  vtkm_configure_component_CUDA()
-  if(NOT VTKm_CUDA_FOUND)
-    message(SEND_ERROR "Could not load CUDA configuration. If CUDA is not available, turn off VTKm_ENABLE_CUDA.")
-  endif()
-endif (VTKm_ENABLE_CUDA)
 
 #-----------------------------------------------------------------------------
 
@@ -206,15 +171,6 @@ check_type_size(long VTKm_SIZE_LONG BUILTIN_TYPES_ONLY)
 check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 
 #-----------------------------------------------------------------------------
-# Find the Python interpreter, which we will use during the build process
-find_package(PythonInterp)
-
-#-----------------------------------------------------------------------------
-# Find Pyexpander in case somebody wants to update the auto generated
-# faux variadic template code
-find_package(Pyexpander)
-
-#-----------------------------------------------------------------------------
 # Add subdirectories
 add_subdirectory(vtkm)
 
@@ -228,46 +184,6 @@ endif()
 #-----------------------------------------------------------------------------
 # Ready files for find_package
 include(CMakePackageConfigHelpers)
-
-string(REPLACE ";" " " VTKm_AVAILABLE_COMPONENTS_LIST
-  "${VTKm_AVAILABLE_COMPONENTS}"
-  )
-
-set(VTKm_LOAD_COMPONENTS_COMMANDS "# Clear out old FOUND flags")
-foreach(component ${VTKm_AVAILABLE_COMPONENTS})
-  set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
-set(VTKm_${component}_FOUND)"
-    )
-endforeach(component)
-
-set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
-
-# Load each component selected in find_package
-foreach(comp \${VTKm_FIND_COMPONENTS})")
-
-foreach(component ${VTKm_AVAILABLE_COMPONENTS})
-  set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
-  if(\"${component}\" STREQUAL \${comp})
-    vtkm_configure_component_${component}()
-    if(VTKm_${component}_FOUND AND NOT VTKm_CONFIGURE_QUIET)
-      message(STATUS \"Successfully loaded VTK-m component ${component}\")
-    else()
-      if(VTKm_FIND_REQUIRED_${component} AND NOT VTKm_CONFIGURE_QUIET)
-        message(\"Could not load REQUIRED VTK-m component ${component}\")
-      elseif(NOT VTKm_CONFIGURE_QUIET)
-        message(STATUS \"Could not load optional VTK-m component ${component}\")
-      endif()
-    endif()
-    continue()
-  endif()"
-    )
-endforeach()
-
-set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
-  if(NOT VTKm_CONFIGURE_QUIET)
-    message(WARNING \"No such VTK-m component: \${comp}\")
-  endif()
-endforeach()" )
 
 configure_package_config_file(
   ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
@@ -305,22 +221,15 @@ install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
 # Install helper configure files.
 install(
   FILES
-    ${VTKm_SOURCE_DIR}/CMake/FindEGL.cmake
-    ${VTKm_SOURCE_DIR}/CMake/FindGLEW.cmake
-    ${VTKm_SOURCE_DIR}/CMake/FindGLFW.cmake
-    ${VTKm_SOURCE_DIR}/CMake/FindMESA.cmake
     ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
-    ${VTKm_SOURCE_DIR}/CMake/FindThrust.cmake
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
 # Install support files.
 install(
   FILES
-    ${VTKm_SOURCE_DIR}/CMake/VTKmMacros.cmake
-    ${VTKm_SOURCE_DIR}/CMake/VTKmConfigureComponents.cmake
-    ${VTKm_SOURCE_DIR}/CMake/VTKmCompilerOptimizations.cmake
-    ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cu
+    ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
+    ${VTKm_SOURCE_DIR}/CMake/VTKmBackends.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )

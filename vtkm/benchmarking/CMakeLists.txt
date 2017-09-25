@@ -30,16 +30,11 @@ set(benchmark_headers
   Benchmarker.h
   )
 
-vtkm_save_benchmarks(${benchmark_srcs}
-  HEADERS ${benchmark_headers}
-  )
-
-vtkm_benchmarks(VTKM_DEVICE_ADAPTER_SERIAL)
-
+vtkm_benchmarks(BACKEND SERIAL SOURCES ${benchmark_srcs} ${benchmark_headers})
 if (VTKm_ENABLE_CUDA)
-  vtkm_benchmarks(VTKM_DEVICE_ADAPTER_CUDA)
+  vtkm_benchmarks(BACKEND CUDA SOURCES ${benchmark_srcs} ${benchmark_headers})
 endif()
 if (VTKm_ENABLE_TBB)
-  vtkm_benchmarks(VTKM_DEVICE_ADAPTER_TBB)
+  vtkm_benchmarks(BACKEND TBB SOURCES ${benchmark_srcs} ${benchmark_headers})
 endif()
 

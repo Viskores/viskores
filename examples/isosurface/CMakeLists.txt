@@ -33,7 +33,7 @@ if(VTKm_OpenGL_FOUND AND VTKm_GLUT_FOUND)
   target_compile_options(IsosurfaceUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
   if(VTKm_CUDA_FOUND)
-    vtkm_disable_troublesome_thrust_warnings()
+
     # Cuda compiles do not respect target_include_directories
     cuda_include_directories(${VTKm_INCLUDE_DIRS})
     cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu quaternion.h)

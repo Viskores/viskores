@@ -1,0 +1,119 @@
+##============================================================================
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##
+##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+##  Copyright 2014 UT-Battelle, LLC.
+##  Copyright 2014 Los Alamos National Security.
+##
+##  Under the terms of Contract DE-NA0003525 with NTESS,
+##  the U.S. Government retains certain rights in this software.
+##
+##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+##  Laboratory (LANL), the U.S. Government retains certain rights in
+##  this software.
+##============================================================================
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(VTKM_COMPILER_IS_GNU 1)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(VTKM_COMPILER_IS_CLANG 1)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+  set(VTKM_COMPILER_IS_CLANG 1)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
+  set(VTKM_COMPILER_IS_PGI 1)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
+  set(VTKM_COMPILER_IS_ICC 1)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set(VTKM_COMPILER_IS_MSV 1)
+endif()
+
+
+#-----------------------------------------------------------------------------
+# vtkm_compiler_flags is used by all the vtkm targets
+add_library(vtkm_compiler_flags INTERFACE)
+
+# setup that we need C++11 support
+target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
+
+# Enable large object support so we can have 2^32 addressable sections
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(vtkm_compiler_flags INTERFACE "/bigobj")
+endif()
+
+# Setup the include directories that are needed for vtkm
+target_include_directories(vtkm_compiler_flags INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  )
+
+# Todo set up PIC flags here
+#INTERFACE_POSITION_INDEPENDENT_CODE
+
+# Additional warnings just for Clang 3.5+, and AppleClang 7+ we specify
+# for all build types, since these failures to vectorize are not limited
+# to debug builds
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
+    CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)
+  target_compile_options(vtkm_compiler_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>>)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
+       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6.99)
+  target_compile_options(vtkm_compiler_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>>)
+endif()
+
+# When building libraries/tests that are part of the VTK-m repository
+# inherit the properties from vtkm_debug_flags
+target_link_libraries(vtkm_compiler_flags
+  INTERFACE $<BUILD_INTERFACE:vtkm_debug_flags>)
+
+
+#-----------------------------------------------------------------------------
+# vtkm_debug_flags is used ONLY BY libraries that are built as part of this
+# repository
+add_library(vtkm_debug_flags INTERFACE)
+target_link_libraries(vtkm_debug_flags INTERFACE vtkm_compiler_flags)
+
+if(VTKM_COMPILER_IS_MSVC)
+  target_compile_definitions(vtkm_debug_flags INTERFACE "_SCL_SECURE_NO_WARNINGS"
+                                                        "_CRT_SECURE_NO_WARNINGS")
+
+  target_compile_options(vtkm_debug_flags INTERFACE -wd4702 -wd4505 -wd4512 -wd4510)
+
+  # In VS2013 the C4127 warning has a bug in the implementation and
+  # generates false positive warnings for lots of template code
+  if(MSVC_VERSION LESS 1900)
+    target_compile_options(vtkm_debug_flags INTERFACE -wd4127 )
+  endif()
+
+elseif(VTKM_COMPILER_IS_ICC)
+  #Intel compiler offers header level suppression in the form of
+  # #pragma warning(disable : 1478), but for warning 1478 it seems to not
+  #work. Instead we add it as a definition
+  # Likewise to suppress failures about being unable to apply vectorization
+  # to loops, the #pragma warning(disable seems to not work so we add a
+  # a compile define.
+  target_compile_definitions(vtkm_debug_flags INTERFACE -wd1478 -wd13379)
+
+elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
+  set(flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
+  target_compile_options(vtkm_compiler_flags
+    INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${flags}>>
+    )
+endif()
+
+install(TARGETS vtkm_compiler_flags vtkm_debug_flags EXPORT ${VTKm_EXPORT_NAME})

@@ -30,44 +30,23 @@ set(headers
   ThrustExceptionHandler.h
   VirtualObjectTransferCuda.h
   )
+vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
 
-set(sources
+#-----------------------------------------------------------------------------
+if (NOT VTKm_ENABLE_CUDA)
+  return()
+endif()
+
+add_library(vtkm_cont_cuda OBJECT
   ArrayManagerExecutionCuda.cu
   CudaAllocator.cu
   )
 
-vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
+target_compile_options(vtkm_cont_cuda PRIVATE $<TARGET_PROPERTY:vtkm,INTERFACE_COMPILE_OPTIONS>)
+target_compile_definitions(vtkm_cont_cuda PRIVATE $<TARGET_PROPERTY:vtkm,INTERFACE_COMPILE_DEFINITIONS>)
+target_compile_features(vtkm_cont_cuda PRIVATE $<TARGET_PROPERTY:vtkm,INTERFACE_COMPILE_FEATURES>)
+target_include_directories(vtkm_cont_cuda PRIVATE $<TARGET_PROPERTY:vtkm,INTERFACE_INCLUDE_DIRECTORIES>)
 
-#-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
-  add_subdirectory(testing)
-
-  #todo we need to add a custom target and feed that as a dependency
-  #for vtkm_cont
-  cuda_include_directories(${VTKm_SOURCE_DIR}
-                           ${VTKm_BINARY_INCLUDE_DIR}
-                           ${VTKm_BACKEND_INCLUDE_DIRS}
-                           )
-
-  set(compile_options -Dvtkm_cont_EXPORTS)
-  if(BUILD_SHARED_LIBS AND NOT WIN32)
-    list(APPEND compile_options -Xcompiler=${CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY}hidden)
-    list(APPEND compile_options -Xcompiler=-fPIC)
-  endif()
-
-  vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
-
-  cuda_compile(vtkm_cont_cuda_object_files ${sources}
-               OPTIONS "${compile_options}")
-
-  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
-  set(CMAKE_CXX_FLAGS ${old_cxx_flags})
-
-
-  #Setup the dependency chain for the custom object build so that
-  add_custom_target(vtkm_cont_cuda DEPENDS ${vtkm_cont_cuda_object_files})
-
-  set_property( GLOBAL
-                PROPERTY vtkm_cont_cuda_object_files ${vtkm_cont_cuda_object_files})
-
+if(BUILD_SHARED_LIBS)
+  set_property(TARGET vtkm_cont_cuda PROPERTY POSITION_INDEPENDENT_CODE ON)
 endif()

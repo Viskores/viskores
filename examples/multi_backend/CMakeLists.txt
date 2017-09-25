@@ -21,26 +21,11 @@
 ##=============================================================================
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB
-  )
+find_package(VTKm REQUIRED QUIET)
 
-if(VTKm_CUDA_FOUND)
-  set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
-  set(old_cxx_flags ${CMAKE_CXX_FLAGS})
-  vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags)
-  vtkm_disable_troublesome_thrust_warnings()
-
-  # Cuda compiles do not respect target_include_directories
-  cuda_include_directories(${VTKm_INCLUDE_DIRS})
-  cuda_add_executable(MultiBackend MultiBackend.cu)
-
-  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
-  set(CMAKE_CXX_FLAGS ${old_cxx_flags})
-else()
-  add_executable(MultiBackend MultiBackend.cxx)
+if(TARGET vtkm::cuda)
+  set_source_files_properties(MultiBackend.cxx LANGUAGE "CUDA")
 endif()
 
-target_include_directories(MultiBackend PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(MultiBackend PRIVATE ${VTKm_LIBRARIES})
-target_compile_options(MultiBackend PRIVATE ${VTKm_COMPILE_OPTIONS})
+add_executable(MultiBackend MultiBackend.cxx)
+target_link_libraries(MultiBackend PRIVATE vtkm)
