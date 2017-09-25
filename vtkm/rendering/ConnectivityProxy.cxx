@@ -182,7 +182,7 @@ public:
   void Trace(const vtkm::rendering::Camera& camera, vtkm::rendering::CanvasRayTracer* canvas)
   {
 
-    if (canvas == NULL)
+    if (canvas == nullptr)
     {
       std::cout << "Conn proxy: canvas is NULL\n";
       throw vtkm::cont::ErrorBadValue("Conn Proxy: null canvas");

@@ -38,7 +38,7 @@ struct TestExecObject
 {
   VTKM_EXEC_CONT
   TestExecObject()
-    : Value(NULL)
+    : Value(nullptr)
   {
   }
 

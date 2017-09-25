@@ -109,7 +109,7 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// place. The \c FunctionInterface template class takes a function signature,
 /// which can have a variable number of arguments. The \c FunctionInterface
 /// will hold in its state a copy of all input parameters (regardless of number
-/// or type) and the return value if it exists (i.e. non-null) and the function
+/// or type) and the return value if it exists (i.e. non-nullptr) and the function
 /// has been invoked. This means that all arguments can be passed around in a
 /// single object so that objects and functions dealing with these variadic
 /// parameters can be templated on a single type (the type of \c
