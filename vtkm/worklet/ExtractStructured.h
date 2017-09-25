@@ -21,6 +21,7 @@
 #define vtk_m_worklet_ExtractStructured_h
 
 #include <vtkm/RangeId3.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -440,8 +441,8 @@ private:
       }
       else
       {
-        vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(
-          vtkm::cont::make_ArrayHandlePermutation(valid, coords), dest);
+        vtkm::cont::ArrayCopy(
+          vtkm::cont::make_ArrayHandlePermutation(valid, coords), dest, DeviceAdapter());
         return 1;
       }
     }

@@ -27,6 +27,7 @@
 
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -74,8 +75,7 @@ vtkm::cont::ArrayHandle<ValueType, StorageTag> MakeInputArray(int arrayId)
   // will invalidate the array handle we just created. So copy to a new buffer
   // that will stick around after we return.
   ArrayHandleType copyHandle;
-  vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::Copy(bufferHandle,
-                                                                               copyHandle);
+  vtkm::cont::ArrayCopy(bufferHandle, copyHandle);
 
   return copyHandle;
 }
@@ -89,7 +89,7 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType, C>& outArray,
   // get to values on the control side, so copy to an array that is accessible.
   using ArrayHandleType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
   ArrayHandleType arrayCopy;
-  vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::Copy(outArray, arrayCopy);
+  vtkm::cont::ArrayCopy(outArray, arrayCopy);
 
   typename ArrayHandleType::PortalConstControl portal = arrayCopy.GetPortalConstControl();
   using VTraits = vtkm::VecTraits<ValueType>;

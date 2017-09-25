@@ -22,6 +22,7 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DataSet.h>
@@ -53,7 +54,7 @@ vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> 
   vtkm::cont::ArrayHandle<T> mem =
     vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues() * N);
   vtkm::cont::ArrayHandle<T> result;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(mem, result);
+  vtkm::cont::ArrayCopy(mem, result, DeviceAdapter());
   return result;
 }
 

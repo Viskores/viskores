@@ -21,6 +21,7 @@
 #ifndef vtk_m_rendering_Texture2D_h
 #define vtk_m_rendering_Texture2D_h
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -76,7 +77,7 @@ public:
     // We do not know the lifetime of the underlying data source of input `data`. Since it might
     // be from a shallow copy of the data source, we make a deep copy of the input data and keep
     // it's portal. The copy operation is very fast.
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(data, Data);
+    vtkm::cont::ArrayCopy(data, Data);
   }
 
   VTKM_CONT

@@ -24,6 +24,7 @@
 
 #include <vtkm/Hash.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 
 #include <vtkm/cont/testing/Testing.h>
@@ -75,7 +76,7 @@ void TryKeyType(KeyType)
 
   // Create Keys object
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(keysArray, sortedKeys);
+  vtkm::cont::ArrayCopy(keysArray, sortedKeys);
   vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   VTKM_TEST_ASSERT(keys.GetInputRange() == NUM_UNIQUE, "Keys has bad input range.");
 
