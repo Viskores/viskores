@@ -34,16 +34,39 @@ namespace vtkm
 namespace cont
 {
 
+/// \brief Does a deep copy from one array to another array.
+///
+/// Given a source \c ArrayHandle and a destination \c ArrayHandle, this function allocates the
+/// destination \c ArrayHandle to the correct size and deeply copies all the values from the source
+/// to the destination.
+///
+/// This version of the method takes a device adapter on which to perform the copy. If you do not
+/// have a device adapter handy, use a version of \c ArrayCopy that uses a \c RuntimeDeviceTracker
+/// (or no device at all) to choose a good option for you.
+///
+template <typename InValueType,
+          typename InStorage,
+          typename OutValueType,
+          typename OutStorage,
+          typename Device>
+VTKM_CONT void ArrayCopy(const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
+                         vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination,
+                         Device)
+{
+  vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(
+    vtkm::cont::make_ArrayHandleCast<OutValueType>(source), destination);
+}
+
 namespace detail
 {
 
-template <typename ValueType, typename InStorage, typename OutStorage>
+template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
 struct ArrayCopyFunctor
 {
-  using InArrayHandleType = vtkm::cont::ArrayHandle<ValueType, InStorage>;
+  using InArrayHandleType = vtkm::cont::ArrayHandle<InValueType, InStorage>;
   InArrayHandleType InputArray;
 
-  using OutArrayHandleType = vtkm::cont::ArrayHandle<ValueType, OutStorage>;
+  using OutArrayHandleType = vtkm::cont::ArrayHandle<OutValueType, OutStorage>;
   OutArrayHandleType OutputArray;
 
   bool OnlyUseCurrentInputDevice;
@@ -71,7 +94,7 @@ struct ArrayCopyFunctor
       return false;
     }
 
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(this->InputArray, this->OutputArray);
+    vtkm::cont::ArrayCopy(this->InputArray, this->OutputArray, Device());
 
     return true;
   }
@@ -87,15 +110,16 @@ struct ArrayCopyFunctor
 ///
 /// This method optionally takes a \c RuntimeDeviceTracker to control which devices to try.
 ///
-template <typename ValueType, typename InStorage, typename OutStorage>
+template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
 VTKM_CONT void ArrayCopy(
-  const vtkm::cont::ArrayHandle<ValueType, InStorage>& source,
-  vtkm::cont::ArrayHandle<ValueType, OutStorage>& destination,
+  const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
+  vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination,
   vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
   bool isCopied = false;
 
-  detail::ArrayCopyFunctor<ValueType, InStorage, OutStorage> functor(source, destination, true);
+  detail::ArrayCopyFunctor<InValueType, InStorage, OutValueType, OutStorage> functor(
+    source, destination, true);
 
   // First pass, only use source's already loaded device.
   isCopied = vtkm::cont::TryExecute(functor, tracker);
@@ -114,15 +138,6 @@ VTKM_CONT void ArrayCopy(
 
   // If we are here, then we just failed to copy.
   throw vtkm::cont::ErrorExecution("Failed to run ArrayCopy on any device.");
-}
-
-template <typename InValueType, typename InStorage, typename OutValueType, typename OutStorage>
-VTKM_CONT void ArrayCopy(
-  const vtkm::cont::ArrayHandle<InValueType, InStorage>& source,
-  vtkm::cont::ArrayHandle<OutValueType, OutStorage>& destination,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
-{
-  ArrayCopy(vtkm::cont::make_ArrayHandleCast<OutValueType>(source), destination, tracker);
 }
 }
 } // namespace vtkm::cont

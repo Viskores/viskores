@@ -76,6 +76,16 @@ VTKM_CONT ArrayHandleCast<T, HandleType> make_ArrayHandleCast(const HandleType& 
 {
   return ArrayHandleCast<T, HandleType>(handle);
 }
+
+/// Overriden version of \c make_ArrayHandleCast that returns the original object type.
+///
+template <typename T, typename Storage>
+VTKM_CONT vtkm::cont::ArrayHandle<T, Storage> make_ArrayHandleCast(
+  const vtkm::cont::ArrayHandle<T, Storage>& handle,
+  const T& = T())
+{
+  return handle;
+}
 }
 } // namespace vtkm::cont
 
