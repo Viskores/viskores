@@ -116,7 +116,7 @@ inline VTKM_CONT bool Streamline::DoMapField(
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter&)
 {
-  return true;
+  return false;
 }
 }
 } // namespace vtkm::filter
