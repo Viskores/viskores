@@ -25,6 +25,8 @@
 
 #include <vtkm/worklet/Keys.h>
 
+#include <vtkm/cont/ArrayCopy.h>
+
 #include <vtkm/cont/testing/Testing.h>
 
 namespace
@@ -134,7 +136,7 @@ void TryKeyType(KeyType)
   vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(keyArray, sortedKeys);
+  vtkm::cont::ArrayCopy(keyArray, sortedKeys);
 
   vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 

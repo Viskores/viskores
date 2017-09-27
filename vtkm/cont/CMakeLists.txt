@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  ArrayCopy.h
   ArrayHandle.h
   ArrayHandleCast.h
   ArrayHandleCartesianProduct.h

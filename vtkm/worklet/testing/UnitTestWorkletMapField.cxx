@@ -17,6 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
@@ -99,8 +100,7 @@ struct DoStaticTestWorklet
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(inputHandle,
-                                                                              inoutHandle);
+    vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
 
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
@@ -144,8 +144,7 @@ struct DoDynamicTestWorklet
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
-    vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(inputHandle,
-                                                                              inoutHandle);
+    vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
 
     std::cout << "Create and run dispatcher with dynamic arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;

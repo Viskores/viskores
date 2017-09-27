@@ -39,8 +39,8 @@ namespace cont
 /// the values in the array. For arrays containing Vec values, the range is
 /// computed for each component.
 ///
-///This method optionally takes a \c RuntimeDeviceTracker to control which
-///devices to try.
+/// This method optionally takes a \c RuntimeDeviceTracker to control which
+/// devices to try.
 ///
 /// The result is returned in an \c ArrayHandle of \c Range objects. There is
 /// one value in the returned array for every component of the input's value

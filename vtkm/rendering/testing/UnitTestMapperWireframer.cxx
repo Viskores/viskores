@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -40,8 +41,7 @@ vtkm::cont::DataSet Make3DUniformDataSet(vtkm::Id size = 64)
   vtkm::cont::ArrayHandleCounting<vtkm::Float32> fieldValues(
     0.0f, 10.0f / static_cast<vtkm::Float32>(numValues), numValues);
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarField;
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(fieldValues,
-                                                                            scalarField);
+  vtkm::cont::ArrayCopy(fieldValues, scalarField);
   vtkm::cont::DataSetFieldAdd().AddPointField(dataSet, fieldName, scalarField);
   return dataSet;
 }
