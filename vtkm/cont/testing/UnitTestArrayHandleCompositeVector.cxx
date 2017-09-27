@@ -18,9 +18,7 @@
 //  this software.
 //============================================================================
 
-// Make sure ArrayHandleCompositeVector does not rely on default storage or
-// device adapter.
-#define VTKM_STORAGE VTKM_STORAGE_ERROR
+// Make sure ArrayHandleCompositeVector does not rely on default device adapter.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
