@@ -67,24 +67,38 @@ public:
   }
 };
 
+namespace detail
+{
+
+template <typename CastType, typename OriginalType, typename ArrayType>
+struct MakeArrayHandleCastImpl
+{
+  using ReturnType = vtkm::cont::ArrayHandleCast<CastType, ArrayType>;
+
+  VTKM_CONT static ReturnType DoMake(const ArrayType& array) { return ReturnType(array); }
+};
+
+template <typename T, typename ArrayType>
+struct MakeArrayHandleCastImpl<T, T, ArrayType>
+{
+  using ReturnType = ArrayType;
+
+  VTKM_CONT static ReturnType DoMake(const ArrayType& array) { return array; }
+};
+
+} // namespace detail
+
 /// make_ArrayHandleCast is convenience function to generate an
 /// ArrayHandleCast.
 ///
-template <typename T, typename HandleType>
-VTKM_CONT ArrayHandleCast<T, HandleType> make_ArrayHandleCast(const HandleType& handle,
-                                                              const T& = T())
+template <typename T, typename ArrayType>
+VTKM_CONT
+  typename detail::MakeArrayHandleCastImpl<T, typename ArrayType::ValueType, ArrayType>::ReturnType
+  make_ArrayHandleCast(const ArrayType& array, const T& = T())
 {
-  return ArrayHandleCast<T, HandleType>(handle);
-}
-
-/// Overriden version of \c make_ArrayHandleCast that returns the original object type.
-///
-template <typename T, typename Storage>
-VTKM_CONT vtkm::cont::ArrayHandle<T, Storage> make_ArrayHandleCast(
-  const vtkm::cont::ArrayHandle<T, Storage>& handle,
-  const T& = T())
-{
-  return handle;
+  VTKM_IS_ARRAY_HANDLE(ArrayType);
+  using MakeImpl = detail::MakeArrayHandleCastImpl<T, typename ArrayType::ValueType, ArrayType>;
+  return MakeImpl::DoMake(array);
 }
 }
 } // namespace vtkm::cont
