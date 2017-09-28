@@ -28,13 +28,10 @@ namespace vtkm
 {
 namespace filter
 {
-/// \brief generate isosurface(s) from a Volume
+/// \brief generate streamlines from a vector field.
 
-/// Takes as input a volume (e.g., 3D structured point set) and generates on
-/// output one or more isosurfaces.
-/// Multiple contour values must be specified to generate the isosurfaces.
-/// @warning
-/// This filter is currently only supports 3D volumes.
+/// Takes as input a vector field and seed locations and generates the
+/// paths taken by the seeds through the vector field.
 class Streamline : public vtkm::filter::FilterDataSetWithField<Streamline>
 {
 public:
