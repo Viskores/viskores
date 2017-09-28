@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2017 Sandia Corporation.
+//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2017 UT-Battelle, LLC.
 //  Copyright 2017 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -166,7 +166,8 @@ struct BenchmarkArrayTransfer
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      std::vector<ValueType> vec(this->NumValues, ValueTypeTraits::ZeroInitialization());
+      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
+                                 ValueTypeTraits::ZeroInitialization());
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Time the copy:
@@ -248,7 +249,8 @@ struct BenchmarkArrayTransfer
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      std::vector<ValueType> vec(this->NumValues, ValueTypeTraits::ZeroInitialization());
+      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
+                                 ValueTypeTraits::ZeroInitialization());
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Time the copy:
@@ -291,7 +293,8 @@ struct BenchmarkArrayTransfer
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      std::vector<ValueType> vec(this->NumValues, ValueTypeTraits::ZeroInitialization());
+      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
+                                 ValueTypeTraits::ZeroInitialization());
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Ensure data is in control before we start:
@@ -349,7 +352,8 @@ struct BenchmarkArrayTransfer
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      std::vector<ValueType> vec(this->NumValues, ValueTypeTraits::ZeroInitialization());
+      std::vector<ValueType> vec(static_cast<std::size_t>(this->NumValues),
+                                 ValueTypeTraits::ZeroInitialization());
       ArrayType array = vtkm::cont::make_ArrayHandle(vec);
 
       // Ensure data is in control before we start:

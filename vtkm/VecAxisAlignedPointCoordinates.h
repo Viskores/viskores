@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2015 UT-Battelle, LLC.
 //  Copyright 2015 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -67,7 +67,7 @@ const vtkm::FloatDefault VecAxisAlignedPointCoordinatesOffsetTable[8][3] = {
 /// \brief An implicit vector for point coordinates in axis aligned cells. For
 /// internal use only.
 ///
-/// The \C VecAxisAlignedPointCoordinates class is a Vec-like class that holds
+/// The \c VecAxisAlignedPointCoordinates class is a Vec-like class that holds
 /// the point coordinates for a axis aligned cell. The class is templated on the
 /// dimensions of the cell, which can be 1 (for a line).
 ///

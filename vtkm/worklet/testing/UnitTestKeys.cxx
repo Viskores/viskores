@@ -8,11 +8,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2016 UT-Battelle, LLC.
 //  Copyright 2016 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
 //  Laboratory (LANL), the U.S. Government retains certain rights in
@@ -21,6 +21,8 @@
 //=============================================================================
 
 #include <vtkm/worklet/Keys.h>
+
+#include <vtkm/cont/ArrayCopy.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -70,7 +72,7 @@ void TryKeyType(KeyType)
   vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(keyArray, sortedKeys);
+  vtkm::cont::ArrayCopy(keyArray, sortedKeys);
 
   vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   VTKM_TEST_ASSERT(keys.GetInputRange() == NUM_UNIQUE, "Keys has bad input range.");

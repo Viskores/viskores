@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2016 UT-Battelle, LLC.
 //  Copyright 2016 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -23,6 +23,7 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/Types.h>
+#include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
 
 namespace vtkm
@@ -30,9 +31,13 @@ namespace vtkm
 namespace rendering
 {
 
+class Canvas;
+
 class VTKM_RENDERING_EXPORT WorldAnnotator
 {
 public:
+  WorldAnnotator(const vtkm::rendering::Canvas* canvas);
+
   virtual ~WorldAnnotator();
 
   virtual void AddLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
@@ -88,6 +93,9 @@ public:
                   color,
                   text);
   }
+
+private:
+  const vtkm::rendering::Canvas* Canvas;
 };
 }
 } //namespace vtkm::rendering

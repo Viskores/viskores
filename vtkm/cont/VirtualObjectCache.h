@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2017 Sandia Corporation.
+//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2017 UT-Battelle, LLC.
 //  Copyright 2017 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -41,24 +41,24 @@ namespace cont
 ///
 /// The template parameter \c VirtualObject is the class that acts as the
 /// interface. Following is a method for implementing such classes:
-/// 1. Create a <tt>const void*<\tt> member variable that will hold a
+/// 1. Create a <tt>const void*</tt> member variable that will hold a
 ///    reference to the target class.
 /// 2. For each virtual-like method:
 ///    a. Create a typedef for a function with the same signature,
-///       except for an extra <tt>const void*<\tt> argument.
+///       except for an extra <tt>const void*</tt> argument.
 ///    b. Create a function pointer member variable with the type of the
 ///       associated typedef from 2a.
 ///    c. Create an implementation of the method, that calls the associated
 ///       function pointer with the void pointer to the target class as one of
 ///       the arguments.
 /// 3. Create the following template function:
-///    <tt>
+///    \code{.cpp}
 ///       template<typename TargetClass>
 ///       VTKM_EXEC void Bind(const TargetClass *deviceTarget);
-///    </tt>
+///    \endcode
 ///    This function should set the void pointer from 1 to \c deviceTarget,
 ///    and assign the function pointers from 2b to functions that cast their
-///    first argument to <tt>const TargetClass*<\tt> and call the corresponding
+///    first argument to <tt>const TargetClass*</tt> and call the corresponding
 ///    member function on it.
 ///
 /// Both \c VirtualObject and target class objects should be bitwise copyable.

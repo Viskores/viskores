@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -63,8 +63,8 @@ private:
     {
       const int VTKDims = 3; // VTK files always require 3 dims for points
 
-      typedef typename PortalType::ValueType ValueType;
-      typedef typename vtkm::VecTraits<ValueType> VecType;
+      using ValueType = typename PortalType::ValueType;
+      using VecType = typename vtkm::VecTraits<ValueType>;
 
       const ValueType& value = portal.Get(index);
 
@@ -105,8 +105,8 @@ private:
   {
     for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
     {
-      typedef typename PortalType::ValueType ValueType;
-      typedef typename vtkm::VecTraits<ValueType> VecType;
+      using ValueType = typename PortalType::ValueType;
+      using VecType = typename vtkm::VecTraits<ValueType>;
 
       const ValueType& value = portal.Get(index);
 
@@ -144,7 +144,7 @@ public:
   template <typename ArrayHandleType>
   void operator()(const ArrayHandleType&) const
   {
-    typedef typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType DataType;
+    using DataType = typename vtkm::VecTraits<typename ArrayHandleType::ValueType>::ComponentType;
     *this->Name = vtkm::io::internal::DataTypeName<DataType>::Name();
   }
 

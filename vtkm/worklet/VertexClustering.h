@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -22,6 +22,7 @@
 
 #include <vtkm/Types.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/DataSet.h>
@@ -53,7 +54,7 @@ vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> 
   vtkm::cont::ArrayHandle<T> mem =
     vtkm::cont::make_ArrayHandle(vmem, other.GetNumberOfValues() * N);
   vtkm::cont::ArrayHandle<T> result;
-  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(mem, result);
+  vtkm::cont::ArrayCopy(mem, result, DeviceAdapter());
   return result;
 }
 

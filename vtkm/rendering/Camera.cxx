@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2015 UT-Battelle, LLC.
 //  Copyright 2015 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -164,7 +164,14 @@ void Camera::GetRealViewport(vtkm::Id screenWidth,
     vtkm::Float32 daspect =
       (this->Camera2D.Right - this->Camera2D.Left) / (this->Camera2D.Top - this->Camera2D.Bottom);
     daspect *= this->Camera2D.XScale;
-    //cerr << "waspect="<<waspect << "   \tdaspect="<<daspect<<endl;
+//cerr << "waspect="<<waspect << "   \tdaspect="<<daspect<<endl;
+
+//needed as center is a constant value
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4127) // conditional expression is constant
+#endif
+
     const bool center = true; // if false, anchor to bottom-left
     if (waspect > daspect)
     {
@@ -198,6 +205,9 @@ void Camera::GetRealViewport(vtkm::Id screenWidth,
       left = this->ViewportLeft;
       right = this->ViewportRight;
     }
+#if defined(VTKM_MSVC)
+#pragma warning(pop)
+#endif
   }
 }
 

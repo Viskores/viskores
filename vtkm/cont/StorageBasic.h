@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -90,8 +90,16 @@ struct AlignedAllocator
   pointer address(reference r) { return &r; }
   const_pointer address(const_reference r) { return &r; }
   size_type max_size() const { return (std::numeric_limits<size_type>::max)() / sizeof(T); }
-  void construct(pointer p, const T& t) { new (p) T(t); }
-  void destroy(pointer p) { p->~T(); }
+  void construct(pointer p, const T& t)
+  {
+    (void)p;
+    new (p) T(t);
+  }
+  void destroy(pointer p)
+  {
+    (void)p;
+    p->~T();
+  }
 };
 
 template <typename T, typename U, size_t AlignA, size_t AlignB>
@@ -301,6 +309,8 @@ namespace cont
 namespace internal
 {
 
+/// \cond
+/// Make doxygen ignore this section
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<char, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::Int8, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT Storage<vtkm::UInt8, StorageTagBasic>;
@@ -334,6 +344,7 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT
   Storage<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic>;
 extern template class VTKM_CONT_TEMPLATE_EXPORT
   Storage<vtkm::Vec<vtkm::Float64, 4>, StorageTagBasic>;
+/// \endcond
 }
 }
 }

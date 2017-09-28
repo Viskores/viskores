@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2015 UT-Battelle, LLC.
 //  Copyright 2015 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -266,6 +266,8 @@ struct CellSetExplicitConnectivityChooser<CellSetType,
 
 } // namespace detail
 
+/// \cond
+/// Make doxygen ignore this section
 #ifndef vtk_m_cont_CellSetExplicit_cxx
 extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetExplicit<>; // default
 extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetExplicit<
@@ -274,6 +276,7 @@ extern template class VTKM_CONT_TEMPLATE_EXPORT CellSetExplicit<
   VTKM_DEFAULT_CONNECTIVITY_STORAGE_TAG,
   typename vtkm::cont::ArrayHandleCounting<vtkm::Id>::StorageTag>; // CellSetSingleType base
 #endif
+/// \endcond
 }
 } // namespace vtkm::cont
 

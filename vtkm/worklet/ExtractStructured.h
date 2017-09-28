@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2017 Sandia Corporation.
+//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2017 UT-Battelle, LLC.
 //  Copyright 2017 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -21,6 +21,7 @@
 #define vtk_m_worklet_ExtractStructured_h
 
 #include <vtkm/RangeId3.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
@@ -440,8 +441,8 @@ private:
       }
       else
       {
-        vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(
-          vtkm::cont::make_ArrayHandlePermutation(valid, coords), dest);
+        vtkm::cont::ArrayCopy(
+          vtkm::cont::make_ArrayHandlePermutation(valid, coords), dest, DeviceAdapter());
         return 1;
       }
     }

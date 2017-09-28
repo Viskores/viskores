@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -33,6 +33,22 @@ namespace worklet
 namespace splatkernels
 {
 
+template <vtkm::IdComponent Dim>
+struct default_norm_value;
+
+template <>
+struct default_norm_value<2>
+{
+  double value() const { return 10.0 / (7.0 * M_PI); }
+};
+
+template <>
+struct default_norm_value<3>
+{
+  double value() const { return 1.0 / M_PI; }
+};
+
+
 template <int Dimensions>
 struct Spline3rdOrder : public KernelBase<Spline3rdOrder<Dimensions>>
 {
@@ -49,14 +65,8 @@ struct Spline3rdOrder : public KernelBase<Spline3rdOrder<Dimensions>>
     maxRadius_ = 2.0 * smoothingLength;
     maxRadius2_ = maxRadius_ * maxRadius_;
     //
-    if (Dimensions == 2)
-    {
-      norm_ = 10.0 / (7.0 * M_PI);
-    }
-    if (Dimensions == 3)
-    {
-      norm_ = 1.0 / M_PI;
-    }
+    norm_ = default_norm_value<Dimensions>().value();
+
     scale_W_ = norm_ * PowerExpansion<Dimensions>(Hinverse_);
     scale_GradW_ = norm_ * PowerExpansion<Dimensions + 1>(Hinverse_);
   }

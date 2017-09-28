@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -18,15 +18,14 @@
 //  this software.
 //============================================================================
 
-// Make sure ArrayHandleCompositeVector does not rely on default storage or
-// device adapter.
-#define VTKM_STORAGE VTKM_STORAGE_ERROR
+// Make sure ArrayHandleCompositeVector does not rely on default device adapter.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 
 #include <vtkm/VecTraits.h>
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -74,8 +73,7 @@ vtkm::cont::ArrayHandle<ValueType, StorageTag> MakeInputArray(int arrayId)
   // will invalidate the array handle we just created. So copy to a new buffer
   // that will stick around after we return.
   ArrayHandleType copyHandle;
-  vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::Copy(bufferHandle,
-                                                                               copyHandle);
+  vtkm::cont::ArrayCopy(bufferHandle, copyHandle);
 
   return copyHandle;
 }
@@ -89,7 +87,7 @@ void CheckArray(const vtkm::cont::ArrayHandle<ValueType, C>& outArray,
   // get to values on the control side, so copy to an array that is accessible.
   using ArrayHandleType = vtkm::cont::ArrayHandle<ValueType, StorageTag>;
   ArrayHandleType arrayCopy;
-  vtkm::cont::DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>::Copy(outArray, arrayCopy);
+  vtkm::cont::ArrayCopy(outArray, arrayCopy);
 
   typename ArrayHandleType::PortalConstControl portal = arrayCopy.GetPortalConstControl();
   using VTraits = vtkm::VecTraits<ValueType>;

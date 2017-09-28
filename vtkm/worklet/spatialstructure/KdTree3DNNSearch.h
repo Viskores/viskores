@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -60,15 +60,15 @@ public:
     NearestNeighborSearch3DWorklet() {}
 
     template <typename CooriVecT, typename CooriT, typename IdPortalT, typename CoordiPortalT>
-    VTKM_EXEC_CONT void NearestNeighborSearch3D(CooriVecT qc,
+    VTKM_EXEC_CONT void NearestNeighborSearch3D(const CooriVecT& qc,
                                                 CooriT& dis,
                                                 vtkm::Id& nnpIdx,
                                                 vtkm::Int32 level,
                                                 vtkm::Id sIdx,
                                                 vtkm::Id tIdx,
-                                                IdPortalT treePortal,
-                                                IdPortalT splitIdPortal,
-                                                CoordiPortalT coordiPortal) const
+                                                const IdPortalT& treePortal,
+                                                const IdPortalT& splitIdPortal,
+                                                const CoordiPortalT& coordiPortal) const
     {
       CooriT qx = qc[0];
       CooriT qy = qc[1];
@@ -90,7 +90,7 @@ public:
       }
       else
       { //normal Node
-        vtkm::Id splitNodeLoc = static_cast<vtkm::Id>(vtkm::Ceil((sIdx + tIdx) / 2.0));
+        vtkm::Id splitNodeLoc = static_cast<vtkm::Id>(vtkm::Ceil(double((sIdx + tIdx)) / 2.0));
         CooriT splitX = coordiPortal.Get(splitIdPortal.Get(splitNodeLoc))[0];
         CooriT splitY = coordiPortal.Get(splitIdPortal.Get(splitNodeLoc))[1];
         CooriT splitZ = coordiPortal.Get(splitIdPortal.Get(splitNodeLoc))[2];
@@ -122,7 +122,7 @@ public:
                                     nnpIdx,
                                     level + 1,
                                     sIdx,
-                                    static_cast<vtkm::Id>(vtkm::Ceil((sIdx + tIdx) / 2.0)),
+                                    splitNodeLoc,
                                     treePortal,
                                     splitIdPortal,
                                     coordiPortal);
@@ -131,7 +131,7 @@ public:
                                     dis,
                                     nnpIdx,
                                     level + 1,
-                                    static_cast<vtkm::Id>(vtkm::Ceil((sIdx + tIdx) / 2.0)),
+                                    splitNodeLoc,
                                     tIdx,
                                     treePortal,
                                     splitIdPortal,
@@ -144,7 +144,7 @@ public:
                                     dis,
                                     nnpIdx,
                                     level + 1,
-                                    static_cast<vtkm::Id>(vtkm::Ceil((sIdx + tIdx) / 2.0)),
+                                    splitNodeLoc,
                                     tIdx,
                                     treePortal,
                                     splitIdPortal,
@@ -155,7 +155,7 @@ public:
                                     nnpIdx,
                                     level + 1,
                                     sIdx,
-                                    static_cast<vtkm::Id>(vtkm::Ceil((sIdx + tIdx) / 2.0)),
+                                    splitNodeLoc,
                                     treePortal,
                                     splitIdPortal,
                                     coordiPortal);
@@ -189,16 +189,21 @@ public:
     }
   };
 
-  // Execute the Neaseat Neighbor Search given kdtree and search points
-  // Returns:
-  // Vectors of NN point index and NNpoint distance
+  /// \brief Execute the Neaseat Neighbor Search given kdtree and search points
+  ///
+  /// Given x, y, z coordinate of of training data points in \c coordi_Handle, indices to KD-tree
+  /// leaf nodes in \c pointId_Handle and indices to internal nodes in \c splitId_Handle, search
+  /// for nearest neighbors in the training data points for each of testing points in \c qc_Handle.
+  /// Returns indices to nearest neighbor in \c nnId_Handle and distance to nearest neighbor in
+  /// \c nnDis_Handle.
+
   template <typename CoordType,
             typename CoordStorageTag1,
             typename CoordStorageTag2,
             typename DeviceAdapter>
   void Run(const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag1>& coordi_Handle,
-           vtkm::cont::ArrayHandle<vtkm::Id>& pointId_Handle,
-           vtkm::cont::ArrayHandle<vtkm::Id>& splitId_Handle,
+           const vtkm::cont::ArrayHandle<vtkm::Id>& pointId_Handle,
+           const vtkm::cont::ArrayHandle<vtkm::Id>& splitId_Handle,
            const vtkm::cont::ArrayHandle<vtkm::Vec<CoordType, 3>, CoordStorageTag2>& qc_Handle,
            vtkm::cont::ArrayHandle<vtkm::Id>& nnId_Handle,
            vtkm::cont::ArrayHandle<CoordType>& nnDis_Handle,

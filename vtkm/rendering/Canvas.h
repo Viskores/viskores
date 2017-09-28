@@ -6,104 +6,100 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
-//  Copyright 2015 UT-Battelle, LLC.
-//  Copyright 2015 Los Alamos National Security.
+//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2016 UT-Battelle, LLC.
+//  Copyright 2016 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+
 #ifndef vtk_m_rendering_Canvas_h
 #define vtk_m_rendering_Canvas_h
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
+#include <vtkm/Matrix.h>
 #include <vtkm/Types.h>
+#include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/ColorTable.h>
-#include <vtkm/rendering/WorldAnnotator.h>
+#include <vtkm/rendering/Texture2D.h>
 
 namespace vtkm
 {
 namespace rendering
 {
 
+class WorldAnnotator;
+
 class VTKM_RENDERING_EXPORT Canvas
 {
 public:
-  Canvas(vtkm::Id width = 1024, vtkm::Id height = 1024);
+  using ColorBufferType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using DepthBufferType = vtkm::cont::ArrayHandle<vtkm::Float32>;
+  using FontTextureType = vtkm::rendering::Texture2D<1>;
 
+  Canvas(vtkm::Id width = 1024, vtkm::Id height = 1024);
   virtual ~Canvas();
 
-  virtual void Initialize() = 0;
+  virtual vtkm::rendering::Canvas* NewCopy() const;
 
-  virtual void Activate() = 0;
+  virtual void Initialize();
 
-  virtual void Clear() = 0;
+  virtual void Activate();
 
-  virtual void Finish() = 0;
+  virtual void Clear();
 
-  virtual vtkm::rendering::Canvas* NewCopy() const = 0;
+  virtual void Finish();
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorBufferType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Float32> DepthBufferType;
-
-  VTKM_CONT
-  vtkm::Id GetWidth() const { return this->Width; }
+  virtual void BlendBackground();
 
   VTKM_CONT
-  vtkm::Id GetHeight() const { return this->Height; }
+  vtkm::Id GetWidth() const;
 
   VTKM_CONT
-  const ColorBufferType& GetColorBuffer() const { return this->ColorBuffer; }
+  vtkm::Id GetHeight() const;
 
   VTKM_CONT
-  ColorBufferType& GetColorBuffer() { return this->ColorBuffer; }
+  const ColorBufferType& GetColorBuffer() const;
 
   VTKM_CONT
-  const DepthBufferType& GetDepthBuffer() const { return this->DepthBuffer; }
+  ColorBufferType& GetColorBuffer();
 
   VTKM_CONT
-  DepthBufferType& GetDepthBuffer() { return this->DepthBuffer; }
+  const DepthBufferType& GetDepthBuffer() const;
 
   VTKM_CONT
-  void ResizeBuffers(vtkm::Id width, vtkm::Id height)
-  {
-    VTKM_ASSERT(width >= 0);
-    VTKM_ASSERT(height >= 0);
-
-    vtkm::Id numPixels = width * height;
-    if (this->ColorBuffer.GetNumberOfValues() != numPixels)
-    {
-      this->ColorBuffer.Allocate(numPixels);
-    }
-    if (this->DepthBuffer.GetNumberOfValues() != numPixels)
-    {
-      this->DepthBuffer.Allocate(numPixels);
-    }
-
-    this->Width = width;
-    this->Height = height;
-  }
+  DepthBufferType& GetDepthBuffer();
 
   VTKM_CONT
-  const vtkm::rendering::Color& GetBackgroundColor() const { return this->BackgroundColor; }
+  void ResizeBuffers(vtkm::Id width, vtkm::Id height);
 
   VTKM_CONT
-  void SetBackgroundColor(const vtkm::rendering::Color& color) { this->BackgroundColor = color; }
+  const vtkm::rendering::Color& GetBackgroundColor() const;
+
+  VTKM_CONT
+  void SetBackgroundColor(const vtkm::rendering::Color& color);
+
+  VTKM_CONT
+  vtkm::Id2 GetScreenPoint(vtkm::Float32 x,
+                           vtkm::Float32 y,
+                           vtkm::Float32 z,
+                           const vtkm::Matrix<vtkm::Float32, 4, 4>& transfor) const;
 
   // If a subclass uses a system that renderers to different buffers, then
   // these should be overridden to copy the data to the buffers.
   virtual void RefreshColorBuffer() const {}
   virtual void RefreshDepthBuffer() const {}
 
-  virtual void SetViewToWorldSpace(const vtkm::rendering::Camera&, bool) {}
-  virtual void SetViewToScreenSpace(const vtkm::rendering::Camera&, bool) {}
+  virtual void SetViewToWorldSpace(const vtkm::rendering::Camera& camera, bool clip);
+  virtual void SetViewToScreenSpace(const vtkm::rendering::Camera& camera, bool clip);
   virtual void SetViewportClipping(const vtkm::rendering::Camera&, bool) {}
 
   virtual void SaveAs(const std::string& fileName) const;
@@ -117,17 +113,12 @@ public:
   ///
   virtual vtkm::rendering::WorldAnnotator* CreateWorldAnnotator() const;
 
-  friend class AxisAnnotation2D;
-  friend class ColorBarAnnotation;
-  friend class ColorLegendAnnotation;
-  friend class TextAnnotationScreen;
-
-protected:
+  VTKM_CONT
   virtual void AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
                               const vtkm::Vec<vtkm::Float64, 2>& point1,
                               const vtkm::Vec<vtkm::Float64, 2>& point2,
                               const vtkm::Vec<vtkm::Float64, 2>& point3,
-                              const vtkm::rendering::Color& color) const = 0;
+                              const vtkm::rendering::Color& color) const;
 
   VTKM_CONT
   void AddColorSwatch(const vtkm::Float64 x0,
@@ -138,19 +129,13 @@ protected:
                       const vtkm::Float64 y2,
                       const vtkm::Float64 x3,
                       const vtkm::Float64 y3,
-                      const vtkm::rendering::Color& color) const
-  {
-    this->AddColorSwatch(vtkm::make_Vec(x0, y0),
-                         vtkm::make_Vec(x1, y1),
-                         vtkm::make_Vec(x2, y2),
-                         vtkm::make_Vec(x3, y3),
-                         color);
-  }
+                      const vtkm::rendering::Color& color) const;
 
+  VTKM_CONT
   virtual void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
                        const vtkm::Vec<vtkm::Float64, 2>& point1,
                        vtkm::Float32 linewidth,
-                       const vtkm::rendering::Color& color) const = 0;
+                       const vtkm::rendering::Color& color) const;
 
   VTKM_CONT
   void AddLine(vtkm::Float64 x0,
@@ -158,14 +143,12 @@ protected:
                vtkm::Float64 x1,
                vtkm::Float64 y1,
                vtkm::Float32 linewidth,
-               const vtkm::rendering::Color& color) const
-  {
-    this->AddLine(vtkm::make_Vec(x0, y0), vtkm::make_Vec(x1, y1), linewidth, color);
-  }
+               const vtkm::rendering::Color& color) const;
 
+  VTKM_CONT
   virtual void AddColorBar(const vtkm::Bounds& bounds,
                            const vtkm::rendering::ColorTable& colorTable,
-                           bool horizontal) const = 0;
+                           bool horizontal) const;
 
   VTKM_CONT
   void AddColorBar(vtkm::Float32 x,
@@ -173,13 +156,7 @@ protected:
                    vtkm::Float32 width,
                    vtkm::Float32 height,
                    const vtkm::rendering::ColorTable& colorTable,
-                   bool horizontal) const
-  {
-    this->AddColorBar(
-      vtkm::Bounds(vtkm::Range(x, x + width), vtkm::Range(y, y + height), vtkm::Range(0, 0)),
-      colorTable,
-      horizontal);
-  }
+                   bool horizontal) const;
 
   virtual void AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
                        vtkm::Float32 scale,
@@ -187,7 +164,7 @@ protected:
                        vtkm::Float32 windowAspect,
                        const vtkm::Vec<vtkm::Float32, 2>& anchor,
                        const vtkm::rendering::Color& color,
-                       const std::string& text) const = 0;
+                       const std::string& text) const;
 
   VTKM_CONT
   void AddText(vtkm::Float32 x,
@@ -198,24 +175,32 @@ protected:
                vtkm::Float32 anchorX,
                vtkm::Float32 anchorY,
                const vtkm::rendering::Color& color,
-               const std::string& text) const
-  {
-    this->AddText(vtkm::make_Vec(x, y),
-                  scale,
-                  angle,
-                  windowAspect,
-                  vtkm::make_Vec(anchorX, anchorY),
-                  color,
-                  text);
-  }
+               const std::string& text) const;
 
+  VTKM_CONT
+  void AddText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
+               vtkm::Float32 scale,
+               const vtkm::Vec<vtkm::Float32, 2>& anchor,
+               const vtkm::rendering::Color& color,
+               const std::string& text) const;
+
+
+  friend class AxisAnnotation2D;
+  friend class ColorBarAnnotation;
+  friend class ColorLegendAnnotation;
+  friend class TextAnnotationScreen;
+  friend class TextRenderer;
+  friend class WorldAnnotator;
 
 private:
-  vtkm::Id Width;
-  vtkm::Id Height;
-  vtkm::rendering::Color BackgroundColor;
-  ColorBufferType ColorBuffer;
-  DepthBufferType DepthBuffer;
+  bool LoadFont() const;
+
+  const vtkm::Matrix<vtkm::Float32, 4, 4>& GetModelView() const;
+
+  const vtkm::Matrix<vtkm::Float32, 4, 4>& GetProjection() const;
+
+  struct CanvasInternals;
+  std::shared_ptr<CanvasInternals> Internals;
 };
 }
 } //namespace vtkm::rendering

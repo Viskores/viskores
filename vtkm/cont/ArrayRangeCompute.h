@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2016 UT-Battelle, LLC.
 //  Copyright 2016 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -39,8 +39,8 @@ namespace cont
 /// the values in the array. For arrays containing Vec values, the range is
 /// computed for each component.
 ///
-///This method optionally takes a \c RuntimeDeviceTracker to control which
-///devices to try.
+/// This method optionally takes a \c RuntimeDeviceTracker to control which
+/// devices to try.
 ///
 /// The result is returned in an \c ArrayHandle of \c Range objects. There is
 /// one value in the returned array for every component of the input's value

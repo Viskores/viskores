@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2016 UT-Battelle, LLC.
 //  Copyright 2016 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -198,17 +198,22 @@ struct BoundaryState
 
 namespace detail
 {
-// Helper function to increase an index to 3D.
+/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+///
 inline VTKM_EXEC vtkm::Id3 To3D(vtkm::Id3 index)
 {
   return index;
 }
 
+/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// \overload
 inline VTKM_EXEC vtkm::Id3 To3D(vtkm::Id2 index)
 {
   return vtkm::Id3(index[0], index[1], 1);
 }
 
+/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// \overload
 inline VTKM_EXEC vtkm::Id3 To3D(vtkm::Vec<vtkm::Id, 1> index)
 {
   return vtkm::Id3(index[0], 1, 1);

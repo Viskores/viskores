@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2015 UT-Battelle, LLC.
 //  Copyright 2015 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -876,7 +876,7 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   // polygon. The point is in the triangle if it is on the correct side of both
   // planes.
   vtkm::IdComponent firstPointIndex;
-  vtkm::IdComponent secondPointIndex;
+  vtkm::IdComponent secondPointIndex = 0;
   bool foundTriangle = false;
   for (firstPointIndex = 0; firstPointIndex < numPoints - 1; firstPointIndex++)
   {

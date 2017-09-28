@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -22,6 +22,8 @@
 #define vtk_m_worklet_waveletcompressor_h
 
 #include <vtkm/worklet/wavelets/WaveletDWT.h>
+
+#include <vtkm/cont/ArrayCopy.h>
 
 namespace vtkm
 {
@@ -52,7 +54,7 @@ public:
     }
     if (nLevels == 0) //  0 levels means no transform
     {
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(sigIn, coeffOut);
+      vtkm::cont::ArrayCopy(sigIn, coeffOut, DeviceTag());
       return 0;
     }
 
@@ -75,7 +77,7 @@ public:
     typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> IdArrayType;
     typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, CoeffArrayType> PermutArrayType;
 
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(sigIn, coeffOut);
+    vtkm::cont::ArrayCopy(sigIn, coeffOut, DeviceTag());
 
     for (vtkm::Id i = nLevels; i > 0; i--)
     {
@@ -123,7 +125,7 @@ public:
     typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> IdArrayType;
     typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, SignalArrayType> PermutArrayType;
 
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(coeffIn, sigOut);
+    vtkm::cont::ArrayCopy(coeffIn, sigOut, DeviceTag());
 
     for (vtkm::Id i = 1; i <= nLevels; i++)
     {
@@ -170,7 +172,7 @@ public:
     }
     if (nLevels == 0) //  0 levels means no transform
     {
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(sigIn, coeffOut);
+      vtkm::cont::ArrayCopy(sigIn, coeffOut, DeviceTag());
       return 0;
     }
 
@@ -265,7 +267,7 @@ public:
     OutBasicArray outBuffer;
     if (nLevels == 0) //  0 levels means no transform
     {
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(arrIn, arrOut);
+      vtkm::cont::ArrayCopy(arrIn, arrOut, DeviceTag());
       return 0;
     }
     else if (discardArrIn)
@@ -274,7 +276,7 @@ public:
     }
     else
     {
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(arrIn, outBuffer);
+      vtkm::cont::ArrayCopy(arrIn, outBuffer, DeviceTag());
     }
 
     std::vector<vtkm::Id> L;
@@ -341,7 +343,7 @@ public:
     }
     if (nLevels == 0) //  0 levels means no transform
     {
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(sigIn, coeffOut);
+      vtkm::cont::ArrayCopy(sigIn, coeffOut, DeviceTag());
       return 0;
     }
 
@@ -408,12 +410,12 @@ public:
     OutBasicArray outBuffer;
     if (nLevels == 0) //  0 levels means no transform
     {
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(arrIn, arrOut);
+      vtkm::cont::ArrayCopy(arrIn, arrOut, DeviceTag());
       return 0;
     }
     else
     {
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(arrIn, outBuffer);
+      vtkm::cont::ArrayCopy(arrIn, outBuffer, DeviceTag());
     }
 
     VTKM_ASSERT(vtkm::Id(L.size()) == 6 * nLevels + 4);
@@ -473,7 +475,7 @@ public:
       typedef typename CoeffArrayType::ValueType ValueType;
       typedef vtkm::cont::ArrayHandle<ValueType> CoeffArrayBasic;
       CoeffArrayBasic sortedArray;
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::Copy(coeffIn, sortedArray);
+      vtkm::cont::ArrayCopy(coeffIn, sortedArray, DeviceTag());
 
       WaveletBase::DeviceSort(sortedArray, DeviceTag());
 

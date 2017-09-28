@@ -6,11 +6,11 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 Sandia Corporation.
+##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 ##  Copyright 2014 UT-Battelle, LLC.
 ##  Copyright 2014 Los Alamos National Security.
 ##
-##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+##  Under the terms of Contract DE-NA0003525 with NTESS,
 ##  the U.S. Government retains certain rights in this software.
 ##
 ##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -88,4 +88,12 @@ elseif(CMAKE_COMPILER_IS_ICCXX)
 elseif (CMAKE_COMPILER_IS_MSVCXX)
   #enable large object support so we can have 2^32 addressable sections
   list(APPEND VTKm_COMPILE_OPTIONS "/bigobj")
+
+  # Use the highest warning level for visual c++ compiler.
+  if(CMAKE_CXX_FLAGS MATCHES "/W[0-4]")
+    string(REGEX REPLACE "/W[0-4]" "/W4" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+  endif()
+
 endif()

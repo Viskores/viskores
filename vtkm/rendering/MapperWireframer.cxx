@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2016 UT-Battelle, LLC.
 //  Copyright 2016 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -40,6 +40,10 @@ namespace rendering
 namespace
 {
 
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4127) //conditional expression is constant
+#endif
 struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
 {
   typedef void ControlSignature(CellSetIn cellSet, FieldOutCell<> numEdges);
@@ -49,6 +53,7 @@ struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
   template <typename CellShapeTag>
   VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag shape, vtkm::IdComponent numPoints) const
   {
+    //TODO: Remove the if/then with templates.
     if (shape.Id == vtkm::CELL_SHAPE_LINE)
     {
       return 1;
@@ -82,6 +87,7 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
                             vtkm::IdComponent visitIndex,
                             EdgeIndexVecType& edgeIndices) const
   {
+    //TODO: Remove the if/then with templates.
     vtkm::Id p1, p2;
     if (shape.Id == vtkm::CELL_SHAPE_LINE)
     {
@@ -104,6 +110,10 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
 private:
   ScatterType Scatter;
 }; // struct EdgesExtracter
+
+#if defined(VTKM_MSVC)
+#pragma warning(pop)
+#endif
 
 struct ExtractUniqueEdges
 {

@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2015 UT-Battelle, LLC.
 //  Copyright 2015 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -40,8 +41,7 @@ vtkm::cont::DataSet Make3DUniformDataSet(vtkm::Id size = 64)
   vtkm::cont::ArrayHandleCounting<vtkm::Float32> fieldValues(
     0.0f, 10.0f / static_cast<vtkm::Float32>(numValues), numValues);
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarField;
-  vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>::Copy(fieldValues,
-                                                                            scalarField);
+  vtkm::cont::ArrayCopy(fieldValues, scalarField);
   vtkm::cont::DataSetFieldAdd().AddPointField(dataSet, fieldName, scalarField);
   return dataSet;
 }

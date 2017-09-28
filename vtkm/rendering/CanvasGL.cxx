@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2016 Sandia Corporation.
+//  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2016 UT-Battelle, LLC.
 //  Copyright 2016 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -276,7 +276,7 @@ void CanvasGL::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
 
 vtkm::rendering::WorldAnnotator* CanvasGL::CreateWorldAnnotator() const
 {
-  return new vtkm::rendering::WorldAnnotatorGL;
+  return new vtkm::rendering::WorldAnnotatorGL(this);
 }
 
 void CanvasGL::RenderText(vtkm::Float32 scale,

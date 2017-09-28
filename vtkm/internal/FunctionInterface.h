@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -96,7 +96,7 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// \brief Holds parameters and result of a function.
 ///
 /// To make VTK-m easier for the end user developer, the
-/// vtkm::cont::Dispatcher*::Invoke() method takes an arbitrary amount of
+/// \c Invoke method of dispatchers takes an arbitrary amount of
 /// arguments that get transformed and swizzled into arguments and return value
 /// for a worklet operator. In between these two invocations a complicated
 /// series of transformations and operations can occur.
@@ -109,7 +109,7 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// place. The \c FunctionInterface template class takes a function signature,
 /// which can have a variable number of arguments. The \c FunctionInterface
 /// will hold in its state a copy of all input parameters (regardless of number
-/// or type) and the return value if it exists (i.e. non-null) and the function
+/// or type) and the return value if it exists (i.e. non-nullptr) and the function
 /// has been invoked. This means that all arguments can be passed around in a
 /// single object so that objects and functions dealing with these variadic
 /// parameters can be templated on a single type (the type of \c

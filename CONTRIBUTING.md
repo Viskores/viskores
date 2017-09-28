@@ -19,8 +19,7 @@ Before you begin, perform initial setup:
 
 2.  [Fork VTK-m][] into your user's namespace on GitLab.
 
-3.  Follow the [download instructions](download.md#clone) to create a
-    local clone of the main VTK repository:
+3.  Use Git to create a local clone of the main VTK repository:
 
         $ git clone https://gitlab.kitware.com/vtk/vtk-m.git
         $ cd vtk-m

@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -210,7 +210,8 @@ public:
                                   Compare comp)
   {
     using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
-    if (sizeof(U) > sizeof(vtkm::Id))
+    VTKM_CONSTEXPR bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
+    if (larger_than_64bits)
     {
       /// More efficient sort:
       /// Move value indexes when sorting and reorder the value array at last
@@ -242,6 +243,21 @@ public:
       ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
       Sort(zipHandle, vtkm::cont::internal::KeyCompare<T, U, Compare>(comp));
     }
+  }
+
+  template <typename T, class Storage>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
+  {
+    Unique(values, std::equal_to<T>());
+  }
+
+  template <typename T, class Storage, class BinaryCompare>
+  VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values,
+                               BinaryCompare binary_compare)
+  {
+    vtkm::Id outputSize =
+      tbb::UniquePortals(values.PrepareForInPlace(DeviceAdapterTagTBB()), binary_compare);
+    values.Shrink(outputSize);
   }
 
   VTKM_CONT static void Synchronize()

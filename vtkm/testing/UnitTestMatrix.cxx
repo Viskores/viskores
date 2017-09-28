@@ -8,11 +8,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2015 UT-Battelle, LLC.
 //  Copyright 2015 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
 //  Laboratory (LANL), the U.S. Government retains certain rights in
@@ -313,7 +313,8 @@ template <typename T, int Size>
 void SingularMatrix(vtkm::Matrix<T, Size, Size>& singularMatrix)
 {
   FOR_ROW_COL(singularMatrix) { singularMatrix(row, col) = static_cast<T>(row + col); }
-  if (Size > 1)
+  VTKM_CONSTEXPR bool larger_than_1 = Size > 1;
+  if (larger_than_1)
   {
     vtkm::MatrixSetRow(singularMatrix, 0, vtkm::MatrixGetRow(singularMatrix, (Size + 1) / 2));
   }

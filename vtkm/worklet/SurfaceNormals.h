@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2017 Sandia Corporation.
+//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2017 UT-Battelle, LLC.
 //  Copyright 2017 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -72,12 +72,28 @@ public:
                               const PointsVecType& points,
                               vtkm::Vec<T, 3>& normal) const
     {
-      normal = vtkm::TypeTraits<vtkm::Vec<T, 3>>::ZeroInitialization();
-      if (vtkm::CellTraits<CellShapeTag>::TOPOLOGICAL_DIMENSIONS == 2)
-      {
-        normal = this->Normal(vtkm::Cross(points[2] - points[1], points[0] - points[1]));
-      }
+      using CTraits = vtkm::CellTraits<CellShapeTag>;
+      const auto tag = typename CTraits::TopologicalDimensionsTag();
+      this->Compute(tag, points, normal);
     }
+
+    template <vtkm::IdComponent Dim, typename PointsVecType, typename T>
+    VTKM_EXEC void Compute(vtkm::CellTopologicalDimensionsTag<Dim>,
+                           const PointsVecType&,
+                           vtkm::Vec<T, 3>& normal) const
+    {
+      normal = vtkm::TypeTraits<vtkm::Vec<T, 3>>::ZeroInitialization();
+    }
+
+    template <typename PointsVecType, typename T>
+    VTKM_EXEC void Compute(vtkm::CellTopologicalDimensionsTag<2>,
+                           const PointsVecType& points,
+                           vtkm::Vec<T, 3>& normal) const
+    {
+      normal = this->Normal(vtkm::Cross(points[2] - points[1], points[0] - points[1]));
+    }
+
+
 
     template <typename PointsVecType, typename T>
     VTKM_EXEC void operator()(vtkm::CellShapeTagGeneric shape,

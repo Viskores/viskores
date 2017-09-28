@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2015 UT-Battelle, LLC.
 //  Copyright 2015 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -32,108 +32,8 @@ namespace vtkm
 {
 namespace rendering
 {
-
 namespace internal
 {
-
-class ClearBuffers : public vtkm::worklet::WorkletMapField
-{
-public:
-  VTKM_CONT
-  ClearBuffers() {}
-  typedef void ControlSignature(FieldOut<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
-  VTKM_EXEC
-  void operator()(vtkm::Vec<vtkm::Float32, 4>& color, vtkm::Float32& depth) const
-  {
-    color[0] = 0.f;
-    color[1] = 0.f;
-    color[2] = 0.f;
-    color[3] = 0.f;
-    depth = 1.001f;
-  }
-}; //class ClearBuffers
-
-struct ClearBuffersInvokeFunctor
-{
-  typedef vtkm::rendering::Canvas::ColorBufferType ColorBufferType;
-  typedef vtkm::rendering::Canvas::DepthBufferType DepthBufferType;
-
-  ClearBuffers Worklet;
-  ColorBufferType ColorBuffer;
-  DepthBufferType DepthBuffer;
-
-  VTKM_CONT
-  ClearBuffersInvokeFunctor(const ColorBufferType& colorBuffer, const DepthBufferType& depthBuffer)
-    : Worklet()
-    , ColorBuffer(colorBuffer)
-    , DepthBuffer(depthBuffer)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::worklet::DispatcherMapField<ClearBuffers, Device> dispatcher(this->Worklet);
-    dispatcher.Invoke(this->ColorBuffer, this->DepthBuffer);
-    return true;
-  }
-};
-
-class BlendBackground : public vtkm::worklet::WorkletMapField
-{
-  vtkm::Vec<vtkm::Float32, 4> BackgroundColor;
-
-public:
-  VTKM_CONT
-  BlendBackground(const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
-    : BackgroundColor(backgroundColor)
-  {
-  }
-
-  typedef void ControlSignature(FieldInOut<>);
-  typedef void ExecutionSignature(_1);
-
-  VTKM_EXEC void operator()(vtkm::Vec<vtkm::Float32, 4>& color) const
-  {
-    if (color[3] >= 1.f)
-      return;
-
-    vtkm::Float32 alpha = BackgroundColor[3] * (1.f - color[3]);
-    color[0] = color[0] + BackgroundColor[0] * alpha;
-    color[1] = color[1] + BackgroundColor[1] * alpha;
-    color[2] = color[2] + BackgroundColor[2] * alpha;
-    color[3] = alpha + color[3];
-  }
-}; //class BlendBackground
-
-struct BlendBackgroundFunctor
-{
-  typedef vtkm::rendering::Canvas::ColorBufferType ColorBufferType;
-
-  ColorBufferType ColorBuffer;
-  BlendBackground Worklet;
-
-  VTKM_CONT
-  BlendBackgroundFunctor(const ColorBufferType& colorBuffer,
-                         const vtkm::Vec<vtkm::Float32, 4>& backgroundColor)
-    : ColorBuffer(colorBuffer)
-    , Worklet(backgroundColor)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device) const
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    vtkm::worklet::DispatcherMapField<BlendBackground, Device> dispatcher(this->Worklet);
-    dispatcher.Invoke(this->ColorBuffer);
-    return true;
-  }
-};
 
 class SurfaceConverter : public vtkm::worklet::WorkletMapField
 {
@@ -278,35 +178,6 @@ CanvasRayTracer::~CanvasRayTracer()
 {
 }
 
-void CanvasRayTracer::Initialize()
-{
-  // Nothing to initialize
-}
-
-void CanvasRayTracer::Activate()
-{
-  // Nothing to activate
-}
-
-void CanvasRayTracer::Finish()
-{
-  // Nothing to finish
-}
-
-void CanvasRayTracer::BlendBackground()
-{
-  vtkm::cont::TryExecute(internal::BlendBackgroundFunctor(this->GetColorBuffer(),
-                                                          this->GetBackgroundColor().Components));
-}
-
-void CanvasRayTracer::Clear()
-{
-  // TODO: Should the rendering library support policies or some other way to
-  // configure with custom devices?
-  vtkm::cont::TryExecute(
-    internal::ClearBuffersInvokeFunctor(this->GetColorBuffer(), this->GetDepthBuffer()));
-}
-
 void CanvasRayTracer::WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm::Float32>& rays,
                                     const vtkm::cont::ArrayHandle<vtkm::Float32>& colors,
                                     const vtkm::rendering::Camera& camera)
@@ -324,41 +195,6 @@ void CanvasRayTracer::WriteToCanvas(const vtkm::rendering::raytracing::Ray<vtkm:
 vtkm::rendering::Canvas* CanvasRayTracer::NewCopy() const
 {
   return new vtkm::rendering::CanvasRayTracer(*this);
-}
-
-void CanvasRayTracer::AddLine(const vtkm::Vec<vtkm::Float64, 2>&,
-                              const vtkm::Vec<vtkm::Float64, 2>&,
-                              vtkm::Float32,
-                              const vtkm::rendering::Color&) const
-{
-  // Not implemented
-}
-
-void CanvasRayTracer::AddColorBar(const vtkm::Bounds&,
-                                  const vtkm::rendering::ColorTable&,
-                                  bool) const
-{
-  // Not implemented
-}
-
-void CanvasRayTracer::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>&,
-                                     const vtkm::Vec<vtkm::Float64, 2>&,
-                                     const vtkm::Vec<vtkm::Float64, 2>&,
-                                     const vtkm::Vec<vtkm::Float64, 2>&,
-                                     const vtkm::rendering::Color&) const
-{
-  // Not implemented
-}
-
-void CanvasRayTracer::AddText(const vtkm::Vec<vtkm::Float32, 2>&,
-                              vtkm::Float32,
-                              vtkm::Float32,
-                              vtkm::Float32,
-                              const vtkm::Vec<vtkm::Float32, 2>&,
-                              const vtkm::rendering::Color&,
-                              const std::string&) const
-{
-  // Not implemented
 }
 }
 }

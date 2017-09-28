@@ -30,7 +30,7 @@ OPTIONS_SPEC=
 SUBDIRECTORY_OK=Yes
 . "$(git --exec-path)/git-sh-setup"
 
-egrep-q() {
+egrep_q() {
   egrep "$@" >/dev/null 2>/dev/null
 }
 

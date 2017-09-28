@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -175,8 +175,16 @@
 #elif (defined(VTKM_MSVC))
 #define VTKM_THIRDPARTY_PRE_INCLUDE \
   __pragma(warning(push)) \
-  __pragma(warning(disable:4267)) \
+  __pragma(warning(disable:4100)) \
+  __pragma(warning(disable:4127)) \
+  __pragma(warning(disable:4201)) \
   __pragma(warning(disable:4244)) \
+  __pragma(warning(disable:4267)) \
+  __pragma(warning(disable:4324)) \
+  __pragma(warning(disable:4510)) \
+  __pragma(warning(disable:4512)) \
+  __pragma(warning(disable:4515)) \
+  __pragma(warning(disable:4610)) \
   __pragma(warning(disable:4800))
 #define VTKM_THIRDPARTY_POST_INCLUDE \
   __pragma(warning(pop))
@@ -253,11 +261,6 @@
 //Mark if we are building with TBB enabled
 #ifndef VTKM_ENABLE_TBB
 #cmakedefine VTKM_ENABLE_TBB
-#endif
-
-//Mark if we are building with interop enabled
-#ifndef VTKM_ENABLE_OPENGL_INTEROP
-#cmakedefine VTKM_ENABLE_OPENGL_INTEROP
 #endif
 
 #if __cplusplus >= 201103L || \

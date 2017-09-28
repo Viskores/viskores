@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2015 Sandia Corporation.
+//  Copyright 2015 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2015 UT-Battelle, LLC.
 //  Copyright 2015 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -64,7 +64,7 @@ public:
   }
 
 private:
-  typedef enum { ByteData, ShortData, IntegerData, FloatData, DoubleData } DataFormat;
+  using DataFormat = enum { ByteData, ShortData, IntegerData, FloatData, DoubleData };
 
   void LoadFile()
   {
@@ -240,7 +240,7 @@ private:
   {
     FILE* fp = fopen(fName.c_str(), "rb");
     size_t readSize = static_cast<size_t>(sz);
-    if (fp == NULL)
+    if (fp == nullptr)
       throw vtkm::io::ErrorIO("Unable to open data file: " + fName);
     buff.resize(readSize);
     size_t nread = fread(&buff[0], sizeof(T), readSize, fp);

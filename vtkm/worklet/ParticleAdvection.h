@@ -6,11 +6,11 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2014 Sandia Corporation.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 //  Copyright 2014 UT-Battelle, LLC.
 //  Copyright 2014 Los Alamos National Security.
 //
-//  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+//  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
 //
 //  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -22,6 +22,7 @@
 #define vtk_m_worklet_ParticleAdvection_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/particleadvection/ParticleAdvectionWorklets.h>
 
@@ -79,11 +80,11 @@ public:
     //Allocate status and steps arrays.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> init(0, numSeeds);
     stepsTaken.Allocate(numSeeds);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(init, stepsTaken);
+    vtkm::cont::ArrayCopy(init, stepsTaken, DeviceAdapter());
 
     vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
     status.Allocate(numSeeds);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(statusOK, status);
+    vtkm::cont::ArrayCopy(statusOK, status, DeviceAdapter());
 
     worklet.Run(it, pts, nSteps, status, stepsTaken);
     //Create output.
@@ -111,11 +112,11 @@ public:
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
     //Allocate status and steps arrays.
     stepsTaken.Allocate(numSeeds);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(stepsAlreadyTaken, stepsTaken);
+    vtkm::cont::ArrayCopy(stepsAlreadyTaken, stepsTaken, DeviceAdapter());
 
     vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
     status.Allocate(numSeeds);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(statusOK, status);
+    vtkm::cont::ArrayCopy(statusOK, status, DeviceAdapter());
 
     worklet.Run(it, pts, nSteps, status, stepsTaken);
     //Create output.

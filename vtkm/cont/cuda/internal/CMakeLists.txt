@@ -6,11 +6,11 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 Sandia Corporation.
+##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
 ##  Copyright 2014 UT-Battelle, LLC.
 ##  Copyright 2014 Los Alamos National Security.
 ##
-##  Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
+##  Under the terms of Contract DE-NA0003525 with NTESS,
 ##  the U.S. Government retains certain rights in this software.
 ##
 ##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
@@ -55,8 +55,14 @@ if (VTKm_ENABLE_CUDA)
     list(APPEND compile_options -Xcompiler=-fPIC)
   endif()
 
+  vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags )
+
   cuda_compile(vtkm_cont_cuda_object_files ${sources}
                OPTIONS "${compile_options}")
+
+  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+  set(CMAKE_CXX_FLAGS ${old_cxx_flags})
+
 
   #Setup the dependency chain for the custom object build so that
   add_custom_target(vtkm_cont_cuda DEPENDS ${vtkm_cont_cuda_object_files})
