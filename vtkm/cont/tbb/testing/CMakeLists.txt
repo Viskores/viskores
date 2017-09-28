@@ -21,6 +21,7 @@
 set(unit_tests
   UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx
+  UnitTestTBBCellLocatorTwoLevelUniformGrid.cxx
   UnitTestTBBComputeRange.cxx
   UnitTestTBBDataSetExplicit.cxx
   UnitTestTBBDataSetSingleType.cxx

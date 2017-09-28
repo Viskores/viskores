@@ -21,6 +21,7 @@
 set(unit_tests
   UnitTestSerialArrayHandle.cxx
   UnitTestSerialArrayHandleFancy.cxx
+  UnitTestSerialCellLocatorTwoLevelUniformGrid.cxx
   UnitTestSerialComputeRange.cxx
   UnitTestSerialDataSetExplicit.cxx
   UnitTestSerialDataSetSingleType.cxx

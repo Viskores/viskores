@@ -23,6 +23,7 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
+  TestingCellLocatorTwoLevelUniformGrid.h
   TestingComputeRange.h
   TestingDeviceAdapter.h
   TestingDataSetExplicit.h

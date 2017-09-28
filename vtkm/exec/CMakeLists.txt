@@ -23,6 +23,7 @@ set(headers
   CellDerivative.h
   CellEdge.h
   CellFace.h
+  CellInside.h
   CellInterpolate.h
   ConnectivityExplicit.h
   ConnectivityPermuted.h
