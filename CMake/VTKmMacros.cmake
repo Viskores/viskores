@@ -169,7 +169,7 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     endforeach()
 
     cuda_include_directories(${VTKm_SOURCE_DIR}
-                             ${VTKm_BINARY_DIR}/include
+                             ${VTKm_BINARY_INCLUDE_DIR}
                             )
 
     cuda_add_library(TestBuild_${name} STATIC ${cxxfiles} ${hfiles})
@@ -331,7 +331,7 @@ function(vtkm_unit_tests)
 
       # Cuda compiles do not respect target_include_directories
       cuda_include_directories(${VTKm_SOURCE_DIR}
-                               ${VTKm_BINARY_DIR}/include
+                               ${VTKm_BINARY_INCLUDE_DIR}
                                ${VTKm_INCLUDE_DIRS}
                                )
 
@@ -470,7 +470,7 @@ function(vtkm_worklet_unit_tests device_adapter)
 
       # Cuda compiles do not respect target_include_directories
       cuda_include_directories(${VTKm_SOURCE_DIR}
-                               ${VTKm_BINARY_DIR}/include
+                               ${VTKm_BINARY_INCLUDE_DIR}
                                ${VTKm_INCLUDE_DIRS}
                                )
 
@@ -605,7 +605,7 @@ function(vtkm_benchmarks device_adapter)
         # Cuda compiles do not respect target_include_directories
 
         cuda_include_directories(${VTKm_SOURCE_DIR}
-                                 ${VTKm_BINARY_DIR}/include
+                                 ${VTKm_BINARY_INCLUDE_DIR}
                                  ${VTKm_BACKEND_INCLUDE_DIRS}
                                  )
 
@@ -725,7 +725,7 @@ function(vtkm_library)
 
     # Cuda compiles do not respect target_include_directories
     cuda_include_directories(${VTKm_SOURCE_DIR}
-                             ${VTKm_BINARY_DIR}/include
+                             ${VTKm_BINARY_INCLUDE_DIR}
                              ${VTKm_BACKEND_INCLUDE_DIRS}
                              )
 
@@ -794,7 +794,7 @@ function(vtkm_library)
 
   configure_file(
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
-      ${VTKm_BINARY_DIR}/include/${dir_prefix}/${lib_name}_export.h
+      ${VTKm_BINARY_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
     @ONLY)
 
   unset(EXPORT_MACRO_NAME)
@@ -808,7 +808,7 @@ function(vtkm_library)
     RUNTIME DESTINATION ${VTKm_INSTALL_BIN_DIR}
     )
   vtkm_install_headers("${dir_prefix}"
-    ${VTKm_BINARY_DIR}/include/${dir_prefix}/${lib_name}_export.h
+    ${VTKm_BINARY_INCLUDE_DIR}/${dir_prefix}/${lib_name}_export.h
     ${VTKm_LIB_HEADERS}
     )
 endfunction(vtkm_library)

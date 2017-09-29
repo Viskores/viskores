@@ -43,5 +43,5 @@ endif()
 target_include_directories(vtkm_cont_serial PRIVATE
     ${VTKm_BACKEND_INCLUDE_DIRS}
     ${VTKm_SOURCE_DIR}
-    ${VTKm_BINARY_DIR}/include
+    ${VTKm_BINARY_INCLUDE_DIR}
   )
