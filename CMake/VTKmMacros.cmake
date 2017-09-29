@@ -98,6 +98,37 @@ function(vtkm_setup_msvc_properties target )
 
 endfunction(vtkm_setup_msvc_properties)
 
+# vtkm_target_name(<name>)
+#
+# This macro does some basic checking for library naming, and also adds a suffix
+# to the output name with the VTKm version by default. Setting the variable
+# VTKm_CUSTOM_LIBRARY_SUFFIX will override the suffix.
+function(vtkm_target_name _name)
+  get_property(_type TARGET ${_name} PROPERTY TYPE)
+  if(NOT "${_type}" STREQUAL EXECUTABLE)
+    set_property(TARGET ${_name} PROPERTY VERSION 1)
+    set_property(TARGET ${_name} PROPERTY SOVERSION 1)
+  endif()
+  if("${_name}" MATCHES "^[Vv][Tt][Kk][Mm]")
+    set(_vtkm "")
+  else()
+    set(_vtkm "vtkm")
+    #message(AUTHOR_WARNING "Target [${_name}] does not start in 'vtkm'.")
+  endif()
+  # Support custom library suffix names, for other projects wanting to inject
+  # their own version numbers etc.
+  if(DEFINED VTKm_CUSTOM_LIBRARY_SUFFIX)
+    set(_lib_suffix "${VTKm_CUSTOM_LIBRARY_SUFFIX}")
+  else()
+    set(_lib_suffix "-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}")
+  endif()
+  set_property(TARGET ${_name} PROPERTY OUTPUT_NAME ${_vtk}${_name}${_lib_suffix})
+endfunction()
+
+function(vtkm_target _name)
+  vtkm_target_name(${_name})
+endfunction()
+
 # Builds a source file and an executable that does nothing other than
 # compile the given header files.
 function(vtkm_add_header_build_test name dir_prefix use_cuda)
@@ -710,6 +741,8 @@ function(vtkm_library)
   else()
     add_library(${lib_name} ${VTKm_LIB_SOURCES})
   endif()
+
+  vtkm_target(${lib_name})
 
   target_link_libraries(${lib_name} PUBLIC vtkm)
   target_link_libraries(${lib_name} PRIVATE
