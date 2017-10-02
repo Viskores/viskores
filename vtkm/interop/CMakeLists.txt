@@ -31,6 +31,10 @@ endif()
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 
+if(VTKm_CUDA_FOUND)
+  add_subdirectory(cuda)
+endif()
+
 #-----------------------------------------------------------------------------
 vtkm_declare_headers(${headers} TESTABLE FALSE)
 
