@@ -24,6 +24,9 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif
 
+// Must be included before any other GL includes:
+#include <GL/glew.h>
+
 #include <iostream>
 
 #include <vtkm/Math.h>
