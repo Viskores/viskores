@@ -327,7 +327,7 @@ install(
 
 # Create and install exports for external projects
 export(EXPORT ${VTKm_EXPORT_NAME}
-  FILE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+  FILE ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
   )
 install(EXPORT ${VTKm_EXPORT_NAME}
   DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
