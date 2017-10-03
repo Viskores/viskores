@@ -55,15 +55,39 @@ void TestVertexClustering()
   FieldArrayType cellvar = output.GetCellField("cellvar").GetData().Cast<FieldArrayType>();
 
   // test
-  const vtkm::Id output_points = 6;
+  const vtkm::Id output_points = 7;
   vtkm::Float64 output_point[output_points][3] = {
-    { 0.0174716003, 0.0501927994, 0.0930275023 }, { 0.0320714004, 0.14704667, 0.0952706337 },
-    { 0.0268670674, 0.246195346, 0.119720004 },   { 0.00215422804, 0.0340906903, 0.180881709 },
-    { 0.0108188, 0.152774006, 0.167914003 },      { 0.0202241503, 0.225427493, 0.140208006 }
+    { 0.0174716, 0.0501928, 0.0930275 }, { 0.0307091, 0.1521420, 0.05392490 },
+    { 0.0174172, 0.1371240, 0.1245530 }, { 0.0480879, 0.1518740, 0.10733400 },
+    { 0.0180085, 0.2043600, 0.1453160 }, { -.000129414, 0.00247137, 0.17656100 },
+    { 0.0108188, 0.1527740, 0.1679140 }
   };
 
-  vtkm::Float32 output_pointvar[output_points] = { 28.f, 15.f, 16.f, 21.f, 30.f, 17.f };
-  vtkm::Float32 output_cellvar[3] = { 140.f, 144.f, 132.f };
+  vtkm::Float32 output_pointvar[output_points] = { 28.f, 19.f, 25.f, 15.f, 16.f, 21.f, 30.f };
+  vtkm::Float32 output_cellvar[] = { 145.f, 134.f, 138.f, 140.f, 149.f, 144.f };
+
+  {
+    typedef vtkm::cont::CellSetSingleType<> CellSetType;
+    CellSetType cellSet;
+    output.GetCellSet(0).CopyTo(cellSet);
+    auto cellArray =
+      cellSet.GetConnectivityArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    std::cerr << "output_pointIds = " << cellArray.GetNumberOfValues() << "\n";
+    std::cerr << "output_pointId[] = ";
+    vtkm::cont::printSummary_ArrayHandle(cellArray, std::cerr, true);
+  }
+
+  {
+    typedef vtkm::Vec<vtkm::Float64, 3> PointType;
+    vtkm::cont::ArrayHandle<PointType> pointArray;
+    output.GetCoordinateSystem(0).GetData().CopyTo(pointArray);
+    std::cerr << "output_points = " << pointArray.GetNumberOfValues() << "\n";
+    std::cerr << "output_point[] = ";
+    vtkm::cont::printSummary_ArrayHandle(pointArray, std::cerr, true);
+  }
+
+  vtkm::cont::printSummary_ArrayHandle(pointvar, std::cerr, true);
+  vtkm::cont::printSummary_ArrayHandle(cellvar, std::cerr, true);
 
   typedef vtkm::Vec<vtkm::Float64, 3> PointType;
   vtkm::cont::ArrayHandle<PointType> pointArray;
@@ -74,7 +98,6 @@ void TestVertexClustering()
   {
     const PointType& p1 = pointArray.GetPortalConstControl().Get(i);
     PointType p2 = vtkm::make_Vec(output_point[i][0], output_point[i][1], output_point[i][2]);
-    std::cout << "point: " << p1 << " " << p2 << std::endl;
     VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
   }
 
@@ -89,7 +112,7 @@ void TestVertexClustering()
 
   {
     auto portal = cellvar.GetPortalConstControl();
-    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 3, "Cell field size mismatch.");
+    VTKM_TEST_ASSERT(portal.GetNumberOfValues() == 6, "Cell field size mismatch.");
     for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(test_equal(portal.Get(i), output_cellvar[i]), "Cell field mismatch.");

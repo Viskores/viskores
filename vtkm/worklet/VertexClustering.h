@@ -36,8 +36,12 @@
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/DispatcherReduceByKey.h>
+#include <vtkm/worklet/Keys.h>
+#include <vtkm/worklet/StableSortIndices.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/WorkletReduceByKey.h>
 
 //#define __VTKM_VERTEX_CLUSTERING_BENCHMARK
 
@@ -53,118 +57,68 @@ namespace worklet
 namespace internal
 {
 
-// Allows Sort to be called on an array that indexes into ValuePortal.
-template <typename ValuePortalType>
-struct IndirectSortPredicate
+/// Selects the representative point somewhat randomly from the pool of points
+/// in a cluster.
+struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
 {
-  using ValueType = typename ValuePortalType::ValueType;
+  typedef void ControlSignature(KeysIn clusterIds, ValuesIn<> points, ReducedValuesOut<> repPoints);
+  typedef _3 ExecutionSignature(_2);
+  using InputDomain = _1;
 
-  ValuePortalType ValuePortal;
-
-  IndirectSortPredicate(ValuePortalType valuePortal)
-    : ValuePortal(valuePortal)
+  template <typename PointsInVecType>
+  VTKM_EXEC typename PointsInVecType::ComponentType operator()(
+    const PointsInVecType& pointsIn) const
   {
+    // Grab the point from the middle of the set. This usually does a decent
+    // job of selecting a representative point that won't emphasize the cluster
+    // partitions.
+    //
+    // Note that we must use the stable sorting with the worklet::Keys for this
+    // to be reproducible across backends.
+    return pointsIn[pointsIn.GetNumberOfComponents() / 2];
   }
 
-  template <typename IndexType>
-  bool operator()(const IndexType& a, const IndexType& b) const
+  template <typename KeyType, typename DeviceAdapterTag>
+  struct RunTrampoline
   {
-    // If the values compare equal, compare the indices as well so we get
-    // consistent outputs.
-    const ValueType valueA = this->ValuePortal.Get(a);
-    const ValueType valueB = this->ValuePortal.Get(b);
-    if (valueA < valueB)
+    const vtkm::worklet::Keys<KeyType>& Keys;
+    vtkm::cont::DynamicArrayHandle& OutputPoints;
+
+    VTKM_CONT
+    RunTrampoline(const vtkm::worklet::Keys<KeyType>& keys, vtkm::cont::DynamicArrayHandle& output)
+      : Keys(keys)
+      , OutputPoints(output)
     {
-      return true;
     }
-    else if (valueB < valueA)
+
+    template <typename InputPointsArrayType>
+    VTKM_CONT void operator()(const InputPointsArrayType& points) const
     {
-      return false;
+      vtkm::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
+
+      vtkm::worklet::DispatcherReduceByKey<SelectRepresentativePoint, DeviceAdapterTag> dispatcher;
+      dispatcher.Invoke(this->Keys, points, out);
+
+      this->OutputPoints = out;
     }
-    else
-    {
-      return a < b;
-    }
+  };
+
+  template <typename KeyType, typename InputDynamicPointsArrayType, typename DeviceAdapterTag>
+  VTKM_CONT static vtkm::cont::DynamicArrayHandle Run(
+    const vtkm::worklet::Keys<KeyType>& keys,
+    const InputDynamicPointsArrayType& inputPoints,
+    DeviceAdapterTag)
+  {
+    vtkm::cont::DynamicArrayHandle output;
+    RunTrampoline<KeyType, DeviceAdapterTag> trampoline(keys, output);
+    vtkm::cont::CastAndCall(inputPoints, trampoline);
+    return output;
   }
 };
 
-// Allows Unique to be called on an array that indexes into ValuePortal.
-template <typename ValuePortalType>
-struct IndirectUniquePredicate
-{
-  ValuePortalType ValuePortal;
-
-  IndirectUniquePredicate(ValuePortalType valuePortal)
-    : ValuePortal(valuePortal)
-  {
-  }
-
-  template <typename IndexType>
-  bool operator()(const IndexType& a, const IndexType& b) const
-  {
-    return this->ValuePortal.Get(a) == this->ValuePortal.Get(b);
-  }
-};
-
-// Returns an ArrayHandle<vtkm::Id> that contains sorted, unique indices of the data in values.
-template <typename ValueType, typename Storage, typename DeviceAdapter>
-VTKM_CONT static vtkm::cont::ArrayHandle<vtkm::Id> SortAndUniqueIndices(
-  const vtkm::cont::ArrayHandle<ValueType, Storage>& values,
-  DeviceAdapter)
-{
-  using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-  using IndexArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
-  using ValueArrayType = vtkm::cont::ArrayHandle<ValueType, Storage>;
-  using ValuePortalType =
-    typename ValueArrayType::template ExecutionTypes<DeviceAdapter>::PortalConst;
-
-  using SortPredicate = IndirectSortPredicate<ValuePortalType>;
-  using UniquePredicate = IndirectUniquePredicate<ValuePortalType>;
-
-#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-  vtkm::cont::Timer<DeviceAdapter> timer;
-#endif
-
-  // Generate the initial index array
-  IndexArrayType indices;
-  {
-    vtkm::cont::ArrayHandleIndex indicesSrc(values.GetNumberOfValues());
-    Algo::Copy(indicesSrc, indices);
-  }
-
-#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-  std::cout << "Generate index array: " << timer.GetElapsedTime() << "\n";
-  timer.Reset();
-#endif
-
-  ValuePortalType valuePortal = values.PrepareForInput(DeviceAdapter());
-
-  // Sort the values:
-  {
-    Algo::Sort(indices, SortPredicate(valuePortal));
-  }
-
-#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-  std::cout << "Indexed sort: " << timer.GetElapsedTime() << "\n";
-  timer.Reset();
-#endif
-
-  // Make unique:
-  {
-    Algo::Unique(indices, UniquePredicate(valuePortal));
-  }
-
-#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-  std::cout << "Indexed unique: " << timer.GetElapsedTime() << "\n";
-  timer.Reset();
-#endif
-
-  return indices;
-}
-
-template <typename ValueType, typename StorageType, typename DeviceAdapter>
+template <typename ValueType, typename StorageType, typename IndexArrayType, typename DeviceAdapter>
 VTKM_CONT vtkm::cont::ArrayHandle<ValueType> ConcretePermutationArray(
-  const vtkm::cont::ArrayHandle<vtkm::Id>& indices,
+  const IndexArrayType& indices,
   const vtkm::cont::ArrayHandle<ValueType, StorageType>& values,
   DeviceAdapter)
 {
@@ -173,40 +127,6 @@ VTKM_CONT vtkm::cont::ArrayHandle<ValueType> ConcretePermutationArray(
   vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(tmp, result);
   return result;
 }
-
-// Create a permutation of a dynamic array.
-template <typename DeviceAdapter>
-struct DynamicPermutationFunctor
-{
-  using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
-  const vtkm::cont::ArrayHandle<vtkm::Id>& Indices;
-  vtkm::cont::DynamicArrayHandle& Output;
-
-  DynamicPermutationFunctor(const vtkm::cont::ArrayHandle<vtkm::Id>& indices,
-                            vtkm::cont::DynamicArrayHandle& output)
-    : Indices(indices)
-    , Output(output)
-  {
-  }
-
-  template <typename ArrayType>
-  VTKM_CONT void operator()(const ArrayType& input) const
-  {
-    this->Output = ConcretePermutationArray(this->Indices, input, DeviceAdapter());
-  }
-
-  template <typename DynamicArrayHandleType>
-  VTKM_CONT static vtkm::cont::DynamicArrayHandle Run(
-    const vtkm::cont::ArrayHandle<vtkm::Id>& indices,
-    const DynamicArrayHandleType& values)
-  {
-    vtkm::cont::DynamicArrayHandle result;
-    DynamicPermutationFunctor<DeviceAdapter> functor(indices, result);
-    CastAndCall(values, functor);
-    return result;
-  }
-};
 
 template <typename T, vtkm::IdComponent N, typename DeviceAdapter>
 vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> const& other,
@@ -224,6 +144,9 @@ vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> 
 
 struct VertexClustering
 {
+  using PointIdMapType = vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                                            vtkm::cont::ArrayHandle<vtkm::Id>>;
+
   struct GridInfo
   {
     vtkm::Vec<vtkm::Id, 3> dim;
@@ -429,8 +352,6 @@ public:
                           const vtkm::Id3& nDivisions,
                           DeviceAdapter)
   {
-    using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     /// determine grid resolution for clustering
     GridInfo gridInfo;
     {
@@ -469,24 +390,28 @@ public:
     timer.Reset();
 #endif
 
-    /// pass 2 : Reduce each cluster to a single point from the cluster.
-    ///          Choosing a random point from the input gives a better visual
-    ///          result than a simple average in the common case of surface
-    ///          geometry, as the average results in a blocky output with
-    ///          obvious grid artifacts.
-    this->PointIdMap = internal::SortAndUniqueIndices(pointCidArray, DeviceAdapter());
+    /// pass 2 : Choose a representative point from each cluster for the output:
+    vtkm::cont::DynamicArrayHandle repPointArray;
+    {
+      vtkm::worklet::Keys<vtkm::Id> keys;
+      keys.BuildArrays(
+        pointCidArray, vtkm::worklet::Keys<vtkm::Id>::SortType::Stable, DeviceAdapter());
 
-    using RepPointCidType = vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                                               vtkm::cont::ArrayHandle<vtkm::Id>>;
-    RepPointCidType repPointCidArray =
+      // For mapping properties, this map will select an arbitrary point from
+      // the cluster:
+      this->PointIdMap =
+        vtkm::cont::make_ArrayHandlePermutation(keys.GetOffsets(), keys.GetSortedValuesMap());
+
+      // Compute representative points from each cluster (may not match the
+      // PointIdMap indexing)
+      repPointArray = internal::SelectRepresentativePoint::Run(keys, coordinates, DeviceAdapter());
+    }
+
+    auto repPointCidArray =
       vtkm::cont::make_ArrayHandlePermutation(this->PointIdMap, pointCidArray);
 
-    // representative points
-    vtkm::cont::DynamicArrayHandle repPointArray =
-      internal::DynamicPermutationFunctor<DeviceAdapter>::Run(this->PointIdMap, coordinates);
-
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;
+    std::cout << "Time after reducing points (s): " << timer.GetElapsedTime() << std::endl;
     timer.Reset();
 #endif
 
@@ -505,7 +430,6 @@ public:
     std::cout << "Time after clustering cells (s): " << timer.GetElapsedTime() << std::endl;
     timer.Reset();
 #endif
-
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
     vtkm::cont::ArrayHandle<vtkm::Id> cidIndexArray;
@@ -552,7 +476,8 @@ public:
       timer.Reset();
 #endif
 
-      this->CellIdMap = internal::SortAndUniqueIndices(pointId3HashArray, DeviceAdapter());
+      this->CellIdMap = vtkm::worklet::StableSortIndices<DeviceAdapter>::Sort(pointId3HashArray);
+      vtkm::worklet::StableSortIndices<DeviceAdapter>::Unique(pointId3HashArray, this->CellIdMap);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique with hashing (s): " << timer.GetElapsedTime()
@@ -576,7 +501,8 @@ public:
       timer.Reset();
 #endif
 
-      this->CellIdMap = internal::SortAndUniqueIndices(pointId3Array, DeviceAdapter());
+      this->CellIdMap = vtkm::worklet::StableSortIndices<DeviceAdapter>::Sort(pointId3Array);
+      vtkm::worklet::StableSortIndices<DeviceAdapter>::Unique(pointId3Array, this->CellIdMap);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique [no hashing] (s): " << timer.GetElapsedTime()
@@ -584,7 +510,8 @@ public:
       timer.Reset();
 #endif
 
-      // Permute the connectivity array into a basic array handle:
+      // Permute the connectivity array into a basic array handle. Use a
+      // temporary array handle to avoid memory aliasing.
       {
         vtkm::cont::ArrayHandle<vtkm::Id3> tmp;
         tmp = internal::ConcretePermutationArray(this->CellIdMap, pointId3Array, DeviceAdapter());
@@ -604,7 +531,8 @@ public:
     /// output
     vtkm::cont::DataSet output;
 
-    output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
+    output.AddCoordinateSystem(
+      vtkm::cont::CoordinateSystem("coordinates", vtkm::cont::DynamicArrayHandle(repPointArray)));
 
     vtkm::cont::CellSetSingleType<> triangles("cells");
     triangles.Fill(repPointArray.GetNumberOfValues(),
@@ -641,7 +569,7 @@ public:
   }
 
 private:
-  vtkm::cont::ArrayHandle<vtkm::Id> PointIdMap;
+  PointIdMapType PointIdMap;
   vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
 }; // struct VertexClustering
 }
