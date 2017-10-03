@@ -100,7 +100,7 @@ struct DoStaticTestWorklet
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
-    vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+    vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
     std::cout << "Create and run dispatcher." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
@@ -144,7 +144,7 @@ struct DoDynamicTestWorklet
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> inoutHandle;
 
-    vtkm::cont::ArrayCopy(inputHandle, inoutHandle);
+    vtkm::cont::ArrayCopy(inputHandle, inoutHandle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
     std::cout << "Create and run dispatcher with dynamic arrays." << std::endl;
     vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
