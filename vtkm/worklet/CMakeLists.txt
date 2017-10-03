@@ -43,7 +43,6 @@ set(headers
   Keys.h
   Magnitude.h
   MarchingCubes.h
-  MarchingCubesDataTables.h
   Mask.h
   MaskPoints.h
   NDimsEntropy.h
@@ -74,6 +73,7 @@ set(headers
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
+add_subdirectory(contour)
 add_subdirectory(contourtree)
 add_subdirectory(cosmotools)
 add_subdirectory(gradient)
