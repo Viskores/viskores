@@ -45,7 +45,7 @@ if (VTKm_ENABLE_CUDA)
   #todo we need to add a custom target and feed that as a dependency
   #for vtkm_cont
   cuda_include_directories(${VTKm_SOURCE_DIR}
-                           ${VTKm_BINARY_DIR}/include
+                           ${VTKm_BINARY_INCLUDE_DIR}
                            ${VTKm_BACKEND_INCLUDE_DIRS}
                            )
 

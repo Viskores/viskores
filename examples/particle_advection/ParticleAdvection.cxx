@@ -35,6 +35,10 @@
 #include <chrono>
 #include <vector>
 
+#ifdef __BUILDING_TBB_VERSION__
+#include <tbb/task_scheduler_init.h>
+#endif
+
 const vtkm::Id SPARSE = 0;
 const vtkm::Id DENSE = 1;
 const vtkm::Id MEDIUM = 2;

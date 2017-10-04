@@ -27,29 +27,9 @@ cmake_minimum_required(VERSION 3.3)
 
 project (VTKm)
 
-if (NOT DEFINED VTKm_INSTALL_INCLUDE_DIR)
-  set(VTKm_INSTALL_INCLUDE_DIR "include")
-endif()
-if (NOT DEFINED VTKm_INSTALL_CONFIG_DIR)
-  set(VTKm_INSTALL_CONFIG_DIR "lib")
-endif()
-if (NOT DEFINED VTKm_INSTALL_LIB_DIR)
-  set(VTKm_INSTALL_LIB_DIR "lib")
-endif()
-if (NOT DEFINED VTKm_INSTALL_BIN_DIR)
-  set(VTKm_INSTALL_BIN_DIR "bin")
-endif()
-if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
-  set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm/cmake")
-endif()
-
-set(VTKm_EXPORT_NAME "VTKmTargets")
-
+# Update module path
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
-
-# Setup default build types
-include(VTKmBuildType)
 
 # Determine VTK-m version
 include(Utilities/Git/Git.cmake)
@@ -60,6 +40,29 @@ file(STRINGS version.txt version_txt)
 extract_version_components("${version_txt}" "VTKm")
 # Get the version from git if we can
 determine_version(${VTKm_SOURCE_DIR} ${GIT_EXECUTABLE} "VTKm")
+
+if (NOT DEFINED VTKm_INSTALL_INCLUDE_DIR)
+  set(VTKm_INSTALL_INCLUDE_DIR "include/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}")
+endif()
+if (NOT DEFINED VTKm_INSTALL_CONFIG_DIR)
+  set(VTKm_INSTALL_CONFIG_DIR "lib/cmake/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}")
+endif()
+if (NOT DEFINED VTKm_INSTALL_LIB_DIR)
+  set(VTKm_INSTALL_LIB_DIR "lib")
+endif()
+if (NOT DEFINED VTKm_INSTALL_BIN_DIR)
+  set(VTKm_INSTALL_BIN_DIR "bin")
+endif()
+if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
+  set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}/cmake")
+endif()
+
+set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}")
+
+set(VTKm_EXPORT_NAME "VTKmTargets")
+
+# Setup default build types
+include(VTKmBuildType)
 
 # include some vtkm-specific cmake code.
 include(VTKmMacros)
@@ -75,7 +78,7 @@ add_library(vtkm INTERFACE)
 target_compile_features(vtkm INTERFACE cxx_auto_type)
 target_include_directories(vtkm INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}>
   $<INSTALL_INTERFACE:include>
   )
 install(TARGETS vtkm EXPORT ${VTKm_EXPORT_NAME})
@@ -324,10 +327,10 @@ install(
 
 # Create and install exports for external projects
 export(EXPORT ${VTKm_EXPORT_NAME}
-  FILE ${CMAKE_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+  FILE ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
   )
 install(EXPORT ${VTKm_EXPORT_NAME}
-  DESTINATION ${VTKm_INSTALL_LIB_DIR}
+  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   FILE VTKmTargets.cmake
   )
 

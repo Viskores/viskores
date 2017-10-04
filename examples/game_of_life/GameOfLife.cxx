@@ -18,6 +18,9 @@
 //  this software.
 //============================================================================
 
+// Must be included before any other GL includes:
+#include <GL/glew.h>
+
 #include <algorithm>
 #include <iostream>
 #include <random>
