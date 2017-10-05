@@ -48,7 +48,11 @@ endif()
 add_library(vtkm_compiler_flags INTERFACE)
 
 # setup that we need C++11 support
-target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
+if(CMAKE_VERSION VERSION_LESS 3.8)
+  target_compile_features(vtkm_compiler_flags INTERFACE cxx_nullptr)
+else()
+  target_compile_features(vtkm_compiler_flags INTERFACE cxx_std_11)
+endif()
 
 # Enable large object support so we can have 2^32 addressable sections
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")

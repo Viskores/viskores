@@ -118,28 +118,28 @@ set(device_sources
 add_subdirectory(internal)
 add_subdirectory(arg)
 
-vtkm_library( NAME vtkm
+set(backends )
+add_subdirectory(serial)
+list(APPEND sources $<TARGET_OBJECTS:vtkm_cont_serial>)
+
+add_subdirectory(tbb)
+if (VTKm_ENABLE_TBB)
+  list(APPEND sources $<TARGET_OBJECTS:vtkm_cont_tbb>)
+  list(APPEND backends vtkm::tbb)
+endif()
+
+add_subdirectory(cuda)
+if (VTKm_ENABLE_CUDA)
+  list(APPEND sources $<TARGET_OBJECTS:vtkm_cont_cuda>)
+  list(APPEND backends vtkm::cuda)
+endif()
+
+vtkm_library( NAME vtkm_cont
               SOURCES ${sources}
               TEMPLATE_SOURCES ${template_sources}
               HEADERS ${headers}
               WRAP_FOR_CUDA ${device_sources}
             )
-
-add_subdirectory(serial)
-target_sources(vtkm PRIVATE $<TARGET_OBJECTS:vtkm_cont_serial>)
-
-add_subdirectory(tbb)
-if (VTKm_ENABLE_TBB)
-  target_sources(vtkm PRIVATE $<TARGET_OBJECTS:vtkm_cont_tbb>)
-  target_link_libraries(vtkm PUBLIC vtkm::tbb)
-endif()
-
-add_subdirectory(cuda)
-if (VTKm_ENABLE_CUDA)
-  target_sources(vtkm PRIVATE $<TARGET_OBJECTS:vtkm_cont_cuda>)
-  target_link_libraries(vtkm PUBLIC vtkm::cuda)
-endif()
-
-target_link_libraries(vtkm PUBLIC vtkm_compiler_flags)
+target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)

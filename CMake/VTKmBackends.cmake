@@ -43,6 +43,7 @@ endif()
 
 
 if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
+  cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
   enable_language(CUDA)
 
   add_library(vtkm::cuda UNKNOWN IMPORTED)

@@ -26,7 +26,7 @@
 #   - Support for usage requirements
 #
 # We require CMake 3.9 for CUDA support
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.3)
 project (VTKm)
 
 # Update module path

@@ -19,7 +19,7 @@
 ##  this software.
 ##
 ##=============================================================================
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 project(MultiBackend CXX)
 
 #Find the VTK-m package
@@ -30,4 +30,4 @@ if(TARGET vtkm::cuda)
 endif()
 
 add_executable(MultiBackend MultiBackend.cxx)
-target_link_libraries(MultiBackend PRIVATE vtkm)
+target_link_libraries(MultiBackend PRIVATE vtkm_cont)

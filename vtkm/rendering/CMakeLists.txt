@@ -187,7 +187,7 @@ elseif(VTKm_RENDERING_BACKEND STREQUAL "EGL")
 endif()
 
 #-----------------------------------------------------------------------------
-target_link_libraries(vtkm_rendering PUBLIC vtkm)
+target_link_libraries(vtkm_rendering PUBLIC vtkm_cont)
 
 if(UNIX AND NOT APPLE)
   target_link_libraries(vtkm_rendering PRIVATE rt )

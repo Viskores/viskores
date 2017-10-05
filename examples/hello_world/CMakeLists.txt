@@ -19,7 +19,7 @@
 ##  this software.
 ##
 ##=============================================================================
-cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 project(HelloWorld CXX)
 
 #Find the VTK-m package
@@ -32,17 +32,17 @@ if(TARGET OpenGL::GL AND
 
   add_executable(HelloWorld_SERIAL HelloWorld.cxx LoadShaders.h)
   target_link_libraries(HelloWorld_SERIAL
-                        PRIVATE vtkm OpenGL::GL GLEW::GLEW GLUT::GLUT)
+                        PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
 
   if(TARGET vtkm::tbb)
     add_executable(HelloWorld_TBB HelloWorldTBB.cxx LoadShaders.h)
     target_link_libraries(HelloWorld_TBB
-                          PRIVATE vtkm OpenGL::GL GLEW::GLEW GLUT::GLUT)
+                          PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
   endif()
 
   if(TARGET vtkm::cuda)
     add_executable(HelloWorld_CUDA HelloWorld.cu LoadShaders.h)
     target_link_libraries(HelloWorld_CUDA
-                          PRIVATE vtkm OpenGL::GL GLEW::GLEW GLUT::GLUT)
+                          PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
   endif()
 endif()

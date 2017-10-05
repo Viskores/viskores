@@ -229,7 +229,7 @@ function(vtkm_unit_tests)
     RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
     )
 
-  target_link_libraries(${test_prog} PRIVATE vtkm ${VTKm_UT_LIBRARIES})
+  target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
 
   if(NOT VTKm_UT_NO_TESTS)
     return()
