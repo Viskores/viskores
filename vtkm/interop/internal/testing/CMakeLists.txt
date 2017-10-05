@@ -18,9 +18,13 @@
 ##  this software.
 ##============================================================================
 
+if(NOT TARGET GLEW::GLEW)
+  return()
+endif()
+
 set(unit_tests
-  UnitTestBufferTypePicker.cxx
-  UnitTestOpenGLHeaders.cxx
+    UnitTestOpenGLHeaders.cxx
+    UnitTestBufferTypePicker.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES GLEW::GLEW)

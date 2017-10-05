@@ -18,6 +18,24 @@
 ##  this software.
 ##============================================================================
 
+if(NOT VTKm_ENABLE_RENDERING)
+  return()
+endif()
+# determine what backend for rendering we want to build
+
+set(default_backend "OpenGL")
+if(NOT VTKm_RENDERING_BACKEND)
+  message(STATUS "Setting rendering backend to '${default_backend}' as none was specified.")
+  set(VTKm_RENDERING_BACKEND "${default_backend}" CACHE
+      STRING "Choose the backend for vtkm rendering." FORCE)
+  # Set the possible values of rendering backend types for cmake-gui
+  set(extra_backends )
+  if(UNIX AND NOT APPLE)
+    list(APPEND extra_backends "OSMesa" "EGL")
+  endif()
+  set_property(CACHE VTKm_RENDERING_BACKEND PROPERTY STRINGS "None" "OpenGL" ${extra_backends})
+endif()
+
 set(headers
   Actor.h
   AxisAnnotation.h
@@ -100,6 +118,8 @@ set(sources
   raytracing/VolumeRendererStructured.cxx
   )
 
+# Note that EGL and OSMesa Canvas depend on the GL version being built. Only
+# the None backend supports not building the opengl version
 set(opengl_headers
   CanvasGL.h
   MapperGL.h
@@ -148,64 +168,39 @@ set(device_sources
   )
 
 #-----------------------------------------------------------------------------
-vtkm_configure_component_OpenGL()
-if(VTKm_OpenGL_FOUND)
-  list(APPEND headers ${opengl_headers})
-  list(APPEND sources ${opengl_sources})
-
-  vtkm_configure_component_OSMesa()
-  if(VTKm_OSMesa_FOUND)
-    list(APPEND headers ${osmesa_headers})
-    list(APPEND sources ${osmesa_sources})
-  endif()
-
-#  vtkm_configure_component_EGL()
-#  if(VTKm_EGL_FOUND)
-#    list(APPEND headers ${egl_headers})
-#    list(APPEND sources ${egl_sources})
-#  endif()
-endif()
-
-if(VTKm_ENABLE_OSMESA AND NOT VTKm_OSMesa_FOUND)
-  message(SEND_ERROR "OSMesa was requested by not properly configured.
-Either make sure the OSMesa headers and library are properly found or set
-VTKm_ENABLE_OSMESA to OFF.")
-endif()
-
-vtkm_declare_headers(${headers})
-
 vtkm_library(
+  NAME vtkm_rendering
   SOURCES ${sources}
+  HEADERS ${headers}
   WRAP_FOR_CUDA ${device_sources}
   )
 
-# EGL Libs are added here to ensure propper linking when statically compiling.
-# This is safe to do even when not using EGL as the values will then be empty.
-target_link_libraries(vtkm_rendering
-                      PUBLIC vtkm_cont
-                      PRIVATE ${VTKm_OPENGL_LIBRARIES}
-                              ${VTKm_BACKEND_LIBRARIES}
-                              ${EGL_LIBRARIES}
-                      )
+if(VTKm_RENDERING_BACKEND STREQUAL "OpenGL")
+  vtkm_declare_headers(${opengl_headers})
+  target_sources(vtkm_rendering PRIVATE ${opengl_sources})
+elseif(VTKm_RENDERING_BACKEND STREQUAL "OSMesa")
+  vtkm_declare_headers(${opengl_headers} ${osmesa_headers})
+  target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${osmesa_sources})
+elseif(VTKm_RENDERING_BACKEND STREQUAL "EGL")
+  vtkm_declare_headers(${opengl_headers} ${egl_headers})
+  target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${egl_sources})
+endif()
 
-# EGL Dirs are added here to ensure propper linking when statically compiling.
-# This is safe to do even when not using EGL as the values will then be empty.
-target_include_directories(vtkm_rendering
-                          PRIVATE ${VTKm_OPENGL_INCLUDE_DIRS}
-                                  ${VTKm_BACKEND_INCLUDE_DIRS}
-                                  ${EGL_INCLUDE_DIRS}
-                          )
+#-----------------------------------------------------------------------------
+target_link_libraries(vtkm_rendering PUBLIC vtkm)
 
 if(UNIX AND NOT APPLE)
   target_link_libraries(vtkm_rendering PRIVATE rt )
 endif()
 
-
-# Subclasses need rendering library
-vtkm_configure_component_Rendering()
-
-add_subdirectory(internal)
-add_subdirectory(raytracing)
+#-----------------------------------------------------------------------------
+include(VTKmRenderingBackends)
+target_link_libraries(vtkm_rendering PUBLIC vtkm_rendering_backend)
+  install(TARGETS vtkm_rendering_backend
+    EXPORT ${VTKm_EXPORT_NAME}
+    )
 
 #-----------------------------------------------------------------------------
+add_subdirectory(internal)
+add_subdirectory(raytracing)
 add_subdirectory(testing)

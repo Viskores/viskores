@@ -82,11 +82,9 @@ add_subdirectory(filter)
 
 #-----------------------------------------------------------------------------
 # Build rendering
-# if(VTKm_ENABLE_RENDERING)
-#   add_subdirectory(rendering)
-# endif()
+add_subdirectory(rendering)
 
-# add_subdirectory(interop)
+add_subdirectory(interop)
 
 #-----------------------------------------------------------------------------
 #add the benchmarking folder

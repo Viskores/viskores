@@ -19,15 +19,27 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(Rendering CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial OpenGL Rendering GLUT
-  )
+find_package(VTKm REQUIRED QUIET)
 
-if(VTKm_OpenGL_FOUND AND VTKm_Rendering_FOUND AND VTKm_GLUT_FOUND)
-  add_executable(Rendering_SERIAL Rendering.cxx)
-  target_include_directories(Rendering_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(Rendering_SERIAL PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(Rendering_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
+if(NOT TARGET vtkm_rendering OR NOT VTKm_RENDERING_BACKEND STREQUAL "OpenGL")
+  return()
+endif()
+
+vtkm_find_gl(OPTIONAL GLUT)
+if(NOT TARGET GLUT::GLUT)
+  return()
+endif()
+
+add_executable(Rendering_SERIAL Rendering.cxx)
+target_link_libraries(Rendering_SERIAL PRIVATE vtkm_rendering GLUT::GLUT)
+
+if(TARGET vtkm::tbb)
+  add_executable(Rendering_TBB Rendering.cxx)
+  target_compile_definitions(Rendering_TBB PRIVATE
+                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
+  target_link_libraries(Rendering_TBB PRIVATE vtkm_rendering GLUT::GLUT)
 endif()

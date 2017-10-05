@@ -33,9 +33,15 @@ set(unit_tests
   UnitTestMapperVolume.cxx
 )
 
-VTKm_unit_tests(SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
 
-#add_subdirectory(osmesa)
-#add_subdirectory(egl)
-#add_subdirectory(glfw)
-
+if(VTKm_RENDERING_BACKEND STREQUAL "OpenGL")
+  # message(STATUS "rendering testing/glfw needs a FindGLFW")
+  # message(STATUS "rendering testing/glut needs compile corrections")
+  # add_subdirectory(glfw)
+  # add_subdirectory(glut)
+elseif(VTKm_RENDERING_BACKEND STREQUAL "OSMesa")
+  add_subdirectory(osmesa)
+elseif(VTKm_RENDERING_BACKEND STREQUAL "EGL")
+  add_subdirectory(egl)
+endif()

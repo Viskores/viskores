@@ -75,7 +75,6 @@ option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
 option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
-option(VTKm_ENABLE_OSMESA "Enable creating the OSMesa canvas" OFF)
 
 option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
 option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
@@ -222,6 +221,7 @@ install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
 install(
   FILES
     ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
+    ${VTKm_SOURCE_DIR}/CMake/FindOpenGL.cmake
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )
 
@@ -230,6 +230,7 @@ install(
   FILES
     ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmBackends.cmake
+    ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingBackends.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )

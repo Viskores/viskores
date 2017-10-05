@@ -117,8 +117,6 @@ function(vtkm_install_template_sources)
   vtkm_install_headers("${dir_prefix}" ${hfiles})
 endfunction(vtkm_install_template_sources)
 
-
-
 #-----------------------------------------------------------------------------
 # Add a VTK-m library. The name of the library will match the "kit" name
 # (e.g. vtkm_rendering) unless the NAME argument is given.
@@ -231,7 +229,7 @@ function(vtkm_unit_tests)
     RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
     )
 
-  target_link_libraries(${test_prog} PRIVATE vtkm)
+  target_link_libraries(${test_prog} PRIVATE vtkm ${VTKm_UT_LIBRARIES})
 
   if(NOT VTKm_UT_NO_TESTS)
     return()

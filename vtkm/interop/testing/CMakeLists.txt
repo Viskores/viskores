@@ -22,40 +22,35 @@ set(headers
   TestingOpenGLInterop.h
   TestingTransferFancyHandles.h
   )
+vtkm_declare_headers(${headers} TESTABLE FALSE)
 
-set(unit_tests)
 
-# So because we are using GLEW to do our
-# GL binding we can only expect one
-# of these transfer tests to work
-#
-#
-set(needs_rendering FALSE)
-if(VTKm_OSMesa_FOUND AND TARGET vtkm_rendering)
+if(NOT TARGET GLUT::GLUT)
+  find_package(GLUT QUIET)
+
+  if(NOT TARGET GLUT::GLUT)
+    return()
+  endif()
+endif()
+
+# rendering can only have a single backend so we need to
+if(VTKm_RENDERING_BACKEND STREQUAL "OSMesa" AND TARGET vtkm_rendering)
   list(APPEND unit_tests
     UnitTestTransferOSMesa.cxx
     UnitTestFancyTransferOSMesa.cxx
   )
-  set(needs_rendering TRUE)
-elseif(VTKm_EGL_FOUND AND TARGET vtkm_rendering)
+elseif(VTKm_RENDERING_BACKEND STREQUAL "EGL" AND TARGET vtkm_rendering)
   list(APPEND unit_tests
     UnitTestTransferEGL.cxx
     UnitTestFancyTransferEGL.cxx
   )
-  set(needs_rendering TRUE)
-else()
-  vtkm_configure_component_GLUT()
-  if(VTKm_GLUT_FOUND)
-    list(APPEND unit_tests
-       UnitTestTransferGLUT.cxx
-       UnitTestFancyTransferGLUT.cxx
-    )
-  endif()
+elseif(VTKm_RENDERING_BACKEND STREQUAL "OpenGL" AND TARGET vtkm_rendering)
+  list(APPEND unit_tests
+     UnitTestTransferGLUT.cxx
+     UnitTestFancyTransferGLUT.cxx
+  )
 endif()
 
-
-vtkm_declare_headers(${headers} TESTABLE FALSE)
-vtkm_unit_tests(SOURCES ${unit_tests})
-if(needs_rendering)
-  target_link_libraries(UnitTests_vtkm_interop_testing PRIVATE vtkm_rendering)
+if(unit_tests)
+  vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES vtkm_rendering GLUT::GLUT)
 endif()

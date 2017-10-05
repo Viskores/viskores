@@ -17,15 +17,15 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
-
-vtkm_configure_component_GLFW()
-if (VTKm_GLFW_FOUND)
-  set(unit_tests
-    UnitTestMapperGLFW.cxx
-    )
-  VTKm_unit_tests(
-    SOURCES ${unit_tests}
-    TEST_ARGS -B
-    )
+find_package(GLFW QUIET)
+if(NOT TARGET GLFW::GLFW)
+  return()
 endif()
+
+set(unit_tests
+  UnitTestMapperGLFW.cxx
+  )
+vtkm_unit_tests(SOURCES ${unit_tests}
+                TEST_ARGS -B
+                LIBRARIES vtkm_rendering GLFW::GLFW)
 

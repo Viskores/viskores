@@ -23,6 +23,8 @@
 #
 # vtkm        Target that should be used to link to VTK-m
 #
+# vtkm_rendering Target that contains all the rendering code
+#
 # vtkm::tbb   Target that contains tbb related link information
 #             implicitly linked to by `vtkm` if tbb is enabled
 #
@@ -58,6 +60,8 @@ endif()
 set(VTKm_BUILD_SHARED_LIBS "@BUILD_SHARED_LIBS@")
 set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
 set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
+set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
+set(VTKm_RENDERING_BACKEND "@VTKm_RENDERING_BACKEND@")
 
 # Load the library exports, but only if not compiling VTK-m itself
 set_and_check(VTKm_CONFIG_DIR "@PACKAGE_VTKm_INSTALL_CONFIG_DIR@")
@@ -72,5 +76,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
 # This includes a host of functions used by VTK-m CMake.
 include(VTKmWrappers)
+
+if(VTKm_ENABLE_RENDERING)
+  include(VTKmRenderingBackends)
+endif()
 
 check_required_components(vtkm)

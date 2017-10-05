@@ -19,33 +19,23 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+project(VTKmDemo CXX)
 
 #Find the VTK-m package
-find_package(VTKm QUIET REQUIRED
-  OPTIONAL_COMPONENTS Serial CUDA TBB OSMesa Rendering
-  )
+find_package(VTKm REQUIRED QUIET)
 
+if(TARGET vtkm_rendering)
 
-if(VTKm_OSMesa_FOUND AND VTKm_Rendering_FOUND)
-  if(VTKm_CUDA_FOUND)
-    # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS})
-    cuda_add_executable(Demo Demo.cu)
-  else()
-    add_executable(Demo Demo.cxx)
-  endif()
+  add_executable(Demo Demo.cxx)
+  target_link_libraries(Demo PRIVATE vtkm_rendering)
 
-
-  #need to setup the default device adapter.
-  target_include_directories(Demo PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(Demo PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(Demo PRIVATE ${VTKm_COMPILE_OPTIONS})
-
-  #when we are using TBB pass in the default device adapter as
-  #a compile definition to make sure we build with TBB selected
-  if(VTKm_TBB_FOUND)
+  if(TARGET vtkm::cuda)
+    set_source_files_properties(Demo.cxx LANGUAGE "CUDA")
+    target_compile_definitions(Demo
+        PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+  elseif(TARGET vtkm::tbb)
     target_compile_definitions(Demo
         PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
   endif()
-
 endif()

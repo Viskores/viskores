@@ -19,6 +19,8 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+project(MultiBackend CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
