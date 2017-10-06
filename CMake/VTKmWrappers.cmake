@@ -142,7 +142,7 @@ function(vtkm_library)
   set(lib_name ${VTKm_LIB_NAME})
 
   if(VTKm_ENABLE_CUDA)
-    set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} LANGUAGE "CUDA")
+    set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} PROPERTIES LANGUAGE "CUDA")
   endif()
 
 

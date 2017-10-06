@@ -27,15 +27,16 @@ find_package(VTKm REQUIRED QUIET)
 
 if(TARGET vtkm_rendering)
 
+  set(backend "VTKM_DEVICE_ADAPTER_SERIAL")
+  if(TARGET vtkm::cuda)
+    set_source_files_properties(Demo.cxx PROPERTIES LANGUAGE "CUDA")
+    set(backend "VTKM_DEVICE_ADAPTER_CUDA")
+  elseif(TARGET vtkm::tbb)
+    set(backend "VTKM_DEVICE_ADAPTER_TBB")
+  endif()
+
   add_executable(Demo Demo.cxx)
   target_link_libraries(Demo PRIVATE vtkm_rendering)
+  target_compile_definitions(Demo PRIVATE "VTKM_DEVICE_ADAPTER=${backend}")
 
-  if(TARGET vtkm::cuda)
-    set_source_files_properties(Demo.cxx LANGUAGE "CUDA")
-    target_compile_definitions(Demo
-        PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
-  elseif(TARGET vtkm::tbb)
-    target_compile_definitions(Demo
-        PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  endif()
 endif()

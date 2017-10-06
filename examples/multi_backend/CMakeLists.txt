@@ -26,7 +26,7 @@ project(MultiBackend CXX)
 find_package(VTKm REQUIRED QUIET)
 
 if(TARGET vtkm::cuda)
-  set_source_files_properties(MultiBackend.cxx LANGUAGE "CUDA")
+  set_source_files_properties(MultiBackend.cxx PROPERTIES LANGUAGE "CUDA")
 endif()
 
 add_executable(MultiBackend MultiBackend.cxx)
