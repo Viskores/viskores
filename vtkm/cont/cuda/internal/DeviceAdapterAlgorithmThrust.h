@@ -71,7 +71,7 @@ namespace cont
 {
 
 template <class DeviceAdapterTag>
-class DeviceAdapterAlgorithm;
+struct DeviceAdapterAlgorithm;
 
 namespace cuda
 {
