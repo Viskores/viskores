@@ -121,8 +121,16 @@ public:
   {
     auto keysPortalIn = keys.PrepareForInput(Device());
     auto valuesPortalIn = values.PrepareForInput(Device());
-
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+
+    VTKM_ASSERT(numberOfKeys == values.GetNumberOfValues());
+    if (numberOfKeys == 0)
+    {
+      keys_output.Shrink(0);
+      values_output.Shrink(0);
+      return;
+    }
+
     auto keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device());
     auto valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device());
 
