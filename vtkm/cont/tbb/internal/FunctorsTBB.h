@@ -28,7 +28,9 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
 #include <algorithm>
+#include <iterator>
 #include <sstream>
+#include <type_traits>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 
@@ -96,6 +98,7 @@ struct CopyBody
   vtkm::Id InputOffset;
   vtkm::Id OutputOffset;
 
+  VTKM_EXEC_CONT
   CopyBody(const InputPortalType& inPortal,
            const OutputPortalType& outPortal,
            vtkm::Id inOffset,
@@ -107,14 +110,47 @@ struct CopyBody
   {
   }
 
+  // MSVC likes complain about narrowing type conversions in std::copy and
+  // provides no reasonable way to disable the warning. As a work-around, this
+  // template calls std::copy if and only if the types match, otherwise falls
+  // back to a iterative casting approach. Since std::copy can only really
+  // optimize same-type copies, this shouldn't affect performance.
+  template <typename InIter, typename OutIter>
+  VTKM_EXEC void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type) const
+  {
+    using OutputType = typename std::iterator_traits<OutIter>::value_type;
+    while (src != srcEnd)
+    {
+      *dst = static_cast<OutputType>(*src);
+      ++src;
+      ++dst;
+    }
+  }
+
+  template <typename InIter, typename OutIter>
+  VTKM_EXEC void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type) const
+  {
+    std::copy(src, srcEnd, dst);
+  }
+
+  VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range) const
   {
+    if (range.empty())
+    {
+      return;
+    }
+
     auto inIter = vtkm::cont::ArrayPortalToIteratorBegin(this->InputPortal);
     auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(this->OutputPortal);
 
-    std::copy(inIter + this->InputOffset + range.begin(),
-              inIter + this->InputOffset + range.end(),
-              outIter + this->OutputOffset + range.begin());
+    using InputType = typename InputPortalType::ValueType;
+    using OutputType = typename OutputPortalType::ValueType;
+
+    this->DoCopy(inIter + this->InputOffset + range.begin(),
+                 inIter + this->InputOffset + range.end(),
+                 outIter + this->OutputOffset + range.begin(),
+                 std::is_same<InputType, OutputType>());
   }
 };
 

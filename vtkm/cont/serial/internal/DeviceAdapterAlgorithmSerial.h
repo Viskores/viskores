@@ -33,7 +33,9 @@
 #include <vtkm/exec/serial/internal/TaskTiling.h>
 
 #include <algorithm>
+#include <iterator>
 #include <numeric>
+#include <type_traits>
 
 namespace vtkm
 {
@@ -49,6 +51,29 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>
 private:
   using Device = vtkm::cont::DeviceAdapterTagSerial;
 
+  // MSVC likes complain about narrowing type conversions in std::copy and
+  // provides no reasonable way to disable the warning. As a work-around, this
+  // template calls std::copy if and only if the types match, otherwise falls
+  // back to a iterative casting approach. Since std::copy can only really
+  // optimize same-type copies, this shouldn't affect performance.
+  template <typename InIter, typename OutIter>
+  VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type)
+  {
+    using OutputType = typename std::iterator_traits<OutIter>::value_type;
+    while (src != srcEnd)
+    {
+      *dst = static_cast<OutputType>(*src);
+      ++src;
+      ++dst;
+    }
+  }
+
+  template <typename InIter, typename OutIter>
+  VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
+  {
+    std::copy(src, srcEnd, dst);
+  }
+
 public:
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
@@ -58,9 +83,13 @@ public:
     auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
     auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagSerial());
 
-    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
-              vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
-              vtkm::cont::ArrayPortalToIteratorBegin(outputPortal));
+    using InputType = decltype(inputPortal.Get(0));
+    using OutputType = decltype(outputPortal.Get(0));
+
+    DoCopy(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+           vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+           vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+           std::is_same<InputType, OutputType>());
   }
 
   template <typename T, typename U, class CIn, class CStencil, class COut>
@@ -153,9 +182,13 @@ public:
     auto inIter = vtkm::cont::ArrayPortalToIteratorBegin(inputPortal);
     auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(outputPortal);
 
-    std::copy(inIter + inputStartIndex,
-              inIter + inputStartIndex + numberOfElementsToCopy,
-              outIter + outputIndex);
+    using InputType = decltype(inputPortal.Get(0));
+    using OutputType = decltype(outputPortal.Get(0));
+
+    DoCopy(inIter + inputStartIndex,
+           inIter + inputStartIndex + numberOfElementsToCopy,
+           outIter + outputIndex,
+           std::is_same<InputType, OutputType>());
 
     return true;
   }
