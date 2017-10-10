@@ -88,6 +88,49 @@ using WrappedBinaryOperator = vtkm::cont::internal::WrappedBinaryOperator<Result
 // into picking this size.
 static const vtkm::Id TBB_GRAIN_SIZE = 1024;
 
+template <typename InputPortalType, typename OutputPortalType>
+struct CopyBody
+{
+  InputPortalType InputPortal;
+  OutputPortalType OutputPortal;
+  vtkm::Id InputOffset;
+  vtkm::Id OutputOffset;
+
+  CopyBody(const InputPortalType& inPortal,
+           const OutputPortalType& outPortal,
+           vtkm::Id inOffset,
+           vtkm::Id outOffset)
+    : InputPortal(inPortal)
+    , OutputPortal(outPortal)
+    , InputOffset(inOffset)
+    , OutputOffset(outOffset)
+  {
+  }
+
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range) const
+  {
+    auto inIter = vtkm::cont::ArrayPortalToIteratorBegin(this->InputPortal);
+    auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(this->OutputPortal);
+
+    std::copy(inIter + this->InputOffset + range.begin(),
+              inIter + this->InputOffset + range.end(),
+              outIter + this->OutputOffset + range.begin());
+  }
+};
+
+template <typename InputPortalType, typename OutputPortalType>
+void CopyPortals(const InputPortalType& inPortal,
+                 const OutputPortalType& outPortal,
+                 vtkm::Id inOffset,
+                 vtkm::Id outOffset,
+                 vtkm::Id numValues)
+{
+  using Kernel = CopyBody<InputPortalType, OutputPortalType>;
+  Kernel kernel(inPortal, outPortal, inOffset, outOffset);
+  ::tbb::blocked_range<vtkm::Id> range(0, numValues, TBB_GRAIN_SIZE);
+  ::tbb::parallel_for(range, kernel);
+}
+
 template <typename InputPortalType,
           typename StencilPortalType,
           typename OutputPortalType,
