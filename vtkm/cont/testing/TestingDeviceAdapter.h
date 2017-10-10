@@ -1967,6 +1967,29 @@ private:
       }
     }
 
+    // 7. Test that overlapping ranges trigger a failure:
+    // 7.1 output starts inside input range:
+    {
+      const vtkm::Id inBegin = 100;
+      const vtkm::Id inEnd = 200;
+      const vtkm::Id outBegin = 150;
+
+      const vtkm::Id numVals = inEnd - inBegin;
+      bool result = Algorithm::CopySubRange(input, inBegin, numVals, input, outBegin);
+      VTKM_TEST_ASSERT(result == false, "Overlapping subrange did not fail.");
+    }
+
+    // 7.2 input starts inside output range
+    {
+      const vtkm::Id inBegin = 100;
+      const vtkm::Id inEnd = 200;
+      const vtkm::Id outBegin = 50;
+
+      const vtkm::Id numVals = inEnd - inBegin;
+      bool result = Algorithm::CopySubRange(input, inBegin, numVals, input, outBegin);
+      VTKM_TEST_ASSERT(result == false, "Overlapping subrange did not fail.");
+    }
+
     {
       vtkm::cont::ArrayHandle<T> output;
 

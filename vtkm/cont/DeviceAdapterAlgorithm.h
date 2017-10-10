@@ -108,7 +108,8 @@ struct DeviceAdapterAlgorithm
   /// fit the number of elements we desire.
   ///
   /// \par Requirements:
-  /// \arg \c input must already be sorted
+  /// \arg If \c input and \c output share memory, the input and output ranges
+  /// must not overlap.
   ///
   template <typename T, typename U, class CIn, class COut>
   VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn>& input,
