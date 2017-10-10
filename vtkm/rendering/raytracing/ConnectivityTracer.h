@@ -63,7 +63,6 @@ namespace rendering
 namespace raytracing
 {
 
-
 //
 //  Advance Ray
 //      After a ray leaves the mesh, we need to check to see
@@ -1256,7 +1255,7 @@ public:
   void OffsetMinDistances(Ray<FloatType>& rays, Device)
   {
     vtkm::worklet::DispatcherMapField<AdvanceRay<FloatType>, Device>(
-      AdvanceRay<FloatType>(FloatType(0.0000001)))
+      AdvanceRay<FloatType>(FloatType(0.001)))
       .Invoke(rays.Status, rays.MinDistance);
   }
 
@@ -1319,9 +1318,8 @@ public:
 
     MeshConn.Construct(Device());
 
-    logger->AddLogData("active_pixels", rays.NumRays);
 
-    bool cullMissedRays = false;
+    bool cullMissedRays = true;
     bool workRemaining = true;
     if (this->CountRayStatus)
     {
@@ -1405,6 +1403,7 @@ public:
     }
     vtkm::Float64 renderTime = renderTimer.GetElapsedTime();
     this->LogTimers();
+    logger->AddLogData("active_pixels", rays.NumRays);
     logger->CloseLogEntry(renderTime);
   } //Render
 

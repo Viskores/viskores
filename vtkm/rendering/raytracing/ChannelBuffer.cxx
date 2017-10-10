@@ -100,10 +100,10 @@ ChannelBuffer<Precision>::ChannelBuffer()
 template <typename Precision>
 ChannelBuffer<Precision>::ChannelBuffer(const vtkm::Int32 numChannels, const vtkm::Id size)
 {
-  if (size < 1)
-    throw vtkm::cont::ErrorBadValue("ChannelBuffer: Size must be greater that 0");
-  if (numChannels < 1)
-    throw vtkm::cont::ErrorBadValue("ChannelBuffer: NumChannels must be greater that 0");
+  if (size < 0)
+    throw vtkm::cont::ErrorBadValue("ChannelBuffer: Size must be greater that -1");
+  if (numChannels < 0)
+    throw vtkm::cont::ErrorBadValue("ChannelBuffer: NumChannels must be greater that -1");
 
   this->NumChannels = numChannels;
   this->Size = size;
@@ -235,7 +235,10 @@ ChannelBuffer<Precision> ChannelBuffer<Precision>::GetChannel(const vtkm::Int32 
     throw vtkm::cont::ErrorBadValue("ChannelBuffer: invalid channel to extract");
   ChannelBuffer<Precision> output(1, this->Size);
   output.SetName(this->Name);
-
+  if (this->Size == 0)
+  {
+    return output;
+  }
   ExtractChannelFunctor<Precision> functor(this, output.Buffer, channel);
 
   vtkm::cont::TryExecute(functor);

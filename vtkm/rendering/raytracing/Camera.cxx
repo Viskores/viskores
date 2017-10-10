@@ -645,6 +645,9 @@ VTKM_CONT void Camera::CreateRaysOnDevice(Ray<Precision>& rays,
   vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(MemSet<Precision>(0.f))
     .Invoke(rays.MinDistance);
 
+  vtkm::worklet::DispatcherMapField<MemSet<Precision>, Device>(MemSet<Precision>(0.f))
+    .Invoke(rays.Distance);
+
   //Reset the Rays Hit Index to -2
   vtkm::worklet::DispatcherMapField<MemSet<vtkm::Id>, Device>(MemSet<vtkm::Id>(-2))
     .Invoke(rays.HitIdx);
