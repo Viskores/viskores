@@ -255,9 +255,9 @@ public:
   VTKM_CONT
   bool HasBuffer(const std::string name)
   {
-    vtkm::Id numBuffers = static_cast<vtkm::Id>(this->Buffers.size());
+    size_t numBuffers = this->Buffers.size();
     bool found = false;
-    for (vtkm::Id i = 0; i < numBuffers; ++i)
+    for (size_t i = 0; i < numBuffers; ++i)
     {
       if (this->Buffers[i].GetName() == name)
       {
