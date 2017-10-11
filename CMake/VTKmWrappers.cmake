@@ -231,7 +231,7 @@ function(vtkm_unit_tests)
 
   target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
 
-  if(NOT VTKm_UT_NO_TESTS)
+  if(VTKm_UT_NO_TESTS)
     return()
   endif()
 
@@ -243,10 +243,10 @@ function(vtkm_unit_tests)
   endif()
   foreach (test ${VTKm_UT_SOURCES})
     get_filename_component(tname ${test} NAME_WE)
-    add_test(NAME ${tname}
+    add_test(NAME ${tname}${backend}
       COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
       )
-    set_tests_properties("${tname}" PROPERTIES TIMEOUT ${timeout})
+    set_tests_properties("${tname}${backend}" PROPERTIES TIMEOUT ${timeout})
   endforeach (test)
 
 endfunction(vtkm_unit_tests)
