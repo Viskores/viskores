@@ -22,6 +22,7 @@
 #define vtk_m_cont_internal_DeviceAdapterAlgorithmGeneral_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleDiscard.h>
 #include <vtkm/cont/ArrayHandleImplicit.h>
 #include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleStreaming.h>
@@ -34,6 +35,8 @@
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/internal/Windows.h>
+
+#include <type_traits>
 
 namespace vtkm
 {
@@ -363,6 +366,8 @@ public:
                                     vtkm::cont::ArrayHandle<U, VOut>& values_output,
                                     BinaryFunctor binary_functor)
   {
+    using KeysOutputType = vtkm::cont::ArrayHandle<U, KOut>;
+
     VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
 
@@ -412,9 +417,14 @@ public:
 
     } //release all temporary memory
 
-    //find all the unique keys
-    DerivedAlgorithm::Copy(keys, keys_output);
-    DerivedAlgorithm::Unique(keys_output);
+    // Don't bother with the keys_output if it's an ArrayHandleDiscard -- there
+    // will be a runtime exception in Unique() otherwise:
+    if (!vtkm::cont::IsArrayHandleDiscard<KeysOutputType>::Value)
+    {
+      //find all the unique keys
+      DerivedAlgorithm::Copy(keys, keys_output);
+      DerivedAlgorithm::Unique(keys_output);
+    }
   }
 
   //--------------------------------------------------------------------------
