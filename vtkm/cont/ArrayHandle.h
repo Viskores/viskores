@@ -321,10 +321,23 @@ public:
   {
     return (this->Internals == rhs.Internals);
   }
+
   VTKM_CONT
   bool operator!=(const ArrayHandle<ValueType, StorageTag>& rhs) const
   {
     return (this->Internals != rhs.Internals);
+  }
+
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator==(const ArrayHandle<VT, ST>&) const
+  {
+    return false; // different valuetype and/or storage
+  }
+
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator!=(const ArrayHandle<VT, ST>&) const
+  {
+    return true; // different valuetype and/or storage
   }
 
   /// Get the storage.
