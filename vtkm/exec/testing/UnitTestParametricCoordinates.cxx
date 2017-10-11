@@ -80,8 +80,9 @@ static void CompareCoordinates(const PointWCoordsType& pointWCoords,
   VTKM_TEST_ASSERT(test_equal(computedWCoords, trueWCoords, 0.01),
                    "Computed wrong world coords from parametric coords.");
 
+  bool success = false;
   Vector3 computedPCoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-    pointWCoords, trueWCoords, shape, workletProxy);
+    pointWCoords, trueWCoords, shape, success, workletProxy);
   VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
   VTKM_TEST_ASSERT(test_equal(computedPCoords, truePCoords, 0.01),
                    "Computed wrong parametric coords from world coords.");
@@ -166,8 +167,9 @@ void TestPCoordsSample(const PointWCoordsType& pointWCoords, CellShapeTag shape)
     Vector3 wcoords = vtkm::exec::ParametricCoordinatesToWorldCoordinates(
       pointWCoords, pcoords, shape, workletProxy);
     VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
+    bool success = false;
     Vector3 computedPCoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-      pointWCoords, wcoords, shape, workletProxy);
+      pointWCoords, wcoords, shape, success, workletProxy);
     VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
 
     VTKM_TEST_ASSERT(test_equal(pcoords, computedPCoords, 0.05),

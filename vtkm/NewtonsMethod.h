@@ -26,6 +26,14 @@
 namespace vtkm
 {
 
+template <typename ScalarType, vtkm::IdComponent Size>
+struct NewtonsMethodResult
+{
+  bool Valid;
+  bool Converged;
+  vtkm::Vec<ScalarType, Size> Solution;
+};
+
 /// Uses Newton's method (a.k.a. Newton-Raphson method) to solve a nonlinear
 /// system of equations. This function assumes that the number of variables
 /// equals the number of equations. Newton's method operates on an iterative
@@ -41,7 +49,7 @@ template <typename ScalarType,
           vtkm::IdComponent Size,
           typename JacobianFunctor,
           typename FunctionFunctor>
-VTKM_EXEC_CONT vtkm::Vec<ScalarType, Size> NewtonsMethod(
+VTKM_EXEC_CONT NewtonsMethodResult<ScalarType, Size> NewtonsMethod(
   JacobianFunctor jacobianEvaluator,
   FunctionFunctor functionEvaluator,
   vtkm::Vec<ScalarType, Size> desiredFunctionOutput,
@@ -54,6 +62,7 @@ VTKM_EXEC_CONT vtkm::Vec<ScalarType, Size> NewtonsMethod(
 
   VectorType x = initialGuess;
 
+  bool valid = false;
   bool converged = false;
   for (vtkm::IdComponent iteration = 0; !converged && (iteration < maxIterations); iteration++)
   {
@@ -69,9 +78,12 @@ VTKM_EXEC_CONT vtkm::Vec<ScalarType, Size> NewtonsMethod(
     MatrixType jacobian = jacobianEvaluator(x);
     VectorType currentFunctionOutput = functionEvaluator(x);
 
-    bool valid; // Ignored.
     VectorType deltaX =
       vtkm::SolveLinearSystem(jacobian, currentFunctionOutput - desiredFunctionOutput, valid);
+    if (!valid)
+    {
+      break;
+    }
 
     x = x - deltaX;
 
@@ -83,7 +95,7 @@ VTKM_EXEC_CONT vtkm::Vec<ScalarType, Size> NewtonsMethod(
   }
 
   // Not checking whether converged.
-  return x;
+  return { valid, converged, x };
 }
 
 } // namespace vtkm
