@@ -51,7 +51,16 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   # We can't have this location/lib empty, so we provide a location that is
   # valid and will have no effect on compilation
   list(GET CMAKE_CUDA_IMPLICIT_LINK_LIBRARIES 0 VTKM_CUDA_LIBRARY)
-  set_property(TARGET vtkm::cuda APPEND PROPERTY IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
+  if(IS_ABSOLUTE "${VTKM_CUDA_LIBRARY}")
+    set_property(TARGET vtkm::cuda APPEND PROPERTY IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
+  else()
+    find_library(cuda_lib
+                 NAME ${VTKM_CUDA_LIBRARY}
+                 PATHS ${CMAKE_CUDA_HOST_IMPLICIT_LINK_DIRECTORIES}
+                 )
+    set(VTKM_CUDA_LIBRARY ${cuda_lib})
+    set_property(TARGET vtkm::cuda APPEND PROPERTY IMPORTED_LOCATION "${VTKM_CUDA_LIBRARY}")
+  endif()
 
   set_target_properties(vtkm::cuda PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
