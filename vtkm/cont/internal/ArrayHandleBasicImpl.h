@@ -162,8 +162,15 @@ public:
 
   VTKM_CONT Thisclass& operator=(const Thisclass& src);
   VTKM_CONT Thisclass& operator=(Thisclass&& src);
+
   VTKM_CONT bool operator==(const Thisclass& rhs) const;
   VTKM_CONT bool operator!=(const Thisclass& rhs) const;
+
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator==(const ArrayHandle<VT, ST>&) const;
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator!=(const ArrayHandle<VT, ST>&) const;
+
   VTKM_CONT StorageType& GetStorage();
   VTKM_CONT const StorageType& GetStorage() const;
   VTKM_CONT PortalControl GetPortalControl();

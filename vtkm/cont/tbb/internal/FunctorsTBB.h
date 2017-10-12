@@ -28,7 +28,9 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 
 #include <algorithm>
+#include <iterator>
 #include <sstream>
+#include <type_traits>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
 
@@ -87,6 +89,83 @@ using WrappedBinaryOperator = vtkm::cont::internal::WrappedBinaryOperator<Result
 // The "grain size" of scheduling with TBB.  Not a lot of thought has gone
 // into picking this size.
 static const vtkm::Id TBB_GRAIN_SIZE = 1024;
+
+template <typename InputPortalType, typename OutputPortalType>
+struct CopyBody
+{
+  InputPortalType InputPortal;
+  OutputPortalType OutputPortal;
+  vtkm::Id InputOffset;
+  vtkm::Id OutputOffset;
+
+  VTKM_EXEC_CONT
+  CopyBody(const InputPortalType& inPortal,
+           const OutputPortalType& outPortal,
+           vtkm::Id inOffset,
+           vtkm::Id outOffset)
+    : InputPortal(inPortal)
+    , OutputPortal(outPortal)
+    , InputOffset(inOffset)
+    , OutputOffset(outOffset)
+  {
+  }
+
+  // MSVC likes complain about narrowing type conversions in std::copy and
+  // provides no reasonable way to disable the warning. As a work-around, this
+  // template calls std::copy if and only if the types match, otherwise falls
+  // back to a iterative casting approach. Since std::copy can only really
+  // optimize same-type copies, this shouldn't affect performance.
+  template <typename InIter, typename OutIter>
+  VTKM_EXEC void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type) const
+  {
+    using OutputType = typename std::iterator_traits<OutIter>::value_type;
+    while (src != srcEnd)
+    {
+      *dst = static_cast<OutputType>(*src);
+      ++src;
+      ++dst;
+    }
+  }
+
+  template <typename InIter, typename OutIter>
+  VTKM_EXEC void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type) const
+  {
+    std::copy(src, srcEnd, dst);
+  }
+
+  VTKM_EXEC
+  void operator()(const ::tbb::blocked_range<vtkm::Id>& range) const
+  {
+    if (range.empty())
+    {
+      return;
+    }
+
+    auto inIter = vtkm::cont::ArrayPortalToIteratorBegin(this->InputPortal);
+    auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(this->OutputPortal);
+
+    using InputType = typename InputPortalType::ValueType;
+    using OutputType = typename OutputPortalType::ValueType;
+
+    this->DoCopy(inIter + this->InputOffset + range.begin(),
+                 inIter + this->InputOffset + range.end(),
+                 outIter + this->OutputOffset + range.begin(),
+                 std::is_same<InputType, OutputType>());
+  }
+};
+
+template <typename InputPortalType, typename OutputPortalType>
+void CopyPortals(const InputPortalType& inPortal,
+                 const OutputPortalType& outPortal,
+                 vtkm::Id inOffset,
+                 vtkm::Id outOffset,
+                 vtkm::Id numValues)
+{
+  using Kernel = CopyBody<InputPortalType, OutputPortalType>;
+  Kernel kernel(inPortal, outPortal, inOffset, outOffset);
+  ::tbb::blocked_range<vtkm::Id> range(0, numValues, TBB_GRAIN_SIZE);
+  ::tbb::parallel_for(range, kernel);
+}
 
 template <typename InputPortalType,
           typename StencilPortalType,

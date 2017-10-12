@@ -45,6 +45,17 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>
       vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
+  template <typename T, typename U, class CIn, class COut>
+  VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                             vtkm::cont::ArrayHandle<U, COut>& output)
+  {
+    const vtkm::Id inSize = input.GetNumberOfValues();
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagTBB());
+    auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagTBB());
+
+    tbb::CopyPortals(inputPortal, outputPortal, 0, 0, inSize);
+  }
+
   template <typename T, typename U, class CIn, class CStencil, class COut>
   VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
@@ -68,6 +79,63 @@ public:
                          output.PrepareForOutput(inputSize, DeviceAdapterTagTBB()),
                          unary_predicate);
     output.Shrink(outputSize);
+  }
+
+  template <typename T, typename U, class CIn, class COut>
+  VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::Id inputStartIndex,
+                                     vtkm::Id numberOfElementsToCopy,
+                                     vtkm::cont::ArrayHandle<U, COut>& output,
+                                     vtkm::Id outputIndex = 0)
+  {
+    const vtkm::Id inSize = input.GetNumberOfValues();
+
+    // Check if the ranges overlap and fail if they do.
+    if (input == output && ((outputIndex >= inputStartIndex &&
+                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+                            (inputStartIndex >= outputIndex &&
+                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    {
+      return false;
+    }
+
+    if (inputStartIndex < 0 || numberOfElementsToCopy < 0 || outputIndex < 0 ||
+        inputStartIndex >= inSize)
+    { //invalid parameters
+      return false;
+    }
+
+    //determine if the numberOfElementsToCopy needs to be reduced
+    if (inSize < (inputStartIndex + numberOfElementsToCopy))
+    { //adjust the size
+      numberOfElementsToCopy = (inSize - inputStartIndex);
+    }
+
+    const vtkm::Id outSize = output.GetNumberOfValues();
+    const vtkm::Id copyOutEnd = outputIndex + numberOfElementsToCopy;
+    if (outSize < copyOutEnd)
+    { //output is not large enough
+      if (outSize == 0)
+      { //since output has nothing, just need to allocate to correct length
+        output.Allocate(copyOutEnd);
+      }
+      else
+      { //we currently have data in this array, so preserve it in the new
+        //resized array
+        vtkm::cont::ArrayHandle<U, COut> temp;
+        temp.Allocate(copyOutEnd);
+        CopySubRange(output, 0, outSize, temp);
+        output = temp;
+      }
+    }
+
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagTBB());
+    auto outputPortal = output.PrepareForInPlace(DeviceAdapterTagTBB());
+
+    tbb::CopyPortals(
+      inputPortal, outputPortal, inputStartIndex, outputIndex, numberOfElementsToCopy);
+
+    return true;
   }
 
   template <typename T, typename U, class CIn>
