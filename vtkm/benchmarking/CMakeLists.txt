@@ -20,6 +20,7 @@
 
 set(benchmark_srcs
   BenchmarkArrayTransfer.cxx
+  BenchmarkCopySpeeds.cxx
   BenchmarkDeviceAdapter.cxx
   BenchmarkFieldAlgorithms.cxx
   BenchmarkTopologyAlgorithms.cxx
