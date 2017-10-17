@@ -32,6 +32,7 @@
 #include <vtkm/VecTraits.h>
 
 #include <exception>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -557,6 +558,12 @@ static inline VTKM_EXEC_CONT vtkm::Vec<T, N> TestValue(vtkm::Id index, vtkm::Vec
   return value;
 }
 
+template <typename U, typename V>
+static inline VTKM_EXEC_CONT vtkm::Pair<U, V> TestValue(vtkm::Id index, vtkm::Pair<U, V>)
+{
+  return vtkm::Pair<U, V>(TestValue(2 * index, U()), TestValue(2 * index + 1, V()));
+}
+
 static inline VTKM_CONT std::string TestValue(vtkm::Id index, std::string)
 {
   std::stringstream stream;
@@ -620,6 +627,47 @@ static inline VTKM_CONT bool test_equal_portals(const PortalType1& portal1,
   }
 
   return true;
+}
+
+/// Convert a size in bytes to a human readable string (e.g. "64 bytes",
+/// "1.44 MiB", "128 GiB", etc)
+static inline VTKM_CONT std::string HumanSize(vtkm::Float64 bytes)
+{
+  std::string suffix = "bytes";
+
+  if (bytes >= 1024.)
+  {
+    bytes /= 1024.;
+    suffix = "KiB";
+  }
+
+  if (bytes >= 1024.)
+  {
+    bytes /= 1024.;
+    suffix = "MiB";
+  }
+
+  if (bytes >= 1024.)
+  {
+    bytes /= 1024.;
+    suffix = "GiB";
+  }
+
+  if (bytes >= 1024.)
+  {
+    bytes /= 1024.;
+    suffix = "TiB";
+  }
+
+  if (bytes >= 1024.)
+  {
+    bytes /= 1024.;
+    suffix = "PiB"; // Dream big...
+  }
+
+  std::ostringstream out;
+  out << std::fixed << std::setprecision(2) << bytes << " " << suffix;
+  return out.str();
 }
 
 #endif //vtk_m_testing_Testing_h
