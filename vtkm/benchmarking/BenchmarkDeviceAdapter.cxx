@@ -269,17 +269,18 @@ private:
     VTKM_CONT
     BenchCopy()
     {
-      ValueHandle_src.PrepareForOutput(Config.ComputeSize<Value>(), DeviceAdapterTag());
-      ValueHandle_dst.PrepareForOutput(Config.ComputeSize<Value>(), DeviceAdapterTag());
+      vtkm::Id arraySize = Config.ComputeSize<Value>();
+      this->ValueHandle_src.Allocate(arraySize);
+      auto portal = this->ValueHandle_src.GetPortalControl();
+      for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
+      {
+        portal.Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
+      }
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      for (vtkm::Id i = 0; i < ValueHandle_src.GetNumberOfValues(); ++i)
-      {
-        ValueHandle_src.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
-      }
       Timer timer;
       Algorithm::Copy(ValueHandle_src, ValueHandle_dst);
       return timer.GetElapsedTime();
@@ -593,17 +594,24 @@ private:
     std::mt19937 Rng;
 
     VTKM_CONT
-    BenchSort() { ValueHandle.PrepareForOutput(Config.ComputeSize<Value>(), DeviceAdapterTag()); }
+    BenchSort()
+    {
+      this->ValueHandle.Allocate(Config.ComputeSize<Value>());
+      auto portal = this->ValueHandle.GetPortalControl();
+      for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
+      {
+        portal.Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
+      }
+    }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i)
-      {
-        ValueHandle.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
-      }
+      ValueArrayHandle array;
+      Algorithm::Copy(this->ValueHandle, array);
+
       Timer timer;
-      Algorithm::Sort(ValueHandle);
+      Algorithm::Sort(array);
       return timer.GetElapsedTime();
     }
 
@@ -635,22 +643,28 @@ private:
       : N_KEYS((Config.ComputeSize<Value>() * percent_key) / 100)
       , PERCENT_KEYS(percent_key)
     {
-      ValueHandle.PrepareForOutput(Config.ComputeSize<Value>(), DeviceAdapterTag());
+      vtkm::Id arraySize = Config.ComputeSize<Value>();
+      this->ValueHandle.Allocate(arraySize);
+      auto portal = this->ValueHandle.GetPortalControl();
+      for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
+      {
+        portal.Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
+      }
+      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id>(
+                            N_KEYS, KeyHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
+                          arraySize);
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      for (vtkm::Id i = 0; i < ValueHandle.GetNumberOfValues(); ++i)
-      {
-        ValueHandle.GetPortalControl().Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
-      }
-      vtkm::Id arraySize = Config.ComputeSize<Value>();
-      Algorithm::Schedule(FillModuloTestValueKernel<vtkm::Id>(
-                            N_KEYS, KeyHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
-                          arraySize);
+      IdArrayHandle keys;
+      ValueArrayHandle values;
+      Algorithm::Copy(this->KeyHandle, keys);
+      Algorithm::Copy(this->ValueHandle, values);
+
       Timer timer;
-      Algorithm::SortByKey(ValueHandle, KeyHandle);
+      Algorithm::SortByKey(keys, values);
       return timer.GetElapsedTime();
     }
 
@@ -793,18 +807,21 @@ private:
       : N_VALID((Config.ComputeSize<Value>() * percent_valid) / 100)
       , PERCENT_VALID(percent_valid)
     {
-    }
-
-    VTKM_CONT
-    vtkm::Float64 operator()()
-    {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       Algorithm::Schedule(FillModuloTestValueKernel<Value>(
                             N_VALID, ValueHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
                           arraySize);
       Algorithm::Sort(ValueHandle);
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      ValueArrayHandle array;
+      Algorithm::Copy(this->ValueHandle, array);
+
       Timer timer;
-      Algorithm::Unique(ValueHandle);
+      Algorithm::Unique(array);
       return timer.GetElapsedTime();
     }
 
