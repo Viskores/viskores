@@ -323,6 +323,11 @@ void GeneralVecTypeTest(const vtkm::Vec<ComponentType, Size>&)
 
   typedef vtkm::Vec<ComponentType, Size> T;
 
+  // Vector types should preserve the trivial properties of their components.
+  // This insures that algorithms like std::copy will optimize fully.
+  VTKM_TEST_ASSERT(std::is_trivial<ComponentType>::value == std::is_trivial<T>::value,
+                   "VectorType's triviality differs from ComponentType.");
+
   VTKM_TEST_ASSERT(T::NUM_COMPONENTS == Size, "NUM_COMPONENTS is wrong size.");
 
   //grab the number of elements of T

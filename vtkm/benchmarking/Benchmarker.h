@@ -223,46 +223,82 @@ vtkm::Float64 MedianAbsDeviation(const std::vector<vtkm::Float64>& samples)
  * in seconds, this lets us avoid including any per-run setup time in the benchmark.
  * However any one-time setup should be done in the functor's constructor
  */
-struct Benchmarker
+class Benchmarker
 {
-  const vtkm::Float64 MAX_RUNTIME;
-  const size_t MAX_ITERATIONS;
+  std::vector<vtkm::Float64> Samples;
+  std::string BenchmarkName;
 
-  Benchmarker()
-    : MAX_RUNTIME(30)
-    , MAX_ITERATIONS(500)
+  const vtkm::Float64 MaxRuntime;
+  const size_t MaxIterations;
+
+public:
+  VTKM_CONT
+  Benchmarker(vtkm::Float64 maxRuntime = 30, std::size_t maxIterations = 100)
+    : MaxRuntime(maxRuntime)
+    , MaxIterations(maxIterations)
   {
   }
 
   template <typename Functor>
-  VTKM_CONT void operator()(Functor func) const
+  VTKM_CONT void GatherSamples(Functor func)
   {
-    std::vector<vtkm::Float64> samples;
+    this->Samples.clear();
+    this->BenchmarkName = func.Description();
+
     // Do a warm-up run. If the benchmark allocates any additional memory
     // eg. storage for output results, this will let it do that and
     // allow us to avoid measuring the allocation time in the actual benchmark run
     func();
 
-    samples.reserve(MAX_ITERATIONS);
+    this->Samples.reserve(this->MaxIterations);
+
     // Run each benchmark for MAX_RUNTIME seconds or MAX_ITERATIONS iterations, whichever
-    // takes less time. This kind of assumes that running for 500 iterations or 1.5s will give
+    // takes less time. This kind of assumes that running for 500 iterations or 30s will give
     // good statistics, but if median abs dev and/or std dev are too high both these limits
     // could be increased
     size_t iter = 0;
-    for (vtkm::Float64 elapsed = 0.0; elapsed < MAX_RUNTIME && iter < MAX_ITERATIONS;
-         elapsed += samples.back(), ++iter)
+    for (vtkm::Float64 elapsed = 0.0; elapsed < this->MaxRuntime && iter < this->MaxIterations;
+         elapsed += this->Samples.back(), ++iter)
     {
-      samples.push_back(func());
+      this->Samples.push_back(func());
     }
-    std::sort(samples.begin(), samples.end());
-    stats::Winsorize(samples, 5.0);
-    std::cout << "Benchmark \'" << func.Description() << "\' results:\n"
-              << "\tmedian = " << stats::PercentileValue(samples, 50.0) << "s\n"
-              << "\tmedian abs dev = " << stats::MedianAbsDeviation(samples) << "s\n"
-              << "\tmean = " << stats::Mean(samples) << "s\n"
-              << "\tstd dev = " << stats::StandardDeviation(samples) << "s\n"
-              << "\tmin = " << samples.front() << "s\n"
-              << "\tmax = " << samples.back() << "s\n";
+
+    std::sort(this->Samples.begin(), this->Samples.end());
+    stats::Winsorize(this->Samples, 5.0);
+  }
+
+  VTKM_CONT void PrintSummary(std::ostream& out = std::cout)
+  {
+    out << "Benchmark \'" << this->BenchmarkName << "\' results:\n";
+
+    if (this->Samples.empty())
+    {
+      out << "\tNo samples gathered!\n";
+      return;
+    }
+
+    out << "\tnumSamples = " << this->Samples.size() << "\n"
+        << "\tmedian = " << stats::PercentileValue(this->Samples, 50.0) << "s\n"
+        << "\tmedian abs dev = " << stats::MedianAbsDeviation(this->Samples) << "s\n"
+        << "\tmean = " << stats::Mean(this->Samples) << "s\n"
+        << "\tstd dev = " << stats::StandardDeviation(this->Samples) << "s\n"
+        << "\tmin = " << this->Samples.front() << "s\n"
+        << "\tmax = " << this->Samples.back() << "s\n";
+  }
+
+  template <typename Functor>
+  VTKM_CONT void operator()(Functor func)
+  {
+    this->GatherSamples(func);
+    this->PrintSummary();
+  }
+
+  VTKM_CONT const std::vector<vtkm::Float64>& GetSamples() const { return this->Samples; }
+
+  VTKM_CONT void Reset()
+  {
+    this->Samples.clear();
+    this->BenchmarkName.clear();
   }
 };
 

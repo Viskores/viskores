@@ -65,11 +65,7 @@ struct Pair
   SecondType second;
 
   VTKM_EXEC_CONT
-  Pair()
-    : first()
-    , second()
-  {
-  }
+  Pair() = default;
 
   VTKM_EXEC_CONT
   Pair(const FirstType& firstSrc, const SecondType& secondSrc)
@@ -93,12 +89,8 @@ struct Pair
   }
 
   VTKM_EXEC_CONT
-  vtkm::Pair<FirstType, SecondType>& operator=(const vtkm::Pair<FirstType, SecondType>& src)
-  {
-    this->first = src.first;
-    this->second = src.second;
-    return *this;
-  }
+  vtkm::Pair<FirstType, SecondType>& operator=(const vtkm::Pair<FirstType, SecondType>& src) =
+    default;
 
   VTKM_EXEC_CONT
   bool operator==(const vtkm::Pair<FirstType, SecondType>& other) const
