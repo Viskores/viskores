@@ -31,6 +31,16 @@ namespace
 template <typename T, typename U>
 void PairTest()
 {
+  {
+    using P = vtkm::Pair<T, U>;
+
+    // Pair types should preserve the trivial properties of their components.
+    // This insures that algorithms like std::copy will optimize fully.
+    VTKM_TEST_ASSERT(std::is_trivial<T>::value &&
+                       std::is_trivial<U>::value == std::is_trivial<P>::value,
+                     "PairType's triviality differs from ComponentTypes.");
+  }
+
   //test that all the constructors work properly
   {
     vtkm::Pair<T, U> no_params_pair;
