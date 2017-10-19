@@ -139,7 +139,7 @@ public:
       }
     }
 
-    VTKM_TEST_ASSERT(false, "Uniform Grid NN search result incorrect.");
+    VTKM_TEST_ASSERT(passTest, "Uniform Grid NN search result incorrect.");
   }
 
   void operator()() const { this->TestTest(); }
