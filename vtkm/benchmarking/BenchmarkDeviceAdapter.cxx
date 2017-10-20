@@ -1252,7 +1252,7 @@ int main(int argc, char* argv[])
     else if (arg == "typelist")
     {
       ++i;
-      std::string arg = argv[i];
+      arg = argv[i];
       std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
       if (arg == "base")
       {
@@ -1271,7 +1271,7 @@ int main(int argc, char* argv[])
     else if (arg == "fixbytes")
     {
       ++i;
-      std::string arg = argv[i];
+      arg = argv[i];
       std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
       if (arg == "off")
       {
@@ -1287,7 +1287,7 @@ int main(int argc, char* argv[])
     else if (arg == "fixsizes")
     {
       ++i;
-      std::string arg = argv[i];
+      arg = argv[i];
       std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
       if (arg == "off")
       {
