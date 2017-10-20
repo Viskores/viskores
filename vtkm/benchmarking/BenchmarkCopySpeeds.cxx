@@ -126,7 +126,7 @@ void BenchmarkValueType()
       vtkm::Float64 speed = static_cast<vtkm::Float64>(size) / stats::Mean(bench.GetSamples());
       speedStr = HumanSize(speed) + std::string("/s");
     }
-    catch (vtkm::cont::ErrorBadAllocation& e)
+    catch (vtkm::cont::ErrorBadAllocation&)
     {
       speedStr = "[allocation too large]";
     }
