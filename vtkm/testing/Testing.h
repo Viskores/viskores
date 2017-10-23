@@ -630,43 +630,48 @@ static inline VTKM_CONT bool test_equal_portals(const PortalType1& portal1,
 }
 
 /// Convert a size in bytes to a human readable string (e.g. "64 bytes",
-/// "1.44 MiB", "128 GiB", etc)
-static inline VTKM_CONT std::string HumanSize(vtkm::Float64 bytes)
+/// "1.44 MiB", "128 GiB", etc). @a prec controls the fixed point precision
+/// of the stringified number.
+static inline VTKM_CONT std::string HumanSize(vtkm::UInt64 bytes, int prec = 2)
 {
   std::string suffix = "bytes";
 
-  if (bytes >= 1024.)
+  // Might truncate, but it really doesn't matter unless the precision arg
+  // is obscenely huge.
+  vtkm::Float64 bytesf = static_cast<vtkm::Float64>(bytes);
+
+  if (bytesf >= 1024.)
   {
-    bytes /= 1024.;
+    bytesf /= 1024.;
     suffix = "KiB";
   }
 
-  if (bytes >= 1024.)
+  if (bytesf >= 1024.)
   {
-    bytes /= 1024.;
+    bytesf /= 1024.;
     suffix = "MiB";
   }
 
-  if (bytes >= 1024.)
+  if (bytesf >= 1024.)
   {
-    bytes /= 1024.;
+    bytesf /= 1024.;
     suffix = "GiB";
   }
 
-  if (bytes >= 1024.)
+  if (bytesf >= 1024.)
   {
-    bytes /= 1024.;
+    bytesf /= 1024.;
     suffix = "TiB";
   }
 
-  if (bytes >= 1024.)
+  if (bytesf >= 1024.)
   {
-    bytes /= 1024.;
+    bytesf /= 1024.;
     suffix = "PiB"; // Dream big...
   }
 
   std::ostringstream out;
-  out << std::fixed << std::setprecision(2) << bytes << " " << suffix;
+  out << std::fixed << std::setprecision(prec) << bytesf << " " << suffix;
   return out.str();
 }
 

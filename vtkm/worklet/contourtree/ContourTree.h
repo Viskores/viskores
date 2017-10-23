@@ -915,7 +915,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CollectSaddlePeak(
   DeviceAlgorithm::Copy(tempArray, saddlePeak);
 
 #ifdef DEBUG_PRINT
-  for (vtkm::UInt32 superarc = 0; superarc < superarcVector.size(); superarc++)
+  const vtkm::Id arcVecSize = static_cast<vtkm::Id>(superarcVector.size());
+  for (vtkm::Id superarc = 0; superarc < arcVecSize; superarc++)
   {
     std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).first << " ";
     std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).second
