@@ -316,44 +316,31 @@ public:
   class VirtualObjectTransferKernel
   {
   public:
-    struct Interface
+    struct Interface : public vtkm::VirtualObjectBase
     {
-      using FooSig = vtkm::Id(const void*);
-
-      template <typename T>
-      VTKM_EXEC void Bind(const T* target)
-      {
-        this->Target = target;
-        this->FooPtr = [](const void* t) { return static_cast<const T*>(t)->Foo(); };
-      }
-
-      VTKM_EXEC
-      vtkm::Id Foo() const { return this->FooPtr(this->Target); }
-
-      const void* Target;
-      FooSig* FooPtr;
+      VTKM_EXEC virtual vtkm::Id Foo() const = 0;
     };
 
-    struct Concrete
+    struct Concrete : public Interface
     {
-      vtkm::Id Foo() const { return this->Value; }
+      VTKM_EXEC vtkm::Id Foo() const override { return this->Value; }
 
       vtkm::Id Value = 0;
     };
 
-    VirtualObjectTransferKernel(const Interface& vo, IdArrayHandle& result)
+    VirtualObjectTransferKernel(const Interface* vo, IdArrayHandle& result)
       : Virtual(vo)
       , Result(result.PrepareForInPlace(DeviceAdapterTag()))
     {
     }
 
     VTKM_EXEC
-    void operator()(vtkm::Id) const { this->Result.Set(0, this->Virtual.Foo()); }
+    void operator()(vtkm::Id) const { this->Result.Set(0, this->Virtual->Foo()); }
 
     VTKM_CONT void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer&) {}
 
   private:
-    Interface Virtual;
+    const Interface* Virtual;
     IdPortalType Result;
   };
 
@@ -512,10 +499,9 @@ private:
   VTKM_CONT
   static void TestVirtualObjectTransfer()
   {
-    using VirtualObject = typename VirtualObjectTransferKernel::Interface;
+    using BaseType = typename VirtualObjectTransferKernel::Interface;
     using TargetType = typename VirtualObjectTransferKernel::Concrete;
-    using Transfer =
-      vtkm::cont::internal::VirtualObjectTransfer<VirtualObject, TargetType, DeviceAdapterTag>;
+    using Transfer = vtkm::cont::internal::VirtualObjectTransfer<TargetType, DeviceAdapterTag>;
 
     IdArrayHandle result;
     result.Allocate(1);
@@ -524,21 +510,21 @@ private:
     TargetType target;
     target.Value = 5;
 
-    VirtualObject vo;
-    void* state = Transfer::Create(vo, &target);
+    Transfer transfer(&target);
+    const BaseType* base = transfer.PrepareForExecution(false);
 
     std::cout << "-------------------------------------------" << std::endl;
     std::cout << "Testing VirtualObjectTransfer" << std::endl;
 
-    Algorithm::Schedule(VirtualObjectTransferKernel(vo, result), 1);
+    Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 5, "Did not get expected result");
 
     target.Value = 10;
-    Transfer::Update(state, &target);
-    Algorithm::Schedule(VirtualObjectTransferKernel(vo, result), 1);
+    base = transfer.PrepareForExecution(true);
+    Algorithm::Schedule(VirtualObjectTransferKernel(base, result), 1);
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(0) == 10, "Did not get expected result");
 
-    Transfer::Cleanup(state);
+    transfer.ReleaseResources();
   }
 
   static VTKM_CONT void TestAlgorithmSchedule()

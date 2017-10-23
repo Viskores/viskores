@@ -31,10 +31,14 @@ namespace cont
 namespace internal
 {
 
-template <typename VirtualObject, typename TargetClass>
-struct VirtualObjectTransfer<VirtualObject, TargetClass, vtkm::cont::DeviceAdapterTagTBB>
-  : public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
+template <typename VirtualDerivedType>
+struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagTBB>
+  : VirtualObjectTransferShareWithControl<VirtualDerivedType>
 {
+  VTKM_CONT VirtualObjectTransfer(const VirtualDerivedType* virtualObject)
+    : VirtualObjectTransferShareWithControl<VirtualDerivedType>(virtualObject)
+  {
+  }
 };
 }
 }

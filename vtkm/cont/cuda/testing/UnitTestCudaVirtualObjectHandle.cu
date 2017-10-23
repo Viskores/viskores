@@ -17,21 +17,22 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/cont/testing/TestingVirtualObjectCache.h>
+#include <vtkm/cont/testing/TestingVirtualObjectHandle.h>
 
 namespace
 {
 
-void TestVirtualObjectCache()
+void TestVirtualObjectHandle()
 {
-  using DeviceAdapterList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial>;
+  using DeviceAdapterList =
+    vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial, vtkm::cont::DeviceAdapterTagCuda>;
 
-  vtkm::cont::testing::TestingVirtualObjectCache<DeviceAdapterList>::Run();
+  vtkm::cont::testing::TestingVirtualObjectHandle<DeviceAdapterList>::Run();
 }
 
 } // anonymous namespace
 
-int UnitTestSerialVirtualObjectCache(int, char* [])
+int UnitTestCudaVirtualObjectHandle(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestVirtualObjectCache);
+  return vtkm::cont::testing::Testing::Run(TestVirtualObjectHandle);
 }

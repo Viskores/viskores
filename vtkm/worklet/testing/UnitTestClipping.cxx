@@ -30,7 +30,7 @@
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/Field.h>
-#include <vtkm/cont/ImplicitFunction.h>
+#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #include <vector>
@@ -243,13 +243,15 @@ void TestClippingWithImplicitFunction()
 {
   vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
-  vtkm::cont::Sphere sphere(center, radius);
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0), sphere, ds.GetCoordinateSystem("coords"), DeviceAdapter());
+    clip.Run(ds.GetCellSet(0),
+             vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
+             ds.GetCoordinateSystem("coords"),
+             DeviceAdapter());
 
   vtkm::cont::ArrayHandleUniformPointCoordinates coordsIn;
   ds.GetCoordinateSystem("coords").GetData().CopyTo(coordsIn);

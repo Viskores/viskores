@@ -40,6 +40,47 @@ struct DeviceAdapterListTagCommon : vtkm::ListTagBase<vtkm::cont::DeviceAdapterT
                                                       vtkm::cont::DeviceAdapterTagSerial>
 {
 };
+
+namespace detail
+{
+
+template <typename FunctorType>
+class ExecuteIfValidDeviceTag
+{
+private:
+  template <typename DeviceAdapter>
+  using EnableIfValid = std::enable_if<vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::Valid>;
+
+  template <typename DeviceAdapter>
+  using EnableIfInvalid = std::enable_if<!vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::Valid>;
+
+public:
+  explicit ExecuteIfValidDeviceTag(const FunctorType& functor)
+    : Functor(functor)
+  {
+  }
+
+  template <typename DeviceAdapter>
+  typename EnableIfValid<DeviceAdapter>::type operator()(DeviceAdapter) const
+  {
+    this->Functor(DeviceAdapter());
+  }
+
+  template <typename DeviceAdapter>
+  typename EnableIfInvalid<DeviceAdapter>::type operator()(DeviceAdapter) const
+  {
+  }
+
+private:
+  FunctorType Functor;
+};
+} // detail
+
+template <typename DeviceList, typename Functor>
+VTKM_CONT void ForEachValidDevice(DeviceList devices, const Functor& functor)
+{
+  vtkm::ListForEach(detail::ExecuteIfValidDeviceTag<Functor>(functor), devices);
+}
 }
 } // namespace vtkm::cont
 

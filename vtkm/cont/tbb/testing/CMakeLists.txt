@@ -28,6 +28,6 @@ set(unit_tests
   UnitTestTBBDeviceAdapter.cxx
   UnitTestTBBImplicitFunction.cxx
   UnitTestTBBPointLocatorUniformGrid.cxx
-  UnitTestTBBVirtualObjectCache.cxx
+  UnitTestTBBVirtualObjectHandle.cxx
   )
 vtkm_unit_tests(TBB SOURCES ${unit_tests})
