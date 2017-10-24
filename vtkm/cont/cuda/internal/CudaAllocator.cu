@@ -120,12 +120,14 @@ void CudaAllocator::PrepareForControl(const void* ptr, std::size_t numBytes)
 
   if (ManagedMemorySupported)
   {
+#if CUDART_VERSION >= 8000
     // TODO these hints need to be benchmarked and adjusted once we start
     // sharing the pointers between cont/exec
     VTKM_CUDA_CALL(
       cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, cudaCpuDeviceId));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, cudaCpuDeviceId, cudaStreamPerThread));
+#endif // CUDA >= 8.0
   }
 }
 
@@ -135,11 +137,13 @@ void CudaAllocator::PrepareForInput(const void* ptr, std::size_t numBytes)
 
   if (ManagedMemorySupported)
   {
+#if CUDART_VERSION >= 8000
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
+#endif // CUDA >= 8.0
   }
 }
 
@@ -149,11 +153,13 @@ void CudaAllocator::PrepareForOutput(const void* ptr, std::size_t numBytes)
 
   if (ManagedMemorySupported)
   {
+#if CUDART_VERSION >= 8000
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
+#endif // CUDA >= 8.0
   }
 }
 
@@ -163,11 +169,13 @@ void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
 
   if (ManagedMemorySupported)
   {
+#if CUDART_VERSION >= 8000
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
     VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
+#endif // CUDA >= 8.0
   }
 }
 
