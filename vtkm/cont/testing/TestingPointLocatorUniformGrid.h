@@ -111,7 +111,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
 
-    uniformGrid.Run(
+    uniformGrid.FindNearestPoint(
       coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
     vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
