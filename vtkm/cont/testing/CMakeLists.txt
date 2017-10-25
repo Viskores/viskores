@@ -30,6 +30,7 @@ set(headers
   TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
+  TestingPointLocatorUniformGrid.h
   TestingVirtualObjectCache.h
   )
 

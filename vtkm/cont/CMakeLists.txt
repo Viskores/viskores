@@ -71,6 +71,7 @@ set(headers
   Field.h
   ImplicitFunction.h
   MultiBlock.h
+  PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Storage.h
