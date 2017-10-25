@@ -32,6 +32,7 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/TaskSingular.h>
 
+#include <vtkm/BinaryPredicates.h>
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/internal/Windows.h>
@@ -767,7 +768,7 @@ public:
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
-    Unique(values, std::equal_to<T>());
+    DerivedAlgorithm::Unique(values, vtkm::Equal());
   }
 
   template <typename T, class Storage, class BinaryCompare>
