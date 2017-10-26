@@ -81,13 +81,15 @@ Optional dependencies are:
         not needed except for some optional tests.
   + Extension Binding
       + [GLEW](http://glew.sourceforge.net/)
-  + Rendering Canvas
-      + OpenGL Driver (See your GPU/iGPU vendor)
-  + Windowing/Contexts
-      + EGL (See your GPU/iGPU vendor)
-      + [OSMesa](https://www.mesa3d.org/osmesa.html)
+  + On Screen Rendering
+      + OpenGL Driver
+      + Mesa Driver
+  + On Screen Rendering Tests
       + [GLFW](http://www.glfw.org/)
       + [GLUT](http://freeglut.sourceforge.net/)
+  + Headless Rendering
+      + [OS Mesa](https://www.mesa3d.org/osmesa.html)
+      + EGL Driver
 
 
 ## Building ##
