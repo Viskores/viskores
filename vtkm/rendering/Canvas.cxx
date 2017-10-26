@@ -140,6 +140,49 @@ struct BlendBackgroundExecutor
   }
 }; // struct BlendBackgroundExecutor
 
+struct DrawColorSwatch : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<>, WholeArrayInOut<>);
+  typedef void ExecutionSignature(_1, _2);
+
+  VTKM_CONT
+  DrawColorSwatch(vtkm::Id2 dims,
+                  vtkm::Id2 xBounds,
+                  vtkm::Id2 yBounds,
+                  const vtkm::Vec<vtkm::Float32, 4> color)
+    : Color(color)
+  {
+    ImageWidth = dims[0];
+    ImageHeight = dims[1];
+    SwatchBottomLeft[0] = xBounds[0];
+    SwatchBottomLeft[1] = yBounds[0];
+    SwatchWidth = xBounds[1] - xBounds[0];
+    SwatchHeight = yBounds[1] - yBounds[0];
+  }
+
+  template <typename FrameBuffer>
+  VTKM_EXEC void operator()(const vtkm::Id& index, FrameBuffer& frameBuffer) const
+  {
+    // local bar coord
+    vtkm::Id x = index % SwatchWidth;
+    vtkm::Id y = index / SwatchWidth;
+
+    // offset to global image coord
+    x += SwatchBottomLeft[0];
+    y += SwatchBottomLeft[1];
+
+    vtkm::Id offset = y * ImageWidth + x;
+    frameBuffer.Set(offset, Color);
+  }
+
+  vtkm::Id ImageWidth;
+  vtkm::Id ImageHeight;
+  vtkm::Id2 SwatchBottomLeft;
+  vtkm::Id SwatchWidth;
+  vtkm::Id SwatchHeight;
+  const vtkm::Vec<vtkm::Float32, 4> Color;
+}; // struct DrawColorSwatch
+
 struct DrawColorBar : public vtkm::worklet::WorkletMapField
 {
   typedef void ControlSignature(FieldIn<>, WholeArrayInOut<>, WholeArrayIn<>);
@@ -203,6 +246,42 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
   bool Horizontal;
 }; // struct DrawColorBar
 
+struct ColorSwatchExecutor
+{
+  VTKM_CONT
+  ColorSwatchExecutor(vtkm::Id2 dims,
+                      vtkm::Id2 xBounds,
+                      vtkm::Id2 yBounds,
+                      const vtkm::Vec<vtkm::Float32, 4>& color,
+                      const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorBuffer)
+    : Dims(dims)
+    , XBounds(xBounds)
+    , YBounds(yBounds)
+    , Color(color)
+    , ColorBuffer(colorBuffer)
+  {
+  }
+
+  template <typename Device>
+  VTKM_CONT bool operator()(Device) const
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+
+    vtkm::Id totalPixels = (XBounds[1] - XBounds[0]) * (YBounds[1] - YBounds[0]);
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> iterator(0, 1, totalPixels);
+    vtkm::worklet::DispatcherMapField<DrawColorSwatch, Device> dispatcher(
+      DrawColorSwatch(this->Dims, this->XBounds, this->YBounds, Color));
+    dispatcher.Invoke(iterator, this->ColorBuffer);
+    return true;
+  }
+
+  vtkm::Id2 Dims;
+  vtkm::Id2 XBounds;
+  vtkm::Id2 YBounds;
+  const vtkm::Vec<vtkm::Float32, 4>& Color;
+  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorBuffer;
+}; // struct ColorSwatchExecutor
+
 struct ColorBarExecutor
 {
   VTKM_CONT
@@ -240,7 +319,7 @@ struct ColorBarExecutor
   bool Horizontal;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorMap;
   const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorBuffer;
-}; // struct ColorBarExecutor
+}; // struct ColorSwatchExecutor
 
 } // namespace internal
 
@@ -365,13 +444,24 @@ void Canvas::ResizeBuffers(vtkm::Id width, vtkm::Id height)
   Internals->Height = height;
 }
 
-void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point0),
+void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
                             const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point1),
-                            const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point2),
+                            const vtkm::Vec<vtkm::Float64, 2>& point2,
                             const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point3),
-                            const vtkm::rendering::Color& vtkmNotUsed(color)) const
+                            const vtkm::rendering::Color& color) const
 {
-  // Not implemented
+  vtkm::Float64 width = static_cast<vtkm::Float64>(this->GetWidth());
+  vtkm::Float64 height = static_cast<vtkm::Float64>(this->GetHeight());
+
+  vtkm::Id2 x, y;
+  x[0] = static_cast<vtkm::Id>(((point0[0] + 1.) / 2.) * width + .5);
+  x[1] = static_cast<vtkm::Id>(((point2[0] + 1.) / 2.) * width + .5);
+  y[0] = static_cast<vtkm::Id>(((point0[1] + 1.) / 2.) * height + .5);
+  y[1] = static_cast<vtkm::Id>(((point2[1] + 1.) / 2.) * height + .5);
+
+  vtkm::Id2 dims(this->GetWidth(), this->GetHeight());
+  vtkm::cont::TryExecute(
+    internal::ColorSwatchExecutor(dims, x, y, color.Components, this->GetColorBuffer()));
 }
 
 void Canvas::AddColorSwatch(const vtkm::Float64 x0,

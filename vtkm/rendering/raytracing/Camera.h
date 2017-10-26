@@ -67,6 +67,7 @@ public:
 
   // cuda does not compile if this is private
   class PerspectiveRayGen;
+  class Ortho2DRayGen;
 
   std::string ToString();
 
@@ -162,7 +163,8 @@ private:
   template <typename DeviceAdapter, typename Precision>
   VTKM_CONT void UpdateDimensions(Ray<Precision>& rays,
                                   DeviceAdapter,
-                                  const vtkm::Bounds& boundingBox);
+                                  const vtkm::Bounds& boundingBox,
+                                  bool ortho2D);
 
 }; // class camera
 }

@@ -72,12 +72,10 @@ void View2D::RenderScreenAnnotations()
                                     viewportRight,
                                     viewportBottom,
                                     viewportTop);
-
   this->HorizontalAxisAnnotation.SetColor(AxisColor);
   this->HorizontalAxisAnnotation.SetScreenPosition(
     viewportLeft, viewportBottom, viewportRight, viewportBottom);
   vtkm::Bounds viewRange = this->GetCamera().GetViewRange2D();
-
   this->HorizontalAxisAnnotation.SetRangeForAutoTicks(viewRange.X.Min, viewRange.X.Max);
   this->HorizontalAxisAnnotation.SetMajorTickSize(0, .05, 1.0);
   this->HorizontalAxisAnnotation.SetMinorTickSize(0, .02, 1.0);
@@ -138,6 +136,8 @@ void View2D::UpdateCameraProperties()
                                 (static_cast<vtkm::Float32>(this->GetCanvas().GetHeight())) *
                                 (top - bottom) / (right - left));
   }
+  vtkm::Float32 left, right, bottom, top;
+  this->GetCamera().GetViewRange2D(left, right, bottom, top);
 }
 }
 } // namespace vtkm::rendering

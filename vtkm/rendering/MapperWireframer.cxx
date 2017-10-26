@@ -40,6 +40,40 @@ namespace rendering
 namespace
 {
 
+class Convert1DCoordinates : public vtkm::worklet::WorkletMapField
+{
+private:
+public:
+  VTKM_CONT
+  Convert1DCoordinates() {}
+
+  typedef void ControlSignature(FieldIn<>,
+                                FieldIn<vtkm::TypeListTagScalarAll>,
+                                FieldOut<>,
+                                FieldOut<>);
+
+  typedef void ExecutionSignature(_1, _2, _3, _4);
+  template <typename ScalarType>
+  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& inCoord,
+                            const ScalarType& scalar,
+                            vtkm::Vec<vtkm::Float32, 3>& outCoord,
+                            vtkm::Float32& fieldOut) const
+  {
+    //
+    // Rendering supports lines based on a cellSetStructured<1>
+    // where only the x coord matters. It creates a y based on
+    // the scalar values and connects all the points with lines.
+    // So, we need to convert it back to something that can
+    // actuall be rendered.
+    //
+    outCoord[0] = inCoord[0];
+    outCoord[1] = static_cast<vtkm::Float32>(scalar);
+    outCoord[2] = 0.f;
+    // all lines have the same color
+    fieldOut = 1.f;
+  }
+}; // convert coords
+
 #if defined(VTKM_MSVC)
 #pragma warning(push)
 #pragma warning(disable : 4127) //conditional expression is constant
@@ -220,13 +254,64 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
                                    const vtkm::Range& scalarRange)
 {
   vtkm::cont::DynamicCellSet cellSet = inCellSet;
-  vtkm::cont::Field field = inScalarField;
-  if (!(this->Internals->ShowInternalZones))
+
+  bool is1D = cellSet.IsSameType(vtkm::cont::CellSetStructured<1>());
+
+  vtkm::cont::CoordinateSystem actualCoords = coords;
+  vtkm::cont::Field actualField = inScalarField;
+
+  if (is1D)
+  {
+
+    bool isSupportedField = inScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    if (!isSupportedField)
+    {
+      throw vtkm::cont::ErrorBadValue(
+        "WireFramer: field must be associated with points for 1D cell set");
+    }
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> newCoords;
+    vtkm::cont::ArrayHandle<vtkm::Float32> newScalars;
+    //
+    // Convert the cell set into something we can draw
+    //
+    vtkm::worklet::DispatcherMapField<Convert1DCoordinates, vtkm::cont::DeviceAdapterTagSerial>(
+      Convert1DCoordinates())
+      .Invoke(coords.GetData(), inScalarField.GetData(), newCoords, newScalars);
+
+    actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
+    actualField =
+      vtkm::cont::Field(inScalarField.GetName(), vtkm::cont::Field::ASSOC_POINTS, newScalars);
+    vtkm::Id numCells = cellSet.GetNumberOfCells();
+    vtkm::cont::ArrayHandle<vtkm::Id> conn;
+    conn.Allocate(numCells * 2);
+    auto connPortal = conn.GetPortalControl();
+    for (int i = 0; i < numCells; ++i)
+    {
+      connPortal.Set(i * 2 + 0, i);
+      connPortal.Set(i * 2 + 1, i + 1);
+    }
+
+    vtkm::cont::CellSetSingleType<> newCellSet("cells");
+    newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
+    cellSet = vtkm::cont::DynamicCellSet(newCellSet);
+  }
+  bool isLines = false;
+  // Check for a cell set that is already lines
+  // Since there is no need to de external faces or
+  // render the depth of the mesh to hide internal zones
+  if (cellSet.IsSameType(vtkm::cont::CellSetSingleType<>()))
+  {
+    auto singleType = cellSet.Cast<vtkm::cont::CellSetSingleType<>>();
+    isLines = singleType.GetCellShape(0) == vtkm::CELL_SHAPE_LINE;
+  }
+
+  bool doExternalFaces = !(this->Internals->ShowInternalZones) && !isLines && !is1D;
+  if (doExternalFaces)
   {
     // If internal zones are to be hidden, the number of edges processed can be reduced by
     // running the external faces filter on the input cell set.
     vtkm::cont::DataSet dataSet;
-    dataSet.AddCoordinateSystem(coords);
+    dataSet.AddCoordinateSystem(actualCoords);
     dataSet.AddCellSet(inCellSet);
     vtkm::filter::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
@@ -234,7 +319,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::filter::Result result = externalFaces.Execute(dataSet);
     externalFaces.MapFieldOntoOutput(result, inScalarField);
     cellSet = result.GetDataSet().GetCellSet();
-    field = result.GetDataSet().GetField(0);
+    actualField = result.GetDataSet().GetField(0);
   }
 
   // Extract unique edges from the cell set.
@@ -246,7 +331,9 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     this->Internals->Canvas, this->Internals->ShowInternalZones, this->Internals->IsOverlay);
   // Render the cell set using a raytracer, on a separate canvas, and use the generated depth
   // buffer, which represents the solid mesh, to avoid drawing on the internal zones
-  if (!(this->Internals->ShowInternalZones) && !(this->Internals->IsOverlay))
+  bool renderDepth =
+    !(this->Internals->ShowInternalZones) && !(this->Internals->IsOverlay) && !isLines && !is1D;
+  if (renderDepth)
   {
     CanvasRayTracer canvas(this->Internals->Canvas->GetWidth(),
                            this->Internals->Canvas->GetHeight());
@@ -257,17 +344,17 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     MapperRayTracer raytracer;
     raytracer.SetCanvas(&canvas);
     raytracer.SetActiveColorTable(colorTable);
-    raytracer.RenderCells(cellSet, coords, field, colorTable, camera, scalarRange);
+    raytracer.RenderCells(cellSet, actualCoords, actualField, colorTable, camera, scalarRange);
     renderer.SetSolidDepthBuffer(canvas.GetDepthBuffer());
   }
-  else if (this->Internals->IsOverlay)
+  else
   {
     renderer.SetSolidDepthBuffer(this->Internals->Canvas->GetDepthBuffer());
   }
 
   renderer.SetCamera(camera);
   renderer.SetColorMap(this->ColorMap);
-  renderer.SetData(coords, edgeIndices, field, scalarRange);
+  renderer.SetData(actualCoords, edgeIndices, actualField, scalarRange);
   renderer.Render();
 }
 
