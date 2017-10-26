@@ -165,7 +165,7 @@ struct DrawColorSwatch : public vtkm::worklet::WorkletMapField
   {
     // local bar coord
     vtkm::Id x = index % SwatchWidth;
-    vtkm::Id y = index / SwatchWidth, yLocal = y;
+    vtkm::Id y = index / SwatchWidth;
 
     // offset to global image coord
     x += SwatchBottomLeft[0];
@@ -458,8 +458,6 @@ void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
   x[1] = static_cast<vtkm::Id>(((point2[0] + 1.) / 2.) * width + .5);
   y[0] = static_cast<vtkm::Id>(((point0[1] + 1.) / 2.) * height + .5);
   y[1] = static_cast<vtkm::Id>(((point2[1] + 1.) / 2.) * height + .5);
-  vtkm::Id swatchWidth = x[1] - x[0];
-  vtkm::Id swatchHeight = y[1] - y[0];
 
   vtkm::Id2 dims(this->GetWidth(), this->GetHeight());
   vtkm::cont::TryExecute(

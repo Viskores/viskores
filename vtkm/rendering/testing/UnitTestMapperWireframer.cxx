@@ -47,30 +47,6 @@ vtkm::cont::DataSet Make3DUniformDataSet(vtkm::Id size = 64)
   return dataSet;
 }
 
-vtkm::cont::DataSet Make1DUniformDataSet()
-{
-  vtkm::cont::DataSetBuilderUniform builder;
-  std::vector<vtkm::Float32> x;
-  x.push_back(0.f);
-  x.push_back(1.f);
-  x.push_back(2.f);
-  x.push_back(3.f);
-  x.push_back(4.f);
-  x.push_back(5.f);
-  std::vector<vtkm::Float32> y;
-  y.push_back(10.f);
-  y.push_back(11.f);
-  y.push_back(11.5f);
-  y.push_back(13.f);
-  y.push_back(14.f);
-  y.push_back(13.f);
-  vtkm::cont::DataSet dataSet = builder.Create(x.size());
-
-  vtkm::cont::DataSetFieldAdd dsf;
-  dsf.AddPointField(dataSet, "something", y);
-  return dataSet;
-}
-
 vtkm::cont::DataSet Make2DExplicitDataSet()
 {
   vtkm::cont::DataSet dataSet;
@@ -78,11 +54,11 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
   const int nVerts = 5;
   using CoordType = vtkm::Vec<vtkm::Float32, 3>;
   std::vector<CoordType> coords(nVerts);
-  CoordType coordinates[nVerts] = { CoordType(0, 0, 0),
-                                    CoordType(1, .5, 0),
-                                    CoordType(2, 1, 0),
-                                    CoordType(3, 1.7, 0),
-                                    CoordType(4, 3, 0) };
+  CoordType coordinates[nVerts] = { CoordType(0.f, 0.f, 0.f),
+                                    CoordType(1.f, .5f, 0.f),
+                                    CoordType(2.f, 1.f, 0.f),
+                                    CoordType(3.f, 1.7f, 0.f),
+                                    CoordType(4.f, 3.f, 0.f) };
 
   std::vector<vtkm::Float32> cellVar;
   cellVar.push_back(10);
