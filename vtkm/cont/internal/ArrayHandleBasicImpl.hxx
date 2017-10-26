@@ -90,6 +90,20 @@ bool ArrayHandle<T, StorageTagBasic>::operator!=(const Thisclass& rhs) const
 }
 
 template <typename T>
+template <typename VT, typename ST>
+VTKM_CONT bool ArrayHandle<T, StorageTagBasic>::operator==(const ArrayHandle<VT, ST>&) const
+{
+  return false; // different valuetype and/or storage
+}
+
+template <typename T>
+template <typename VT, typename ST>
+VTKM_CONT bool ArrayHandle<T, StorageTagBasic>::operator!=(const ArrayHandle<VT, ST>&) const
+{
+  return true; // different valuetype and/or storage
+}
+
+template <typename T>
 typename ArrayHandle<T, StorageTagBasic>::StorageType& ArrayHandle<T, StorageTagBasic>::GetStorage()
 {
   this->SyncControlArray();

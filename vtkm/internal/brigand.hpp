@@ -27,8 +27,8 @@
 #endif
 #endif
 #if defined(__CUDACC__)
-#if (__CUDACC_VER_MAJOR__ == 9 && __CUDACC_VER_MINOR__ == 0 && __CUDACC_VER_BUILD__ <= 102)
-#define BRIGAND_COMP_CUDA_9_RC
+#if __CUDACC_VER_MAJOR__ == 9
+#define BRIGAND_COMP_CUDA_9
 #endif
 #define BRIGAND_COMP_CUDA
 #endif
@@ -250,7 +250,7 @@ namespace brigand
     template<class T> T extract_type(type_<T>*);
 
     template<std::size_t N, typename Seq> struct at_impl;
-#if defined(BRIGAND_COMP_CUDA_9_RC)
+#if defined(BRIGAND_COMP_CUDA_9)
     //Only needed for CUDA 9 RC1 as it has some compiler bugs
     template <std::size_t N, template <typename...> class L, class... Ts>
     struct at_impl<N, L<Ts...>>
@@ -493,7 +493,7 @@ namespace lazy
         using type = ::brigand::size_t<0>;
     };
 
-#if defined(BRIGAND_COMP_CUDA_9_RC)
+#if defined(BRIGAND_COMP_CUDA_9)
   //This was added for CUDA 9 RC1 and most likely will need CUDA
   //version guards
   template<class P, class T>
@@ -1571,7 +1571,7 @@ namespace detail
 namespace brigand
 {
 
-#if (defined(BRIGAND_COMP_GCC) || defined(BRIGAND_COMP_CLANG)) && !defined(BRIGAND_COMP_CUDA_9_RC)
+#if (defined(BRIGAND_COMP_GCC) || defined(BRIGAND_COMP_CLANG)) && !defined(BRIGAND_COMP_CUDA_9)
   namespace lazy
   {
     template <typename L, typename Pred>

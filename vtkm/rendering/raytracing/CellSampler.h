@@ -89,8 +89,9 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::Vec<vtkm::Vec<P, 3>, 8>& points,
     pointsVec.Append(points[i]);
     scalarVec.Append(scalars[i]);
   }
+  bool success = false; // ignored
   vtkm::Vec<P, 3> pcoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-    pointsVec, sampleLocation, shapeTag, callingWorklet);
+    pointsVec, sampleLocation, shapeTag, success, callingWorklet);
   P pmin, pmax;
   pmin = vtkm::Min(vtkm::Min(pcoords[0], pcoords[1]), pcoords[2]);
   pmax = vtkm::Max(vtkm::Max(pcoords[0], pcoords[1]), pcoords[2]);
@@ -112,8 +113,9 @@ VTKM_EXEC_CONT inline bool Sample(const vtkm::VecAxisAlignedPointCoordinates<3>&
 {
 
   bool validSample = true;
+  bool success;
   vtkm::Vec<P, 3> pcoords = vtkm::exec::WorldCoordinatesToParametricCoordinates(
-    points, sampleLocation, vtkm::CellShapeTagHexahedron(), callingWorklet);
+    points, sampleLocation, vtkm::CellShapeTagHexahedron(), success, callingWorklet);
   P pmin, pmax;
   pmin = vtkm::Min(vtkm::Min(pcoords[0], pcoords[1]), pcoords[2]);
   pmax = vtkm::Max(vtkm::Max(pcoords[0], pcoords[1]), pcoords[2]);

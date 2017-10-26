@@ -25,7 +25,7 @@ set(headers
 vtkm_disable_troublesome_thrust_warnings()
 
 #-----------------------------------------------------------------------------
-vtkm_declare_headers(CUDA ${headers})
+vtkm_declare_headers(CUDA ${headers} TESTABLE FALSE)
 
 add_subdirectory(internal)
 

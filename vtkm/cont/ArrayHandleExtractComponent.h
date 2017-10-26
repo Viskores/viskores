@@ -38,7 +38,8 @@ class VTKM_ALWAYS_EXPORT ArrayPortalExtractComponent
 public:
   using VectorType = typename PortalType::ValueType;
   using Traits = vtkm::VecTraits<VectorType>;
-  using ComponentType = typename Traits::ComponentType;
+  using ValueType = typename Traits::ComponentType;
+
   static const vtkm::IdComponent COMPONENT = Component;
 
   VTKM_EXEC_CONT
@@ -64,13 +65,13 @@ public:
   vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
 
   VTKM_EXEC_CONT
-  ComponentType Get(vtkm::Id index) const
+  ValueType Get(vtkm::Id index) const
   {
     return Traits::GetComponent(this->Portal.Get(index), Component);
   }
 
   VTKM_EXEC_CONT
-  void Set(vtkm::Id index, const ComponentType& value) const
+  void Set(vtkm::Id index, const ValueType& value) const
   {
     VectorType vec = this->Portal.Get(index);
     Traits::SetComponent(vec, Component, value);
@@ -104,7 +105,7 @@ public:
     ArrayPortalExtractComponent<typename ArrayHandleType::PortalControl, Component>;
   using PortalConstType =
     ArrayPortalExtractComponent<typename ArrayHandleType::PortalConstControl, Component>;
-  using ValueType = typename PortalType::ComponentType;
+  using ValueType = typename PortalType::ValueType;
 
   VTKM_CONT
   Storage()

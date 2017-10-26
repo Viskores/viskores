@@ -20,23 +20,34 @@
 #ifndef vtk_m_worklet_VertexClustering_h
 #define vtk_m_worklet_VertexClustering_h
 
+#include <vtkm/BinaryOperators.h>
+#include <vtkm/BinaryPredicates.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
+#include <vtkm/cont/ArrayHandleDiscard.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
-#include <vtkm/worklet/AverageByKey.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/DispatcherReduceByKey.h>
+#include <vtkm/worklet/Keys.h>
+#include <vtkm/worklet/StableSortIndices.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
+#include <vtkm/worklet/WorkletReduceByKey.h>
 
 //#define __VTKM_VERTEX_CLUSTERING_BENCHMARK
-//#include <vtkm/cont/Timer.h>
+
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+#include <vtkm/cont/Timer.h>
+#endif
 
 namespace vtkm
 {
@@ -45,6 +56,77 @@ namespace worklet
 
 namespace internal
 {
+
+/// Selects the representative point somewhat randomly from the pool of points
+/// in a cluster.
+struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
+{
+  typedef void ControlSignature(KeysIn clusterIds, ValuesIn<> points, ReducedValuesOut<> repPoints);
+  typedef _3 ExecutionSignature(_2);
+  using InputDomain = _1;
+
+  template <typename PointsInVecType>
+  VTKM_EXEC typename PointsInVecType::ComponentType operator()(
+    const PointsInVecType& pointsIn) const
+  {
+    // Grab the point from the middle of the set. This usually does a decent
+    // job of selecting a representative point that won't emphasize the cluster
+    // partitions.
+    //
+    // Note that we must use the stable sorting with the worklet::Keys for this
+    // to be reproducible across backends.
+    return pointsIn[pointsIn.GetNumberOfComponents() / 2];
+  }
+
+  template <typename KeyType, typename DeviceAdapterTag>
+  struct RunTrampoline
+  {
+    const vtkm::worklet::Keys<KeyType>& Keys;
+    vtkm::cont::DynamicArrayHandle& OutputPoints;
+
+    VTKM_CONT
+    RunTrampoline(const vtkm::worklet::Keys<KeyType>& keys, vtkm::cont::DynamicArrayHandle& output)
+      : Keys(keys)
+      , OutputPoints(output)
+    {
+    }
+
+    template <typename InputPointsArrayType>
+    VTKM_CONT void operator()(const InputPointsArrayType& points) const
+    {
+      vtkm::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
+
+      vtkm::worklet::DispatcherReduceByKey<SelectRepresentativePoint, DeviceAdapterTag> dispatcher;
+      dispatcher.Invoke(this->Keys, points, out);
+
+      this->OutputPoints = out;
+    }
+  };
+
+  template <typename KeyType, typename InputDynamicPointsArrayType, typename DeviceAdapterTag>
+  VTKM_CONT static vtkm::cont::DynamicArrayHandle Run(
+    const vtkm::worklet::Keys<KeyType>& keys,
+    const InputDynamicPointsArrayType& inputPoints,
+    DeviceAdapterTag)
+  {
+    vtkm::cont::DynamicArrayHandle output;
+    RunTrampoline<KeyType, DeviceAdapterTag> trampoline(keys, output);
+    vtkm::cont::CastAndCall(inputPoints, trampoline);
+    return output;
+  }
+};
+
+template <typename ValueType, typename StorageType, typename IndexArrayType, typename DeviceAdapter>
+VTKM_CONT vtkm::cont::ArrayHandle<ValueType> ConcretePermutationArray(
+  const IndexArrayType& indices,
+  const vtkm::cont::ArrayHandle<ValueType, StorageType>& values,
+  DeviceAdapter)
+{
+  vtkm::cont::ArrayHandle<ValueType> result;
+  auto tmp = vtkm::cont::make_ArrayHandlePermutation(indices, values);
+  vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(tmp, result);
+  return result;
+}
 
 template <typename T, vtkm::IdComponent N, typename DeviceAdapter>
 vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> const& other,
@@ -58,50 +140,19 @@ vtkm::cont::ArrayHandle<T> copyFromVec(vtkm::cont::ArrayHandle<vtkm::Vec<T, N>> 
   return result;
 }
 
-template <typename KeyArrayIn, typename KeyArrayOut, typename DeviceAdapter>
-class AverageByKeyDynamicValue
-{
-private:
-  typedef typename KeyArrayIn::ValueType KeyType;
-
-public:
-  VTKM_CONT
-  AverageByKeyDynamicValue(const KeyArrayIn& inputKeys,
-                           KeyArrayOut& outputKeys,
-                           vtkm::cont::DynamicArrayHandle& outputValues)
-    : InputKeys(inputKeys)
-    , OutputKeys(&outputKeys)
-    , OutputValues(&outputValues)
-  {
-  }
-
-  template <typename ValueArrayIn>
-  VTKM_CONT void operator()(const ValueArrayIn& coordinates) const
-  {
-    typedef typename ValueArrayIn::ValueType ValueType;
-
-    vtkm::cont::ArrayHandle<ValueType> outArray;
-    vtkm::worklet::AverageByKey::Run(
-      InputKeys, coordinates, *(this->OutputKeys), outArray, DeviceAdapter());
-    *(this->OutputValues) = vtkm::cont::DynamicArrayHandle(outArray);
-  }
-
-private:
-  KeyArrayIn InputKeys;
-  KeyArrayOut* OutputKeys;
-  vtkm::cont::DynamicArrayHandle* OutputValues;
-};
-
 } // namespace internal
 
 struct VertexClustering
 {
+  using PointIdMapType = vtkm::cont::ArrayHandlePermutation<vtkm::cont::ArrayHandle<vtkm::Id>,
+                                                            vtkm::cont::ArrayHandle<vtkm::Id>>;
+
   struct GridInfo
   {
-    vtkm::Id dim[3];
+    vtkm::Vec<vtkm::Id, 3> dim;
     vtkm::Vec<vtkm::Float64, 3> origin;
-    vtkm::Float64 grid_width;
-    vtkm::Float64 inv_grid_width; // = 1/grid_width
+    vtkm::Vec<vtkm::Float64, 3> bin_size;
+    vtkm::Vec<vtkm::Float64, 3> inv_bin_size;
   };
 
   // input: points  output: cid of the points
@@ -129,10 +180,12 @@ struct VertexClustering
                            static_cast<ComponentType>(this->Grid.origin[1]),
                            static_cast<ComponentType>(this->Grid.origin[2]));
 
-      PointType p_rel = (p - gridOrigin) * static_cast<ComponentType>(this->Grid.inv_grid_width);
-      vtkm::Id x = vtkm::Min((vtkm::Id)p_rel[0], this->Grid.dim[0] - 1);
-      vtkm::Id y = vtkm::Min((vtkm::Id)p_rel[1], this->Grid.dim[1] - 1);
-      vtkm::Id z = vtkm::Min((vtkm::Id)p_rel[2], this->Grid.dim[2] - 1);
+      PointType p_rel = (p - gridOrigin) * this->Grid.inv_bin_size;
+
+      vtkm::Id x = vtkm::Min(static_cast<vtkm::Id>(p_rel[0]), this->Grid.dim[0] - 1);
+      vtkm::Id y = vtkm::Min(static_cast<vtkm::Id>(p_rel[1]), this->Grid.dim[1] - 1);
+      vtkm::Id z = vtkm::Min(static_cast<vtkm::Id>(p_rel[2]), this->Grid.dim[2] - 1);
+
       return x + this->Grid.dim[0] * (y + this->Grid.dim[1] * z); // get a unique hash value
     }
 
@@ -286,23 +339,6 @@ struct VertexClustering
     }
   };
 
-  class Id3Less
-  {
-  public:
-    VTKM_EXEC
-    bool operator()(const vtkm::Id3& a, const vtkm::Id3& b) const
-    {
-      if (a[0] < 0)
-      {
-        // invalid id: place at the last after sorting
-        // (comparing to 0 is faster than matching -1)
-        return false;
-      }
-      return b[0] < 0 || a[0] < b[0] || (a[0] == b[0] && a[1] < b[1]) ||
-        (a[0] == b[0] && a[1] == b[1] && a[2] < b[2]);
-    }
-  };
-
 public:
   ///////////////////////////////////////////////////
   /// \brief VertexClustering: Mesh simplification
@@ -316,39 +352,25 @@ public:
                           const vtkm::Id3& nDivisions,
                           DeviceAdapter)
   {
-
     /// determine grid resolution for clustering
     GridInfo gridInfo;
     {
-      vtkm::Vec<vtkm::Float64, 3> res(bounds.X.Length() / static_cast<vtkm::Float64>(nDivisions[0]),
-                                      bounds.Y.Length() / static_cast<vtkm::Float64>(nDivisions[1]),
-                                      bounds.Z.Length() /
-                                        static_cast<vtkm::Float64>(nDivisions[2]));
-      gridInfo.grid_width = vtkm::Max(res[0], vtkm::Max(res[1], res[2]));
-
-      vtkm::Float64 inv_grid_width = gridInfo.inv_grid_width =
-        vtkm::Float64(1) / gridInfo.grid_width;
-
-      //printf("Bounds: %lf, %lf, %lf, %lf, %lf, %lf\n", bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
-      gridInfo.dim[0] =
-        vtkm::Min((vtkm::Id)vtkm::Ceil((bounds.X.Length()) * inv_grid_width), nDivisions[0]);
-      gridInfo.dim[1] =
-        vtkm::Min((vtkm::Id)vtkm::Ceil((bounds.Y.Length()) * inv_grid_width), nDivisions[1]);
-      gridInfo.dim[2] =
-        vtkm::Min((vtkm::Id)vtkm::Ceil((bounds.Z.Length()) * inv_grid_width), nDivisions[2]);
-
-      // center the mesh in the grids
-      vtkm::Vec<vtkm::Float64, 3> center = bounds.Center();
-      gridInfo.origin[0] =
-        center[0] - gridInfo.grid_width * static_cast<vtkm::Float64>(gridInfo.dim[0]) * .5;
-      gridInfo.origin[1] =
-        center[1] - gridInfo.grid_width * static_cast<vtkm::Float64>(gridInfo.dim[1]) * .5;
-      gridInfo.origin[2] =
-        center[2] - gridInfo.grid_width * static_cast<vtkm::Float64>(gridInfo.dim[2]) * .5;
+      gridInfo.origin[0] = bounds.X.Min;
+      gridInfo.origin[1] = bounds.Y.Min;
+      gridInfo.origin[2] = bounds.Z.Min;
+      gridInfo.dim[0] = nDivisions[0];
+      gridInfo.dim[1] = nDivisions[1];
+      gridInfo.dim[2] = nDivisions[2];
+      gridInfo.bin_size[0] = bounds.X.Length() / static_cast<vtkm::Float64>(nDivisions[0]);
+      gridInfo.bin_size[1] = bounds.Y.Length() / static_cast<vtkm::Float64>(nDivisions[1]);
+      gridInfo.bin_size[2] = bounds.Z.Length() / static_cast<vtkm::Float64>(nDivisions[2]);
+      gridInfo.inv_bin_size[0] = 1. / gridInfo.bin_size[0];
+      gridInfo.inv_bin_size[1] = 1. / gridInfo.bin_size[1];
+      gridInfo.inv_bin_size[2] = 1. / gridInfo.bin_size[2];
     }
 
-//construct the scheduler that will execute all the worklets
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+    vtkm::cont::Timer<> totalTimer;
     vtkm::cont::Timer<> timer;
 #endif
 
@@ -365,22 +387,32 @@ public:
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
     std::cout << "Time map points (s): " << timer.GetElapsedTime() << std::endl;
+    timer.Reset();
 #endif
 
-    /// pass 2 : compute average point position for each cluster,
-    ///          using pointCidArray as the key
-    ///
-    vtkm::cont::ArrayHandle<vtkm::Id> pointCidArrayReduced;
-    vtkm::cont::DynamicArrayHandle repPointArray; // representative point
+    /// pass 2 : Choose a representative point from each cluster for the output:
+    vtkm::cont::DynamicArrayHandle repPointArray;
+    {
+      vtkm::worklet::Keys<vtkm::Id> keys;
+      keys.BuildArrays(
+        pointCidArray, vtkm::worklet::Keys<vtkm::Id>::SortType::Stable, DeviceAdapter());
 
-    internal::AverageByKeyDynamicValue<vtkm::cont::ArrayHandle<vtkm::Id>,
-                                       vtkm::cont::ArrayHandle<vtkm::Id>,
-                                       DeviceAdapter>
-      averageByKey(pointCidArray, pointCidArrayReduced, repPointArray);
-    CastAndCall(coordinates, averageByKey);
+      // For mapping properties, this map will select an arbitrary point from
+      // the cluster:
+      this->PointIdMap =
+        vtkm::cont::make_ArrayHandlePermutation(keys.GetOffsets(), keys.GetSortedValuesMap());
+
+      // Compute representative points from each cluster (may not match the
+      // PointIdMap indexing)
+      repPointArray = internal::SelectRepresentativePoint::Run(keys, coordinates, DeviceAdapter());
+    }
+
+    auto repPointCidArray =
+      vtkm::cont::make_ArrayHandlePermutation(this->PointIdMap, pointCidArray);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    std::cout << "Time after averaging (s): " << timer.GetElapsedTime() << std::endl;
+    std::cout << "Time after reducing points (s): " << timer.GetElapsedTime() << std::endl;
+    timer.Reset();
 #endif
 
     /// Pass 3 : Decimated mesh generation
@@ -394,21 +426,26 @@ public:
     vtkm::worklet::DispatcherMapTopology<MapCellsWorklet, DeviceAdapter>(MapCellsWorklet())
       .Invoke(cellSet, pointCidArray, cid3Array);
 
-    pointCidArray.ReleaseResources();
+#ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
+    std::cout << "Time after clustering cells (s): " << timer.GetElapsedTime() << std::endl;
+    timer.Reset();
+#endif
 
     /// preparation: Get the indexes of the clustered points to prepare for new cell array
     vtkm::cont::ArrayHandle<vtkm::Id> cidIndexArray;
     cidIndexArray.PrepareForOutput(gridInfo.dim[0] * gridInfo.dim[1] * gridInfo.dim[2],
                                    DeviceAdapter());
 
-    vtkm::worklet::DispatcherMapField<IndexingWorklet, DeviceAdapter>().Invoke(pointCidArrayReduced,
+    vtkm::worklet::DispatcherMapField<IndexingWorklet, DeviceAdapter>().Invoke(repPointCidArray,
                                                                                cidIndexArray);
 
-    pointCidArrayReduced.ReleaseResources();
+    pointCidArray.ReleaseResources();
+    repPointCidArray.ReleaseResources();
 
     ///
     /// map: convert each triangle vertices from original point id to the new cluster indexes
-    ///      If the triangle is degenerated, set the ids to <-1, -1, -1>
+    ///      If the triangle is degenerated, set the ids to <nPoints, nPoints, nPoints>
+    ///      This ensures it will be placed at the end of the array when sorted.
     ///
     vtkm::Id nPoints = repPointArray.GetNumberOfValues();
 
@@ -436,36 +473,50 @@ public:
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
+      timer.Reset();
 #endif
 
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(pointId3HashArray);
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(pointId3HashArray);
+      this->CellIdMap = vtkm::worklet::StableSortIndices<DeviceAdapter>::Sort(pointId3HashArray);
+      vtkm::worklet::StableSortIndices<DeviceAdapter>::Unique(pointId3HashArray, this->CellIdMap);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique with hashing (s): " << timer.GetElapsedTime()
                 << std::endl;
+      timer.Reset();
 #endif
+
+      // Create a temporary permutation array and use that for unhashing.
+      auto tmpPerm = vtkm::cont::make_ArrayHandlePermutation(this->CellIdMap, pointId3HashArray);
 
       // decode
       vtkm::worklet::DispatcherMapField<Cid3UnhashWorklet, DeviceAdapter>(
         Cid3UnhashWorklet(nPoints))
-        .Invoke(pointId3HashArray, pointId3Array);
+        .Invoke(tmpPerm, pointId3Array);
     }
     else
     {
-
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time before sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
+      timer.Reset();
 #endif
 
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Sort(pointId3Array);
-      vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Unique(pointId3Array);
+      this->CellIdMap = vtkm::worklet::StableSortIndices<DeviceAdapter>::Sort(pointId3Array);
+      vtkm::worklet::StableSortIndices<DeviceAdapter>::Unique(pointId3Array, this->CellIdMap);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
       std::cout << "Time after sort and unique [no hashing] (s): " << timer.GetElapsedTime()
                 << std::endl;
+      timer.Reset();
 #endif
+
+      // Permute the connectivity array into a basic array handle. Use a
+      // temporary array handle to avoid memory aliasing.
+      {
+        vtkm::cont::ArrayHandle<vtkm::Id3> tmp;
+        tmp = internal::ConcretePermutationArray(this->CellIdMap, pointId3Array, DeviceAdapter());
+        pointId3Array = tmp;
+      }
     }
 
     // remove the last element if invalid
@@ -474,12 +525,14 @@ public:
     {
       cells--;
       pointId3Array.Shrink(cells);
+      this->CellIdMap.Shrink(cells);
     }
 
     /// output
     vtkm::cont::DataSet output;
 
-    output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
+    output.AddCoordinateSystem(
+      vtkm::cont::CoordinateSystem("coordinates", vtkm::cont::DynamicArrayHandle(repPointArray)));
 
     vtkm::cont::CellSetSingleType<> triangles("cells");
     triangles.Fill(repPointArray.GetNumberOfValues(),
@@ -489,7 +542,8 @@ public:
     output.AddCellSet(triangles);
 
 #ifdef __VTKM_VERTEX_CLUSTERING_BENCHMARK
-    vtkm::Float64 t = timer.GetElapsedTime();
+    std::cout << "Wrap-up (s): " << timer.GetElapsedTime() << std::endl;
+    vtkm::Float64 t = totalTimer.GetElapsedTime();
     std::cout << "Time (s): " << t << std::endl;
     std::cout << "number of output points: " << repPointArray.GetNumberOfValues() << std::endl;
     std::cout << "number of output cells: " << pointId3Array.GetNumberOfValues() << std::endl;
@@ -497,6 +551,26 @@ public:
 
     return output;
   }
+
+  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<ValueType> ProcessPointField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input,
+    const DeviceAdapter&) const
+  {
+    return internal::ConcretePermutationArray(this->PointIdMap, input, DeviceAdapter());
+  }
+
+  template <typename ValueType, typename StorageType, typename DeviceAdapter>
+  vtkm::cont::ArrayHandle<ValueType> ProcessCellField(
+    const vtkm::cont::ArrayHandle<ValueType, StorageType>& input,
+    const DeviceAdapter&) const
+  {
+    return internal::ConcretePermutationArray(this->CellIdMap, input, DeviceAdapter());
+  }
+
+private:
+  PointIdMapType PointIdMap;
+  vtkm::cont::ArrayHandle<vtkm::Id> CellIdMap;
 }; // struct VertexClustering
 }
 } // namespace vtkm::worklet

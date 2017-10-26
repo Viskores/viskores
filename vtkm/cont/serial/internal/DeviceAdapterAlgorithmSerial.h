@@ -33,7 +33,9 @@
 #include <vtkm/exec/serial/internal/TaskTiling.h>
 
 #include <algorithm>
+#include <iterator>
 #include <numeric>
+#include <type_traits>
 
 namespace vtkm
 {
@@ -49,7 +51,47 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagSerial>
 private:
   using Device = vtkm::cont::DeviceAdapterTagSerial;
 
+  // MSVC likes complain about narrowing type conversions in std::copy and
+  // provides no reasonable way to disable the warning. As a work-around, this
+  // template calls std::copy if and only if the types match, otherwise falls
+  // back to a iterative casting approach. Since std::copy can only really
+  // optimize same-type copies, this shouldn't affect performance.
+  template <typename InIter, typename OutIter>
+  VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::false_type)
+  {
+    using OutputType = typename std::iterator_traits<OutIter>::value_type;
+    while (src != srcEnd)
+    {
+      *dst = static_cast<OutputType>(*src);
+      ++src;
+      ++dst;
+    }
+  }
+
+  template <typename InIter, typename OutIter>
+  VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
+  {
+    std::copy(src, srcEnd, dst);
+  }
+
 public:
+  template <typename T, typename U, class CIn, class COut>
+  VTKM_CONT static void Copy(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                             vtkm::cont::ArrayHandle<U, COut>& output)
+  {
+    const vtkm::Id inSize = input.GetNumberOfValues();
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
+    auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagSerial());
+
+    using InputType = decltype(inputPortal.Get(0));
+    using OutputType = decltype(outputPortal.Get(0));
+
+    DoCopy(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
+           vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
+           vtkm::cont::ArrayPortalToIteratorBegin(outputPortal),
+           std::is_same<InputType, OutputType>());
+  }
+
   template <typename T, typename U, class CIn, class CStencil, class COut>
   VTKM_CONT static void CopyIf(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                const vtkm::cont::ArrayHandle<U, CStencil>& stencil,
@@ -87,6 +129,70 @@ public:
     output.Shrink(writePos);
   }
 
+  template <typename T, typename U, class CIn, class COut>
+  VTKM_CONT static bool CopySubRange(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                     vtkm::Id inputStartIndex,
+                                     vtkm::Id numberOfElementsToCopy,
+                                     vtkm::cont::ArrayHandle<U, COut>& output,
+                                     vtkm::Id outputIndex = 0)
+  {
+    const vtkm::Id inSize = input.GetNumberOfValues();
+
+    // Check if the ranges overlap and fail if they do.
+    if (input == output && ((outputIndex >= inputStartIndex &&
+                             outputIndex < inputStartIndex + numberOfElementsToCopy) ||
+                            (inputStartIndex >= outputIndex &&
+                             inputStartIndex < outputIndex + numberOfElementsToCopy)))
+    {
+      return false;
+    }
+
+    if (inputStartIndex < 0 || numberOfElementsToCopy < 0 || outputIndex < 0 ||
+        inputStartIndex >= inSize)
+    { //invalid parameters
+      return false;
+    }
+
+    //determine if the numberOfElementsToCopy needs to be reduced
+    if (inSize < (inputStartIndex + numberOfElementsToCopy))
+    { //adjust the size
+      numberOfElementsToCopy = (inSize - inputStartIndex);
+    }
+
+    const vtkm::Id outSize = output.GetNumberOfValues();
+    const vtkm::Id copyOutEnd = outputIndex + numberOfElementsToCopy;
+    if (outSize < copyOutEnd)
+    { //output is not large enough
+      if (outSize == 0)
+      { //since output has nothing, just need to allocate to correct length
+        output.Allocate(copyOutEnd);
+      }
+      else
+      { //we currently have data in this array, so preserve it in the new
+        //resized array
+        vtkm::cont::ArrayHandle<U, COut> temp;
+        temp.Allocate(copyOutEnd);
+        CopySubRange(output, 0, outSize, temp);
+        output = temp;
+      }
+    }
+
+    auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
+    auto outputPortal = output.PrepareForInPlace(DeviceAdapterTagSerial());
+    auto inIter = vtkm::cont::ArrayPortalToIteratorBegin(inputPortal);
+    auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(outputPortal);
+
+    using InputType = decltype(inputPortal.Get(0));
+    using OutputType = decltype(outputPortal.Get(0));
+
+    DoCopy(inIter + inputStartIndex,
+           inIter + inputStartIndex + numberOfElementsToCopy,
+           outIter + outputIndex,
+           std::is_same<InputType, OutputType>());
+
+    return true;
+  }
+
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
@@ -121,8 +227,16 @@ public:
   {
     auto keysPortalIn = keys.PrepareForInput(Device());
     auto valuesPortalIn = values.PrepareForInput(Device());
-
     const vtkm::Id numberOfKeys = keys.GetNumberOfValues();
+
+    VTKM_ASSERT(numberOfKeys == values.GetNumberOfValues());
+    if (numberOfKeys == 0)
+    {
+      keys_output.Shrink(0);
+      values_output.Shrink(0);
+      return;
+    }
+
     auto keysPortalOut = keys_output.PrepareForOutput(numberOfKeys, Device());
     auto valuesPortalOut = values_output.PrepareForOutput(numberOfKeys, Device());
 

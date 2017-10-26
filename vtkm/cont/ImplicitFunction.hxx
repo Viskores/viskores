@@ -168,7 +168,7 @@ inline vtkm::Vec<FloatDefault, 3> Box::Gradient(const vtkm::Vec<FloatDefault, 3>
   FloatDefault dist = 0.0;
   FloatDefault minDist = vtkm::Infinity32();
   vtkm::Vec<vtkm::IdComponent, 3> location;
-  vtkm::Vec<FloatDefault, 3> normal;
+  vtkm::Vec<FloatDefault, 3> normal(FloatDefault(0));
   vtkm::Vec<FloatDefault, 3> inside(FloatDefault(0));
   vtkm::Vec<FloatDefault, 3> outside(FloatDefault(0));
   vtkm::Vec<FloatDefault, 3> center((this->MaxPoint + this->MinPoint) * FloatDefault(0.5));

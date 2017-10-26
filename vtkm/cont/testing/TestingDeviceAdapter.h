@@ -73,6 +73,7 @@ private:
   using StorageTag = vtkm::cont::StorageTagBasic;
 
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id, StorageTag>;
+  using IdComponentArrayHandle = vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageTag>;
 
   using ScalarArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag>;
 
@@ -1182,15 +1183,16 @@ private:
     {
       const vtkm::Id inputLength = 12;
       const vtkm::Id expectedLength = 6;
-      vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 };       // input keys
-      vtkm::Id inputValues[inputLength] = { 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 }; // input keys
-      vtkm::Id expectedKeys[expectedLength] = { 0, 1, 4, 0, 2, -1 };
+      vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 }; // in keys
+      vtkm::Id inputValues[inputLength] = { 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 }; // in values
+      vtkm::IdComponent expectedKeys[expectedLength] = { 0, 1, 4, 0, 2, -1 };
       vtkm::Id expectedValues[expectedLength] = { 10, 2, 0, 3, 10, -42 };
 
-      IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+      IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
       IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
-      IdArrayHandle keysOut, valuesOut;
+      IdComponentArrayHandle keysOut;
+      IdArrayHandle valuesOut;
       Algorithm::ReduceByKey(keys, values, keysOut, valuesOut, vtkm::Add());
 
       VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
@@ -1405,13 +1407,13 @@ private:
     std::cout << "Testing Scan Inclusive By Key" << std::endl;
 
     const vtkm::Id inputLength = 10;
-    vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
     vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     IdArrayHandle valuesOut;
@@ -1529,14 +1531,14 @@ private:
     std::cout << "Testing Scan Exclusive By Key" << std::endl;
 
     const vtkm::Id inputLength = 10;
-    vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
     vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     vtkm::Id init = 5;
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     IdArrayHandle valuesOut;
@@ -1965,6 +1967,29 @@ private:
         value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + i);
         VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 6)");
       }
+    }
+
+    // 7. Test that overlapping ranges trigger a failure:
+    // 7.1 output starts inside input range:
+    {
+      const vtkm::Id inBegin = 100;
+      const vtkm::Id inEnd = 200;
+      const vtkm::Id outBegin = 150;
+
+      const vtkm::Id numVals = inEnd - inBegin;
+      bool result = Algorithm::CopySubRange(input, inBegin, numVals, input, outBegin);
+      VTKM_TEST_ASSERT(result == false, "Overlapping subrange did not fail.");
+    }
+
+    // 7.2 input starts inside output range
+    {
+      const vtkm::Id inBegin = 100;
+      const vtkm::Id inEnd = 200;
+      const vtkm::Id outBegin = 50;
+
+      const vtkm::Id numVals = inEnd - inBegin;
+      bool result = Algorithm::CopySubRange(input, inBegin, numVals, input, outBegin);
+      VTKM_TEST_ASSERT(result == false, "Overlapping subrange did not fail.");
     }
 
     {

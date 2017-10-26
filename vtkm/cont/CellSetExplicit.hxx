@@ -79,7 +79,11 @@ template <typename ShapeStorageTag,
           typename ConnectivityStorageTag,
           typename OffsetsStorageTag>
 CellSetExplicit<ShapeStorageTag, NumIndicesStorageTag, ConnectivityStorageTag, OffsetsStorageTag>::
-  ~CellSetExplicit() = default;
+  ~CellSetExplicit()
+// explicitly define instead of '=default' to workaround an intel compiler bug
+// (see #179)
+{
+}
 
 template <typename ShapeStorageTag,
           typename NumIndicesStorageTag,

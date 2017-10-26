@@ -28,38 +28,38 @@ namespace vtkm
 namespace worklet
 {
 
-//
-// Distribute multiple copies of cell data depending on cells create from original
-//
-struct DistributeCellData : public vtkm::worklet::WorkletMapField
-{
-  typedef void ControlSignature(FieldIn<> inIndices, FieldOut<> outIndices);
-  typedef void ExecutionSignature(_1, _2);
-
-  typedef vtkm::worklet::ScatterCounting ScatterType;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->Scatter; }
-
-  template <typename CountArrayType, typename DeviceAdapter>
-  VTKM_CONT DistributeCellData(const CountArrayType& countArray, DeviceAdapter device)
-    : Scatter(countArray, device)
-  {
-  }
-
-  template <typename T>
-  VTKM_EXEC void operator()(T inputIndex, T& outputIndex) const
-  {
-    outputIndex = inputIndex;
-  }
-
-private:
-  ScatterType Scatter;
-};
-
 class Tetrahedralize
 {
 public:
+  //
+  // Distribute multiple copies of cell data depending on cells create from original
+  //
+  struct DistributeCellData : public vtkm::worklet::WorkletMapField
+  {
+    typedef void ControlSignature(FieldIn<> inIndices, FieldOut<> outIndices);
+    typedef void ExecutionSignature(_1, _2);
+
+    typedef vtkm::worklet::ScatterCounting ScatterType;
+
+    VTKM_CONT
+    ScatterType GetScatter() const { return this->Scatter; }
+
+    template <typename CountArrayType, typename DeviceAdapter>
+    VTKM_CONT DistributeCellData(const CountArrayType& countArray, DeviceAdapter device)
+      : Scatter(countArray, device)
+    {
+    }
+
+    template <typename T>
+    VTKM_EXEC void operator()(T inputIndex, T& outputIndex) const
+    {
+      outputIndex = inputIndex;
+    }
+
+  private:
+    ScatterType Scatter;
+  };
+
   Tetrahedralize()
     : OutCellsPerCell()
   {

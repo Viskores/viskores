@@ -711,13 +711,16 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates3D(const WorldCoordVector& pointWCoords,
                                           const typename WorldCoordVector::ComponentType& wcoords,
                                           CellShapeTag,
+                                          bool& success,
                                           const vtkm::exec::FunctorBase& worklet)
 {
-  return vtkm::NewtonsMethod(
+  auto result = vtkm::NewtonsMethod(
     JacobianFunctor3DCell<WorldCoordVector, CellShapeTag>(&pointWCoords),
     CoordinatesFunctor3DCell<WorldCoordVector, CellShapeTag>(&pointWCoords, &worklet),
     wcoords,
     typename WorldCoordVector::ComponentType(0.5f, 0.5f, 0.5f));
+  success = result.Valid;
+  return result.Solution;
 }
 
 } // namespace detail
@@ -728,14 +731,16 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType& wcoords,
                                         vtkm::CellShapeTagGeneric shape,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& worklet)
 {
   typename WorldCoordVector::ComponentType result;
   switch (shape.Id)
   {
     vtkmGenericCellShapeMacro(result = WorldCoordinatesToParametricCoordinates(
-                                pointWCoords, wcoords, CellShapeTag(), worklet));
+                                pointWCoords, wcoords, CellShapeTag(), success, worklet));
     default:
+      success = false;
       worklet.RaiseError("Unknown cell shape sent to world 2 parametric.");
       return typename WorldCoordVector::ComponentType();
   }
@@ -748,9 +753,11 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector&,
                                         const typename WorldCoordVector::ComponentType&,
                                         vtkm::CellShapeTagEmpty,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& worklet)
 {
   worklet.RaiseError("Attempted to find point coordinates in empty cell.");
+  success = false;
   return typename WorldCoordVector::ComponentType();
 }
 
@@ -759,10 +766,12 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType&,
                                         vtkm::CellShapeTagVertex,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   (void)pointWCoords; // Silence compiler warnings.
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 1);
+  success = true;
   return typename WorldCoordVector::ComponentType(0, 0, 0);
 }
 
@@ -771,9 +780,11 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType& wcoords,
                                         vtkm::CellShapeTagLine,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 2);
+  success = true;
 
   // Because this is a line, there is only one vaild parametric coordinate. Let
   // vec be the vector from the first point to the second point
@@ -798,8 +809,10 @@ static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParam
   const vtkm::VecAxisAlignedPointCoordinates<1>& pointWCoords,
   const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
   vtkm::CellShapeTagLine,
+  bool& success,
   const FunctorBase&)
 {
+  success = true;
   return (wcoords - pointWCoords.GetOrigin()) / pointWCoords.GetSpacing();
 }
 
@@ -808,8 +821,10 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType& wcoords,
                                         vtkm::CellShapeTagTriangle,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
+  success = true;
   return vtkm::exec::internal::ReverseInterpolateTriangle(pointWCoords, wcoords);
 }
 
@@ -818,6 +833,7 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType& wcoords,
                                         vtkm::CellShapeTagPolygon,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& worklet)
 {
   const vtkm::IdComponent numPoints = pointWCoords.GetNumberOfComponents();
@@ -826,16 +842,16 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   {
     case 1:
       return WorldCoordinatesToParametricCoordinates(
-        pointWCoords, wcoords, vtkm::CellShapeTagVertex(), worklet);
+        pointWCoords, wcoords, vtkm::CellShapeTagVertex(), success, worklet);
     case 2:
       return WorldCoordinatesToParametricCoordinates(
-        pointWCoords, wcoords, vtkm::CellShapeTagLine(), worklet);
+        pointWCoords, wcoords, vtkm::CellShapeTagLine(), success, worklet);
     case 3:
       return WorldCoordinatesToParametricCoordinates(
-        pointWCoords, wcoords, vtkm::CellShapeTagTriangle(), worklet);
+        pointWCoords, wcoords, vtkm::CellShapeTagTriangle(), success, worklet);
     case 4:
       return WorldCoordinatesToParametricCoordinates(
-        pointWCoords, wcoords, vtkm::CellShapeTagQuad(), worklet);
+        pointWCoords, wcoords, vtkm::CellShapeTagQuad(), success, worklet);
   }
 
   // If we are here, then there are 5 or more points on this polygon.
@@ -920,7 +936,7 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   triangleWCoords[2] = pointWCoords[secondPointIndex];
 
   WCoordType trianglePCoords = WorldCoordinatesToParametricCoordinates(
-    triangleWCoords, wcoords, vtkm::CellShapeTagTriangle(), worklet);
+    triangleWCoords, wcoords, vtkm::CellShapeTagTriangle(), success, worklet);
 
   // trianglePCoords is in the triangle's parameter space rather than the
   // polygon's parameter space. We can find the polygon's parameter space by
@@ -940,6 +956,7 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType& wcoords,
                                         vtkm::CellShapeTagQuad,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& worklet)
 {
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 4);
@@ -952,22 +969,25 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   // plane that the polygon sits.
   vtkm::exec::internal::Space2D<T> space(pointWCoords[0], pointWCoords[1], pointWCoords[3]);
 
-  Vector2 pcoords = vtkm::NewtonsMethod(
+  auto result = vtkm::NewtonsMethod(
     detail::JacobianFunctorQuad<WorldCoordVector, vtkm::CellShapeTagQuad>(&pointWCoords, &space),
     detail::CoordinatesFunctorQuad<WorldCoordVector, vtkm::CellShapeTagQuad>(
       &pointWCoords, &space, &worklet),
     space.ConvertCoordToSpace(wcoords),
     Vector2(0.5f, 0.5f));
 
-  return Vector3(pcoords[0], pcoords[1], 0);
+  success = result.Valid;
+  return Vector3(result.Solution[0], result.Solution[1], 0);
 }
 
 static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParametricCoordinates(
   const vtkm::VecAxisAlignedPointCoordinates<2>& pointWCoords,
   const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
   vtkm::CellShapeTagQuad,
+  bool& success,
   const FunctorBase&)
 {
+  success = true;
   return (wcoords - pointWCoords.GetOrigin()) / pointWCoords.GetSpacing();
 }
 
@@ -976,9 +996,11 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType& wcoords,
                                         vtkm::CellShapeTagTetra,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& vtkmNotUsed(worklet))
 {
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 4);
+  success = true;
 
   // We solve the world to parametric coordinates problem for tetrahedra
   // similarly to that for triangles. Before understanding this code, you
@@ -1029,20 +1051,23 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType& wcoords,
                                         vtkm::CellShapeTagHexahedron,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& worklet)
 {
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 8);
 
   return detail::WorldCoordinatesToParametricCoordinates3D(
-    pointWCoords, wcoords, vtkm::CellShapeTagHexahedron(), worklet);
+    pointWCoords, wcoords, vtkm::CellShapeTagHexahedron(), success, worklet);
 }
 
 static inline VTKM_EXEC vtkm::Vec<vtkm::FloatDefault, 3> WorldCoordinatesToParametricCoordinates(
   const vtkm::VecAxisAlignedPointCoordinates<3>& pointWCoords,
   const vtkm::Vec<vtkm::FloatDefault, 3>& wcoords,
   vtkm::CellShapeTagHexahedron,
+  bool& success,
   const FunctorBase&)
 {
+  success = true;
   return (wcoords - pointWCoords.GetOrigin()) / pointWCoords.GetSpacing();
 }
 
@@ -1051,12 +1076,13 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType& wcoords,
                                         vtkm::CellShapeTagWedge,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& worklet)
 {
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 6);
 
   return detail::WorldCoordinatesToParametricCoordinates3D(
-    pointWCoords, wcoords, vtkm::CellShapeTagWedge(), worklet);
+    pointWCoords, wcoords, vtkm::CellShapeTagWedge(), success, worklet);
 }
 
 template <typename WorldCoordVector>
@@ -1064,12 +1090,13 @@ static inline VTKM_EXEC typename WorldCoordVector::ComponentType
 WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
                                         const typename WorldCoordVector::ComponentType& wcoords,
                                         vtkm::CellShapeTagPyramid,
+                                        bool& success,
                                         const vtkm::exec::FunctorBase& worklet)
 {
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 5);
 
   return detail::WorldCoordinatesToParametricCoordinates3D(
-    pointWCoords, wcoords, vtkm::CellShapeTagPyramid(), worklet);
+    pointWCoords, wcoords, vtkm::CellShapeTagPyramid(), success, worklet);
 }
 }
 } // namespace vtkm::exec
