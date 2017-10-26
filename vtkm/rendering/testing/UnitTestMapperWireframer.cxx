@@ -21,6 +21,7 @@
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
 #include <vtkm/rendering/MapperWireframer.h>
@@ -46,11 +47,89 @@ vtkm::cont::DataSet Make3DUniformDataSet(vtkm::Id size = 64)
   return dataSet;
 }
 
+vtkm::cont::DataSet Make1DUniformDataSet()
+{
+  vtkm::cont::DataSetBuilderUniform builder;
+  std::vector<vtkm::Float32> x;
+  x.push_back(0.f);
+  x.push_back(1.f);
+  x.push_back(2.f);
+  x.push_back(3.f);
+  x.push_back(4.f);
+  x.push_back(5.f);
+  std::vector<vtkm::Float32> y;
+  y.push_back(10.f);
+  y.push_back(11.f);
+  y.push_back(11.5f);
+  y.push_back(13.f);
+  y.push_back(14.f);
+  y.push_back(13.f);
+  vtkm::cont::DataSet dataSet = builder.Create(x.size());
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  dsf.AddPointField(dataSet, "something", y);
+  return dataSet;
+}
+
+vtkm::cont::DataSet Make2DExplicitDataSet()
+{
+  vtkm::cont::DataSet dataSet;
+  vtkm::cont::DataSetBuilderExplicit dsb;
+  const int nVerts = 5;
+  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
+  std::vector<CoordType> coords(nVerts);
+  CoordType coordinates[nVerts] = { CoordType(0, 0, 0),
+                                    CoordType(1, .5, 0),
+                                    CoordType(2, 1, 0),
+                                    CoordType(3, 1.7, 0),
+                                    CoordType(4, 3, 0) };
+
+  std::vector<vtkm::Float32> cellVar;
+  cellVar.push_back(10);
+  cellVar.push_back(12);
+  cellVar.push_back(13);
+  cellVar.push_back(14);
+  std::vector<vtkm::Float32> pointVar;
+  pointVar.push_back(10);
+  pointVar.push_back(12);
+  pointVar.push_back(13);
+  pointVar.push_back(14);
+  pointVar.push_back(15);
+  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
+  vtkm::cont::CellSetSingleType<> cellSet("cells");
+
+  vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
+  connectivity.Allocate(8);
+  auto connPortal = connectivity.GetPortalControl();
+  connPortal.Set(0, 0);
+  connPortal.Set(1, 1);
+
+  connPortal.Set(2, 1);
+  connPortal.Set(3, 2);
+
+  connPortal.Set(4, 2);
+  connPortal.Set(5, 3);
+
+  connPortal.Set(6, 3);
+  connPortal.Set(7, 4);
+
+  cellSet.Fill(nVerts, vtkm::CELL_SHAPE_LINE, 2, connectivity);
+  dataSet.AddCellSet(cellSet);
+  vtkm::cont::DataSetFieldAdd dsf;
+  dsf.AddPointField(dataSet, "pointVar", pointVar);
+  dsf.AddCellField(dataSet, "cellVar", cellVar);
+
+  dataSet.PrintSummary(std::cout);
+  return dataSet;
+}
+
 void RenderTests()
 {
   typedef vtkm::rendering::MapperWireframer M;
   typedef vtkm::rendering::CanvasRayTracer C;
   typedef vtkm::rendering::View3D V3;
+  typedef vtkm::rendering::View2D V2;
+  typedef vtkm::rendering::View1D V1;
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
@@ -63,6 +142,19 @@ void RenderTests()
     maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
   vtkm::rendering::testing::Render<M, C, V3>(
     Make3DUniformDataSet(), "pointvar", colorTable, "uniform3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V2>(
+    Make2DExplicitDataSet(), "cellVar", colorTable, "lines2D.pnm");
+  //
+  // Test the 1D cell set line plot with multiple lines
+  //
+  std::vector<std::string> fields;
+  fields.push_back("pointvar");
+  fields.push_back("pointvar2");
+  std::vector<vtkm::rendering::Color> colors;
+  colors.push_back(vtkm::rendering::Color(1.f, 0.f, 0.f));
+  colors.push_back(vtkm::rendering::Color(0.f, 1.f, 0.f));
+  vtkm::rendering::testing::Render<M, C, V1>(
+    maker.Make1DUniformDataSet0(), fields, colors, "lines1D.pnm");
 }
 
 } //namespace

@@ -148,7 +148,7 @@ public:
     xEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (xmax - xmin));
     yEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (ymax - ymin));
     zEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (zmax - zmin));
-    //if(xEpsilon == minEpsilon) std::cout<<"m";
+
     xmin -= xEpsilon;
     ymin -= yEpsilon;
     zmin -= zEpsilon;

@@ -83,7 +83,9 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet0()
 
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::Float32 var[nVerts] = { -1.0f, .5f, -.2f, 1.7f, -.1f, .8f };
+  vtkm::Float32 var2[nVerts] = { -1.1f, .7f, -.2f, 0.2f, -.1f, .4f };
   dsf.AddPointField(dataSet, "pointvar", var, nVerts);
+  dsf.AddPointField(dataSet, "pointvar2", var2, nVerts);
 
   return dataSet;
 }

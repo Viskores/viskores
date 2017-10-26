@@ -375,7 +375,7 @@ public:
                      const vtkm::rendering::raytracing::Camera& camera)
   {
     // TODO: support light positions
-    vtkm::Vec<vtkm::Float32, 3> scale(5, 5, 5);
+    vtkm::Vec<vtkm::Float32, 3> scale(2, 2, 2);
     vtkm::Vec<vtkm::Float32, 3> lightPosition = camera.GetPosition() + scale * camera.GetUp();
     const vtkm::Int32 colorMapSize = vtkm::Int32(colorMap.GetNumberOfValues());
     vtkm::worklet::DispatcherMapField<MapScalarToColor, Device>(

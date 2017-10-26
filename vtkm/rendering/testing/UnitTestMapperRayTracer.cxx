@@ -36,6 +36,7 @@ void RenderTests()
   typedef vtkm::rendering::MapperRayTracer M;
   typedef vtkm::rendering::CanvasRayTracer C;
   typedef vtkm::rendering::View3D V3;
+  typedef vtkm::rendering::View2D V2;
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::rendering::ColorTable colorTable("thermal");
@@ -46,6 +47,9 @@ void RenderTests()
     maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
   vtkm::rendering::testing::Render<M, C, V3>(
     maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
+
+  vtkm::rendering::testing::Render<M, C, V2>(
+    maker.Make2DUniformDataSet1(), "pointvar", colorTable, "uni2D.pnm");
 }
 
 } //namespace
