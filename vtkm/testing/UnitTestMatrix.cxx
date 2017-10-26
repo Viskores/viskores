@@ -309,6 +309,17 @@ void NonSingularMatrix(vtkm::Matrix<T, 5, 5>& mat)
   mat(4, 4) = 4;
 }
 
+template <typename T, vtkm::IdComponent S>
+void PrintMatrix(const vtkm::Matrix<T, S, S>& m)
+{
+  std::cout << "matrix\n";
+  for (vtkm::IdComponent i = 0; i < S; ++i)
+  {
+    std::cout << "\t" << m[i] << "\n";
+  }
+  std::cout << std::flush;
+}
+
 template <typename T, int Size>
 void SingularMatrix(vtkm::Matrix<T, Size, Size>& singularMatrix)
 {
@@ -461,16 +472,20 @@ struct SquareMatrixTest
     // Check that a singular matrix is identified.
     MatrixType singularMatrix;
     SingularMatrix(singularMatrix);
+
+    // On some some compilers in release mode this creation of a matrix and
+    // than solving the linear system breaks if we don't first print the values.
+    // I believe this somehow was tickling a compiler optimization bug.
+    // But for now we will live with a bit more console output to work around
+    // the issue
+    PrintMatrix(singularMatrix);
     x = vtkm::SolveLinearSystem(singularMatrix, b, valid);
-    if (valid)
-    {
-      // This condition should never be reached. However, I have found that
-      // without it valid remains true for some compiler optimizations. What
-      // I think happens is that the optimizer finds that the result is never
-      // used and so removes the actual computation. Without the computation,
-      // the validity is never determined.
-      std::cout << "Result: " << x << std::endl;
-    }
+    //
+    // We need to print the results of the SolveLinearSystem to screen to
+    // make sure the compiler doesn't optimize out the operation which
+    // previously was happening
+    std::cout << "Result: " << x << std::endl;
+
     VTKM_TEST_ASSERT(!valid, "Expected matrix to be declared singular.");
   }
 
