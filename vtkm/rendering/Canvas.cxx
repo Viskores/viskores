@@ -450,8 +450,6 @@ void Canvas::AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
                             const vtkm::Vec<vtkm::Float64, 2>& vtkmNotUsed(point3),
                             const vtkm::rendering::Color& color) const
 {
-  std::cout << point0 << "\n";
-  std::cout << point2 << "\n";
   vtkm::Float64 width = static_cast<vtkm::Float64>(this->GetWidth());
   vtkm::Float64 height = static_cast<vtkm::Float64>(this->GetHeight());
 

@@ -119,7 +119,6 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
   dsf.AddPointField(dataSet, "pointVar", pointVar);
   dsf.AddCellField(dataSet, "cellVar", cellVar);
 
-  dataSet.PrintSummary(std::cout);
   return dataSet;
 }
 
