@@ -78,7 +78,7 @@ Optional dependencies are:
         includes (optionally built) OpenGL rendering classes.
       + The OpenGL rendering classes require that you have a extension
         binding library and one rendering library. A windowing library is
-        not needed expect for some optional tests.
+        not needed except for some optional tests.
   + Extension Binding
       + [GLEW](http://glew.sourceforge.net/)
   + Rendering Canvas
@@ -108,6 +108,68 @@ $ make test
 
 A more detailed description of building VTK-m is available in the [VTK-m
 Users Guide].
+
+
+## Example##
+
+The VTK-m source distribution includes a number of examples. The goal of the
+VTK-m examples is to illustrate specific VTK-m concepts in a consistent and 
+simple format. However, these examples only cover a small part of the
+capabilities of VTK-m.
+
+Below is a simple example of using VTK-m to load a VTK image file, run the
+Marching Cubes algorithm on it, and render the results to an image:
+
+```cpp
+vtkm::io::reader::VTKDataSetReader reader("path/to/vtk_image_file");
+inputData = reader.ReadDataSet();
+
+vtkm::Float64 isovalue = 100.0f;
+std::string fieldName = "pointvar";
+
+// Create an isosurface filter
+vtkm::filter::MarchingCubes filter;
+filter.SetIsoValue(0, isovalue);
+vtkm::filter::Result result = filter.Execute( inputData,
+                                              inputData.GetField(fieldName) );
+filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
+
+// compute the bounds and extends of the input data
+vtkm::Bounds coordsBounds = inputData.GetCoordinateSystem().GetBounds();
+vtkm::Vec<vtkm::Float64,3> totalExtent( coordsBounds.X.Length(),
+                                        coordsBounds.Y.Length(),
+                                        coordsBounds.Z.Length() );
+vtkm::Float64 mag = vtkm::Magnitude(totalExtent);
+vtkm::Normalize(totalExtent);
+
+// setup a camera and point it to towards the center of the input data
+vtkm::rendering::Camera camera;
+camera.ResetToBounds(coordsBounds);
+
+camera.SetLookAt(totalExtent*(mag * .5f));
+camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
+camera.SetClippingRange(1.f, 100.f);
+camera.SetFieldOfView(60.f);
+camera.SetPosition(totalExtent*(mag * 2.f));
+vtkm::rendering::ColorTable colorTable("thermal");
+
+// Create a mapper, canvas and view that will be used to render the scene
+vtkm::rendering::Scene scene;
+vtkm::rendering::MapperRayTracer mapper;
+vtkm::rendering::CanvasRayTracer canvas(512, 512);
+vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
+
+// Render an image of the output isosurface
+vtkm::cont::DataSet& outputData = result.GetDataSet();
+scene.AddActor(vtkm::rendering::Actor(outputData.GetCellSet(),
+                                      outputData.GetCoordinateSystem(),
+                                      outputData.GetField(fieldName),
+                                      colorTable));
+vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
+view.Initialize();
+view.Paint();
+view.SaveAs("demo_output.pnm");
+```
 
 
 ## License ##
