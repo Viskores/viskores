@@ -335,7 +335,7 @@ private:
   {
     vtkm::Int32 colorIdx =
       vtkm::Int32((vtkm::Float32(fieldValue) - FieldMin) * ColorMapSize * InverseFieldDelta);
-    colorIdx = vtkm::Min(ColorMap.GetNumberOfValues() - 1, vtkm::Max(0, colorIdx));
+    colorIdx = vtkm::Min(vtkm::In32(ColorMap.GetNumberOfValues() - 1), vtkm::Max(0, colorIdx));
     return ColorMap.Get(colorIdx);
   }
 
