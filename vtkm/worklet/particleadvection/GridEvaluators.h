@@ -493,7 +493,7 @@ public:
   }
 
 private:
-  typedef vtkm::cont::ArrayHandle<FieldType> AxisHandle;
+  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> AxisHandle;
   typedef vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>
     RectilinearType;
   typedef typename RectilinearType::template ExecutionTypes<DeviceAdapterTag>::PortalConst
