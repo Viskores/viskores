@@ -144,17 +144,6 @@ public:
     throw vtkm::cont::ErrorBadValue("Implicit arrays cannot be used for output.");
   }
 
-  template <class IteratorTypeControl>
-  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
-  {
-    using PortalType = typename StorageType::PortalConstType;
-    PortalType portal = this->Storage->GetPortalConst();
-
-    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-              vtkm::cont::ArrayPortalToIteratorEnd(portal),
-              dest);
-  }
-
   VTKM_CONT
   void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
   {

@@ -360,12 +360,6 @@ public:
   ///
   VTKM_CONT vtkm::Id GetNumberOfValues() const;
 
-  /// Copies data into the given iterator for the control environment. This
-  /// method can skip copying into an internally managed control array.
-  ///
-  template <typename IteratorType, typename DeviceAdapterTag>
-  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const;
-
   /// \brief Allocates an array large enough to hold the given number of values.
   ///
   /// The allocation may be done on an already existing array, but can wipe out

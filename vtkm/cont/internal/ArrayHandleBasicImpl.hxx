@@ -190,43 +190,6 @@ vtkm::Id ArrayHandle<T, StorageTagBasic>::GetNumberOfValues() const
 }
 
 template <typename T>
-template <typename IteratorType, typename DeviceAdapterTag>
-void ArrayHandle<T, StorageTagBasic>::CopyInto(IteratorType dest, DeviceAdapterTag) const
-{
-  using pointer_type = typename std::iterator_traits<IteratorType>::pointer;
-  using value_type = typename std::remove_pointer<pointer_type>::type;
-
-  static_assert(!std::is_const<value_type>::value, "CopyInto requires a non const iterator.");
-
-  VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-  if (!this->Internals->ControlArrayValid && !this->Internals->ExecutionArrayValid)
-  {
-    throw vtkm::cont::ErrorBadValue("ArrayHandle has no data to copy into Iterator.");
-  }
-
-  // If we can copy directly from the execution environment, do so.
-  DeviceAdapterId devId = DeviceAdapterTraits<DeviceAdapterTag>::GetId();
-  if (!this->Internals->ControlArrayValid && std::is_pointer<IteratorType>::value &&
-      this->Internals->ExecutionInterface &&
-      this->Internals->ExecutionInterface->GetDeviceId() == devId)
-  {
-    vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(sizeof(ValueType)) *
-      static_cast<vtkm::UInt64>(this->GetNumberOfValues());
-    this->Internals->ExecutionInterface->CopyToControl(
-      this->Internals->ExecutionArray, dest, numBytes);
-  }
-  else
-  {
-    // Otherwise copy from control.
-    PortalConstControl portal = this->GetPortalConstControl();
-    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-              vtkm::cont::ArrayPortalToIteratorEnd(portal),
-              dest);
-  }
-}
-
-template <typename T>
 void ArrayHandle<T, StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 {
   this->ReleaseResourcesExecutionInternal();

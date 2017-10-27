@@ -153,45 +153,6 @@ vtkm::Id ArrayHandle<T, S>::GetNumberOfValues() const
 }
 
 template <typename T, typename S>
-template <typename IteratorType, typename DeviceAdapterTag>
-void ArrayHandle<T, S>::CopyInto(IteratorType dest, DeviceAdapterTag) const
-{
-  using pointer_type = typename std::iterator_traits<IteratorType>::pointer;
-  using value_type = typename std::remove_pointer<pointer_type>::type;
-
-  static_assert(!std::is_const<value_type>::value, "CopyInto requires a non const iterator.");
-
-  VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-  if (!this->Internals->ControlArrayValid && !this->Internals->ExecutionArrayValid)
-  {
-    throw vtkm::cont::ErrorBadValue("ArrayHandle has no data to copy into Iterator.");
-  }
-
-  if (!this->Internals->ControlArrayValid &&
-      this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
-  {
-    /// Dynamically cast ArrayHandleExecutionManagerBase into a concrete
-    /// class and call CopyInto. The dynamic conversion will be sucessful
-    /// becuase the check to ensure the ExecutionArray is of the type
-    /// DeviceAdapterTag has already passed
-    using ConcreteType =
-      vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>;
-    ConcreteType* ConcreteExecutionArray =
-      dynamic_cast<ConcreteType*>(this->Internals->ExecutionArray.get());
-
-    ConcreteExecutionArray->CopyInto(dest);
-  }
-  else
-  {
-    PortalConstControl portal = this->GetPortalConstControl();
-    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-              vtkm::cont::ArrayPortalToIteratorEnd(portal),
-              dest);
-  }
-}
-
-template <typename T, typename S>
 void ArrayHandle<T, S>::Shrink(vtkm::Id numberOfValues)
 {
   VTKM_ASSERT(numberOfValues >= 0);

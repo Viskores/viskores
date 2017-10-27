@@ -177,9 +177,6 @@ public:
   VTKM_CONT PortalConstControl GetPortalConstControl() const;
   VTKM_CONT vtkm::Id GetNumberOfValues() const;
 
-  template <typename IteratorType, typename DeviceAdapterTag>
-  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const;
-
   VTKM_CONT void Allocate(vtkm::Id numberOfValues);
   VTKM_CONT void Shrink(vtkm::Id numberOfValues);
   VTKM_CONT void ReleaseResourcesExecution();
