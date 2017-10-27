@@ -264,9 +264,6 @@ void TestNormalFunctorInvoke()
   std::cout << "Testing normal worklet invoke." << std::endl;
 
   vtkm::Id inputTestValues[3] = { 5, 5, 6 };
-  vtkm::Id outputTestValues[3] = { static_cast<vtkm::Id>(0xDEADDEAD),
-                                   static_cast<vtkm::Id>(0xDEADDEAD),
-                                   static_cast<vtkm::Id>(0xDEADDEAD) };
 
   vtkm::cont::ArrayHandle<vtkm::Id> input = vtkm::cont::make_ArrayHandle(inputTestValues, 3);
   vtkm::cont::ArrayHandle<vtkm::Id> output;
@@ -289,10 +286,8 @@ void TestNormalFunctorInvoke()
   input.SyncControlArray();
   output.SyncControlArray();
 
-  output.CopyInto(outputTestValues, DeviceAdapter());
-
   VTKM_TEST_ASSERT(inputTestValues[1] == 5, "Input value changed.");
-  VTKM_TEST_ASSERT(outputTestValues[1] == inputTestValues[1] + 100 + 30,
+  VTKM_TEST_ASSERT(output.GetPortalConstControl().Get(1) == inputTestValues[1] + 100 + 30,
                    "Output value not set right.");
 
   std::cout << "  Try return value." << std::endl;
@@ -312,10 +307,8 @@ void TestNormalFunctorInvoke()
   input.SyncControlArray();
   output.SyncControlArray();
 
-  output.CopyInto(outputTestValues, DeviceAdapter());
-
   VTKM_TEST_ASSERT(inputTestValues[2] == 6, "Input value changed.");
-  VTKM_TEST_ASSERT(outputTestValues[2] == inputTestValues[2] + 200 + 30 * 2,
+  VTKM_TEST_ASSERT(output.GetPortalConstControl().Get(2) == inputTestValues[2] + 200 + 30 * 2,
                    "Output value not set right.");
 }
 
