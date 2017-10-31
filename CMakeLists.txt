@@ -177,7 +177,6 @@ add_subdirectory(vtkm)
 # Build documentation
 if (VTKm_ENABLE_DOCUMENTATION)
   include(CMake/VTKmBuildDocumentation.cmake)
-  vtkm_build_documentation()
 endif()
 
 #-----------------------------------------------------------------------------
