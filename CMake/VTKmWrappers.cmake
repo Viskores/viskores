@@ -20,7 +20,7 @@
 
 include(CMakeParseArguments)
 
-include(VTKmBackends)
+include(VTKmDeviceAdapters)
 
 #-----------------------------------------------------------------------------
 # Utility to build a kit name from the current directory.
