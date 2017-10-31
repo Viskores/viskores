@@ -1839,6 +1839,15 @@ private:
     }
   };
 
+  template <typename T, typename U>
+  struct TestCopy<vtkm::Pair<T, U>>
+  {
+    static vtkm::Pair<T, U> get(vtkm::Id i)
+    {
+      return vtkm::make_Pair(TestCopy<T>::get(i), TestCopy<U>::get(i));
+    }
+  };
+
   template <typename T>
   static VTKM_CONT void TestCopyArrays()
   {
@@ -1862,9 +1871,10 @@ private:
       VTKM_TEST_ASSERT(temp.GetNumberOfValues() == COPY_ARRAY_SIZE, "Copy Needs to Resize Array");
 
       typename std::vector<T>::const_iterator c = testData.begin();
+      const auto& portal = temp.GetPortalConstControl();
       for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
       {
-        T value = temp.GetPortalConstControl().Get(i);
+        T value = portal.Get(i);
         VTKM_TEST_ASSERT(value == *c, "Got bad value (Copy)");
       }
     }
@@ -2015,19 +2025,15 @@ private:
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Copy to same array type" << std::endl;
-    TestCopyArrays<vtkm::Vec<vtkm::Float32, 4>>();
-    TestCopyArrays<vtkm::Vec<vtkm::Float64, 4>>();
+    TestCopyArrays<vtkm::Vec<vtkm::Float32, 3>>();
+    TestCopyArrays<vtkm::Vec<vtkm::UInt8, 4>>();
     //
-    TestCopyArrays<vtkm::Vec<vtkm::UInt8, 2>>();
-    TestCopyArrays<vtkm::Vec<vtkm::UInt16, 2>>();
-    TestCopyArrays<vtkm::Vec<vtkm::UInt32, 2>>();
-    TestCopyArrays<vtkm::Vec<vtkm::UInt64, 2>>();
+    TestCopyArrays<vtkm::Pair<vtkm::Id, vtkm::Float32>>();
+    TestCopyArrays<vtkm::Pair<vtkm::Id, vtkm::Vec<vtkm::Float32, 3>>>();
     //
     TestCopyArrays<vtkm::Float32>();
     TestCopyArrays<vtkm::Float64>();
     //
-    TestCopyArrays<vtkm::Int8>();
-    TestCopyArrays<vtkm::Int16>();
     TestCopyArrays<vtkm::Int32>();
     TestCopyArrays<vtkm::Int64>();
     //
@@ -2035,8 +2041,6 @@ private:
     TestCopyArrays<vtkm::UInt16>();
     TestCopyArrays<vtkm::UInt32>();
     TestCopyArrays<vtkm::UInt64>();
-    //
-    TestCopyArrays<vtkm::Id>();
   }
 
   static VTKM_CONT void TestCopyArraysInDiffTypes()
