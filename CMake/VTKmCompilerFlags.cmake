@@ -71,7 +71,7 @@ target_include_directories(vtkm_compiler_flags INTERFACE
 
 # Additional warnings just for Clang 3.5+, and AppleClang 7+ we specify
 # for all build types, since these failures to vectorize are not limited
-# to debug builds
+# to developer builds
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
     CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 3.4)
   target_compile_options(vtkm_compiler_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:-Wno-pass-failed>>)
@@ -81,27 +81,27 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" AND
 endif()
 
 # When building libraries/tests that are part of the VTK-m repository
-# inherit the properties from vtkm_debug_flags
+# inherit the properties from vtkm_developer_flags
 target_link_libraries(vtkm_compiler_flags
-  INTERFACE $<BUILD_INTERFACE:vtkm_debug_flags>)
+  INTERFACE $<BUILD_INTERFACE:vtkm_developer_flags>)
 
 
 #-----------------------------------------------------------------------------
-# vtkm_debug_flags is used ONLY BY libraries that are built as part of this
+# vtkm_developer_flags is used ONLY BY libraries that are built as part of this
 # repository
-add_library(vtkm_debug_flags INTERFACE)
-target_link_libraries(vtkm_debug_flags INTERFACE vtkm_compiler_flags)
+add_library(vtkm_developer_flags INTERFACE)
+target_link_libraries(vtkm_developer_flags INTERFACE vtkm_compiler_flags)
 
 if(VTKM_COMPILER_IS_MSVC)
-  target_compile_definitions(vtkm_debug_flags INTERFACE "_SCL_SECURE_NO_WARNINGS"
+  target_compile_definitions(vtkm_developer_flags INTERFACE "_SCL_SECURE_NO_WARNINGS"
                                                         "_CRT_SECURE_NO_WARNINGS")
 
-  target_compile_options(vtkm_debug_flags INTERFACE -wd4702 -wd4505 -wd4512 -wd4510)
+  target_compile_options(vtkm_developer_flags INTERFACE -wd4702 -wd4505 -wd4512 -wd4510)
 
   # In VS2013 the C4127 warning has a bug in the implementation and
   # generates false positive warnings for lots of template code
   if(MSVC_VERSION LESS 1900)
-    target_compile_options(vtkm_debug_flags INTERFACE -wd4127 )
+    target_compile_options(vtkm_developer_flags INTERFACE -wd4127 )
   endif()
 
 elseif(VTKM_COMPILER_IS_ICC)
@@ -111,7 +111,7 @@ elseif(VTKM_COMPILER_IS_ICC)
   # Likewise to suppress failures about being unable to apply vectorization
   # to loops, the #pragma warning(disable seems to not work so we add a
   # a compile define.
-  target_compile_definitions(vtkm_debug_flags INTERFACE -wd1478 -wd13379)
+  target_compile_definitions(vtkm_developer_flags INTERFACE -wd1478 -wd13379)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   set(flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
@@ -120,4 +120,4 @@ elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
     )
 endif()
 
-install(TARGETS vtkm_compiler_flags vtkm_debug_flags EXPORT ${VTKm_EXPORT_NAME})
+install(TARGETS vtkm_compiler_flags vtkm_developer_flags EXPORT ${VTKm_EXPORT_NAME})
