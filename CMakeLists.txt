@@ -170,6 +170,15 @@ check_type_size(long VTKm_SIZE_LONG BUILTIN_TYPES_ONLY)
 check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 
 #-----------------------------------------------------------------------------
+# Find the Python interpreter, which we will use during the build process
+find_package(PythonInterp)
+
+#-----------------------------------------------------------------------------
+# Find Pyexpander in case somebody wants to update the auto generated
+# faux variadic template code
+find_package(Pyexpander)
+
+#-----------------------------------------------------------------------------
 # Add subdirectories
 add_subdirectory(vtkm)
 
