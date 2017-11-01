@@ -454,8 +454,6 @@ public:
         rayStatus = RAY_ACTIVE; //re-activate ray
       }
 
-      bool debug = false;
-      vtkm::Id id = ids.GetPortalControl().Get(pixelIndex);
     } //operator
   };  //class RayBumper
 
@@ -643,8 +641,6 @@ public:
         emissionBins.Set(rayOffset + i, emissionIntensity);
       }
       currentDistance = exitDistance;
-      bool debug = false;
-      vtkm::Id id = ids.GetPortalControl().Get(rayIndex);
     }
   };
   //
