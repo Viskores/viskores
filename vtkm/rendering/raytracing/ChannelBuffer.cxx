@@ -376,7 +376,6 @@ public:
     {
       InvDeltaScalar = 1.f / (maxScalar - minScalar);
     }
-    //std::cout<<"Min scalar "<<minScalar<<" max "<<maxScalar<<std::endl;
   }
   typedef void ControlSignature(FieldInOut<>);
   typedef void ExecutionSignature(_1);
@@ -411,7 +410,6 @@ struct NormalizeFunctor
     asField.GetRange(&range);
     Precision minScalar = static_cast<Precision>(range.Min);
     Precision maxScalar = static_cast<Precision>(range.Max);
-    std::cout << "ROVER " << minScalar << " " << maxScalar << "\n";
     vtkm::worklet::DispatcherMapField<NormalizeBuffer<Precision>, Device>(
       NormalizeBuffer<Precision>(minScalar, maxScalar, Invert))
       .Invoke(Input);

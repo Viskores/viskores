@@ -62,7 +62,7 @@ namespace rendering
 {
 namespace raytracing
 {
-
+static vtkm::cont::ArrayHandle<vtkm::Id> ids;
 //
 //  Advance Ray
 //      After a ray leaves the mesh, we need to check to see
@@ -454,6 +454,8 @@ public:
         rayStatus = RAY_ACTIVE; //re-activate ray
       }
 
+      bool debug = false;
+      vtkm::Id id = ids.GetPortalControl().Get(pixelIndex);
     } //operator
   };  //class RayBumper
 
@@ -641,6 +643,8 @@ public:
         emissionBins.Set(rayOffset + i, emissionIntensity);
       }
       currentDistance = exitDistance;
+      bool debug = false;
+      vtkm::Id id = ids.GetPortalControl().Get(rayIndex);
     }
   };
   //
@@ -1254,7 +1258,6 @@ public:
       bool divideEmisByAbsorp = false;
       vtkm::cont::ArrayHandle<FloatType> absorp = rays.Buffers.at(0).Buffer;
       vtkm::cont::ArrayHandle<FloatType> emission = rays.GetBuffer("emission").Buffer;
-
       vtkm::worklet::DispatcherMapField<IntegrateEmission<FloatType>, Device>(
         IntegrateEmission<FloatType>(rays.Buffers.at(0).GetNumChannels(), divideEmisByAbsorp))
         .Invoke(rays.Status,
@@ -1286,13 +1289,27 @@ public:
   template <typename FloatType>
   void PrintDebugRay(Ray<FloatType>& rays, vtkm::Id rayId)
   {
-    if (rayId < 0 || rayId > rays.Distance.GetPortalControl().GetNumberOfValues())
+    vtkm::Id index = -1;
+    for (vtkm::Id i = 0; i < rays.NumRays; ++i)
+    {
+      if (rays.PixelIdx.GetPortalControl().Get(i) == rayId)
+      {
+        index = i;
+        break;
+      }
+    }
+    if (index == -1)
+    {
       return;
-    std::cout << "++++++++DEBUG RAY++++++++\n";
-    std::cout << "Status: " << (int)rays.Status.GetPortalControl().Get(rayId) << "\n";
-    std::cout << "HitIndex: " << rays.HitIdx.GetPortalControl().Get(rayId) << "\n";
-    std::cout << "Dist " << rays.Distance.GetPortalControl().Get(rayId) << "\n";
-    std::cout << "MinDist " << rays.MinDistance.GetPortalControl().Get(rayId) << "\n";
+    }
+
+    std::cout << "++++++++RAY " << rayId << "++++++++\n";
+    std::cout << "Status: " << (int)rays.Status.GetPortalControl().Get(index) << "\n";
+    std::cout << "HitIndex: " << rays.HitIdx.GetPortalControl().Get(index) << "\n";
+    std::cout << "Dist " << rays.Distance.GetPortalControl().Get(index) << "\n";
+    std::cout << "MinDist " << rays.MinDistance.GetPortalControl().Get(index) << "\n";
+    std::cout << "Origin " << rays.Origin.GetPortalConstControl().Get(index) << "\n";
+    std::cout << "Dir " << rays.Dir.GetPortalConstControl().Get(index) << "\n";
     std::cout << "+++++++++++++++++++++++++\n";
   }
 
@@ -1406,6 +1423,7 @@ public:
       while (RayOperations::RaysInMesh(rays, Device()))
       {
         //
+        ids = rays.PixelIdx;
         // Rays the leave the mesh will be marked as RAYEXITED_MESH
         this->IntersectCell(rays, rayTracker, Device());
         //

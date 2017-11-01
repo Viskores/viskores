@@ -181,8 +181,27 @@ public:
   VTKM_CONT Ray(const vtkm::Int32 size, Device, bool enableIntersectionData = false)
   {
     NumRays = size;
-
     IntersectionDataEnabled = enableIntersectionData;
+
+    ChannelBuffer<Precision> buffer;
+    this->Buffers.push_back(buffer);
+
+    DebugWidth = -1;
+    DebugHeight = -1;
+
+    this->Resize(size, Device());
+  }
+
+
+  VTKM_CONT void Resize(const vtkm::Int32 size)
+  {
+    this->Resize(size, vtkm::cont::DeviceAdapterTagSerial());
+  }
+
+  template <typename Device>
+  VTKM_CONT void Resize(const vtkm::Int32 size, Device)
+  {
+    NumRays = size;
 
     if (IntersectionDataEnabled)
     {
@@ -235,12 +254,11 @@ public:
       DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
 
 
-    ChannelBuffer<Precision> buffer;
-    buffer.Resize(NumRays, Device());
-    this->Buffers.push_back(buffer);
-
-    DebugWidth = -1;
-    DebugHeight = -1;
+    const size_t numBuffers = this->Buffers.size();
+    for (size_t i = 0; i < numBuffers; ++i)
+    {
+      this->Buffers[i].Resize(NumRays, Device());
+    }
   }
 
   VTKM_CONT
