@@ -56,7 +56,7 @@ View::View(const vtkm::rendering::Scene& scene,
   : Scene(scene)
   , MapperPointer(mapper.NewCopy())
   , CanvasPointer(canvas.NewCopy())
-  , WorldAnnotatorPointer(canvas.CreateWorldAnnotator())
+  , WorldAnnotatorPointer(CanvasPointer->CreateWorldAnnotator())
   , Camera(camera)
 {
   this->CanvasPointer->SetBackgroundColor(backgroundColor);

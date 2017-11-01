@@ -429,7 +429,8 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
 {
   const vtkm::Id numVerts = 16;
 
-  const vtkm::Vec<vtkm::FloatDefault, 3> hq[numVerts] = {
+  //Calculated using PointGradient
+  const vtkm::Vec<vtkm::FloatDefault, 3> hq_ug[numVerts] = {
     { 0.1510f, 0.6268f, 0.7644f },   { 0.1333f, -0.3974f, 0.9079f },
     { 0.1626f, 0.7642f, 0.6242f },   { 0.3853f, 0.6643f, 0.6405f },
     { -0.1337f, 0.7136f, 0.6876f },  { 0.7705f, -0.4212f, 0.4784f },
@@ -440,6 +441,19 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
     { 0.1234f, -0.8871f, -0.4448f }, { 0.1333f, -0.3974f, -0.9079f }
   };
 
+  //Calculated using StructuredPointGradient
+  const vtkm::Vec<vtkm::FloatDefault, 3> hq_sg[numVerts] = {
+    { 0.165519f, 0.687006f, 0.707549f },    { 0.188441f, -0.561729f, 0.805574f },
+    { 0.179543f, 0.702158f, 0.689012f },    { 0.271085f, 0.692957f, 0.668074f },
+    { 0.00313049f, 0.720109f, 0.693854f },  { 0.549947f, -0.551974f, 0.626804f },
+    { -0.447526f, -0.588187f, 0.673614f },  { 0.167553f, -0.779396f, 0.603711f },
+    { 0.179543f, 0.702158f, -0.689012f },   { 0.271085f, 0.692957f, -0.668074f },
+    { 0.00313049f, 0.720109f, -0.693854f }, { 0.165519f, 0.687006f, -0.707549f },
+    { 0.549947f, -0.551974f, -0.626804f },  { -0.447526f, -0.588187f, -0.673614f },
+    { 0.167553f, -0.779396f, -0.603711f },  { 0.188441f, -0.561729f, -0.805574f }
+  };
+
+  //Calculated using normals of the output triangles
   const vtkm::Vec<vtkm::FloatDefault, 3> fast[numVerts] = {
     { -0.1351f, 0.4377f, 0.8889f },  { 0.2863f, -0.1721f, 0.9426f },
     { 0.3629f, 0.8155f, 0.4509f },   { 0.8486f, 0.3560f, 0.3914f },
@@ -458,7 +472,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   mc.SetGenerateNormals(true);
 
   // Test default normals generation: high quality for structured, fast for unstructured.
-  auto expected = structured ? hq : fast;
+  auto expected = structured ? hq_sg : fast;
 
   auto result = mc.Execute(dataset, dataset.GetField("pointvar"));
   result.GetDataSet().GetField("normals").GetData().CopyTo(normals);
@@ -479,7 +493,7 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   else
   {
     mc.SetComputeFastNormalsForUnstructured(false);
-    expected = hq;
+    expected = hq_ug;
   }
 
   result = mc.Execute(dataset, dataset.GetField("pointvar"));

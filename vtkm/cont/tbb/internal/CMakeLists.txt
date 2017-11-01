@@ -57,6 +57,6 @@ endif()
 
 target_include_directories(vtkm_cont_tbb PRIVATE
     "${VTKm_SOURCE_DIR}"
-    "${VTKm_BINARY_DIR}/include"
+    "${VTKm_BINARY_INCLUDE_DIR}"
     ${VTKm_BACKEND_INCLUDE_DIRS}
   )

@@ -25,5 +25,5 @@ set(headers
 vtkm_disable_troublesome_thrust_warnings()
 
 #-----------------------------------------------------------------------------
-vtkm_declare_headers(CUDA ${headers})
-
+# Disable test builds because we'd need to link OpenGL libraries.
+vtkm_declare_headers(CUDA ${headers} TESTABLE FALSE)

@@ -6,9 +6,9 @@
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
+##  Copyright 2016 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+##  Copyright 2016 UT-Battelle, LLC.
+##  Copyright 2016 Los Alamos National Security.
 ##
 ##  Under the terms of Contract DE-NA0003525 with NTESS,
 ##  the U.S. Government retains certain rights in this software.
@@ -19,26 +19,8 @@
 ##============================================================================
 
 set(headers
-  BufferState.h
-  TransferToOpenGL.h
+  DataTables.h
   )
 
-if(VTKm_ENABLE_TESTING)
-  # Determine if we actually want to compile OpenGL Interop tests.
-  vtkm_configure_component_OpenGL()
-endif()
-
 #-----------------------------------------------------------------------------
-add_subdirectory(internal)
-
-if(VTKm_CUDA_FOUND)
-  add_subdirectory(cuda)
-endif()
-
-#-----------------------------------------------------------------------------
-vtkm_declare_headers(${headers} TESTABLE FALSE)
-
-#-----------------------------------------------------------------------------
-if(VTKm_OpenGL_FOUND)
-  add_subdirectory(testing)
-endif()
+vtkm_declare_headers(${headers})

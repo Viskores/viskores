@@ -26,7 +26,7 @@ namespace rendering
 namespace raytracing
 {
 
-Logger* Logger::Instance = NULL;
+Logger* Logger::Instance = nullptr;
 
 Logger::Logger()
 {
@@ -39,7 +39,7 @@ Logger::~Logger()
 
 Logger* Logger::GetInstance()
 {
-  if (Instance == NULL)
+  if (Instance == nullptr)
   {
     Instance = new Logger();
   }

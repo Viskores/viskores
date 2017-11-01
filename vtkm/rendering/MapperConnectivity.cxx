@@ -37,7 +37,7 @@ namespace rendering
 VTKM_CONT
 MapperConnectivity::MapperConnectivity()
 {
-  CanvasRT = NULL;
+  CanvasRT = nullptr;
   SampleDistance = -1;
 }
 
@@ -55,11 +55,11 @@ void MapperConnectivity::SetSampleDistance(const vtkm::Float32& distance)
 VTKM_CONT
 void MapperConnectivity::SetCanvas(Canvas* canvas)
 {
-  if (canvas != NULL)
+  if (canvas != nullptr)
   {
 
     CanvasRT = dynamic_cast<CanvasRayTracer*>(canvas);
-    if (CanvasRT == NULL)
+    if (CanvasRT == nullptr)
     {
       throw vtkm::cont::ErrorBadValue("Volume Render: bad canvas type. Must be CanvasRayTracer");
     }

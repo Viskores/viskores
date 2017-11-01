@@ -58,6 +58,7 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
   {
     using CoordType = typename PointsIn::ValueType;
     using CT = typename vtkm::BaseComponent<CoordType>::Type;
+    using OT = typename GradientOutType::ComponentType;
 
     vtkm::Vec<CT, 3> xi, eta, zeta;
     this->Jacobian(inputPoints, boundary, xi, eta, zeta); //store the metrics in xi,eta,zeta
@@ -70,9 +71,9 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
     deta = (boundary.OnY() ? deta : deta * 0.5f);
     dzeta = (boundary.OnZ() ? dzeta : dzeta * 0.5f);
 
-    outputGradient[0] = static_cast<T>(xi[0] * dxi + eta[0] * deta + zeta[0] * dzeta);
-    outputGradient[1] = static_cast<T>(xi[1] * dxi + eta[1] * deta + zeta[1] * dzeta);
-    outputGradient[2] = static_cast<T>(xi[2] * dxi + eta[2] * deta + zeta[2] * dzeta);
+    outputGradient[0] = static_cast<OT>(xi[0] * dxi + eta[0] * deta + zeta[0] * dzeta);
+    outputGradient[1] = static_cast<OT>(xi[1] * dxi + eta[1] * deta + zeta[1] * dzeta);
+    outputGradient[2] = static_cast<OT>(xi[2] * dxi + eta[2] * deta + zeta[2] * dzeta);
   }
 
   template <typename FieldIn, typename GradientOutType>
@@ -89,6 +90,8 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
     using PointsIn =
       vtkm::exec::arg::Neighborhood<1, vtkm::internal::ArrayPortalUniformPointCoordinates>;
     using CoordType = typename PointsIn::ValueType;
+    using OT = typename GradientOutType::ComponentType;
+
 
     CoordType r = inputPoints.Portal.GetSpacing();
 
@@ -100,9 +103,9 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
     const T dy = inputField.Get(0, 1, 0) - inputField.Get(0, -1, 0);
     const T dz = inputField.Get(0, 0, 1) - inputField.Get(0, 0, -1);
 
-    outputGradient[0] = dx * r[0];
-    outputGradient[1] = dy * r[1];
-    outputGradient[2] = dz * r[2];
+    outputGradient[0] = static_cast<OT>(dx * r[0]);
+    outputGradient[1] = static_cast<OT>(dy * r[1]);
+    outputGradient[2] = static_cast<OT>(dz * r[2]);
   }
 
   //we need to pass the coordinates into this function, and instead

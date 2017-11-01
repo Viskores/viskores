@@ -40,6 +40,7 @@ set(unit_tests
   UnitTestNDHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
+  UnitTestStreamlineFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx
   UnitTestThresholdFilter.cxx

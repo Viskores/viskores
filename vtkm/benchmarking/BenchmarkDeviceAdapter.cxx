@@ -33,6 +33,8 @@
 #include <vtkm/cont/internal/DeviceAdapterError.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <vtkm/worklet/StableSortIndices.h>
+
 #include <algorithm>
 #include <cmath>
 #include <random>
@@ -60,11 +62,15 @@ enum BenchmarkName
   SCAN_EXCLUSIVE = 1 << 6,
   SORT = 1 << 7,
   SORT_BY_KEY = 1 << 8,
-  UNIQUE = 1 << 9,
-  UPPER_BOUNDS = 1 << 10,
+  STABLE_SORT_INDICES = 1 << 9,
+  STABLE_SORT_INDICES_UNIQUE = 1 << 10,
+  UNIQUE = 1 << 11,
+  UPPER_BOUNDS = 1 << 12,
   ALL = COPY | COPY_IF | LOWER_BOUNDS | REDUCE | REDUCE_BY_KEY | SCAN_INCLUSIVE | SCAN_EXCLUSIVE |
     SORT |
     SORT_BY_KEY |
+    STABLE_SORT_INDICES |
+    STABLE_SORT_INDICES_UNIQUE |
     UNIQUE |
     UPPER_BOUNDS
 };
@@ -380,6 +386,7 @@ private:
   VTKM_MAKE_BENCHMARK(ReduceByKey20, BenchReduceByKey, 20);
   VTKM_MAKE_BENCHMARK(ReduceByKey25, BenchReduceByKey, 25);
   VTKM_MAKE_BENCHMARK(ReduceByKey30, BenchReduceByKey, 30);
+  VTKM_MAKE_BENCHMARK(ReduceByKey100, BenchReduceByKey, 100);
 
   template <typename Value>
   struct BenchScanInclusive
@@ -526,6 +533,94 @@ private:
   VTKM_MAKE_BENCHMARK(SortByKey20, BenchSortByKey, 20);
   VTKM_MAKE_BENCHMARK(SortByKey25, BenchSortByKey, 25);
   VTKM_MAKE_BENCHMARK(SortByKey30, BenchSortByKey, 30);
+  VTKM_MAKE_BENCHMARK(SortByKey100, BenchSortByKey, 100);
+
+  template <typename Value>
+  struct BenchStableSortIndices
+  {
+    using SSI = vtkm::worklet::StableSortIndices<DeviceAdapterTag>;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
+
+    ValueArrayHandle ValueHandle;
+    std::mt19937 Rng;
+
+    VTKM_CONT
+    BenchStableSortIndices()
+    {
+      this->ValueHandle.Allocate(ARRAY_SIZE);
+      auto portal = this->ValueHandle.GetPortalControl();
+      for (vtkm::Id i = 0; i < portal.GetNumberOfValues(); ++i)
+      {
+        portal.Set(vtkm::Id(i), TestValue(vtkm::Id(Rng()), Value()));
+      }
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      vtkm::cont::ArrayHandle<vtkm::Id> indices;
+      Algorithm::Copy(vtkm::cont::ArrayHandleIndex(ARRAY_SIZE), indices);
+
+      Timer timer;
+      SSI::Sort(ValueHandle, indices);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      std::stringstream description;
+      description << "StableSortIndices::Sort on " << ARRAY_SIZE << " random values";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(StableSortIndices, BenchStableSortIndices);
+
+  template <typename Value>
+  struct BenchStableSortIndicesUnique
+  {
+    using SSI = vtkm::worklet::StableSortIndices<DeviceAdapterTag>;
+    using IndexArrayHandle = typename SSI::IndexArrayType;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
+
+    const vtkm::Id N_VALID;
+    ValueArrayHandle ValueHandle;
+
+    VTKM_CONT
+    BenchStableSortIndicesUnique(vtkm::Id percent_valid)
+      : N_VALID((ARRAY_SIZE * percent_valid) / 100)
+    {
+      Algorithm::Schedule(
+        FillModuloTestValueKernel<Value>(
+          N_VALID, this->ValueHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag())),
+        ARRAY_SIZE);
+    }
+
+    VTKM_CONT
+    vtkm::Float64 operator()()
+    {
+      IndexArrayHandle indices = SSI::Sort(this->ValueHandle);
+      Timer timer;
+      SSI::Unique(this->ValueHandle, indices);
+      return timer.GetElapsedTime();
+    }
+
+    VTKM_CONT
+    std::string Description() const
+    {
+      std::stringstream description;
+      description << "StableSortIndices::Unique on " << ARRAY_SIZE << " values with "
+                  << this->N_VALID << " valid values";
+      return description.str();
+    }
+  };
+  VTKM_MAKE_BENCHMARK(StableSortIndicesUnique5, BenchStableSortIndicesUnique, 5);
+  VTKM_MAKE_BENCHMARK(StableSortIndicesUnique10, BenchStableSortIndicesUnique, 10);
+  VTKM_MAKE_BENCHMARK(StableSortIndicesUnique15, BenchStableSortIndicesUnique, 15);
+  VTKM_MAKE_BENCHMARK(StableSortIndicesUnique20, BenchStableSortIndicesUnique, 20);
+  VTKM_MAKE_BENCHMARK(StableSortIndicesUnique25, BenchStableSortIndicesUnique, 25);
+  VTKM_MAKE_BENCHMARK(StableSortIndicesUnique30, BenchStableSortIndicesUnique, 30);
+  VTKM_MAKE_BENCHMARK(StableSortIndicesUnique100, BenchStableSortIndicesUnique, 100);
 
   template <typename Value>
   struct BenchUnique
@@ -674,6 +769,7 @@ public:
       VTKM_RUN_BENCHMARK(ReduceByKey20, ValueTypes());
       VTKM_RUN_BENCHMARK(ReduceByKey25, ValueTypes());
       VTKM_RUN_BENCHMARK(ReduceByKey30, ValueTypes());
+      VTKM_RUN_BENCHMARK(ReduceByKey100, ValueTypes());
     }
 
     if (benchmarks & SCAN_INCLUSIVE)
@@ -703,6 +799,25 @@ public:
       VTKM_RUN_BENCHMARK(SortByKey20, ValueTypes());
       VTKM_RUN_BENCHMARK(SortByKey25, ValueTypes());
       VTKM_RUN_BENCHMARK(SortByKey30, ValueTypes());
+      VTKM_RUN_BENCHMARK(SortByKey100, ValueTypes());
+    }
+
+    if (benchmarks & STABLE_SORT_INDICES)
+    {
+      std::cout << "\n" << DIVIDER << "\nBenchmarking StableSortIndices::Sort\n";
+      VTKM_RUN_BENCHMARK(StableSortIndices, ValueTypes());
+    }
+
+    if (benchmarks & STABLE_SORT_INDICES_UNIQUE)
+    {
+      std::cout << "\n" << DIVIDER << "\nBenchmarking StableSortIndices::Unique\n";
+      VTKM_RUN_BENCHMARK(StableSortIndicesUnique5, ValueTypes());
+      VTKM_RUN_BENCHMARK(StableSortIndicesUnique10, ValueTypes());
+      VTKM_RUN_BENCHMARK(StableSortIndicesUnique15, ValueTypes());
+      VTKM_RUN_BENCHMARK(StableSortIndicesUnique20, ValueTypes());
+      VTKM_RUN_BENCHMARK(StableSortIndicesUnique25, ValueTypes());
+      VTKM_RUN_BENCHMARK(StableSortIndicesUnique30, ValueTypes());
+      VTKM_RUN_BENCHMARK(StableSortIndicesUnique100, ValueTypes());
     }
 
     if (benchmarks & UNIQUE)
@@ -782,6 +897,14 @@ int main(int argc, char* argv[])
       else if (arg == "sortbykey")
       {
         benchmarks |= vtkm::benchmarking::SORT_BY_KEY;
+      }
+      else if (arg == "stablesortindices")
+      {
+        benchmarks |= vtkm::benchmarking::STABLE_SORT_INDICES;
+      }
+      else if (arg == "stablesortindicesunique")
+      {
+        benchmarks |= vtkm::benchmarking::STABLE_SORT_INDICES_UNIQUE;
       }
       else if (arg == "unique")
       {

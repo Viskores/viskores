@@ -22,6 +22,7 @@
 #define vtk_m_worklet_ParticleAdvection_h
 
 #include <vtkm/Types.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/worklet/particleadvection/ParticleAdvectionWorklets.h>
 
@@ -79,11 +80,11 @@ public:
     //Allocate status and steps arrays.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> init(0, numSeeds);
     stepsTaken.Allocate(numSeeds);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(init, stepsTaken);
+    vtkm::cont::ArrayCopy(init, stepsTaken, DeviceAdapter());
 
     vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
     status.Allocate(numSeeds);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(statusOK, status);
+    vtkm::cont::ArrayCopy(statusOK, status, DeviceAdapter());
 
     worklet.Run(it, pts, nSteps, status, stepsTaken);
     //Create output.
@@ -111,11 +112,11 @@ public:
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
     //Allocate status and steps arrays.
     stepsTaken.Allocate(numSeeds);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(stepsAlreadyTaken, stepsTaken);
+    vtkm::cont::ArrayCopy(stepsAlreadyTaken, stepsTaken, DeviceAdapter());
 
     vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
     status.Allocate(numSeeds);
-    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(statusOK, status);
+    vtkm::cont::ArrayCopy(statusOK, status, DeviceAdapter());
 
     worklet.Run(it, pts, nSteps, status, stepsTaken);
     //Create output.
