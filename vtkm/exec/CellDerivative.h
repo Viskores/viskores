@@ -277,7 +277,7 @@ VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor2DCellFinish(
   using FieldTraits = vtkm::VecTraits<FieldType>;
   using FieldComponentType = typename FieldTraits::ComponentType;
 
-  vtkm::Vec<FieldType, 3> gradient;
+  vtkm::Vec<FieldType, 3> gradient(vtkm::TypeTraits<FieldType>::ZeroInitialization());
 
   for (vtkm::IdComponent fieldComponent = 0;
        fieldComponent < FieldTraits::GetNumberOfComponents(field[0]);
@@ -484,7 +484,7 @@ VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeLineImpl(
   using FieldComponentType = typename FieldTraits::ComponentType;
   using GradientType = vtkm::Vec<FieldType, 3>;
 
-  GradientType gradient;
+  GradientType gradient(vtkm::TypeTraits<FieldType>::ZeroInitialization());
   for (vtkm::IdComponent fieldComponent = 0;
        fieldComponent < FieldTraits::GetNumberOfComponents(deltaField);
        fieldComponent++)
@@ -571,7 +571,7 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivativeFinish(
   using FieldTraits = vtkm::VecTraits<ValueType>;
   using FieldComponentType = typename FieldTraits::ComponentType;
 
-  vtkm::Vec<ValueType, 3> gradient;
+  vtkm::Vec<ValueType, 3> gradient(vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   for (vtkm::IdComponent fieldComponent = 0;
        fieldComponent < FieldTraits::GetNumberOfComponents(field[0]);
@@ -872,7 +872,7 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivativeFinish(
   using FieldTraits = vtkm::VecTraits<ValueType>;
   using FieldComponentType = typename FieldTraits::ComponentType;
 
-  vtkm::Vec<ValueType, 3> gradient;
+  vtkm::Vec<ValueType, 3> gradient(vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   for (vtkm::IdComponent fieldComponent = 0;
        fieldComponent < FieldTraits::GetNumberOfComponents(field[0]);

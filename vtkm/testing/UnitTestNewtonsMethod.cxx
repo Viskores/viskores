@@ -91,10 +91,11 @@ void TestNewtonsMethodTemplate()
       {
         std::cout << "   " << initialGuess << std::endl;
 
-        Vector3 solution = vtkm::NewtonsMethod(
+        auto result = vtkm::NewtonsMethod(
           EvaluateJacobian<T>(), EvaluateFunctions<T>(), desiredOutput, initialGuess, T(1e-6));
 
-        VTKM_TEST_ASSERT(test_equal(solution, expected1) || test_equal(solution, expected2),
+        VTKM_TEST_ASSERT(test_equal(result.Solution, expected1) ||
+                           test_equal(result.Solution, expected2),
                          "Newton's method did not converge to expected result.");
       }
     }

@@ -22,6 +22,9 @@
 
 #include <vtkm/TypeTraits.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/internal/Unreachable.h>
+
+#include <type_traits>
 
 namespace vtkm
 {
@@ -64,11 +67,9 @@ public:
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
 
-  ValueType Get(vtkm::Id index) const
+  ValueType Get(vtkm::Id) const
   {
-    VTKM_ASSERT(index < this->GetNumberOfValues());
-    VTKM_ASSERT("Method not supported for ArrayPortalDiscard." && false);
-    (void)index;
+    VTKM_UNREACHABLE("Cannot read from ArrayHandleDiscard.");
     return vtkm::TypeTraits<ValueType>::ZeroInitialization();
   }
 
@@ -224,6 +225,22 @@ public:
   VTKM_ARRAY_HANDLE_SUBCLASS(ArrayHandleDiscard,
                              (ArrayHandleDiscard<ValueType_>),
                              (typename internal::ArrayHandleDiscardTraits<ValueType_>::Superclass));
+};
+
+/// Helper to determine if an ArrayHandle type is an ArrayHandleDiscard.
+template <typename T>
+struct IsArrayHandleDiscard;
+
+template <typename T>
+struct IsArrayHandleDiscard<ArrayHandle<T, internal::StorageTagDiscard>> : std::true_type
+{
+  static const bool Value = true;
+};
+
+template <typename T, typename U>
+struct IsArrayHandleDiscard<ArrayHandle<T, U>> : std::false_type
+{
+  static const bool Value = false;
 };
 
 } // end namespace cont

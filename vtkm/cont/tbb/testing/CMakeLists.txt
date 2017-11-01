@@ -21,11 +21,13 @@
 set(unit_tests
   UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx
+  UnitTestTBBCellLocatorTwoLevelUniformGrid.cxx
   UnitTestTBBComputeRange.cxx
   UnitTestTBBDataSetExplicit.cxx
   UnitTestTBBDataSetSingleType.cxx
   UnitTestTBBDeviceAdapter.cxx
   UnitTestTBBImplicitFunction.cxx
+  UnitTestTBBPointLocatorUniformGrid.cxx
   UnitTestTBBVirtualObjectCache.cxx
   )
 vtkm_unit_tests(TBB SOURCES ${unit_tests})

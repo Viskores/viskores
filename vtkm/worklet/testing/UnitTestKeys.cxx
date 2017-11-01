@@ -72,7 +72,7 @@ void TryKeyType(KeyType)
   vtkm::cont::ArrayHandle<KeyType> keyArray = vtkm::cont::make_ArrayHandle(keyBuffer, ARRAY_SIZE);
 
   vtkm::cont::ArrayHandle<KeyType> sortedKeys;
-  vtkm::cont::ArrayCopy(keyArray, sortedKeys);
+  vtkm::cont::ArrayCopy(keyArray, sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
   vtkm::worklet::Keys<KeyType> keys(sortedKeys, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
   VTKM_TEST_ASSERT(keys.GetInputRange() == NUM_UNIQUE, "Keys has bad input range.");

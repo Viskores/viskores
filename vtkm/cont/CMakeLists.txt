@@ -44,6 +44,7 @@ set(headers
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
   ArrayRangeCompute.hxx
+  CellLocatorTwoLevelUniformGrid.h
   CellSet.h
   CellSetExplicit.h
   CellSetListTag.h
@@ -70,6 +71,7 @@ set(headers
   Field.h
   ImplicitFunction.h
   MultiBlock.h
+  PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Storage.h

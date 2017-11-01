@@ -42,7 +42,9 @@ namespace testing
 {
 
 template <typename ViewType>
-inline void SetCamera(vtkm::rendering::Camera& camera, const vtkm::Bounds& coordBounds);
+inline void SetCamera(vtkm::rendering::Camera& camera,
+                      const vtkm::Bounds& coordBounds,
+                      const vtkm::cont::Field& field);
 template <typename ViewType>
 inline void SetCamera(vtkm::rendering::Camera& camera,
                       const vtkm::Bounds& coordBounds,
@@ -50,7 +52,8 @@ inline void SetCamera(vtkm::rendering::Camera& camera,
 
 template <>
 inline void SetCamera<vtkm::rendering::View3D>(vtkm::rendering::Camera& camera,
-                                               const vtkm::Bounds& coordBounds)
+                                               const vtkm::Bounds& coordBounds,
+                                               const vtkm::cont::Field&)
 {
   camera = vtkm::rendering::Camera();
   camera.ResetToBounds(coordBounds);
@@ -60,7 +63,8 @@ inline void SetCamera<vtkm::rendering::View3D>(vtkm::rendering::Camera& camera,
 
 template <>
 inline void SetCamera<vtkm::rendering::View2D>(vtkm::rendering::Camera& camera,
-                                               const vtkm::Bounds& coordBounds)
+                                               const vtkm::Bounds& coordBounds,
+                                               const vtkm::cont::Field&)
 {
   camera = vtkm::rendering::Camera(vtkm::rendering::Camera::MODE_2D);
   camera.ResetToBounds(coordBounds);
@@ -105,7 +109,39 @@ void Render(const vtkm::cont::DataSet& ds,
   scene.AddActor(vtkm::rendering::Actor(
     ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm), colorTable));
   vtkm::rendering::Camera camera;
-  SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds());
+  SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fieldNm));
+  ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+
+  // Print the title
+  vtkm::rendering::TextAnnotationScreen* titleAnnotation =
+    new vtkm::rendering::TextAnnotationScreen("Test Plot",
+                                              vtkm::rendering::Color(1, 1, 1, 1),
+                                              .075f,
+                                              vtkm::Vec<vtkm::Float32, 2>(-.11f, .92f),
+                                              0.f);
+  view.AddAnnotation(titleAnnotation);
+  Render<MapperType, CanvasType, ViewType>(view, outputFile);
+}
+
+template <typename MapperType, typename CanvasType, typename ViewType>
+void Render(const vtkm::cont::DataSet& ds,
+            const std::vector<std::string>& fields,
+            const std::vector<vtkm::rendering::Color>& colors,
+            const std::string& outputFile)
+{
+  MapperType mapper;
+  CanvasType canvas(512, 512);
+  canvas.SetBackgroundColor(vtkm::rendering::Color::white);
+  vtkm::rendering::Scene scene;
+
+  size_t numFields = fields.size();
+  for (size_t i = 0; i < numFields; ++i)
+  {
+    scene.AddActor(vtkm::rendering::Actor(
+      ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fields[i]), colors[i]));
+  }
+  vtkm::rendering::Camera camera;
+  SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fields[0]));
   ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
 
   // Print the title
@@ -167,7 +203,7 @@ void MultiMapperRender(const vtkm::cont::DataSet& ds1,
   vtkm::Bounds totalBounds =
     ds1.GetCoordinateSystem().GetBounds() + ds2.GetCoordinateSystem().GetBounds();
   vtkm::rendering::Camera camera;
-  SetCamera<ViewType>(camera, totalBounds);
+  SetCamera<ViewType>(camera, totalBounds, ds1.GetField(fieldNm));
 
   mapper1.SetCanvas(&canvas);
   mapper1.SetActiveColorTable(colorTable1);

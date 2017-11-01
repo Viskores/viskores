@@ -28,6 +28,8 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 
+#include <numeric>
+
 namespace vtkm
 {
 namespace cont
@@ -83,7 +85,9 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet0()
 
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::Float32 var[nVerts] = { -1.0f, .5f, -.2f, 1.7f, -.1f, .8f };
+  vtkm::Float32 var2[nVerts] = { -1.1f, .7f, -.2f, 0.2f, -.1f, .4f };
   dsf.AddPointField(dataSet, "pointvar", var, nVerts);
+  dsf.AddPointField(dataSet, "pointvar2", var2, nVerts);
 
   return dataSet;
 }
@@ -975,6 +979,15 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetCowNose()
   vtkm::cont::CellSetSingleType<> cellSet("cells");
   cellSet.Fill(nVerts, vtkm::CELL_SHAPE_TRIANGLE, 3, connectivity);
   dataSet.AddCellSet(cellSet);
+
+  std::vector<vtkm::Float32> pointvar(nVerts);
+  std::iota(pointvar.begin(), pointvar.end(), 15.f);
+  std::vector<vtkm::Float32> cellvar(connectivitySize / 3);
+  std::iota(cellvar.begin(), cellvar.end(), 132.f);
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  dsf.AddPointField(dataSet, "pointvar", pointvar);
+  dsf.AddCellField(dataSet, "cellvar", cellvar, "cells");
 
   return dataSet;
 }

@@ -84,11 +84,7 @@ function(vtkm_setup_msvc_properties target )
   #      unreachable code
   #C4505 Generates numerous warnings about unused functions being
   #      removed when doing header test builds.
-  #C4512 Generates numerous warning that implicit assignment operators can't
-  #      be constructed. This is understood and we don't care.
-  #C4510 Generates numerous warning that implicit constructors can't
-  #      be constructed. This is understood and we don't care.
-  target_compile_options(${target} PRIVATE -wd4702 -wd4505 -wd4512 -wd4510)
+  target_compile_options(${target} PRIVATE -wd4702 -wd4505)
 
   # In VS2013 the C4127 warning has a bug in the implementation and
   # generates false positive warnings for lots of template code

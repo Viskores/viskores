@@ -26,6 +26,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/cont/ArrayHandleExtractComponent.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -67,6 +68,18 @@ void CheckArray(const vtkm::cont::ArrayHandle<T>& handle)
   CheckPortal(handle.GetPortalConstControl());
 }
 }
+
+// Use to get an arbitrarily different valuetype than T:
+template <typename T>
+struct OtherType
+{
+  using Type = vtkm::Int32;
+};
+template <>
+struct OtherType<vtkm::Int32>
+{
+  using Type = vtkm::UInt8;
+};
 
 /// This class has a single static member, Run, that tests that all Fancy Array
 /// Handles work with the given DeviceAdapter
@@ -207,42 +220,6 @@ private:
         //can just make sure the allocation didn't throw an exception
       }
 
-      std::cout << "Check CopyInto from control array" << std::endl;
-      { //Release the execution resources so that data is only
-        //in the control environment
-        arrayHandle.ReleaseResourcesExecution();
-
-        //Copy data from handle into iterator
-        T array[ARRAY_SIZE];
-        arrayHandle.CopyInto(array, DeviceAdapterTag());
-        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
-      }
-
-      std::cout << "Check CopyInto from execution array" << std::endl;
-      { //Copy the data to the execution environment
-        vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
-
-        //Copy data from handle into iterator
-        T array[ARRAY_SIZE];
-        result.CopyInto(array, DeviceAdapterTag());
-        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
-      }
-
-      if (!std::is_same<DeviceAdapterTag, vtkm::cont::DeviceAdapterTagSerial>::value)
-      {
-        std::cout << "Check using different device adapter" << std::endl;
-        //Copy the data to the execution environment
-        vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
-
-        //CopyInto allows you to copy the data even
-        //if you request it from a different device adapter
-        T array[ARRAY_SIZE];
-        result.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
-        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
-      }
-
       { //as output with a length larger than the memory provided by the user
         //this should fail
         bool gotException = false;
@@ -326,6 +303,67 @@ private:
     }
   };
 
+  struct VerifyEqualityOperators
+  {
+    template <typename T>
+    VTKM_CONT void operator()(T) const
+    {
+      std::cout << "Verify that shallow copied array handles compare equal:\n";
+      {
+        vtkm::cont::ArrayHandle<T> a1;
+        vtkm::cont::ArrayHandle<T> a2 = a1; // shallow copy
+        vtkm::cont::ArrayHandle<T> a3;
+        VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
+        VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
+        VTKM_TEST_ASSERT(a1 != a3, "Distinct arrays compared equal.");
+        VTKM_TEST_ASSERT(!(a1 == a3), "Distinct arrays compared equal.");
+
+        // Operations on a1 shouldn't affect equality
+        a1.Allocate(200);
+        VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
+        VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
+
+        a1.GetPortalConstControl();
+        VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
+        VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
+
+        a1.PrepareForInPlace(DeviceAdapterTagSerial());
+        VTKM_TEST_ASSERT(a1 == a2, "Shallow copied array not equal.");
+        VTKM_TEST_ASSERT(!(a1 != a2), "Shallow copied array not equal.");
+      }
+
+      std::cout << "Verify that handles with different storage types are not equal.\n";
+      {
+        vtkm::cont::ArrayHandle<T, StorageTagBasic> a1;
+        vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageTagBasic> tmp;
+        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent<1>(tmp);
+
+        VTKM_TEST_ASSERT(a1 != a2, "Arrays with different storage type compared equal.");
+        VTKM_TEST_ASSERT(!(a1 == a2), "Arrays with different storage type compared equal.");
+      }
+
+      std::cout << "Verify that handles with different value types are not equal.\n";
+      {
+        vtkm::cont::ArrayHandle<T, StorageTagBasic> a1;
+        vtkm::cont::ArrayHandle<typename OtherType<T>::Type, StorageTagBasic> a2;
+
+        VTKM_TEST_ASSERT(a1 != a2, "Arrays with different value type compared equal.");
+        VTKM_TEST_ASSERT(!(a1 == a2), "Arrays with different value type compared equal.");
+      }
+
+      std::cout << "Verify that handles with different storage and value types are not equal.\n";
+      {
+        vtkm::cont::ArrayHandle<T, StorageTagBasic> a1;
+        vtkm::cont::ArrayHandle<vtkm::Vec<typename OtherType<T>::Type, 3>, StorageTagBasic> tmp;
+        auto a2 = vtkm::cont::make_ArrayHandleExtractComponent<1>(tmp);
+
+        VTKM_TEST_ASSERT(a1 != a2, "Arrays with different storage and value type compared equal.");
+        VTKM_TEST_ASSERT(!(a1 == a2),
+                         "Arrays with different storage and value type compared equal.");
+      }
+    }
+  };
+
   struct TryArrayHandleType
   {
     void operator()() const
@@ -333,6 +371,7 @@ private:
       vtkm::testing::Testing::TryTypes(VerifyEmptyArrays());
       vtkm::testing::Testing::TryTypes(VerifyUserAllocatedHandle());
       vtkm::testing::Testing::TryTypes(VerifyVTKMAllocatedHandle());
+      vtkm::testing::Testing::TryTypes(VerifyEqualityOperators());
     }
   };
 

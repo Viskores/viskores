@@ -332,6 +332,17 @@
 //
 #pragma warning(disable:4251)
 
+// MSVC 2013 and earlier only:
+#if _MSC_VER <= 1800
+// Generates numerous warnings that implicit constructors can't
+// be constructed. This is understood and we don't care.
+#pragma warning(disable:4510)
+
+// Generates numerous warnings that implicit assignment operators can't
+// be constructed. This is understood and we don't care.
+#pragma warning(disable:4512)
+#endif // MSVC <= 2013
+
 #endif
 
 #endif //vtkm_internal_Configure_h

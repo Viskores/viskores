@@ -215,16 +215,6 @@ public:
     }
   }
 
-  /// Copies the data currently in the device array into the given iterators.
-  /// Although the iterator is supposed to be from the control environment,
-  /// thrust can generally handle iterators for a device as well.
-  ///
-  template <class IteratorTypeControl>
-  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
-  {
-    ::thrust::copy(this->Begin, this->End, dest);
-  }
-
   /// Resizes the device vector.
   ///
   VTKM_CONT void Shrink(vtkm::Id numberOfValues)

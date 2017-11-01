@@ -321,10 +321,23 @@ public:
   {
     return (this->Internals == rhs.Internals);
   }
+
   VTKM_CONT
   bool operator!=(const ArrayHandle<ValueType, StorageTag>& rhs) const
   {
     return (this->Internals != rhs.Internals);
+  }
+
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator==(const ArrayHandle<VT, ST>&) const
+  {
+    return false; // different valuetype and/or storage
+  }
+
+  template <typename VT, typename ST>
+  VTKM_CONT bool operator!=(const ArrayHandle<VT, ST>&) const
+  {
+    return true; // different valuetype and/or storage
   }
 
   /// Get the storage.
@@ -346,12 +359,6 @@ public:
   /// Returns the number of entries in the array.
   ///
   VTKM_CONT vtkm::Id GetNumberOfValues() const;
-
-  /// Copies data into the given iterator for the control environment. This
-  /// method can skip copying into an internally managed control array.
-  ///
-  template <typename IteratorType, typename DeviceAdapterTag>
-  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const;
 
   /// \brief Allocates an array large enough to hold the given number of values.
   ///

@@ -23,12 +23,14 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
+  TestingCellLocatorTwoLevelUniformGrid.h
   TestingComputeRange.h
   TestingDeviceAdapter.h
   TestingDataSetExplicit.h
   TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
+  TestingPointLocatorUniformGrid.h
   TestingVirtualObjectCache.h
   )
 

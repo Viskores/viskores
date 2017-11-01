@@ -217,12 +217,6 @@ public:
   {
   }
 
-  template <class IteratorTypeControl>
-  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
-  {
-    this->Transfer.CopyInto(dest);
-  }
-
 protected:
   VTKM_CONT
   vtkm::Id GetNumberOfValuesImpl() const { return this->Transfer.GetNumberOfValues(); }

@@ -209,9 +209,9 @@ public:
 
     //transfer the data.
     //the primary concern that we have at this point is data locality and
-    //the type of storage. Our options include using CopyInto and provide a
-    //temporary location for the values to reside before we give it to openGL
-    //this works for all storage types.
+    //the type of storage. Our options include using DeviceAdapterAlgorithm::Copy
+    //and provide a temporary location for the values to reside before we give it
+    //to openGL this works for all storage types.
     //
     //Second option is to call PrepareForInput and get a PortalConst in the
     //exection environment.
@@ -220,7 +220,8 @@ public:
     //a unneeded copy.
     //
     //The end result is that we have CopyFromHandle which does number two
-    //from StorageTagBasic, and does the CopyInto for everything else
+    //from StorageTagBasic, and does the DeviceAdapterAlgorithm::Copy for everything
+    //else
     detail::CopyFromHandle(handle, this->State, DeviceAdapterTag());
   }
 

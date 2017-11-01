@@ -148,7 +148,7 @@ public:
     xEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (xmax - xmin));
     yEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (ymax - ymin));
     zEpsilon = vtkm::Max(minEpsilon, AABB_EPSILON * (zmax - zmin));
-    //if(xEpsilon == minEpsilon) std::cout<<"m";
+
     xmin -= xEpsilon;
     ymin -= yEpsilon;
     zmin -= zEpsilon;
@@ -902,6 +902,20 @@ void LinearBVH::ConstructOnDevice(Device device)
   vtkm::Float64 time = timer.GetElapsedTime();
   logger->CloseLogEntry(time);
 }
+
+// explicitly export to workaround an intel compiler bug
+#if defined(VTKM_ICC)
+template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagSerial>(
+  vtkm::cont::DeviceAdapterTagSerial);
+#ifdef VTKM_ENABLE_TBB
+template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
+  vtkm::cont::DeviceAdapterTagTBB);
+#endif
+#ifdef VTKM_ENABLE_CUDA
+template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(
+  vtkm::cont::DeviceAdapterTagCuda);
+#endif
+#endif
 
 VTKM_CONT
 bool LinearBVH::GetIsConstructed() const

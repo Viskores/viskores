@@ -20,6 +20,7 @@
 
 set(unit_tests
   UnitTestCudaArrayHandleFancy.cu
+  UnitTestCudaCellLocatorTwoLevelUniformGrid.cu
   UnitTestCudaComputeRange.cu
   UnitTestCudaDataSetExplicit.cu
   UnitTestCudaDataSetSingleType.cu
@@ -27,6 +28,7 @@ set(unit_tests
   UnitTestCudaImplicitFunction.cu
   UnitTestCudaMath.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
+  UnitTestCudaPointLocatorUniformGrid.cxx
   UnitTestCudaVirtualObjectCache.cu
   )
 vtkm_unit_tests(CUDA SOURCES ${unit_tests})

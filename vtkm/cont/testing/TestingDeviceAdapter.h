@@ -73,6 +73,7 @@ private:
   using StorageTag = vtkm::cont::StorageTagBasic;
 
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id, StorageTag>;
+  using IdComponentArrayHandle = vtkm::cont::ArrayHandle<vtkm::IdComponent, StorageTag>;
 
   using ScalarArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault, StorageTag>;
 
@@ -1182,15 +1183,16 @@ private:
     {
       const vtkm::Id inputLength = 12;
       const vtkm::Id expectedLength = 6;
-      vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 };       // input keys
-      vtkm::Id inputValues[inputLength] = { 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 }; // input keys
-      vtkm::Id expectedKeys[expectedLength] = { 0, 1, 4, 0, 2, -1 };
+      vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 4, 0, 2, 2, 2, 2, -1 }; // in keys
+      vtkm::Id inputValues[inputLength] = { 13, -2, -1, 1, 1, 0, 3, 1, 2, 3, 4, -42 }; // in values
+      vtkm::IdComponent expectedKeys[expectedLength] = { 0, 1, 4, 0, 2, -1 };
       vtkm::Id expectedValues[expectedLength] = { 10, 2, 0, 3, 10, -42 };
 
-      IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+      IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
       IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
-      IdArrayHandle keysOut, valuesOut;
+      IdComponentArrayHandle keysOut;
+      IdArrayHandle valuesOut;
       Algorithm::ReduceByKey(keys, values, keysOut, valuesOut, vtkm::Add());
 
       VTKM_TEST_ASSERT(keysOut.GetNumberOfValues() == expectedLength,
@@ -1405,13 +1407,13 @@ private:
     std::cout << "Testing Scan Inclusive By Key" << std::endl;
 
     const vtkm::Id inputLength = 10;
-    vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
     vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 1, 2, 3, 1, 2, 1, 1, 2, 3, 4 };
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     IdArrayHandle valuesOut;
@@ -1529,14 +1531,14 @@ private:
     std::cout << "Testing Scan Exclusive By Key" << std::endl;
 
     const vtkm::Id inputLength = 10;
-    vtkm::Id inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
+    vtkm::IdComponent inputKeys[inputLength] = { 0, 0, 0, 1, 1, 2, 3, 3, 3, 3 };
     vtkm::Id inputValues[inputLength] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
     vtkm::Id init = 5;
 
     const vtkm::Id expectedLength = 10;
     vtkm::Id expectedValues[expectedLength] = { 5, 6, 7, 5, 6, 5, 5, 6, 7, 8 };
 
-    IdArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
+    IdComponentArrayHandle keys = vtkm::cont::make_ArrayHandle(inputKeys, inputLength);
     IdArrayHandle values = vtkm::cont::make_ArrayHandle(inputValues, inputLength);
 
     IdArrayHandle valuesOut;
@@ -1837,6 +1839,15 @@ private:
     }
   };
 
+  template <typename T, typename U>
+  struct TestCopy<vtkm::Pair<T, U>>
+  {
+    static vtkm::Pair<T, U> get(vtkm::Id i)
+    {
+      return vtkm::make_Pair(TestCopy<T>::get(i), TestCopy<U>::get(i));
+    }
+  };
+
   template <typename T>
   static VTKM_CONT void TestCopyArrays()
   {
@@ -1860,9 +1871,10 @@ private:
       VTKM_TEST_ASSERT(temp.GetNumberOfValues() == COPY_ARRAY_SIZE, "Copy Needs to Resize Array");
 
       typename std::vector<T>::const_iterator c = testData.begin();
+      const auto& portal = temp.GetPortalConstControl();
       for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
       {
-        T value = temp.GetPortalConstControl().Get(i);
+        T value = portal.Get(i);
         VTKM_TEST_ASSERT(value == *c, "Got bad value (Copy)");
       }
     }
@@ -1967,6 +1979,29 @@ private:
       }
     }
 
+    // 7. Test that overlapping ranges trigger a failure:
+    // 7.1 output starts inside input range:
+    {
+      const vtkm::Id inBegin = 100;
+      const vtkm::Id inEnd = 200;
+      const vtkm::Id outBegin = 150;
+
+      const vtkm::Id numVals = inEnd - inBegin;
+      bool result = Algorithm::CopySubRange(input, inBegin, numVals, input, outBegin);
+      VTKM_TEST_ASSERT(result == false, "Overlapping subrange did not fail.");
+    }
+
+    // 7.2 input starts inside output range
+    {
+      const vtkm::Id inBegin = 100;
+      const vtkm::Id inEnd = 200;
+      const vtkm::Id outBegin = 50;
+
+      const vtkm::Id numVals = inEnd - inBegin;
+      bool result = Algorithm::CopySubRange(input, inBegin, numVals, input, outBegin);
+      VTKM_TEST_ASSERT(result == false, "Overlapping subrange did not fail.");
+    }
+
     {
       vtkm::cont::ArrayHandle<T> output;
 
@@ -1990,19 +2025,15 @@ private:
   {
     std::cout << "-------------------------------------------------" << std::endl;
     std::cout << "Testing Copy to same array type" << std::endl;
-    TestCopyArrays<vtkm::Vec<vtkm::Float32, 4>>();
-    TestCopyArrays<vtkm::Vec<vtkm::Float64, 4>>();
+    TestCopyArrays<vtkm::Vec<vtkm::Float32, 3>>();
+    TestCopyArrays<vtkm::Vec<vtkm::UInt8, 4>>();
     //
-    TestCopyArrays<vtkm::Vec<vtkm::UInt8, 2>>();
-    TestCopyArrays<vtkm::Vec<vtkm::UInt16, 2>>();
-    TestCopyArrays<vtkm::Vec<vtkm::UInt32, 2>>();
-    TestCopyArrays<vtkm::Vec<vtkm::UInt64, 2>>();
+    TestCopyArrays<vtkm::Pair<vtkm::Id, vtkm::Float32>>();
+    TestCopyArrays<vtkm::Pair<vtkm::Id, vtkm::Vec<vtkm::Float32, 3>>>();
     //
     TestCopyArrays<vtkm::Float32>();
     TestCopyArrays<vtkm::Float64>();
     //
-    TestCopyArrays<vtkm::Int8>();
-    TestCopyArrays<vtkm::Int16>();
     TestCopyArrays<vtkm::Int32>();
     TestCopyArrays<vtkm::Int64>();
     //
@@ -2010,8 +2041,6 @@ private:
     TestCopyArrays<vtkm::UInt16>();
     TestCopyArrays<vtkm::UInt32>();
     TestCopyArrays<vtkm::UInt64>();
-    //
-    TestCopyArrays<vtkm::Id>();
   }
 
   static VTKM_CONT void TestCopyArraysInDiffTypes()
