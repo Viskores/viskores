@@ -46,11 +46,11 @@ public:
 
   ~View2D();
 
-  void Paint() VTKM_OVERRIDE;
+  void Paint() override;
 
-  void RenderScreenAnnotations() VTKM_OVERRIDE;
+  void RenderScreenAnnotations() override;
 
-  void RenderWorldAnnotations() VTKM_OVERRIDE;
+  void RenderWorldAnnotations() override;
 
 private:
   void UpdateCameraProperties();

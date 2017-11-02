@@ -45,9 +45,9 @@ public:
 
   ~View1D();
 
-  void Paint() VTKM_OVERRIDE;
-  void RenderScreenAnnotations() VTKM_OVERRIDE;
-  void RenderWorldAnnotations() VTKM_OVERRIDE;
+  void Paint() override;
+  void RenderScreenAnnotations() override;
+  void RenderWorldAnnotations() override;
   void RenderColorLegendAnnotations();
 
   void EnableLegend();
