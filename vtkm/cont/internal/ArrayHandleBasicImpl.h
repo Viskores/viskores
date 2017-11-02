@@ -112,6 +112,17 @@ struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicBase
                              void* controlPtr,
                              vtkm::UInt64 numBytes) const = 0;
 
+
+  VTKM_CONT virtual void UsingForRead(const void* controlPtr,
+                                      const void* executionPtr,
+                                      vtkm::UInt64 numBytes) const = 0;
+  VTKM_CONT virtual void UsingForWrite(const void* controlPtr,
+                                       const void* executionPtr,
+                                       vtkm::UInt64 numBytes) const = 0;
+  VTKM_CONT virtual void UsingForReadWrite(const void* controlPtr,
+                                           const void* executionPtr,
+                                           vtkm::UInt64 numBytes) const = 0;
+
 protected:
   StorageBasicBase& ControlStorage;
 };

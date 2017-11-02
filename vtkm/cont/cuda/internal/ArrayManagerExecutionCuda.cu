@@ -133,6 +133,7 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(
   // execution:
   if (controlPtr == executionPtr && CudaAllocator::IsDevicePointer(controlPtr))
   {
+    CudaAllocator::PrepareForInput(executionPtr, numBytes);
     return;
   }
 
@@ -160,6 +161,7 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
     }
 
     // If it is managed, just return and let CUDA handle the migration for us.
+    CudaAllocator::PrepareForControl(controlPtr, numBytes);
     return;
   }
 
@@ -169,6 +171,29 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
                                  cudaMemcpyDeviceToHost,
                                  cudaStreamPerThread));
 }
+
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(const void* controlPtr,
+                                                                      const void* executionPtr,
+                                                                      vtkm::UInt64 numBytes) const
+{
+  CudaAllocator::PrepareForInput(executionPtr, static_cast<size_t>(numBytes));
+}
+
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForWrite(const void* controlPtr,
+                                                                       const void* executionPtr,
+                                                                       vtkm::UInt64 numBytes) const
+{
+  CudaAllocator::PrepareForOutput(executionPtr, static_cast<size_t>(numBytes));
+}
+
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForReadWrite(
+  const void* controlPtr,
+  const void* executionPtr,
+  vtkm::UInt64 numBytes) const
+{
+  CudaAllocator::PrepareForInPlace(executionPtr, static_cast<size_t>(numBytes));
+}
+
 
 } // end namespace internal
 
