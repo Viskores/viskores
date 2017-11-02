@@ -127,7 +127,7 @@ public:
 
   void Render(const vtkm::rendering::Camera& camera,
               const vtkm::rendering::WorldAnnotator& worldAnnotator,
-              vtkm::rendering::Canvas& canvas) VTKM_OVERRIDE;
+              vtkm::rendering::Canvas& canvas) override;
 };
 }
 } //namespace vtkm::rendering
