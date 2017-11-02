@@ -237,9 +237,9 @@ public:
         count++;
       }
       //TODO: we could make this a recipical, but this is not a bottleneck.
-      center[0] = center[0] / vtkm::Float32(count + 1);
-      center[1] = center[1] / vtkm::Float32(count + 1);
-      center[2] = center[2] / vtkm::Float32(count + 1);
+      center[0] = center[0] / vtkm::Float32(count);
+      center[1] = center[1] / vtkm::Float32(count);
+      center[2] = center[2] / vtkm::Float32(count);
       Normalize(center);
       code = Morton3D(center[0], center[1], center[2]);
       BOUNDS_CHECK(mortonCodes, offset + i);

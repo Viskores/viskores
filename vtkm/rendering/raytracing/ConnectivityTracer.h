@@ -62,8 +62,6 @@ namespace rendering
 {
 namespace raytracing
 {
-
-
 //
 //  Advance Ray
 //      After a ray leaves the mesh, we need to check to see
@@ -457,6 +455,40 @@ public:
 
     } //operator
   };  //class RayBumper
+
+  template <typename FloatType>
+  class AddPathLengths : public vtkm::worklet::WorkletMapField
+  {
+  public:
+    VTKM_CONT
+    AddPathLengths() {}
+
+    typedef void ControlSignature(FieldIn<RayStatusType>,            // ray status
+                                  FieldIn<ScalarRenderingTypes>,     // cell enter distance
+                                  FieldIn<ScalarRenderingTypes>,     // cell exit distance
+                                  FieldInOut<ScalarRenderingTypes>); // ray absorption data
+
+    typedef void ExecutionSignature(_1, _2, _3, _4);
+
+    VTKM_EXEC inline void operator()(const vtkm::UInt8& rayStatus,
+                                     const FloatType& enterDistance,
+                                     const FloatType& exitDistance,
+                                     FloatType& distance) const
+    {
+      if (rayStatus != RAY_ACTIVE)
+      {
+        return;
+      }
+
+      if (exitDistance <= enterDistance)
+      {
+        return;
+      }
+
+      FloatType segmentLength = exitDistance - enterDistance;
+      distance += segmentLength;
+    }
+  };
 
   template <typename FloatType>
   class Integrate : public vtkm::worklet::WorkletMapField
@@ -1139,6 +1171,17 @@ public:
   }
 
   template <typename FloatType, typename Device>
+  void AccumulatePathLengths(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device)
+  {
+    vtkm::worklet::DispatcherMapField<AddPathLengths<FloatType>, Device>(
+      AddPathLengths<FloatType>())
+      .Invoke(rays.Status,
+              *(tracker.EnterDist),
+              *(tracker.ExitDist),
+              rays.GetBuffer("path_lengths").Buffer);
+  }
+
+  template <typename FloatType, typename Device>
   void FindLostRays(Ray<FloatType>& rays, detail::RayTracking<FloatType>& tracker, Device)
   {
     vtkm::cont::Timer<Device> timer;
@@ -1210,7 +1253,6 @@ public:
       bool divideEmisByAbsorp = false;
       vtkm::cont::ArrayHandle<FloatType> absorp = rays.Buffers.at(0).Buffer;
       vtkm::cont::ArrayHandle<FloatType> emission = rays.GetBuffer("emission").Buffer;
-
       vtkm::worklet::DispatcherMapField<IntegrateEmission<FloatType>, Device>(
         IntegrateEmission<FloatType>(rays.Buffers.at(0).GetNumChannels(), divideEmisByAbsorp))
         .Invoke(rays.Status,
@@ -1242,13 +1284,27 @@ public:
   template <typename FloatType>
   void PrintDebugRay(Ray<FloatType>& rays, vtkm::Id rayId)
   {
-    if (rayId < 0 || rayId > rays.Distance.GetPortalControl().GetNumberOfValues())
+    vtkm::Id index = -1;
+    for (vtkm::Id i = 0; i < rays.NumRays; ++i)
+    {
+      if (rays.PixelIdx.GetPortalControl().Get(i) == rayId)
+      {
+        index = i;
+        break;
+      }
+    }
+    if (index == -1)
+    {
       return;
-    std::cout << "++++++++DEBUG RAY++++++++\n";
-    std::cout << "Status: " << (int)rays.Status.GetPortalControl().Get(rayId) << "\n";
-    std::cout << "HitIndex: " << rays.HitIdx.GetPortalControl().Get(rayId) << "\n";
-    std::cout << "Dist " << rays.Distance.GetPortalControl().Get(rayId) << "\n";
-    std::cout << "MinDist " << rays.MinDistance.GetPortalControl().Get(rayId) << "\n";
+    }
+
+    std::cout << "++++++++RAY " << rayId << "++++++++\n";
+    std::cout << "Status: " << (int)rays.Status.GetPortalControl().Get(index) << "\n";
+    std::cout << "HitIndex: " << rays.HitIdx.GetPortalControl().Get(index) << "\n";
+    std::cout << "Dist " << rays.Distance.GetPortalControl().Get(index) << "\n";
+    std::cout << "MinDist " << rays.MinDistance.GetPortalControl().Get(index) << "\n";
+    std::cout << "Origin " << rays.Origin.GetPortalConstControl().Get(index) << "\n";
+    std::cout << "Dir " << rays.Dir.GetPortalConstControl().Get(index) << "\n";
     std::cout << "+++++++++++++++++++++++++\n";
   }
 
@@ -1256,7 +1312,7 @@ public:
   void OffsetMinDistances(Ray<FloatType>& rays, Device)
   {
     vtkm::worklet::DispatcherMapField<AdvanceRay<FloatType>, Device>(
-      AdvanceRay<FloatType>(FloatType(0.0000001)))
+      AdvanceRay<FloatType>(FloatType(0.001)))
       .Invoke(rays.Status, rays.MinDistance);
   }
 
@@ -1303,6 +1359,7 @@ public:
 
     this->SetBoundingBox(Device());
 
+    bool hasPathLengths = rays.HasBuffer("path_lengths");
 
     vtkm::cont::Timer<Device> timer;
     this->Init(Device());
@@ -1319,9 +1376,8 @@ public:
 
     MeshConn.Construct(Device());
 
-    logger->AddLogData("active_pixels", rays.NumRays);
 
-    bool cullMissedRays = false;
+    bool cullMissedRays = true;
     bool workRemaining = true;
     if (this->CountRayStatus)
     {
@@ -1377,6 +1433,10 @@ public:
         else
           this->IntegrateCells(rays, rayTracker, Device());
 
+        if (hasPathLengths)
+        {
+          this->AccumulatePathLengths(rays, rayTracker, Device());
+        }
         //swap enter and exit distances
         rayTracker.Swap();
         if (this->CountRayStatus)
@@ -1405,6 +1465,7 @@ public:
     }
     vtkm::Float64 renderTime = renderTimer.GetElapsedTime();
     this->LogTimers();
+    logger->AddLogData("active_pixels", rays.NumRays);
     logger->CloseLogEntry(renderTime);
   } //Render
 
