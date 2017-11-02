@@ -62,7 +62,6 @@ namespace rendering
 {
 namespace raytracing
 {
-static vtkm::cont::ArrayHandle<vtkm::Id> ids;
 //
 //  Advance Ray
 //      After a ray leaves the mesh, we need to check to see
@@ -1419,7 +1418,6 @@ public:
       while (RayOperations::RaysInMesh(rays, Device()))
       {
         //
-        ids = rays.PixelIdx;
         // Rays the leave the mesh will be marked as RAYEXITED_MESH
         this->IntersectCell(rays, rayTracker, Device());
         //
