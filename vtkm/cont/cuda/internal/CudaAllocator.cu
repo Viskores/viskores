@@ -52,6 +52,7 @@ bool CudaAllocator::UsingManagedMemory()
 
 bool CudaAllocator::IsDevicePointer(const void* ptr)
 {
+  CudaAllocator::Initialize();
   if (!ptr)
   {
     return false;
@@ -72,7 +73,7 @@ bool CudaAllocator::IsDevicePointer(const void* ptr)
 
 bool CudaAllocator::IsManagedPointer(const void* ptr)
 {
-  if (!ptr)
+  if (!ptr || !ManagedMemorySupported)
   {
     return false;
   }
@@ -109,23 +110,17 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
 
 void CudaAllocator::Free(void* ptr)
 {
-  CudaAllocator::Initialize();
-
   VTKM_CUDA_CALL(cudaFree(ptr));
 }
 
 void CudaAllocator::PrepareForControl(const void* ptr, std::size_t numBytes)
 {
-  CudaAllocator::Initialize();
-
-  if (ManagedMemorySupported)
+  if (IsManagedPointer(ptr))
   {
 #if CUDART_VERSION >= 8000
     // TODO these hints need to be benchmarked and adjusted once we start
     // sharing the pointers between cont/exec
-    VTKM_CUDA_CALL(
-      cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, cudaCpuDeviceId));
+    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, cudaCpuDeviceId));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, cudaCpuDeviceId, cudaStreamPerThread));
 #endif // CUDA >= 8.0
   }
@@ -133,15 +128,14 @@ void CudaAllocator::PrepareForControl(const void* ptr, std::size_t numBytes)
 
 void CudaAllocator::PrepareForInput(const void* ptr, std::size_t numBytes)
 {
-  CudaAllocator::Initialize();
-
-  if (ManagedMemorySupported)
+  if (IsManagedPointer(ptr))
   {
 #if CUDART_VERSION >= 8000
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetReadMostly, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetReadMostly, dev));
+    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
 #endif // CUDA >= 8.0
   }
@@ -149,15 +143,14 @@ void CudaAllocator::PrepareForInput(const void* ptr, std::size_t numBytes)
 
 void CudaAllocator::PrepareForOutput(const void* ptr, std::size_t numBytes)
 {
-  CudaAllocator::Initialize();
-
-  if (ManagedMemorySupported)
+  if (IsManagedPointer(ptr))
   {
 #if CUDART_VERSION >= 8000
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
+    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
 #endif // CUDA >= 8.0
   }
@@ -165,15 +158,14 @@ void CudaAllocator::PrepareForOutput(const void* ptr, std::size_t numBytes)
 
 void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
 {
-  CudaAllocator::Initialize();
-
-  if (ManagedMemorySupported)
+  if (IsManagedPointer(ptr))
   {
 #if CUDART_VERSION >= 8000
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
+    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
 #endif // CUDA >= 8.0
   }
