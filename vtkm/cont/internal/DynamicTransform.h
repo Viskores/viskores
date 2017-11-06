@@ -29,6 +29,10 @@ namespace cont
 
 template <typename T, typename S>
 class ArrayHandle;
+
+class CoordinateSystem;
+class Field;
+
 template <vtkm::IdComponent>
 class CellSetStructured;
 template <typename T>
@@ -46,6 +50,18 @@ void CastAndCall(const DynamicObject& dynamicObject, const Functor& f)
 {
   dynamicObject.CastAndCall(f);
 }
+
+/// A specialization of CastAndCall for basic CoordinateSystem to make
+/// it be treated just like any other dynamic object
+// actually implemented in vtkm/cont/CoordinateSystem
+template <typename Functor>
+void CastAndCall(const CoordinateSystem& coords, const Functor& f);
+
+/// A specialization of CastAndCall for basic Field to make
+/// it be treated just like any other dynamic object
+// actually implemented in vtkm/cont/Field
+template <typename Functor>
+void CastAndCall(const vtkm::cont::Field& field, const Functor& f);
 
 /// A specialization of CastAndCall for basic ArrayHandle types,
 /// Since the type is already known no deduction is needed.
