@@ -18,6 +18,8 @@
 //  this software.
 //============================================================================
 
+#include <sstream>
+#include <typeindex>
 #include <vtkm/cont/DynamicArrayHandle.h>
 
 namespace vtkm
@@ -33,6 +35,18 @@ PolymorphicArrayHandleContainerBase::PolymorphicArrayHandleContainerBase()
 
 PolymorphicArrayHandleContainerBase::~PolymorphicArrayHandleContainerBase()
 {
+}
+
+void ThrowCastAndCallException(PolymorphicArrayHandleContainerBase* ptr,
+                               const std::type_info* type,
+                               const std::type_info* storage)
+{
+  std::ostringstream out;
+  out << "Could not find appropriate cast for array in CastAndCall1.\n"
+         "Array: ";
+  ptr->PrintSummary(out);
+  out << "TypeList: " << type->name() << "\nStorageList: " << storage->name() << "\n";
+  throw vtkm::cont::ErrorBadValue(out.str());
 }
 }
 }

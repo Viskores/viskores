@@ -206,6 +206,35 @@ VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2, T3, T4, ArgTyp
   ListForEachImpl(f, brigand::list<ArgTypes...>());
 }
 
+
+template <typename T, typename U, typename R>
+struct ListCrossProductAppend
+{
+  using type = brigand::push_back<T, std::pair<U, R>>;
+};
+
+template <typename T, typename U, typename R2>
+struct ListCrossProductImplUnrollR2
+{
+  using P =
+    brigand::fold<R2,
+                  brigand::list<>,
+                  ListCrossProductAppend<brigand::_state, brigand::_element, brigand::pin<U>>>;
+
+  using type = brigand::append<T, P>;
+};
+
+template <typename R1, typename R2>
+struct ListCrossProductImpl
+{
+  using type = brigand::fold<
+    R2,
+    brigand::list<>,
+    ListCrossProductImplUnrollR2<brigand::_state, brigand::_element, brigand::pin<R1>>>;
+};
+
+
+
 } // namespace detail
 
 //-----------------------------------------------------------------------------
