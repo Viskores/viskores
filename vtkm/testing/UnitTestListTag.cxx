@@ -94,17 +94,10 @@ struct MutableFunctor
 template <typename T>
 struct ConstantFunctor
 {
-  std::vector<T>& FoundTypes;
-
-  ConstantFunctor(std::vector<T>& values)
-    : FoundTypes(values)
+  template <typename U, typename VectorType>
+  VTKM_CONT void operator()(U u, VectorType& vector) const
   {
-  }
-
-  template <typename U>
-  VTKM_CONT void operator()(U u) const
-  {
-    this->FoundTypes.push_back(test_number(u));
+    vector.push_back(test_number(u));
   }
 };
 
@@ -160,8 +153,8 @@ void TryList(const vtkm::Vec<int, N>& expected, ListTag)
 
   std::cout << "    Try constant for each" << std::endl;
   std::vector<int> foundTypes;
-  ConstantFunctor<int> cfunc(foundTypes);
-  vtkm::ListForEach(cfunc, ListTag());
+  ConstantFunctor<int> cfunc;
+  vtkm::ListForEach(cfunc, ListTag(), foundTypes);
   CheckSame(expected, foundTypes);
 
   std::cout << "    Try checking contents" << std::endl;
@@ -188,8 +181,8 @@ void TryList(const vtkm::Vec<std::pair<int, int>, N>& expected, ListTag)
 
   std::cout << "    Try constant for each" << std::endl;
   std::vector<std::pair<int, int>> foundTypes;
-  ConstantFunctor<std::pair<int, int>> cfunc(foundTypes);
-  vtkm::ListForEach(cfunc, ListTag());
+  ConstantFunctor<std::pair<int, int>> cfunc;
+  vtkm::ListForEach(cfunc, ListTag(), foundTypes);
   CheckSame(expected, foundTypes);
 }
 

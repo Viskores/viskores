@@ -85,16 +85,16 @@ struct ListTagIntersect : detail::ListRoot
 /// For each typename represented by the list tag, call the functor with a
 /// default instance of that type.
 ///
-template <typename Functor, typename ListTag>
-VTKM_CONT void ListForEach(Functor&& f, ListTag)
+template <typename Functor, typename ListTag, typename... Args>
+VTKM_CONT void ListForEach(Functor&& f, ListTag, Args&&... args)
 {
   VTKM_IS_LIST_TAG(ListTag);
-  detail::ListForEachImpl(f, typename ListTag::list());
+  detail::ListForEachImpl(
+    std::forward<Functor>(f), typename ListTag::list{}, std::forward<Args>(args)...);
 }
 
 /// Generate a tag that is the cross product of two other tags. The resulting
 // a tag has the form of Tag< std::pair<A1,B1>, std::pair<A1,B2> .... >
-///
 ///
 template <typename ListTag1, typename ListTag2>
 struct ListCrossProduct : detail::ListRoot
