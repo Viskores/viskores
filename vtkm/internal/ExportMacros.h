@@ -89,8 +89,6 @@
 #define VTKM_NOEXCEPT noexcept
 #endif
 
-#define VTKM_OVERRIDE override
-
 // Clang will warn about weak vtables (-Wweak-vtables) on exception classes,
 // but there's no good way to eliminate them in this case because MSVC (See
 // http://stackoverflow.com/questions/24511376). These macros will silence the
