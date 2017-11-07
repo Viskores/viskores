@@ -110,6 +110,7 @@ set(device_sources
   ArrayRangeCompute.cxx
   CellSetExplicit.cxx
   RuntimeDeviceTracker.cxx
+  TryExecute.cxx
   )
 
 vtkm_declare_headers(${headers})

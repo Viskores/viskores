@@ -81,6 +81,19 @@ void TryExecuteWithList(DeviceList, bool expectSuccess)
   {
     VTKM_TEST_ASSERT(!result, "Call returned true when expected failure.");
   }
+
+  //verify the ability to pass rvalue functors
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray2;
+  result = vtkm::cont::TryExecute(TryExecuteTestFunctor(inArray, outArray2), DeviceList());
+  if (expectSuccess)
+  {
+    VTKM_TEST_ASSERT(result, "Call returned failure when expected success.");
+    CheckPortal(outArray2.GetPortalConstControl());
+  }
+  else
+  {
+    VTKM_TEST_ASSERT(!result, "Call returned true when expected failure.");
+  }
 }
 
 static void Run()
