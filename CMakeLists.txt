@@ -101,9 +101,13 @@ set(CMAKE_CXX_EXTENSIONS False)
 # VTK-m is setup by default not to export symbols unless explicitly stated.
 # We prefer to only export symbols of a small set of user facing classes,
 # rather than exporting all symbols. In practice we will try to not export
-# symbols for any third party library
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+# symbols for any third party library.
+option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
+mark_as_advanced(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+  set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+  set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+endif()
 include(GenerateExportHeader)
 include(CMake/VTKmCompilerExtras.cmake)
 
