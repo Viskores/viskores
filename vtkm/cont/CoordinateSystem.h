@@ -72,7 +72,17 @@ struct StorageListTagCoordinateSystemDefault
                         vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::StorageTag>
 {
 };
+}
+}
 
+namespace vtkm
+{
+
+template struct ListCrossProduct<::vtkm::TypeListTagFieldVec3,
+                                 ::vtkm::cont::StorageListTagCoordinateSystemDefault>;
+
+namespace cont
+{
 using DynamicArrayHandleCoordinateSystem =
   vtkm::cont::DynamicArrayHandleBase<VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG,
                                      VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>;

@@ -31,10 +31,11 @@
 
 #include <vtkm/cont/internal/DynamicTransform.h>
 
-#include <sstream>
-
 namespace vtkm
 {
+
+template struct ListCrossProduct<VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG>;
+
 namespace cont
 {
 
@@ -406,135 +407,70 @@ using DynamicArrayHandle =
 namespace detail
 {
 
-template <typename Functor, typename Type>
-struct DynamicArrayHandleTryStorage
+template <typename Functor>
+struct ListFunctorWrapper
 {
-  const DynamicArrayHandle* const Array;
-  const Functor& Function;
-  bool FoundCast;
-
-  VTKM_CONT
-  DynamicArrayHandleTryStorage(const DynamicArrayHandle& array, const Functor& f)
-    : Array(&array)
+  ListFunctorWrapper(bool& called, const Functor& f, PolymorphicArrayHandleContainerBase* c)
+    : Called(called)
+    , Container(c)
     , Function(f)
-    , FoundCast(false)
   {
   }
 
-  template <typename Storage>
-  VTKM_CONT void operator()(Storage)
+  template <typename T, typename U, typename... Args>
+  void operator()(std::pair<T, U>&& p, Args&&... args) const
   {
-    this->DoCast(Storage(),
-                 typename vtkm::cont::internal::IsValidArrayHandle<Type, Storage>::type());
+    using storage = vtkm::cont::internal::Storage<T, U>;
+    using invalid = typename std::is_base_of<vtkm::cont::internal::UndefinedStorage, storage>::type;
+    this->run(std::forward<decltype(p)>(p), invalid{}, args...);
   }
 
-private:
-  template <typename Storage>
-  void DoCast(Storage, std::true_type)
+  template <typename T, typename U, typename... Args>
+  void run(std::pair<T, U>&&, std::false_type, Args&&... args) const
   {
-    if (!this->FoundCast && this->Array->template IsTypeAndStorage<Type, Storage>())
+    if (!this->Called)
     {
-      this->Function(this->Array->template CastToTypeStorage<Type, Storage>());
-      this->FoundCast = true;
+      vtkm::cont::ArrayHandle<T, U>* handle = DynamicArrayHandleTryCast<T, U>(this->Container);
+      if (handle)
+      {
+        this->Function(*handle, std::forward<Args>(args)...);
+        this->Called = true;
+      }
     }
   }
 
-  template <typename Storage>
-  void DoCast(Storage, std::false_type)
+  template <typename T, typename U, typename... Args>
+  void run(std::pair<T, U>&&, std::true_type, Args&&...) const
   {
-    // This type of array handle cannot exist, so do nothing.
   }
 
-  void operator=(const DynamicArrayHandleTryStorage<Functor, Type>&) = delete;
+  bool& Called;
+  PolymorphicArrayHandleContainerBase* Container;
+  const Functor& Function;
 };
 
-template <typename Functor, typename StorageList>
-struct DynamicArrayHandleTryType
-{
-  const DynamicArrayHandle* const Array;
-  const Functor& Function;
-  bool FoundCast;
-
-  VTKM_CONT
-  DynamicArrayHandleTryType(const DynamicArrayHandle& array, const Functor& f)
-    : Array(&array)
-    , Function(f)
-    , FoundCast(false)
-  {
-  }
-
-  template <typename Type>
-  VTKM_CONT void operator()(Type)
-  {
-    if (this->FoundCast)
-    {
-      return;
-    }
-    using TryStorageType = DynamicArrayHandleTryStorage<Functor, Type>;
-    TryStorageType tryStorage = TryStorageType(*this->Array, this->Function);
-
-    vtkm::ListForEach(tryStorage, StorageList());
-    if (tryStorage.FoundCast)
-    {
-      this->FoundCast = true;
-    }
-  }
-
-private:
-  void operator=(const DynamicArrayHandleTryType<Functor, StorageList>&) = delete;
-};
-
+VTKM_CONT_EXPORT void ThrowCastAndCallException(PolymorphicArrayHandleContainerBase*,
+                                                const std::type_info*,
+                                                const std::type_info*);
 } // namespace detail
 
 template <typename TypeList, typename StorageList>
 template <typename Functor>
 VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const Functor& f) const
 {
-  VTKM_IS_LIST_TAG(TypeList);
-  VTKM_IS_LIST_TAG(StorageList);
-  using TryTypeType = detail::DynamicArrayHandleTryType<Functor, StorageList>;
+  //For optimizations we should compile once the cross product for the default types
+  //and make it extern
+  using crossProduct = typename vtkm::ListCrossProduct<TypeList, StorageList>;
 
-  // We cast this to a DynamicArrayHandle because at this point we are ignoring
-  // the type/storage lists in it. There is no sense in adding more unnecessary
-  // template cases.
-  // The downside to this approach is that a copy is created, causing an
-  // atomic increment, which affects both performance and library size.
-  // For these reasons we have a specialization of this method to remove
-  // the copy when the type/storage lists are the default
-  DynamicArrayHandle t(*this);
-  TryTypeType tryType = TryTypeType(t, f);
+  auto* ptr = this->ArrayContainer.get();
+  bool called = false;
+  auto task = detail::ListFunctorWrapper<Functor>(called, f, ptr);
 
-  vtkm::ListForEach(tryType, TypeList());
-  if (!tryType.FoundCast)
+  vtkm::ListForEach(task, crossProduct{});
+  if (!called)
   {
-    std::ostringstream out;
-    out << "Could not find appropriate cast for array in CastAndCall1.\n"
-           "Array: ";
-    this->PrintSummary(out);
-    out << "TypeList: " << typeid(TypeList).name()
-        << "\nStorageList: " << typeid(StorageList).name() << "\n";
-    throw vtkm::cont::ErrorBadValue(out.str());
-  }
-}
-
-template <>
-template <typename Functor>
-VTKM_CONT void
-DynamicArrayHandleBase<VTKM_DEFAULT_TYPE_LIST_TAG, VTKM_DEFAULT_STORAGE_LIST_TAG>::CastAndCall(
-  const Functor& f) const
-{
-
-  using TryTypeType = detail::DynamicArrayHandleTryType<Functor, VTKM_DEFAULT_STORAGE_LIST_TAG>;
-
-  // We can remove the copy, as the current DynamicArrayHandle is already
-  // the default one, and no reason to do an atomic increment and increase
-  // library size, and reduce performance
-  TryTypeType tryType = TryTypeType(*this, f);
-
-  vtkm::ListForEach(tryType, VTKM_DEFAULT_TYPE_LIST_TAG());
-  if (!tryType.FoundCast)
-  {
-    throw vtkm::cont::ErrorBadValue("Could not find appropriate cast for array in CastAndCall2.");
+    // throw an exception
+    detail::ThrowCastAndCallException(ptr, &typeid(TypeList), &typeid(StorageList));
   }
 }
 
@@ -549,6 +485,7 @@ struct DynamicTransformTraits<vtkm::cont::DynamicArrayHandleBase<TypeList, Stora
 
 } // namespace internal
 }
+
 } // namespace vtkm::cont
 
 #endif //vtk_m_cont_DynamicArrayHandle_h
