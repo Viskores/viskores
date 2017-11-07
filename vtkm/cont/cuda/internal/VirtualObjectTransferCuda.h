@@ -20,6 +20,7 @@
 #ifndef vtk_m_cont_cuda_internal_VirtualObjectTransferCuda_h
 #define vtk_m_cont_cuda_internal_VirtualObjectTransferCuda_h
 
+#include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
@@ -34,45 +35,108 @@ namespace internal
 namespace detail
 {
 
-template <typename VirtualObject, typename TargetClass>
-__global__ void CreateKernel(VirtualObject* object, const TargetClass* target)
+template <typename VirtualDerivedType>
+__global__ void ConstructVirtualObjectKernel(VirtualDerivedType* deviceObject,
+                                             const VirtualDerivedType* targetObject)
 {
-  object->Bind(target);
+  // Use the "placement new" syntax to construct an object in pre-allocated memory
+  new (deviceObject) VirtualDerivedType(*targetObject);
+}
+
+template <typename VirtualDerivedType>
+__global__ void UpdateVirtualObjectKernel(VirtualDerivedType* deviceObject,
+                                          const VirtualDerivedType* targetObject)
+{
+  *deviceObject = *targetObject;
+}
+
+template <typename VirtualDerivedType>
+__global__ void DeleteVirtualObjectKernel(VirtualDerivedType* deviceObject)
+{
+  deviceObject->~VirtualDerivedType();
 }
 
 } // detail
 
-template <typename VirtualObject, typename TargetClass>
-struct VirtualObjectTransfer<VirtualObject, TargetClass, vtkm::cont::DeviceAdapterTagCuda>
+template <typename VirtualDerivedType>
+struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCuda>
 {
-  static void* Create(VirtualObject& object, const void* target)
+  VTKM_CONT VirtualObjectTransfer(const VirtualDerivedType* virtualObject)
+    : ControlObject(virtualObject)
+    , ExecutionObject(nullptr)
   {
-    TargetClass* cutarget;
-    VTKM_CUDA_CALL(cudaMalloc(&cutarget, sizeof(TargetClass)));
-    VTKM_CUDA_CALL(cudaMemcpyAsync(
-      cutarget, target, sizeof(TargetClass), cudaMemcpyHostToDevice, cudaStreamPerThread));
-
-    VirtualObject* cuobject;
-    VTKM_CUDA_CALL(cudaMalloc(&cuobject, sizeof(VirtualObject)));
-    detail::CreateKernel<<<1, 1, 0, cudaStreamPerThread>>>(cuobject, cutarget);
-    VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
-    VTKM_CUDA_CALL(cudaMemcpyAsync(
-      &object, cuobject, sizeof(VirtualObject), cudaMemcpyDeviceToHost, cudaStreamPerThread));
-    VTKM_CUDA_CALL(cudaFree(cuobject));
-
-    return cutarget;
   }
 
-  static void Update(void* deviceState, const void* target)
+  VTKM_CONT ~VirtualObjectTransfer() { this->ReleaseResources(); }
+
+  VirtualObjectTransfer(const VirtualObjectTransfer&) = delete;
+  void operator=(const VirtualObjectTransfer&) = delete;
+
+  VTKM_CONT const VirtualDerivedType* PrepareForExecution(bool updateData)
   {
-    VTKM_CUDA_CALL(cudaMemcpyAsync(
-      deviceState, target, sizeof(TargetClass), cudaMemcpyHostToDevice, cudaStreamPerThread));
+    if (this->ExecutionObject == nullptr)
+    {
+      // deviceTarget will hold a byte copy of the host object on the device. The virtual table
+      // will be wrong.
+      VirtualDerivedType* deviceTarget;
+      VTKM_CUDA_CALL(cudaMalloc(&deviceTarget, sizeof(VirtualDerivedType)));
+      VTKM_CUDA_CALL(cudaMemcpy(
+        deviceTarget, this->ControlObject, sizeof(VirtualDerivedType), cudaMemcpyHostToDevice));
+
+      // Allocate memory for the object that will eventually be a correct copy on the device.
+      VTKM_CUDA_CALL(cudaMalloc(&this->ExecutionObject, sizeof(VirtualDerivedType)));
+
+      // Initialize the device object
+      detail::ConstructVirtualObjectKernel<<<1, 1>>>(this->ExecutionObject, deviceTarget);
+      VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
+
+      // Clean up intermediate copy
+      VTKM_CUDA_CALL(cudaFree(deviceTarget));
+    }
+    else if (updateData)
+    {
+      // deviceTarget will hold a byte copy of the host object on the device. The virtual table
+      // will be wrong.
+      VirtualDerivedType* deviceTarget;
+      VTKM_CUDA_CALL(cudaMalloc(&deviceTarget, sizeof(VirtualDerivedType)));
+      VTKM_CUDA_CALL(cudaMemcpy(
+        deviceTarget, this->ControlObject, sizeof(VirtualDerivedType), cudaMemcpyHostToDevice));
+
+      // Initialize the device object
+      detail::UpdateVirtualObjectKernel<<<1, 1>>>(this->ExecutionObject, deviceTarget);
+      VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
+
+      // Clean up intermediate copy
+      VTKM_CUDA_CALL(cudaFree(deviceTarget));
+    }
+    else
+    {
+      // Nothing to do. The device object is already up to date.
+    }
+
+    return this->ExecutionObject;
   }
 
-  static void Cleanup(void* deviceState) { VTKM_CUDA_CALL(cudaFree(deviceState)); }
+  VTKM_CONT void ReleaseResources()
+  {
+    if (this->ExecutionObject != nullptr)
+    {
+      detail::DeleteVirtualObjectKernel<<<1, 1>>>(this->ExecutionObject);
+      VTKM_CUDA_CALL(cudaFree(this->ExecutionObject));
+      this->ExecutionObject = nullptr;
+    }
+  }
+
+private:
+  const VirtualDerivedType* ControlObject;
+  VirtualDerivedType* ExecutionObject;
 };
 }
 }
 } // vtkm::cont::internal
+
+#define VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(DerivedType)                                          \
+  template class vtkm::cont::internal::VirtualObjectTransfer<DerivedType,                          \
+                                                             vtkm::cont::DeviceAdapterTagCuda>
 
 #endif // vtk_m_cont_cuda_internal_VirtualObjectTransferCuda_h

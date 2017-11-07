@@ -31,7 +31,7 @@ set(headers
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
   TestingPointLocatorUniformGrid.h
-  TestingVirtualObjectCache.h
+  TestingVirtualObjectHandle.h
   )
 
 vtkm_declare_headers(${headers})

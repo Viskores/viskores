@@ -30,7 +30,7 @@
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
-#include <vtkm/cont/ImplicitFunction.h>
+#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/exec/ExecutionWholeArray.h>
@@ -522,7 +522,7 @@ public:
     VTKM_CONT
     ClipWithImplicitFunction(Clip* clipper,
                              const DynamicCellSet& cellSet,
-                             const vtkm::exec::ImplicitFunction& function,
+                             const vtkm::ImplicitFunction* function,
                              vtkm::cont::CellSetExplicit<>* result)
       : Clipper(clipper)
       , CellSet(&cellSet)
@@ -536,8 +536,8 @@ public:
     {
       // Evaluate the implicit function on the input coordinates using
       // ArrayHandleTransform
-      vtkm::cont::ArrayHandleTransform<ArrayHandleType, vtkm::exec::ImplicitFunctionValue>
-        clipScalars(handle, this->Function);
+      vtkm::cont::ArrayHandleTransform<ArrayHandleType, vtkm::ImplicitFunctionValue> clipScalars(
+        handle, this->Function);
 
       // Clip at locations where the implicit function evaluates to 0
       *this->Result = this->Clipper->Run(*this->CellSet, clipScalars, 0.0, DeviceAdapter());
@@ -546,13 +546,13 @@ public:
   private:
     Clip* Clipper;
     const DynamicCellSet* CellSet;
-    const vtkm::exec::ImplicitFunctionValue Function;
+    vtkm::ImplicitFunctionValue Function;
     vtkm::cont::CellSetExplicit<>* Result;
   };
 
   template <typename CellSetList, typename DeviceAdapter>
   vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
-                                    const vtkm::cont::ImplicitFunction& clipFunction,
+                                    const vtkm::cont::ImplicitFunctionHandle& clipFunction,
                                     const vtkm::cont::CoordinateSystem& coords,
                                     DeviceAdapter device)
   {

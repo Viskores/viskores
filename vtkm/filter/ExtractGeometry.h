@@ -21,7 +21,7 @@
 #ifndef vtk_m_filter_ExtractGeometry_h
 #define vtk_m_filter_ExtractGeometry_h
 
-#include <vtkm/cont/ImplicitFunction.h>
+#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/ExtractGeometry.h>
 
@@ -52,20 +52,12 @@ public:
   ExtractGeometry();
 
   // Set the volume of interest to extract
-  template <typename ImplicitFunctionType, typename DerivedPolicy>
-  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  template <typename ImplicitFunctionType>
-  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func)
+  void SetImplicitFunction(const vtkm::cont::ImplicitFunctionHandle& func)
   {
     this->Function = func;
   }
 
-  std::shared_ptr<vtkm::cont::ImplicitFunction> GetImplicitFunction() const
-  {
-    return this->Function;
-  }
+  const vtkm::cont::ImplicitFunctionHandle& GetImplicitFunction() const { return this->Function; }
 
   VTKM_CONT
   bool GetExtractInside() { return this->ExtractInside; }
@@ -111,7 +103,7 @@ private:
   bool ExtractInside;
   bool ExtractBoundaryCells;
   bool ExtractOnlyBoundaryCells;
-  std::shared_ptr<vtkm::cont::ImplicitFunction> Function;
+  vtkm::cont::ImplicitFunctionHandle Function;
   vtkm::worklet::ExtractGeometry Worklet;
 };
 

@@ -22,7 +22,7 @@
 
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterListTag.h>
-#include <vtkm/cont/ImplicitFunction.h>
+#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -50,7 +50,7 @@ public:
   typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1, _2);
 
-  EvaluateImplicitFunction(const vtkm::exec::ImplicitFunction& function)
+  EvaluateImplicitFunction(const vtkm::ImplicitFunction* function)
     : Function(function)
   {
   }
@@ -58,16 +58,16 @@ public:
   template <typename VecType, typename ScalarType>
   VTKM_EXEC void operator()(const VecType& point, ScalarType& val) const
   {
-    val = this->Function.Value(point);
+    val = this->Function->Value(point);
   }
 
 private:
-  vtkm::exec::ImplicitFunction Function;
+  const vtkm::ImplicitFunction* Function;
 };
 
 template <typename DeviceAdapter>
 void EvaluateOnCoordinates(vtkm::cont::CoordinateSystem points,
-                           const vtkm::cont::ImplicitFunction& function,
+                           const vtkm::cont::ImplicitFunctionHandle& function,
                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>& values,
                            DeviceAdapter device)
 {
@@ -141,13 +141,16 @@ private:
   template <typename DeviceAdapter>
   void TestBox(DeviceAdapter device)
   {
-    std::cout << "Testing vtkm::cont::Box on "
+    std::cout << "Testing vtkm::Box on "
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
-    vtkm::cont::Box box({ 0.0f, -0.5f, -0.5f }, { 1.5f, 1.5f, 0.5f });
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
     implicit_function_detail::EvaluateOnCoordinates(
-      this->Input.GetCoordinateSystem(0), box, values, device);
+      this->Input.GetCoordinateSystem(0),
+      vtkm::cont::make_ImplicitFunctionHandle(
+        vtkm::Box({ 0.0f, -0.5f, -0.5f }, { 1.5f, 1.5f, 0.5f })),
+      values,
+      device);
 
     std::array<vtkm::FloatDefault, 8> expected = {
       { 0.0f, -0.5f, 0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.5f }
@@ -159,17 +162,20 @@ private:
   template <typename DeviceAdapter>
   void TestCylinder(DeviceAdapter device)
   {
-    std::cout << "Testing vtkm::cont::Cylinder on "
+    std::cout << "Testing vtkm::Cylinder on "
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
-    vtkm::cont::Cylinder cylinder;
+    vtkm::Cylinder cylinder;
     cylinder.SetCenter({ 0.0f, 0.0f, 1.0f });
     cylinder.SetAxis({ 0.0f, 1.0f, 0.0f });
     cylinder.SetRadius(1.0f);
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
     implicit_function_detail::EvaluateOnCoordinates(
-      this->Input.GetCoordinateSystem(0), cylinder, values, device);
+      this->Input.GetCoordinateSystem(0),
+      vtkm::cont::ImplicitFunctionHandle(&cylinder, false),
+      values,
+      device);
 
     std::array<vtkm::FloatDefault, 8> expected = {
       { 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f }
@@ -181,7 +187,7 @@ private:
   template <typename DeviceAdapter>
   void TestFrustum(DeviceAdapter device)
   {
-    std::cout << "Testing vtkm::cont::Frustum on "
+    std::cout << "Testing vtkm::Frustum on "
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
     vtkm::Vec<vtkm::FloatDefault, 3> points[8] = {
@@ -194,12 +200,15 @@ private:
       { 1.5f, 1.5f, 1.5f }, // 6
       { 0.5f, 1.5f, 1.5f }  // 7
     };
-    vtkm::cont::Frustum frustum;
+    vtkm::Frustum frustum;
     frustum.CreateFromPoints(points);
 
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
     implicit_function_detail::EvaluateOnCoordinates(
-      this->Input.GetCoordinateSystem(0), frustum, values, device);
+      this->Input.GetCoordinateSystem(0),
+      vtkm::cont::make_ImplicitFunctionHandle(frustum),
+      values,
+      device);
 
     std::array<vtkm::FloatDefault, 8> expected = {
       { 0.0f, 0.0f, 0.0f, 0.0f, 0.316228f, 0.316228f, -0.316228f, 0.316228f }
@@ -211,23 +220,25 @@ private:
   template <typename DeviceAdapter>
   void TestPlane(DeviceAdapter device)
   {
-    std::cout << "Testing vtkm::cont::Plane on "
+    std::cout << "Testing vtkm::Plane on "
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
-    vtkm::cont::Plane plane({ 0.5f, 0.5f, 0.5f }, { 1.0f, 0.0f, 1.0f });
-    vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
+    auto planeHandle = vtkm::cont::make_ImplicitFunctionHandle<vtkm::Plane>(
+      vtkm::make_Vec(0.5f, 0.5f, 0.5f), vtkm::make_Vec(1.0f, 0.0f, 1.0f));
+    auto plane = static_cast<vtkm::Plane*>(planeHandle.Get());
 
+    vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
     implicit_function_detail::EvaluateOnCoordinates(
-      this->Input.GetCoordinateSystem(0), plane, values, device);
+      this->Input.GetCoordinateSystem(0), planeHandle, values, device);
     std::array<vtkm::FloatDefault, 8> expected1 = {
       { -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f }
     };
     VTKM_TEST_ASSERT(implicit_function_detail::TestArrayEqual(values, expected1),
                      "Result does not match expected values");
 
-    plane.SetNormal({ -1.0f, 0.0f, -1.0f });
+    plane->SetNormal({ -1.0f, 0.0f, -1.0f });
     implicit_function_detail::EvaluateOnCoordinates(
-      this->Input.GetCoordinateSystem(0), plane, values, device);
+      this->Input.GetCoordinateSystem(0), planeHandle, values, device);
     std::array<vtkm::FloatDefault, 8> expected2 = {
       { 1.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f }
     };
@@ -238,13 +249,15 @@ private:
   template <typename DeviceAdapter>
   void TestSphere(DeviceAdapter device)
   {
-    std::cout << "Testing vtkm::cont::Sphere on "
+    std::cout << "Testing vtkm::Sphere on "
               << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName() << "\n";
 
-    vtkm::cont::Sphere sphere({ 0.0f, 0.0f, 0.0f }, 1.0f);
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> values;
     implicit_function_detail::EvaluateOnCoordinates(
-      this->Input.GetCoordinateSystem(0), sphere, values, device);
+      this->Input.GetCoordinateSystem(0),
+      vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(vtkm::make_Vec(0.0f, 0.0f, 0.0f), 1.0f),
+      values,
+      device);
 
     std::array<vtkm::FloatDefault, 8> expected = {
       { -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 2.0f, 1.0f }

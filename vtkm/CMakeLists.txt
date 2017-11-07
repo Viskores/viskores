@@ -35,6 +35,7 @@ set(headers
   CellShape.h
   CellTraits.h
   Hash.h
+  ImplicitFunction.h
   ListTag.h
   Math.h
   Matrix.h
@@ -55,6 +56,7 @@ set(headers
   VectorAnalysis.h
   VecTraits.h
   VecVariable.h
+  VirtualObjectBase.h
   UnaryPredicates.h
   )
 

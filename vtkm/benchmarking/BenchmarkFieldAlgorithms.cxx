@@ -24,7 +24,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/ImplicitFunction.h>
+#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -264,7 +264,7 @@ public:
   typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1, _2);
 
-  EvaluateImplicitFunction(const ImplicitFunction& function)
+  EvaluateImplicitFunction(const ImplicitFunction* function)
     : Function(function)
   {
   }
@@ -272,11 +272,11 @@ public:
   template <typename VecType, typename ScalarType>
   VTKM_EXEC void operator()(const VecType& point, ScalarType& val) const
   {
-    val = this->Function.Value(point);
+    val = this->Function->Value(point);
   }
 
 private:
-  ImplicitFunction Function;
+  const ImplicitFunction* Function;
 };
 
 template <typename T1, typename T2>
@@ -286,7 +286,7 @@ public:
   typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1, _2);
 
-  Evaluate2ImplicitFunctions(const T1& f1, const T2& f2)
+  Evaluate2ImplicitFunctions(const T1* f1, const T2* f2)
     : Function1(f1)
     , Function2(f2)
   {
@@ -295,12 +295,12 @@ public:
   template <typename VecType, typename ScalarType>
   VTKM_EXEC void operator()(const VecType& point, ScalarType& val) const
   {
-    val = this->Function1.Value(point) + this->Function2.Value(point);
+    val = this->Function1->Value(point) + this->Function2->Value(point);
   }
 
 private:
-  T1 Function1;
-  T2 Function2;
+  const T1* Function1;
+  const T2* Function2;
 };
 
 struct ValueTypes : vtkm::ListTagBase<vtkm::Float32, vtkm::Float64>
@@ -680,7 +680,7 @@ private:
   {
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Points;
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> Result;
-    vtkm::cont::Sphere Sphere1, Sphere2;
+    vtkm::Sphere Sphere1, Sphere2;
   };
 
   static ImplicitFunctionBenchData MakeImplicitFunctionBenchData()
@@ -703,8 +703,8 @@ private:
       portal.Set(i, vtkm::make_Vec(distx(rangen), disty(rangen), distz(rangen)));
     }
 
-    data.Sphere1 = vtkm::cont::Sphere({ 0.22f, 0.33f, 0.44f }, 0.55f);
-    data.Sphere2 = vtkm::cont::Sphere({ 0.22f, 0.33f, 0.11f }, 0.77f);
+    data.Sphere1 = vtkm::Sphere({ 0.22f, 0.33f, 0.44f }, 0.55f);
+    data.Sphere2 = vtkm::Sphere({ 0.22f, 0.33f, 0.11f }, 0.77f);
 
     return data;
   }
@@ -720,10 +720,13 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      using EvalWorklet = EvaluateImplicitFunction<vtkm::cont::Sphere>;
+      using EvalWorklet = EvaluateImplicitFunction<vtkm::Sphere>;
       using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet, DeviceAdapterTag>;
 
-      EvalWorklet eval(Internal.Sphere1);
+      auto handle = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
+      auto function =
+        static_cast<const vtkm::Sphere*>(handle.PrepareForExecution(DeviceAdapterTag()));
+      EvalWorklet eval(function);
 
       vtkm::cont::Timer<DeviceAdapterTag> timer;
       EvalDispatcher(eval).Invoke(this->Internal.Points, this->Internal.Result);
@@ -734,8 +737,8 @@ private:
     std::string Description() const
     {
       std::stringstream description;
-      description << "Implicit Function (vtkm::cont::Sphere) on "
-                  << Internal.Points.GetNumberOfValues() << " points";
+      description << "Implicit Function (vtkm::Sphere) on " << Internal.Points.GetNumberOfValues()
+                  << " points";
       return description.str();
     }
 
@@ -743,9 +746,9 @@ private:
   };
 
   template <typename Value>
-  struct BenchDynamicImplicitFunction
+  struct BenchVirtualImplicitFunction
   {
-    BenchDynamicImplicitFunction()
+    BenchVirtualImplicitFunction()
       : Internal(MakeImplicitFunctionBenchData())
     {
     }
@@ -753,10 +756,11 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      using EvalWorklet = EvaluateImplicitFunction<vtkm::exec::ImplicitFunction>;
+      using EvalWorklet = EvaluateImplicitFunction<vtkm::ImplicitFunction>;
       using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet, DeviceAdapterTag>;
 
-      EvalWorklet eval(Internal.Sphere1.PrepareForExecution(DeviceAdapterTag()));
+      auto sphere = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
+      EvalWorklet eval(sphere.PrepareForExecution(DeviceAdapterTag()));
 
       vtkm::cont::Timer<DeviceAdapterTag> timer;
       EvalDispatcher(eval).Invoke(this->Internal.Points, this->Internal.Result);
@@ -767,7 +771,7 @@ private:
     std::string Description() const
     {
       std::stringstream description;
-      description << "Implicit Function (DynamicImplicitFunction) on "
+      description << "Implicit Function (VirtualImplicitFunction) on "
                   << Internal.Points.GetNumberOfValues() << " points";
       return description.str();
     }
@@ -786,10 +790,14 @@ private:
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      using EvalWorklet = Evaluate2ImplicitFunctions<vtkm::cont::Sphere, vtkm::cont::Sphere>;
+      using EvalWorklet = Evaluate2ImplicitFunctions<vtkm::Sphere, vtkm::Sphere>;
       using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet, DeviceAdapterTag>;
 
-      EvalWorklet eval(Internal.Sphere1, Internal.Sphere2);
+      auto h1 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
+      auto h2 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere2);
+      auto f1 = static_cast<const vtkm::Sphere*>(h1.PrepareForExecution(DeviceAdapterTag()));
+      auto f2 = static_cast<const vtkm::Sphere*>(h2.PrepareForExecution(DeviceAdapterTag()));
+      EvalWorklet eval(f1, f2);
 
       vtkm::cont::Timer<DeviceAdapterTag> timer;
       EvalDispatcher(eval).Invoke(this->Internal.Points, this->Internal.Result);
@@ -800,8 +808,8 @@ private:
     std::string Description() const
     {
       std::stringstream description;
-      description << "Implicit Function 2x(vtkm::cont::Sphere) on "
-                  << Internal.Points.GetNumberOfValues() << " points";
+      description << "Implicit Function 2x(vtkm::Sphere) on " << Internal.Points.GetNumberOfValues()
+                  << " points";
       return description.str();
     }
 
@@ -809,9 +817,9 @@ private:
   };
 
   template <typename Value>
-  struct Bench2DynamicImplicitFunctions
+  struct Bench2VirtualImplicitFunctions
   {
-    Bench2DynamicImplicitFunctions()
+    Bench2VirtualImplicitFunctions()
       : Internal(MakeImplicitFunctionBenchData())
     {
     }
@@ -820,11 +828,13 @@ private:
     vtkm::Float64 operator()()
     {
       using EvalWorklet =
-        Evaluate2ImplicitFunctions<vtkm::exec::ImplicitFunction, vtkm::exec::ImplicitFunction>;
+        Evaluate2ImplicitFunctions<vtkm::ImplicitFunction, vtkm::ImplicitFunction>;
       using EvalDispatcher = vtkm::worklet::DispatcherMapField<EvalWorklet, DeviceAdapterTag>;
 
-      EvalWorklet eval(Internal.Sphere1.PrepareForExecution(DeviceAdapterTag()),
-                       Internal.Sphere2.PrepareForExecution(DeviceAdapterTag()));
+      auto s1 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere1);
+      auto s2 = vtkm::cont::make_ImplicitFunctionHandle(Internal.Sphere2);
+      EvalWorklet eval(s1.PrepareForExecution(DeviceAdapterTag()),
+                       s2.PrepareForExecution(DeviceAdapterTag()));
 
       vtkm::cont::Timer<DeviceAdapterTag> timer;
       EvalDispatcher(eval).Invoke(this->Internal.Points, this->Internal.Result);
@@ -835,7 +845,7 @@ private:
     std::string Description() const
     {
       std::stringstream description;
-      description << "Implicit Function 2x(DynamicImplicitFunction) on "
+      description << "Implicit Function 2x(VirtualImplicitFunction) on "
                   << Internal.Points.GetNumberOfValues() << " points";
       return description.str();
     }
@@ -844,9 +854,9 @@ private:
   };
 
   VTKM_MAKE_BENCHMARK(ImplicitFunction, BenchImplicitFunction);
-  VTKM_MAKE_BENCHMARK(ImplicitFunctionDynamic, BenchDynamicImplicitFunction);
+  VTKM_MAKE_BENCHMARK(ImplicitFunctionVirtual, BenchVirtualImplicitFunction);
   VTKM_MAKE_BENCHMARK(ImplicitFunction2, Bench2ImplicitFunctions);
-  VTKM_MAKE_BENCHMARK(ImplicitFunctionDynamic2, Bench2DynamicImplicitFunctions);
+  VTKM_MAKE_BENCHMARK(ImplicitFunctionVirtual2, Bench2VirtualImplicitFunctions);
 
 public:
   static VTKM_CONT int Run(int benchmarks)
@@ -887,9 +897,9 @@ public:
 
       std::cout << "\nBenchmarking Implicit Function\n";
       VTKM_RUN_BENCHMARK(ImplicitFunction, FloatDefaultType());
-      VTKM_RUN_BENCHMARK(ImplicitFunctionDynamic, FloatDefaultType());
+      VTKM_RUN_BENCHMARK(ImplicitFunctionVirtual, FloatDefaultType());
       VTKM_RUN_BENCHMARK(ImplicitFunction2, FloatDefaultType());
-      VTKM_RUN_BENCHMARK(ImplicitFunctionDynamic2, FloatDefaultType());
+      VTKM_RUN_BENCHMARK(ImplicitFunctionVirtual2, FloatDefaultType());
     }
 
     return 0;

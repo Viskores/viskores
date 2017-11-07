@@ -17,14 +17,14 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_testing_TestingVirtualObjectCache_h
-#define vtk_m_cont_testing_TestingVirtualObjectCache_h
+#ifndef vtk_m_cont_testing_TestingVirtualObjectHandle_h
+#define vtk_m_cont_testing_TestingVirtualObjectHandle_h
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/VirtualObjectCache.h>
+#include <vtkm/cont/VirtualObjectHandle.h>
 #include <vtkm/cont/testing/Testing.h>
 
 #define ARRAY_LEN 8
@@ -39,62 +39,76 @@ namespace testing
 namespace virtual_object_detail
 {
 
-class Transformer
+class Transformer : public vtkm::VirtualObjectBase
 {
 public:
-  template <typename T>
-  VTKM_EXEC void Bind(const T* target)
+  VTKM_EXEC
+  virtual vtkm::FloatDefault Eval(vtkm::FloatDefault val) const = 0;
+};
+
+class Square : public Transformer
+{
+public:
+  VTKM_EXEC
+  vtkm::FloatDefault Eval(vtkm::FloatDefault val) const override { return val * val; }
+};
+
+class Multiply : public Transformer
+{
+public:
+  VTKM_CONT
+  void SetMultiplicand(vtkm::FloatDefault val)
   {
-    this->Concrete = target;
-    this->Caller = [](const void* concrete, vtkm::FloatDefault val) {
-      return static_cast<const T*>(concrete)->operator()(val);
-    };
+    this->Multiplicand = val;
+    this->Modified();
   }
 
+  VTKM_CONT
+  vtkm::FloatDefault GetMultiplicand() const { return this->Multiplicand; }
+
   VTKM_EXEC
-  vtkm::FloatDefault operator()(vtkm::FloatDefault val) const
+  vtkm::FloatDefault Eval(vtkm::FloatDefault val) const override
   {
-    return this->Caller(this->Concrete, val);
+    return val * this->Multiplicand;
   }
 
 private:
-  using Signature = vtkm::FloatDefault(const void*, vtkm::FloatDefault);
-
-  const void* Concrete;
-  Signature* Caller;
+  vtkm::FloatDefault Multiplicand = 0.0f;
 };
 
-struct Square
+class TransformerFunctor
 {
-  VTKM_EXEC
-  vtkm::FloatDefault operator()(vtkm::FloatDefault val) const { return val * val; }
-};
+public:
+  TransformerFunctor() = default;
+  explicit TransformerFunctor(const Transformer* impl)
+    : Impl(impl)
+  {
+  }
 
-struct Multiply
-{
   VTKM_EXEC
-  vtkm::FloatDefault operator()(vtkm::FloatDefault val) const { return val * this->Multiplicand; }
+  vtkm::FloatDefault operator()(vtkm::FloatDefault val) const { return this->Impl->Eval(val); }
 
-  vtkm::FloatDefault Multiplicand;
+private:
+  const Transformer* Impl;
 };
 
 } // virtual_object_detail
 
 template <typename DeviceAdapterList>
-class TestingVirtualObjectCache
+class TestingVirtualObjectHandle
 {
 private:
   using FloatArrayHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
   using ArrayTransform =
-    vtkm::cont::ArrayHandleTransform<FloatArrayHandle, virtual_object_detail::Transformer>;
-  using TransformerCache = vtkm::cont::VirtualObjectCache<virtual_object_detail::Transformer>;
+    vtkm::cont::ArrayHandleTransform<FloatArrayHandle, virtual_object_detail::TransformerFunctor>;
+  using TransformerHandle = vtkm::cont::VirtualObjectHandle<virtual_object_detail::Transformer>;
 
   class TestStage1
   {
   public:
-    TestStage1(const FloatArrayHandle& input, TransformerCache& manager)
+    TestStage1(const FloatArrayHandle& input, TransformerHandle& handle)
       : Input(&input)
-      , Manager(&manager)
+      , Handle(&handle)
     {
     }
 
@@ -107,7 +121,9 @@ private:
 
       for (int n = 0; n < 2; ++n)
       {
-        ArrayTransform transformed(*this->Input, this->Manager->GetVirtualObject(device));
+        virtual_object_detail::TransformerFunctor tfnctr(this->Handle->PrepareForExecution(device));
+        ArrayTransform transformed(*this->Input, tfnctr);
+
         FloatArrayHandle output;
         Algorithm::Copy(transformed, output);
         auto portal = output.GetPortalConstControl();
@@ -120,14 +136,14 @@ private:
         if (n == 0)
         {
           std::cout << "\tReleaseResources and test again..." << std::endl;
-          this->Manager->ReleaseResources();
+          this->Handle->ReleaseExecutionResources();
         }
       }
     }
 
   private:
     const FloatArrayHandle* Input;
-    TransformerCache* Manager;
+    TransformerHandle* Handle;
   };
 
   class TestStage2
@@ -135,10 +151,10 @@ private:
   public:
     TestStage2(const FloatArrayHandle& input,
                virtual_object_detail::Multiply& mul,
-               TransformerCache& manager)
+               TransformerHandle& handle)
       : Input(&input)
       , Mul(&mul)
-      , Manager(&manager)
+      , Handle(&handle)
     {
     }
 
@@ -149,17 +165,18 @@ private:
       std::cout << "\tDeviceAdapter: " << vtkm::cont::DeviceAdapterTraits<DeviceAdapter>::GetName()
                 << std::endl;
 
-      this->Mul->Multiplicand = 2;
-      this->Manager->SetRefreshFlag(true);
+      this->Mul->SetMultiplicand(2);
       for (int n = 0; n < 2; ++n)
       {
-        ArrayTransform transformed(*this->Input, this->Manager->GetVirtualObject(device));
+        virtual_object_detail::TransformerFunctor tfnctr(this->Handle->PrepareForExecution(device));
+        ArrayTransform transformed(*this->Input, tfnctr);
+
         FloatArrayHandle output;
         Algorithm::Copy(transformed, output);
         auto portal = output.GetPortalConstControl();
         for (vtkm::Id i = 0; i < ARRAY_LEN; ++i)
         {
-          VTKM_TEST_ASSERT(portal.Get(i) == FloatDefault(i) * this->Mul->Multiplicand,
+          VTKM_TEST_ASSERT(portal.Get(i) == FloatDefault(i) * this->Mul->GetMultiplicand(),
                            "\tIncorrect result");
         }
         std::cout << "\tSuccess." << std::endl;
@@ -167,8 +184,7 @@ private:
         if (n == 0)
         {
           std::cout << "\tUpdate and test again..." << std::endl;
-          this->Mul->Multiplicand = 3;
-          this->Manager->SetRefreshFlag(true);
+          this->Mul->SetMultiplicand(3);
         }
       }
     }
@@ -176,7 +192,7 @@ private:
   private:
     const FloatArrayHandle* Input;
     virtual_object_detail::Multiply* Mul;
-    TransformerCache* Manager;
+    TransformerHandle* Handle;
   };
 
 public:
@@ -190,20 +206,20 @@ public:
       portal.Set(i, vtkm::FloatDefault(i));
     }
 
-    TransformerCache manager;
+    TransformerHandle handle;
 
     std::cout << "Testing with concrete type 1 (Square)..." << std::endl;
     virtual_object_detail::Square sqr;
-    manager.Bind(&sqr, DeviceAdapterList());
-    vtkm::ListForEach(TestStage1(input, manager), DeviceAdapterList());
+    handle.Reset(&sqr, false, DeviceAdapterList());
+    vtkm::ListForEach(TestStage1(input, handle), DeviceAdapterList());
 
     std::cout << "Reset..." << std::endl;
-    manager.Reset();
+    handle.Reset();
 
     std::cout << "Testing with concrete type 2 (Multiply)..." << std::endl;
     virtual_object_detail::Multiply mul;
-    manager.Bind(&mul, DeviceAdapterList());
-    vtkm::ListForEach(TestStage2(input, mul, manager), DeviceAdapterList());
+    handle.Reset(&mul, false, DeviceAdapterList());
+    vtkm::ListForEach(TestStage2(input, mul, handle), DeviceAdapterList());
   }
 };
 }

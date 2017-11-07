@@ -45,15 +45,6 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-template <typename ImplicitFunctionType, typename DerivedPolicy>
-inline void ExtractPoints::SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func,
-                                               const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  func->ResetDevices(DerivedPolicy::DeviceAdapterList);
-  this->Function = func;
-}
-
-//-----------------------------------------------------------------------------
 inline VTKM_CONT ExtractPoints::ExtractPoints()
   : vtkm::filter::FilterDataSet<ExtractPoints>()
   , ExtractInside(true)
@@ -79,7 +70,7 @@ inline vtkm::filter::Result ExtractPoints::DoExecute(
 
   outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
                            vtkm::filter::ApplyPolicy(coords, policy),
-                           *this->Function,
+                           this->Function,
                            this->ExtractInside,
                            device);
 
