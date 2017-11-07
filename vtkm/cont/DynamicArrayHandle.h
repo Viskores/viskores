@@ -357,8 +357,8 @@ public:
   /// two lists to VTKM_DEFAULT_TYPE_LIST_TAG and VTK_DEFAULT_STORAGE_LIST_TAG,
   /// respectively.
   ///
-  template <typename Functor>
-  VTKM_CONT void CastAndCall(const Functor& f) const;
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCall(const Functor& f, Args&&...) const;
 
   /// \brief Create a new array of the same type as this array.
   ///
@@ -450,8 +450,9 @@ VTKM_CONT_EXPORT void ThrowCastAndCallException(PolymorphicArrayHandleContainerB
 } // namespace detail
 
 template <typename TypeList, typename StorageList>
-template <typename Functor>
-VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const Functor& f) const
+template <typename Functor, typename... Args>
+VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const Functor& f,
+                                                                          Args&&... args) const
 {
   //For optimizations we should compile once the cross product for the default types
   //and make it extern
@@ -459,7 +460,8 @@ VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const 
 
   bool called = false;
   auto* ptr = this->ArrayContainer.get();
-  vtkm::ListForEach(detail::DynamicArrayHandleTry(ptr), crossProduct{}, f, called);
+  vtkm::ListForEach(
+    detail::DynamicArrayHandleTry(ptr), crossProduct{}, f, called, std::forward<Args>(args)...);
   if (!called)
   {
     // throw an exception

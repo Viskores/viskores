@@ -224,10 +224,10 @@ public:
   virtual void PrintSummary(std::ostream& out) const;
 };
 
-template <typename Functor>
-void CastAndCall(const vtkm::cont::CoordinateSystem& coords, const Functor& f)
+template <typename Functor, typename... Args>
+void CastAndCall(const vtkm::cont::CoordinateSystem& coords, const Functor& f, Args&&... args)
 {
-  coords.GetData().CastAndCall(f);
+  coords.GetData().CastAndCall(f, std::forward<Args>(args)...);
 }
 
 namespace internal
