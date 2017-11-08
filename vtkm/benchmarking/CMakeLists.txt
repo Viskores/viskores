@@ -18,23 +18,34 @@
 ##  this software.
 ##============================================================================
 
-set(benchmark_srcs
-  BenchmarkArrayTransfer.cxx
-  BenchmarkCopySpeeds.cxx
-  BenchmarkDeviceAdapter.cxx
-  BenchmarkFieldAlgorithms.cxx
-  BenchmarkTopologyAlgorithms.cxx
+set(benchmarks
+  BenchmarkArrayTransfer
+  BenchmarkCopySpeeds
+  BenchmarkDeviceAdapter
+  BenchmarkFieldAlgorithms
+  BenchmarkTopologyAlgorithms
   )
 
-set(benchmark_headers
-  Benchmarker.h
-  )
+#set(benchmark_headers
+#  Benchmarker.h
+#  )
 
-vtkm_benchmarks(BACKEND SERIAL SOURCES ${benchmark_srcs} ${benchmark_headers})
-if (VTKm_ENABLE_CUDA)
-  vtkm_benchmarks(BACKEND CUDA SOURCES ${benchmark_srcs} ${benchmark_headers})
-endif()
-if (VTKm_ENABLE_TBB)
-  vtkm_benchmarks(BACKEND TBB SOURCES ${benchmark_srcs} ${benchmark_headers})
-endif()
+function(add_benchmark name files)
+  add_executable(${name}_SERIAL ${files})
+  target_link_libraries(${name}_SERIAL PRIVATE vtkm_cont)
 
+  if (TARGET vtkm::tbb)
+    add_executable(${name}_TBB ${files})
+    target_link_libraries(${name}_TBB PRIVATE vtkm_cont)
+  endif()
+
+  if (TARGET vtkm::cuda)
+    set_source_files_properties(${files} PROPERTIES LANGUAGE "CUDA")
+    add_executable(${name}_CUDA ${files})
+    target_link_libraries(${name}_CUDA PRIVATE vtkm_cont)
+  endif()
+endfunction()
+
+foreach (benchmark ${benchmarks})
+  add_benchmark(${benchmark} ${benchmark}.cxx)
+endforeach ()
