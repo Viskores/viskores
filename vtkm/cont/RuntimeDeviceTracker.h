@@ -74,6 +74,17 @@ public:
     this->SetDeviceState(Traits::GetId(), Traits::GetName(), false);
   }
 
+  /// Report a failure to allocate memory on a device, this will flag the
+  /// device as being unusable for all future invocations of the instance of
+  /// the filter.
+  ///
+  VTKM_CONT void ReportAllocationFailure(vtkm::Int8 deviceId,
+                                         const std::string& name,
+                                         const vtkm::cont::ErrorBadAllocation&)
+  {
+    this->SetDeviceState(deviceId, name, false);
+  }
+
   /// Reset the tracker for the given device. This will discard any updates
   /// caused by reported failures
   ///

@@ -132,9 +132,8 @@ template <typename Type, typename Storage>
 VTKM_CONT vtkm::cont::ArrayHandle<Type, Storage>* DynamicArrayHandleTryCast(
   vtkm::cont::detail::PolymorphicArrayHandleContainerBase* arrayContainer)
 {
-  vtkm::cont::detail::PolymorphicArrayHandleContainer<Type, Storage>* downcastContainer =
-    dynamic_cast<vtkm::cont::detail::PolymorphicArrayHandleContainer<Type, Storage>*>(
-      arrayContainer);
+  vtkm::cont::detail::PolymorphicArrayHandleContainer<Type, Storage>* downcastContainer = nullptr;
+  downcastContainer = dynamic_cast<decltype(downcastContainer)>(arrayContainer);
   if (downcastContainer != nullptr)
   {
     return &downcastContainer->Array;
@@ -407,13 +406,10 @@ using DynamicArrayHandle =
 namespace detail
 {
 
-template <typename Functor>
-struct ListFunctorWrapper
+struct DynamicArrayHandleTry
 {
-  ListFunctorWrapper(bool& called, const Functor& f, PolymorphicArrayHandleContainerBase* c)
-    : Called(called)
-    , Container(c)
-    , Function(f)
+  DynamicArrayHandleTry(const PolymorphicArrayHandleContainerBase* const c)
+    : Container(c)
   {
   }
 
@@ -425,16 +421,17 @@ struct ListFunctorWrapper
     this->run(std::forward<decltype(p)>(p), invalid{}, args...);
   }
 
-  template <typename T, typename U, typename... Args>
-  void run(std::pair<T, U>&&, std::false_type, Args&&... args) const
+  template <typename T, typename U, typename Functor, typename... Args>
+  void run(std::pair<T, U>&&, std::false_type, Functor&& f, bool& called, Args&&... args) const
   {
-    if (!this->Called)
+    if (!called)
     {
-      vtkm::cont::ArrayHandle<T, U>* handle = DynamicArrayHandleTryCast<T, U>(this->Container);
-      if (handle)
+      using downcastType = const vtkm::cont::detail::PolymorphicArrayHandleContainer<T, U>* const;
+      downcastType downcastContainer = dynamic_cast<downcastType>(this->Container);
+      if (downcastContainer)
       {
-        this->Function(*handle, std::forward<Args>(args)...);
-        this->Called = true;
+        f(downcastContainer->Array, std::forward<Args>(args)...);
+        called = true;
       }
     }
   }
@@ -444,9 +441,7 @@ struct ListFunctorWrapper
   {
   }
 
-  bool& Called;
-  PolymorphicArrayHandleContainerBase* Container;
-  const Functor& Function;
+  const PolymorphicArrayHandleContainerBase* const Container;
 };
 
 VTKM_CONT_EXPORT void ThrowCastAndCallException(PolymorphicArrayHandleContainerBase*,
@@ -462,11 +457,9 @@ VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const 
   //and make it extern
   using crossProduct = typename vtkm::ListCrossProduct<TypeList, StorageList>;
 
-  auto* ptr = this->ArrayContainer.get();
   bool called = false;
-  auto task = detail::ListFunctorWrapper<Functor>(called, f, ptr);
-
-  vtkm::ListForEach(task, crossProduct{});
+  auto* ptr = this->ArrayContainer.get();
+  vtkm::ListForEach(detail::DynamicArrayHandleTry(ptr), crossProduct{}, f, called);
   if (!called)
   {
     // throw an exception
