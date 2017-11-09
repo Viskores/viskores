@@ -193,8 +193,9 @@ private:
       vtkm::Id nids = cellSet.GetNumberOfPointsInCell(i);
       cellSet.GetIndices(i, ids);
       out << nids;
+      auto IdPortal = ids.GetPortalConstControl();
       for (int j = 0; j < nids; ++j)
-        out << " " << ids.GetPortalControl().Get(j);
+        out << " " << IdPortal.Get(j);
       out << std::endl;
     }
 
