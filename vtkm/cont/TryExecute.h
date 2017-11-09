@@ -94,7 +94,7 @@ template <typename Functor, typename DeviceList, typename... Args>
 VTKM_CONT bool TryExecuteImpl(Functor&& functor,
                               std::true_type,
                               std::true_type,
-                              vtkm::cont::RuntimeDeviceTracker tracker,
+                              vtkm::cont::RuntimeDeviceTracker& tracker,
                               DeviceList list,
                               Args&&... args)
 {

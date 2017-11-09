@@ -120,12 +120,12 @@ void TryExecuteAllExplicit(DeviceList, bool expectSuccess)
 struct EdgeCaseFunctor
 {
   template <typename DeviceList>
-  bool operator()(DeviceList tags, int, float, bool) const
+  bool operator()(DeviceList, int, float, bool) const
   {
     return true;
   }
   template <typename DeviceList>
-  bool operator()(DeviceList tags) const
+  bool operator()(DeviceList) const
   {
     return true;
   }
@@ -141,36 +141,27 @@ void TryExecuteAllEdgeCases()
   vtkm::cont::TryExecute(EdgeCaseFunctor());
 
   std::cout << "TryExecute no Runtime, no Device, with parameters." << std::endl;
-  vtkm::cont::TryExecute(EdgeCaseFunctor(), int{ 42 }, float{ 3.14 }, bool{ true });
+  vtkm::cont::TryExecute(EdgeCaseFunctor(), int{ 42 }, float{ 3.14f }, bool{ true });
 
   std::cout << "TryExecute with Runtime, no Device, no parameters." << std::endl;
   vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker);
 
   std::cout << "TryExecute with Runtime, no Device, with parameters." << std::endl;
-  vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker, int{ 42 }, float{ 3.14 }, bool{ true });
+  vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker, int{ 42 }, float{ 3.14f }, bool{ true });
 
   std::cout << "TryExecute no Runtime, with Device, no parameters." << std::endl;
   vtkm::cont::TryExecute(EdgeCaseFunctor(), SingleValidList());
 
   std::cout << "TryExecute no Runtime, with Device, with parameters." << std::endl;
   vtkm::cont::TryExecute(
-    EdgeCaseFunctor(), SingleValidList(), int{ 42 }, float{ 3.14 }, bool{ true });
+    EdgeCaseFunctor(), SingleValidList(), int{ 42 }, float{ 3.14f }, bool{ true });
 
   std::cout << "TryExecute with Runtime, with Device, no parameters." << std::endl;
   vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker, SingleValidList());
 
   std::cout << "TryExecute with Runtime, with Device, with parameters." << std::endl;
   vtkm::cont::TryExecute(
-    EdgeCaseFunctor(), tracker, SingleValidList(), int{ 42 }, float{ 3.14 }, bool{ true });
-
-
-  const vtkm::cont::RuntimeDeviceTracker constTracker;
-  std::cout << "TryExecute with const Runtime, no Device, no parameters." << std::endl;
-  vtkm::cont::TryExecute(EdgeCaseFunctor(), constTracker);
-
-  std::cout << "TryExecute with const Runtime, with Device, with parameters." << std::endl;
-
-  vtkm::cont::TryExecute(EdgeCaseFunctor(), constTracker, SingleValidList());
+    EdgeCaseFunctor(), tracker, SingleValidList(), int{ 42 }, float{ 3.14f }, bool{ true });
 }
 
 template <typename DeviceList>
