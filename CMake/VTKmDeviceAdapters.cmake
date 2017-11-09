@@ -67,5 +67,127 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
 
   #This is where we would add the -gencode flags so that all cuda code
   #way compiled properly
+  #---------------------------------------------------------------------------
+  # Setup build flags for CUDA to have C++11 support
+  #---------------------------------------------------------------------------
+  if(NOT MSVC)
+    if(NOT "--std" IN_LIST CUDA_NVCC_FLAGS)
+      list(APPEND CUDA_NVCC_FLAGS --std c++11)
+    endif()
+  endif()
+
+  #---------------------------------------------------------------------------
+  # Populates CUDA_NVCC_FLAGS with the best set of flags to compile for a
+  # given GPU architecture. The majority of developers should leave the
+  # option at the default of 'native' which uses system introspection to
+  # determine the smallest numerous of virtual and real architectures it
+  # should target.
+  #
+  # The option of 'all' is provided for people generating libraries that
+  # will deployed to any number of machines, it will compile all CUDA code
+  # for all major virtual architectures, guaranteeing that the code will run
+  # anywhere.
+  #
+  #
+  # 1 - native
+  #   - Uses system introspection to determine compile flags
+  # 2 - fermi
+  #   - Uses: --generate-code=arch=compute_20,code=compute_20
+  # 3 - kepler
+  #   - Uses: --generate-code=arch=compute_30,code=compute_30
+  #   - Uses: --generate-code=arch=compute_35,code=compute_35
+  # 4 - maxwell
+  #   - Uses: --generate-code=arch=compute_50,code=compute_50
+  #   - Uses: --generate-code=arch=compute_52,code=compute_52
+  # 5 - pascal
+  #   - Uses: --generate-code=arch=compute_60,code=compute_60
+  #   - Uses: --generate-code=arch=compute_61,code=compute_61
+  # 6 - volta
+  #   - Uses: --generate-code=arch=compute_70,code=compute_70
+  # 7 - all
+  #   - Uses: --generate-code=arch=compute_20,code=compute_20
+  #   - Uses: --generate-code=arch=compute_30,code=compute_30
+  #   - Uses: --generate-code=arch=compute_35,code=compute_35
+  #   - Uses: --generate-code=arch=compute_50,code=compute_50
+  #   - Uses: --generate-code=arch=compute_52,code=compute_52
+  #   - Uses: --generate-code=arch=compute_60,code=compute_60
+  #   - Uses: --generate-code=arch=compute_61,code=compute_61
+  #   - Uses: --generate-code=arch=compute_70,code=compute_70
+  #
+
+  #specify the property
+  set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
+  set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta all)
+
+  #detect what the propery is set too
+  if(VTKm_CUDA_Architecture STREQUAL "native")
+
+    if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)
+      #Use the cached value
+      list(APPEND CUDA_NVCC_FLAGS ${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT})
+    else()
+
+      #run execute_process to do auto_detection
+      if(CMAKE_GENERATOR MATCHES "Visual Studio")
+        set(args "-ccbin" "${CMAKE_CXX_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
+      elseif(CUDA_HOST_COMPILER)
+        set(args "-ccbin" "${CUDA_HOST_COMPILER}" "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
+      else()
+        set(args "--run" "${VTKm_CMAKE_MODULE_PATH}/VTKmDetectCUDAVersion.cu")
+      endif()
+
+      execute_process(
+              COMMAND ${CUDA_NVCC_EXECUTABLE} ${args}
+              RESULT_VARIABLE ran_properly
+              OUTPUT_VARIABLE run_output
+              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+      if(ran_properly EQUAL 0)
+        #find the position of the "--generate-code" output. With some compilers such as
+        #msvc we get compile output plus run output. So we need to strip out just the
+        #run output
+        string(FIND "${run_output}" "--generate-code" position)
+        string(SUBSTRING "${run_output}" ${position} -1 run_output)
+
+        list(APPEND CUDA_NVCC_FLAGS ${run_output})
+        set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
+                "device type(s) for cuda[native]")
+      else()
+        set(VTKm_CUDA_Architecture "fermi")
+      endif()
+    endif()
+  endif()
+
+  #since when we are native we can fail, and fall back to "fermi" these have
+  #to happen after, and separately of the native check
+  if(VTKm_CUDA_Architecture STREQUAL "fermi")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_20,code=compute_20")
+  elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_30,code=compute_30")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_35,code=compute_35")
+  elseif(VTKm_CUDA_Architecture STREQUAL "maxwell")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_50,code=compute_50")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_52,code=compute_52")
+  elseif(VTKm_CUDA_Architecture STREQUAL "pascal")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_60,code=compute_60")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_61,code=compute_61")
+  elseif(VTKm_CUDA_Architecture STREQUAL "volta")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_70,code=compute_70")
+  elseif(VTKm_CUDA_Architecture STREQUAL "all")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_20,code=compute_20")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_30,code=compute_30")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_35,code=compute_35")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_50,code=compute_50")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_52,code=compute_52")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_60,code=compute_60")
+    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_61,code=compute_61")
+  endif()
+
+  if(WIN32)
+    # On Windows, there is an issue with performing parallel builds with
+    # nvcc. Multiple compiles can attempt to write the same .pdb file. Add
+    # this argument to avoid this problem.
+    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options /FS")
+  endif()
 
 endif()
