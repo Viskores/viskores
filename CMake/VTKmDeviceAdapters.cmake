@@ -65,16 +65,8 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   set_target_properties(vtkm::cuda PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
 
-  #This is where we would add the -gencode flags so that all cuda code
-  #way compiled properly
-  #---------------------------------------------------------------------------
-  # Setup build flags for CUDA to have C++11 support
-  #---------------------------------------------------------------------------
-  if(NOT MSVC)
-    if(NOT "--std" IN_LIST CUDA_NVCC_FLAGS)
-      list(APPEND CUDA_NVCC_FLAGS --std c++11)
-    endif()
-  endif()
+  # add the -gencode flags so that all cuda code
+  # way compiled properly
 
   #---------------------------------------------------------------------------
   # Populates CUDA_NVCC_FLAGS with the best set of flags to compile for a
