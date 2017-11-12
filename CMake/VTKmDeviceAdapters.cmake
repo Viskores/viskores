@@ -69,7 +69,7 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   # way compiled properly
 
   #---------------------------------------------------------------------------
-  # Populates CUDA_NVCC_FLAGS with the best set of flags to compile for a
+  # Populates CMAKE_CUDA_FLAGS with the best set of flags to compile for a
   # given GPU architecture. The majority of developers should leave the
   # option at the default of 'native' which uses system introspection to
   # determine the smallest numerous of virtual and real architectures it
@@ -116,7 +116,7 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
 
     if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)
       #Use the cached value
-      list(APPEND CUDA_NVCC_FLAGS ${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT})
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT}")
     else()
 
       #run execute_process to do auto_detection
@@ -141,7 +141,8 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
         string(FIND "${run_output}" "--generate-code" position)
         string(SUBSTRING "${run_output}" ${position} -1 run_output)
 
-        list(APPEND CUDA_NVCC_FLAGS ${run_output})
+        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${run_output}")
+
         set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
                 "device type(s) for cuda[native]")
       else()
@@ -153,33 +154,33 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   #since when we are native we can fail, and fall back to "fermi" these have
   #to happen after, and separately of the native check
   if(VTKm_CUDA_Architecture STREQUAL "fermi")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_20,code=compute_20")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_20,code=compute_20")
   elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_30,code=compute_30")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_35,code=compute_35")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_30,code=compute_30")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_35,code=compute_35")
   elseif(VTKm_CUDA_Architecture STREQUAL "maxwell")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_50,code=compute_50")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_52,code=compute_52")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_50,code=compute_50")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_52,code=compute_52")
   elseif(VTKm_CUDA_Architecture STREQUAL "pascal")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_60,code=compute_60")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_61,code=compute_61")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_60,code=compute_60")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_61,code=compute_61")
   elseif(VTKm_CUDA_Architecture STREQUAL "volta")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_70,code=compute_70")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_70,code=compute_70")
   elseif(VTKm_CUDA_Architecture STREQUAL "all")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_20,code=compute_20")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_30,code=compute_30")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_35,code=compute_35")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_50,code=compute_50")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_52,code=compute_52")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_60,code=compute_60")
-    list(APPEND CUDA_NVCC_FLAGS "--generate-code=arch=compute_61,code=compute_61")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_20,code=compute_20")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_30,code=compute_30")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_35,code=compute_35")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_50,code=compute_50")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_52,code=compute_52")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_60,code=compute_60")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_61,code=compute_61")
   endif()
 
   if(WIN32)
     # On Windows, there is an issue with performing parallel builds with
     # nvcc. Multiple compiles can attempt to write the same .pdb file. Add
     # this argument to avoid this problem.
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options /FS")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --compiler-options /FS")
   endif()
 
 endif()
