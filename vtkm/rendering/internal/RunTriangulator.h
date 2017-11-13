@@ -43,7 +43,7 @@ void RunTriangulator(
   const vtkm::cont::DynamicCellSet& cellSet,
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
   vtkm::Id& numberOfTriangles,
-  const vtkm::cont::RuntimeDeviceTracker& tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
+  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker());
 }
 }
 } // namespace vtkm::rendering::internal
