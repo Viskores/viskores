@@ -1084,7 +1084,6 @@ public:
     if (numberOfValues <= 0)
     {
       output.PrepareForOutput(0, DeviceAdapterTag());
-      return vtkm::TypeTraits<T>::ZeroInitialization();
     }
 
     //We need call PrepareForInput on the input argument before invoking a
@@ -1093,11 +1092,12 @@ public:
     //use case breaks.
     auto keysPortal = keys.PrepareForInput(DeviceAdapterTag());
     auto valuesPortal = values.PrepareForInput(DeviceAdapterTag());
-    ScanExnclusiveByKeyPortal(keysPortal,
-                              valuesPortal,
-                              output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
-                              vtkm::TypeTraits<T>::ZeroInitialization(),
-                              vtkm::Add());
+    ScanExclusiveByKeyPortal(keysPortal,
+                             valuesPortal,
+                             output.PrepareForOutput(numberOfValues, DeviceAdapterTag()),
+                             vtkm::TypeTraits<T>::ZeroInitialization(),
+                             ::thrust::equal_to<T>(),
+                             vtkm::Add());
   }
 
   template <typename T,
