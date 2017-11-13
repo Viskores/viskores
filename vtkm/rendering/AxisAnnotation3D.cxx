@@ -177,13 +177,13 @@ void AxisAnnotation3D::Render(const Camera& camera,
         switch (this->Axis)
         {
           case 0:
-            tickSize[1] = this->TickMajorSize;
+            tickSize[1] = this->TickMinorSize;
             break;
           case 1:
-            tickSize[0] = this->TickMajorSize;
+            tickSize[0] = this->TickMinorSize;
             break;
           case 2:
-            tickSize[0] = this->TickMajorSize;
+            tickSize[0] = this->TickMinorSize;
             break;
         }
       }
@@ -192,13 +192,13 @@ void AxisAnnotation3D::Render(const Camera& camera,
         switch (this->Axis)
         {
           case 0:
-            tickSize[2] = this->TickMajorSize;
+            tickSize[2] = this->TickMinorSize;
             break;
           case 1:
-            tickSize[2] = this->TickMajorSize;
+            tickSize[2] = this->TickMinorSize;
             break;
           case 2:
-            tickSize[1] = this->TickMajorSize;
+            tickSize[1] = this->TickMinorSize;
             break;
         }
       }
