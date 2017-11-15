@@ -19,6 +19,9 @@
 ##============================================================================
 
 set(headers
+  BoundaryIntervalHierarchy.h
+  BoundaryIntervalHierarchyBuilder.h
+  BoundaryIntervalHierarchyNode.h
   KdTree3DConstruction.h
   KdTree3DNNSearch.h
   )
