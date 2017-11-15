@@ -409,6 +409,7 @@ void CastAndCall(const vtkm::cont::Field& field, const Functor& f, Args&&... arg
 
 namespace internal
 {
+
 template <>
 struct DynamicTransformTraits<vtkm::cont::Field>
 {

@@ -138,11 +138,14 @@ $for(param_index in xrange(1,num_params+1))\
 $endfor\
   )
 {
-  FunctionInterface<$signature(num_params)> fi;
+  detail::ParameterContainer<$signature(num_params)> container =
+    {
 $for(param_index in xrange(1,num_params+1))\
-  fi.template SetParameter<$(param_index)>(p$(param_index));
+    p$(param_index)$comma_if(param_index<num_params)
 $endfor\
-  return fi;
+    };
+
+  return FunctionInterface<$signature(num_params)>{container};
 }
 
 $endfor\
