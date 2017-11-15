@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_spatialstructure_BoundaryIntervalHierarchyNode_h
-#define vtk_m_worklet_spatialstructure_BoundaryIntervalHierarchyNode_h
+#ifndef vtk_m_worklet_spatialstructure_BoundingIntervalHierarchyNode_h
+#define vtk_m_worklet_spatialstructure_BoundingIntervalHierarchyNode_h
 
 #include <vtkm/Types.h>
 
@@ -30,7 +30,7 @@ namespace worklet
 namespace spatialstructure
 {
 
-struct BoundaryIntervalHierarchyNode
+struct BoundingIntervalHierarchyNode
 {
   vtkm::IdComponent Dimension;
   vtkm::Id ChildIndex;
@@ -46,9 +46,9 @@ struct BoundaryIntervalHierarchyNode
       vtkm::Id Size;
     } Leaf;
   };
-}; // struct BoundaryIntervalHierarchyNode
+}; // struct BoundingIntervalHierarchyNode
 }
 }
 } // namespace vtkm::worklet::spatialstructure
 
-#endif // vtk_m_worklet_spatialstructure_BoundaryIntervalHierarchyNode_h
+#endif // vtk_m_worklet_spatialstructure_BoundingIntervalHierarchyNode_h

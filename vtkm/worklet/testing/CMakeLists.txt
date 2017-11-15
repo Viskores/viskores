@@ -20,7 +20,7 @@
 
 set(unit_tests
   UnitTestAverageByKey.cxx
-  UnitTestBoundaryIntervalHierarchy.cxx
+  UnitTestBoundingIntervalHierarchy.cxx
   UnitTestCellAverage.cxx
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx

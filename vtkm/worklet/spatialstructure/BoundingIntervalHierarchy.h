@@ -17,15 +17,15 @@
 ////  Laboratory (LANL), the U.S. Government retains certain rights in
 ////  this software.
 ////============================================================================
-#ifndef vtk_m_worklet_spatialstructure_BoundaryIntervalHierarchy_h
-#define vtk_m_worklet_spatialstructure_BoundaryIntervalHierarchy_h
+#ifndef vtk_m_worklet_spatialstructure_BoundingIntervalHierarchy_h
+#define vtk_m_worklet_spatialstructure_BoundingIntervalHierarchy_h
 
 #include <vtkm/VecFromPortalPermute.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/exec/CellInside.h>
 #include <vtkm/exec/ExecutionObjectBase.h>
 #include <vtkm/exec/ParametricCoordinates.h>
-#include <vtkm/worklet/spatialstructure/BoundaryIntervalHierarchyNode.h>
+#include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchyNode.h>
 
 namespace vtkm
 {
@@ -36,20 +36,20 @@ namespace spatialstructure
 namespace
 {
 
-using NodeArrayHandle = vtkm::cont::ArrayHandle<BoundaryIntervalHierarchyNode>;
+using NodeArrayHandle = vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode>;
 using CellIdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
 
 } // namespace
 
 template <typename DeviceAdapter>
-class BoundaryIntervalHierarchyExecutionObject : public vtkm::exec::ExecutionObjectBase
+class BoundingIntervalHierarchyExecutionObject : public vtkm::exec::ExecutionObjectBase
 {
 public:
   VTKM_CONT
-  BoundaryIntervalHierarchyExecutionObject() {}
+  BoundingIntervalHierarchyExecutionObject() {}
 
   VTKM_CONT
-  BoundaryIntervalHierarchyExecutionObject(const NodeArrayHandle& nodes,
+  BoundingIntervalHierarchyExecutionObject(const NodeArrayHandle& nodes,
                                            const CellIdArrayHandle& cellIds,
                                            DeviceAdapter)
     : Nodes(nodes.PrepareForInput(DeviceAdapter()))
@@ -58,23 +58,23 @@ public:
   }
 
   template <typename CellSetType, typename PointPortal>
-  vtkm::Id Find(const vtkm::Vec<vtkm::Float64, 3>& point,
-                const CellSetType& cellSet,
-                const PointPortal& points,
-                const vtkm::exec::FunctorBase& worklet) const
+  VTKM_EXEC vtkm::Id Find(const vtkm::Vec<vtkm::Float64, 3>& point,
+                          const CellSetType& cellSet,
+                          const PointPortal& points,
+                          const vtkm::exec::FunctorBase& worklet) const
   {
     return Find(0, point, cellSet, points, worklet);
   }
 
 private:
   template <typename CellSetType, typename PointPortal>
-  vtkm::Id Find(vtkm::Id index,
-                const vtkm::Vec<vtkm::Float64, 3>& point,
-                const CellSetType& cellSet,
-                const PointPortal& points,
-                const vtkm::exec::FunctorBase& worklet) const
+  VTKM_EXEC vtkm::Id Find(vtkm::Id index,
+                          const vtkm::Vec<vtkm::Float64, 3>& point,
+                          const CellSetType& cellSet,
+                          const PointPortal& points,
+                          const vtkm::exec::FunctorBase& worklet) const
   {
-    const BoundaryIntervalHierarchyNode& node = Nodes.Get(index);
+    const BoundingIntervalHierarchyNode& node = Nodes.Get(index);
     if (node.ChildIndex < 0)
     {
       return FindInLeaf(point, node, cellSet, points, worklet);
@@ -108,11 +108,11 @@ private:
   }
 
   template <typename CellSetType, typename PointPortal>
-  vtkm::Id FindInLeaf(const vtkm::Vec<vtkm::Float64, 3>& point,
-                      const BoundaryIntervalHierarchyNode& node,
-                      const CellSetType& cellSet,
-                      const PointPortal& points,
-                      const vtkm::exec::FunctorBase& worklet) const
+  VTKM_EXEC vtkm::Id FindInLeaf(const vtkm::Vec<vtkm::Float64, 3>& point,
+                                const BoundingIntervalHierarchyNode& node,
+                                const CellSetType& cellSet,
+                                const PointPortal& points,
+                                const vtkm::exec::FunctorBase& worklet) const
   {
     using IndicesType = typename CellSetType::IndicesType;
     for (vtkm::Id i = node.Leaf.Start; i < node.Leaf.Start + node.Leaf.Size; ++i)
@@ -147,30 +147,30 @@ private:
 
   NodePortal Nodes;
   CellIdPortal CellIds;
-}; // class BoundaryIntervalHierarchyExecutionObject
+}; // class BoundingIntervalHierarchyExecutionObject
 
-class BoundaryIntervalHierarchy
+class BoundingIntervalHierarchy
 {
 public:
   VTKM_CONT
-  BoundaryIntervalHierarchy(const NodeArrayHandle& nodes, const CellIdArrayHandle& cellIds)
+  BoundingIntervalHierarchy(const NodeArrayHandle& nodes, const CellIdArrayHandle& cellIds)
     : Nodes(nodes)
     , CellIds(cellIds)
   {
   }
 
   template <typename DeviceAdapter>
-  BoundaryIntervalHierarchyExecutionObject<DeviceAdapter> PrepareForInput()
+  VTKM_CONT BoundingIntervalHierarchyExecutionObject<DeviceAdapter> PrepareForInput()
   {
-    return BoundaryIntervalHierarchyExecutionObject<DeviceAdapter>(Nodes, CellIds, DeviceAdapter());
+    return BoundingIntervalHierarchyExecutionObject<DeviceAdapter>(Nodes, CellIds, DeviceAdapter());
   }
 
 private:
   NodeArrayHandle Nodes;
   CellIdArrayHandle CellIds;
-}; // class BoundaryIntervalHierarchy
+}; // class BoundingIntervalHierarchy
 }
 }
 } // namespace vtkm::worklet::spatialstructure
 
-#endif //vtk_m_worklet_spatialstructure_BoundaryIntervalHierarchy_h
+#endif //vtk_m_worklet_spatialstructure_BoundingIntervalHierarchy_h

@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_spatialstructure_BoundaryIntervalHierarchyBuilder_h
-#define vtk_m_worklet_spatialstructure_BoundaryIntervalHierarchyBuilder_h
+#ifndef vtk_m_worklet_spatialstructure_BoundingIntervalHierarchyBuilder_h
+#define vtk_m_worklet_spatialstructure_BoundingIntervalHierarchyBuilder_h
 
 #include <vtkm/Bounds.h>
 #include <vtkm/Types.h>
@@ -31,12 +31,13 @@
 #include <vtkm/cont/ArrayHandleReverse.h>
 #include <vtkm/cont/ArrayHandleTransform.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+#include <vtkm/cont/Timer.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
-#include <vtkm/worklet/spatialstructure/BoundaryIntervalHierarchy.h>
-#include <vtkm/worklet/spatialstructure/BoundaryIntervalHierarchyNode.h>
+#include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchy.h>
+#include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchyNode.h>
 
 namespace vtkm
 {
@@ -47,12 +48,72 @@ namespace spatialstructure
 namespace
 {
 
+#define START_TIMER(x) Timer x;
+#define PRINT_TIMER(x, y)                                                                          \
+  std::cout << "Step " << x << " time : " << y.GetElapsedTime() << std::endl;
+#define Output(x) OutputArray(x, #x);
+
+template <typename T, typename S>
+void OutputArray(const vtkm::cont::ArrayHandle<T, S>& outputArray, const char* name = "")
+{
+  typedef vtkm::cont::internal::Storage<T, S> StorageType;
+  typedef typename StorageType::PortalConstType PortalConstType;
+  PortalConstType readPortal = outputArray.GetPortalConstControl();
+  vtkm::Id numElements = readPortal.GetNumberOfValues();
+  std::cout << name << " = " << numElements << " [";
+  for (vtkm::Id i = 0; i < numElements; i++)
+    std::cout << readPortal.Get(i) << ((i < numElements - 1) ? ", " : "");
+  std::cout << "]\n";
+}
+
 struct TreeNode
 {
   vtkm::Float64 LMax;
   vtkm::Float64 RMin;
   vtkm::IdComponent Dimension;
 }; // struct TreeNode
+
+template <typename S>
+void OutputArray(const vtkm::cont::ArrayHandle<TreeNode, S>& outputArray, const char* name = "")
+{
+  typedef vtkm::cont::internal::Storage<TreeNode, S> StorageType;
+  typedef typename StorageType::PortalConstType PortalConstType;
+  PortalConstType readPortal = outputArray.GetPortalConstControl();
+  vtkm::Id numElements = readPortal.GetNumberOfValues();
+  std::cout << name << " = " << numElements << " [";
+  for (vtkm::Id i = 0; i < numElements; i++)
+  {
+    auto n = readPortal.Get(i);
+    std::cout << "{ LM = " << n.LMax << ", RM = " << n.RMin << ", D = " << n.Dimension << " }"
+              << ((i < numElements - 1) ? ", " : "");
+  }
+  std::cout << "]\n";
+}
+template <typename S>
+void OutputArray(const vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode, S>& outputArray,
+                 const char* name = "")
+{
+  typedef vtkm::cont::internal::Storage<BoundingIntervalHierarchyNode, S> StorageType;
+  typedef typename StorageType::PortalConstType PortalConstType;
+  PortalConstType readPortal = outputArray.GetPortalConstControl();
+  vtkm::Id numElements = readPortal.GetNumberOfValues();
+  std::cout << name << " = " << numElements << " [";
+  for (vtkm::Id i = 0; i < numElements; i++)
+  {
+    auto n = readPortal.Get(i);
+    if (n.ChildIndex > 0)
+    {
+      std::cout << "{ D = " << n.Dimension << ", CI = " << n.ChildIndex << ", LM = " << n.Node.LMax
+                << ", RM = " << n.Node.RMin << " }" << ((i < numElements - 1) ? ", " : "");
+    }
+    else
+    {
+      std::cout << "{ D = " << n.Dimension << ", CI = " << n.ChildIndex << ", St = " << n.Leaf.Start
+                << ", Sz = " << n.Leaf.Size << " }" << ((i < numElements - 1) ? ", " : "");
+    }
+  }
+  std::cout << "]\n";
+}
 
 struct SplitProperties
 {
@@ -138,11 +199,11 @@ public:
   {
     if (LEQ)
     {
-      outBounds = (value <= planeValue) ? cellBounds : vtkm::Range(0.0, 0.0);
+      outBounds = (value <= planeValue) ? cellBounds : vtkm::Range();
     }
     else
     {
-      outBounds = (value > planeValue) ? cellBounds : vtkm::Range(0.0, 0.0);
+      outBounds = (value > planeValue) ? cellBounds : vtkm::Range();
     }
   }
 }; // struct FilterRanges
@@ -172,9 +233,13 @@ public:
 struct SplitPropertiesCalculator : public vtkm::worklet::WorkletMapField
 {
 public:
-  using ControlSignature =
-    void(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, WholeArrayInOut<>);
-  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, InputIndex);
+  typedef void ControlSignature(FieldIn<>,
+                                FieldIn<>,
+                                FieldIn<>,
+                                FieldIn<>,
+                                FieldIn<>,
+                                WholeArrayInOut<>);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, InputIndex);
   using InputDomain = _1;
 
   VTKM_CONT
@@ -201,7 +266,12 @@ public:
     split.RMin = rMinRanges.Min;
     split.Cost = vtkm::Abs(split.LMax * static_cast<vtkm::Float64>(pointsToLeft) -
                            split.RMin * static_cast<vtkm::Float64>(pointsToRight));
+    if (vtkm::IsNan(split.Cost))
+    {
+      split.Cost = vtkm::Infinity64();
+    }
     splits.Set(inputIndex * Stride + Index, split);
+    //printf("Plane = %lf, NL = %lld, NR = %lld, LM = %lf, RM = %lf, C = %lf\n", split.Plane, split.NumLeftPoints, split.NumRightPoints, split.LMax, split.RMin, split.Cost);
   }
 
   vtkm::IdComponent Index;
@@ -309,6 +379,7 @@ public:
         plane = zMSplit.Plane;
       }
     }
+    //printf("Selected plane %lf, with cost %lf [%d, %lf, %lf]\n", plane, minCost, node.Dimension, node.LMax, node.RMin);
   }
 
   template <typename ArrayPortal>
@@ -336,6 +407,7 @@ struct CalculateSplitDirectionFlag : public vtkm::worklet::WorkletMapField
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
+  VTKM_EXEC
   void operator()(const vtkm::Float64& x,
                   const vtkm::Float64& y,
                   const vtkm::Float64& z,
@@ -369,6 +441,7 @@ struct SegmentSplitter : public vtkm::worklet::WorkletMapField
   {
   }
 
+  VTKM_EXEC
   void operator()(const vtkm::Id& segmentId,
                   const vtkm::Id& leqFlag,
                   const vtkm::Id& segmentSize,
@@ -482,15 +555,15 @@ struct TreeLevelAdder : public vtkm::worklet::WorkletMapField
   {
   }
 
-  template <typename BoundaryIntervalHierarchyPortal>
+  template <typename BoundingIntervalHierarchyPortal>
   VTKM_EXEC void operator()(const vtkm::Id& index,
                             const TreeNode& split,
                             const vtkm::Id& start,
                             const vtkm::Id& count,
                             const vtkm::Id& numPreviousSplits,
-                            BoundaryIntervalHierarchyPortal& treePortal) const
+                            BoundingIntervalHierarchyPortal& treePortal) const
   {
-    BoundaryIntervalHierarchyNode node;
+    BoundingIntervalHierarchyNode node;
     if (count > MaxLeafSize)
     {
       node.Dimension = split.Dimension;
@@ -544,9 +617,33 @@ vtkm::cont::ArrayHandle<T> CopyIfArray(const vtkm::cont::ArrayHandle<T>& input,
   return result;
 }
 
+VTKM_CONT
+struct Invert
+{
+  VTKM_EXEC
+  vtkm::Id operator()(const vtkm::Id& value) const { return 1 - value; }
+}; // struct Invert
+
+VTKM_CONT
+struct RangeAdd
+{
+  VTKM_EXEC
+  vtkm::Range operator()(const vtkm::Range& accumulator, const vtkm::Range& value) const
+  {
+    if (value.IsNonEmpty())
+    {
+      return accumulator.Union(value);
+    }
+    else
+    {
+      return accumulator;
+    }
+  }
+}; // struct RangeAdd
+
 } // namespace
 
-class BoundaryIntervalHierarchyBuilder
+class BoundingIntervalHierarchyBuilder
 {
 private:
   using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id>;
@@ -566,7 +663,7 @@ private:
 
 public:
   VTKM_CONT
-  BoundaryIntervalHierarchyBuilder(vtkm::IdComponent numPlanes = 4,
+  BoundingIntervalHierarchyBuilder(vtkm::IdComponent numPlanes = 4,
                                    vtkm::IdComponent maxLeafSize = 5)
     : NumPlanes(numPlanes)
     , MaxLeafSize(maxLeafSize)
@@ -575,26 +672,34 @@ public:
 
   VTKM_CONT
   template <typename CellSetType, typename PointArrayHandle, typename DeviceAdapter>
-  BoundaryIntervalHierarchy Build(const CellSetType& cellSet,
+  BoundingIntervalHierarchy Build(const CellSetType& cellSet,
                                   const PointArrayHandle& points,
                                   DeviceAdapter)
   {
     using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using Timer = typename vtkm::cont::Timer<DeviceAdapter>;
 
+    Timer totalTimer;
     vtkm::Id numCells = cellSet.GetNumberOfCells();
+    std::cout << "No of cells: " << numCells << "\n";
+    std::cout.precision(3);
+    START_TIMER(s11);
     IdArrayHandle cellIds;
     Algorithms::Copy(CountingIdArrayHandle(0, 1, numCells), cellIds);
     IdArrayHandle segmentIds;
     Algorithms::Copy(vtkm::cont::ArrayHandleConstant<vtkm::Id>(0, numCells), segmentIds);
+    PRINT_TIMER("1.1", s11);
 
+    START_TIMER(s12);
     CoordsArrayHandle centerXs, centerYs, centerZs;
     RangeArrayHandle xRanges, yRanges, zRanges;
     vtkm::worklet::DispatcherMapTopology<CellRangesExtracter, DeviceAdapter>().Invoke(
       cellSet, points, xRanges, yRanges, zRanges, centerXs, centerYs, centerZs);
+    PRINT_TIMER("1.2", s12);
 
     bool done = false;
     vtkm::IdComponent iteration = 0;
-    vtkm::cont::ArrayHandle<BoundaryIntervalHierarchyNode> nodes;
+    vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> nodes;
     vtkm::Id nodesIndexOffset = 0;
     vtkm::Id numSegments = 1;
     IdArrayHandle discardKeys;
@@ -605,21 +710,27 @@ public:
     IdArrayHandle processedCellIds;
     processedCellIds.Allocate(numCells);
     vtkm::Id cellIdsOffset = 0;
+
     while (!done)
     {
       std::cout << "**** Iteration " << (++iteration) << " ****\n";
+      Timer iterationTimer;
 
+      //Output(segmentSizes);
+      START_TIMER(s21);
       // Calculate the X, Y, Z bounding ranges for each segment
       RangeArrayHandle perSegmentXRanges, perSegmentYRanges, perSegmentZRanges;
       Algorithms::ReduceByKey(segmentIds, xRanges, discardKeys, perSegmentXRanges, vtkm::Add());
       Algorithms::ReduceByKey(segmentIds, yRanges, discardKeys, perSegmentYRanges, vtkm::Add());
       Algorithms::ReduceByKey(segmentIds, zRanges, discardKeys, perSegmentZRanges, vtkm::Add());
+      PRINT_TIMER("2.1", s21);
 
       // Expand the per segment bounding ranges, to per cell;
       RangePermutationArrayHandle segmentXRanges(segmentIds, perSegmentXRanges);
       RangePermutationArrayHandle segmentYRanges(segmentIds, perSegmentYRanges);
       RangePermutationArrayHandle segmentZRanges(segmentIds, perSegmentZRanges);
 
+      START_TIMER(s22);
       // Calculate split costs for NumPlanes split planes, across X, Y and Z dimensions
       vtkm::Id numSplitPlanes = numSegments * (NumPlanes + 1);
       vtkm::cont::ArrayHandle<SplitProperties> xSplits, ySplits, zSplits;
@@ -629,7 +740,9 @@ public:
       CalculateSplitCosts(segmentXRanges, xRanges, centerXs, segmentIds, xSplits, DeviceAdapter());
       CalculateSplitCosts(segmentYRanges, yRanges, centerYs, segmentIds, ySplits, DeviceAdapter());
       CalculateSplitCosts(segmentZRanges, zRanges, centerZs, segmentIds, zSplits, DeviceAdapter());
+      PRINT_TIMER("2.2", s22);
 
+      START_TIMER(s23);
       // Select best split plane and dimension across X, Y, Z dimension, per segment
       SplitArrayHandle segmentSplits;
       vtkm::cont::ArrayHandle<vtkm::Float64> segmentPlanes;
@@ -645,22 +758,28 @@ public:
                                      segmentSplits,
                                      segmentPlanes,
                                      splitChoices);
+      PRINT_TIMER("2.3", s23);
 
       // Expand the per segment split plane to per cell
       SplitPermutationArrayHandle splits(segmentIds, segmentSplits);
       CoordsPermutationArrayHandle planes(segmentIds, segmentPlanes);
 
+      START_TIMER(s31);
       IdArrayHandle leqFlags;
       vtkm::worklet::DispatcherMapField<CalculateSplitDirectionFlag> computeFlagDispatcher;
       computeFlagDispatcher.Invoke(centerXs, centerYs, centerZs, splits, planes, leqFlags);
+      PRINT_TIMER("3.1", s31);
 
+      START_TIMER(s32);
       IdArrayHandle scatterIndices =
         CalculateSplitScatterIndices(cellIds, leqFlags, segmentIds, DeviceAdapter());
       IdArrayHandle newSegmentIds;
       IdPermutationArrayHandle sizes(segmentIds, segmentSizes);
       vtkm::worklet::DispatcherMapField<SegmentSplitter>(SegmentSplitter(MaxLeafSize))
         .Invoke(segmentIds, leqFlags, sizes, newSegmentIds);
+      PRINT_TIMER("3.2", s32);
 
+      START_TIMER(s33);
       vtkm::cont::ArrayHandle<vtkm::Id> choices;
       Algorithms::Copy(IdPermutationArrayHandle(segmentIds, splitChoices), choices);
       cellIds = ScatterArray(cellIds, scatterIndices);
@@ -673,8 +792,10 @@ public:
       centerYs = ScatterArray(centerYs, scatterIndices);
       centerZs = ScatterArray(centerZs, scatterIndices);
       choices = ScatterArray(choices, scatterIndices);
+      PRINT_TIMER("3.3", s33);
 
       // Move the cell ids at leafs to the processed cellids list
+      START_TIMER(s41);
       IdArrayHandle nonSplitSegmentSizes;
       vtkm::worklet::DispatcherMapField<NonSplitIndexCalculator>(
         NonSplitIndexCalculator(MaxLeafSize))
@@ -683,7 +804,9 @@ public:
       Algorithms::ScanExclusive(nonSplitSegmentSizes, nonSplitSegmentIndices);
       IdArrayHandle runningSplitSegmentCounts;
       Algorithms::ScanExclusive(splitChoices, runningSplitSegmentCounts);
+      PRINT_TIMER("4.1", s41);
 
+      START_TIMER(s42);
       IdArrayHandle doneCellIds;
       Algorithms::CopyIf(cellIds, choices, doneCellIds, Invert());
       Algorithms::CopySubRange(
@@ -697,10 +820,12 @@ public:
       centerXs = CopyIfArray(centerXs, choices, DeviceAdapter());
       centerYs = CopyIfArray(centerYs, choices, DeviceAdapter());
       centerZs = CopyIfArray(centerZs, choices, DeviceAdapter());
+      PRINT_TIMER("4.2", s42);
 
+      START_TIMER(s43);
       // Make a new nodes with enough nodes for the currnt level, copying over the old one
       vtkm::Id nodesSize = nodes.GetNumberOfValues() + numSegments;
-      vtkm::cont::ArrayHandle<BoundaryIntervalHierarchyNode> newTree;
+      vtkm::cont::ArrayHandle<BoundingIntervalHierarchyNode> newTree;
       newTree.Allocate(nodesSize);
       Algorithms::CopySubRange(nodes, 0, nodes.GetNumberOfValues(), newTree);
 
@@ -716,6 +841,8 @@ public:
       nodesIndexOffset = nodesSize;
       cellIdsOffset += doneCellIds.GetNumberOfValues();
       nodes = newTree;
+      PRINT_TIMER("4.3", s43);
+      START_TIMER(s51);
       segmentIds = newSegmentIds;
       segmentSizes =
         CalculateSegmentSizes<DeviceAdapter>(segmentIds, segmentIds.GetNumberOfValues());
@@ -725,12 +852,16 @@ public:
       Algorithms::Unique(uniqueSegmentIds);
       numSegments = uniqueSegmentIds.GetNumberOfValues();
       done = segmentIds.GetNumberOfValues() == 0;
+      PRINT_TIMER("5.1", s51);
+      std::cout << "Iteration time: " << iterationTimer.GetElapsedTime() << "\n";
     }
-    return BoundaryIntervalHierarchy(nodes, processedCellIds);
+    std::cout << "Total time: " << totalTimer.GetElapsedTime() << "\n";
+    return BoundingIntervalHierarchy(nodes, processedCellIds);
   }
 
+private:
   template <typename DeviceAdapter>
-  IdArrayHandle CalculateSegmentSizes(const IdArrayHandle& segmentIds, vtkm::Id numCells)
+  VTKM_CONT IdArrayHandle CalculateSegmentSizes(const IdArrayHandle& segmentIds, vtkm::Id numCells)
   {
     using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     IdArrayHandle discardKeys;
@@ -744,7 +875,7 @@ public:
   }
 
   template <typename DeviceAdapter>
-  IdArrayHandle GenerateSegmentIds(const IdArrayHandle& segmentSizes, vtkm::Id numCells)
+  VTKM_CONT IdArrayHandle GenerateSegmentIds(const IdArrayHandle& segmentSizes, vtkm::Id numCells)
   {
     // Compact segment ids, removing non-contiguous values.
     using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
@@ -759,12 +890,12 @@ public:
   }
 
   template <typename SegmentRangeArrayHandle, typename RangeArrayHandle, typename DeviceAdapter>
-  void CalculateSplitCosts(SegmentRangeArrayHandle segmentRanges,
-                           RangeArrayHandle ranges,
-                           CoordsArrayHandle& coords,
-                           IdArrayHandle& segmentIds,
-                           vtkm::cont::ArrayHandle<SplitProperties>& splits,
-                           DeviceAdapter)
+  VTKM_CONT void CalculateSplitCosts(SegmentRangeArrayHandle segmentRanges,
+                                     RangeArrayHandle ranges,
+                                     CoordsArrayHandle& coords,
+                                     IdArrayHandle& segmentIds,
+                                     vtkm::cont::ArrayHandle<SplitProperties>& splits,
+                                     DeviceAdapter)
   {
     for (vtkm::IdComponent planeIndex = 0; planeIndex < NumPlanes; ++planeIndex)
     {
@@ -784,15 +915,15 @@ public:
   }
 
   template <typename SegmentRangeArrayHandle, typename RangeArrayHandle, typename DeviceAdapter>
-  void CalculatePlaneSplitCost(vtkm::IdComponent planeIndex,
-                               vtkm::IdComponent numPlanes,
-                               SegmentRangeArrayHandle segmentRanges,
-                               RangeArrayHandle ranges,
-                               CoordsArrayHandle& coords,
-                               IdArrayHandle& segmentIds,
-                               vtkm::cont::ArrayHandle<SplitProperties>& splits,
-                               vtkm::IdComponent index,
-                               DeviceAdapter)
+  VTKM_CONT void CalculatePlaneSplitCost(vtkm::IdComponent planeIndex,
+                                         vtkm::IdComponent numPlanes,
+                                         SegmentRangeArrayHandle segmentRanges,
+                                         RangeArrayHandle ranges,
+                                         CoordsArrayHandle& coords,
+                                         IdArrayHandle& segmentIds,
+                                         vtkm::cont::ArrayHandle<SplitProperties>& splits,
+                                         vtkm::IdComponent index,
+                                         DeviceAdapter)
   {
     using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     // Make candidate split plane array
@@ -826,8 +957,8 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Range> lMaxRanges;
     vtkm::cont::ArrayHandle<vtkm::Range> rMinRanges;
-    Algorithms::ReduceByKey(segmentIds, leqRanges, discardKeys, lMaxRanges, vtkm::Add());
-    Algorithms::ReduceByKey(segmentIds, rRanges, discardKeys, rMinRanges, vtkm::Add());
+    Algorithms::ReduceByKey(segmentIds, leqRanges, discardKeys, lMaxRanges, RangeAdd());
+    Algorithms::ReduceByKey(segmentIds, rRanges, discardKeys, rMinRanges, RangeAdd());
 
     vtkm::cont::ArrayHandle<vtkm::Float64> segmentedSplitPlanes;
     Algorithms::ReduceByKey(
@@ -840,10 +971,10 @@ public:
   }
 
   template <typename DeviceAdapter>
-  IdArrayHandle CalculateSplitScatterIndices(const IdArrayHandle& cellIds,
-                                             const IdArrayHandle& leqFlags,
-                                             const IdArrayHandle& segmentIds,
-                                             DeviceAdapter)
+  VTKM_CONT IdArrayHandle CalculateSplitScatterIndices(const IdArrayHandle& cellIds,
+                                                       const IdArrayHandle& leqFlags,
+                                                       const IdArrayHandle& segmentIds,
+                                                       DeviceAdapter)
   {
     using Algorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     // Count total number of true flags preceding in segment
@@ -880,14 +1011,6 @@ public:
     return scatterIndices;
   }
 
-  VTKM_EXEC
-  struct Invert
-  {
-    VTKM_EXEC
-    vtkm::Id operator()(const vtkm::Id& value) const { return 1 - value; }
-  };
-
-private:
   vtkm::IdComponent NumPlanes;
   vtkm::IdComponent MaxLeafSize;
 };
@@ -895,4 +1018,4 @@ private:
 }
 } // namespace vtkm::worklet::spatialstructure
 
-#endif // vtk_m_worklet_spatialstructure_BoundaryIntervalHierarchyBuilder_h
+#endif // vtk_m_worklet_spatialstructure_BoundingIntervalHierarchyBuilder_h

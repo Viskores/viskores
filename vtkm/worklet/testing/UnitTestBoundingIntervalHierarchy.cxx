@@ -20,21 +20,14 @@
 
 #include <vtkm/cont/ArrayHandleConcatenate.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
+#include <vtkm/cont/Timer.h>
 #include <vtkm/cont/testing/Testing.h>
-//#include <vtkm/io/reader/VTKDataSetReader.h>
-#include <vtkm/worklet/spatialstructure/BoundaryIntervalHierarchy.h>
-#include <vtkm/worklet/spatialstructure/BoundaryIntervalHierarchyBuilder.h>
+#include <vtkm/io/reader/VTKDataSetReader.h>
+#include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchy.h>
+#include <vtkm/worklet/spatialstructure/BoundingIntervalHierarchyBuilder.h>
 
 namespace
 {
-/*
-const char* TETS_ONLY_FILE = "tets_only.vtk";
-const char* GLOBE_FILE = "globe.vtk";
-const char* UCD2D_FILE = "ucd2d.vtk";
-const char* UCD3D_FILE = "ucd3d.vtk";
-const char* BUOYANCY_FILE = "buoyancy.vtk";
-*/
-
 struct CellCentroidCalculator : public vtkm::worklet::WorkletMapPointToCell
 {
   typedef void ControlSignature(CellSetIn, FieldInPoint<>, FieldOut<>);
@@ -52,7 +45,7 @@ struct CellCentroidCalculator : public vtkm::worklet::WorkletMapPointToCell
   }
 }; // struct CellCentroidCalculator
 
-struct BoundaryIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
+struct BoundingIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
 {
   typedef void ControlSignature(FieldIn<>,
                                 ExecObject,
@@ -63,11 +56,11 @@ struct BoundaryIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
   typedef _6 ExecutionSignature(_1, _2, _3, _4, _5);
 
   template <typename Point,
-            typename BoundaryIntervalHierarchyExecObject,
+            typename BoundingIntervalHierarchyExecObject,
             typename CellSet,
             typename CoordsPortal>
   VTKM_EXEC vtkm::IdComponent operator()(const Point& point,
-                                         const BoundaryIntervalHierarchyExecObject& bih,
+                                         const BoundingIntervalHierarchyExecObject& bih,
                                          const CellSet& cellSet,
                                          const CoordsPortal& coords,
                                          const vtkm::Id expectedId) const
@@ -75,75 +68,86 @@ struct BoundaryIntervalHierarchyTester : public vtkm::worklet::WorkletMapField
     vtkm::Id cellId = bih.Find(point, cellSet, coords, *this);
     return (1 - static_cast<vtkm::IdComponent>(expectedId == cellId));
   }
-}; // struct BoundaryIntervalHierarchyTester
+}; // struct BoundingIntervalHierarchyTester
 
 vtkm::cont::DataSet ConstructDataSet(vtkm::Id size)
 {
   return vtkm::cont::DataSetBuilderUniform().Create(vtkm::Id3(size, size, size));
 }
 
-void TestBoundaryIntervalHierarchy()
+void TestBoundingIntervalHierarchy(vtkm::cont::DataSet dataSet, vtkm::IdComponent numPlanes)
 {
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Algorithms = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+  using Timer = vtkm::cont::Timer<DeviceAdapter>;
   namespace spatial = vtkm::worklet::spatialstructure;
 
-  const vtkm::cont::DataSet dataSet = ConstructDataSet(101);
   vtkm::cont::DynamicCellSet cellSet = dataSet.GetCellSet();
   vtkm::cont::DynamicArrayHandleCoordinateSystem vertices = dataSet.GetCoordinateSystem().GetData();
 
-  spatial::BoundaryIntervalHierarchy bih =
-    spatial::BoundaryIntervalHierarchyBuilder().Build(cellSet, vertices, DeviceAdapter());
+  std::cout << "Using numPlanes: " << numPlanes << "\n";
+  spatial::BoundingIntervalHierarchy bih = spatial::BoundingIntervalHierarchyBuilder(numPlanes, 5)
+                                             .Build(cellSet, vertices, DeviceAdapter());
 
+  Timer centroidsTimer;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> centroids;
   vtkm::worklet::DispatcherMapTopology<CellCentroidCalculator>().Invoke(
     cellSet, vertices, centroids);
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> negativePoints;
-  negativePoints.Allocate(4);
-  negativePoints.GetPortalControl().Set(0, vtkm::make_Vec<vtkm::FloatDefault>(-100, -100, -100));
-  negativePoints.GetPortalControl().Set(1, vtkm::make_Vec<vtkm::FloatDefault>(100, -100, -100));
-  negativePoints.GetPortalControl().Set(2, vtkm::make_Vec<vtkm::FloatDefault>(-100, 100, -100));
-  negativePoints.GetPortalControl().Set(3, vtkm::make_Vec<vtkm::FloatDefault>(-100, -100, 100));
-  auto points = vtkm::cont::make_ArrayHandleConcatenate(centroids, negativePoints);
+  std::cout << "Centroids calculation time: " << centroidsTimer.GetElapsedTime() << "\n";
 
-  vtkm::worklet::spatialstructure::BoundaryIntervalHierarchyExecutionObject<DeviceAdapter>
+  vtkm::worklet::spatialstructure::BoundingIntervalHierarchyExecutionObject<DeviceAdapter>
     bihExecObject = bih.PrepareForInput<DeviceAdapter>();
 
-  vtkm::cont::ArrayHandleCounting<vtkm::Id> expectedPositiveCellIds(
-    0, 1, cellSet.GetNumberOfCells());
-  vtkm::cont::ArrayHandleConstant<vtkm::Id> expectedNegativeCellIds(-1, 4);
-  auto expectedCellIds =
-    vtkm::cont::make_ArrayHandleConcatenate(expectedPositiveCellIds, expectedNegativeCellIds);
+  vtkm::cont::ArrayHandleCounting<vtkm::Id> expectedCellIds(0, 1, cellSet.GetNumberOfCells());
 
+  Timer interpolationTimer;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> results;
-  vtkm::worklet::DispatcherMapField<BoundaryIntervalHierarchyTester>().Invoke(
-    points, bihExecObject, cellSet, vertices, expectedCellIds, results);
+#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
+  //set up stack size for cuda envinroment
+  size_t stackSizeBackup;
+  cudaDeviceGetLimit(&stackSizeBackup, cudaLimitStackSize);
+  cudaDeviceSetLimit(cudaLimitStackSize, 1024 * 200);
+#endif
+  vtkm::worklet::DispatcherMapField<BoundingIntervalHierarchyTester>().Invoke(
+    centroids, bihExecObject, cellSet, vertices, expectedCellIds, results);
+#if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_CUDA
+  cudaDeviceSetLimit(cudaLimitStackSize, stackSizeBackup);
+#endif
   vtkm::Id numDiffs = Algorithms::Reduce(results, 0, vtkm::Add());
-
-  VTKM_TEST_ASSERT(test_equal(numDiffs, 0), "Wrong cell id for BoundaryIntervalHierarchy");
+  vtkm::Float64 timeDiff = interpolationTimer.GetElapsedTime();
+  std::cout << "No of interpolations: " << results.GetNumberOfValues() << "\n";
+  std::cout << "Interpolation time: " << timeDiff << "\n";
+  std::cout << "Average interpolation rate: "
+            << (static_cast<vtkm::Float64>(results.GetNumberOfValues()) / timeDiff) << "\n";
+  std::cout << "No of diffs: " << numDiffs << "\n";
 }
 
-/*
 vtkm::cont::DataSet LoadFromFile(const char* file)
 {
   vtkm::io::reader::VTKDataSetReader reader(file);
   return reader.ReadDataSet();
 }
 
-void TestBoundaryIntervalHierarchyFromFile(const char* file)
+void TestBoundingIntervalHierarchyFromFile(const char* file, vtkm::IdComponent numPlanes)
 {
-  TestBoundaryIntervalHierarchy(LoadFromFile(file));
+  TestBoundingIntervalHierarchy(LoadFromFile(file), numPlanes);
 }
-*/
 
 void RunTest()
 {
-  TestBoundaryIntervalHierarchy();
+  TestBoundingIntervalHierarchy(ConstructDataSet(145), 3);
+  TestBoundingIntervalHierarchy(ConstructDataSet(145), 4);
+  TestBoundingIntervalHierarchy(ConstructDataSet(145), 6);
+  TestBoundingIntervalHierarchy(ConstructDataSet(145), 9);
+  TestBoundingIntervalHierarchyFromFile("buoyancy.vtk", 3);
+  TestBoundingIntervalHierarchyFromFile("buoyancy.vtk", 4);
+  TestBoundingIntervalHierarchyFromFile("buoyancy.vtk", 6);
+  TestBoundingIntervalHierarchyFromFile("buoyancy.vtk", 9);
 }
 
 } // anonymous namespace
 
-int UnitTestBoundaryIntervalHierarchy(int, char* [])
+int UnitTestBoundingIntervalHierarchy(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(RunTest);
 }
