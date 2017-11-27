@@ -46,7 +46,12 @@
 # Note: By default we use 'native' as the default option
 #
 #
-message(STATUS "called")
+
+# guard agaisnt building vectorization_flags more than once
+if(TARGET vtkm_vectorization_flags)
+    return()
+endif()
+
 add_library(vtkm_vectorization_flags INTERFACE)
 target_link_libraries(vtkm_vectorization_flags INTERFACE vtkm_compiler_flags)
 
