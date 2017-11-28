@@ -150,5 +150,10 @@ if(VTKm_ENABLE_CUDA)
   add_dependencies(vtkm_cont vtkm_cont_cuda)
 endif()
 
+if(VTKm_ENABLE_MPI)
+  # This will become a required dependency eventually.
+  target_link_libraries(vtkm_cont PRIVATE diy)
+endif()
+
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
