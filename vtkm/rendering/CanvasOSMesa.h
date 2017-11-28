@@ -45,15 +45,15 @@ public:
 
   ~CanvasOSMesa();
 
-  virtual void Initialize() VTKM_OVERRIDE;
+  virtual void Initialize() override;
 
-  virtual void RefreshColorBuffer() const VTKM_OVERRIDE;
+  virtual void RefreshColorBuffer() const override;
 
-  virtual void Activate() VTKM_OVERRIDE;
+  virtual void Activate() override;
 
-  virtual void Finish() VTKM_OVERRIDE;
+  virtual void Finish() override;
 
-  vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Canvas* NewCopy() const override;
 
 private:
   std::shared_ptr<detail::CanvasOSMesaInternals> Internals;

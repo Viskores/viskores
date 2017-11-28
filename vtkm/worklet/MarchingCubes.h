@@ -686,11 +686,11 @@ struct GenerateNormalsDeduced
     //
     NormalsWorkletPass1 pass1(*edges);
     vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1>(pass1).Invoke(
-      *cellset, *cellset, coordinates, *field, *normals);
+      *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *normals);
 
     NormalsWorkletPass2 pass2(*edges);
     vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2>(pass2).Invoke(
-      *cellset, *cellset, coordinates, *field, *weights, *normals);
+      *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *weights, *normals);
   }
 };
 

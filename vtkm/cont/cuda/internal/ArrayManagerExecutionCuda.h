@@ -159,6 +159,16 @@ struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>
   VTKM_CONT void CopyToControl(const void* executionPtr,
                                void* controlPtr,
                                vtkm::UInt64 numBytes) const final;
+
+  VTKM_CONT void UsingForRead(const void* controlPtr,
+                              const void* executionPtr,
+                              vtkm::UInt64 numBytes) const final;
+  VTKM_CONT void UsingForWrite(const void* controlPtr,
+                               const void* executionPtr,
+                               vtkm::UInt64 numBytes) const final;
+  VTKM_CONT void UsingForReadWrite(const void* controlPtr,
+                                   const void* executionPtr,
+                                   vtkm::UInt64 numBytes) const final;
 };
 } // namespace internal
 

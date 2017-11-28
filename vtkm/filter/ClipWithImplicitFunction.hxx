@@ -54,16 +54,6 @@ struct PointMapHelper
 } // end namespace clipwithimplicitfunction
 
 //-----------------------------------------------------------------------------
-template <typename ImplicitFunctionType, typename DerivedPolicy>
-inline void ClipWithImplicitFunction::SetImplicitFunction(
-  const std::shared_ptr<ImplicitFunctionType>& func,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  func->ResetDevices(DerivedPolicy::DeviceAdapterList);
-  this->Function = func;
-}
-
-//-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline vtkm::filter::Result ClipWithImplicitFunction::DoExecute(
   const vtkm::cont::DataSet& input,
@@ -79,7 +69,7 @@ inline vtkm::filter::Result ClipWithImplicitFunction::DoExecute(
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
-    vtkm::filter::ApplyPolicy(cells, policy), *this->Function, inputCoords, device);
+    vtkm::filter::ApplyPolicy(cells, policy), this->Function, inputCoords, device);
 
   // compute output coordinates
   vtkm::cont::DynamicArrayHandle outputCoordsArray;

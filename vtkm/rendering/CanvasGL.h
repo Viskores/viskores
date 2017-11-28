@@ -38,43 +38,43 @@ public:
 
   ~CanvasGL();
 
-  void Initialize() VTKM_OVERRIDE;
+  void Initialize() override;
 
-  void Activate() VTKM_OVERRIDE;
+  void Activate() override;
 
-  void Clear() VTKM_OVERRIDE;
+  void Clear() override;
 
-  void Finish() VTKM_OVERRIDE;
+  void Finish() override;
 
-  vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Canvas* NewCopy() const override;
 
-  void SetViewToWorldSpace(const vtkm::rendering::Camera& camera, bool clip) VTKM_OVERRIDE;
+  void SetViewToWorldSpace(const vtkm::rendering::Camera& camera, bool clip) override;
 
-  void SetViewToScreenSpace(const vtkm::rendering::Camera& camera, bool clip) VTKM_OVERRIDE;
+  void SetViewToScreenSpace(const vtkm::rendering::Camera& camera, bool clip) override;
 
-  void SetViewportClipping(const vtkm::rendering::Camera& camera, bool clip) VTKM_OVERRIDE;
+  void SetViewportClipping(const vtkm::rendering::Camera& camera, bool clip) override;
 
-  void RefreshColorBuffer() const VTKM_OVERRIDE;
+  void RefreshColorBuffer() const override;
 
-  virtual void RefreshDepthBuffer() const VTKM_OVERRIDE;
+  virtual void RefreshDepthBuffer() const override;
 
-  vtkm::rendering::WorldAnnotator* CreateWorldAnnotator() const VTKM_OVERRIDE;
+  vtkm::rendering::WorldAnnotator* CreateWorldAnnotator() const override;
 
 protected:
   void AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
                const vtkm::Vec<vtkm::Float64, 2>& point1,
                vtkm::Float32 linewidth,
-               const vtkm::rendering::Color& color) const VTKM_OVERRIDE;
+               const vtkm::rendering::Color& color) const override;
 
   void AddColorBar(const vtkm::Bounds& bounds,
                    const vtkm::rendering::ColorTable& colorTable,
-                   bool horizontal) const VTKM_OVERRIDE;
+                   bool horizontal) const override;
 
   void AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,
                       const vtkm::Vec<vtkm::Float64, 2>& point1,
                       const vtkm::Vec<vtkm::Float64, 2>& point2,
                       const vtkm::Vec<vtkm::Float64, 2>& point3,
-                      const vtkm::rendering::Color& color) const VTKM_OVERRIDE;
+                      const vtkm::rendering::Color& color) const override;
 
   void AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
                vtkm::Float32 scale,
@@ -82,7 +82,7 @@ protected:
                vtkm::Float32 windowAspect,
                const vtkm::Vec<vtkm::Float32, 2>& anchor,
                const vtkm::rendering::Color& color,
-               const std::string& text) const VTKM_OVERRIDE;
+               const std::string& text) const override;
 
 private:
   vtkm::rendering::BitmapFont Font;

@@ -44,11 +44,11 @@ public:
 
   ~CanvasEGL();
 
-  virtual void Initialize() VTKM_OVERRIDE;
+  virtual void Initialize() override;
 
-  virtual void Activate() VTKM_OVERRIDE;
+  virtual void Activate() override;
 
-  vtkm::rendering::Canvas* NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Canvas* NewCopy() const override;
 
 private:
   std::shared_ptr<detail::CanvasEGLInternals> Internals;

@@ -33,10 +33,6 @@ namespace
 template <int N>
 struct TestClass
 {
-  enum
-  {
-    NUMBER = N
-  };
 };
 
 struct TestListTag1 : vtkm::ListTagBase<TestClass<11>>
@@ -63,36 +59,50 @@ struct TestListTagIntersect : vtkm::ListTagIntersect<TestListTag3, TestListTagJo
 {
 };
 
+struct TestListTagCrossProduct : vtkm::ListCrossProduct<TestListTag3, TestListTag1>
+{
+};
+
 struct TestListTagUniversal : vtkm::ListTagUniversal
 {
 };
 
+template <int N, int M>
+std::pair<int, int> test_number(std::pair<TestClass<N>, TestClass<M>>)
+{
+  return std::make_pair(N, M);
+}
+
+template <int N>
+int test_number(TestClass<N>)
+{
+  return N;
+}
+
+template <typename T>
 struct MutableFunctor
 {
-  std::vector<int> FoundTypes;
+  std::vector<T> FoundTypes;
 
-  template <typename T>
-  VTKM_CONT void operator()(T)
+  template <typename U>
+  VTKM_CONT void operator()(U u)
   {
-    this->FoundTypes.push_back(T::NUMBER);
+    this->FoundTypes.push_back(test_number(u));
   }
 };
 
-std::vector<int> g_FoundType;
-
+template <typename T>
 struct ConstantFunctor
 {
-  ConstantFunctor() { g_FoundType.erase(g_FoundType.begin(), g_FoundType.end()); }
-
-  template <typename T>
-  VTKM_CONT void operator()(T) const
+  template <typename U, typename VectorType>
+  VTKM_CONT void operator()(U u, VectorType& vector) const
   {
-    g_FoundType.push_back(T::NUMBER);
+    vector.push_back(test_number(u));
   }
 };
 
-template <vtkm::IdComponent N>
-void CheckSame(const vtkm::Vec<int, N>& expected, const std::vector<int>& found)
+template <typename T, vtkm::IdComponent N>
+void CheckSame(const vtkm::Vec<T, N>& expected, const std::vector<T>& found)
 {
   VTKM_TEST_ASSERT(static_cast<int>(found.size()) == N, "Got wrong number of items.");
 
@@ -137,13 +147,15 @@ void TryList(const vtkm::Vec<int, N>& expected, ListTag)
   VTKM_IS_LIST_TAG(ListTag);
 
   std::cout << "    Try mutable for each" << std::endl;
-  MutableFunctor functor;
+  MutableFunctor<int> functor;
   vtkm::ListForEach(functor, ListTag());
   CheckSame(expected, functor.FoundTypes);
 
   std::cout << "    Try constant for each" << std::endl;
-  vtkm::ListForEach(ConstantFunctor(), ListTag());
-  CheckSame(expected, g_FoundType);
+  std::vector<int> foundTypes;
+  ConstantFunctor<int> cfunc;
+  vtkm::ListForEach(cfunc, ListTag(), foundTypes);
+  CheckSame(expected, foundTypes);
 
   std::cout << "    Try checking contents" << std::endl;
   CheckContains(TestClass<11>(), ListTag(), functor.FoundTypes);
@@ -156,6 +168,22 @@ void TryList(const vtkm::Vec<int, N>& expected, ListTag)
   CheckContains(TestClass<42>(), ListTag(), functor.FoundTypes);
   CheckContains(TestClass<43>(), ListTag(), functor.FoundTypes);
   CheckContains(TestClass<44>(), ListTag(), functor.FoundTypes);
+}
+template <vtkm::IdComponent N, typename ListTag>
+void TryList(const vtkm::Vec<std::pair<int, int>, N>& expected, ListTag)
+{
+  VTKM_IS_LIST_TAG(ListTag);
+
+  std::cout << "    Try mutable for each" << std::endl;
+  MutableFunctor<std::pair<int, int>> functor;
+  vtkm::ListForEach(functor, ListTag());
+  CheckSame(expected, functor.FoundTypes);
+
+  std::cout << "    Try constant for each" << std::endl;
+  std::vector<std::pair<int, int>> foundTypes;
+  ConstantFunctor<std::pair<int, int>> cfunc;
+  vtkm::ListForEach(cfunc, ListTag(), foundTypes);
+  CheckSame(expected, foundTypes);
 }
 
 template <vtkm::IdComponent N>
@@ -206,6 +234,12 @@ void TestLists()
 
   std::cout << "ListTagIntersect" << std::endl;
   TryList(vtkm::Vec<int, 3>(31, 32, 33), TestListTagIntersect());
+
+  std::cout << "ListTagCrossProduct" << std::endl;
+  TryList(vtkm::Vec<std::pair<int, int>, 3>({ 31, 11 }, { 32, 11 }, { 33, 11 }),
+          TestListTagCrossProduct());
+
+
 
   std::cout << "ListTagUniversal" << std::endl;
   TryList(vtkm::Vec<int, 4>(1, 2, 3, 4), TestListTagUniversal());

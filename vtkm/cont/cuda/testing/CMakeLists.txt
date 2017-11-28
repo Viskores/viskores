@@ -29,6 +29,6 @@ set(unit_tests
   UnitTestCudaMath.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
   UnitTestCudaPointLocatorUniformGrid.cxx
-  UnitTestCudaVirtualObjectCache.cu
+  UnitTestCudaVirtualObjectHandle.cu
   )
 vtkm_unit_tests(SOURCES ${unit_tests})

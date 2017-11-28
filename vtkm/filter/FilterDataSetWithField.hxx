@@ -162,10 +162,11 @@ inline VTKM_CONT Result FilterDataSetWithField<Derived>::PrepareForExecution(
   Result result;
 
   typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result> FunctorType;
-  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, this->Tracker, result);
+  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
 
   typedef vtkm::filter::FilterTraits<Derived> Traits;
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy, Traits()), functor);
+  vtkm::cont::CastAndCall(
+    vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->Tracker);
   return result;
 }
 
@@ -184,10 +185,11 @@ inline VTKM_CONT Result FilterDataSetWithField<Derived>::PrepareForExecution(
   //determine the field type first
   Result result;
   typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result> FunctorType;
-  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, this->Tracker, result);
+  FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
 
   typedef vtkm::filter::FilterTraits<Derived> Traits;
-  vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy, Traits()), functor);
+  vtkm::cont::CastAndCall(
+    vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->Tracker);
 
   return result;
 }
@@ -214,10 +216,9 @@ inline VTKM_CONT bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(
   {
     vtkm::filter::FieldMetadata metaData(field);
     typedef internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy> FunctorType;
-    FunctorType functor(
-      static_cast<Derived*>(this), result, metaData, policy, this->Tracker, valid);
+    FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
-    vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy), functor);
+    vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy), functor, this->Tracker);
   }
 
   //the bool valid will be modified by the map algorithm to hold if the

@@ -17,13 +17,21 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/cont/ImplicitFunction.h>
+#include <vtkm/cont/testing/TestingVirtualObjectHandle.h>
 
-namespace vtkm
-{
-namespace cont
+namespace
 {
 
-ImplicitFunction::~ImplicitFunction() = default;
+void TestVirtualObjectHandle()
+{
+  using DeviceAdapterList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial>;
+
+  vtkm::cont::testing::TestingVirtualObjectHandle<DeviceAdapterList>::Run();
 }
-} // vtkm::cont
+
+} // anonymous namespace
+
+int UnitTestSerialVirtualObjectHandle(int, char* [])
+{
+  return vtkm::cont::testing::Testing::Run(TestVirtualObjectHandle);
+}

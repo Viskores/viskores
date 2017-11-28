@@ -139,11 +139,11 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   {
     vtkm::filter::FieldMetadata metaData(field);
     typedef internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy> FunctorType;
-    FunctorType functor(
-      static_cast<Derived*>(this), result, metaData, policy, this->Tracker, valid);
+    FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
     typedef vtkm::filter::FilterTraits<Derived> Traits;
-    vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy, Traits()), functor);
+    vtkm::cont::CastAndCall(
+      vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->Tracker);
   }
 
   //the bool valid will be modified by the map algorithm to hold if the

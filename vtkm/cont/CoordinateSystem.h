@@ -72,7 +72,17 @@ struct StorageListTagCoordinateSystemDefault
                         vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::StorageTag>
 {
 };
+}
+}
 
+namespace vtkm
+{
+
+template struct ListCrossProduct<::vtkm::TypeListTagFieldVec3,
+                                 ::vtkm::cont::StorageListTagCoordinateSystemDefault>;
+
+namespace cont
+{
 using DynamicArrayHandleCoordinateSystem =
   vtkm::cont::DynamicArrayHandleBase<VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG,
                                      VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>;
@@ -214,10 +224,10 @@ public:
   virtual void PrintSummary(std::ostream& out) const;
 };
 
-template <typename Functor>
-void CastAndCall(const vtkm::cont::CoordinateSystem& coords, const Functor& f)
+template <typename Functor, typename... Args>
+void CastAndCall(const vtkm::cont::CoordinateSystem& coords, const Functor& f, Args&&... args)
 {
-  coords.GetData().CastAndCall(f);
+  coords.GetData().CastAndCall(f, std::forward<Args>(args)...);
 }
 
 namespace internal
