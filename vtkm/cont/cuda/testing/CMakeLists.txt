@@ -28,6 +28,7 @@ set(unit_tests
   UnitTestCudaImplicitFunction.cu
   UnitTestCudaMath.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
-  UnitTestCudaVirtualObjectCache.cu
+  UnitTestCudaPointLocatorUniformGrid.cxx
+  UnitTestCudaVirtualObjectHandle.cu
   )
 vtkm_unit_tests(CUDA SOURCES ${unit_tests})

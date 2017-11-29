@@ -32,6 +32,7 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/TaskSingular.h>
 
+#include <vtkm/BinaryPredicates.h>
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/internal/Windows.h>
@@ -475,11 +476,16 @@ public:
 
   //--------------------------------------------------------------------------
   // Scan Exclusive By Key
-  template <typename T, typename U, typename KIn, typename VIn, typename VOut, class BinaryFunctor>
-  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output,
-                                           const U& initialValue,
+  template <typename KeyT,
+            typename ValueT,
+            typename KIn,
+            typename VIn,
+            typename VOut,
+            class BinaryFunctor>
+  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<KeyT, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
+                                           vtkm::cont::ArrayHandle<ValueT, VOut>& output,
+                                           const ValueT& initialValue,
                                            BinaryFunctor binaryFunctor)
   {
     VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
@@ -513,13 +519,16 @@ public:
     }
 
     // 2. Shift input and initialize elements at head flags position to initValue
-    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> temp;
+    vtkm::cont::ArrayHandle<ValueT, vtkm::cont::StorageTagBasic> temp;
     {
       auto inputPortal = values.PrepareForInput(DeviceAdapterTag());
       auto keyStatePortal = keystate.PrepareForInput(DeviceAdapterTag());
       auto tempPortal = temp.PrepareForOutput(numberOfKeys, DeviceAdapterTag());
 
-      ShiftCopyAndInit<U, decltype(inputPortal), decltype(keyStatePortal), decltype(tempPortal)>
+      ShiftCopyAndInit<ValueT,
+                       decltype(inputPortal),
+                       decltype(keyStatePortal),
+                       decltype(tempPortal)>
         kernel(inputPortal, keyStatePortal, tempPortal, initialValue);
       DerivedAlgorithm::Schedule(kernel, numberOfKeys);
     }
@@ -527,13 +536,13 @@ public:
     DerivedAlgorithm::ScanInclusiveByKey(keys, temp, output, binaryFunctor);
   }
 
-  template <typename T, typename U, class KIn, typename VIn, typename VOut>
-  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output)
+  template <typename KeyT, typename ValueT, class KIn, typename VIn, typename VOut>
+  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<KeyT, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
+                                           vtkm::cont::ArrayHandle<ValueT, VOut>& output)
   {
     DerivedAlgorithm::ScanExclusiveByKey(
-      keys, values, output, vtkm::TypeTraits<U>::ZeroInitialization(), vtkm::Sum());
+      keys, values, output, vtkm::TypeTraits<ValueT>::ZeroInitialization(), vtkm::Sum());
   }
 
   //--------------------------------------------------------------------------
@@ -632,18 +641,18 @@ public:
     return GetExecutionValue(output, numValues - 1);
   }
 
-  template <typename T, typename U, class KIn, class VIn, class VOut>
-  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& values_output)
+  template <typename KeyT, typename ValueT, class KIn, class VIn, class VOut>
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<KeyT, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
+                                           vtkm::cont::ArrayHandle<ValueT, VOut>& values_output)
   {
     return DerivedAlgorithm::ScanInclusiveByKey(keys, values, values_output, vtkm::Add());
   }
 
-  template <typename T, typename U, class KIn, class VIn, class VOut, class BinaryFunctor>
-  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& values_output,
+  template <typename KeyT, typename ValueT, class KIn, class VIn, class VOut, class BinaryFunctor>
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<KeyT, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
+                                           vtkm::cont::ArrayHandle<ValueT, VOut>& values_output,
                                            BinaryFunctor binary_functor)
   {
     VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
@@ -675,7 +684,7 @@ public:
     // the value summed currently, the second being 0 or 1, with 1 being used
     // when this is a value of a key we need to write ( END or START_AND_END)
     {
-      vtkm::cont::ArrayHandle<U, VOut> reducedValues;
+      vtkm::cont::ArrayHandle<ValueT, VOut> reducedValues;
       vtkm::cont::ArrayHandle<ReduceKeySeriesStates> stencil;
       auto scanInput = vtkm::cont::make_ArrayHandleZip(values, keystate);
       auto scanOutput = vtkm::cont::make_ArrayHandleZip(reducedValues, stencil);
@@ -759,7 +768,7 @@ public:
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
-    Unique(values, std::equal_to<T>());
+    DerivedAlgorithm::Unique(values, vtkm::Equal());
   }
 
   template <typename T, class Storage, class BinaryCompare>

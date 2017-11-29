@@ -310,20 +310,43 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output);
 
-  /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
+  /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
-  /// Computes a segmented exclusive prefix sum (or any user binary operation)
-  /// on the \c keys and \c values ArrayHandle(s). Each segmented exclusive
-  /// prefix sum is run on consecutive equal keys with the binary operation
-  /// applied to all values inside that range. Once finished the result is
-  /// stored in \c values_output ArrayHandle.
+  /// Computes an exclusive prefix sum operation on the \c input ArrayHandle,
+  /// storing the results in the \c output ArrayHandle. ExclusiveScan is
+  /// similar to the stl partial sum function, exception that ExclusiveScan
+  /// doesn't do a serial summation. This means that if you have defined a
+  /// custom plus operator for T it must be associative, or you will get
+  /// inconsistent results. When the input and output ArrayHandles are the same
+  /// ArrayHandle the operation will be done inplace.
   ///
-  template <typename T, typename U, typename KIn, typename VIn, typename VOut, class BinaryFunctor>
-  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output,
-                                           const U& initialValue,
-                                           BinaryFunctor binaryFunctor);
+  /// \return The total sum.
+  ///
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                   vtkm::cont::ArrayHandle<T, COut>& output,
+                                   BinaryFunctor binaryFunctor,
+                                   const T& initialValue)
+
+    /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
+    ///
+    /// Computes a segmented exclusive prefix sum (or any user binary operation)
+    /// on the \c keys and \c values ArrayHandle(s). Each segmented exclusive
+    /// prefix sum is run on consecutive equal keys with the binary operation
+    /// applied to all values inside that range. Once finished the result is
+    /// stored in \c values_output ArrayHandle.
+    ///
+    template <typename T,
+              typename U,
+              typename KIn,
+              typename VIn,
+              typename VOut,
+              class BinaryFunctor>
+    VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                             const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                             vtkm::cont::ArrayHandle<U, VOut>& output,
+                                             const U& initialValue,
+                                             BinaryFunctor binaryFunctor);
 
   /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
   ///

@@ -74,6 +74,17 @@ public:
     this->SetDeviceState(Traits::GetId(), Traits::GetName(), false);
   }
 
+  /// Report a failure to allocate memory on a device, this will flag the
+  /// device as being unusable for all future invocations of the instance of
+  /// the filter.
+  ///
+  VTKM_CONT void ReportAllocationFailure(vtkm::Int8 deviceId,
+                                         const std::string& name,
+                                         const vtkm::cont::ErrorBadAllocation&)
+  {
+    this->SetDeviceState(deviceId, name, false);
+  }
+
   /// Reset the tracker for the given device. This will discard any updates
   /// caused by reported failures
   ///
@@ -196,13 +207,13 @@ private:
                        bool runtimeExists);
 };
 
-/// \brief Get the global \c RuntimeDeviceTracker.
+/// \brief Get the \c RuntimeDeviceTracker for the current thread.
 ///
 /// Many features in VTK-m will attempt to run algorithms on the "best
 /// available device." This often is determined at runtime as failures in
 /// one device are recorded and that device is disabled. To prevent having
-/// to check over and over again, VTK-m features generally use the global
-/// device adapter so that these choices are marked and shared.
+/// to check over and over again, VTK-m uses per thread runtime device tracker
+/// so that these choices are marked and shared.
 ///
 VTKM_CONT_EXPORT
 VTKM_CONT

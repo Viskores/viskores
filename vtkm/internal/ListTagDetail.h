@@ -165,30 +165,30 @@ struct ListIntersect<SameListTag, SameListTag>
   using type = SameListTag;
 };
 
-template <typename Functor>
-VTKM_CONT void ListForEachImpl(Functor&&, brigand::empty_sequence)
+template <typename Functor, typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&&, brigand::list<>, Args&&...)
 {
 }
 
-template <typename Functor, typename T1>
-VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1>)
+template <typename Functor, typename T1, typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1>, Args&&... args)
 {
-  f(T1{});
+  f(T1{}, std::forward<Args>(args)...);
 }
 
-template <typename Functor, typename T1, typename T2>
-VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2>)
+template <typename Functor, typename T1, typename T2, typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2>, Args&&... args)
 {
-  f(T1{});
-  f(T2{});
+  f(T1{}, std::forward<Args>(args)...);
+  f(T2{}, std::forward<Args>(args)...);
 }
 
-template <typename Functor, typename T1, typename T2, typename T3>
-VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2, T3>)
+template <typename Functor, typename T1, typename T2, typename T3, typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2, T3>, Args&&... args)
 {
-  f(T1{});
-  f(T2{});
-  f(T3{});
+  f(T1{}, std::forward<Args>(args)...);
+  f(T2{}, std::forward<Args>(args)...);
+  f(T3{}, std::forward<Args>(args)...);
 }
 
 template <typename Functor,
@@ -196,15 +196,48 @@ template <typename Functor,
           typename T2,
           typename T3,
           typename T4,
-          typename... ArgTypes>
-VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2, T3, T4, ArgTypes...>)
+          typename... ArgTypes,
+          typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&& f,
+                               brigand::list<T1, T2, T3, T4, ArgTypes...>&&,
+                               Args&&... args)
 {
-  f(T1{});
-  f(T2{});
-  f(T3{});
-  f(T4{});
-  ListForEachImpl(f, brigand::list<ArgTypes...>());
+  f(T1{}, std::forward<Args>(args)...);
+  f(T2{}, std::forward<Args>(args)...);
+  f(T3{}, std::forward<Args>(args)...);
+  f(T4{}, std::forward<Args>(args)...);
+  ListForEachImpl(
+    std::forward<Functor>(f), brigand::list<ArgTypes...>{}, std::forward<Args>(args)...);
 }
+
+
+template <typename T, typename U, typename R>
+struct ListCrossProductAppend
+{
+  using type = brigand::push_back<T, std::pair<U, R>>;
+};
+
+template <typename T, typename U, typename R2>
+struct ListCrossProductImplUnrollR2
+{
+  using P =
+    brigand::fold<R2,
+                  brigand::list<>,
+                  ListCrossProductAppend<brigand::_state, brigand::_element, brigand::pin<U>>>;
+
+  using type = brigand::append<T, P>;
+};
+
+template <typename R1, typename R2>
+struct ListCrossProductImpl
+{
+  using type = brigand::fold<
+    R2,
+    brigand::list<>,
+    ListCrossProductImplUnrollR2<brigand::_state, brigand::_element, brigand::pin<R1>>>;
+};
+
+
 
 } // namespace detail
 

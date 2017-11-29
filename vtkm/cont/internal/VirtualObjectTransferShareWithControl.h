@@ -20,6 +20,11 @@
 #ifndef vtk_m_cont_internal_VirtualObjectTransferShareWithControl_h
 #define vtk_m_cont_internal_VirtualObjectTransferShareWithControl_h
 
+#include <vtkm/StaticAssert.h>
+#include <vtkm/VirtualObjectBase.h>
+
+#include <typeinfo>
+
 namespace vtkm
 {
 namespace cont
@@ -27,19 +32,23 @@ namespace cont
 namespace internal
 {
 
-template <typename VirtualObject, typename TargetClass>
+template <typename VirtualDerivedType>
 struct VirtualObjectTransferShareWithControl
 {
-  static void* Create(VirtualObject& object, const void* target)
+  VTKM_CONT VirtualObjectTransferShareWithControl(const VirtualDerivedType* virtualObject)
+    : VirtualObject(virtualObject)
   {
-    static int dummyState = 0;
-    object.Bind(static_cast<const TargetClass*>(target));
-    return &dummyState;
   }
 
-  static void Update(void*, const void*) {}
+  VTKM_CONT const VirtualDerivedType* PrepareForExecution(bool vtkmNotUsed(updateData))
+  {
+    return this->VirtualObject;
+  }
 
-  static void Cleanup(void*) {}
+  VTKM_CONT void ReleaseResources() {}
+
+private:
+  const VirtualDerivedType* VirtualObject;
 };
 }
 }

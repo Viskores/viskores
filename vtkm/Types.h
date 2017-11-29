@@ -438,7 +438,7 @@ public:
 
 protected:
   VTKM_EXEC_CONT
-  VecBaseCommon() {}
+  VecBaseCommon() = default;
 
   VTKM_EXEC_CONT
   const DerivedClass& Derived() const { return *static_cast<const DerivedClass*>(this); }
@@ -666,7 +666,7 @@ public:
 
 protected:
   VTKM_EXEC_CONT
-  VecBase() {}
+  VecBase() = default;
 
   VTKM_EXEC_CONT
   explicit VecBase(const ComponentType& value)
@@ -824,7 +824,7 @@ public:
   static const vtkm::IdComponent NUM_COMPONENTS = Size;
 #endif
 
-  VTKM_EXEC_CONT Vec() {}
+  VTKM_EXEC_CONT Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -851,7 +851,7 @@ public:
   using ComponentType = T;
   static const vtkm::IdComponent NUM_COMPONENTS = 0;
 
-  VTKM_EXEC_CONT Vec() {}
+  VTKM_EXEC_CONT Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const ComponentType&) {}
 
   template <typename OtherType>
@@ -882,7 +882,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 1> : public detail::VecBase<T, 1, Vec<T, 1>>
   using Superclass = detail::VecBase<T, 1, Vec<T, 1>>;
 
 public:
-  VTKM_EXEC_CONT Vec() {}
+  VTKM_EXEC_CONT Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -912,7 +912,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 2> : public detail::VecBase<T, 2, Vec<T, 2>>
   using Superclass = detail::VecBase<T, 2, Vec<T, 2>>;
 
 public:
-  VTKM_EXEC_CONT Vec() {}
+  VTKM_EXEC_CONT Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -941,7 +941,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 3> : public detail::VecBase<T, 3, Vec<T, 3>>
   using Superclass = detail::VecBase<T, 3, Vec<T, 3>>;
 
 public:
-  VTKM_EXEC_CONT Vec() {}
+  VTKM_EXEC_CONT Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -972,7 +972,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 4> : public detail::VecBase<T, 4, Vec<T, 4>>
   using Superclass = detail::VecBase<T, 4, Vec<T, 4>>;
 
 public:
-  VTKM_EXEC_CONT Vec() {}
+  VTKM_EXEC_CONT Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {

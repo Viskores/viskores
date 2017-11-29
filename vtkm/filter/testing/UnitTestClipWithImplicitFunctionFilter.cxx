@@ -60,11 +60,10 @@ void TestClipStructured()
 
   vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
-  auto sphere = std::make_shared<vtkm::cont::Sphere>(center, radius);
 
   vtkm::filter::Result result;
   vtkm::filter::ClipWithImplicitFunction clip;
-  clip.SetImplicitFunction(sphere);
+  clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(vtkm::Sphere(center, radius)));
 
   result = clip.Execute(ds);
   clip.MapFieldOntoOutput(result, ds.GetField("scalars"));

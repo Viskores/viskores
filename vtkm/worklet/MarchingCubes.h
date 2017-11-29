@@ -665,6 +665,38 @@ private:
 template <typename NormalCType,
           typename InputFieldType,
           typename InputStorageType,
+          typename CellSet>
+struct GenerateNormalsDeduced
+{
+  vtkm::cont::ArrayHandle<vtkm::Vec<NormalCType, 3>>* normals;
+  const vtkm::cont::ArrayHandle<InputFieldType, InputStorageType>* field;
+  const CellSet* cellset;
+  vtkm::cont::ArrayHandle<vtkm::Id2>* edges;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault>* weights;
+
+  template <typename CoordinateSystem>
+  void operator()(const CoordinateSystem& coordinates) const
+  {
+    // To save memory, the normals computation is done in two passes. In the first
+    // pass the gradient at the first vertex of each edge is computed and stored in
+    // the normals array. In the second pass the gradient at the second vertex is
+    // computed and the gradient of the first vertex is read from the normals array.
+    // The final normal is interpolated from the two gradient values and stored
+    // in the normals array.
+    //
+    NormalsWorkletPass1 pass1(*edges);
+    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1>(pass1).Invoke(
+      *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *normals);
+
+    NormalsWorkletPass2 pass2(*edges);
+    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2>(pass2).Invoke(
+      *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *weights, *normals);
+  }
+};
+
+template <typename NormalCType,
+          typename InputFieldType,
+          typename InputStorageType,
           typename CellSet,
           typename CoordinateSystem>
 void GenerateNormals(vtkm::cont::ArrayHandle<vtkm::Vec<NormalCType, 3>>& normals,
@@ -674,20 +706,15 @@ void GenerateNormals(vtkm::cont::ArrayHandle<vtkm::Vec<NormalCType, 3>>& normals
                      vtkm::cont::ArrayHandle<vtkm::Id2>& edges,
                      vtkm::cont::ArrayHandle<vtkm::FloatDefault>& weights)
 {
-  // To save memory, the normals computation is done in two passes. In the first
-  // pass the gradient at the first vertex of each edge is computed and stored in
-  // the normals array. In the second pass the gradient at the second vertex is
-  // computed and the gradient of the first vertex is read from the normals array.
-  // The final normal is interpolated from the two gradient values and stored
-  // in the normals array.
-  //
-  NormalsWorkletPass1 pass1(edges);
-  vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1>(pass1).Invoke(
-    cellset, cellset, coordinates, field, normals);
+  GenerateNormalsDeduced<NormalCType, InputFieldType, InputStorageType, CellSet> functor;
+  functor.normals = &normals;
+  functor.field = &field;
+  functor.cellset = &cellset;
+  functor.edges = &edges;
+  functor.weights = &weights;
 
-  NormalsWorkletPass2 pass2(edges);
-  vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2>(pass2).Invoke(
-    cellset, cellset, coordinates, field, weights, normals);
+
+  vtkm::cont::CastAndCall(coordinates, functor);
 }
 }
 
@@ -738,7 +765,7 @@ public:
     const DeviceAdapter& device)
   {
     vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>> normals;
-    return this->DoRun(
+    return this->DeduceRun(
       isovalues, numIsoValues, cells, coordinateSystem, input, vertices, normals, false, device);
   }
 
@@ -761,7 +788,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagNormals> normals,
     const DeviceAdapter& device)
   {
-    return this->DoRun(
+    return this->DeduceRun(
       isovalues, numIsoValues, cells, coordinateSystem, input, vertices, normals, true, device);
   }
 
@@ -804,6 +831,91 @@ public:
   void ReleaseCellMapArrays() { this->CellIdMap.ReleaseResources(); }
 
 private:
+  template <typename ValueType,
+            typename CoordinateSystem,
+            typename StorageTagField,
+            typename StorageTagVertices,
+            typename StorageTagNormals,
+            typename CoordinateType,
+            typename NormalType,
+            typename DeviceAdapter>
+  struct DeduceCellType
+  {
+    MarchingCubes* MC = nullptr;
+    const ValueType* isovalues = nullptr;
+    const vtkm::Id* numIsoValues = nullptr;
+    const CoordinateSystem* coordinateSystem = nullptr;
+    const vtkm::cont::ArrayHandle<ValueType, StorageTagField>* inputField = nullptr;
+    vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices>* vertices;
+    vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals>* normals;
+    const bool* withNormals;
+    vtkm::cont::CellSetSingleType<>* result;
+
+    template <typename CellSetType>
+    void operator()(const CellSetType& cells) const
+    {
+      if (this->MC)
+      {
+        *this->result = this->MC->DoRun(isovalues,
+                                        *numIsoValues,
+                                        cells,
+                                        *coordinateSystem,
+                                        *inputField,
+                                        *vertices,
+                                        *normals,
+                                        *withNormals,
+                                        DeviceAdapter());
+      }
+    }
+  };
+
+  //----------------------------------------------------------------------------
+  template <typename ValueType,
+            typename CellSetType,
+            typename CoordinateSystem,
+            typename StorageTagField,
+            typename StorageTagVertices,
+            typename StorageTagNormals,
+            typename CoordinateType,
+            typename NormalType,
+            typename DeviceAdapter>
+  vtkm::cont::CellSetSingleType<> DeduceRun(
+    const ValueType* isovalues,
+    const vtkm::Id numIsoValues,
+    const CellSetType& cells,
+    const CoordinateSystem& coordinateSystem,
+    const vtkm::cont::ArrayHandle<ValueType, StorageTagField>& inputField,
+    vtkm::cont::ArrayHandle<vtkm::Vec<CoordinateType, 3>, StorageTagVertices> vertices,
+    vtkm::cont::ArrayHandle<vtkm::Vec<NormalType, 3>, StorageTagNormals> normals,
+    bool withNormals,
+    const DeviceAdapter&)
+  {
+    vtkm::cont::CellSetSingleType<> outputCells("contour");
+
+    DeduceCellType<ValueType,
+                   CoordinateSystem,
+                   StorageTagField,
+                   StorageTagVertices,
+                   StorageTagNormals,
+                   CoordinateType,
+                   NormalType,
+                   DeviceAdapter>
+      functor;
+    functor.MC = this;
+    functor.isovalues = isovalues;
+    functor.numIsoValues = &numIsoValues;
+    functor.coordinateSystem = &coordinateSystem;
+    functor.inputField = &inputField;
+    functor.vertices = &vertices;
+    functor.normals = &normals;
+    functor.withNormals = &withNormals;
+    functor.result = &outputCells;
+
+    vtkm::cont::CastAndCall(cells, functor);
+
+    return outputCells;
+  }
+
   //----------------------------------------------------------------------------
   template <typename ValueType,
             typename CellSetType,

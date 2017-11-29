@@ -190,43 +190,6 @@ vtkm::Id ArrayHandle<T, StorageTagBasic>::GetNumberOfValues() const
 }
 
 template <typename T>
-template <typename IteratorType, typename DeviceAdapterTag>
-void ArrayHandle<T, StorageTagBasic>::CopyInto(IteratorType dest, DeviceAdapterTag) const
-{
-  using pointer_type = typename std::iterator_traits<IteratorType>::pointer;
-  using value_type = typename std::remove_pointer<pointer_type>::type;
-
-  static_assert(!std::is_const<value_type>::value, "CopyInto requires a non const iterator.");
-
-  VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-  if (!this->Internals->ControlArrayValid && !this->Internals->ExecutionArrayValid)
-  {
-    throw vtkm::cont::ErrorBadValue("ArrayHandle has no data to copy into Iterator.");
-  }
-
-  // If we can copy directly from the execution environment, do so.
-  DeviceAdapterId devId = DeviceAdapterTraits<DeviceAdapterTag>::GetId();
-  if (!this->Internals->ControlArrayValid && std::is_pointer<IteratorType>::value &&
-      this->Internals->ExecutionInterface &&
-      this->Internals->ExecutionInterface->GetDeviceId() == devId)
-  {
-    vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(sizeof(ValueType)) *
-      static_cast<vtkm::UInt64>(this->GetNumberOfValues());
-    this->Internals->ExecutionInterface->CopyToControl(
-      this->Internals->ExecutionArray, dest, numBytes);
-  }
-  else
-  {
-    // Otherwise copy from control.
-    PortalConstControl portal = this->GetPortalConstControl();
-    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-              vtkm::cont::ArrayPortalToIteratorEnd(portal),
-              dest);
-  }
-}
-
-template <typename T>
 void ArrayHandle<T, StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 {
   this->ReleaseResourcesExecutionInternal();
@@ -304,6 +267,9 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device) const
   InternalStruct* priv = const_cast<InternalStruct*>(this->Internals.get());
 
   this->PrepareForDevice(device);
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(sizeof(ValueType)) *
+    static_cast<vtkm::UInt64>(this->GetStorage().GetNumberOfValues());
+
 
   if (!this->Internals->ExecutionArrayValid)
   {
@@ -321,9 +287,6 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device) const
       this->Internals->ControlArray.GetBasePointer(),
       this->Internals->ControlArray.GetCapacityPointer());
 
-    const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(sizeof(ValueType)) *
-      static_cast<vtkm::UInt64>(this->GetStorage().GetNumberOfValues());
-
     priv->ExecutionInterface->Allocate(execArray, numBytes);
 
     priv->ExecutionInterface->CopyFromControl(
@@ -331,6 +294,8 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device) const
 
     this->Internals->ExecutionArrayValid = true;
   }
+  this->Internals->ExecutionInterface->UsingForRead(
+    priv->ControlArray.GetArray(), priv->ExecutionArray, numBytes);
 
   return PortalFactory<DeviceAdapterTag>::CreatePortalConst(this->Internals->ExecutionArray,
                                                             this->Internals->ExecutionArrayEnd);
@@ -357,10 +322,16 @@ ArrayHandle<T, StorageTagBasic>::PrepareForOutput(vtkm::Id numVals, DeviceAdapte
                                              this->Internals->ControlArray.GetBasePointer(),
                                              this->Internals->ControlArray.GetCapacityPointer());
 
-  this->Internals->ExecutionInterface->Allocate(
-    execArray, static_cast<vtkm::UInt64>(sizeof(ValueType)) * static_cast<vtkm::UInt64>(numVals));
+  const vtkm::UInt64 numBytes =
+    static_cast<vtkm::UInt64>(sizeof(ValueType)) * static_cast<vtkm::UInt64>(numVals);
+
+  this->Internals->ExecutionInterface->Allocate(execArray, numBytes);
+
+  this->Internals->ExecutionInterface->UsingForWrite(
+    priv->ControlArray.GetArray(), priv->ExecutionArray, numBytes);
 
   this->Internals->ExecutionArrayValid = true;
+
 
   return PortalFactory<DeviceAdapterTag>::CreatePortal(this->Internals->ExecutionArray,
                                                        this->Internals->ExecutionArrayEnd);
@@ -375,6 +346,9 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
   InternalStruct* priv = const_cast<InternalStruct*>(this->Internals.get());
 
   this->PrepareForDevice(device);
+
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(sizeof(ValueType)) *
+    static_cast<vtkm::UInt64>(this->GetStorage().GetNumberOfValues());
 
   if (!this->Internals->ExecutionArrayValid)
   {
@@ -392,9 +366,6 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
       this->Internals->ControlArray.GetBasePointer(),
       this->Internals->ControlArray.GetCapacityPointer());
 
-    vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(sizeof(ValueType)) *
-      static_cast<vtkm::UInt64>(this->GetStorage().GetNumberOfValues());
-
     priv->ExecutionInterface->Allocate(execArray, numBytes);
 
     priv->ExecutionInterface->CopyFromControl(
@@ -402,6 +373,9 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
 
     this->Internals->ExecutionArrayValid = true;
   }
+
+  priv->ExecutionInterface->UsingForReadWrite(
+    priv->ControlArray.GetArray(), priv->ExecutionArray, numBytes);
 
   // Invalidate the control array, since we expect the values to be modified:
   this->Internals->ControlArrayValid = false;

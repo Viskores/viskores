@@ -87,34 +87,36 @@ struct TemplatedTests
     using PairAllocator =
       typename StorageType::AllocatorType::template rebind<std::pair<ValueType, ValueType>>::other;
     std::vector<ValueType, Allocator> v;
-    v.push_back(ValueType());
+    ValueType value = vtkm::TypeTraits<ValueType>::ZeroInitialization();
+
+    v.push_back(value);
 
     std::deque<ValueType, Allocator> d;
-    d.push_front(ValueType());
+    d.push_front(value);
 
     std::list<ValueType, Allocator> l;
-    l.push_front(ValueType());
+    l.push_front(value);
 
     std::set<ValueType, std::less<ValueType>, Allocator> set;
-    set.insert(ValueType());
+    set.insert(value);
 
     std::map<ValueType, ValueType, std::less<ValueType>, PairAllocator> m;
-    m[ValueType()] = ValueType();
+    m[value] = value;
 
     std::multiset<ValueType, std::less<ValueType>, Allocator> ms;
-    ms.insert(ValueType());
+    ms.insert(value);
 
     std::multimap<ValueType, ValueType, std::less<ValueType>, PairAllocator> mm;
-    mm.insert(std::pair<ValueType, ValueType>(ValueType(), ValueType()));
+    mm.insert(std::pair<ValueType, ValueType>(value, value));
 
     std::stack<ValueType, std::deque<ValueType, Allocator>> stack;
-    stack.push(ValueType());
+    stack.push(value);
 
     std::queue<ValueType, std::deque<ValueType, Allocator>> queue;
-    queue.push(ValueType());
+    queue.push(value);
 
     std::priority_queue<ValueType, std::vector<ValueType, Allocator>> pqueue;
-    pqueue.push(ValueType());
+    pqueue.push(value);
   }
 
   /// Returned value should later be passed to StealArray2.  It is best to

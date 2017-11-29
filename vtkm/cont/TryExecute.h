@@ -21,10 +21,6 @@
 #define vtk_m_cont_TryExecute_h
 
 #include <vtkm/cont/DeviceAdapterListTag.h>
-#include <vtkm/cont/ErrorBadAllocation.h>
-#include <vtkm/cont/ErrorBadType.h>
-#include <vtkm/cont/ErrorBadValue.h>
-
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 namespace vtkm
@@ -35,123 +31,171 @@ namespace cont
 namespace detail
 {
 
-template <typename Functor, typename Device, bool DeviceAdapterValid>
-struct TryExecuteRunIfValid;
+VTKM_CONT_EXPORT void HandleTryExecuteException(vtkm::Int8,
+                                                const std::string&,
+                                                vtkm::cont::RuntimeDeviceTracker&);
 
-template <typename Functor, typename Device>
-struct TryExecuteRunIfValid<Functor, Device, false>
+template <typename DeviceTag, typename Functor, typename... Args>
+bool TryExecuteIfValid(std::true_type,
+                       DeviceTag tag,
+                       Functor&& f,
+                       vtkm::cont::RuntimeDeviceTracker& tracker,
+                       Args&&... args)
 {
-  VTKM_CONT
-  static bool Run(Functor&, const vtkm::cont::RuntimeDeviceTracker&) { return false; }
-};
-
-template <typename Functor, typename Device>
-struct TryExecuteRunIfValid<Functor, Device, true>
-{
-  VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-  VTKM_CONT
-  static bool Run(Functor& functor, vtkm::cont::RuntimeDeviceTracker tracker)
+  if (tracker.CanRunOn(tag))
   {
-    if (tracker.CanRunOn(Device()))
+    try
     {
-      try
-      {
-        return functor(Device());
-      }
-      catch (vtkm::cont::ErrorBadAllocation& e)
-      {
-        std::cerr << "caught ErrorBadAllocation " << e.GetMessage() << std::endl;
-        //currently we only consider OOM errors worth disabling a device for
-        //than we fallback to another device
-        tracker.ReportAllocationFailure(Device(), e);
-      }
-      catch (vtkm::cont::ErrorBadType& e)
-      {
-        //should bad type errors should stop the execution, instead of
-        //deferring to another device adapter?
-        std::cerr << "caught ErrorBadType : " << e.GetMessage() << std::endl;
-      }
-      catch (vtkm::cont::ErrorBadValue& e)
-      {
-        //should bad value errors should stop the filter, instead of deferring
-        //to another device adapter?
-        std::cerr << "caught ErrorBadValue : " << e.GetMessage() << std::endl;
-      }
-      catch (vtkm::cont::Error& e)
-      {
-        //general errors should be caught and let us try the next device adapter.
-        std::cerr << "exception is: " << e.GetMessage() << std::endl;
-      }
-      catch (std::exception& e)
-      {
-        std::cerr << "caught standard exception: " << e.what() << std::endl;
-      }
-      catch (...)
-      {
-        std::cerr << "unknown exception caught" << std::endl;
-      }
+      return f(tag, std::forward<Args>(args)...);
     }
-
-    // If we are here, then the functor was either never run or failed.
-    return false;
-  }
-};
-
-template <typename FunctorType>
-struct TryExecuteImpl
-{
-  // Warning, these are a references. Make sure referenced objects do not go
-  // out of scope.
-  FunctorType& Functor;
-  vtkm::cont::RuntimeDeviceTracker Tracker;
-
-  bool Success;
-
-  VTKM_CONT
-  TryExecuteImpl(
-    FunctorType& functor,
-    vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
-    : Functor(functor)
-    , Tracker(tracker)
-    , Success(false)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    if (!this->Success)
+    catch (...)
     {
-      using DeviceTraits = vtkm::cont::DeviceAdapterTraits<Device>;
-
-      this->Success = detail::TryExecuteRunIfValid<FunctorType, Device, DeviceTraits::Valid>::Run(
-        this->Functor, this->Tracker);
+      using Traits = vtkm::cont::DeviceAdapterTraits<DeviceTag>;
+      HandleTryExecuteException(Traits::GetId(), Traits::GetName(), tracker);
     }
-
-    return this->Success;
   }
 
-private:
-  void operator=(const TryExecuteImpl<FunctorType>&) = delete;
+  // If we are here, then the functor was either never run or failed.
+  return false;
+}
+
+template <typename DeviceTag, typename Functor, typename... Args>
+bool TryExecuteIfValid(std::false_type,
+                       DeviceTag,
+                       Functor&&,
+                       vtkm::cont::RuntimeDeviceTracker&,
+                       Args&&...)
+{
+  return false;
+}
+
+struct TryExecuteWrapper
+{
+  template <typename DeviceTag, typename Functor, typename... Args>
+  void operator()(DeviceTag tag,
+                  Functor&& f,
+                  vtkm::cont::RuntimeDeviceTracker& tracker,
+                  bool& ran,
+                  Args&&... args) const
+  {
+    if (!ran)
+    {
+      using DeviceTraits = vtkm::cont::DeviceAdapterTraits<DeviceTag>;
+      ran = TryExecuteIfValid(std::integral_constant<bool, DeviceTraits::Valid>(),
+                              tag,
+                              std::forward<Functor>(f),
+                              std::forward<decltype(tracker)>(tracker),
+                              std::forward<Args>(args)...);
+    }
+  }
 };
+
+template <typename Functor, typename DeviceList, typename... Args>
+VTKM_CONT bool TryExecuteImpl(Functor&& functor,
+                              std::true_type,
+                              std::true_type,
+                              vtkm::cont::RuntimeDeviceTracker& tracker,
+                              DeviceList list,
+                              Args&&... args)
+{
+  bool success = false;
+  detail::TryExecuteWrapper task;
+  vtkm::ListForEach(
+    task, list, std::forward<Functor>(functor), tracker, success, std::forward<Args>(args)...);
+  return success;
+}
+
+template <typename Functor, typename... Args>
+VTKM_CONT bool TryExecuteImpl(Functor&& functor, std::false_type, std::false_type, Args&&... args)
+{
+  bool success = false;
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  detail::TryExecuteWrapper task;
+  vtkm::ListForEach(task,
+                    VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(),
+                    std::forward<Functor>(functor),
+                    tracker,
+                    success,
+                    std::forward<Args>(args)...);
+  return success;
+}
+
+template <typename Functor, typename Arg1, typename... Args>
+VTKM_CONT bool TryExecuteImpl(Functor&& functor,
+                              std::true_type t,
+                              std::false_type,
+                              Arg1&& arg1,
+                              Args&&... args)
+{
+  return TryExecuteImpl(std::forward<Functor>(functor),
+                        t,
+                        t,
+                        std::forward<Arg1>(arg1),
+                        VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG(),
+                        std::forward<Args>(args)...);
+}
+
+template <typename Functor, typename Arg1, typename... Args>
+VTKM_CONT bool TryExecuteImpl(Functor&& functor,
+                              std::false_type,
+                              std::true_type t,
+                              Arg1&& arg1,
+                              Args&&... args)
+{
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  return TryExecuteImpl(std::forward<Functor>(functor),
+                        t,
+                        t,
+                        tracker,
+                        std::forward<Arg1>(arg1),
+                        std::forward<Args>(args)...);
+}
 
 } // namespace detail
 
+///@{
 /// \brief Try to execute a functor on a list of devices until one succeeds.
 ///
-/// This function takes a functor and a list of devices. It then tries to run
-/// the functor for each device (in the order given in the list) until the
-/// execution succeeds.
+/// This function takes a functor and optionally a list of devices and \c RuntimeDeviceTracker.
+/// It then tries to run the functor for each device (in the order given in the list) until the
+/// execution succeeds. The optional \c RuntimeDeviceTracker allows for monitoring for certain
+/// failures across calls to TryExecute and skip trying devices with a history of failure.
 ///
-/// The functor parentheses operator should take exactly one argument, which is
-/// the \c DeviceAdapterTag to use. The functor should return a \c bool that is
-/// \c true if the execution succeeds, \c false if it fails. If an exception is
-/// thrown from the functor, then the execution is assumed to have failed.
+/// The TryExecute is also able to perfectly forward arbitrary arguments onto the functor.
+/// These arguments must be placed after the optional \c RuntimeDeviceTracker, and device adapter
+/// list and will passed to the functor in the same order as listed.
 ///
-/// This function also optionally takes a \c RuntimeDeviceTracker, which will
-/// monitor for certain failures across calls to TryExecute and skip trying
-/// devices with a history of failure.
+/// The functor must implement the function call operator ( \c operator() ) with a return type of
+/// \c bool and that is \c true if the execution succeeds, \c false if it fails. If an exception
+/// is thrown from the functor, then the execution is assumed to have failed. The functor call
+/// operator must also take at least one argument being the required \c DeviceAdapterTag to use.
+///
+/// \code{.cpp}
+/// struct TryCallExample
+/// {
+///   template<typename DeviceList>
+///   bool operator()(DeviceList tags, int) const
+///   {
+///     return true;
+///   }
+/// };
+///
+///
+/// // Executing without a runtime tracker or device list
+/// vtkm::cont::TryExecute(TryCallExample(), int{42});
+///
+/// // Executing with a runtime tracker
+/// auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+/// vtkm::cont::TryExecute(TryCallExample(), tracker, int{42});
+///
+/// // Executing with a device list
+/// using DeviceList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial>;
+/// vtkm::cont::TryExecute(TryCallExample(), DeviceList(), int{42});
+///
+/// // Executing with a runtime tracker and device list
+/// vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker, DeviceList(), int{42});
+///
+/// \endcode
 ///
 /// This function returns \c true if the functor succeeded on a device,
 /// \c false otherwise.
@@ -159,46 +203,57 @@ private:
 /// If no device list is specified, then \c VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG
 /// is used.
 ///
-template <typename Functor, typename DeviceList>
-VTKM_CONT bool TryExecute(const Functor& functor,
-                          vtkm::cont::RuntimeDeviceTracker tracker,
-                          DeviceList)
-{
-  detail::TryExecuteImpl<const Functor> internals(functor, tracker);
-  vtkm::ListForEach(internals, DeviceList());
-  return internals.Success;
-}
-template <typename Functor, typename DeviceList>
-VTKM_CONT bool TryExecute(Functor& functor, vtkm::cont::RuntimeDeviceTracker tracker, DeviceList)
-{
-  detail::TryExecuteImpl<Functor> internals(functor, tracker);
-  vtkm::ListForEach(internals, DeviceList());
-  return internals.Success;
-}
-template <typename Functor, typename DeviceList>
-VTKM_CONT bool TryExecute(const Functor& functor, DeviceList)
-{
-  return vtkm::cont::TryExecute(functor, vtkm::cont::GetGlobalRuntimeDeviceTracker(), DeviceList());
-}
-template <typename Functor, typename DeviceList>
-VTKM_CONT bool TryExecute(Functor& functor, DeviceList)
-{
-  return vtkm::cont::TryExecute(functor, vtkm::cont::GetGlobalRuntimeDeviceTracker(), DeviceList());
-}
+/// If no \c RuntimeDeviceTracker specified, then \c GetGlobalRuntimeDeviceTracker()
+/// is used.
 template <typename Functor>
-VTKM_CONT bool TryExecute(
-  const Functor& functor,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
+VTKM_CONT bool TryExecute(Functor&& functor)
 {
-  return vtkm::cont::TryExecute(functor, tracker, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+  //we haven't been passed either a runtime tracker or a device list
+  return detail::TryExecuteImpl(functor, std::false_type{}, std::false_type{});
 }
-template <typename Functor>
-VTKM_CONT bool TryExecute(
-  Functor& functor,
-  vtkm::cont::RuntimeDeviceTracker tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker())
+template <typename Functor, typename Arg1>
+VTKM_CONT bool TryExecute(Functor&& functor, Arg1&& arg1)
 {
-  return vtkm::cont::TryExecute(functor, tracker, VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG());
+  //determine if we are being passed a device adapter or runtime tracker as our argument
+  using is_deviceAdapter = typename std::is_base_of<vtkm::detail::ListRoot, Arg1>::type;
+  using is_tracker = typename std::is_base_of<vtkm::cont::RuntimeDeviceTracker,
+                                              typename std::remove_reference<Arg1>::type>::type;
+
+  return detail::TryExecuteImpl(
+    functor, is_tracker{}, is_deviceAdapter{}, std::forward<Arg1>(arg1));
 }
+template <typename Functor, typename Arg1, typename Arg2, typename... Args>
+VTKM_CONT bool TryExecute(Functor&& functor, Arg1&& arg1, Arg2&& arg2, Args&&... args)
+{
+  //So arg1 can be runtime or device adapter
+  //if arg1 is runtime, we need to see if arg2 is device adapter
+  using is_arg1_tracker =
+    typename std::is_base_of<vtkm::cont::RuntimeDeviceTracker,
+                             typename std::remove_reference<Arg1>::type>::type;
+  using is_arg2_devicelist = typename std::is_base_of<vtkm::detail::ListRoot, Arg2>::type;
+
+  //We now know what of three states we are currently at
+  using has_runtime_and_deviceAdapter =
+    brigand::bool_<is_arg1_tracker::value && is_arg2_devicelist::value>;
+  using has_just_runtime = brigand::bool_<is_arg1_tracker::value && !is_arg2_devicelist::value>;
+  using has_just_devicelist = typename std::is_base_of<vtkm::detail::ListRoot, Arg1>::type;
+
+  //With this information we can now compute if we have a runtime tracker and/or
+  //the device adapter and enable the correct flags
+  using first_true =
+    brigand::bool_<has_runtime_and_deviceAdapter::value || has_just_runtime::value>;
+  using second_true =
+    brigand::bool_<has_runtime_and_deviceAdapter::value || has_just_devicelist::value>;
+
+  return detail::TryExecuteImpl(functor,
+                                first_true{},
+                                second_true{},
+                                std::forward<Arg1>(arg1),
+                                std::forward<Arg2>(arg2),
+                                std::forward<Args>(args)...);
+}
+
+//@} //block doxygen all TryExecute functions
 }
 } // namespace vtkm::cont
 

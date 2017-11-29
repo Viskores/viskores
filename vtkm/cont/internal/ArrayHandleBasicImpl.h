@@ -112,6 +112,17 @@ struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicBase
                              void* controlPtr,
                              vtkm::UInt64 numBytes) const = 0;
 
+
+  VTKM_CONT virtual void UsingForRead(const void* controlPtr,
+                                      const void* executionPtr,
+                                      vtkm::UInt64 numBytes) const = 0;
+  VTKM_CONT virtual void UsingForWrite(const void* controlPtr,
+                                       const void* executionPtr,
+                                       vtkm::UInt64 numBytes) const = 0;
+  VTKM_CONT virtual void UsingForReadWrite(const void* controlPtr,
+                                           const void* executionPtr,
+                                           vtkm::UInt64 numBytes) const = 0;
+
 protected:
   StorageBasicBase& ControlStorage;
 };
@@ -176,9 +187,6 @@ public:
   VTKM_CONT PortalControl GetPortalControl();
   VTKM_CONT PortalConstControl GetPortalConstControl() const;
   VTKM_CONT vtkm::Id GetNumberOfValues() const;
-
-  template <typename IteratorType, typename DeviceAdapterTag>
-  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const;
 
   VTKM_CONT void Allocate(vtkm::Id numberOfValues);
   VTKM_CONT void Shrink(vtkm::Id numberOfValues);

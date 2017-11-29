@@ -141,12 +141,12 @@ struct SwizzleTests
     auto refPortal = this->RefArray.GetPortalConstControl();
     auto testPortal = testArray.GetPortalConstControl();
 
+    SwizzleVectorType refVecSwizzle(vtkm::TypeTraits<SwizzleVectorType>::ZeroInitialization());
     for (vtkm::Id i = 0; i < testArray.GetNumberOfValues(); ++i)
     {
-      // Manually swizzle the reference vector using the runtime map information:
       ReferenceVectorType refVec = refPortal.Get(i);
-      SwizzleVectorType refVecSwizzle;
 
+      // Manually swizzle the reference vector using the runtime map information:
       for (size_t j = 0; j < map.size(); ++j)
       {
         refVecSwizzle[static_cast<vtkm::IdComponent>(j)] = refVec[map[j]];

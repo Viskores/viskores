@@ -57,7 +57,7 @@ if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
   set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}/cmake")
 endif()
 
-set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}")
+set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include")
 
 set(VTKm_EXPORT_NAME "VTKmTargets")
 
@@ -78,8 +78,8 @@ add_library(vtkm INTERFACE)
 target_compile_features(vtkm INTERFACE cxx_auto_type)
 target_include_directories(vtkm INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}>
-  $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${VTKm_BINARY_INCLUDE_DIR}>
+  $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}>
   )
 install(TARGETS vtkm EXPORT ${VTKm_EXPORT_NAME})
 
@@ -101,9 +101,13 @@ set(CMAKE_CXX_EXTENSIONS False)
 # VTK-m is setup by default not to export symbols unless explicitly stated.
 # We prefer to only export symbols of a small set of user facing classes,
 # rather than exporting all symbols. In practice we will try to not export
-# symbols for any third party library
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+# symbols for any third party library.
+option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
+mark_as_advanced(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+  set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+  set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+endif()
 include(GenerateExportHeader)
 include(CMake/VTKmCompilerExtras.cmake)
 

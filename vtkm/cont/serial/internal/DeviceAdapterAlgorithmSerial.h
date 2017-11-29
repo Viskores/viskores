@@ -83,6 +83,11 @@ public:
     auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
     auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagSerial());
 
+    if (inSize <= 0)
+    {
+      return;
+    }
+
     using InputType = decltype(inputPortal.Get(0));
     using OutputType = decltype(outputPortal.Get(0));
 

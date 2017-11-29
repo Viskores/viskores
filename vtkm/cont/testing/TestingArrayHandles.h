@@ -220,42 +220,6 @@ private:
         //can just make sure the allocation didn't throw an exception
       }
 
-      std::cout << "Check CopyInto from control array" << std::endl;
-      { //Release the execution resources so that data is only
-        //in the control environment
-        arrayHandle.ReleaseResourcesExecution();
-
-        //Copy data from handle into iterator
-        T array[ARRAY_SIZE];
-        arrayHandle.CopyInto(array, DeviceAdapterTag());
-        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
-      }
-
-      std::cout << "Check CopyInto from execution array" << std::endl;
-      { //Copy the data to the execution environment
-        vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
-
-        //Copy data from handle into iterator
-        T array[ARRAY_SIZE];
-        result.CopyInto(array, DeviceAdapterTag());
-        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
-      }
-
-      if (!std::is_same<DeviceAdapterTag, vtkm::cont::DeviceAdapterTagSerial>::value)
-      {
-        std::cout << "Check using different device adapter" << std::endl;
-        //Copy the data to the execution environment
-        vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
-
-        //CopyInto allows you to copy the data even
-        //if you request it from a different device adapter
-        T array[ARRAY_SIZE];
-        result.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
-        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
-      }
-
       { //as output with a length larger than the memory provided by the user
         //this should fail
         bool gotException = false;

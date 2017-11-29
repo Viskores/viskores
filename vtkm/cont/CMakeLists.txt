@@ -69,8 +69,9 @@ set(headers
   ErrorExecution.h
   ErrorInternal.h
   Field.h
-  ImplicitFunction.h
+  ImplicitFunctionHandle.h
   MultiBlock.h
+  PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
   Storage.h
@@ -79,14 +80,13 @@ set(headers
   StorageListTag.h
   Timer.h
   TryExecute.h
-  VirtualObjectCache.h
+  VirtualObjectHandle.h
   )
 
 set(header_impls
   ArrayHandle.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
-  ImplicitFunction.hxx
   StorageBasic.hxx
   )
 
@@ -98,7 +98,6 @@ set(sources
   CoordinateSystem.cxx
   DynamicArrayHandle.cxx
   Field.cxx
-  ImplicitFunction.cxx
   internal/SimplePolymorphicContainer.cxx
   MultiBlock.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
@@ -111,6 +110,7 @@ set(device_sources
   ArrayRangeCompute.cxx
   CellSetExplicit.cxx
   RuntimeDeviceTracker.cxx
+  TryExecute.cxx
   )
 
 vtkm_declare_headers(${headers})

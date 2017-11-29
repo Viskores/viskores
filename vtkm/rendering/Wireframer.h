@@ -165,6 +165,11 @@ public:
   EdgePlotter(const vtkm::Matrix<vtkm::Float32, 4, 4>& worldToProjection,
               vtkm::Id width,
               vtkm::Id height,
+              vtkm::Id subsetWidth,
+              vtkm::Id subsetHeight,
+              vtkm::Id xOffset,
+              vtkm::Id yOffset,
+              bool assocPoints,
               const vtkm::Range& fieldRange,
               const ColorMapHandle& colorMap,
               const AtomicPackedFrameBufferHandle& frameBuffer,
@@ -172,6 +177,11 @@ public:
     : WorldToProjection(worldToProjection)
     , Width(width)
     , Height(height)
+    , SubsetWidth(subsetWidth)
+    , SubsetHeight(subsetHeight)
+    , XOffset(xOffset)
+    , YOffset(yOffset)
+    , AssocPoints(assocPoints)
     , ColorMap(colorMap.PrepareForInput(DeviceTag()))
     , ColorMapSize(vtkm::Float32(colorMap.GetNumberOfValues() - 1))
     , FrameBuffer(frameBuffer)
@@ -191,6 +201,7 @@ public:
 
     vtkm::Vec<vtkm::Float32, 3> point1 = coordsPortal.Get(edgeIndices[0]);
     vtkm::Vec<vtkm::Float32, 3> point2 = coordsPortal.Get(edgeIndices[1]);
+
     TransformWorldToViewport(point1);
     TransformWorldToViewport(point2);
 
@@ -227,7 +238,16 @@ public:
     vtkm::Float32 xPxl1 = xEnd, yPxl1 = IntegerPart(yEnd);
     vtkm::Float32 zPxl1 = vtkm::Lerp(z1, z2, (xPxl1 - x1) / dx);
     vtkm::Float64 point1Field = fieldPortal.Get(point1Idx);
-    vtkm::Float64 point2Field = fieldPortal.Get(point2Idx);
+    vtkm::Float64 point2Field;
+    if (AssocPoints)
+    {
+      point2Field = fieldPortal.Get(point2Idx);
+    }
+    else
+    {
+      // cell associated field has a solid line color
+      point2Field = point1Field;
+    }
 
     // Plot first endpoint
     vtkm::Vec<vtkm::Float32, 4> color = GetColor(point1Field);
@@ -301,8 +321,8 @@ private:
       point[i] = temp[i] / temp[3];
     }
     // Scale to canvas width and height
-    point[0] = (point[0] * 0.5f + 0.5f) * vtkm::Float32(Width);
-    point[1] = (point[1] * 0.5f + 0.5f) * vtkm::Float32(Height);
+    point[0] = (point[0] * 0.5f + 0.5f) * vtkm::Float32(SubsetWidth) + vtkm::Float32(XOffset);
+    point[1] = (point[1] * 0.5f + 0.5f) * vtkm::Float32(SubsetHeight) + vtkm::Float32(YOffset);
     // Convert from -1/+1 to 0/+1 range
     point[2] = point[2] * 0.5f + 0.5f;
     // Offset the point to a bit towards the camera. This is to ensure that the front faces of
@@ -315,6 +335,7 @@ private:
   {
     vtkm::Int32 colorIdx =
       vtkm::Int32((vtkm::Float32(fieldValue) - FieldMin) * ColorMapSize * InverseFieldDelta);
+    colorIdx = vtkm::Min(vtkm::Int32(ColorMap.GetNumberOfValues() - 1), vtkm::Max(0, colorIdx));
     return ColorMap.Get(colorIdx);
   }
 
@@ -353,6 +374,11 @@ private:
   vtkm::Matrix<vtkm::Float32, 4, 4> WorldToProjection;
   vtkm::Id Width;
   vtkm::Id Height;
+  vtkm::Id SubsetWidth;
+  vtkm::Id SubsetHeight;
+  vtkm::Id XOffset;
+  vtkm::Id YOffset;
+  bool AssocPoints;
   ColorMapPortalConst ColorMap;
   vtkm::Float32 ColorMapSize;
   AtomicPackedFrameBufferHandle FrameBuffer;
@@ -438,10 +464,6 @@ private:
   template <typename DeviceTag>
   VTKM_CONT void RenderWithDevice(DeviceTag)
   {
-    if (ScalarField.GetAssociation() != vtkm::cont::Field::ASSOC_POINTS)
-    {
-      throw vtkm::cont::ErrorBadValue("Field is not associated with points");
-    }
 
     // The wireframe should appear on top of any prerendered data, and hide away the internal
     // zones if `ShowInternalZones` is set to false. Since the prerendered data (or the solid
@@ -479,10 +501,47 @@ private:
       vtkm::worklet::DispatcherMapField<CopyIntoFrameBuffer>(bufferCopy)
         .Invoke(Canvas->GetColorBuffer(), SolidDepthBuffer, FrameBuffer);
     }
+    //
+    // detect a 2D camera and set the correct viewport.
+    // The View port specifies what the region of the screen
+    // to draw to which baiscally modifies the width and the
+    // height of the "canvas"
+    //
+    vtkm::Id xOffset = 0;
+    vtkm::Id yOffset = 0;
+    vtkm::Id subsetWidth = width;
+    vtkm::Id subsetHeight = height;
+
+    bool ortho2d = Camera.GetMode() == vtkm::rendering::Camera::MODE_2D;
+    if (ortho2d)
+    {
+      vtkm::Float32 vl, vr, vb, vt;
+      Camera.GetRealViewport(width, height, vl, vr, vb, vt);
+      vtkm::Float32 _x = static_cast<vtkm::Float32>(width) * (1.f + vl) / 2.f;
+      vtkm::Float32 _y = static_cast<vtkm::Float32>(height) * (1.f + vb) / 2.f;
+      vtkm::Float32 _w = static_cast<vtkm::Float32>(width) * (vr - vl) / 2.f;
+      vtkm::Float32 _h = static_cast<vtkm::Float32>(height) * (vt - vb) / 2.f;
+
+      subsetWidth = static_cast<vtkm::Id>(_w);
+      subsetHeight = static_cast<vtkm::Id>(_h);
+      yOffset = static_cast<vtkm::Id>(_y);
+      xOffset = static_cast<vtkm::Id>(_x);
+    }
+
+    bool isSupportedField = (ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
+                             ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+    if (!isSupportedField)
+      throw vtkm::cont::ErrorBadValue("Field not associated with cell set or points");
+    bool isAssocPoints = ScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
 
     EdgePlotter<DeviceTag> plotter(WorldToProjection,
                                    width,
                                    height,
+                                   subsetWidth,
+                                   subsetHeight,
+                                   xOffset,
+                                   yOffset,
+                                   isAssocPoints,
                                    ScalarFieldRange,
                                    ColorMap,
                                    FrameBuffer,

@@ -90,12 +90,14 @@ public:
   }
 };
 
-template <typename VirtualObject, typename TargetClass>
-struct VirtualObjectTransfer<VirtualObject,
-                             TargetClass,
-                             vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
-  : public VirtualObjectTransferShareWithControl<VirtualObject, TargetClass>
+template <typename TargetClass>
+struct VirtualObjectTransfer<TargetClass, vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+  : public VirtualObjectTransferShareWithControl<TargetClass>
 {
+  VirtualObjectTransfer(const TargetClass* target)
+    : VirtualObjectTransferShareWithControl<TargetClass>(target)
+  {
+  }
 };
 
 template <typename T>

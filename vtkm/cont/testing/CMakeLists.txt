@@ -30,7 +30,8 @@ set(headers
   TestingDataSetSingleType.h
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
-  TestingVirtualObjectCache.h
+  TestingPointLocatorUniformGrid.h
+  TestingVirtualObjectHandle.h
   )
 
 vtkm_declare_headers(${headers})

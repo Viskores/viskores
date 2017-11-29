@@ -45,14 +45,14 @@ public:
                    const vtkm::cont::Field& scalarField,
                    const vtkm::rendering::ColorTable& colorTable,
                    const vtkm::rendering::Camera&,
-                   const vtkm::Range& scalarRange) VTKM_OVERRIDE;
+                   const vtkm::Range& scalarRange) override;
 
-  void StartScene() VTKM_OVERRIDE;
-  void EndScene() VTKM_OVERRIDE;
-  void SetCanvas(vtkm::rendering::Canvas* canvas) VTKM_OVERRIDE;
-  virtual vtkm::rendering::Canvas* GetCanvas() const VTKM_OVERRIDE;
+  void StartScene() override;
+  void EndScene() override;
+  void SetCanvas(vtkm::rendering::Canvas* canvas) override;
+  virtual vtkm::rendering::Canvas* GetCanvas() const override;
 
-  vtkm::rendering::Mapper* NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Mapper* NewCopy() const override;
 
   vtkm::rendering::CanvasGL* Canvas;
   GLuint shader_programme;

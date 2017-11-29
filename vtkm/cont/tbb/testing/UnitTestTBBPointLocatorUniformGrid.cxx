@@ -17,22 +17,10 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/cont/testing/TestingVirtualObjectCache.h>
+#include <vtkm/cont/testing/TestingPointLocatorUniformGrid.h>
 
-namespace
+int UnitTestTBBPointLocatorUniformGrid(int, char* [])
 {
-
-void TestVirtualObjectCache()
-{
-  using DeviceAdapterList =
-    vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial, vtkm::cont::DeviceAdapterTagCuda>;
-
-  vtkm::cont::testing::TestingVirtualObjectCache<DeviceAdapterList>::Run();
-}
-
-} // anonymous namespace
-
-int UnitTestCudaVirtualObjectCache(int, char* [])
-{
-  return vtkm::cont::testing::Testing::Run(TestVirtualObjectCache);
+  return vtkm::cont::testing::Testing::Run(
+    TestingPointLocatorUniformGrid<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
 }

@@ -77,6 +77,22 @@ void ExecutionArrayInterfaceBasicShareWithControl::CopyToControl(const void* src
     std::copy(srcBegin, srcEnd, dstBegin);
   }
 }
+
+void ExecutionArrayInterfaceBasicShareWithControl::UsingForRead(const void*,
+                                                                const void*,
+                                                                vtkm::UInt64) const
+{
+}
+void ExecutionArrayInterfaceBasicShareWithControl::UsingForWrite(const void*,
+                                                                 const void*,
+                                                                 vtkm::UInt64) const
+{
+}
+void ExecutionArrayInterfaceBasicShareWithControl::UsingForReadWrite(const void*,
+                                                                     const void*,
+                                                                     vtkm::UInt64) const
+{
+}
 }
 }
 } // end namespace vtkm::cont::internal

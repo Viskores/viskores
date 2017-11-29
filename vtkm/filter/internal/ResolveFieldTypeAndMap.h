@@ -43,6 +43,15 @@ namespace filter
 {
 namespace internal
 {
+struct ResolveFieldTypeAndMapForDevice
+{
+  template <typename DeviceAdapterTag, typename InstanceType, typename FieldType>
+  bool operator()(DeviceAdapterTag tag, InstanceType&& instance, FieldType&& field) const
+  {
+    return instance.DerivedClass->DoMapField(
+      instance.InputResult, field, instance.Metadata, instance.Policy, tag);
+  }
+};
 
 template <typename Derived, typename DerivedPolicy>
 struct ResolveFieldTypeAndMap
@@ -53,63 +62,28 @@ struct ResolveFieldTypeAndMap
   vtkm::filter::Result& InputResult;
   const vtkm::filter::FieldMetadata& Metadata;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
-  vtkm::cont::RuntimeDeviceTracker Tracker;
   bool& RanProperly;
 
   ResolveFieldTypeAndMap(Derived* derivedClass,
                          vtkm::filter::Result& inResult,
                          const vtkm::filter::FieldMetadata& fieldMeta,
                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                         const vtkm::cont::RuntimeDeviceTracker& tracker,
                          bool& ran)
     : DerivedClass(derivedClass)
     , InputResult(inResult)
     , Metadata(fieldMeta)
     , Policy(policy)
-    , Tracker(tracker)
     , RanProperly(ran)
   {
   }
 
-private:
   template <typename T, typename StorageTag>
-  struct ResolveFieldTypeAndMapForDevice
+  void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& field,
+                  vtkm::cont::RuntimeDeviceTracker& tracker) const
   {
-    typedef vtkm::cont::ArrayHandle<T, StorageTag> FieldArrayHandle;
-    ResolveFieldTypeAndMapForDevice(const Self& instance, const FieldArrayHandle& field)
-      : Instance(instance)
-      , Field(field)
-      , Valid(false)
-    {
-    }
-
-    const Self& Instance;
-    const vtkm::cont::ArrayHandle<T, StorageTag>& Field;
-    mutable bool Valid;
-
-    template <typename DeviceAdapterTag>
-    bool operator()(DeviceAdapterTag tag) const
-    {
-      this->Valid = this->Instance.DerivedClass->DoMapField(this->Instance.InputResult,
-                                                            this->Field,
-                                                            this->Instance.Metadata,
-                                                            this->Instance.Policy,
-                                                            tag);
-
-      return this->Valid;
-    }
-
-  private:
-    void operator=(const ResolveFieldTypeAndMapForDevice<T, StorageTag>&) = delete;
-  };
-
-public:
-  template <typename T, typename StorageTag>
-  void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& field) const
-  {
-    ResolveFieldTypeAndMapForDevice<T, StorageTag> doResolve(*this, field);
-    vtkm::cont::TryExecute(doResolve, this->Tracker, typename DerivedPolicy::DeviceAdapterList());
-    this->RanProperly = doResolve.Valid;
+    ResolveFieldTypeAndMapForDevice doResolve;
+    this->RanProperly = vtkm::cont::TryExecute(
+      doResolve, tracker, typename DerivedPolicy::DeviceAdapterList(), *this, field);
   }
 
 private:
