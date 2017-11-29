@@ -36,10 +36,20 @@
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
-#include <vtkm/internal/IntegerSequence.h>
 #include <vtkm/internal/brigand.hpp>
 
 #include <sstream>
+
+namespace vtkm
+{
+namespace cont
+{
+
+// Forward declaration.
+template <typename CellSetList>
+class DynamicCellSetBase;
+}
+}
 
 namespace vtkm
 {
@@ -47,7 +57,6 @@ namespace worklet
 {
 namespace internal
 {
-
 namespace detail
 {
 
@@ -59,16 +68,21 @@ namespace detail
 // these unsupported combinations we just silently halt the compiler from
 // attempting to create code for these errant conditions and throw a run-time
 // error if one every tries to create one.
-inline void PrintFailureMessage(int, std::true_type)
-{
-}
-inline void PrintFailureMessage(int index, std::false_type)
+inline void PrintFailureMessage(int index)
 {
   std::stringstream message;
   message << "Encountered bad type for parameter " << index
           << " when calling Invoke on a dispatcher.";
   throw vtkm::cont::ErrorBadType(message.str());
 }
+
+template <bool, typename T, typename TypeCheckTag>
+struct ParameterTypeCorrect;
+template <typename T, typename TypeCheckTag>
+struct ParameterTypeCorrect<true, T, TypeCheckTag>
+{
+  static VTKM_CONSTEXPR bool value = true;
+};
 
 // Is designed as a brigand fold operation.
 template <typename T, typename State>
@@ -81,18 +95,22 @@ struct DetermineIfHasDynamicParameter
   using type = std::integral_constant<bool, (State::value || isDynamic::value)>;
 };
 
+
 // Is designed as a brigand fold operation.
-template <typename Index, typename Params, typename SigTypes>
+template <typename T, typename State, typename SigTypes>
 struct DetermineHasInCorrectParameters
 {
-  using T = typename brigand::at_c<Params, Index::value>;
-  using ControlSignatureTag = typename brigand::at_c<SigTypes, Index::value>;
+  //T is the type of the Param at the current index
+  //State if the index to use to fetch the control signature tag
+  using ControlSignatureTag = typename brigand::at_c<SigTypes, State::value>;
   using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
 
-  using type = std::integral_constant<bool, vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value>;
+  using isCorrect =
+    ParameterTypeCorrect<vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value, TypeCheckTag, T>;
+  static_assert(isCorrect::value,
+                "The type check failed since the parameter passed in doesn't pass the TypeCheck");
 
-  static_assert(type::value,
-                "Unable to match 'ValueType' to the signature tag 'ControlSignatureTag'");
+  using type = std::integral_constant<std::size_t, State::value + 1>;
 };
 
 // Checks that an argument in a ControlSignature is a valid control signature
@@ -121,89 +139,6 @@ struct DispatcherBaseExecutionSignatureTagCheck
     VTKM_IS_EXECUTION_SIGNATURE_TAG(ExecutionSignatureTag);
     typedef ExecutionSignatureTag type;
   };
-};
-
-// Used in the dynamic cast to check to make sure that the type passed into
-// the Invoke method matches the type accepted by the ControlSignature.
-template <typename ContinueFunctor, typename TypeCheckTag, vtkm::IdComponent Index>
-struct DispatcherBaseTypeCheckFunctor
-{
-  const ContinueFunctor& Continue;
-
-  VTKM_CONT
-  DispatcherBaseTypeCheckFunctor(const ContinueFunctor& continueFunc)
-    : Continue(continueFunc)
-  {
-  }
-
-  template <typename T>
-  VTKM_CONT void operator()(const T& x) const
-  {
-    typedef std::integral_constant<bool, vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value>
-      CanContinueTagType;
-
-    vtkm::worklet::internal::detail::PrintFailureMessage(Index, CanContinueTagType());
-    this->WillContinue(x, CanContinueTagType());
-  }
-
-private:
-  template <typename T>
-  VTKM_CONT void WillContinue(const T& x, std::true_type) const
-  {
-    this->Continue(x);
-  }
-
-  template <typename T>
-  VTKM_CONT void WillContinue(const T&, std::false_type) const
-  {
-  }
-
-  void operator=(const DispatcherBaseTypeCheckFunctor<ContinueFunctor, TypeCheckTag, Index>&) =
-    delete;
-};
-
-// Uses vtkm::cont::internal::DynamicTransform and the DynamicTransformCont
-// method of FunctionInterface to convert all DynamicArrayHandles and any
-// other arguments declaring themselves as dynamic to static versions.
-template <typename ControlInterface>
-struct DispatcherBaseDynamicTransform
-{
-  vtkm::cont::internal::DynamicTransform BasicDynamicTransform;
-
-  template <typename InputType, typename ContinueFunctor, vtkm::IdComponent Index>
-  VTKM_CONT void operator()(const InputType& input,
-                            const ContinueFunctor& continueFunc,
-                            const vtkm::internal::IndexTag<Index>& indexTag) const
-  {
-    typedef typename ControlInterface::template ParameterType<Index>::type ControlSignatureTag;
-
-    typedef DispatcherBaseTypeCheckFunctor<ContinueFunctor,
-                                           typename ControlSignatureTag::TypeCheckTag,
-                                           Index>
-      TypeCheckFunctor;
-
-    this->BasicDynamicTransform(input, TypeCheckFunctor(continueFunc), indexTag);
-  }
-};
-
-// A functor called at the end of the dynamic transform to call the next
-// step in the dynamic transform.
-template <typename DispatcherBaseType>
-struct DispatcherBaseDynamicTransformHelper
-{
-  const DispatcherBaseType* Dispatcher;
-
-  VTKM_CONT
-  DispatcherBaseDynamicTransformHelper(const DispatcherBaseType* dispatcher)
-    : Dispatcher(dispatcher)
-  {
-  }
-
-  template <typename FunctionInterface>
-  VTKM_CONT void operator()(const FunctionInterface& parameters) const
-  {
-    this->Dispatcher->DynamicTransformInvoke(parameters, std::true_type());
-  }
 };
 
 // A look up helper used by DispatcherBaseTransportFunctor to determine
@@ -276,6 +211,93 @@ private:
   void operator=(const DispatcherBaseTransportFunctor&) = delete;
 };
 
+//forward declares
+template <int LeftToProcess>
+struct for_each_dynamic_arg;
+
+template <int LeftToProcess, typename TypeCheckTag>
+struct convert_arg_wrapper
+{
+  template <typename T, typename... Args>
+  void operator()(T&& t, Args&&... args) const
+  {
+    using Type = typename std::decay<T>::type;
+    using valid =
+      std::integral_constant<bool, vtkm::cont::arg::TypeCheck<TypeCheckTag, Type>::value>;
+    this->WillContinue(valid(), std::forward<T>(t), std::forward<Args>(args)...);
+  }
+  template <typename T, typename... Args>
+  void WillContinue(std::true_type, T&& t, Args&&... args) const
+  {
+    for_each_dynamic_arg<LeftToProcess - 1>()(std::forward<Args>(args)..., std::forward<T>(t));
+  }
+  template <typename... Args>
+  void WillContinue(std::false_type, Args&&...) const
+  {
+    vtkm::worklet::internal::detail::PrintFailureMessage(LeftToProcess);
+  }
+};
+
+template <int LeftToProcess, typename T, typename ContParams, typename Trampoline, typename... Args>
+inline void convert_arg(vtkm::cont::internal::DynamicTransformTagStatic,
+                        T&& t,
+                        const ContParams&,
+                        const Trampoline& trampoline,
+                        Args&&... args)
+{ //This is a static array, so just push it to the back
+  using popped_sig = brigand::pop_front<ContParams>;
+  for_each_dynamic_arg<LeftToProcess - 1>()(
+    trampoline, popped_sig(), std::forward<Args>(args)..., std::forward<T>(t));
+}
+
+template <int LeftToProcess, typename T, typename ContParams, typename Trampoline, typename... Args>
+inline void convert_arg(vtkm::cont::internal::DynamicTransformTagCastAndCall,
+                        T&& t,
+                        const ContParams&,
+                        const Trampoline& trampoline,
+                        Args&&... args)
+{ //This is something dynamic so cast and call
+  using tag_check = typename brigand::at_c<ContParams, 0>::TypeCheckTag;
+  using popped_sig = brigand::pop_front<ContParams>;
+
+  vtkm::cont::CastAndCall(t,
+                          convert_arg_wrapper<LeftToProcess, tag_check>(),
+                          trampoline,
+                          popped_sig(),
+                          std::forward<Args>(args)...);
+}
+
+template <int LeftToProcess>
+struct for_each_dynamic_arg
+{
+  template <typename Trampoline, typename ContParams, typename T, typename... Args>
+  void operator()(const Trampoline& trampoline, ContParams&& sig, T&& t, Args&&... args) const
+  {
+    //Determine that state of T
+    using Type = typename std::decay<T>::type;
+    using tag = typename vtkm::cont::internal::DynamicTransformTraits<Type>::DynamicTag;
+    //convert the first item to a known type
+    convert_arg<LeftToProcess>(
+      tag(), std::forward<T>(t), sig, trampoline, std::forward<Args>(args)...);
+  }
+};
+
+template <>
+struct for_each_dynamic_arg<0>
+{
+  template <typename Trampoline, typename ContParams, typename... Args>
+  void operator()(const Trampoline& trampoline, ContParams&&, Args&&... args) const
+  {
+    trampoline.StartInvokeDynamic(std::false_type(), std::forward<Args>(args)...);
+  }
+};
+
+template <typename Trampoline, typename ContParams, typename... Args>
+inline void deduce(Trampoline&& trampoline, ContParams&& sig, Args&&... args)
+{
+  for_each_dynamic_arg<sizeof...(Args)>()(std::forward<Trampoline>(trampoline), sig, args...);
+}
+
 } // namespace detail
 
 /// Base class for all dispatcher classes. Every worklet type should have its
@@ -287,7 +309,7 @@ class DispatcherBase
 private:
   typedef DispatcherBase<DerivedClass, WorkletType, BaseWorkletType> MyType;
 
-  friend struct detail::DispatcherBaseDynamicTransformHelper<MyType>;
+  friend struct detail::for_each_dynamic_arg<0>;
 
 protected:
   typedef vtkm::internal::FunctionInterface<typename WorkletType::ControlSignature>
@@ -305,10 +327,11 @@ private:
   typedef typename ExecutionInterface::template StaticTransformType<
     detail::DispatcherBaseExecutionSignatureTagCheck>::type ExecutionSignatureCheck;
 
-  template <typename Signature>
-  VTKM_CONT void StartInvoke(const vtkm::internal::FunctionInterface<Signature>& parameters) const
+  template <typename... Args>
+  VTKM_CONT void StartInvoke(Args&&... args) const
   {
-    using ParameterInterface = vtkm::internal::FunctionInterface<Signature>;
+    using ParameterInterface =
+      vtkm::internal::FunctionInterface<void(typename std::decay<Args>::type...)>;
 
     VTKM_STATIC_ASSERT_MSG(ParameterInterface::ARITY == NUM_INVOKE_PARAMS,
                            "Dispatcher Invoke called with wrong number of arguments.");
@@ -329,31 +352,26 @@ private:
                     std::false_type,
                     detail::DetermineIfHasDynamicParameter<brigand::_element, brigand::_state>>;
 
-    this->StartInvokeDynamic(parameters, HasDynamicTypes());
+    this->StartInvokeDynamic(HasDynamicTypes(), std::forward<Args>(args)...);
   }
 
-  template <typename Signature>
-  VTKM_CONT void StartInvokeDynamic(const vtkm::internal::FunctionInterface<Signature>& parameters,
-                                    std::true_type) const
+  template <typename... Args>
+  VTKM_CONT void StartInvokeDynamic(std::true_type, Args&&... args) const
   {
     // As we do the dynamic transform, we are also going to check the static
     // type against the TypeCheckTag in the ControlSignature tags. To do this,
     // the check needs access to both the parameter (in the parameters
     // argument) and the ControlSignature tags (in the ControlInterface type).
-    // To make this possible, we call DynamicTransform with a functor containing
-    // the control signature tags. It uses the index provided by the
-    // dynamic transform mechanism to get the right tag and make sure that
-    // the dynamic type is correct. (This prevents the compiler from expanding
-    // worklets with types that should not be.)
-    parameters.DynamicTransformCont(detail::DispatcherBaseDynamicTransform<ControlInterface>(),
-                                    detail::DispatcherBaseDynamicTransformHelper<MyType>(this));
+    using ContParamsInfo =
+      vtkm::internal::detail::FunctionSigInfo<typename WorkletType::ControlSignature>;
+    detail::deduce(*this, typename ContParamsInfo::Parameters(), std::forward<Args>(args)...);
   }
 
-  template <typename Signature>
-  VTKM_CONT void StartInvokeDynamic(const vtkm::internal::FunctionInterface<Signature>& parameters,
-                                    std::false_type) const
+  template <typename... Args>
+  VTKM_CONT void StartInvokeDynamic(std::false_type, Args&&... args) const
   {
-    using ParameterInterface = vtkm::internal::FunctionInterface<Signature>;
+    using ParameterInterface =
+      vtkm::internal::FunctionInterface<void(typename std::decay<Args>::type...)>;
 
     //Nothing requires a conversion from dynamic to static types, so
     //next we need to verify that each argument's type is correct. If not
@@ -361,42 +379,37 @@ private:
     using ParamTypes = typename ParameterInterface::ParameterSig;
     using ContSigTypes = typename vtkm::internal::detail::FunctionSigInfo<
       typename WorkletType::ControlSignature>::Parameters;
-    using NumParams = vtkm::internal::MakeIntegerSequence<ParameterInterface::ARITY>;
 
-    using isAllValid = brigand::fold<
-      NumParams,
-      std::true_type,
-      detail::DetermineHasInCorrectParameters<brigand::_element, ParamTypes, ContSigTypes>>;
-    //When isAllValid is false we produce a second static_assert
-    //stating that the static transform is not possible
-    static_assert(isAllValid::value, "Unable to match all parameter types");
+    //isAllValid will throw a compile error if everything doesn't match
+    using isAllValid =
+      brigand::fold<ParamTypes,
+                    std::integral_constant<std::size_t, 0>,
+                    detail::DetermineHasInCorrectParameters<brigand::_element,
+                                                            brigand::_state,
+                                                            brigand::pin<ContSigTypes>>>;
 
-    this->DynamicTransformInvoke(parameters, isAllValid());
-  }
+    //this warning exists so that we don't get a warning from not using isAllValid
+    using expectedLen = std::integral_constant<std::size_t, sizeof...(Args)>;
+    static_assert(isAllValid::value == expectedLen::value,
+                  "All arguments failed the TypeCheck pass");
 
-  template <typename Signature>
-  VTKM_CONT void DynamicTransformInvoke(
-    const vtkm::internal::FunctionInterface<Signature>& parameters,
-    std::true_type) const
-  {
-    // TODO: Check parameters
-    static const vtkm::IdComponent INPUT_DOMAIN_INDEX = WorkletType::InputDomain::INDEX;
-    reinterpret_cast<const DerivedClass*>(this)->DoInvoke(
-      vtkm::internal::make_Invocation<INPUT_DOMAIN_INDEX>(
-        parameters, ControlInterface(), ExecutionInterface()));
-  }
-
-  template <typename Signature>
-  VTKM_CONT void DynamicTransformInvoke(const vtkm::internal::FunctionInterface<Signature>&,
-                                        std::false_type) const
-  {
+    auto fi =
+      vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
+    auto ivc = vtkm::internal::Invocation<ParameterInterface,
+                                          ControlInterface,
+                                          ExecutionInterface,
+                                          WorkletType::InputDomain::INDEX,
+                                          vtkm::internal::NullType,
+                                          vtkm::internal::NullType>(
+      fi, vtkm::internal::NullType{}, vtkm::internal::NullType{});
+    static_cast<const DerivedClass*>(this)->DoInvoke(ivc);
   }
 
 public:
-  template <typename... ArgTypes>
-  VTKM_CONT void Invoke(ArgTypes... args) const
+  template <typename... Args>
+  VTKM_CONT void Invoke(Args&&... args) const
   {
-    this->StartInvoke(vtkm::internal::make_FunctionInterface<void>(args...));
+    this->StartInvoke(std::forward<Args>(args)...);
   }
 
 protected:

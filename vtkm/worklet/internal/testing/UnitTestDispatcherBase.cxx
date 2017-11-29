@@ -52,12 +52,21 @@ struct TestExecObject
 
 struct TestExecObjectType : vtkm::exec::ExecutionObjectBase
 {
-  template <typename Functor>
-  void CastAndCall(Functor f) const
+  template <typename Functor, typename... Args>
+  void CastAndCall(Functor f, Args&&... args) const
   {
-    f(*this);
+    f(*this, std::forward<Args>(args)...);
   }
   vtkm::Id Value;
+};
+
+struct TestExecObjectTypeBad
+{ //this will fail as it doesn't inherit from vtkm::exec::ExecutionObjectBase
+  template <typename Functor, typename... Args>
+  void CastAndCall(Functor f, Args&&... args) const
+  {
+    f(*this, std::forward<Args>(args)...);
+  }
 };
 
 struct TestTypeCheckTag
@@ -91,7 +100,7 @@ struct TypeCheck<TestTypeCheckTag, vtkm::Id*>
 template <>
 struct Transport<TestTransportTag, vtkm::Id*, Device>
 {
-  typedef TestExecObject ExecObjectType;
+  using ExecObjectType = TestExecObject;
 
   VTKM_CONT
   ExecObjectType operator()(vtkm::Id* contData,
@@ -118,7 +127,12 @@ namespace internal
 template <>
 struct DynamicTransformTraits<TestExecObjectType>
 {
-  typedef vtkm::cont::internal::DynamicTransformTagCastAndCall DynamicTag;
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
+};
+template <>
+struct DynamicTransformTraits<TestExecObjectTypeBad>
+{
+  using DynamicTag = vtkm::cont::internal::DynamicTransformTagCastAndCall;
 };
 }
 }
@@ -137,7 +151,7 @@ struct Fetch<TestFetchTagInput,
              vtkm::exec::arg::ThreadIndicesBasic,
              TestExecObject>
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
 
   VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic indices,
@@ -159,7 +173,7 @@ struct Fetch<TestFetchTagOutput,
              vtkm::exec::arg::ThreadIndicesBasic,
              TestExecObject>
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
 
   VTKM_EXEC
   ValueType Load(const vtkm::exec::arg::ThreadIndicesBasic&, const TestExecObject&) const
@@ -190,15 +204,15 @@ class TestWorkletBase : public vtkm::worklet::internal::WorkletBase
 public:
   struct TestIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef TestTypeCheckTag TypeCheckTag;
-    typedef TestTransportTag TransportTag;
-    typedef TestFetchTagInput FetchTag;
+    using TypeCheckTag = TestTypeCheckTag;
+    using TransportTag = TestTransportTag;
+    using FetchTag = TestFetchTagInput;
   };
   struct TestOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef TestTypeCheckTag TypeCheckTag;
-    typedef TestTransportTag TransportTag;
-    typedef TestFetchTagOutput FetchTag;
+    using TypeCheckTag = TestTypeCheckTag;
+    using TransportTag = TestTransportTag;
+    using FetchTag = TestFetchTagOutput;
   };
 };
 
@@ -235,17 +249,9 @@ class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispat
                                                                       WorkletType,
                                                                       TestWorkletBase>
 {
-  typedef vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
-                                                  WorkletType,
-                                                  TestWorkletBase>
-    Superclass;
-  typedef vtkm::internal::FunctionInterface<void(vtkm::Id*, TestExecObjectType, vtkm::Id*)>
-    ParameterInterface;
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     typename Superclass::ControlInterface,
-                                     typename Superclass::ExecutionInterface,
-                                     1>
-    Invocation;
+  using Superclass = vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
+                                                             WorkletType,
+                                                             TestWorkletBase>;
 
 public:
   VTKM_CONT
@@ -255,7 +261,8 @@ public:
   }
 
   VTKM_CONT
-  void DoInvoke(const Invocation& invocation) const
+  template <typename Invocation>
+  void DoInvoke(Invocation&& invocation) const
   {
     std::cout << "In TestDispatcher::DoInvoke()" << std::endl;
     this->BasicInvoke(invocation, ARRAY_SIZE, Device());
@@ -321,40 +328,26 @@ void TestInvokeWithError()
   }
 }
 
-void TestInvokeWithDynamicAndBadTypes()
+void TestInvokeWithBadDynamicType()
 {
   std::cout << "Test invoke with bad type" << std::endl;
 
-  vtkm::Id array[ARRAY_SIZE];
-  TestExecObjectType execObject;
-  execObject.Value = EXPECTED_EXEC_OBJECT_VALUE;
+  vtkm::Id inputArray[ARRAY_SIZE];
+  vtkm::Id outputArray[ARRAY_SIZE];
+  TestExecObjectTypeBad execObject;
   TestDispatcher<TestWorklet> dispatcher;
 
   try
   {
-    std::cout << "  First argument bad." << std::endl;
-    dispatcher.Invoke(nullptr, execObject, array);
+    std::cout << "  Second argument bad." << std::endl;
+    dispatcher.Invoke(inputArray, execObject, outputArray);
     VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
   }
   catch (vtkm::cont::ErrorBadType& error)
   {
     std::cout << "    Got expected exception." << std::endl;
     std::cout << "    " << error.GetMessage() << std::endl;
-    VTKM_TEST_ASSERT(error.GetMessage().find(" 1 ") != std::string::npos,
-                     "Parameter index not named in error message.");
-  }
-
-  try
-  {
-    std::cout << "  Third argument bad." << std::endl;
-    dispatcher.Invoke(array, execObject, nullptr);
-    VTKM_TEST_FAIL("Dispatcher did not throw expected error.");
-  }
-  catch (vtkm::cont::ErrorBadType& error)
-  {
-    std::cout << "    Got expected exception." << std::endl;
-    std::cout << "    " << error.GetMessage() << std::endl;
-    VTKM_TEST_ASSERT(error.GetMessage().find(" 3 ") != std::string::npos,
+    VTKM_TEST_ASSERT(error.GetMessage().find(" 2 ") != std::string::npos,
                      "Parameter index not named in error message.");
   }
 }
@@ -363,7 +356,7 @@ void TestDispatcherBase()
 {
   TestBasicInvoke();
   TestInvokeWithError();
-  TestInvokeWithDynamicAndBadTypes();
+  TestInvokeWithBadDynamicType();
 }
 
 } // anonymous namespace

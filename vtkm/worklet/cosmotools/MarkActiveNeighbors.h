@@ -63,6 +63,7 @@
 
 #include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/cosmotools/TagTypes.h>
 
 namespace vtkm
 {
@@ -70,26 +71,21 @@ namespace worklet
 {
 namespace cosmotools
 {
-
 // Worklet for particles to indicate which neighbors are active
 // because at least one particle in that bin is within linking length
 template <typename T>
 class MarkActiveNeighbors : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
-
   typedef void ControlSignature(
-    FieldIn<IdType> index,            // (input) particle index
-    FieldIn<IdType> partId,           // (input) particle id sorted
-    FieldIn<IdType> binId,            // (input) bin Id per particle
-    WholeArrayIn<IdType> partIdArray, // (input) sequence imposed on sorted particle Ids
-    WholeArrayIn<TagType> location,   // (input) location of particles
-    WholeArrayIn<IdType> firstPartId, // (input) vector of first particle indices
-    WholeArrayIn<IdType> lastPartId,  // (input) vector of last particle indices
-    FieldOut<vtkm::UInt32> flag);     // (output) active bin neighbors mask
+    FieldIn<IdType> index,                 // (input) particle index
+    FieldIn<IdType> partId,                // (input) particle id sorted
+    FieldIn<IdType> binId,                 // (input) bin Id per particle
+    WholeArrayIn<IdType> partIdArray,      // (input) sequence imposed on sorted particle Ids
+    WholeArrayIn<Vec3TagType<T>> location, // (input) location of particles
+    WholeArrayIn<IdType> firstPartId,      // (input) vector of first particle indices
+    WholeArrayIn<IdType> lastPartId,       // (input) vector of last particle indices
+    FieldOut<UInt32TagType> flag);         // (output) active bin neighbors mask
   typedef _8 ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
   typedef _1 InputDomain;
 
