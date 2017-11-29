@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  Algorithm.h
   ArrayCopy.h
   ArrayHandle.h
   ArrayHandleCast.h
