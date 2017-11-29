@@ -23,7 +23,7 @@ if(NOT VTKm_ENABLE_RENDERING)
 endif()
 # determine what backend for rendering we want to build
 
-set(default_backend "OpenGL")
+set(default_backend "None")
 if(NOT VTKm_RENDERING_BACKEND)
   message(STATUS "Setting rendering backend to '${default_backend}' as none was specified.")
   set(VTKm_RENDERING_BACKEND "${default_backend}" CACHE
