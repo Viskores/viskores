@@ -223,14 +223,14 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output);
 
-  /// \brief Streaming version of scan inclusive
+  /// \brief Streaming version of scan exclusive
   ///
   /// Computes a scan one block at a time.
   ///
   /// \return The total sum.
   ///
   template <typename T, class CIn, class COut>
-  VTKM_CONT static T StreamingScanInclusive(const vtkm::Id numBlocks,
+  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
                                             const vtkm::cont::ArrayHandle<T, CIn>& input,
                                             vtkm::cont::ArrayHandle<T, COut>& output);
 
