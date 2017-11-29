@@ -36,7 +36,6 @@
 
 #include <vtkm/exec/arg/ExecutionSignatureTagBase.h>
 
-// #include <vtkm/internal/IntegerSequence.h>
 #include <vtkm/internal/brigand.hpp>
 
 #include <sstream>

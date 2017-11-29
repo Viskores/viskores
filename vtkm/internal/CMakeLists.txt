@@ -56,7 +56,6 @@ set(headers
   FunctionInterfaceDetailPost.h
   FunctionInterfaceDetailPre.h
   IndexTag.h
-  IntegerSequence.h
   Invocation.h
   ListTagDetail.h
   Unreachable.h
