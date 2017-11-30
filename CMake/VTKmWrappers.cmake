@@ -69,7 +69,7 @@ function(vtkm_generate_export_header lib_name)
 
 
   configure_file(
-      ${VTKm_SOURCE_DIR}/cmake/VTKmExportHeaderTemplate.h.in
+      ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
       ${VTKm_BINARY_DIR}/include/${dir_prefix}/${kit_name}_export.h
     @ONLY)
 
