@@ -31,10 +31,12 @@ if(TARGET OpenGL::GL AND
    TARGET GLEW::GLEW)
 
   if(TARGET vtkm::cuda)
+    cuda_add_executable(GameOfLife GameOfLife.cu LoadShaders.h)
     set_source_files_properties(GameOfLife.cxx PROPERTIES LANGUAGE "CUDA")
+  else()
+    add_executable(GameOfLife GameOfLife.cxx LoadShaders.h)
   endif()
 
-  add_executable(GameOfLife GameOfLife.cxx LoadShaders.h)
   target_link_libraries(GameOfLife PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
 
 endif()
