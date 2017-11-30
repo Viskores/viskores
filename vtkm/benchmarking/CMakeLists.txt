@@ -55,6 +55,3 @@ endfunction()
 foreach (benchmark ${benchmarks})
   add_benchmark(${benchmark} ${benchmark}.cxx)
 endforeach ()
-
-#set_source_files_properties(${benchmark_headers}
-#        PROPERTIES HEADER_FILE_ONLY TRUE)
