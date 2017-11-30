@@ -25,7 +25,13 @@ set(benchmarks
   BenchmarkFieldAlgorithms
   BenchmarkTopologyAlgorithms
   )
-
+set(benchmark_files
+        BenchmarkArrayTransfer.cxx
+        BenchmarkCopySpeeds.cxx
+        BenchmarkDeviceAdapter.cxx
+        BenchmarkFieldAlgorithms.cxx
+        BenchmarkTopologyAlgorithms.cxx
+        )
 #set(benchmark_headers
 #  Benchmarker.h
 #  )
@@ -49,3 +55,6 @@ endfunction()
 foreach (benchmark ${benchmarks})
   add_benchmark(${benchmark} ${benchmark}.cxx)
 endforeach ()
+
+#set_source_files_properties(${benchmark_headers}
+#        PROPERTIES HEADER_FILE_ONLY TRUE)
