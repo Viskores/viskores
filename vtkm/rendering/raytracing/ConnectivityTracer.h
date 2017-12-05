@@ -281,7 +281,8 @@ public:
       }
       const vtkm::UInt8 cellShape = MeshConn.GetCellShape(currentCell);
       Intersector.IntersectCell(xpoints, ypoints, zpoints, dir, origin, distances, cellShape);
-      const vtkm::Int32 numFaces = FaceLookUp[CellTypeLookUp[cellShape]][1];
+      const vtkm::Int32 numFaces =
+        CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[cellShape]][1];
       //vtkm::Int32 minFace = 6;
       vtkm::Int32 maxFace = -1;
 
@@ -415,7 +416,8 @@ public:
 
       const vtkm::UInt8 cellShape = MeshConn.GetCellShape(currentCell);
       Intersector.IntersectCell(xpoints, ypoints, zpoints, dir, origin, distances, cellShape);
-      const vtkm::Int32 numFaces = FaceLookUp[CellTypeLookUp[cellShape]][1];
+      const vtkm::Int32 numFaces =
+        CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[cellShape]][1];
 
       //vtkm::Int32 minFace = 6;
       vtkm::Int32 maxFace = -1;
