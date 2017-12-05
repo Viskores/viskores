@@ -103,14 +103,15 @@ void Render(const vtkm::cont::DataSet& ds,
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
-  canvas.SetBackgroundColor(vtkm::rendering::Color::white);
   vtkm::rendering::Scene scene;
 
   scene.AddActor(vtkm::rendering::Actor(
     ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm), colorTable));
   vtkm::rendering::Camera camera;
   SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fieldNm));
-  ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+  vtkm::rendering::Color background(1.0f, 1.0f, 1.0f, 1.0f);
+  vtkm::rendering::Color foreground(0.0f, 0.0f, 0.0f, 1.0f);
+  ViewType view(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
   vtkm::rendering::TextAnnotationScreen* titleAnnotation =
@@ -142,7 +143,10 @@ void Render(const vtkm::cont::DataSet& ds,
   }
   vtkm::rendering::Camera camera;
   SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fields[0]));
-  ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+
+  vtkm::rendering::Color background(1.0f, 1.0f, 1.0f, 1.0f);
+  vtkm::rendering::Color foreground(0.0f, 0.0f, 0.0f, 1.0f);
+  ViewType view(scene, mapper, canvas, camera, background, foreground);
 
   // Print the title
   vtkm::rendering::TextAnnotationScreen* titleAnnotation =
@@ -164,7 +168,6 @@ void Render(const vtkm::cont::DataSet& ds,
 {
   MapperType mapper;
   CanvasType canvas(512, 512);
-  canvas.SetBackgroundColor(vtkm::rendering::Color::white);
   vtkm::rendering::Scene scene;
 
   //DRP Actor? no field? no colortable (or a constant colortable) ??
@@ -172,14 +175,15 @@ void Render(const vtkm::cont::DataSet& ds,
     vtkm::rendering::Actor(ds.GetCellSet(), ds.GetCoordinateSystem(), ds.GetField(fieldNm), color));
   vtkm::rendering::Camera camera;
   SetCamera<ViewType>(camera, ds.GetCoordinateSystem().GetBounds(), ds.GetField(fieldNm));
-  ViewType view(scene, mapper, canvas, camera, vtkm::rendering::Color(0.2f, 0.2f, 0.2f, 1.0f));
+
+  vtkm::rendering::Color background(1.0f, 1.0f, 1.0f, 1.0f);
+  vtkm::rendering::Color foreground(0.0f, 0.0f, 0.0f, 1.0f);
+
+  ViewType view(scene, mapper, canvas, camera, background, foreground);
   // Print the title
   vtkm::rendering::TextAnnotationScreen* titleAnnotation =
-    new vtkm::rendering::TextAnnotationScreen("1D Test Plot",
-                                              vtkm::rendering::Color(1, 1, 1, 1),
-                                              .1f,
-                                              vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f),
-                                              0.f);
+    new vtkm::rendering::TextAnnotationScreen(
+      "1D Test Plot", foreground, .1f, vtkm::Vec<vtkm::Float32, 2>(-.27f, .87f), 0.f);
   view.AddAnnotation(titleAnnotation);
   view.SetLogY(logY);
   Render<MapperType, CanvasType, ViewType>(view, outputFile);
