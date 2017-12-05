@@ -189,12 +189,14 @@ struct MapperWireframer::InternalsType
     : Canvas(canvas)
     , ShowInternalZones(showInternalZones)
     , IsOverlay(isOverlay)
+    , CompositeBackground(true)
   {
   }
 
   vtkm::rendering::Canvas* Canvas;
   bool ShowInternalZones;
   bool IsOverlay;
+  bool CompositeBackground;
 }; // struct MapperWireframer::InternalsType
 
 MapperWireframer::MapperWireframer()
@@ -356,6 +358,16 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   renderer.SetColorMap(this->ColorMap);
   renderer.SetData(actualCoords, edgeIndices, actualField, scalarRange);
   renderer.Render();
+
+  if (this->Internals->CompositeBackground)
+  {
+    this->Internals->Canvas->BlendBackground();
+  }
+}
+
+void MapperWireframer::SetCompositeBackground(bool on)
+{
+  this->Internals->CompositeBackground = on;
 }
 
 vtkm::rendering::Mapper* MapperWireframer::NewCopy() const
