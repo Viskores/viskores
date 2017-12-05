@@ -359,7 +359,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     vtkm::cont::ArrayHandle<vtkm::Id> conn;
     vtkm::cont::ArrayHandleCounting<vtkm::Id> iter =
-      vtkm::cont::make_ArrayHandleCounting(0, 1, numCells);
+      vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), numCells);
     conn.Allocate(numCells * 2);
     vtkm::cont::TryExecute(ConnFunctor(), iter, conn);
 
