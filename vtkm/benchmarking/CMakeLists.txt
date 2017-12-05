@@ -20,18 +20,18 @@
 
 set(benchmarks
   BenchmarkArrayTransfer
-  BenchmarkCopySpeeds
-  BenchmarkDeviceAdapter
+#  BenchmarkCopySpeeds
+#  BenchmarkDeviceAdapter
   BenchmarkFieldAlgorithms
   BenchmarkTopologyAlgorithms
   )
-set(benchmark_files
-        BenchmarkArrayTransfer.cxx
-        BenchmarkCopySpeeds.cxx
-        BenchmarkDeviceAdapter.cxx
-        BenchmarkFieldAlgorithms.cxx
-        BenchmarkTopologyAlgorithms.cxx
-        )
+#set(benchmark_files
+#        BenchmarkArrayTransfer.cxx
+#        BenchmarkCopySpeeds.cxx
+#        BenchmarkDeviceAdapter.cxx
+#        BenchmarkFieldAlgorithms.cxx
+#        BenchmarkTopologyAlgorithms.cxx
+#        )
 #set(benchmark_headers
 #  Benchmarker.h
 #  )
