@@ -40,12 +40,52 @@ namespace rendering
 namespace
 {
 
+class CreateConnectivity : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  CreateConnectivity() {}
+
+  typedef void ControlSignature(FieldIn<>, WholeArrayOut<>);
+
+  typedef void ExecutionSignature(_1, _2);
+
+  template <typename ConnPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& i, ConnPortalType& connPortal) const
+  {
+    connPortal.Set(i * 2 + 0, i);
+    connPortal.Set(i * 2 + 1, i + 1);
+  }
+}; // conn
+
+struct ConnFunctor
+{
+
+  template <typename Device>
+  VTKM_CONT bool operator()(Device,
+                            vtkm::cont::ArrayHandleCounting<vtkm::Id>& iter,
+                            vtkm::cont::ArrayHandle<vtkm::Id>& conn)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::worklet::DispatcherMapField<CreateConnectivity, Device>(CreateConnectivity())
+      .Invoke(iter, conn);
+    return true;
+  }
+};
+
 class Convert1DCoordinates : public vtkm::worklet::WorkletMapField
 {
 private:
+  bool LogY;
+  bool LogX;
+
 public:
   VTKM_CONT
-  Convert1DCoordinates() {}
+  Convert1DCoordinates(bool logY, bool logX)
+    : LogY(logY)
+    , LogX(logX)
+  {
+  }
 
   typedef void ControlSignature(FieldIn<>,
                                 FieldIn<vtkm::TypeListTagScalarAll>,
@@ -69,10 +109,38 @@ public:
     outCoord[0] = inCoord[0];
     outCoord[1] = static_cast<vtkm::Float32>(scalar);
     outCoord[2] = 0.f;
+    if (LogY)
+    {
+      outCoord[1] = vtkm::Log10(outCoord[1]);
+    }
+    if (LogX)
+    {
+      outCoord[0] = vtkm::Log10(outCoord[0]);
+    }
     // all lines have the same color
     fieldOut = 1.f;
   }
 }; // convert coords
+
+struct ConvertFunctor
+{
+
+  template <typename Device, typename CoordType, typename ScalarType>
+  VTKM_CONT bool operator()(Device,
+                            CoordType coords,
+                            ScalarType scalars,
+                            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>& outCoords,
+                            vtkm::cont::ArrayHandle<vtkm::Float32>& outScalars,
+                            bool logY,
+                            bool logX)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::worklet::DispatcherMapField<Convert1DCoordinates, Device>(
+      Convert1DCoordinates(logY, logX))
+      .Invoke(coords, scalars, outCoords, outScalars);
+    return true;
+  }
+};
 
 #if defined(VTKM_MSVC)
 #pragma warning(push)
@@ -276,22 +344,24 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     //
     // Convert the cell set into something we can draw
     //
-    vtkm::worklet::DispatcherMapField<Convert1DCoordinates, vtkm::cont::DeviceAdapterTagSerial>(
-      Convert1DCoordinates())
-      .Invoke(coords.GetData(), inScalarField.GetData(), newCoords, newScalars);
+    vtkm::cont::TryExecute(ConvertFunctor(),
+                           coords.GetData(),
+                           inScalarField.GetData(),
+                           newCoords,
+                           newScalars,
+                           this->LogarithmY,
+                           this->LogarithmX);
 
     actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
     actualField =
       vtkm::cont::Field(inScalarField.GetName(), vtkm::cont::Field::ASSOC_POINTS, newScalars);
+
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     vtkm::cont::ArrayHandle<vtkm::Id> conn;
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> iter =
+      vtkm::cont::make_ArrayHandleCounting(0, 1, numCells);
     conn.Allocate(numCells * 2);
-    auto connPortal = conn.GetPortalControl();
-    for (int i = 0; i < numCells; ++i)
-    {
-      connPortal.Set(i * 2 + 0, i);
-      connPortal.Set(i * 2 + 1, i + 1);
-    }
+    vtkm::cont::TryExecute(ConnFunctor(), iter, conn);
 
     vtkm::cont::CellSetSingleType<> newCellSet("cells");
     newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
