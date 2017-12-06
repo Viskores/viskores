@@ -42,6 +42,7 @@ class MakeTestDataSet
 public:
   // 1D uniform datasets.
   vtkm::cont::DataSet Make1DUniformDataSet0();
+  vtkm::cont::DataSet Make1DUniformDataSet1();
   // 1D explicit datasets.
   vtkm::cont::DataSet Make1DExplicitDataSet0();
 
@@ -88,6 +89,20 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet0()
   vtkm::Float32 var2[nVerts] = { -1.1f, .7f, -.2f, 0.2f, -.1f, .4f };
   dsf.AddPointField(dataSet, "pointvar", var, nVerts);
   dsf.AddPointField(dataSet, "pointvar2", var2, nVerts);
+
+  return dataSet;
+}
+
+//Make another simple 1D dataset.
+inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet1()
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  const vtkm::Id nVerts = 6;
+  vtkm::cont::DataSet dataSet = dsb.Create(nVerts);
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  vtkm::Float32 var[nVerts] = { 1.0e3f, 5.e5f, 2.e8f, 1.e10f, 2e12f, 3e15f };
+  dsf.AddPointField(dataSet, "pointvar", var, nVerts);
 
   return dataSet;
 }

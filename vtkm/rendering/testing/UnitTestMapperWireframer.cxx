@@ -130,6 +130,10 @@ void RenderTests()
   colors.push_back(vtkm::rendering::Color(0.f, 1.f, 0.f));
   vtkm::rendering::testing::Render<M, C, V1>(
     maker.Make1DUniformDataSet0(), fields, colors, "lines1D.pnm");
+  //test log y
+  vtkm::rendering::Color red = vtkm::rendering::Color::red;
+  vtkm::rendering::testing::Render<M, C, V1>(
+    maker.Make1DUniformDataSet1(), "pointvar", red, "linesLogY1D.pnm", true);
 }
 
 } //namespace
