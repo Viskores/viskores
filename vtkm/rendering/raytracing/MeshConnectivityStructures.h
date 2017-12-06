@@ -278,7 +278,8 @@ public:
   inline vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const
   {
     const vtkm::Int32 shapeId = static_cast<vtkm::Int32>(ShapesPortal.Get(cellId));
-    const vtkm::Int32 numIndices = FaceLookUp[CellTypeLookUp[shapeId]][2];
+    const vtkm::Int32 numIndices =
+      CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[shapeId]][2];
     BOUNDS_CHECK(CellOffsetsPortal, cellId);
     const vtkm::Id cellOffset = CellOffsetsPortal.Get(cellId);
 
@@ -367,7 +368,7 @@ public:
       Cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
     ShapeId = shapes.GetPortalConstControl().Get(0);
-    NumIndices = FaceLookUp[CellTypeLookUp[ShapeId]][2];
+    NumIndices = CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[ShapeId]][2];
 
     if (NumIndices == 0)
     {
@@ -377,7 +378,7 @@ public:
       throw vtkm::cont::ErrorBadValue(message.str());
     }
     vtkm::Id start = 0;
-    NumFaces = FaceLookUp[CellTypeLookUp[ShapeId]][1];
+    NumFaces = CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[ShapeId]][1];
     vtkm::Id numCells = CellConnectivity.GetPortalConstControl().GetNumberOfValues();
     CellOffsets = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(start, NumIndices, numCells);
 

@@ -40,14 +40,6 @@ namespace vtkm
 namespace worklet
 {
 
-namespace detail
-{
-
-VTKM_EXEC_CONSTANT
-const static vtkm::IdComponent StructuredTriangleIndices[2][3] = { { 0, 1, 2 }, { 0, 2, 3 } };
-
-} // namespace detail
-
 /// \brief Compute the triangulate cells for a uniform grid data set
 template <typename DeviceAdapter>
 class TriangulateStructured
@@ -79,9 +71,11 @@ public:
                               ConnectivityOutVec& connectivityOut,
                               vtkm::IdComponent visitIndex) const
     {
-      connectivityOut[0] = connectivityIn[detail::StructuredTriangleIndices[visitIndex][0]];
-      connectivityOut[1] = connectivityIn[detail::StructuredTriangleIndices[visitIndex][1]];
-      connectivityOut[2] = connectivityIn[detail::StructuredTriangleIndices[visitIndex][2]];
+      const static vtkm::IdComponent StructuredTriangleIndices[2][3] = { { 0, 1, 2 }, { 0, 2, 3 } };
+
+      connectivityOut[0] = connectivityIn[StructuredTriangleIndices[visitIndex][0]];
+      connectivityOut[1] = connectivityIn[StructuredTriangleIndices[visitIndex][1]];
+      connectivityOut[2] = connectivityIn[StructuredTriangleIndices[visitIndex][2]];
     }
   };
 
