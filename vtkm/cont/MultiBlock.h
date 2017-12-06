@@ -133,7 +133,7 @@ public:
   void PrintSummary(std::ostream& stream) const;
 
 private:
-  std::vector<vtkm::cont::DataSet> blocks;
+  std::vector<vtkm::cont::DataSet> Blocks;
 };
 }
 } // namespace vtkm::cont

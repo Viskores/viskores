@@ -34,25 +34,25 @@ namespace cont
 VTKM_CONT
 MultiBlock::MultiBlock(const vtkm::cont::DataSet& ds)
 {
-  this->blocks.insert(blocks.end(), ds);
+  this->Blocks.insert(this->Blocks.end(), ds);
 }
 
 VTKM_CONT
 MultiBlock::MultiBlock(const vtkm::cont::MultiBlock& src)
 {
-  this->blocks = src.GetBlocks();
+  this->Blocks = src.GetBlocks();
 }
 
 VTKM_CONT
 MultiBlock::MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks)
 {
-  this->blocks = mblocks;
+  this->Blocks = mblocks;
 }
 
 VTKM_CONT
 MultiBlock::MultiBlock(vtkm::Id size)
 {
-  this->blocks.reserve(static_cast<std::size_t>(size));
+  this->Blocks.reserve(static_cast<std::size_t>(size));
 }
 
 VTKM_CONT
@@ -68,7 +68,7 @@ MultiBlock::~MultiBlock()
 VTKM_CONT
 MultiBlock& MultiBlock::operator=(const vtkm::cont::MultiBlock& src)
 {
-  this->blocks = src.GetBlocks();
+  this->Blocks = src.GetBlocks();
   return *this;
 }
 
@@ -76,46 +76,46 @@ VTKM_CONT
 vtkm::cont::Field MultiBlock::GetField(const std::string& field_name, const int& block_index)
 {
   assert(block_index >= 0);
-  assert(static_cast<std::size_t>(block_index) < blocks.size());
-  return blocks[static_cast<std::size_t>(block_index)].GetField(field_name);
+  assert(static_cast<std::size_t>(block_index) < this->Blocks.size());
+  return this->Blocks[static_cast<std::size_t>(block_index)].GetField(field_name);
 }
 
 VTKM_CONT
 vtkm::Id MultiBlock::GetNumberOfBlocks() const
 {
-  return static_cast<vtkm::Id>(this->blocks.size());
+  return static_cast<vtkm::Id>(this->Blocks.size());
 }
 
 VTKM_CONT
 const vtkm::cont::DataSet& MultiBlock::GetBlock(vtkm::Id blockId) const
 {
-  return this->blocks[static_cast<std::size_t>(blockId)];
+  return this->Blocks[static_cast<std::size_t>(blockId)];
 }
 
 VTKM_CONT
 const std::vector<vtkm::cont::DataSet>& MultiBlock::GetBlocks() const
 {
-  return this->blocks;
+  return this->Blocks;
 }
 
 VTKM_CONT
 void MultiBlock::AddBlock(vtkm::cont::DataSet& ds)
 {
-  this->blocks.insert(blocks.end(), ds);
+  this->Blocks.insert(this->Blocks.end(), ds);
   return;
 }
 
 void MultiBlock::AddBlocks(std::vector<vtkm::cont::DataSet>& mblocks)
 {
-  this->blocks.insert(blocks.end(), mblocks.begin(), mblocks.end());
+  this->Blocks.insert(this->Blocks.end(), mblocks.begin(), mblocks.end());
   return;
 }
 
 VTKM_CONT
 void MultiBlock::InsertBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
 {
-  if (index <= static_cast<vtkm::Id>(blocks.size()))
-    this->blocks.insert(blocks.begin() + index, ds);
+  if (index <= static_cast<vtkm::Id>(this->Blocks.size()))
+    this->Blocks.insert(this->Blocks.begin() + index, ds);
   else
   {
     std::string msg = "invalid insert position\n ";
@@ -126,8 +126,8 @@ void MultiBlock::InsertBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
 VTKM_CONT
 void MultiBlock::ReplaceBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
 {
-  if (index < static_cast<vtkm::Id>(blocks.size()))
-    this->blocks.at(static_cast<std::size_t>(index)) = ds;
+  if (index < static_cast<vtkm::Id>(this->Blocks.size()))
+    this->Blocks.at(static_cast<std::size_t>(index)) = ds;
   else
   {
     std::string msg = "invalid replace position\n ";
@@ -159,7 +159,7 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index,
   VTKM_IS_LIST_TAG(StorageList);
 
   const vtkm::Id index = coordinate_system_index;
-  const size_t num_blocks = blocks.size();
+  const size_t num_blocks = this->Blocks.size();
 
   vtkm::Bounds bounds;
   for (size_t i = 0; i < num_blocks; ++i)
@@ -206,7 +206,7 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index
   vtkm::cont::CoordinateSystem coords;
   try
   {
-    coords = blocks[block_index].GetCoordinateSystem(index);
+    coords = this->Blocks[block_index].GetCoordinateSystem(index);
   }
   catch (const vtkm::cont::Error& error)
   {
@@ -241,8 +241,8 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const 
   VTKM_IS_LIST_TAG(TypeList);
   VTKM_IS_LIST_TAG(StorageList);
 
-  assert(blocks.size() > 0);
-  vtkm::cont::Field field = blocks.at(0).GetField(index);
+  assert(this->Blocks.size() > 0);
+  vtkm::cont::Field field = this->Blocks.at(0).GetField(index);
   std::string field_name = field.GetName();
   return this->GetGlobalRange(field_name, TypeList(), StorageList());
 }
@@ -268,20 +268,20 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range>
 MultiBlock::GetGlobalRange(const std::string& field_name, TypeList, StorageList) const
 {
   bool valid_field = true;
-  const size_t num_blocks = blocks.size();
+  const size_t num_blocks = this->Blocks.size();
 
   vtkm::cont::ArrayHandle<vtkm::Range> range;
   vtkm::Id num_components = 0;
 
   for (size_t i = 0; i < num_blocks; ++i)
   {
-    if (!blocks[i].HasField(field_name))
+    if (!this->Blocks[i].HasField(field_name))
     {
       valid_field = false;
       break;
     }
 
-    const vtkm::cont::Field& field = blocks[i].GetField(field_name);
+    const vtkm::cont::Field& field = this->Blocks[i].GetField(field_name);
     vtkm::cont::ArrayHandle<vtkm::Range> sub_range = field.GetRange(TypeList(), StorageList());
 
     vtkm::cont::ArrayHandle<vtkm::Range>::PortalConstControl sub_range_control =
@@ -332,10 +332,10 @@ void MultiBlock::PrintSummary(std::ostream& stream) const
   stream << "block "
          << "\n";
 
-  for (size_t block_index = 0; block_index < blocks.size(); ++block_index)
+  for (size_t block_index = 0; block_index < this->Blocks.size(); ++block_index)
   {
     stream << "block " << block_index << "\n";
-    blocks[block_index].PrintSummary(stream);
+    this->Blocks[block_index].PrintSummary(stream);
   }
 }
 }
