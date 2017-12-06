@@ -212,10 +212,10 @@ private:
 };
 
 //forward declares
-template <int LeftToProcess>
+template <std::size_t LeftToProcess>
 struct for_each_dynamic_arg;
 
-template <int LeftToProcess, typename TypeCheckTag>
+template <std::size_t LeftToProcess, typename TypeCheckTag>
 struct convert_arg_wrapper
 {
   template <typename T, typename... Args>
@@ -238,7 +238,11 @@ struct convert_arg_wrapper
   }
 };
 
-template <int LeftToProcess, typename T, typename ContParams, typename Trampoline, typename... Args>
+template <std::size_t LeftToProcess,
+          typename T,
+          typename ContParams,
+          typename Trampoline,
+          typename... Args>
 inline void convert_arg(vtkm::cont::internal::DynamicTransformTagStatic,
                         T&& t,
                         const ContParams&,
@@ -250,7 +254,11 @@ inline void convert_arg(vtkm::cont::internal::DynamicTransformTagStatic,
     trampoline, popped_sig(), std::forward<Args>(args)..., std::forward<T>(t));
 }
 
-template <int LeftToProcess, typename T, typename ContParams, typename Trampoline, typename... Args>
+template <std::size_t LeftToProcess,
+          typename T,
+          typename ContParams,
+          typename Trampoline,
+          typename... Args>
 inline void convert_arg(vtkm::cont::internal::DynamicTransformTagCastAndCall,
                         T&& t,
                         const ContParams&,
@@ -267,7 +275,7 @@ inline void convert_arg(vtkm::cont::internal::DynamicTransformTagCastAndCall,
                           std::forward<Args>(args)...);
 }
 
-template <int LeftToProcess>
+template <std::size_t LeftToProcess>
 struct for_each_dynamic_arg
 {
   template <typename Trampoline, typename ContParams, typename T, typename... Args>
