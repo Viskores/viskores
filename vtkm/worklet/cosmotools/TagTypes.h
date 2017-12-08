@@ -1,4 +1,3 @@
-//============================================================================
 //  Copyright (c) Kitware, Inc.
 //  All rights reserved.
 //  See LICENSE.txt for details.
@@ -58,11 +57,10 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //============================================================================
 
-#ifndef vtkm_worklet_cosmotools_is_star_h
-#define vtkm_worklet_cosmotools_is_star_h
+#ifndef vtkm_worklet_cosmotools_graft_tagtypes_h
+#define vtkm_worklet_cosmotools_graft_tagtypes_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
-#include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/TypeListTag.h>
 
 namespace vtkm
 {
@@ -71,39 +69,15 @@ namespace worklet
 namespace cosmotools
 {
 
-// Examine halo ids from current pass and last pass to see if particles
-// are rooted in an existing halo
-class IsStar : public vtkm::worklet::WorkletMapField
+struct UInt32TagType : vtkm::ListTagBase<vtkm::UInt32>
 {
-public:
-  typedef void ControlSignature(FieldIn<IdType> index,
-                                WholeArrayInOut<IdType> haloIdCurrent,
-                                WholeArrayInOut<IdType> haloIdLast,
-                                WholeArrayInOut<> rootedStar);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+};
 
-  // Constructor
-  VTKM_EXEC_CONT
-  IsStar() {}
-
-  template <typename InPortalType, typename InPortalType2>
-  VTKM_EXEC void operator()(const vtkm::Id& i,
-                            const InPortalType& haloIdCurrent,
-                            const InPortalType& haloIdLast,
-                            InPortalType2& rootedStar) const
-  {
-    vtkm::Id dValue = haloIdLast.Get(i);
-    vtkm::Id ddValue = haloIdCurrent.Get(dValue);
-    if (dValue != ddValue)
-    {
-      rootedStar.Set(dValue, false);
-      rootedStar.Set(ddValue, false);
-    }
-  }
-}; // IsStar
+template <typename T>
+struct Vec3TagType : vtkm::ListTagBase<vtkm::Vec<T, 3>>
+{
+};
 }
 }
 }
-
 #endif

@@ -281,7 +281,7 @@ function(vtkm_pyexpander_generated_file generated_file_name)
         -DPYEXPANDER_COMMAND=${PYEXPANDER_COMMAND}
         -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
         -DGENERATED_FILE=${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}
-        -P ${CMAKE_SOURCE_DIR}/CMake/VTKmCheckPyexpander.cmake
+        -P ${VTKm_CMAKE_MODULE_PATH}/VTKmCheckPyexpander.cmake
       MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}.in
       DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
       COMMENT "Checking validity of ${generated_file_name}"

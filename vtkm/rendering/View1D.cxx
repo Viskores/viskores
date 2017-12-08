@@ -30,8 +30,9 @@ namespace rendering
 View1D::View1D(const vtkm::rendering::Scene& scene,
                const vtkm::rendering::Mapper& mapper,
                const vtkm::rendering::Canvas& canvas,
-               const vtkm::rendering::Color& backgroundColor)
-  : View(scene, mapper, canvas, backgroundColor)
+               const vtkm::rendering::Color& backgroundColor,
+               const vtkm::rendering::Color& foregroundColor)
+  : View(scene, mapper, canvas, backgroundColor, foregroundColor)
 {
 }
 
@@ -39,8 +40,9 @@ View1D::View1D(const vtkm::rendering::Scene& scene,
                const vtkm::rendering::Mapper& mapper,
                const vtkm::rendering::Canvas& canvas,
                const vtkm::rendering::Camera& camera,
-               const vtkm::rendering::Color& backgroundColor)
-  : View(scene, mapper, canvas, camera, backgroundColor)
+               const vtkm::rendering::Color& backgroundColor,
+               const vtkm::rendering::Color& foregroundColor)
+  : View(scene, mapper, canvas, camera, backgroundColor, foregroundColor)
 {
 }
 
@@ -116,6 +118,7 @@ void View1D::RenderColorLegendAnnotations()
       vtkm::rendering::Actor act = this->GetScene().GetActor(i);
       this->Legend.AddItem(act.GetScalarField().GetName(), act.GetColorTable().MapRGB(0));
     }
+    this->Legend.SetLabelColor(this->GetCanvas().GetForegroundColor());
     this->Legend.Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());
   }
 }

@@ -110,19 +110,19 @@ public:
     vtkm::Int32 tableOffset = 0;
     if (shapeType == vtkm::CELL_SHAPE_TETRA)
     {
-      tableOffset = FaceLookUp[1][0];
+      tableOffset = CellTables::Get().FaceLookUp[1][0];
     }
     else if (shapeType == vtkm::CELL_SHAPE_HEXAHEDRON)
     {
-      tableOffset = FaceLookUp[0][0];
+      tableOffset = CellTables::Get().FaceLookUp[0][0];
     }
     else if (shapeType == vtkm::CELL_SHAPE_WEDGE)
     {
-      tableOffset = FaceLookUp[2][0];
+      tableOffset = CellTables::Get().FaceLookUp[2][0];
     }
     else if (shapeType == vtkm::CELL_SHAPE_PYRAMID)
     {
-      tableOffset = FaceLookUp[3][0];
+      tableOffset = CellTables::Get().FaceLookUp[3][0];
     }
     else
       printf("Error shape not recognized %d\n", (int)shapeType);
@@ -190,8 +190,8 @@ public:
         vtkm::Id shape2Offset =
           GetShapeOffset(shapes.Get(cellId2)) + faceIdPairs.Get(currentIndex)[1];
 
-        vtkm::Int32 icount1 = ShapesFaceList[shape1Offset][0];
-        vtkm::Int32 icount2 = ShapesFaceList[shape2Offset][0];
+        vtkm::Int32 icount1 = CellTables::Get().ShapesFaceList[shape1Offset][0];
+        vtkm::Int32 icount2 = CellTables::Get().ShapesFaceList[shape2Offset][0];
         //Check to see if we have the same number of idices
         if (icount1 != icount2)
           continue;
@@ -201,22 +201,24 @@ public:
         vtkm::Vec<vtkm::Id, 4> indices1;
         vtkm::Vec<vtkm::Id, 4> indices2;
 
-        for (vtkm::Int32 i = 1; i <= ShapesFaceList[shape1Offset][0]; ++i)
+        for (vtkm::Int32 i = 1; i <= CellTables::Get().ShapesFaceList[shape1Offset][0]; ++i)
         {
           BOUNDS_CHECK(offsets, cellId1);
           BOUNDS_CHECK(offsets, cellId2);
-          BOUNDS_CHECK(connectivity, (offsets.Get(cellId1) + ShapesFaceList[shape1Offset][i]));
-          BOUNDS_CHECK(connectivity, (offsets.Get(cellId2) + ShapesFaceList[shape2Offset][i]));
-          indices1[i - 1] =
-            connectivity.Get(offsets.Get(cellId1) + ShapesFaceList[shape1Offset][i]);
-          indices2[i - 1] =
-            connectivity.Get(offsets.Get(cellId2) + ShapesFaceList[shape2Offset][i]);
+          BOUNDS_CHECK(connectivity,
+                       (offsets.Get(cellId1) + CellTables::Get().ShapesFaceList[shape1Offset][i]));
+          BOUNDS_CHECK(connectivity,
+                       (offsets.Get(cellId2) + CellTables::Get().ShapesFaceList[shape2Offset][i]));
+          indices1[i - 1] = connectivity.Get(offsets.Get(cellId1) +
+                                             CellTables::Get().ShapesFaceList[shape1Offset][i]);
+          indices2[i - 1] = connectivity.Get(offsets.Get(cellId2) +
+                                             CellTables::Get().ShapesFaceList[shape2Offset][i]);
         }
 
         bool isEqual = true;
-        for (vtkm::Int32 i = 0; i < ShapesFaceList[shape1Offset][0]; ++i)
+        for (vtkm::Int32 i = 0; i < CellTables::Get().ShapesFaceList[shape1Offset][0]; ++i)
         {
-          if (!IsIn(indices1[i], indices2, ShapesFaceList[shape1Offset][0]))
+          if (!IsIn(indices1[i], indices2, CellTables::Get().ShapesFaceList[shape1Offset][0]))
             isEqual = false;
         }
 
@@ -285,7 +287,8 @@ public:
     vtkm::Id offset = shapeOffsets.Get(cellId);
     BOUNDS_CHECK(shapes, cellId);
     vtkm::Int32 shapeId = static_cast<vtkm::Int32>(shapes.Get(cellId));
-    vtkm::Int32 shapesFaceOffset = FaceLookUp[CellTypeLookUp[shapeId]][0];
+    vtkm::Int32 shapesFaceOffset =
+      CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[shapeId]][0];
     if (shapesFaceOffset == -1)
     {
       printf("Unsupported Shape Type %d\n", shapeId);
@@ -294,12 +297,12 @@ public:
 
     vtkm::Vec<vtkm::Id, 4> faceIndices(-1, -1, -1, -1);
     vtkm::Int32 tableIndex = static_cast<vtkm::Int32>(shapesFaceOffset + faceIdPair[1]);
-    const vtkm::Int32 numIndices = ShapesFaceList[tableIndex][0];
+    const vtkm::Int32 numIndices = CellTables::Get().ShapesFaceList[tableIndex][0];
 
     for (vtkm::Int32 i = 1; i <= numIndices; ++i)
     {
-      BOUNDS_CHECK(indices, offset + ShapesFaceList[tableIndex][i]);
-      faceIndices[i - 1] = indices.Get(offset + ShapesFaceList[tableIndex][i]);
+      BOUNDS_CHECK(indices, offset + CellTables::Get().ShapesFaceList[tableIndex][i]);
+      faceIndices[i - 1] = indices.Get(offset + CellTables::Get().ShapesFaceList[tableIndex][i]);
     }
     vtkm::Vec<vtkm::Id, 4> triangle;
     triangle[0] = cellId;
@@ -344,18 +347,6 @@ public:
   }
 }; //class WriteFaceConn
 
-// Each one of size segments will process
-// one face of the hex and domain
-VTKM_EXEC_CONSTANT
-static vtkm::Int32 SegmentToFace[6] = { 0, 2, 1, 3, 4, 5 };
-
-// Each face/segment has 2 varying dimensions
-VTKM_EXEC_CONSTANT
-static vtkm::Int32 SegmentDirections[6][2] = { { 0, 2 }, //face 0 and 2 have the same directions
-                                               { 0, 2 }, { 1, 2 }, //1 and 3
-                                               { 1, 2 }, { 0, 1 }, // 4 and 5
-                                               { 0, 1 } };
-
 class StructuredExternalTriangles : public vtkm::worklet::WorkletMapField
 {
 protected:
@@ -395,6 +386,18 @@ public:
   template <typename TrianglePortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& index, TrianglePortalType& triangles) const
   {
+    // Each one of size segments will process
+    // one face of the hex and domain
+    static const vtkm::Int32 SegmentToFace[6] = { 0, 2, 1, 3, 4, 5 };
+
+    // Each face/segment has 2 varying dimensions
+    static const vtkm::Int32 SegmentDirections[6][2] = {
+      { 0, 2 },           //face 0 and 2 have the same directions
+      { 0, 2 }, { 1, 2 }, //1 and 3
+      { 1, 2 }, { 0, 1 }, // 4 and 5
+      { 0, 1 }
+    };
+
     //
     // We get one index per extenal face
     //
@@ -449,7 +452,8 @@ public:
     // Look up the offset into the face list for each cell type
     // This should always be zero, but in case this table changes I don't
     // want to break anything.
-    vtkm::Int32 shapesFaceOffset = FaceLookUp[CellTypeLookUp[CELL_SHAPE_HEXAHEDRON]][0];
+    vtkm::Int32 shapesFaceOffset =
+      CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[CELL_SHAPE_HEXAHEDRON]][0];
 
     vtkm::Vec<vtkm::Id, 4> faceIndices;
     vtkm::Int32 tableIndex = shapesFaceOffset + cellFace;
@@ -457,7 +461,7 @@ public:
     // Load the face
     for (vtkm::Int32 i = 1; i <= 4; ++i)
     {
-      faceIndices[i - 1] = cellIndices[ShapesFaceList[tableIndex][i]];
+      faceIndices[i - 1] = cellIndices[CellTables::Get().ShapesFaceList[tableIndex][i]];
     }
     const vtkm::Id outputOffset = index * 2;
     vtkm::Vec<vtkm::Id, 4> triangle;
@@ -492,14 +496,15 @@ public:
     vtkm::Id cellId = faceIdPair[0];
     vtkm::Id cellFace = faceIdPair[1];
     vtkm::Int32 shapeType = static_cast<vtkm::Int32>(shapes.Get(cellId));
-    vtkm::Int32 faceStartIndex = FaceLookUp[CellTypeLookUp[shapeType]][0];
+    vtkm::Int32 faceStartIndex =
+      CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[shapeType]][0];
     if (faceStartIndex == -1)
     {
       //Unsupported Shape Type this should never happen
       triangleCount = 0;
       return;
     }
-    vtkm::Int32 faceType = ShapesFaceList[faceStartIndex + cellFace][0];
+    vtkm::Int32 faceType = CellTables::Get().ShapesFaceList[faceStartIndex + cellFace][0];
     // The face will either have 4 or 3 indices, so quad or tri
     triangleCount = (faceType == 4) ? 2 : 1;
 

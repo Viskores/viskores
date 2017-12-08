@@ -56,12 +56,6 @@ struct VecAxisAlignedPointCoordinatesNumComponents<3>
   static const vtkm::IdComponent NUM_COMPONENTS = 8;
 };
 
-VTKM_EXEC_CONSTANT
-const vtkm::FloatDefault VecAxisAlignedPointCoordinatesOffsetTable[8][3] = {
-  { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f },
-  { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }
-};
-
 } // namespace detail
 
 /// \brief An implicit vector for point coordinates in axis aligned cells. For
@@ -110,7 +104,12 @@ public:
   VTKM_EXEC_CONT
   ComponentType operator[](vtkm::IdComponent index) const
   {
-    const vtkm::FloatDefault* offset = detail::VecAxisAlignedPointCoordinatesOffsetTable[index];
+    static const vtkm::FloatDefault VecAxisAlignedPointCoordinatesOffsetTable[8][3] = {
+      { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f },
+      { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }
+    };
+
+    const auto& offset = VecAxisAlignedPointCoordinatesOffsetTable[index];
     return ComponentType(this->Origin[0] + offset[0] * this->Spacing[0],
                          this->Origin[1] + offset[1] * this->Spacing[1],
                          this->Origin[2] + offset[2] * this->Spacing[2]);

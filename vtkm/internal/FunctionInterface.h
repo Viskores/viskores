@@ -243,6 +243,13 @@ public:
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  explicit FunctionInterface(const detail::ParameterContainer<FunctionSignature>& p)
+    : Result()
+    , Parameters(p)
+  {
+  }
+
   // the number of parameters as an integral constant
   typedef detail::FunctionSigInfo<FunctionSignature> SigInfo;
   typedef typename SigInfo::ArityType SignatureArity;
