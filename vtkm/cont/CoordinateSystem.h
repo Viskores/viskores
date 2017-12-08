@@ -225,9 +225,9 @@ public:
 };
 
 template <typename Functor, typename... Args>
-void CastAndCall(const vtkm::cont::CoordinateSystem& coords, const Functor& f, Args&&... args)
+void CastAndCall(const vtkm::cont::CoordinateSystem& coords, Functor&& f, Args&&... args)
 {
-  coords.GetData().CastAndCall(f, std::forward<Args>(args)...);
+  coords.GetData().CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
 }
 
 namespace internal

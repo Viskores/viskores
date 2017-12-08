@@ -358,7 +358,7 @@ public:
   /// respectively.
   ///
   template <typename Functor, typename... Args>
-  VTKM_CONT void CastAndCall(const Functor& f, Args&&...) const;
+  VTKM_CONT void CastAndCall(Functor&& f, Args&&...) const;
 
   /// \brief Create a new array of the same type as this array.
   ///
@@ -414,15 +414,15 @@ struct DynamicArrayHandleTry
   }
 
   template <typename T, typename U, typename... Args>
-  void operator()(std::pair<T, U>&& p, Args&&... args) const
+  void operator()(std::pair<T, U>, Args&&... args) const
   {
     using storage = vtkm::cont::internal::Storage<T, U>;
     using invalid = typename std::is_base_of<vtkm::cont::internal::UndefinedStorage, storage>::type;
-    this->run(std::forward<decltype(p)>(p), invalid{}, args...);
+    this->run<T, U>(invalid{}, args...);
   }
 
   template <typename T, typename U, typename Functor, typename... Args>
-  void run(std::pair<T, U>&&, std::false_type, Functor&& f, bool& called, Args&&... args) const
+  void run(std::false_type, Functor&& f, bool& called, Args&&... args) const
   {
     if (!called)
     {
@@ -437,7 +437,7 @@ struct DynamicArrayHandleTry
   }
 
   template <typename T, typename U, typename... Args>
-  void run(std::pair<T, U>&&, std::true_type, Args&&...) const
+  void run(std::true_type, Args&&...) const
   {
   }
 
@@ -451,7 +451,7 @@ VTKM_CONT_EXPORT void ThrowCastAndCallException(PolymorphicArrayHandleContainerB
 
 template <typename TypeList, typename StorageList>
 template <typename Functor, typename... Args>
-VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const Functor& f,
+VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(Functor&& f,
                                                                           Args&&... args) const
 {
   //For optimizations we should compile once the cross product for the default types
@@ -460,8 +460,11 @@ VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(const 
 
   bool called = false;
   auto* ptr = this->ArrayContainer.get();
-  vtkm::ListForEach(
-    detail::DynamicArrayHandleTry(ptr), crossProduct{}, f, called, std::forward<Args>(args)...);
+  vtkm::ListForEach(detail::DynamicArrayHandleTry(ptr),
+                    crossProduct{},
+                    std::forward<Functor>(f),
+                    called,
+                    std::forward<Args>(args)...);
   if (!called)
   {
     // throw an exception
