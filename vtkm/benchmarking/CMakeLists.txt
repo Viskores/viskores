@@ -20,8 +20,8 @@
 
 set(benchmarks
   BenchmarkArrayTransfer
-#  BenchmarkCopySpeeds
-#  BenchmarkDeviceAdapter
+  BenchmarkCopySpeeds
+  BenchmarkDeviceAdapter
   BenchmarkFieldAlgorithms
   BenchmarkTopologyAlgorithms
   )
