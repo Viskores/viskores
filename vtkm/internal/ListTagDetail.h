@@ -213,9 +213,33 @@ VTKM_CONT void ListForEachImpl(Functor&& f,
 template <typename R1, typename R2>
 struct ListCrossProductImpl
 {
-  //This is a lazy Cartesian product generator
-  //that was found inside the brigand apply test and runs on all compilers.
-  //The original version didn't work with Intel
+#if defined(VTKM_MSVC) && _MSC_VER == 1800
+  // This is a Cartesian product generator that is used
+  // when building with visual studio 2013. Visual Studio
+  // 2013 is unable to handle the lazy version as it can't
+  // deduce the correct template parameters
+  using type = brigand::reverse_fold<
+    brigand::list<R1, R2>,
+    brigand::list<brigand::list<>>,
+    brigand::bind<
+      brigand::join,
+      brigand::bind<
+        brigand::transform,
+        brigand::_2,
+        brigand::defer<brigand::bind<
+          brigand::join,
+          brigand::bind<
+            brigand::transform,
+            brigand::parent<brigand::_1>,
+            brigand::defer<brigand::bind<
+              brigand::list,
+              brigand::bind<brigand::push_front, brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
+#else
+  // This is a lazy Cartesian product generator that is used
+  // when using any compiler other than visual studio 2013.
+  // This version was settled on as being the best default
+  // version as all compilers including Intel handle this
+  // implementation without issue for very large cross products
   using type = brigand::reverse_fold<
     brigand::list<R1, R2>,
     brigand::list<brigand::list<>>,
@@ -226,6 +250,7 @@ struct ListCrossProductImpl
         brigand::defer<brigand::bind<
           brigand::list,
           brigand::lazy::push_front<brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
+#endif
 };
 
 
