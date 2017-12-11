@@ -414,7 +414,7 @@ struct DynamicArrayHandleTry
   }
 
   template <typename T, typename U, typename... Args>
-  void operator()(std::pair<T, U>, Args&&... args) const
+  void operator()(brigand::list<T, U>, Args&&... args) const
   {
     using storage = vtkm::cont::internal::Storage<T, U>;
     using invalid = typename std::is_base_of<vtkm::cont::internal::UndefinedStorage, storage>::type;

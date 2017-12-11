@@ -210,31 +210,22 @@ VTKM_CONT void ListForEachImpl(Functor&& f,
     std::forward<Functor>(f), brigand::list<ArgTypes...>{}, std::forward<Args>(args)...);
 }
 
-
-template <typename T, typename U, typename R>
-struct ListCrossProductAppend
-{
-  using type = brigand::push_back<T, std::pair<U, R>>;
-};
-
-template <typename T, typename U, typename R2>
-struct ListCrossProductImplUnrollR2
-{
-  using P =
-    brigand::fold<R2,
-                  brigand::list<>,
-                  ListCrossProductAppend<brigand::_state, brigand::_element, brigand::pin<U>>>;
-
-  using type = brigand::append<T, P>;
-};
-
 template <typename R1, typename R2>
 struct ListCrossProductImpl
 {
-  using type = brigand::fold<
-    R2,
-    brigand::list<>,
-    ListCrossProductImplUnrollR2<brigand::_state, brigand::_element, brigand::pin<R1>>>;
+  //This is a lazy Cartesian product generator
+  //that was found inside the brigand apply test and runs on all compilers.
+  //The original version didn't work with Intel
+  using type = brigand::reverse_fold<
+    brigand::list<R1, R2>,
+    brigand::list<brigand::list<>>,
+    brigand::lazy::join<brigand::lazy::transform<
+      brigand::_2,
+      brigand::defer<brigand::lazy::join<brigand::lazy::transform<
+        brigand::parent<brigand::_1>,
+        brigand::defer<brigand::bind<
+          brigand::list,
+          brigand::lazy::push_front<brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
 };
 
 
