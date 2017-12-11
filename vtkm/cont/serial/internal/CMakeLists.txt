@@ -30,7 +30,7 @@ add_library(vtkm_cont_serial OBJECT
   ArrayManagerExecutionSerial.cxx
   DeviceAdapterAlgorithmSerial.cxx
   )
-
+target_compile_definitions(vtkm_cont_serial PRIVATE vtkm_cont_EXPORTS)
 target_compile_options(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_OPTIONS>)
 target_compile_definitions(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_DEFINITIONS>)
 target_compile_features(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_FEATURES>)
