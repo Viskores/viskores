@@ -76,12 +76,18 @@ inline void PrintFailureMessage(int index)
   throw vtkm::cont::ErrorBadType(message.str());
 }
 
-template <bool, typename T, typename TypeCheckTag>
-struct ParameterTypeCorrect;
-template <typename T, typename TypeCheckTag>
-struct ParameterTypeCorrect<true, T, TypeCheckTag>
+template <typename T, bool noError>
+struct ReportTypeOnError;
+template <typename T>
+struct ReportTypeOnError<T, true> : std::true_type
 {
-  static VTKM_CONSTEXPR bool value = true;
+};
+
+template <int Value, bool noError>
+struct ReportValueOnError;
+template <int Value>
+struct ReportValueOnError<Value, true> : std::true_type
+{
 };
 
 // Is designed as a brigand fold operation.
@@ -97,20 +103,51 @@ struct DetermineIfHasDynamicParameter
 
 
 // Is designed as a brigand fold operation.
-template <typename T, typename State, typename SigTypes>
-struct DetermineHasInCorrectParameters
+template <typename WorkletType>
+struct DetermineHasCorrectParameters
 {
-  //T is the type of the Param at the current index
-  //State if the index to use to fetch the control signature tag
-  using ControlSignatureTag = typename brigand::at_c<SigTypes, State::value>;
-  using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
+  template <typename T, typename State, typename SigTypes>
+  struct Functor
+  {
+    //T is the type of the Param at the current index
+    //State if the index to use to fetch the control signature tag
+    using ControlSignatureTag = typename brigand::at_c<SigTypes, State::value>;
+    using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
 
-  using isCorrect =
-    ParameterTypeCorrect<vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value, TypeCheckTag, T>;
-  static_assert(isCorrect::value,
-                "The type check failed since the parameter passed in doesn't pass the TypeCheck");
+    static VTKM_CONSTEXPR bool isCorrect = vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value;
 
-  using type = std::integral_constant<std::size_t, State::value + 1>;
+    // If you get an error on the line below, that means that your code has called the
+    // Invoke method on a dispatcher, and one of the arguments of the Invoke is the wrong
+    // type. Each argument of Invoke corresponds to a tag in the arguments of the
+    // ControlSignature of the worklet. If there is a mismatch, then you get an error here
+    // (instead of where you called the dispatcher). For example, if the worklet has a
+    // control signature as ControlSignature(CellSetIn, ...) and the first argument passed
+    // to Invoke is an ArrayHandle, you will get an error here because you cannot use an
+    // ArrayHandle in place of a CellSetIn argument. (You need to use a CellSet.) See a few
+    // lines later for some diagnostics to help you trace where the error occured.
+
+    // If you are getting the error described above, the following lines will give you some
+    // diagnostics (in the form of compile errors). Each one will result in a compile error
+    // reporting an undefined type for ReportTypeOnError (or ReportValueOnError). What we are
+    // really reporting is the first template argument, which is one of the types or values that
+    // should help pinpoint where the error is. The comment for static_assert provides the
+    // type/value being reported. (Note that some compilers report better types than others. If
+    // your compiler is giving unhelpful types like "T" or "WorkletType", you may need to try a
+    // different compiler.)
+    static_assert(ReportTypeOnError<T, isCorrect>::value, "Type passed to Invoke");
+    static_assert(ReportTypeOnError<WorkletType, isCorrect>::value, "Worklet being invoked.");
+    static_assert(ReportValueOnError<State::value, isCorrect>::value, "Index of Invoke parameter");
+    static_assert(ReportTypeOnError<TypeCheckTag, isCorrect>::value, "Type check tag used");
+
+    // This final static_assert gives a human-readable error message. Ideally, this would be
+    // placed first, but some compilers will suppress further errors when a static_assert
+    // fails, so you would not see the other diagnostic error messages.
+    static_assert(isCorrect,
+                  "The type of one of the arguments to the dispatcher's Invoke method is "
+                  "incompatible with the corresponding tag in the worklet's ControlSignature.");
+
+    using type = std::integral_constant<std::size_t, State::value + 1>;
+  };
 };
 
 // Checks that an argument in a ControlSignature is a valid control signature
@@ -389,12 +426,11 @@ private:
       typename WorkletType::ControlSignature>::Parameters;
 
     //isAllValid will throw a compile error if everything doesn't match
-    using isAllValid =
-      brigand::fold<ParamTypes,
-                    std::integral_constant<std::size_t, 0>,
-                    detail::DetermineHasInCorrectParameters<brigand::_element,
-                                                            brigand::_state,
-                                                            brigand::pin<ContSigTypes>>>;
+    using isAllValid = brigand::fold<
+      ParamTypes,
+      std::integral_constant<std::size_t, 0>,
+      typename detail::DetermineHasCorrectParameters<WorkletType>::
+        template Functor<brigand::_element, brigand::_state, brigand::pin<ContSigTypes>>>;
 
     //this warning exists so that we don't get a warning from not using isAllValid
     using expectedLen = std::integral_constant<std::size_t, sizeof...(Args)>;
