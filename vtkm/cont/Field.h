@@ -402,9 +402,9 @@ private:
 };
 
 template <typename Functor, typename... Args>
-void CastAndCall(const vtkm::cont::Field& field, const Functor& f, Args&&... args)
+void CastAndCall(const vtkm::cont::Field& field, Functor&& f, Args&&... args)
 {
-  field.GetData().CastAndCall(f, std::forward<Args>(args)...);
+  field.GetData().CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
 }
 
 namespace internal
