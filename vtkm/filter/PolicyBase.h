@@ -47,9 +47,6 @@ struct PolicyBase
   typedef vtkm::cont::CellSetListTagUnstructured UnstructuredCellSetList;
   typedef VTKM_DEFAULT_CELL_SET_LIST_TAG AllCellSetList;
 
-  typedef VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG CoordinateTypeList;
-  typedef VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG CoordinateStorageList;
-
   // List of backends to try in sequence (if one fails, the next is attempted).
   typedef VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG DeviceAdapterList;
 };
@@ -79,33 +76,6 @@ ApplyPolicy(const vtkm::cont::Field& field,
 
   typedef typename DerivedPolicy::FieldStorageList StorageList;
   return field.GetData().ResetTypeAndStorageLists(TypeList(), StorageList());
-}
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy>
-VTKM_CONT vtkm::cont::DynamicArrayHandleBase<typename DerivedPolicy::CoordinateTypeList,
-                                             typename DerivedPolicy::CoordinateStorageList>
-ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
-            const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  typedef typename DerivedPolicy::CoordinateTypeList TypeList;
-  typedef typename DerivedPolicy::CoordinateStorageList StorageList;
-  return coordinates.GetData().ResetTypeAndStorageLists(TypeList(), StorageList());
-}
-
-//-----------------------------------------------------------------------------
-template <typename DerivedPolicy, typename FilterType>
-VTKM_CONT vtkm::cont::DynamicArrayHandleBase<typename DerivedPolicy::CoordinateTypeList,
-                                             typename DerivedPolicy::CoordinateStorageList>
-ApplyPolicy(const vtkm::cont::CoordinateSystem& coordinates,
-            const vtkm::filter::PolicyBase<DerivedPolicy>&,
-            const vtkm::filter::FilterTraits<FilterType>&)
-{
-  //todo: we need to intersect the policy field type list and the
-  //filter traits to the get smallest set of valid types
-  typedef typename DerivedPolicy::CoordinateTypeList TypeList;
-  typedef typename DerivedPolicy::CoordinateStorageList StorageList;
-  return coordinates.GetData().ResetTypeAndStorageLists(TypeList(), StorageList());
 }
 
 //-----------------------------------------------------------------------------

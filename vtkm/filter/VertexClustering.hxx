@@ -40,12 +40,11 @@ inline VTKM_CONT vtkm::filter::Result VertexClustering::DoExecute(
   // todo this code needs to obey the policy for what storage types
   // the output should use
   //need to compute bounds first
-  vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds(
-    typename DerivedPolicy::CoordinateTypeList(), typename DerivedPolicy::CoordinateStorageList());
+  vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
   vtkm::cont::DataSet outDataSet =
     this->Worklet.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
-                      vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy),
+                      input.GetCoordinateSystem(),
                       bounds,
                       this->GetNumberOfDivisions(),
                       tag);

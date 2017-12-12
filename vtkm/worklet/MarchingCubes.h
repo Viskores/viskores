@@ -379,7 +379,8 @@ public:
                             OutFieldType& result) const
   {
     //fetch the low / high values from inPortal
-    result = vtkm::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight);
+    result = static_cast<OutFieldType>(
+      vtkm::Lerp(inPortal.Get(low_high[0]), inPortal.Get(low_high[1]), weight));
   }
 };
 

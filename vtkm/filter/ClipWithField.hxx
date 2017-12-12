@@ -95,9 +95,7 @@ inline VTKM_CONT vtkm::filter::Result ClipWithField::DoExecute(
   output.AddCellSet(outputCellSet);
 
   // Compute the new boundary points and add them to the output:
-  vtkm::cont::DynamicArrayHandle outputCoordsArray;
-  PointMapHelper<DeviceAdapter> pointMapper(this->Worklet, outputCoordsArray);
-  vtkm::filter::ApplyPolicy(inputCoords, policy).CastAndCall(pointMapper);
+  auto outputCoordsArray = this->Worklet.ProcessPointField(inputCoords.GetData(), device);
   vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(), outputCoordsArray);
   output.AddCoordinateSystem(outputCoords);
   vtkm::filter::Result result(output);

@@ -91,10 +91,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
 
   // copy points
   vtkm::cont::ArrayHandle<PointType> points;
-  Algorithm::Copy(uniformDs.GetCoordinateSystem()
-                    .GetData()
-                    .template Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>(),
-                  points);
+  Algorithm::Copy(uniformDs.GetCoordinateSystem().GetData(), points);
 
   vtkm::Id numberOfCells = uniformDs.GetCellSet().GetNumberOfCells();
   vtkm::Id numberOfIndices = numberOfCells * PointsPerCell;

@@ -167,7 +167,7 @@ inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
     outputCells = this->Worklet.Run(&ivalues[0],
                                     static_cast<vtkm::Id>(ivalues.size()),
                                     vtkm::filter::ApplyPolicy(cells, policy),
-                                    vtkm::filter::ApplyPolicy(coords, policy),
+                                    coords.GetData(),
                                     field,
                                     vertices,
                                     normals,
@@ -178,7 +178,7 @@ inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
     outputCells = this->Worklet.Run(&ivalues[0],
                                     static_cast<vtkm::Id>(ivalues.size()),
                                     vtkm::filter::ApplyPolicy(cells, policy),
-                                    vtkm::filter::ApplyPolicy(coords, policy),
+                                    coords.GetData(),
                                     field,
                                     vertices,
                                     device);

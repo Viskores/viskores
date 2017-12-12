@@ -1461,7 +1461,7 @@ public:
     {
 
       vtkm::cont::ArrayHandleCounting<vtkm::Id> pCounter(0, 1, rays.NumRays);
-      vtkm::worklet::DispatcherMapField<IdentifyMissedRay>(
+      vtkm::worklet::DispatcherMapField<IdentifyMissedRay, Device>(
         IdentifyMissedRay(rays.DebugWidth, rays.DebugHeight, this->BackgroundColor))
         .Invoke(pCounter, rays.Buffers.at(0).Buffer);
     }

@@ -23,6 +23,7 @@
 #endif
 
 #include <vtkm/Math.h>
+#include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/DispatcherMapField.h>
@@ -67,30 +68,6 @@ static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> vertexArray;
 Quaternion qrot;
 int lastx, lasty;
 int mouse_state = 1;
-
-//
-// Functor to retrieve vertex locations from the CoordinateSystem
-// Actually need a static cast to ArrayHandle from DynamicArrayHandleCoordinateSystem
-// but haven't been able to figure out what that is
-//
-struct GetVertexArray
-{
-  template <typename ArrayHandleType>
-  VTKM_CONT void operator()(ArrayHandleType array) const
-  {
-    this->GetVertexPortal(array.GetPortalConstControl());
-  }
-
-private:
-  template <typename PortalType>
-  VTKM_CONT void GetVertexPortal(const PortalType& portal) const
-  {
-    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
-    {
-      vertexArray.GetPortalControl().Set(index, portal.Get(index));
-    }
-  }
-};
 
 //
 // Initialize the OpenGL state
@@ -145,16 +122,10 @@ void displayCall()
   // Get the cell set, coordinate system and coordinate data
   vtkm::cont::CellSetExplicit<> cellSet;
   outDataSet.GetCellSet(0).CopyTo(cellSet);
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem& coordArray =
-    outDataSet.GetCoordinateSystem().GetData();
+  auto coordArray = outDataSet.GetCoordinateSystem().GetData();
 
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
-  vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();
-
-  // Need the actual vertex points from a static cast of the dynamic array but can't get it right
-  // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(numberOfPoints);
-  vtkm::cont::CastAndCall(coordArray, GetVertexArray());
+  vtkm::cont::ArrayCopy(coordArray, vertexArray);
 
   // Each cell is a polyline
   glColor3f(1.0f, 0.0f, 0.0f);

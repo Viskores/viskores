@@ -69,8 +69,6 @@ public:
   Id4Handle ExternalTriangles;
   LinearBVH Bvh;
 
-  // Restrict the coordinates to the types that be for unstructured meshes
-  DynamicArrayHandleExplicitCoordinateSystem Coordinates;
   vtkm::Bounds CoordinateBounds;
   vtkm::cont::CellSetExplicit<> Cellset;
   vtkm::cont::CoordinateSystem Coords;
@@ -89,15 +87,6 @@ public:
     : IsConstructed(false)
   {
     Coords = coords;
-    vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
-
-    //
-    // Reset the type lists to only contain the coordinate systemss of an
-    // unstructured cell set.
-    //
-
-    Coordinates = dynamicCoordsHandle.ResetTypeList(ExplicitCoordinatesType())
-                    .ResetStorageList(StorageListTagExplicitCoordinateSystem());
 
     if (!cellset.IsSameType(vtkm::cont::CellSetExplicit<>()))
     {
@@ -130,7 +119,6 @@ public:
     , Shapes(other.Shapes)
     , ExternalTriangles(other.ExternalTriangles)
     , Bvh(other.Bvh)
-    , Coordinates(other.Coordinates)
     , CoordinateBounds(other.CoordinateBounds)
     , Cellset(other.Cellset)
     , Coords(other.Coords)
@@ -153,7 +141,7 @@ public:
       //
       // Build the face-to-face connectivity
       //
-      connBuilder.BuildConnectivity(Cellset, Coordinates, CoordinateBounds);
+      connBuilder.BuildConnectivity(Cellset, Coords.GetData(), CoordinateBounds);
 
       //
       // Initialize all of the array handles
@@ -184,7 +172,7 @@ public:
     }
     TriangleIntersector<Device, TriLeafIntersector<WaterTight<T>>> intersector;
     bool getCellIndex = true;
-    intersector.runHitOnly(rays, Bvh, Coordinates, getCellIndex);
+    intersector.runHitOnly(rays, Bvh, Coords.GetData(), getCellIndex);
   }
   //----------------------------------------------------------------------------
   VTKM_CONT
@@ -198,7 +186,7 @@ public:
 
   //----------------------------------------------------------------------------
   VTKM_CONT
-  DynamicArrayHandleExplicitCoordinateSystem GetCoordinates() { return Coordinates; }
+  vtkm::cont::ArrayHandleVirtualCoordinates GetCoordinates() { return Coords.GetData(); }
 
   //----------------------------------------------------------------------------
   template <typename Device>
@@ -319,8 +307,7 @@ public:
   // Mesh Boundry
   LinearBVH Bvh;
   Id4Handle ExternalTriangles;
-  // Restrict the coordinates to the types that be for unstructured meshes
-  DynamicArrayHandleExplicitCoordinateSystem Coordinates;
+
   vtkm::Bounds CoordinateBounds;
   vtkm::cont::CoordinateSystem Coords;
   vtkm::cont::CellSetSingleType<> Cellset;
@@ -344,15 +331,6 @@ public:
   {
 
     Coords = coords;
-    vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
-
-    //
-    // Reset the type lists to only contain the coordinate systemss of an
-    // unstructured cell set.
-    //
-
-    Coordinates = dynamicCoordsHandle.ResetTypeList(ExplicitCoordinatesType())
-                    .ResetStorageList(StorageListTagExplicitCoordinateSystem());
 
     if (!cellset.IsSameType(vtkm::cont::CellSetSingleType<>()))
     {
@@ -393,7 +371,6 @@ public:
     , CellConnectivity(other.CellConnectivity)
     , Bvh(other.Bvh)
     , ExternalTriangles(other.ExternalTriangles)
-    , Coordinates(other.Coordinates)
     , CoordinateBounds(other.CoordinateBounds)
     , Coords(other.coords)
     , Cellset(other.Cellset)
@@ -420,7 +397,7 @@ public:
       //
       // Build the face-to-face connectivity
       //
-      connBuilder.BuildConnectivity(Cellset, Coordinates, CoordinateBounds);
+      connBuilder.BuildConnectivity(Cellset, Coords.GetData(), CoordinateBounds);
       //
       // Initialize all of the array handles
       //
@@ -451,7 +428,7 @@ public:
     }
     TriangleIntersector<Device, TriLeafIntersector<WaterTight<T>>> intersector;
     bool getCellIndex = true;
-    intersector.runHitOnly(rays, Bvh, Coordinates, getCellIndex);
+    intersector.runHitOnly(rays, Bvh, Coords.GetData(), getCellIndex);
   }
   //----------------------------------------------------------------------------
   VTKM_CONT
@@ -461,7 +438,7 @@ public:
   Id4Handle GetExternalTriangles() { return ExternalTriangles; }
   //----------------------------------------------------------------------------
   VTKM_CONT
-  DynamicArrayHandleExplicitCoordinateSystem GetCoordinates() { return Coordinates; }
+  vtkm::cont::ArrayHandleVirtualCoordinates GetCoordinates() { return Coords.GetData(); }
   //----------------------------------------------------------------------------
   template <typename Device>
   VTKM_CONT vtkm::Bounds GetCoordinateBounds(Device)
@@ -567,7 +544,6 @@ public:
   typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Id4Handle;
   vtkm::Id3 CellDims;
   vtkm::Id3 PointDims;
-  DynamicArrayHandleStructuredCoordinateSystem Coordinates;
   vtkm::Bounds CoordinateBounds;
   vtkm::cont::CoordinateSystem Coords;
   vtkm::cont::CellSetStructured<3> Cellset;
@@ -589,15 +565,7 @@ public:
     : IsConstructed(false)
   {
     Coords = coords;
-    vtkm::cont::DynamicArrayHandleCoordinateSystem dynamicCoordsHandle = coords.GetData();
 
-    //
-    // Reset the type lists to only contain the coordinate systemss of an
-    // unstructured cell set.
-    //
-
-    Coordinates = dynamicCoordsHandle.ResetTypeList(ExplicitCoordinatesType())
-                    .ResetStorageList(StructuredStorage());
     if (!cellset.IsSameType(vtkm::cont::CellSetStructured<3>()))
     {
       throw vtkm::cont::ErrorBadValue(
@@ -612,7 +580,6 @@ public:
   VTKM_CONT StructuredMeshConn(const T& other)
     : CellDims(other.CellDims)
     , PointDims(other.PointDims)
-    , Coordinates(other.Coordinates)
     , CoordinateBounds(other.CoordinateBounds)
     , Coords(other.coords)
     , Cellset(other.Cellset)
@@ -659,7 +626,7 @@ public:
     }
     TriangleIntersector<Device, TriLeafIntersector<WaterTight<T>>> intersector;
     bool getCellIndex = true;
-    intersector.runHitOnly(rays, Bvh, Coordinates, getCellIndex);
+    intersector.runHitOnly(rays, Bvh, Coords.GetData(), getCellIndex);
   }
   //----------------------------------------------------------------------------
   VTKM_CONT
@@ -672,7 +639,7 @@ public:
 
   //----------------------------------------------------------------------------
   VTKM_CONT
-  DynamicArrayHandleStructuredCoordinateSystem GetCoordinates() { return Coordinates; }
+  vtkm::cont::ArrayHandleVirtualCoordinates GetCoordinates() { return Coords.GetData(); }
 
   //----------------------------------------------------------------------------
   template <typename Device>
