@@ -125,6 +125,7 @@ struct DetermineHasCorrectParameters
     // to Invoke is an ArrayHandle, you will get an error here because you cannot use an
     // ArrayHandle in place of a CellSetIn argument. (You need to use a CellSet.) See a few
     // lines later for some diagnostics to help you trace where the error occured.
+    VTKM_READ_THE_SOURCE_CODE_FOR_HELP(isCorrect);
 
     // If you are getting the error described above, the following lines will give you some
     // diagnostics (in the form of compile errors). Each one will result in a compile error
