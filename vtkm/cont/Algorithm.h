@@ -35,13 +35,11 @@ namespace
 {
 struct CopyFunctor
 {
-  template <typename Device, typename T, typename U, class CIn, class COut>
-  VTKM_CONT bool operator()(Device,
-                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            vtkm::cont::ArrayHandle<U, COut>& output) const
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(input, output);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Copy(std::forward<Args>(args)...);
     return true;
   }
 };
@@ -62,17 +60,11 @@ struct CopySubRangeFunctor
 {
   bool valid;
 
-  template <typename Device, typename T, typename U, class CIn, class COut>
-  VTKM_CONT bool operator()(Device,
-                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            vtkm::Id inputStartIndex,
-                            vtkm::Id numberOfElementsToCopy,
-                            vtkm::cont::ArrayHandle<U, COut>& output,
-                            vtkm::Id outputIndex)
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    valid = vtkm::cont::DeviceAdapterAlgorithm<Device>::CopySubRange(
-      input, inputStartIndex, numberOfElementsToCopy, output, outputIndex);
+    valid = vtkm::cont::DeviceAdapterAlgorithm<Device>::CopySubRange(std::forward<Args>(args)...);
     return true;
   }
 };
@@ -92,66 +84,29 @@ struct LowerBoundsFunctor
 template <typename U>
 struct ReduceFunctor
 {
-  U InitialValue;
-  U Result;
-
-  ReduceFunctor(U initialValue)
-    : InitialValue(initialValue)
-    , Result(U(0))
-  {
-  }
-
-  template <typename Device, typename T, typename CIn>
-  VTKM_CONT bool operator()(Device, const vtkm::cont::ArrayHandle<T, CIn>& input)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    Result = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(input, InitialValue);
-    return true;
-  }
-};
-
-template <typename U>
-struct ReduceBinaryFunctor
-{
   U result;
-  ReduceBinaryFunctor()
+
+  ReduceFunctor()
     : result(U(0))
   {
   }
 
-  template <typename Device, typename T, class CIn, class BinaryFunctor>
-  VTKM_CONT bool operator()(Device,
-                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            U initialValue,
-                            BinaryFunctor binary_functor)
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    result =
-      vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(input, initialValue, binary_functor);
+    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::Reduce(std::forward<Args>(args)...);
     return true;
   }
 };
 
 struct ReduceByKeyFunctor
 {
-  template <typename Device,
-            typename T,
-            typename U,
-            class CKeyIn,
-            class CValIn,
-            class CKeyOut,
-            class CValOut,
-            class BinaryFunctor>
-  VTKM_CONT bool operator()(Device,
-                            const vtkm::cont::ArrayHandle<T, CKeyIn>& keys,
-                            const vtkm::cont::ArrayHandle<U, CValIn>& values,
-                            vtkm::cont::ArrayHandle<T, CKeyOut>& keys_output,
-                            vtkm::cont::ArrayHandle<U, CValOut>& values_output,
-                            BinaryFunctor binary_functor) const
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::ReduceByKey(
-      keys, values, keys_output, values_output, binary_functor);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::ReduceByKey(std::forward<Args>(args)...);
     return true;
   }
 };
@@ -209,52 +164,20 @@ struct ScanInclusiveByKeyFunctor
   }
 };
 
-template <typename T, class CIn, class COut>
+template <typename T>
 struct ScanExclusiveFunctor
 {
-  T Result;
-  ScanExclusiveFunctor()
-    : Result(T(0))
-  {
-  }
-
-  const vtkm::cont::ArrayHandle<T, CIn>& Input;
-  vtkm::cont::ArrayHandle<T, COut>& Output;
-  ScanExclusiveFunctor(const vtkm::cont::ArrayHandle<T, CIn>& input,
-                       vtkm::cont::ArrayHandle<T, COut>& output)
-    : Input(input)
-    , Output(output)
-  {
-  }
-
-  template <typename Device>
-  VTKM_CONT bool operator()(Device)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    Result = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(Input, Output);
-    return true;
-  }
-};
-
-template <typename T>
-struct ScanExclusiveBinaryFunctor
-{
   T result;
-  ScanExclusiveBinaryFunctor()
+  ScanExclusiveFunctor()
     : result(T(0))
   {
   }
 
-  template <typename Device, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT bool operator()(Device,
-                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                            vtkm::cont::ArrayHandle<T, COut>& output,
-                            BinaryFunctor binary_functor,
-                            const T& initialValue)
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(
-      input, output, binary_functor, initialValue);
+    result = vtkm::cont::DeviceAdapterAlgorithm<Device>::ScanExclusive(std::forward<Args>(args)...);
     return true;
   }
 };
@@ -274,29 +197,17 @@ struct ScanExclusiveByKeyFunctor
 
 struct ScheduleFunctor
 {
-  template <typename Device, class Functor>
-  VTKM_CONT bool operator()(Device, Functor functor, vtkm::Id numInstances)
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args)
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(functor, numInstances);
-    return true;
-  }
-};
-
-struct Schedule3DFunctor
-{
-  template <typename Device, class Functor>
-  VTKM_CONT bool operator()(Device, Functor functor, vtkm::Id3 rangeMax)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(functor, rangeMax);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(std::forward<Args>(args)...);
     return true;
   }
 };
 
 struct SortFunctor
 {
-
   template <typename Device, typename... Args>
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
@@ -308,32 +219,11 @@ struct SortFunctor
 
 struct SortByKeyFunctor
 {
-  template <typename Device, typename T, typename U, class StorageT, class StorageU>
-  VTKM_CONT bool operator()(Device,
-                            vtkm::cont::ArrayHandle<T, StorageT>& keys,
-                            vtkm::cont::ArrayHandle<U, StorageU>& values)
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::SortByKey(keys, values);
-    return true;
-  }
-};
-
-struct SortByKeyBinaryFunctor
-{
-  template <typename Device,
-            typename T,
-            typename U,
-            class StorageT,
-            class StorageU,
-            class BinaryCompare>
-  VTKM_CONT bool operator()(Device,
-                            vtkm::cont::ArrayHandle<T, StorageT>& keys,
-                            vtkm::cont::ArrayHandle<U, StorageU>& values,
-                            BinaryCompare binary_compare)
-  {
-    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-    vtkm::cont::DeviceAdapterAlgorithm<Device>::SortByKey(keys, values, binary_compare);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::SortByKey(std::forward<Args>(args)...);
     return true;
   }
 };
@@ -351,7 +241,6 @@ struct SynchronizeFunctor
 
 struct UniqueFunctor
 {
-
   template <typename Device, typename... Args>
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
@@ -363,7 +252,6 @@ struct UniqueFunctor
 
 struct UpperBoundsFunctor
 {
-
   template <typename Device, typename... Args>
   VTKM_CONT bool operator()(Device, Args&&... args) const
   {
@@ -441,9 +329,9 @@ struct Algorithm
   template <typename T, typename U, class CIn>
   VTKM_CONT static U Reduce(const vtkm::cont::ArrayHandle<T, CIn>& input, U initialValue)
   {
-    ReduceFunctor<U> functor(initialValue);
-    vtkm::cont::TryExecute(functor, input);
-    return functor.Result;
+    ReduceFunctor<U> functor;
+    vtkm::cont::TryExecute(functor, input, initialValue);
+    return functor.result;
   }
 
   template <typename T, typename U, class CIn, class BinaryFunctor>
@@ -451,7 +339,7 @@ struct Algorithm
                             U initialValue,
                             BinaryFunctor binary_functor)
   {
-    ReduceBinaryFunctor<U> functor;
+    ReduceFunctor<U> functor;
     vtkm::cont::TryExecute(functor, input, initialValue, binary_functor);
     return functor.result;
   }
@@ -529,9 +417,9 @@ struct Algorithm
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output)
   {
-    ScanExclusiveFunctor<T, CIn, COut> functor(input, output);
-    vtkm::cont::TryExecute(functor);
-    return functor.Result;
+    ScanExclusiveFunctor<T> functor;
+    vtkm::cont::TryExecute(functor, input, output);
+    return functor.result;
   }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
@@ -540,7 +428,7 @@ struct Algorithm
                                    BinaryFunctor binaryFunctor,
                                    const T& initialValue)
   {
-    ScanExclusiveBinaryFunctor<T> functor;
+    ScanExclusiveFunctor<T> functor;
     vtkm::cont::TryExecute(functor, input, output, binaryFunctor, initialValue);
     return functor.result;
   }
@@ -552,8 +440,8 @@ struct Algorithm
                                            const U& initialValue,
                                            BinaryFunctor binaryFunctor)
   {
-    ScanExclusiveByKeyFunctor functor;
-    vtkm::cont::TryExecute(functor, keys, values, output, initialValue, binaryFunctor);
+    vtkm::cont::TryExecute(
+      ScanExclusiveByKeyFunctor(), keys, values, output, initialValue, binaryFunctor);
   }
 
   template <typename T, typename U, class KIn, typename VIn, typename VOut>
@@ -561,8 +449,7 @@ struct Algorithm
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& output)
   {
-    ScanExclusiveByKeyFunctor functor;
-    vtkm::cont::TryExecute(functor, keys, values, output);
+    vtkm::cont::TryExecute(ScanExclusiveByKeyFunctor(), keys, values, output);
   }
 
   template <class Functor>
@@ -574,7 +461,7 @@ struct Algorithm
   template <class Functor>
   VTKM_CONT static void Schedule(Functor functor, vtkm::Id3 rangeMax)
   {
-    vtkm::cont::TryExecute(Schedule3DFunctor(), functor, rangeMax);
+    vtkm::cont::TryExecute(ScheduleFunctor(), functor, rangeMax);
   }
 
   template <typename T, class Storage>
@@ -602,7 +489,7 @@ struct Algorithm
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   BinaryCompare binary_compare)
   {
-    vtkm::cont::TryExecute(SortByKeyBinaryFunctor(), keys, values, binary_compare);
+    vtkm::cont::TryExecute(SortByKeyFunctor(), keys, values, binary_compare);
   }
 
   VTKM_CONT static void Synchronize() { vtkm::cont::TryExecute(SynchronizeFunctor()); }
