@@ -223,14 +223,14 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output);
 
-  /// \brief Streaming version of scan inclusive
+  /// \brief Streaming version of scan exclusive
   ///
   /// Computes a scan one block at a time.
   ///
   /// \return The total sum.
   ///
   template <typename T, class CIn, class COut>
-  VTKM_CONT static T StreamingScanInclusive(const vtkm::Id numBlocks,
+  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
                                             const vtkm::cont::ArrayHandle<T, CIn>& input,
                                             vtkm::cont::ArrayHandle<T, COut>& output);
 
@@ -281,18 +281,6 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& values_output);
-
-  /// \brief Streaming version of scan inclusive
-  ///
-  /// Computes a scan one block at a time.
-  ///
-  /// \return The total sum.
-  ///
-  template <typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT static T StreamingScanInclusive(const vtkm::Id numBlocks,
-                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                            vtkm::cont::ArrayHandle<T, COut>& output,
-                                            BinaryFunctor binary_functor);
 
   /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
