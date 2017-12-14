@@ -64,6 +64,13 @@ public:
   VTKM_CONT
   vtkm::Id GetNumberOfBlocks() const;
 
+  /// Returns the number of blocks across all ranks. For non-MPI builds, this
+  /// will be same as `GetNumberOfBlocks()`.
+  /// This method is not thread-safe and may involve global communication across
+  /// all ranks in distributed environments with MPI.
+  VTKM_CONT
+  vtkm::Id GetGlobalNumberOfBlocks() const;
+
   VTKM_CONT
   const vtkm::cont::DataSet& GetBlock(vtkm::Id blockId) const;
 
@@ -105,7 +112,11 @@ public:
                                         vtkm::Id coordinate_system_index,
                                         TypeList,
                                         StorageList) const;
-  /// get the unified range of the same feild within all contained DataSet
+
+  //@{
+  /// Get the unified range of the same field within all contained DataSet.
+  /// These methods are not thread-safe and may involve global communication
+  /// across all ranks in distributed environments with MPI.
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name) const;
 
@@ -128,6 +139,7 @@ public:
   VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int& index,
                                                                 TypeList,
                                                                 StorageList) const;
+  //@}
 
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;
