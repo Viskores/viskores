@@ -48,6 +48,7 @@ set(unit_tests
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx
   UnitTestRemoveUnusedPoints.cxx
+  UnitTestScalarsToColors.cxx
   UnitTestScatterCounting.cxx
   UnitTestScatterPermutation.cxx
   UnitTestSplatKernels.cxx
