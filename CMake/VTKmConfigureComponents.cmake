@@ -104,6 +104,13 @@ macro(vtkm_configure_component_Base)
     include(VTKmCompilerOptimizations)
   endif()
 
+  # For now, MPI support is a compile time option.
+  if (VTKm_ENABLE_MPI)
+    if (NOT MPI_C_FOUND)
+      find_package(MPI ${VTKm_FIND_PACKAGE_QUIETLY})
+    endif()
+  endif()
+
   # Check for the existance of the base vtkm target
   if (TARGET vtkm)
     set(VTKm_base_vtkm_target_FOUND True)

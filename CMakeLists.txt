@@ -119,6 +119,7 @@ option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
 option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
 option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
 option(VTKm_ENABLE_OSMESA "Enable creating the OSMesa canvas" OFF)
+option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
 
 option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
 option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
@@ -220,6 +221,11 @@ find_package(Pyexpander)
 
 #-----------------------------------------------------------------------------
 # Add subdirectories
+if(VTKm_ENABLE_MPI)
+  # This `if` is temporary and will be removed once `diy` supports building
+  # without MPI.
+  add_subdirectory(diy)
+endif()
 add_subdirectory(vtkm)
 
 #-----------------------------------------------------------------------------
