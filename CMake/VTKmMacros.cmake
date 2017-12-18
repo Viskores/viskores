@@ -299,15 +299,32 @@ endfunction(vtkm_pyexpander_generated_file)
 #   SOURCES <source_list>
 #   LIBRARIES <dependent_library_list>
 #   TEST_ARGS <argument_list>
+#   <options>
 #   )
+#
+# Where <source_list> is a ';' separated list of source files.
+#
+# Supported <options> are documented below. These can be specified for
+# all tests or for individual tests. When specifying these for individual tests,
+# simply add them after the test name in the <source_list> separated by a comma.
+# e.g. `UnitTestMultiBlock,MPI`.
+#
+# Supported <options> are
+# * MPI : the test(s) will be executed using `mpirun`.
+# * CUDA: the test(s) use CUDA. Currently, this option can only be provided
+#         globally, i.e not supported for individual tests.
 function(vtkm_unit_tests)
-  set(options CUDA)
+  set(global_only_options CUDA)
+  set(global_or_file_options MPI)
+  set(options ${global_only_options} ${global_or_file_options})
   set(oneValueArgs)
   set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
     )
+
+  _vtkm_parse_test_options(VTKm_UT_SOURCES "${global_or_file_options}" ${VTKm_UT_SOURCES})
 
   if (VTKm_ENABLE_TESTING)
     vtkm_get_kit_name(kit)
@@ -358,9 +375,17 @@ function(vtkm_unit_tests)
 
     foreach (test ${VTKm_UT_SOURCES})
       get_filename_component(tname ${test} NAME_WE)
-      add_test(NAME ${tname}
-        COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
-        )
+      if(VTKm_ENABLE_MPI AND (_${test}_MPI OR VTKm_UT_MPI))
+        add_test(NAME ${tname}
+          COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
+                  $<TARGET_FILE:${test_prog}> ${tname} ${VTKm_UT_TEST_ARGS}
+                  ${MPIEXEC_POSTFLAGS}
+          )
+      else()
+        add_test(NAME ${tname}
+          COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
+          )
+      endif()
       set_tests_properties("${tname}" PROPERTIES TIMEOUT ${timeout})
     endforeach (test)
   endif (VTKm_ENABLE_TESTING)
@@ -831,3 +856,38 @@ macro(vtkm_disable_troublesome_thrust_warnings_var flags_var)
 endmacro(vtkm_disable_troublesome_thrust_warnings_var)
 
 include(VTKmConfigureComponents)
+
+
+# -----------------------------------------------------------------------------
+# _vtkm_parse_test_options(varname options)
+#   INTERNAL: Parse options specified for individual tests.
+#
+#   Parses the arguments to separate out options specified after the test name
+#   separated by a comma e.g.
+#
+#   TestName,Option1,Option2
+#
+#   For every option in options, this will set _TestName_Option1,
+#   _TestName_Option2, etc in the parent scope.
+#
+function(_vtkm_parse_test_options varname options)
+  set(names)
+  foreach(arg IN LISTS ARGN)
+    set(test_name ${arg})
+    set(test_options)
+    if(test_name AND "x${test_name}" MATCHES "^x([^,]*),(.*)$")
+      set(test_name "${CMAKE_MATCH_1}")
+      string(REPLACE "," ";" test_options "${CMAKE_MATCH_2}")
+    endif()
+    foreach(opt IN LISTS test_options)
+      list(FIND options "${opt}" index)
+      if(index EQUAL -1)
+        message(WARNING "Unknown option '${opt}' specified for test '${test_name}'")
+      else()
+        set(_${test_name}_${opt} TRUE PARENT_SCOPE)
+      endif()
+    endforeach()
+    list(APPEND names ${test_name})
+  endforeach()
+  set(${varname} ${names} PARENT_SCOPE)
+endfunction()

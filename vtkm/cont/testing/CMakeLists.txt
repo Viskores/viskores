@@ -66,7 +66,7 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
-  UnitTestMultiBlock.cxx
+  UnitTestMultiBlock.cxx,MPI
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx
