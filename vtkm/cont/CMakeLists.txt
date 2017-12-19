@@ -98,6 +98,7 @@ set(sources
   CellSetExplicit.cxx
   CellSetStructured.cxx
   CoordinateSystem.cxx
+  DataSet.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
   Field.cxx
