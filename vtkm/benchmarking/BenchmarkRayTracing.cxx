@@ -28,6 +28,8 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
 #include <vtkm/rendering/Camera.h>
+#include <vtkm/rendering/internal/RunTriangulator.h>
+#include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayTracer.h>
 
 #include <vtkm/exec/FunctorBase.h>
@@ -47,41 +49,65 @@ struct BenchRayTracing
 {
   vtkm::rendering::raytracing::RayTracer Tracer;
   vtkm::rendering::raytracing::Camera RayCamera;
-  // Setup anything that doesn't need to change per run in the constructor
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
+  vtkm::rendering::raytracing::Ray<Precision> Rays;
+  vtkm::Id NumberOfTriangles;
+  vtkm::cont::CoordinateSystem Coords;
+  vtkm::cont::DataSet Data;
+
   VTKM_CONT BenchRayTracing()
   {
     vtkm::cont::testing::MakeTestDataSet maker;
-    vtkm::cont::DataSet data = maker.Make3DUniformDataSet2();
+    Data = maker.Make3DUniformDataSet2();
+    Coords = Data.GetCoordinateSystem();
 
     vtkm::rendering::Camera camera;
-    vtkm::Bounds bounds = data.GetCoordinateSystem().GetBounds();
+    vtkm::Bounds bounds = Data.GetCoordinateSystem().GetBounds();
     camera.ResetToBounds(bounds);
+
+    vtkm::cont::DynamicCellSet cellset = Data.GetCellSet();
+    vtkm::rendering::internal::RunTriangulator(cellset, Indices, NumberOfTriangles);
+
+    vtkm::rendering::CanvasRayTracer canvas(1920, 1080);
+    RayCamera.SetParameters(camera, canvas);
+    RayCamera.CreateRays(Rays, Coords);
+
+    Rays.Buffers.at(0).InitConst(0.f);
+
+    vtkm::cont::Field field = Data.GetField("pointvar");
+    vtkm::Range range = field.GetRange().GetPortalConstControl().Get(0);
+
+    Tracer.SetData(Coords.GetData(), Indices, field, NumberOfTriangles, range, bounds);
+
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> colors;
+    vtkm::rendering::ColorTable("cool2warm").Sample(100, colors);
+
+    Tracer.SetColorMap(colors);
+    Tracer.Render(Rays);
   }
 
-  // The overloaded call operator will run the operations being timed and
-  // return the execution time
   VTKM_CONT
-  vtkm::Float64 operator()() { return 0.05; }
+  vtkm::Float64 operator()()
+  {
+    vtkm::cont::Timer<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> timer;
 
-  // The benchmark must also provide a method describing itself, this is
-  // used when printing out run time statistics
+    RayCamera.CreateRays(Rays, Coords);
+    Tracer.Render(Rays);
+
+    return timer.GetElapsedTime();
+  }
+
   VTKM_CONT
   std::string Description() const { return "A ray tracing benchmark"; }
 };
 
-// Now use the VTKM_MAKE_BENCHMARK macro to generate a maker functor for
-// your benchmark. This lets us generate the benchmark functor for each type
-// we want to test
 VTKM_MAKE_BENCHMARK(RayTracing, BenchRayTracing);
 }
 } // end namespace vtkm::benchmarking
 
 int main(int, char* [])
 {
-  using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-  //using Benchmarks = vtkm::benchmarking::BenchRayTracing<Device>;
   using TestTypes = vtkm::ListTagBase<vtkm::Float32>;
   VTKM_RUN_BENCHMARK(RayTracing, vtkm::ListTagBase<vtkm::Float32>());
-  //bool result = Benchmarks::Run();
-  //return result ? EXIT_SUCCESS : EXIT_FAILURE;
+  return 0;
 }

@@ -645,7 +645,12 @@ function(vtkm_benchmarks device_adapter)
         PROPERTIES HEADER_FILE_ONLY TRUE)
 
       target_include_directories(${benchmark_prog} PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
-      target_link_libraries(${benchmark_prog} PRIVATE vtkm_cont ${VTKm_BACKEND_LIBRARIES})
+
+      if(VTKm_ENABLE_RENDERING)
+        set(VTKM_RENDERING_LIBS vtkm_rendering)
+      endif()
+
+      target_link_libraries(${benchmark_prog} PRIVATE vtkm_cont ${VTKM_RENDERING_LIBS} ${VTKm_BACKEND_LIBRARIES})
 
       vtkm_setup_msvc_properties(${benchmark_prog})
 

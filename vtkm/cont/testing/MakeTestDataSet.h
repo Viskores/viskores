@@ -248,7 +248,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet1()
 
 inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
 {
-  const vtkm::Id base_size = 128;
+  const vtkm::Id base_size = 256;
   vtkm::cont::DataSetBuilderUniform dsb;
   vtkm::Id3 dimensions(base_size, base_size, base_size);
   vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
@@ -262,6 +262,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
       for (vtkm::Int32 x = 0; x < base_size; ++x)
       {
         vtkm::Int32 index = z * base_size * base_size + y * base_size + x;
+        pointvar[index] = vtkm::Sqrt(vtkm::Float32(x * x + y * y + z * z));
       }
 
   dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
