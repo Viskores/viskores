@@ -102,32 +102,6 @@ public:
     VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) || (this->Association == ASSOC_POINTS));
   }
 
-  template <typename T>
-  VTKM_CONT Field(std::string name, AssociationEnum association, const std::vector<T>& data)
-    : Name(name)
-    , Association(association)
-    , AssocCellSetName()
-    , AssocLogicalDim(-1)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) || (this->Association == ASSOC_POINTS));
-    this->CopyData(&data[0], static_cast<vtkm::Id>(data.size()));
-  }
-
-  template <typename T>
-  VTKM_CONT Field(std::string name, AssociationEnum association, const T* data, vtkm::Id nvals)
-    : Name(name)
-    , Association(association)
-    , AssocCellSetName()
-    , AssocLogicalDim(-1)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) || (this->Association == ASSOC_POINTS));
-    this->CopyData(data, nvals);
-  }
-
   /// constructors for cell set associations
   VTKM_CONT
   Field(std::string name,
@@ -161,39 +135,6 @@ public:
     VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
   }
 
-  template <typename T>
-  VTKM_CONT Field(std::string name,
-                  AssociationEnum association,
-                  const std::string& cellSetName,
-                  const std::vector<T>& data)
-    : Name(name)
-    , Association(association)
-    , AssocCellSetName(cellSetName)
-    , AssocLogicalDim(-1)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
-    this->CopyData(&data[0], static_cast<vtkm::Id>(data.size()));
-  }
-
-  template <typename T>
-  VTKM_CONT Field(std::string name,
-                  AssociationEnum association,
-                  const std::string& cellSetName,
-                  const T* data,
-                  vtkm::Id nvals)
-    : Name(name)
-    , Association(association)
-    , AssocCellSetName(cellSetName)
-    , AssocLogicalDim(-1)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
-    this->CopyData(data, nvals);
-  }
-
   /// constructors for logical dimension associations
   VTKM_CONT
   Field(std::string name,
@@ -224,37 +165,6 @@ public:
     , ModifiedFlag(true)
   {
     VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
-  }
-
-  template <typename T>
-  VTKM_CONT Field(std::string name,
-                  AssociationEnum association,
-                  vtkm::IdComponent logicalDim,
-                  const std::vector<T>& data)
-    : Name(name)
-    , Association(association)
-    , AssocLogicalDim(logicalDim)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
-    this->CopyData(&data[0], static_cast<vtkm::Id>(data.size()));
-  }
-
-  template <typename T>
-  VTKM_CONT Field(std::string name,
-                  AssociationEnum association,
-                  vtkm::IdComponent logicalDim,
-                  const T* data,
-                  vtkm::Id nvals)
-    : Name(name)
-    , Association(association)
-    , AssocLogicalDim(logicalDim)
-    , Range()
-    , ModifiedFlag(true)
-  {
-    VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
-    CopyData(data, nvals);
   }
 
   VTKM_CONT
@@ -356,17 +266,7 @@ public:
   template <typename T>
   VTKM_CONT void CopyData(const T* ptr, vtkm::Id nvals)
   {
-    //allocate main memory using an array handle
-    vtkm::cont::ArrayHandle<T> tmp;
-    tmp.Allocate(nvals);
-
-    //copy into the memory owned by the array handle
-    std::copy(ptr,
-              ptr + static_cast<std::size_t>(nvals),
-              vtkm::cont::ArrayPortalToIteratorBegin(tmp.GetPortalControl()));
-
-    //assign to the dynamic array handle
-    this->Data = tmp;
+    this->Data = vtkm::cont::make_ArrayHandle(ptr, nvals, true);
     this->ModifiedFlag = true;
   }
 
@@ -406,6 +306,73 @@ void CastAndCall(const vtkm::cont::Field& field, Functor&& f, Args&&... args)
 {
   field.GetData().CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
 }
+
+//@{
+/// Convinience functions to build fields from C style arrays and std::vector
+template <typename T>
+vtkm::cont::Field make_Field(std::string name,
+                             Field::AssociationEnum association,
+                             const T* data,
+                             vtkm::Id size,
+                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+{
+  return vtkm::cont::Field(name, association, vtkm::cont::make_ArrayHandle(data, size, copy));
+}
+
+template <typename T>
+vtkm::cont::Field make_Field(std::string name,
+                             Field::AssociationEnum association,
+                             const std::vector<T>& data,
+                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+{
+  return vtkm::cont::Field(name, association, vtkm::cont::make_ArrayHandle(data, copy));
+}
+
+template <typename T>
+vtkm::cont::Field make_Field(std::string name,
+                             Field::AssociationEnum association,
+                             const std::string& cellSetName,
+                             const T* data,
+                             vtkm::Id size,
+                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+{
+  return vtkm::cont::Field(
+    name, association, cellSetName, vtkm::cont::make_ArrayHandle(data, size, copy));
+}
+
+template <typename T>
+vtkm::cont::Field make_Field(std::string name,
+                             Field::AssociationEnum association,
+                             const std::string& cellSetName,
+                             const std::vector<T>& data,
+                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+{
+  return vtkm::cont::Field(
+    name, association, cellSetName, vtkm::cont::make_ArrayHandle(data, copy));
+}
+
+template <typename T>
+vtkm::cont::Field make_Field(std::string name,
+                             Field::AssociationEnum association,
+                             vtkm::IdComponent logicalDim,
+                             const T* data,
+                             vtkm::Id size,
+                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+{
+  return vtkm::cont::Field(
+    name, association, logicalDim, vtkm::cont::make_ArrayHandle(data, size, copy));
+}
+
+template <typename T>
+vtkm::cont::Field make_Field(std::string name,
+                             Field::AssociationEnum association,
+                             vtkm::IdComponent logicalDim,
+                             const std::vector<T>& data,
+                             vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+{
+  return vtkm::cont::Field(name, association, logicalDim, vtkm::cont::make_ArrayHandle(data, copy));
+}
+//@}
 
 namespace internal
 {
