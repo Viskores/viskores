@@ -59,7 +59,7 @@ void TestFieldTypesPoint()
 
   //verify the field helper works properly
   vtkm::Float32 vars[6] = { 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f };
-  vtkm::cont::Field field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, 6);
+  auto field = vtkm::cont::make_Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, 6);
   vtkm::filter::FieldMetadata makeMDFromField(field);
   VTKM_TEST_ASSERT(makeMDFromField.IsPointField() == true, "point should be a point field");
   VTKM_TEST_ASSERT(makeMDFromField.IsCellField() == false, "point can't be a cell field");
@@ -74,7 +74,8 @@ void TestFieldTypesCell()
 
   //verify the field helper works properly
   vtkm::Float32 vars[6] = { 10.1f, 20.1f, 30.1f, 40.1f, 50.1f, 60.1f };
-  vtkm::cont::Field field("pointvar", vtkm::cont::Field::ASSOC_CELL_SET, std::string(), vars, 6);
+  auto field =
+    vtkm::cont::make_Field("pointvar", vtkm::cont::Field::ASSOC_CELL_SET, std::string(), vars, 6);
   vtkm::filter::FieldMetadata makeMDFromField(field);
   VTKM_TEST_ASSERT(makeMDFromField.IsPointField() == false, "cell can't be a point field");
   VTKM_TEST_ASSERT(makeMDFromField.IsCellField() == true, "cell should be a cell field");

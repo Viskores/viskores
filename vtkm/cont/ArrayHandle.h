@@ -23,6 +23,7 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/Assert.h>
+#include <vtkm/Flags.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -31,6 +32,7 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
 
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <vector>
@@ -503,23 +505,35 @@ public:
 /// A convenience function for creating an ArrayHandle from a standard C array.
 ///
 template <typename T>
-VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> make_ArrayHandle(const T* array,
-                                                                                   vtkm::Id length)
+VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
+make_ArrayHandle(const T* array, vtkm::Id length, vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
 {
   using ArrayHandleType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
-  using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>;
-  return ArrayHandleType(StorageType(array, length));
+  if (copy == vtkm::CopyFlag::On)
+  {
+    ArrayHandleType handle;
+    handle.Allocate(length);
+    std::copy(
+      array, array + length, vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()));
+    return handle;
+  }
+  else
+  {
+    using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>;
+    return ArrayHandleType(StorageType(array, length));
+  }
 }
 
 /// A convenience function for creating an ArrayHandle from an std::vector.
 ///
 template <typename T, typename Allocator>
 VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> make_ArrayHandle(
-  const std::vector<T, Allocator>& array)
+  const std::vector<T, Allocator>& array,
+  vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
 {
   if (!array.empty())
   {
-    return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()));
+    return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()), copy);
   }
   else
   {

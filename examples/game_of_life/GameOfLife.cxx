@@ -355,7 +355,7 @@ int main(int argc, char** argv)
   vtkm::cont::DataSetBuilderUniform builder;
   vtkm::cont::DataSet data = builder.Create(vtkm::Id2(x, y));
 
-  vtkm::cont::Field stateField("state", vtkm::cont::Field::ASSOC_POINTS, input_state);
+  auto stateField = vtkm::cont::make_Field("state", vtkm::cont::Field::ASSOC_POINTS, input_state);
   data.AddField(stateField);
 
   GameOfLife filter;
