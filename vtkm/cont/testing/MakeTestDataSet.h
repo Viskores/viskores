@@ -53,6 +53,7 @@ public:
   // 3D uniform datasets.
   vtkm::cont::DataSet Make3DUniformDataSet0();
   vtkm::cont::DataSet Make3DUniformDataSet1();
+  vtkm::cont::DataSet Make3DUniformDataSet2();
   vtkm::cont::DataSet Make3DRegularDataSet0();
   vtkm::cont::DataSet Make3DRegularDataSet1();
 
@@ -241,6 +242,32 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet1()
 
   dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
   dsf.AddCellField(dataSet, "cellvar", cellvar, nCells, "cells");
+
+  return dataSet;
+}
+
+inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
+{
+  const vtkm::Id base_size = 256;
+  vtkm::cont::DataSetBuilderUniform dsb;
+  vtkm::Id3 dimensions(base_size, base_size, base_size);
+  vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  const vtkm::Id nVerts = base_size * base_size * base_size;
+  vtkm::Float32* pointvar = new vtkm::Float32[nVerts];
+
+  for (vtkm::Int32 z = 0; z < base_size; ++z)
+    for (vtkm::Int32 y = 0; y < base_size; ++y)
+      for (vtkm::Int32 x = 0; x < base_size; ++x)
+      {
+        vtkm::Int32 index = z * base_size * base_size + y * base_size + x;
+        pointvar[index] = vtkm::Sqrt(vtkm::Float32(x * x + y * y + z * z));
+      }
+
+  dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
+
+  delete[] pointvar;
 
   return dataSet;
 }
