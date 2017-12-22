@@ -84,7 +84,6 @@
 #ifndef vtkm_worklet_contourtree_trunk_builder_h
 #define vtkm_worklet_contourtree_trunk_builder_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
