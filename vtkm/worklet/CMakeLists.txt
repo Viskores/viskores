@@ -25,11 +25,13 @@ set(headers
   Clip.h
   ContourTreeUniform.h
   CosmoTools.h
+  CrossProduct.h
   DispatcherMapField.h
   DispatcherMapTopology.h
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
+  DotProduct.h
   ExternalFaces.h
   ExtractGeometry.h
   ExtractPoints.h
