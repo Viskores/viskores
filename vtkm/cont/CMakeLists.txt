@@ -68,6 +68,7 @@ set(headers
   EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
+  ErrorBadDevice.h
   ErrorBadType.h
   ErrorBadValue.h
   ErrorExecution.h
