@@ -48,7 +48,7 @@
 
 #include <vector>
 
-static vtkm::Id3 dims(256, 256, 256);
+static vtkm::Id3 dims(4, 4, 4);
 static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verticesArray, normalsArray;
 static vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 static Quaternion qrot;
@@ -245,7 +245,7 @@ int main(int argc, char* argv[])
   vtkm::filter::MarchingCubes filter;
   filter.SetGenerateNormals(true);
   filter.SetMergeDuplicatePoints(false);
-  filter.SetIsoValue(0, 0.5);
+  filter.SetIsoValue(0, 0.1);
   vtkm::filter::Result result = filter.Execute(dataSet, dataSet.GetField("nodevar"));
 
   filter.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));

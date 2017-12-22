@@ -881,6 +881,37 @@ struct ScanKernel : vtkm::exec::FunctorBase
     }
   }
 };
+
+template <typename InPortalType, typename OutPortalType, typename BinaryFunctor>
+struct BinaryTransformKernel : vtkm::exec::FunctorBase
+{
+  using ValueType = typename InPortalType::ValueType;
+
+  InPortalType InPortal1;
+  InPortalType InPortal2;
+  OutPortalType OutPortal;
+  BinaryFunctor BinaryOperator;
+
+  VTKM_CONT
+  BinaryTransformKernel(const InPortalType& inPortal1,
+                        const InPortalType& inPortal2,
+                        const OutPortalType& outPortal,
+                        BinaryFunctor binaryOperator)
+    : InPortal1(inPortal1)
+    , InPortal2(inPortal2)
+    , OutPortal(outPortal)
+    , BinaryOperator(binaryOperator)
+  {
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  VTKM_EXEC
+  void operator()(vtkm::Id index) const
+  {
+    this->OutPortal.Set(
+      index, this->BinaryOperator(this->InPortal1.Get(index), this->InPortal2.Get(index)));
+  }
+};
 }
 }
 } // namespace vtkm::cont::internal

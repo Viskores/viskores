@@ -25,6 +25,7 @@ set(CMAKE_PREFIX_PATH ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR})
 
 add_subdirectory(clipping)
 add_subdirectory(contour_tree)
+add_subdirectory(connected_component_labeling)
 add_subdirectory(cosmotools)
 add_subdirectory(demo)
 add_subdirectory(dynamic_dispatcher)

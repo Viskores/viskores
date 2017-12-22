@@ -763,6 +763,28 @@ public:
     DerivedAlgorithm::Sort(zipHandle, internal::KeyCompare<T, U, BinaryCompare>(binary_compare));
   }
 
+  template <typename T, typename U, class StorageT, class StorageU, class BinaryFunctor>
+  VTKM_CONT static void Transform(vtkm::cont::ArrayHandle<T, StorageT>& input1,
+                                  vtkm::cont::ArrayHandle<T, StorageT>& input2,
+                                  vtkm::cont::ArrayHandle<U, StorageU>& output,
+                                  BinaryFunctor binaryFunctor)
+  {
+    vtkm::Id numValues = vtkm::Min(input1.GetNumberOfValues(), input2.GetNumberOfValues());
+    if (numValues <= 0)
+    {
+      return;
+    }
+
+    auto input1Portal = input1.PrepareForInput(DeviceAdapterTag());
+    auto input2Portal = input2.PrepareForInput(DeviceAdapterTag());
+    auto outputPortal = output.PrepareForOutput(numValues, DeviceAdapterTag());
+
+    BinaryTransformKernel<decltype(input1Portal), decltype(outputPortal), BinaryFunctor>
+      binaryKernel(input1Portal, input2Portal, outputPortal, binaryFunctor);
+    DerivedAlgorithm::Schedule(binaryKernel, numValues);
+  }
+
+  //};
   //--------------------------------------------------------------------------
   // Unique
   template <typename T, class Storage>
