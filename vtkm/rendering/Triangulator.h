@@ -24,7 +24,6 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/rendering/raytracing/MeshConnectivityBuilder.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
@@ -276,17 +275,21 @@ public:
   public:
     VTKM_CONT
     UniqueTriangles() {}
-    typedef void ControlSignature(ExecObject, ExecObject);
+
+    typedef void ControlSignature(WholeArrayIn<vtkm::ListTagBase<vtkm::Vec<vtkm::Id, 4>>>,
+                                  WholeArrayOut<vtkm::ListTagBase<vtkm::UInt8>>);
     typedef void ExecutionSignature(_1, _2, WorkIndex);
+
     VTKM_EXEC
     bool IsTwin(const vtkm::Vec<vtkm::Id, 4>& a, const vtkm::Vec<vtkm::Id, 4>& b) const
     {
       return (a[1] == b[1] && a[2] == b[2] && a[3] == b[3]);
     }
-    VTKM_EXEC
-    void operator()(vtkm::exec::ExecutionWholeArrayConst<vtkm::Vec<vtkm::Id, 4>>& indices,
-                    vtkm::exec::ExecutionWholeArray<vtkm::UInt8>& outputFlags,
-                    const vtkm::Id& index) const
+
+    template <typename IndicesPortalType, typename OutputFlagsPortalType>
+    VTKM_EXEC void operator()(const IndicesPortalType& indices,
+                              OutputFlagsPortalType& outputFlags,
+                              const vtkm::Id& index) const
     {
       if (index == 0)
         return;
@@ -612,9 +615,7 @@ public:
     flags.Allocate(outputTriangles);
     vtkm::worklet::DispatcherMapField<MemSet<vtkm::UInt8>>(MemSet<vtkm::UInt8>(1)).Invoke(flags);
     //Unique triangles will have a flag = 1
-    vtkm::worklet::DispatcherMapField<UniqueTriangles>().Invoke(
-      vtkm::exec::ExecutionWholeArrayConst<vtkm::Vec<vtkm::Id, 4>>(outputIndices),
-      vtkm::exec::ExecutionWholeArray<vtkm::UInt8>(flags));
+    vtkm::worklet::DispatcherMapField<UniqueTriangles>().Invoke(outputIndices, flags);
 
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> subset;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(outputIndices, flags, subset);

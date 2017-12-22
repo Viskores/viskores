@@ -22,8 +22,6 @@
 
 #include <vtkm/Math.h>
 
-#include <vtkm/exec/ExecutionWholeArray.h>
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -363,16 +361,16 @@ struct KernelSplatterFilterUniformGrid
   class UpdateVoxelSplats : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, ExecObject);
+    typedef void ControlSignature(FieldIn<>, FieldIn<>, WholeArrayOut<Scalar>);
     typedef void ExecutionSignature(_1, _2, _3);
 
     VTKM_CONT
     UpdateVoxelSplats() {}
 
-    VTKM_EXEC_CONT
-    void operator()(const vtkm::Id& voxelIndex,
-                    const vtkm::Float64& splatValue,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Float32>& execArg) const
+    template <typename ExecArgPortalType>
+    VTKM_EXEC_CONT void operator()(const vtkm::Id& voxelIndex,
+                                   const vtkm::Float64& splatValue,
+                                   ExecArgPortalType& execArg) const
     {
       execArg.Set(voxelIndex, static_cast<vtkm::Float32>(splatValue));
     }
@@ -594,9 +592,7 @@ struct KernelSplatterFilterUniformGrid
     vtkm::worklet::DispatcherMapField<UpdateVoxelSplats> scatterDispatcher;
 
     START_TIMER_BLOCK(UpdateVoxelSplats)
-    scatterDispatcher.Invoke(uniqueVoxelIds,
-                             voxelSplatSums,
-                             vtkm::exec::ExecutionWholeArray<vtkm::Float32>(scalarSplatOutput));
+    scatterDispatcher.Invoke(uniqueVoxelIds, voxelSplatSums, scalarSplatOutput);
     END_TIMER_BLOCK(UpdateVoxelSplats)
     debug::OutputArrayDebug(scalarSplatOutput, "scalarSplatOutput");
     //

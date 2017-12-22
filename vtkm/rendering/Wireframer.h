@@ -157,7 +157,7 @@ class EdgePlotter : public vtkm::worklet::WorkletMapField
 public:
   using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArray<vtkm::Int64, DeviceTag>;
 
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, WholeArrayIn<Scalar>);
+  typedef void ControlSignature(FieldIn<Id2Type>, WholeArrayIn<Vec3>, WholeArrayIn<Scalar>);
   typedef void ExecutionSignature(_1, _2, _3);
   using InputDomain = _1;
 
@@ -393,14 +393,16 @@ public:
   VTKM_CONT
   BufferConverter() {}
 
-  typedef void ControlSignature(FieldIn<>, ExecObject, ExecObject);
+  typedef void ControlSignature(FieldIn<>,
+                                WholeArrayOut<vtkm::ListTagBase<vtkm::Float32>>,
+                                WholeArrayOut<vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 4>>>);
   typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
 
-  VTKM_EXEC
-  void operator()(const vtkm::Int64& packedValue,
-                  vtkm::exec::ExecutionWholeArray<vtkm::Float32>& depthBuffer,
-                  vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32, 4>>& colorBuffer,
-                  const vtkm::Id& index) const
+  template <typename DepthBufferPortalType, typename ColorBufferPortalType>
+  VTKM_EXEC void operator()(const vtkm::Int64& packedValue,
+                            DepthBufferPortalType& depthBuffer,
+                            ColorBufferPortalType& colorBuffer,
+                            const vtkm::Id& index) const
   {
     PackedValue packed;
     packed.Raw = packedValue;
@@ -551,9 +553,7 @@ private:
 
     BufferConverter converter;
     vtkm::worklet::DispatcherMapField<BufferConverter, DeviceTag>(converter).Invoke(
-      FrameBuffer,
-      vtkm::exec::ExecutionWholeArray<vtkm::Float32>(Canvas->GetDepthBuffer()),
-      vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32, 4>>(Canvas->GetColorBuffer()));
+      FrameBuffer, Canvas->GetDepthBuffer(), Canvas->GetColorBuffer());
   }
 
   VTKM_CONT
