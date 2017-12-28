@@ -114,7 +114,7 @@ determine_version(${VTKm_SOURCE_DIR} ${GIT_EXECUTABLE} "VTKm")
 # configuration.
 include(VTKmCompilerFlags)
 include(VTKmWrappers)
-include(CPUVectorization)
+include(VTKmCPUVectorization)
 
 if (VTKm_ENABLE_TESTING)
   enable_testing()
