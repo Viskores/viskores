@@ -30,4 +30,4 @@ set(unit_tests
   UnitTestSerialPointLocatorUniformGrid.cxx
   UnitTestSerialVirtualObjectHandle.cxx
   )
-vtkm_unit_tests(TBB SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests} BACKEND SERIAL)
