@@ -85,11 +85,11 @@ function(vtkm_find_gl)
 endfunction()
 
 #-----------------------------------------------------------------------------
-if(TARGET vtkm_rendering_backend)
+if(TARGET vtkm_rendering_gl_context)
   return()
 endif()
 
-add_library(vtkm_rendering_backend INTERFACE)
+add_library(vtkm_rendering_gl_context INTERFACE)
 if(NOT VTKm_RENDERING_BACKEND STREQUAL "None")
   vtkm_find_gl(REQUIRED GL GLEW
                OPTIONAL
@@ -97,18 +97,18 @@ if(NOT VTKm_RENDERING_BACKEND STREQUAL "None")
 endif()
 
 #-----------------------------------------------------------------------------
-if(VTKm_RENDERING_BACKEND STREQUAL "OpenGL")
+if(VTKm_ENABLE_GL_CONTEXT)
   if(TARGET OpenGL::GLX)
-    target_link_libraries(vtkm_rendering_backend
+    target_link_libraries(vtkm_rendering_gl_context
                           INTERFACE OpenGL::OpenGL OpenGL::GLX GLEW::GLEW)
   elseif(TARGET OpenGL::GL)
-    target_link_libraries(vtkm_rendering_backend
+    target_link_libraries(vtkm_rendering_gl_context
                           INTERFACE OpenGL::GL GLEW::GLEW)
   endif()
-elseif(VTKm_RENDERING_BACKEND STREQUAL "OSMesa")
-  target_link_libraries(vtkm_rendering_backend
+elseif(VTKm_ENABLE_OSMESA_CONTEXT)
+  target_link_libraries(vtkm_rendering_gl_context
                         INTERFACE OpenGL::GL GLEW::GLEW)
-elseif(VTKm_RENDERING_BACKEND STREQUAL "EGL")
-  target_link_libraries(vtkm_rendering_backend
+elseif(VTKm_ENABLE_EGL_CONTEXT)
+  target_link_libraries(vtkm_rendering_gl_context
                         INTERFACE OpenGL::OpenGL OpenGL::EGL GLEW::GLEW)
 endif()

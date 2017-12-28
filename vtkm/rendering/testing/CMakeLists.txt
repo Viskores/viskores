@@ -35,13 +35,13 @@ set(unit_tests
 
 vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
 
-if(VTKm_RENDERING_BACKEND STREQUAL "OpenGL")
+if(VTKm_ENABLE_GL_CONTEXT)
   # message(STATUS "rendering testing/glfw needs a FindGLFW")
   # message(STATUS "rendering testing/glut needs compile corrections")
   # add_subdirectory(glfw)
   # add_subdirectory(glut)
-elseif(VTKm_RENDERING_BACKEND STREQUAL "OSMesa")
+elseif(VTKm_ENABLE_OSMESA_CONTEXT)
   add_subdirectory(osmesa)
-elseif(VTKm_RENDERING_BACKEND STREQUAL "EGL")
+elseif(VTKm_ENABLE_EGL_CONTEXT)
   add_subdirectory(egl)
 endif()

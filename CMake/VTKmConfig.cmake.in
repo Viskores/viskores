@@ -61,7 +61,9 @@ set(VTKm_BUILD_SHARED_LIBS "@BUILD_SHARED_LIBS@")
 set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
 set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
 set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
-set(VTKm_RENDERING_BACKEND "@VTKm_RENDERING_BACKEND@")
+set(VTKm_ENABLE_GL_CONTEXT "@VTKm_ENABLE_GL_CONTEXT")
+set(VTKm_ENABLE_OSMESA_CONTEXT "@VTKm_ENABLE_OSMESA_CONTEXT")
+set(VTKm_ENABLE_EGL_CONTEXT "@VTKm_ENABLE_EGL_CONTEXT")
 set(VTKm_ENABLE_MPI "@VTKm_ENABLE_MPI@")
 
 # Load the library exports, but only if not compiling VTK-m itself
@@ -79,7 +81,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 include(VTKmWrappers)
 
 if(VTKm_ENABLE_RENDERING)
-  include(VTKmRenderingBackends)
+  include(VTKmRenderingContexts)
 endif()
 
 check_required_components(vtkm)

@@ -25,7 +25,7 @@ project(Rendering CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-if(NOT TARGET vtkm_rendering OR NOT VTKm_RENDERING_BACKEND STREQUAL "OpenGL")
+if(NOT TARGET vtkm_rendering OR NOT VTKm_ENABLE_GL_CONTEXT)
   return()
 endif()
 

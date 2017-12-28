@@ -105,13 +105,9 @@ extract_version_components("${version_txt}" "VTKm")
 # Get the version from git if we can
 determine_version(${VTKm_SOURCE_DIR} ${GIT_EXECUTABLE} "VTKm")
 
-# Create an "interface" target library. This is not a real library but rather
-# holds CMake configuration that is required for CXX targets that use VTK-m
-# headers. In particular, it makes sure the appropriate C++11 version is being
-# used. (The cxx_constexpr and cxx_auto_type features happen to force C++11.
-# Directly asking for C++11 with this interface is not supported in CMake 3.3.)
-# This is also exported so that dependent CMake projects can load the same
-# configuration.
+# Create vtkm_compiler_flags library. This is an interface library that
+# holds all the C++ compiler flags that are needed for consumers and
+# when building VTK-m.
 include(VTKmCompilerFlags)
 include(VTKmWrappers)
 include(VTKmCPUVectorization)
@@ -245,7 +241,7 @@ install(
   FILES
     ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmBackends.cmake
-    ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingBackends.cmake
+    ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
     ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
   DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
   )

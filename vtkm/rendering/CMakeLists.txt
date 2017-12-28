@@ -21,19 +21,23 @@
 if(NOT VTKm_ENABLE_RENDERING)
   return()
 endif()
-# determine what backend for rendering we want to build
 
-set(default_backend "None")
-if(NOT VTKm_RENDERING_BACKEND)
-  message(STATUS "Setting rendering backend to '${default_backend}' as none was specified.")
-  set(VTKm_RENDERING_BACKEND "${default_backend}" CACHE
-      STRING "Choose the backend for vtkm rendering." FORCE)
-  # Set the possible values of rendering backend types for cmake-gui
-  set(extra_backends )
-  if(UNIX AND NOT APPLE)
-    list(APPEND extra_backends "OSMesa" "EGL")
-  endif()
-  set_property(CACHE VTKm_RENDERING_BACKEND PROPERTY STRINGS "None" "OpenGL" ${extra_backends})
+# determine what context(s) for rendering we want to build
+option(VTKm_ENABLE_GL_CONTEXT "Enable GL context for vtkm rendering" OFF)
+if(UNIX AND NOT APPLE)
+  option(VTKm_ENABLE_OSMESA_CONTEXT "Enable OSMesa context for vtkm rendering" OFF)
+  option(VTKm_ENABLE_EGL_CONTEXT "Enable EGL context for vtkm rendering" OFF)
+  mark_as_advanced(VTKm_ENABLE_OSMESA_CONTEXT)
+  mark_as_advanced(VTKm_ENABLE_EGL_CONTEXT)
+endif()
+if(VTKm_ENABLE_GL_CONTEXT AND VTKm_ENABLE_OSMESA_CONTEXT)
+  message(FATAL_ERROR "VTK-m GL and OSMesa contexts are mutually exclusive")
+endif()
+if(VTKm_ENABLE_GL_CONTEXT AND VTKm_ENABLE_EGL_CONTEXT)
+  message(FATAL_ERROR "VTK-m GL and EGL contexts are mutually exclusive")
+endif()
+if(VTKm_ENABLE_EGL_CONTEXT AND VTKm_ENABLE_OSMESA_CONTEXT)
+  message(FATAL_ERROR "VTK-m EGL and OSMesa contexts are mutually exclusive")
 endif()
 
 set(headers
@@ -175,13 +179,13 @@ vtkm_library(
   WRAP_FOR_CUDA ${device_sources}
   )
 
-if(VTKm_RENDERING_BACKEND STREQUAL "OpenGL")
+if(VTKm_ENABLE_GL_CONTEXT)
   vtkm_declare_headers(${opengl_headers})
   target_sources(vtkm_rendering PRIVATE ${opengl_sources})
-elseif(VTKm_RENDERING_BACKEND STREQUAL "OSMesa")
+elseif(VTKm_ENABLE_OSMESA_CONTEXT)
   vtkm_declare_headers(${opengl_headers} ${osmesa_headers})
   target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${osmesa_sources})
-elseif(VTKm_RENDERING_BACKEND STREQUAL "EGL")
+elseif(VTKm_ENABLE_EGL_CONTEXT)
   vtkm_declare_headers(${opengl_headers} ${egl_headers})
   target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${egl_sources})
 endif()
@@ -194,9 +198,9 @@ if(UNIX AND NOT APPLE)
 endif()
 
 #-----------------------------------------------------------------------------
-include(VTKmRenderingBackends)
-target_link_libraries(vtkm_rendering PUBLIC vtkm_rendering_backend)
-  install(TARGETS vtkm_rendering_backend
+include(VTKmRenderingContexts)
+target_link_libraries(vtkm_rendering PUBLIC vtkm_rendering_gl_context)
+  install(TARGETS vtkm_rendering_gl_context
     EXPORT ${VTKm_EXPORT_NAME}
     )
 

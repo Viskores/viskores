@@ -34,17 +34,17 @@ if(NOT TARGET GLUT::GLUT)
 endif()
 
 # rendering can only have a single backend so we need to
-if(VTKm_RENDERING_BACKEND STREQUAL "OSMesa" AND TARGET vtkm_rendering)
+if(VTKm_ENABLE_OSMESA_CONTEXT AND TARGET vtkm_rendering)
   list(APPEND unit_tests
     UnitTestTransferOSMesa.cxx
     UnitTestFancyTransferOSMesa.cxx
   )
-elseif(VTKm_RENDERING_BACKEND STREQUAL "EGL" AND TARGET vtkm_rendering)
+elseif(VTKm_ENABLE_EGL_CONTEXT AND TARGET vtkm_rendering)
   list(APPEND unit_tests
     UnitTestTransferEGL.cxx
     UnitTestFancyTransferEGL.cxx
   )
-elseif(VTKm_RENDERING_BACKEND STREQUAL "OpenGL" AND TARGET vtkm_rendering)
+elseif(VTKm_ENABLE_GL_CONTEXT AND TARGET vtkm_rendering)
   list(APPEND unit_tests
      UnitTestTransferGLUT.cxx
      UnitTestFancyTransferGLUT.cxx
