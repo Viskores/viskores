@@ -79,7 +79,7 @@ public:
   };
 
   VTKM_CONT
-  Keys() {}
+  Keys() = default;
 
   /// \b Construct a Keys class from an array of keys.
   ///

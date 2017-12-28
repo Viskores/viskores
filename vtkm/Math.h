@@ -2347,7 +2347,12 @@ static inline VTKM_EXEC_CONT vtkm::Float32 RemainderQuotient(vtkm::Float32 numer
                                                              QType& quotient)
 {
   int iQuotient;
-  vtkm::Float32 result = std::remquo(numerator, denominator, &iQuotient);
+#ifdef VTKM_CUDA
+  const vtkm::Float64 result =
+    VTKM_CUDA_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
+#else
+  const vtkm::Float32 result = std::remquo(numerator, denominator, &iQuotient);
+#endif
   quotient = iQuotient;
   return result;
 }
@@ -2357,7 +2362,12 @@ static inline VTKM_EXEC_CONT vtkm::Float64 RemainderQuotient(vtkm::Float64 numer
                                                              QType& quotient)
 {
   int iQuotient;
-  vtkm::Float64 result = std::remquo(numerator, denominator, &iQuotient);
+#ifdef VTKM_CUDA
+  const vtkm::Float64 result =
+    VTKM_CUDA_MATH_FUNCTION_64(remquo)(numerator, denominator, &iQuotient);
+#else
+  const vtkm::Float64 result = std::remquo(numerator, denominator, &iQuotient);
+#endif
   quotient = iQuotient;
   return result;
 }
