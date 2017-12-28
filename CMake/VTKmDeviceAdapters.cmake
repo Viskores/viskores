@@ -116,7 +116,10 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
 
     if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)
       #Use the cached value
-      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT}")
+      # replace any semicolons with an empty space as CMAKE_CUDA_FLAGS is
+      # a string not a list and this could be cached from when it was a list
+      string(REPLACE ";" " " run_output "${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT}")
+      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${run_output}")
     else()
 
       #run execute_process to do auto_detection
@@ -129,7 +132,7 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
       endif()
 
       execute_process(
-              COMMAND ${CUDA_NVCC_EXECUTABLE} ${args}
+              COMMAND ${CMAKE_CUDA_COMPILER} ${args}
               RESULT_VARIABLE ran_properly
               OUTPUT_VARIABLE run_output
               WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -141,6 +144,9 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
         string(FIND "${run_output}" "--generate-code" position)
         string(SUBSTRING "${run_output}" ${position} -1 run_output)
 
+        # replace any semicolons with an empty space as CMAKE_CUDA_FLAGS is
+        # a string not a list
+        string(REPLACE ";" " " run_output "${run_output}")
         set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${run_output}")
 
         set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
@@ -173,13 +179,6 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_52,code=compute_52")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_60,code=compute_60")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_61,code=compute_61")
-  endif()
-
-  if(WIN32)
-    # On Windows, there is an issue with performing parallel builds with
-    # nvcc. Multiple compiles can attempt to write the same .pdb file. Add
-    # this argument to avoid this problem.
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --compiler-options /FS")
   endif()
 
 endif()
