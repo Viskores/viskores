@@ -13,4 +13,5 @@
 *.md             whitespace=tab-in-indent conflict-marker-size=79 -whitespace
 *.rst            whitespace=tab-in-indent conflict-marker-size=79
 *.txt            whitespace=tab-in-indent
+diy/**           -format.clang-format -whitespace
 * !text !filter !merge !diff

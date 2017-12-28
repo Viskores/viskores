@@ -37,6 +37,7 @@ set(headers
 vtkm_declare_headers(${headers})
 
 set(unit_tests
+  UnitTestAlgorithm.cxx
   UnitTestArrayCopy.cxx
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
@@ -65,7 +66,7 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
-  UnitTestMultiBlock.cxx
+  UnitTestMultiBlock.cxx,MPI
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx

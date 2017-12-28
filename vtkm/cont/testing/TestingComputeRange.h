@@ -60,7 +60,7 @@ private:
     const vtkm::Id nvals = 11;
     T data[nvals] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1, 0 };
     std::random_shuffle(data, data + nvals);
-    vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, data, nvals);
+    auto field = vtkm::cont::make_Field("TestField", vtkm::cont::Field::ASSOC_POINTS, data, nvals);
 
     vtkm::Range result;
     field.GetRange(&result);
@@ -84,7 +84,8 @@ private:
         fieldData[j][i] = data[j];
       }
     }
-    vtkm::cont::Field field("TestField", vtkm::cont::Field::ASSOC_POINTS, fieldData, nvals);
+    auto field =
+      vtkm::cont::make_Field("TestField", vtkm::cont::Field::ASSOC_POINTS, fieldData, nvals);
 
     vtkm::Range result[NumberOfComponents];
     field.GetRange(result, CustomTypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());

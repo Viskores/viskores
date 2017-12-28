@@ -141,7 +141,7 @@ function(vtkm_library)
   endif()
   set(lib_name ${VTKm_LIB_NAME})
 
-  if(VTKm_ENABLE_CUDA)
+  if(TARGET vtkm::cuda)
     set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} PROPERTIES LANGUAGE "CUDA")
   endif()
 
@@ -176,23 +176,37 @@ endfunction(vtkm_library)
 # Declare unit tests, which should be in the same directory as a kit
 # (package, module, whatever you call it).  Usage:
 #
-# [CUDA]: mark all source files as being compiled with the cuda compiler
+# vtkm_unit_tests(
+#   NAME
+#   SOURCES <source_list>
+#   BACKEND <type>
+#   LIBRARIES <dependent_library_list>
+#   TEST_ARGS <argument_list>
+#   <options>
+#   )
+#
 # [BACKEND]: mark all source files as being compiled with the proper defines
 #            to make this backend the default backend
 #            If the backend is specified as CUDA it will also imply all
 #            sources should be treated as CUDA sources
 #            The backend name will also be added to the executable name
 #            so you can test multiple backends easily
-# vtkm_unit_tests(
-#   NAME
-#   CUDA
-#   SOURCES <source_list>
-#   BACKEND <type>
-#   LIBRARIES <dependent_library_list>
-#   TEST_ARGS <argument_list>
-#   )
+#
+# [LIBRARIES] : extra libraries that this set of tests need to link too
+#
+# [TEST_ARGS] : arguments that should be passed on the command line to the
+#               test executable
+#
+# Supported <options> are documented below. These can be specified for
+# all tests or for individual tests. When specifying these for individual tests,
+# simply add them after the test name in the <source_list> separated by a comma.
+# e.g. `UnitTestMultiBlock,MPI`.
+#
+# Supported <options> are
+# * MPI : the test(s) will be executed using `mpirun`.
+#
 function(vtkm_unit_tests)
-  set(options CUDA NO_TESTS)
+  set(options MPI)
   set(oneValueArgs BACKEND NAME)
   set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
@@ -204,12 +218,11 @@ function(vtkm_unit_tests)
     return()
   endif()
 
+  vtkm_parse_test_options(VTKm_UT_SOURCES "${options}" ${VTKm_UT_SOURCES})
+
   set(backend )
   if(VTKm_UT_BACKEND)
     set(backend "_${VTKm_UT_BACKEND}")
-    if(backend STREQUAL "CUDA")
-      set(VTKm_UT_CUDA "TRUE")
-    endif()
   endif()
 
   vtkm_get_kit_name(kit)
@@ -219,6 +232,9 @@ function(vtkm_unit_tests)
     set(test_prog "${VTKm_UT_NAME}${backend}")
   endif()
 
+  if(VTKm_UT_BACKEND STREQUAL "CUDA")
+    set_source_files_properties(${VTKm_UT_SOURCES} PROPERTIES LANGUAGE "CUDA")
+  endif()
 
   create_test_sourcelist(TestSources ${test_prog}.cxx ${VTKm_UT_SOURCES})
 
@@ -238,7 +254,7 @@ function(vtkm_unit_tests)
   #determine the timeout for all the tests based on the backend. CUDA tests
   #generally require more time because of kernel generation.
   set(timeout 180)
-  if(VTKm_UT_CUDA)
+  if(VTKm_UT_BACKEND STREQUAL "CUDA")
     set(timeout 1500)
   endif()
   foreach (test ${VTKm_UT_SOURCES})
@@ -251,20 +267,36 @@ function(vtkm_unit_tests)
 
 endfunction(vtkm_unit_tests)
 
-#-----------------------------------------------------------------------------
-# Declare benchmarks, which use all the same infrastructure as tests but
-# don't actually do the add_test at the end
+# -----------------------------------------------------------------------------
+# vtkm_parse_test_options(varname options)
+#   INTERNAL: Parse options specified for individual tests.
 #
-# [BACKEND]: mark all source files as being compiled with the proper defines
-#            to make this backend the default backend
-#            If the backend is specified as CUDA it will also imply all
-#            sources should be treated as CUDA sources
-#            The backend name will also be added to the executable name
-#            so you can test multiple backends easily
-# vtkm_benchmarks(
-#   SOURCES <source_list>
-#   BACKEND <type>
-#   LIBRARIES <dependent_library_list>
-function(vtkm_benchmarks)
-  vtkm_unit_tests(NAME Benchmarks NO_TESTS ${ARGN})
-endfunction(vtkm_benchmarks)
+#   Parses the arguments to separate out options specified after the test name
+#   separated by a comma e.g.
+#
+#   TestName,Option1,Option2
+#
+#   For every option in options, this will set _TestName_Option1,
+#   _TestName_Option2, etc in the parent scope.
+#
+function(vtkm_parse_test_options varname options)
+  set(names)
+  foreach(arg IN LISTS ARGN)
+    set(test_name ${arg})
+    set(test_options)
+    if(test_name AND "x${test_name}" MATCHES "^x([^,]*),(.*)$")
+      set(test_name "${CMAKE_MATCH_1}")
+      string(REPLACE "," ";" test_options "${CMAKE_MATCH_2}")
+    endif()
+    foreach(opt IN LISTS test_options)
+      list(FIND options "${opt}" index)
+      if(index EQUAL -1)
+        message(WARNING "Unknown option '${opt}' specified for test '${test_name}'")
+      else()
+        set(_${test_name}_${opt} TRUE PARENT_SCOPE)
+      endif()
+    endforeach()
+    list(APPEND names ${test_name})
+  endforeach()
+  set(${varname} ${names} PARENT_SCOPE)
+endfunction()

@@ -62,6 +62,7 @@ set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
 set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
 set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
 set(VTKm_RENDERING_BACKEND "@VTKm_RENDERING_BACKEND@")
+set(VTKm_ENABLE_MPI "@VTKm_ENABLE_MPI@")
 
 # Load the library exports, but only if not compiling VTK-m itself
 set_and_check(VTKm_CONFIG_DIR "@PACKAGE_VTKm_INSTALL_CONFIG_DIR@")

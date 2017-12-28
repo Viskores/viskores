@@ -68,7 +68,7 @@ struct TestListTagUniversal : vtkm::ListTagUniversal
 };
 
 template <int N, int M>
-std::pair<int, int> test_number(std::pair<TestClass<N>, TestClass<M>>)
+std::pair<int, int> test_number(brigand::list<TestClass<N>, TestClass<M>>)
 {
   return std::make_pair(N, M);
 }

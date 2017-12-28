@@ -25,16 +25,10 @@ set(benchmarks
   BenchmarkFieldAlgorithms
   BenchmarkTopologyAlgorithms
   )
-#set(benchmark_files
-#        BenchmarkArrayTransfer.cxx
-#        BenchmarkCopySpeeds.cxx
-#        BenchmarkDeviceAdapter.cxx
-#        BenchmarkFieldAlgorithms.cxx
-#        BenchmarkTopologyAlgorithms.cxx
-#        )
-#set(benchmark_headers
-#  Benchmarker.h
-#  )
+
+if(TARGET vtkm_rendering)
+  list(APPEND benchmarks BenchmarkRayTracing)
+endif()
 
 function(add_benchmark name files)
   add_executable(${name}_SERIAL ${files})

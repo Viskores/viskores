@@ -48,6 +48,7 @@ set(headers
   NDimsEntropy.h
   NDimsHistogram.h
   NDimsHistMarginalization.h
+  Normalize.h
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
