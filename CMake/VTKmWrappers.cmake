@@ -153,9 +153,13 @@ function(vtkm_library)
               ${VTKm_LIB_WRAP_FOR_CUDA}
               )
 
-  set_target_properties(${lib_name}
-                        PROPERTIES
-                        CXX_VISIBILITY_PRESET "hidden")
+  if(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+    set_target_properties(${lib_name}
+                          PROPERTIES
+                          CUDA_VISIBILITY_PRESET "hidden"
+                          CXX_VISIBILITY_PRESET "hidden")
+  endif()
+
 
   vtkm_generate_export_header(${lib_name})
   install(TARGETS ${lib_name}

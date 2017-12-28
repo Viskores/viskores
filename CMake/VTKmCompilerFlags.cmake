@@ -66,9 +66,6 @@ target_include_directories(vtkm_compiler_flags INTERFACE
   $<INSTALL_INTERFACE:include>
   )
 
-# Todo set up PIC flags here
-#INTERFACE_POSITION_INDEPENDENT_CODE
-
 # Additional warnings just for Clang 3.5+, and AppleClang 7+ we specify
 # for all build types, since these failures to vectorize are not limited
 # to developer builds

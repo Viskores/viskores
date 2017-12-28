@@ -51,7 +51,4 @@ target_compile_options(vtkm_cont_tbb PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFA
 target_compile_definitions(vtkm_cont_tbb PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_DEFINITIONS>)
 target_compile_features(vtkm_cont_tbb PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_FEATURES>)
 target_include_directories(vtkm_cont_tbb PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_INCLUDE_DIRECTORIES>)
-
-if(BUILD_SHARED_LIBS)
-  set_property(TARGET vtkm_cont_tbb PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
+set_property(TARGET vtkm_cont_tbb PROPERTY POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS})
