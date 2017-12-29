@@ -19,44 +19,30 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(CosmoTools CXX)
+
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB
-  )
+find_package(VTKm REQUIRED QUIET)
 
 add_executable(CosmoCenterFinder_SERIAL CosmoCenterFinder.cxx)
-target_include_directories(CosmoCenterFinder_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(CosmoCenterFinder_SERIAL PRIVATE ${VTKm_LIBRARIES})
-target_compile_options(CosmoCenterFinder_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
-
 add_executable(CosmoHaloFinder_SERIAL CosmoHaloFinder.cxx)
-target_include_directories(CosmoHaloFinder_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(CosmoHaloFinder_SERIAL PRIVATE ${VTKm_LIBRARIES})
-target_compile_options(CosmoHaloFinder_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-if(VTKm_CUDA_FOUND)
-  # Cuda compiles do not respect target_include_directories
-  cuda_include_directories(${VTKm_INCLUDE_DIRS})
+target_link_libraries(CosmoCenterFinder_SERIAL PRIVATE vtkm_cont)
+target_link_libraries(CosmoHaloFinder_SERIAL PRIVATE vtkm_cont)
 
-  cuda_add_executable(CosmoCenterFinder_CUDA CosmoCenterFinder.cu)
-  target_include_directories(CosmoCenterFinder_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(CosmoCenterFinder_CUDA PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(CosmoCenterFinder_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+if(TARGET vtkm::cuda)
+  add_executable(CosmoCenterFinder_CUDA CosmoCenterFinder.cu)
+  add_executable(CosmoHaloFinder_CUDA CosmoHaloFinder.cu)
 
-  cuda_add_executable(CosmoHaloFinder_CUDA CosmoHaloFinder.cu)
-  target_include_directories(CosmoHaloFinder_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(CosmoHaloFinder_CUDA PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(CosmoHaloFinder_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+  target_link_libraries(CosmoCenterFinder_CUDA PRIVATE vtkm_cont)
+  target_link_libraries(CosmoHaloFinder_CUDA PRIVATE vtkm_cont)
 endif()
 
-if(VTKm_TBB_FOUND)
+if(TARGET vtkm::tbb)
   add_executable(CosmoCenterFinder_TBB CosmoCenterFinderTBB.cxx)
-  target_include_directories(CosmoCenterFinder_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(CosmoCenterFinder_TBB PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(CosmoCenterFinder_TBB PRIVATE PRIVATE ${VTKm_COMPILE_OPTIONS})
-
   add_executable(CosmoHaloFinder_TBB CosmoHaloFinderTBB.cxx)
-  target_include_directories(CosmoHaloFinder_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(CosmoHaloFinder_TBB PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(CosmoHaloFinder_TBB PRIVATE PRIVATE ${VTKm_COMPILE_OPTIONS})
+
+  target_link_libraries(CosmoCenterFinder_TBB PRIVATE vtkm_cont)
+  target_link_libraries(CosmoHaloFinder_TBB PRIVATE vtkm_cont)
 endif()

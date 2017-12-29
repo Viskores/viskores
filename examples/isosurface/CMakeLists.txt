@@ -19,33 +19,30 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(IsoSurface CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
-  )
+find_package(VTKm REQUIRED QUIET)
+vtkm_find_gl(OPTIONAL GL GLUT GLEW)
 
-if(VTKm_OpenGL_FOUND AND VTKm_GLUT_FOUND)
-  add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx quaternion.h)
+if(TARGET OpenGL::GL AND
+   TARGET GLUT::GLUT AND
+   TARGET GLEW::GLEW)
+
   set_source_files_properties(quaternion.h PROPERTIES HEADER_FILE_ONLY TRUE)
-  target_include_directories(IsosurfaceUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(IsosurfaceUniformGrid_SERIAL PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(IsosurfaceUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-  if(VTKm_CUDA_FOUND)
+  add_executable(IsosurfaceUniformGrid_SERIAL IsosurfaceUniformGrid.cxx quaternion.h)
+  target_link_libraries(IsosurfaceUniformGrid_SERIAL PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
 
-    # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS})
-    cuda_add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu quaternion.h)
-    target_link_libraries(IsosurfaceUniformGrid_CUDA PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(IsosurfaceUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+  if(TARGET vtkm::cuda)
+    add_executable(IsosurfaceUniformGrid_CUDA IsosurfaceUniformGrid.cu quaternion.h)
+    target_link_libraries(IsosurfaceUniformGrid_CUDA PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
   endif()
 
-  if(VTKm_ENABLE_TBB)
+  if(TARGET vtkm::tbb)
     add_executable(IsosurfaceUniformGrid_TBB IsosurfaceUniformGridTBB.cxx quaternion.h)
-    target_include_directories(IsosurfaceUniformGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(IsosurfaceUniformGrid_TBB PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(IsosurfaceUniformGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
+    target_link_libraries(IsosurfaceUniformGrid_TBB PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
   endif()
 
 endif()

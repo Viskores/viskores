@@ -20,8 +20,5 @@
 ##
 ##=============================================================================
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_executable(DynamicDispatcherExample main.cxx)
-target_include_directories(DynamicDispatcherExample PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(DynamicDispatcherExample PRIVATE ${VTKm_LIBRARIES})
-target_compile_options(DynamicDispatcherExample PRIVATE ${VTKm_COMPILE_OPTIONS})
+target_link_libraries(DynamicDispatcherExample PRIVATE vtkm_cont)

@@ -19,57 +19,50 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(ContourTree CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB
-  )
+find_package(VTKm REQUIRED QUIET)
 
 add_executable(ContourTreeMesh2D_SERIAL ContourTreeMesh2D.cxx)
-target_include_directories(ContourTreeMesh2D_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(ContourTreeMesh2D_SERIAL      PRIVATE ${VTKm_LIBRARIES})
-target_compile_options(ContourTreeMesh2D_SERIAL     PRIVATE ${VTKm_COMPILE_OPTIONS})
+target_link_libraries(ContourTreeMesh2D_SERIAL vtkm_cont)
 
 add_executable(ContourTreeMesh3D_SERIAL ContourTreeMesh3D.cxx)
-target_include_directories(ContourTreeMesh3D_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(ContourTreeMesh3D_SERIAL      PRIVATE ${VTKm_LIBRARIES})
-target_compile_options(ContourTreeMesh3D_SERIAL     PRIVATE ${VTKm_COMPILE_OPTIONS})
+target_link_libraries(ContourTreeMesh3D_SERIAL vtkm_cont)
 
-if(VTKm_CUDA_FOUND)
-  set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
-  set(old_cxx_flags ${CMAKE_CXX_FLAGS})
-  vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags)
+target_compile_definitions(ContourTreeMesh2D_SERIAL PRIVATE
+                           "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
+target_compile_definitions(ContourTreeMesh3D_SERIAL PRIVATE
+                           "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
 
-
-  # Cuda compiles do not respect target_include_directories
-  cuda_include_directories(${VTKm_INCLUDE_DIRS})
-
+if(TARGET vtkm::cuda)
   set (cudaSource "${CMAKE_CURRENT_BINARY_DIR}/ContourTreeMesh2D.cu")
   configure_file(ContourTreeMesh2D.cxx ${cudaSource} COPYONLY)
-  cuda_add_executable(ContourTreeMesh2D_CUDA ${cudaSource})
-  target_include_directories(ContourTreeMesh2D_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(ContourTreeMesh2D_CUDA      PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(ContourTreeMesh2D_CUDA     PRIVATE ${VTKm_COMPILE_OPTIONS})
+  add_executable(ContourTreeMesh2D_CUDA ${cudaSource})
 
   set (cudaSource "${CMAKE_CURRENT_BINARY_DIR}/ContourTreeMesh3D.cu")
   configure_file(ContourTreeMesh3D.cxx ${cudaSource} COPYONLY)
-  cuda_add_executable(ContourTreeMesh3D_CUDA ${cudaSource})
-  target_include_directories(ContourTreeMesh3D_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(ContourTreeMesh3D_CUDA      PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(ContourTreeMesh3D_CUDA     PRIVATE ${VTKm_COMPILE_OPTIONS})
+  add_executable(ContourTreeMesh3D_CUDA ${cudaSource})
 
-  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
-  set(CMAKE_CXX_FLAGS ${old_cxx_flags})
+  target_link_libraries(ContourTreeMesh2D_CUDA vtkm_cont)
+  target_link_libraries(ContourTreeMesh3D_CUDA vtkm_cont)
+
+  target_compile_definitions(ContourTreeMesh2D_CUDA PRIVATE
+                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
+  target_compile_definitions(ContourTreeMesh3D_CUDA PRIVATE
+                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
 endif()
 
-if(VTKm_TBB_FOUND)
+if(TARGET vtkm::tbb)
   add_executable(ContourTreeMesh2D_TBB ContourTreeMesh2D.cxx)
-  target_include_directories(ContourTreeMesh2D_TBB  PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(ContourTreeMesh2D_TBB       PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(ContourTreeMesh2D_TBB      PRIVATE ${VTKm_COMPILE_OPTIONS})
-
   add_executable(ContourTreeMesh3D_TBB ContourTreeMesh3D.cxx)
-  target_include_directories(ContourTreeMesh3D_TBB  PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(ContourTreeMesh3D_TBB       PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(ContourTreeMesh3D_TBB      PRIVATE ${VTKm_COMPILE_OPTIONS})
+
+  target_link_libraries(ContourTreeMesh2D_TBB vtkm_cont)
+  target_link_libraries(ContourTreeMesh3D_TBB vtkm_cont)
+
+  target_compile_definitions(ContourTreeMesh2D_TBB PRIVATE
+                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
+  target_compile_definitions(ContourTreeMesh3D_TBB PRIVATE
+                             "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
 endif()

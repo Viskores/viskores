@@ -26,20 +26,15 @@ project(VTKmDemo CXX)
 find_package(VTKm REQUIRED QUIET)
 
 if(TARGET vtkm_rendering)
-
   set(backend "VTKM_DEVICE_ADAPTER_SERIAL")
   if(TARGET vtkm::cuda)
     set_source_files_properties(Demo.cxx PROPERTIES LANGUAGE "CUDA")
     set(backend "VTKM_DEVICE_ADAPTER_CUDA")
-    add_executable(Demo Demo.cxx)
   elseif(TARGET vtkm::tbb)
     set(backend "VTKM_DEVICE_ADAPTER_TBB")
-    cuda_add_executable(Demo Demo.cu)
-  else()
-    cuda_add_executable(Demo Demo.cu)
   endif()
 
+  add_executable(Demo Demo.cxx)
   target_link_libraries(Demo PRIVATE vtkm_rendering)
   target_compile_definitions(Demo PRIVATE "VTKM_DEVICE_ADAPTER=${backend}")
-
 endif()

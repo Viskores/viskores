@@ -25,12 +25,10 @@ project(Clipping CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-
 add_executable(Clipping_SERIAL Clipping.cxx)
 target_compile_definitions(Clipping_SERIAL PRIVATE
                            "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
 target_link_libraries(Clipping_SERIAL PRIVATE vtkm_cont)
-
 
 if(TARGET vtkm::tbb)
   add_executable(Clipping_TBB Clipping.cxx)
