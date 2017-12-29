@@ -48,6 +48,10 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
 
   add_library(vtkm::cuda UNKNOWN IMPORTED)
 
+  set_target_properties(vtkm::cuda PROPERTIES
+    INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+  )
+
   # We can't have this location/lib empty, so we provide a location that is
   # valid and will have no effect on compilation
   list(GET CMAKE_CUDA_IMPLICIT_LINK_LIBRARIES 0 VTKM_CUDA_LIBRARY)
