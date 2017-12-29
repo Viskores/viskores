@@ -35,8 +35,10 @@ public:
   typedef void ControlSignature(FieldIn<VecAll>, FieldIn<VecAll>, FieldOut<VecAll>);
   typedef void ExecutionSignature(_1, _2, _3);
 
-  template <typename T, typename T2>
-  VTKM_EXEC void operator()(const T& vec1, const T& vec2, T2& outVec) const
+  template <typename T>
+  VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& vec1,
+                            const vtkm::Vec<T, 3>& vec2,
+                            vtkm::Vec<T, 3>& outVec) const
   {
     outVec = vtkm::Cross(vec1, vec2);
   }

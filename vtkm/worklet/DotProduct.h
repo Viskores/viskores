@@ -35,8 +35,10 @@ public:
   typedef void ControlSignature(FieldIn<VecAll>, FieldIn<VecAll>, FieldOut<Scalar>);
   typedef void ExecutionSignature(_1, _2, _3);
 
-  template <typename T, typename T2>
-  VTKM_EXEC void operator()(const T& v1, const T& v2, T2& outValue) const
+  template <typename T, vtkm::IdComponent Size>
+  VTKM_EXEC void operator()(const vtkm::Vec<T, Size>& v1,
+                            const vtkm::Vec<T, Size>& v2,
+                            T& outValue) const
   {
     outValue = vtkm::dot(v1, v2);
   }
