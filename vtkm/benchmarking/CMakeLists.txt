@@ -17,19 +17,6 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
-
-set(benchmarks
-  BenchmarkArrayTransfer
-  BenchmarkCopySpeeds
-  BenchmarkDeviceAdapter
-  BenchmarkFieldAlgorithms
-  BenchmarkTopologyAlgorithms
-  )
-
-if(TARGET vtkm_rendering)
-  list(APPEND benchmarks BenchmarkRayTracing)
-endif()
-
 function(add_benchmark name files)
   add_executable(${name}_SERIAL ${files})
   target_link_libraries(${name}_SERIAL PRIVATE vtkm_cont)
@@ -40,12 +27,36 @@ function(add_benchmark name files)
   endif()
 
   if (TARGET vtkm::cuda)
-    set_source_files_properties(${files} PROPERTIES LANGUAGE "CUDA")
-    add_executable(${name}_CUDA ${files})
+    get_filename_component(fname "${name}" NAME_WE)
+    get_filename_component(fullpath "${name}.cxx" ABSOLUTE)
+    file(GENERATE
+          OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu
+          CONTENT "#include \"${fullpath}\"")
+
+    add_executable(${name}_CUDA ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu)
     target_link_libraries(${name}_CUDA PRIVATE vtkm_cont)
   endif()
 endfunction()
 
+set(benchmarks
+  BenchmarkArrayTransfer
+  BenchmarkCopySpeeds
+  BenchmarkDeviceAdapter
+  BenchmarkFieldAlgorithms
+  BenchmarkTopologyAlgorithms
+  )
+
 foreach (benchmark ${benchmarks})
   add_benchmark(${benchmark} ${benchmark}.cxx)
 endforeach ()
+
+if(TARGET vtkm_rendering)
+  add_benchmark(BenchmarkRayTracing BenchmarkRayTracing.cxx)
+  target_link_libraries(BenchmarkRayTracing_SERIAL PRIVATE vtkm_rendering)
+  if(TARGET BenchmarkRayTracing_TBB)
+    target_link_libraries(BenchmarkRayTracing_TBB PRIVATE vtkm_rendering)
+  endif()
+  if(TARGET BenchmarkRayTracing_CUDA)
+    target_link_libraries(BenchmarkRayTracing_CUDA PRIVATE vtkm_rendering)
+  endif()
+endif()
