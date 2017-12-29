@@ -237,7 +237,20 @@ function(vtkm_unit_tests)
   endif()
 
   if(VTKm_UT_BACKEND STREQUAL "CUDA")
-    set_source_files_properties(${VTKm_UT_SOURCES} PROPERTIES LANGUAGE "CUDA")
+    #we can't mark the files as CUDA here since that would mean that
+    #for all other backends they would be built as CUDA too. Instead we
+    #generate a build directory file with a .cu extension
+    set( cuda_srcs )
+    foreach(file ${VTKm_UT_SOURCES})
+      get_filename_component(fname "${file}" NAME_WE)
+      get_filename_component(fullpath "${file}" ABSOLUTE)
+      list(APPEND cuda_srcs "${fname}.cu")
+      file(GENERATE
+          OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu
+          CONTENT "#include \"${fullpath}\"")
+    endforeach()
+    set(VTKm_UT_SOURCES ${cuda_srcs})
+
   endif()
 
   create_test_sourcelist(TestSources ${test_prog}.cxx ${VTKm_UT_SOURCES})
