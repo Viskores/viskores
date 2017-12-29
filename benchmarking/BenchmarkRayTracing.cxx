@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/benchmarking/Benchmarker.h>
+#include "Benchmarker.h"
 
 #include <vtkm/TypeTraits.h>
 

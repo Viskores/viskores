@@ -32,7 +32,7 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/benchmarking/Benchmarker.h>
+#include "Benchmarker.h"
 #include <vtkm/cont/testing/Testing.h>
 
 #include <random>

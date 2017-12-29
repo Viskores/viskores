@@ -90,11 +90,5 @@ add_subdirectory(rendering)
 add_subdirectory(interop)
 
 #-----------------------------------------------------------------------------
-#add the benchmarking folder
-if(VTKm_ENABLE_BENCHMARKS)
-    add_subdirectory(benchmarking)
-endif()
-
-#-----------------------------------------------------------------------------
 #add the io folder
 add_subdirectory(io)

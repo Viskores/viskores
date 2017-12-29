@@ -277,6 +277,12 @@ set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
 include(CPack)
 
 #-----------------------------------------------------------------------------
+#add the benchmarking folder
+if(VTKm_ENABLE_BENCHMARKS)
+    add_subdirectory(benchmarking)
+endif()
+
+#-----------------------------------------------------------------------------
 # Build examples
 if(VTKm_ENABLE_EXAMPLES)
   add_subdirectory(examples)

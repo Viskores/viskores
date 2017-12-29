@@ -20,7 +20,7 @@
 
 #include <vtkm/TypeTraits.h>
 
-#include <vtkm/benchmarking/Benchmarker.h>
+#include "Benchmarker.h"
 
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>

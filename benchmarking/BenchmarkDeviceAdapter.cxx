@@ -18,8 +18,8 @@
 //  this software.
 //============================================================================
 
+#include "Benchmarker.h"
 #include <vtkm/TypeTraits.h>
-#include <vtkm/benchmarking/Benchmarker.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
