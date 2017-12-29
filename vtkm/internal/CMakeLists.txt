@@ -21,8 +21,9 @@
 #-----------------------------------------------------------------------------
 # Build the configure file.
 # need to set numerous VTKm cmake properties to the naming convention
-# that we exepect for our C++ defines.
+# that we expect for our C++ defines.
 
+set(VTKM_NO_ASSERT ${VTKm_NO_ASSERT})
 set(VTKM_USE_DOUBLE_PRECISION ${VTKm_USE_DOUBLE_PRECISION})
 set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
 
