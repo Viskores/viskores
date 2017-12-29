@@ -70,9 +70,9 @@ set(unit_tests
 
 
 vtkm_unit_tests(NAME Worklets BACKEND SERIAL SOURCES ${unit_tests})
-if (VTKm_ENABLE_TBB)
+if (TARGET vtkm::tbb)
   vtkm_unit_tests(NAME Worklets BACKEND TBB SOURCES ${unit_tests})
 endif()
-if (VTKm_ENABLE_CUDA)
+if (TARGET vtkm::cuda)
   vtkm_unit_tests(NAME Worklets BACKEND CUDA SOURCES ${unit_tests})
 endif()

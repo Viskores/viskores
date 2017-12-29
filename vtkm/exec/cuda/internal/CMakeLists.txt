@@ -33,6 +33,6 @@ set_source_files_properties(ThrustPatches.h
                             PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE)
 
 #-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
+if (TARGET vtkm::cuda)
   add_subdirectory(testing)
 endif()

@@ -33,6 +33,6 @@ endif()
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 
-if(VTKm_CUDA_FOUND)
+if(TARGET vtkm::cuda)
   add_subdirectory(cuda)
 endif()
