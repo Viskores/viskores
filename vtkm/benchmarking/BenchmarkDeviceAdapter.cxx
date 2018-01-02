@@ -108,7 +108,7 @@ struct BenchDevAlgoConfig
   /// @note FixBytes and FixSizes are not mutually exclusive. If both are
   /// specified, both will run.
   bool TestArraySizeValues{ false };
-  vtkm::Id ArraySizeValues{ 1 << 21 };
+  vtkm::UInt64 ArraySizeValues{ 1 << 21 };
 
   /// If true, operations like "Unique" will test with a wider range of unique
   /// values (5%, 10%, 15%, 20%, 25%, 30%, 35%, 40%, 45%, 50%, 75%, 100%
@@ -126,7 +126,7 @@ struct BenchDevAlgoConfig
   {
     return this->DoByteSizes
       ? static_cast<vtkm::Id>(this->ArraySizeBytes / static_cast<vtkm::UInt64>(sizeof(T)))
-      : this->ArraySizeValues;
+      : static_cast<vtkm::Id>(this->ArraySizeValues);
   }
 };
 
@@ -291,8 +291,8 @@ private:
     {
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
-      description << "Copy " << arraySize << " values (" << HumanSize(arraySize * sizeof(Value))
-                  << ")";
+      description << "Copy " << arraySize << " values ("
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
       return description.str();
     }
   };
@@ -337,8 +337,8 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "CopyIf on " << arraySize << " values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ") with " << PERCENT_VALID
-                  << "% valid values";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
+                  << PERCENT_VALID << "% valid values";
       return description.str();
     }
   };
@@ -393,8 +393,8 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "LowerBounds on " << arraySize << " input values ("
-                  << "(" << HumanSize(arraySize * sizeof(Value)) << ") (" << PERCENT_VALUES
-                  << "% configuration)";
+                  << "(" << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") ("
+                  << PERCENT_VALUES << "% configuration)";
       return description.str();
     }
   };
@@ -451,7 +451,7 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "Reduce on " << arraySize << " values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ")";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
       return description.str();
     }
   };
@@ -496,8 +496,8 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "ReduceByKey on " << arraySize << " values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ") with " << N_KEYS << " ("
-                  << PERCENT_KEYS << "%) distinct vtkm::Id keys";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
+                  << N_KEYS << " (" << PERCENT_KEYS << "%) distinct vtkm::Id keys";
       return description.str();
     }
   };
@@ -543,7 +543,7 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "ScanInclusive on " << arraySize << " values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ")";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
       return description.str();
     }
   };
@@ -579,7 +579,7 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "ScanExclusive on " << arraySize << " values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ")";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
       return description.str();
     }
   };
@@ -621,7 +621,7 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "Sort on " << arraySize << " random values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ")";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
       return description.str();
     }
   };
@@ -674,8 +674,8 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "SortByKey on " << arraySize << " random values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ") with " << N_KEYS << " ("
-                  << PERCENT_KEYS << "%) different vtkm::Id keys";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
+                  << N_KEYS << " (" << PERCENT_KEYS << "%) different vtkm::Id keys";
       return description.str();
     }
   };
@@ -731,7 +731,7 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "StableSortIndices::Sort on " << arraySize << " random values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ")";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
       return description.str();
     }
   };
@@ -775,8 +775,8 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "StableSortIndices::Unique on " << arraySize << " values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ") with " << this->N_VALID << " ("
-                  << PERCENT_VALID << "%) valid values";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
+                  << this->N_VALID << " (" << PERCENT_VALID << "%) valid values";
       return description.str();
     }
   };
@@ -831,8 +831,8 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "Unique on " << arraySize << " values ("
-                  << HumanSize(arraySize * sizeof(Value)) << ") with " << N_VALID << " ("
-                  << PERCENT_VALID << "%) valid values";
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ") with "
+                  << N_VALID << " (" << PERCENT_VALID << "%) valid values";
       return description.str();
     }
   };
@@ -887,8 +887,8 @@ private:
       vtkm::Id arraySize = Config.ComputeSize<Value>();
       std::stringstream description;
       description << "UpperBounds on " << arraySize << " input and " << N_VALS << " ("
-                  << PERCENT_VALS
-                  << "%) values (input array size: " << HumanSize(arraySize * sizeof(Value)) << ")";
+                  << PERCENT_VALS << "%) values (input array size: "
+                  << HumanSize(static_cast<vtkm::UInt64>(arraySize) * sizeof(Value)) << ")";
       return description.str();
     }
   };

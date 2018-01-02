@@ -74,6 +74,7 @@ vtkm::UInt32 ScaleColorComponent(vtkm::Float32 c)
   return vtkm::UInt32(t < 0 ? 0 : (t > 255 ? 255 : t));
 }
 
+VTKM_EXEC_CONT
 vtkm::UInt32 PackColor(vtkm::Float32 r, vtkm::Float32 g, vtkm::Float32 b, vtkm::Float32 a);
 
 VTKM_EXEC_CONT
@@ -92,6 +93,7 @@ vtkm::UInt32 PackColor(vtkm::Float32 r, vtkm::Float32 g, vtkm::Float32 b, vtkm::
   return packed;
 }
 
+VTKM_EXEC_CONT
 void UnpackColor(vtkm::UInt32 color,
                  vtkm::Float32& r,
                  vtkm::Float32& g,

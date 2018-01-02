@@ -411,6 +411,7 @@ void TestMarchingCubesExplicit()
 
 int UnitTestMarchingCubes(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestMarchingCubesUniformGrid);
-  return vtkm::cont::testing::Testing::Run(TestMarchingCubesExplicit);
+  int result1 = vtkm::cont::testing::Testing::Run(TestMarchingCubesUniformGrid);
+  int result2 = vtkm::cont::testing::Testing::Run(TestMarchingCubesExplicit);
+  return result1 == 0 && result2 == 0;
 }

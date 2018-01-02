@@ -68,6 +68,7 @@ private:
     }
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename InIter, typename OutIter>
   VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
   {

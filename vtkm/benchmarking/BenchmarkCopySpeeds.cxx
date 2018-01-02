@@ -80,8 +80,8 @@ struct MeasureCopySpeed
 
   VTKM_CONT std::string Description() const
   {
-    vtkm::UInt64 actualSize =
-      static_cast<vtkm::UInt64>(this->Source.GetNumberOfValues() * sizeof(ValueType));
+    vtkm::UInt64 actualSize = sizeof(ValueType);
+    actualSize *= static_cast<vtkm::UInt64>(this->Source.GetNumberOfValues());
     std::ostringstream out;
     out << "Copying " << HumanSize(this->NumBytes) << " (actual=" << HumanSize(actualSize)
         << ") of " << vtkm::testing::TypeName<ValueType>::Name() << "\n";

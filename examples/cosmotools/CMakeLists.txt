@@ -35,6 +35,11 @@ target_link_libraries(CosmoHaloFinder_SERIAL PRIVATE ${VTKm_LIBRARIES})
 target_compile_options(CosmoHaloFinder_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
 if(VTKm_CUDA_FOUND)
+  set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
+  set(old_cxx_flags ${CMAKE_CXX_FLAGS})
+  vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags)
+  vtkm_disable_troublesome_thrust_warnings()
+
   # Cuda compiles do not respect target_include_directories
   cuda_include_directories(${VTKm_INCLUDE_DIRS})
 
@@ -47,6 +52,9 @@ if(VTKm_CUDA_FOUND)
   target_include_directories(CosmoHaloFinder_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
   target_link_libraries(CosmoHaloFinder_CUDA PRIVATE ${VTKm_LIBRARIES})
   target_compile_options(CosmoHaloFinder_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+
+  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+  set(CMAKE_CXX_FLAGS ${old_cxx_flags})
 endif()
 
 if(VTKm_TBB_FOUND)
