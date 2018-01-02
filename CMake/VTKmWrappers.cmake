@@ -73,17 +73,21 @@ function(vtkm_generate_export_header lib_name)
       ${VTKm_BINARY_DIR}/include/${dir_prefix}/${kit_name}_export.h
     @ONLY)
 
-  install(FILES ${VTKm_BINARY_DIR}/include/${dir_prefix}/${kit_name}_export.h
-    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
-    )
+  if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+    install(FILES ${VTKm_BINARY_DIR}/include/${dir_prefix}/${kit_name}_export.h
+      DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
+      )
+  endif()
 
 endfunction(vtkm_generate_export_header)
 
 function(vtkm_install_headers dir_prefix)
-  set(hfiles ${ARGN})
-  install(FILES ${hfiles}
-    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
-    )
+  if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+    set(hfiles ${ARGN})
+    install(FILES ${hfiles}
+      DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${dir_prefix}
+      )
+  endif()
 endfunction(vtkm_install_headers)
 
 

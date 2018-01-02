@@ -200,9 +200,12 @@ endif()
 #-----------------------------------------------------------------------------
 include(VTKmRenderingContexts)
 target_link_libraries(vtkm_rendering PUBLIC vtkm_rendering_gl_context)
+
+if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(TARGETS vtkm_rendering_gl_context
     EXPORT ${VTKm_EXPORT_NAME}
     )
+endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)

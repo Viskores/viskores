@@ -52,14 +52,16 @@ if(MPI_CXX_COMPILE_DEFNITIONS)
     $<$<COMPILE_LANGUAGE:CXX>:${MPI_CXX_COMPILE_DEFNITIONS>)
 endif()
 
-install(TARGETS diy
-  EXPORT ${VTKm_EXPORT_NAME})
+if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+  install(TARGETS diy
+    EXPORT ${VTKm_EXPORT_NAME})
 
-# Install headers
-install(DIRECTORY include/diy
-  DESTINATION ${VTKm_INSTALL_INCLUDE_DIR})
+  # Install headers
+  install(DIRECTORY include/diy
+    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR})
 
-# Install other files.
-install(FILES LEGAL.txt LICENSE.txt
-  DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/diy
-  )
+  # Install other files.
+  install(FILES LEGAL.txt LICENSE.txt
+    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/diy
+    )
+endif()

@@ -117,4 +117,6 @@ elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
     )
 endif()
 
-install(TARGETS vtkm_compiler_flags vtkm_developer_flags EXPORT ${VTKm_EXPORT_NAME})
+if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+  install(TARGETS vtkm_compiler_flags vtkm_developer_flags EXPORT ${VTKm_EXPORT_NAME})
+endif()

@@ -180,4 +180,6 @@ if(NOT VTKm_Vectorization_flags_added)
     target_compile_options(vtkm_vectorization_flags INTERFACE ${flags})
 endif()
 
-install(TARGETS vtkm_vectorization_flags EXPORT ${VTKm_EXPORT_NAME})
+if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+    install(TARGETS vtkm_vectorization_flags EXPORT ${VTKm_EXPORT_NAME})
+endif()

@@ -83,8 +83,15 @@ option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
 option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
 option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
+# When VTK-m is embedded into larger projects they may desire to turn off
+# VTK-m internal assert checks when in debug mode to improve debug runtime
+# performance.
 option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
-mark_as_advanced(VTKm_NO_ASSERT)
+
+# When VTK-m is embedded into larger projects that wish to make end user
+# applications they want to only install libraries and don't want CMake/headers
+# installed.
+option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no headers" OFF)
 
 # VTK-m is setup by default not to export symbols unless explicitly stated.
 # We prefer to only export symbols of a small set of user facing classes,
@@ -92,7 +99,12 @@ mark_as_advanced(VTKm_NO_ASSERT)
 # which require static builds can force all symbols on, which is something
 # VTK does.
 option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
-mark_as_advanced(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
+
+mark_as_advanced(
+  VTKm_NO_ASSERT
+  VTKm_INSTALL_ONLY_LIBRARIES
+  VTKm_USE_DEFAULT_SYMBOL_VISIBILITY
+  )
 
 option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
@@ -220,49 +232,52 @@ write_basic_package_version_file(
   ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
-install(
-  FILES
-    ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
-    ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
-  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
-  )
 
-# Install the readme and license files.
-install(FILES ${VTKm_SOURCE_DIR}/README.md
-  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
-  RENAME VTKmREADME.md
-  )
-install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
-  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
-  RENAME VTKmLICENSE.txt
-  )
+if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+  install(
+    FILES
+      ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
+      ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
+    DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+    )
 
-# Install helper configure files.
-install(
-  FILES
-    ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
-    ${VTKm_SOURCE_DIR}/CMake/FindOpenGL.cmake
-  DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
-  )
+  # Install the readme and license files.
+  install(FILES ${VTKm_SOURCE_DIR}/README.md
+    DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+    RENAME VTKmREADME.md
+    )
+  install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
+    DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+    RENAME VTKmLICENSE.txt
+    )
 
-# Install support files.
-install(
-  FILES
-    ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
-    ${VTKm_SOURCE_DIR}/CMake/VTKmBackends.cmake
-    ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
-    ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
-  DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
-  )
+  # Install helper configure files.
+  install(
+    FILES
+      ${VTKm_SOURCE_DIR}/CMake/FindTBB.cmake
+      ${VTKm_SOURCE_DIR}/CMake/FindOpenGL.cmake
+    DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
+    )
 
-# Create and install exports for external projects
-export(EXPORT ${VTKm_EXPORT_NAME}
-  FILE ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
-  )
-install(EXPORT ${VTKm_EXPORT_NAME}
-  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
-  FILE VTKmTargets.cmake
-  )
+  # Install support files.
+  install(
+    FILES
+      ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
+      ${VTKm_SOURCE_DIR}/CMake/VTKmBackends.cmake
+      ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
+      ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
+    DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
+    )
+
+  # Create and install exports for external projects
+  export(EXPORT ${VTKm_EXPORT_NAME}
+    FILE ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+    )
+  install(EXPORT ${VTKm_EXPORT_NAME}
+    DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+    FILE VTKmTargets.cmake
+    )
+endif()
 
 # Enable CPack packaging
 set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)
