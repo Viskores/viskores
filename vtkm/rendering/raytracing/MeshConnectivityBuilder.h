@@ -95,7 +95,7 @@ public:
   VTKM_CONT
   MortonNeighbor() {}
   typedef void ControlSignature(WholeArrayIn<>,
-                                ExecObject,
+                                WholeArrayInOut<Id3Type>,
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
@@ -146,18 +146,18 @@ public:
 
 
   template <typename MortonPortalType,
+            typename FaceIdPairsPortalType,
             typename ConnPortalType,
             typename ShapePortalType,
             typename OffsetPortalType,
             typename ExternalFaceFlagType>
-  VTKM_EXEC inline void operator()(
-    const MortonPortalType& mortonCodes,
-    vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Id, 3>>& faceIdPairs,
-    const vtkm::Id& index,
-    const ConnPortalType& connectivity,
-    const ShapePortalType& shapes,
-    const OffsetPortalType& offsets,
-    ExternalFaceFlagType& flags) const
+  VTKM_EXEC inline void operator()(const MortonPortalType& mortonCodes,
+                                   FaceIdPairsPortalType& faceIdPairs,
+                                   const vtkm::Id& index,
+                                   const ConnPortalType& connectivity,
+                                   const ShapePortalType& shapes,
+                                   const OffsetPortalType& offsets,
+                                   ExternalFaceFlagType& flags) const
   {
     if (index == 0)
     {
@@ -330,14 +330,16 @@ public:
 class WriteFaceConn : public vtkm::worklet::WorkletMapField
 {
 public:
+  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, WholeArrayOut<IdType>);
+  typedef void ExecutionSignature(_1, _2, _3);
+
   VTKM_CONT
   WriteFaceConn() {}
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, ExecObject);
-  typedef void ExecutionSignature(_1, _2, _3);
-  template <typename FaceOffsetsPortalType>
+
+  template <typename FaceOffsetsPortalType, typename FaceConnectivityPortalType>
   VTKM_EXEC inline void operator()(const vtkm::Vec<vtkm::Id, 3>& faceIdPair,
                                    const FaceOffsetsPortalType& faceOffsets,
-                                   vtkm::exec::ExecutionWholeArray<vtkm::Id>& faceConn) const
+                                   FaceConnectivityPortalType& faceConn) const
   {
     vtkm::Id cellId = faceIdPair[0];
     BOUNDS_CHECK(faceOffsets, cellId);
@@ -570,8 +572,7 @@ public:
 
     // scatter the coonectivity into the original order
     vtkm::worklet::DispatcherMapField<WriteFaceConn>(WriteFaceConn())
-      .Invoke(
-        cellFaceId, this->FaceOffsets, vtkm::exec::ExecutionWholeArray<vtkm::Id>(faceConnectivity));
+      .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
 
     FaceConnectivity = faceConnectivity;
@@ -628,8 +629,7 @@ public:
 
     // scatter the coonectivity into the original order
     vtkm::worklet::DispatcherMapField<WriteFaceConn>(WriteFaceConn())
-      .Invoke(
-        cellFaceId, this->FaceOffsets, vtkm::exec::ExecutionWholeArray<vtkm::Id>(faceConnectivity));
+      .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
     FaceConnectivity = faceConnectivity;
     OutsideTriangles = externalTriangles;
@@ -754,12 +754,7 @@ protected:
       .Invoke(faceConnectivity);
 
     vtkm::worklet::DispatcherMapField<MortonNeighbor, DeviceAdapter>(MortonNeighbor())
-      .Invoke(faceMortonCodes,
-              vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Id, 3>>(cellFaceId),
-              conn,
-              shapes,
-              shapeOffsets,
-              faceConnectivity);
+      .Invoke(faceMortonCodes, cellFaceId, conn, shapes, shapeOffsets, faceConnectivity);
 
     vtkm::Float64 time = timer.GetElapsedTime();
     Logger::GetInstance()->AddLogData("gen_face_conn", time);

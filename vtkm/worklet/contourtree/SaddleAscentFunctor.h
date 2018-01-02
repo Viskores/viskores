@@ -80,7 +80,6 @@
 #ifndef vtkm_worklet_contourtree_saddle_ascent_functor_h
 #define vtkm_worklet_contourtree_saddle_ascent_functor_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
