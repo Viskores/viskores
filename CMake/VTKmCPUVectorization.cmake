@@ -70,7 +70,7 @@
 
 # guard agaisnt building vectorization_flags more than once
 if(TARGET vtkm_vectorization_flags)
-    return()
+  return()
 endif()
 
 add_library(vtkm_vectorization_flags INTERFACE)
@@ -79,64 +79,64 @@ target_link_libraries(vtkm_vectorization_flags INTERFACE vtkm_compiler_flags)
 set(vec_levels none native)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    #for now we presume gcc > 4.6
-    list(APPEND vec_levels avx)
+  #for now we presume gcc > 4.6
+  list(APPEND vec_levels avx)
 
-    #common flags for the avx instructions for the gcc compiler
-    set(native_flags -march=native)
-    set(avx_flags -mavx)
-    set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.7 OR
-            CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.7)
-        #if GNU is less than 4.9 you get avx, avx2
-        list(APPEND vec_levels avx2)
-    elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
-        #if GNU is less than 5.1 you get avx, avx2, and some avx512
-        list(APPEND vec_levels avx2 avx512-knl)
-        set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
-    else()
-        #if GNU is 5.1+ you get avx, avx2, and more avx512
-        list(APPEND vec_levels avx2 avx512-skx avx512-knl)
-        set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
-        set(skylake_flags ${avx2_flags} -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl)
-    endif()
+  #common flags for the avx instructions for the gcc compiler
+  set(native_flags -march=native)
+  set(avx_flags -mavx)
+  set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.7 OR
+  CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.7)
+  #if GNU is less than 4.9 you get avx, avx2
+  list(APPEND vec_levels avx2)
+elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
+  #if GNU is less than 5.1 you get avx, avx2, and some avx512
+  list(APPEND vec_levels avx2 avx512-knl)
+  set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
+else()
+  #if GNU is 5.1+ you get avx, avx2, and more avx512
+  list(APPEND vec_levels avx2 avx512-skx avx512-knl)
+  set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
+  set(skylake_flags ${avx2_flags} -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl)
+endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    list(APPEND vec_levels avx avx2 avx512-skx avx512-knl)
-    set(native_flags -march=native)
-    set(avx_flags -mavx)
-    set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
-    set(knl_flags ${avx2_flags} -avx512f -avx512cd -avx512dq -avx512bw -avx512vl)
-    set(skylake_flags ${avx2_flags} -avx512f -avx512cd -avx512er -avx512pf)
+  list(APPEND vec_levels avx avx2 avx512-skx avx512-knl)
+  set(native_flags -march=native)
+  set(avx_flags -mavx)
+  set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
+  set(knl_flags ${avx2_flags} -avx512f -avx512cd -avx512dq -avx512bw -avx512vl)
+  set(skylake_flags ${avx2_flags} -avx512f -avx512cd -avx512er -avx512pf)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
-    #While Clang support AVX512, no version of AppleClang has that support yet
-    list(APPEND vec_levels avx avx2)
-    set(native_flags -march=native)
-    set(avx_flags -mavx)
-    set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
+  #While Clang support AVX512, no version of AppleClang has that support yet
+  list(APPEND vec_levels avx avx2)
+  set(native_flags -march=native)
+  set(avx_flags -mavx)
+  set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
-    #I can't find documentation to explicitly state the level of vectorization
-    #support I want from the PGI compiler
-    #so for now we are going to do nothing
+  #I can't find documentation to explicitly state the level of vectorization
+  #support I want from the PGI compiler
+  #so for now we are going to do nothing
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
-    #Intel 15.X is the first version with avx512
-    #Intel 16.X has way better vector generation compared to 15.X though
+  #Intel 15.X is the first version with avx512
+  #Intel 16.X has way better vector generation compared to 15.X though
 
-    set(native_flags -xHost)
-    set(avx_flags  -xAVX)
-    set(avx2_flags -xCORE-AVX2)
+  set(native_flags -xHost)
+  set(avx_flags  -xAVX)
+  set(avx2_flags -xCORE-AVX2)
 
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0)
-        message(STATUS "While Intel ICC 14.0 and lower support #pragma simd")
-        message(STATUS "The code that is generated in testing has caused SIGBUS")
-        message(STATUS "runtime signals to be thrown. We recommend you upgrade")
-        message(STATUS "or disable vectorization.")
-    elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16.0)
-        list(APPEND vec_levels avx avx2)
-    else()
-        list(APPEND vec_levels avx avx2 avx512-skx avx512-knl)
-        set(knl_flags ${knl_flags} -xMIC-AVX512)
-        set(skylake_flags ${skylake_flags} -xCORE-AVX512)
-    endif()
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15.0)
+    message(STATUS "While Intel ICC 14.0 and lower support #pragma simd")
+    message(STATUS "The code that is generated in testing has caused SIGBUS")
+    message(STATUS "runtime signals to be thrown. We recommend you upgrade")
+    message(STATUS "or disable vectorization.")
+  elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16.0)
+    list(APPEND vec_levels avx avx2)
+  else()
+    list(APPEND vec_levels avx avx2 avx512-skx avx512-knl)
+    set(knl_flags ${knl_flags} -xMIC-AVX512)
+    set(skylake_flags ${skylake_flags} -xCORE-AVX512)
+  endif()
 endif()
 
 set_property(GLOBAL PROPERTY VTKm_NATIVE_FLAGS ${native_flags})
@@ -153,7 +153,7 @@ set_property(GLOBAL PROPERTY VTKm_SKYLAKE_FLAGS ${skylake_flags})
 set(VTKm_Vectorization "none" CACHE STRING "Level of compiler vectorization support")
 set_property(CACHE VTKm_Vectorization PROPERTY STRINGS ${vec_levels})
 if (NOT ${VTKm_Vectorization} STREQUAL "none")
-    set(VTKM_VECTORIZATION_ENABLED "ON")
+  set(VTKM_VECTORIZATION_ENABLED "ON")
 endif()
 
 #
@@ -162,24 +162,24 @@ endif()
 #
 set(flags)
 if(VTKm_Vectorization STREQUAL "native")
-    get_property(flags GLOBAL PROPERTY VTKm_NATIVE_FLAGS)
+  get_property(flags GLOBAL PROPERTY VTKm_NATIVE_FLAGS)
 elseif(VTKm_Vectorization STREQUAL "avx")
-    get_property(flags GLOBAL PROPERTY VTKm_AVX_FLAGS)
+  get_property(flags GLOBAL PROPERTY VTKm_AVX_FLAGS)
 elseif(VTKm_Vectorization STREQUAL "avx2")
-    get_property(flags GLOBAL PROPERTY VTKm_AVX2_FLAGS)
+  get_property(flags GLOBAL PROPERTY VTKm_AVX2_FLAGS)
 elseif(VTKm_Vectorization STREQUAL "avx512-skx")
-    get_property(flags GLOBAL PROPERTY VTKm_SKYLAKE_FLAGS)
+  get_property(flags GLOBAL PROPERTY VTKm_SKYLAKE_FLAGS)
 elseif(VTKm_Vectorization STREQUAL "avx512-knl")
-    get_property(flags GLOBAL PROPERTY VTKm_KNL_FLAGS)
+  get_property(flags GLOBAL PROPERTY VTKm_KNL_FLAGS)
 endif()
 
 #guard against adding the flags multiple times, which happens when multiple
 #backends include this file
 if(NOT VTKm_Vectorization_flags_added)
-    set(VTKm_Vectorization_flags_added true)
-    target_compile_options(vtkm_vectorization_flags INTERFACE ${flags})
+  set(VTKm_Vectorization_flags_added true)
+  target_compile_options(vtkm_vectorization_flags INTERFACE ${flags})
 endif()
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
-    install(TARGETS vtkm_vectorization_flags EXPORT ${VTKm_EXPORT_NAME})
+  install(TARGETS vtkm_vectorization_flags EXPORT ${VTKm_EXPORT_NAME})
 endif()
