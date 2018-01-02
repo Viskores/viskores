@@ -115,7 +115,7 @@ public:
       graftDispatcher.Invoke(
         cellIds, indexOffsetArray, numIndexArray, connectivityArray, components);
 
-      // Detection of allStar has be come before pointer jumping. Don't try to rearrange it.
+      // Detection of allStar has come before pointer jumping. Don't try to rearrange it.
       vtkm::worklet::DispatcherMapField<IsStar> isStarDisp;
       isStarDisp.Invoke(cellIds, components, isStar);
       allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());

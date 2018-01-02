@@ -23,17 +23,17 @@ set(unit_tests
 #  UnitTestCellAverage.cxx
 #  UnitTestCellDeepCopy.cxx
 #  UnitTestCellGradient.cxx
+  UnitTestCellSetConnectivity.cpp
+  UnitTestCellSetDualGraph.cxx
 #  UnitTestClipping.cxx
 #  UnitTestContourTreeUniform.cxx
 #  UnitTestCosmoTools.cxx
-  UnitTestDualGraph.cxx
 #  UnitTestExternalFaces.cxx
 #  UnitTestExtractGeometry.cxx
 #  UnitTestExtractPoints.cxx
 #  UnitTestExtractStructured.cxx
 #  UnitTestFieldHistogram.cxx
 #  UnitTestFieldStatistics.cxx
-  UnitTestGraphConnectivity.cpp
   UnitTestInnerJoin.cxx
 #  UnitTestKdTreeBuildNNS.cxx
 #  UnitTestKeys.cxx

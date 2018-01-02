@@ -19,17 +19,9 @@
 //============================================================================
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
-#include <vtkm/worklet/DispatcherMapTopology.h>
-#include <vtkm/exec/CellEdge.h>
-#include <vtkm/worklet/ScatterCounting.h>
-#include <vtkm/worklet/Keys.h>
-#include <vtkm/worklet/WorkletReduceByKey.h>
-#include <vtkm/worklet/DispatcherReduceByKey.h>
-#include <vtkm/worklet/connectivities/CellSetDualGraph.h>
-#include <vtkm/worklet/connectivities/GraphConnectivity.h>
-
 #include <vtkm/filter/MarchingCubes.h>
+
+#include <vtkm/worklet/connectivities/CellSetConnectivity.h>
 
 class TangleField : public vtkm::worklet::WorkletMapField
 {
@@ -47,15 +39,15 @@ public:
               const vtkm::FloatDefault mins[3],
               const vtkm::FloatDefault maxs[3])
     : xdim(dims[0])
-      , ydim(dims[1])
-      , zdim(dims[2])
-      , xmin(mins[0])
-      , ymin(mins[1])
-      , zmin(mins[2])
-      , xmax(maxs[0])
-      , ymax(maxs[1])
-      , zmax(maxs[2])
-      , cellsPerLayer((xdim) * (ydim))
+    , ydim(dims[1])
+    , zdim(dims[2])
+    , xmin(mins[0])
+    , ymin(mins[1])
+    , zmin(mins[2])
+    , xmax(maxs[0])
+    , ymax(maxs[1])
+    , zmax(maxs[2])
+    , cellsPerLayer((xdim) * (ydim))
   {
   }
 
@@ -80,7 +72,7 @@ public:
     v = (xx * xx * xx * xx - 5.0f * xx * xx + yy * yy * yy * yy - 5.0f * yy * yy +
          zz * zz * zz * zz - 5.0f * zz * zz + 11.8f) *
         0.2f +
-        0.5f;
+      0.5f;
   }
 };
 
@@ -124,43 +116,11 @@ static vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
 
 
 template <typename DeviceAdapter>
-class TestGraphConnectivity
+class TestCellSetConnectivity
 {
 public:
-  void TestGrafting() const
+  void TestTangleIsosurface() const
   {
-//    std::vector<vtkm::Id> ids    = {0, 1, 2, 3};
-//    std::vector<vtkm::Id> conn   = {1, 0, 2, 3, 1, 1};
-//    std::vector<vtkm::Id> starts = {0, 1, 4, 5};
-//    std::vector<vtkm::Id> ends   = {1, 4, 5, 6};
-//    std::vector<vtkm::Id> degrees = {1, 3, 1, 1};
-//    std::vector<vtkm::Id> comp    = {0, 1, 2, 3};
-
-//    std::vector<vtkm::Id> ids    = {0, 1, 2, 3, 4};
-//    std::vector<vtkm::Id> conn   = {1, 2, 0, 2, 0, 1, 4, 3};
-//    std::vector<vtkm::Id> starts = {0, 2, 4, 6, 7};
-//    std::vector<vtkm::Id> ends   = {2, 4, 6, 7, 8};
-//    std::vector<vtkm::Id> degrees = {2, 2, 2, 1, 1};
-//    std::vector<vtkm::Id> comp    = {0, 1, 2, 3, 4};
-
-//    vtkm::cont::ArrayHandle<vtkm::Id> idsArr = vtkm::cont::make_ArrayHandle(ids);
-//    vtkm::cont::ArrayHandle<vtkm::Id> connArr = vtkm::cont::make_ArrayHandle(conn);
-//    vtkm::cont::ArrayHandle<vtkm::Id> startsArr = vtkm::cont::make_ArrayHandle(starts);
-//    vtkm::cont::ArrayHandle<vtkm::Id> endsArr = vtkm::cont::make_ArrayHandle(ends);
-//    vtkm::cont::ArrayHandle<vtkm::Id> degreesArr = vtkm::cont::make_ArrayHandle(degrees);
-//    vtkm::cont::ArrayHandle<vtkm::Id> compArr = vtkm::cont::make_ArrayHandle(comp);
-//    for (int i = 0; i < compArr.GetNumberOfValues(); i++) {
-//      std::cout << compArr.GetPortalConstControl().Get(i) << " ";
-//    }
-//    std::cout << std::endl;
-
-//    std::vector<vtkm::Id> connectivity = { 0, 2, 4, 1, 3, 5, 2, 6, 4, 5, 3, 7, 2, 9, 6, 4, 6, 8};
-//    vtkm::cont::CellSetSingleType<> cellSet;
-//    cellSet.Fill(8,
-//                 vtkm::CELL_SHAPE_TRIANGLE,
-//                 3,
-//                 vtkm::cont::make_ArrayHandle(connectivity));
-
     vtkm::Id3 dims(4, 4, 4);
     vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
@@ -172,38 +132,21 @@ public:
     vtkm::cont::DataSet& outputData = result.GetDataSet();
 
     auto cellSet = outputData.GetCellSet().Cast<vtkm::cont::CellSetSingleType<>>();
-
-
-    vtkm::cont::ArrayHandle<vtkm::Id> numIndicesArray;
-    vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray;
-    vtkm::cont::ArrayHandle<vtkm::Id> connectivityArray;
-
-    CellSetDualGraph<DeviceAdapter>().Run(cellSet,
-                                          numIndicesArray,
-                                          indexOffsetArray,
-                                          connectivityArray);
-
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
-    GraphConnectivity<DeviceAdapter>().Run(numIndicesArray,
-                                           indexOffsetArray,
-                                           connectivityArray,
-                                           componentArray);
+    CellSetConnectivity<DeviceAdapter>().Run(cellSet, componentArray);
 
-    for (int i = 0; i < componentArray.GetNumberOfValues(); i++)
-    {
-      std::cout << i << " "
-                << componentArray.GetPortalConstControl().Get(i) << std::endl;
-    }
-    std::cout << std::endl;
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    Algorithm::Sort(componentArray);
+    Algorithm::Unique(componentArray);
+    VTKM_TEST_ASSERT(componentArray.GetNumberOfValues() == 8,
+                     "Wrong number of connected components");
   }
 
-    void operator()() const
-  {
-    this->TestGrafting();
-  }
+  void operator()() const { this->TestTangleIsosurface(); }
 };
 
-int UnitTestGraphConnectivity(int, char *[])
+int UnitTestCellSetConnectivity(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestGraphConnectivity<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
+  return vtkm::cont::testing::Testing::Run(
+    TestCellSetConnectivity<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>());
 }

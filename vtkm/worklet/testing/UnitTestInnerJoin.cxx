@@ -4,8 +4,8 @@
 
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/worklet/ScatterCounting.h>
-#include <vtkm/worklet/WorkletMapTopology.h>
+//#include <vtkm/worklet/ScatterCounting.h>
+//#include <vtkm/worklet/WorkletMapTopology.h>
 
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 
@@ -13,6 +13,27 @@ template <typename DeviceAdapter>
 class TestInnerJoin
 {
 public:
+  template <typename T, typename Storage>
+  bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
+                       const T* expected,
+                       vtkm::Id size) const
+  {
+    if (size != ah.GetNumberOfValues())
+    {
+      return false;
+    }
+
+    for (vtkm::Id i = 0; i < size; ++i)
+    {
+      if (ah.GetPortalConstControl().Get(i) != expected[i])
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   void TestTwoArrays() const
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
@@ -36,12 +57,14 @@ public:
 
     InnerJoin<DeviceAdapter>().Run(A_arr, idxA, B_arr, idxB, joinedIndex, outA, outB);
 
-    for (int i = 0; i < joinedIndex.GetNumberOfValues(); i++)
-    {
-      std::cout << "key: " << joinedIndex.GetPortalConstControl().Get(i)
-                << ", value1: " << outA.GetPortalConstControl().Get(i)
-                << ", value2: " << outB.GetPortalConstControl().Get(i) << std::endl;
-    }
+    vtkm::Id expectedIndex[] = { 5, 5, 8, 8, 9 };
+    VTKM_TEST_ASSERT(TestArrayHandle(joinedIndex, expectedIndex, 5), "Wrong joined keys");
+
+    vtkm::Id expectedOutA[] = { 5, 5, 0, 3, 4 };
+    VTKM_TEST_ASSERT(TestArrayHandle(outA, expectedOutA, 5), "Wrong joined values");
+
+    vtkm::Id expectedOutB[] = { 4, 7, 3, 3, 2 };
+    VTKM_TEST_ASSERT(TestArrayHandle(outB, expectedOutB, 5), "Wrong joined values");
   }
 
   void operator()() const { this->TestTwoArrays(); }

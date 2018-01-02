@@ -18,10 +18,10 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_worklet_InnerJoin_h
-#define vtk_m_worklet_InnerJoin_h
+#ifndef vtk_m_worklet_connectivity_InnerJoin_h
+#define vtk_m_worklet_connectivity_InnerJoin_h
 
-
+#include <vtkm/worklet/ScatterCounting.h>
 
 template <typename DeviceAdapter>
 class InnerJoin
@@ -29,9 +29,9 @@ class InnerJoin
 public:
   struct Merge : vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<vtkm::Id>,
-                                  FieldIn<vtkm::Id>,
-                                  FieldIn<vtkm::Id>,
+    typedef void ControlSignature(FieldIn<>,
+                                  FieldIn<>,
+                                  FieldIn<>,
                                   WholeArrayIn<vtkm::Id>,
                                   FieldOut<>,
                                   FieldOut<>,
@@ -50,15 +50,19 @@ public:
     {
     }
 
-    template <typename InPortalType>
-    VTKM_EXEC void operator()(vtkm::Id key,
-                              vtkm::Id value1,
+    template <typename KeyType,
+              typename InValue1,
+              typename InPortalType,
+              typename OutValue1,
+              typename OutValue2>
+    VTKM_EXEC void operator()(KeyType key,
+                              InValue1 value1,
                               vtkm::Id lowerBounds,
                               vtkm::Id visitIndex,
                               const InPortalType& value2,
-                              vtkm::Id& keyOut,
-                              vtkm::Id& value1Out,
-                              vtkm::Id& value2Out) const
+                              KeyType& keyOut,
+                              OutValue1& value1Out,
+                              OutValue2& value2Out) const
     {
       auto v2 = value2.Get(lowerBounds + visitIndex);
       keyOut = key;
@@ -102,4 +106,4 @@ public:
     mergeDisp.Invoke(key1, value1, lbs, value2, keyOut, value1Out, value2Out);
   };
 };
-#endif //vtk_m_worklet_InnerJoin_h
+#endif //vtk_m_worklet_connectivity_InnerJoin_h

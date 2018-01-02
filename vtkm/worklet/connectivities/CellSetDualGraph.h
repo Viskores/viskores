@@ -22,6 +22,10 @@
 #define vtk_m_worklet_CellSetDualGraph_h
 
 #include <vtkm/cont/CellSetSingleType.h>
+#include <vtkm/exec/CellEdge.h>
+#include <vtkm/worklet/DispatcherMapTopology.h>
+#include <vtkm/worklet/ScatterCounting.h>
+#include <vtkm/worklet/WorkletMapTopology.h>
 
 struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
 {
@@ -124,7 +128,7 @@ public:
   }
 
   template <typename T>
-  void Run(vtkm::cont::CellSetSingleType<T>& cellSet,
+  void Run(const vtkm::cont::CellSetSingleType<T>& cellSet,
            vtkm::cont::ArrayHandle<vtkm::Id>& numIndicesArray,
            vtkm::cont::ArrayHandle<vtkm::Id>& indexOffsetArray,
            vtkm::cont::ArrayHandle<vtkm::Id>& connectivityArray) const
@@ -134,17 +138,9 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> cellIds;
     vtkm::cont::ArrayHandle<vtkm::Id2> cellEdges;
     EdgeToCellConnectivity(cellSet, cellIds, cellEdges);
-    //    for (int i = 0; i < cellIds.GetNumberOfValues(); i++) {
-    //      std::cout << cellIds.GetPortalConstControl().Get(i) << " "
-    //        << cellEdges.GetPortalConstControl().Get(i) << std::endl;
-    //    }
 
     // sort cell ids by cell edges, this groups cells by cell edges
     Algorithm::SortByKey(cellEdges, cellIds);
-    //    for (int i = 0; i < cellIds.GetNumberOfValues(); i++) {
-    //      std::cout << cellEdges.GetPortalConstControl().Get(i) << " "
-    //        << cellIds.GetPortalConstControl().Get(i) << std::endl;
-    //    }
 
     // count how many times an edge is shared by cells.
     vtkm::cont::ArrayHandle<vtkm::Id2> uniqueEdges;
@@ -155,26 +151,14 @@ public:
       uniqueEdges,
       uniqueEdgeDegree,
       vtkm::Add());
-    //    for (int i = 0; i < uniqueEdges.GetNumberOfValues(); i++) {
-    //      std::cout << uniqueEdges.GetPortalConstControl().Get(i) << " "
-    //        << uniqueEdgeDegree.GetPortalConstControl().Get(i) << std::endl;
-    //    }
 
     // Extract edges shared by two cells
     vtkm::cont::ArrayHandle<vtkm::Id2> sharedEdges;
     Algorithm::CopyIf(uniqueEdges, uniqueEdgeDegree, sharedEdges, degree2());
-    //    for (int i = 0; i < sharedEdges.GetNumberOfValues(); i++) {
-    //      std::cout << "graph edge: " << sharedEdges.GetPortalConstControl().Get(i)
-    //                << std::endl;
-    //    }
 
     // find shared edges within all the edges.
     vtkm::cont::ArrayHandle<vtkm::Id> lb;
     Algorithm::LowerBounds(cellEdges, sharedEdges, lb);
-    //    for (int i = 0; i < lb.GetNumberOfValues(); i++) {
-    //      std::cout << "lower bound: " << lb.GetPortalConstControl().Get(i)
-    //                << std::endl;
-    //    }
 
     // take each shared edge and the cells to create 2 edges of the dual graph
     vtkm::cont::ArrayHandle<vtkm::Id> connFrom;
@@ -184,19 +168,8 @@ public:
     vtkm::worklet::DispatcherMapField<CellToCellConnectivity> c2cDisp;
     c2cDisp.Invoke(lb, cellIds, connFrom, connTo);
 
-    //    for (int i = 0; i < connFrom.GetNumberOfValues(); i++) {
-    //      std::cout << "from cell: " << connFrom.GetPortalConstControl().Get(i)
-    //                << ", to cell: " << connTo.GetPortalConstControl().Get(i)
-    //                << std::endl;
-    //    }
-
-    // Turn
+    // Turn dual graph into Compressed Sparse Row format
     Algorithm::SortByKey(connFrom, connTo);
-    //    for (int i = 0; i < connFrom.GetNumberOfValues(); i++) {
-    //      std::cout << "from cell: " << connFrom.GetPortalConstControl().Get(i)
-    //                << ", to cell: " << connTo.GetPortalConstControl().Get(i)
-    //                << std::endl;
-    //    }
     Algorithm::Copy(connTo, connectivityArray);
 
     vtkm::cont::ArrayHandle<vtkm::Id> dualGraphVertices;
@@ -206,12 +179,6 @@ public:
       dualGraphVertices,
       numIndicesArray,
       vtkm::Add());
-    //    for (int i = 0; i < dualGraphVertices.GetNumberOfValues(); i++) {
-    //      std::cout << "dual graph vertex: " << dualGraphVertices.GetPortalConstControl().Get(i)
-    //                << ", degree: " << numIndicesArray.GetPortalConstControl().Get(i)
-    //                << std::endl;
-    //    }
-
     Algorithm::ScanExclusive(numIndicesArray, indexOffsetArray);
   }
 };
