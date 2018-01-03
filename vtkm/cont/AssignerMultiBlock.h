@@ -21,10 +21,14 @@
 #define vtk_m_cont_AssignerMultiBlock_h
 
 #include <vtkm/internal/Configure.h>
-#if defined(VTKM_ENABLE_MPI)
 
-#include <diy/assigner.hpp>
+#if defined(VTKM_ENABLE_MPI)
 #include <vtkm/cont/MultiBlock.h>
+
+// clang-format off
+#include <vtkm/thirdparty/diy/Configure.h>
+#include VTKM_DIY(diy/assigner.hpp)
+// clang-format on
 
 namespace vtkm
 {
