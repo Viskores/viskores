@@ -159,12 +159,13 @@ mark_as_advanced(
   VTKm_EXECUTABLE_OUTPUT_PATH
   VTKm_LIBRARY_OUTPUT_PATH)
 
-#-----------------------------------------------------------------------------
-# Add "meta" tests that check the state of the repository
-# SystemInformation prints out information about the current configuration
-# CopyrightStatement checks that the copyright statement is in all source files
-# SourceInBuild checks that all source files are listed in the build
 if (VTKm_ENABLE_TESTING)
+
+  #-----------------------------------------------------------------------------
+  # Add "meta" tests that check the state of the repository
+  # SystemInformation prints out information about the current configuration
+  # CopyrightStatement checks that the copyright statement is in all source files
+  # SourceInBuild checks that all source files are listed in the build
   add_test(NAME SystemInformation
     COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" "-DVTKm_BINARY_DIR=${VTKm_BINARY_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmSystemInformation.cmake"
     )
@@ -174,6 +175,15 @@ if (VTKm_ENABLE_TESTING)
   add_test(NAME SourceInBuild
     COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInBuild.cmake"
     )
+
+  #-----------------------------------------------------------------------------
+  # Find the Python interpreter, which we will use during the build process
+  find_package(PythonInterp)
+
+  #-----------------------------------------------------------------------------
+  # Find Pyexpander in case somebody wants to update the auto generated
+  # faux variadic template code
+  find_package(Pyexpander)
 endif (VTKm_ENABLE_TESTING)
 
 #-----------------------------------------------------------------------------
@@ -187,15 +197,6 @@ check_type_size(short VTKm_SIZE_SHORT BUILTIN_TYPES_ONLY)
 check_type_size(int VTKm_SIZE_INT BUILTIN_TYPES_ONLY)
 check_type_size(long VTKm_SIZE_LONG BUILTIN_TYPES_ONLY)
 check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
-
-#-----------------------------------------------------------------------------
-# Find the Python interpreter, which we will use during the build process
-find_package(PythonInterp)
-
-#-----------------------------------------------------------------------------
-# Find Pyexpander in case somebody wants to update the auto generated
-# faux variadic template code
-find_package(Pyexpander)
 
 #-----------------------------------------------------------------------------
 # Add subdirectories

@@ -38,7 +38,24 @@ endfunction(vtkm_get_kit_name)
 
 #-----------------------------------------------------------------------------
 function(vtkm_pyexpander_generated_file)
-  #This should go in a separate cmake file
+  # If pyexpander is available, add targets to build and check
+  if(PYEXPANDER_FOUND AND PYTHONINTERP_FOUND)
+    add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}.checked
+      COMMAND ${CMAKE_COMMAND}
+        -DPYTHON_EXECUTABLE=${PYTHON_EXECUTABLE}
+        -DPYEXPANDER_COMMAND=${PYEXPANDER_COMMAND}
+        -DSOURCE_FILE=${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
+        -DGENERATED_FILE=${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}
+        -P ${VTKm_CMAKE_MODULE_PATH}/VTKmCheckPyexpander.cmake
+      MAIN_DEPENDENCY ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}.in
+      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${generated_file_name}
+      COMMENT "Checking validity of ${generated_file_name}"
+      )
+    add_custom_target(check_${generated_file_name} ALL
+      DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${generated_file_name}.checked
+      )
+  endif()
 endfunction(vtkm_pyexpander_generated_file)
 
 #-----------------------------------------------------------------------------
