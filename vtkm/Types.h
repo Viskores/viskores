@@ -516,22 +516,6 @@ public:
   VTKM_EXEC_CONT
   bool operator!=(const DerivedClass& other) const { return !(this->operator==(other)); }
 
-  VTKM_EXEC_CONT
-  ComponentType Dot(const VecBaseCommon<ComponentType, DerivedClass>& other) const
-  {
-    // Why the static_cast here and below? Because * on small integers (char,
-    // short) promotes the result to a 32-bit int. After helpfully promoting
-    // the width of the result, some compilers then warn you about casting it
-    // back to the type you were expecting in the first place. The static_cast
-    // suppresses this warning.
-    ComponentType result = static_cast<ComponentType>(this->Component(0) * other.Component(0));
-    for (vtkm::IdComponent i = 1; i < this->NumComponents(); ++i)
-    {
-      result = static_cast<ComponentType>(result + this->Component(i) * other.Component(i));
-    }
-    return result;
-  }
-
 #if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
@@ -1241,46 +1225,85 @@ VTKM_EXEC_CONT static inline vtkm::VecCConst<T> make_VecC(const T* array, vtkm::
   return vtkm::VecCConst<T>(array, size);
 }
 
-// A pre-declaration of vtkm::Pair so that classes templated on them can refer
-// to it. The actual implementation is in vtkm/Pair.h.
-template <typename U, typename V>
-struct Pair;
-
-template <typename T, vtkm::IdComponent Size>
-static inline VTKM_EXEC_CONT T dot(const vtkm::Vec<T, Size>& a, const vtkm::Vec<T, Size>& b)
+namespace detail
 {
-  T result = T(a[0] * b[0]);
-  for (vtkm::IdComponent i = 1; i < Size; ++i)
+template <typename T>
+struct DotType
+{
+  //results when < 32bit can be float if somehow we are using float16/float8, otherwise is
+  // int32 or uint32 depending on if it signed or not.
+  using float_type = vtkm::Float32;
+  using integer_type =
+    typename std::conditional<std::is_signed<T>::value, vtkm::Int32, vtkm::UInt32>::type;
+  using promote_type =
+    typename std::conditional<std::is_integral<T>::value, integer_type, float_type>::type;
+  using type =
+    typename std::conditional<(sizeof(T) < sizeof(vtkm::Float32)), promote_type, T>::type;
+};
+
+template <typename T>
+static inline VTKM_EXEC_CONT typename DotType<typename T::ComponentType>::type vec_dot(const T& a,
+                                                                                       const T& b)
+{
+  using U = typename DotType<typename T::ComponentType>::type;
+  U result = a[0] * b[0];
+  for (vtkm::IdComponent i = 1; i < a.GetNumberOfComponents(); ++i)
   {
-    result = T(result + a[i] * b[i]);
+    result = result + a[i] * b[i];
   }
   return result;
 }
-
-template <typename T>
-static inline VTKM_EXEC_CONT T dot(const vtkm::Vec<T, 2>& a, const vtkm::Vec<T, 2>& b)
+template <typename T, vtkm::IdComponent Size>
+static inline VTKM_EXEC_CONT typename DotType<T>::type vec_dot(const vtkm::Vec<T, Size>& a,
+                                                               const vtkm::Vec<T, Size>& b)
 {
-  return T((a[0] * b[0]) + (a[1] * b[1]));
+  using U = typename DotType<T>::type;
+  U result = a[0] * b[0];
+  for (vtkm::IdComponent i = 1; i < Size; ++i)
+  {
+    result = result + a[i] * b[i];
+  }
+  return result;
+}
 }
 
 template <typename T>
-static inline VTKM_EXEC_CONT T dot(const vtkm::Vec<T, 3>& a, const vtkm::Vec<T, 3>& b)
+static inline VTKM_EXEC_CONT auto dot(const T& a, const T& b) -> decltype(detail::vec_dot(a, b))
 {
-  return T((a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]));
+  return detail::vec_dot(a, b);
 }
-
 template <typename T>
-static inline VTKM_EXEC_CONT T dot(const vtkm::Vec<T, 4>& a, const vtkm::Vec<T, 4>& b)
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 2>& a,
+                                                                   const vtkm::Vec<T, 2>& b)
 {
-  return T((a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]) + (a[3] * b[3]));
+  return (a[0] * b[0]) + (a[1] * b[1]);
 }
-
-template <typename T, typename VecType>
-static inline VTKM_EXEC_CONT T dot(const vtkm::detail::VecBaseCommon<T, VecType>& a,
-                                   const vtkm::detail::VecBaseCommon<T, VecType>& b)
+template <typename T>
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 3>& a,
+                                                                   const vtkm::Vec<T, 3>& b)
 {
-  return a.Dot(b);
+  return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
 }
+template <typename T>
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 4>& a,
+                                                                   const vtkm::Vec<T, 4>& b)
+{
+  return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]) + (a[3] * b[3]);
+}
+// Integer types of a width less than an integer get implicitly casted to
+// an integer when doing a multiplication.
+#define VTK_M_SCALAR_DOT(stype)                                                                    \
+  static inline VTKM_EXEC_CONT detail::DotType<stype>::type dot(stype a, stype b) { return a * b; }
+VTK_M_SCALAR_DOT(vtkm::Int8)
+VTK_M_SCALAR_DOT(vtkm::UInt8)
+VTK_M_SCALAR_DOT(vtkm::Int16)
+VTK_M_SCALAR_DOT(vtkm::UInt16)
+VTK_M_SCALAR_DOT(vtkm::Int32)
+VTK_M_SCALAR_DOT(vtkm::UInt32)
+VTK_M_SCALAR_DOT(vtkm::Int64)
+VTK_M_SCALAR_DOT(vtkm::UInt64)
+VTK_M_SCALAR_DOT(vtkm::Float32)
+VTK_M_SCALAR_DOT(vtkm::Float64)
 
 template <typename T, vtkm::IdComponent Size>
 VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, Size>& a)
@@ -1340,22 +1363,10 @@ VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, 4>& a)
   return a[0] * a[1] * a[2] * a[3];
 }
 
-// Integer types of a width less than an integer get implicitly casted to
-// an integer when doing a multiplication.
-#define VTK_M_INTEGER_PROMOTION_SCALAR_DOT(type)                                                   \
-  static inline VTKM_EXEC_CONT type dot(type a, type b) { return static_cast<type>(a * b); }
-VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::Int8)
-VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::UInt8)
-VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::Int16)
-VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::UInt16)
-#define VTK_M_SCALAR_DOT(type)                                                                     \
-  static inline VTKM_EXEC_CONT type dot(type a, type b) { return a * b; }
-VTK_M_SCALAR_DOT(vtkm::Int32)
-VTK_M_SCALAR_DOT(vtkm::UInt32)
-VTK_M_SCALAR_DOT(vtkm::Int64)
-VTK_M_SCALAR_DOT(vtkm::UInt64)
-VTK_M_SCALAR_DOT(vtkm::Float32)
-VTK_M_SCALAR_DOT(vtkm::Float64)
+// A pre-declaration of vtkm::Pair so that classes templated on them can refer
+// to it. The actual implementation is in vtkm/Pair.h.
+template <typename U, typename V>
+struct Pair;
 
 } // End of namespace vtkm
 
