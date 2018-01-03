@@ -42,6 +42,57 @@ function(vtkm_pyexpander_generated_file)
 endfunction(vtkm_pyexpander_generated_file)
 
 #-----------------------------------------------------------------------------
+function(vtkm_add_header_build_test name dir_prefix use_cuda)
+  set(hfiles ${ARGN})
+
+  set(srcs)
+  foreach (header ${ARGN})
+    get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
+
+    if( NOT cant_be_tested )
+      string(REPLACE "${CMAKE_CURRENT_BINARY_DIR}" "" header "${header}")
+      get_filename_component(headername ${header} NAME_WE)
+      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.cxx)
+      configure_file(${VTKm_SOURCE_DIR}/CMake/TestBuild.cxx.in ${src} @ONLY)
+      list(APPEND srcs ${src})
+    endif()
+  endforeach (header)
+
+  #only attempt to add a test build executable if we have any headers to
+  #test. this might not happen when everything depends on thrust.
+  list(LENGTH srcs num_srcs)
+
+  if (${num_srcs} EQUAL 0)
+    return()
+  endif()
+
+  if(NOT TARGET TestBuild_${name})
+    add_library(TestBuild_${name} STATIC ${srcs} ${hfiles})
+    target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags)
+  else()
+    target_sources(TestBuild_${name} PRIVATE ${srcs})
+  endif()
+
+  set_source_files_properties(${hfiles}
+    PROPERTIES HEADER_FILE_ONLY TRUE
+    )
+  if(use_cuda)
+    set_source_files_properties(${srcs}
+      PROPERTIES LANGUAGE "CUDA"
+      )
+  endif()
+
+  # Send the libraries created for test builds to their own directory so as to
+  # not polute the directory with useful libraries.
+  set_target_properties(TestBuild_${name} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+    LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+    RUNTIME_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+    )
+
+endfunction()
+
+#-----------------------------------------------------------------------------
 function(vtkm_generate_export_header lib_name)
   # Get the location of this library in the directory structure
   # export headers work on the directory structure more than the lib_name
@@ -102,8 +153,22 @@ function(vtkm_declare_headers)
     ${ARGN}
     )
 
+  #The testable keyword allows the caller to turn off the header testing,
+  #mainly used so that backends can be installed even when they can't be
+  #built on the machine.
+  #Since this is an optional property not setting it means you do want testing
+  if(NOT DEFINED VTKm_DH_TESTABLE)
+      set(VTKm_DH_TESTABLE ON)
+  endif()
+
   set(hfiles ${VTKm_DH_UNPARSED_ARGUMENTS})
   vtkm_get_kit_name(name dir_prefix)
+
+  #only do header testing if enable testing is turned on
+  if (VTKm_ENABLE_TESTING AND VTKm_DH_TESTABLE)
+    vtkm_add_header_build_test(
+      "${name}" "${dir_prefix}" "${VTKm_DH_CUDA}" ${hfiles})
+  endif()
 
   vtkm_install_headers("${dir_prefix}" ${hfiles})
 endfunction(vtkm_declare_headers)
