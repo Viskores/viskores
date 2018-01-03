@@ -19456,26 +19456,6 @@ static vtkm::UInt8 CellEdges[CELL_EDGES_SIZE] = {
 };
 #undef X
 
-// index into ClipTablesIndices for each shape
-VTKM_EXEC_CONSTANT
-static vtkm::Int16 CellIndexLookup[vtkm::NUMBER_OF_CELL_SHAPES] = {
-  -1,  //  0 = vtkm::CELL_SHAPE_EMPTY_CELL
-  0,   //  1 = vtkm::CELL_SHAPE_VERTEX
-  -1,  //  2 = vtkm::CELL_SHAPE_POLY_VERTEX
-  2,   //  3 = vtkm::CELL_SHAPE_LINE
-  -1,  //  4 = vtkm::CELL_SHAPE_POLY_LINE
-  6,   //  5 = vtkm::CELL_SHAPE_TRIANGLE
-  -1,  //  6 = vtkm::CELL_SHAPE_TRIANGLE_STRIP
-  -1,  //  7 = vtkm::CELL_SHAPE_POLYGON
-  -1,  //  8 = vtkm::CELL_SHAPE_PIXEL
-  14,  //  9 = vtkm::CELL_SHAPE_QUAD
-  30,  // 10 = vtkm::CELL_SHAPE_TETRA
-  -1,  // 11 = vtkm::CELL_SHAPE_VOXEL
-  46,  // 12 = vtkm::CELL_SHAPE_HEXAHEDRON
-  302, // 13 = vtkm::CELL_SHAPE_WEDGE
-  366  // 14 = vtkm::CELL_SHAPE_PYRAMID
-};
-
 class ClipTables
 {
 public:
@@ -19488,6 +19468,25 @@ public:
     VTKM_EXEC
     vtkm::Id GetCaseIndex(vtkm::Id shape, vtkm::Id caseId) const
     {
+      // index into ClipTablesIndices for each shape
+      static vtkm::Int16 CellIndexLookup[vtkm::NUMBER_OF_CELL_SHAPES] = {
+        -1,  //  0 = vtkm::CELL_SHAPE_EMPTY_CELL
+        0,   //  1 = vtkm::CELL_SHAPE_VERTEX
+        -1,  //  2 = vtkm::CELL_SHAPE_POLY_VERTEX
+        2,   //  3 = vtkm::CELL_SHAPE_LINE
+        -1,  //  4 = vtkm::CELL_SHAPE_POLY_LINE
+        6,   //  5 = vtkm::CELL_SHAPE_TRIANGLE
+        -1,  //  6 = vtkm::CELL_SHAPE_TRIANGLE_STRIP
+        -1,  //  7 = vtkm::CELL_SHAPE_POLYGON
+        -1,  //  8 = vtkm::CELL_SHAPE_PIXEL
+        14,  //  9 = vtkm::CELL_SHAPE_QUAD
+        30,  // 10 = vtkm::CELL_SHAPE_TETRA
+        -1,  // 11 = vtkm::CELL_SHAPE_VOXEL
+        46,  // 12 = vtkm::CELL_SHAPE_HEXAHEDRON
+        302, // 13 = vtkm::CELL_SHAPE_WEDGE
+        366  // 14 = vtkm::CELL_SHAPE_PYRAMID
+      };
+
       vtkm::Id index = CellIndexLookup[shape];
       return this->ClipTablesIndicesPortal.Get(index + caseId);
     }

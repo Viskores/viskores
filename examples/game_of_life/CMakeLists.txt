@@ -29,7 +29,16 @@ find_package(VTKm REQUIRED
   )
 
 if(VTKm_CUDA_FOUND)
+
+  set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
+  set(old_cxx_flags ${CMAKE_CXX_FLAGS})
+  vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags)
+  vtkm_disable_troublesome_thrust_warnings()
+
   cuda_add_executable(GameOfLife GameOfLife.cu LoadShaders.h)
+
+  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
+  set(CMAKE_CXX_FLAGS ${old_cxx_flags})
 else()
   add_executable(GameOfLife GameOfLife.cxx LoadShaders.h)
 endif()

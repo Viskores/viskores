@@ -84,7 +84,6 @@
 #ifndef vtk_m_worklet_contourtree_active_edge_transferrer_h
 #define vtk_m_worklet_contourtree_active_edge_transferrer_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm

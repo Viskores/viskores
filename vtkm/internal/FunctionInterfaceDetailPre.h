@@ -76,12 +76,16 @@ struct ParameterContainer;
 template <typename R>
 struct ParameterContainer<R()>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
 };
 
 template <typename R,
           typename P1>
 struct ParameterContainer<R(P1)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
 };
 
@@ -90,6 +94,8 @@ template <typename R,
           typename P2>
 struct ParameterContainer<R(P1, P2)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
 };
@@ -100,6 +106,8 @@ template <typename R,
           typename P3>
 struct ParameterContainer<R(P1, P2, P3)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -112,6 +120,8 @@ template <typename R,
           typename P4>
 struct ParameterContainer<R(P1, P2, P3, P4)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -126,6 +136,8 @@ template <typename R,
           typename P5>
 struct ParameterContainer<R(P1, P2, P3, P4, P5)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -142,6 +154,8 @@ template <typename R,
           typename P6>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -160,6 +174,8 @@ template <typename R,
           typename P7>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -180,6 +196,8 @@ template <typename R,
           typename P8>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -202,6 +220,8 @@ template <typename R,
           typename P9>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -226,6 +246,8 @@ template <typename R,
           typename P10>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;

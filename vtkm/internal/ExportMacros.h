@@ -34,12 +34,10 @@
 #else
 #define VTKM_SUPPRESS_EXEC_WARNINGS #pragma hd_warning_disable
 #endif
-#define VTKM_EXEC_CONSTANT __device__ __constant__
 #else
 #define VTKM_EXEC
 #define VTKM_EXEC_CONT
 #define VTKM_SUPPRESS_EXEC_WARNINGS
-#define VTKM_EXEC_CONSTANT
 #endif
 
 #define VTKM_CONT

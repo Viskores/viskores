@@ -30,6 +30,10 @@ set(benchmark_headers
   Benchmarker.h
   )
 
+if(VTKm_ENABLE_RENDERING)
+  list(APPEND benchmark_srcs BenchmarkRayTracing.cxx)
+endif()
+
 vtkm_save_benchmarks(${benchmark_srcs}
   HEADERS ${benchmark_headers}
   )

@@ -56,7 +56,7 @@ void ColorBarAnnotation::Render(const vtkm::rendering::Camera& camera,
 
   canvas.AddColorBar(bounds, this->ColorTable, true);
 
-  this->Axis.SetColor(vtkm::rendering::Color(1, 1, 1));
+  this->Axis.SetColor(canvas.GetForegroundColor());
   this->Axis.SetLineWidth(1);
   this->Axis.SetScreenPosition(bounds.X.Min, bounds.Y.Min, bounds.X.Max, bounds.Y.Min);
   this->Axis.SetMajorTickSize(0, .02, 1.0);

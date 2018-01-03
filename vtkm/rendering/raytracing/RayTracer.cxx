@@ -234,14 +234,14 @@ public:
   VTKM_CONT void run(Ray<Precision>& rays,
                      LinearBVH& bvh,
                      vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
-                     const vtkm::cont::Field* scalarField,
+                     vtkm::cont::Field& scalarField,
                      const vtkm::Range& scalarRange)
   {
-    bool isSupportedField = (scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
-                             scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+    bool isSupportedField = (scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
+                             scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
     if (!isSupportedField)
       throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
-    bool isAssocPoints = scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    bool isAssocPoints = scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
 
     vtkm::worklet::DispatcherMapField<CalculateNormals, Device>(CalculateNormals(bvh.LeafNodes))
       .Invoke(rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, coordsHandle);
@@ -251,14 +251,14 @@ public:
       vtkm::worklet::DispatcherMapField<LerpScalar<Precision>, Device>(
         LerpScalar<Precision>(
           bvh.LeafNodes, vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.U, rays.V, rays.Scalar, *scalarField);
+        .Invoke(rays.HitIdx, rays.U, rays.V, rays.Scalar, scalarField);
     }
     else
     {
       vtkm::worklet::DispatcherMapField<NodalScalar<Precision>, Device>(
         NodalScalar<Precision>(
           bvh.LeafNodes, vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.Scalar, *scalarField);
+        .Invoke(rays.HitIdx, rays.Scalar, scalarField);
     }
   } // Run
 
@@ -398,14 +398,14 @@ Camera& RayTracer::GetCamera()
 
 void RayTracer::SetData(const vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
                         const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
-                        const vtkm::cont::Field& scalarField,
+                        vtkm::cont::Field& scalarField,
                         const vtkm::Id& numberOfTriangles,
                         const vtkm::Range& scalarRange,
                         const vtkm::Bounds& dataBounds)
 {
   CoordsHandle = coordsHandle;
   Indices = indices;
-  ScalarField = &scalarField;
+  ScalarField = scalarField;
   NumberOfTriangles = numberOfTriangles;
   ScalarRange = scalarRange;
   DataBounds = dataBounds;

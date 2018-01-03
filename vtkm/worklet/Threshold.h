@@ -92,7 +92,7 @@ public:
   {
   public:
     typedef void ControlSignature(CellSetIn cellset,
-                                  FieldInTo<Scalar> scalars,
+                                  FieldInTo<ScalarAll> scalars,
                                   FieldOut<BoolType> passFlags);
 
     typedef _3 ExecutionSignature(_2);

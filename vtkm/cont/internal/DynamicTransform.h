@@ -48,28 +48,28 @@ class CellSetPermutation;
 /// DynamicObject's CastAndCall, but specializations of this function exist for
 /// other classes (e.g. Field, CoordinateSystem, ArrayHandle).
 template <typename DynamicObject, typename Functor, typename... Args>
-void CastAndCall(const DynamicObject& dynamicObject, const Functor& f, Args&&... args)
+void CastAndCall(const DynamicObject& dynamicObject, Functor&& f, Args&&... args)
 {
-  dynamicObject.CastAndCall(f, std::forward<Args>(args)...);
+  dynamicObject.CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
 }
 
 /// A specialization of CastAndCall for basic CoordinateSystem to make
 /// it be treated just like any other dynamic object
 // actually implemented in vtkm/cont/CoordinateSystem
 template <typename Functor, typename... Args>
-void CastAndCall(const CoordinateSystem& coords, const Functor& f, Args&&... args);
+void CastAndCall(const CoordinateSystem& coords, Functor&& f, Args&&... args);
 
 /// A specialization of CastAndCall for basic Field to make
 /// it be treated just like any other dynamic object
 // actually implemented in vtkm/cont/Field
 template <typename Functor, typename... Args>
-void CastAndCall(const vtkm::cont::Field& field, const Functor& f, Args&&... args);
+void CastAndCall(const vtkm::cont::Field& field, Functor&& f, Args&&... args);
 
 /// A specialization of CastAndCall for basic ArrayHandle types,
 /// Since the type is already known no deduction is needed.
 /// This specialization is used to simplify numerous worklet algorithms
 template <typename T, typename U, typename Functor, typename... Args>
-void CastAndCall(const vtkm::cont::ArrayHandle<T, U>& handle, const Functor& f, Args&&... args)
+void CastAndCall(const vtkm::cont::ArrayHandle<T, U>& handle, Functor&& f, Args&&... args)
 {
   f(handle, std::forward<Args>(args)...);
 }
@@ -78,9 +78,7 @@ void CastAndCall(const vtkm::cont::ArrayHandle<T, U>& handle, const Functor& f, 
 /// Since the type is already known no deduction is needed.
 /// This specialization is used to simplify numerous worklet algorithms
 template <vtkm::IdComponent Dim, typename Functor, typename... Args>
-void CastAndCall(const vtkm::cont::CellSetStructured<Dim>& cellset,
-                 const Functor& f,
-                 Args&&... args)
+void CastAndCall(const vtkm::cont::CellSetStructured<Dim>& cellset, Functor&& f, Args&&... args)
 {
   f(cellset, std::forward<Args>(args)...);
 }
@@ -90,7 +88,7 @@ void CastAndCall(const vtkm::cont::CellSetStructured<Dim>& cellset,
 /// This specialization is used to simplify numerous worklet algorithms
 template <typename ConnectivityStorageTag, typename Functor, typename... Args>
 void CastAndCall(const vtkm::cont::CellSetSingleType<ConnectivityStorageTag>& cellset,
-                 const Functor& f,
+                 Functor&& f,
                  Args&&... args)
 {
   f(cellset, std::forward<Args>(args)...);
@@ -101,7 +99,7 @@ void CastAndCall(const vtkm::cont::CellSetSingleType<ConnectivityStorageTag>& ce
 /// This specialization is used to simplify numerous worklet algorithms
 template <typename T, typename S, typename U, typename V, typename Functor, typename... Args>
 void CastAndCall(const vtkm::cont::CellSetExplicit<T, S, U, V>& cellset,
-                 const Functor& f,
+                 Functor&& f,
                  Args&&... args)
 {
   f(cellset, std::forward<Args>(args)...);
@@ -112,7 +110,7 @@ void CastAndCall(const vtkm::cont::CellSetExplicit<T, S, U, V>& cellset,
 /// This specialization is used to simplify numerous worklet algorithms
 template <typename PermutationType, typename CellSetType, typename Functor, typename... Args>
 void CastAndCall(const vtkm::cont::CellSetPermutation<PermutationType, CellSetType>& cellset,
-                 const Functor& f,
+                 Functor&& f,
                  Args&&... args)
 {
   f(cellset, std::forward<Args>(args)...);

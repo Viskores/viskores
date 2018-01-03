@@ -28,7 +28,7 @@ template <typename DeviceAdapter>
 class CellSetConnectivity
 {
 public:
-  template <template <class> typename CellSetType, typename T>
+  template <template <typename> class CellSetType, typename T>
   void Run(const CellSetType<T>& cellSet, vtkm::cont::ArrayHandle<vtkm::Id>& componentArray) const
   {
     vtkm::cont::ArrayHandle<vtkm::Id> numIndicesArray;

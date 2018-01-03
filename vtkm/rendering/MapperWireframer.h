@@ -47,6 +47,7 @@ public:
 
   bool GetShowInternalZones() const;
   void SetShowInternalZones(bool showInternalZones);
+  void SetCompositeBackground(bool on);
 
   bool GetIsOverlay() const;
   void SetIsOverlay(bool isOverlay);

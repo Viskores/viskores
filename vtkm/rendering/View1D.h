@@ -35,13 +35,15 @@ public:
   View1D(const vtkm::rendering::Scene& scene,
          const vtkm::rendering::Mapper& mapper,
          const vtkm::rendering::Canvas& canvas,
-         const vtkm::rendering::Color& backgroundColor = vtkm::rendering::Color(0, 0, 0, 1));
+         const vtkm::rendering::Color& backgroundColor = vtkm::rendering::Color(0, 0, 0, 1),
+         const vtkm::rendering::Color& foregroundColor = vtkm::rendering::Color(1, 1, 1, 1));
 
   View1D(const vtkm::rendering::Scene& scene,
          const vtkm::rendering::Mapper& mapper,
          const vtkm::rendering::Canvas& canvas,
          const vtkm::rendering::Camera& camera,
-         const vtkm::rendering::Color& backgroundColor = vtkm::rendering::Color(0, 0, 0, 1));
+         const vtkm::rendering::Color& backgroundColor = vtkm::rendering::Color(0, 0, 0, 1),
+         const vtkm::rendering::Color& foregroundColor = vtkm::rendering::Color(1, 1, 1, 1));
 
   ~View1D();
 

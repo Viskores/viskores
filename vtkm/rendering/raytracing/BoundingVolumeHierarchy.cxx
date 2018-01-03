@@ -316,22 +316,22 @@ public:
   {
     this->FlatBVH = flatBVH.PrepareForOutput((LeafCount - 1) * 4, Device());
   }
-  typedef void ControlSignature(ExecObject,
-                                ExecObject,
-                                ExecObject,
-                                ExecObject,
-                                ExecObject,
-                                ExecObject);
+  typedef void ControlSignature(WholeArrayIn<Scalar>,
+                                WholeArrayIn<Scalar>,
+                                WholeArrayIn<Scalar>,
+                                WholeArrayIn<Scalar>,
+                                WholeArrayIn<Scalar>,
+                                WholeArrayIn<Scalar>);
   typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4, _5, _6);
-  template <typename StrorageType>
-  VTKM_EXEC_CONT void operator()(
-    const vtkm::Id workIndex,
-    const vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32, StrorageType>& xmin,
-    const vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32, StrorageType>& ymin,
-    const vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32, StrorageType>& zmin,
-    const vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32, StrorageType>& xmax,
-    const vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32, StrorageType>& ymax,
-    const vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32, StrorageType>& zmax) const
+
+  template <typename InputPortalType>
+  VTKM_EXEC_CONT void operator()(const vtkm::Id workIndex,
+                                 const InputPortalType& xmin,
+                                 const InputPortalType& ymin,
+                                 const InputPortalType& zmin,
+                                 const InputPortalType& xmax,
+                                 const InputPortalType& ymax,
+                                 const InputPortalType& zmax) const
   {
     //move up into the inner nodes
     vtkm::Id currentNode = LeafCount - 1 + workIndex;
@@ -780,12 +780,7 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   vtkm::worklet::DispatcherMapField<PropagateAABBs<Device>, Device>(
     PropagateAABBs<Device>(
       bvh.parent, bvh.leftChild, bvh.rightChild, primitiveCount, linearBVH.FlatBVH, atomicCounters))
-    .Invoke(vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(*bvh.xmins),
-            vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(*bvh.ymins),
-            vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(*bvh.zmins),
-            vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(*bvh.xmaxs),
-            vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(*bvh.ymaxs),
-            vtkm::exec::ExecutionWholeArrayConst<vtkm::Float32>(*bvh.zmaxs));
+    .Invoke(*bvh.xmins, *bvh.ymins, *bvh.zmins, *bvh.xmaxs, *bvh.ymaxs, *bvh.zmaxs);
 
   time = timer.GetElapsedTime();
   logger->AddLogData("propagate_aabbs", time);

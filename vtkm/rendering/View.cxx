@@ -28,13 +28,16 @@ namespace rendering
 View::View(const vtkm::rendering::Scene& scene,
            const vtkm::rendering::Mapper& mapper,
            const vtkm::rendering::Canvas& canvas,
-           const vtkm::rendering::Color& backgroundColor)
+           const vtkm::rendering::Color& backgroundColor,
+           const vtkm::rendering::Color& foregroundColor)
   : Scene(scene)
   , MapperPointer(mapper.NewCopy())
   , CanvasPointer(canvas.NewCopy())
   , WorldAnnotatorPointer(canvas.CreateWorldAnnotator())
 {
   this->CanvasPointer->SetBackgroundColor(backgroundColor);
+  this->CanvasPointer->SetForegroundColor(foregroundColor);
+  this->AxisColor = foregroundColor;
 
   vtkm::Bounds spatialBounds = this->Scene.GetSpatialBounds();
   this->Camera.ResetToBounds(spatialBounds);
@@ -52,7 +55,8 @@ View::View(const vtkm::rendering::Scene& scene,
            const vtkm::rendering::Mapper& mapper,
            const vtkm::rendering::Canvas& canvas,
            const vtkm::rendering::Camera& camera,
-           const vtkm::rendering::Color& backgroundColor)
+           const vtkm::rendering::Color& backgroundColor,
+           const vtkm::rendering::Color& foregroundColor)
   : Scene(scene)
   , MapperPointer(mapper.NewCopy())
   , CanvasPointer(canvas.NewCopy())
@@ -60,6 +64,8 @@ View::View(const vtkm::rendering::Scene& scene,
   , Camera(camera)
 {
   this->CanvasPointer->SetBackgroundColor(backgroundColor);
+  this->CanvasPointer->SetForegroundColor(foregroundColor);
+  this->AxisColor = foregroundColor;
 }
 
 View::~View()

@@ -272,8 +272,11 @@ FunctionInterface<R()>
 make_FunctionInterface(
   )
 {
-  FunctionInterface<R()> fi;
-  return fi;
+  detail::ParameterContainer<R()> container =
+    {
+    };
+
+  return FunctionInterface<R()>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -297,9 +300,12 @@ make_FunctionInterface(
   const P1& p1
   )
 {
-  FunctionInterface<R(P1)> fi;
-  fi.template SetParameter<1>(p1);
-  return fi;
+  detail::ParameterContainer<R(P1)> container =
+    {
+    p1
+    };
+
+  return FunctionInterface<R(P1)>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -325,10 +331,13 @@ make_FunctionInterface(
   const P2& p2
   )
 {
-  FunctionInterface<R(P1,P2)> fi;
-  fi.template SetParameter<1>(p1);
-  fi.template SetParameter<2>(p2);
-  return fi;
+  detail::ParameterContainer<R(P1,P2)> container =
+    {
+    p1,
+    p2
+    };
+
+  return FunctionInterface<R(P1,P2)>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -356,11 +365,14 @@ make_FunctionInterface(
   const P3& p3
   )
 {
-  FunctionInterface<R(P1,P2,P3)> fi;
-  fi.template SetParameter<1>(p1);
-  fi.template SetParameter<2>(p2);
-  fi.template SetParameter<3>(p3);
-  return fi;
+  detail::ParameterContainer<R(P1,P2,P3)> container =
+    {
+    p1,
+    p2,
+    p3
+    };
+
+  return FunctionInterface<R(P1,P2,P3)>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -390,12 +402,15 @@ make_FunctionInterface(
   const P4& p4
   )
 {
-  FunctionInterface<R(P1,P2,P3,P4)> fi;
-  fi.template SetParameter<1>(p1);
-  fi.template SetParameter<2>(p2);
-  fi.template SetParameter<3>(p3);
-  fi.template SetParameter<4>(p4);
-  return fi;
+  detail::ParameterContainer<R(P1,P2,P3,P4)> container =
+    {
+    p1,
+    p2,
+    p3,
+    p4
+    };
+
+  return FunctionInterface<R(P1,P2,P3,P4)>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -427,13 +442,16 @@ make_FunctionInterface(
   const P5& p5
   )
 {
-  FunctionInterface<R(P1,P2,P3,P4,P5)> fi;
-  fi.template SetParameter<1>(p1);
-  fi.template SetParameter<2>(p2);
-  fi.template SetParameter<3>(p3);
-  fi.template SetParameter<4>(p4);
-  fi.template SetParameter<5>(p5);
-  return fi;
+  detail::ParameterContainer<R(P1,P2,P3,P4,P5)> container =
+    {
+    p1,
+    p2,
+    p3,
+    p4,
+    p5
+    };
+
+  return FunctionInterface<R(P1,P2,P3,P4,P5)>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -467,14 +485,17 @@ make_FunctionInterface(
   const P6& p6
   )
 {
-  FunctionInterface<R(P1,P2,P3,P4,P5,P6)> fi;
-  fi.template SetParameter<1>(p1);
-  fi.template SetParameter<2>(p2);
-  fi.template SetParameter<3>(p3);
-  fi.template SetParameter<4>(p4);
-  fi.template SetParameter<5>(p5);
-  fi.template SetParameter<6>(p6);
-  return fi;
+  detail::ParameterContainer<R(P1,P2,P3,P4,P5,P6)> container =
+    {
+    p1,
+    p2,
+    p3,
+    p4,
+    p5,
+    p6
+    };
+
+  return FunctionInterface<R(P1,P2,P3,P4,P5,P6)>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -510,15 +531,18 @@ make_FunctionInterface(
   const P7& p7
   )
 {
-  FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7)> fi;
-  fi.template SetParameter<1>(p1);
-  fi.template SetParameter<2>(p2);
-  fi.template SetParameter<3>(p3);
-  fi.template SetParameter<4>(p4);
-  fi.template SetParameter<5>(p5);
-  fi.template SetParameter<6>(p6);
-  fi.template SetParameter<7>(p7);
-  return fi;
+  detail::ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7)> container =
+    {
+    p1,
+    p2,
+    p3,
+    p4,
+    p5,
+    p6,
+    p7
+    };
+
+  return FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7)>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -556,16 +580,19 @@ make_FunctionInterface(
   const P8& p8
   )
 {
-  FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8)> fi;
-  fi.template SetParameter<1>(p1);
-  fi.template SetParameter<2>(p2);
-  fi.template SetParameter<3>(p3);
-  fi.template SetParameter<4>(p4);
-  fi.template SetParameter<5>(p5);
-  fi.template SetParameter<6>(p6);
-  fi.template SetParameter<7>(p7);
-  fi.template SetParameter<8>(p8);
-  return fi;
+  detail::ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8)> container =
+    {
+    p1,
+    p2,
+    p3,
+    p4,
+    p5,
+    p6,
+    p7,
+    p8
+    };
+
+  return FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8)>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -605,17 +632,20 @@ make_FunctionInterface(
   const P9& p9
   )
 {
-  FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> fi;
-  fi.template SetParameter<1>(p1);
-  fi.template SetParameter<2>(p2);
-  fi.template SetParameter<3>(p3);
-  fi.template SetParameter<4>(p4);
-  fi.template SetParameter<5>(p5);
-  fi.template SetParameter<6>(p6);
-  fi.template SetParameter<7>(p7);
-  fi.template SetParameter<8>(p8);
-  fi.template SetParameter<9>(p9);
-  return fi;
+  detail::ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)> container =
+    {
+    p1,
+    p2,
+    p3,
+    p4,
+    p5,
+    p6,
+    p7,
+    p8,
+    p9
+    };
+
+  return FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9)>{container};
 }
 
 /// \brief Create a \c FunctionInterface
@@ -657,18 +687,21 @@ make_FunctionInterface(
   const P10& p10
   )
 {
-  FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> fi;
-  fi.template SetParameter<1>(p1);
-  fi.template SetParameter<2>(p2);
-  fi.template SetParameter<3>(p3);
-  fi.template SetParameter<4>(p4);
-  fi.template SetParameter<5>(p5);
-  fi.template SetParameter<6>(p6);
-  fi.template SetParameter<7>(p7);
-  fi.template SetParameter<8>(p8);
-  fi.template SetParameter<9>(p9);
-  fi.template SetParameter<10>(p10);
-  return fi;
+  detail::ParameterContainer<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)> container =
+    {
+    p1,
+    p2,
+    p3,
+    p4,
+    p5,
+    p6,
+    p7,
+    p8,
+    p9,
+    p10
+    };
+
+  return FunctionInterface<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10)>{container};
 }
 
 

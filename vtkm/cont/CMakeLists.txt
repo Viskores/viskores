@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  Algorithm.h
   ArrayCopy.h
   ArrayHandle.h
   ArrayHandleCast.h
@@ -62,6 +63,7 @@ set(headers
   DeviceAdapterListTag.h
   DynamicArrayHandle.h
   DynamicCellSet.h
+  EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
   ErrorBadType.h
@@ -96,7 +98,9 @@ set(sources
   CellSetExplicit.cxx
   CellSetStructured.cxx
   CoordinateSystem.cxx
+  DataSet.cxx
   DynamicArrayHandle.cxx
+  EnvironmentTracker.cxx
   Field.cxx
   internal/SimplePolymorphicContainer.cxx
   MultiBlock.cxx
@@ -147,6 +151,11 @@ target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
 
 if(VTKm_ENABLE_CUDA)
   add_dependencies(vtkm_cont vtkm_cont_cuda)
+endif()
+
+if(VTKm_ENABLE_MPI)
+  # This will become a required dependency eventually.
+  target_link_libraries(vtkm_cont PUBLIC diy)
 endif()
 
 #-----------------------------------------------------------------------------

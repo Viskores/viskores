@@ -42,6 +42,7 @@ class MakeTestDataSet
 public:
   // 1D uniform datasets.
   vtkm::cont::DataSet Make1DUniformDataSet0();
+  vtkm::cont::DataSet Make1DUniformDataSet1();
   // 1D explicit datasets.
   vtkm::cont::DataSet Make1DExplicitDataSet0();
 
@@ -52,6 +53,7 @@ public:
   // 3D uniform datasets.
   vtkm::cont::DataSet Make3DUniformDataSet0();
   vtkm::cont::DataSet Make3DUniformDataSet1();
+  vtkm::cont::DataSet Make3DUniformDataSet2();
   vtkm::cont::DataSet Make3DRegularDataSet0();
   vtkm::cont::DataSet Make3DRegularDataSet1();
 
@@ -88,6 +90,20 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet0()
   vtkm::Float32 var2[nVerts] = { -1.1f, .7f, -.2f, 0.2f, -.1f, .4f };
   dsf.AddPointField(dataSet, "pointvar", var, nVerts);
   dsf.AddPointField(dataSet, "pointvar2", var2, nVerts);
+
+  return dataSet;
+}
+
+//Make another simple 1D dataset.
+inline vtkm::cont::DataSet MakeTestDataSet::Make1DUniformDataSet1()
+{
+  vtkm::cont::DataSetBuilderUniform dsb;
+  const vtkm::Id nVerts = 6;
+  vtkm::cont::DataSet dataSet = dsb.Create(nVerts);
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  vtkm::Float32 var[nVerts] = { 1.0e3f, 5.e5f, 2.e8f, 1.e10f, 2e12f, 3e15f };
+  dsf.AddPointField(dataSet, "pointvar", var, nVerts);
 
   return dataSet;
 }
@@ -230,6 +246,32 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet1()
   return dataSet;
 }
 
+inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
+{
+  const vtkm::Id base_size = 256;
+  vtkm::cont::DataSetBuilderUniform dsb;
+  vtkm::Id3 dimensions(base_size, base_size, base_size);
+  vtkm::cont::DataSet dataSet = dsb.Create(dimensions);
+
+  vtkm::cont::DataSetFieldAdd dsf;
+  const vtkm::Id nVerts = base_size * base_size * base_size;
+  vtkm::Float32* pointvar = new vtkm::Float32[nVerts];
+
+  for (vtkm::Int32 z = 0; z < base_size; ++z)
+    for (vtkm::Int32 y = 0; y < base_size; ++y)
+      for (vtkm::Int32 x = 0; x < base_size; ++x)
+      {
+        vtkm::Int32 index = z * base_size * base_size + y * base_size + x;
+        pointvar[index] = vtkm::Sqrt(vtkm::Float32(x * x + y * y + z * z));
+      }
+
+  dsf.AddPointField(dataSet, "pointvar", pointvar, nVerts);
+
+  delete[] pointvar;
+
+  return dataSet;
+}
+
 inline vtkm::cont::DataSet MakeTestDataSet::Make2DRectilinearDataSet0()
 {
   vtkm::cont::DataSetBuilderRectilinear dsb;
@@ -272,11 +314,13 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DRegularDataSet0()
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   //Set point scalar
-  dataSet.AddField(Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  dataSet.AddField(
+    make_Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts, vtkm::CopyFlag::On));
 
   //Set cell scalar
   vtkm::Float32 cellvar[4] = { 100.1f, 100.2f, 100.3f, 100.4f };
-  dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 4));
+  dataSet.AddField(make_Field(
+    "cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 4, vtkm::CopyFlag::On));
 
   static const vtkm::IdComponent dim = 3;
   vtkm::cont::CellSetStructured<dim> cellSet("cells");
@@ -297,11 +341,13 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DRegularDataSet1()
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   //Set point scalar
-  dataSet.AddField(Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  dataSet.AddField(
+    make_Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts, vtkm::CopyFlag::On));
 
   //Set cell scalar
   vtkm::Float32 cellvar[1] = { 100.1f };
-  dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 1));
+  dataSet.AddField(make_Field(
+    "cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 1, vtkm::CopyFlag::On));
 
   static const vtkm::IdComponent dim = 3;
   vtkm::cont::CellSetStructured<dim> cellSet("cells");
@@ -541,7 +587,8 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet1()
                                     CoordType(2, 2, 0) };
   vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f };
 
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
+  dataSet.AddCoordinateSystem(
+    vtkm::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, vtkm::CopyFlag::On));
   vtkm::cont::CellSetExplicit<> cellSet("cells");
   cellSet.PrepareToAddCells(2, 7);
   cellSet.AddCell(vtkm::CELL_SHAPE_TRIANGLE, 3, make_Vec<vtkm::Id>(0, 1, 2));
@@ -550,11 +597,13 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet1()
   dataSet.AddCellSet(cellSet);
 
   //Set point scalar
-  dataSet.AddField(Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  dataSet.AddField(
+    make_Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts, vtkm::CopyFlag::On));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = { 100.1f, 100.2f };
-  dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
+  dataSet.AddField(make_Field(
+    "cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2, vtkm::CopyFlag::On));
 
   return dataSet;
 }
@@ -577,14 +626,17 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet2()
   };
   vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f, 70.2f, 80.3f };
 
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
+  dataSet.AddCoordinateSystem(
+    vtkm::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, vtkm::CopyFlag::On));
 
   //Set point scalar
-  dataSet.AddField(Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  dataSet.AddField(
+    make_Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts, vtkm::CopyFlag::On));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = { 100.1f };
-  dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 1));
+  dataSet.AddField(make_Field(
+    "cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 1, vtkm::CopyFlag::On));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells");
   vtkm::Vec<vtkm::Id, 8> ids;
@@ -630,14 +682,17 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet4()
   vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f,
                                  70.2f, 80.3f, 90.f,  10.f,  11.f,  12.f };
 
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
+  dataSet.AddCoordinateSystem(
+    vtkm::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, vtkm::CopyFlag::On));
 
   //Set point scalar
-  dataSet.AddField(Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  dataSet.AddField(
+    make_Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts, vtkm::CopyFlag::On));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = { 100.1f, 110.f };
-  dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2));
+  dataSet.AddField(make_Field(
+    "cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 2, vtkm::CopyFlag::On));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells");
   vtkm::Vec<vtkm::Id, 8> ids;
@@ -680,14 +735,17 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet3()
   };
   vtkm::Float32 vars[nVerts] = { 10.1f, 10.1f, 10.2f, 30.2f };
 
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
+  dataSet.AddCoordinateSystem(
+    vtkm::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, vtkm::CopyFlag::On));
 
   //Set point scalar
-  dataSet.AddField(Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  dataSet.AddField(
+    make_Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts, vtkm::CopyFlag::On));
 
   //Set cell scalar
   vtkm::Float32 cellvar[2] = { 100.1f };
-  dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 1));
+  dataSet.AddField(make_Field(
+    "cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 1, vtkm::CopyFlag::On));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells");
   vtkm::Vec<vtkm::Id, 4> ids;
@@ -728,15 +786,18 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSet5()
   vtkm::Float32 vars[nVerts] = { 10.1f, 20.1f, 30.2f, 40.2f, 50.3f, 60.2f,
                                  70.2f, 80.3f, 90.f,  10.f,  11.f };
 
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
+  dataSet.AddCoordinateSystem(
+    vtkm::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, vtkm::CopyFlag::On));
 
   //Set point scalar
-  dataSet.AddField(Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts));
+  dataSet.AddField(
+    make_Field("pointvar", vtkm::cont::Field::ASSOC_POINTS, vars, nVerts, vtkm::CopyFlag::On));
 
   //Set cell scalar
   const int nCells = 4;
   vtkm::Float32 cellvar[nCells] = { 100.1f, 110.f, 120.2f, 130.5f };
-  dataSet.AddField(Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, nCells));
+  dataSet.AddField(make_Field(
+    "cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, nCells, vtkm::CopyFlag::On));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells");
   vtkm::Vec<vtkm::Id, 8> ids;
@@ -967,7 +1028,8 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DExplicitDataSetCowNose()
 
   // create DataSet
   vtkm::cont::DataSet dataSet;
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
+  dataSet.AddCoordinateSystem(
+    vtkm::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, vtkm::CopyFlag::On));
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
   connectivity.Allocate(connectivitySize);

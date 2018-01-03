@@ -71,7 +71,8 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
   pointVar.push_back(13);
   pointVar.push_back(14);
   pointVar.push_back(15);
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates, nVerts));
+  dataSet.AddCoordinateSystem(
+    vtkm::cont::make_CoordinateSystem("coordinates", coordinates, nVerts, vtkm::CopyFlag::On));
   vtkm::cont::CellSetSingleType<> cellSet("cells");
 
   vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
@@ -107,14 +108,14 @@ void RenderTests()
   typedef vtkm::rendering::View1D V1;
 
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("thermal");
+  vtkm::rendering::ColorTable colorTable("OrRd");
 
-  //vtkm::rendering::testing::Render<M, C, V3>(
-  //  maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
-  //vtkm::rendering::testing::Render<M, C, V3>(
-  //  maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
-  //vtkm::rendering::testing::Render<M, C, V3>(
-  //  maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
+  vtkm::rendering::testing::Render<M, C, V3>(
+    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
   vtkm::rendering::testing::Render<M, C, V3>(
     Make3DUniformDataSet(), "pointvar", colorTable, "uniform3D.pnm");
   vtkm::rendering::testing::Render<M, C, V2>(
@@ -130,6 +131,10 @@ void RenderTests()
   colors.push_back(vtkm::rendering::Color(0.f, 1.f, 0.f));
   vtkm::rendering::testing::Render<M, C, V1>(
     maker.Make1DUniformDataSet0(), fields, colors, "lines1D.pnm");
+  //test log y
+  vtkm::rendering::Color red = vtkm::rendering::Color::red;
+  vtkm::rendering::testing::Render<M, C, V1>(
+    maker.Make1DUniformDataSet1(), "pointvar", red, "linesLogY1D.pnm", true);
 }
 
 } //namespace

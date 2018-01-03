@@ -19,55 +19,58 @@
 ##============================================================================
 
 set(unit_tests
-#  UnitTestAverageByKey.cxx
-#  UnitTestCellAverage.cxx
-#  UnitTestCellDeepCopy.cxx
-#  UnitTestCellGradient.cxx
+  UnitTestAverageByKey.cxx
+  UnitTestCellAverage.cxx
+  UnitTestCellDeepCopy.cxx
+  UnitTestCellGradient.cxx
   UnitTestCellSetConnectivity.cpp
   UnitTestCellSetDualGraph.cxx
-#  UnitTestClipping.cxx
-#  UnitTestContourTreeUniform.cxx
-#  UnitTestCosmoTools.cxx
-#  UnitTestExternalFaces.cxx
-#  UnitTestExtractGeometry.cxx
-#  UnitTestExtractPoints.cxx
-#  UnitTestExtractStructured.cxx
-#  UnitTestFieldHistogram.cxx
-#  UnitTestFieldStatistics.cxx
+  UnitTestClipping.cxx
+  UnitTestContourTreeUniform.cxx
+  UnitTestCosmoTools.cxx
+  UnitTestCrossProduct.cxx
+  UnitTestDotProduct.cxx
+  UnitTestExternalFaces.cxx
+  UnitTestExtractGeometry.cxx
+  UnitTestExtractPoints.cxx
+  UnitTestExtractStructured.cxx
+  UnitTestFieldHistogram.cxx
+  UnitTestFieldStatistics.cxx
   UnitTestInnerJoin.cxx
-#  UnitTestKdTreeBuildNNS.cxx
-#  UnitTestKeys.cxx
-#  UnitTestMagnitude.cxx
-#  UnitTestMarchingCubes.cxx
-#  UnitTestMask.cxx
-#  UnitTestMaskPoints.cxx
-#  UnitTestNDimsEntropy.cxx
-#  UnitTestNDimsHistogram.cxx
-#  UnitTestNDimsHistMarginalization.cxx
-#  UnitTestParticleAdvection.cxx
-#  UnitTestPointElevation.cxx
-#  UnitTestPointGradient.cxx
-#  UnitTestRemoveUnusedPoints.cxx
-#  UnitTestScatterCounting.cxx
-#  UnitTestScatterPermutation.cxx
-#  UnitTestSplatKernels.cxx
-#  UnitTestStreamingSine.cxx
-#  UnitTestStreamLineUniformGrid.cxx
-#  UnitTestSurfaceNormals.cxx
-#  UnitTestTetrahedralize.cxx
-#  UnitTestThreshold.cxx
-#  UnitTestThresholdPoints.cxx
-#  UnitTestTriangulate.cxx
-#  UnitTestWholeCellSetIn.cxx
-#  UnitTestWorkletMapField.cxx
-#  UnitTestWorkletMapFieldExecArg.cxx
-#  UnitTestWorkletMapFieldWholeArray.cxx
-#  UnitTestWorkletMapPointNeighborhood.cxx
-#  UnitTestWorkletMapTopologyExplicit.cxx
-#  UnitTestWorkletMapTopologyUniform.cxx
-#  UnitTestWorkletReduceByKey.cxx
-#  UnitTestVertexClustering.cxx
-#  UnitTestWaveletCompressor.cxx
+  UnitTestKdTreeBuildNNS.cxx
+  UnitTestKeys.cxx
+  UnitTestMagnitude.cxx
+  UnitTestMarchingCubes.cxx
+  UnitTestMask.cxx
+  UnitTestMaskPoints.cxx
+  UnitTestNormalize.cxx
+  UnitTestNDimsEntropy.cxx
+  UnitTestNDimsHistogram.cxx
+  UnitTestNDimsHistMarginalization.cxx
+  UnitTestParticleAdvection.cxx
+  UnitTestPointElevation.cxx
+  UnitTestPointGradient.cxx
+  UnitTestRemoveUnusedPoints.cxx
+  UnitTestScatterCounting.cxx
+  UnitTestScatterPermutation.cxx
+  UnitTestSplatKernels.cxx
+  UnitTestStreamingSine.cxx
+  UnitTestStreamLineUniformGrid.cxx
+  UnitTestSurfaceNormals.cxx
+  UnitTestTetrahedralize.cxx
+  UnitTestThreshold.cxx
+  UnitTestThresholdPoints.cxx
+  UnitTestTriangulate.cxx
+  UnitTestWholeCellSetIn.cxx
+  UnitTestWorkletMapField.cxx
+  UnitTestWorkletMapFieldExecArg.cxx
+  UnitTestWorkletMapFieldWholeArray.cxx
+  UnitTestWorkletMapPointNeighborhood.cxx
+  UnitTestWorkletMapTopologyExplicit.cxx
+  UnitTestWorkletMapTopologyUniform.cxx
+  UnitTestWorkletReduceByKey.cxx
+  UnitTestVertexClustering.cxx
+  UnitTestWaveletCompressor.cxx
  )
 
 vtkm_save_worklet_unit_tests(${unit_tests})

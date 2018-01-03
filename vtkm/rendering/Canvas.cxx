@@ -330,11 +330,21 @@ struct Canvas::CanvasInternals
     : Width(width)
     , Height(height)
   {
+    BackgroundColor.Components[0] = 0.f;
+    BackgroundColor.Components[1] = 0.f;
+    BackgroundColor.Components[2] = 0.f;
+    BackgroundColor.Components[3] = 1.f;
+
+    ForegroundColor.Components[0] = 1.f;
+    ForegroundColor.Components[1] = 1.f;
+    ForegroundColor.Components[2] = 1.f;
+    ForegroundColor.Components[3] = 1.f;
   }
 
   vtkm::Id Width;
   vtkm::Id Height;
   vtkm::rendering::Color BackgroundColor;
+  vtkm::rendering::Color ForegroundColor;
   ColorBufferType ColorBuffer;
   DepthBufferType DepthBuffer;
   vtkm::rendering::BitmapFont Font;
@@ -398,6 +408,16 @@ const vtkm::rendering::Color& Canvas::GetBackgroundColor() const
 void Canvas::SetBackgroundColor(const vtkm::rendering::Color& color)
 {
   Internals->BackgroundColor = color;
+}
+
+const vtkm::rendering::Color& Canvas::GetForegroundColor() const
+{
+  return Internals->ForegroundColor;
+}
+
+void Canvas::SetForegroundColor(const vtkm::rendering::Color& color)
+{
+  Internals->ForegroundColor = color;
 }
 
 void Canvas::Initialize()

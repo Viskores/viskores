@@ -18,7 +18,6 @@
 //  this software.
 //============================================================================
 
-#include <vector>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/NDimsEntropy.h>
 
@@ -57,11 +56,9 @@ inline VTKM_CONT vtkm::filter::Result NDEntropy::DoExecute(
 
   // Run worklet to calculate multi-variate entropy
   vtkm::Float64 entropy = ndEntropy.Run(device);
-
   vtkm::cont::DataSet outputData;
-  std::vector<vtkm::Float64> entropyHandle;
-  entropyHandle.push_back(entropy);
-  outputData.AddField(vtkm::cont::Field("Entropy", vtkm::cont::Field::ASSOC_POINTS, entropyHandle));
+  outputData.AddField(vtkm::cont::make_Field(
+    "Entropy", vtkm::cont::Field::ASSOC_POINTS, &entropy, 1, vtkm::CopyFlag::On));
 
   //return outputData;
   return vtkm::filter::Result(outputData);
