@@ -46,6 +46,12 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
   enable_language(CUDA)
 
+  #To work around https://gitlab.kitware.com/cmake/cmake/issues/17512
+  #we need to fix the CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES variable
+  if(${CMAKE_VERSION} VERSION_LESS 3.10 AND CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
+    list(APPEND CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
+  endif()
+
   add_library(vtkm::cuda UNKNOWN IMPORTED)
 
   set_target_properties(vtkm::cuda PROPERTIES
