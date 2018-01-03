@@ -21,7 +21,11 @@
 #ifndef vtk_m_worklet_connectivity_InnerJoin_h
 #define vtk_m_worklet_connectivity_InnerJoin_h
 
+#include <vtkm/cont/ArrayHandleCounting.h>
+#include <vtkm/cont/DeviceAdapter.h>
+#include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/ScatterCounting.h>
+#include <vtkm/worklet/WorkletMapField.h>
 
 template <typename DeviceAdapter>
 class InnerJoin
@@ -32,7 +36,7 @@ public:
     typedef void ControlSignature(FieldIn<>,
                                   FieldIn<>,
                                   FieldIn<>,
-                                  WholeArrayIn<vtkm::Id>,
+                                  WholeArrayIn<>,
                                   FieldOut<>,
                                   FieldOut<>,
                                   FieldOut<>);
@@ -50,19 +54,16 @@ public:
     {
     }
 
-    template <typename KeyType,
-              typename InValue1,
-              typename InPortalType,
-              typename OutValue1,
-              typename OutValue2>
+    // TODO: type trait for array portal?
+    template <typename KeyType, typename ValueType1, typename InPortalType, typename ValueType2>
     VTKM_EXEC void operator()(KeyType key,
-                              InValue1 value1,
+                              ValueType1 value1,
                               vtkm::Id lowerBounds,
                               vtkm::Id visitIndex,
                               const InPortalType& value2,
-                              KeyType& keyOut,
-                              OutValue1& value1Out,
-                              OutValue2& value2Out) const
+                              vtkm::Id& keyOut,
+                              ValueType1& value1Out,
+                              ValueType2& value2Out) const
     {
       auto v2 = value2.Get(lowerBounds + visitIndex);
       keyOut = key;

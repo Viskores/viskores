@@ -2,11 +2,8 @@
 // Created by ollie on 12/19/17.
 //
 
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
-//#include <vtkm/worklet/ScatterCounting.h>
-//#include <vtkm/worklet/WorkletMapTopology.h>
 
+#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 
 template <typename DeviceAdapter>

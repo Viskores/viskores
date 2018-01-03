@@ -76,7 +76,7 @@ public:
 class IsStar : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> index, WholeArrayIn<IdType> comp, FieldOut<bool>);
+  typedef void ControlSignature(FieldIn<IdType> index, WholeArrayIn<IdType> comp, FieldOut<>);
   typedef _3 ExecutionSignature(_1, _2);
   typedef _1 InputDomain;
 
