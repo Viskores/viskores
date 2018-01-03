@@ -90,7 +90,10 @@ if(TARGET vtkm_rendering_gl_context)
 endif()
 
 add_library(vtkm_rendering_gl_context INTERFACE)
-if(NOT VTKm_RENDERING_BACKEND STREQUAL "None")
+if(VTKm_ENABLE_GL_CONTEXT OR
+   VTKm_ENABLE_OSMESA_CONTEXT OR
+   VTKm_ENABLE_EGL_CONTEXT
+   )
   vtkm_find_gl(REQUIRED GL GLEW
                OPTIONAL
                QUIET)
