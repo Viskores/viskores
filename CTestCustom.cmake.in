@@ -20,4 +20,7 @@
 
 list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   ".*warning: ignoring loop annotation.*"
-) 
+  ".*diy.include.diy.*WShadow.*" # exclude `diy` shadow warnings.
+  ".*diy.include.diy.*note: shadowed.*" # exclude `diy` shadow warnings.
+  ".*diy.include.diy.storage.hpp.*Wunused-result.*" # this is a TODO in DIY.
+)
