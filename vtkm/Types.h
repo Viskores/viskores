@@ -437,7 +437,6 @@ public:
   using ComponentType = T;
 
 protected:
-  VTKM_EXEC_CONT
   VecBaseCommon() = default;
 
   VTKM_EXEC_CONT
@@ -665,7 +664,6 @@ public:
   static const vtkm::IdComponent NUM_COMPONENTS = Size;
 
 protected:
-  VTKM_EXEC_CONT
   VecBase() = default;
 
   VTKM_EXEC_CONT
@@ -824,7 +822,7 @@ public:
   static const vtkm::IdComponent NUM_COMPONENTS = Size;
 #endif
 
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -851,7 +849,7 @@ public:
   using ComponentType = T;
   static const vtkm::IdComponent NUM_COMPONENTS = 0;
 
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const ComponentType&) {}
 
   template <typename OtherType>
@@ -882,7 +880,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 1> : public detail::VecBase<T, 1, Vec<T, 1>>
   using Superclass = detail::VecBase<T, 1, Vec<T, 1>>;
 
 public:
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -912,7 +910,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 2> : public detail::VecBase<T, 2, Vec<T, 2>>
   using Superclass = detail::VecBase<T, 2, Vec<T, 2>>;
 
 public:
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -941,7 +939,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 3> : public detail::VecBase<T, 3, Vec<T, 3>>
   using Superclass = detail::VecBase<T, 3, Vec<T, 3>>;
 
 public:
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -972,7 +970,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 4> : public detail::VecBase<T, 4, Vec<T, 4>>
   using Superclass = detail::VecBase<T, 4, Vec<T, 4>>;
 
 public:
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {

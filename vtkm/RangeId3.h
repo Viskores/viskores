@@ -40,7 +40,6 @@ struct RangeId3
   vtkm::RangeId Y;
   vtkm::RangeId Z;
 
-  VTKM_EXEC_CONT
   RangeId3() = default;
 
   VTKM_EXEC_CONT

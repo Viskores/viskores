@@ -412,7 +412,7 @@ private:
 class VTKM_ALWAYS_EXPORT Frustum : public vtkm::ImplicitFunction
 {
 public:
-  VTKM_EXEC_CONT Frustum() = default;
+  Frustum() = default;
 
   VTKM_EXEC_CONT Frustum(const Vector points[6], const Vector normals[6])
   {

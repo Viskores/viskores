@@ -64,7 +64,6 @@ struct Pair
   ///
   SecondType second;
 
-  VTKM_EXEC_CONT
   Pair() = default;
 
   VTKM_EXEC_CONT
