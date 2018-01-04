@@ -135,14 +135,14 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
   VTKM_TEST_ASSERT(test_equal(vectorCopy, inVector), "CopyInto does not work.");
 
   {
-    ComponentType result = 0;
+    auto expected = vtkm::dot(vectorCopy, vectorCopy);
+    decltype(expected) result = 0;
     for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {
       ComponentType component = Traits::GetComponent(inVector, i);
-      result = ComponentType(result + (component * component));
+      result = result + (component * component);
     }
-    VTKM_TEST_ASSERT(test_equal(result, vtkm::dot(vectorCopy, vectorCopy)),
-                     "Got bad result for dot product");
+    VTKM_TEST_ASSERT(test_equal(result, expected), "Got bad result for dot product");
   }
 
   // This will fail to compile if the tags are wrong.

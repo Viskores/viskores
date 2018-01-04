@@ -401,8 +401,22 @@ private:
     static_assert(isAllValid::value == expectedLen::value,
                   "All arguments failed the TypeCheck pass");
 
+#if defined __NVCC__
+// Disable warning "calling a __host__ function from a __host__ __device__"
+// In some cases nv_exec_check_disable doesn't work and therefore you need
+// to use the following suppressions
+// This have been found by eigen:
+// https://github.com/RLovelett/eigen/blame/master/Eigen/src/Core/util/DisableStupidWarnings.h
+#pragma push
+#pragma diag_suppress 2737
+#pragma diag_suppress 2739
+#endif
     auto fi =
       vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
+#if defined __NVCC__
+#pragma pop
+#endif
+
     auto ivc = vtkm::internal::Invocation<ParameterInterface,
                                           ControlInterface,
                                           ExecutionInterface,

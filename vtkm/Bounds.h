@@ -46,6 +46,9 @@ struct Bounds
   Bounds() {}
 
   VTKM_EXEC_CONT
+  Bounds(const Bounds&) = default;
+
+  VTKM_EXEC_CONT
   Bounds(const vtkm::Range& xRange, const vtkm::Range& yRange, const vtkm::Range& zRange)
     : X(xRange)
     , Y(yRange)
@@ -89,13 +92,7 @@ struct Bounds
   }
 
   VTKM_EXEC_CONT
-  const vtkm::Bounds& operator=(const vtkm::Bounds& src)
-  {
-    this->X = src.X;
-    this->Y = src.Y;
-    this->Z = src.Z;
-    return *this;
-  }
+  vtkm::Bounds& operator=(const vtkm::Bounds& src) = default;
 
   /// \b Determine if the bounds are valid (i.e. has at least one valid point).
   ///

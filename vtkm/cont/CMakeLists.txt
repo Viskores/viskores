@@ -45,6 +45,7 @@ set(headers
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
   ArrayRangeCompute.hxx
+  AssignerMultiBlock.h
   CellLocatorTwoLevelUniformGrid.h
   CellSet.h
   CellSetExplicit.h
@@ -58,6 +59,7 @@ set(headers
   DataSetBuilderRectilinear.h
   DataSetBuilderUniform.h
   DataSetFieldAdd.h
+  DecomposerMultiBlock.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
   DeviceAdapterListTag.h
@@ -94,10 +96,12 @@ set(header_impls
 
 set(sources
   ArrayHandle.cxx
+  AssignerMultiBlock.cxx
   CellSet.cxx
   CellSetExplicit.cxx
   CellSetStructured.cxx
   CoordinateSystem.cxx
+  DataSet.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
   Field.cxx

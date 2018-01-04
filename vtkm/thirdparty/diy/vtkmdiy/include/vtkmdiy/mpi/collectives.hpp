@@ -152,13 +152,13 @@ namespace mpi
       }
     }
 
-    static void reduce(const communicator& comm, const T& in, T& out, int root, const Op& op)
+    static void reduce(const communicator& comm, const T& in, T& out, int root, const Op&)
     {
       MPI_Reduce(Datatype::address(const_cast<T&>(in)),
                  Datatype::address(out),
                  Datatype::count(in),
                  Datatype::datatype(),
-                 detail::mpi_op<Op>::get(op),
+                 detail::mpi_op<Op>::get(),
                  root, comm);
     }
 
@@ -168,38 +168,38 @@ namespace mpi
                  Datatype::address(const_cast<T&>(in)),
                  Datatype::count(in),
                  Datatype::datatype(),
-                 detail::mpi_op<Op>::get(op),
+                 detail::mpi_op<Op>::get(),
                  root, comm);
     }
 
-    static void all_reduce(const communicator& comm, const T& in, T& out, const Op& op)
+    static void all_reduce(const communicator& comm, const T& in, T& out, const Op&)
     {
       MPI_Allreduce(Datatype::address(const_cast<T&>(in)),
                     Datatype::address(out),
                     Datatype::count(in),
                     Datatype::datatype(),
-                    detail::mpi_op<Op>::get(op),
+                    detail::mpi_op<Op>::get(),
                     comm);
     }
 
-    static void all_reduce(const communicator& comm, const std::vector<T>& in, std::vector<T>& out, const Op& op)
+    static void all_reduce(const communicator& comm, const std::vector<T>& in, std::vector<T>& out, const Op&)
     {
       out.resize(in.size());
       MPI_Allreduce(Datatype::address(const_cast<T&>(in[0])),
                     Datatype::address(out[0]),
                     in.size(),
                     Datatype::datatype(),
-                    detail::mpi_op<Op>::get(op),
+                    detail::mpi_op<Op>::get(),
                     comm);
     }
 
-    static void scan(const communicator& comm, const T& in, T& out, const Op& op)
+    static void scan(const communicator& comm, const T& in, T& out, const Op&)
     {
       MPI_Scan(Datatype::address(const_cast<T&>(in)),
                Datatype::address(out),
                Datatype::count(in),
                Datatype::datatype(),
-               detail::mpi_op<Op>::get(op),
+               detail::mpi_op<Op>::get(),
                comm);
     }
 

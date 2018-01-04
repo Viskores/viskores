@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_mark_active_neighbors_h
 #define vtkm_worklet_cosmotools_mark_active_neighbors_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/cosmotools/TagTypes.h>
 

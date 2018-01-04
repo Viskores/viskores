@@ -9,7 +9,7 @@ namespace mpi
   {
     public:
                 communicator(MPI_Comm comm = MPI_COMM_WORLD):
-                  comm_(comm), rank_(0), size_(1) { if (comm != MPI_COMM_NULL) { MPI_Comm_rank(comm_, &rank_); MPI_Comm_size(comm_, &size_); } }
+                  comm_(comm), rank_(0), size_(1)   { if (comm != MPI_COMM_NULL) { MPI_Comm_rank(comm_, &rank_); MPI_Comm_size(comm_, &size_); } }
 
       int       rank() const                        { return rank_; }
       int       size() const                        { return size_; }

@@ -26,6 +26,8 @@ set(unit_tests
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestCosmoTools.cxx
+  UnitTestCrossProduct.cxx
+  UnitTestDotProduct.cxx
   UnitTestExternalFaces.cxx
   UnitTestExtractGeometry.cxx
   UnitTestExtractPoints.cxx

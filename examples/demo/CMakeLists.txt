@@ -28,6 +28,12 @@ find_package(VTKm QUIET REQUIRED
 
 if(VTKm_OSMesa_FOUND AND VTKm_Rendering_FOUND)
   if(VTKm_CUDA_FOUND)
+
+    set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
+    set(old_cxx_flags ${CMAKE_CXX_FLAGS})
+    vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags)
+    vtkm_disable_troublesome_thrust_warnings()
+
     # Cuda compiles do not respect target_include_directories
     cuda_include_directories(${VTKm_INCLUDE_DIRS})
     cuda_add_executable(Demo Demo.cu)

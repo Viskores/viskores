@@ -58,6 +58,7 @@ struct Gaussian : public KernelBase<Gaussian<Dimensions>>
 
   //---------------------------------------------------------------------
   // return the multiplier between smoothing length and max cutoff distance
+  VTKM_EXEC_CONT
   VTKM_CONSTEXPR double getDilationFactor() const { return 5.0; }
 
   //---------------------------------------------------------------------
