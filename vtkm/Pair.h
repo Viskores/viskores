@@ -87,7 +87,6 @@ struct Pair
   {
   }
 
-  VTKM_EXEC_CONT
   vtkm::Pair<FirstType, SecondType>& operator=(const vtkm::Pair<FirstType, SecondType>& src) =
     default;
 

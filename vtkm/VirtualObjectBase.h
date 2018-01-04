@@ -42,7 +42,7 @@ namespace vtkm
 class VTKM_ALWAYS_EXPORT VirtualObjectBase
 {
 public:
-  virtual ~VirtualObjectBase() = default;
+  VTKM_EXEC_CONT virtual ~VirtualObjectBase() = default;
 
   VTKM_EXEC_CONT void Modified() { this->ModifiedCount++; }
 
