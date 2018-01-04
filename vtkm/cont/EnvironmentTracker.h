@@ -25,6 +25,11 @@
 #include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
 
+#if defined(VTKM_ENABLE_MPI)
+// needed for diy mangling.
+#include <vtkm/thirdparty/diy/Configure.h>
+#endif
+
 namespace diy
 {
 namespace mpi

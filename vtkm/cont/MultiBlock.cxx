@@ -32,11 +32,14 @@
 #include <vtkm/cont/MultiBlock.h>
 
 #if defined(VTKM_ENABLE_MPI)
-#include <diy/decomposition.hpp>
-#include <diy/master.hpp>
-#include <diy/partners/all-reduce.hpp>
-#include <diy/partners/swap.hpp>
-#include <diy/reduce.hpp>
+// clang-format off
+#include <vtkm/thirdparty/diy/Configure.h>
+#include VTKM_DIY(diy/decomposition.hpp)
+#include VTKM_DIY(diy/master.hpp)
+#include VTKM_DIY(diy/partners/all-reduce.hpp)
+#include VTKM_DIY(diy/partners/swap.hpp)
+#include VTKM_DIY(diy/reduce.hpp)
+// clang-format on
 
 namespace vtkm
 {
