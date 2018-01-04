@@ -86,6 +86,11 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   if(NOT TARGET TestBuild_${name})
     add_library(TestBuild_${name} STATIC ${srcs} ${hfiles})
     target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags)
+
+    if(TARGET vtkm::tbb)
+      #make sure that we have the tbb include paths when tbb is enabled.
+      target_link_libraries(TestBuild_${name} PRIVATE vtkm::tbb)
+    endif()
   else()
     target_sources(TestBuild_${name} PRIVATE ${srcs})
   endif()

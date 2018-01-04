@@ -54,9 +54,11 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
 
   add_library(vtkm::cuda UNKNOWN IMPORTED)
 
-  set_target_properties(vtkm::cuda PROPERTIES
-    INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
-  )
+  if(NOT "x${CMAKE_CUDA_SIMULATE_ID}" STREQUAL "xMSVC")
+    set_target_properties(vtkm::cuda PROPERTIES
+      INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+    )
+  endif()
 
   # We can't have this location/lib empty, so we provide a location that is
   # valid and will have no effect on compilation

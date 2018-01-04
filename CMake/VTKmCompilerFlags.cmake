@@ -39,7 +39,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  set(VTKM_COMPILER_IS_MSV 1)
+  set(VTKM_COMPILER_IS_MSVC 1)
 endif()
 
 
@@ -91,14 +91,16 @@ target_link_libraries(vtkm_developer_flags INTERFACE vtkm_compiler_flags)
 
 if(VTKM_COMPILER_IS_MSVC)
   target_compile_definitions(vtkm_developer_flags INTERFACE "_SCL_SECURE_NO_WARNINGS"
-                                                        "_CRT_SECURE_NO_WARNINGS")
+                                                            "_CRT_SECURE_NO_WARNINGS")
 
-  target_compile_options(vtkm_developer_flags INTERFACE -wd4702 -wd4505 -wd4512 -wd4510)
+  #CMake COMPILE_LANGUAGE doesn't work with MSVC, ans since we want these flags
+  #only for C++ compilation we have to resort to setting CMAKE_CXX_FLAGS :(
+  # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4702 -wd4505")
 
-  # In VS2013 the C4127 warning has a bug in the implementation and
-  # generates false positive warnings for lots of template code
   if(MSVC_VERSION LESS 1900)
-    target_compile_options(vtkm_developer_flags INTERFACE -wd4127 )
+    # In VS2013 the C4127 warning has a bug in the implementation and
+    # generates false positive warnings for lots of template code
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4127")
   endif()
 
 elseif(VTKM_COMPILER_IS_ICC)
@@ -108,7 +110,7 @@ elseif(VTKM_COMPILER_IS_ICC)
   # Likewise to suppress failures about being unable to apply vectorization
   # to loops, the #pragma warning(disable seems to not work so we add a
   # a compile define.
-  target_compile_definitions(vtkm_developer_flags INTERFACE -wd1478 -wd13379)
+  target_compile_definitions(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd1478 -wd13379>)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   set(flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
