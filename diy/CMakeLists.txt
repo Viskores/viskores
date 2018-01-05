@@ -33,8 +33,11 @@ target_include_directories(diy INTERFACE
   $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}>)
 
 # presently, this dependency is required. Make it optional in the future.
+# CMake 3.10 FindMPI removed MPI_<>_INCLUDE_PATH and replaced them with the
+# MPI_<>_INCLUDE_DIRS so the FindMPI conforms to CMake find module requirements
 set(arg)
-foreach(apath IN LISTS MPI_C_INCLUDE_PATH MPI_CXX_INCLUDE_PATH)
+foreach(apath IN LISTS MPI_C_INCLUDE_PATH MPI_CXX_INCLUDE_PATH
+                       MPI_C_INCLUDE_DIRS MPI_CXX_INCLUDE_DIRS)
   list(APPEND arg $<BUILD_INTERFACE:${apath}>)
 endforeach()
 target_include_directories(diy INTERFACE ${arg})

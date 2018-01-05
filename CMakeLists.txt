@@ -203,6 +203,9 @@ check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 if(VTKm_ENABLE_MPI)
   # This `if` is temporary and will be removed once `diy` supports building
   # without MPI.
+  if (NOT MPI_C_FOUND)
+    find_package(MPI ${VTKm_FIND_PACKAGE_QUIETLY})
+  endif()
   add_subdirectory(diy)
 endif()
 add_subdirectory(vtkm)
