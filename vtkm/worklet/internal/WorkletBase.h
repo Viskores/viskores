@@ -86,6 +86,39 @@ struct _8 : Arg<8>
 struct _9 : Arg<9>
 {
 };
+struct _10 : Arg<10>
+{
+};
+struct _11 : Arg<11>
+{
+};
+struct _12 : Arg<12>
+{
+};
+struct _13 : Arg<13>
+{
+};
+struct _14 : Arg<14>
+{
+};
+struct _15 : Arg<15>
+{
+};
+struct _16 : Arg<16>
+{
+};
+struct _17 : Arg<17>
+{
+};
+struct _18 : Arg<18>
+{
+};
+struct _19 : Arg<19>
+{
+};
+struct _20 : Arg<20>
+{
+};
 }
 
 namespace worklet
@@ -109,6 +142,17 @@ public:
   typedef vtkm::placeholders::_7 _7;
   typedef vtkm::placeholders::_8 _8;
   typedef vtkm::placeholders::_9 _9;
+  typedef vtkm::placeholders::_10 _10;
+  typedef vtkm::placeholders::_11 _11;
+  typedef vtkm::placeholders::_12 _12;
+  typedef vtkm::placeholders::_13 _13;
+  typedef vtkm::placeholders::_14 _14;
+  typedef vtkm::placeholders::_15 _15;
+  typedef vtkm::placeholders::_16 _16;
+  typedef vtkm::placeholders::_17 _17;
+  typedef vtkm::placeholders::_18 _18;
+  typedef vtkm::placeholders::_19 _19;
+  typedef vtkm::placeholders::_20 _20;
 
   /// \c ExecutionSignature tag for getting the work index.
   ///
