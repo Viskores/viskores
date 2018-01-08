@@ -19,12 +19,12 @@
 ##  this software.
 ##
 ##=============================================================================
-add_library(diy INTERFACE)
+add_library(vtkm_diy INTERFACE)
 
 vtkm_get_kit_name(kit_name kit_dir)
 
 # diy needs C++11
-target_compile_features(diy INTERFACE cxx_auto_type)
+target_compile_features(vtkm_diy INTERFACE cxx_auto_type)
 
 # placeholder to support external DIY
 set(VTKM_USE_EXTERNAL_DIY OFF)
@@ -32,7 +32,7 @@ set(VTKM_USE_EXTERNAL_DIY OFF)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
   ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h)
 
-target_include_directories(diy INTERFACE
+target_include_directories(vtkm_diy INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}>)
@@ -45,23 +45,23 @@ foreach(apath IN LISTS MPI_C_INCLUDE_PATH MPI_CXX_INCLUDE_PATH
                        MPI_C_INCLUDE_DIRS MPI_CXX_INCLUDE_DIRS)
   list(APPEND arg $<BUILD_INTERFACE:${apath}>)
 endforeach()
-target_include_directories(diy INTERFACE ${arg})
+target_include_directories(vtkm_diy INTERFACE ${arg})
 
-target_link_libraries(diy INTERFACE
+target_link_libraries(vtkm_diy INTERFACE
   $<BUILD_INTERFACE:${MPI_C_LIBRARIES}>
   $<BUILD_INTERFACE:${MPI_CXX_LIBRARIES}>)
 
 if(MPI_C_COMPILE_DEFINITIONS)
-  target_compile_definitions(diy INTERFACE
+  target_compile_definitions(vtkm_diy INTERFACE
     $<$<COMPILE_LANGUAGE:C>:${MPI_C_COMPILE_DEFINITIONS}>)
 endif()
 if(MPI_CXX_COMPILE_DEFNITIONS)
-  target_compile_definitions(diy INTERFACE
+  target_compile_definitions(vtkm_diy INTERFACE
     $<$<COMPILE_LANGUAGE:CXX>:${MPI_CXX_COMPILE_DEFNITIONS>)
 endif()
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
-  install(TARGETS diy
+  install(TARGETS vtkm_diy
     EXPORT ${VTKm_EXPORT_NAME})
 
   ## Install headers

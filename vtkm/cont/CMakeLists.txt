@@ -152,7 +152,7 @@ vtkm_library( NAME vtkm_cont
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
 if(VTKm_ENABLE_MPI)
   # This will become a required dependency eventually.
-  target_link_libraries(vtkm_cont PUBLIC diy)
+  target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
 endif()
 
 #-----------------------------------------------------------------------------
