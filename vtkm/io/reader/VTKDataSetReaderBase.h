@@ -262,16 +262,12 @@ inline vtkm::cont::DynamicCellSet CreateCellSetStructured(const vtkm::Id3& dim)
     cs.SetPointDimensions(dim[0]);
     return cs;
   }
-  else
-  {
-    std::stringstream ss;
-    ss << "Unsupported dimensions: (" << dim[0] << ", " << dim[1] << ", " << dim[2]
-       << "), 2D structured datasets should be on X-Y plane and "
-       << "1D structured datasets should be along X axis";
-    throw vtkm::io::ErrorIO(ss.str());
-  }
 
-  return vtkm::cont::DynamicCellSet();
+  std::stringstream ss;
+  ss << "Unsupported dimensions: (" << dim[0] << ", " << dim[1] << ", " << dim[2]
+     << "), 2D structured datasets should be on X-Y plane and "
+     << "1D structured datasets should be along X axis";
+  throw vtkm::io::ErrorIO(ss.str());
 }
 
 } // namespace internal
