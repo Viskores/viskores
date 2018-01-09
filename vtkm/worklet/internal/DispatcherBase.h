@@ -444,9 +444,11 @@ private:
 // to use the following suppressions
 // This have been found by eigen:
 // https://github.com/RLovelett/eigen/blame/master/Eigen/src/Core/util/DisableStupidWarnings.h
+// To discover new dia_supress values use -Xcudafe "--display_error_number"
 #pragma push
 #pragma diag_suppress 2737
 #pragma diag_suppress 2739
+#pragma diag_suppress 2828
 #endif
     auto fi =
       vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
