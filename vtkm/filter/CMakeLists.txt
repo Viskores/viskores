@@ -46,6 +46,7 @@ set(headers
   PointElevation.h
   PolicyBase.h
   PolicyDefault.h
+  Probe.h
   Result.h
   Streamline.h
   SurfaceNormals.h
@@ -81,6 +82,7 @@ set(header_template_sources
   NDHistogram.hxx
   PointAverage.hxx
   PointElevation.hxx
+  Probe.hxx
   Streamline.hxx
   SurfaceNormals.hxx
   Tetrahedralize.hxx
