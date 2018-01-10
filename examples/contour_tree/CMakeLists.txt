@@ -37,12 +37,10 @@ target_compile_definitions(ContourTreeMesh3D_SERIAL PRIVATE
                            "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
 
 if(TARGET vtkm::cuda)
-  set (cudaSource "${CMAKE_CURRENT_BINARY_DIR}/ContourTreeMesh2D.cu")
-  configure_file(ContourTreeMesh2D.cxx ${cudaSource} COPYONLY)
+  vtkm_compile_as_cuda(cudaSource ContourTreeMesh2D.cxx)
   add_executable(ContourTreeMesh2D_CUDA ${cudaSource})
 
-  set (cudaSource "${CMAKE_CURRENT_BINARY_DIR}/ContourTreeMesh3D.cu")
-  configure_file(ContourTreeMesh3D.cxx ${cudaSource} COPYONLY)
+  vtkm_compile_as_cuda(cudaSource ContourTreeMesh3D.cxx)
   add_executable(ContourTreeMesh3D_CUDA ${cudaSource})
 
   target_link_libraries(ContourTreeMesh2D_CUDA vtkm_cont)

@@ -25,16 +25,19 @@ project(VTKmDemo CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
+set(srcs Demo.cxx)
+
 if(TARGET vtkm_rendering)
   set(backend "VTKM_DEVICE_ADAPTER_SERIAL")
   if(TARGET vtkm::cuda)
-    set_source_files_properties(Demo.cxx PROPERTIES LANGUAGE "CUDA")
+    vtkm_compile_as_cuda(cuda_srcs ${srcs})
+    set(srcs ${cuda_srcs})
     set(backend "VTKM_DEVICE_ADAPTER_CUDA")
   elseif(TARGET vtkm::tbb)
     set(backend "VTKM_DEVICE_ADAPTER_TBB")
   endif()
 
-  add_executable(Demo Demo.cxx)
+  add_executable(Demo ${srcs})
   target_link_libraries(Demo PRIVATE vtkm_rendering)
   target_compile_definitions(Demo PRIVATE "VTKM_DEVICE_ADAPTER=${backend}")
 endif()

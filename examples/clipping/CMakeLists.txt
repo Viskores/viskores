@@ -38,9 +38,7 @@ if(TARGET vtkm::tbb)
 endif()
 
 if(TARGET vtkm::cuda)
-  set (cudaSource "${CMAKE_CURRENT_BINARY_DIR}/Clipping.cu")
-  configure_file(Clipping.cxx ${cudaSource} COPYONLY)
-
+  vtkm_compile_as_cuda(cudaSource Clipping.cxx)
   add_executable(Clipping_CUDA ${cudaSource})
 
   target_compile_definitions(Clipping_CUDA PRIVATE

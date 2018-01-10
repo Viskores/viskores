@@ -25,9 +25,13 @@ project(MultiBackend CXX)
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
+set(srcs
+    MultiBackend.cxx)
+
 if(TARGET vtkm::cuda)
-  set_source_files_properties(MultiBackend.cxx PROPERTIES LANGUAGE "CUDA")
+  vtkm_compile_as_cuda(cuda_srcs ${srcs})
+  set(srcs ${cuda_srcs})
 endif()
 
-add_executable(MultiBackend MultiBackend.cxx)
+add_executable(MultiBackend ${srcs})
 target_link_libraries(MultiBackend PRIVATE vtkm_cont)

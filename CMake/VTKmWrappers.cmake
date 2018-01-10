@@ -59,6 +59,33 @@ function(vtkm_pyexpander_generated_file)
 endfunction(vtkm_pyexpander_generated_file)
 
 #-----------------------------------------------------------------------------
+function(vtkm_compile_as_cuda output)
+  # We cant use set_source_files_properties(<> PROPERTIES LANGUAGE "CUDA")
+  # for the following reasons:
+  #
+  # 1. As of CMake 3.10 MSBuild cuda language support has a bug where files
+  #    aren't passed to nvcc with the explicit '-x cu' flag which will cause
+  #    them to be compiled without CUDA actually enabled.
+  # 2. If the source file is used by multiple targets(libraries/executable)
+  #    they will all see the source file marked as being CUDA. This will cause
+  #    tests / examples that reuse sources with different backends to use CUDA
+  #    by mistake
+  #
+  # The result of this is that instead we will use file(GENERATE ) to construct
+  # a proxy cu file
+  set(_cuda_srcs )
+  foreach(_not_cuda_file ${ARGN})
+    get_filename_component(_cuda_fname "${_not_cuda_file}" NAME_WE)
+    get_filename_component(_not_cuda_fullpath "${_not_cuda_file}" ABSOLUTE)
+    list(APPEND _cuda_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu")
+    file(GENERATE
+          OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu
+          CONTENT "#include \"${_not_cuda_fullpath}\"")
+  endforeach()
+  set(${output} ${_cuda_srcs} PARENT_SCOPE)
+endfunction()
+
+#-----------------------------------------------------------------------------
 function(vtkm_add_header_build_test name dir_prefix use_cuda)
   set(hfiles ${ARGN})
 
@@ -247,7 +274,8 @@ function(vtkm_library)
   set(lib_name ${VTKm_LIB_NAME})
 
   if(TARGET vtkm::cuda)
-    set_source_files_properties(${VTKm_LIB_WRAP_FOR_CUDA} PROPERTIES LANGUAGE "CUDA")
+    vtkm_compile_as_cuda(cu_srcs ${VTKm_LIB_WRAP_FOR_CUDA})
+    set(VTKm_LIB_WRAP_FOR_CUDA ${cu_srcs})
   endif()
 
 
@@ -341,26 +369,16 @@ function(vtkm_unit_tests)
     set(test_prog "${VTKm_UT_NAME}${backend}")
   endif()
 
+  #the creation of the test source list needs to occur before the labeling as
+  #cuda. This is so that we get the correctly named entry points generated
+  #
+  create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES})
   if(VTKm_UT_BACKEND STREQUAL "CUDA")
-    #we can't mark the files as CUDA here since that would mean that
-    #for all other backends they would be built as CUDA too. Instead we
-    #generate a build directory file with a .cu extension
-    set( cuda_srcs )
-    foreach(file ${VTKm_UT_SOURCES})
-      get_filename_component(fname "${file}" NAME_WE)
-      get_filename_component(fullpath "${file}" ABSOLUTE)
-      list(APPEND cuda_srcs "${fname}.cu")
-      file(GENERATE
-          OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu
-          CONTENT "#include \"${fullpath}\"")
-    endforeach()
-    set(VTKm_UT_SOURCES ${cuda_srcs})
-
+    vtkm_compile_as_cuda(cu_srcs ${VTKm_UT_SOURCES})
+    set(VTKm_UT_SOURCES ${cu_srcs})
   endif()
 
-  create_test_sourcelist(TestSources ${test_prog}.cxx ${VTKm_UT_SOURCES})
-
-  add_executable(${test_prog} ${TestSources})
+  add_executable(${test_prog} ${test_sources})
   set_target_properties(${test_prog} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
     LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
