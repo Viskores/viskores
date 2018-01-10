@@ -38,12 +38,6 @@ namespace
 struct TestExecObject
 {
   VTKM_EXEC_CONT
-  TestExecObject()
-    : Portal()
-  {
-  }
-
-  VTKM_EXEC_CONT
   TestExecObject(vtkm::exec::cuda::internal::ArrayPortalFromThrust<vtkm::Id> portal)
     : Portal(portal)
   {
@@ -62,6 +56,7 @@ struct MyOutputToInputMapPortal
 struct MyVisitArrayPortal
 {
   using ValueType = vtkm::IdComponent;
+  VTKM_EXEC_CONT
   vtkm::IdComponent Get(vtkm::Id) const { return 1; }
 };
 

@@ -110,18 +110,6 @@ public:
   {
   }
 
-  template <typename T>
-  VTKM_CONT CoordinateSystem(std::string name, const std::vector<T>& data)
-    : Superclass(name, ASSOC_POINTS, data)
-  {
-  }
-
-  template <typename T>
-  VTKM_CONT CoordinateSystem(std::string name, const T* data, vtkm::Id numberOfValues)
-    : Superclass(name, ASSOC_POINTS, data, numberOfValues)
-  {
-  }
-
   /// This constructor of coordinate system sets up a regular grid of points.
   ///
   VTKM_CONT
@@ -225,9 +213,27 @@ public:
 };
 
 template <typename Functor, typename... Args>
-void CastAndCall(const vtkm::cont::CoordinateSystem& coords, const Functor& f, Args&&... args)
+void CastAndCall(const vtkm::cont::CoordinateSystem& coords, Functor&& f, Args&&... args)
 {
-  coords.GetData().CastAndCall(f, std::forward<Args>(args)...);
+  coords.GetData().CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
+}
+
+template <typename T>
+vtkm::cont::CoordinateSystem make_CoordinateSystem(std::string name,
+                                                   const std::vector<T>& data,
+                                                   vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+{
+  return vtkm::cont::CoordinateSystem(name, vtkm::cont::make_ArrayHandle(data, copy));
+}
+
+template <typename T>
+vtkm::cont::CoordinateSystem make_CoordinateSystem(std::string name,
+                                                   const T* data,
+                                                   vtkm::Id numberOfValues,
+                                                   vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
+{
+  return vtkm::cont::CoordinateSystem(name,
+                                      vtkm::cont::make_ArrayHandle(data, numberOfValues, copy));
 }
 
 namespace internal

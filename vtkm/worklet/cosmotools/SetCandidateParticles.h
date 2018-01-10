@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_set_candidate_particles_h
 #define vtkm_worklet_cosmotools_set_candidate_particles_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm

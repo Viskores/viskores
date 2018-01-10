@@ -210,31 +210,47 @@ VTKM_CONT void ListForEachImpl(Functor&& f,
     std::forward<Functor>(f), brigand::list<ArgTypes...>{}, std::forward<Args>(args)...);
 }
 
-
-template <typename T, typename U, typename R>
-struct ListCrossProductAppend
-{
-  using type = brigand::push_back<T, std::pair<U, R>>;
-};
-
-template <typename T, typename U, typename R2>
-struct ListCrossProductImplUnrollR2
-{
-  using P =
-    brigand::fold<R2,
-                  brigand::list<>,
-                  ListCrossProductAppend<brigand::_state, brigand::_element, brigand::pin<U>>>;
-
-  using type = brigand::append<T, P>;
-};
-
 template <typename R1, typename R2>
 struct ListCrossProductImpl
 {
-  using type = brigand::fold<
-    R2,
-    brigand::list<>,
-    ListCrossProductImplUnrollR2<brigand::_state, brigand::_element, brigand::pin<R1>>>;
+#if defined(VTKM_MSVC) && _MSC_VER == 1800
+  // This is a Cartesian product generator that is used
+  // when building with visual studio 2013. Visual Studio
+  // 2013 is unable to handle the lazy version as it can't
+  // deduce the correct template parameters
+  using type = brigand::reverse_fold<
+    brigand::list<R1, R2>,
+    brigand::list<brigand::list<>>,
+    brigand::bind<
+      brigand::join,
+      brigand::bind<
+        brigand::transform,
+        brigand::_2,
+        brigand::defer<brigand::bind<
+          brigand::join,
+          brigand::bind<
+            brigand::transform,
+            brigand::parent<brigand::_1>,
+            brigand::defer<brigand::bind<
+              brigand::list,
+              brigand::bind<brigand::push_front, brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
+#else
+  // This is a lazy Cartesian product generator that is used
+  // when using any compiler other than visual studio 2013.
+  // This version was settled on as being the best default
+  // version as all compilers including Intel handle this
+  // implementation without issue for very large cross products
+  using type = brigand::reverse_fold<
+    brigand::list<R1, R2>,
+    brigand::list<brigand::list<>>,
+    brigand::lazy::join<brigand::lazy::transform<
+      brigand::_2,
+      brigand::defer<brigand::lazy::join<brigand::lazy::transform<
+        brigand::parent<brigand::_1>,
+        brigand::defer<brigand::bind<
+          brigand::list,
+          brigand::lazy::push_front<brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
+#endif
 };
 
 

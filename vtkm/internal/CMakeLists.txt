@@ -21,13 +21,15 @@
 #-----------------------------------------------------------------------------
 # Build the configure file.
 # need to set numerous VTKm cmake properties to the naming convention
-# that we exepect for our C++ defines.
+# that we expect for our C++ defines.
 
+set(VTKM_NO_ASSERT ${VTKm_NO_ASSERT})
 set(VTKM_USE_DOUBLE_PRECISION ${VTKm_USE_DOUBLE_PRECISION})
 set(VTKM_USE_64BIT_IDS ${VTKm_USE_64BIT_IDS})
 
 set(VTKM_ENABLE_CUDA ${VTKm_ENABLE_CUDA})
 set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
+set(VTKM_ENABLE_MPI ${VTKm_ENABLE_MPI})
 
 vtkm_get_kit_name(kit_name kit_dir)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
@@ -56,7 +58,6 @@ set(headers
   FunctionInterfaceDetailPost.h
   FunctionInterfaceDetailPre.h
   IndexTag.h
-  IntegerSequence.h
   Invocation.h
   ListTagDetail.h
   Unreachable.h

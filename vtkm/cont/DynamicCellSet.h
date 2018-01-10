@@ -228,7 +228,7 @@ public:
   /// behavior from \c CastAndCall.
   ///
   template <typename Functor, typename... Args>
-  VTKM_CONT void CastAndCall(const Functor& f, Args&&...) const;
+  VTKM_CONT void CastAndCall(Functor&& f, Args&&...) const;
 
   /// \brief Create a new cell set of the same type as this cell set.
   ///
@@ -302,11 +302,12 @@ struct DynamicCellSetTry
 
 template <typename CellSetList>
 template <typename Functor, typename... Args>
-VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor& f, Args&&... args) const
+VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(Functor&& f, Args&&... args) const
 {
   bool called = false;
   detail::DynamicCellSetTry tryCellSet(this->CellSetContainer.get());
-  vtkm::ListForEach(tryCellSet, CellSetList{}, f, called, std::forward<Args>(args)...);
+  vtkm::ListForEach(
+    tryCellSet, CellSetList{}, std::forward<Functor>(f), called, std::forward<Args>(args)...);
   if (!called)
   {
     throw vtkm::cont::ErrorBadValue("Could not find appropriate cast for cell set.");

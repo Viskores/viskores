@@ -255,7 +255,6 @@ public:
     rayOriginX = origin[0];
     rayOriginY = origin[1];
     rayOriginZ = origin[2];
-
     i += Minx;
     j += Miny;
     pixelIndex = static_cast<vtkm::Id>(j * w + i);
@@ -333,7 +332,12 @@ public:
     pixelIndex = static_cast<vtkm::Id>(j * w + i);
     ray_dir = nlook + delta_x * ((2.f * Precision(i) - Precision(w)) / 2.0f) +
       delta_y * ((2.f * Precision(j) - Precision(h)) / 2.0f);
-
+    // avoid some numerical issues
+    for (vtkm::Int32 d = 0; d < 3; ++d)
+    {
+      if (ray_dir[d] == 0.f)
+        ray_dir[d] += 0.0000001f;
+    }
     Precision dot = vtkm::dot(ray_dir, ray_dir);
     Precision sq_mag = vtkm::Sqrt(dot);
 

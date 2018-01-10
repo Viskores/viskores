@@ -57,7 +57,8 @@ public:
                                       const std::string& fieldName,
                                       const std::vector<T>& field)
   {
-    dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_POINTS, field));
+    dataSet.AddField(
+      make_Field(fieldName, vtkm::cont::Field::ASSOC_POINTS, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
@@ -66,7 +67,8 @@ public:
                                       const T* field,
                                       const vtkm::Id& n)
   {
-    dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_POINTS, field, n));
+    dataSet.AddField(
+      make_Field(fieldName, vtkm::cont::Field::ASSOC_POINTS, field, n, vtkm::CopyFlag::On));
   }
 
   //Cell centered field
@@ -94,7 +96,8 @@ public:
                                      const std::vector<T>& field,
                                      const std::string& cellSetName)
   {
-    dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_CELL_SET, cellSetName, field));
+    dataSet.AddField(make_Field(
+      fieldName, vtkm::cont::Field::ASSOC_CELL_SET, cellSetName, field, vtkm::CopyFlag::On));
   }
 
   template <typename T>
@@ -104,7 +107,8 @@ public:
                                      const vtkm::Id& n,
                                      const std::string& cellSetName)
   {
-    dataSet.AddField(Field(fieldName, vtkm::cont::Field::ASSOC_CELL_SET, cellSetName, field, n));
+    dataSet.AddField(make_Field(
+      fieldName, vtkm::cont::Field::ASSOC_CELL_SET, cellSetName, field, n, vtkm::CopyFlag::On));
   }
 
   VTKM_CONT

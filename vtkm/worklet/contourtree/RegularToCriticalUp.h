@@ -67,7 +67,6 @@
 #ifndef vtkm_worklet_contourtree_regular_to_critical_up_h
 #define vtkm_worklet_contourtree_regular_to_critical_up_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm

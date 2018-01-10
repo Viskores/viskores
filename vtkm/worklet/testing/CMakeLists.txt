@@ -26,6 +26,8 @@ set(unit_tests
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestCosmoTools.cxx
+  UnitTestCrossProduct.cxx
+  UnitTestDotProduct.cxx
   UnitTestExternalFaces.cxx
   UnitTestExtractGeometry.cxx
   UnitTestExtractPoints.cxx
@@ -38,6 +40,7 @@ set(unit_tests
   UnitTestMarchingCubes.cxx
   UnitTestMask.cxx
   UnitTestMaskPoints.cxx
+  UnitTestNormalize.cxx
   UnitTestNDimsEntropy.cxx
   UnitTestNDimsHistogram.cxx
   UnitTestNDimsHistMarginalization.cxx

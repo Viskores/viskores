@@ -33,8 +33,6 @@
 #include <vtkm/worklet/ScatterUniform.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/exec/ExecutionWholeArray.h>
-
 namespace vtkm
 {
 
@@ -166,9 +164,9 @@ public:
   public:
     typedef void ControlSignature(FieldIn<IdType> seedId,
                                   FieldIn<> position,
-                                  ExecObject numIndices,
-                                  ExecObject validPoint,
-                                  ExecObject streamLines);
+                                  WholeArrayOut<IdComponentType> numIndices,
+                                  WholeArrayOut<IdComponentType> validPoint,
+                                  WholeArrayOut<Vec3> streamLines);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, VisitIndex);
     typedef _1 InputDomain;
 
@@ -200,13 +198,13 @@ public:
     {
     }
 
-    VTKM_EXEC
-    void operator()(vtkm::Id& seedId,
-                    vtkm::Vec<FieldType, 3>& seedPos,
-                    vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>& numIndices,
-                    vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>& validPoint,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Vec<FieldType, 3>>& slLists,
-                    vtkm::IdComponent visitIndex) const
+    template <typename IdComponentPortalType, typename FieldVec3PortalType>
+    VTKM_EXEC void operator()(vtkm::Id& seedId,
+                              vtkm::Vec<FieldType, 3>& seedPos,
+                              IdComponentPortalType& numIndices,
+                              IdComponentPortalType& validPoint,
+                              FieldVec3PortalType& slLists,
+                              vtkm::IdComponent visitIndex) const
     {
       // Set initial offset into the output streams array
       vtkm::Vec<FieldType, 3> pos = seedPos;
@@ -403,11 +401,7 @@ public:
     typedef typename vtkm::worklet::DispatcherMapField<MakeStreamLines> MakeStreamLinesDispatcher;
     MakeStreamLinesDispatcher makeStreamLinesDispatcher(makeStreamLines);
     makeStreamLinesDispatcher.Invoke(
-      seedIdArray,
-      seedPosArray,
-      vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>(numIndices, numCells),
-      vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>(validPoint, maxConnectivityLen),
-      vtkm::exec::ExecutionWholeArray<vtkm::Vec<FieldType, 3>>(streamArray, maxConnectivityLen));
+      seedIdArray, seedPosArray, numIndices, validPoint, streamArray);
 
     // Size of connectivity based on size of returned streamlines
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesOut;

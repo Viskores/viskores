@@ -67,7 +67,6 @@
 #ifndef vtkm_worklet_contourtree_degree_delta_h
 #define vtkm_worklet_contourtree_degree_delta_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm

@@ -40,17 +40,6 @@ namespace vtkm
 namespace worklet
 {
 
-namespace detail
-{
-
-VTKM_EXEC_CONSTANT
-const static vtkm::IdComponent StructuredTetrahedronIndices[2][5][4] = {
-  { { 0, 1, 3, 4 }, { 1, 4, 5, 6 }, { 1, 4, 6, 3 }, { 1, 3, 6, 2 }, { 3, 6, 7, 4 } },
-  { { 2, 1, 5, 0 }, { 0, 2, 3, 7 }, { 2, 5, 6, 7 }, { 0, 7, 4, 5 }, { 0, 2, 7, 5 } }
-};
-
-} // namespace detail
-
 /// \brief Compute the tetrahedralize cells for a uniform grid data set
 template <typename DeviceAdapter>
 class TetrahedralizeStructured
@@ -82,6 +71,11 @@ public:
                               ConnectivityOutVec& connectivityOut,
                               const ThreadIndicesType threadIndices) const
     {
+      const static vtkm::IdComponent StructuredTetrahedronIndices[2][5][4] = {
+        { { 0, 1, 3, 4 }, { 1, 4, 5, 6 }, { 1, 4, 6, 3 }, { 1, 3, 6, 2 }, { 3, 6, 7, 4 } },
+        { { 2, 1, 5, 0 }, { 0, 2, 3, 7 }, { 2, 5, 6, 7 }, { 0, 7, 4, 5 }, { 0, 2, 7, 5 } }
+      };
+
       vtkm::Id3 inputIndex = threadIndices.GetInputIndex3D();
 
       // Calculate the type of tetrahedron generated because it alternates
@@ -89,14 +83,10 @@ public:
 
       vtkm::IdComponent visitIndex = threadIndices.GetVisitIndex();
 
-      connectivityOut[0] =
-        connectivityIn[detail::StructuredTetrahedronIndices[indexType][visitIndex][0]];
-      connectivityOut[1] =
-        connectivityIn[detail::StructuredTetrahedronIndices[indexType][visitIndex][1]];
-      connectivityOut[2] =
-        connectivityIn[detail::StructuredTetrahedronIndices[indexType][visitIndex][2]];
-      connectivityOut[3] =
-        connectivityIn[detail::StructuredTetrahedronIndices[indexType][visitIndex][3]];
+      connectivityOut[0] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][0]];
+      connectivityOut[1] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][1]];
+      connectivityOut[2] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][2]];
+      connectivityOut[3] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][3]];
     }
   };
 

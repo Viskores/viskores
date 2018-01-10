@@ -38,6 +38,7 @@ set(headers
   MarkActiveNeighbors.h
   PointerJump.h
   SetCandidateParticles.h
+  TagTypes.h
   ValidHalo.h
   )
 

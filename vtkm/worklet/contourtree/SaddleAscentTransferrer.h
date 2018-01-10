@@ -80,7 +80,6 @@
 #ifndef vtkm_worklet_contourtree_saddle_ascent_transferrer_h
 #define vtkm_worklet_contourtree_saddle_ascent_transferrer_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm

@@ -33,7 +33,6 @@
 #include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/cont/Timer.h>
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/exec/FunctorBase.h>
 
 #if defined(THRUST_MAJOR_VERSION) && THRUST_MAJOR_VERSION == 1 && THRUST_MINOR_VERSION == 8 &&     \

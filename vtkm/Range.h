@@ -49,6 +49,9 @@ struct Range
   {
   }
 
+  VTKM_EXEC_CONT
+  Range(const Range&) = default;
+
   template <typename T1, typename T2>
   VTKM_EXEC_CONT Range(const T1& min, const T2& max)
     : Min(static_cast<vtkm::Float64>(min))
@@ -57,12 +60,7 @@ struct Range
   }
 
   VTKM_EXEC_CONT
-  const vtkm::Range& operator=(const vtkm::Range& src)
-  {
-    this->Min = src.Min;
-    this->Max = src.Max;
-    return *this;
-  }
+  vtkm::Range& operator=(const vtkm::Range& src) = default;
 
   /// \b Determine if the range is valid (i.e. has at least one valid point).
   ///

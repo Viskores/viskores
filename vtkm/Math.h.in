@@ -108,28 +108,30 @@ static inline VTKM_EXEC_CONT vtkm::Vec<typename detail::FloatingPointReturnType<
 }}
 '''.format(vtkmname)
 
-def unary_math_function_no_vec(vtkmname, sysname, returntype = None):
-  return unary_function(vtkmname,
-                        'T',
-                        'typename detail::FloatingPointReturnType<T>::Type' if returntype == None else returntype,
-                        'VTKM_CUDA_MATH_FUNCTION_64(' + sysname + ')(static_cast<vtkm::Float64>(x))',
-                        'std::' + sysname + '(static_cast<vtkm::Float64>(x))',
-                        'template <typename T>',
-                        'static inline') + \
-         unary_function(vtkmname,
-                        'vtkm::Float32',
-                        'detail::FloatingPointReturnType<vtkm::Float32>::Type' if returntype == None else returntype,
-                        'VTKM_CUDA_MATH_FUNCTION_32(' + sysname + ')(x)',
-                        'std::' + sysname + '(x)',
-                        'template <>',
-                        'inline') + \
-         unary_function(vtkmname,
-                        'vtkm::Float64',
-                        'detail::FloatingPointReturnType<vtkm::Float64>::Type' if returntype == None else returntype,
-                        'VTKM_CUDA_MATH_FUNCTION_64(' + sysname + ')(x)',
-                        'std::' + sysname + '(x)',
-                        'template <>',
-                        'inline')
+def unary_math_function_no_vec(vtkmname, sysname):
+  general_type = '''template <typename T>
+static inline VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type {0}(const T& x)
+{{
+  using RT = typename detail::FloatingPointReturnType<T>::Type;
+  return vtkm::{0}(static_cast<RT>(x));
+}}
+'''.format(vtkmname)
+  specialization_types = unary_function(vtkmname,
+                                        'vtkm::Float32',
+                                        'vtkm::Float32',
+                                        'VTKM_CUDA_MATH_FUNCTION_32(' + sysname + ')(x)',
+                                        'std::' + sysname + '(x)',
+                                        '',
+                                        'inline')
+  specialization_types += unary_function(vtkmname,
+                                         'vtkm::Float64',
+                                         'vtkm::Float64',
+                                         'VTKM_CUDA_MATH_FUNCTION_64(' + sysname + ')(x)',
+                                         'std::' + sysname + '(x)',
+                                         '',
+                                         'inline')
+  return specialization_types + general_type
+
 
 def unary_math_function(vtkmname, sysname):
   return unary_math_function_no_vec(vtkmname, sysname) + \
@@ -235,25 +237,15 @@ static inline VTKM_EXEC_CONT vtkm::Float64 Pi_4()
 
 namespace detail
 {
-
 template <typename T>
-struct FloatingPointReturnCondition
-  : std::enable_if<
-      std::is_same<typename vtkm::VecTraits<T>::ComponentType, vtkm::Float32>::value ||
-      std::is_same<typename vtkm::VecTraits<T>::ComponentType, const vtkm::Float32>::value>
-{
-};
-
-template <typename T, typename = void>
 struct FloatingPointReturnType
 {
-  using Type = vtkm::Float64;
-};
-
-template <typename T>
-struct FloatingPointReturnType<T, typename FloatingPointReturnCondition<T>::type>
-{
-  using Type = vtkm::Float32;
+  using ctype = typename vtkm::VecTraits<T>::ComponentType;
+  using representable_as_float_type =
+    std::integral_constant<bool,
+                          ((sizeof(ctype) < sizeof(float)) || std::is_same<ctype, vtkm::Float32>::value)>;
+  using Type =
+    typename std::conditional<representable_as_float_type::value, vtkm::Float32, vtkm::Float64>::type;
 };
 } // namespace detail
 
@@ -928,7 +920,12 @@ static inline VTKM_EXEC_CONT vtkm::Float32 RemainderQuotient(vtkm::Float32 numer
                                                              QType& quotient)
 {
   int iQuotient;
-  vtkm::Float32 result = std::remquo(numerator, denominator, &iQuotient);
+#ifdef VTKM_CUDA
+  const vtkm::Float64 result =
+    VTKM_CUDA_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
+#else
+  const vtkm::Float32 result = std::remquo(numerator, denominator, &iQuotient);
+#endif
   quotient = iQuotient;
   return result;
 }
@@ -938,7 +935,12 @@ static inline VTKM_EXEC_CONT vtkm::Float64 RemainderQuotient(vtkm::Float64 numer
                                                              QType& quotient)
 {
   int iQuotient;
-  vtkm::Float64 result = std::remquo(numerator, denominator, &iQuotient);
+#ifdef VTKM_CUDA
+  const vtkm::Float64 result =
+    VTKM_CUDA_MATH_FUNCTION_64(remquo)(numerator, denominator, &iQuotient);
+#else
+  const vtkm::Float64 result = std::remquo(numerator, denominator, &iQuotient);
+#endif
   quotient = iQuotient;
   return result;
 }

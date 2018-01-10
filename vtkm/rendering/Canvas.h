@@ -88,6 +88,12 @@ public:
   void SetBackgroundColor(const vtkm::rendering::Color& color);
 
   VTKM_CONT
+  const vtkm::rendering::Color& GetForegroundColor() const;
+
+  VTKM_CONT
+  void SetForegroundColor(const vtkm::rendering::Color& color);
+
+  VTKM_CONT
   vtkm::Id2 GetScreenPoint(vtkm::Float32 x,
                            vtkm::Float32 y,
                            vtkm::Float32 z,

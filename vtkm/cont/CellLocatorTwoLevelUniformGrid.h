@@ -107,6 +107,7 @@ private:
     DimVec3 Min;
     DimVec3 Max;
 
+    VTKM_EXEC
     bool Empty() const
     {
       return (this->Max[0] < this->Min[0]) || (this->Max[1] < this->Min[1]) ||

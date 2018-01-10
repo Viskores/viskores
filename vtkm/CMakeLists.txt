@@ -34,6 +34,7 @@ set(headers
   Bounds.h
   CellShape.h
   CellTraits.h
+  Flags.h
   Hash.h
   ImplicitFunction.h
   ListTag.h
@@ -66,6 +67,11 @@ vtkm_declare_headers(${headers})
 
 #-----------------------------------------------------------------------------
 #first add all the components vtkm that are shared between control and exec
+if(VTKm_ENABLE_MPI)
+  # This `if` is temporary and will be removed once `diy` supports building
+  # without MPI.
+  add_subdirectory(thirdparty/diy)
+endif()
 add_subdirectory(testing)
 add_subdirectory(internal)
 
