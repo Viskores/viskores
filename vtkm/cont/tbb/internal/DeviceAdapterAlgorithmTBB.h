@@ -265,6 +265,21 @@ public:
     ::tbb::parallel_sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
   }
 
+  template <typename T, class BinaryCompare>
+  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& values,
+                             BinaryCompare binary_compare)
+  {
+    if (parallel_radix_sort_tbb::can_use_parallel_radix_sort<T, BinaryCompare>())
+    {
+      ::parallel_radix_sort_tbb::parallel_radix_sort(
+        values.GetStorage().GetArray(), values.GetNumberOfValues(), binary_compare);
+    }
+    else
+    {
+      Sort<T, vtkm::cont::StorageTagBasic, BinaryCompare>(values, binary_compare);
+    }
+  }
+
   template <typename T, typename U, class StorageT, class StorageU>
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)

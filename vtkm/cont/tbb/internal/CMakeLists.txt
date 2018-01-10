@@ -34,7 +34,11 @@ if (VTKm_ENABLE_TBB)
   endif()
 endif()
 
-vtkm_declare_headers(parallel_sort.h TESTABLE OFF)
+vtkm_declare_headers(parallel_sort.h
+                     parallel_radix_sort_tbb.h
+                     kxsort.h
+                     TESTABLE OFF)
+
 vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})
 
 #-----------------------------------------------------------------------------
