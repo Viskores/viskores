@@ -45,7 +45,6 @@ set(headers
   ArrayPortalToIterators.h
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
-  ArrayRangeCompute.hxx
   AssignerMultiBlock.h
   CellLocator.h
   CellLocatorTwoLevelUniformGrid.h
@@ -92,6 +91,7 @@ set(headers
 
 set(template_sources
   ArrayHandle.hxx
+  ArrayRangeCompute.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
   StorageBasic.hxx

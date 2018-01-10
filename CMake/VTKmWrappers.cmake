@@ -62,29 +62,50 @@ endfunction(vtkm_pyexpander_generated_file)
 function(vtkm_add_header_build_test name dir_prefix use_cuda)
   set(hfiles ${ARGN})
 
-  set(srcs)
-  foreach (header ${ARGN})
-    get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
+  set(ext "cxx")
+  if(use_cuda)
+    set(ext "cu")
+  endif()
 
-    if( NOT cant_be_tested )
-      string(REPLACE "${CMAKE_CURRENT_BINARY_DIR}" "" header "${header}")
+  set(valid_hfiles )
+  set(srcs)
+  foreach (header ${hfiles})
+    get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
+    if( cant_be_tested )
       get_filename_component(headername ${header} NAME_WE)
-      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.cxx)
-      configure_file(${VTKm_SOURCE_DIR}/CMake/TestBuild.cxx.in ${src} @ONLY)
+
+      #By using file generate we will not trigger CMake execution when
+      #a header gets touched
+      file(GENERATE
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext}
+        CONTENT "
+//mark that we are including headers as test for completeness.
+//This is used by headers that include thrust to properly define a proper
+//device backend / system
+#define VTKM_TEST_HEADER_BUILD
+#include <${dir_prefix}/${headername}.h>"
+        )
       list(APPEND srcs ${src})
+      list(APPEND valid_hfiles ${header})
     endif()
-  endforeach (header)
+  endforeach()
+
+  set_source_files_properties(${valid_hfiles}
+    PROPERTIES HEADER_FILE_ONLY TRUE
+    )
 
   #only attempt to add a test build executable if we have any headers to
   #test. this might not happen when everything depends on thrust.
   list(LENGTH srcs num_srcs)
-
   if (${num_srcs} EQUAL 0)
     return()
   endif()
 
-  if(NOT TARGET TestBuild_${name})
-    add_library(TestBuild_${name} STATIC ${srcs} ${hfiles})
+  if(TARGET TestBuild_${name})
+    #If the target already exists just add more sources to it
+    target_sources(TestBuild_${name} PRIVATE ${srcs})
+  else()
+    add_library(TestBuild_${name} STATIC ${srcs} ${valid_hfiles})
     target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags)
 
     if(TARGET vtkm::tbb)
@@ -95,26 +116,15 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     if(TARGET vtkm_diy)
       target_link_libraries(TestBuild_${name} PRIVATE vtkm_diy)
     endif()
-  else()
-    target_sources(TestBuild_${name} PRIVATE ${srcs})
-  endif()
 
-  set_source_files_properties(${hfiles}
-    PROPERTIES HEADER_FILE_ONLY TRUE
-    )
-  if(use_cuda)
-    set_source_files_properties(${srcs}
-      PROPERTIES LANGUAGE "CUDA"
+    # Send the libraries created for test builds to their own directory so as to
+    # not polute the directory with useful libraries.
+    set_target_properties(TestBuild_${name} PROPERTIES
+      ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+      LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+      RUNTIME_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
       )
   endif()
-
-  # Send the libraries created for test builds to their own directory so as to
-  # not polute the directory with useful libraries.
-  set_target_properties(TestBuild_${name} PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
-    LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
-    RUNTIME_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
-    )
 
 endfunction()
 
