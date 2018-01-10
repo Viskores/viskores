@@ -23,6 +23,7 @@
 #include <vtkm/cont/DeviceAdapterListTag.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/internal/DeviceAdapterListHelpers.h>
 #include <vtkm/cont/internal/DeviceAdapterTag.h>
 #include <vtkm/cont/internal/VirtualObjectTransfer.h>
 
@@ -101,9 +102,10 @@ public:
 
       this->Internals->VirtualObject = derived;
       this->Internals->Owner = acquireOwnership;
-      vtkm::cont::ForEachValidDevice(
-        devices,
-        CreateTransferInterface<VirtualDerivedType>(this->Internals->Transfers.data(), derived));
+      vtkm::cont::internal::ForEachValidDevice(devices,
+                                               CreateTransferInterface<VirtualDerivedType>(),
+                                               this->Internals->Transfers.data(),
+                                               derived);
     }
   }
 
@@ -202,18 +204,12 @@ private:
   };
 
   template <typename VirtualDerivedType>
-  class CreateTransferInterface
+  struct CreateTransferInterface
   {
-  public:
-    CreateTransferInterface(std::unique_ptr<TransferInterface>* transfers,
-                            const VirtualDerivedType* virtualObject)
-      : Transfers(transfers)
-      , VirtualObject(virtualObject)
-    {
-    }
-
     template <typename DeviceAdapter>
-    void operator()(DeviceAdapter) const
+    VTKM_CONT void operator()(DeviceAdapter,
+                              std::unique_ptr<TransferInterface>* transfers,
+                              const VirtualDerivedType* virtualObject) const
     {
       using DeviceInfo = vtkm::cont::DeviceAdapterTraits<DeviceAdapter>;
 
@@ -225,12 +221,8 @@ private:
         throw vtkm::cont::ErrorBadType(msg);
       }
       using TransferImpl = TransferInterfaceImpl<VirtualDerivedType, DeviceAdapter>;
-      this->Transfers[DeviceInfo::GetId()].reset(new TransferImpl(this->VirtualObject));
+      transfers[DeviceInfo::GetId()].reset(new TransferImpl(virtualObject));
     }
-
-  private:
-    std::unique_ptr<TransferInterface>* Transfers;
-    const VirtualDerivedType* VirtualObject;
   };
 
   struct InternalStruct

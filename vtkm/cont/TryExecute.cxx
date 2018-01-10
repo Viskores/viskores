@@ -46,6 +46,11 @@ void HandleTryExecuteException(vtkm::Int8 deviceId,
     //than we fallback to another device
     tracker.ReportAllocationFailure(deviceId, name, e);
   }
+  catch (vtkm::cont::ErrorBadDevice& e)
+  {
+    std::cerr << "caught ErrorBadDevice: " << e.GetMessage() << std::endl;
+    tracker.ReportBadDeviceFailure(deviceId, name, e);
+  }
   catch (vtkm::cont::ErrorBadType& e)
   {
     //should bad type errors should stop the execution, instead of

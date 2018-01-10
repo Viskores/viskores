@@ -496,24 +496,17 @@ public:
 
   /// Builds the cell locator lookup structure
   ///
-  template <typename DeviceAdapter,
-            typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG,
-            typename CoordsTypeList = VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG,
-            typename CoordsStorageList = VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>
-  void Build(DeviceAdapter,
-             CellSetList cellSetTypes = CellSetList(),
-             CoordsTypeList coordsValueTypes = CoordsTypeList(),
-             CoordsStorageList coordsStorageType = CoordsStorageList())
+  template <typename DeviceAdapter, typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
+  void Build(DeviceAdapter, CellSetList cellSetTypes = CellSetList())
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     auto cellset = this->CellSet.ResetCellSetList(cellSetTypes);
-    auto points =
-      this->Coordinates.GetData().ResetTypeAndStorageLists(coordsValueTypes, coordsStorageType);
+    const auto& coords = this->Coordinates;
     TwoLevelUniformGrid ls;
 
     // 1: Compute the top level grid
-    auto bounds = this->Coordinates.GetBounds(coordsValueTypes, coordsStorageType);
+    auto bounds = this->Coordinates.GetBounds();
     FloatVec3 bmin(static_cast<vtkm::FloatDefault>(bounds.X.Min),
                    static_cast<vtkm::FloatDefault>(bounds.Y.Min),
                    static_cast<vtkm::FloatDefault>(bounds.Z.Min));
@@ -533,7 +526,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> binCounts;
     CountBinsL1 countL1(ls.TopLevel);
     vtkm::worklet::DispatcherMapTopology<CountBinsL1, DeviceAdapter>(countL1).Invoke(
-      cellset, points, binCounts);
+      cellset, coords, binCounts);
 
     // 3: Total number of unique (cell, bin) pairs (for pre-allocating arrays)
     vtkm::Id numPairsL1 = Algorithm::ScanExclusive(binCounts, binCounts);
@@ -543,7 +536,7 @@ public:
     binIds.Allocate(numPairsL1);
     FindBinsL1 findL1(ls.TopLevel);
     vtkm::worklet::DispatcherMapTopology<FindBinsL1, DeviceAdapter>(findL1).Invoke(
-      cellset, points, binCounts, binIds);
+      cellset, coords, binCounts, binIds);
     binCounts.ReleaseResources();
 
     // 5: From above, find the number of cells that intersect each top level bin
@@ -577,7 +570,7 @@ public:
     // 8: For each cell, find the number of l2 bins they intersect
     CountBinsL2 countL2(ls.TopLevel);
     vtkm::worklet::DispatcherMapTopology<CountBinsL2, DeviceAdapter>(countL2).Invoke(
-      cellset, points, ls.LeafDimensions, binCounts);
+      cellset, coords, ls.LeafDimensions, binCounts);
 
     // 9: Total number of unique (cell, bin) pairs (for pre-allocating arrays)
     vtkm::Id numPairsL2 = Algorithm::ScanExclusive(binCounts, binCounts);
@@ -587,7 +580,7 @@ public:
     ls.CellIds.Allocate(numPairsL2);
     FindBinsL2 findL2(ls.TopLevel);
     vtkm::worklet::DispatcherMapTopology<FindBinsL2, DeviceAdapter>(findL2).Invoke(
-      cellset, points, ls.LeafDimensions, ls.LeafStartIndex, binCounts, binIds, ls.CellIds);
+      cellset, coords, ls.LeafDimensions, ls.LeafStartIndex, binCounts, binIds, ls.CellIds);
     binCounts.ReleaseResources();
 
     // 11: From above, find the cells that each l2 bin intersects
@@ -710,22 +703,18 @@ public:
   template <typename PointComponentType,
             typename PointStorageType,
             typename DeviceAdapter,
-            typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG,
-            typename CoordsTypeList = VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG,
-            typename CoordsStorageList = VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>
+            typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
   void FindCells(
     const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& points,
     vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
     vtkm::cont::ArrayHandle<FloatVec3>& parametricCoords,
     DeviceAdapter device,
-    CellSetList cellSetTypes = CellSetList(),
-    CoordsTypeList coordsValueTypes = CoordsTypeList(),
-    CoordsStorageList coordsStorageType = CoordsStorageList()) const
+    CellSetList cellSetTypes = CellSetList()) const
   {
     vtkm::worklet::DispatcherMapField<FindCellWorklet, DeviceAdapter>().Invoke(
       points,
       this->CellSet.ResetCellSetList(cellSetTypes),
-      this->Coordinates.GetData().ResetTypeAndStorageLists(coordsValueTypes, coordsStorageType),
+      this->Coordinates,
       this->PrepareForDevice(device),
       cellIds,
       parametricCoords);

@@ -71,6 +71,10 @@ VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt8, 4, vtkm::cont::StorageTagBasic);
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float32, 4, vtkm::cont::StorageTagBasic);
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasic);
 
+VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::FloatDefault,
+                                  3,
+                                  vtkm::cont::ArrayHandleVirtualCoordinates::StorageTag);
+
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_T
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC
 

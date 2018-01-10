@@ -689,7 +689,7 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   logger->AddLogData("device", GetDeviceString(Device()));
   vtkm::cont::Timer<Device> constructTimer;
 
-  vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle = linearBVH.GetCoordsHandle();
+  auto coordsHandle = linearBVH.GetCoordsHandle();
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangleIndices = linearBVH.GetTriangles();
   vtkm::Id numberOfTriangles = linearBVH.GetNumberOfTriangles();
 
@@ -811,7 +811,7 @@ LinearBVH::LinearBVH()
   , CanConstruct(false){};
 
 VTKM_CONT
-LinearBVH::LinearBVH(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
+LinearBVH::LinearBVH(vtkm::cont::ArrayHandleVirtualCoordinates coordsHandle,
                      vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
                      vtkm::Bounds coordBounds)
   : CoordBounds(coordBounds)
@@ -856,7 +856,7 @@ void LinearBVH::Construct()
 }
 
 VTKM_CONT
-void LinearBVH::SetData(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
+void LinearBVH::SetData(vtkm::cont::ArrayHandleVirtualCoordinates coordsHandle,
                         vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
                         vtkm::Bounds coordBounds)
 {
@@ -918,7 +918,7 @@ bool LinearBVH::GetIsConstructed() const
   return IsConstructed;
 }
 VTKM_CONT
-vtkm::cont::DynamicArrayHandleCoordinateSystem LinearBVH::GetCoordsHandle() const
+vtkm::cont::ArrayHandleVirtualCoordinates LinearBVH::GetCoordsHandle() const
 {
   return CoordsHandle;
 }

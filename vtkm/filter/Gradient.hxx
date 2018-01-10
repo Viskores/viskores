@@ -115,20 +115,14 @@ inline vtkm::filter::Result Gradient::DoExecute(
   if (this->ComputePointGradient)
   {
     vtkm::worklet::PointGradient gradient;
-    outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                            vtkm::filter::ApplyPolicy(coords, policy),
-                            inField,
-                            gradientfields,
-                            adapter);
+    outArray = gradient.Run(
+      vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields, adapter);
   }
   else
   {
     vtkm::worklet::CellGradient gradient;
-    outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                            vtkm::filter::ApplyPolicy(coords, policy),
-                            inField,
-                            gradientfields,
-                            adapter);
+    outArray = gradient.Run(
+      vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields, adapter);
   }
   if (!this->RowOrdering)
   {
