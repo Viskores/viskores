@@ -52,10 +52,8 @@ inline VTKM_CONT vtkm::filter::Result ExtractStructured::DoExecute(
                                    this->IncludeBoundary,
                                    device);
 
-  auto coords =
-    this->Worklet.MapCoordinates(vtkm::filter::ApplyPolicy(coordinates, policy), device);
-  vtkm::cont::CoordinateSystem outputCoordinates(coordinates.GetName(),
-                                                 vtkm::cont::DynamicArrayHandle(coords));
+  auto coords = this->Worklet.MapCoordinates(coordinates, device);
+  vtkm::cont::CoordinateSystem outputCoordinates(coordinates.GetName(), coords);
 
   vtkm::cont::DataSet output;
   output.AddCellSet(vtkm::cont::DynamicCellSet(cellset));

@@ -37,11 +37,10 @@ namespace
 
 const vtkm::Id ARRAY_SIZE = 10;
 
-template <typename ValueType>
 struct MySquare
 {
   template <typename U>
-  VTKM_EXEC ValueType operator()(U u) const
+  VTKM_EXEC auto operator()(U u) const -> decltype(vtkm::dot(u, u))
   {
     return vtkm::dot(u, u);
   }
@@ -59,7 +58,7 @@ struct CheckTransformFunctor : vtkm::exec::FunctorBase
     using T = typename TransformedPortalType::ValueType;
     typename OriginalPortalType::ValueType original = this->OriginalPortal.Get(index);
     T transformed = this->TransformedPortal.Get(index);
-    if (!test_equal(transformed, MySquare<T>()(original)))
+    if (!test_equal(transformed, MySquare{}(original)))
     {
       this->RaiseError("Encountered bad transformed value.");
     }
@@ -107,7 +106,7 @@ VTKM_CONT void CheckControlPortals(const OriginalArrayHandleType& originalArray,
     using T = typename TransformedPortalType::ValueType;
     typename OriginalPortalType::ValueType original = originalPortal.Get(index);
     T transformed = transformedPortal.Get(index);
-    VTKM_TEST_ASSERT(test_equal(transformed, MySquare<T>()(original)), "Bad transform value.");
+    VTKM_TEST_ASSERT(test_equal(transformed, MySquare{}(original)), "Bad transform value.");
   }
 }
 
@@ -115,20 +114,19 @@ template <typename InputValueType>
 struct TransformTests
 {
   using OutputValueType = typename vtkm::VecTraits<InputValueType>::ComponentType;
-  using FunctorType = MySquare<OutputValueType>;
 
   using TransformHandle =
-    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<InputValueType>, FunctorType>;
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<InputValueType>, MySquare>;
 
   using CountingTransformHandle =
-    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<InputValueType>, FunctorType>;
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<InputValueType>, MySquare>;
 
   using Device = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
   void operator()() const
   {
-    FunctorType functor;
+    MySquare functor;
 
     std::cout << "Test a transform handle with a counting handle as the values" << std::endl;
     vtkm::cont::ArrayHandleCounting<InputValueType> counting = vtkm::cont::make_ArrayHandleCounting(

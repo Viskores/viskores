@@ -221,11 +221,6 @@ find_package(Pyexpander)
 
 #-----------------------------------------------------------------------------
 # Add subdirectories
-if(VTKm_ENABLE_MPI)
-  # This `if` is temporary and will be removed once `diy` supports building
-  # without MPI.
-  add_subdirectory(diy)
-endif()
 add_subdirectory(vtkm)
 
 #-----------------------------------------------------------------------------

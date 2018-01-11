@@ -71,9 +71,10 @@ VTKM_EXEC_CONT vtkm::Vec<ValueType, N> Lerp(const vtkm::Vec<ValueType, N>& value
 /// when possible.
 ///
 template <typename T>
-VTKM_EXEC_CONT typename vtkm::VecTraits<T>::ComponentType MagnitudeSquared(const T& x)
+VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type MagnitudeSquared(const T& x)
 {
-  return vtkm::dot(x, x);
+  using U = typename detail::FloatingPointReturnType<T>::Type;
+  return static_cast<U>(vtkm::dot(x, x));
 }
 
 // ----------------------------------------------------------------------------

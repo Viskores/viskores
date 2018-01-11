@@ -32,11 +32,14 @@
 #include <vtkm/cont/MultiBlock.h>
 
 #if defined(VTKM_ENABLE_MPI)
-#include <diy/decomposition.hpp>
-#include <diy/master.hpp>
-#include <diy/partners/all-reduce.hpp>
-#include <diy/partners/swap.hpp>
-#include <diy/reduce.hpp>
+// clang-format off
+#include <vtkm/thirdparty/diy/Configure.h>
+#include VTKM_DIY(diy/decomposition.hpp)
+#include VTKM_DIY(diy/master.hpp)
+#include VTKM_DIY(diy/partners/all-reduce.hpp)
+#include VTKM_DIY(diy/partners/swap.hpp)
+#include VTKM_DIY(diy/reduce.hpp)
+// clang-format on
 
 namespace vtkm
 {
@@ -202,29 +205,8 @@ void MultiBlock::ReplaceBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
   }
 }
 
-VTKM_CONT
-vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) const
+VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) const
 {
-  return this->GetBounds(coordinate_system_index,
-                         VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
-                         VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList>
-VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index, TypeList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  return this->GetBounds(
-    coordinate_system_index, TypeList(), VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-}
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index,
-                                             TypeList,
-                                             StorageList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  VTKM_IS_LIST_TAG(StorageList);
-
 #if defined(VTKM_ENABLE_MPI)
   auto world = vtkm::cont::EnvironmentTracker::GetCommunicator();
   diy::Master master(world,
@@ -244,7 +226,7 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index,
     try
     {
       vtkm::cont::CoordinateSystem coords = block.GetCoordinateSystem(coordinate_system_index);
-      *data = coords.GetBounds(TypeList(), StorageList());
+      *data = coords.GetBounds();
     }
     catch (const vtkm::cont::Error&)
     {
@@ -285,44 +267,16 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index,
   vtkm::Bounds bounds;
   for (size_t i = 0; i < num_blocks; ++i)
   {
-    vtkm::Bounds block_bounds = this->GetBlockBounds(i, index, TypeList(), StorageList());
+    vtkm::Bounds block_bounds = this->GetBlockBounds(i, index);
     bounds.Include(block_bounds);
   }
   return bounds;
 #endif
 }
 
-VTKM_CONT
-vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index,
-                                        vtkm::Id coordinate_system_index) const
-{
-  return this->GetBlockBounds(block_index,
-                              coordinate_system_index,
-                              VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
-                              VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList>
 VTKM_CONT vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index,
-                                                  vtkm::Id coordinate_system_index,
-                                                  TypeList) const
+                                                  vtkm::Id coordinate_system_index) const
 {
-  VTKM_IS_LIST_TAG(TypeList);
-  return this->GetBlockBounds(block_index,
-                              coordinate_system_index,
-                              TypeList(),
-                              VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index,
-                                                  vtkm::Id coordinate_system_index,
-                                                  TypeList,
-                                                  StorageList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  VTKM_IS_LIST_TAG(StorageList);
-
   const vtkm::Id index = coordinate_system_index;
   vtkm::cont::CoordinateSystem coords;
   try
@@ -337,56 +291,19 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index
         << "block " << block_index << ". vtkm error message: " << error.GetMessage();
     throw ErrorExecution(msg.str());
   }
-  return coords.GetBounds(TypeList(), StorageList());
+  return coords.GetBounds();
 }
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int& index) const
+VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int& index) const
 {
-  return this->GetGlobalRange(index, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int& index,
-                                                                          TypeList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  return this->GetGlobalRange(index, TypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int& index,
-                                                                          TypeList,
-                                                                          StorageList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  VTKM_IS_LIST_TAG(StorageList);
-
   assert(this->Blocks.size() > 0);
   vtkm::cont::Field field = this->Blocks.at(0).GetField(index);
   std::string field_name = field.GetName();
-  return this->GetGlobalRange(field_name, TypeList(), StorageList());
+  return this->GetGlobalRange(field_name);
 }
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const std::string& field_name) const
-{
-  return this->GetGlobalRange(
-    field_name, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(
-  const std::string& field_name,
-  TypeList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  return this->GetGlobalRange(field_name, TypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range>
-MultiBlock::GetGlobalRange(const std::string& field_name, TypeList, StorageList) const
+  const std::string& field_name) const
 {
 #if defined(VTKM_ENABLE_MPI)
   using BlockMetaData = std::vector<vtkm::Range>;
@@ -408,7 +325,7 @@ MultiBlock::GetGlobalRange(const std::string& field_name, TypeList, StorageList)
     if (block.HasField(field_name))
     {
       auto field = block.GetField(field_name);
-      const vtkm::cont::ArrayHandle<vtkm::Range> range = field.GetRange(TypeList(), StorageList());
+      const vtkm::cont::ArrayHandle<vtkm::Range> range = field.GetRange();
       *data = vtkm::cont::detail::CopyArrayPortalToVector(range.GetPortalConstControl());
     }
   });
@@ -465,7 +382,7 @@ MultiBlock::GetGlobalRange(const std::string& field_name, TypeList, StorageList)
     }
 
     const vtkm::cont::Field& field = this->Blocks[i].GetField(field_name);
-    vtkm::cont::ArrayHandle<vtkm::Range> sub_range = field.GetRange(TypeList(), StorageList());
+    vtkm::cont::ArrayHandle<vtkm::Range> sub_range = field.GetRange();
 
     vtkm::cont::ArrayHandle<vtkm::Range>::PortalConstControl sub_range_control =
       sub_range.GetPortalConstControl();
@@ -488,7 +405,6 @@ MultiBlock::GetGlobalRange(const std::string& field_name, TypeList, StorageList)
           << "(" << num_components << ") in block 0";
       throw ErrorExecution(msg.str());
     }
-
 
     for (vtkm::Id c = 0; c < components; ++c)
     {

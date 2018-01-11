@@ -249,8 +249,8 @@ public:
 
   vtkm::cont::DynamicArrayHandle& GetData();
 
-  template <typename T>
-  VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T>& newdata)
+  template <typename T, typename StorageTag>
+  VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, StorageTag>& newdata)
   {
     this->Data = newdata;
     this->ModifiedFlag = true;

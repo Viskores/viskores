@@ -20,7 +20,12 @@
 #include <vtkm/cont/EnvironmentTracker.h>
 
 #if defined(VTKM_ENABLE_MPI)
-#include <diy/mpi.hpp>
+
+// clang-format off
+#include <vtkm/thirdparty/diy/Configure.h>
+#include VTKM_DIY(diy/mpi.hpp)
+// clang-format on
+
 #else
 namespace diy
 {

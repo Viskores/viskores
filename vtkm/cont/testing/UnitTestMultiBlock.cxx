@@ -36,7 +36,12 @@
 #include <vtkm/exec/ConnectivityStructured.h>
 
 #if defined(VTKM_ENABLE_MPI)
-#include <diy/master.hpp>
+
+// clang-format off
+#include <vtkm/thirdparty/diy/Configure.h>
+#include VTKM_DIY(diy/master.hpp)
+// clang-format on
+
 #endif
 
 void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet);

@@ -46,7 +46,7 @@ $# Ignore the following comment. It is meant for the generated file.
 
 #include <vtkm/internal/brigand.hpp>
 
-$py(max_parameters=10)\
+$py(max_parameters=20)\
 #define VTKM_MAX_FUNCTION_PARAMETERS $(max_parameters)
 
 $# Python commands used in template expansion.

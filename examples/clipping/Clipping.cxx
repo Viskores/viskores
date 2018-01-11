@@ -104,14 +104,11 @@ int main(int argc, char* argv[])
   output.AddCellSet(outputCellSet);
 
 
+  auto inCoords = input.GetCoordinateSystem(0).GetData();
   timer.Reset();
-  vtkm::cont::DynamicArrayHandle coords;
-  {
-    FieldMapper<DeviceAdapter> coordMapper(coords, clip, false);
-    input.GetCoordinateSystem(0).GetData().CastAndCall(coordMapper);
-  }
+  auto outCoords = clip.ProcessCellField(inCoords, DeviceAdapter());
   vtkm::Float64 processCoordinatesTime = timer.GetElapsedTime();
-  output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coords));
+  output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", outCoords));
 
   timer.Reset();
   for (vtkm::Id i = 0; i < input.GetNumberOfFields(); ++i)
