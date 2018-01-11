@@ -127,7 +127,6 @@ determine_version(${VTKm_SOURCE_DIR} ${GIT_EXECUTABLE} "VTKm")
 # when building VTK-m.
 include(VTKmCompilerFlags)
 include(VTKmWrappers)
-include(VTKmCPUVectorization)
 
 #-----------------------------------------------------------------------------
 # When building VTK-m it self we want to explicitly disable compiler extensions
@@ -267,7 +266,8 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(
     FILES
       ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
-      ${VTKm_SOURCE_DIR}/CMake/VTKmBackends.cmake
+      ${VTKm_SOURCE_DIR}/CMake/VTKmCPUVectorization.cmake
+      ${VTKm_SOURCE_DIR}/CMake/VTKmDeviceAdapters.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}

@@ -81,7 +81,7 @@ endif()
 # When building libraries/tests that are part of the VTK-m repository
 # inherit the properties from vtkm_developer_flags
 target_link_libraries(vtkm_compiler_flags
-  INTERFACE $<BUILD_INTERFACE:vtkm_developer_flags>)
+  INTERFACE $<BUILD_INTERFACE:vtkm_developer_flags vtkm_vectorization_flags>)
 
 
 #-----------------------------------------------------------------------------

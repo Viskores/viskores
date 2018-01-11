@@ -21,6 +21,7 @@
 include(CMakeParseArguments)
 
 include(VTKmDeviceAdapters)
+include(VTKmCPUVectorization)
 
 #-----------------------------------------------------------------------------
 # Utility to build a kit name from the current directory.
