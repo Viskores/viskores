@@ -25,6 +25,8 @@
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/raytracing/ConnectivityTracerFactory.h>
 #include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/raytracing/RayOperations.h>
+
 
 namespace vtkm
 {
