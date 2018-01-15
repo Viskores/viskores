@@ -36,6 +36,7 @@
 #include <vtkm/worklet/StableSortIndices.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <random>
 #include <string>
@@ -1196,7 +1197,9 @@ int main(int argc, char* argv[])
   for (int i = 1; i < argc; ++i)
   {
     std::string arg = argv[i];
-    std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+    std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+      return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    });
     if (arg == "copy")
     {
       config.BenchmarkFlags |= vtkm::benchmarking::COPY;
@@ -1253,7 +1256,9 @@ int main(int argc, char* argv[])
     {
       ++i;
       arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      });
       if (arg == "base")
       {
         config.ExtendedTypeList = false;
@@ -1272,7 +1277,9 @@ int main(int argc, char* argv[])
     {
       ++i;
       arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      });
       if (arg == "off")
       {
         config.TestArraySizeBytes = false;
@@ -1288,7 +1295,9 @@ int main(int argc, char* argv[])
     {
       ++i;
       arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      });
       if (arg == "off")
       {
         config.TestArraySizeValues = false;
