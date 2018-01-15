@@ -47,6 +47,7 @@ set(headers
   ArrayRangeCompute.h
   ArrayRangeCompute.hxx
   AssignerMultiBlock.h
+  CellLocator.h
   CellLocatorTwoLevelUniformGrid.h
   CellSet.h
   CellSetExplicit.h
