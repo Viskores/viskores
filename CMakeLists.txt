@@ -168,12 +168,12 @@ if (VTKm_ENABLE_TESTING)
 
   #-----------------------------------------------------------------------------
   # Find the Python interpreter, which we will use during the build process
-  find_package(PythonInterp)
+  find_package(PythonInterp QUIET)
 
   #-----------------------------------------------------------------------------
   # Find Pyexpander in case somebody wants to update the auto generated
   # faux variadic template code
-  find_package(Pyexpander)
+  find_package(Pyexpander QUIET)
 endif (VTKm_ENABLE_TESTING)
 
 #-----------------------------------------------------------------------------
