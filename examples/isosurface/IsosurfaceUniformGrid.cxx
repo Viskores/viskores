@@ -48,7 +48,7 @@
 
 #include <vector>
 
-static vtkm::Id3 dims(4, 4, 4);
+static vtkm::Id3 dims(256, 256, 256);
 static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> verticesArray, normalsArray;
 static vtkm::cont::ArrayHandle<vtkm::Float32> scalarsArray;
 static Quaternion qrot;
