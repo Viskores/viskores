@@ -882,19 +882,20 @@ struct ScanKernel : vtkm::exec::FunctorBase
   }
 };
 
-template <typename InPortalType, typename OutPortalType, typename BinaryFunctor>
+template <typename InPortalType1,
+          typename InPortalType2,
+          typename OutPortalType,
+          typename BinaryFunctor>
 struct BinaryTransformKernel : vtkm::exec::FunctorBase
 {
-  using ValueType = typename InPortalType::ValueType;
-
-  InPortalType InPortal1;
-  InPortalType InPortal2;
+  InPortalType1 InPortal1;
+  InPortalType2 InPortal2;
   OutPortalType OutPortal;
   BinaryFunctor BinaryOperator;
 
   VTKM_CONT
-  BinaryTransformKernel(const InPortalType& inPortal1,
-                        const InPortalType& inPortal2,
+  BinaryTransformKernel(const InPortalType1& inPortal1,
+                        const InPortalType2& inPortal2,
                         const OutPortalType& outPortal,
                         BinaryFunctor binaryOperator)
     : InPortal1(inPortal1)
