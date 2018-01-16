@@ -217,7 +217,7 @@ find_package(PythonInterp)
 #-----------------------------------------------------------------------------
 # Find Pyexpander in case somebody wants to update the auto generated
 # faux variadic template code
-find_package(Pyexpander)
+find_package(Pyexpander QUIET)
 
 #-----------------------------------------------------------------------------
 # Add subdirectories
