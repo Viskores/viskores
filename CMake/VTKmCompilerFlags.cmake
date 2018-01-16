@@ -64,7 +64,7 @@ endif()
 target_include_directories(vtkm_compiler_flags INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
-  $<INSTALL_INTERFACE:include>
+  $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}>
   )
 
 # Additional warnings just for Clang 3.5+, and AppleClang 7+ we specify
