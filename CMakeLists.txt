@@ -102,7 +102,7 @@ set(CMAKE_CXX_EXTENSIONS False)
 # We prefer to only export symbols of a small set of user facing classes,
 # rather than exporting all symbols. In practice we will try to not export
 # symbols for any third party library.
-option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
+vtkm_option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
 mark_as_advanced(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
 if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -113,27 +113,27 @@ include(CMake/VTKmCompilerExtras.cmake)
 
 #-----------------------------------------------------------------------------
 # Configurable Options
-option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
-option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
-option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
-option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
-option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
-option(VTKm_ENABLE_OSMESA "Enable creating the OSMesa canvas" OFF)
-option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
+vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
+vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
+vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
+vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
+vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
+vtkm_option(VTKm_ENABLE_OSMESA "Enable creating the OSMesa canvas" OFF)
+vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
 
-option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
-option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
+vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
+vtkm_option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
 
-option(VTKm_USE_DOUBLE_PRECISION
+vtkm_option(VTKm_USE_DOUBLE_PRECISION
   "Use double precision for floating point calculations"
   OFF
   )
-option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
+vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
-option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
+vtkm_option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
 mark_as_advanced(VTKm_NO_ASSERT)
 
-option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
+vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 if (VTKm_ENABLE_TESTING)
