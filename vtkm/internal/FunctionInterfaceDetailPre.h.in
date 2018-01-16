@@ -46,7 +46,7 @@ $# Ignore the following comment. It is meant for the generated file.
 
 #include <vtkm/internal/brigand.hpp>
 
-$py(max_parameters=10)\
+$py(max_parameters=20)\
 #define VTKM_MAX_FUNCTION_PARAMETERS $(max_parameters)
 
 $# Python commands used in template expansion.
@@ -123,6 +123,8 @@ $for(num_params in range(0, max_parameters+1))\
 template <$template_params(num_params)>
 struct ParameterContainer<$signature(num_params)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
 $for(param_index in range(1, num_params+1))\
   $ptype(param_index) Parameter$(param_index);
 $endfor\

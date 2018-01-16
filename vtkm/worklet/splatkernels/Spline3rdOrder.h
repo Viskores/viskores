@@ -39,13 +39,13 @@ struct default_norm_value;
 template <>
 struct default_norm_value<2>
 {
-  double value() const { return 10.0 / (7.0 * M_PI); }
+  const double value = 10.0 / (7.0 * M_PI);
 };
 
 template <>
 struct default_norm_value<3>
 {
-  double value() const { return 1.0 / M_PI; }
+  const double value = 1.0 / M_PI;
 };
 
 
@@ -65,7 +65,7 @@ struct Spline3rdOrder : public KernelBase<Spline3rdOrder<Dimensions>>
     maxRadius_ = 2.0 * smoothingLength;
     maxRadius2_ = maxRadius_ * maxRadius_;
     //
-    norm_ = default_norm_value<Dimensions>().value();
+    norm_ = default_norm_value<Dimensions>().value;
 
     scale_W_ = norm_ * PowerExpansion<Dimensions>(Hinverse_);
     scale_GradW_ = norm_ * PowerExpansion<Dimensions + 1>(Hinverse_);

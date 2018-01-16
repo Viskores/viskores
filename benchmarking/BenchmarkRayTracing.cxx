@@ -107,7 +107,6 @@ VTKM_MAKE_BENCHMARK(RayTracing, BenchRayTracing);
 
 int main(int, char* [])
 {
-  using TestTypes = vtkm::ListTagBase<vtkm::Float32>;
   VTKM_RUN_BENCHMARK(RayTracing, vtkm::ListTagBase<vtkm::Float32>());
   return 0;
 }

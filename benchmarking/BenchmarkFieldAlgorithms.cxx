@@ -35,6 +35,7 @@
 #include "Benchmarker.h"
 #include <vtkm/cont/testing/Testing.h>
 
+#include <cctype>
 #include <random>
 #include <string>
 
@@ -922,7 +923,9 @@ int main(int argc, char* argv[])
     for (int i = 1; i < argc; ++i)
     {
       std::string arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      });
       if (arg == "blackscholes")
       {
         benchmarks |= vtkm::benchmarking::BLACK_SCHOLES;

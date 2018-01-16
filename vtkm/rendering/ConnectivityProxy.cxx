@@ -25,6 +25,8 @@
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/raytracing/ConnectivityTracerFactory.h>
 #include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/raytracing/RayOperations.h>
+
 
 namespace vtkm
 {
@@ -66,7 +68,7 @@ protected:
     {
       VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-      Internals->SpatialBounds = Internals->Coords.GetBounds(Device());
+      Internals->SpatialBounds = Internals->Coords.GetBounds();
       return true;
     }
   };

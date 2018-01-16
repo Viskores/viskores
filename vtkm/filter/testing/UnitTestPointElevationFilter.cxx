@@ -91,9 +91,7 @@ void TestPointElevationNoPolicy()
   const bool valid = result.FieldAs(resultArrayHandle);
   if (valid)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> coordinates;
-    inputData.GetCoordinateSystem().GetData().CopyTo(coordinates);
-
+    auto coordinates = inputData.GetCoordinateSystem().GetData();
     for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
@@ -131,9 +129,7 @@ void TestPointElevationWithPolicy()
   const bool valid = result.FieldAs(resultArrayHandle);
   if (valid)
   {
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> coordinates;
-    inputData.GetCoordinateSystem().GetData().CopyTo(coordinates);
-
+    auto coordinates = inputData.GetCoordinateSystem().GetData();
     for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,

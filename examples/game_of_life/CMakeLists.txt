@@ -29,7 +29,6 @@ vtkm_find_gl(OPTIONAL GL GLUT GLEW)
 if(TARGET OpenGL::GL AND
    TARGET GLUT::GLUT AND
    TARGET GLEW::GLEW)
-
   if(TARGET vtkm::cuda)
     add_executable(GameOfLife GameOfLife.cu LoadShaders.h)
   else()

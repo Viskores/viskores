@@ -19,8 +19,8 @@
 //  this software.
 //
 //=============================================================================
-#ifndef vtk_m_ArrayHandlePermutation_h
-#define vtk_m_ArrayHandlePermutation_h
+#ifndef vtk_m_cont_ArrayHandlePermutation_h
+#define vtk_m_cont_ArrayHandlePermutation_h
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ErrorBadType.h>
@@ -372,4 +372,4 @@ make_ArrayHandlePermutation(IndexArrayHandleType indexArray, ValueArrayHandleTyp
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_ArrayHandlePermutation_h
+#endif //vtk_m_cont_ArrayHandlePermutation_h

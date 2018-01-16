@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_compute_bin_range_h
 #define vtkm_worklet_cosmotools_compute_bin_range_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm

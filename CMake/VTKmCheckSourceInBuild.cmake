@@ -39,11 +39,21 @@ set(FILES_TO_CHECK
 set(EXCEPTIONS
   )
 
+set(DIRECTORY_EXCEPTIONS
+  ${VTKm_SOURCE_DIR}/vtkm/thirdparty/diy/vtkmdiy
+  )
+
 if (NOT VTKm_SOURCE_DIR)
   message(SEND_ERROR "VTKm_SOURCE_DIR not defined.")
 endif (NOT VTKm_SOURCE_DIR)
 
 function(check_directory directory parent_CMakeLists_contents)
+  foreach(exception IN LISTS DIRECTORY_EXCEPTIONS)
+    if(directory MATCHES "^${exception}$")
+      return()
+    endif()
+  endforeach(exception)
+
   message("Checking directory ${directory}...")
 
   get_filename_component(directory_name "${directory}" NAME)

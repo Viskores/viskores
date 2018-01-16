@@ -21,14 +21,15 @@
 set(headers
   BoundingVolumeHierarchy.h
   Camera.h
+  CellIntersector.h
+  CellSampler.h
+  CellTables.h
   ChannelBuffer.h
   ChannelBufferOperations.h
   ConnectivityBase.h
   ConnectivityTracer.h
+  ConnectivityTracerBase.h
   ConnectivityTracerFactory.h
-  CellIntersector.h
-  CellSampler.h
-  CellTables.h
   Logger.h
   MeshConnectivityBuilder.h
   MeshConnectivityStructures.h
@@ -38,8 +39,8 @@ set(headers
   RayTracer.h
   RayTracingTypeDefs.h
   TriangleIntersector.h
-  Worklets.h
   VolumeRendererStructured.h
+  Worklets.h
   )
 
 set_source_files_properties(CellTables.h

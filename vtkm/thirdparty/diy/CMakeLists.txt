@@ -19,17 +19,22 @@
 ##  this software.
 ##
 ##=============================================================================
-
-#==============================================================================
-# See License.txt
-#==============================================================================
 add_library(diy INTERFACE)
+
+vtkm_get_kit_name(kit_name kit_dir)
 
 # diy needs C++11
 target_compile_features(diy INTERFACE cxx_auto_type)
 
+# placeholder to support external DIY
+set(VTKM_USE_EXTERNAL_DIY OFF)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
+  ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h)
+
 target_include_directories(diy INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
   $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}>)
 
 # presently, this dependency is required. Make it optional in the future.
@@ -59,12 +64,9 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(TARGETS diy
     EXPORT ${VTKm_EXPORT_NAME})
 
-  # Install headers
-  install(DIRECTORY include/diy
-    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR})
-
-  # Install other files.
-  install(FILES LEGAL.txt LICENSE.txt
-    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/diy
-    )
+  ## Install headers
+  install(DIRECTORY vtkmdiy
+    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
+  install(FILES ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h
+    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
 endif()

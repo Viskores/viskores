@@ -522,9 +522,7 @@ public:
 
     /// output
     vtkm::cont::DataSet output;
-
-    output.AddCoordinateSystem(
-      vtkm::cont::CoordinateSystem("coordinates", vtkm::cont::DynamicArrayHandle(repPointArray)));
+    output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
 
     vtkm::cont::CellSetSingleType<> triangles("cells");
     triangles.Fill(repPointArray.GetNumberOfValues(),

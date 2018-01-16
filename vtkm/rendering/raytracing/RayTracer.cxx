@@ -233,8 +233,8 @@ public:
   template <typename Precision>
   VTKM_CONT void run(Ray<Precision>& rays,
                      LinearBVH& bvh,
-                     vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
-                     vtkm::cont::Field& scalarField,
+                     vtkm::cont::ArrayHandleVirtualCoordinates& coordsHandle,
+                     const vtkm::cont::Field& scalarField,
                      const vtkm::Range& scalarRange)
   {
     bool isSupportedField = (scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
@@ -396,7 +396,7 @@ Camera& RayTracer::GetCamera()
   return camera;
 }
 
-void RayTracer::SetData(const vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
+void RayTracer::SetData(const vtkm::cont::ArrayHandleVirtualCoordinates& coordsHandle,
                         const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
                         vtkm::cont::Field& scalarField,
                         const vtkm::Id& numberOfTriangles,

@@ -92,26 +92,10 @@ public:
   VTKM_CONT
   vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
 
-  template <typename TypeList>
-  VTKM_CONT vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index, TypeList) const;
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index, TypeList, StorageList) const;
   /// get the bounds of a coordinate system within a given DataSet
   VTKM_CONT
   vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
                               vtkm::Id coordinate_system_index = 0) const;
-
-  template <typename TypeList>
-  VTKM_CONT vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
-                                        vtkm::Id coordinate_system_index,
-                                        TypeList) const;
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
-                                        vtkm::Id coordinate_system_index,
-                                        TypeList,
-                                        StorageList) const;
 
   //@{
   /// Get the unified range of the same field within all contained DataSet.
@@ -120,25 +104,8 @@ public:
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name) const;
 
-  template <typename TypeList>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name,
-                                                                TypeList) const;
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name,
-                                                                TypeList,
-                                                                StorageList) const;
-
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int& index) const;
-
-  template <typename TypeList>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int& index, TypeList) const;
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int& index,
-                                                                TypeList,
-                                                                StorageList) const;
   //@}
 
   VTKM_CONT

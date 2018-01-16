@@ -21,7 +21,9 @@
 #include <vtkm/StaticAssert.h>
 #include <vtkm/cont/ArrayCopy.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/AssignerMultiBlock.h>
 #include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/DecomposerMultiBlock.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/EnvironmentTracker.h>
@@ -30,7 +32,14 @@
 #include <vtkm/cont/MultiBlock.h>
 
 #if defined(VTKM_ENABLE_MPI)
-#include <diy/master.hpp>
+// clang-format off
+#include <vtkm/thirdparty/diy/Configure.h>
+#include VTKM_DIY(diy/decomposition.hpp)
+#include VTKM_DIY(diy/master.hpp)
+#include VTKM_DIY(diy/partners/all-reduce.hpp)
+#include VTKM_DIY(diy/partners/swap.hpp)
+#include VTKM_DIY(diy/reduce.hpp)
+// clang-format on
 
 namespace vtkm
 {
@@ -48,110 +57,20 @@ VTKM_CONT std::vector<typename PortalType::ValueType> CopyArrayPortalToVector(
   std::copy(iterators.GetBegin(), iterators.GetEnd(), result.begin());
   return result;
 }
+
+template <typename T>
+const vtkm::cont::DataSet& GetBlock(const vtkm::cont::MultiBlock& mb, const T&);
+
+template <>
+const vtkm::cont::DataSet& GetBlock(const vtkm::cont::MultiBlock& mb,
+                                    const diy::Master::ProxyWithLink& cp)
+{
+  const int lid = cp.master()->lid(cp.gid());
+  return mb.GetBlock(lid);
 }
 }
 }
-
-namespace std
-{
-
-namespace detail
-{
-
-template <typename T, size_t ElementSize = sizeof(T)>
-struct MPIPlus
-{
-  MPIPlus()
-  {
-    this->OpPtr = std::shared_ptr<MPI_Op>(new MPI_Op(MPI_NO_OP), [](MPI_Op* ptr) {
-      MPI_Op_free(ptr);
-      delete ptr;
-    });
-
-    MPI_Op_create(
-      [](void* a, void* b, int* len, MPI_Datatype*) {
-        T* ba = reinterpret_cast<T*>(a);
-        T* bb = reinterpret_cast<T*>(b);
-        for (int cc = 0; cc < (*len) / ElementSize; ++cc)
-        {
-          bb[cc] = ba[cc] + bb[cc];
-        }
-      },
-      1,
-      this->OpPtr.get());
-  }
-  ~MPIPlus() {}
-  operator MPI_Op() const { return *this->OpPtr.get(); }
-private:
-  std::shared_ptr<MPI_Op> OpPtr;
-};
-
-} // std::detail
-
-template <>
-struct plus<vtkm::Bounds>
-{
-  MPI_Op get_mpi_op() const { return this->Op; }
-  vtkm::Bounds operator()(const vtkm::Bounds& lhs, const vtkm::Bounds& rhs) const
-  {
-    return lhs + rhs;
-  }
-
-private:
-  std::detail::MPIPlus<vtkm::Bounds> Op;
-};
-
-template <>
-struct plus<vtkm::Range>
-{
-  MPI_Op get_mpi_op() const { return this->Op; }
-  vtkm::Range operator()(const vtkm::Range& lhs, const vtkm::Range& rhs) const { return lhs + rhs; }
-
-private:
-  std::detail::MPIPlus<vtkm::Range> Op;
-};
 }
-
-namespace diy
-{
-namespace mpi
-{
-namespace detail
-{
-template <>
-struct mpi_datatype<vtkm::Bounds>
-{
-  static MPI_Datatype datatype() { return get_mpi_datatype<vtkm::Float64>(); }
-  static const void* address(const vtkm::Bounds& x) { return &x; }
-  static void* address(vtkm::Bounds& x) { return &x; }
-  static int count(const vtkm::Bounds&) { return 6; }
-};
-
-template <>
-struct mpi_op<std::plus<vtkm::Bounds>>
-{
-  static MPI_Op get(const std::plus<vtkm::Bounds>& op) { return op.get_mpi_op(); }
-};
-
-template <>
-struct mpi_datatype<vtkm::Range>
-{
-  static MPI_Datatype datatype() { return get_mpi_datatype<vtkm::Float64>(); }
-  static const void* address(const vtkm::Range& x) { return &x; }
-  static void* address(vtkm::Range& x) { return &x; }
-  static int count(const vtkm::Range&) { return 2; }
-};
-
-template <>
-struct mpi_op<std::plus<vtkm::Range>>
-{
-  static MPI_Op get(const std::plus<vtkm::Range>& op) { return op.get_mpi_op(); }
-};
-
-} // diy::mpi::detail
-} // diy::mpi
-} // diy
-
 
 #endif
 
@@ -286,51 +205,60 @@ void MultiBlock::ReplaceBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
   }
 }
 
-VTKM_CONT
-vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) const
+VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) const
 {
-  return this->GetBounds(coordinate_system_index,
-                         VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
-                         VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList>
-VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index, TypeList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  return this->GetBounds(
-    coordinate_system_index, TypeList(), VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-}
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index,
-                                             TypeList,
-                                             StorageList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  VTKM_IS_LIST_TAG(StorageList);
-
 #if defined(VTKM_ENABLE_MPI)
   auto world = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  //const auto global_num_blocks = this->GetGlobalNumberOfBlocks();
+  diy::Master master(world,
+                     1,
+                     -1,
+                     []() -> void* { return new vtkm::Bounds(); },
+                     [](void* ptr) { delete static_cast<vtkm::Bounds*>(ptr); });
 
-  const auto num_blocks = this->GetNumberOfBlocks();
+  vtkm::cont::AssignerMultiBlock assigner(*this);
 
-  diy::Master master(world, 1, -1);
-  for (vtkm::Id cc = 0; cc < num_blocks; ++cc)
-  {
-    int gid = cc * world.size() + world.rank();
-    master.add(gid, const_cast<vtkm::cont::DataSet*>(&this->Blocks[cc]), new diy::Link());
-  }
+  // populate master with blocks from `this`.
+  diy::decompose(world.rank(), assigner, master);
 
-  master.foreach ([&](const vtkm::cont::DataSet* block, const diy::Master::ProxyWithLink& cp) {
-    auto coords = block->GetCoordinateSystem(coordinate_system_index);
-    const vtkm::Bounds bounds = coords.GetBounds(TypeList(), StorageList());
-    cp.all_reduce(bounds, std::plus<vtkm::Bounds>());
+  auto self = (*this);
+  master.foreach ([&](vtkm::Bounds* data, const diy::Master::ProxyWithLink& cp) {
+    const vtkm::cont::DataSet& block = vtkm::cont::detail::GetBlock(self, cp);
+    try
+    {
+      vtkm::cont::CoordinateSystem coords = block.GetCoordinateSystem(coordinate_system_index);
+      *data = coords.GetBounds();
+    }
+    catch (const vtkm::cont::Error&)
+    {
+    }
   });
 
-  master.process_collectives();
-  auto bounds = master.proxy(0).get<vtkm::Bounds>();
-  return bounds;
+  vtkm::cont::DecomposerMultiBlock decomposer(assigner);
+  diy::RegularSwapPartners partners(decomposer, /*k=*/2);
+
+  auto callback =
+    [](vtkm::Bounds* data, const diy::ReduceProxy& srp, const diy::RegularSwapPartners&) {
+      // 1. dequeue.
+      std::vector<int> incoming;
+      srp.incoming(incoming);
+      vtkm::Bounds message;
+      for (const int gid : incoming)
+      {
+        srp.dequeue(gid, message);
+        data->Include(message);
+      }
+      // 2. enqueue
+      for (int cc = 0; cc < srp.out_link().size(); ++cc)
+      {
+        srp.enqueue(srp.out_link().target(cc), *data);
+      }
+    };
+  diy::reduce(master, assigner, partners, callback);
+  if (master.size())
+  {
+    return (*master.block<vtkm::Bounds>(0));
+  }
+  return vtkm::Bounds();
 
 #else
   const vtkm::Id index = coordinate_system_index;
@@ -339,44 +267,16 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index,
   vtkm::Bounds bounds;
   for (size_t i = 0; i < num_blocks; ++i)
   {
-    vtkm::Bounds block_bounds = this->GetBlockBounds(i, index, TypeList(), StorageList());
+    vtkm::Bounds block_bounds = this->GetBlockBounds(i, index);
     bounds.Include(block_bounds);
   }
   return bounds;
 #endif
 }
 
-VTKM_CONT
-vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index,
-                                        vtkm::Id coordinate_system_index) const
-{
-  return this->GetBlockBounds(block_index,
-                              coordinate_system_index,
-                              VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG(),
-                              VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList>
 VTKM_CONT vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index,
-                                                  vtkm::Id coordinate_system_index,
-                                                  TypeList) const
+                                                  vtkm::Id coordinate_system_index) const
 {
-  VTKM_IS_LIST_TAG(TypeList);
-  return this->GetBlockBounds(block_index,
-                              coordinate_system_index,
-                              TypeList(),
-                              VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index,
-                                                  vtkm::Id coordinate_system_index,
-                                                  TypeList,
-                                                  StorageList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  VTKM_IS_LIST_TAG(StorageList);
-
   const vtkm::Id index = coordinate_system_index;
   vtkm::cont::CoordinateSystem coords;
   try
@@ -391,117 +291,77 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index
         << "block " << block_index << ". vtkm error message: " << error.GetMessage();
     throw ErrorExecution(msg.str());
   }
-  return coords.GetBounds(TypeList(), StorageList());
+  return coords.GetBounds();
 }
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int& index) const
+VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int& index) const
 {
-  return this->GetGlobalRange(index, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int& index,
-                                                                          TypeList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  return this->GetGlobalRange(index, TypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const int& index,
-                                                                          TypeList,
-                                                                          StorageList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  VTKM_IS_LIST_TAG(StorageList);
-
   assert(this->Blocks.size() > 0);
   vtkm::cont::Field field = this->Blocks.at(0).GetField(index);
   std::string field_name = field.GetName();
-  return this->GetGlobalRange(field_name, TypeList(), StorageList());
+  return this->GetGlobalRange(field_name);
 }
 
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const std::string& field_name) const
-{
-  return this->GetGlobalRange(
-    field_name, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(
-  const std::string& field_name,
-  TypeList) const
-{
-  VTKM_IS_LIST_TAG(TypeList);
-  return this->GetGlobalRange(field_name, TypeList(), VTKM_DEFAULT_STORAGE_LIST_TAG());
-}
-
-template <typename TypeList, typename StorageList>
-VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range>
-MultiBlock::GetGlobalRange(const std::string& field_name, TypeList, StorageList) const
+  const std::string& field_name) const
 {
 #if defined(VTKM_ENABLE_MPI)
-  auto world = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  const auto num_blocks = this->GetNumberOfBlocks();
+  using BlockMetaData = std::vector<vtkm::Range>;
 
-  diy::Master master(world);
-  for (vtkm::Id cc = 0; cc < num_blocks; ++cc)
-  {
-    int gid = cc * world.size() + world.rank();
-    master.add(gid, const_cast<vtkm::cont::DataSet*>(&this->Blocks[cc]), new diy::Link());
-  }
+  auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
+  diy::Master master(comm,
+                     1,
+                     -1,
+                     []() -> void* { return new BlockMetaData(); },
+                     [](void* ptr) { delete static_cast<BlockMetaData*>(ptr); });
 
-  // collect info about number of components in the field.
-  master.foreach ([&](const vtkm::cont::DataSet* dataset, const diy::Master::ProxyWithLink& cp) {
-    if (dataset->HasField(field_name))
+  vtkm::cont::AssignerMultiBlock assigner(*this);
+
+  diy::decompose(comm.rank(), assigner, master);
+
+  auto self = (*this);
+  master.foreach ([&](BlockMetaData* data, const diy::Master::ProxyWithLink& cp) {
+    const vtkm::cont::DataSet& block = vtkm::cont::detail::GetBlock(self, cp);
+    if (block.HasField(field_name))
     {
-      auto field = dataset->GetField(field_name);
-      const vtkm::cont::ArrayHandle<vtkm::Range> range = field.GetRange(TypeList(), StorageList());
-      vtkm::Id components = range.GetPortalConstControl().GetNumberOfValues();
-      cp.all_reduce(components, diy::mpi::maximum<vtkm::Id>());
+      auto field = block.GetField(field_name);
+      const vtkm::cont::ArrayHandle<vtkm::Range> range = field.GetRange();
+      *data = vtkm::cont::detail::CopyArrayPortalToVector(range.GetPortalConstControl());
     }
   });
-  master.process_collectives();
 
-  const vtkm::Id components = master.size() ? master.proxy(0).read<vtkm::Id>() : 0;
+  vtkm::cont::DecomposerMultiBlock decomposer(assigner);
+  diy::RegularSwapPartners partners(decomposer, /*k=*/2);
+  auto callback =
+    [](BlockMetaData* data, const diy::ReduceProxy& srp, const diy::RegularSwapPartners&) {
+      std::vector<int> incoming;
+      srp.incoming(incoming);
 
-  // clear all collectives.
-  master.foreach ([&](const vtkm::cont::DataSet*, const diy::Master::ProxyWithLink& cp) {
-    cp.collectives()->clear();
-  });
-
-  master.foreach ([&](const vtkm::cont::DataSet* dataset, const diy::Master::ProxyWithLink& cp) {
-    if (dataset->HasField(field_name))
-    {
-      auto field = dataset->GetField(field_name);
-      const vtkm::cont::ArrayHandle<vtkm::Range> range = field.GetRange(TypeList(), StorageList());
-      const auto v_range =
-        vtkm::cont::detail::CopyArrayPortalToVector(range.GetPortalConstControl());
-      for (const vtkm::Range& r : v_range)
+      // 1. dequeue
+      BlockMetaData message;
+      for (const int gid : incoming)
       {
-        cp.all_reduce(r, std::plus<vtkm::Range>());
+        srp.dequeue(gid, message);
+        data->resize(std::max(data->size(), message.size()));
+        for (size_t cc = 0; cc < data->size(); ++cc)
+        {
+          (*data)[cc].Include(message[cc]);
+        }
       }
-      // if current block has less that the max number of components, just add invalid ranges for the rest.
-      for (vtkm::Id cc = static_cast<vtkm::Id>(v_range.size()); cc < components; ++cc)
+      // 2. enqueue
+      for (int cc = 0; cc < srp.out_link().size(); ++cc)
       {
-        cp.all_reduce(vtkm::Range(), std::plus<vtkm::Range>());
+        srp.enqueue(srp.out_link().target(cc), *data);
       }
-    }
-  });
-  master.process_collectives();
-  std::vector<vtkm::Range> ranges(components);
-  // FIXME: is master.size() == 0 i.e. there are no blocks on the current rank,
-  // this method won't return valid range.
-  if (master.size() > 0)
-  {
-    for (vtkm::Id cc = 0; cc < components; ++cc)
-    {
-      ranges[cc] = master.proxy(0).get<vtkm::Range>();
-    }
-  }
+    };
 
+  diy::reduce(master, assigner, partners, callback);
+
+  BlockMetaData ranges;
+  if (master.size())
+  {
+    ranges = *(master.block<BlockMetaData>(0));
+  }
   vtkm::cont::ArrayHandle<vtkm::Range> tmprange = vtkm::cont::make_ArrayHandle(ranges);
   vtkm::cont::ArrayHandle<vtkm::Range> range;
   vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandle(ranges), range);
@@ -522,7 +382,7 @@ MultiBlock::GetGlobalRange(const std::string& field_name, TypeList, StorageList)
     }
 
     const vtkm::cont::Field& field = this->Blocks[i].GetField(field_name);
-    vtkm::cont::ArrayHandle<vtkm::Range> sub_range = field.GetRange(TypeList(), StorageList());
+    vtkm::cont::ArrayHandle<vtkm::Range> sub_range = field.GetRange();
 
     vtkm::cont::ArrayHandle<vtkm::Range>::PortalConstControl sub_range_control =
       sub_range.GetPortalConstControl();
@@ -545,7 +405,6 @@ MultiBlock::GetGlobalRange(const std::string& field_name, TypeList, StorageList)
           << "(" << num_components << ") in block 0";
       throw ErrorExecution(msg.str());
     }
-
 
     for (vtkm::Id c = 0; c < components; ++c)
     {

@@ -132,8 +132,7 @@ void TestClippingExplicit()
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, DeviceAdapter());
 
-  vtkm::cont::ArrayHandle<Coord3D> coordsIn;
-  ds.GetCoordinateSystem("coords").GetData().CopyTo(coordsIn);
+  auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
@@ -188,8 +187,7 @@ void TestClippingStrucutred()
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, DeviceAdapter());
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates coordsIn;
-  ds.GetCoordinateSystem("coords").GetData().CopyTo(coordsIn);
+  auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
   CoordsOutType coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;
@@ -253,8 +251,7 @@ void TestClippingWithImplicitFunction()
              ds.GetCoordinateSystem("coords"),
              DeviceAdapter());
 
-  vtkm::cont::ArrayHandleUniformPointCoordinates coordsIn;
-  ds.GetCoordinateSystem("coords").GetData().CopyTo(coordsIn);
+  auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
 
   vtkm::cont::ArrayHandle<vtkm::Float32> scalarsIn;

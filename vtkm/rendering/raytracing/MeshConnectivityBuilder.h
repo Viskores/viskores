@@ -95,7 +95,7 @@ public:
   VTKM_CONT
   MortonNeighbor() {}
   typedef void ControlSignature(WholeArrayIn<>,
-                                ExecObject,
+                                WholeArrayInOut<Id3Type>,
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
@@ -146,18 +146,18 @@ public:
 
 
   template <typename MortonPortalType,
+            typename FaceIdPairsPortalType,
             typename ConnPortalType,
             typename ShapePortalType,
             typename OffsetPortalType,
             typename ExternalFaceFlagType>
-  VTKM_EXEC inline void operator()(
-    const MortonPortalType& mortonCodes,
-    vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Id, 3>>& faceIdPairs,
-    const vtkm::Id& index,
-    const ConnPortalType& connectivity,
-    const ShapePortalType& shapes,
-    const OffsetPortalType& offsets,
-    ExternalFaceFlagType& flags) const
+  VTKM_EXEC inline void operator()(const MortonPortalType& mortonCodes,
+                                   FaceIdPairsPortalType& faceIdPairs,
+                                   const vtkm::Id& index,
+                                   const ConnPortalType& connectivity,
+                                   const ShapePortalType& shapes,
+                                   const OffsetPortalType& offsets,
+                                   ExternalFaceFlagType& flags) const
   {
     if (index == 0)
     {
@@ -330,14 +330,16 @@ public:
 class WriteFaceConn : public vtkm::worklet::WorkletMapField
 {
 public:
+  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, WholeArrayOut<IdType>);
+  typedef void ExecutionSignature(_1, _2, _3);
+
   VTKM_CONT
   WriteFaceConn() {}
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, ExecObject);
-  typedef void ExecutionSignature(_1, _2, _3);
-  template <typename FaceOffsetsPortalType>
+
+  template <typename FaceOffsetsPortalType, typename FaceConnectivityPortalType>
   VTKM_EXEC inline void operator()(const vtkm::Vec<vtkm::Id, 3>& faceIdPair,
                                    const FaceOffsetsPortalType& faceOffsets,
-                                   vtkm::exec::ExecutionWholeArray<vtkm::Id>& faceConn) const
+                                   FaceConnectivityPortalType& faceConn) const
   {
     vtkm::Id cellId = faceIdPair[0];
     BOUNDS_CHECK(faceOffsets, cellId);
@@ -523,7 +525,7 @@ public:
 
   VTKM_CONT
   void BuildConnectivity(vtkm::cont::CellSetSingleType<>& cellSetUnstructured,
-                         DynamicArrayHandleExplicitCoordinateSystem& coordinates,
+                         const vtkm::cont::ArrayHandleVirtualCoordinates& coordinates,
                          vtkm::Bounds coordsBounds)
   {
     Logger* logger = Logger::GetInstance();
@@ -569,9 +571,8 @@ public:
 
 
     // scatter the coonectivity into the original order
-    vtkm::worklet::DispatcherMapField<WriteFaceConn>(WriteFaceConn())
-      .Invoke(
-        cellFaceId, this->FaceOffsets, vtkm::exec::ExecutionWholeArray<vtkm::Id>(faceConnectivity));
+    vtkm::worklet::DispatcherMapField<WriteFaceConn, DeviceAdapter>(WriteFaceConn())
+      .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
 
     FaceConnectivity = faceConnectivity;
@@ -583,7 +584,7 @@ public:
 
   VTKM_CONT
   void BuildConnectivity(vtkm::cont::CellSetExplicit<>& cellSetUnstructured,
-                         DynamicArrayHandleExplicitCoordinateSystem& coordinates,
+                         const vtkm::cont::ArrayHandleVirtualCoordinates& coordinates,
                          vtkm::Bounds coordsBounds)
   {
     Logger* logger = Logger::GetInstance();
@@ -627,9 +628,8 @@ public:
       this->ExtractExternalFaces(cellFaceId, faceConnectivity, shapes, conn, shapeOffsets);
 
     // scatter the coonectivity into the original order
-    vtkm::worklet::DispatcherMapField<WriteFaceConn>(WriteFaceConn())
-      .Invoke(
-        cellFaceId, this->FaceOffsets, vtkm::exec::ExecutionWholeArray<vtkm::Id>(faceConnectivity));
+    vtkm::worklet::DispatcherMapField<WriteFaceConn, DeviceAdapter>(WriteFaceConn())
+      .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
     FaceConnectivity = faceConnectivity;
     OutsideTriangles = externalTriangles;
@@ -653,7 +653,7 @@ public:
     triangles.PrepareForOutput(numFaces * 2, DeviceAdapter());
     vtkm::cont::ArrayHandleCounting<vtkm::Id> counting(0, 1, numFaces);
 
-    vtkm::worklet::DispatcherMapField<StructuredExternalTriangles>(
+    vtkm::worklet::DispatcherMapField<StructuredExternalTriangles, DeviceAdapter>(
       StructuredExternalTriangles(cellSetStructured.PrepareForInput(
         DeviceAdapter(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())))
       .Invoke(counting, triangles);
@@ -683,7 +683,7 @@ protected:
     const ShapeHandleType shapes,
     const ConnHandleType conn,
     const OffsetsHandleType shapeOffsets,
-    DynamicArrayHandleExplicitCoordinateSystem& coordinates,
+    const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
     vtkm::cont::ArrayHandle<vtkm::Id>& faceConnectivity,
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>>& cellFaceId,
     vtkm::Float32 BoundingBox[6])
@@ -692,6 +692,9 @@ protected:
     vtkm::cont::Timer<DeviceAdapter> timer;
 
     vtkm::Id numCells = shapes.GetNumberOfValues();
+
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> coordinates;
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(coords, coordinates);
 
     /*-----------------------------------------------------------------*/
 
@@ -744,8 +747,10 @@ protected:
     vtkm::worklet::DispatcherMapTopology<MortonCodeFace, DeviceAdapter>(
       MortonCodeFace(inverseExtent, minPoint))
       .Invoke(cellSet, coordinates, cellOffsets, faceMortonCodes, cellFaceId);
+
     // Sort the "faces" (i.e., morton codes)
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::SortByKey(faceMortonCodes, cellFaceId);
+
     // Allocate space for the final face-to-face conectivity
     faceConnectivity.PrepareForOutput(totalFaces, DeviceAdapter());
 
@@ -754,12 +759,7 @@ protected:
       .Invoke(faceConnectivity);
 
     vtkm::worklet::DispatcherMapField<MortonNeighbor, DeviceAdapter>(MortonNeighbor())
-      .Invoke(faceMortonCodes,
-              vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Id, 3>>(cellFaceId),
-              conn,
-              shapes,
-              shapeOffsets,
-              faceConnectivity);
+      .Invoke(faceMortonCodes, cellFaceId, conn, shapes, shapeOffsets, faceConnectivity);
 
     vtkm::Float64 time = timer.GetElapsedTime();
     Logger::GetInstance()->AddLogData("gen_face_conn", time);

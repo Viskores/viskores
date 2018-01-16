@@ -38,7 +38,7 @@ public:
   template <typename T, typename T2>
   VTKM_EXEC void operator()(const T& inValue, T2& outValue) const
   {
-    outValue = vtkm::Magnitude(inValue);
+    outValue = static_cast<T2>(vtkm::Magnitude(inValue));
   }
 };
 }

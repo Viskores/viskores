@@ -34,7 +34,7 @@
 
 #include <vtkm/internal/brigand.hpp>
 
-#define VTKM_MAX_FUNCTION_PARAMETERS 10
+#define VTKM_MAX_FUNCTION_PARAMETERS 20
 
 
 namespace vtkm
@@ -76,12 +76,16 @@ struct ParameterContainer;
 template <typename R>
 struct ParameterContainer<R()>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
 };
 
 template <typename R,
           typename P1>
 struct ParameterContainer<R(P1)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
 };
 
@@ -90,6 +94,8 @@ template <typename R,
           typename P2>
 struct ParameterContainer<R(P1, P2)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
 };
@@ -100,6 +106,8 @@ template <typename R,
           typename P3>
 struct ParameterContainer<R(P1, P2, P3)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -112,6 +120,8 @@ template <typename R,
           typename P4>
 struct ParameterContainer<R(P1, P2, P3, P4)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -126,6 +136,8 @@ template <typename R,
           typename P5>
 struct ParameterContainer<R(P1, P2, P3, P4, P5)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -142,6 +154,8 @@ template <typename R,
           typename P6>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -160,6 +174,8 @@ template <typename R,
           typename P7>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -180,6 +196,8 @@ template <typename R,
           typename P8>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -202,6 +220,8 @@ template <typename R,
           typename P9>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -226,6 +246,8 @@ template <typename R,
           typename P10>
 struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>
 {
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
   P1 Parameter1;
   P2 Parameter2;
   P3 Parameter3;
@@ -236,6 +258,386 @@ struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>
   P8 Parameter8;
   P9 Parameter9;
   P10 Parameter10;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+  P12 Parameter12;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+  P12 Parameter12;
+  P13 Parameter13;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+  P12 Parameter12;
+  P13 Parameter13;
+  P14 Parameter14;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+  P12 Parameter12;
+  P13 Parameter13;
+  P14 Parameter14;
+  P15 Parameter15;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+  P12 Parameter12;
+  P13 Parameter13;
+  P14 Parameter14;
+  P15 Parameter15;
+  P16 Parameter16;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+  P12 Parameter12;
+  P13 Parameter13;
+  P14 Parameter14;
+  P15 Parameter15;
+  P16 Parameter16;
+  P17 Parameter17;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+  P12 Parameter12;
+  P13 Parameter13;
+  P14 Parameter14;
+  P15 Parameter15;
+  P16 Parameter16;
+  P17 Parameter17;
+  P18 Parameter18;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+  P12 Parameter12;
+  P13 Parameter13;
+  P14 Parameter14;
+  P15 Parameter15;
+  P16 Parameter16;
+  P17 Parameter17;
+  P18 Parameter18;
+  P19 Parameter19;
+};
+
+template <typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19,
+          typename P20>
+struct ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  ~ParameterContainer() = default;
+  P1 Parameter1;
+  P2 Parameter2;
+  P3 Parameter3;
+  P4 Parameter4;
+  P5 Parameter5;
+  P6 Parameter6;
+  P7 Parameter7;
+  P8 Parameter8;
+  P9 Parameter9;
+  P10 Parameter10;
+  P11 Parameter11;
+  P12 Parameter12;
+  P13 Parameter13;
+  P14 Parameter14;
+  P15 Parameter15;
+  P16 Parameter16;
+  P17 Parameter17;
+  P18 Parameter18;
+  P19 Parameter19;
+  P20 Parameter20;
 };
 
 // clang-format on
@@ -577,6 +979,286 @@ struct ParameterContainerAccess<10>
   }
 };
 
+template <>
+struct ParameterContainerAccess<11>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<11, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter11;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<11, FunctionSignature>::type& value)
+  {
+    parameters.Parameter11 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter11 = std::move(src.Parameter11);
+  }
+};
+
+template <>
+struct ParameterContainerAccess<12>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<12, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter12;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<12, FunctionSignature>::type& value)
+  {
+    parameters.Parameter12 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter12 = std::move(src.Parameter12);
+  }
+};
+
+template <>
+struct ParameterContainerAccess<13>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<13, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter13;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<13, FunctionSignature>::type& value)
+  {
+    parameters.Parameter13 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter13 = std::move(src.Parameter13);
+  }
+};
+
+template <>
+struct ParameterContainerAccess<14>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<14, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter14;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<14, FunctionSignature>::type& value)
+  {
+    parameters.Parameter14 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter14 = std::move(src.Parameter14);
+  }
+};
+
+template <>
+struct ParameterContainerAccess<15>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<15, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter15;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<15, FunctionSignature>::type& value)
+  {
+    parameters.Parameter15 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter15 = std::move(src.Parameter15);
+  }
+};
+
+template <>
+struct ParameterContainerAccess<16>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<16, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter16;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<16, FunctionSignature>::type& value)
+  {
+    parameters.Parameter16 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter16 = std::move(src.Parameter16);
+  }
+};
+
+template <>
+struct ParameterContainerAccess<17>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<17, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter17;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<17, FunctionSignature>::type& value)
+  {
+    parameters.Parameter17 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter17 = std::move(src.Parameter17);
+  }
+};
+
+template <>
+struct ParameterContainerAccess<18>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<18, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter18;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<18, FunctionSignature>::type& value)
+  {
+    parameters.Parameter18 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter18 = std::move(src.Parameter18);
+  }
+};
+
+template <>
+struct ParameterContainerAccess<19>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<19, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter19;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<19, FunctionSignature>::type& value)
+  {
+    parameters.Parameter19 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter19 = std::move(src.Parameter19);
+  }
+};
+
+template <>
+struct ParameterContainerAccess<20>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT const typename AtType<20, FunctionSignature>::type& Get(
+    const ParameterContainer<FunctionSignature>& parameters)
+  {
+    return parameters.Parameter20;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignature>
+  VTKM_EXEC_CONT void Set(ParameterContainer<FunctionSignature>& parameters,
+                          const typename AtType<20, FunctionSignature>::type& value)
+  {
+    parameters.Parameter20 = value;
+  }
+
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename FunctionSignatureDest, typename FunctionSignatureSrc>
+  VTKM_EXEC_CONT void Move(ParameterContainer<FunctionSignatureDest>& dest,
+                           const ParameterContainer<FunctionSignatureSrc>& src)
+  {
+    dest.Parameter20 = std::move(src.Parameter20);
+  }
+};
+
 
 //============================================================================
 template <vtkm::IdComponent NumToCopy>
@@ -736,6 +1418,261 @@ struct CopyAllParameters<10>
     dest.Parameter8 = src.Parameter8;
     dest.Parameter9 = src.Parameter9;
     dest.Parameter10 = src.Parameter10;
+  }
+};
+template <>
+struct CopyAllParameters<11>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+  }
+};
+template <>
+struct CopyAllParameters<12>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+    dest.Parameter12 = src.Parameter12;
+  }
+};
+template <>
+struct CopyAllParameters<13>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+    dest.Parameter12 = src.Parameter12;
+    dest.Parameter13 = src.Parameter13;
+  }
+};
+template <>
+struct CopyAllParameters<14>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+    dest.Parameter12 = src.Parameter12;
+    dest.Parameter13 = src.Parameter13;
+    dest.Parameter14 = src.Parameter14;
+  }
+};
+template <>
+struct CopyAllParameters<15>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+    dest.Parameter12 = src.Parameter12;
+    dest.Parameter13 = src.Parameter13;
+    dest.Parameter14 = src.Parameter14;
+    dest.Parameter15 = src.Parameter15;
+  }
+};
+template <>
+struct CopyAllParameters<16>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+    dest.Parameter12 = src.Parameter12;
+    dest.Parameter13 = src.Parameter13;
+    dest.Parameter14 = src.Parameter14;
+    dest.Parameter15 = src.Parameter15;
+    dest.Parameter16 = src.Parameter16;
+  }
+};
+template <>
+struct CopyAllParameters<17>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+    dest.Parameter12 = src.Parameter12;
+    dest.Parameter13 = src.Parameter13;
+    dest.Parameter14 = src.Parameter14;
+    dest.Parameter15 = src.Parameter15;
+    dest.Parameter16 = src.Parameter16;
+    dest.Parameter17 = src.Parameter17;
+  }
+};
+template <>
+struct CopyAllParameters<18>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+    dest.Parameter12 = src.Parameter12;
+    dest.Parameter13 = src.Parameter13;
+    dest.Parameter14 = src.Parameter14;
+    dest.Parameter15 = src.Parameter15;
+    dest.Parameter16 = src.Parameter16;
+    dest.Parameter17 = src.Parameter17;
+    dest.Parameter18 = src.Parameter18;
+  }
+};
+template <>
+struct CopyAllParameters<19>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+    dest.Parameter12 = src.Parameter12;
+    dest.Parameter13 = src.Parameter13;
+    dest.Parameter14 = src.Parameter14;
+    dest.Parameter15 = src.Parameter15;
+    dest.Parameter16 = src.Parameter16;
+    dest.Parameter17 = src.Parameter17;
+    dest.Parameter18 = src.Parameter18;
+    dest.Parameter19 = src.Parameter19;
+  }
+};
+template <>
+struct CopyAllParameters<20>
+{
+  VTKM_SUPPRESS_EXEC_WARNINGS
+  template <typename DestSignature, typename SrcSignature>
+  VTKM_EXEC_CONT void Copy(vtkm::internal::detail::ParameterContainer<DestSignature>& dest,
+                           const vtkm::internal::detail::ParameterContainer<SrcSignature>& src)
+  {
+    dest.Parameter1 = src.Parameter1;
+    dest.Parameter2 = src.Parameter2;
+    dest.Parameter3 = src.Parameter3;
+    dest.Parameter4 = src.Parameter4;
+    dest.Parameter5 = src.Parameter5;
+    dest.Parameter6 = src.Parameter6;
+    dest.Parameter7 = src.Parameter7;
+    dest.Parameter8 = src.Parameter8;
+    dest.Parameter9 = src.Parameter9;
+    dest.Parameter10 = src.Parameter10;
+    dest.Parameter11 = src.Parameter11;
+    dest.Parameter12 = src.Parameter12;
+    dest.Parameter13 = src.Parameter13;
+    dest.Parameter14 = src.Parameter14;
+    dest.Parameter15 = src.Parameter15;
+    dest.Parameter16 = src.Parameter16;
+    dest.Parameter17 = src.Parameter17;
+    dest.Parameter18 = src.Parameter18;
+    dest.Parameter19 = src.Parameter19;
+    dest.Parameter20 = src.Parameter20;
   }
 };
 
@@ -2664,6 +3601,3406 @@ VTKM_EXEC void DoInvokeExec(Functor& f,
     transform(parameters.Parameter10));
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18),
+                             transform(parameters.Parameter19)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18),
+    transform(parameters.Parameter19));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18),
+                             transform(parameters.Parameter19)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18),
+    transform(parameters.Parameter19));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18),
+                             transform(parameters.Parameter19)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18),
+    transform(parameters.Parameter19));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18),
+                             transform(parameters.Parameter19)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18),
+    transform(parameters.Parameter19));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19,
+          typename P20>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18),
+                             transform(parameters.Parameter19),
+                             transform(parameters.Parameter20)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19,
+          typename P20>
+VTKM_CONT void DoInvokeCont(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18),
+    transform(parameters.Parameter19),
+    transform(parameters.Parameter20));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19,
+          typename P20>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18),
+                             transform(parameters.Parameter19),
+                             transform(parameters.Parameter20)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19,
+          typename P20>
+VTKM_CONT void DoInvokeCont(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18),
+    transform(parameters.Parameter19),
+    transform(parameters.Parameter20));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19,
+          typename P20>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18),
+                             transform(parameters.Parameter19),
+                             transform(parameters.Parameter20)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19,
+          typename P20>
+VTKM_EXEC void DoInvokeExec(const Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18),
+    transform(parameters.Parameter19),
+    transform(parameters.Parameter20));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19,
+          typename P20>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)>& parameters,
+                            FunctionInterfaceReturnContainer<R>& result,
+                            const TransformFunctor& transform)
+{
+  result.Value = transform(f(
+                             transform(parameters.Parameter1),
+                             transform(parameters.Parameter2),
+                             transform(parameters.Parameter3),
+                             transform(parameters.Parameter4),
+                             transform(parameters.Parameter5),
+                             transform(parameters.Parameter6),
+                             transform(parameters.Parameter7),
+                             transform(parameters.Parameter8),
+                             transform(parameters.Parameter9),
+                             transform(parameters.Parameter10),
+                             transform(parameters.Parameter11),
+                             transform(parameters.Parameter12),
+                             transform(parameters.Parameter13),
+                             transform(parameters.Parameter14),
+                             transform(parameters.Parameter15),
+                             transform(parameters.Parameter16),
+                             transform(parameters.Parameter17),
+                             transform(parameters.Parameter18),
+                             transform(parameters.Parameter19),
+                             transform(parameters.Parameter20)));
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename TransformFunctor,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19,
+          typename P20>
+VTKM_EXEC void DoInvokeExec(Functor& f,
+                            ParameterContainer<void(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P20)>& parameters,
+                            FunctionInterfaceReturnContainer<void>&,
+                            const TransformFunctor& transform)
+{
+  f(
+    transform(parameters.Parameter1),
+    transform(parameters.Parameter2),
+    transform(parameters.Parameter3),
+    transform(parameters.Parameter4),
+    transform(parameters.Parameter5),
+    transform(parameters.Parameter6),
+    transform(parameters.Parameter7),
+    transform(parameters.Parameter8),
+    transform(parameters.Parameter9),
+    transform(parameters.Parameter10),
+    transform(parameters.Parameter11),
+    transform(parameters.Parameter12),
+    transform(parameters.Parameter13),
+    transform(parameters.Parameter14),
+    transform(parameters.Parameter15),
+    transform(parameters.Parameter16),
+    transform(parameters.Parameter17),
+    transform(parameters.Parameter18),
+    transform(parameters.Parameter19),
+    transform(parameters.Parameter20));
+}
+
 
 // clang-format on
 
@@ -3260,6 +7597,1386 @@ VTKM_EXEC void DoStaticTransformExec(
     transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
 }
 
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename OriginalP16,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15,
+          typename TransformedP16>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+  transformedParameters.Parameter16 =
+    transform(originalParameters.Parameter16, vtkm::internal::IndexTag<16>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename OriginalP16,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15,
+          typename TransformedP16>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+  transformedParameters.Parameter16 =
+    transform(originalParameters.Parameter16, vtkm::internal::IndexTag<16>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename OriginalP16,
+          typename OriginalP17,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15,
+          typename TransformedP16,
+          typename TransformedP17>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+  transformedParameters.Parameter16 =
+    transform(originalParameters.Parameter16, vtkm::internal::IndexTag<16>());
+  transformedParameters.Parameter17 =
+    transform(originalParameters.Parameter17, vtkm::internal::IndexTag<17>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename OriginalP16,
+          typename OriginalP17,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15,
+          typename TransformedP16,
+          typename TransformedP17>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+  transformedParameters.Parameter16 =
+    transform(originalParameters.Parameter16, vtkm::internal::IndexTag<16>());
+  transformedParameters.Parameter17 =
+    transform(originalParameters.Parameter17, vtkm::internal::IndexTag<17>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename OriginalP16,
+          typename OriginalP17,
+          typename OriginalP18,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15,
+          typename TransformedP16,
+          typename TransformedP17,
+          typename TransformedP18>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+  transformedParameters.Parameter16 =
+    transform(originalParameters.Parameter16, vtkm::internal::IndexTag<16>());
+  transformedParameters.Parameter17 =
+    transform(originalParameters.Parameter17, vtkm::internal::IndexTag<17>());
+  transformedParameters.Parameter18 =
+    transform(originalParameters.Parameter18, vtkm::internal::IndexTag<18>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename OriginalP16,
+          typename OriginalP17,
+          typename OriginalP18,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15,
+          typename TransformedP16,
+          typename TransformedP17,
+          typename TransformedP18>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+  transformedParameters.Parameter16 =
+    transform(originalParameters.Parameter16, vtkm::internal::IndexTag<16>());
+  transformedParameters.Parameter17 =
+    transform(originalParameters.Parameter17, vtkm::internal::IndexTag<17>());
+  transformedParameters.Parameter18 =
+    transform(originalParameters.Parameter18, vtkm::internal::IndexTag<18>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename OriginalP16,
+          typename OriginalP17,
+          typename OriginalP18,
+          typename OriginalP19,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15,
+          typename TransformedP16,
+          typename TransformedP17,
+          typename TransformedP18,
+          typename TransformedP19>
+VTKM_CONT void DoStaticTransformCont(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18, OriginalP19)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18, TransformedP19)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+  transformedParameters.Parameter16 =
+    transform(originalParameters.Parameter16, vtkm::internal::IndexTag<16>());
+  transformedParameters.Parameter17 =
+    transform(originalParameters.Parameter17, vtkm::internal::IndexTag<17>());
+  transformedParameters.Parameter18 =
+    transform(originalParameters.Parameter18, vtkm::internal::IndexTag<18>());
+  transformedParameters.Parameter19 =
+    transform(originalParameters.Parameter19, vtkm::internal::IndexTag<19>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Transform,
+          typename OriginalR,
+          typename OriginalP1,
+          typename OriginalP2,
+          typename OriginalP3,
+          typename OriginalP4,
+          typename OriginalP5,
+          typename OriginalP6,
+          typename OriginalP7,
+          typename OriginalP8,
+          typename OriginalP9,
+          typename OriginalP10,
+          typename OriginalP11,
+          typename OriginalP12,
+          typename OriginalP13,
+          typename OriginalP14,
+          typename OriginalP15,
+          typename OriginalP16,
+          typename OriginalP17,
+          typename OriginalP18,
+          typename OriginalP19,
+          typename TransformedR,
+          typename TransformedP1,
+          typename TransformedP2,
+          typename TransformedP3,
+          typename TransformedP4,
+          typename TransformedP5,
+          typename TransformedP6,
+          typename TransformedP7,
+          typename TransformedP8,
+          typename TransformedP9,
+          typename TransformedP10,
+          typename TransformedP11,
+          typename TransformedP12,
+          typename TransformedP13,
+          typename TransformedP14,
+          typename TransformedP15,
+          typename TransformedP16,
+          typename TransformedP17,
+          typename TransformedP18,
+          typename TransformedP19>
+VTKM_EXEC void DoStaticTransformExec(
+  const Transform& transform,
+  const ParameterContainer<OriginalR(OriginalP1, OriginalP2, OriginalP3, OriginalP4, OriginalP5, OriginalP6, OriginalP7, OriginalP8, OriginalP9, OriginalP10, OriginalP11, OriginalP12, OriginalP13, OriginalP14, OriginalP15, OriginalP16, OriginalP17, OriginalP18, OriginalP19)>& originalParameters,
+  ParameterContainer<TransformedR(TransformedP1, TransformedP2, TransformedP3, TransformedP4, TransformedP5, TransformedP6, TransformedP7, TransformedP8, TransformedP9, TransformedP10, TransformedP11, TransformedP12, TransformedP13, TransformedP14, TransformedP15, TransformedP16, TransformedP17, TransformedP18, TransformedP19)>& transformedParameters)
+{
+  transformedParameters.Parameter1 =
+    transform(originalParameters.Parameter1, vtkm::internal::IndexTag<1>());
+  transformedParameters.Parameter2 =
+    transform(originalParameters.Parameter2, vtkm::internal::IndexTag<2>());
+  transformedParameters.Parameter3 =
+    transform(originalParameters.Parameter3, vtkm::internal::IndexTag<3>());
+  transformedParameters.Parameter4 =
+    transform(originalParameters.Parameter4, vtkm::internal::IndexTag<4>());
+  transformedParameters.Parameter5 =
+    transform(originalParameters.Parameter5, vtkm::internal::IndexTag<5>());
+  transformedParameters.Parameter6 =
+    transform(originalParameters.Parameter6, vtkm::internal::IndexTag<6>());
+  transformedParameters.Parameter7 =
+    transform(originalParameters.Parameter7, vtkm::internal::IndexTag<7>());
+  transformedParameters.Parameter8 =
+    transform(originalParameters.Parameter8, vtkm::internal::IndexTag<8>());
+  transformedParameters.Parameter9 =
+    transform(originalParameters.Parameter9, vtkm::internal::IndexTag<9>());
+  transformedParameters.Parameter10 =
+    transform(originalParameters.Parameter10, vtkm::internal::IndexTag<10>());
+  transformedParameters.Parameter11 =
+    transform(originalParameters.Parameter11, vtkm::internal::IndexTag<11>());
+  transformedParameters.Parameter12 =
+    transform(originalParameters.Parameter12, vtkm::internal::IndexTag<12>());
+  transformedParameters.Parameter13 =
+    transform(originalParameters.Parameter13, vtkm::internal::IndexTag<13>());
+  transformedParameters.Parameter14 =
+    transform(originalParameters.Parameter14, vtkm::internal::IndexTag<14>());
+  transformedParameters.Parameter15 =
+    transform(originalParameters.Parameter15, vtkm::internal::IndexTag<15>());
+  transformedParameters.Parameter16 =
+    transform(originalParameters.Parameter16, vtkm::internal::IndexTag<16>());
+  transformedParameters.Parameter17 =
+    transform(originalParameters.Parameter17, vtkm::internal::IndexTag<17>());
+  transformedParameters.Parameter18 =
+    transform(originalParameters.Parameter18, vtkm::internal::IndexTag<18>());
+  transformedParameters.Parameter19 =
+    transform(originalParameters.Parameter19, vtkm::internal::IndexTag<19>());
+}
+
 // clang-format on
 
 //============================================================================
@@ -3992,6 +9709,1526 @@ VTKM_EXEC void DoForEachExec(
   f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
   f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
   f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+  f(parameters.Parameter18, vtkm::internal::IndexTag<18>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+  f(parameters.Parameter18, vtkm::internal::IndexTag<18>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+  f(parameters.Parameter18, vtkm::internal::IndexTag<18>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+  f(parameters.Parameter18, vtkm::internal::IndexTag<18>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+  f(parameters.Parameter18, vtkm::internal::IndexTag<18>());
+  f(parameters.Parameter19, vtkm::internal::IndexTag<19>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_CONT void DoForEachCont(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+  f(parameters.Parameter18, vtkm::internal::IndexTag<18>());
+  f(parameters.Parameter19, vtkm::internal::IndexTag<19>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  const ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+  f(parameters.Parameter18, vtkm::internal::IndexTag<18>());
+  f(parameters.Parameter19, vtkm::internal::IndexTag<19>());
+}
+
+VTKM_SUPPRESS_EXEC_WARNINGS
+template <typename Functor,
+          typename R,
+          typename P1,
+          typename P2,
+          typename P3,
+          typename P4,
+          typename P5,
+          typename P6,
+          typename P7,
+          typename P8,
+          typename P9,
+          typename P10,
+          typename P11,
+          typename P12,
+          typename P13,
+          typename P14,
+          typename P15,
+          typename P16,
+          typename P17,
+          typename P18,
+          typename P19>
+VTKM_EXEC void DoForEachExec(
+  const Functor& f,
+  ParameterContainer<R(P1, P2, P3, P4, P5, P6, P7, P8, P9, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19)>& parameters)
+{
+  f(parameters.Parameter1, vtkm::internal::IndexTag<1>());
+  f(parameters.Parameter2, vtkm::internal::IndexTag<2>());
+  f(parameters.Parameter3, vtkm::internal::IndexTag<3>());
+  f(parameters.Parameter4, vtkm::internal::IndexTag<4>());
+  f(parameters.Parameter5, vtkm::internal::IndexTag<5>());
+  f(parameters.Parameter6, vtkm::internal::IndexTag<6>());
+  f(parameters.Parameter7, vtkm::internal::IndexTag<7>());
+  f(parameters.Parameter8, vtkm::internal::IndexTag<8>());
+  f(parameters.Parameter9, vtkm::internal::IndexTag<9>());
+  f(parameters.Parameter10, vtkm::internal::IndexTag<10>());
+  f(parameters.Parameter11, vtkm::internal::IndexTag<11>());
+  f(parameters.Parameter12, vtkm::internal::IndexTag<12>());
+  f(parameters.Parameter13, vtkm::internal::IndexTag<13>());
+  f(parameters.Parameter14, vtkm::internal::IndexTag<14>());
+  f(parameters.Parameter15, vtkm::internal::IndexTag<15>());
+  f(parameters.Parameter16, vtkm::internal::IndexTag<16>());
+  f(parameters.Parameter17, vtkm::internal::IndexTag<17>());
+  f(parameters.Parameter18, vtkm::internal::IndexTag<18>());
+  f(parameters.Parameter19, vtkm::internal::IndexTag<19>());
 }
 
 

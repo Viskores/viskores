@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_graft_particle_h
 #define vtkm_worklet_cosmotools_graft_particle_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/cosmotools/TagTypes.h>
 

@@ -358,7 +358,7 @@ public:
   }
 
 private:
-  template <typename DynamicCoordinates, typename DeviceAdapter>
+  template <typename DeviceAdapter>
   class CoordinatesMapper
   {
   private:
@@ -372,7 +372,8 @@ private:
       vtkm::cont::ArrayHandle<T, Storage3>>::Superclass;
 
   public:
-    CoordinatesMapper(const ExtractStructured* worklet, DynamicCoordinates& result)
+    CoordinatesMapper(const ExtractStructured* worklet,
+                      vtkm::cont::ArrayHandleVirtualCoordinates& result)
       : Worklet(worklet)
       , Result(&result)
     {
@@ -394,7 +395,8 @@ private:
         inOrigin[2] + static_cast<ValueType>(this->Worklet->VOI.Z.Min) * inSpacing[2]);
       CoordType outSpacing = inSpacing * static_cast<CoordType>(this->Worklet->SampleRate);
 
-      *this->Result = CoordsArray(this->Worklet->OutputDimensions, outOrigin, outSpacing);
+      auto out = CoordsArray(this->Worklet->OutputDimensions, outOrigin, outSpacing);
+      *this->Result = vtkm::cont::ArrayHandleVirtualCoordinates(out);
     }
 
     template <typename T, typename Storage1, typename Storage2, typename Storage3>
@@ -419,13 +421,15 @@ private:
       dim += RectilinearCoordsCopy(coords.GetStorage().GetThirdArray(), *validIds[dim], zs);
       VTKM_ASSERT(dim == this->Worklet->InputDimensionality);
 
-      *this->Result = vtkm::cont::make_ArrayHandleCartesianProduct(xs, ys, zs);
+      auto out = vtkm::cont::make_ArrayHandleCartesianProduct(xs, ys, zs);
+      *this->Result = vtkm::cont::ArrayHandleVirtualCoordinates(out);
     }
 
     template <typename T, typename Storage>
     void operator()(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, Storage>& coords) const
     {
-      *this->Result = this->Worklet->ProcessPointField(coords, DeviceAdapter());
+      auto out = this->Worklet->ProcessPointField(coords, DeviceAdapter());
+      *this->Result = vtkm::cont::ArrayHandleVirtualCoordinates(out);
     }
 
   private:
@@ -448,15 +452,17 @@ private:
     }
 
     const ExtractStructured* Worklet;
-    DynamicCoordinates* Result;
+    vtkm::cont::ArrayHandleVirtualCoordinates* Result;
   };
 
 public:
-  template <typename DynamicCoordinates, typename DeviceAdapter>
-  DynamicCoordinates MapCoordinates(const DynamicCoordinates& coordinates, DeviceAdapter)
+  template <typename DeviceAdapter>
+  vtkm::cont::ArrayHandleVirtualCoordinates MapCoordinates(
+    const vtkm::cont::CoordinateSystem& coordinates,
+    DeviceAdapter)
   {
-    DynamicCoordinates result;
-    CoordinatesMapper<DynamicCoordinates, DeviceAdapter> mapper(this, result);
+    vtkm::cont::ArrayHandleVirtualCoordinates result;
+    CoordinatesMapper<DeviceAdapter> mapper(this, result);
     vtkm::cont::CastAndCall(coordinates, mapper);
     return result;
   }

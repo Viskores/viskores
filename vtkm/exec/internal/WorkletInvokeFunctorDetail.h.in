@@ -51,7 +51,7 @@ $# Ignore the following comment. It is meant for the generated file.
 #include <vtkm/exec/arg/Fetch.h>
 
 $# This needs to match the max_parameters in FunctionInterfaceDetailPre.h.in
-$py(max_parameters=10)\
+$py(max_parameters=20)\
 #if VTKM_MAX_FUNCTION_PARAMETERS != $(max_parameters)
 #error Mismatch of maximum parameters between FunctionInterfaceDatailPre.h.in and WorkletInvokeFunctorDetail.h.in
 #endif

@@ -206,8 +206,8 @@ if(VTKm_ENABLE_MPI)
   if (NOT MPI_C_FOUND)
     find_package(MPI ${VTKm_FIND_PACKAGE_QUIETLY})
   endif()
-  add_subdirectory(diy)
 endif()
+
 add_subdirectory(vtkm)
 
 #-----------------------------------------------------------------------------

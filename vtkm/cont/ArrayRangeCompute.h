@@ -26,6 +26,7 @@
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
 namespace vtkm
@@ -96,6 +97,10 @@ VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasi
 VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::FloatDefault,
                                     3,
                                     vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag);
+
+VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC(vtkm::FloatDefault,
+                                    3,
+                                    vtkm::cont::ArrayHandleVirtualCoordinates::StorageTag);
 
 #undef VTKM_ARRAY_RANGE_COMPUTE_EXPORT_T
 #undef VTKM_ARRAY_RANGE_COMPUTE_EXPORT_VEC
