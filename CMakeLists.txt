@@ -132,33 +132,24 @@ include(VTKmWrappers)
 # When building VTK-m it self we want to explicitly disable compiler extensions
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+#-----------------------------------------------------------------------------
+
+## Set the directory where the binaries will be stored
+if(NOT VTKm_EXECUTABLE_OUTPUT_PATH)
+  set(VTKm_EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
+endif()
+
+## Set the directory where the libraries will be stored
+if(NOT VTKm_LIBRARY_OUTPUT_PATH)
+  set(VTKm_LIBRARY_OUTPUT_PATH  ${PROJECT_BINARY_DIR}/lib)
+endif()
+
+#-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)
   enable_testing()
   include(CTest)
   configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
-endif()
-
-#-----------------------------------------------------------------------------
-
-## Set the directory where the binaries will be stored
-set( VTKm_EXECUTABLE_OUTPUT_PATH
-  ${PROJECT_BINARY_DIR}/bin
-  CACHE PATH
-  "Directory where all executable will be stored"
-)
-
-## Set the directory where the libraries will be stored
-set( VTKm_LIBRARY_OUTPUT_PATH
-  ${PROJECT_BINARY_DIR}/lib
-  CACHE PATH
-  "Directory where all the libraries will be stored"
-)
-mark_as_advanced(
-  VTKm_EXECUTABLE_OUTPUT_PATH
-  VTKm_LIBRARY_OUTPUT_PATH)
-
-if (VTKm_ENABLE_TESTING)
 
   #-----------------------------------------------------------------------------
   # Add "meta" tests that check the state of the repository

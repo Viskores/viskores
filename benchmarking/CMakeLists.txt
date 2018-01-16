@@ -18,12 +18,14 @@
 ##  this software.
 ##============================================================================
 function(add_benchmark name files)
+  set(benchmarks )
+
   add_executable(${name}_SERIAL ${files})
-  target_link_libraries(${name}_SERIAL PRIVATE vtkm_cont)
+  list(APPEND benchmarks ${name}_SERIAL)
 
   if (TARGET vtkm::tbb)
     add_executable(${name}_TBB ${files})
-    target_link_libraries(${name}_TBB PRIVATE vtkm_cont)
+    list(APPEND benchmarks ${name}_TBB)
   endif()
 
   if (TARGET vtkm::cuda)
@@ -34,8 +36,17 @@ function(add_benchmark name files)
           CONTENT "#include \"${fullpath}\"")
 
     add_executable(${name}_CUDA ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu)
-    target_link_libraries(${name}_CUDA PRIVATE vtkm_cont)
+    list(APPEND benchmarks ${name}_CUDA)
   endif()
+
+  foreach(benchmark ${benchmarks})
+    target_link_libraries(${benchmark} PRIVATE vtkm_cont)
+    set_target_properties(${benchmark} PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
+      )
+  endforeach()
+
+
 endfunction()
 
 set(benchmarks

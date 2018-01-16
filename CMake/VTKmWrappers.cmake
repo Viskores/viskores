@@ -134,6 +134,14 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     target_sources(TestBuild_${name} PRIVATE ${srcs})
   else()
     add_library(TestBuild_${name} STATIC ${srcs} ${valid_hfiles})
+    # Send the libraries created for test builds to their own directory so as to
+    # not pollute the directory with useful libraries.
+    set_target_properties(TestBuild_${name} PROPERTIES
+      ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+      LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+      RUNTIME_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
+      )
+
     target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags)
 
     if(TARGET vtkm::tbb)
@@ -145,13 +153,7 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
       target_link_libraries(TestBuild_${name} PRIVATE vtkm_diy)
     endif()
 
-    # Send the libraries created for test builds to their own directory so as to
-    # not polute the directory with useful libraries.
-    set_target_properties(TestBuild_${name} PROPERTIES
-      ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
-      LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
-      RUNTIME_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
-      )
+
   endif()
 
 endfunction()
@@ -286,6 +288,12 @@ function(vtkm_library)
               ${VTKm_LIB_TEMPLATE_SOURCES}
               ${VTKm_LIB_WRAP_FOR_CUDA}
               )
+  #specify where to place the built library
+  set_target_properties(${test_prog} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+    LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
+    RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
+    )
 
   if(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
     set_target_properties(${lib_name}
@@ -294,19 +302,35 @@ function(vtkm_library)
                           CXX_VISIBILITY_PRESET "hidden")
   endif()
 
+  # Setup the SOVERSION and VERSION information for this vtkm library
+  set_property(TARGET ${lib_name} PROPERTY VERSION ${VTKm_VERSION})
+  set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
 
+  # Support custom library suffix names, for other projects wanting to inject
+  # their own version numbers etc.
+  if(DEFINED VTKm_CUSTOM_LIBRARY_SUFFIX)
+    set(_lib_suffix "${VTKm_CUSTOM_LIBRARY_SUFFIX}")
+  else()
+    set(_lib_suffix "-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}")
+  endif()
+  set_property(TARGET ${lib_name} PROPERTY OUTPUT_NAME ${lib_name}${_lib_suffix})
+
+  #generate the export header and install it
   vtkm_generate_export_header(${lib_name})
+
+  #test and install the headers
+  vtkm_declare_headers(${VTKm_LIB_HEADERS})
+
+  #install the template sources
+  vtkm_install_template_sources(${VTKm_LIB_TEMPLATE_SOURCES})
+
+  #install the library itself
   install(TARGETS ${lib_name}
     EXPORT ${VTKm_EXPORT_NAME}
     ARCHIVE DESTINATION ${VTKm_INSTALL_LIB_DIR}
     LIBRARY DESTINATION ${VTKm_INSTALL_LIB_DIR}
     RUNTIME DESTINATION ${VTKm_INSTALL_BIN_DIR}
     )
-
-  #test and install the headers
-  vtkm_declare_headers(${VTKm_LIB_HEADERS})
-  #install the template sources
-  vtkm_install_template_sources(${VTKm_LIB_TEMPLATE_SOURCES})
 
 endfunction(vtkm_library)
 
