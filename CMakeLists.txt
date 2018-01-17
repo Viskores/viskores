@@ -277,9 +277,13 @@ set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
   endif()
 endforeach()" )
 
+if (NOT DEFINED VTKm_BUILD_CMAKE_BASE_DIR)
+  set(VTKm_BUILD_CMAKE_BASE_DIR "${VTKm_BINARY_DIR}")
+endif ()
+
 configure_package_config_file(
   ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
-  ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
+  ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
   INSTALL_DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   PATH_VARS
     VTKm_INSTALL_INCLUDE_DIR
@@ -290,13 +294,13 @@ configure_package_config_file(
   )
 
 write_basic_package_version_file(
-  ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
+  ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
 install(
   FILES
-    ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
-    ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
+    ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
+    ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   )
 
@@ -335,7 +339,7 @@ install(
 
 # Create and install exports for external projects
 export(EXPORT ${VTKm_EXPORT_NAME}
-  FILE ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+  FILE ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
   )
 install(EXPORT ${VTKm_EXPORT_NAME}
   DESTINATION ${VTKm_INSTALL_CONFIG_DIR}

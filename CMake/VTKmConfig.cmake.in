@@ -46,7 +46,7 @@ set(VTKm_VERSION_FULL "@VTKm_VERSION_FULL@")
 set(VTKm_VERSION "@VTKm_VERSION@")
 
 # This is true when the package is still in the build directory (not installed)
-if(CMAKE_CURRENT_LIST_DIR STREQUAL "@VTKm_BINARY_DIR@/@VTKm_INSTALL_CONFIG_DIR@")
+if(CMAKE_CURRENT_LIST_DIR STREQUAL "@VTKm_BUILD_CMAKE_BASE_DIR@/@VTKm_INSTALL_CONFIG_DIR@")
   set(VTKm_PACKAGE_IN_BUILD TRUE)
 endif()
 
