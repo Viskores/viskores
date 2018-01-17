@@ -43,6 +43,15 @@ set(VTKm_VERSION_PATCH "@VTKm_VERSION_PATCH@")
 set(VTKm_VERSION_FULL "@VTKm_VERSION_FULL@")
 set(VTKm_VERSION "@VTKm_VERSION@")
 
+set(VTKm_BUILD_SHARED_LIBS "@VTKm_BUILD_SHARED_LIBS@")
+set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
+set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
+set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
+set(VTKm_ENABLE_GL_CONTEXT "@VTKm_ENABLE_GL_CONTEXT@")
+set(VTKm_ENABLE_OSMESA_CONTEXT "@VTKm_ENABLE_OSMESA_CONTEXT@")
+set(VTKm_ENABLE_EGL_CONTEXT "@VTKm_ENABLE_EGL_CONTEXT@")
+set(VTKm_ENABLE_MPI "@VTKm_ENABLE_MPI@")
+
 # This is true when the package is still in the build directory (not installed)
 if(CMAKE_CURRENT_LIST_DIR STREQUAL "@VTKm_BINARY_DIR@/@VTKm_INSTALL_CONFIG_DIR@")
   set(VTKm_PACKAGE_IN_BUILD TRUE)
@@ -56,21 +65,10 @@ else()
   set_and_check(VTKm_INCLUDE_DIRS "@PACKAGE_VTKm_INSTALL_INCLUDE_DIR@")
 endif()
 
-
-set(VTKm_BUILD_SHARED_LIBS "@VTKm_BUILD_SHARED_LIBS@")
-set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
-set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
-set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
-set(VTKm_ENABLE_GL_CONTEXT "@VTKm_ENABLE_GL_CONTEXT@")
-set(VTKm_ENABLE_OSMESA_CONTEXT "@VTKm_ENABLE_OSMESA_CONTEXT@")
-set(VTKm_ENABLE_EGL_CONTEXT "@VTKm_ENABLE_EGL_CONTEXT@")
-set(VTKm_ENABLE_MPI "@VTKm_ENABLE_MPI@")
-
 # Load the library exports, but only if not compiling VTK-m itself
 set_and_check(VTKm_CONFIG_DIR "@PACKAGE_VTKm_INSTALL_CONFIG_DIR@")
 if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@VTKm_BINARY_DIR@")
   include(${VTKm_CONFIG_DIR}/VTKmTargets.cmake)
-
 endif()
 
 # VTKm requires some CMake Find modules not included with CMake, so
@@ -83,5 +81,3 @@ include(VTKmWrappers)
 if(VTKm_ENABLE_RENDERING)
   include(VTKmRenderingContexts)
 endif()
-
-check_required_components(vtkm)
