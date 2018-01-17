@@ -23,6 +23,8 @@ set(unit_tests
   UnitTestCellAverage.cxx
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
+  UnitTestCellSetConnectivity.cpp
+  UnitTestCellSetDualGraph.cxx
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestCosmoTools.cxx
@@ -34,6 +36,7 @@ set(unit_tests
   UnitTestExtractStructured.cxx
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
+  UnitTestInnerJoin.cxx
   UnitTestKdTreeBuildNNS.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx
