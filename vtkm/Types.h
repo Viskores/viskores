@@ -143,39 +143,21 @@ namespace vtkm
 //*****************************************************************************
 // Typedefs for basic types.
 //*****************************************************************************
-
-#if VTKM_SIZE_FLOAT == 4
 using Float32 = float;
-#else
-#error Could not find a 32-bit float.
-#endif
-
-#if VTKM_SIZE_DOUBLE == 8
 using Float64 = double;
-#else
-#error Could not find a 64-bit float.
-#endif
-
-#if VTKM_SIZE_CHAR == 1
 using Int8 = signed char;
 using UInt8 = unsigned char;
-#else
-#error Could not find an 8-bit integer.
-#endif
-
-#if VTKM_SIZE_SHORT == 2
 using Int16 = short;
 using UInt16 = unsigned short;
-#else
-#error Could not find a 16-bit integer.
-#endif
-
-#if VTKM_SIZE_INT == 4
 using Int32 = int;
 using UInt32 = unsigned int;
-#else
-#error Could not find a 32-bit integer.
-#endif
+
+/// Represents a component ID (index of component in a vector). The number
+/// of components, being a value fixed at compile time, is generally assumed
+/// to be quite small. However, we are currently using a 32-bit width
+/// integer because modern processors tend to access them more efficiently
+/// than smaller widths.
+using IdComponent = vtkm::Int32;
 
 //In this order so that we exactly match the logic that exists in VTK
 #if VTKM_SIZE_LONG_LONG == 8
@@ -188,40 +170,19 @@ using UInt64 = unsigned long;
 #error Could not find a 64-bit integer.
 #endif
 
-//-----------------------------------------------------------------------------
-
-#if VTKM_SIZE_ID == 4
-
 /// Represents an ID (index into arrays).
-using Id = vtkm::Int32;
-
-#elif VTKM_SIZE_ID == 8
-
-/// Represents an ID.
+#ifdef VTKM_USE_64BIT_IDS
 using Id = vtkm::Int64;
-
 #else
-#error Unknown Id Size
+using Id = vtkm::Int32;
 #endif
 
-/// Represents a component ID (index of component in a vector). The number
-/// of components, being a value fixed at compile time, is generally assumed
-/// to be quite small. However, we are currently using a 32-bit width
-/// integer because modern processors tend to access them more efficiently
-/// than smaller widths.
-using IdComponent = vtkm::Int32;
-
+/// The floating point type to use when no other precision is specified.
 #ifdef VTKM_USE_DOUBLE_PRECISION
-
-/// The floating point type to use when no other precision is specified.
 using FloatDefault = vtkm::Float64;
-
-#else //VTKM_USE_DOUBLE_PRECISION
-
-/// The floating point type to use when no other precision is specified.
+#else
 using FloatDefault = vtkm::Float32;
-
-#endif //VTKM_USE_DOUBLE_PRECISION
+#endif
 
 namespace internal
 {

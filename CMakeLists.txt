@@ -180,11 +180,6 @@ endif (VTKm_ENABLE_TESTING)
 # Check basic type sizes.
 include(CheckTypeSize)
 
-check_type_size(float VTKm_SIZE_FLOAT BUILTIN_TYPES_ONLY)
-check_type_size(double VTKm_SIZE_DOUBLE BUILTIN_TYPES_ONLY)
-check_type_size(char VTKm_SIZE_CHAR BUILTIN_TYPES_ONLY)
-check_type_size(short VTKm_SIZE_SHORT BUILTIN_TYPES_ONLY)
-check_type_size(int VTKm_SIZE_INT BUILTIN_TYPES_ONLY)
 check_type_size(long VTKm_SIZE_LONG BUILTIN_TYPES_ONLY)
 check_type_size("long long" VTKm_SIZE_LONG_LONG BUILTIN_TYPES_ONLY)
 
