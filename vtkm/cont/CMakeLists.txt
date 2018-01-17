@@ -124,33 +124,27 @@ set(device_sources
   )
 
 #-----------------------------------------------------------------------------
-add_subdirectory(internal)
-add_subdirectory(arg)
-
-set(backends )
-add_subdirectory(serial)
-list(APPEND sources $<TARGET_OBJECTS:vtkm_cont_serial>)
-
-add_subdirectory(tbb)
-if(TARGET vtkm::tbb)
-  list(APPEND sources $<TARGET_OBJECTS:vtkm_cont_tbb>)
-  list(APPEND backends vtkm::tbb)
-endif()
-
-add_subdirectory(cuda)
-if(TARGET vtkm::cuda)
-  list(APPEND sources $<TARGET_OBJECTS:vtkm_cont_cuda>)
-  list(APPEND backends vtkm::cuda)
-endif()
-
 vtkm_library( NAME vtkm_cont
               SOURCES ${sources}
               TEMPLATE_SOURCES ${template_sources}
               HEADERS ${headers}
               WRAP_FOR_CUDA ${device_sources}
             )
+add_subdirectory(internal)
+add_subdirectory(arg)
+add_subdirectory(serial)
+add_subdirectory(tbb)
+add_subdirectory(cuda)
+
+set(backends )
+if(TARGET vtkm::tbb)
+  list(APPEND backends vtkm::tbb)
+endif()
+if(TARGET vtkm::cuda)
+  list(APPEND backends vtkm::cuda)
+endif()
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
-if(VTKm_ENABLE_MPI)
+if(TARGET vtkm_diy)
   # This will become a required dependency eventually.
   target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
 endif()

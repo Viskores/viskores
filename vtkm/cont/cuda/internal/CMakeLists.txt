@@ -37,13 +37,7 @@ if (NOT VTKm_ENABLE_CUDA)
   return()
 endif()
 
-add_library(vtkm_cont_cuda OBJECT
-  ArrayManagerExecutionCuda.cu
-  CudaAllocator.cu
-  )
-target_compile_definitions(vtkm_cont_cuda PRIVATE vtkm_cont_EXPORTS)
-target_compile_options(vtkm_cont_cuda PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_OPTIONS>)
-target_compile_definitions(vtkm_cont_cuda PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_DEFINITIONS>)
-target_compile_features(vtkm_cont_cuda PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_FEATURES>)
-target_include_directories(vtkm_cont_cuda PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_INCLUDE_DIRECTORIES>)
-set_property(TARGET vtkm_cont_cuda PROPERTY POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS})
+target_sources(vtkm_cont PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionCuda.cu
+  ${CMAKE_CURRENT_SOURCE_DIR}/CudaAllocator.cu
+)

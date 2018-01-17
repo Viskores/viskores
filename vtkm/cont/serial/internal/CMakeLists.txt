@@ -26,13 +26,7 @@ set(headers
   )
 vtkm_declare_headers(${headers})
 
-add_library(vtkm_cont_serial OBJECT
-  ArrayManagerExecutionSerial.cxx
-  DeviceAdapterAlgorithmSerial.cxx
-  )
-target_compile_definitions(vtkm_cont_serial PRIVATE vtkm_cont_EXPORTS)
-target_compile_options(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_OPTIONS>)
-target_compile_definitions(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_DEFINITIONS>)
-target_compile_features(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_COMPILE_FEATURES>)
-target_include_directories(vtkm_cont_serial PRIVATE $<TARGET_PROPERTY:vtkm_cont,INTERFACE_INCLUDE_DIRECTORIES>)
-set_property(TARGET vtkm_cont_serial PROPERTY POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS})
+target_sources(vtkm_cont PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionSerial.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmSerial.cxx
+)
