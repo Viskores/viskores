@@ -23,10 +23,10 @@ if(NOT VTKm_ENABLE_RENDERING)
 endif()
 
 # determine what context(s) for rendering we want to build
-option(VTKm_ENABLE_GL_CONTEXT "Enable GL context for vtkm rendering" OFF)
+vtkm_option(VTKm_ENABLE_GL_CONTEXT "Enable GL context for vtkm rendering" OFF)
 if(UNIX AND NOT APPLE)
-  option(VTKm_ENABLE_OSMESA_CONTEXT "Enable OSMesa context for vtkm rendering" OFF)
-  option(VTKm_ENABLE_EGL_CONTEXT "Enable EGL context for vtkm rendering" OFF)
+  vtkm_option(VTKm_ENABLE_OSMESA_CONTEXT "Enable OSMesa context for vtkm rendering" OFF)
+  vtkm_option(VTKm_ENABLE_EGL_CONTEXT "Enable EGL context for vtkm rendering" OFF)
   mark_as_advanced(VTKm_ENABLE_OSMESA_CONTEXT)
   mark_as_advanced(VTKm_ENABLE_EGL_CONTEXT)
 endif()

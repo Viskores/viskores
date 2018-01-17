@@ -69,36 +69,44 @@ endif()
 set(VTKm_EXPORT_NAME "VTKmTargets")
 
 #-----------------------------------------------------------------------------
+# vtkm_option(variable doc [initial])
+#   Provides an option if it is not already defined.
+macro (vtkm_option variable)
+  if (NOT DEFINED "${variable}")
+    option("${variable}" ${ARGN})
+  endif ()
+endmacro ()
+
 # Configurable Options
-option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
-option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
-option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
-option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
-option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
-option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
+vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
+vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
+vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
+vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
+vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
+vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
 
-option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
-option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
+vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
+vtkm_option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
 
-option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
-option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
+vtkm_option(VTKm_USE_DOUBLE_PRECISION "Use double precision for floating point calculations" OFF)
+vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
 # When VTK-m is embedded into larger projects they may desire to turn off
 # VTK-m internal assert checks when in debug mode to improve debug runtime
 # performance.
-option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
+vtkm_option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
 
 # When VTK-m is embedded into larger projects that wish to make end user
 # applications they want to only install libraries and don't want CMake/headers
 # installed.
-option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no headers" OFF)
+vtkm_option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no headers" OFF)
 
 # VTK-m is setup by default not to export symbols unless explicitly stated.
 # We prefer to only export symbols of a small set of user facing classes,
 # rather than exporting all symbols. This flag is added so that consumers
 # which require static builds can force all symbols on, which is something
 # VTK does.
-option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
+vtkm_option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
 
 mark_as_advanced(
   VTKm_NO_ASSERT
@@ -106,7 +114,7 @@ mark_as_advanced(
   VTKm_USE_DEFAULT_SYMBOL_VISIBILITY
   )
 
-option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
+vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 # Setup default build types
