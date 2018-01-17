@@ -67,11 +67,11 @@ public:
   template <typename InOutPortalType>
   VTKM_EXEC void operator()(vtkm::Id index, InOutPortalType& comp) const
   {
-    while (comp.Get(comp.Get(index)) != comp.Get(index))
-      comp.Set(index, comp.Get(comp.Get(index)));
-
-    //vtkm::Id parent = comp.Get(index);
-    //comp.Set(index, comp.Get(comp.Get(index)));
+    // keep updating component id until we reach the root of the tree.
+    for (auto parent = comp.Get(index); comp.Get(parent) != parent; parent = comp.Get(index))
+    {
+      comp.Set(index, comp.Get(parent));
+    }
   };
 };
 
@@ -113,16 +113,16 @@ public:
 
     do
     {
-      vtkm::worklet::DispatcherMapField<Graft> graftDispatcher;
+      vtkm::worklet::DispatcherMapField<Graft, DeviceAdapter> graftDispatcher;
       graftDispatcher.Invoke(
         cellIds, indexOffsetArray, numIndexArray, connectivityArray, components);
 
-      // Detection of allStar has come before pointer jumping. Don't try to rearrange it.
-      vtkm::worklet::DispatcherMapField<IsStar> isStarDisp;
+      // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
+      vtkm::worklet::DispatcherMapField<IsStar, DeviceAdapter> isStarDisp;
       isStarDisp.Invoke(cellIds, components, isStar);
       allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());
 
-      vtkm::worklet::DispatcherMapField<PointerJumping> pointJumpingDispatcher;
+      vtkm::worklet::DispatcherMapField<PointerJumping, DeviceAdapter> pointJumpingDispatcher;
       pointJumpingDispatcher.Invoke(cellIds, components);
     } while (!allStar);
 

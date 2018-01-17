@@ -100,9 +100,6 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> counts;
     Algorithm::Transform(ubs, lbs, counts, vtkm::Subtract());
 
-    vtkm::cont::ArrayHandle<vtkm::Id> output_offset;
-    Algorithm::ScanExclusive(counts, output_offset);
-
     vtkm::worklet::ScatterCounting scatter{ counts, DeviceAdapter() };
     Merge merge(scatter);
     vtkm::worklet::DispatcherMapField<Merge, DeviceAdapter> mergeDisp(merge);

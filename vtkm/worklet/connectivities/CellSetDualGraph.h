@@ -62,7 +62,7 @@ struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
             typename EdgeIndexVecType>
   VTKM_EXEC void operator()(CellShapeTag cellShape,
                             CellIndexType cellIndex,
-                            PointIndexVecType& pointIndices,
+                            const PointIndexVecType& pointIndices,
                             vtkm::IdComponent visitIndex,
                             CellIndexType& cellIndexOut,
                             EdgeIndexVecType& edgeIndices) const
@@ -119,12 +119,12 @@ public:
   {
     // Get number of edges for each cell and use it as scatter count.
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numEdgesPerCell;
-    vtkm::worklet::DispatcherMapTopology<EdgeCount> edgesPerCellDisp;
+    vtkm::worklet::DispatcherMapTopology<EdgeCount, DeviceAdapter> edgesPerCellDisp;
     edgesPerCellDisp.Invoke(cellSet, numEdgesPerCell);
 
     // Get uncompress Cell to Edge mapping
     vtkm::worklet::ScatterCounting scatter{ numEdgesPerCell, DeviceAdapter() };
-    vtkm::worklet::DispatcherMapTopology<EdgeExtract> edgeExtractDisp{ scatter };
+    vtkm::worklet::DispatcherMapTopology<EdgeExtract, DeviceAdapter> edgeExtractDisp{ scatter };
     edgeExtractDisp.Invoke(cellSet, cellIds, cellEdges);
   }
 
@@ -166,7 +166,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> connTo;
     connFrom.Allocate(sharedEdges.GetNumberOfValues() * 2);
     connTo.Allocate(sharedEdges.GetNumberOfValues() * 2);
-    vtkm::worklet::DispatcherMapField<CellToCellConnectivity> c2cDisp;
+    vtkm::worklet::DispatcherMapField<CellToCellConnectivity, DeviceAdapter> c2cDisp;
     c2cDisp.Invoke(lb, cellIds, connFrom, connTo);
 
     // Turn dual graph into Compressed Sparse Row format

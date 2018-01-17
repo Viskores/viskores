@@ -60,10 +60,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> idxA;
     vtkm::cont::ArrayHandle<vtkm::Id> idxB;
 
-    Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, A_arr.GetNumberOfValues()),
-                    idxA);
-    Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, B_arr.GetNumberOfValues()),
-                    idxB);
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(A_arr.GetNumberOfValues()), idxA);
+    Algorithm::Copy(vtkm::cont::ArrayHandleIndex(B_arr.GetNumberOfValues()), idxB);
 
     vtkm::cont::ArrayHandle<vtkm::Id> joinedIndex;
     vtkm::cont::ArrayHandle<vtkm::Id> outA;

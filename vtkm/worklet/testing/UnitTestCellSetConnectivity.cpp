@@ -135,7 +135,7 @@ public:
 
     auto cellSet = outputData.GetCellSet().Cast<vtkm::cont::CellSetSingleType<>>();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
-    CellSetConnectivity<DeviceAdapter>().Run(cellSet, componentArray);
+    CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
 
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     Algorithm::Sort(componentArray);

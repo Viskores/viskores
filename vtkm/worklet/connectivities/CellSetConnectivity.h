@@ -25,12 +25,13 @@
 #include <vtkm/worklet/connectivities/CellSetDualGraph.h>
 #include <vtkm/worklet/connectivities/GraphConnectivity.h>
 
-template <typename DeviceAdapter>
 class CellSetConnectivity
 {
 public:
-  template <template <typename> class CellSetType, typename T>
-  void Run(const CellSetType<T>& cellSet, vtkm::cont::ArrayHandle<vtkm::Id>& componentArray) const
+  template <typename CellSetType, typename DeviceAdapter>
+  void Run(const CellSetType& cellSet,
+           vtkm::cont::ArrayHandle<vtkm::Id>& componentArray,
+           DeviceAdapter) const
   {
     vtkm::cont::ArrayHandle<vtkm::Id> numIndicesArray;
     vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray;
