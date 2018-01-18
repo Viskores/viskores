@@ -39,7 +39,7 @@ void RenderTests()
   typedef vtkm::rendering::View3D V3;
 
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("thermal");
+  vtkm::cont::ColorTable colorTable("inferno");
 
   vtkm::rendering::testing::Render<M, C, V3>(
     maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");

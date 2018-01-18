@@ -46,12 +46,12 @@ void RenderTests()
   typedef vtkm::rendering::View3D V3;
 
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("thermal");
+  vtkm::cont::ColorTable colorTable("inferno");
 
 
-  vtkm::rendering::ColorTable colorTable2("cool2warm");
-  colorTable2.AddAlphaControlPoint(0.0, .02f);
-  colorTable2.AddAlphaControlPoint(1.0, .02f);
+  vtkm::cont::ColorTable colorTable2("cool to warm");
+  colorTable2.AddPointAlpha(0.0, .02f);
+  colorTable2.AddPointAlpha(1.0, .02f);
 
   vtkm::rendering::testing::MultiMapperRender<R, M2, C, V3>(maker.Make3DExplicitDataSetPolygonal(),
                                                             maker.Make3DRectilinearDataSet0(),

@@ -20,7 +20,6 @@
 #include <cstdlib>
 #include <typeinfo>
 #include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/ConnectivityProxy.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/raytracing/ConnectivityTracerFactory.h>

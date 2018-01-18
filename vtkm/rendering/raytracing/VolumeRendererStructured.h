@@ -24,8 +24,6 @@
 
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/rendering/ColorTable.h>
-
 #include <vtkm/rendering/raytracing/Ray.h>
 
 namespace vtkm

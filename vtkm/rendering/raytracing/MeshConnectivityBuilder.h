@@ -32,7 +32,6 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/raytracing/CellTables.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/MortonCodes.h>

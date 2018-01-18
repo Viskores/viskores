@@ -153,7 +153,7 @@ camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
 camera.SetClippingRange(1.f, 100.f);
 camera.SetFieldOfView(60.f);
 camera.SetPosition(totalExtent*(mag * 2.f));
-vtkm::rendering::ColorTable colorTable("thermal");
+vtkm::cont::ColorTable colorTable("inferno");
 
 // Create a mapper, canvas and view that will be used to render the scene
 vtkm::rendering::Scene scene;

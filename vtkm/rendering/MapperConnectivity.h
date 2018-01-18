@@ -20,8 +20,8 @@
 #ifndef vtk_m_rendering_MapperConnectivity_h
 #define vtk_m_rendering_MapperConnectivity_h
 
+#include <vtkm/cont/ColorTable.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/View.h>
 
@@ -43,7 +43,7 @@ public:
   virtual void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,
                            const vtkm::cont::Field& scalarField,
-                           const vtkm::rendering::ColorTable&, //colorTable
+                           const vtkm::cont::ColorTable&, //colorTable
                            const vtkm::rendering::Camera& camera,
                            const vtkm::Range& scalarRange) override;
 
