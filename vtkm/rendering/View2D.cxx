@@ -102,6 +102,7 @@ void View2D::RenderScreenAnnotations()
   if (scene.GetNumberOfActors() > 0)
   {
     //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
+    this->ColorBarAnnotation.SetFieldName(scene.GetActor(0).GetScalarField().GetName());
     this->ColorBarAnnotation.SetRange(
       scene.GetActor(0).GetScalarRange().Min, scene.GetActor(0).GetScalarRange().Max, 5);
     this->ColorBarAnnotation.SetColorTable(scene.GetActor(0).GetColorTable());
