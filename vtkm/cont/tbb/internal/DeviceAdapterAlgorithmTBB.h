@@ -366,8 +366,8 @@ class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
-                                                             const InvocationType& invocation,
+  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(WorkletType& worklet,
+                                                             InvocationType& invocation,
                                                              vtkm::Id,
                                                              vtkm::Id globalIndexOffset = 0)
   {
@@ -375,8 +375,8 @@ public:
   }
 
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
-                                                             const InvocationType& invocation,
+  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(WorkletType& worklet,
+                                                             InvocationType& invocation,
                                                              vtkm::Id3,
                                                              vtkm::Id globalIndexOffset = 0)
   {
