@@ -212,7 +212,7 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
     vtkm::Vec<vtkm::Float32, 4> color = colorMap.Get(sample);
 
     vtkm::Float32 normalizedHeight =
-      Horizontal ? vtkm::Float32(y) / BarHeight : vtkm::Float32(BarWidthx) / BarWidth;
+      Horizontal ? vtkm::Float32(y) / BarHeight : vtkm::Float32(x) / BarWidth;
     // offset to global image coord
     x += BarBottomLeft[0];
     y += BarBottomLeft[1];
@@ -220,7 +220,6 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
     vtkm::Id offset = y * ImageWidth + x;
     // If the colortable has alpha values, we blend each color sample with translucent white.
     // The height of the resultant translucent bar indicates the opacity.
-    //vtkm::Float32 normalizedHeight = static_cast<vtkm::Float32>(yLocal) / BarHeight;
     if (color[3] < 1.0f && normalizedHeight <= color[3])
     {
       vtkm::Float32 intensity = 0.4f;
