@@ -56,8 +56,8 @@ endif()
 
 # Enable large object support so we can have 2^32 addressable sections
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -bigobj")
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-bigobj")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/bigobj\" -Xcudafe=\"--diag_suppress=1394 --diag_suppress=766 --display_error_number\"")
 endif()
 
 # Setup the include directories that are needed for vtkm
@@ -96,14 +96,14 @@ if(VTKM_COMPILER_IS_MSVC)
 
   #CMake COMPILE_LANGUAGE doesn't work with MSVC, ans since we want these flags
   #only for C++ compilation we have to resort to setting CMAKE_CXX_FLAGS :(
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4702 -wd4505")
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"-wd4702 -wd4505\"")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4702 /wd4505")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/wd4702 /wd4505\"")
 
   if(MSVC_VERSION LESS 1900)
     # In VS2013 the C4127 warning has a bug in the implementation and
     # generates false positive warnings for lots of template code
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4127")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"-wd4127\"")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/wd4127\"")
   endif()
 
 elseif(VTKM_COMPILER_IS_ICC)

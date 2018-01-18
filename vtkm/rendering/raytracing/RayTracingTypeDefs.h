@@ -45,10 +45,10 @@ namespace rendering
 #endif
 
 template <typename ArrayHandleType>
-inline void BoundsCheck(const ArrayHandleType& handle,
-                        const vtkm::Id& index,
-                        const char* file,
-                        int line)
+VTKM_EXEC inline void BoundsCheck(const ArrayHandleType& handle,
+                                  const vtkm::Id& index,
+                                  const char* file,
+                                  int line)
 {
   if (index < 0 || index >= handle.GetNumberOfValues())
     printf("Bad Index %d  at file %s line %d\n", (int)index, file, line);

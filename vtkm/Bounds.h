@@ -45,7 +45,6 @@ struct Bounds
   VTKM_EXEC_CONT
   Bounds() {}
 
-  VTKM_EXEC_CONT
   Bounds(const Bounds&) = default;
 
   VTKM_EXEC_CONT
@@ -91,7 +90,6 @@ struct Bounds
   {
   }
 
-  VTKM_EXEC_CONT
   vtkm::Bounds& operator=(const vtkm::Bounds& src) = default;
 
   /// \b Determine if the bounds are valid (i.e. has at least one valid point).
