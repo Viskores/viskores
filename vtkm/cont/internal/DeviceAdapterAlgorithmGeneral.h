@@ -989,8 +989,8 @@ class DeviceTaskTypes
 public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet,
-    const InvocationType& invocation,
+    WorkletType& worklet,
+    InvocationType& invocation,
     vtkm::Id,
     vtkm::Id globalIndexOffset = 0)
   {
@@ -1000,8 +1000,8 @@ public:
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet,
-    const InvocationType& invocation,
+    WorkletType& worklet,
+    InvocationType& invocation,
     vtkm::Id3,
     vtkm::Id globalIndexOffset = 0)
   {
