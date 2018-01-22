@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_DeviceAdapterAlgorithm_h
-#define vtk_m_cont_internal_DeviceAdapterAlgorithm_h
+#ifndef vtk_m_cont_DeviceAdapterAlgorithm_h
+#define vtk_m_cont_DeviceAdapterAlgorithm_h
 
 #include <vtkm/Types.h>
 
@@ -438,6 +438,26 @@ struct DeviceAdapterAlgorithm
     /// Waits for any asynchronous operations running on the device to complete.
     ///
     VTKM_CONT static void Synchronize();
+
+  /// \brief Apply a given binary operation function element-wise to input arrays.
+  ///
+  /// Apply the give binary operation to pairs of elements from the two input array
+  /// \c input1 and \c input2. The number of elements in the input arrays do not
+  /// have to be the same, in this case, only the smaller of the two numbers of elements
+  /// will be applied.
+  /// Outputs of the binary operation is stored in \c output.
+  ///
+  template <typename T,
+            typename U,
+            typename V,
+            typename StorageT,
+            typename StorageU,
+            typename StorageV,
+            typename BinaryFunctor>
+  VTKM_CONT static void Transform(const vtkm::cont::ArrayHandle<T, StorageT>& input1,
+                                  const vtkm::cont::ArrayHandle<U, StorageU>& input2,
+                                  vtkm::cont::ArrayHandle<V, StorageV>& output,
+                                  BinaryFunctor binaryFunctor);
 
   /// \brief Reduce an array to only the unique values it contains
   ///

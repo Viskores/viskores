@@ -55,6 +55,7 @@ set(headers
   PointAverage.h
   PointElevation.h
   RemoveUnusedPoints.h
+  ScalarsToColors.h
   ScatterCounting.h
   ScatterIdentity.h
   ScatterPermutation.h
@@ -74,6 +75,12 @@ set(headers
   WorkletReduceByKey.h
   )
 
+
+set(header_impls
+  ScalarsToColors.hxx
+  )
+
+
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(contour)
@@ -88,6 +95,7 @@ add_subdirectory(wavelets)
 add_subdirectory(particleadvection)
 
 vtkm_declare_headers(${headers})
+vtkm_declare_headers(${header_impls} TESTABLE OFF)
 
 
 #-----------------------------------------------------------------------------

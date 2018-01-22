@@ -789,23 +789,17 @@ public:
   {
     vtkm::Vec<vtkm::Float64, 3> MinPoint;
     vtkm::Vec<vtkm::Float64, 3> MaxPoint;
-    vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                       vtkm::TopologyElementTagCell,
-                                       3>
-      Conn;
 
-    Conn = inCellSet.PrepareForInput(
-      DeviceAdapter(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
+    vtkm::Id3 PointDimensions = inCellSet.GetPointDimensions();
 
-    vtkm::Id3 PointDimensions = Conn.GetPointDimensions();
     typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
     typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>
       CartesianArrayHandle;
 
-    if (coord.GetData().IsSameType(CartesianArrayHandle()))
+    auto coordData = coord.GetData();
+    if (coordData.IsSameType<CartesianArrayHandle>())
     {
-      CartesianArrayHandle vertices;
-      vertices = coord.GetData().Cast<CartesianArrayHandle>();
+      auto vertices = coordData.Cast<CartesianArrayHandle>();
 
       MinPoint[0] =
         static_cast<vtkm::Float64>(vertices.GetPortalConstControl().GetFirstPortal().Get(0));
@@ -823,12 +817,8 @@ public:
     }
     else
     {
-      vtkm::cont::ArrayHandleUniformPointCoordinates vertices;
-      vertices = coord.GetData().Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
-      typedef typename vtkm::cont::ArrayHandleUniformPointCoordinates UniformArrayHandle;
-      typedef
-        typename UniformArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst UniformConstPortal;
-      UniformConstPortal Coordinates = vertices.PrepareForInput(DeviceAdapter());
+      auto vertices = coordData.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      auto Coordinates = vertices.GetPortalConstControl();
 
       MinPoint = Coordinates.GetOrigin();
       vtkm::Vec<vtkm::Float64, 3> spacing = Coordinates.GetSpacing();
@@ -842,10 +832,10 @@ public:
 
     // Create a worklet to count the number of external faces on each cell
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numExternalFaces;
-    vtkm::worklet::DispatcherMapTopology<NumExternalFacesPerStructuredCell>
+    vtkm::worklet::DispatcherMapTopology<NumExternalFacesPerStructuredCell, DeviceAdapter>
       numExternalFacesDispatcher((NumExternalFacesPerStructuredCell(MinPoint, MaxPoint)));
 
-    numExternalFacesDispatcher.Invoke(inCellSet, numExternalFaces, coord.GetData());
+    numExternalFacesDispatcher.Invoke(inCellSet, numExternalFaces, coordData);
 
     typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
     vtkm::Id numberOfExternalFaces = DeviceAlgorithms::Reduce(numExternalFaces, 0, vtkm::Sum());
@@ -865,7 +855,7 @@ public:
     // information to.
     faceConnectivity.Allocate(connectivitySize);
 
-    vtkm::worklet::DispatcherMapTopology<BuildConnectivityStructured>
+    vtkm::worklet::DispatcherMapTopology<BuildConnectivityStructured, DeviceAdapter>
       buildConnectivityStructuredDispatcher(
         (BuildConnectivityStructured(MinPoint, MaxPoint, scatterCellToExternalFace)));
 
@@ -875,7 +865,7 @@ public:
       faceShapes,
       facePointCount,
       vtkm::cont::make_ArrayHandleGroupVec<4>(faceConnectivity),
-      coord.GetData());
+      coordData);
     outCellSet.Fill(inCellSet.GetNumberOfPoints(), faceShapes, facePointCount, faceConnectivity);
   }
 
@@ -901,7 +891,7 @@ public:
 
     //Create a worklet to map the number of faces to each cell
     vtkm::cont::ArrayHandle<vtkm::IdComponent> facesPerCell;
-    vtkm::worklet::DispatcherMapTopology<NumFacesPerCell> numFacesDispatcher;
+    vtkm::worklet::DispatcherMapTopology<NumFacesPerCell, DeviceAdapter> numFacesDispatcher;
 
     numFacesDispatcher.Invoke(inCellSet, facesPerCell);
 
@@ -917,7 +907,7 @@ public:
     if (this->PassPolyData)
     {
       vtkm::cont::ArrayHandle<vtkm::IdComponent> isPolyDataCell;
-      vtkm::worklet::DispatcherMapTopology<IsPolyDataCell> isPolyDataCellDispatcher;
+      vtkm::worklet::DispatcherMapTopology<IsPolyDataCell, DeviceAdapter> isPolyDataCellDispatcher;
 
       isPolyDataCellDispatcher.Invoke(inCellSet, isPolyDataCell);
 

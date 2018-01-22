@@ -50,9 +50,6 @@ static vtkm::Id cellsToDisplay = 16;
 // Takes input uniform grid and outputs unstructured grid of triangles
 static vtkm::cont::DataSet triDataSet;
 
-// Point location of vertices from a CastAndCall but needs a static cast eventually
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> vertexArray;
-
 //
 // Construct an input data set with uniform grid of indicated dimensions, origin and spacing
 //
@@ -79,30 +76,6 @@ vtkm::cont::DataSet MakeTriangulateTestDataSet(vtkm::Id2 dim)
 }
 
 //
-// Functor to retrieve vertex locations from the CoordinateSystem
-// Actually need a static cast to ArrayHandle from DynamicArrayHandleCoordinateSystem
-// but haven't been able to figure out what that is
-//
-struct GetVertexArray
-{
-  template <typename ArrayHandleType>
-  VTKM_CONT void operator()(ArrayHandleType array) const
-  {
-    this->GetVertexPortal(array.GetPortalConstControl());
-  }
-
-private:
-  template <typename PortalType>
-  VTKM_CONT void GetVertexPortal(const PortalType& portal) const
-  {
-    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
-    {
-      vertexArray.GetPortalControl().Set(index, portal.Get(index));
-    }
-  }
-};
-
-//
 // Initialize the OpenGL state
 //
 void initializeGL()
@@ -125,10 +98,7 @@ void displayCall()
   vtkm::cont::CellSetSingleType<> cellSet;
   triDataSet.GetCellSet(0).CopyTo(cellSet);
 
-  // Need the actual vertex points from a static cast of the dynamic array but can't get it right
-  // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(cellSet.GetNumberOfPoints());
-  vtkm::cont::CastAndCall(triDataSet.GetCoordinateSystem(), GetVertexArray());
+  auto vertexArray = triDataSet.GetCoordinateSystem().GetData();
 
   // Draw the two triangles belonging to each quad
   vtkm::Id triangle = 0;
@@ -207,7 +177,6 @@ int main(int argc, char* argv[])
   glutMainLoop();
 
   triDataSet.Clear();
-  vertexArray.ReleaseResources();
   return 0;
 }
 

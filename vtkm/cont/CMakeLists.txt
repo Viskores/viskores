@@ -39,6 +39,7 @@ set(headers
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
+  ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
@@ -46,6 +47,7 @@ set(headers
   ArrayRangeCompute.h
   ArrayRangeCompute.hxx
   AssignerMultiBlock.h
+  CellLocator.h
   CellLocatorTwoLevelUniformGrid.h
   CellSet.h
   CellSetExplicit.h
@@ -68,6 +70,7 @@ set(headers
   EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
+  ErrorBadDevice.h
   ErrorBadType.h
   ErrorBadValue.h
   ErrorExecution.h
@@ -100,13 +103,10 @@ set(sources
   CellSet.cxx
   CellSetExplicit.cxx
   CellSetStructured.cxx
-  CoordinateSystem.cxx
-  DataSet.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
   Field.cxx
   internal/SimplePolymorphicContainer.cxx
-  MultiBlock.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
   StorageBasic.cxx
   )
@@ -116,6 +116,9 @@ set(sources
 set(device_sources
   ArrayRangeCompute.cxx
   CellSetExplicit.cxx
+  CoordinateSystem.cxx
+  DataSet.cxx
+  MultiBlock.cxx
   RuntimeDeviceTracker.cxx
   TryExecute.cxx
   )

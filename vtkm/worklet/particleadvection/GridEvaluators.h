@@ -146,7 +146,7 @@ public:
     typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformType;
     typedef vtkm::cont::CellSetStructured<3> StructuredType;
 
-    if (!coords.GetData().IsSameType(UniformType()))
+    if (!coords.GetData().IsSameType<UniformType>())
       throw vtkm::cont::ErrorInternal("Coordinates are not uniform.");
     if (!cellSet.IsSameType(StructuredType()))
       throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
@@ -176,8 +176,8 @@ public:
   {
     typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformType;
 
-    vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray = ds.GetCoordinateSystem().GetData();
-    if (!coordArray.IsSameType(UniformType()))
+    auto coordArray = ds.GetCoordinateSystem().GetData();
+    if (!coordArray.IsSameType<UniformType>())
       throw vtkm::cont::ErrorInternal("Given dataset is was not uniform.");
 
     bounds = ds.GetCoordinateSystem(0).GetBounds();
@@ -321,7 +321,7 @@ public:
   {
     typedef vtkm::cont::CellSetStructured<3> StructuredType;
 
-    if (!coords.GetData().IsSameType(RectilinearType()))
+    if (!coords.GetData().IsSameType<RectilinearType>())
       throw vtkm::cont::ErrorInternal("Coordinates are not rectilinear.");
     if (!cellSet.IsSameType(StructuredType()))
       throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
@@ -351,9 +351,8 @@ public:
     dims = cells.GetSchedulingRange(vtkm::TopologyElementTagPoint());
     planeSize = dims[0] * dims[1];
     rowSize = dims[0];
-    vtkm::cont::DynamicArrayHandleCoordinateSystem coordArray =
-      dataset.GetCoordinateSystem().GetData();
-    if (coordArray.IsSameType(RectilinearType()))
+    auto coordArray = dataset.GetCoordinateSystem().GetData();
+    if (coordArray.IsSameType<RectilinearType>())
     {
       RectilinearType gridPoints = coordArray.Cast<RectilinearType>();
       xAxis = gridPoints.GetPortalConstControl().GetFirstPortal();

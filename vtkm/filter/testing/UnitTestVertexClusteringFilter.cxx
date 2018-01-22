@@ -78,9 +78,7 @@ void TestVertexClustering()
   }
 
   {
-    typedef vtkm::Vec<vtkm::Float64, 3> PointType;
-    vtkm::cont::ArrayHandle<PointType> pointArray;
-    output.GetCoordinateSystem(0).GetData().CopyTo(pointArray);
+    auto pointArray = output.GetCoordinateSystem(0).GetData();
     std::cerr << "output_points = " << pointArray.GetNumberOfValues() << "\n";
     std::cerr << "output_point[] = ";
     vtkm::cont::printSummary_ArrayHandle(pointArray, std::cerr, true);
@@ -90,8 +88,7 @@ void TestVertexClustering()
   vtkm::cont::printSummary_ArrayHandle(cellvar, std::cerr, true);
 
   typedef vtkm::Vec<vtkm::Float64, 3> PointType;
-  vtkm::cont::ArrayHandle<PointType> pointArray;
-  output.GetCoordinateSystem(0).GetData().CopyTo(pointArray);
+  auto pointArray = output.GetCoordinateSystem(0).GetData();
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
                    "Number of output points mismatch");
   for (vtkm::Id i = 0; i < pointArray.GetNumberOfValues(); ++i)

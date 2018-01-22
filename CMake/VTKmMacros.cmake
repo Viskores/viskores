@@ -896,3 +896,12 @@ function(_vtkm_parse_test_options varname options)
   endforeach()
   set(${varname} ${names} PARENT_SCOPE)
 endfunction()
+
+# -----------------------------------------------------------------------------
+# vtkm_option(variable doc [initial])
+#   Provides an option if it is not already defined.
+macro (vtkm_option variable)
+  if (NOT DEFINED "${variable}")
+    option("${variable}" ${ARGN})
+  endif ()
+endmacro ()

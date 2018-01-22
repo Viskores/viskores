@@ -65,25 +65,19 @@ set(sources
   BitmapFontFactory.cxx
   BoundingBoxAnnotation.cxx
   Camera.cxx
-  Canvas.cxx
-  CanvasRayTracer.cxx
   Color.cxx
   ColorBarAnnotation.cxx
   ColorLegendAnnotation.cxx
   ColorTable.cxx
-  ConnectivityProxy.cxx
   DecodePNG.cxx
   LineRenderer.cxx
-  Mapper.cxx
+  MapperConnectivity.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
-  MapperConnectivity.cxx
-  MapperWireframer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
-  TextRenderer.cxx
   View.cxx
   View1D.cxx
   View2D.cxx
@@ -91,13 +85,10 @@ set(sources
   WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
-  raytracing/BoundingVolumeHierarchy.cxx
-  raytracing/Camera.cxx
-  raytracing/ChannelBuffer.cxx
+  raytracing/ConnectivityBase.cxx
+  raytracing/ConnectivityTracerBase.cxx
+  raytracing/ConnectivityTracerFactory.cxx
   raytracing/Logger.cxx
-  raytracing/RayTracer.cxx
-  raytracing/RayOperations.cxx
-  raytracing/VolumeRendererStructured.cxx
   )
 
 set(opengl_headers
@@ -133,18 +124,20 @@ set(osmesa_sources
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
-  Mapper.cxx
-  MapperWireframer.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx
+  Mapper.cxx
+  MapperWireframer.cxx
   TextRenderer.cxx
+
   raytracing/BoundingVolumeHierarchy.cxx
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
-  raytracing/VolumeRendererStructured.cxx
+  raytracing/ConnectivityTracer.cxx
   raytracing/RayOperations.cxx
   raytracing/RayTracer.cxx
+  raytracing/VolumeRendererStructured.cxx
   )
 
 #-----------------------------------------------------------------------------

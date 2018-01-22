@@ -22,19 +22,10 @@
 
 #include <vtkm/Bounds.h>
 
-#include <vtkm/cont/ArrayHandleCartesianProduct.h>
-#include <vtkm/cont/ArrayHandleCompositeVector.h>
+#include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ArrayHandleVirtualCoordinates.h>
 #include <vtkm/cont/Field.h>
-
-#ifndef VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG
-#define VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG ::vtkm::TypeListTagFieldVec3
-#endif
-
-#ifndef VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG
-#define VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG                                            \
-  ::vtkm::cont::StorageListTagCoordinateSystemDefault
-#endif
 
 namespace vtkm
 {
@@ -44,48 +35,48 @@ namespace cont
 namespace detail
 {
 
-using ArrayHandleCompositeVectorFloat32_3Default =
-  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float32>>::type;
+struct MakeArrayHandleVirtualCoordinatesFunctor
+{
+  VTKM_CONT explicit MakeArrayHandleVirtualCoordinatesFunctor(
+    vtkm::cont::ArrayHandleVirtualCoordinates& out)
+    : Out(&out)
+  {
+  }
 
-using ArrayHandleCompositeVectorFloat64_3Default =
-  vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                             vtkm::cont::ArrayHandle<vtkm::Float64>>::type;
+  template <typename StorageTag>
+  VTKM_CONT void operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>, StorageTag>& array) const
+  {
+    *this->Out = vtkm::cont::ArrayHandleVirtualCoordinates(array);
+  }
+
+  template <typename StorageTag>
+  VTKM_CONT void operator()(
+    const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>, StorageTag>& array) const
+  {
+    *this->Out = vtkm::cont::ArrayHandleVirtualCoordinates(array);
+  }
+
+  template <typename T, typename StorageTag>
+  VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>&) const
+  {
+    throw vtkm::cont::ErrorBadType("CoordinateSystem's value type should be a 3 component Vec "
+                                   "of either vtkm::Float32 or vtkm::Float64");
+  }
+
+  vtkm::cont::ArrayHandleVirtualCoordinates* Out;
+};
+
+template <typename TypeList, typename StorageList>
+VTKM_CONT vtkm::cont::ArrayHandleVirtualCoordinates MakeArrayHandleVirtualCoordinates(
+  const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& array)
+{
+  vtkm::cont::ArrayHandleVirtualCoordinates out;
+  array.CastAndCall(MakeArrayHandleVirtualCoordinatesFunctor(out));
+  return out;
+}
 
 } // namespace detail
-
-/// \brief Default storage list for CoordinateSystem arrays.
-///
-/// \c VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG is set to this value
-/// by default (unless it is defined before including VTK-m headers.
-///
-struct StorageListTagCoordinateSystemDefault
-  : vtkm::ListTagBase<vtkm::cont::StorageTagBasic,
-                      vtkm::cont::ArrayHandleUniformPointCoordinates::StorageTag,
-                      detail::ArrayHandleCompositeVectorFloat32_3Default::StorageTag,
-                      detail::ArrayHandleCompositeVectorFloat64_3Default::StorageTag,
-                      vtkm::cont::ArrayHandleCartesianProduct<
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault>>::StorageTag>
-{
-};
-}
-}
-
-namespace vtkm
-{
-
-template struct ListCrossProduct<::vtkm::TypeListTagFieldVec3,
-                                 ::vtkm::cont::StorageListTagCoordinateSystemDefault>;
-
-namespace cont
-{
-using DynamicArrayHandleCoordinateSystem =
-  vtkm::cont::DynamicArrayHandleBase<VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG,
-                                     VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>;
 
 class VTKM_CONT_EXPORT CoordinateSystem : public vtkm::cont::Field
 {
@@ -98,15 +89,22 @@ public:
   {
   }
 
-  VTKM_CONT
-  CoordinateSystem(std::string name, const vtkm::cont::DynamicArrayHandle& data)
+  VTKM_CONT CoordinateSystem(std::string name,
+                             const vtkm::cont::ArrayHandleVirtualCoordinates::Superclass& data)
     : Superclass(name, ASSOC_POINTS, data)
+  {
+  }
+
+  template <typename TypeList, typename StorageList>
+  VTKM_CONT CoordinateSystem(std::string name,
+                             const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& data)
+    : Superclass(name, ASSOC_POINTS, detail::MakeArrayHandleVirtualCoordinates(data))
   {
   }
 
   template <typename T, typename Storage>
   VTKM_CONT CoordinateSystem(std::string name, const ArrayHandle<T, Storage>& data)
-    : Superclass(name, ASSOC_POINTS, data)
+    : Superclass(name, ASSOC_POINTS, vtkm::cont::ArrayHandleVirtualCoordinates(data))
   {
   }
 
@@ -120,7 +118,7 @@ public:
     vtkm::Vec<vtkm::FloatDefault, 3> spacing = vtkm::Vec<vtkm::FloatDefault, 3>(1.0f, 1.0f, 1.0f))
     : Superclass(name,
                  ASSOC_POINTS,
-                 vtkm::cont::DynamicArrayHandle(
+                 vtkm::cont::ArrayHandleVirtualCoordinates(
                    vtkm::cont::ArrayHandleUniformPointCoordinates(dimensions, origin, spacing)))
   {
   }
@@ -129,85 +127,37 @@ public:
   CoordinateSystem& operator=(const vtkm::cont::CoordinateSystem& src) = default;
 
   VTKM_CONT
-  vtkm::cont::DynamicArrayHandleCoordinateSystem GetData() const
+  vtkm::cont::ArrayHandleVirtualCoordinates GetData() const
   {
-    return vtkm::cont::DynamicArrayHandleCoordinateSystem(this->Superclass::GetData());
+    return this->Superclass::GetData().Cast<vtkm::cont::ArrayHandleVirtualCoordinates>();
+  }
+
+  VTKM_CONT void SetData(const vtkm::cont::ArrayHandleVirtualCoordinates::Superclass& newdata)
+  {
+    this->Superclass::SetData(newdata);
+  }
+
+  template <typename T, typename StorageTag>
+  VTKM_CONT void SetData(const vtkm::cont::ArrayHandle<T, StorageTag>& newdata)
+  {
+    this->Superclass::SetData(vtkm::cont::ArrayHandleVirtualCoordinates(newdata));
   }
 
   VTKM_CONT
-  vtkm::cont::DynamicArrayHandleCoordinateSystem GetData()
+  template <typename TypeList, typename StorageList>
+  void SetData(const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& newdata)
   {
-    return vtkm::cont::DynamicArrayHandleCoordinateSystem(this->Superclass::GetData());
+    this->Superclass::SetData(detail::MakeArrayHandleVirtualCoordinates(newdata));
   }
 
   VTKM_CONT
   void GetRange(vtkm::Range* range) const;
 
-  template <typename TypeList>
-  VTKM_CONT void GetRange(vtkm::Range* range, TypeList) const
-  {
-    VTKM_IS_LIST_TAG(TypeList);
-
-    this->Superclass::GetRange(
-      range, TypeList(), VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-  }
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT void GetRange(vtkm::Range* range, TypeList, StorageList) const
-  {
-    VTKM_IS_LIST_TAG(TypeList);
-    VTKM_IS_LIST_TAG(StorageList);
-
-    this->Superclass::GetRange(range, TypeList(), StorageList());
-  }
-
   VTKM_CONT
   const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange() const;
 
-  template <typename TypeList>
-  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList) const
-  {
-    VTKM_IS_LIST_TAG(TypeList);
-
-    return this->Superclass::GetRange(TypeList(),
-                                      VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-  }
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT const vtkm::cont::ArrayHandle<vtkm::Range>& GetRange(TypeList, StorageList) const
-  {
-    VTKM_IS_LIST_TAG(TypeList);
-    VTKM_IS_LIST_TAG(StorageList);
-
-    return this->Superclass::GetRange(TypeList(), StorageList());
-  }
-
   VTKM_CONT
   vtkm::Bounds GetBounds() const;
-
-  template <typename TypeList>
-  VTKM_CONT vtkm::Bounds GetBounds(TypeList) const
-  {
-    VTKM_IS_LIST_TAG(TypeList);
-
-    return this->GetBounds(TypeList(), VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG());
-  }
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT vtkm::Bounds GetBounds(TypeList, StorageList) const
-  {
-    VTKM_IS_LIST_TAG(TypeList);
-    VTKM_IS_LIST_TAG(StorageList);
-
-    vtkm::cont::ArrayHandle<vtkm::Range> ranges = this->GetRange(TypeList(), StorageList());
-
-    VTKM_ASSERT(ranges.GetNumberOfValues() == 3);
-
-    vtkm::cont::ArrayHandle<vtkm::Range>::PortalConstControl rangePortal =
-      ranges.GetPortalConstControl();
-
-    return vtkm::Bounds(rangePortal.Get(0), rangePortal.Get(1), rangePortal.Get(2));
-  }
 
   virtual void PrintSummary(std::ostream& out) const;
 };
@@ -215,7 +165,7 @@ public:
 template <typename Functor, typename... Args>
 void CastAndCall(const vtkm::cont::CoordinateSystem& coords, Functor&& f, Args&&... args)
 {
-  coords.GetData().CastAndCall(std::forward<Functor>(f), std::forward<Args>(args)...);
+  CastAndCall(coords.GetData(), std::forward<Functor>(f), std::forward<Args>(args)...);
 }
 
 template <typename T>

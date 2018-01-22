@@ -161,17 +161,13 @@ private:
   {
     ///\todo: support other coordinate systems
     int cindex = 0;
-
-    vtkm::cont::CoordinateSystem coords = dataSet.GetCoordinateSystem(cindex);
-    vtkm::cont::DynamicArrayHandleCoordinateSystem cdata = coords.GetData();
+    auto cdata = dataSet.GetCoordinateSystem(cindex).GetData();
 
     vtkm::Id npoints = cdata.GetNumberOfValues();
+    out << "POINTS " << npoints << " "
+        << vtkm::io::internal::DataTypeName<vtkm::FloatDefault>::Name() << " " << std::endl;
 
-    std::string typeName;
-    vtkm::cont::CastAndCall(cdata, detail::GetDataTypeName(typeName));
-
-    out << "POINTS " << npoints << " " << typeName << " " << std::endl;
-    vtkm::cont::CastAndCall(cdata, detail::OutputPointsFunctor(out));
+    detail::OutputPointsFunctor{ out }(cdata);
   }
 
   template <class CellSetType>

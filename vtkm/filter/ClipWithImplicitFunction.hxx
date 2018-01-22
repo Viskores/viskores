@@ -72,9 +72,7 @@ inline vtkm::filter::Result ClipWithImplicitFunction::DoExecute(
     vtkm::filter::ApplyPolicy(cells, policy), this->Function, inputCoords, device);
 
   // compute output coordinates
-  vtkm::cont::DynamicArrayHandle outputCoordsArray;
-  PointMapHelper<DeviceAdapter> pointMapper(this->Worklet, outputCoordsArray);
-  vtkm::filter::ApplyPolicy(inputCoords, policy).CastAndCall(pointMapper);
+  auto outputCoordsArray = this->Worklet.ProcessPointField(inputCoords.GetData(), device);
   vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(), outputCoordsArray);
 
   //create the output data

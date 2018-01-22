@@ -22,6 +22,7 @@
 
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
+#include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
 
 namespace vtkm
@@ -84,6 +85,23 @@ public:
   {
     this->SetDeviceState(deviceId, name, false);
   }
+
+  //@{
+  /// Report a ErrorBadDevice failure and flag the device as unusable.
+  template <typename DeviceAdapterTag>
+  VTKM_CONT void ReportBadDeviceFailure(DeviceAdapterTag, const vtkm::cont::ErrorBadDevice&)
+  {
+    using Traits = vtkm::cont::DeviceAdapterTraits<DeviceAdapterTag>;
+    this->SetDeviceState(Traits::GetId(), Traits::GetName(), false);
+  }
+
+  VTKM_CONT void ReportBadDeviceFailure(vtkm::Int8 deviceId,
+                                        const std::string& name,
+                                        const vtkm::cont::ErrorBadDevice&)
+  {
+    this->SetDeviceState(deviceId, name, false);
+  }
+  //@}
 
   /// Reset the tracker for the given device. This will discard any updates
   /// caused by reported failures

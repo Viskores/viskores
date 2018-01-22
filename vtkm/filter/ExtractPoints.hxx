@@ -69,7 +69,7 @@ inline vtkm::filter::Result ExtractPoints::DoExecute(
   vtkm::worklet::ExtractPoints worklet;
 
   outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                           vtkm::filter::ApplyPolicy(coords, policy),
+                           coords.GetData(),
                            this->Function,
                            this->ExtractInside,
                            device);

@@ -39,7 +39,7 @@ class VTKM_RENDERING_EXPORT RayTracer
 protected:
   LinearBVH Bvh;
   Camera camera;
-  vtkm::cont::DynamicArrayHandleCoordinateSystem CoordsHandle;
+  vtkm::cont::ArrayHandleVirtualCoordinates CoordsHandle;
   vtkm::cont::Field ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
   vtkm::cont::ArrayHandle<vtkm::Float32> Scalars;
@@ -61,7 +61,7 @@ public:
   Camera& GetCamera();
 
   VTKM_CONT
-  void SetData(const vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
+  void SetData(const vtkm::cont::ArrayHandleVirtualCoordinates& coordsHandle,
                const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
                vtkm::cont::Field& scalarField,
                const vtkm::Id& numberOfTriangles,

@@ -451,7 +451,7 @@ public:
                const vtkm::Range& fieldRange)
   {
     this->Bounds = coords.GetBounds();
-    this->Coordinates = coords.GetData();
+    this->Coordinates = coords;
     this->PointIndices = endPointIndices;
     this->ScalarField = field;
     this->ScalarFieldRange = fieldRange;
@@ -583,7 +583,7 @@ private:
   bool ShowInternalZones;
   bool IsOverlay;
   ColorMapHandle ColorMap;
-  vtkm::cont::DynamicArrayHandleCoordinateSystem Coordinates;
+  vtkm::cont::CoordinateSystem Coordinates;
   IndicesHandle PointIndices;
   vtkm::cont::Field ScalarField;
   vtkm::Range ScalarFieldRange;

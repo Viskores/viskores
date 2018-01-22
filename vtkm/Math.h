@@ -48,6 +48,7 @@
 #define VTKM_CUDA_MATH_FUNCTION_32(func) func##f
 #define VTKM_CUDA_MATH_FUNCTION_64(func) func
 
+// clang-format off
 namespace vtkm
 {
 
@@ -92,10 +93,8 @@ template <typename T>
 struct FloatingPointReturnType
 {
   using ctype = typename vtkm::VecTraits<T>::ComponentType;
-  using representable_as_float_type =
-    std::integral_constant<bool,
-                           ((sizeof(ctype) < sizeof(float)) ||
-                            std::is_same<ctype, vtkm::Float32>::value)>;
+  using representable_as_float_type = std::integral_constant<bool,
+                      ((sizeof(ctype) < sizeof(float)) || std::is_same<ctype, vtkm::Float32>::value)>;
   using Type = typename std::conditional<representable_as_float_type::value,
                                          vtkm::Float32,
                                          vtkm::Float64>::type;
@@ -2438,5 +2437,6 @@ static inline VTKM_EXEC_CONT vtkm::Vec<T, N> CopySign(const vtkm::Vec<T, N>& x,
 }
 
 } // namespace vtkm
+// clang-format on
 
 #endif //vtk_m_Math_h

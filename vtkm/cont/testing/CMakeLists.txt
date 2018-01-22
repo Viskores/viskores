@@ -23,6 +23,7 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
+  TestingArrayHandleVirtualCoordinates.h
   TestingCellLocatorTwoLevelUniformGrid.h
   TestingComputeRange.h
   TestingDeviceAdapter.h
@@ -53,6 +54,7 @@ set(unit_tests
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayPortalToIterators.cxx
+  UnitTestCellLocator.cxx
   UnitTestCellSetExplicit.cxx
   UnitTestCellSetPermutation.cxx
   UnitTestContTesting.cxx
