@@ -723,7 +723,7 @@ void VolumeRendererStructured::SetData(const vtkm::cont::CoordinateSystem& coord
                                        const vtkm::cont::CellSetStructured<3>& cellset,
                                        const vtkm::Range& scalarRange)
 {
-  if (coords.GetData().IsSameType<CartesianArrayHandle>())
+  if (coords.GetData().IsType<CartesianArrayHandle>())
     IsUniformDataSet = false;
   IsSceneDirty = true;
   SpatialExtent = coords.GetBounds();
