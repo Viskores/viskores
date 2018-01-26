@@ -157,6 +157,8 @@ EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = */testing/*
 EXCLUDE_PATTERNS       += */examples/*
 EXCLUDE_PATTERNS       += UnitTest*
+EXCLUDE_PATTERNS       += */vtkmdiy/fmt/*
+EXCLUDE_PATTERNS       += */vtkmdiy/thread/*
 
 EXCLUDE_SYMBOLS        = thrust
 EXCLUDE_SYMBOLS        += detail
