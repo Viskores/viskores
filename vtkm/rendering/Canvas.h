@@ -31,6 +31,8 @@
 #include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Texture2D.h>
 
+#define VTKM_DEFAULT_CANVAS_DEPTH 1.001f
+
 namespace vtkm
 {
 namespace rendering
@@ -188,7 +190,8 @@ public:
                vtkm::Float32 scale,
                const vtkm::Vec<vtkm::Float32, 2>& anchor,
                const vtkm::rendering::Color& color,
-               const std::string& text) const;
+               const std::string& text,
+               const vtkm::Float32& depth) const;
 
 
   friend class AxisAnnotation2D;

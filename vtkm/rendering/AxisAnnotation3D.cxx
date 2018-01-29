@@ -159,6 +159,9 @@ void AxisAnnotation3D::Render(const Camera& camera,
     this->Labels[i]->SetPosition(vtkm::Float32(tickPos[0] - tickSize[0]),
                                  vtkm::Float32(tickPos[1] - tickSize[1]),
                                  vtkm::Float32(tickPos[2] - tickSize[2]));
+    vtkm::Vec<vtkm::Float32, 3> pp(vtkm::Float32(tickPos[0] - tickSize[0]),
+                                   vtkm::Float32(tickPos[1] - tickSize[1]),
+                                   vtkm::Float32(tickPos[2] - tickSize[2]));
     this->Labels[i]->SetAlignment(TextAnnotation::HCenter, TextAnnotation::VCenter);
   }
 

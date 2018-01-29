@@ -263,7 +263,8 @@ void CanvasGL::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
                        vtkm::Float32 windowAspect,
                        const vtkm::Vec<vtkm::Float32, 2>& anchor,
                        const vtkm::rendering::Color& color,
-                       const std::string& text) const
+                       const std::string& text,
+                       const vtkm::Float32& vtkmNotUsed(depth)) const
 {
   glPushMatrix();
   glTranslatef(position[0], position[1], 0);

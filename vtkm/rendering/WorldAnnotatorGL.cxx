@@ -78,7 +78,8 @@ void WorldAnnotatorGL::AddText(const vtkm::Vec<vtkm::Float32, 3>& origin,
                                vtkm::Float32 scale,
                                const vtkm::Vec<vtkm::Float32, 2>& anchor,
                                const vtkm::rendering::Color& color,
-                               const std::string& text) const
+                               const std::string& text,
+                               const vtkm::Float32 vtkmNotUsed(depth)) const
 {
 
   vtkm::Vec<vtkm::Float32, 3> n = vtkm::Cross(right, up);
