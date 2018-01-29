@@ -191,7 +191,7 @@ public:
                const vtkm::Vec<vtkm::Float32, 2>& anchor,
                const vtkm::rendering::Color& color,
                const std::string& text,
-               const vtkm::Float32& depth) const;
+               const vtkm::Float32& depth = 0) const;
 
 
   friend class AxisAnnotation2D;

@@ -82,8 +82,7 @@ protected:
                vtkm::Float32 windowAspect,
                const vtkm::Vec<vtkm::Float32, 2>& anchor,
                const vtkm::rendering::Color& color,
-               const std::string& text,
-               const vtkm::Float32& depth = 0.f) const override;
+               const std::string& text) const override;
 
 private:
   vtkm::rendering::BitmapFont Font;
