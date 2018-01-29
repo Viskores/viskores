@@ -31,7 +31,6 @@ set(headers
   ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
-  ImplicitFunction.h
   Jacobian.h
   ParametricCoordinates.h
   TaskBase.h
