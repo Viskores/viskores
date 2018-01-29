@@ -441,7 +441,7 @@ public:
   }
 
   template <typename ArrayHandleType>
-  bool IsSameType() const
+  bool IsType() const
   {
     return this->GetArrayHandleWrapper<ArrayHandleType>() != nullptr;
   }
@@ -488,7 +488,7 @@ void CastAndCall(const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
                  Functor&& f,
                  Args&&... args)
 {
-  if (coords.IsSameType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
+  if (coords.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
   {
     f(coords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>(), std::forward<Args>(args)...);
   }
