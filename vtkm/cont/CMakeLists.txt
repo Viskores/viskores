@@ -101,7 +101,6 @@ set(sources
   ArrayHandle.cxx
   AssignerMultiBlock.cxx
   CellSet.cxx
-  CellSetExplicit.cxx
   CellSetStructured.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
