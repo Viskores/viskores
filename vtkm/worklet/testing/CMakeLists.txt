@@ -50,6 +50,7 @@ set(unit_tests
   UnitTestParticleAdvection.cxx
   UnitTestPointElevation.cxx
   UnitTestPointGradient.cxx
+  UnitTestProbe.cxx
   UnitTestRemoveUnusedPoints.cxx
   UnitTestScalarsToColors.cxx
   UnitTestScatterCounting.cxx

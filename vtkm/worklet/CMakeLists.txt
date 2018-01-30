@@ -54,6 +54,7 @@ set(headers
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
+  Probe.h
   RemoveUnusedPoints.h
   ScalarsToColors.h
   ScatterCounting.h

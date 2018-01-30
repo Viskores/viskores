@@ -126,6 +126,14 @@ struct VecTraits<vtkm::VecFromPortalPermute<IndexVecType, PortalType>>
   }
 };
 
+template <typename IndexVecType, typename PortalType>
+inline VTKM_EXEC VecFromPortalPermute<IndexVecType, PortalType> make_VecFromPortalPermute(
+  const IndexVecType* index,
+  const PortalType& portal)
+{
+  return VecFromPortalPermute<IndexVecType, PortalType>(index, portal);
+}
+
 } // namespace vtkm
 
 #endif //vtk_m_VecFromPortalPermute_h
