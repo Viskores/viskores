@@ -134,7 +134,7 @@ public:
     {
       //
       // When searching for points, we consider the max value of the cell
-      // to be apart of the next cell. If the point falls on the boundary of the
+      // to be apart of the next cell. If the point falls on the boundry of the
       // data set, then it is technically inside a cell. This checks for that case
       //
       if (point[dim] == MaxPoint[dim])
@@ -372,8 +372,17 @@ public:
     }
     //get the initial sample position;
     vtkm::Vec<vtkm::Float32, 3> sampleLocation;
-    vtkm::Float32 distance = 0.00001f + minDistance;
+    // find the distance to the first sample
+    vtkm::Float32 distance = minDistance + 0.0001f;
     sampleLocation = rayOrigin + distance * rayDir;
+    // since the calculations are slightly different, we could hit an
+    // edge case where the first sample location may not be in the data set.
+    // Thus, advance to the next sample location
+    while (!Locator.IsInside(sampleLocation) && distance < maxDistance)
+    {
+      distance += SampleDistance;
+      sampleLocation = rayOrigin + distance * rayDir;
+    }
     /*
             7----------6
            /|         /|
@@ -557,8 +566,17 @@ public:
       return; //TODO: Compact? or just image subset...
     //get the initial sample position;
     vtkm::Vec<vtkm::Float32, 3> sampleLocation;
-    vtkm::Float32 distance = 0.0001f + minDistance;
+    // find the distance to the first sample
+    vtkm::Float32 distance = minDistance + 0.0001f;
     sampleLocation = rayOrigin + distance * rayDir;
+    // since the calculations are slightly different, we could hit an
+    // edge case where the first sample location may not be in the data set.
+    // Thus, advance to the next sample location
+    while (!Locator.IsInside(sampleLocation) && distance < maxDistance)
+    {
+      distance += SampleDistance;
+      sampleLocation = rayOrigin + distance * rayDir;
+    }
 
     /*
             7----------6
@@ -731,7 +749,7 @@ void VolumeRendererStructured::SetData(const vtkm::cont::CoordinateSystem& coord
                                        const vtkm::cont::CellSetStructured<3>& cellset,
                                        const vtkm::Range& scalarRange)
 {
-  if (coords.GetData().IsType<CartesianArrayHandle>())
+  if (coords.GetData().IsSameType(CartesianArrayHandle()))
     IsUniformDataSet = false;
   IsSceneDirty = true;
   SpatialExtent = coords.GetBounds();
