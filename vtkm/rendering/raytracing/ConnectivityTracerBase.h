@@ -82,7 +82,7 @@ protected:
   bool ReEnterMesh; // Do not try to re-enter the mesh
   bool CreatePartialComposites;
   bool FieldAssocPoints;
-  bool HasEmission; // Mode for integrating through engery bins
+  bool HasEmission; // Mode for integrating through energy bins
 
   // timers
   vtkm::Float64 IntersectTime;
