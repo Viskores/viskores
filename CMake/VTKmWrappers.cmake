@@ -75,13 +75,18 @@ function(vtkm_compile_as_cuda output)
   # The result of this is that instead we will use file(GENERATE ) to construct
   # a proxy cu file
   set(_cuda_srcs )
-  foreach(_not_cuda_file ${ARGN})
-    get_filename_component(_cuda_fname "${_not_cuda_file}" NAME_WE)
-    get_filename_component(_not_cuda_fullpath "${_not_cuda_file}" ABSOLUTE)
-    list(APPEND _cuda_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu")
-    file(GENERATE
-          OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu
-          CONTENT "#include \"${_not_cuda_fullpath}\"")
+  foreach(_to_be_cuda_file ${ARGN})
+    get_filename_component(_fname_ext "${_to_be_cuda_file}" EXT)
+    if(_fname_ext STREQUAL ".cu")
+      list(APPEND _cuda_srcs "${_to_be_cuda_file}")
+    else()
+      get_filename_component(_cuda_fname "${_to_be_cuda_file}" NAME_WE)
+      get_filename_component(_not_cuda_fullpath "${_to_be_cuda_file}" ABSOLUTE)
+      list(APPEND _cuda_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu")
+      file(GENERATE
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_cuda_fname}.cu
+            CONTENT "#include \"${_not_cuda_fullpath}\"")
+    endif()
   endforeach()
   set(${output} ${_cuda_srcs} PARENT_SCOPE)
 endfunction()
@@ -362,6 +367,10 @@ endfunction(vtkm_library)
 # * MPI : the test(s) will be executed using `mpirun`.
 #
 function(vtkm_unit_tests)
+  if (NOT VTKm_ENABLE_TESTING)
+    return()
+  endif()
+
   set(options MPI)
   set(oneValueArgs BACKEND NAME)
   set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
@@ -369,35 +378,31 @@ function(vtkm_unit_tests)
     "${options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
     )
-
-  if (NOT VTKm_ENABLE_TESTING)
-    return()
-  endif()
-
   vtkm_parse_test_options(VTKm_UT_SOURCES "${options}" ${VTKm_UT_SOURCES})
 
-  set(backend )
-  if(VTKm_UT_BACKEND)
-    set(backend "_${VTKm_UT_BACKEND}")
-  endif()
+  set(test_prog )
+  set(backend ${VTKm_UT_BACKEND})
 
-  vtkm_get_kit_name(kit)
-  #we use UnitTests_ so that it is an unique key to exclude from coverage
-  set(test_prog "UnitTests_${kit}${backend}")
   if(VTKm_UT_NAME)
-    set(test_prog "${VTKm_UT_NAME}${backend}")
+    set(test_prog "${VTKm_UT_NAME}")
+  else()
+    vtkm_get_kit_name(kit)
+    set(test_prog "UnitTests_${kit}")
+  endif()
+  if(VTKm_UT_BACKEND)
+    string(APPEND test_prog "_${backend}")
   endif()
 
   #the creation of the test source list needs to occur before the labeling as
   #cuda. This is so that we get the correctly named entry points generated
   #
   create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES})
-  if(VTKm_UT_BACKEND STREQUAL "CUDA")
+  if(backend STREQUAL "CUDA")
     vtkm_compile_as_cuda(cu_srcs ${VTKm_UT_SOURCES})
     set(VTKm_UT_SOURCES ${cu_srcs})
   endif()
 
-  add_executable(${test_prog} ${test_sources})
+  add_executable(${test_prog} ${test_prog}.cxx ${VTKm_UT_SOURCES})
   set_property(TARGET ${test_prog} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${test_prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
   set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
@@ -411,7 +416,7 @@ function(vtkm_unit_tests)
   #determine the timeout for all the tests based on the backend. CUDA tests
   #generally require more time because of kernel generation.
   set(timeout 180)
-  if(VTKm_UT_BACKEND STREQUAL "CUDA")
+  if(backend STREQUAL "CUDA")
     set(timeout 1500)
   endif()
   foreach (test ${VTKm_UT_SOURCES})
