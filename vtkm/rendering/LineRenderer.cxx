@@ -65,21 +65,43 @@ void LineRenderer::RenderLine(const vtkm::Vec<vtkm::Float64, 3>& point0,
   vtkm::Id dx = vtkm::Abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
   vtkm::Id dy = -vtkm::Abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
   vtkm::Id err = dx + dy, err2 = 0;
-  vtkm::rendering::Canvas::ColorBufferType::PortalControl colorPortal =
+  auto colorPortal =
     vtkm::rendering::Canvas::ColorBufferType(Canvas->GetColorBuffer()).GetPortalControl();
-  vtkm::rendering::Canvas::DepthBufferType::PortalControl depthPortal =
+  auto depthPortal =
     vtkm::rendering::Canvas::DepthBufferType(Canvas->GetDepthBuffer()).GetPortalControl();
   vtkm::Vec<vtkm::Float32, 4> colorC = color.Components;
+
   while (x0 >= 0 && x0 < Canvas->GetWidth() && y0 >= 0 && y0 < Canvas->GetHeight())
   {
     vtkm::Float32 t = (dx == 0) ? 1.0f : (static_cast<vtkm::Float32>(x0) - p0[0]) / (p1[0] - p0[0]);
+    t = vtkm::Min(1.f, vtkm::Max(0.f, t));
     vtkm::Float32 z = vtkm::Lerp(z0, z1, t);
     vtkm::Id index = y0 * Canvas->GetWidth() + x0;
-    if (depthPortal.Get(index) > z)
+    vtkm::Vec<vtkm::Float32, 4> currentColor = colorPortal.Get(index);
+    vtkm::Float32 currentZ = depthPortal.Get(index);
+    bool blend = currentColor[3] < 1.f && z > currentZ;
+    if (currentZ > z || blend)
     {
-      depthPortal.Set(index, z);
-      colorPortal.Set(index, colorC);
+      vtkm::Vec<vtkm::Float32, 4> writeColor = colorC;
+      vtkm::Float32 depth = z;
+
+      if (blend)
+      {
+        // If there is any transparency, all alphas
+        // have been pre-mulitplied
+        vtkm::Float32 alpha = (1.f - currentColor[3]);
+        writeColor[0] = currentColor[0] + colorC[0] * alpha;
+        writeColor[1] = currentColor[1] + colorC[1] * alpha;
+        writeColor[2] = currentColor[2] + colorC[2] * alpha;
+        writeColor[3] = 1.f * alpha + currentColor[3]; // we are always drawing opaque lines
+        // keep the current z. Line z interpolation is not accurate
+        depth = currentZ;
+      }
+
+      depthPortal.Set(index, depth);
+      colorPortal.Set(index, writeColor);
     }
+
     if (x0 == x1 && y0 == y1)
     {
       break;

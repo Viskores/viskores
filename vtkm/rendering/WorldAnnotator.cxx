@@ -54,7 +54,8 @@ void WorldAnnotator::AddText(const vtkm::Vec<vtkm::Float32, 3>& origin,
                              vtkm::Float32 scale,
                              const vtkm::Vec<vtkm::Float32, 2>& anchor,
                              const vtkm::rendering::Color& color,
-                             const std::string& text) const
+                             const std::string& text,
+                             const vtkm::Float32 depth) const
 {
   vtkm::Vec<vtkm::Float32, 3> n = vtkm::Cross(right, up);
   vtkm::Normalize(n);
@@ -62,7 +63,7 @@ void WorldAnnotator::AddText(const vtkm::Vec<vtkm::Float32, 3>& origin,
   vtkm::Matrix<vtkm::Float32, 4, 4> transform = MatrixHelpers::WorldMatrix(origin, right, up, n);
   transform = vtkm::MatrixMultiply(Canvas->GetModelView(), transform);
   transform = vtkm::MatrixMultiply(Canvas->GetProjection(), transform);
-  Canvas->AddText(transform, scale, anchor, color, text);
+  Canvas->AddText(transform, scale, anchor, color, text, depth);
 }
 }
 } // namespace vtkm::rendering

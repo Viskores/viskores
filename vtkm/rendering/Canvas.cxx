@@ -57,7 +57,7 @@ struct ClearBuffers : public vtkm::worklet::WorkletMapField
     color[3] = 0.f;
     // The depth is set to slightly larger than 1.0f, ensuring this color value always fails a
     // depth check
-    depth = 1.001f;
+    depth = VTKM_DEFAULT_CANVAS_DEPTH;
   }
 }; // struct ClearBuffers
 
@@ -581,7 +581,8 @@ void Canvas::AddText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
                      vtkm::Float32 scale,
                      const vtkm::Vec<vtkm::Float32, 2>& anchor,
                      const vtkm::rendering::Color& color,
-                     const std::string& text) const
+                     const std::string& text,
+                     const vtkm::Float32& depth) const
 {
   if (!Internals->FontTexture.IsValid())
   {
@@ -593,7 +594,7 @@ void Canvas::AddText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform,
 
   vtkm::rendering::Canvas* self = const_cast<vtkm::rendering::Canvas*>(this);
   TextRenderer fontRenderer(self, Internals->Font, Internals->FontTexture);
-  fontRenderer.RenderText(transform, scale, anchor, color, text);
+  fontRenderer.RenderText(transform, scale, anchor, color, text, depth);
 }
 
 void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
@@ -612,7 +613,7 @@ void Canvas::AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
   vtkm::Matrix<vtkm::Float32, 4, 4> transform =
     vtkm::MatrixMultiply(translationMatrix, vtkm::MatrixMultiply(scaleMatrix, rotationMatrix));
 
-  this->AddText(transform, scale, anchor, color, text);
+  this->AddText(transform, scale, anchor, color, text, 0.f);
 }
 
 void Canvas::AddText(vtkm::Float32 x,
