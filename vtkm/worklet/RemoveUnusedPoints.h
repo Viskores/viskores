@@ -202,7 +202,7 @@ public:
   /// \brief Maps a point field from the original points to the new reduced points
   ///
   /// Given an array handle that holds the values for a point field of the
-  /// orignal data set, returns a new array handle containing field values
+  /// original data set, returns a new array handle containing field values
   /// rearranged to the new indices of the reduced point set.
   ///
   /// This version of point mapping performs a shallow copy by using a
@@ -221,7 +221,7 @@ public:
   /// \brief Maps a point field from the original points to the new reduced points
   ///
   /// Given an array handle that holds the values for a point field of the
-  /// orignal data set, returns a new array handle containing field values
+  /// original data set, returns a new array handle containing field values
   /// rearranged to the new indices of the reduced point set.
   ///
   /// This version of point mapping performs a deep copy into the destination
@@ -244,7 +244,7 @@ public:
   /// \brief Maps a point field from the original points to the new reduced points
   ///
   /// Given an array handle that holds the values for a point field of the
-  /// orignal data set, returns a new array handle containing field values
+  /// original data set, returns a new array handle containing field values
   /// rearranged to the new indices of the reduced point set.
   ///
   /// This version of point mapping performs a deep copy into an array that is

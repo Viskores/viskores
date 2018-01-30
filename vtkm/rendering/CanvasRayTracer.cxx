@@ -102,7 +102,7 @@ public:
     {
       color[i] = vtkm::Min(1.f, vtkm::Max(color[i], 0.f));
     }
-    // The existng depth should already been feed into thge ray mapper
+    // The existing depth should already been feed into the ray mapper
     // so no color contribution will exist past the existing depth.
 
     depthBuffer.Set(pixelIndex, depth);

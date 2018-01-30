@@ -131,7 +131,7 @@ public:
   ///
   /// If you want a \c RuntimeDeviceTracker with independent state, just create
   /// one independently. If you want to start with the state of a source
-  /// \c RuntimeDeviceTracker but update the state indepenently, you can use
+  /// \c RuntimeDeviceTracker but update the state independently, you can use
   /// \c DeepCopy method to get the initial state. Further changes will
   /// not be shared.
   ///
@@ -152,7 +152,7 @@ public:
   ///
   /// If you want a \c RuntimeDeviceTracker with independent state, just create
   /// one independently. If you want to start with the state of a source
-  /// \c RuntimeDeviceTracker but update the state indepenently, you can use
+  /// \c RuntimeDeviceTracker but update the state independently, you can use
   /// \c DeepCopy method to get the initial state. Further changes will
   /// not be shared.
   ///

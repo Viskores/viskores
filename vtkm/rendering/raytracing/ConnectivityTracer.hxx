@@ -559,7 +559,7 @@ public:
 
       //
       // Traditionally, we would only keep track of a single intensity value per ray
-      // per bin and we would integrate from the begining to end of the ray. In a
+      // per bin and we would integrate from the beginning to end of the ray. In a
       // distributed memory setting, we would move cell data around so that the
       // entire ray could be traced, but in situ, moving that much cell data around
       // could blow memory. Here we are keeping track of two values. Total absorption
@@ -1181,7 +1181,7 @@ void ConnectivityTracer<CellType, ConnectivityType>::RenderOnDevice(Ray<FloatTyp
     {
       vtkm::cont::Timer<Device> entryTimer;
       //
-      // if ray misses the exteral face it will be marked RAY_EXITED_MESH
+      // if ray misses the external face it will be marked RAY_EXITED_MESH
       //
       MeshConn.FindEntry(rays, Device());
       MeshEntryTime += entryTimer.GetElapsedTime();
@@ -1238,7 +1238,7 @@ void ConnectivityTracer<CellType, ConnectivityType>::RenderOnDevice(Ray<FloatTyp
     workRemaining = RayOperations::RaysProcessed(rays, Device()) != rays.NumRays;
     //
     // Ensure that we move the current distance forward some
-    // epsilon so we dont re-enter the cell we just left.
+    // epsilon so we don't re-enter the cell we just left.
     //
     if (workRemaining)
     {

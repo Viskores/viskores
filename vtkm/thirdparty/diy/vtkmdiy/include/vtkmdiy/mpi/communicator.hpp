@@ -33,7 +33,7 @@ namespace mpi
       request   isend(int dest, int tag, const T& x) const  { return detail::isend<T>()(comm_, dest, tag, x); }
 
       //! Non-blocking version of `recv()`.
-      //! If `T` is an `std::vector<...>`, its size must be big enough to accomodate the sent values.
+      //! If `T` is an `std::vector<...>`, its size must be big enough to accommodate the sent values.
       template<class T>
       request   irecv(int source, int tag, T& x) const      { return detail::irecv<T>()(comm_, source, tag, x); }
 

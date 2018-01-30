@@ -94,7 +94,7 @@ if(NOT VTKm_Base_FOUND)
 endif()
 
 #-----------------------------------------------------------------------------
-# When using C++11 suport make sure you use the standard C++ extensions rather
+# When using C++11 support make sure you use the standard C++ extensions rather
 # than compiler-specific versions of the extensions (to preserve portability).
 set(CMAKE_CXX_EXTENSIONS False)
 

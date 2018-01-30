@@ -309,7 +309,7 @@ public:
       const FieldType ivalue = isovalues[i];
       // Compute the Marching Cubes case number for this cell. We need to iterate
       // the isovalues until the sum >= our visit index. But we need to make
-      // sure the caseNumber is correct before stoping
+      // sure the caseNumber is correct before stopping
       caseNumber =
         ((fieldIn[0] > ivalue) | (fieldIn[1] > ivalue) << 1 | (fieldIn[2] > ivalue) << 2 |
          (fieldIn[3] > ivalue) << 3 | (fieldIn[4] > ivalue) << 4 | (fieldIn[5] > ivalue) << 5 |

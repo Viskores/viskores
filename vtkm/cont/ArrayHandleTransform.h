@@ -436,7 +436,7 @@ public:
   {
     throw vtkm::cont::ErrorInternal(
       "ArrayHandleTransform read only. "
-      "There should be no occurance of the ArrayHandle trying to pull "
+      "There should be no occurrence of the ArrayHandle trying to pull "
       "data from the execution environment.");
   }
 

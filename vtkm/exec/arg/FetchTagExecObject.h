@@ -36,7 +36,7 @@ namespace arg
 
 /// \brief \c Fetch tag for execution objects.
 ///
-/// \c FetchTagExecObject is a tag used with the \c Fetch class to retreive
+/// \c FetchTagExecObject is a tag used with the \c Fetch class to retrieve
 /// execution objects. For safety, execution objects are read-only. \c
 /// FetchTagExecObject is almost always used in conjunction with \c
 /// TransportTagExecObject and vice versa.

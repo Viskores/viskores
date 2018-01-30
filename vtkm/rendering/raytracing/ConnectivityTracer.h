@@ -48,7 +48,7 @@ struct RenderFunctor;
 
 //
 //  Ray tracker manages memory and pointer
-//  swaping for current cell intersection data
+//  swapping for current cell intersection data
 //
 template <typename FloatType>
 class RayTracking

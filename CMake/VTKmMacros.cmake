@@ -186,7 +186,7 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   vtkm_setup_msvc_properties(TestBuild_${name})
 
   # Send the libraries created for test builds to their own directory so as to
-  # not polute the directory with useful libraries.
+  # not pollute the directory with useful libraries.
   set_target_properties(TestBuild_${name} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
     LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds

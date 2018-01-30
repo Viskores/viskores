@@ -398,7 +398,7 @@ static inline VTKM_EXEC_CONT bool test_equal_impl(ScalarType1 scalar1,
                                        vtkm::TypeTraitsScalarTag>::type::value),
                          "Trying to compare a scalar with a vector.");
 
-  // Do all comparisions using 64-bit floats.
+  // Do all comparisons using 64-bit floats.
   vtkm::Float64 value1 = vtkm::Float64(scalar1);
   vtkm::Float64 value2 = vtkm::Float64(scalar2);
 

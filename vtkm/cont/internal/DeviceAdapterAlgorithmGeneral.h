@@ -1007,7 +1007,7 @@ private:
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.
 ///
-/// When worklets are launched inside the execution enviornment we need to
+/// When worklets are launched inside the execution environment we need to
 /// ask the device adapter what is the preferred execution style, be it
 /// a tiled iteration pattern, or strided. This class
 ///

@@ -436,7 +436,7 @@ authorized developers may add a comment with a single *trailing* line:
     Do: merge
 
 to ask that the change be merged into the upstream repository. By
-convention, only merge if you have recieved `+1` . Do not request a merge
+convention, only merge if you have received `+1` . Do not request a merge
 if any `-1` review comments have not been resolved.
 
 ### Merge Success ###

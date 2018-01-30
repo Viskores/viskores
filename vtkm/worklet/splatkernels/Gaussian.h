@@ -24,7 +24,7 @@
 
 //
 // Gaussian kernel.
-// Compact support is achived by truncating the kernel beyond the cutoff radius
+// Compact support is achieved by truncating the kernel beyond the cutoff radius
 // This implementation uses a factor of 5 between smoothing length and cutoff
 //
 
