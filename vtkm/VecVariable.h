@@ -48,20 +48,9 @@ public:
   {
   }
 
-  template <vtkm::IdComponent SrcSize>
-  VTKM_EXEC_CONT VecVariable(const vtkm::VecVariable<ComponentType, SrcSize>& src)
+  template <typename SrcVecType>
+  VTKM_EXEC_CONT VecVariable(const SrcVecType& src)
     : NumComponents(src.GetNumberOfComponents())
-  {
-    VTKM_ASSERT(this->NumComponents <= MaxSize);
-    for (vtkm::IdComponent index = 0; index < this->NumComponents; index++)
-    {
-      this->Data[index] = src[index];
-    }
-  }
-
-  template <vtkm::IdComponent SrcSize>
-  VTKM_EXEC_CONT VecVariable(const vtkm::Vec<ComponentType, SrcSize>& src)
-    : NumComponents(SrcSize)
   {
     VTKM_ASSERT(this->NumComponents <= MaxSize);
     for (vtkm::IdComponent index = 0; index < this->NumComponents; index++)
