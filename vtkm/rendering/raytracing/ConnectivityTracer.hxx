@@ -1013,9 +1013,9 @@ void ConnectivityTracer<CellType, ConnectivityType>::SampleCells(
   detail::RayTracking<FloatType>& tracker,
   Device)
 {
-  using SamplePoints =
+  using SampleP =
     SampleCellAssocPoints<CellType, FloatType, Device, MeshConnExec<ConnectivityType, Device>>;
-  using SampleCells =
+  using SampleC =
     SampleCellAssocCells<CellType, FloatType, Device, MeshConnExec<ConnectivityType, Device>>;
   vtkm::cont::Timer<Device> timer;
 
@@ -1023,13 +1023,13 @@ void ConnectivityTracer<CellType, ConnectivityType>::SampleCells(
 
   if (FieldAssocPoints)
   {
-    vtkm::worklet::DispatcherMapField<SamplePoints, Device>(
-      SamplePoints(this->SampleDistance,
-                   vtkm::Float32(this->ScalarBounds.Min),
-                   vtkm::Float32(this->ScalarBounds.Max),
-                   this->ColorMap,
-                   rays.Buffers.at(0).Buffer,
-                   this->MeshConn))
+    vtkm::worklet::DispatcherMapField<SampleP, Device>(
+      SampleP(this->SampleDistance,
+              vtkm::Float32(this->ScalarBounds.Min),
+              vtkm::Float32(this->ScalarBounds.Max),
+              this->ColorMap,
+              rays.Buffers.at(0).Buffer,
+              this->MeshConn))
       .Invoke(rays.HitIdx,
               this->MeshConn.GetCoordinates(),
               this->ScalarField.GetData(),
@@ -1042,13 +1042,13 @@ void ConnectivityTracer<CellType, ConnectivityType>::SampleCells(
   }
   else
   {
-    vtkm::worklet::DispatcherMapField<SampleCells, Device>(
-      SampleCells(this->SampleDistance,
-                  vtkm::Float32(this->ScalarBounds.Min),
-                  vtkm::Float32(this->ScalarBounds.Max),
-                  this->ColorMap,
-                  rays.Buffers.at(0).Buffer,
-                  this->MeshConn))
+    vtkm::worklet::DispatcherMapField<SampleC, Device>(
+      SampleC(this->SampleDistance,
+              vtkm::Float32(this->ScalarBounds.Min),
+              vtkm::Float32(this->ScalarBounds.Max),
+              this->ColorMap,
+              rays.Buffers.at(0).Buffer,
+              this->MeshConn))
       .Invoke(rays.HitIdx,
               this->ScalarField.GetData(),
               *(tracker.EnterDist),
