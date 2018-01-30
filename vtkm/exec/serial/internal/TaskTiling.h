@@ -173,7 +173,7 @@ public:
   /// parameters that go along with it
   template <typename WorkletType, typename InvocationType>
   TaskTiling1D(WorkletType& worklet,
-               const InvocationType& invocation,
+               InvocationType& invocation,
                const vtkm::Id& globalIndexOffset = 0)
     : Worklet(nullptr)
     , Invocation(nullptr)
@@ -263,7 +263,7 @@ public:
 
   template <typename WorkletType, typename InvocationType>
   TaskTiling3D(WorkletType& worklet,
-               const InvocationType& invocation,
+               InvocationType& invocation,
                const vtkm::Id& globalIndexOffset = 0)
     : Worklet(nullptr)
     , Invocation(nullptr)
