@@ -124,7 +124,7 @@ struct DetermineHasCorrectParameters
     // control signature as ControlSignature(CellSetIn, ...) and the first argument passed
     // to Invoke is an ArrayHandle, you will get an error here because you cannot use an
     // ArrayHandle in place of a CellSetIn argument. (You need to use a CellSet.) See a few
-    // lines later for some diagnostics to help you trace where the error occured.
+    // lines later for some diagnostics to help you trace where the error occurred.
     VTKM_READ_THE_SOURCE_CODE_FOR_HELP(isCorrect);
 
     // If you are getting the error described above, the following lines will give you some

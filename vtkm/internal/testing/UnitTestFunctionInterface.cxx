@@ -500,7 +500,7 @@ void TestInvokeTime()
   vtkm::Float64 invokeCallTime = timer.GetElapsedTime();
   std::cout << "Time for invoking function interface: " << invokeCallTime << " seconds"
             << std::endl;
-  std::cout << "Pointless result (makeing sure compiler computes it) " << f.Field << std::endl;
+  std::cout << "Pointless result (making sure compiler computes it) " << f.Field << std::endl;
 
 #if !defined(NDEBUG) && defined(VTKM_MSVC)
   // We expect function calls through the FunctionInterface class to take

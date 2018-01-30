@@ -37,8 +37,8 @@ void TestCellGradientUniform3D()
   vtkm::filter::Gradient gradient;
   gradient.SetOutputFieldName("Gradient");
 
-  gradient.SetComputeVorticity(true);  //this wont work as we have a scalar field
-  gradient.SetComputeQCriterion(true); //this wont work as we have a scalar field
+  gradient.SetComputeVorticity(true);  //this won't work as we have a scalar field
+  gradient.SetComputeQCriterion(true); //this won't work as we have a scalar field
 
   result = gradient.Execute(dataSet, dataSet.GetField("pointvar"));
 

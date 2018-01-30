@@ -172,7 +172,7 @@ vtkm_library(
   WRAP_FOR_CUDA ${device_sources}
   )
 
-# EGL Libs are added here to ensure propper linking when statically compiling.
+# EGL Libs are added here to ensure proper linking when statically compiling.
 # This is safe to do even when not using EGL as the values will then be empty.
 target_link_libraries(vtkm_rendering
                       PUBLIC vtkm_cont
@@ -181,7 +181,7 @@ target_link_libraries(vtkm_rendering
                               ${EGL_LIBRARIES}
                       )
 
-# EGL Dirs are added here to ensure propper linking when statically compiling.
+# EGL Dirs are added here to ensure proper linking when statically compiling.
 # This is safe to do even when not using EGL as the values will then be empty.
 target_include_directories(vtkm_rendering
                           PRIVATE ${VTKm_OPENGL_INCLUDE_DIRS}

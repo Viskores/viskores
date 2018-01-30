@@ -786,7 +786,7 @@ WorldCoordinatesToParametricCoordinates(const WorldCoordVector& pointWCoords,
   VTKM_ASSERT(pointWCoords.GetNumberOfComponents() == 2);
   success = true;
 
-  // Because this is a line, there is only one vaild parametric coordinate. Let
+  // Because this is a line, there is only one valid parametric coordinate. Let
   // vec be the vector from the first point to the second point
   // (pointWCoords[1] - pointWCoords[0]), which is the direction of the line.
   // dot(vec,wcoords-pointWCoords[0])/mag(vec) is the orthoginal projection of

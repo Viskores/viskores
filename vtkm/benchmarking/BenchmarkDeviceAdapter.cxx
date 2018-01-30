@@ -418,7 +418,7 @@ private:
     typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
 
     ValueArrayHandle InputHandle;
-    // We don't actually use this, but we need it to prevent sufficently
+    // We don't actually use this, but we need it to prevent sufficiently
     // smart compilers from optimizing the Reduce call out.
     Value Result;
 

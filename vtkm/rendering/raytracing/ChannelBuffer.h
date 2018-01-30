@@ -40,8 +40,8 @@ namespace raytracing
 ///  \c The ChannelBuffer class is meant to handle a buffer of values with potentially many
 ///  channels. While RGBA values could be placed in a Vec<T,4>, data with a large number of
 ///  channels (e.g., 100+ energy bins) are better handled by a raw array. Rays can have color,
-///  absorption, absorption + emmision, or even track additional scalar values to support
-///  standards such as Cinema. This class allows us to treat all of these differnt use cases
+///  absorption, absorption + emission, or even track additional scalar values to support
+///  standards such as Cinema. This class allows us to treat all of these different use cases
 ///  with the same type.
 ///
 ///  This class has methods that can be utilized by other VTK-m classes that already have a

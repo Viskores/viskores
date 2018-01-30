@@ -74,18 +74,18 @@ struct MatrixTest
     FOR_ROW_COL(matrix) { matrix[row][col] = ComponentType(value(row, col) * 2); }
     FOR_ROW_COL(matrix)
     {
-      VTKM_TEST_ASSERT(test_equal(matrix(row, col), value(row, col) * 2), "Bad set or retreive.");
+      VTKM_TEST_ASSERT(test_equal(matrix(row, col), value(row, col) * 2), "Bad set or retrieve.");
       const MatrixType const_matrix = matrix;
       VTKM_TEST_ASSERT(test_equal(const_matrix(row, col), value(row, col) * 2),
-                       "Bad set or retreive.");
+                       "Bad set or retrieve.");
     }
 
     FOR_ROW_COL(matrix) { matrix(row, col) = value(row, col); }
     const MatrixType const_matrix = matrix;
     FOR_ROW_COL(matrix)
     {
-      VTKM_TEST_ASSERT(test_equal(matrix[row][col], value(row, col)), "Bad set or retreive.");
-      VTKM_TEST_ASSERT(test_equal(const_matrix[row][col], value(row, col)), "Bad set or retreive.");
+      VTKM_TEST_ASSERT(test_equal(matrix[row][col], value(row, col)), "Bad set or retrieve.");
+      VTKM_TEST_ASSERT(test_equal(const_matrix[row][col], value(row, col)), "Bad set or retrieve.");
     }
     VTKM_TEST_ASSERT(matrix == const_matrix, "Equal test operator not working.");
     VTKM_TEST_ASSERT(!(matrix != const_matrix), "Not-Equal test operator not working.");

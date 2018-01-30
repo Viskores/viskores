@@ -134,7 +134,7 @@ public:
     {
       //
       // When searching for points, we consider the max value of the cell
-      // to be apart of the next cell. If the point falls on the boundry of the
+      // to be apart of the next cell. If the point falls on the boundary of the
       // data set, then it is technically inside a cell. This checks for that case
       //
       if (point[dim] == MaxPoint[dim])

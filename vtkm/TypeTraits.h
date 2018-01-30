@@ -63,7 +63,7 @@ struct TypeTraitsVectorTag
 };
 
 /// The TypeTraits class provides helpful compile-time information about the
-/// basic types used in VTKm (and a few others for convienience). The majority
+/// basic types used in VTKm (and a few others for convenience). The majority
 /// of TypeTraits contents are typedefs to tags that can be used to easily
 /// override behavior of called functions.
 ///
@@ -71,7 +71,7 @@ template <typename T>
 class TypeTraits
 {
 public:
-  /// \brief A tag to determing whether the type is integer or real.
+  /// \brief A tag to determine whether the type is integer or real.
   ///
   /// This tag is either TypeTraitsRealTag or TypeTraitsIntegerTag.
   using NumericTag = vtkm::TypeTraitsUnknownTag;

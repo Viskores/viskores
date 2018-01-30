@@ -367,7 +367,7 @@ struct VecTraitsBasic
 
 /// \brief VecTraits for Pair types
 ///
-/// Although a pair woudl seem better as a size-2 vector, we treat it as a
+/// Although a pair would seem better as a size-2 vector, we treat it as a
 /// scalar. This is because a \c Vec is assumed to have the same type for
 /// every component, and a pair in general has a different type for each
 /// component. Thus we treat a pair as a "scalar" unit.

@@ -41,7 +41,7 @@ struct ColorTableInternals;
 ///
 /// This class provides the basic representation of a color table. This class was
 /// Ported from EAVL. Originally created by Jeremy Meredith, Dave Pugmire,
-/// and Sean Ahern. This class uses seperate RGB and alpha control points and can
+/// and Sean Ahern. This class uses separate RGB and alpha control points and can
 /// be used as a transfer function.
 ///
 class VTKM_RENDERING_EXPORT ColorTable

@@ -36,16 +36,16 @@ namespace cont
 class VTKM_CONT_EXPORT MultiBlock
 {
 public:
-  /// creat a new MultiBlcok containng a single DataSet "ds"
+  /// create a new MultiBlock containng a single DataSet "ds"
   VTKM_CONT
   MultiBlock(const vtkm::cont::DataSet& ds);
-  /// creat a new MultiBlcok with the exisiting one "src"
+  /// create a new MultiBlock with the existing one "src"
   VTKM_CONT
   MultiBlock(const vtkm::cont::MultiBlock& src);
-  /// creat a new MultiBlcok with a DataSet vector "mblocks"
+  /// create a new MultiBlock with a DataSet vector "mblocks"
   VTKM_CONT
   MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks);
-  /// creat a new MultiBlcok with the capacity set to be "size"
+  /// create a new MultiBlock with the capacity set to be "size"
   VTKM_CONT
   MultiBlock(vtkm::Id size);
 
@@ -57,7 +57,7 @@ public:
 
   VTKM_CONT
   ~MultiBlock();
-  /// get the field "field_name" from blcok "block_index"
+  /// get the field "field_name" from block "block_index"
   VTKM_CONT
   vtkm::cont::Field GetField(const std::string& field_name, const int& block_index);
 

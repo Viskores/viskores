@@ -139,7 +139,7 @@ struct Range
   /// \b Expand range to include other range.
   ///
   /// This version of \c Include expands this range just enough to include that
-  /// of another range. Esentially it is the union of the two ranges.
+  /// of another range. Essentially it is the union of the two ranges.
   ///
   VTKM_EXEC_CONT
   void Include(const vtkm::Range& range)

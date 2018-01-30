@@ -210,7 +210,7 @@ public:
       .Invoke(rays.Status, masks);
 
     //
-    // Make empty composite vectors so we dont use up extra storage
+    // Make empty composite vectors so we don't use up extra storage
     //
     vtkm::IdComponent inComp[3];
     inComp[0] = 0;

@@ -50,7 +50,7 @@ vtkm::Vec<T, 3> WorldToParametric(const vtkm::Vec<T, 3>& wcoord)
   return T(0.5) * (wcoord + vtkm::Vec<T, 3>(0.25f));
 }
 
-/// Simple structure describing a linear field.  Has a convienience class
+/// Simple structure describing a linear field.  Has a convenience class
 /// for getting values.
 template <typename FieldType>
 struct LinearField

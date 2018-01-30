@@ -356,7 +356,7 @@ private:
                                       BinaryFunctor binary_functor,
                                       std::false_type)
   {
-    //The portal type and the initial value ARENT the same type so we have
+    //The portal type and the initial value AREN'T the same type so we have
     //to a slower approach, where we wrap the input portal inside a cast
     //portal
     using CastFunctor = vtkm::cont::internal::Cast<typename InputPortal::ValueType, T>;

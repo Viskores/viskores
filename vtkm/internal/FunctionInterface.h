@@ -102,7 +102,7 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// series of transformations and operations can occur.
 ///
 /// Supporting arbitrary function and template arguments is difficult and
-/// really requires seperate implementations for ANSI and C++11 versions of
+/// really requires separate implementations for ANSI and C++11 versions of
 /// compilers. Thus, variatic template arguments are, at this point in time,
 /// something to be avoided when possible. The intention of \c
 /// FunctionInterface is to collect most of the variatic template code into one

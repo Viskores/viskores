@@ -41,7 +41,7 @@ namespace io
   }
 }
 
-// Serialize GidOffsetCount explicitly, to avoid alignment and unitialized data issues
+// Serialize GidOffsetCount explicitly, to avoid alignment and uninitialized data issues
 // (to get identical output files given the same block input)
 template<>
 struct Serialization<io::detail::GidOffsetCount>
