@@ -75,7 +75,7 @@ struct WrappedUnaryPredicate
     return m_f((T)x);
   }
 
-  VTKM_EXEC bool operator()(const thrust::system::cuda::pointer<T> x) const { return m_f(*x); }
+  VTKM_EXEC bool operator()(const T* x) const { return m_f(*x); }
 };
 
 // Binary function object wrapper which can detect and handle calling the
@@ -126,26 +126,11 @@ struct WrappedBinaryOperator
     return m_f((T)x, (T)y);
   }
 
-  VTKM_EXEC T operator()(const thrust::system::cuda::pointer<T> x, const T* y) const
-  {
-    return m_f(*x, *y);
-  }
+  VTKM_EXEC T operator()(const T* const x, const T& y) const { return m_f(*x, y); }
 
-  VTKM_EXEC T operator()(const thrust::system::cuda::pointer<T> x, const T& y) const
-  {
-    return m_f(*x, y);
-  }
+  VTKM_EXEC T operator()(const T& x, const T* const y) const { return m_f(x, *y); }
 
-  VTKM_EXEC T operator()(const T& x, const thrust::system::cuda::pointer<T> y) const
-  {
-    return m_f(x, *y);
-  }
-
-  VTKM_EXEC T operator()(const thrust::system::cuda::pointer<T> x,
-                         const thrust::system::cuda::pointer<T> y) const
-  {
-    return m_f(*x, *y);
-  }
+  VTKM_EXEC T operator()(const T* const x, const T* const y) const { return m_f(*x, *y); }
 };
 
 template <typename T_, typename Function>
@@ -192,26 +177,11 @@ struct WrappedBinaryPredicate
     return m_f((T)x, (T)y);
   }
 
-  VTKM_EXEC bool operator()(const thrust::system::cuda::pointer<T> x, const T* y) const
-  {
-    return m_f(*x, *y);
-  }
+  VTKM_EXEC bool operator()(const T* const x, const T& y) const { return m_f(*x, y); }
 
-  VTKM_EXEC bool operator()(const thrust::system::cuda::pointer<T> x, const T& y) const
-  {
-    return m_f(*x, y);
-  }
+  VTKM_EXEC bool operator()(const T& x, const T* const y) const { return m_f(x, *y); }
 
-  VTKM_EXEC bool operator()(const T& x, const thrust::system::cuda::pointer<T> y) const
-  {
-    return m_f(x, *y);
-  }
-
-  VTKM_EXEC bool operator()(const thrust::system::cuda::pointer<T> x,
-                            const thrust::system::cuda::pointer<T> y) const
-  {
-    return m_f(*x, *y);
-  }
+  VTKM_EXEC bool operator()(const T* const x, const T* const y) const { return m_f(*x, *y); }
 };
 }
 }
