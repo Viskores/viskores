@@ -31,11 +31,8 @@
 // in VTK-m:
 //
 //   - Changed parallel threading from OpenMP to TBB tasks
-//   - Removed pair sorting
 //   - Added minimum threshold for parallel, will instead invoke serial radix sort (kxsort)
 //   - Added std::greater<T> and std::less<T> to interface for descending order sorts
-//   - Added can_use_parallel_radix_sort<T, F>() function to determine if parallel radix sorting
-//     is possible for type T and compare function F (fallback is std::sort() if not possible)
 //   - Added linear scaling of threads used by the algorithm for more stable performance
 //     on machines with lots of available threads (KNL and Haswell)
 //
@@ -95,15 +92,23 @@ namespace internal
 const size_t kOutBufferSize = 32;
 
 // Ascending order radix sort is a no-op
-template <typename PlainType, typename UnsignedType, typename CompareType, unsigned int Base>
+template <typename PlainType,
+          typename UnsignedType,
+          typename CompareType,
+          typename ValueManager,
+          unsigned int Base>
 struct ParallelRadixCompareInternal
 {
   inline static void reverse(UnsignedType& t) { (void)t; }
 };
 
 // Handle descending order radix sort
-template <typename PlainType, typename UnsignedType, unsigned int Base>
-struct ParallelRadixCompareInternal<PlainType, UnsignedType, std::greater<PlainType>, Base>
+template <typename PlainType, typename UnsignedType, typename ValueManager, unsigned int Base>
+struct ParallelRadixCompareInternal<PlainType,
+                                    UnsignedType,
+                                    std::greater<PlainType>,
+                                    ValueManager,
+                                    Base>
 {
   inline static void reverse(UnsignedType& t) { t = ((1 << Base) - 1) - t; }
 };
@@ -113,20 +118,22 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
 class ParallelRadixSortInternal
 {
 public:
-  typedef ParallelRadixCompareInternal<PlainType, UnsignedType, CompareType, Base> CompareInternal;
+  typedef ParallelRadixCompareInternal<PlainType, UnsignedType, CompareType, ValueManager, Base>
+    CompareInternal;
 
   ParallelRadixSortInternal();
   ~ParallelRadixSortInternal();
 
   void Init(PlainType* data, size_t num_elems);
 
-  PlainType* Sort(PlainType* data);
+  PlainType* Sort(PlainType* data, ValueManager* value_manager);
 
-  static void InitAndSort(PlainType* data, size_t num_elems);
+  static void InitAndSort(PlainType* data, size_t num_elems, ValueManager* value_manager);
 
 private:
   CompareInternal compare_internal_;
@@ -139,10 +146,11 @@ private:
   size_t** out_buf_n_;
 
   size_t *pos_bgn_, *pos_end_;
+  ValueManager* value_manager_;
 
   void DeleteAll();
 
-  UnsignedType* SortInternal(UnsignedType* data);
+  UnsignedType* SortInternal(UnsignedType* data, ValueManager* value_manager);
 
   // Compute |pos_bgn_| and |pos_end_| (associated ranges for each threads)
   void ComputeRanges();
@@ -160,8 +168,9 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
-ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::
+ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::
   ParallelRadixSortInternal()
   : num_elems_(0)
   , num_threads_(0)
@@ -179,8 +188,9 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
-ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::
+ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::
   ~ParallelRadixSortInternal()
 {
   DeleteAll();
@@ -190,8 +200,10 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
-void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::DeleteAll()
+void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::
+  DeleteAll()
 {
   delete[] tmp_;
   tmp_ = NULL;
@@ -227,10 +239,10 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
-void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::Init(
-  PlainType* data,
-  size_t num_elems)
+void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::
+  Init(PlainType* data, size_t num_elems)
 {
   DeleteAll();
 
@@ -265,12 +277,15 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
-PlainType* ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::Sort(
-  PlainType* data)
+PlainType*
+ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::Sort(
+  PlainType* data,
+  ValueManager* value_manager)
 {
   UnsignedType* src = reinterpret_cast<UnsignedType*>(data);
-  UnsignedType* res = SortInternal(src);
+  UnsignedType* res = SortInternal(src, value_manager);
   return reinterpret_cast<PlainType*>(res);
 }
 
@@ -278,14 +293,14 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
-void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::InitAndSort(
-  PlainType* data,
-  size_t num_elems)
+void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::
+  InitAndSort(PlainType* data, size_t num_elems, ValueManager* value_manager)
 {
   ParallelRadixSortInternal prs;
   prs.Init(data, num_elems);
-  const PlainType* res = prs.Sort(data);
+  const PlainType* res = prs.Sort(data, value_manager);
   if (res != data)
   {
     for (size_t i = 0; i < num_elems; ++i)
@@ -297,11 +312,14 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
 UnsignedType*
-ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::SortInternal(
-  UnsignedType* data)
+ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::
+  SortInternal(UnsignedType* data, ValueManager* value_manager)
 {
+
+  value_manager_ = value_manager;
 
   // Compute |pos_bgn_| and |pos_end_|
   ComputeRanges();
@@ -315,6 +333,7 @@ ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::
     Scatter(b, src, dst);
 
     std::swap(src, dst);
+    value_manager->Next();
   }
 
   return src;
@@ -324,8 +343,10 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
-void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::ComputeRanges()
+void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::
+  ComputeRanges()
 {
   pos_bgn_[0] = 0;
   for (size_t i = 0; i < num_threads_ - 1; ++i)
@@ -395,8 +416,9 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
-void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::
+void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::
   ComputeHistogram(unsigned int b, UnsignedType* src)
 {
   // Compute local histogram
@@ -440,11 +462,10 @@ template <typename PlainType,
           typename CompareType,
           typename UnsignedType,
           typename Encoder,
+          typename ValueManager,
           unsigned int Base>
-void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>::Scatter(
-  unsigned int b,
-  UnsignedType* src,
-  UnsignedType* dst)
+void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>::
+  Scatter(unsigned int b, UnsignedType* src, UnsignedType* dst)
 {
 
   auto lambda = [=](const size_t my_id) {
@@ -461,6 +482,7 @@ void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Ba
       UnsignedType t = (s >> b) & ((1 << Base) - 1);
       compare_internal_.reverse(t);
       my_buf[t][my_buf_n[t]] = src[i];
+      value_manager_->Push(my_id, t, my_buf_n[t], i);
       ++my_buf_n[t];
 
       if (my_buf_n[t] == kOutBufferSize)
@@ -471,6 +493,7 @@ void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Ba
           size_t tp = p++;
           dst[tp] = my_buf[t][j];
         }
+        value_manager_->Flush(my_id, t, kOutBufferSize, my_histo[t]);
 
         my_histo[t] += kOutBufferSize;
         my_buf_n[t] = 0;
@@ -486,6 +509,7 @@ void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Ba
         size_t tp = p++;
         dst[tp] = my_buf[i][j];
       }
+      value_manager_->Flush(my_id, i, my_buf_n[i], my_histo[i]);
     }
   };
 
@@ -540,6 +564,127 @@ public:
 };
 } // namespace encoder
 
+// Value managers are used to generalize the sorting algorithm
+// to sorting of keys and sorting of pairs
+namespace value_manager
+{
+class DummyValueManager
+{
+public:
+  inline void Push(int thread __attribute__((unused)),
+                   size_t bucket __attribute__((unused)),
+                   size_t num __attribute__((unused)),
+                   size_t from_pos __attribute__((unused)))
+  {
+  }
+
+  inline void Flush(int thread __attribute__((unused)),
+                    size_t bucket __attribute__((unused)),
+                    size_t num __attribute__((unused)),
+                    size_t to_pos __attribute__((unused)))
+  {
+  }
+
+  void Next() {}
+};
+
+template <typename ValueType, int Base>
+class PairValueManager
+{
+public:
+  PairValueManager()
+    : max_elems_(0)
+    , max_threads_(0)
+    , original_(NULL)
+    , tmp_(NULL)
+    , src_(NULL)
+    , dst_(NULL)
+    , out_buf_(NULL)
+  {
+  }
+
+  ~PairValueManager() { DeleteAll(); }
+
+  void Init(size_t max_elems);
+
+  void Start(ValueType* original, size_t num_elems)
+  {
+    assert(num_elems <= max_elems_);
+    src_ = original_ = original;
+    dst_ = tmp_;
+  }
+
+  inline void Push(int thread, size_t bucket, size_t num, size_t from_pos)
+  {
+    out_buf_[thread][bucket][num] = src_[from_pos];
+  }
+
+  inline void Flush(int thread, size_t bucket, size_t num, size_t to_pos)
+  {
+    for (size_t i = 0; i < num; ++i)
+    {
+      dst_[to_pos++] = out_buf_[thread][bucket][i];
+    }
+  }
+
+  void Next() { std::swap(src_, dst_); }
+
+  ValueType* GetResult() { return src_; }
+private:
+  size_t max_elems_;
+  int max_threads_;
+
+  static const size_t kOutBufferSize = internal::kOutBufferSize;
+  ValueType *original_, *tmp_;
+  ValueType *src_, *dst_;
+  ValueType*** out_buf_;
+
+  void DeleteAll();
+};
+
+template <typename ValueType, int Base>
+void PairValueManager<ValueType, Base>::Init(size_t max_elems)
+{
+  DeleteAll();
+
+  max_elems_ = max_elems;
+  max_threads_ = utility::GetMaxThreads(max_elems_ * sizeof(ValueType));
+
+  tmp_ = new ValueType[max_elems];
+
+  out_buf_ = new ValueType**[max_threads_];
+  for (int i = 0; i < max_threads_; ++i)
+  {
+    out_buf_[i] = new ValueType*[1 << Base];
+    for (size_t j = 0; j < 1 << Base; ++j)
+    {
+      out_buf_[i][j] = new ValueType[kOutBufferSize];
+    }
+  }
+}
+
+template <typename ValueType, int Base>
+void PairValueManager<ValueType, Base>::DeleteAll()
+{
+  delete[] tmp_;
+  tmp_ = NULL;
+
+  for (int i = 0; i < max_threads_; ++i)
+  {
+    for (size_t j = 0; j < 1 << Base; ++j)
+    {
+      delete[] out_buf_[i][j];
+    }
+    delete[] out_buf_[i];
+  }
+  delete[] out_buf_;
+  out_buf_ = NULL;
+
+  max_elems_ = 0;
+  max_threads_ = 0;
+}
+} // namespace value_manager
+
 // Frontend class for sorting keys
 template <typename PlainType,
           typename CompareType,
@@ -548,90 +693,122 @@ template <typename PlainType,
           unsigned int Base = 8>
 class KeySort
 {
-  typedef internal::ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Base>
+  typedef value_manager::DummyValueManager DummyValueManager;
+  typedef internal::ParallelRadixSortInternal<PlainType,
+                                              CompareType,
+                                              UnsignedType,
+                                              Encoder,
+                                              DummyValueManager,
+                                              Base>
     Internal;
 
 public:
   void InitAndSort(PlainType* data, size_t num_elems, const CompareType& comp)
   {
     (void)comp;
-    Internal::InitAndSort(data, num_elems);
+    DummyValueManager dvm;
+    Internal::InitAndSort(data, num_elems, &dvm);
   }
-
-  bool can_use_parallel_radix_sort() { return true; }
 };
 
-template <typename PlainType, typename CompareType>
-class KeySort<PlainType, CompareType>
+// Frontend class for sorting pairs
+template <typename PlainType,
+          typename ValueType,
+          typename CompareType,
+          typename UnsignedType = PlainType,
+          typename Encoder = encoder::EncoderDummy,
+          int Base = 8>
+class PairSort
 {
+  typedef value_manager::PairValueManager<ValueType, Base> ValueManager;
+  typedef internal::
+    ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>
+      Internal;
+
 public:
-  void InitAndSort(PlainType* data, size_t num_elems, const CompareType& comp)
+  void InitAndSort(PlainType* keys, ValueType* vals, size_t num_elems, const CompareType& comp)
   {
-    std::sort(data, data + num_elems, comp);
+    ValueManager vm;
+    vm.Init(num_elems);
+    vm.Start(vals, num_elems);
+    Internal::InitAndSort(keys, num_elems, &vm);
+    ValueType* res_vals = vm.GetResult();
+    if (res_vals != vals)
+    {
+      for (size_t i = 0; i < num_elems; ++i)
+      {
+        vals[i] = res_vals[i];
+      }
+    }
   }
 
-  bool can_use_parallel_radix_sort() { return false; }
+private:
 };
 
-#define TYPE_CASE(plain_type, compare_type, unsigned_type, encoder_type)                           \
+#define KEY_SORT_CASE(plain_type, compare_type, unsigned_type, encoder_type)                       \
   template <>                                                                                      \
   class KeySort<plain_type, compare_type>                                                          \
     : public KeySort<plain_type, compare_type, unsigned_type, encoder::Encoder##encoder_type>      \
   {                                                                                                \
+  };                                                                                               \
+  template <typename V>                                                                            \
+  class PairSort<plain_type, V, compare_type>                                                      \
+    : public PairSort<plain_type, V, compare_type, unsigned_type, encoder::Encoder##encoder_type>  \
+  {                                                                                                \
   };
 
 // Unsigned integers
-TYPE_CASE(unsigned int, std::less<unsigned int>, unsigned int, Unsigned);
-TYPE_CASE(unsigned int, std::greater<unsigned int>, unsigned int, Unsigned);
-TYPE_CASE(unsigned short int, std::less<unsigned short int>, unsigned short int, Unsigned);
-TYPE_CASE(unsigned short int, std::greater<unsigned short int>, unsigned short int, Unsigned);
-TYPE_CASE(unsigned long int, std::less<unsigned long int>, unsigned long int, Unsigned);
-TYPE_CASE(unsigned long int, std::greater<unsigned long int>, unsigned long int, Unsigned);
-TYPE_CASE(unsigned long long int,
-          std::less<unsigned long long int>,
-          unsigned long long int,
-          Unsigned);
-TYPE_CASE(unsigned long long int,
-          std::greater<unsigned long long int>,
-          unsigned long long int,
-          Unsigned);
+KEY_SORT_CASE(unsigned int, std::less<unsigned int>, unsigned int, Unsigned);
+KEY_SORT_CASE(unsigned int, std::greater<unsigned int>, unsigned int, Unsigned);
+KEY_SORT_CASE(unsigned short int, std::less<unsigned short int>, unsigned short int, Unsigned);
+KEY_SORT_CASE(unsigned short int, std::greater<unsigned short int>, unsigned short int, Unsigned);
+KEY_SORT_CASE(unsigned long int, std::less<unsigned long int>, unsigned long int, Unsigned);
+KEY_SORT_CASE(unsigned long int, std::greater<unsigned long int>, unsigned long int, Unsigned);
+KEY_SORT_CASE(unsigned long long int,
+              std::less<unsigned long long int>,
+              unsigned long long int,
+              Unsigned);
+KEY_SORT_CASE(unsigned long long int,
+              std::greater<unsigned long long int>,
+              unsigned long long int,
+              Unsigned);
 
 // Unsigned char
-TYPE_CASE(unsigned char, std::less<unsigned char>, unsigned char, Unsigned);
-TYPE_CASE(unsigned char, std::greater<unsigned char>, unsigned char, Unsigned);
-TYPE_CASE(char16_t, std::less<char16_t>, uint16_t, Unsigned);
-TYPE_CASE(char16_t, std::greater<char16_t>, uint16_t, Unsigned);
-TYPE_CASE(char32_t, std::less<char32_t>, uint32_t, Unsigned);
-TYPE_CASE(char32_t, std::greater<char32_t>, uint32_t, Unsigned);
-TYPE_CASE(wchar_t, std::less<wchar_t>, uint32_t, Unsigned);
-TYPE_CASE(wchar_t, std::greater<wchar_t>, uint32_t, Unsigned);
+KEY_SORT_CASE(unsigned char, std::less<unsigned char>, unsigned char, Unsigned);
+KEY_SORT_CASE(unsigned char, std::greater<unsigned char>, unsigned char, Unsigned);
+KEY_SORT_CASE(char16_t, std::less<char16_t>, uint16_t, Unsigned);
+KEY_SORT_CASE(char16_t, std::greater<char16_t>, uint16_t, Unsigned);
+KEY_SORT_CASE(char32_t, std::less<char32_t>, uint32_t, Unsigned);
+KEY_SORT_CASE(char32_t, std::greater<char32_t>, uint32_t, Unsigned);
+KEY_SORT_CASE(wchar_t, std::less<wchar_t>, uint32_t, Unsigned);
+KEY_SORT_CASE(wchar_t, std::greater<wchar_t>, uint32_t, Unsigned);
 
 // Signed integers
-TYPE_CASE(char, std::less<char>, unsigned char, Signed);
-TYPE_CASE(char, std::greater<char>, unsigned char, Signed);
-TYPE_CASE(short, std::less<short>, unsigned short, Signed);
-TYPE_CASE(short, std::greater<short>, unsigned short, Signed);
-TYPE_CASE(int, std::less<int>, unsigned int, Signed);
-TYPE_CASE(int, std::greater<int>, unsigned int, Signed);
-TYPE_CASE(long, std::less<long>, unsigned long, Signed);
-TYPE_CASE(long, std::greater<long>, unsigned long, Signed);
-TYPE_CASE(long long, std::less<long long>, unsigned long long, Signed);
-TYPE_CASE(long long, std::greater<long long>, unsigned long long, Signed);
+KEY_SORT_CASE(char, std::less<char>, unsigned char, Signed);
+KEY_SORT_CASE(char, std::greater<char>, unsigned char, Signed);
+KEY_SORT_CASE(short, std::less<short>, unsigned short, Signed);
+KEY_SORT_CASE(short, std::greater<short>, unsigned short, Signed);
+KEY_SORT_CASE(int, std::less<int>, unsigned int, Signed);
+KEY_SORT_CASE(int, std::greater<int>, unsigned int, Signed);
+KEY_SORT_CASE(long, std::less<long>, unsigned long, Signed);
+KEY_SORT_CASE(long, std::greater<long>, unsigned long, Signed);
+KEY_SORT_CASE(long long, std::less<long long>, unsigned long long, Signed);
+KEY_SORT_CASE(long long, std::greater<long long>, unsigned long long, Signed);
 
 // |signed char| and |char| are treated as different types
-TYPE_CASE(signed char, std::less<signed char>, unsigned char, Signed);
-TYPE_CASE(signed char, std::greater<signed char>, unsigned char, Signed);
+KEY_SORT_CASE(signed char, std::less<signed char>, unsigned char, Signed);
+KEY_SORT_CASE(signed char, std::greater<signed char>, unsigned char, Signed);
 
 // Floating point numbers
-TYPE_CASE(float, std::less<float>, uint32_t, Decimal);
-TYPE_CASE(float, std::greater<float>, uint32_t, Decimal);
-TYPE_CASE(double, std::less<double>, uint64_t, Decimal);
-TYPE_CASE(double, std::greater<double>, uint64_t, Decimal);
+KEY_SORT_CASE(float, std::less<float>, uint32_t, Decimal);
+KEY_SORT_CASE(float, std::greater<float>, uint32_t, Decimal);
+KEY_SORT_CASE(double, std::less<double>, uint64_t, Decimal);
+KEY_SORT_CASE(double, std::greater<double>, uint64_t, Decimal);
 
-#undef TYPE_CASE
+#undef KEY_SORT_CASE
 
 template <typename T, typename CompareType>
-struct run_kx_radix_sort
+struct run_kx_radix_sort_keys
 {
   static void run(T* data, size_t num_elems, const CompareType& comp)
   {
@@ -639,91 +816,109 @@ struct run_kx_radix_sort
   }
 };
 
-#define KX_CASE(plain_type)                                                                        \
+#define KX_SORT_KEYS(key_type)                                                                     \
   template <>                                                                                      \
-  struct run_kx_radix_sort<plain_type, std::less<plain_type>>                                      \
+  struct run_kx_radix_sort_keys<key_type, std::less<key_type>>                                     \
   {                                                                                                \
-    static void run(plain_type* data, size_t num_elems, const std::less<plain_type>& comp)         \
+    static void run(key_type* data, size_t num_elems, const std::less<key_type>& comp)             \
     {                                                                                              \
       (void)comp;                                                                                  \
       kx::radix_sort(data, data + num_elems);                                                      \
     }                                                                                              \
   };
 
-KX_CASE(short int);
-KX_CASE(unsigned short int);
-KX_CASE(int);
-KX_CASE(unsigned int);
-KX_CASE(long int);
-KX_CASE(unsigned long int);
-KX_CASE(long long int);
-KX_CASE(unsigned long long int);
-KX_CASE(unsigned char);
-KX_CASE(signed char);
-KX_CASE(char);
-KX_CASE(char16_t);
-KX_CASE(char32_t);
-KX_CASE(wchar_t);
+KX_SORT_KEYS(short int);
+KX_SORT_KEYS(unsigned short int);
+KX_SORT_KEYS(int);
+KX_SORT_KEYS(unsigned int);
+KX_SORT_KEYS(long int);
+KX_SORT_KEYS(unsigned long int);
+KX_SORT_KEYS(long long int);
+KX_SORT_KEYS(unsigned long long int);
+KX_SORT_KEYS(unsigned char);
+KX_SORT_KEYS(signed char);
+KX_SORT_KEYS(char);
+KX_SORT_KEYS(char16_t);
+KX_SORT_KEYS(char32_t);
+KX_SORT_KEYS(wchar_t);
 
-#undef KX_CASE
+#undef KX_SORT_KEYS
 
 template <typename T, typename CompareType>
-bool use_serial_sort(T* data, size_t num_elems, const CompareType& comp)
+bool use_serial_sort_keys(T* data, size_t num_elems, const CompareType& comp)
 {
   size_t total_bytes = (num_elems) * sizeof(T);
   if (total_bytes < MIN_BYTES_FOR_PARALLEL)
   {
-    run_kx_radix_sort<T, CompareType>::run(data, num_elems, comp);
+    run_kx_radix_sort_keys<T, CompareType>::run(data, num_elems, comp);
     return true;
   }
   return false;
 }
 
-template <typename T>
-void parallel_radix_sort(T* data, size_t num_elems, const std::less<T>& comp)
-{
-  if (!use_serial_sort(data, num_elems, comp))
-  {
-    KeySort<T, std::less<T>> ks;
-    ks.InitAndSort(data, num_elems, comp);
+// Generate radix sort interfaces for key and key value sorts.
+
+#define RADIX_SORT_INTERFACE(key_type)                                                             \
+  template <typename ValueType>                                                                    \
+  inline void parallel_radix_sort_key_values(                                                      \
+    key_type* keys, ValueType* vals, size_t num_elems, const std::greater<key_type>& comp)         \
+  {                                                                                                \
+    PairSort<key_type, ValueType, std::greater<key_type>> ps;                                      \
+    ps.InitAndSort(keys, vals, num_elems, comp);                                                   \
+  }                                                                                                \
+  template <typename ValueType>                                                                    \
+  inline void parallel_radix_sort_key_values(                                                      \
+    key_type* keys, ValueType* vals, size_t num_elems, const std::less<key_type>& comp)            \
+  {                                                                                                \
+    PairSort<key_type, ValueType, std::less<key_type>> ps;                                         \
+    ps.InitAndSort(keys, vals, num_elems, comp);                                                   \
+  }                                                                                                \
+  template <typename ValueType>                                                                    \
+  inline void parallel_radix_sort_key_values(key_type* keys, ValueType* vals, size_t num_elems)    \
+  {                                                                                                \
+    parallel_radix_sort_key_values(keys, vals, num_elems, std::less<key_type>());                  \
+  }                                                                                                \
+  inline void parallel_radix_sort(                                                                 \
+    key_type* data, size_t num_elems, const std::greater<key_type>& comp)                          \
+  {                                                                                                \
+    if (!use_serial_sort_keys(data, num_elems, comp))                                              \
+    {                                                                                              \
+      KeySort<key_type, std::greater<key_type>> ks;                                                \
+      ks.InitAndSort(data, num_elems, comp);                                                       \
+    }                                                                                              \
+  }                                                                                                \
+  inline void parallel_radix_sort(                                                                 \
+    key_type* data, size_t num_elems, const std::less<key_type>& comp)                             \
+  {                                                                                                \
+    if (!use_serial_sort_keys(data, num_elems, comp))                                              \
+    {                                                                                              \
+      KeySort<key_type, std::less<key_type>> ks;                                                   \
+      ks.InitAndSort(data, num_elems, comp);                                                       \
+    }                                                                                              \
+  }                                                                                                \
+  inline void parallel_radix_sort(key_type* data, size_t num_elems)                                \
+  {                                                                                                \
+    parallel_radix_sort(data, num_elems, std::less<key_type>());                                   \
   }
-}
 
-template <typename T>
-void parallel_radix_sort(T* data, size_t num_elems, const std::greater<T>& comp)
-{
-  if (!use_serial_sort(data, num_elems, comp))
-  {
-    KeySort<T, std::greater<T>> ks;
-    ks.InitAndSort(data, num_elems, comp);
-  }
-}
+RADIX_SORT_INTERFACE(short int);
+RADIX_SORT_INTERFACE(unsigned short int);
+RADIX_SORT_INTERFACE(int);
+RADIX_SORT_INTERFACE(unsigned int);
+RADIX_SORT_INTERFACE(long int);
+RADIX_SORT_INTERFACE(unsigned long int);
+RADIX_SORT_INTERFACE(long long int);
+RADIX_SORT_INTERFACE(unsigned long long int);
+RADIX_SORT_INTERFACE(unsigned char);
+RADIX_SORT_INTERFACE(signed char);
+RADIX_SORT_INTERFACE(char);
+RADIX_SORT_INTERFACE(char16_t);
+RADIX_SORT_INTERFACE(char32_t);
+RADIX_SORT_INTERFACE(wchar_t);
+RADIX_SORT_INTERFACE(float);
+RADIX_SORT_INTERFACE(double);
 
-template <typename T, typename CompareType>
-inline void parallel_radix_sort(T* data, size_t num_elems, const CompareType& comp)
-{
-  KeySort<T, CompareType> ks;
-  ks.InitAndSort(data, num_elems, comp);
-}
-
-template <typename T>
-inline void parallel_radix_sort(T* data, size_t num_elems)
-{
-  parallel_radix_sort(data, num_elems, std::less<T>());
-}
-
-template <typename T, typename CompareType>
-inline bool can_use_parallel_radix_sort()
-{
-  KeySort<T, CompareType> ks;
-  return ks.can_use_parallel_radix_sort();
-}
-
-template <typename T>
-inline bool can_use_parallel_radix_sort()
-{
-  return can_use_parallel_radix_sort<T, std::less<T>>();
-}
+#undef RADIX_SORT_INTERFACE
 
 }; // namespace parallel radix sort tbb
 

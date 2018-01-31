@@ -23,6 +23,7 @@ set(headers
   DeviceAdapterAlgorithmTBB.h
   DeviceAdapterTagTBB.h
   FunctorsTBB.h
+  RadixSortMacrosTBB.h
   VirtualObjectTransferTBB.h
   )
 

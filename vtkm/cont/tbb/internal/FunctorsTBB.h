@@ -66,7 +66,6 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <tbb/parallel_scan.h>
 #include <tbb/partitioner.h>
 #include <tbb/tick_count.h>
-#include <vtkm/cont/tbb/internal/parallel_radix_sort_tbb.h>
 
 #if defined(VTKM_MSVC)
 #pragma pop_macro("__TBB_NO_IMPLICITLINKAGE")

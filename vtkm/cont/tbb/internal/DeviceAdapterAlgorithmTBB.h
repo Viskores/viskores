@@ -30,6 +30,7 @@
 #include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 #include <vtkm/cont/tbb/internal/FunctorsTBB.h>
+#include <vtkm/cont/tbb/internal/RadixSortMacrosTBB.h>
 
 #include <vtkm/exec/tbb/internal/TaskTiling.h>
 
@@ -251,8 +252,8 @@ public:
   }
 
   template <typename T, class Container, class BinaryCompare>
-  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
-                             BinaryCompare binary_compare)
+  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
+                                    BinaryCompare binary_compare)
   {
     using PortalType = typename vtkm::cont::ArrayHandle<T, Container>::template ExecutionTypes<
       vtkm::cont::DeviceAdapterTagTBB>::Portal;
@@ -265,32 +266,31 @@ public:
     ::tbb::parallel_sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
   }
 
-  template <typename T, class BinaryCompare>
-  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& values,
-                             BinaryCompare binary_compare)
+  template <typename T>
+  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& values,
+                                    vtkm::SortLess)
   {
-    if (parallel_radix_sort_tbb::can_use_parallel_radix_sort<T, BinaryCompare>())
-    {
-      ::parallel_radix_sort_tbb::parallel_radix_sort(
-        values.GetStorage().GetArray(), values.GetNumberOfValues(), binary_compare);
-    }
-    else
-    {
-      Sort<T, vtkm::cont::StorageTagBasic, BinaryCompare>(values, binary_compare);
-    }
+    Sort(values, std::less<T>());
+  }
+
+  template <typename T>
+  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>& values,
+                                    vtkm::SortGreater)
+  {
+    Sort(values, std::greater<T>());
   }
 
   template <typename T, typename U, class StorageT, class StorageU>
-  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
-                                  vtkm::cont::ArrayHandle<U, StorageU>& values)
+  VTKM_CONT_EXPORT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                         vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
     SortByKey(keys, values, std::less<T>());
   }
 
   template <typename T, typename U, class StorageT, class StorageU, class Compare>
-  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
-                                  vtkm::cont::ArrayHandle<U, StorageU>& values,
-                                  Compare comp)
+  VTKM_CONT_EXPORT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                         vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                         Compare comp)
   {
     using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
     VTKM_CONSTEXPR bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
@@ -327,6 +327,39 @@ public:
       Sort(zipHandle, vtkm::cont::internal::KeyCompare<T, U, Compare>(comp));
     }
   }
+
+  template <typename T, typename U, class StorageT, class StorageU>
+  VTKM_CONT_EXPORT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                         vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                         vtkm::SortLess)
+  {
+    SortByKey(keys, values, std::less<T>());
+  }
+
+  template <typename T, typename U, class StorageT, class StorageU>
+  VTKM_CONT_EXPORT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                         vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                         vtkm::SortGreater)
+  {
+    SortByKey(keys, values, std::greater<T>());
+  }
+
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(unsigned int);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(unsigned short int);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(unsigned long int);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(unsigned long long int);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(unsigned char);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(char16_t);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(char32_t);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(wchar_t);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(char);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(short);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(int);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(long);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(long long);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(signed char);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(float);
+  VTKM_DECLARE_RADIX_SORT_BY_KEY_FOR_VALUE_TYPE(double);
 
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
@@ -398,6 +431,23 @@ public:
     return vtkm::exec::tbb::internal::TaskTiling3D(worklet, invocation, globalIndexOffset);
   }
 };
+
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(unsigned int);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(unsigned short int);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(unsigned long int);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(unsigned long long int);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(unsigned char);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(char16_t);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(char32_t);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(wchar_t);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(char);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(short);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(int);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(long);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(long long);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(signed char);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(float);
+VTKM_DECLARE_RADIX_SORT_FOR_VALUE_TYPE(double);
 }
 } // namespace vtkm::cont
 
