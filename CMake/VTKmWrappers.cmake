@@ -136,11 +136,8 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     add_library(TestBuild_${name} STATIC ${srcs} ${valid_hfiles})
     # Send the libraries created for test builds to their own directory so as to
     # not pollute the directory with useful libraries.
-    set_target_properties(TestBuild_${name} PROPERTIES
-      ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
-      LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
-      RUNTIME_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
-      )
+    set_property(TARGET TestBuild_${name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
+    set_property(TARGET TestBuild_${name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
 
     target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags)
 
@@ -288,18 +285,15 @@ function(vtkm_library)
               ${VTKm_LIB_TEMPLATE_SOURCES}
               ${VTKm_LIB_WRAP_FOR_CUDA}
               )
+
   #specify where to place the built library
-  set_target_properties(${test_prog} PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
-    LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
-    RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
-    )
+  set_property(TARGET ${lib_name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
+  set_property(TARGET ${lib_name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
+  set_property(TARGET ${lib_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
   if(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
-    set_target_properties(${lib_name}
-                          PROPERTIES
-                          CUDA_VISIBILITY_PRESET "hidden"
-                          CXX_VISIBILITY_PRESET "hidden")
+    set_property(TARGET ${lib_name} PROPERTY CUDA_VISIBILITY_PRESET "hidden")
+    set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
   endif()
 
   # Setup the SOVERSION and VERSION information for this vtkm library
@@ -404,11 +398,9 @@ function(vtkm_unit_tests)
   endif()
 
   add_executable(${test_prog} ${test_sources})
-  set_target_properties(${test_prog} PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
-    LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}
-    RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH}
-    )
+  set_property(TARGET ${test_prog} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
+  set_property(TARGET ${test_prog} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH})
+  set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
   target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
 
