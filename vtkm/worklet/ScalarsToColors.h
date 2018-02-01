@@ -81,6 +81,7 @@ public:
 
   void SetRange(const vtkm::Range& range)
   {
+    this->ValueRange = range;
     colorconversion::ComputeShiftScale(range, this->Shift, this->Scale);
   }
 
