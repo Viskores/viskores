@@ -53,14 +53,13 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <thrust/binary_search.h>
 #include <thrust/copy.h>
 #include <thrust/count.h>
+#include <thrust/iterator/counting_iterator.h>
 #include <thrust/scan.h>
 #include <thrust/sort.h>
+#include <thrust/system/cpp/memory.h>
 #include <thrust/system/cuda/vector.h>
 #include <thrust/unique.h>
 #include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
-
-#include <thrust/iterator/counting_iterator.h>
-#include <thrust/system/cuda/execution_policy.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <atomic>
@@ -218,8 +217,7 @@ private:
                                          OutputPortal output,
                                          UnaryPredicate unary_predicate)
   {
-    using IteratorType = typename detail::IteratorTraits<OutputPortal>::IteratorType;
-    IteratorType outputBegin = IteratorBegin(output);
+    auto outputBegin = IteratorBegin(output);
 
     using ValueType = typename StencilPortal::ValueType;
 
@@ -497,12 +495,15 @@ private:
 
     try
     {
+      ::thrust::system::cuda::vector<ValueType> result(1);
       auto end = ::thrust::inclusive_scan(ThrustCudaPolicyPerThread,
                                           IteratorBegin(input),
                                           IteratorEnd(input),
                                           IteratorBegin(output),
                                           bop);
-      return *(end - 1);
+
+      ::thrust::copy_n(ThrustCudaPolicyPerThread, end - 1, 1, result.begin());
+      return result[0];
     }
     catch (...)
     {

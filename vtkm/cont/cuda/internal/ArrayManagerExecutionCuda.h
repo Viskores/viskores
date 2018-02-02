@@ -127,19 +127,13 @@ struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagCuda>
   VTKM_CONT
   static PortalType CreatePortal(ValueType* start, ValueType* end)
   {
-    using ThrustPointerT = thrust::system::cuda::pointer<ValueType>;
-    ThrustPointerT startThrust(start);
-    ThrustPointerT endThrust(end);
-    return PortalType(startThrust, endThrust);
+    return PortalType(start, end);
   }
 
   VTKM_CONT
   static PortalConstType CreatePortalConst(const ValueType* start, const ValueType* end)
   {
-    using ThrustPointerT = thrust::system::cuda::pointer<const ValueType>;
-    ThrustPointerT startThrust(start);
-    ThrustPointerT endThrust(end);
-    return PortalConstType(startThrust, endThrust);
+    return PortalConstType(start, end);
   }
 };
 
