@@ -281,28 +281,6 @@ public:
     values_output.Shrink(writePos + 1);
   }
 
-  template <typename T, class CIn, class COut>
-  VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                   vtkm::cont::ArrayHandle<T, COut>& output)
-  {
-    vtkm::Id numberOfValues = input.GetNumberOfValues();
-
-    auto inputPortal = input.PrepareForInput(Device());
-    auto outputPortal = output.PrepareForOutput(numberOfValues, Device());
-
-    if (numberOfValues <= 0)
-    {
-      return vtkm::TypeTraits<T>::ZeroInitialization();
-    }
-
-    std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
-                     vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
-                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal));
-
-    // Return the value at the last index in the array, which is the full sum.
-    return outputPortal.Get(numberOfValues - 1);
-  }
-
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output,
@@ -327,6 +305,13 @@ public:
 
     // Return the value at the last index in the array, which is the full sum.
     return outputPortal.Get(numberOfValues - 1);
+  }
+
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                   vtkm::cont::ArrayHandle<T, COut>& output)
+  {
+    return ScanInclusive(input, output, vtkm::Sum());
   }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
@@ -513,8 +498,8 @@ class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
-                                                             const InvocationType& invocation,
+  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(WorkletType& worklet,
+                                                             InvocationType& invocation,
                                                              vtkm::Id,
                                                              vtkm::Id globalIndexOffset = 0)
   {
@@ -522,8 +507,8 @@ public:
   }
 
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
-                                                             const InvocationType& invocation,
+  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(WorkletType& worklet,
+                                                             InvocationType& invocation,
                                                              vtkm::Id3,
                                                              vtkm::Id globalIndexOffset = 0)
   {

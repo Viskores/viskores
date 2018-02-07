@@ -797,7 +797,7 @@ public:
       CartesianArrayHandle;
 
     auto coordData = coord.GetData();
-    if (coordData.IsSameType<CartesianArrayHandle>())
+    if (coordData.IsType<CartesianArrayHandle>())
     {
       auto vertices = coordData.Cast<CartesianArrayHandle>();
 

@@ -268,7 +268,7 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device) const
 
   this->PrepareForDevice(device);
   const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(sizeof(ValueType)) *
-    static_cast<vtkm::UInt64>(this->GetStorage().GetNumberOfValues());
+    static_cast<vtkm::UInt64>(this->GetNumberOfValues());
 
 
   if (!this->Internals->ExecutionArrayValid)
@@ -348,7 +348,7 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
   this->PrepareForDevice(device);
 
   const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(sizeof(ValueType)) *
-    static_cast<vtkm::UInt64>(this->GetStorage().GetNumberOfValues());
+    static_cast<vtkm::UInt64>(this->GetNumberOfValues());
 
   if (!this->Internals->ExecutionArrayValid)
   {

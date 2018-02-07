@@ -86,7 +86,7 @@ void ConnectivityTracerBase::SetEnergyData(const vtkm::cont::Field& absorption,
     throw vtkm::cont::ErrorBadValue("Absorption Field '" + absorption.GetName() +
                                     "' not accociated with cells");
   ScalarField = absorption;
-  // Check for emmision
+  // Check for emission
   HasEmission = false;
 
   if (emission.GetAssociation() != vtkm::cont::Field::ASSOC_ANY)

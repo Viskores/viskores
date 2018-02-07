@@ -88,7 +88,7 @@ void TestCrossProduct()
   VTKM_TEST_ASSERT(outputArray.GetNumberOfValues() == inputArray1.GetNumberOfValues(),
                    "Wrong number of results for CrossProduct worklet");
 
-  //Test the cannonical cases.
+  //Test the canonical cases.
   VTKM_TEST_ASSERT(
     test_equal(outputArray.GetPortalConstControl().Get(0), vtkm::make_Vec(0, 0, 1)) &&
       test_equal(outputArray.GetPortalConstControl().Get(1), vtkm::make_Vec(1, 0, 0)) &&

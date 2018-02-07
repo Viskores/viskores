@@ -111,7 +111,7 @@ macro(vtkm_configure_component_Base)
     endif()
   endif()
 
-  # Check for the existance of the base vtkm target
+  # Check for the existence of the base vtkm target
   if (TARGET vtkm)
     set(VTKm_base_vtkm_target_FOUND True)
   endif()
@@ -179,7 +179,7 @@ macro(vtkm_configure_component_OpenGL)
 
   #setting VTKm_OPENGL_INCLUDE_DIRS when both mesa and
   #opengl are not present causes cmake to fail to configure
-  #becase of a percieved dependency in the rendering lib
+  #because of a perceived dependency in the rendering lib
   if(VTKm_OSMesa_FOUND OR OPENGL_FOUND)
     set(VTKm_OPENGL_INCLUDE_DIRS ${vtkm_opengl_includes})
     set(VTKm_OPENGL_LIBRARIES  ${vtkm_opengl_libraries})
@@ -350,7 +350,7 @@ macro(vtkm_configure_component_CUDA)
     set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
     set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta all)
 
-    #detect what the propery is set too
+    #detect what the property is set too
     if(VTKm_CUDA_Architecture STREQUAL "native")
 
       if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)

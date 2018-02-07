@@ -48,7 +48,7 @@
  * \brief Transportation controls for Control Environment Objects.
  *
  * vtkm::cont::arg includes the classes that allows the vtkm::worklet::Dispatchers
- * to request Control Environment Objects to be transfered to the Execution Environment.
+ * to request Control Environment Objects to be transferred to the Execution Environment.
  *
  * \namespace vtkm::cont::cuda
  * \brief CUDA implementation for Control Environment.
@@ -790,7 +790,7 @@ protected:
 /// The \c Vec class is most often used to represent vectors in the
 /// mathematical sense as a quantity with a magnitude and direction. Vectors
 /// are, of course, used extensively in computational geometry as well as
-/// phyiscal simulations. The \c Vec class can be (and is) repurposed for more
+/// physical simulations. The \c Vec class can be (and is) repurposed for more
 /// general usage of holding a fixed-length sequence of objects.
 ///
 /// There is no real limit to the size of the sequence (other than the largest

@@ -3677,7 +3677,7 @@ private:
                                 // each becomes a wild card if negative
 };
 
-// Worklet: Copys a small rectangle to become a part of a big rectangle
+// Worklet: Copies a small rectangle to become a part of a big rectangle
 class RectangleCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -3731,7 +3731,7 @@ private:
   vtkm::Id outXStart, outYStart;
 };
 
-// Worklet: Copys a small cube to become a part of a big cube
+// Worklet: Copies a small cube to become a part of a big cube
 class CubeCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:

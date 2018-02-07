@@ -33,7 +33,7 @@ namespace arg
 
 /// \brief \c Fetch tag for getting topology information.
 ///
-/// \c FetchTagCellSetIn is a tag used with the \c Fetch class to retreive
+/// \c FetchTagCellSetIn is a tag used with the \c Fetch class to retrieve
 /// values from a topology object.  This default parameter returns
 /// the basis topology type, i.e. cell type in a \c WorkletCellMap.
 ///

@@ -27,7 +27,7 @@ namespace vtkm
 namespace cont
 {
 
-/// A class that can be used to time operations in VTK-m that might be occuring
+/// A class that can be used to time operations in VTK-m that might be occurring
 /// in parallel. You should make sure that the device adapter for the timer
 /// matches that being used to execute algorithms to ensure that the thread
 /// synchronization is correct.

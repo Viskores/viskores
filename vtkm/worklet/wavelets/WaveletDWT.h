@@ -150,7 +150,7 @@ public:
     else if (!pretendSigPaddedZero && padZeroAtExt2)
     { // This case is not exactly padding a zero at the end of Ext2.
       // Rather, it is to increase extension length by one and fill it
-      //         to be whatever mirrorred.
+      //         to be whatever mirrored.
       extDimX = addLen + 1;
       ext2.PrepareForOutput(extDimX * extDimY * extDimZ, DeviceTag());
       ExtensionWorklet worklet(extDimX,
@@ -315,7 +315,7 @@ public:
     else if (!pretendSigPaddedZero && padZeroAtExt2)
     { // This case is not exactly padding a zero at the end of Ext2.
       // Rather, it is to increase extension length by one and fill it
-      //         to be whatever mirrorred.
+      //         to be whatever mirrored.
       extDimY = addLen + 1;
       ext2.PrepareForOutput(extDimX * extDimY * extDimZ, DeviceTag());
       ExtensionWorklet worklet(extDimX,
@@ -480,7 +480,7 @@ public:
     else if (!pretendSigPaddedZero && padZeroAtExt2)
     { // This case is not exactly padding a zero at the end of Ext2.
       // Rather, it is to increase extension length by one and fill it
-      //         to be whatever mirrorred.
+      //         to be whatever mirrored.
       extDimZ = addLen + 1;
       ext2.PrepareForOutput(extDimX * extDimY * extDimZ, DeviceTag());
       ExtensionWorklet worklet(extDimX,

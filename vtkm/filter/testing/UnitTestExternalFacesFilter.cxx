@@ -93,8 +93,8 @@ void TestExternalFacesExplicitGrid(const vtkm::cont::DataSet& ds,
   VTKM_TEST_ASSERT(numOutputExtFaces == numExpectedExtFaces, "Number of External Faces mismatch");
 
   // verify fields
-  VTKM_TEST_ASSERT(resultds.HasField("pointvar"), "Point field not mapped succesfully");
-  VTKM_TEST_ASSERT(resultds.HasField("cellvar"), "Cell field not mapped succesfully");
+  VTKM_TEST_ASSERT(resultds.HasField("pointvar"), "Point field not mapped successfully");
+  VTKM_TEST_ASSERT(resultds.HasField("cellvar"), "Cell field not mapped successfully");
 
   // verify CompactPoints
   if (compactPoints)

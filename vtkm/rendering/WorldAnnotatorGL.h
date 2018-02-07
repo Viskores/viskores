@@ -50,7 +50,8 @@ public:
                vtkm::Float32 scale,
                const vtkm::Vec<vtkm::Float32, 2>& anchor,
                const vtkm::rendering::Color& color,
-               const std::string& text) const override;
+               const std::string& text,
+               const vtkm::Float32 depth = 0.f) const override;
 
 private:
   BitmapFont Font;

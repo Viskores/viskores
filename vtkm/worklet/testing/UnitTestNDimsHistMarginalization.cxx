@@ -192,7 +192,7 @@ vtkm::cont::DataSet MakeTestDataSet()
 // marginal histogram
 // In this example, we have three variable var0, var1, var2
 // the condition is P(Var0, Var2 | 1<Var1<4)
-// because var0 and var2 are the marginal varaible, we do not care the case var==0 or var==2
+// because var0 and var2 are the marginal variable, we do not care the case var==0 or var==2
 // it supposes that we do not have input as var ==0 or 2
 struct VariableCondition
 {

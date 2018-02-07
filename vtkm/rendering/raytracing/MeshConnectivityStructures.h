@@ -65,7 +65,7 @@ public:
   IdHandle CellConn;
   IdHandle CellOffsets;
   UCharHandle Shapes;
-  // Mesh Boundry
+  // Mesh Boundary
   Id4Handle ExternalTriangles;
   LinearBVH Bvh;
 
@@ -304,7 +304,7 @@ public:
   IdHandle FaceConnectivity;
   CountingHandle CellOffsets;
   IdHandle CellConnectivity;
-  // Mesh Boundry
+  // Mesh Boundary
   LinearBVH Bvh;
   Id4Handle ExternalTriangles;
 
@@ -547,7 +547,7 @@ public:
   vtkm::Bounds CoordinateBounds;
   vtkm::cont::CoordinateSystem Coords;
   vtkm::cont::CellSetStructured<3> Cellset;
-  // Mesh Boundry
+  // Mesh Boundary
   LinearBVH Bvh;
   Id4Handle ExternalTriangles;
 

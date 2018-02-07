@@ -58,7 +58,7 @@ function(determine_version source_dir git_command var_prefix)
   endif()
   extract_version_components("${output}" tmp)
   if(DEFINED tmp_VERSION)
-    message(STATUS "Determined Source Version : ${tmp_VERSION_FULL}")
+    message(STATUS "Determined ${PROJECT_NAME} Source Version: ${tmp_VERSION_FULL}")
     if (NOT "${tmp_VERSION}" STREQUAL "${${var_prefix}_VERSION}")
       message(WARNING
         "Version from git (${tmp_VERSION}) disagrees with hard coded version (${${var_prefix}_VERSION}). Either update the git tags or version.txt.")

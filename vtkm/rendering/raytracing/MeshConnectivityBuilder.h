@@ -234,7 +234,7 @@ public:
       currentIndex--;
     }
 
-    //this means that this cell is resposible for both itself and the other cell
+    //this means that this cell is responsible for both itself and the other cell
     //set the connecttion for the other cell
     if (isInternal)
     {
@@ -720,13 +720,13 @@ protected:
 
     // We are creating a spatial hash based on morton codes calculated
     // from the centriod (point average)  of each face. Each centroid is
-    // calculated in way (consistant order of floating point calcs) that
+    // calculated in way (consistent order of floating point calcs) that
     // ensures that each face maps to the same morton code. It is possbilbe
     // that two non-connecting faces map to the same morton code,  but if
     // if a face has a matching face from another cell, it will be mapped
     // to the same morton code. We check for this.
 
-    // set up everyting we need to gen morton codes
+    // set up everything we need to gen morton codes
     vtkm::Vec<vtkm::Float32, 3> inverseExtent;
     inverseExtent[0] = 1.f / (BoundingBox[1] - BoundingBox[0]);
     inverseExtent[1] = 1.f / (BoundingBox[3] - BoundingBox[2]);

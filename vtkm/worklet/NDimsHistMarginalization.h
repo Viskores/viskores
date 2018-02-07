@@ -172,7 +172,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
     DeviceAlgorithms::Copy(freqsIn, freqs);
-    vtkm::Id numMarginalVariables = 0; //count num of marginal varaibles
+    vtkm::Id numMarginalVariables = 0; //count num of marginal variables
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
       if (marginalVariables.GetPortalConstControl().Get(i) == true)

@@ -50,7 +50,7 @@ public:
   virtual void SetVolumeData(const vtkm::cont::Field& scalarField,
                              const vtkm::Range& scalarBounds) = 0;
 
-  virtual void SetEnergyData(const vtkm::cont::Field& absorbtion,
+  virtual void SetEnergyData(const vtkm::cont::Field& absorption,
                              const vtkm::Int32 numBins,
                              const vtkm::cont::Field& emission = vtkm::cont::Field()) = 0;
 

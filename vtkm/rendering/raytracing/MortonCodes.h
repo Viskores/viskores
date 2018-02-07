@@ -207,7 +207,7 @@ public:
       vtkm::Vec<vtkm::Id, 3> cellFace;
       cellFace[0] = cellId;
 
-      // We must be sure that this calulation is the same for all faces. If we didn't
+      // We must be sure that this calculation is the same for all faces. If we didn't
       // then it is possible for the same face to end up in multiple morton "buckets" due to
       // the wonders of floating point math. This is bad. If we calculate in the same order
       // for all faces, then at worst, two different faces can enter the same bucket, which

@@ -64,7 +64,8 @@ public:
                   vtkm::Float32 scale,
                   const vtkm::Vec<vtkm::Float32, 2>& anchor,
                   const vtkm::rendering::Color& color,
-                  const std::string& text);
+                  const std::string& text,
+                  const vtkm::Float32& depth = 0.f);
 
 private:
   const vtkm::rendering::Canvas* Canvas;
