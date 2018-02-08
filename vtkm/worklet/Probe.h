@@ -105,8 +105,10 @@ public:
 
       // Compute points inside cell bounds
       auto portal = points.GetPortal();
-      auto minp = static_cast<vtkm::Id3>((cbmin - portal.GetOrigin()) / portal.GetSpacing());
-      auto maxp = static_cast<vtkm::Id3>((cbmax - portal.GetOrigin()) / portal.GetSpacing());
+      auto minp =
+        static_cast<vtkm::Id3>(vtkm::Ceil((cbmin - portal.GetOrigin()) / portal.GetSpacing()));
+      auto maxp =
+        static_cast<vtkm::Id3>(vtkm::Floor((cbmax - portal.GetOrigin()) / portal.GetSpacing()));
 
       // clamp
       minp = vtkm::Max(minp, vtkm::Id3(0));
