@@ -563,10 +563,10 @@ public:
       // distributed memory setting, we would move cell data around so that the
       // entire ray could be traced, but in situ, moving that much cell data around
       // could blow memory. Here we are keeping track of two values. Total absorption
-      // through this contiguous segment of the mesh, and the amount of amassed energy
+      // through this contiguous segment of the mesh, and the amount of emitted energy
       // that makes it out of this mesh segment. If this is really run on a single node,
       // we can get the final energy value by multiplying the background intensity by
-      // the total absorption of the mesh segment and add in the amount of amassed
+      // the total absorption of the mesh segment and add in the amount of emitted
       // energy that escapes.
       //
       FloatType absorbIntensity = static_cast<FloatType>(absorptionBins.Get(rayOffset + i));
