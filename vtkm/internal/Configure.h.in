@@ -113,6 +113,11 @@
 # endif
 #endif
 
+// Defines the cache line size in bytes to align allocations to
+#ifndef VTKM_ALLOCATION_ALIGNMENT
+#define VTKM_ALLOCATION_ALIGNMENT 64
+#endif
+
 #ifdef VTKM_USE_64BIT_IDS
 # ifndef VTKM_SIZE_ID
 #  define VTKM_SIZE_ID 8

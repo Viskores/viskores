@@ -44,8 +44,10 @@ DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::GetDeviceId(
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecutionArray& execArray,
-                                                                  vtkm::UInt64 numBytes) const
+                                                                  vtkm::Id numberOfValues,
+                                                                  vtkm::UInt64 sizeOfValue) const
 {
+  const vtkm::UInt64 numBytes = static_cast<vtkm::UInt64>(numberOfValues) * sizeOfValue;
   // Detect if we can reuse a device-accessible pointer from the control env:
   if (CudaAllocator::IsDevicePointer(execArray.ArrayControl))
   {

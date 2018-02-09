@@ -34,12 +34,12 @@ ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareW
 }
 
 void ExecutionArrayInterfaceBasicShareWithControl::Allocate(TypelessExecutionArray& execArray,
-                                                            vtkm::UInt64 numBytes) const
+                                                            vtkm::Id numberOfValues,
+                                                            vtkm::UInt64 sizeOfValue) const
 {
-  this->ControlStorage.AllocateBytes(numBytes);
-
+  this->ControlStorage.AllocateValues(numberOfValues, sizeOfValue);
   execArray.Array = this->ControlStorage.GetBasePointer();
-  execArray.ArrayEnd = this->ControlStorage.GetEndPointer();
+  execArray.ArrayEnd = this->ControlStorage.GetEndPointer(numberOfValues, sizeOfValue);
   execArray.ArrayCapacity = this->ControlStorage.GetCapacityPointer();
 }
 

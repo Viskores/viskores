@@ -139,7 +139,9 @@ struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicShareWithControl
 
   VTKM_CONT ExecutionArrayInterfaceBasicShareWithControl(StorageBasicBase& storage);
 
-  VTKM_CONT void Allocate(TypelessExecutionArray& execArray, vtkm::UInt64 numBytes) const final;
+  VTKM_CONT void Allocate(TypelessExecutionArray& execArray,
+                          vtkm::Id numberOfValues,
+                          vtkm::UInt64 sizeOfValue) const final;
   VTKM_CONT void Free(TypelessExecutionArray& execArray) const final;
 
   VTKM_CONT void CopyFromControl(const void* src, void* dst, vtkm::UInt64 bytes) const final;
