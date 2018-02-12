@@ -35,15 +35,14 @@ namespace cont
 namespace internal
 {
 
+struct ArrayHandleImpl;
+
 /// Type-agnostic container for an execution memory buffer.
 struct VTKM_CONT_EXPORT TypelessExecutionArray
 {
 
-  TypelessExecutionArray(void*& array,
-                         void*& arrayEnd,
-                         void*& arrayCapacity,
-                         const void* arrayControl,
-                         const void* arrayControlCapacity);
+  TypelessExecutionArray(const ArrayHandleImpl* data);
+
   void*& Array;
   void*& ArrayEnd;
   void*& ArrayCapacity;
@@ -130,8 +129,9 @@ struct ExecutionArrayInterfaceBasic;
 
 struct VTKM_CONT_EXPORT ArrayHandleImpl
 {
+  VTKM_CONT
   template <typename T>
-  ArrayHandleImpl(T)
+  explicit ArrayHandleImpl(T)
     : ControlArrayValid(false)
     , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>())
     , ExecutionInterface(nullptr)
@@ -142,8 +142,10 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
   {
   }
 
+  VTKM_CONT
   template <typename T>
-  ArrayHandleImpl(const vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>& storage)
+  explicit ArrayHandleImpl(
+    const vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>& storage)
     : ControlArrayValid(true)
     , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>(storage))
     , ExecutionInterface(nullptr)
@@ -154,19 +156,42 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
   {
   }
 
-  ~ArrayHandleImpl();
+  VTKM_CONT ~ArrayHandleImpl();
 
-  ArrayHandleImpl(const ArrayHandleImpl&) = delete;
-  void operator=(const ArrayHandleImpl&) = delete;
+  VTKM_CONT ArrayHandleImpl(const ArrayHandleImpl&) = delete;
+  VTKM_CONT void operator=(const ArrayHandleImpl&) = delete;
 
-  bool ControlArrayValid;
+  //Throws ErrorInternal if ControlArrayValid == false
+  VTKM_CONT void CheckControlArrayValid() noexcept(false);
+
+  VTKM_CONT vtkm::Id GetNumberOfValues(vtkm::UInt64 sizeOfT) const;
+  VTKM_CONT void Allocate(vtkm::Id numberOfValues, vtkm::UInt64 sizeOfT);
+  VTKM_CONT void Shrink(vtkm::Id numberOfValues, vtkm::UInt64 sizeOfT);
+
+  VTKM_CONT void SyncControlArray(vtkm::UInt64 sizeofT) const;
+  VTKM_CONT void ReleaseResources();
+  VTKM_CONT void ReleaseResourcesExecutionInternal();
+
+  VTKM_CONT void PrepareForInput(vtkm::UInt64 sizeofT) const;
+  VTKM_CONT void PrepareForOutput(vtkm::Id numVals, vtkm::UInt64 sizeofT);
+  VTKM_CONT void PrepareForInPlace(vtkm::UInt64 sizeofT);
+
+  // Check if the current device matches the last one. If they don't match
+  // this moves all data back from execution environment and deletes the
+  // ExecutionInterface instance.
+  // Returns true when the caller needs to reallocate ExecutionInterface
+  VTKM_CONT bool PrepareForDevice(DeviceAdapterId devId, vtkm::UInt64 sizeofT) const;
+
+  VTKM_CONT DeviceAdapterId GetDeviceAdapterId() const;
+
+  mutable bool ControlArrayValid;
   StorageBasicBase* ControlArray;
 
-  ExecutionArrayInterfaceBasicBase* ExecutionInterface;
-  bool ExecutionArrayValid;
-  void* ExecutionArray;
-  void* ExecutionArrayEnd;
-  void* ExecutionArrayCapacity;
+  mutable ExecutionArrayInterfaceBasicBase* ExecutionInterface;
+  mutable bool ExecutionArrayValid;
+  mutable void* ExecutionArray;
+  mutable void* ExecutionArrayEnd;
+  mutable void* ExecutionArrayCapacity;
 };
 
 } // end namespace internal
@@ -175,7 +200,8 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
 /// the amount of codegen for the common case of Basic storage when we build
 /// the common arrays into libvtkm_cont.
 template <typename T>
-class ArrayHandle<T, ::vtkm::cont::StorageTagBasic> : public ::vtkm::cont::internal::ArrayHandleBase
+class VTKM_ALWAYS_EXPORT ArrayHandle<T, ::vtkm::cont::StorageTagBasic>
+  : public ::vtkm::cont::internal::ArrayHandleBase
 {
 private:
   using Thisclass = ArrayHandle<T, ::vtkm::cont::StorageTagBasic>;
@@ -252,6 +278,13 @@ public:
 
 } // end namespace cont
 } // end namespace vtkm
+
+#ifndef vtkm_cont_internal_ArrayHandleImpl_cxx
+#ifdef VTKM_MSVC
+extern template class VTKM_CONT_TEMPLATE_EXPORT
+  std::shared_ptr<vtkm::cont::internal::ArrayHandleImpl>;
+#endif
+#endif
 
 #include <vtkm/cont/internal/ArrayHandleBasicImpl.hxx>
 

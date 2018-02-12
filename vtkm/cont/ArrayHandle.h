@@ -661,32 +661,6 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 
 #ifndef vtkm_cont_ArrayHandle_cxx
 
-#ifdef VTKM_MSVC
-#define _VTKM_SHARED_PTR_EXPORT(Type)                                                              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    std::shared_ptr<vtkm::cont::ArrayHandle<Type, vtkm::cont::StorageTagBasic>::InternalStruct>;   \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr<                                 \
-    vtkm::cont::ArrayHandle<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic>::InternalStruct>;     \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr<                                 \
-    vtkm::cont::ArrayHandle<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic>::InternalStruct>;     \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr<                                 \
-    vtkm::cont::ArrayHandle<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic>::InternalStruct>;
-
-_VTKM_SHARED_PTR_EXPORT(char)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Int8)
-_VTKM_SHARED_PTR_EXPORT(vtkm::UInt8)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Int16)
-_VTKM_SHARED_PTR_EXPORT(vtkm::UInt16)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Int32)
-_VTKM_SHARED_PTR_EXPORT(vtkm::UInt32)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Int64)
-_VTKM_SHARED_PTR_EXPORT(vtkm::UInt64)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Float32)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Float64)
-
-#undef _VTKM_SHARED_PTR_EXPORT
-#endif // VTKM_MSVC
-
 namespace vtkm
 {
 namespace cont

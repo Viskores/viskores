@@ -108,6 +108,7 @@ set(sources
   Field.cxx
   internal/SimplePolymorphicContainer.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
+  internal/ArrayHandleBasicImpl.cxx
   StorageBasic.cxx
   )
 

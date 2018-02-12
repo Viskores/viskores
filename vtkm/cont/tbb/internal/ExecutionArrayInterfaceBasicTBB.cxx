@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -17,15 +17,19 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
-#define vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu
-
-#include <vtkm/cont/cuda/internal/ArrayManagerExecutionCuda.h>
+#include <vtkm/cont/tbb/internal/ExecutionArrayInterfaceBasicTBB.h>
 
 namespace vtkm
 {
 namespace cont
 {
-VTKM_INSTANTIATE_ARRAYHANDLES_FOR_DEVICE_ADAPTER(DeviceAdapterTagCuda)
+namespace internal
+{
+vtkm::cont::DeviceAdapterId ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB>::GetDeviceId() const
+{
+  return VTKM_DEVICE_ADAPTER_TBB;
 }
-} // end vtkm::cont
+
+} // namespace internal
+}
+} // namespace vtkm::cont
