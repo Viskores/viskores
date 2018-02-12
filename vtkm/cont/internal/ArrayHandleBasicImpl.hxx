@@ -27,10 +27,9 @@ namespace vtkm
 {
 namespace cont
 {
-
 template <typename T>
 ArrayHandle<T, StorageTagBasic>::ArrayHandle()
-  : Internals(new InternalStruct)
+  : Internals(new internal::ArrayHandleImpl(T{}))
 {
 }
 
@@ -48,13 +47,7 @@ ArrayHandle<T, StorageTagBasic>::ArrayHandle(const Thisclass&& src)
 
 template <typename T>
 ArrayHandle<T, StorageTagBasic>::ArrayHandle(const StorageType& storage)
-  : Internals(new InternalStruct(storage))
-{
-}
-
-template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(const std::shared_ptr<InternalStruct>& i)
-  : Internals(i)
+  : Internals(new internal::ArrayHandleImpl(storage))
 {
 }
 
@@ -109,7 +102,7 @@ typename ArrayHandle<T, StorageTagBasic>::StorageType& ArrayHandle<T, StorageTag
   this->SyncControlArray();
   if (this->Internals->ControlArrayValid)
   {
-    return this->Internals->ControlArray;
+    return *(static_cast<StorageType*>(this->Internals->ControlArray));
   }
   else
   {
@@ -125,7 +118,7 @@ ArrayHandle<T, StorageTagBasic>::GetStorage() const
   this->SyncControlArray();
   if (this->Internals->ControlArrayValid)
   {
-    return this->Internals->ControlArray;
+    return *(static_cast<const StorageType*>(this->Internals->ControlArray));
   }
   else
   {
@@ -145,7 +138,8 @@ ArrayHandle<T, StorageTagBasic>::GetPortalControl()
     // array will become invalid. Play it safe and release the execution
     // resources. (Use the const version to preserve the execution array.)
     this->ReleaseResourcesExecutionInternal();
-    return this->Internals->ControlArray.GetPortal();
+    StorageType* privStorage = static_cast<StorageType*>(this->Internals->ControlArray);
+    return privStorage->GetPortal();
   }
   else
   {
@@ -162,7 +156,8 @@ ArrayHandle<T, StorageTagBasic>::GetPortalConstControl() const
   this->SyncControlArray();
   if (this->Internals->ControlArrayValid)
   {
-    return this->Internals->ControlArray.GetPortalConst();
+    StorageType* privStorage = static_cast<StorageType*>(this->Internals->ControlArray);
+    return privStorage->GetPortalConst();
   }
   else
   {
@@ -176,12 +171,12 @@ vtkm::Id ArrayHandle<T, StorageTagBasic>::GetNumberOfValues() const
 {
   if (this->Internals->ControlArrayValid)
   {
-    return this->Internals->ControlArray.GetNumberOfValues();
+    return this->Internals->ControlArray->GetNumberOfValues();
   }
   else if (this->Internals->ExecutionArrayValid)
   {
-    return static_cast<vtkm::Id>(this->Internals->ExecutionArrayEnd -
-                                 this->Internals->ExecutionArray);
+    return static_cast<vtkm::Id>(static_cast<T*>(this->Internals->ExecutionArrayEnd) -
+                                 static_cast<T*>(this->Internals->ExecutionArray));
   }
   else
   {
@@ -193,7 +188,7 @@ template <typename T>
 void ArrayHandle<T, StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 {
   this->ReleaseResourcesExecutionInternal();
-  this->Internals->ControlArray.AllocateValues(numberOfValues, sizeof(T));
+  this->Internals->ControlArray->AllocateValues(numberOfValues, sizeof(T));
   this->Internals->ControlArrayValid = true;
 }
 
@@ -210,11 +205,12 @@ void ArrayHandle<T, StorageTagBasic>::Shrink(vtkm::Id numberOfValues)
     {
       if (this->Internals->ControlArrayValid)
       {
-        this->Internals->ControlArray.Shrink(numberOfValues);
+        this->Internals->ControlArray->Shrink(numberOfValues);
       }
       if (this->Internals->ExecutionArrayValid)
       {
-        this->Internals->ExecutionArrayEnd = this->Internals->ExecutionArray + numberOfValues;
+        this->Internals->ExecutionArrayEnd =
+          static_cast<T*>(this->Internals->ExecutionArray) + numberOfValues;
       }
     }
     else if (numberOfValues == originalNumberOfValues)
@@ -253,7 +249,7 @@ void ArrayHandle<T, StorageTagBasic>::ReleaseResources()
 
   if (this->Internals->ControlArrayValid)
   {
-    this->Internals->ControlArray.ReleaseResources();
+    this->Internals->ControlArray->ReleaseResources();
     this->Internals->ControlArrayValid = false;
   }
 }
@@ -264,7 +260,7 @@ typename ArrayHandle<T, StorageTagBasic>::template ExecutionTypes<DeviceAdapterT
 ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device) const
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-  InternalStruct* priv = const_cast<InternalStruct*>(this->Internals.get());
+  internal::ArrayHandleImpl* priv = const_cast<internal::ArrayHandleImpl*>(this->Internals.get());
 
   this->PrepareForDevice(device);
   const vtkm::Id numVals = this->GetNumberOfValues();
@@ -276,29 +272,29 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInput(DeviceAdapterTag device) const
     // Initialize an empty array if needed:
     if (!this->Internals->ControlArrayValid)
     {
-      this->Internals->ControlArray.Allocate(0);
+      priv->ControlArray->AllocateValues(0, sizeof(T));
       this->Internals->ControlArrayValid = true;
     }
 
-    internal::TypelessExecutionArray execArray(
-      reinterpret_cast<void*&>(priv->ExecutionArray),
-      reinterpret_cast<void*&>(priv->ExecutionArrayEnd),
-      reinterpret_cast<void*&>(priv->ExecutionArrayCapacity),
-      this->Internals->ControlArray.GetBasePointer(),
-      this->Internals->ControlArray.GetCapacityPointer());
+    internal::TypelessExecutionArray execArray(priv->ExecutionArray,
+                                               priv->ExecutionArrayEnd,
+                                               priv->ExecutionArrayCapacity,
+                                               priv->ControlArray->GetBasePointer(),
+                                               priv->ControlArray->GetCapacityPointer());
 
     priv->ExecutionInterface->Allocate(execArray, numVals, sizeof(T));
 
     priv->ExecutionInterface->CopyFromControl(
-      priv->ControlArray.GetArray(), priv->ExecutionArray, numBytes);
+      priv->ControlArray->GetBasePointer(), priv->ExecutionArray, numBytes);
 
     this->Internals->ExecutionArrayValid = true;
   }
   this->Internals->ExecutionInterface->UsingForRead(
-    priv->ControlArray.GetArray(), priv->ExecutionArray, numBytes);
+    priv->ControlArray->GetBasePointer(), priv->ExecutionArray, numBytes);
 
-  return PortalFactory<DeviceAdapterTag>::CreatePortalConst(this->Internals->ExecutionArray,
-                                                            this->Internals->ExecutionArrayEnd);
+  return PortalFactory<DeviceAdapterTag>::CreatePortalConst(
+    static_cast<T*>(this->Internals->ExecutionArray),
+    static_cast<T*>(this->Internals->ExecutionArrayEnd));
 }
 
 template <typename T>
@@ -307,7 +303,7 @@ typename ArrayHandle<T, StorageTagBasic>::template ExecutionTypes<DeviceAdapterT
 ArrayHandle<T, StorageTagBasic>::PrepareForOutput(vtkm::Id numVals, DeviceAdapterTag device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-  InternalStruct* priv = const_cast<InternalStruct*>(this->Internals.get());
+  internal::ArrayHandleImpl* priv = const_cast<internal::ArrayHandleImpl*>(this->Internals.get());
 
   this->PrepareForDevice(device);
 
@@ -316,22 +312,23 @@ ArrayHandle<T, StorageTagBasic>::PrepareForOutput(vtkm::Id numVals, DeviceAdapte
   // the execution environment.
   this->Internals->ControlArrayValid = false;
 
-  internal::TypelessExecutionArray execArray(reinterpret_cast<void*&>(priv->ExecutionArray),
-                                             reinterpret_cast<void*&>(priv->ExecutionArrayEnd),
-                                             reinterpret_cast<void*&>(priv->ExecutionArrayCapacity),
-                                             this->Internals->ControlArray.GetBasePointer(),
-                                             this->Internals->ControlArray.GetCapacityPointer());
+  internal::TypelessExecutionArray execArray(priv->ExecutionArray,
+                                             priv->ExecutionArrayEnd,
+                                             priv->ExecutionArrayCapacity,
+                                             priv->ControlArray->GetBasePointer(),
+                                             priv->ControlArray->GetCapacityPointer());
 
   this->Internals->ExecutionInterface->Allocate(execArray, numVals, sizeof(T));
   const vtkm::UInt64 numBytes = sizeof(T) * static_cast<vtkm::UInt64>(numVals);
   this->Internals->ExecutionInterface->UsingForWrite(
-    priv->ControlArray.GetArray(), priv->ExecutionArray, numBytes);
+    priv->ControlArray->GetBasePointer(), priv->ExecutionArray, numBytes);
 
   this->Internals->ExecutionArrayValid = true;
 
 
-  return PortalFactory<DeviceAdapterTag>::CreatePortal(this->Internals->ExecutionArray,
-                                                       this->Internals->ExecutionArrayEnd);
+  return PortalFactory<DeviceAdapterTag>::CreatePortal(
+    static_cast<T*>(this->Internals->ExecutionArray),
+    static_cast<T*>(this->Internals->ExecutionArrayEnd));
 }
 
 template <typename T>
@@ -340,7 +337,7 @@ typename ArrayHandle<T, StorageTagBasic>::template ExecutionTypes<DeviceAdapterT
 ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-  InternalStruct* priv = const_cast<InternalStruct*>(this->Internals.get());
+  internal::ArrayHandleImpl* priv = const_cast<internal::ArrayHandleImpl*>(this->Internals.get());
 
   this->PrepareForDevice(device);
   const vtkm::Id numVals = this->GetNumberOfValues();
@@ -351,33 +348,33 @@ ArrayHandle<T, StorageTagBasic>::PrepareForInPlace(DeviceAdapterTag device)
     // Initialize an empty array if needed:
     if (!this->Internals->ControlArrayValid)
     {
-      this->Internals->ControlArray.Allocate(0);
+      priv->ControlArray->AllocateValues(0, sizeof(T));
       this->Internals->ControlArrayValid = true;
     }
 
-    internal::TypelessExecutionArray execArray(
-      reinterpret_cast<void*&>(this->Internals->ExecutionArray),
-      reinterpret_cast<void*&>(this->Internals->ExecutionArrayEnd),
-      reinterpret_cast<void*&>(this->Internals->ExecutionArrayCapacity),
-      this->Internals->ControlArray.GetBasePointer(),
-      this->Internals->ControlArray.GetCapacityPointer());
+    internal::TypelessExecutionArray execArray(this->Internals->ExecutionArray,
+                                               this->Internals->ExecutionArrayEnd,
+                                               this->Internals->ExecutionArrayCapacity,
+                                               priv->ControlArray->GetBasePointer(),
+                                               priv->ControlArray->GetCapacityPointer());
 
     priv->ExecutionInterface->Allocate(execArray, numVals, sizeof(T));
 
     priv->ExecutionInterface->CopyFromControl(
-      priv->ControlArray.GetArray(), priv->ExecutionArray, numBytes);
+      priv->ControlArray->GetBasePointer(), priv->ExecutionArray, numBytes);
 
     this->Internals->ExecutionArrayValid = true;
   }
 
   priv->ExecutionInterface->UsingForReadWrite(
-    priv->ControlArray.GetArray(), priv->ExecutionArray, numBytes);
+    priv->ControlArray->GetBasePointer(), priv->ExecutionArray, numBytes);
 
   // Invalidate the control array, since we expect the values to be modified:
   this->Internals->ControlArrayValid = false;
 
-  return PortalFactory<DeviceAdapterTag>::CreatePortal(this->Internals->ExecutionArray,
-                                                       this->Internals->ExecutionArrayEnd);
+  return PortalFactory<DeviceAdapterTag>::CreatePortal(
+    static_cast<T*>(this->Internals->ExecutionArray),
+    static_cast<T*>(this->Internals->ExecutionArrayEnd));
 }
 
 template <typename T>
@@ -385,8 +382,7 @@ template <typename DeviceAdapterTag>
 void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag) const
 {
   DeviceAdapterId devId = DeviceAdapterTraits<DeviceAdapterTag>::GetId();
-  InternalStruct* priv = const_cast<InternalStruct*>(this->Internals.get());
-
+  internal::ArrayHandleImpl* priv = const_cast<internal::ArrayHandleImpl*>(this->Internals.get());
   // Check if the current device matches the last one and sync through
   // the control environment if the device changes.
   if (this->Internals->ExecutionInterface)
@@ -400,12 +396,11 @@ void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag) const
     {
       // Update the device allocator:
       this->SyncControlArray();
-      internal::TypelessExecutionArray execArray(
-        reinterpret_cast<void*&>(priv->ExecutionArray),
-        reinterpret_cast<void*&>(priv->ExecutionArrayEnd),
-        reinterpret_cast<void*&>(priv->ExecutionArrayCapacity),
-        this->Internals->ControlArray.GetBasePointer(),
-        this->Internals->ControlArray.GetCapacityPointer());
+      internal::TypelessExecutionArray execArray(priv->ExecutionArray,
+                                                 priv->ExecutionArrayEnd,
+                                                 priv->ExecutionArrayCapacity,
+                                                 priv->ControlArray->GetBasePointer(),
+                                                 priv->ControlArray->GetCapacityPointer());
       priv->ExecutionInterface->Free(execArray);
       delete priv->ExecutionInterface;
       priv->ExecutionInterface = nullptr;
@@ -417,7 +412,7 @@ void ArrayHandle<T, StorageTagBasic>::PrepareForDevice(DeviceAdapterTag) const
   VTKM_ASSERT(!priv->ExecutionArrayValid);
 
   priv->ExecutionInterface =
-    new internal::ExecutionArrayInterfaceBasic<DeviceAdapterTag>(this->Internals->ControlArray);
+    new internal::ExecutionArrayInterfaceBasic<DeviceAdapterTag>(*this->Internals->ControlArray);
 }
 
 template <typename T>
@@ -434,15 +429,15 @@ void ArrayHandle<T, StorageTagBasic>::SyncControlArray() const
   {
     // Need to change some state that does not change the logical state from
     // an external point of view.
-    InternalStruct* priv = const_cast<InternalStruct*>(this->Internals.get());
+    internal::ArrayHandleImpl* priv = const_cast<internal::ArrayHandleImpl*>(this->Internals.get());
     if (this->Internals->ExecutionArrayValid)
     {
-      const vtkm::Id numValues =
-        static_cast<vtkm::Id>(this->Internals->ExecutionArrayEnd - this->Internals->ExecutionArray);
-      const vtkm::UInt64 numBytes = sizeof(T) * static_cast<vtkm::UInt64>(numValues);
-      priv->ControlArray.Allocate(numValues);
+      const vtkm::Id numVals = static_cast<vtkm::Id>(static_cast<T*>(priv->ExecutionArrayEnd) -
+                                                     static_cast<T*>(priv->ExecutionArray));
+      const vtkm::UInt64 numBytes = sizeof(T) * static_cast<vtkm::UInt64>(numVals);
+      priv->ControlArray->AllocateValues(numVals, sizeof(T));
       priv->ExecutionInterface->CopyToControl(
-        priv->ExecutionArray, priv->ControlArray.GetArray(), numBytes);
+        priv->ExecutionArray, static_cast<T*>(priv->ControlArray->GetBasePointer()), numBytes);
       priv->ControlArrayValid = true;
     }
     else
@@ -450,7 +445,7 @@ void ArrayHandle<T, StorageTagBasic>::SyncControlArray() const
       // This array is in the null state (there is nothing allocated), but
       // the calling function wants to do something with the array. Put this
       // class into a valid state by allocating an array of size 0.
-      priv->ControlArray.Allocate(0);
+      priv->ControlArray->AllocateValues(0, sizeof(T));
       priv->ControlArrayValid = true;
     }
   }
@@ -461,12 +456,11 @@ void ArrayHandle<T, StorageTagBasic>::ReleaseResourcesExecutionInternal()
 {
   if (this->Internals->ExecutionArrayValid)
   {
-    internal::TypelessExecutionArray execArray(
-      reinterpret_cast<void*&>(this->Internals->ExecutionArray),
-      reinterpret_cast<void*&>(this->Internals->ExecutionArrayEnd),
-      reinterpret_cast<void*&>(this->Internals->ExecutionArrayCapacity),
-      this->Internals->ControlArray.GetBasePointer(),
-      this->Internals->ControlArray.GetCapacityPointer());
+    internal::TypelessExecutionArray execArray(this->Internals->ExecutionArray,
+                                               this->Internals->ExecutionArrayEnd,
+                                               this->Internals->ExecutionArrayCapacity,
+                                               this->Internals->ControlArray->GetBasePointer(),
+                                               this->Internals->ControlArray->GetCapacityPointer());
     this->Internals->ExecutionInterface->Free(execArray);
     this->Internals->ExecutionArrayValid = false;
   }

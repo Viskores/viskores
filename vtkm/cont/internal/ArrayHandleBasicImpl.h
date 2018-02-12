@@ -36,22 +36,14 @@ namespace internal
 {
 
 /// Type-agnostic container for an execution memory buffer.
-struct VTKM_ALWAYS_EXPORT TypelessExecutionArray
+struct VTKM_CONT_EXPORT TypelessExecutionArray
 {
-  VTKM_CONT
+
   TypelessExecutionArray(void*& array,
                          void*& arrayEnd,
                          void*& arrayCapacity,
                          const void* arrayControl,
-                         const void* arrayControlCapacity)
-    : Array(array)
-    , ArrayEnd(arrayEnd)
-    , ArrayCapacity(arrayCapacity)
-    , ArrayControl(arrayControl)
-    , ArrayControlCapacity(arrayControlCapacity)
-  {
-  }
-
+                         const void* arrayControlCapacity);
   void*& Array;
   void*& ArrayEnd;
   void*& ArrayCapacity;
@@ -136,6 +128,47 @@ protected:
 template <typename DeviceTag>
 struct ExecutionArrayInterfaceBasic;
 
+struct VTKM_CONT_EXPORT ArrayHandleImpl
+{
+  template <typename T>
+  ArrayHandleImpl(T)
+    : ControlArrayValid(false)
+    , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>())
+    , ExecutionInterface(nullptr)
+    , ExecutionArrayValid(false)
+    , ExecutionArray(nullptr)
+    , ExecutionArrayEnd(nullptr)
+    , ExecutionArrayCapacity(nullptr)
+  {
+  }
+
+  template <typename T>
+  ArrayHandleImpl(const vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>& storage)
+    : ControlArrayValid(true)
+    , ControlArray(new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>(storage))
+    , ExecutionInterface(nullptr)
+    , ExecutionArrayValid(false)
+    , ExecutionArray(nullptr)
+    , ExecutionArrayEnd(nullptr)
+    , ExecutionArrayCapacity(nullptr)
+  {
+  }
+
+  ~ArrayHandleImpl();
+
+  ArrayHandleImpl(const ArrayHandleImpl&) = delete;
+  void operator=(const ArrayHandleImpl&) = delete;
+
+  bool ControlArrayValid;
+  StorageBasicBase* ControlArray;
+
+  ExecutionArrayInterfaceBasicBase* ExecutionInterface;
+  bool ExecutionArrayValid;
+  void* ExecutionArray;
+  void* ExecutionArrayEnd;
+  void* ExecutionArrayCapacity;
+};
+
 } // end namespace internal
 
 /// Specialization of ArrayHandle for Basic storage. The goal here is to reduce
@@ -156,7 +189,6 @@ public:
   using ValueType = T;
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
-  struct InternalStruct;
 
   template <typename DeviceTag>
   struct ExecutionTypes
@@ -169,7 +201,6 @@ public:
   VTKM_CONT ArrayHandle(const Thisclass& src);
   VTKM_CONT ArrayHandle(const Thisclass&& src);
   VTKM_CONT ArrayHandle(const StorageType& storage);
-  VTKM_CONT ArrayHandle(const std::shared_ptr<InternalStruct>& i);
 
   VTKM_CONT ~ArrayHandle();
 
@@ -216,60 +247,7 @@ public:
   VTKM_CONT void SyncControlArray() const;
   VTKM_CONT void ReleaseResourcesExecutionInternal();
 
-  struct VTKM_ALWAYS_EXPORT InternalStruct
-  {
-    InternalStruct()
-      : ControlArrayValid(false)
-      , ExecutionInterface(nullptr)
-      , ExecutionArrayValid(false)
-      , ExecutionArray(nullptr)
-      , ExecutionArrayEnd(nullptr)
-      , ExecutionArrayCapacity(nullptr)
-    {
-    }
-
-    InternalStruct(const StorageType& storage)
-      : ControlArrayValid(true)
-      , ControlArray(storage)
-      , ExecutionInterface(nullptr)
-      , ExecutionArrayValid(false)
-      , ExecutionArray(nullptr)
-      , ExecutionArrayEnd(nullptr)
-      , ExecutionArrayCapacity(nullptr)
-    {
-    }
-
-    ~InternalStruct()
-    {
-      if (this->ExecutionArrayValid && this->ExecutionInterface != nullptr &&
-          this->ExecutionArray != nullptr)
-      {
-        internal::TypelessExecutionArray execArray(
-          reinterpret_cast<void*&>(this->ExecutionArray),
-          reinterpret_cast<void*&>(this->ExecutionArrayEnd),
-          reinterpret_cast<void*&>(this->ExecutionArrayCapacity),
-          this->ControlArray.GetBasePointer(),
-          this->ControlArray.GetCapacityPointer());
-        this->ExecutionInterface->Free(execArray);
-      }
-
-      delete this->ExecutionInterface;
-    }
-
-    InternalStruct(const InternalStruct&) = delete;
-    void operator=(const InternalStruct&) = delete;
-
-    bool ControlArrayValid;
-    StorageType ControlArray;
-
-    internal::ExecutionArrayInterfaceBasicBase* ExecutionInterface;
-    bool ExecutionArrayValid;
-    ValueType* ExecutionArray;
-    ValueType* ExecutionArrayEnd;
-    ValueType* ExecutionArrayCapacity;
-  };
-
-  std::shared_ptr<InternalStruct> Internals;
+  std::shared_ptr<internal::ArrayHandleImpl> Internals;
 };
 
 } // end namespace cont

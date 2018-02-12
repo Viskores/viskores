@@ -54,6 +54,19 @@ namespace cont
 namespace internal
 {
 
+TypelessExecutionArray::TypelessExecutionArray(void*& array,
+                                               void*& arrayEnd,
+                                               void*& arrayCapacity,
+                                               const void* arrayControl,
+                                               const void* arrayControlCapacity)
+  : Array(array)
+  , ArrayEnd(arrayEnd)
+  , ArrayCapacity(arrayCapacity)
+  , ArrayControl(arrayControl)
+  , ArrayControlCapacity(arrayControlCapacity)
+{
+}
+
 ExecutionArrayInterfaceBasicBase::ExecutionArrayInterfaceBasicBase(StorageBasicBase& storage)
   : ControlStorage(storage)
 {
@@ -61,6 +74,23 @@ ExecutionArrayInterfaceBasicBase::ExecutionArrayInterfaceBasicBase(StorageBasicB
 
 ExecutionArrayInterfaceBasicBase::~ExecutionArrayInterfaceBasicBase()
 {
+}
+
+ArrayHandleImpl::~ArrayHandleImpl()
+{
+  if (this->ExecutionArrayValid && this->ExecutionInterface != nullptr &&
+      this->ExecutionArray != nullptr)
+  {
+    TypelessExecutionArray execArray(this->ExecutionArray,
+                                     this->ExecutionArrayEnd,
+                                     this->ExecutionArrayCapacity,
+                                     this->ControlArray->GetBasePointer(),
+                                     this->ControlArray->GetCapacityPointer());
+    this->ExecutionInterface->Free(execArray);
+  }
+
+  delete this->ControlArray;
+  delete this->ExecutionInterface;
 }
 
 } // end namespace internal
