@@ -75,9 +75,10 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/tbb/internal/ParallelSortTBB.h>
-#include <vtkm/cont/tbb/internal/kxsort.h>
 
 VTKM_THIRDPARTY_PRE_INCLUDE
+
+#include <vtkm/cont/tbb/internal/kxsort.h>
 
 #if defined(VTKM_MSVC)
 
