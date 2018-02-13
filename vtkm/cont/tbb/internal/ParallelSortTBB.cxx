@@ -620,18 +620,20 @@ namespace value_manager
 class DummyValueManager
 {
 public:
-  inline void Push(int thread __attribute__((unused)),
-                   size_t bucket __attribute__((unused)),
-                   size_t num __attribute__((unused)),
-                   size_t from_pos __attribute__((unused)))
+  inline void Push(int thread, size_t bucket, size_t num, size_t from_pos)
   {
+    (void)thread;
+    (void)bucket;
+    (void)num;
+    (void)from_pos;
   }
 
-  inline void Flush(int thread __attribute__((unused)),
-                    size_t bucket __attribute__((unused)),
-                    size_t num __attribute__((unused)),
-                    size_t to_pos __attribute__((unused)))
+  inline void Flush(int thread, size_t bucket, size_t num, size_t to_pos)
   {
+    (void)thread;
+    (void)bucket;
+    (void)num;
+    (void)to_pos;
   }
 
   void Next() {}
@@ -922,6 +924,7 @@ bool use_serial_sort_keys(T* data, size_t num_elems, const CompareType& comp)
   }                                                                                                \
   void parallel_radix_sort(key_type* data, size_t num_elems, const std::greater<key_type>& comp)   \
   {                                                                                                \
+    std::cout << "RADIX SORT\n";                                                                   \
     if (!use_serial_sort_keys(data, num_elems, comp))                                              \
     {                                                                                              \
       KeySort<key_type, std::greater<key_type>> ks;                                                \
@@ -930,6 +933,7 @@ bool use_serial_sort_keys(T* data, size_t num_elems, const CompareType& comp)
   }                                                                                                \
   void parallel_radix_sort(key_type* data, size_t num_elems, const std::less<key_type>& comp)      \
   {                                                                                                \
+    std::cout << "RADIX SORT\n";                                                                   \
     if (!use_serial_sort_keys(data, num_elems, comp))                                              \
     {                                                                                              \
       KeySort<key_type, std::less<key_type>> ks;                                                   \
