@@ -248,33 +248,23 @@ void* StorageBasicBase::GetCapacityPointer() const
   return static_cast<void*>(v);
 }
 
-template class VTKM_CONT_EXPORT Storage<char, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Int8, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::UInt8, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Int16, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::UInt16, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Int32, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::UInt32, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Int64, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::UInt64, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Float32, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Float64, StorageTagBasic>;
+#define _VTKM_STORAGE_INSTANTIATE(Type)                                                            \
+  template class VTKM_CONT_EXPORT Storage<Type, StorageTagBasic>;                                  \
+  template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>;                    \
+  template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 3>, StorageTagBasic>;                    \
+  template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 4>, StorageTagBasic>;
 
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Int64, 2>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Int32, 2>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float32, 2>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float64, 2>, StorageTagBasic>;
-
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Int64, 3>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Int32, 3>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float32, 3>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float64, 3>, StorageTagBasic>;
-
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<char, 4>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Int8, 4>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<UInt8, 4>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float64, 4>, StorageTagBasic>;
+_VTKM_STORAGE_INSTANTIATE(char)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Int8)
+_VTKM_STORAGE_INSTANTIATE(vtkm::UInt8)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Int16)
+_VTKM_STORAGE_INSTANTIATE(vtkm::UInt16)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Int32)
+_VTKM_STORAGE_INSTANTIATE(vtkm::UInt32)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Int64)
+_VTKM_STORAGE_INSTANTIATE(vtkm::UInt64)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Float32)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Float64)
 }
 }
 } // namespace vtkm::cont::internal
