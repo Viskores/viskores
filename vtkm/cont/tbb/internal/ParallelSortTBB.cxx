@@ -924,7 +924,6 @@ bool use_serial_sort_keys(T* data, size_t num_elems, const CompareType& comp)
   }                                                                                                \
   void parallel_radix_sort(key_type* data, size_t num_elems, const std::greater<key_type>& comp)   \
   {                                                                                                \
-    std::cout << "RADIX SORT\n";                                                                   \
     if (!use_serial_sort_keys(data, num_elems, comp))                                              \
     {                                                                                              \
       KeySort<key_type, std::greater<key_type>> ks;                                                \
@@ -933,7 +932,6 @@ bool use_serial_sort_keys(T* data, size_t num_elems, const CompareType& comp)
   }                                                                                                \
   void parallel_radix_sort(key_type* data, size_t num_elems, const std::less<key_type>& comp)      \
   {                                                                                                \
-    std::cout << "RADIX SORT\n";                                                                   \
     if (!use_serial_sort_keys(data, num_elems, comp))                                              \
     {                                                                                              \
       KeySort<key_type, std::less<key_type>> ks;                                                   \
