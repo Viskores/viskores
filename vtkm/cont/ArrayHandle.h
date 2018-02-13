@@ -485,12 +485,13 @@ public:
 
   struct VTKM_ALWAYS_EXPORT InternalStruct
   {
-    StorageType ControlArray;
-    bool ControlArrayValid;
+    mutable StorageType ControlArray;
+    mutable bool ControlArrayValid;
 
-    std::unique_ptr<vtkm::cont::internal::ArrayHandleExecutionManagerBase<ValueType, StorageTag>>
+    mutable std::unique_ptr<
+      vtkm::cont::internal::ArrayHandleExecutionManagerBase<ValueType, StorageTag>>
       ExecutionArray;
-    bool ExecutionArrayValid;
+    mutable bool ExecutionArrayValid;
   };
 
   VTKM_CONT
