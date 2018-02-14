@@ -888,7 +888,6 @@ KX_SORT_KEYS(unsigned long int);
 KX_SORT_KEYS(long long int);
 KX_SORT_KEYS(unsigned long long int);
 KX_SORT_KEYS(unsigned char);
-KX_SORT_KEYS(char);
 
 #undef KX_SORT_KEYS
 
@@ -935,7 +934,6 @@ bool use_serial_sort_keys(T* data, size_t num_elems, const CompareType& comp)
     }                                                                                              \
   }
 
-
 VTKM_TBB_SORT_EXPORT(short int);
 VTKM_TBB_SORT_EXPORT(unsigned short int);
 VTKM_TBB_SORT_EXPORT(int);
@@ -947,6 +945,9 @@ VTKM_TBB_SORT_EXPORT(unsigned long long int);
 VTKM_TBB_SORT_EXPORT(unsigned char);
 VTKM_TBB_SORT_EXPORT(signed char);
 VTKM_TBB_SORT_EXPORT(char);
+VTKM_TBB_SORT_EXPORT(char16_t);
+VTKM_TBB_SORT_EXPORT(char32_t);
+VTKM_TBB_SORT_EXPORT(wchar_t);
 VTKM_TBB_SORT_EXPORT(float);
 VTKM_TBB_SORT_EXPORT(double);
 

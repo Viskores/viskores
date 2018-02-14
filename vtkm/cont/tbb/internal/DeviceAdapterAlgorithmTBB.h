@@ -255,23 +255,23 @@ public:
   }
 
   template <typename T, class Container, class BinaryCompare>
-  VTKM_CONT_EXPORT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
-                                    BinaryCompare binary_compare)
+  VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
+                             BinaryCompare binary_compare)
   {
     vtkm::cont::tbb::internal::parallel_sort(values, binary_compare);
   }
 
   template <typename T, typename U, class StorageT, class StorageU>
-  VTKM_CONT_EXPORT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
-                                         vtkm::cont::ArrayHandle<U, StorageU>& values)
+  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                  vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
     vtkm::cont::tbb::internal::parallel_sort_bykey(keys, values, std::less<T>());
   }
 
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
-  VTKM_CONT_EXPORT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
-                                         vtkm::cont::ArrayHandle<U, StorageU>& values,
-                                         BinaryCompare binary_compare)
+  VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
+                                  vtkm::cont::ArrayHandle<U, StorageU>& values,
+                                  BinaryCompare binary_compare)
   {
     vtkm::cont::tbb::internal::parallel_sort_bykey(keys, values, binary_compare);
   }

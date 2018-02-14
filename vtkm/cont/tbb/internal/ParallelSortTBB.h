@@ -93,9 +93,11 @@ template <typename T, typename BinaryCompare>
 struct sort_tag_type<T, vtkm::cont::StorageTagBasic, BinaryCompare>
 {
   using PrimT = std::is_arithmetic<T>;
+  using LongDT = std::is_same<T, long double>;
   using BComp = is_valid_compare_type<BinaryCompare>;
-  using type =
-    typename std::conditional<PrimT::value && BComp::value, RadixSortTag, PSortTag>::type;
+  using type = typename std::conditional<PrimT::value && BComp::value && !LongDT::value,
+                                         RadixSortTag,
+                                         PSortTag>::type;
 };
 
 template <typename T, typename U, typename StorageTagT, typename StorageTagU, class BinaryCompare>
@@ -112,10 +114,12 @@ struct sortbykey_tag_type<T,
 {
   using PrimT = std::is_arithmetic<T>;
   using PrimU = std::is_arithmetic<U>;
+  using LongDT = std::is_same<T, long double>;
   using BComp = is_valid_compare_type<BinaryCompare>;
-  using type = typename std::conditional<PrimT::value && PrimU::value && BComp::value,
-                                         RadixSortTag,
-                                         PSortTag>::type;
+  using type =
+    typename std::conditional<PrimT::value && PrimU::value && BComp::value && !LongDT::value,
+                              RadixSortTag,
+                              PSortTag>::type;
 };
 
 
@@ -141,6 +145,9 @@ VTKM_TBB_SORT_EXPORT(unsigned long long int);
 VTKM_TBB_SORT_EXPORT(unsigned char);
 VTKM_TBB_SORT_EXPORT(signed char);
 VTKM_TBB_SORT_EXPORT(char);
+VTKM_TBB_SORT_EXPORT(char16_t);
+VTKM_TBB_SORT_EXPORT(char32_t);
+VTKM_TBB_SORT_EXPORT(wchar_t);
 VTKM_TBB_SORT_EXPORT(float);
 VTKM_TBB_SORT_EXPORT(double);
 #undef VTKM_TBB_SORT_EXPORT
