@@ -608,7 +608,7 @@ public:
   {
     static const size_t bits = CHAR_BIT * sizeof(UnsignedType);
     const UnsignedType a = x >> (bits - 1);
-    const UnsignedType b = (-a) | (UnsignedType(1) << (bits - 1));
+    const UnsignedType b = (-static_cast<int>(a)) | (UnsignedType(1) << (bits - 1));
     return x ^ b;
   }
 };
@@ -880,7 +880,6 @@ struct run_kx_radix_sort_keys
     }                                                                                              \
   };
 
-KX_SORT_KEYS(short int);
 KX_SORT_KEYS(unsigned short int);
 KX_SORT_KEYS(int);
 KX_SORT_KEYS(unsigned int);
@@ -889,11 +888,7 @@ KX_SORT_KEYS(unsigned long int);
 KX_SORT_KEYS(long long int);
 KX_SORT_KEYS(unsigned long long int);
 KX_SORT_KEYS(unsigned char);
-KX_SORT_KEYS(signed char);
 KX_SORT_KEYS(char);
-KX_SORT_KEYS(char16_t);
-KX_SORT_KEYS(char32_t);
-KX_SORT_KEYS(wchar_t);
 
 #undef KX_SORT_KEYS
 
