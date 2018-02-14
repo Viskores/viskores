@@ -159,6 +159,8 @@ VTKM_CONT inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 
   return result;
 }
+
+VTKM_CONT_EXPORT void ThrowArrayRangeComputeFailed();
 }
 } // namespace vtkm::cont
 

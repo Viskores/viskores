@@ -25,8 +25,9 @@
 #include <vtkm/BinaryOperators.h>
 #include <vtkm/VecTraits.h>
 
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/cont/TryExecute.h>
+#include <vtkm/cont/Algorithm.h>
+
+#include <limits>
 
 namespace vtkm
 {
@@ -38,61 +39,65 @@ namespace detail
 
 struct ArrayRangeComputeFunctor
 {
-  template <typename Device, typename ArrayHandleType>
+  template <typename Device, typename T, typename S>
   VTKM_CONT bool operator()(Device,
-                            const ArrayHandleType& handle,
-                            vtkm::cont::ArrayHandle<vtkm::Range>& range) const
+                            const vtkm::cont::ArrayHandle<T, S>& handle,
+                            const vtkm::Vec<T, 2>& initialValue,
+                            vtkm::Vec<T, 2>& result) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
-
-    using ValueType = typename ArrayHandleType::ValueType;
-    using VecTraits = vtkm::VecTraits<ValueType>;
-    const vtkm::IdComponent NumberOfComponents = VecTraits::NUM_COMPONENTS;
-
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-
-    range.Allocate(NumberOfComponents);
-
-    if (handle.GetNumberOfValues() < 1)
-    {
-      for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
-      {
-        range.GetPortalControl().Set(i, vtkm::Range());
-      }
-      return true;
-    }
-
-    vtkm::Vec<ValueType, 2> initial(handle.GetPortalConstControl().Get(0));
-
-    vtkm::Vec<ValueType, 2> result =
-      Algorithm::Reduce(handle, initial, vtkm::MinAndMax<ValueType>());
-
-    for (vtkm::IdComponent i = 0; i < NumberOfComponents; ++i)
-    {
-      range.GetPortalControl().Set(
-        i,
-        vtkm::Range(VecTraits::GetComponent(result[0], i), VecTraits::GetComponent(result[1], i)));
-    }
-
+    result = Algorithm::Reduce(handle, initialValue, vtkm::MinAndMax<T>());
     return true;
   }
 };
 
-template <typename ArrayHandleType>
+template <typename T, typename S>
 inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeComputeImpl(
-  const ArrayHandleType& input,
-  vtkm::cont::RuntimeDeviceTracker tracker)
+  const vtkm::cont::ArrayHandle<T, S>& input,
+  vtkm::cont::RuntimeDeviceTracker& tracker)
 {
-  VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-
+  using VecTraits = vtkm::VecTraits<T>;
+  using CT = typename VecTraits::ComponentType;
+  //We want to minimize the amount of code that we do in try execute as
+  //it is repeated for each
   vtkm::cont::ArrayHandle<vtkm::Range> range;
-  detail::ArrayRangeComputeFunctor functor;
+  range.Allocate(VecTraits::NUM_COMPONENTS);
 
-  if (!vtkm::cont::TryExecute(functor, tracker, input, range))
+  if (input.GetNumberOfValues() < 1)
   {
-    throw vtkm::cont::ErrorExecution("Failed to run ArrayRangeComputation on any device.");
+    auto portal = range.GetPortalControl();
+    for (vtkm::IdComponent i = 0; i < VecTraits::NUM_COMPONENTS; ++i)
+    {
+      portal.Set(i, vtkm::Range());
+    }
   }
+  else
+  {
+    //We used the limits, so that we don't need to sync the array handle
+    //
+    vtkm::Vec<T, 2> result;
+    vtkm::Vec<T, 2> initial;
+    initial[0] = T(std::numeric_limits<CT>::max());
+    initial[1] = T(std::numeric_limits<CT>::lowest());
 
+    const bool rangeComputed =
+      vtkm::cont::TryExecute(detail::ArrayRangeComputeFunctor{}, tracker, input, initial, result);
+    if (!rangeComputed)
+    {
+      ThrowArrayRangeComputeFailed();
+    }
+    else
+    {
+      auto portal = range.GetPortalControl();
+      for (vtkm::IdComponent i = 0; i < VecTraits::NUM_COMPONENTS; ++i)
+      {
+        portal.Set(i,
+                   vtkm::Range(VecTraits::GetComponent(result[0], i),
+                               VecTraits::GetComponent(result[1], i)));
+      }
+    }
+  }
   return range;
 }
 
@@ -104,7 +109,6 @@ inline vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
   vtkm::cont::RuntimeDeviceTracker tracker)
 {
   VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-
   return detail::ArrayRangeComputeImpl(input, tracker);
 }
 }
