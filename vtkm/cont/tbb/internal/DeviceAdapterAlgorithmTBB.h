@@ -30,6 +30,7 @@
 #include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 #include <vtkm/cont/tbb/internal/FunctorsTBB.h>
+#include <vtkm/cont/tbb/internal/ParallelSortTBB.h>
 
 #include <vtkm/exec/tbb/internal/TaskTiling.h>
 
@@ -242,75 +243,37 @@ public:
     ScheduleTask(kernel, rangeMax);
   }
 
+  //1. We need functions for each of the following
+
+
   template <typename T, class Container>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values)
   {
     //this is required to get sort to work with zip handles
     std::less<T> lessOp;
-    Sort(values, lessOp);
+    vtkm::cont::tbb::internal::parallel_sort(values, lessOp);
   }
 
   template <typename T, class Container, class BinaryCompare>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
                              BinaryCompare binary_compare)
   {
-    using PortalType = typename vtkm::cont::ArrayHandle<T, Container>::template ExecutionTypes<
-      vtkm::cont::DeviceAdapterTagTBB>::Portal;
-    PortalType arrayPortal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagTBB());
-
-    using IteratorsType = vtkm::cont::ArrayPortalToIterators<PortalType>;
-    IteratorsType iterators(arrayPortal);
-
-    internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
-    ::tbb::parallel_sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
+    vtkm::cont::tbb::internal::parallel_sort(values, binary_compare);
   }
 
   template <typename T, typename U, class StorageT, class StorageU>
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
-    SortByKey(keys, values, std::less<T>());
+    vtkm::cont::tbb::internal::parallel_sort_bykey(keys, values, std::less<T>());
   }
 
-  template <typename T, typename U, class StorageT, class StorageU, class Compare>
+  template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
-                                  Compare comp)
+                                  BinaryCompare binary_compare)
   {
-    using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
-    VTKM_CONSTEXPR bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
-    if (larger_than_64bits)
-    {
-      /// More efficient sort:
-      /// Move value indexes when sorting and reorder the value array at last
-
-      using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
-      using IndexType = vtkm::cont::ArrayHandle<vtkm::Id>;
-      using ZipHandleType = vtkm::cont::ArrayHandleZip<KeyType, IndexType>;
-
-      IndexType indexArray;
-      ValueType valuesScattered;
-      const vtkm::Id size = values.GetNumberOfValues();
-
-      Copy(ArrayHandleIndex(keys.GetNumberOfValues()), indexArray);
-
-      ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, indexArray);
-      Sort(zipHandle, vtkm::cont::internal::KeyCompare<T, vtkm::Id, Compare>(comp));
-
-      tbb::ScatterPortal(values.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-                         indexArray.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-                         valuesScattered.PrepareForOutput(size, vtkm::cont::DeviceAdapterTagTBB()));
-
-      Copy(valuesScattered, values);
-    }
-    else
-    {
-      using ValueType = vtkm::cont::ArrayHandle<U, StorageU>;
-      using ZipHandleType = vtkm::cont::ArrayHandleZip<KeyType, ValueType>;
-
-      ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
-      Sort(zipHandle, vtkm::cont::internal::KeyCompare<T, U, Compare>(comp));
-    }
+    vtkm::cont::tbb::internal::parallel_sort_bykey(keys, values, binary_compare);
   }
 
   template <typename T, class Storage>
