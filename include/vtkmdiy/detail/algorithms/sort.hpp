@@ -51,10 +51,10 @@ struct SampleSort
             {
                 if (skip_self && rp.in_link().target(i).gid == rp.gid()) continue;
                 MemoryBuffer& in = rp.incoming(rp.in_link().target(i).gid);
-                size_t sz = in.size() / sizeof(T);
+                size_t incoming_sz = in.size() / sizeof(T);
                 T* bg = (T*) &in.buffer[0];
-                std::copy(bg, bg + sz, &v[end]);
-                end += sz;
+                std::copy(bg, bg + incoming_sz, &v[end]);
+                end += incoming_sz;
             }
         } else
         {

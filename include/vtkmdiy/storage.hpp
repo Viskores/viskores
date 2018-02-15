@@ -4,15 +4,12 @@
 #include <string>
 #include <map>
 #include <fstream>
-
-#include <unistd.h>     // mkstemp() on Mac
-#include <cstdlib>      // mkstemp() on Linux
-#include <cstdio>       // remove()
 #include <fcntl.h>
 
 #include "serialization.hpp"
 #include "thread.hpp"
 #include "log.hpp"
+#include "io/utils.hpp"
 
 namespace diy
 {
@@ -75,11 +72,14 @@ namespace diy
         log->debug("FileStorage::put(): {}; buffer size: {}", filename, bb.size());
 
         size_t sz = bb.buffer.size();
+#if defined(_WIN32)
+        size_t written = _write(fh, &bb.buffer[0], static_cast<unsigned int>(sz));
+#else
         size_t written = write(fh, &bb.buffer[0], sz);
+#endif
         if (written < sz || written == (size_t)-1)
           log->warn("Could not write the full buffer to {}: written = {}; size = {}", filename, written, sz);
-        fsync(fh);
-        close(fh);
+        io::utils::close(fh);
         bb.wipe();
 
 #if 0       // double-check the written file size: only for extreme debugging
@@ -98,12 +98,15 @@ namespace diy
       {
         std::string     filename;
         int fh = open_random(filename);
-
+#if defined(_WIN32)
+        detail::FileBuffer fb(_fdopen(fh, "wb"));
+#else
         detail::FileBuffer fb(fdopen(fh, "w"));
+#endif
         save(x, fb);
         size_t sz = fb.size();
         fclose(fb.file);
-        fsync(fh);
+        io::utils::sync(fh);
 
         return make_file_record(filename, sz);
       }
@@ -116,10 +119,15 @@ namespace diy
 
         bb.buffer.reserve(fr.size + extra);
         bb.buffer.resize(fr.size);
+#if defined(_WIN32)
+        int fh = -1;
+        _sopen_s(&fh, fr.name.c_str(), _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
+        _read(fh, &bb.buffer[0], static_cast<unsigned int>(fr.size));
+#else
         int fh = open(fr.name.c_str(), O_RDONLY | O_SYNC, 0600);
         read(fh, &bb.buffer[0], fr.size);
-        close(fh);
-
+#endif
+        io::utils::close(fh);
         remove_file(fr);
       }
 
@@ -128,8 +136,14 @@ namespace diy
         FileRecord fr = extract_file_record(i);
 
         //int fh = open(fr.name.c_str(), O_RDONLY | O_SYNC, 0600);
+#if defined(_WIN32)
+        int fh = -1;
+        _sopen_s(&fh, fr.name.c_str(), _O_RDONLY | _O_BINARY, _SH_DENYNO, _S_IREAD);
+        detail::FileBuffer fb(_fdopen(fh, "rb"));
+#else
         int fh = open(fr.name.c_str(), O_RDONLY, 0600);
         detail::FileBuffer fb(fdopen(fh, "r"));
+#endif
         load(x, fb);
         fclose(fb.file);
 
@@ -144,7 +158,7 @@ namespace diy
           fr = (*accessor)[i];
           accessor->erase(i);
         }
-        remove(fr.name.c_str());
+        io::utils::remove(fr.name);
         (*current_size_.access()) -= fr.size;
       }
 
@@ -158,7 +172,7 @@ namespace diy
                                            it != filenames_.const_access()->end();
                                          ++it)
         {
-          remove(it->second.name.c_str());
+          io::utils::remove(it->second.name);
         }
       }
 
@@ -172,13 +186,7 @@ namespace diy
             // pick a template at random (very basic load balancing mechanism)
             filename  = filename_templates_[std::rand() % filename_templates_.size()].c_str();
         }
-#ifdef __MACH__
-        // TODO: figure out how to open with O_SYNC
-        int fh = mkstemp(const_cast<char*>(filename.c_str()));
-#else
-        int fh = mkostemp(const_cast<char*>(filename.c_str()), O_WRONLY | O_SYNC);
-#endif
-
+        int fh = diy::io::utils::mkstemp(filename);
         return fh;
       }
 
@@ -208,7 +216,7 @@ namespace diy
 
       void          remove_file(const FileRecord& fr)
       {
-        remove(fr.name.c_str());
+        io::utils::remove(fr.name);
         (*current_size_.access()) -= fr.size;
       }
 

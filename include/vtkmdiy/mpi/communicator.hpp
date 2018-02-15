@@ -8,8 +8,8 @@ namespace mpi
   class communicator
   {
     public:
-                communicator(MPI_Comm comm = MPI_COMM_WORLD):
-                  comm_(comm), rank_(0), size_(1)   { if (comm != MPI_COMM_NULL) { MPI_Comm_rank(comm_, &rank_); MPI_Comm_size(comm_, &size_); } }
+                inline
+                communicator(MPI_Comm comm = MPI_COMM_WORLD);
 
       int       rank() const                        { return rank_; }
       int       size() const                        { return size_; }
@@ -38,7 +38,8 @@ namespace mpi
       request   irecv(int source, int tag, T& x) const      { return detail::irecv<T>()(comm_, source, tag, x); }
 
       //! probe
-      status    probe(int source, int tag) const            { status s; MPI_Probe(source, tag, comm_, &s.s); return s; }
+      inline
+      status    probe(int source, int tag) const;
 
       //! iprobe
       inline
@@ -46,7 +47,8 @@ namespace mpi
                 iprobe(int source, int tag) const;
 
       //! barrier
-      void      barrier() const                             { MPI_Barrier(comm_); }
+      inline
+      void      barrier() const;
 
                 operator MPI_Comm() const                   { return comm_; }
 
@@ -58,15 +60,56 @@ namespace mpi
 }
 }
 
+diy::mpi::communicator::
+communicator(MPI_Comm comm)
+:comm_(comm), rank_(0), size_(1)
+{
+#ifndef DIY_NO_MPI
+  if (comm != MPI_COMM_NULL)
+  {
+    MPI_Comm_rank(comm_, &rank_);
+    MPI_Comm_size(comm_, &size_);
+  }
+#endif
+}
+
+diy::mpi::status
+diy::mpi::communicator::
+probe(int source, int tag) const
+{
+  (void) source;
+  (void) tag;
+
+#ifndef DIY_NO_MPI
+  status s;
+  MPI_Probe(source, tag, comm_, &s.s);
+  return s;
+#else
+  DIY_UNSUPPORTED_MPI_CALL(MPI_Probe);
+#endif
+}
+
 diy::mpi::optional<diy::mpi::status>
 diy::mpi::communicator::
 iprobe(int source, int tag) const
 {
+  (void) source;
+  (void) tag;
+#ifndef DIY_NO_MPI
   status s;
   int flag;
   MPI_Iprobe(source, tag, comm_, &flag, &s.s);
   if (flag)
     return s;
+#endif
   return optional<status>();
 }
 
+void
+diy::mpi::communicator::
+barrier() const
+{
+#ifndef DIY_NO_MPI
+  MPI_Barrier(comm_);
+#endif
+}

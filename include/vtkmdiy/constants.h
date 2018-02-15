@@ -19,4 +19,6 @@ enum
   DIY_T1 = 0x80  /* maximum-side t (later) neighbor */
 };
 
+#define DIY_UNUSED(expr) do { (void)(expr); } while (0)
+
 #endif

@@ -17,7 +17,7 @@ namespace diy
     public:
       virtual   ~Link()                             {}  // need to be able to delete derived classes
 
-      int       size() const                        { return neighbors_.size(); }
+      int       size() const                        { return static_cast<int>(neighbors_.size()); }
       inline
       int       size_unique() const;
       BlockID   target(int i) const                 { return neighbors_[i]; }
@@ -201,7 +201,7 @@ size_unique() const
 {
     std::vector<BlockID> tmp(neighbors_.begin(), neighbors_.end());
     std::sort(tmp.begin(), tmp.end());
-    return std::unique(tmp.begin(), tmp.end()) - tmp.begin();
+    return static_cast<int>(std::unique(tmp.begin(), tmp.end()) - tmp.begin());
 }
 
 template<class Bounds>
