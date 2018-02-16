@@ -134,9 +134,9 @@ private:
 
 struct ClipStats
 {
-  vtkm::Id NumberOfCells;
-  vtkm::Id NumberOfIndices;
-  vtkm::Id NumberOfNewPoints;
+  vtkm::Id NumberOfCells = 0;
+  vtkm::Id NumberOfIndices = 0;
+  vtkm::Id NumberOfNewPoints = 0;
 
   struct SumOp
   {
@@ -154,8 +154,9 @@ struct ClipStats
 
 struct EdgeInterpolation
 {
-  vtkm::Id Vertex1, Vertex2;
-  vtkm::Float64 Weight;
+  vtkm::Id Vertex1 = -1;
+  vtkm::Id Vertex2 = -1;
+  vtkm::Float64 Weight = 0;
 
   struct LessThanOp
   {
@@ -449,7 +450,7 @@ public:
       .Invoke(cellSet, scalars, clipTableIdxs, stats);
 
     // compute offsets for each invocation
-    ClipStats zero = { 0, 0, 0 };
+    ClipStats zero;
     vtkm::cont::ArrayHandle<ClipStats> cellSetIndices;
     ClipStats total = Algorithm::ScanExclusive(stats, cellSetIndices, ClipStats::SumOp(), zero);
     stats.ReleaseResources();
