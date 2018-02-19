@@ -144,8 +144,11 @@ struct Range
   VTKM_EXEC_CONT
   void Include(const vtkm::Range& range)
   {
-    this->Include(range.Min);
-    this->Include(range.Max);
+    if (range.IsNonEmpty())
+    {
+      this->Include(range.Min);
+      this->Include(range.Max);
+    }
   }
 
   /// \b Return the union of this and another range.

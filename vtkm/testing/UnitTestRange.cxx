@@ -32,6 +32,12 @@ void TestRange()
   VTKM_TEST_ASSERT(!emptyRange.IsNonEmpty(), "Non empty range not empty.");
   VTKM_TEST_ASSERT(test_equal(emptyRange.Length(), 0.0), "Bad length.");
 
+  vtkm::Range emptyRange2;
+  VTKM_TEST_ASSERT(!emptyRange2.IsNonEmpty(), "2nd empty range not empty.");
+  VTKM_TEST_ASSERT(!emptyRange.Union(emptyRange2).IsNonEmpty(), "Union of empty ranges not empty.");
+  emptyRange2.Include(emptyRange);
+  VTKM_TEST_ASSERT(!emptyRange2.IsNonEmpty(), "Include empty in empty is not empty.");
+
   std::cout << "Single value range." << std::endl;
   vtkm::Range singleValueRange(5.0, 5.0);
   VTKM_TEST_ASSERT(singleValueRange.IsNonEmpty(), "Empty?");
