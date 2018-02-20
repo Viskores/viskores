@@ -36,7 +36,7 @@ namespace internal
 // ncells, {{celltype, nverts, {edge/verts(>=100), ...}}, ...}, \n
 // values < 100 represent edges where the corresponding vertex lies
 // values >= 100 reresent existing vertices of the input cell (vertex = value - 100)
-static vtkm::UInt8 ClipTablesData[] = {
+static const vtkm::UInt8 ClipTablesData[] = {
   // vtkm::CELL_SHAPE_VERTEX
   0, // 0
   1,

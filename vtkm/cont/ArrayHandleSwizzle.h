@@ -43,7 +43,7 @@ struct ComponentIsUnique;
 template <vtkm::IdComponent TestValue, vtkm::IdComponent Head>
 struct ComponentIsUnique<TestValue, Head>
 {
-  const static bool IsUnique = TestValue != Head;
+  static const bool IsUnique = TestValue != Head;
 };
 
 // Recursive case:
@@ -51,7 +51,7 @@ template <vtkm::IdComponent TestValue, vtkm::IdComponent Head, vtkm::IdComponent
 struct ComponentIsUnique<TestValue, Head, Tail...>
 {
   using Next = ComponentIsUnique<TestValue, Tail...>;
-  const static bool IsUnique = TestValue != Head && Next::IsUnique;
+  static const bool IsUnique = TestValue != Head && Next::IsUnique;
 };
 
 // Validate the component map.
