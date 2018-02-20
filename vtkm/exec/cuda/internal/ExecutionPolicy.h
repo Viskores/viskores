@@ -183,7 +183,8 @@ __host__ __device__::thrust::pair<OutputIterator1, OutputIterator2> reduce_by_ke
   BinaryFunction binary_op)
 
 {
-#if defined(__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ == 7) && (__CUDACC_VER_MINOR__ >= 5)
+#if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR == 7) &&                          \
+  (VTKM_CUDA_VERSION_MINOR >= 5)
   ::thrust::pair<OutputIterator1, OutputIterator2> result =
     thrust::reduce_by_key(ThrustCudaPolicyPerThread,
                           keys_first,

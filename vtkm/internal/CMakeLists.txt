@@ -31,6 +31,11 @@ set(VTKM_ENABLE_CUDA ${VTKm_ENABLE_CUDA})
 set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
 set(VTKM_ENABLE_MPI ${VTKm_ENABLE_MPI})
 
+if(VTKM_ENABLE_CUDA)
+  set(VTKM_CUDA_VERSION_MAJOR ${CUDA_VERSION_MAJOR})
+  set(VTKM_CUDA_VERSION_MINOR ${CUDA_VERSION_MINOR})
+endif()
+
 vtkm_get_kit_name(kit_name kit_dir)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
   ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h
