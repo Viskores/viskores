@@ -186,8 +186,8 @@ __host__ __device__::thrust::pair<OutputIterator1, OutputIterator2> reduce_by_ke
 #if defined(__CUDACC_VER_MAJOR__) && (__CUDACC_VER_MAJOR__ == 7) && (__CUDACC_VER_MINOR__ >= 5)
   ::thrust::pair<OutputIterator1, OutputIterator2> result =
     thrust::reduce_by_key(ThrustCudaPolicyPerThread,
-                          keys_first.get(),
-                          keys_last.get(),
+                          keys_first,
+                          keys_last,
                           values_first,
                           keys_output,
                           values_output,
