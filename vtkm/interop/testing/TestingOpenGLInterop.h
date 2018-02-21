@@ -177,7 +177,6 @@ private:
     template <typename T>
     void operator()(const T t) const
     {
-      std::cout << "TransferFunctor" << std::endl;
       const std::size_t Size = 10;
       GLuint GLHandle;
       //verify that T is able to be transfer to openGL.
@@ -197,7 +196,7 @@ private:
 
       //verify the results match what is in the array handle
       temp.SyncControlArray();
-      T* expectedValues = temp.Internals->ControlArray.StealArray();
+      T* expectedValues = temp.GetStorage().GetArray();
 
       for (std::size_t i = 0; i < Size; ++i)
       {
@@ -214,7 +213,7 @@ private:
       returnedValues = CopyGLBuffer(GLHandle, t);
       //verify the results match what is in the array handle
       temp.SyncControlArray();
-      expectedValues = temp.Internals->ControlArray.StealArray();
+      expectedValues = temp.GetStorage().GetArray();
 
       for (std::size_t i = 0; i < Size * 2; ++i)
       {

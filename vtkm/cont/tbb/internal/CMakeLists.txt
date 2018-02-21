@@ -22,6 +22,7 @@ set(headers
   ArrayManagerExecutionTBB.h
   DeviceAdapterAlgorithmTBB.h
   DeviceAdapterTagTBB.h
+  ExecutionArrayInterfaceBasicTBB.h
   FunctorsTBB.h
   ParallelSortTBB.h
   VirtualObjectTransferTBB.h
@@ -48,6 +49,7 @@ endif()
 add_library(vtkm_cont_tbb OBJECT
   ArrayManagerExecutionTBB.cxx
   DeviceAdapterAlgorithmTBB.cxx
+  ExecutionArrayInterfaceBasicTBB.cxx
   ParallelSortTBB.cxx
   )
 

@@ -26,6 +26,10 @@
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 
+//This is in a separate header so that ArrayHandleBasicImpl can include
+//the interface without getting any CUDA headers
+#include <vtkm/cont/cuda/internal/ExecutionArrayInterfaceBasicCuda.h>
+
 // These must be placed in the vtkm::cont::internal namespace so that
 // the template can be found.
 
@@ -137,33 +141,6 @@ struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagCuda>
   }
 };
 
-template <>
-struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>
-  : public ExecutionArrayInterfaceBasicBase
-{
-  using Superclass = ExecutionArrayInterfaceBasicBase;
-
-  VTKM_CONT ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
-  VTKM_CONT DeviceAdapterId GetDeviceId() const final;
-  VTKM_CONT void Allocate(TypelessExecutionArray& execArray, vtkm::UInt64 numBytes) const final;
-  VTKM_CONT void Free(TypelessExecutionArray& execArray) const final;
-  VTKM_CONT void CopyFromControl(const void* controlPtr,
-                                 void* executionPtr,
-                                 vtkm::UInt64 numBytes) const final;
-  VTKM_CONT void CopyToControl(const void* executionPtr,
-                               void* controlPtr,
-                               vtkm::UInt64 numBytes) const final;
-
-  VTKM_CONT void UsingForRead(const void* controlPtr,
-                              const void* executionPtr,
-                              vtkm::UInt64 numBytes) const final;
-  VTKM_CONT void UsingForWrite(const void* controlPtr,
-                               const void* executionPtr,
-                               vtkm::UInt64 numBytes) const final;
-  VTKM_CONT void UsingForReadWrite(const void* controlPtr,
-                                   const void* executionPtr,
-                                   vtkm::UInt64 numBytes) const final;
-};
 } // namespace internal
 
 #ifndef vtk_m_cont_cuda_internal_ArrayManagerExecutionCuda_cu

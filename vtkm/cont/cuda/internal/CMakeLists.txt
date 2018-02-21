@@ -25,6 +25,7 @@ set(headers
   DeviceAdapterAlgorithmCuda.h
   DeviceAdapterAlgorithmThrust.h
   DeviceAdapterTagCuda.h
+  ExecutionArrayInterfaceBasicCuda.h
   MakeThrustIterator.h
   TaskTuner.h
   ThrustExceptionHandler.h
@@ -33,6 +34,7 @@ set(headers
 
 set(sources
   ArrayManagerExecutionCuda.cu
+  ExecutionArrayInterfaceBasicCuda.cu
   CudaAllocator.cu
   )
 
