@@ -42,7 +42,7 @@ namespace detail
     static MPI_Datatype         datatype()              { return get_mpi_datatype<T>(); }
     static const void*          address(const T& x)     { return &x; }
     static void*                address(T& x)           { return &x; }
-    static int                  count(const T& x)       { return 1; }
+    static int                  count(const T&)         { return 1; }
   };
 
   template<class U>
@@ -53,7 +53,7 @@ namespace detail
     static MPI_Datatype         datatype()              { return get_mpi_datatype<U>(); }
     static const void*          address(const VecU& x)  { return &x[0]; }
     static void*                address(VecU& x)        { return &x[0]; }
-    static int                  count(const VecU& x)    { return x.size(); }
+    static int                  count(const VecU& x)    { return static_cast<int>(x.size()); }
   };
 
 }

@@ -113,7 +113,7 @@ fill(int round, int gid, std::vector<int>& partners) const
   {
     partner += step;
     coords[kv.dim] = partner;
-    int partner_gid = Decomposer::coords_to_gid(coords, divisions_);
+    partner_gid = Decomposer::coords_to_gid(coords, divisions_);
     partners.push_back(partner_gid);
   }
 }
