@@ -25,7 +25,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 
 namespace vtkm
 {
@@ -102,7 +102,7 @@ public:
   }
 
   template <typename DeviceTag>
-  class Texture2DSampler : public vtkm::exec::ExecutionObjectBase
+  class Texture2DSampler : public vtkm::cont::ExecutionObjectFactoryBase
   {
   public:
     using TextureExecPortal =

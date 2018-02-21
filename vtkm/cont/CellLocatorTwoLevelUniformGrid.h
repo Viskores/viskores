@@ -606,7 +606,7 @@ public:
   }
 
   template <typename DeviceAdapter>
-  struct TwoLevelUniformGridExecution : public vtkm::exec::ExecutionObjectBase
+  struct TwoLevelUniformGridExecution : public vtkm::cont::ExecutionObjectFactoryBase
   {
     template <typename T>
     using ArrayPortalConst =

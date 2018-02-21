@@ -17,40 +17,24 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_arg_TypeCheckTagExecObject_h
-#define vtk_m_cont_arg_TypeCheckTagExecObject_h
-
-#include <vtkm/internal/ExportMacros.h>
-
-#include <vtkm/cont/arg/TypeCheck.h>
-
-#include <vtkm/cont/ExecutionObjectFactoryBase.h>
-
-#include <type_traits>
-
+#ifndef vtk_m_cont_ExecutionObjectFactoryBase_h
+#define vtk_m_cont_ExecutionObjectFactoryBase_h
+#include <vtkm/Types.h>
+#include <vtkm/exec/ExecutionObjectBase.h>
 namespace vtkm
 {
 namespace cont
 {
-namespace arg
-{
+/// Base \c ExecutionObjectFactoryBase for execution objects to inherit from so that
+/// you can use an arbitrary object as a parameter in an execution environment
+/// function. Any method you want to use on the execution side must have the
+/// VTKM_EXEC modifier.
+/// \tparam Device
 
-/// The ExecObject type check passes for any object that inherits from \c
-/// ExecutionObjectFactoryBase. This is supposed to signify that the object can be
-/// used in the execution environment although there is no way to verify that.
-///
-struct TypeCheckTagExecObject
+class ExecutionObjectFactoryBase
 {
 };
-
-template <typename Type>
-struct TypeCheck<TypeCheckTagExecObject, Type>
-{
-  static constexpr bool value =
-    std::is_base_of<vtkm::cont::ExecutionObjectFactoryBase, Type>::value;
-};
 }
-}
-} // namespace vtkm::cont::arg
+} // namespace vtkm::cont
 
-#endif //vtk_m_cont_arg_TypeCheckTagExecObject_h
+#endif //vtk_m_cont_ExecutionObjectFactoryBase_h

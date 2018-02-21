@@ -23,7 +23,7 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
 
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -89,7 +89,7 @@ static vtkm::IdComponent TriangleIndexData[] = {
 };
 
 template <typename Device>
-class TriangulateTablesExecutionObject : public vtkm::exec::ExecutionObjectBase
+class TriangulateTablesExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
 {
 public:
   using PortalType = typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst;
@@ -262,7 +262,7 @@ static vtkm::IdComponent TetrahedronIndexData[] = {
 };
 
 template <typename Device>
-class TetrahedralizeTablesExecutionObject : public vtkm::exec::ExecutionObjectBase
+class TetrahedralizeTablesExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
 {
 public:
   using PortalType = typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst;

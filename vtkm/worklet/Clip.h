@@ -67,7 +67,7 @@ VTKM_EXEC_CONT vtkm::Vec<T, NumComponents> Scale(const vtkm::Vec<T, NumComponent
 }
 
 template <typename DeviceAdapter>
-class ExecutionConnectivityExplicit : vtkm::exec::ExecutionObjectBase
+class ExecutionConnectivityExplicit : vtkm::cont::ExecutionObjectFactoryBase
 {
 private:
   using UInt8Portal =

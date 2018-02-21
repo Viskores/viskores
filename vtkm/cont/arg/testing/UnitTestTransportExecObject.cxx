@@ -20,7 +20,7 @@
 
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 #include <vtkm/exec/FunctorBase.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
@@ -32,7 +32,7 @@
 namespace
 {
 
-struct TestExecutionObject : public vtkm::exec::ExecutionObjectBase
+struct TestExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
 {
   vtkm::Int32 Number;
 };

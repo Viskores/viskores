@@ -50,7 +50,7 @@ struct TestExecObject
   vtkm::Id* Array;
 };
 
-struct TestExecObjectType : vtkm::exec::ExecutionObjectBase
+struct TestExecObjectType : vtkm::cont::ExecutionObjectFactoryBase
 {
   template <typename Functor, typename... Args>
   void CastAndCall(Functor f, Args&&... args) const
@@ -61,7 +61,7 @@ struct TestExecObjectType : vtkm::exec::ExecutionObjectBase
 };
 
 struct TestExecObjectTypeBad
-{ //this will fail as it doesn't inherit from vtkm::exec::ExecutionObjectBase
+{ //this will fail as it doesn't inherit from vtkm::cont::ExecutionObjectFactoryBase
   template <typename Functor, typename... Args>
   void CastAndCall(Functor f, Args&&... args) const
   {

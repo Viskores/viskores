@@ -23,7 +23,7 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 
 namespace vtkm
 {
@@ -44,7 +44,7 @@ enum ParticleStatus
 };
 
 template <typename T, typename DeviceAdapterTag>
-class Particles : public vtkm::exec::ExecutionObjectBase
+class Particles : public vtkm::cont::ExecutionObjectFactoryBase
 {
 
 private:
