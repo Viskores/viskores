@@ -30,9 +30,8 @@
 
 #include <vtkm/filter/MarchingCubes.h>
 
-namespace
+namespace vtkm_ut_mc_filter
 {
-
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -532,5 +531,5 @@ void TestMarchingCubesFilter()
 
 int UnitTestMarchingCubesFilter(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestMarchingCubesFilter);
+  return vtkm::cont::testing::Testing::Run(vtkm_ut_mc_filter::TestMarchingCubesFilter);
 }

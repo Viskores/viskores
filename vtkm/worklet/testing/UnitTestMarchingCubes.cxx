@@ -28,7 +28,7 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/MarchingCubes.h>
 
-namespace
+namespace vtkm_ut_mc_worklet
 {
 
 class TangleField : public vtkm::worklet::WorkletMapField
@@ -273,14 +273,14 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
   return dataSet;
 }
 
-} // anonymous namespace
+} // vtkm_ut_mc_worklet namespace
 
 void TestMarchingCubesUniformGrid()
 {
   std::cout << "Testing MarchingCubes filter on a uniform grid" << std::endl;
 
   vtkm::Id3 dims(4, 4, 4);
-  vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
+  vtkm::cont::DataSet dataSet = vtkm_ut_mc_worklet::MakeIsosurfaceTestDataSet(dims);
 
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   vtkm::cont::CellSetStructured<3> cellSet;
@@ -336,7 +336,7 @@ void TestMarchingCubesExplicit()
 {
   std::cout << "Testing MarchingCubes filter on explicit data" << std::endl;
 
-  using DataSetGenerator = MakeRadiantDataSet;
+  using DataSetGenerator = vtkm_ut_mc_worklet::MakeRadiantDataSet;
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Vec3Handle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
   using DataHandle = vtkm::cont::ArrayHandle<vtkm::Float32>;
