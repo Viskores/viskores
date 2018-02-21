@@ -78,12 +78,17 @@
 #endif
 
 // cuda 7.5 doesn't support static const or static constexpr variables
-// that exist inside methods or classes, so in those cases we gracefully
-// fall back to using just constexpr
+// that exist inside methods or classes, so in those cases we have to use
+// just constexpr
 #if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR < 8)
-#define VTKM_STATIC_CONSTEXPR constexpr
+#define VTKM_STATIC_CONSTEXPR_ARRAY constexpr
+// cuda 8+ doesn't support static constexpr pointers/fixed size arrays
+// that exist inside methods or classes, so in those cases we gracefully
+// fall back to static const
+#elif defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR >= 8)
+#define VTKM_STATIC_CONSTEXPR_ARRAY static const
 #else
-#define VTKM_STATIC_CONSTEXPR static constexpr
+#define VTKM_STATIC_CONSTEXPR_ARRAY static constexpr
 #endif
 
 // Clang will warn about weak vtables (-Wweak-vtables) on exception classes,

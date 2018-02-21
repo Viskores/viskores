@@ -170,28 +170,29 @@ public:
                                    MortonPortalType& mortonCodes,
                                    CellFaceIdsPortalType& cellFaceIds) const
   {
+    CellTables tables;
     vtkm::Int32 faceCount;
     vtkm::Int32 tableOffset;
 
     if (cellShape.Id == vtkm::CELL_SHAPE_TETRA)
     {
-      faceCount = CellTables::Get().FaceLookUp[1][1];
-      tableOffset = CellTables::Get().FaceLookUp[1][0];
+      faceCount = tables.FaceLookUp(1, 1);
+      tableOffset = tables.FaceLookUp(1, 0);
     }
     else if (cellShape.Id == vtkm::CELL_SHAPE_HEXAHEDRON)
     {
-      faceCount = CellTables::Get().FaceLookUp[0][1];
-      tableOffset = CellTables::Get().FaceLookUp[0][0];
+      faceCount = tables.FaceLookUp(0, 1);
+      tableOffset = tables.FaceLookUp(0, 0);
     }
     else if (cellShape.Id == vtkm::CELL_SHAPE_WEDGE)
     {
-      faceCount = CellTables::Get().FaceLookUp[2][1];
-      tableOffset = CellTables::Get().FaceLookUp[2][0];
+      faceCount = tables.FaceLookUp(2, 1);
+      tableOffset = tables.FaceLookUp(2, 0);
     }
     else if (cellShape.Id == vtkm::CELL_SHAPE_PYRAMID)
     {
-      faceCount = CellTables::Get().FaceLookUp[3][1];
-      tableOffset = CellTables::Get().FaceLookUp[3][0];
+      faceCount = tables.FaceLookUp(3, 1);
+      tableOffset = tables.FaceLookUp(3, 0);
     }
     else
     {
@@ -215,10 +216,10 @@ public:
       vtkm::Vec<vtkm::Id, 4> faceIndices;
       faceIndices[3] = -1;
       //Number of indices this face has
-      const vtkm::Id indiceCount = CellTables::Get().ShapesFaceList[tableOffset + i][0];
+      const vtkm::Int32 indiceCount = tables.ShapesFaceList(tableOffset + i, 0);
       for (vtkm::Int32 j = 1; j <= indiceCount; j++)
       {
-        faceIndices[j - 1] = cellIndices[CellTables::Get().ShapesFaceList[tableOffset + i][j]];
+        faceIndices[j - 1] = cellIndices[tables.ShapesFaceList(tableOffset + i, j)];
       }
       //sort the indices in descending order
       Sort4(faceIndices);

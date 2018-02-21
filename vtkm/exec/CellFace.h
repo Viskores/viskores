@@ -37,168 +37,111 @@ namespace detail
 class CellFaceTables
 {
 public:
-  static const vtkm::IdComponent MAX_FACE_SIZE = 4;
-  static const vtkm::IdComponent MAX_NUM_FACES = 6;
+  static constexpr vtkm::Int32 MAX_FACE_SIZE = 4;
+  static constexpr vtkm::Int32 MAX_NUM_FACES = 6;
 
-private:
-  struct Tables
+  VTKM_EXEC vtkm::Int32 NumFaces(vtkm::Int32 i) const
   {
-    vtkm::IdComponent NumFaces[vtkm::NUMBER_OF_CELL_SHAPES];
-    vtkm::IdComponent NumPointsInFace[vtkm::NUMBER_OF_CELL_SHAPES][MAX_NUM_FACES];
-    vtkm::IdComponent PointsInFace[vtkm::NUMBER_OF_CELL_SHAPES][MAX_NUM_FACES][MAX_FACE_SIZE];
-  };
-
-public:
-  VTKM_EXEC_CONT
-  static const Tables& Get()
-  {
-    static const Tables table = { // NumFaces
-                                  {
-                                    0, //  0: CELL_SHAPE_EMPTY
-                                    0, //  1: CELL_SHAPE_VERTEX
-                                    0, //  2: Unused
-                                    0, //  3: CELL_SHAPE_LINE
-                                    0, //  4: Unused
-                                    0, //  5: CELL_SHAPE_TRIANGLE
-                                    0, //  6: Unused
-                                    0, //  7: CELL_SHAPE_POLYGON
-                                    0, //  8: Unused
-                                    0, //  9: CELL_SHAPE_QUAD
-                                    4, // 10: CELL_SHAPE_TETRA
-                                    0, // 11: Unused
-                                    6, // 12: CELL_SHAPE_HEXAHEDRON
-                                    5, // 13: CELL_SHAPE_WEDGE
-                                    5  // 14: CELL_SHAPE_PYRAMID
-                                  },
-
-                                  // NumPointsInFace
-                                  {
-                                    { -1, -1, -1, -1, -1, -1 }, //  0: CELL_SHAPE_EMPTY
-                                    { -1, -1, -1, -1, -1, -1 }, //  1: CELL_SHAPE_VERTEX
-                                    { -1, -1, -1, -1, -1, -1 }, //  2: Unused
-                                    { -1, -1, -1, -1, -1, -1 }, //  3: CELL_SHAPE_LINE
-                                    { -1, -1, -1, -1, -1, -1 }, //  4: Unused
-                                    { -1, -1, -1, -1, -1, -1 }, //  5: CELL_SHAPE_TRIANGLE
-                                    { -1, -1, -1, -1, -1, -1 }, //  6: Unused
-                                    { -1, -1, -1, -1, -1, -1 }, //  7: CELL_SHAPE_POLYGON
-                                    { -1, -1, -1, -1, -1, -1 }, //  8: Unused
-                                    { -1, -1, -1, -1, -1, -1 }, //  9: CELL_SHAPE_QUAD
-                                    { 3, 3, 3, 3, -1, -1 },     // 10: CELL_SHAPE_TETRA
-                                    { -1, -1, -1, -1, -1, -1 }, // 11: Unused
-                                    { 4, 4, 4, 4, 4, 4 },       // 12: CELL_SHAPE_HEXAHEDRON
-                                    { 3, 3, 4, 4, 4, -1 },      // 13: CELL_SHAPE_WEDGE
-                                    { 4, 3, 3, 3, 3, -1 }       // 14: CELL_SHAPE_PYRAMID
-                                  },
-
-                                  // PointsInFace
-                                  { //  0: CELL_SHAPE_EMPTY
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    //  1: CELL_SHAPE_VERTEX
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    //  2: Unused
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    //  3: CELL_SHAPE_LINE
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    //  4: Unused
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    //  5: CELL_SHAPE_TRIANGLE
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    //  6: Unused
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    //  7: CELL_SHAPE_POLYGON
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    //  8: Unused
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    //  9: CELL_SHAPE_QUAD
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    // 10: CELL_SHAPE_TETRA
-                                    { { 0, 1, 3, -1 },
-                                      { 1, 2, 3, -1 },
-                                      { 2, 0, 3, -1 },
-                                      { 0, 2, 1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    // 11: Unused
-                                    { { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 },
-                                      { -1, -1, -1, -1 } },
-                                    // 12: CELL_SHAPE_HEXAHEDRON
-                                    { { 0, 4, 7, 3 },
-                                      { 1, 2, 6, 5 },
-                                      { 0, 1, 5, 4 },
-                                      { 3, 7, 6, 2 },
-                                      { 0, 3, 2, 1 },
-                                      { 4, 5, 6, 7 } },
-                                    // 13: CELL_SHAPE_WEDGE
-                                    { { 0, 1, 2, -1 },
-                                      { 3, 5, 4, -1 },
-                                      { 0, 3, 4, 1 },
-                                      { 1, 4, 5, 2 },
-                                      { 2, 5, 3, 0 },
-                                      { -1, -1, -1, -1 } },
-                                    // 14: CELL_SHAPE_PYRAMID
-                                    { { 0, 3, 2, 1 },
-                                      { 0, 1, 4, -1 },
-                                      { 1, 2, 4, -1 },
-                                      { 2, 3, 4, -1 },
-                                      { 3, 0, 4, -1 },
-                                      { -1, -1, -1, -1 } } }
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32 numFaces[vtkm::NUMBER_OF_CELL_SHAPES] = {
+      // NumFaces
+      0, //  0: CELL_SHAPE_EMPTY
+      0, //  1: CELL_SHAPE_VERTEX
+      0, //  2: Unused
+      0, //  3: CELL_SHAPE_LINE
+      0, //  4: Unused
+      0, //  5: CELL_SHAPE_TRIANGLE
+      0, //  6: Unused
+      0, //  7: CELL_SHAPE_POLYGON
+      0, //  8: Unused
+      0, //  9: CELL_SHAPE_QUAD
+      4, // 10: CELL_SHAPE_TETRA
+      0, // 11: Unused
+      6, // 12: CELL_SHAPE_HEXAHEDRON
+      5, // 13: CELL_SHAPE_WEDGE
+      5  // 14: CELL_SHAPE_PYRAMID
     };
+    return numFaces[i];
+  }
 
-    return table;
+  VTKM_EXEC vtkm::Int32 NumPointsInFace(vtkm::Int32 i, vtkm::Int32 j) const
+  {
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32
+      numPointsInFace[vtkm::NUMBER_OF_CELL_SHAPES][MAX_NUM_FACES] = {
+        // NumPointsInFace
+        { -1, -1, -1, -1, -1, -1 }, //  0: CELL_SHAPE_EMPTY
+        { -1, -1, -1, -1, -1, -1 }, //  1: CELL_SHAPE_VERTEX
+        { -1, -1, -1, -1, -1, -1 }, //  2: Unused
+        { -1, -1, -1, -1, -1, -1 }, //  3: CELL_SHAPE_LINE
+        { -1, -1, -1, -1, -1, -1 }, //  4: Unused
+        { -1, -1, -1, -1, -1, -1 }, //  5: CELL_SHAPE_TRIANGLE
+        { -1, -1, -1, -1, -1, -1 }, //  6: Unused
+        { -1, -1, -1, -1, -1, -1 }, //  7: CELL_SHAPE_POLYGON
+        { -1, -1, -1, -1, -1, -1 }, //  8: Unused
+        { -1, -1, -1, -1, -1, -1 }, //  9: CELL_SHAPE_QUAD
+        { 3, 3, 3, 3, -1, -1 },     // 10: CELL_SHAPE_TETRA
+        { -1, -1, -1, -1, -1, -1 }, // 11: Unused
+        { 4, 4, 4, 4, 4, 4 },       // 12: CELL_SHAPE_HEXAHEDRON
+        { 3, 3, 4, 4, 4, -1 },      // 13: CELL_SHAPE_WEDGE
+        { 4, 3, 3, 3, 3, -1 }       // 14: CELL_SHAPE_PYRAMID
+      };
+    return numPointsInFace[i][j];
+  }
+
+  VTKM_EXEC vtkm::Int32 PointsInFace(vtkm::Int32 i, vtkm::Int32 j, vtkm::Int32 k) const
+  {
+    // clang-format off
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32 pointsInFace[vtkm::NUMBER_OF_CELL_SHAPES][MAX_NUM_FACES]
+                                                  [MAX_FACE_SIZE] =
+    {
+      // PointsInFace
+      //  0: CELL_SHAPE_EMPTY
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      //  1: CELL_SHAPE_VERTEX
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      //  2: Unused
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      //  3: CELL_SHAPE_LINE
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      //  4: Unused
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      //  5: CELL_SHAPE_TRIANGLE
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      //  6: Unused
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      //  7: CELL_SHAPE_POLYGON
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      //  8: Unused
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      //  9: CELL_SHAPE_QUAD
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      // 10: CELL_SHAPE_TETRA
+      { { 0, 1, 3, -1 }, { 1, 2, 3, -1 }, { 2, 0, 3, -1 },
+        { 0, 2, 1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      // 11: Unused
+      { { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 },
+        { -1, -1, -1, -1 }, { -1, -1, -1, -1 }, { -1, -1, -1, -1 } },
+      // 12: CELL_SHAPE_HEXAHEDRON
+      { { 0, 4, 7, 3 }, { 1, 2, 6, 5 }, { 0, 1, 5, 4 },
+        { 3, 7, 6, 2 }, { 0, 3, 2, 1 }, { 4, 5, 6, 7 } },
+      // 13: CELL_SHAPE_WEDGE
+      { { 0, 1, 2, -1 }, { 3, 5, 4, -1 }, { 0, 3, 4, 1 },
+        { 1, 4, 5, 2 },  { 2, 5, 3, 0 }, { -1, -1, -1, -1 } },
+      // 14: CELL_SHAPE_PYRAMID
+      { { 0, 3, 2, 1 }, { 0, 1, 4, -1 }, { 1, 2, 4, -1 },
+        { 2, 3, 4, -1 }, { 3, 0, 4, -1 },{ -1, -1, -1, -1 } }
+                                                          // clang-format on
+                                                        };
+    return pointsInFace[i][j][k];
   }
 };
 
@@ -209,7 +152,8 @@ static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfFaces(CellShapeTag sha
                                                                 const vtkm::exec::FunctorBase&)
 {
   (void)shape; //C4100 false positive workaround
-  return detail::CellFaceTables::Get().NumFaces[shape.Id];
+  detail::CellFaceTables table;
+  return table.NumFaces(shape.Id);
 }
 
 template <typename CellShapeTag>
@@ -225,8 +169,8 @@ static inline VTKM_EXEC vtkm::IdComponent CellFaceNumberOfPoints(
     worklet.RaiseError("Invalid face number.");
     return 0;
   }
-
-  return detail::CellFaceTables::Get().NumPointsInFace[shape.Id][faceIndex];
+  detail::CellFaceTables table;
+  return table.NumPointsInFace(shape.Id, faceIndex);
 }
 
 template <typename CellShapeTag>
@@ -247,24 +191,6 @@ static inline VTKM_EXEC vtkm::UInt8 CellFaceShape(vtkm::IdComponent faceIndex,
   }
 }
 
-template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::VecCConst<vtkm::IdComponent> CellFaceLocalIndices(
-  vtkm::IdComponent faceIndex,
-  CellShapeTag shape,
-  const vtkm::exec::FunctorBase& worklet)
-{
-  vtkm::IdComponent numPointsInFace = vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, worklet);
-  if (numPointsInFace < 1)
-  {
-    // An invalid face. We should already have gotten an error from
-    // CellFaceNumberOfPoints.
-    return vtkm::VecCConst<vtkm::IdComponent>();
-  }
-
-  return vtkm::make_VecC(detail::CellFaceTables::Get().PointsInFace[shape.Id][faceIndex],
-                         numPointsInFace);
-}
-
 /// \brief Returns a canonical identifier for a cell face
 ///
 /// Given information about a cell face and the global point indices for that cell, returns a
@@ -282,15 +208,20 @@ static inline VTKM_EXEC vtkm::Id3 CellFaceCanonicalId(
   const GlobalPointIndicesVecType& globalPointIndicesVec,
   const vtkm::exec::FunctorBase& worklet)
 {
-  vtkm::VecCConst<vtkm::IdComponent> localPointIndices =
-    vtkm::exec::CellFaceLocalIndices(faceIndex, shape, worklet);
+  const vtkm::IdComponent numPointsInFace =
+    vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, worklet);
+  if (numPointsInFace == 0)
+  {
+    // An invalid face. We should already have gotten an error from
+    // CellFaceNumberOfPoints.
+    return vtkm::Id3(0);
+  }
 
-  VTKM_ASSERT(localPointIndices.GetNumberOfComponents() >= 3);
-
+  detail::CellFaceTables table;
   //Sort the first 3 face points/nodes in ascending order
-  vtkm::Id3 sorted(globalPointIndicesVec[localPointIndices[0]],
-                   globalPointIndicesVec[localPointIndices[1]],
-                   globalPointIndicesVec[localPointIndices[2]]);
+  vtkm::Id3 sorted(globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 0)],
+                   globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 1)],
+                   globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, 2)]);
   vtkm::Id temp;
   if (sorted[0] > sorted[2])
   {
@@ -312,10 +243,9 @@ static inline VTKM_EXEC vtkm::Id3 CellFaceCanonicalId(
   }
 
   // Check the rest of the points to see if they are in the lowest 3
-  vtkm::IdComponent numPointsInFace = localPointIndices.GetNumberOfComponents();
   for (vtkm::IdComponent pointIndex = 3; pointIndex < numPointsInFace; pointIndex++)
   {
-    vtkm::Id nextPoint = globalPointIndicesVec[localPointIndices[pointIndex]];
+    vtkm::Id nextPoint = globalPointIndicesVec[table.PointsInFace(shape.Id, faceIndex, pointIndex)];
     if (nextPoint < sorted[2])
     {
       if (nextPoint < sorted[1])
