@@ -640,7 +640,7 @@ public:
   void Next() {}
 };
 
-template <typename ValueType, int Base>
+template <typename PlainType, typename ValueType, int Base>
 class PairValueManager
 {
 public:
@@ -694,13 +694,13 @@ private:
   void DeleteAll();
 };
 
-template <typename ValueType, int Base>
-void PairValueManager<ValueType, Base>::Init(size_t max_elems)
+template <typename PlainType, typename ValueType, int Base>
+void PairValueManager<PlainType, ValueType, Base>::Init(size_t max_elems)
 {
   DeleteAll();
 
   max_elems_ = max_elems;
-  max_threads_ = utility::GetMaxThreads(max_elems_ * sizeof(ValueType));
+  max_threads_ = utility::GetMaxThreads(max_elems_ * sizeof(PlainType));
 
   tmp_ = new ValueType[max_elems];
 
@@ -715,8 +715,8 @@ void PairValueManager<ValueType, Base>::Init(size_t max_elems)
   }
 }
 
-template <typename ValueType, int Base>
-void PairValueManager<ValueType, Base>::DeleteAll()
+template <typename PlainType, typename ValueType, int Base>
+void PairValueManager<PlainType, ValueType, Base>::DeleteAll()
 {
   delete[] tmp_;
   tmp_ = NULL;
@@ -772,7 +772,7 @@ template <typename PlainType,
           int Base = 8>
 class PairSort
 {
-  typedef value_manager::PairValueManager<ValueType, Base> ValueManager;
+  typedef value_manager::PairValueManager<PlainType, ValueType, Base> ValueManager;
   typedef internal::
     ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>
       Internal;
