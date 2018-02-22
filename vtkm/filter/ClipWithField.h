@@ -71,7 +71,7 @@ template <>
 class FilterTraits<ClipWithField>
 { //currently the Clip filter only works on scalar data.
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

@@ -238,7 +238,7 @@ public:
                                                        BinaryFunctor binary_functor,
                                                        DeviceAdapter vtkmNotUsed(device))
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::cont::ArrayHandle<T> resultHandle;
 
@@ -337,7 +337,7 @@ public:
                                                   vtkm::cont::ArrayHandle<T>& segIdHandle,
                                                   DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::cont::ArrayHandle<T> segCountAryHandle;
     {
@@ -363,7 +363,7 @@ public:
                                                      vtkm::cont::ArrayHandle<T>& C_Handle,
                                                      DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::cont::ArrayHandle<T> D_Handle;
     T initValue = 0;
@@ -400,7 +400,7 @@ public:
                               vtkm::cont::ArrayHandle<T>& D_Handle,
                               DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::Id nPoints = A_Handle.GetNumberOfValues();
 
@@ -464,7 +464,7 @@ public:
                                  vtkm::cont::ArrayHandle<T>& Z_Handle,
                                  DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::cont::ArrayHandle<T> D_Handle;
     T initValue = 0;
@@ -518,7 +518,7 @@ public:
                        vtkm::Int32 level,
                        DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::cont::ArrayHandle<T> flag_Handle;
     if (level % 3 == 0)
@@ -581,7 +581,7 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Id>& splitId_Handle,
            DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::Id nTrainingPoints = coordi_Handle.GetNumberOfValues();
     vtkm::cont::ArrayHandleCounting<vtkm::Id> counting_Handle(0, 1, nTrainingPoints);

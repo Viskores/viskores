@@ -40,7 +40,7 @@ template <>
 class ConnectivityStructuredInternals<1>
 {
 public:
-  typedef vtkm::Id SchedulingRangeType;
+  using SchedulingRangeType = vtkm::Id;
 
   VTKM_EXEC_CONT
   void SetPointDimensions(vtkm::Id dimensions) { this->PointDimensions = dimensions; }
@@ -75,7 +75,7 @@ public:
   VTKM_EXEC_CONT
   vtkm::IdComponent GetCellShape() const { return vtkm::CELL_SHAPE_LINE; }
 
-  typedef vtkm::CellShapeTagLine CellShapeTag;
+  using CellShapeTag = vtkm::CellShapeTagLine;
 
   VTKM_EXEC_CONT
   vtkm::Vec<vtkm::Id, NUM_POINTS_IN_CELL> GetPointsOfCell(vtkm::Id index) const
@@ -145,7 +145,7 @@ template <>
 class ConnectivityStructuredInternals<2>
 {
 public:
-  typedef vtkm::Id2 SchedulingRangeType;
+  using SchedulingRangeType = vtkm::Id2;
 
   VTKM_EXEC_CONT
   void SetPointDimensions(vtkm::Id2 dims) { this->PointDimensions = dims; }
@@ -181,7 +181,7 @@ public:
   VTKM_EXEC_CONT
   vtkm::IdComponent GetCellShape() const { return vtkm::CELL_SHAPE_QUAD; }
 
-  typedef vtkm::CellShapeTagQuad CellShapeTag;
+  using CellShapeTag = vtkm::CellShapeTagQuad;
 
   VTKM_EXEC_CONT
   vtkm::Vec<vtkm::Id, NUM_POINTS_IN_CELL> GetPointsOfCell(
@@ -303,7 +303,7 @@ template <>
 class ConnectivityStructuredInternals<3>
 {
 public:
-  typedef vtkm::Id3 SchedulingRangeType;
+  using SchedulingRangeType = vtkm::Id3;
 
   VTKM_EXEC_CONT
   void SetPointDimensions(vtkm::Id3 dims)
@@ -344,7 +344,7 @@ public:
   VTKM_EXEC_CONT
   vtkm::IdComponent GetCellShape() const { return vtkm::CELL_SHAPE_HEXAHEDRON; }
 
-  typedef vtkm::CellShapeTagHexahedron CellShapeTag;
+  using CellShapeTag = vtkm::CellShapeTagHexahedron;
 
   VTKM_EXEC_CONT
   vtkm::Vec<vtkm::Id, NUM_POINTS_IN_CELL> GetPointsOfCell(const SchedulingRangeType& ijk) const
@@ -512,12 +512,12 @@ struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagPoint,
                                          vtkm::TopologyElementTagCell,
                                          Dimension>
 {
-  typedef vtkm::internal::ConnectivityStructuredInternals<Dimension> ConnectivityType;
-  typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;
+  using ConnectivityType = vtkm::internal::ConnectivityStructuredInternals<Dimension>;
+  using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
   using CellShapeTag = typename ConnectivityType::CellShapeTag;
 
-  typedef vtkm::Vec<vtkm::Id, ConnectivityType::NUM_POINTS_IN_CELL> IndicesType;
+  using IndicesType = vtkm::Vec<vtkm::Id, ConnectivityType::NUM_POINTS_IN_CELL>;
 
   VTKM_EXEC_CONT static vtkm::Id GetNumberOfElements(const ConnectivityType& connectivity)
   {
@@ -573,12 +573,12 @@ struct ConnectivityStructuredIndexHelper<vtkm::TopologyElementTagCell,
                                          vtkm::TopologyElementTagPoint,
                                          Dimension>
 {
-  typedef vtkm::internal::ConnectivityStructuredInternals<Dimension> ConnectivityType;
-  typedef typename ConnectivityType::SchedulingRangeType LogicalIndexType;
+  using ConnectivityType = vtkm::internal::ConnectivityStructuredInternals<Dimension>;
+  using LogicalIndexType = typename ConnectivityType::SchedulingRangeType;
 
   using CellShapeTag = vtkm::CellShapeTagVertex;
 
-  typedef vtkm::VecVariable<vtkm::Id, ConnectivityType::MAX_CELL_TO_POINT> IndicesType;
+  using IndicesType = vtkm::VecVariable<vtkm::Id, ConnectivityType::MAX_CELL_TO_POINT>;
 
   VTKM_EXEC_CONT static vtkm::Id GetNumberOfElements(const ConnectivityType& connectivity)
   {

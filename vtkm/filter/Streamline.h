@@ -79,7 +79,7 @@ public:
     : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>
   {
   };
-  typedef TypeListTagStreamline InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagStreamline;
 };
 }
 } // namespace vtkm::filter

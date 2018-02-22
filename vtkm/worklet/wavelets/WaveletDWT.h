@@ -88,10 +88,10 @@ public:
       return 0;
     }
 
-    typedef typename SigInArrayType::ValueType ValueType;
-    typedef vtkm::cont::ArrayHandle<ValueType> ExtendArrayType;
-    typedef vtkm::worklet::wavelets::ExtensionWorklet3D ExtensionWorklet;
-    typedef typename vtkm::worklet::DispatcherMapField<ExtensionWorklet, DeviceTag> DispatcherType;
+    using ValueType = typename SigInArrayType::ValueType;
+    using ExtendArrayType = vtkm::cont::ArrayHandle<ValueType>;
+    using ExtensionWorklet = vtkm::worklet::wavelets::ExtensionWorklet3D;
+    using DispatcherType = typename vtkm::worklet::DispatcherMapField<ExtensionWorklet, DeviceTag>;
     vtkm::Id extDimX, extDimY, extDimZ;
     vtkm::worklet::wavelets::ExtensionDirection dir;
 
@@ -253,10 +253,10 @@ public:
       return 0;
     }
 
-    typedef typename SigInArrayType::ValueType ValueType;
-    typedef vtkm::cont::ArrayHandle<ValueType> ExtendArrayType;
-    typedef vtkm::worklet::wavelets::ExtensionWorklet3D ExtensionWorklet;
-    typedef typename vtkm::worklet::DispatcherMapField<ExtensionWorklet, DeviceTag> DispatcherType;
+    using ValueType = typename SigInArrayType::ValueType;
+    using ExtendArrayType = vtkm::cont::ArrayHandle<ValueType>;
+    using ExtensionWorklet = vtkm::worklet::wavelets::ExtensionWorklet3D;
+    using DispatcherType = typename vtkm::worklet::DispatcherMapField<ExtensionWorklet, DeviceTag>;
     vtkm::Id extDimX, extDimY, extDimZ;
     vtkm::worklet::wavelets::ExtensionDirection dir;
 
@@ -418,10 +418,10 @@ public:
       return 0;
     }
 
-    typedef typename SigInArrayType::ValueType ValueType;
-    typedef vtkm::cont::ArrayHandle<ValueType> ExtendArrayType;
-    typedef vtkm::worklet::wavelets::ExtensionWorklet3D ExtensionWorklet;
-    typedef typename vtkm::worklet::DispatcherMapField<ExtensionWorklet, DeviceTag> DispatcherType;
+    using ValueType = typename SigInArrayType::ValueType;
+    using ExtendArrayType = vtkm::cont::ArrayHandle<ValueType>;
+    using ExtensionWorklet = vtkm::worklet::wavelets::ExtensionWorklet3D;
+    using DispatcherType = typename vtkm::worklet::DispatcherMapField<ExtensionWorklet, DeviceTag>;
     vtkm::Id extDimX, extDimY, extDimZ;
     vtkm::worklet::wavelets::ExtensionDirection dir;
 
@@ -630,16 +630,16 @@ public:
     }
     vtkm::Id addLen = filterLen / 2;
 
-    typedef typename ArrayInType::ValueType ValueType;
-    typedef vtkm::cont::ArrayHandle<ValueType> ArrayType;
-    typedef vtkm::worklet::wavelets::ForwardTransform3DLeftRight<DeviceTag> LeftRightXFormType;
-    typedef vtkm::worklet::wavelets::ForwardTransform3DTopDown<DeviceTag> TopDownXFormType;
-    typedef vtkm::worklet::wavelets::ForwardTransform3DFrontBack<DeviceTag> FrontBackXFormType;
-    typedef vtkm::worklet::DispatcherMapField<LeftRightXFormType, DeviceTag>
-      LeftRightDispatcherType;
-    typedef vtkm::worklet::DispatcherMapField<TopDownXFormType, DeviceTag> TopDownDispatcherType;
-    typedef vtkm::worklet::DispatcherMapField<FrontBackXFormType, DeviceTag>
-      FrontBackDispatcherType;
+    using ValueType = typename ArrayInType::ValueType;
+    using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+    using LeftRightXFormType = vtkm::worklet::wavelets::ForwardTransform3DLeftRight<DeviceTag>;
+    using TopDownXFormType = vtkm::worklet::wavelets::ForwardTransform3DTopDown<DeviceTag>;
+    using FrontBackXFormType = vtkm::worklet::wavelets::ForwardTransform3DFrontBack<DeviceTag>;
+    using LeftRightDispatcherType =
+      vtkm::worklet::DispatcherMapField<LeftRightXFormType, DeviceTag>;
+    using TopDownDispatcherType = vtkm::worklet::DispatcherMapField<TopDownXFormType, DeviceTag>;
+    using FrontBackDispatcherType =
+      vtkm::worklet::DispatcherMapField<FrontBackXFormType, DeviceTag>;
 
     vtkm::cont::Timer<DeviceTag> timer;
     vtkm::Float64 computationTime = 0.0;
@@ -821,15 +821,15 @@ public:
     vtkm::Id inPretendDimZ = L[2] + L[5];
 
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
-    typedef vtkm::cont::ArrayHandle<typename ArrayInType::ValueType> BasicArrayType;
-    typedef vtkm::worklet::wavelets::InverseTransform3DLeftRight<DeviceTag> LeftRightXFormType;
-    typedef vtkm::worklet::wavelets::InverseTransform3DTopDown<DeviceTag> TopDownXFormType;
-    typedef vtkm::worklet::wavelets::InverseTransform3DFrontBack<DeviceTag> FrontBackXFormType;
-    typedef vtkm::worklet::DispatcherMapField<LeftRightXFormType, DeviceTag>
-      LeftRightDispatcherType;
-    typedef vtkm::worklet::DispatcherMapField<TopDownXFormType, DeviceTag> TopDownDispatcherType;
-    typedef vtkm::worklet::DispatcherMapField<FrontBackXFormType, DeviceTag>
-      FrontBackDispatcherType;
+    using BasicArrayType = vtkm::cont::ArrayHandle<typename ArrayInType::ValueType>;
+    using LeftRightXFormType = vtkm::worklet::wavelets::InverseTransform3DLeftRight<DeviceTag>;
+    using TopDownXFormType = vtkm::worklet::wavelets::InverseTransform3DTopDown<DeviceTag>;
+    using FrontBackXFormType = vtkm::worklet::wavelets::InverseTransform3DFrontBack<DeviceTag>;
+    using LeftRightDispatcherType =
+      vtkm::worklet::DispatcherMapField<LeftRightXFormType, DeviceTag>;
+    using TopDownDispatcherType = vtkm::worklet::DispatcherMapField<TopDownXFormType, DeviceTag>;
+    using FrontBackDispatcherType =
+      vtkm::worklet::DispatcherMapField<FrontBackXFormType, DeviceTag>;
 
     vtkm::cont::Timer<DeviceTag> timer;
     vtkm::Float64 computationTime = 0.0;
@@ -1081,10 +1081,10 @@ public:
       return 0;
     }
 
-    typedef typename SigInArrayType::ValueType ValueType;
-    typedef vtkm::cont::ArrayHandle<ValueType> ExtendArrayType;
-    typedef vtkm::worklet::wavelets::ExtensionWorklet2D ExtensionWorklet;
-    typedef typename vtkm::worklet::DispatcherMapField<ExtensionWorklet, DeviceTag> DispatcherType;
+    using ValueType = typename SigInArrayType::ValueType;
+    using ExtendArrayType = vtkm::cont::ArrayHandle<ValueType>;
+    using ExtensionWorklet = vtkm::worklet::wavelets::ExtensionWorklet2D;
+    using DispatcherType = typename vtkm::worklet::DispatcherMapField<ExtensionWorklet, DeviceTag>;
     vtkm::Id extDimX, extDimY;
     vtkm::worklet::wavelets::ExtensionDirection dir;
 
@@ -1251,9 +1251,9 @@ public:
     // "right extension" can be attached a zero on either end, but not both ends.
     VTKM_ASSERT(!attachZeroRightRight || !attachZeroRightLeft);
 
-    typedef typename SigInArrayType::ValueType ValueType;
-    typedef vtkm::cont::ArrayHandle<ValueType> ExtensionArrayType;
-    typedef vtkm::cont::ArrayHandleConcatenate<ExtensionArrayType, SigInArrayType> ArrayConcat;
+    using ValueType = typename SigInArrayType::ValueType;
+    using ExtensionArrayType = vtkm::cont::ArrayHandle<ValueType>;
+    using ArrayConcat = vtkm::cont::ArrayHandleConcatenate<ExtensionArrayType, SigInArrayType>;
 
     ExtensionArrayType leftExtend, rightExtend;
 
@@ -1278,14 +1278,14 @@ public:
     leftExtend.PrepareForOutput(addLen, DeviceTag());
     vtkm::Id sigInLen = sigIn.GetNumberOfValues();
 
-    typedef vtkm::worklet::wavelets::LeftSYMHExtentionWorklet LeftSYMH;
-    typedef vtkm::worklet::wavelets::LeftSYMWExtentionWorklet LeftSYMW;
-    typedef vtkm::worklet::wavelets::RightSYMHExtentionWorklet RightSYMH;
-    typedef vtkm::worklet::wavelets::RightSYMWExtentionWorklet RightSYMW;
-    typedef vtkm::worklet::wavelets::LeftASYMHExtentionWorklet LeftASYMH;
-    typedef vtkm::worklet::wavelets::LeftASYMWExtentionWorklet LeftASYMW;
-    typedef vtkm::worklet::wavelets::RightASYMHExtentionWorklet RightASYMH;
-    typedef vtkm::worklet::wavelets::RightASYMWExtentionWorklet RightASYMW;
+    using LeftSYMH = vtkm::worklet::wavelets::LeftSYMHExtentionWorklet;
+    using LeftSYMW = vtkm::worklet::wavelets::LeftSYMWExtentionWorklet;
+    using RightSYMH = vtkm::worklet::wavelets::RightSYMHExtentionWorklet;
+    using RightSYMW = vtkm::worklet::wavelets::RightSYMWExtentionWorklet;
+    using LeftASYMH = vtkm::worklet::wavelets::LeftASYMHExtentionWorklet;
+    using LeftASYMW = vtkm::worklet::wavelets::LeftASYMWExtentionWorklet;
+    using RightASYMH = vtkm::worklet::wavelets::RightASYMHExtentionWorklet;
+    using RightASYMW = vtkm::worklet::wavelets::RightASYMWExtentionWorklet;
 
     switch (leftExtMethod)
     {
@@ -1379,7 +1379,7 @@ public:
     }
     else // attachZeroRightLeft mode
     {
-      typedef vtkm::cont::ArrayHandleConcatenate<SigInArrayType, ExtensionArrayType> ConcatArray;
+      using ConcatArray = vtkm::cont::ArrayHandleConcatenate<SigInArrayType, ExtensionArrayType>;
       // attach a zero at the end of sigIn
       ExtensionArrayType singleValArray;
       singleValArray.PrepareForOutput(1, DeviceTag());
@@ -1497,11 +1497,11 @@ public:
 
     vtkm::Id sigExtendedLen = sigInLen + 2 * addLen;
 
-    typedef typename SignalArrayType::ValueType SigInValueType;
-    typedef vtkm::cont::ArrayHandle<SigInValueType> SigInBasic;
+    using SigInValueType = typename SignalArrayType::ValueType;
+    using SigInBasic = vtkm::cont::ArrayHandle<SigInValueType>;
 
-    typedef vtkm::cont::ArrayHandleConcatenate<SigInBasic, SignalArrayType> ConcatType1;
-    typedef vtkm::cont::ArrayHandleConcatenate<ConcatType1, SigInBasic> ConcatType2;
+    using ConcatType1 = vtkm::cont::ArrayHandleConcatenate<SigInBasic, SignalArrayType>;
+    using ConcatType2 = vtkm::cont::ArrayHandleConcatenate<ConcatType1, SigInBasic>;
 
     ConcatType2 sigInExtended;
 
@@ -1610,8 +1610,8 @@ public:
       cDTempLen = L[1];
     }
 
-    typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> IdArrayType;
-    typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, CoeffArrayType> PermutArrayType;
+    using IdArrayType = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
+    using PermutArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, CoeffArrayType>;
 
     // Separate cA and cD
     IdArrayType approxIndices(0, 1, L[0]);
@@ -1619,10 +1619,10 @@ public:
     PermutArrayType cA(approxIndices, coeffIn);
     PermutArrayType cD(detailIndices, coeffIn);
 
-    typedef typename CoeffArrayType::ValueType CoeffValueType;
-    typedef vtkm::cont::ArrayHandle<CoeffValueType> ExtensionArrayType;
-    typedef vtkm::cont::ArrayHandleConcatenate<ExtensionArrayType, PermutArrayType> Concat1;
-    typedef vtkm::cont::ArrayHandleConcatenate<Concat1, ExtensionArrayType> Concat2;
+    using CoeffValueType = typename CoeffArrayType::ValueType;
+    using ExtensionArrayType = vtkm::cont::ArrayHandle<CoeffValueType>;
+    using Concat1 = vtkm::cont::ArrayHandleConcatenate<ExtensionArrayType, PermutArrayType>;
+    using Concat2 = vtkm::cont::ArrayHandleConcatenate<Concat1, ExtensionArrayType>;
 
     Concat2 cATemp, cDTemp;
 
@@ -1769,10 +1769,10 @@ public:
     }
     vtkm::Id addLen = filterLen / 2;
 
-    typedef typename ArrayInType::ValueType ValueType;
-    typedef vtkm::cont::ArrayHandle<ValueType> ArrayType;
-    typedef vtkm::worklet::wavelets::ForwardTransform2D<DeviceTag> ForwardXForm;
-    typedef typename vtkm::worklet::DispatcherMapField<ForwardXForm, DeviceTag> DispatcherType;
+    using ValueType = typename ArrayInType::ValueType;
+    using ArrayType = vtkm::cont::ArrayHandle<ValueType>;
+    using ForwardXForm = vtkm::worklet::wavelets::ForwardTransform2D<DeviceTag>;
+    using DispatcherType = typename vtkm::worklet::DispatcherMapField<ForwardXForm, DeviceTag>;
 
     vtkm::cont::Timer<DeviceTag> timer;
     vtkm::Float64 computationTime = 0.0;
@@ -1882,9 +1882,9 @@ public:
     vtkm::Id inPretendDimY = L[1] + L[3];
 
     vtkm::Id filterLen = WaveletBase::filter.GetFilterLength();
-    typedef vtkm::cont::ArrayHandle<typename ArrayInType::ValueType> BasicArrayType;
-    typedef vtkm::worklet::wavelets::InverseTransform2D<DeviceTag> IDWT2DWorklet;
-    typedef vtkm::worklet::DispatcherMapField<IDWT2DWorklet, DeviceTag> Dispatcher;
+    using BasicArrayType = vtkm::cont::ArrayHandle<typename ArrayInType::ValueType>;
+    using IDWT2DWorklet = vtkm::worklet::wavelets::InverseTransform2D<DeviceTag>;
+    using Dispatcher = vtkm::worklet::DispatcherMapField<IDWT2DWorklet, DeviceTag>;
     vtkm::cont::Timer<DeviceTag> timer;
     vtkm::Float64 computationTime = 0.0;
 

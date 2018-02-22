@@ -59,7 +59,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension
                                 WholeArrayIn<ScalarAll>); // signal
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -876,7 +876,7 @@ public:
                                 WholeArrayIn<ScalarAll>,   // right extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _4 InputDomain;
+  using InputDomain = _4;
 
   VTKM_EXEC_CONT
   ForwardTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
@@ -981,7 +981,7 @@ public:
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
     vtkm::Id inputCube, inputIdx;
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    using OutputValueType = typename OutputPortalType::ValueType;
 
     if (workX % 2 == 0) // calculate cA
     {
@@ -1032,7 +1032,7 @@ public:
                                 WholeArrayIn<ScalarAll>,   // right extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _4 InputDomain;
+  using InputDomain = _4;
 
   VTKM_EXEC_CONT
   ForwardTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
@@ -1137,7 +1137,7 @@ public:
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
     vtkm::Id inputCube, inputIdx;
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    using OutputValueType = typename OutputPortalType::ValueType;
 
     if (workY % 2 == 0) // calculate cA
     {
@@ -1188,7 +1188,7 @@ public:
                                 WholeArrayIn<ScalarAll>,   // right extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _4 InputDomain;
+  using InputDomain = _4;
 
   VTKM_EXEC_CONT
   ForwardTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
@@ -1293,7 +1293,7 @@ public:
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
     vtkm::Id inputCube, inputIdx;
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    using OutputValueType = typename OutputPortalType::ValueType;
 
     if (workZ % 2 == 0) // calculate cA
     {
@@ -1359,7 +1359,7 @@ public:
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coefficients
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
-  typedef _6 InputDomain;
+  using InputDomain = _6;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -1593,7 +1593,7 @@ public:
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coefficients
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
-  typedef _6 InputDomain;
+  using InputDomain = _6;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -1827,7 +1827,7 @@ public:
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coefficients
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
-  typedef _6 InputDomain;
+  using InputDomain = _6;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -2312,7 +2312,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -2463,7 +2463,7 @@ public:
                                 WholeArrayIn<ScalarAll>,   // right/bottom extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _4 InputDomain;
+  using InputDomain = _4;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -2547,7 +2547,7 @@ public:
     vtkm::Id workX, workY, output1D;
     Output1Dto2D(workIndex, workX, workY);
     vtkm::Id inputMatrix, inputIdx;
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    using OutputValueType = typename OutputPortalType::ValueType;
 
     if (modeLR)
     {
@@ -2654,7 +2654,7 @@ public:
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coeffs
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
-  typedef _6 InputDomain;
+  using InputDomain = _6;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -2960,7 +2960,7 @@ public:
   typedef void ControlSignature(WholeArrayIn<ScalarAll>,   // sigIn
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -2990,7 +2990,7 @@ public:
                             OutputPortalType& coeffOut,
                             const vtkm::Id& workIndex) const
   {
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    using OutputValueType = typename OutputPortalType::ValueType;
     if (workIndex < approxLen + detailLen)
     {
       if (workIndex % 2 == 0) // calculate cA
@@ -3045,7 +3045,7 @@ public:
                                                            // cA followed by cD
                                 WholeArrayOut<ScalarAll>); // output
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3127,7 +3127,7 @@ public:
                                                            // cA followed by cD
                                 WholeArrayOut<ScalarAll>); // output
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3217,7 +3217,7 @@ class ThresholdWorklet : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldInOut<ScalarAll>); // Thresholding in-place
   typedef void ExecutionSignature(_1);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   ThresholdWorklet(vtkm::Float64 t)
@@ -3246,7 +3246,7 @@ class SquaredDeviation : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
   typedef _2 ExecutionSignature(_1);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   template <typename ValueType>
@@ -3272,7 +3272,7 @@ class Differencer : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<ScalarAll>, FieldIn<ScalarAll>, FieldOut<ScalarAll>);
   typedef _3 ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename ValueType1, typename ValueType2>
   VTKM_EXEC ValueType1 operator()(const ValueType1& v1, const ValueType2& v2) const
@@ -3286,7 +3286,7 @@ class SquareWorklet : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
   typedef _2 ExecutionSignature(_1);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename ValueType>
   VTKM_EXEC ValueType operator()(const ValueType& v) const
@@ -3300,7 +3300,7 @@ class CopyWorklet : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(WholeArrayIn<ScalarAll>, WholeArrayOut<ScalarAll>);
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3325,7 +3325,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3353,7 +3353,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3381,7 +3381,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3409,7 +3409,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3437,7 +3437,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3465,7 +3465,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3493,7 +3493,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3521,7 +3521,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

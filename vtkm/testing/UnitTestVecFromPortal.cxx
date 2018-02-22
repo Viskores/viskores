@@ -37,7 +37,7 @@ template <typename T>
 class TestPortal
 {
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
   VTKM_EXEC
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
@@ -51,10 +51,10 @@ struct VecFromPortalTestFunctor
   template <typename T>
   void operator()(T) const
   {
-    typedef TestPortal<T> PortalType;
-    typedef vtkm::VecFromPortal<PortalType> VecType;
-    typedef vtkm::TypeTraits<VecType> TTraits;
-    typedef vtkm::VecTraits<VecType> VTraits;
+    using PortalType = TestPortal<T>;
+    using VecType = vtkm::VecFromPortal<PortalType>;
+    using TTraits = vtkm::TypeTraits<VecType>;
+    using VTraits = vtkm::VecTraits<VecType>;
 
     std::cout << "Checking VecFromPortal traits" << std::endl;
 

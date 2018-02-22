@@ -205,7 +205,7 @@ class GenerateEdges : public vtkm::worklet::WorkletMapPointToCell
 public:
   typedef void ControlSignature(CellSetIn cellset, WholeArrayOut<> edgeIds);
   typedef void ExecutionSignature(PointIndices, ThreadIndices, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename ConnectivityInVec, typename ThreadIndicesType, typename IdPairTableType>
   VTKM_EXEC void operator()(const ConnectivityInVec& connectivity,
@@ -234,7 +234,7 @@ public:
                                 WholeArrayIn<> inputField,
                                 FieldOut<> output);
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename WeightType, typename T, typename S, typename D>
   VTKM_EXEC void operator()(const vtkm::Id2& low_high,
@@ -321,11 +321,11 @@ using StorageListTag = ::vtkm::cont::StorageListTagBasic;
 template <class DeviceAdapterTag>
 class BenchmarkFieldAlgorithms
 {
-  typedef vtkm::cont::StorageTagBasic StorageTag;
+  using StorageTag = vtkm::cont::StorageTagBasic;
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  typedef vtkm::cont::Timer<DeviceAdapterTag> Timer;
+  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
 
   using ValueDynamicHandle = vtkm::cont::DynamicArrayHandleBase<ValueTypes, StorageListTag>;
   using InterpDynamicHandle = vtkm::cont::DynamicArrayHandleBase<InterpValueTypes, StorageListTag>;

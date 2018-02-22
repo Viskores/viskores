@@ -42,7 +42,7 @@ inline VTKM_CONT vtkm::filter::Result VectorMagnitude::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
   const DeviceAdapter&)
 {
-  typedef typename detail::FloatingPointReturnType<T>::Type ReturnType;
+  using ReturnType = typename detail::FloatingPointReturnType<T>::Type;
   vtkm::cont::ArrayHandle<ReturnType> outArray;
 
   vtkm::worklet::DispatcherMapField<vtkm::worklet::Magnitude, DeviceAdapter> dispatcher(

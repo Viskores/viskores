@@ -43,7 +43,7 @@ public:
   {
     std::cout << "Testing mask points stride on 2D uniform dataset" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
 
@@ -64,7 +64,7 @@ public:
   {
     std::cout << "Testing mask points stride on 3D uniform dataset" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
 
@@ -85,7 +85,7 @@ public:
   {
     std::cout << "Testing mask points stride on 3D explicit dataset" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 

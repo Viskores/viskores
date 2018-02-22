@@ -112,7 +112,7 @@ public:
     WholeArrayOut<IdType> edgeFar,      // (output) high end of edges
     WholeArrayOut<IdType> activeEdges); // (output) active edge list
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nRows; // (input) number of rows in 2D
   vtkm::Id nCols; // (input) number of cols in 2D

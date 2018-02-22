@@ -46,7 +46,7 @@ struct AspectTagOnBoundary
 struct OnBoundary : vtkm::exec::arg::ExecutionSignatureTagBase
 {
   static const vtkm::IdComponent INDEX = 1;
-  typedef vtkm::exec::arg::AspectTagOnBoundary AspectTag;
+  using AspectTag = vtkm::exec::arg::AspectTagOnBoundary;
 };
 
 template <typename FetchTag, int NSize, typename ExecObjectType>

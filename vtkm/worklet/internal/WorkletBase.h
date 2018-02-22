@@ -133,63 +133,63 @@ namespace internal
 class WorkletBase : public vtkm::exec::FunctorBase
 {
 public:
-  typedef vtkm::placeholders::_1 _1;
-  typedef vtkm::placeholders::_2 _2;
-  typedef vtkm::placeholders::_3 _3;
-  typedef vtkm::placeholders::_4 _4;
-  typedef vtkm::placeholders::_5 _5;
-  typedef vtkm::placeholders::_6 _6;
-  typedef vtkm::placeholders::_7 _7;
-  typedef vtkm::placeholders::_8 _8;
-  typedef vtkm::placeholders::_9 _9;
-  typedef vtkm::placeholders::_10 _10;
-  typedef vtkm::placeholders::_11 _11;
-  typedef vtkm::placeholders::_12 _12;
-  typedef vtkm::placeholders::_13 _13;
-  typedef vtkm::placeholders::_14 _14;
-  typedef vtkm::placeholders::_15 _15;
-  typedef vtkm::placeholders::_16 _16;
-  typedef vtkm::placeholders::_17 _17;
-  typedef vtkm::placeholders::_18 _18;
-  typedef vtkm::placeholders::_19 _19;
-  typedef vtkm::placeholders::_20 _20;
+  using _1 = vtkm::placeholders::_1;
+  using _2 = vtkm::placeholders::_2;
+  using _3 = vtkm::placeholders::_3;
+  using _4 = vtkm::placeholders::_4;
+  using _5 = vtkm::placeholders::_5;
+  using _6 = vtkm::placeholders::_6;
+  using _7 = vtkm::placeholders::_7;
+  using _8 = vtkm::placeholders::_8;
+  using _9 = vtkm::placeholders::_9;
+  using _10 = vtkm::placeholders::_10;
+  using _11 = vtkm::placeholders::_11;
+  using _12 = vtkm::placeholders::_12;
+  using _13 = vtkm::placeholders::_13;
+  using _14 = vtkm::placeholders::_14;
+  using _15 = vtkm::placeholders::_15;
+  using _16 = vtkm::placeholders::_16;
+  using _17 = vtkm::placeholders::_17;
+  using _18 = vtkm::placeholders::_18;
+  using _19 = vtkm::placeholders::_19;
+  using _20 = vtkm::placeholders::_20;
 
   /// \c ExecutionSignature tag for getting the work index.
   ///
-  typedef vtkm::exec::arg::WorkIndex WorkIndex;
+  using WorkIndex = vtkm::exec::arg::WorkIndex;
 
   /// \c ExecutionSignature tag for getting the input index.
   ///
-  typedef vtkm::exec::arg::InputIndex InputIndex;
+  using InputIndex = vtkm::exec::arg::InputIndex;
 
   /// \c ExecutionSignature tag for getting the output index.
   ///
-  typedef vtkm::exec::arg::OutputIndex OutputIndex;
+  using OutputIndex = vtkm::exec::arg::OutputIndex;
 
   /// \c ExecutionSignature tag for getting the thread indices.
   ///
-  typedef vtkm::exec::arg::ThreadIndices ThreadIndices;
+  using ThreadIndices = vtkm::exec::arg::ThreadIndices;
 
   /// \c ExecutionSignature tag for getting the visit index.
   ///
-  typedef vtkm::exec::arg::VisitIndex VisitIndex;
+  using VisitIndex = vtkm::exec::arg::VisitIndex;
 
   /// \c ControlSignature tag for execution object inputs.
   struct ExecObject : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef vtkm::cont::arg::TypeCheckTagExecObject TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagExecObject TransportTag;
-    typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagExecObject;
+    using TransportTag = vtkm::cont::arg::TransportTagExecObject;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
 
   /// Default input domain is the first argument. Worklet subclasses can
   /// override this by redefining this type.
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   /// All worklets must define their scatter operation. The scatter defines
   /// what output each input contributes to. The default scatter is the
   /// identity scatter (1-to-1 input to output).
-  typedef vtkm::worklet::ScatterIdentity ScatterType;
+  using ScatterType = vtkm::worklet::ScatterIdentity;
 
   /// In addition to defining the scatter type, the worklet must produce the
   /// scatter. The default ScatterIdentity has no state, so just return an
@@ -201,91 +201,91 @@ public:
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagId IdType;
+  using IdType = vtkm::TypeListTagId;
 
   /// \brief A type list containing the type vtkm::Id2.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagId2 Id2Type;
+  using Id2Type = vtkm::TypeListTagId2;
 
   /// \brief A type list containing the type vtkm::Id3.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagId3 Id3Type;
+  using Id3Type = vtkm::TypeListTagId3;
 
   /// \brief A type list containing the type vtkm::IdComponent.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagIdComponent IdComponentType;
+  using IdComponentType = vtkm::TypeListTagIdComponent;
 
   /// \brief A list of types commonly used for indexing.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagIndex Index;
+  using Index = vtkm::TypeListTagIndex;
 
   /// \brief A list of types commonly used for scalar fields.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagFieldScalar Scalar;
+  using Scalar = vtkm::TypeListTagFieldScalar;
 
   /// \brief A list of all basic types used for scalar fields.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagScalarAll ScalarAll;
+  using ScalarAll = vtkm::TypeListTagScalarAll;
 
   /// \brief A list of types commonly used for vector fields of 2 components.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagFieldVec2 Vec2;
+  using Vec2 = vtkm::TypeListTagFieldVec2;
 
   /// \brief A list of types commonly used for vector fields of 3 components.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagFieldVec3 Vec3;
+  using Vec3 = vtkm::TypeListTagFieldVec3;
 
   /// \brief A list of types commonly used for vector fields of 4 components.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagFieldVec4 Vec4;
+  using Vec4 = vtkm::TypeListTagFieldVec4;
 
   /// \brief A list of all basic types used for vector fields.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagVecAll VecAll;
+  using VecAll = vtkm::TypeListTagVecAll;
 
   /// \brief A list of types (scalar and vector) commonly used in fields.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagField FieldCommon;
+  using FieldCommon = vtkm::TypeListTagField;
 
   /// \brief A list of vector types commonly used in fields.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagVecCommon VecCommon;
+  using VecCommon = vtkm::TypeListTagVecCommon;
 
   /// \brief A list of generally common types.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagCommon CommonTypes;
+  using CommonTypes = vtkm::TypeListTagCommon;
 
   /// \brief A list of all basic types.
   ///
   /// This is a convenience type to use as template arguments to \c
   /// ControlSignature tags to specify the types of worklet arguments.
-  typedef vtkm::TypeListTagAll AllTypes;
+  using AllTypes = vtkm::TypeListTagAll;
 
   /// \c ControlSignature tag for whole input arrays.
   ///
@@ -300,9 +300,9 @@ public:
   template <typename TypeList = AllTypes>
   struct WholeArrayIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagWholeArrayIn TransportTag;
-    typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagWholeArrayIn;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
 
   /// \c ControlSignature tag for whole output arrays.
@@ -319,9 +319,9 @@ public:
   template <typename TypeList = AllTypes>
   struct WholeArrayOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagWholeArrayOut TransportTag;
-    typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagWholeArrayOut;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
 
   /// \c ControlSignature tag for whole input/output arrays.
@@ -339,9 +339,9 @@ public:
   template <typename TypeList = AllTypes>
   struct WholeArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagWholeArrayInOut TransportTag;
-    typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagWholeArrayInOut;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
 
   /// \c ControlSignature tag for whole input/output arrays.
@@ -359,9 +359,9 @@ public:
   template <typename TypeList = AllTypes>
   struct AtomicArrayInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef vtkm::cont::arg::TypeCheckTagAtomicArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagAtomicArray TransportTag;
-    typedef vtkm::exec::arg::FetchTagExecObject FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagAtomicArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagAtomicArray;
+    using FetchTag = vtkm::exec::arg::FetchTagExecObject;
   };
 
   /// \c ControlSignature tag for whole input topology.
@@ -377,9 +377,9 @@ public:
   template <typename FromType = Point, typename ToType = Cell>
   struct WholeCellSetIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef vtkm::cont::arg::TypeCheckTagCellSet TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagCellSetIn<FromType, ToType> TransportTag;
-    typedef vtkm::exec::arg::FetchTagWholeCellSetIn FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagCellSet;
+    using TransportTag = vtkm::cont::arg::TransportTagCellSetIn<FromType, ToType>;
+    using FetchTag = vtkm::exec::arg::FetchTagWholeCellSetIn;
   };
 
   /// \brief Creates a \c ThreadIndices object.

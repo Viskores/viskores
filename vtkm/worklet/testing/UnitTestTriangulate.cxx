@@ -35,8 +35,8 @@ public:
   void TestStructured() const
   {
     std::cout << "Testing TriangulateStructured:" << std::endl;
-    typedef vtkm::cont::CellSetStructured<2> CellSetType;
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<2>;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
@@ -60,8 +60,8 @@ public:
   void TestExplicit() const
   {
     std::cout << "Testing TriangulateExplicit:" << std::endl;
-    typedef vtkm::cont::CellSetExplicit<> CellSetType;
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetExplicit<>;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DExplicitDataSet0();

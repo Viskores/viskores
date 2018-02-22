@@ -53,7 +53,7 @@ private:
   template <typename T>
   static vtkm::cont::ArrayHandle<T, StorageTag> FillArray(std::vector<T>& data, std::size_t length)
   {
-    typedef typename std::vector<T>::iterator iterator;
+    using iterator = typename std::vector<T>::iterator;
     //make sure the data array is exactly the right length
     data.clear();
     data.resize(length);

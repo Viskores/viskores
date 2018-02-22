@@ -45,7 +45,7 @@ void CheckTypeSizes()
 template <typename ComponentType, vtkm::IdComponent Size>
 void DoGeneralVecTypeTestNegate(const vtkm::Vec<ComponentType, Size>&)
 {
-  typedef vtkm::Vec<ComponentType, Size> VectorType;
+  using VectorType = vtkm::Vec<ComponentType, Size>;
   for (vtkm::Id valueIndex = 0; valueIndex < 10; valueIndex++)
   {
     VectorType original = TestValue(valueIndex, VectorType());
@@ -321,7 +321,7 @@ void GeneralVecTypeTest(const vtkm::Vec<ComponentType, Size>&)
 {
   std::cout << "Checking general Vec functionality." << std::endl;
 
-  typedef vtkm::Vec<ComponentType, Size> T;
+  using T = vtkm::Vec<ComponentType, Size>;
 
   // Vector types should preserve the trivial properties of their components.
   // This insures that algorithms like std::copy will optimize fully.
@@ -445,7 +445,7 @@ void TypeTest(const vtkm::Vec<ComponentType, Size>&)
 template <typename Scalar>
 void TypeTest(const vtkm::Vec<Scalar, 2>&)
 {
-  typedef vtkm::Vec<Scalar, 2> Vector;
+  using Vector = vtkm::Vec<Scalar, 2>;
 
   GeneralVecTypeTest(Vector());
 
@@ -506,7 +506,7 @@ void TypeTest(const vtkm::Vec<Scalar, 2>&)
 template <typename Scalar>
 void TypeTest(const vtkm::Vec<Scalar, 3>&)
 {
-  typedef vtkm::Vec<Scalar, 3> Vector;
+  using Vector = vtkm::Vec<Scalar, 3>;
 
   GeneralVecTypeTest(Vector());
 
@@ -568,7 +568,7 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
 template <typename Scalar>
 void TypeTest(const vtkm::Vec<Scalar, 4>&)
 {
-  typedef vtkm::Vec<Scalar, 4> Vector;
+  using Vector = vtkm::Vec<Scalar, 4>;
 
   GeneralVecTypeTest(Vector());
 

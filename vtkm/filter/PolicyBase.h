@@ -40,15 +40,15 @@ namespace filter
 template <typename Derived>
 struct PolicyBase
 {
-  typedef VTKM_DEFAULT_TYPE_LIST_TAG FieldTypeList;
-  typedef VTKM_DEFAULT_STORAGE_LIST_TAG FieldStorageList;
+  using FieldTypeList = VTKM_DEFAULT_TYPE_LIST_TAG;
+  using FieldStorageList = VTKM_DEFAULT_STORAGE_LIST_TAG;
 
-  typedef vtkm::cont::CellSetListTagStructured StructuredCellSetList;
-  typedef vtkm::cont::CellSetListTagUnstructured UnstructuredCellSetList;
-  typedef VTKM_DEFAULT_CELL_SET_LIST_TAG AllCellSetList;
+  using StructuredCellSetList = vtkm::cont::CellSetListTagStructured;
+  using UnstructuredCellSetList = vtkm::cont::CellSetListTagUnstructured;
+  using AllCellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG;
 
   // List of backends to try in sequence (if one fails, the next is attempted).
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG DeviceAdapterList;
+  using DeviceAdapterList = VTKM_DEFAULT_DEVICE_ADAPTER_LIST_TAG;
 };
 
 //-----------------------------------------------------------------------------
@@ -57,8 +57,8 @@ VTKM_CONT vtkm::cont::DynamicArrayHandleBase<typename DerivedPolicy::FieldTypeLi
                                              typename DerivedPolicy::FieldStorageList>
 ApplyPolicy(const vtkm::cont::Field& field, const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  typedef typename DerivedPolicy::FieldTypeList TypeList;
-  typedef typename DerivedPolicy::FieldStorageList StorageList;
+  using TypeList = typename DerivedPolicy::FieldTypeList;
+  using StorageList = typename DerivedPolicy::FieldStorageList;
   return field.GetData().ResetTypeAndStorageLists(TypeList(), StorageList());
 }
 
@@ -71,10 +71,10 @@ ApplyPolicy(const vtkm::cont::Field& field,
             const vtkm::filter::PolicyBase<DerivedPolicy>&,
             const vtkm::filter::FilterTraits<FilterType>&)
 {
-  typedef
-    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType>::TypeList TypeList;
+  using TypeList =
+    typename vtkm::filter::DeduceFilterFieldTypes<DerivedPolicy, FilterType>::TypeList;
 
-  typedef typename DerivedPolicy::FieldStorageList StorageList;
+  using StorageList = typename DerivedPolicy::FieldStorageList;
   return field.GetData().ResetTypeAndStorageLists(TypeList(), StorageList());
 }
 
@@ -84,7 +84,7 @@ VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::AllCellSetList>
   const vtkm::cont::DynamicCellSet& cellset,
   const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  typedef typename DerivedPolicy::AllCellSetList CellSetList;
+  using CellSetList = typename DerivedPolicy::AllCellSetList;
   return cellset.ResetCellSetList(CellSetList());
 }
 
@@ -94,7 +94,7 @@ VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::StructuredCellS
 ApplyPolicyStructured(const vtkm::cont::DynamicCellSet& cellset,
                       const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  typedef typename DerivedPolicy::StructuredCellSetList CellSetList;
+  using CellSetList = typename DerivedPolicy::StructuredCellSetList;
   return cellset.ResetCellSetList(CellSetList());
 }
 
@@ -104,7 +104,7 @@ VTKM_CONT vtkm::cont::DynamicCellSetBase<typename DerivedPolicy::UnstructuredCel
 ApplyPolicyUnstructured(const vtkm::cont::DynamicCellSet& cellset,
                         const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  typedef typename DerivedPolicy::UnstructuredCellSetList CellSetList;
+  using CellSetList = typename DerivedPolicy::UnstructuredCellSetList;
   return cellset.ResetCellSetList(CellSetList());
 }
 }

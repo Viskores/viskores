@@ -138,7 +138,7 @@ public:
     : vtkm::ListTagBase<vtkm::UInt8, vtkm::Int8, vtkm::Float32, vtkm::Float64>
   {
   };
-  typedef TypeListTagMCScalars InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagMCScalars;
 };
 }
 } // namespace vtkm::filter

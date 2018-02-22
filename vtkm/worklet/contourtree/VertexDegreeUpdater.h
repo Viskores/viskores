@@ -107,7 +107,7 @@ public:
     WholeArrayInOut<IdType> chainExtemum, // (i/o) chain extemum for vertices
     FieldOut<IdType> newOutdegree);       // (output) new updegree of vertex
   typedef _8 ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // chainMaximum is safe for I/O here because:
   // 		we have previously eliminated maxima from the active vertex list

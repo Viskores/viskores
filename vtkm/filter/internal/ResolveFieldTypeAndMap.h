@@ -56,7 +56,7 @@ struct ResolveFieldTypeAndMapForDevice
 template <typename Derived, typename DerivedPolicy>
 struct ResolveFieldTypeAndMap
 {
-  typedef ResolveFieldTypeAndMap<Derived, DerivedPolicy> Self;
+  using Self = ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
 
   Derived* DerivedClass;
   vtkm::filter::Result& InputResult;

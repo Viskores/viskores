@@ -48,7 +48,7 @@ struct CellGradient : vtkm::worklet::WorkletMapPointToCell
                                 GradientOutputs outputFields);
 
   typedef void ExecutionSignature(CellShape, PointCount, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename CellTagType,
             typename PointCoordVecType,

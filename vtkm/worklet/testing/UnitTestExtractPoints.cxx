@@ -33,7 +33,7 @@ public:
   {
     std::cout << "Testing extract points structured by id:" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -60,7 +60,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -92,7 +92,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -124,7 +124,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (sphere):" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -156,7 +156,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box) on explicit:" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -188,7 +188,7 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box) on explicit:" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -220,7 +220,7 @@ public:
   {
     std::cout << "Testing extract points explicit by id:" << std::endl;
 
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();

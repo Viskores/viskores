@@ -90,7 +90,7 @@ public:
     WholeArrayIn<IdType> lastParticleId,  // (input) last particle in halo
     FieldOut<TagType> potential);         // (output) bin ID
   typedef _9 ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id xNum, yNum, zNum;
   vtkm::Id NUM_NEIGHBORS;

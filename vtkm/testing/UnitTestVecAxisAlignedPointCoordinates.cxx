@@ -25,7 +25,7 @@
 namespace
 {
 
-typedef vtkm::Vec<vtkm::FloatDefault, 3> Vec3;
+using Vec3 = vtkm::Vec<vtkm::FloatDefault, 3>;
 
 static const Vec3 g_Origin = Vec3(1.0f, 2.0f, 3.0f);
 static const Vec3 g_Spacing = Vec3(4.0f, 5.0f, 6.0f);
@@ -79,9 +79,9 @@ template <vtkm::IdComponent NumDimensions>
 void TryVecAxisAlignedPointCoordinates(
   const vtkm::VecAxisAlignedPointCoordinates<NumDimensions>& coords)
 {
-  typedef vtkm::VecAxisAlignedPointCoordinates<NumDimensions> VecCoordsType;
-  typedef vtkm::TypeTraits<VecCoordsType> TTraits;
-  typedef vtkm::VecTraits<VecCoordsType> VTraits;
+  using VecCoordsType = vtkm::VecAxisAlignedPointCoordinates<NumDimensions>;
+  using TTraits = vtkm::TypeTraits<VecCoordsType>;
+  using VTraits = vtkm::VecTraits<VecCoordsType>;
 
   std::cout << "Check traits tags." << std::endl;
   CheckNumericTag(typename TTraits::NumericTag());

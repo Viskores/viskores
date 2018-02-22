@@ -96,11 +96,10 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 class EdgePeakComparator
 {
 public:
-  typedef typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst ValuePortalType;
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
-      IdPortalType;
+  using ValuePortalType = typename vtkm::cont::ArrayHandle<T, StorageType>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst;
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   ValuePortalType values;
   IdPortalType valueIndex;

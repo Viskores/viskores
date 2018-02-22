@@ -57,8 +57,8 @@ VTKM_EXEC_CONT NewtonsMethodResult<ScalarType, Size> NewtonsMethod(
   ScalarType convergeDifference = ScalarType(1e-3),
   vtkm::IdComponent maxIterations = 10)
 {
-  typedef vtkm::Vec<ScalarType, Size> VectorType;
-  typedef vtkm::Matrix<ScalarType, Size, Size> MatrixType;
+  using VectorType = vtkm::Vec<ScalarType, Size>;
+  using MatrixType = vtkm::Matrix<ScalarType, Size, Size>;
 
   VectorType x = initialGuess;
 

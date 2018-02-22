@@ -56,9 +56,9 @@ public:
   public:
     typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(PointIndices, _2, ThreadIndices);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
-    typedef vtkm::worklet::ScatterUniform ScatterType;
+    using ScatterType = vtkm::worklet::ScatterUniform;
     VTKM_CONT
     ScatterType GetScatter() const { return ScatterType(5); }
 
@@ -94,7 +94,7 @@ public:
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;

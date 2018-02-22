@@ -122,7 +122,7 @@ public:
                                 FieldOutCell<IdComponentType> outNumTriangles,
                                 WholeArrayIn<IdComponentType> numTrianglesTable);
   typedef void ExecutionSignature(CellShape, _1, _2, _4, _5);
-  typedef _3 InputDomain;
+  using InputDomain = _3;
 
   template <typename IsoValuesType, typename FieldInType, typename NumTrianglesTablePortalType>
   VTKM_EXEC void operator()(vtkm::CellShapeTagGeneric shape,
@@ -182,11 +182,11 @@ class EdgeWeightGenerateMetaData
   template <typename FieldType>
   struct PortalTypes
   {
-    typedef vtkm::cont::ArrayHandle<FieldType> HandleType;
-    typedef typename HandleType::template ExecutionTypes<DeviceAdapter> ExecutionTypes;
+    using HandleType = vtkm::cont::ArrayHandle<FieldType>;
+    using ExecutionTypes = typename HandleType::template ExecutionTypes<DeviceAdapter>;
 
-    typedef typename ExecutionTypes::Portal Portal;
-    typedef typename ExecutionTypes::PortalConst PortalConst;
+    using Portal = typename ExecutionTypes::Portal;
+    using PortalConst = typename ExecutionTypes::PortalConst;
   };
 
 public:
@@ -233,7 +233,7 @@ public:
   {
   };
 
-  typedef vtkm::worklet::ScatterCounting ScatterType;
+  using ScatterType = vtkm::worklet::ScatterCounting;
 
   typedef void ControlSignature(
     CellSetIn cellset, // Cell set
@@ -243,7 +243,7 @@ public:
   typedef void
     ExecutionSignature(CellShape, _2, _3, InputIndex, WorkIndex, VisitIndex, FromIndices);
 
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   VTKM_CONT
   EdgeWeightGenerate(const EdgeWeightGenerateMetaData<DeviceAdapter>& meta)
@@ -300,7 +300,7 @@ public:
                             const IndicesVecType& indices) const
   { //covers when we have hexs coming from 3d structured data
     const vtkm::Id outputPointId = 3 * outputCellId;
-    typedef typename vtkm::VecTraits<FieldInType>::ComponentType FieldType;
+    using FieldType = typename vtkm::VecTraits<FieldInType>::ComponentType;
 
     vtkm::IdComponent sum = 0, caseNumber = 0;
     vtkm::IdComponent i = 0, size = static_cast<vtkm::IdComponent>(isovalues.GetNumberOfValues());
@@ -367,7 +367,7 @@ public:
                                 WholeArrayIn<> inputField,
                                 FieldOut<> output);
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   VTKM_CONT
   MapPointField() {}
@@ -417,7 +417,7 @@ struct MergeDuplicateValues : vtkm::worklet::WorkletReduceByKey
                                 ReducedValuesOut<> valueOut1,
                                 ReducedValuesOut<> valueOut2);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename T,
             typename ValuesInType,
@@ -440,7 +440,7 @@ struct CopyEdgeIds : vtkm::worklet::WorkletMapField
 {
   typedef void ControlSignature(FieldIn<>, FieldOut<>);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   VTKM_EXEC
   void operator()(const vtkm::Id2& input, vtkm::Id2& output) const { output = input; }

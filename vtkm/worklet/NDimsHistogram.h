@@ -46,7 +46,7 @@ public:
   template <typename DeviceAdapter>
   void SetNumOfDataPoints(vtkm::Id _numDataPoints, DeviceAdapter vtkmNotUsed(device))
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     NumDataPoints = _numDataPoints;
 
@@ -93,7 +93,7 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Id>& freqs,
            DeviceAdapter vtkmNotUsed(device))
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     binId.resize(NumberOfBins.size());
 

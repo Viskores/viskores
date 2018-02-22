@@ -38,20 +38,20 @@ public:
                             const InOutPortalType& inOutPortal,
                             const OutPortalType& outPortal) const
   {
-    typedef typename InPortalType::ValueType inT;
+    using inT = typename InPortalType::ValueType;
     if (!test_equal(inPortal.Get(index), TestValue(index, inT())))
     {
       this->RaiseError("Got wrong input value.");
     }
 
-    typedef typename InOutPortalType::ValueType inOutT;
+    using inOutT = typename InOutPortalType::ValueType;
     if (!test_equal(inOutPortal.Get(index), TestValue(index, inOutT()) + inOutT(100)))
     {
       this->RaiseError("Got wrong input/output value.");
     }
     inOutPortal.Set(index, TestValue(index, inOutT()));
 
-    typedef typename OutPortalType::ValueType outT;
+    using outT = typename OutPortalType::ValueType;
     outPortal.Set(index, TestValue(index, outT()));
   }
 };
@@ -61,12 +61,12 @@ class TestAtomicArrayWorklet : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<>, AtomicArrayInOut<>);
   typedef void ExecutionSignature(WorkIndex, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename AtomicArrayType>
   VTKM_EXEC void operator()(const vtkm::Id& index, const AtomicArrayType& atomicArray) const
   {
-    typedef typename AtomicArrayType::ValueType ValueType;
+    using ValueType = typename AtomicArrayType::ValueType;
     atomicArray.Add(0, static_cast<ValueType>(index));
   }
 };
@@ -78,7 +78,7 @@ static const vtkm::Id ARRAY_SIZE = 10;
 
 struct DoTestWholeArrayWorklet
 {
-  typedef TestWholeArrayWorklet WorkletType;
+  using WorkletType = TestWholeArrayWorklet;
 
   // This just demonstrates that the WholeArray tags support dynamic arrays.
   VTKM_CONT
@@ -122,7 +122,7 @@ struct DoTestWholeArrayWorklet
 
 struct DoTestAtomicArrayWorklet
 {
-  typedef TestAtomicArrayWorklet WorkletType;
+  using WorkletType = TestAtomicArrayWorklet;
 
   // This just demonstrates that the WholeArray tags support dynamic arrays.
   VTKM_CONT
@@ -153,7 +153,7 @@ struct DoTestAtomicArrayWorklet
 
 void TestWorkletMapFieldExecArg()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
   std::cout << "Testing Worklet with WholeArray on device adapter: "
             << DeviceAdapterTraits::GetName() << std::endl;
 

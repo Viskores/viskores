@@ -31,7 +31,7 @@
 #include "KernelWendland.h"
 */
 
-typedef vtkm::Vec<vtkm::Float64, 3> Vector;
+using Vector = vtkm::Vec<vtkm::Float64, 3>;
 
 // Simpson integradion rule
 double SimpsonIntegration(const std::vector<double>& y, const std::vector<double>& x)

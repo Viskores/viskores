@@ -103,7 +103,7 @@ class ChainDoubler : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<IdType> vertexID, WholeArrayInOut<IdType> chains);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

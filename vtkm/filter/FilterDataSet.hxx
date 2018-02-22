@@ -138,10 +138,10 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
   if (result.IsValid())
   {
     vtkm::filter::FieldMetadata metaData(field);
-    typedef internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy> FunctorType;
+    using FunctorType = internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
     FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
-    typedef vtkm::filter::FilterTraits<Derived> Traits;
+    using Traits = vtkm::filter::FilterTraits<Derived>;
     vtkm::cont::CastAndCall(
       vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->Tracker);
   }
