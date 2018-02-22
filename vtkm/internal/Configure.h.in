@@ -272,7 +272,7 @@
 #cmakedefine VTKM_ENABLE_MPI
 
 #if __cplusplus >= 201103L || \
-    ( defined(VTKM_MSVC) && _MSC_VER >= 1800  ) || \
+    ( defined(VTKM_MSVC) && _MSC_VER >= 1900  ) || \
     ( defined(VTKM_ICC)  && defined(__INTEL_CXX11_MODE__) )
 #define VTKM_HAVE_CXX_11
 #else
@@ -339,17 +339,6 @@
 //warning.
 //
 #pragma warning(disable:4251)
-
-// MSVC 2013 and earlier only:
-#if _MSC_VER <= 1800
-// Generates numerous warnings that implicit constructors can't
-// be constructed. This is understood and we don't care.
-#pragma warning(disable:4510)
-
-// Generates numerous warnings that implicit assignment operators can't
-// be constructed. This is understood and we don't care.
-#pragma warning(disable:4512)
-#endif // MSVC <= 2013
 
 #endif
 

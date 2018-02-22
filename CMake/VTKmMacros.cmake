@@ -86,12 +86,6 @@ function(vtkm_setup_msvc_properties target )
   #      removed when doing header test builds.
   target_compile_options(${target} PRIVATE -wd4702 -wd4505)
 
-  # In VS2013 the C4127 warning has a bug in the implementation and
-  # generates false positive warnings for lots of template code
-  if(MSVC_VERSION LESS 1900)
-    target_compile_options(${target} PRIVATE -wd4127 )
-  endif()
-
 endfunction(vtkm_setup_msvc_properties)
 
 # vtkm_target_name(<name>)

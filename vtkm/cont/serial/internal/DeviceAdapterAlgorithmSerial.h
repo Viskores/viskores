@@ -433,7 +433,7 @@ public:
                                   const BinaryCompare& binary_compare)
   {
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
-    VTKM_CONSTEXPR bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
+    constexpr bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
     if (larger_than_64bits)
     {
       /// More efficient sort:

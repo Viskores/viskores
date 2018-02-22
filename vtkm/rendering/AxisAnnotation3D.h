@@ -23,9 +23,6 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/Range.h>
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#endif
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/AxisAnnotation.h>

@@ -80,35 +80,35 @@ struct ListContainsImpl;
 template <typename Type>
 struct ListContainsImpl<Type, brigand::empty_sequence>
 {
-  static VTKM_CONSTEXPR bool value = false;
+  static constexpr bool value = false;
 };
 
 //-----------------------------------------------------------------------------
 template <typename Type>
 struct ListContainsImpl<Type, brigand::list<vtkm::detail::UniversalTag>>
 {
-  static VTKM_CONSTEXPR bool value = true;
+  static constexpr bool value = true;
 };
 
 //-----------------------------------------------------------------------------
 template <typename Type, typename T1>
 struct ListContainsImpl<Type, brigand::list<T1>>
 {
-  static VTKM_CONSTEXPR bool value = std::is_same<Type, T1>::value;
+  static constexpr bool value = std::is_same<Type, T1>::value;
 };
 
 //-----------------------------------------------------------------------------
 template <typename Type, typename T1, typename T2>
 struct ListContainsImpl<Type, brigand::list<T1, T2>>
 {
-  static VTKM_CONSTEXPR bool value = std::is_same<Type, T1>::value || std::is_same<Type, T2>::value;
+  static constexpr bool value = std::is_same<Type, T1>::value || std::is_same<Type, T2>::value;
 };
 
 //-----------------------------------------------------------------------------
 template <typename Type, typename T1, typename T2, typename T3>
 struct ListContainsImpl<Type, brigand::list<T1, T2, T3>>
 {
-  static VTKM_CONSTEXPR bool value =
+  static constexpr bool value =
     std::is_same<Type, T1>::value || std::is_same<Type, T2>::value || std::is_same<Type, T3>::value;
 };
 
@@ -116,8 +116,8 @@ struct ListContainsImpl<Type, brigand::list<T1, T2, T3>>
 template <typename Type, typename T1, typename T2, typename T3, typename T4>
 struct ListContainsImpl<Type, brigand::list<T1, T2, T3, T4>>
 {
-  static VTKM_CONSTEXPR bool value = std::is_same<Type, T1>::value ||
-    std::is_same<Type, T2>::value || std::is_same<Type, T3>::value || std::is_same<Type, T4>::value;
+  static constexpr bool value = std::is_same<Type, T1>::value || std::is_same<Type, T2>::value ||
+    std::is_same<Type, T3>::value || std::is_same<Type, T4>::value;
 };
 
 //-----------------------------------------------------------------------------
@@ -126,7 +126,7 @@ struct ListContainsImpl
 {
   using find_result = brigand::find<List, std::is_same<brigand::_1, Type>>;
   using size = brigand::size<find_result>;
-  static VTKM_CONSTEXPR bool value = (size::value != 0);
+  static constexpr bool value = (size::value != 0);
 };
 
 //-----------------------------------------------------------------------------
@@ -213,30 +213,7 @@ VTKM_CONT void ListForEachImpl(Functor&& f,
 template <typename R1, typename R2>
 struct ListCrossProductImpl
 {
-#if defined(VTKM_MSVC) && _MSC_VER == 1800
-  // This is a Cartesian product generator that is used
-  // when building with visual studio 2013. Visual Studio
-  // 2013 is unable to handle the lazy version as it can't
-  // deduce the correct template parameters
-  using type = brigand::reverse_fold<
-    brigand::list<R1, R2>,
-    brigand::list<brigand::list<>>,
-    brigand::bind<
-      brigand::join,
-      brigand::bind<
-        brigand::transform,
-        brigand::_2,
-        brigand::defer<brigand::bind<
-          brigand::join,
-          brigand::bind<
-            brigand::transform,
-            brigand::parent<brigand::_1>,
-            brigand::defer<brigand::bind<
-              brigand::list,
-              brigand::bind<brigand::push_front, brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
-#else
-  // This is a lazy Cartesian product generator that is used
-  // when using any compiler other than visual studio 2013.
+  // This is a lazy Cartesian product generator.
   // This version was settled on as being the best default
   // version as all compilers including Intel handle this
   // implementation without issue for very large cross products
@@ -250,7 +227,6 @@ struct ListCrossProductImpl
         brigand::defer<brigand::bind<
           brigand::list,
           brigand::lazy::push_front<brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
-#endif
 };
 
 
