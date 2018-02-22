@@ -96,4 +96,6 @@ elseif (CMAKE_COMPILER_IS_MSVCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
   endif()
 
+  # disable C4275: non-dll interface base class warnings
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
 endif()
