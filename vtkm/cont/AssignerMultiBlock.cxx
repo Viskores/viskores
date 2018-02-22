@@ -42,28 +42,28 @@ AssignerMultiBlock::AssignerMultiBlock(const vtkm::cont::MultiBlock& mb)
   , IScanBlockCounts()
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  const auto nblocks = mb.GetNumberOfBlocks();
+  const auto num_blocks = mb.GetNumberOfBlocks();
 
   vtkm::Id iscan;
-  diy::mpi::scan(comm, nblocks, iscan, std::plus<vtkm::Id>());
+  diy::mpi::scan(comm, num_blocks, iscan, std::plus<vtkm::Id>());
   diy::mpi::all_gather(comm, iscan, this->IScanBlockCounts);
 
   this->set_nblocks(static_cast<int>(this->IScanBlockCounts.back()));
 }
 
 VTKM_CONT
-void AssignerMultiBlock::local_gids(int rank, std::vector<int>& gids) const
+void AssignerMultiBlock::local_gids(int my_rank, std::vector<int>& gids) const
 {
-  if (rank == 0)
+  if (my_rank == 0)
   {
     assert(this->IScanBlockCounts.size() > 0);
-    gids.resize(this->IScanBlockCounts[rank]);
+    gids.resize(this->IScanBlockCounts[my_rank]);
     std::iota(gids.begin(), gids.end(), 0);
   }
-  else if (rank > 0 && rank < static_cast<int>(this->IScanBlockCounts.size()))
+  else if (my_rank > 0 && my_rank < static_cast<int>(this->IScanBlockCounts.size()))
   {
-    gids.resize(this->IScanBlockCounts[rank] - this->IScanBlockCounts[rank - 1]);
-    std::iota(gids.begin(), gids.end(), this->IScanBlockCounts[rank - 1]);
+    gids.resize(this->IScanBlockCounts[my_rank] - this->IScanBlockCounts[my_rank - 1]);
+    std::iota(gids.begin(), gids.end(), this->IScanBlockCounts[my_rank - 1]);
   }
 }
 
