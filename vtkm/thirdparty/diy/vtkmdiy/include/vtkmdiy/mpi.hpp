@@ -1,7 +1,11 @@
 #ifndef DIY_MPI_HPP
 #define DIY_MPI_HPP
 
+#ifndef DIY_NO_MPI
 #include <mpi.h>
+#else
+#include "mpi/no-mpi.hpp"
+#endif
 
 #include "mpi/constants.hpp"
 #include "mpi/datatypes.hpp"
@@ -21,12 +25,39 @@ namespace mpi
 //! \ingroup MPI
 struct environment
 {
-  environment()                           { int argc = 0; char** argv; MPI_Init(&argc, &argv); }
-  environment(int argc, char* argv[])     { MPI_Init(&argc, &argv); }
-  ~environment()                          { MPI_Finalize(); }
+  inline environment();
+  inline environment(int argc, char* argv[]);
+  inline ~environment();
 };
 
 }
+}
+
+diy::mpi::environment::
+environment()
+{
+#ifndef DIY_NO_MPI
+  int argc = 0; char** argv;
+  MPI_Init(&argc, &argv);
+#endif
+}
+
+diy::mpi::environment::
+environment(int argc, char* argv[])
+{
+#ifndef DIY_NO_MPI
+  MPI_Init(&argc, &argv);
+#else
+  (void) argc; (void) argv;
+#endif
+}
+
+diy::mpi::environment::
+~environment()
+{
+#ifndef DIY_NO_MPI
+  MPI_Finalize();
+#endif
 }
 
 #endif

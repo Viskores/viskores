@@ -71,6 +71,7 @@ void
 diy::io::BOV::
 read(const DiscreteBounds& bounds, T* buffer, bool collective, int chunk) const
 {
+#ifndef DIY_NO_MPI
   int dim   = shape_.size();
   int total = 1;
   std::vector<int> subsizes;
@@ -110,6 +111,10 @@ read(const DiscreteBounds& bounds, T* buffer, bool collective, int chunk) const
   if (chunk != 1)
     MPI_Type_free(&T_type);
   MPI_Type_free(&fileblk);
+#else
+  (void) bounds; (void) buffer; (void) collective; (void)chunk;
+  DIY_UNSUPPORTED_MPI_CALL(diy::io::BOV::read);
+#endif
 }
 
 template<class T>
@@ -125,6 +130,7 @@ void
 diy::io::BOV::
 write(const DiscreteBounds& bounds, const T* buffer, const DiscreteBounds& core, bool collective, int chunk)
 {
+#ifndef DIY_NO_MPI
   int dim   = shape_.size();
   std::vector<int> subsizes;
   std::vector<int> buffer_shape, buffer_start;
@@ -166,6 +172,10 @@ write(const DiscreteBounds& bounds, const T* buffer, const DiscreteBounds& core,
     MPI_Type_free(&T_type);
   MPI_Type_free(&fileblk);
   MPI_Type_free(&subbuffer);
+#else
+  (void) bounds; (void) buffer;(void) core; (void) collective; (void) chunk;
+  DIY_UNSUPPORTED_MPI_CALL(diy::io::bov::write);
+#endif
 }
 
 #endif

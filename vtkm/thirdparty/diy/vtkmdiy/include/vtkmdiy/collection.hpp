@@ -23,23 +23,23 @@ namespace diy
       typedef       detail::Load                                Load;
 
     public:
-                    Collection(Create               create,
-                               Destroy              destroy,
-                               ExternalStorage*     storage,
-                               Save                 save,
-                               Load                 load):
-                        create_(create),
-                        destroy_(destroy),
-                        storage_(storage),
-                        save_(save),
-                        load_(load),
+                    Collection(Create               create__,
+                               Destroy              destroy__,
+                               ExternalStorage*     storage__,
+                               Save                 save__,
+                               Load                 load__):
+                        create_(create__),
+                        destroy_(destroy__),
+                        storage_(storage__),
+                        save_(save__),
+                        load_(load__),
                         in_memory_(0)               {}
 
       size_t        size() const                    { return elements_.size(); }
       const CInt&   in_memory() const               { return in_memory_; }
       inline void   clear();
 
-      int           add(Element e)                  { elements_.push_back(e); external_.push_back(-1); ++(*in_memory_.access()); return elements_.size() - 1; }
+      int           add(Element e)                  { elements_.push_back(e); external_.push_back(-1); ++(*in_memory_.access()); return static_cast<int>(elements_.size()) - 1; }
       void*         release(int i)                  { void* e = get(i); elements_[i] = 0; return e; }
 
       void*         find(int i) const               { return elements_[i]; }                        // possibly returns 0, if the element is unloaded
@@ -81,7 +81,7 @@ clear()
 {
   if (own())
     for (size_t i = 0; i < size(); ++i)
-      destroy(i);
+      destroy(static_cast<int>(i));
   elements_.clear();
   external_.clear();
   *in_memory_.access() = 0;

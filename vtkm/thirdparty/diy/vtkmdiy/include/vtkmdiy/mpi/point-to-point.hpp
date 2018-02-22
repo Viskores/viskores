@@ -15,11 +15,16 @@ namespace detail
   {
     void operator()(MPI_Comm comm, int dest, int tag, const T& x) const
     {
+#ifndef DIY_NO_MPI
       typedef       mpi_datatype<T>     Datatype;
       MPI_Send((void*) Datatype::address(x),
                Datatype::count(x),
                Datatype::datatype(),
                dest, tag, comm);
+#else
+      (void) comm; (void) dest; (void) tag; (void) x;
+      DIY_UNSUPPORTED_MPI_CALL(MPI_Send);
+#endif
     }
   };
 
@@ -32,6 +37,7 @@ namespace detail
   {
     status operator()(MPI_Comm comm, int source, int tag, T& x) const
     {
+#ifndef DIY_NO_MPI
       typedef       mpi_datatype<T>     Datatype;
       status s;
       MPI_Recv((void*) Datatype::address(x),
@@ -39,6 +45,10 @@ namespace detail
                 Datatype::datatype(),
                 source, tag, comm, &s.s);
       return s;
+#else
+      (void) comm; (void) source; (void) tag; (void) x;
+      DIY_UNSUPPORTED_MPI_CALL(MPI_Recv);
+#endif
     }
   };
 
@@ -47,12 +57,17 @@ namespace detail
   {
     status operator()(MPI_Comm comm, int source, int tag, std::vector<U>& x) const
     {
+#ifndef DIY_NO_MPI
       status s;
 
       MPI_Probe(source, tag, comm, &s.s);
       x.resize(s.count<U>());
-      MPI_Recv(&x[0], x.size(), get_mpi_datatype<U>(), source, tag, comm, &s.s);
+      MPI_Recv(&x[0], static_cast<int>(x.size()), get_mpi_datatype<U>(), source, tag, comm, &s.s);
       return s;
+#else
+      (void) comm; (void) source; (void) tag; (void) x;
+      DIY_UNSUPPORTED_MPI_CALL(MPI_Recv);
+#endif
     }
   };
 
@@ -65,6 +80,7 @@ namespace detail
   {
     request operator()(MPI_Comm comm, int dest, int tag, const T& x) const
     {
+#ifndef DIY_NO_MPI
       request r;
       typedef       mpi_datatype<T>     Datatype;
       MPI_Isend((void*) Datatype::address(x),
@@ -72,6 +88,10 @@ namespace detail
                 Datatype::datatype(),
                 dest, tag, comm, &r.r);
       return r;
+#else
+      (void) comm; (void) dest; (void) tag; (void) x;
+      DIY_UNSUPPORTED_MPI_CALL(MPI_Isend);
+#endif
     }
   };
 
@@ -84,6 +104,7 @@ namespace detail
   {
     request operator()(MPI_Comm comm, int source, int tag, T& x) const
     {
+#ifndef DIY_NO_MPI
       request r;
       typedef       mpi_datatype<T>     Datatype;
       MPI_Irecv(Datatype::address(x),
@@ -91,6 +112,10 @@ namespace detail
                 Datatype::datatype(),
                 source, tag, comm, &r.r);
       return r;
+#else
+      (void) comm; (void) source; (void) tag; (void) x;
+      DIY_UNSUPPORTED_MPI_CALL(MPI_Irecv);
+#endif
     }
   };
 }
