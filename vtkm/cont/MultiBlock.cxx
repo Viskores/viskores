@@ -31,7 +31,6 @@
 #include <vtkm/cont/Field.h>
 #include <vtkm/cont/MultiBlock.h>
 
-#if defined(VTKM_ENABLE_MPI)
 // clang-format off
 #include <vtkm/thirdparty/diy/Configure.h>
 #include VTKM_DIY(diy/decomposition.hpp)
@@ -71,8 +70,6 @@ const vtkm::cont::DataSet& GetBlock(const vtkm::cont::MultiBlock& mb,
 }
 }
 }
-
-#endif
 
 namespace vtkm
 {
@@ -137,7 +134,6 @@ vtkm::Id MultiBlock::GetNumberOfBlocks() const
 VTKM_CONT
 vtkm::Id MultiBlock::GetGlobalNumberOfBlocks() const
 {
-#if defined(VTKM_ENABLE_MPI)
   auto world = vtkm::cont::EnvironmentTracker::GetCommunicator();
   const auto local_count = this->GetNumberOfBlocks();
 
@@ -151,9 +147,6 @@ vtkm::Id MultiBlock::GetGlobalNumberOfBlocks() const
   master.process_collectives();
   vtkm::Id global_count = master.proxy(0).get<vtkm::Id>();
   return global_count;
-#else
-  return this->GetNumberOfBlocks();
-#endif
 }
 
 VTKM_CONT
@@ -207,7 +200,6 @@ void MultiBlock::ReplaceBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
 
 VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) const
 {
-#if defined(VTKM_ENABLE_MPI)
   auto world = vtkm::cont::EnvironmentTracker::GetCommunicator();
   diy::Master master(world,
                      1,
@@ -259,19 +251,6 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) c
     return (*master.block<vtkm::Bounds>(0));
   }
   return vtkm::Bounds();
-
-#else
-  const vtkm::Id index = coordinate_system_index;
-  const size_t num_blocks = this->Blocks.size();
-
-  vtkm::Bounds bounds;
-  for (size_t i = 0; i < num_blocks; ++i)
-  {
-    vtkm::Bounds block_bounds = this->GetBlockBounds(i, index);
-    bounds.Include(block_bounds);
-  }
-  return bounds;
-#endif
 }
 
 VTKM_CONT vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index,
@@ -305,7 +284,6 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(const 
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(
   const std::string& field_name) const
 {
-#if defined(VTKM_ENABLE_MPI)
   using BlockMetaData = std::vector<vtkm::Range>;
 
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
@@ -366,64 +344,6 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(
   vtkm::cont::ArrayHandle<vtkm::Range> range;
   vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandle(ranges), range);
   return range;
-#else
-  bool valid_field = true;
-  const size_t num_blocks = this->Blocks.size();
-
-  vtkm::cont::ArrayHandle<vtkm::Range> range;
-  vtkm::Id num_components = 0;
-
-  for (size_t i = 0; i < num_blocks; ++i)
-  {
-    if (!this->Blocks[i].HasField(field_name))
-    {
-      valid_field = false;
-      break;
-    }
-
-    const vtkm::cont::Field& field = this->Blocks[i].GetField(field_name);
-    vtkm::cont::ArrayHandle<vtkm::Range> sub_range = field.GetRange();
-
-    vtkm::cont::ArrayHandle<vtkm::Range>::PortalConstControl sub_range_control =
-      sub_range.GetPortalConstControl();
-    vtkm::cont::ArrayHandle<vtkm::Range>::PortalControl range_control = range.GetPortalControl();
-
-    if (i == 0)
-    {
-      num_components = sub_range_control.GetNumberOfValues();
-      range = sub_range;
-      continue;
-    }
-
-    vtkm::Id components = sub_range_control.GetNumberOfValues();
-
-    if (components != num_components)
-    {
-      std::stringstream msg;
-      msg << "GetRange call failed. The number of components (" << components << ") in field "
-          << field_name << " from block " << i << " does not match the number of components "
-          << "(" << num_components << ") in block 0";
-      throw ErrorExecution(msg.str());
-    }
-
-    for (vtkm::Id c = 0; c < components; ++c)
-    {
-      vtkm::Range s_range = sub_range_control.Get(c);
-      vtkm::Range c_range = range_control.Get(c);
-      c_range.Include(s_range);
-      range_control.Set(c, c_range);
-    }
-  }
-
-  if (!valid_field)
-  {
-    std::string msg = "GetRange call failed. ";
-    msg += " Field " + field_name + " did not exist in at least one block.";
-    throw ErrorExecution(msg);
-  }
-
-  return range;
-#endif
 }
 
 VTKM_CONT

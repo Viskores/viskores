@@ -22,8 +22,20 @@
 #ifndef vtkm_diy_h
 #define vtkm_diy_h
 
+#include <vtkm/internal/Configure.h>
+
 /* Use the diy library configured for VTM-m. */
 #cmakedefine01 VTKM_USE_EXTERNAL_DIY
+
+/* Whether to use MPI support in DIY */
+#if !defined(VTKM_ENABLE_MPI)
+# define DIY_NO_MPI
+#endif
+
+/* initially, we disable DIY threads.
+ * once we've sorted out how DIY threads and vtkm work together
+ * we will make this configurable.*/
+#define DIY_NO_THREADS
 
 #if VTKM_USE_EXTERNAL_DIY
 # define VTKM_DIY(header) <header>

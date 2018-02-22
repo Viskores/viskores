@@ -20,9 +20,14 @@
 #ifndef vtk_m_cont_DecomposerMultiBlock_h
 #define vtk_m_cont_DecomposerMultiBlock_h
 
-#include <vtkm/internal/Configure.h>
-#if defined(VTKM_ENABLE_MPI)
-#include <vtkm/cont/AssignerMultiBlock.h>
+#include <vtkm/cont/vtkm_cont_export.h>
+
+#include <vtkm/internal/ExportMacros.h>
+#include <vtkm/thirdparty/diy/Configure.h>
+
+// clang-format off
+#include VTKM_DIY(diy/assigner.hpp)
+// clang-format on
 
 namespace vtkm
 {
@@ -51,7 +56,5 @@ public:
 };
 }
 }
-
-#endif // defined(VTKM_ENABLE_MPI)
 
 #endif

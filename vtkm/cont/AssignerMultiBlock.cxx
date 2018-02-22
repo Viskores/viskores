@@ -19,10 +19,10 @@
 //============================================================================
 #include <vtkm/cont/AssignerMultiBlock.h>
 
-#if defined(VTKM_ENABLE_MPI)
+#include <vtkm/cont/EnvironmentTracker.h>
+#include <vtkm/cont/MultiBlock.h>
 
 // clang-format off
-#include <vtkm/cont/EnvironmentTracker.h>
 #include VTKM_DIY(diy/mpi.hpp)
 // clang-format on
 
@@ -76,5 +76,3 @@ int AssignerMultiBlock::rank(int gid) const
 
 } // vtkm::cont
 } // vtkm
-
-#endif // defined(VTKM_ENABLE_MPI)
