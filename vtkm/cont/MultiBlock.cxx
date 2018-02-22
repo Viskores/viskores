@@ -52,10 +52,15 @@ template <typename PortalType>
 VTKM_CONT std::vector<typename PortalType::ValueType> CopyArrayPortalToVector(
   const PortalType& portal)
 {
+  const size_t count =
+    portal.GetNumberOfValues() > 0 ? static_cast<size_t>(portal.GetNumberOfValues()) : 0;
   using ValueType = typename PortalType::ValueType;
-  std::vector<ValueType> result(portal.GetNumberOfValues());
-  vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
-  std::copy(iterators.GetBegin(), iterators.GetEnd(), result.begin());
+  std::vector<ValueType> result(count);
+  if (count > 0)
+  {
+    vtkm::cont::ArrayPortalToIterators<PortalType> iterators(portal);
+    std::copy(iterators.GetBegin(), iterators.GetEnd(), result.begin());
+  }
   return result;
 }
 
