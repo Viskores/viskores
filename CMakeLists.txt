@@ -18,14 +18,12 @@
 ##  this software.
 ##============================================================================
 
-# We require CMake 3.9 for Modern CMake which as features such as:
-#   - Support for OBJECTs in target_sources
-#   - Support for meta level compiler features
-#   - Proper if() argument expansion
-#   - Proper CUDA support
+# We require CMake 3.3 for Modern CMake which as features such as:
+#   - Support for target_sources
 #   - Support for usage requirements
 #
-# We require CMake 3.9 for CUDA support
+# If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX or
+# CMake 3.10 on windows.
 cmake_minimum_required(VERSION 3.3)
 project (VTKm)
 
