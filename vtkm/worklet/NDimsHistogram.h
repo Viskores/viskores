@@ -46,7 +46,7 @@ public:
   template <typename DeviceAdapter>
   void SetNumOfDataPoints(vtkm::Id _numDataPoints, DeviceAdapter vtkmNotUsed(device))
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     NumDataPoints = _numDataPoints;
 
@@ -82,18 +82,18 @@ public:
   // Execute N-Dim histogram worklet to get N-Dims histogram from input fields
   // Input arguments:
   //   binId: returned bin id of NDims-histogram, binId has n arrays, if length of fieldName is n
-  //   freqs: returned frequncy(count) array
+  //   freqs: returned frequency(count) array
   //     Note: the ND-histogram is returned in the fashion of sparse representation.
-  //           (no zero freqncy in freqs array)
+  //           (no zero frequency in freqs array)
   //           the length of all arrays in binId and freqs array must be the same
   //           if the length of fieldNames is n (compute a n-dimensional hisotgram)
-  //           freqs[i] is the freqncy of the bin with bin Ids{ binId[0][i], binId[1][i], ... binId[n-1][i] }
+  //           freqs[i] is the frequency of the bin with bin Ids{ binId[0][i], binId[1][i], ... binId[n-1][i] }
   template <typename DeviceAdapter>
   void Run(std::vector<vtkm::cont::ArrayHandle<vtkm::Id>>& binId,
            vtkm::cont::ArrayHandle<vtkm::Id>& freqs,
            DeviceAdapter vtkmNotUsed(device))
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     binId.resize(NumberOfBins.size());
 

@@ -5,15 +5,12 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <unistd.h>
-#include <sys/stat.h>
-#include <dirent.h>
-
 #include "../mpi.hpp"
 #include "../assigner.hpp"
 #include "../master.hpp"
 #include "../storage.hpp"
 #include "../log.hpp"
+#include "utils.hpp"
 
 // Read and write collections of blocks using MPI-IO
 namespace diy
@@ -41,7 +38,7 @@ namespace io
   }
 }
 
-// Serialize GidOffsetCount explicitly, to avoid alignment and unitialized data issues
+// Serialize GidOffsetCount explicitly, to avoid alignment and uninitialized data issues
 // (to get identical output files given the same block input)
 template<>
 struct Serialization<io::detail::GidOffsetCount>
@@ -89,14 +86,13 @@ namespace io
 
     // truncate the file
     if (comm.rank() == 0)
-        truncate(outfilename.c_str(), 0);
+        diy::io::utils::truncate(outfilename.c_str(), 0);
 
     mpi::io::file f(comm, outfilename, mpi::io::file::wronly | mpi::io::file::create);
 
     offset_t  start = 0, shift;
     std::vector<GidOffsetCount>     offset_counts;
-    unsigned i;
-    for (i = 0; i < max_size; ++i)
+    for (unsigned i = 0; i < max_size; ++i)
     {
       offset_t count = 0,
                offset;
@@ -140,12 +136,12 @@ namespace io
       std::vector<GidOffsetCount>  all_offset_counts;
       for (unsigned i = 0; i < gathered_offset_count_buffers.size(); ++i)
       {
-        MemoryBuffer oc_buffer; oc_buffer.buffer.swap(gathered_offset_count_buffers[i]);
-        std::vector<GidOffsetCount> offset_counts;
-        diy::load(oc_buffer, offset_counts);
-        for (unsigned j = 0; j < offset_counts.size(); ++j)
-          if (offset_counts[j].gid != -1)
-            all_offset_counts.push_back(offset_counts[j]);
+        MemoryBuffer per_rank_oc_buffer; per_rank_oc_buffer.buffer.swap(gathered_offset_count_buffers[i]);
+        std::vector<GidOffsetCount> per_rank_offset_counts;
+        diy::load(per_rank_oc_buffer, per_rank_offset_counts);
+        for (unsigned j = 0; j < per_rank_offset_counts.size(); ++j)
+          if (per_rank_offset_counts[j].gid != -1)
+            all_offset_counts.push_back(per_rank_offset_counts[j]);
       }
       std::sort(all_offset_counts.begin(), all_offset_counts.end());        // sorts by gid
 
@@ -278,13 +274,11 @@ namespace split
     size_t size = 0;
     if (comm.rank() == 0)
     {
-        struct stat s;
-        if (stat(outfilename.c_str(), &s) == 0)
-        {
-            if (S_ISDIR(s.st_mode))
-                proceed = true;
-        } else if (mkdir(outfilename.c_str(), 0755) == 0)
-            proceed = true;
+        if (diy::io::utils::is_directory(outfilename))
+          proceed = true;
+        else if (diy::io::utils::make_directory(outfilename))
+          proceed = true;
+
         mpi::broadcast(comm, proceed, 0);
         mpi::reduce(comm, (size_t) master.size(), size, 0, std::plus<size_t>());
     } else
@@ -338,12 +332,14 @@ namespace split
 
     // load the extra buffer and size
     size_t          size;
-    std::string filename = infilename + "/extra";
-    ::diy::detail::FileBuffer bb(fopen(filename.c_str(), "r"));
-    ::diy::load(bb, size);
-    ::diy::load(bb, extra);
-    extra.reset();
-    fclose(bb.file);
+    {
+        std::string filename = infilename + "/extra";
+        ::diy::detail::FileBuffer bb(fopen(filename.c_str(), "r"));
+        ::diy::load(bb, size);
+        ::diy::load(bb, extra);
+        extra.reset();
+        fclose(bb.file);
+    }
 
     // Get local gids from assigner
     assigner.set_nblocks(size);

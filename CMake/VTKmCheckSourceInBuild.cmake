@@ -37,6 +37,7 @@ set(FILES_TO_CHECK
   )
 
 set(EXCEPTIONS
+  kxsort.h
   )
 
 set(DIRECTORY_EXCEPTIONS

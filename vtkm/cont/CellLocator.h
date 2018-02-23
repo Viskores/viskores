@@ -38,7 +38,7 @@ private:
   VTKM_CONT static bool IsUniformGrid(const vtkm::cont::DynamicCellSet& cellset,
                                       const vtkm::cont::CoordinateSystem& coordinates)
   {
-    return coordinates.GetData().IsSameType<vtkm::cont::ArrayHandleUniformPointCoordinates>() &&
+    return coordinates.GetData().IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>() &&
       (cellset.IsType<vtkm::cont::CellSetStructured<1>>() ||
        cellset.IsType<vtkm::cont::CellSetStructured<2>>() ||
        cellset.IsType<vtkm::cont::CellSetStructured<3>>());
@@ -97,7 +97,7 @@ public:
         "expecting ArrayHandleUniformPointCoordinates for coordinates");
 
       auto cellId3 = static_cast<vtkm::Id3>((point - coords.GetOrigin()) / coords.GetSpacing());
-      auto cellDim = coords.GetDimensions() - vtkm::Id3(1);
+      auto cellDim = vtkm::Max(vtkm::Id3(1), coords.GetDimensions() - vtkm::Id3(1));
       if (cellId3[0] < 0 || cellId3[0] >= cellDim[0] || cellId3[1] < 0 ||
           cellId3[1] >= cellDim[1] || cellId3[2] < 0 || cellId3[2] >= cellDim[2])
       {

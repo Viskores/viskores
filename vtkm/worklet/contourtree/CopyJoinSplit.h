@@ -87,7 +87,7 @@ public:
                                 WholeArrayIn<IdType> outdegree,  // (input)
                                 WholeArrayOut<IdType> outbound); // (output) join or split arcs
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

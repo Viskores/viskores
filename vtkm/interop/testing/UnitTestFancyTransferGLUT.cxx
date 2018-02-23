@@ -40,7 +40,7 @@
 // 1. Some Linux distributions default linker implicitly enables the as-needed
 // linking flag. This means that your shared library or executable will only
 // link to libraries from which they use symbols. So if you explicitly link to
-// pthread but don't use any symbols you wont have a 'DT_NEEDED' entry for
+// pthread but don't use any symbols you won't have a 'DT_NEEDED' entry for
 // pthread.
 //
 // 2. NVidia libGL (driver version 352 ) uses pthread but doesn't have

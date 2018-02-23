@@ -161,10 +161,10 @@ inline VTKM_CONT Result FilterDataSetWithField<Derived>::PrepareForExecution(
   vtkm::filter::FieldMetadata metaData(field);
   Result result;
 
-  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result> FunctorType;
+  using FunctorType = internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result>;
   FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
 
-  typedef vtkm::filter::FilterTraits<Derived> Traits;
+  using Traits = vtkm::filter::FilterTraits<Derived>;
   vtkm::cont::CastAndCall(
     vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->Tracker);
   return result;
@@ -184,10 +184,10 @@ inline VTKM_CONT Result FilterDataSetWithField<Derived>::PrepareForExecution(
 
   //determine the field type first
   Result result;
-  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result> FunctorType;
+  using FunctorType = internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result>;
   FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
 
-  typedef vtkm::filter::FilterTraits<Derived> Traits;
+  using Traits = vtkm::filter::FilterTraits<Derived>;
   vtkm::cont::CastAndCall(
     vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->Tracker);
 
@@ -215,7 +215,7 @@ inline VTKM_CONT bool FilterDataSetWithField<Derived>::MapFieldOntoOutput(
   if (result.IsDataSetValid())
   {
     vtkm::filter::FieldMetadata metaData(field);
-    typedef internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy> FunctorType;
+    using FunctorType = internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
     FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
     vtkm::cont::CastAndCall(vtkm::filter::ApplyPolicy(field, policy), functor, this->Tracker);

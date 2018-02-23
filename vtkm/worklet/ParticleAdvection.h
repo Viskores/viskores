@@ -168,7 +168,7 @@ public:
     const vtkm::Id& nSteps,
     const DeviceAdapter&)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType, FieldType, DeviceAdapter>
       worklet;
 

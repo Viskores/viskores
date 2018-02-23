@@ -54,9 +54,9 @@ public:
   template <typename TypeList = AllTypes>
   struct FieldIn : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagArrayIn TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayDirectIn FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagArrayIn;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectIn;
   };
 
   /// \brief A control signature tag for output fields.
@@ -67,9 +67,9 @@ public:
   template <typename TypeList = AllTypes>
   struct FieldOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagArrayOut TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayDirectOut FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagArrayOut;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectOut;
   };
 
   /// \brief A control signature tag for input-output (in-place) fields.
@@ -80,9 +80,9 @@ public:
   template <typename TypeList = AllTypes>
   struct FieldInOut : vtkm::cont::arg::ControlSignatureTagBase
   {
-    typedef vtkm::cont::arg::TypeCheckTagArray<TypeList> TypeCheckTag;
-    typedef vtkm::cont::arg::TransportTagArrayInOut TransportTag;
-    typedef vtkm::exec::arg::FetchTagArrayDirectInOut FetchTag;
+    using TypeCheckTag = vtkm::cont::arg::TypeCheckTagArray<TypeList>;
+    using TransportTag = vtkm::cont::arg::TransportTagArrayInOut;
+    using FetchTag = vtkm::exec::arg::FetchTagArrayDirectInOut;
   };
 };
 }

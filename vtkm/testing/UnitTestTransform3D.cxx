@@ -43,8 +43,8 @@ struct TransformTests
 
   T RandomNum() { return this->RandomDistribution(g_RandomGenerator); }
 
-  typedef vtkm::Vec<T, 3> Vec;
-  typedef vtkm::Matrix<T, 4, 4> Transform;
+  using Vec = vtkm::Vec<T, 3>;
+  using Transform = vtkm::Matrix<T, 4, 4>;
 
   Vec RandomVector()
   {
@@ -73,7 +73,7 @@ struct TransformTests
     VTKM_TEST_ASSERT(test_equal(translated2, startPoint + T(2) * translateAmount),
                      "Bad translation.");
 
-    // Vectors should be invarient to translation.
+    // Vectors should be invariant to translation.
     translated1 = vtkm::Transform3DVector(translate, startPoint);
     std::cout << " Translated vector: " << translated1 << std::endl;
     VTKM_TEST_ASSERT(test_equal(translated1, startPoint), "Bad translation.");

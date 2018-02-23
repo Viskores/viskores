@@ -38,10 +38,10 @@ class DispatcherMapTopology
                                                    WorkletType,
                                                    vtkm::worklet::detail::WorkletMapTopologyBase>
 {
-  typedef vtkm::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType, Device>,
-                                                  WorkletType,
-                                                  vtkm::worklet::detail::WorkletMapTopologyBase>
-    Superclass;
+  using Superclass =
+    vtkm::worklet::internal::DispatcherBase<DispatcherMapTopology<WorkletType, Device>,
+                                            WorkletType,
+                                            vtkm::worklet::detail::WorkletMapTopologyBase>;
 
 public:
   VTKM_CONT
@@ -54,7 +54,7 @@ public:
   VTKM_CONT void DoInvoke(const Invocation& invocation) const
   {
     // This is the type for the input domain
-    typedef typename Invocation::InputDomainType InputDomainType;
+    using InputDomainType = typename Invocation::InputDomainType;
 
     // If you get a compile error on this line, then you have tried to use
     // something that is not a vtkm::cont::CellSet as the input domain to a

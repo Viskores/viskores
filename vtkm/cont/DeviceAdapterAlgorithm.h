@@ -439,6 +439,26 @@ struct DeviceAdapterAlgorithm
     ///
     VTKM_CONT static void Synchronize();
 
+  /// \brief Apply a given binary operation function element-wise to input arrays.
+  ///
+  /// Apply the give binary operation to pairs of elements from the two input array
+  /// \c input1 and \c input2. The number of elements in the input arrays do not
+  /// have to be the same, in this case, only the smaller of the two numbers of elements
+  /// will be applied.
+  /// Outputs of the binary operation is stored in \c output.
+  ///
+  template <typename T,
+            typename U,
+            typename V,
+            typename StorageT,
+            typename StorageU,
+            typename StorageV,
+            typename BinaryFunctor>
+  VTKM_CONT static void Transform(const vtkm::cont::ArrayHandle<T, StorageT>& input1,
+                                  const vtkm::cont::ArrayHandle<U, StorageU>& input2,
+                                  vtkm::cont::ArrayHandle<V, StorageV>& output,
+                                  BinaryFunctor binaryFunctor);
+
   /// \brief Reduce an array to only the unique values it contains
   ///
   /// Removes all duplicate values in \c values that are adjacent to each
@@ -611,7 +631,7 @@ class DeviceAdapterAtomicArrayImplementation;
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.
 ///
-/// When worklets are launched inside the execution enviornment we need to
+/// When worklets are launched inside the execution environment we need to
 /// ask the device adapter what is the preferred execution style, be it
 /// a tiled iteration pattern, or strided. This class
 ///

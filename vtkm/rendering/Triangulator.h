@@ -293,7 +293,7 @@ public:
     {
       if (index == 0)
         return;
-      //if we are a shared face, mark ourself and neighbor for desctruction
+      //if we are a shared face, mark ourself and neighbor for destruction
       if (IsTwin(indices.Get(index), indices.Get(index - 1)))
       {
         outputFlags.Set(index, 0);

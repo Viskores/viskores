@@ -79,7 +79,7 @@ public:
                                 FieldIn<IdType> binId,               // (input) bin Id
                                 WholeArrayOut<IdType> leftNeighbor); // (output) neighbor Id
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id xNum, yNum, zNum;
   vtkm::Id NUM_NEIGHBORS;

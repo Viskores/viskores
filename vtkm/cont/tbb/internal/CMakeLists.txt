@@ -22,7 +22,9 @@ set(headers
   ArrayManagerExecutionTBB.h
   DeviceAdapterAlgorithmTBB.h
   DeviceAdapterTagTBB.h
+  ExecutionArrayInterfaceBasicTBB.h
   FunctorsTBB.h
+  ParallelSortTBB.h
   VirtualObjectTransferTBB.h
   )
 
@@ -34,7 +36,9 @@ if (VTKm_ENABLE_TBB)
   endif()
 endif()
 
-vtkm_declare_headers(parallel_sort.h TESTABLE OFF)
+vtkm_declare_headers(ParallelSortTBB.hxx
+                     TESTABLE OFF)
+
 vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})
 
 #-----------------------------------------------------------------------------
@@ -45,4 +49,6 @@ endif()
 target_sources(vtkm_cont PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionTBB.cxx
   ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmTBB.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicTBB.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/ParallelSortTBB.cxx
 )

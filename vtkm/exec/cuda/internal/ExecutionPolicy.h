@@ -44,8 +44,8 @@ struct vtkm_cuda_policy : thrust::device_execution_policy<vtkm_cuda_policy>
 template <typename T>
 __host__ __device__ void sort(
   const vtkm_cuda_policy& exec,
-  thrust::system::cuda::pointer<T> first,
-  thrust::system::cuda::pointer<T> last,
+  T* first,
+  T* last,
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortLess> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
@@ -55,8 +55,8 @@ __host__ __device__ void sort(
 template <typename T, typename RandomAccessIterator>
 __host__ __device__ void sort_by_key(
   const vtkm_cuda_policy& exec,
-  thrust::system::cuda::pointer<T> first,
-  thrust::system::cuda::pointer<T> last,
+  T* first,
+  T* last,
   RandomAccessIterator values_first,
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortLess> comp)
 { //sort for concrete pointers and less than op
@@ -68,8 +68,8 @@ __host__ __device__ void sort_by_key(
 template <typename T>
 __host__ __device__ void sort(
   const vtkm_cuda_policy& exec,
-  thrust::system::cuda::pointer<T> first,
-  thrust::system::cuda::pointer<T> last,
+  T* first,
+  T* last,
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::less<T>> comp)
 { //sort for concrete pointers and less than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
@@ -79,8 +79,8 @@ __host__ __device__ void sort(
 template <typename T, typename RandomAccessIterator>
 __host__ __device__ void sort_by_key(
   const vtkm_cuda_policy& exec,
-  thrust::system::cuda::pointer<T> first,
-  thrust::system::cuda::pointer<T> last,
+  T* first,
+  T* last,
   RandomAccessIterator values_first,
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::less<T>> comp)
 { //sort for concrete pointers and less than op
@@ -92,8 +92,8 @@ __host__ __device__ void sort_by_key(
 template <typename T>
 __host__ __device__ void sort(
   const vtkm_cuda_policy& exec,
-  thrust::system::cuda::pointer<T> first,
-  thrust::system::cuda::pointer<T> last,
+  T* first,
+  T* last,
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortGreater> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
@@ -103,8 +103,8 @@ __host__ __device__ void sort(
 template <typename T, typename RandomAccessIterator>
 __host__ __device__ void sort_by_key(
   const vtkm_cuda_policy& exec,
-  thrust::system::cuda::pointer<T> first,
-  thrust::system::cuda::pointer<T> last,
+  T* first,
+  T* last,
   RandomAccessIterator values_first,
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, vtkm::SortGreater> comp)
 { //sort for concrete pointers and greater than op
@@ -116,8 +116,8 @@ __host__ __device__ void sort_by_key(
 template <typename T>
 __host__ __device__ void sort(
   const vtkm_cuda_policy& exec,
-  thrust::system::cuda::pointer<T> first,
-  thrust::system::cuda::pointer<T> last,
+  T* first,
+  T* last,
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::greater<T>> comp)
 { //sort for concrete pointers and greater than op
   //this makes sure that we invoke the thrust radix sort and not merge sort
@@ -127,8 +127,8 @@ __host__ __device__ void sort(
 template <typename T, typename RandomAccessIterator>
 __host__ __device__ void sort_by_key(
   const vtkm_cuda_policy& exec,
-  thrust::system::cuda::pointer<T> first,
-  thrust::system::cuda::pointer<T> last,
+  T* first,
+  T* last,
   RandomAccessIterator values_first,
   vtkm::exec::cuda::internal::WrappedBinaryPredicate<T, ::thrust::greater<T>> comp)
 { //sort for concrete pointers and greater than op
@@ -174,8 +174,8 @@ template <typename T,
           typename BinaryFunction>
 __host__ __device__::thrust::pair<OutputIterator1, OutputIterator2> reduce_by_key(
   const vtkm_cuda_policy& exec,
-  thrust::system::cuda::pointer<T> keys_first,
-  thrust::system::cuda::pointer<T> keys_last,
+  T* keys_first,
+  T* keys_last,
   InputIterator2 values_first,
   OutputIterator1 keys_output,
   OutputIterator2 values_output,

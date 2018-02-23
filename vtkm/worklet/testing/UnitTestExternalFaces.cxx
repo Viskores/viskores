@@ -79,7 +79,7 @@ void TestExternalFaces1()
 
   //--------------Construct a VTK-m Test Dataset----------------
   const int nVerts = 8; //A cube that is tetrahedralized
-  typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
+  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
   vtkm::cont::ArrayHandle<CoordType> coordinates;
   coordinates.Allocate(nVerts);
   coordinates.GetPortalControl().Set(0, CoordType(0.0f, 0.0f, 0.0f));

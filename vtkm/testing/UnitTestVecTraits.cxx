@@ -32,8 +32,8 @@ struct TestVecTypeFunctor
   template <typename T>
   void operator()(const T&) const
   {
-    typedef vtkm::VecTraits<T> Traits;
-    typedef typename Traits::ComponentType ComponentType;
+    using Traits = vtkm::VecTraits<T>;
+    using ComponentType = typename Traits::ComponentType;
     VTKM_TEST_ASSERT(Traits::NUM_COMPONENTS <= MAX_VECTOR_SIZE,
                      "Need to update test for larger vectors.");
     T inVector;

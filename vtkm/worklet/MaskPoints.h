@@ -39,7 +39,7 @@ public:
                                       const vtkm::Id stride,
                                       DeviceAdapter)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::Id numberOfInputPoints = cellSet.GetNumberOfPoints();
     vtkm::Id numberOfSampledPoints = numberOfInputPoints / stride;

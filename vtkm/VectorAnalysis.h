@@ -22,7 +22,7 @@
 #ifndef vtk_m_VectorAnalysis_h
 #define vtk_m_VectorAnalysis_h
 
-// This header file defines math functions that deal with linear albegra funcitons
+// This header file defines math functions that deal with linear albegra functions
 
 #include <vtkm/Math.h>
 #include <vtkm/TypeTraits.h>

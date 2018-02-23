@@ -84,7 +84,7 @@ public:
                                 FieldIn<IdType> partCount,  // (input) count of particles in bin
                                 WholeArrayOut<IdType> candidate); // (input) z location in bin
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   T cutoffPotential; // Lowest potential for a candidate bin
 

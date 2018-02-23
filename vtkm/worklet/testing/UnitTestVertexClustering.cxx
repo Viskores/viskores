@@ -67,7 +67,7 @@ void TestVertexClustering()
   vtkm::Float32 output_cellvar[output_pointIds / 3] = { 145.f, 134.f, 138.f, 140.f, 149.f, 144.f };
 
   {
-    typedef vtkm::cont::CellSetSingleType<> CellSetType;
+    using CellSetType = vtkm::cont::CellSetSingleType<>;
     CellSetType cellSet;
     outDataSet.GetCellSet(0).CopyTo(cellSet);
     auto cellArray =
@@ -89,7 +89,7 @@ void TestVertexClustering()
 
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCoordinateSystems() == 1,
                    "Number of output coordinate systems mismatch");
-  typedef vtkm::Vec<vtkm::Float64, 3> PointType;
+  using PointType = vtkm::Vec<vtkm::Float64, 3>;
   auto pointArray = outDataSet.GetCoordinateSystem(0).GetData();
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
                    "Number of output points mismatch");
@@ -100,7 +100,7 @@ void TestVertexClustering()
     VTKM_TEST_ASSERT(test_equal(p1, p2), "Point Array mismatch");
   }
 
-  typedef vtkm::cont::CellSetSingleType<> CellSetType;
+  using CellSetType = vtkm::cont::CellSetSingleType<>;
   VTKM_TEST_ASSERT(outDataSet.GetNumberOfCellSets() == 1, "Number of output cellsets mismatch");
   CellSetType cellSet;
   outDataSet.GetCellSet(0).CopyTo(cellSet);

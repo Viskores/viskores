@@ -75,7 +75,7 @@ template <vtkm::IdComponent NumDimensions>
 class VecAxisAlignedPointCoordinates
 {
 public:
-  typedef vtkm::Vec<vtkm::FloatDefault, 3> ComponentType;
+  using ComponentType = vtkm::Vec<vtkm::FloatDefault, 3>;
 
   static const vtkm::IdComponent NUM_COMPONENTS =
     detail::VecAxisAlignedPointCoordinatesNumComponents<NumDimensions>::NUM_COMPONENTS;
@@ -132,8 +132,8 @@ private:
 template <vtkm::IdComponent NumDimensions>
 struct TypeTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
 {
-  typedef vtkm::TypeTraitsRealTag NumericTag;
-  typedef TypeTraitsVectorTag DimensionalityTag;
+  using NumericTag = vtkm::TypeTraitsRealTag;
+  using DimensionalityTag = TypeTraitsVectorTag;
 
   VTKM_EXEC_CONT
   static vtkm::VecAxisAlignedPointCoordinates<NumDimensions> ZeroInitialization()
@@ -146,11 +146,11 @@ struct TypeTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
 template <vtkm::IdComponent NumDimensions>
 struct VecTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
 {
-  typedef vtkm::VecAxisAlignedPointCoordinates<NumDimensions> VecType;
+  using VecType = vtkm::VecAxisAlignedPointCoordinates<NumDimensions>;
 
-  typedef vtkm::Vec<vtkm::FloatDefault, 3> ComponentType;
-  typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
-  typedef vtkm::VecTraitsTagSizeStatic IsSizeStatic;
+  using ComponentType = vtkm::Vec<vtkm::FloatDefault, 3>;
+  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 
   static const vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
 

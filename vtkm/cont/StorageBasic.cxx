@@ -20,6 +20,7 @@
 
 #define vtkm_cont_StorageBasic_cxx
 #include <vtkm/cont/StorageBasic.h>
+#include <vtkm/internal/Configure.h>
 
 #if defined(VTKM_POSIX)
 #define VTKM_MEMALIGN_POSIX
@@ -51,11 +52,7 @@ namespace cont
 namespace internal
 {
 
-StorageBasicBase::~StorageBasicBase()
-{
-}
-
-void* alloc_aligned(size_t size, size_t align)
+void* StorageBasicAllocator::allocate(size_t size, size_t align)
 {
 #if defined(VTKM_MEMALIGN_POSIX)
   void* mem = nullptr;
@@ -70,14 +67,10 @@ void* alloc_aligned(size_t size, size_t align)
 #else
   void* mem = malloc(size);
 #endif
-  if (mem == nullptr)
-  {
-    throw std::bad_alloc();
-  }
   return mem;
 }
 
-void free_aligned(void* mem)
+void StorageBasicAllocator::free_memory(void* mem)
 {
 #if defined(VTKM_MEMALIGN_POSIX)
   free(mem);
@@ -90,33 +83,188 @@ void free_aligned(void* mem)
 #endif
 }
 
-template class VTKM_CONT_EXPORT Storage<char, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Int8, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::UInt8, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Int16, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::UInt16, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Int32, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::UInt32, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Int64, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::UInt64, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Float32, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Float64, StorageTagBasic>;
 
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Int64, 2>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Int32, 2>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float32, 2>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float64, 2>, StorageTagBasic>;
+StorageBasicBase::StorageBasicBase()
+  : Array(nullptr)
+  , AllocatedByteSize(0)
+  , NumberOfValues(0)
+  , DeallocateOnRelease(true)
+{
+}
 
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Int64, 3>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Int32, 3>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float32, 3>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float64, 3>, StorageTagBasic>;
+StorageBasicBase::StorageBasicBase(const void* array,
+                                   vtkm::Id numberOfValues,
+                                   vtkm::UInt64 sizeOfValue)
+  : Array(const_cast<void*>(array))
+  , AllocatedByteSize(static_cast<vtkm::UInt64>(numberOfValues) * sizeOfValue)
+  , NumberOfValues(numberOfValues)
+  , DeallocateOnRelease(array == nullptr ? true : false)
+{
+}
 
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<char, 4>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Int8, 4>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<UInt8, 4>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float32, 4>, StorageTagBasic>;
-template class VTKM_CONT_EXPORT Storage<vtkm::Vec<vtkm::Float64, 4>, StorageTagBasic>;
+StorageBasicBase::~StorageBasicBase()
+{
+  this->ReleaseResources();
+}
+
+StorageBasicBase::StorageBasicBase(const StorageBasicBase& src)
+  : Array(src.Array)
+  , AllocatedByteSize(src.AllocatedByteSize)
+  , NumberOfValues(src.NumberOfValues)
+  , DeallocateOnRelease(src.DeallocateOnRelease)
+
+{
+  if (src.DeallocateOnRelease)
+  {
+    throw vtkm::cont::ErrorBadValue(
+      "Attempted to copy a storage array that needs deallocation. "
+      "This is disallowed to prevent complications with deallocation.");
+  }
+}
+
+StorageBasicBase StorageBasicBase::operator=(const StorageBasicBase& src)
+{
+  if (src.DeallocateOnRelease)
+  {
+    throw vtkm::cont::ErrorBadValue(
+      "Attempted to copy a storage array that needs deallocation. "
+      "This is disallowed to prevent complications with deallocation.");
+  }
+
+  this->ReleaseResources();
+  this->Array = src.Array;
+  this->AllocatedByteSize = src.AllocatedByteSize;
+  this->NumberOfValues = src.NumberOfValues;
+  this->DeallocateOnRelease = src.DeallocateOnRelease;
+  return *this;
+}
+
+void StorageBasicBase::ReleaseResources()
+{
+  if (this->AllocatedByteSize > 0)
+  {
+    VTKM_ASSERT(this->Array != nullptr);
+    if (this->DeallocateOnRelease)
+    {
+      AllocatorType{}.free_memory(this->Array);
+    }
+    this->Array = nullptr;
+    this->AllocatedByteSize = 0;
+    this->NumberOfValues = 0;
+  }
+  else
+  {
+    VTKM_ASSERT(this->Array == nullptr);
+  }
+}
+
+void StorageBasicBase::AllocateValues(vtkm::Id numberOfValues, vtkm::UInt64 sizeOfValue)
+{
+  if (numberOfValues < 0)
+  {
+    throw vtkm::cont::ErrorBadAllocation("Cannot allocate an array with negative size.");
+  }
+
+  // Check that the number of bytes won't be more than a size_t can hold.
+  const size_t maxNumValues = std::numeric_limits<size_t>::max() / sizeOfValue;
+  if (static_cast<vtkm::UInt64>(numberOfValues) > maxNumValues)
+  {
+    throw ErrorBadAllocation("Requested allocation exceeds size_t capacity.");
+  }
+
+  // If we are allocating less data, just shrink the array.
+  // (If allocation empty, drop down so we can deallocate memory.)
+  vtkm::UInt64 allocsize = static_cast<vtkm::UInt64>(numberOfValues) * sizeOfValue;
+  if ((allocsize <= this->AllocatedByteSize) && (numberOfValues > 0))
+  {
+    this->NumberOfValues = numberOfValues;
+    return;
+  }
+
+  if (!this->DeallocateOnRelease)
+  {
+    throw vtkm::cont::ErrorBadValue("User allocated arrays cannot be reallocated.");
+  }
+
+  this->ReleaseResources();
+
+  if (numberOfValues > 0)
+  {
+    this->Array = AllocatorType{}.allocate(allocsize, VTKM_ALLOCATION_ALIGNMENT);
+    this->AllocatedByteSize = allocsize;
+    this->NumberOfValues = numberOfValues;
+    if (this->Array == nullptr)
+    {
+      // Make sureour state is OK.
+      this->AllocatedByteSize = 0;
+      this->NumberOfValues = 0;
+      throw vtkm::cont::ErrorBadAllocation("Could not allocate basic control array.");
+    }
+  }
+  else
+  {
+    // ReleaseResources should have already set NumberOfValues to 0.
+    VTKM_ASSERT(this->NumberOfValues == 0);
+    VTKM_ASSERT(this->AllocatedByteSize == 0);
+  }
+  this->DeallocateOnRelease = true;
+}
+
+void StorageBasicBase::Shrink(vtkm::Id numberOfValues)
+{
+  if (numberOfValues > this->NumberOfValues)
+  {
+    throw vtkm::cont::ErrorBadValue("Shrink method cannot be used to grow array.");
+  }
+
+  this->NumberOfValues = numberOfValues;
+}
+
+void* StorageBasicBase::GetBasePointer() const
+{
+  return this->Array;
+}
+
+void* StorageBasicBase::GetEndPointer(vtkm::Id numberOfValues, vtkm::UInt64 sizeOfValue) const
+{
+  VTKM_ASSERT(this->NumberOfValues == numberOfValues);
+  if (!this->Array)
+  {
+    return nullptr;
+  }
+
+  auto p = static_cast<vtkm::UInt8*>(this->Array);
+  auto offset = static_cast<vtkm::UInt64>(this->NumberOfValues) * sizeOfValue;
+  return static_cast<void*>(p + offset);
+}
+
+void* StorageBasicBase::GetCapacityPointer() const
+{
+  if (!this->Array)
+  {
+    return nullptr;
+  }
+  auto v = static_cast<vtkm::UInt8*>(this->Array) + AllocatedByteSize;
+  return static_cast<void*>(v);
+}
+
+#define _VTKM_STORAGE_INSTANTIATE(Type)                                                            \
+  template class VTKM_CONT_EXPORT Storage<Type, StorageTagBasic>;                                  \
+  template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 2>, StorageTagBasic>;                    \
+  template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 3>, StorageTagBasic>;                    \
+  template class VTKM_CONT_EXPORT Storage<vtkm::Vec<Type, 4>, StorageTagBasic>;
+
+_VTKM_STORAGE_INSTANTIATE(char)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Int8)
+_VTKM_STORAGE_INSTANTIATE(vtkm::UInt8)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Int16)
+_VTKM_STORAGE_INSTANTIATE(vtkm::UInt16)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Int32)
+_VTKM_STORAGE_INSTANTIATE(vtkm::UInt32)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Int64)
+_VTKM_STORAGE_INSTANTIATE(vtkm::UInt64)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Float32)
+_VTKM_STORAGE_INSTANTIATE(vtkm::Float64)
 }
 }
 } // namespace vtkm::cont::internal

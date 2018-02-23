@@ -132,7 +132,6 @@ namespace detail
         {
           MemoryBuffer& in = srp.incoming(srp.in_link().target(i).gid);
 
-          std::pair<int, int> range;
           load(in, range);
 
           std::pair<int, int> from_to;

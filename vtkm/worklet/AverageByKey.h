@@ -109,7 +109,7 @@ struct AverageByKey
     template <class ValueType>
     VTKM_EXEC void operator()(const ValueType& v, const vtkm::Id& count, ValueType& vout) const
     {
-      typedef typename VecTraits<ValueType>::ComponentType ComponentType;
+      using ComponentType = typename VecTraits<ValueType>::ComponentType;
       vout = v * ComponentType(1. / static_cast<double>(count));
     }
 
@@ -143,10 +143,10 @@ struct AverageByKey
                             vtkm::cont::ArrayHandle<ValueType, ValueOutStorage>& outputValueArray,
                             DeviceAdapter)
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
-    typedef vtkm::cont::ArrayHandle<ValueType, ValueInStorage> ValueInArray;
-    typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArray;
-    typedef vtkm::cont::ArrayHandle<ValueType> ValueArray;
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using ValueInArray = vtkm::cont::ArrayHandle<ValueType, ValueInStorage>;
+    using IdArray = vtkm::cont::ArrayHandle<vtkm::Id>;
+    using ValueArray = vtkm::cont::ArrayHandle<ValueType>;
 
     // sort the indexed array
     vtkm::cont::ArrayHandleIndex indexArray(keyArray.GetNumberOfValues());
@@ -158,12 +158,12 @@ struct AverageByKey
     Algorithm::SortByKey(keyArraySorted, indexArraySorted, vtkm::SortLess());
 
     // generate permultation array based on the indexes
-    typedef vtkm::cont::ArrayHandlePermutation<IdArray, ValueInArray> PermutatedValueArray;
+    using PermutatedValueArray = vtkm::cont::ArrayHandlePermutation<IdArray, ValueInArray>;
     PermutatedValueArray valueArraySorted =
       vtkm::cont::make_ArrayHandlePermutation(indexArraySorted, valueArray);
 
     // reduce both sumArray and countArray by key
-    typedef vtkm::cont::ArrayHandleConstant<vtkm::Id> ConstIdArray;
+    using ConstIdArray = vtkm::cont::ArrayHandleConstant<vtkm::Id>;
     ConstIdArray constOneArray(1, valueArray.GetNumberOfValues());
     IdArray countArray;
     ValueArray sumArray;

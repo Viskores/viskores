@@ -65,7 +65,7 @@ class To1DIndex : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<> bin, FieldIn<> binIndexIn, FieldOut<> binIndexOut);
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id numberOfBins;
 

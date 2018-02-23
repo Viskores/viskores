@@ -36,7 +36,7 @@ namespace
 template <typename T>
 struct EvaluateFunctions
 {
-  typedef vtkm::Vec<T, 3> Vector3;
+  using Vector3 = vtkm::Vec<T, 3>;
 
   VTKM_EXEC_CONT
   Vector3 operator()(Vector3 x) const
@@ -51,8 +51,8 @@ struct EvaluateFunctions
 template <typename T>
 struct EvaluateJacobian
 {
-  typedef vtkm::Vec<T, 3> Vector3;
-  typedef vtkm::Matrix<T, 3, 3> Matrix3x3;
+  using Vector3 = vtkm::Vec<T, 3>;
+  using Matrix3x3 = vtkm::Matrix<T, 3, 3>;
 
   VTKM_EXEC_CONT
   Matrix3x3 operator()(Vector3 x) const
@@ -76,7 +76,7 @@ void TestNewtonsMethodTemplate()
 {
   std::cout << "Testing Newton's Method." << std::endl;
 
-  typedef vtkm::Vec<T, 3> Vector3;
+  using Vector3 = vtkm::Vec<T, 3>;
 
   Vector3 desiredOutput(1, 1, 1);
   Vector3 expected1(2.0f / 3.0f, -1.0f / 3.0f, -2.0f / 3.0f);

@@ -308,7 +308,7 @@ void CastAndCall(const vtkm::cont::Field& field, Functor&& f, Args&&... args)
 }
 
 //@{
-/// Convinience functions to build fields from C style arrays and std::vector
+/// Convenience functions to build fields from C style arrays and std::vector
 template <typename T>
 vtkm::cont::Field make_Field(std::string name,
                              Field::AssociationEnum association,

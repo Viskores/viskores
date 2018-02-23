@@ -130,7 +130,7 @@ vtkm::cont::DataSet MakeCosmo_3DDataSet_0()
   // Coordinates
   const int nVerts = 14;
   const int nCells = 14;
-  typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
+  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
   std::vector<CoordType> coords(nVerts);
 
   coords[0] = CoordType(20.8125f, 10.8864f, 0.309784f);

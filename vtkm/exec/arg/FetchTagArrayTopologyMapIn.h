@@ -43,7 +43,7 @@ namespace arg
 /// \brief \c Fetch tag for getting array values determined by topology connections.
 ///
 /// \c FetchTagArrayTopologyMapIn is a tag used with the \c Fetch class to
-/// retreive values from an array portal. The fetch uses indexing based on
+/// retrieve values from an array portal. The fetch uses indexing based on
 /// the topology structure used for the input domain.
 ///
 struct FetchTagArrayTopologyMapIn

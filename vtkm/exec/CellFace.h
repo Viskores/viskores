@@ -265,7 +265,7 @@ static inline VTKM_EXEC vtkm::VecCConst<vtkm::IdComponent> CellFaceLocalIndices(
                          numPointsInFace);
 }
 
-/// \brief Returns a canonical identifer for a cell face
+/// \brief Returns a canonical identifier for a cell face
 ///
 /// Given information about a cell face and the global point indices for that cell, returns a
 /// vtkm::Id3 that contains values that are unique to that face. The values for two faces will be

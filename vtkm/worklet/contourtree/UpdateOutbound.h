@@ -84,7 +84,7 @@ public:
   typedef void ControlSignature(FieldIn<IdType> superID,           // input
                                 WholeArrayInOut<IdType> outbound); // i/o
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

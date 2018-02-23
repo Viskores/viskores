@@ -37,10 +37,10 @@ class DispatcherMapField
                                                    WorkletType,
                                                    vtkm::worklet::WorkletMapField>
 {
-  typedef vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType, Device>,
-                                                  WorkletType,
-                                                  vtkm::worklet::WorkletMapField>
-    Superclass;
+  using Superclass =
+    vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType, Device>,
+                                            WorkletType,
+                                            vtkm::worklet::WorkletMapField>;
 
 public:
   VTKM_CONT
@@ -53,7 +53,7 @@ public:
   VTKM_CONT void DoInvoke(const Invocation& invocation) const
   {
     // This is the type for the input domain
-    typedef typename Invocation::InputDomainType InputDomainType;
+    using InputDomainType = typename Invocation::InputDomainType;
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.

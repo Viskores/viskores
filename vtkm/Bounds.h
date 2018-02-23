@@ -140,7 +140,7 @@ struct Bounds
   /// \b Expand bounds to include other bounds.
   ///
   /// This version of \c Include expands these bounds just enough to include
-  /// that of another bounds. Esentially it is the union of the two bounds.
+  /// that of another bounds. Essentially it is the union of the two bounds.
   ///
   VTKM_EXEC_CONT
   void Include(const vtkm::Bounds& bounds)

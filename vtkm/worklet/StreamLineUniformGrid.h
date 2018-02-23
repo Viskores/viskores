@@ -155,9 +155,9 @@ public:
     }
   };
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef
-    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
+  using FieldPortalConstType =
+    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   class MakeStreamLines : public vtkm::worklet::WorkletMapField
   {
@@ -168,9 +168,9 @@ public:
                                   WholeArrayOut<IdComponentType> validPoint,
                                   WholeArrayOut<Vec3> streamLines);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, VisitIndex);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
-    typedef vtkm::worklet::ScatterUniform ScatterType;
+    using ScatterType = vtkm::worklet::ScatterUniform;
     VTKM_CONT
     ScatterType GetScatter() const { return ScatterType(2); }
 
@@ -346,7 +346,7 @@ public:
                           vtkm::Id maxSteps,
                           FieldType timeStep)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     // Get information from input dataset
     vtkm::cont::CellSetStructured<3> inCellSet;
@@ -398,7 +398,7 @@ public:
     // Worklet to make the streamlines
     MakeStreamLines makeStreamLines(
       timeStep, streamMode, maxSteps, vdims, fieldArray.PrepareForInput(DeviceAdapter()));
-    typedef typename vtkm::worklet::DispatcherMapField<MakeStreamLines> MakeStreamLinesDispatcher;
+    using MakeStreamLinesDispatcher = typename vtkm::worklet::DispatcherMapField<MakeStreamLines>;
     MakeStreamLinesDispatcher makeStreamLinesDispatcher(makeStreamLines);
     makeStreamLinesDispatcher.Invoke(
       seedIdArray, seedPosArray, numIndices, validPoint, streamArray);

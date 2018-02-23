@@ -70,12 +70,12 @@ public:
     std::vector<vtkm::Id> L1d(3, 0);
 
     // Use an intermediate array
-    typedef typename CoeffArrayType::ValueType OutputValueType;
-    typedef vtkm::cont::ArrayHandle<OutputValueType> InterArrayType;
+    using OutputValueType = typename CoeffArrayType::ValueType;
+    using InterArrayType = vtkm::cont::ArrayHandle<OutputValueType>;
 
     // Define a few more types
-    typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> IdArrayType;
-    typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, CoeffArrayType> PermutArrayType;
+    using IdArrayType = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
+    using PermutArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, CoeffArrayType>;
 
     vtkm::cont::ArrayCopy(sigIn, coeffOut, DeviceTag());
 
@@ -120,10 +120,10 @@ public:
     L1d[0] = L[0];
     L1d[1] = L[1];
 
-    typedef typename SignalArrayType::ValueType OutValueType;
-    typedef vtkm::cont::ArrayHandle<OutValueType> OutArrayBasic;
-    typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> IdArrayType;
-    typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, SignalArrayType> PermutArrayType;
+    using OutValueType = typename SignalArrayType::ValueType;
+    using OutArrayBasic = vtkm::cont::ArrayHandle<OutValueType>;
+    using IdArrayType = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
+    using PermutArrayType = vtkm::cont::ArrayHandlePermutation<IdArrayType, SignalArrayType>;
 
     vtkm::cont::ArrayCopy(coeffIn, sigOut, DeviceTag());
 
@@ -181,8 +181,8 @@ public:
     vtkm::Id currentLenZ = inZ;
     std::vector<vtkm::Id> L3d(27, 0);
 
-    typedef typename OutArrayType::ValueType OutValueType;
-    typedef vtkm::cont::ArrayHandle<OutValueType> OutBasicArray;
+    using OutValueType = typename OutArrayType::ValueType;
+    using OutBasicArray = vtkm::cont::ArrayHandle<OutValueType>;
 
     // First level transform writes to the output array
     vtkm::Float64 computationTime = WaveletDWT::DWT3D(sigIn,
@@ -260,8 +260,8 @@ public:
     {
       throw vtkm::cont::ErrorBadValue("Number of levels of transform is not supported! ");
     }
-    typedef typename OutArrayType::ValueType OutValueType;
-    typedef vtkm::cont::ArrayHandle<OutValueType> OutBasicArray;
+    using OutValueType = typename OutArrayType::ValueType;
+    using OutBasicArray = vtkm::cont::ArrayHandle<OutValueType>;
     vtkm::Float64 computationTime = 0.0;
 
     OutBasicArray outBuffer;
@@ -356,8 +356,8 @@ public:
     std::vector<vtkm::Id> L2d(10, 0);
     vtkm::Float64 computationTime = 0.0;
 
-    typedef typename OutArrayType::ValueType OutValueType;
-    typedef vtkm::cont::ArrayHandle<OutValueType> OutBasicArray;
+    using OutValueType = typename OutArrayType::ValueType;
+    using OutBasicArray = vtkm::cont::ArrayHandle<OutValueType>;
 
     // First level transform operates writes to the output array
     computationTime += WaveletDWT::DWT2D(
@@ -403,8 +403,8 @@ public:
     {
       throw vtkm::cont::ErrorBadValue("Number of levels of transform is not supported! ");
     }
-    typedef typename OutArrayType::ValueType OutValueType;
-    typedef vtkm::cont::ArrayHandle<OutValueType> OutBasicArray;
+    using OutValueType = typename OutArrayType::ValueType;
+    using OutBasicArray = vtkm::cont::ArrayHandle<OutValueType>;
     vtkm::Float64 computationTime = 0.0;
 
     OutBasicArray outBuffer;
@@ -472,8 +472,8 @@ public:
     if (ratio > 1.0)
     {
       vtkm::Id coeffLen = coeffIn.GetNumberOfValues();
-      typedef typename CoeffArrayType::ValueType ValueType;
-      typedef vtkm::cont::ArrayHandle<ValueType> CoeffArrayBasic;
+      using ValueType = typename CoeffArrayType::ValueType;
+      using CoeffArrayBasic = vtkm::cont::ArrayHandle<ValueType>;
       CoeffArrayBasic sortedArray;
       vtkm::cont::ArrayCopy(coeffIn, sortedArray, DeviceTag());
 
@@ -486,7 +486,7 @@ public:
         nthVal *= -1.0;
       }
 
-      typedef vtkm::worklet::wavelets::ThresholdWorklet ThresholdType;
+      using ThresholdType = vtkm::worklet::wavelets::ThresholdWorklet;
       ThresholdType thresholdWorklet(nthVal);
       vtkm::worklet::DispatcherMapField<ThresholdType, DeviceTag> dispatcher(thresholdWorklet);
       dispatcher.Invoke(coeffIn);
@@ -505,17 +505,17 @@ public:
 #define MAKEVAL(a) (static_cast<VAL>(a))
     VAL VarOrig = WaveletBase::DeviceCalculateVariance(original, DeviceTag());
 
-    typedef typename ArrayType::ValueType ValueType;
-    typedef vtkm::cont::ArrayHandle<ValueType> ArrayBasic;
+    using ValueType = typename ArrayType::ValueType;
+    using ArrayBasic = vtkm::cont::ArrayHandle<ValueType>;
     ArrayBasic errorArray, errorSquare;
 
     // Use a worklet to calculate point-wise error, and its square
-    typedef vtkm::worklet::wavelets::Differencer DifferencerWorklet;
+    using DifferencerWorklet = vtkm::worklet::wavelets::Differencer;
     DifferencerWorklet dw;
     vtkm::worklet::DispatcherMapField<DifferencerWorklet> dwDispatcher(dw);
     dwDispatcher.Invoke(original, reconstruct, errorArray);
 
-    typedef vtkm::worklet::wavelets::SquareWorklet SquareWorklet;
+    using SquareWorklet = vtkm::worklet::wavelets::SquareWorklet;
     SquareWorklet sw;
     vtkm::worklet::DispatcherMapField<SquareWorklet> swDispatcher(sw);
     swDispatcher.Invoke(errorArray, errorSquare);

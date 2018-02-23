@@ -25,11 +25,13 @@ set(headers
   DeviceAdapterAlgorithmCuda.h
   DeviceAdapterAlgorithmThrust.h
   DeviceAdapterTagCuda.h
+  ExecutionArrayInterfaceBasicCuda.h
   MakeThrustIterator.h
   TaskTuner.h
   ThrustExceptionHandler.h
   VirtualObjectTransferCuda.h
   )
+
 vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
 
 #-----------------------------------------------------------------------------
@@ -39,5 +41,6 @@ endif()
 
 target_sources(vtkm_cont PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionCuda.cu
+  ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicCuda.cu
   ${CMAKE_CURRENT_SOURCE_DIR}/CudaAllocator.cu
 )

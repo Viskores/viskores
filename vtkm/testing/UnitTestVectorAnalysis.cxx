@@ -38,7 +38,7 @@ namespace internal
 template <typename VectorType>
 typename vtkm::VecTraits<VectorType>::ComponentType MyMag(const VectorType& vt)
 {
-  typedef vtkm::VecTraits<VectorType> Traits;
+  using Traits = vtkm::VecTraits<VectorType>;
   double total = 0.0;
   for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; ++index)
   {
@@ -50,7 +50,7 @@ typename vtkm::VecTraits<VectorType>::ComponentType MyMag(const VectorType& vt)
 template <typename VectorType>
 VectorType MyNormal(const VectorType& vt)
 {
-  typedef vtkm::VecTraits<VectorType> Traits;
+  using Traits = vtkm::VecTraits<VectorType>;
   typename Traits::ComponentType mag = internal::MyMag(vt);
   VectorType temp = vt;
   for (vtkm::IdComponent index = 0; index < Traits::NUM_COMPONENTS; ++index)
@@ -70,7 +70,7 @@ T MyLerp(const T& a, const T& b, const W& w)
 template <typename VectorType>
 void TestVector(const VectorType& vector)
 {
-  typedef typename vtkm::VecTraits<VectorType>::ComponentType ComponentType;
+  using ComponentType = typename vtkm::VecTraits<VectorType>::ComponentType;
 
   std::cout << "Testing " << vector << std::endl;
 
@@ -127,7 +127,7 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
 {
   std::cout << "Testing " << x << " x " << y << std::endl;
 
-  typedef vtkm::Vec<T, 3> Vec3;
+  using Vec3 = vtkm::Vec<T, 3>;
   Vec3 cross = vtkm::Cross(x, y);
 
   std::cout << "  = " << cross << std::endl;
@@ -163,9 +163,9 @@ struct TestLinearFunctor
   template <typename T>
   void operator()(const T&) const
   {
-    typedef vtkm::VecTraits<T> Traits;
+    using Traits = vtkm::VecTraits<T>;
     const vtkm::IdComponent NUM_COMPONENTS = Traits::NUM_COMPONENTS;
-    typedef typename Traits::ComponentType ComponentType;
+    using ComponentType = typename Traits::ComponentType;
 
     T zeroVector = T(ComponentType(0));
     T normalizedVector = T(vtkm::RSqrt(ComponentType(NUM_COMPONENTS)));

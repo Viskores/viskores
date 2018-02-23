@@ -85,6 +85,11 @@
 #define VTKM_SIZE_LONG @VTKm_SIZE_LONG@
 #define VTKM_SIZE_LONG_LONG @VTKm_SIZE_LONG_LONG@
 
+// Defines the cache line size in bytes to align allocations to
+#ifndef VTKM_ALLOCATION_ALIGNMENT
+#define VTKM_ALLOCATION_ALIGNMENT 64
+#endif
+
 // Define a pair of macros, VTKM_THIRDPARTY_PRE_INCLUDE and VTKM_THIRDPARTY_POST_INCLUDE,
 // that should be wrapped around any #include for a tbb or thrust header file. Mostly
 // this is used to set pragmas that dissable warnings that VTK-m checks for
@@ -269,7 +274,7 @@
 
 #ifdef VTKM_MSVC
 //With MSVC the types that we generate cause warning C4503 (long symbol names)
-//this doesn't affect the resulting binary so we just supress that warning
+//this doesn't affect the resulting binary so we just suppress that warning
 //
 #pragma warning(disable:4503)
 
@@ -279,7 +284,7 @@
 //a valid use is MSVC-specific. Even less fortunate is the fact that if
 //another header violates the warning, it is impossible to suppress it
 //because it happens in a system header file (xutility), which was included
-//far before the actual offending code occured. Even less fortunate than
+//far before the actual offending code occurred. Even less fortunate than
 //that, a boost header we (indirectly) use sets off this warning, cannot
 //be suppressed, and is not going to be fixed
 //(https://svn.boost.org/trac/boost/ticket/11426). The best solution is to

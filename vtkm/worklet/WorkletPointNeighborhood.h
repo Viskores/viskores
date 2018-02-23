@@ -94,7 +94,7 @@ public:
   };
 
   /// All worklets must define their scatter operation.
-  typedef vtkm::worklet::ScatterIdentity ScatterType;
+  using ScatterType = vtkm::worklet::ScatterIdentity;
 
   /// In addition to defining the scatter type, the worklet must produce the
   /// scatter. The default vtkm::worklet::ScatterIdentity  has no state,
@@ -104,7 +104,7 @@ public:
 
   /// All neighborhood worklets must define their boundary type operation.
   /// The boundary type determines how loading on boundaries will work.
-  typedef vtkm::worklet::BoundaryClamp BoundaryType;
+  using BoundaryType = vtkm::worklet::BoundaryClamp;
 
   /// In addition to defining the boundary type, the worklet must produce the
   /// boundary condition. The default BoundaryClamp has no state, so just return an

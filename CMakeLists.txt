@@ -55,18 +55,21 @@ endif()
 if (NOT DEFINED VTKm_INSTALL_BIN_DIR)
   set(VTKm_INSTALL_BIN_DIR "bin")
 endif()
-if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
-  set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}/cmake")
+if (NOT DEFINED VTKm_INSTALL_SHARE_DIR)
+  set(VTKm_INSTALL_SHARE_DIR "share/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}")
 endif()
+if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
+  set(VTKm_INSTALL_CMAKE_MODULE_DIR "${VTKm_INSTALL_SHARE_DIR}/cmake")
+endif()
+if (NOT DEFINED VTKm_BUILD_CMAKE_BASE_DIR)
+  set(VTKm_BUILD_CMAKE_BASE_DIR "${VTKm_BINARY_DIR}")
+endif ()
 
 set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include")
 
 if (NOT DEFINED VTKm_EXPORT_NAME)
   set(VTKm_EXPORT_NAME "VTKmTargets")
 endif()
-
-
-set(VTKm_EXPORT_NAME "VTKmTargets")
 
 #-----------------------------------------------------------------------------
 # vtkm_option(variable doc [initial])
@@ -108,14 +111,19 @@ vtkm_option(VTKm_INSTALL_ONLY_LIBRARIES "install only vtk-m libraries and no hea
 # VTK does.
 vtkm_option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
 
+vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
+set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+
 mark_as_advanced(
   VTKm_NO_ASSERT
   VTKm_INSTALL_ONLY_LIBRARIES
   VTKm_USE_DEFAULT_SYMBOL_VISIBILITY
   )
 
-vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
-set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
+#-----------------------------------------------------------------------------
+# When using C++11 support make sure you use the standard C++ extensions rather
+# than compiler-specific versions of the extensions (to preserve portability).
+set(CMAKE_CXX_EXTENSIONS False)
 
 # Setup default build types
 include(VTKmBuildType)
@@ -215,7 +223,7 @@ include(CMakePackageConfigHelpers)
 
 configure_package_config_file(
   ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
-  ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
+  ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
   INSTALL_DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   PATH_VARS
     VTKm_INSTALL_INCLUDE_DIR
@@ -226,25 +234,25 @@ configure_package_config_file(
   )
 
 write_basic_package_version_file(
-  ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
+  ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   install(
     FILES
-      ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
-      ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
+      ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
+      ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
     DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
     )
 
   # Install the readme and license files.
   install(FILES ${VTKm_SOURCE_DIR}/README.md
-    DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+    DESTINATION ${VTKm_INSTALL_SHARE_DIR}
     RENAME VTKmREADME.md
     )
   install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
-    DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+    DESTINATION ${VTKm_INSTALL_SHARE_DIR}
     RENAME VTKmLICENSE.txt
     )
 
@@ -277,17 +285,20 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
     )
 endif()
 
-# Enable CPack packaging
-set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The VTKm Toolkit")
-set(CPACK_PACKAGE_NAME "VTKm")
-set(CPACK_PACKAGE_VERSION_MAJOR ${VTKm_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${VTKm_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${VTKm_VERSION_PATCH})
-set(CPACK_PACKAGE_FILE_NAME "VTKm-${VTKm_VERSION}")
-set(CPACK_RESOURCE_FILE_LICENSE ${VTKm_SOURCE_DIR}/LICENSE.txt)
-set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
-include(CPack)
+vtkm_option(VTKm_ENABLE_CPACK "Enable CPack packaging of VTKm" ON)
+if (VTKm_ENABLE_CPACK)
+  # Enable CPack packaging
+  set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)
+  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The VTKm Toolkit")
+  set(CPACK_PACKAGE_NAME "VTKm")
+  set(CPACK_PACKAGE_VERSION_MAJOR ${VTKm_VERSION_MAJOR})
+  set(CPACK_PACKAGE_VERSION_MINOR ${VTKm_VERSION_MINOR})
+  set(CPACK_PACKAGE_VERSION_PATCH ${VTKm_VERSION_PATCH})
+  set(CPACK_PACKAGE_FILE_NAME "VTKm-${VTKm_VERSION}")
+  set(CPACK_RESOURCE_FILE_LICENSE ${VTKm_SOURCE_DIR}/LICENSE.txt)
+  set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
+  include(CPack)
+endif ()
 
 #-----------------------------------------------------------------------------
 #add the benchmarking folder

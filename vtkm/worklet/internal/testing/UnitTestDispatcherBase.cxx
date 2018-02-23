@@ -29,7 +29,7 @@
 namespace
 {
 
-typedef vtkm::cont::DeviceAdapterTagSerial Device;
+using Device = vtkm::cont::DeviceAdapterTagSerial;
 
 static const vtkm::Id ARRAY_SIZE = 10;
 

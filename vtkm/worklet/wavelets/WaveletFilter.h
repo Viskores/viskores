@@ -115,7 +115,7 @@ public:
 
   bool isSymmetric() { return this->Symmetricity; }
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Float64> FilterType;
+  using FilterType = vtkm::cont::ArrayHandle<vtkm::Float64>;
 
   const FilterType& GetLowDecomposeFilter() const { return this->LowDecomType; }
   const FilterType& GetHighDecomposeFilter() const { return this->HighDecomType; }

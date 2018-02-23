@@ -102,7 +102,7 @@ public:
                                 WholeArrayIn<IdType> saddles,      // (input) saddles
                                 WholeArrayOut<IdType> mergeArcs);  // (output) target for write back
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

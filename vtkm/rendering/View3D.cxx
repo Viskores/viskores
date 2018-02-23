@@ -69,6 +69,7 @@ void View3D::RenderScreenAnnotations()
   if (this->GetScene().GetNumberOfActors() > 0)
   {
     //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
+    this->ColorBarAnnotation.SetFieldName(this->GetScene().GetActor(0).GetScalarField().GetName());
     this->ColorBarAnnotation.SetRange(this->GetScene().GetActor(0).GetScalarRange(), 5);
     this->ColorBarAnnotation.SetColorTable(this->GetScene().GetActor(0).GetColorTable());
     this->ColorBarAnnotation.Render(

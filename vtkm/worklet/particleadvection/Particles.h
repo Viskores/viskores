@@ -48,11 +48,10 @@ class Particles : public vtkm::exec::ExecutionObjectBase
 {
 
 private:
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal
-      IdPortal;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
-    DeviceAdapterTag>::Portal PosPortal;
+  using IdPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+  using PosPortal = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
+    DeviceAdapterTag>::Portal;
 
 public:
   VTKM_EXEC_CONT
@@ -207,13 +206,12 @@ class StateRecordingParticles : public Particles<T, DeviceAdapterTag>
 {
 
 private:
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal
-      IdPortal;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<
-    DeviceAdapterTag>::Portal IdComponentPortal;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
-    DeviceAdapterTag>::Portal PosPortal;
+  using IdPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+  using IdComponentPortal = typename vtkm::cont::ArrayHandle<
+    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+  using PosPortal = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
+    DeviceAdapterTag>::Portal;
 
 public:
   VTKM_EXEC_CONT

@@ -52,7 +52,7 @@ namespace diy
       using Skip = std::function<bool(int, const Master&)>;
 
       struct SkipNoIncoming;
-      struct NeverSkip { bool    operator()(int i, const Master& master) const   { return false; } };
+      struct NeverSkip { bool    operator()(int, const Master&) const { return false; } };
 
       // Collection
       typedef Collection::Create            CreateBlock;
@@ -80,8 +80,8 @@ namespace diy
       struct QueueSizePolicy: public QueuePolicy
       {
                 QueueSizePolicy(size_t sz): size(sz)          {}
-        bool    unload_incoming(const Master& master, int from, int to, size_t sz) const    { return sz > size; }
-        bool    unload_outgoing(const Master& master, int from, size_t sz) const            { return sz > size*master.outgoing_count(from); }
+        bool    unload_incoming(const Master&, int, int, size_t sz) const         { return sz > size; }
+        bool    unload_outgoing(const Master& master, int from, size_t sz) const  { return sz > size*master.outgoing_count(from); }
 
         size_t  size;
       };
@@ -162,15 +162,15 @@ namespace diy
            * serialize a block
       */
                     Master(mpi::communicator    comm,          //!< communicator
-                           int                  threads  = 1,  //!< number of threads DIY can use
-                           int                  limit    = -1, //!< number of blocks to store in memory
-                           CreateBlock          create   = 0,  //!< block create function; master manages creation if create != 0
-                           DestroyBlock         destroy  = 0,  //!< block destroy function; master manages destruction if destroy != 0
-                           ExternalStorage*     storage  = 0,  //!< storage object (path, method, etc.) for storing temporary blocks being shuffled in/out of core
-                           SaveBlock            save     = 0,  //!< block save function; master manages saving if save != 0
-                           LoadBlock            load     = 0,  //!< block load function; master manages loading if load != 0
-                           QueuePolicy*         q_policy = new QueueSizePolicy(4096)): //!< policy for managing message queues specifies maximum size of message queues to keep in memory
-                      blocks_(create, destroy, storage, save, load),
+                           int                  threads   = 1,  //!< number of threads DIY can use
+                           int                  limit     = -1, //!< number of blocks to store in memory
+                           CreateBlock          create_   = 0,  //!< block create function; master manages creation if create != 0
+                           DestroyBlock         destroy_  = 0,  //!< block destroy function; master manages destruction if destroy != 0
+                           ExternalStorage*     storage   = 0,  //!< storage object (path, method, etc.) for storing temporary blocks being shuffled in/out of core
+                           SaveBlock            save      = 0,  //!< block save function; master manages saving if save != 0
+                           LoadBlock            load_     = 0,  //!< block load function; master manages loading if load != 0
+                           QueuePolicy*         q_policy  = new QueueSizePolicy(4096)): //!< policy for managing message queues specifies maximum size of message queues to keep in memory
+                      blocks_(create_, destroy_, storage, save, load_),
                       queue_policy_(q_policy),
                       limit_(limit),
                       threads_(threads == -1 ? thread::hardware_concurrency() : threads),
@@ -230,7 +230,7 @@ namespace diy
       ProxyWithLink proxy(int i) const;
 
       //! return the number of local blocks
-      unsigned      size() const                        { return blocks_.size(); }
+      unsigned int  size() const                        { return static_cast<unsigned int>(blocks_.size()); }
       void*         create() const                      { return blocks_.create(); }
 
       // accessors
@@ -666,7 +666,7 @@ add(int gid, void* b, Link* l)
   links_.push_back(l);
   gids_.push_back(gid);
 
-  int lid = gids_.size() - 1;
+  int lid = static_cast<int>(gids_.size()) - 1;
   lids_[gid] = lid;
   add_expected(l->size_unique()); // NB: at every iteration we expect a message from each unique neighbor
 
@@ -703,6 +703,8 @@ diy::Master::
 foreach_(const Callback<Block>& f, const Skip& skip)
 {
     auto scoped = prof.scoped("foreach");
+    DIY_UNUSED(scoped);
+
     commands_.push_back(new Command<Block>(f, skip));
 
     if (immediate())
@@ -715,6 +717,7 @@ execute()
 {
   log->debug("Entered execute()");
   auto scoped = prof.scoped("execute");
+  DIY_UNUSED(scoped);
   //show_incoming_records();
 
   // touch the outgoing and incoming queues as well as collectives to make sure they exist
@@ -798,6 +801,8 @@ diy::Master::
 exchange()
 {
   auto scoped = prof.scoped("exchange");
+  DIY_UNUSED(scoped);
+
   execute();
 
   log->debug("Starting exchange");
@@ -1087,9 +1092,9 @@ flush()
   // XXX: with queues we could easily maintain a specific space limit
   int out_queues_limit;
   if (limit_ == -1 || size() == 0)
-    out_queues_limit = to_send.size();
+    out_queues_limit = static_cast<int>(to_send.size());
   else
-    out_queues_limit = std::max((size_t) 1, to_send.size()/size()*limit_);      // average number of queues per block * in-memory block limit
+    out_queues_limit = static_cast<int>(std::max((size_t) 1, to_send.size()/size()*limit_));      // average number of queues per block * in-memory block limit
 
   do
   {
@@ -1119,6 +1124,7 @@ diy::Master::
 process_collectives()
 {
   auto scoped = prof.scoped("collectives");
+  DIY_UNUSED(scoped);
 
   if (collectives_.empty())
       return;
@@ -1157,15 +1163,17 @@ diy::Master::
 nudge()
 {
   bool success = false;
-  for (InFlightSendsList::iterator it = inflight_sends_.begin(); it != inflight_sends_.end(); ++it)
+  for (InFlightSendsList::iterator it = inflight_sends_.begin(); it != inflight_sends_.end();)
   {
     mpi::optional<mpi::status> ostatus = it->request.test();
     if (ostatus)
     {
       success = true;
-      InFlightSendsList::iterator rm = it;
-      --it;
-      inflight_sends_.erase(rm);
+      it = inflight_sends_.erase(it);
+    }
+    else
+    {
+      ++it;
     }
   }
   return success;

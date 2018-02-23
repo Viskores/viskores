@@ -119,7 +119,7 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(const_portal.GetNumberOfValues() == ARRAY_SIZE,
                      "Const portal array size wrong.");
 
-    std::cout << "  Check inital value." << std::endl;
+    std::cout << "  Check initial value." << std::endl;
     VTKM_TEST_ASSERT(CheckPortal(portal, ORIGINAL_VALUE), "Portal iterator has bad value.");
     VTKM_TEST_ASSERT(CheckPortal(const_portal, ORIGINAL_VALUE),
                      "Const portal iterator has bad value.");

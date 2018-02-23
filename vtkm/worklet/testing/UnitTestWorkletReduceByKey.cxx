@@ -57,7 +57,7 @@ struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
                                 ValuesInOut<> valuesToModify,
                                 ValuesOut<> writeKey);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex, ValueCount);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename T,
             typename KeyMirrorVecType,
@@ -187,7 +187,7 @@ void TryKeyType(KeyType)
 
 void TestReduceByKey()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
   std::cout << "Testing Map Field on device adapter: " << DeviceAdapterTraits::GetName()
             << std::endl;
 

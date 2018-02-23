@@ -126,7 +126,7 @@ struct ExecutionArrayInterfaceBasic<DeviceAdapterTagTestAlgorithmGeneral>
   }
 
   VTKM_CONT
-  virtual DeviceAdapterId GetDeviceId() const final { return -3; }
+  DeviceAdapterId GetDeviceId() const final { return -3; }
 };
 }
 }

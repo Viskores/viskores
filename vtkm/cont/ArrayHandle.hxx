@@ -299,9 +299,8 @@ void ArrayHandle<T, S>::PrepareForDevice(DeviceAdapterTag) const
       this->SyncControlArray();
       // Need to change some state that does not change the logical state from
       // an external point of view.
-      InternalStruct* internals = const_cast<InternalStruct*>(this->Internals.get());
-      internals->ExecutionArray.reset();
-      internals->ExecutionArrayValid = false;
+      this->Internals->ExecutionArray.reset();
+      this->Internals->ExecutionArrayValid = false;
     }
   }
 
@@ -309,10 +308,9 @@ void ArrayHandle<T, S>::PrepareForDevice(DeviceAdapterTag) const
   VTKM_ASSERT(!this->Internals->ExecutionArrayValid);
   // Need to change some state that does not change the logical state from
   // an external point of view.
-  InternalStruct* internals = const_cast<InternalStruct*>(this->Internals.get());
-  internals->ExecutionArray.reset(
+  this->Internals->ExecutionArray.reset(
     new vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>(
-      &internals->ControlArray));
+      &this->Internals->ControlArray));
 }
 
 template <typename T, typename S>
@@ -322,19 +320,18 @@ void ArrayHandle<T, S>::SyncControlArray() const
   {
     // Need to change some state that does not change the logical state from
     // an external point of view.
-    InternalStruct* internals = const_cast<InternalStruct*>(this->Internals.get());
     if (this->Internals->ExecutionArrayValid)
     {
-      internals->ExecutionArray->RetrieveOutputData(&internals->ControlArray);
-      internals->ControlArrayValid = true;
+      this->Internals->ExecutionArray->RetrieveOutputData(&this->Internals->ControlArray);
+      this->Internals->ControlArrayValid = true;
     }
     else
     {
       // This array is in the null state (there is nothing allocated), but
       // the calling function wants to do something with the array. Put this
       // class into a valid state by allocating an array of size 0.
-      internals->ControlArray.Allocate(0);
-      internals->ControlArrayValid = true;
+      this->Internals->ControlArray.Allocate(0);
+      this->Internals->ControlArrayValid = true;
     }
   }
 }
