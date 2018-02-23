@@ -108,7 +108,7 @@ public:
                                 FieldOut<IdType> chain,       // (output) modify the chains
                                 FieldOut<IdType> linkMask);   // (output) modify the mask
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nRows; // (input) number of rows in 2D
   vtkm::Id nCols; // (input) number of cols in 2D

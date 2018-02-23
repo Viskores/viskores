@@ -105,12 +105,12 @@ public:
                                 FieldOut<IdType> outdegree,    // (output) outdegree
                                 FieldOut<IdType> isCritical);  // (output) whether critical
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
-  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst IdComponentPortalType;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst IdPortalType;
+  using IdComponentPortalType = typename vtkm::cont::ArrayHandle<
+    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst;
 
   vtkm::Id nRows;                       // (input) number of rows in 3D
   vtkm::Id nCols;                       // (input) number of cols in 3D

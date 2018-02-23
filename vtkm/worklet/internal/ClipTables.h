@@ -19459,7 +19459,7 @@ static vtkm::UInt8 CellEdges[CELL_EDGES_SIZE] = {
 class ClipTables
 {
 public:
-  typedef vtkm::Vec<vtkm::IdComponent, 2> EdgeVec;
+  using EdgeVec = vtkm::Vec<vtkm::IdComponent, 2>;
 
   template <typename DeviceAdapter>
   class DevicePortal

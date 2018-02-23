@@ -79,7 +79,7 @@ template <typename DeviceAdapter>
 class TestingPointLocatorUniformGrid
 {
 public:
-  typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
   void TestTest() const
   {
     vtkm::Int32 nTrainingPoints = 1000;

@@ -138,7 +138,7 @@ public:
     {
       case vtkm::cont::Field::ASSOC_POINTS:
       {
-        typedef ThresholdByPointField<UnaryPredicate> ThresholdWorklet;
+        using ThresholdWorklet = ThresholdByPointField<UnaryPredicate>;
 
         ThresholdWorklet worklet(predicate);
         DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);
@@ -147,7 +147,7 @@ public:
       }
       case vtkm::cont::Field::ASSOC_CELL_SET:
       {
-        typedef ThresholdByCellField<UnaryPredicate> ThresholdWorklet;
+        using ThresholdWorklet = ThresholdByCellField<UnaryPredicate>;
 
         ThresholdWorklet worklet(predicate);
         DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);

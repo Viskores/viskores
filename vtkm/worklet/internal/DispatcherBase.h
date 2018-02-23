@@ -161,7 +161,7 @@ struct DispatcherBaseControlSignatureTagCheck
     // If you get a compile error here, it means there is something that is
     // not a valid control signature tag in a worklet's ControlSignature.
     VTKM_IS_CONTROL_SIGNATURE_TAG(ControlSignatureTag);
-    typedef ControlSignatureTag type;
+    using type = ControlSignatureTag;
   };
 };
 
@@ -175,7 +175,7 @@ struct DispatcherBaseExecutionSignatureTagCheck
     // If you get a compile error here, it means there is something that is not
     // a valid execution signature tag in a worklet's ExecutionSignature.
     VTKM_IS_EXECUTION_SIGNATURE_TAG(ExecutionSignatureTag);
-    typedef ExecutionSignatureTag type;
+    using type = ExecutionSignatureTag;
   };
 };
 
@@ -185,8 +185,8 @@ template <typename ControlInterface, vtkm::IdComponent Index>
 struct DispatcherBaseTransportInvokeTypes
 {
   //Moved out of DispatcherBaseTransportFunctor to reduce code generation
-  typedef typename ControlInterface::template ParameterType<Index>::type ControlSignatureTag;
-  typedef typename ControlSignatureTag::TransportTag TransportTag;
+  using ControlSignatureTag = typename ControlInterface::template ParameterType<Index>::type;
+  using TransportTag = typename ControlSignatureTag::TransportTag;
 };
 
 VTKM_CONT
@@ -353,25 +353,25 @@ template <typename DerivedClass, typename WorkletType, typename BaseWorkletType>
 class DispatcherBase
 {
 private:
-  typedef DispatcherBase<DerivedClass, WorkletType, BaseWorkletType> MyType;
+  using MyType = DispatcherBase<DerivedClass, WorkletType, BaseWorkletType>;
 
   friend struct detail::for_each_dynamic_arg<0>;
 
 protected:
-  typedef vtkm::internal::FunctionInterface<typename WorkletType::ControlSignature>
-    ControlInterface;
-  typedef vtkm::internal::FunctionInterface<typename WorkletType::ExecutionSignature>
-    ExecutionInterface;
+  using ControlInterface =
+    vtkm::internal::FunctionInterface<typename WorkletType::ControlSignature>;
+  using ExecutionInterface =
+    vtkm::internal::FunctionInterface<typename WorkletType::ExecutionSignature>;
 
   static const vtkm::IdComponent NUM_INVOKE_PARAMS = ControlInterface::ARITY;
 
 private:
   // We don't really need these types, but declaring them checks the arguments
   // of the control and execution signatures.
-  typedef typename ControlInterface::template StaticTransformType<
-    detail::DispatcherBaseControlSignatureTagCheck>::type ControlSignatureCheck;
-  typedef typename ExecutionInterface::template StaticTransformType<
-    detail::DispatcherBaseExecutionSignatureTagCheck>::type ExecutionSignatureCheck;
+  using ControlSignatureCheck = typename ControlInterface::template StaticTransformType<
+    detail::DispatcherBaseControlSignatureTagCheck>::type;
+  using ExecutionSignatureCheck = typename ExecutionInterface::template StaticTransformType<
+    detail::DispatcherBaseExecutionSignatureTagCheck>::type;
 
   template <typename... Args>
   VTKM_CONT void StartInvoke(Args&&... args) const
@@ -529,16 +529,15 @@ private:
     // control environment) in a FunctionInterface. Specifically, we use a
     // static transform of the FunctionInterface to call the transport on each
     // argument and return the corresponding execution environment object.
-    typedef typename Invocation::ParameterInterface ParameterInterfaceType;
+    using ParameterInterfaceType = typename Invocation::ParameterInterface;
     const ParameterInterfaceType& parameters = invocation.Parameters;
 
-    typedef detail::DispatcherBaseTransportFunctor<typename Invocation::ControlInterface,
-                                                   typename Invocation::InputDomainType,
-                                                   DeviceAdapter>
-      TransportFunctorType;
-    typedef
-      typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type
-        ExecObjectParameters;
+    using TransportFunctorType =
+      detail::DispatcherBaseTransportFunctor<typename Invocation::ControlInterface,
+                                             typename Invocation::InputDomainType,
+                                             DeviceAdapter>;
+    using ExecObjectParameters =
+      typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type;
 
     ExecObjectParameters execObjectParameters = parameters.StaticTransformCont(
       TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));

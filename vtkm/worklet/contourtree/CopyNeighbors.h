@@ -87,7 +87,7 @@ public:
     WholeArrayIn<IdType> arcs,             // (input) merge tree arcs
     FieldOut<IdType> sortVector);          // (output) neighbors for active edge
   typedef _4 ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

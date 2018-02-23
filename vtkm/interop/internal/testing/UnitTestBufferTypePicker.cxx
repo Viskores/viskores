@@ -28,8 +28,8 @@ void TestBufferTypePicker()
 {
   //just verify that certain types match
   GLenum type;
-  typedef unsigned int vtkmUint;
-  typedef vtkm::FloatDefault T;
+  using vtkmUint = unsigned int;
+  using T = vtkm::FloatDefault;
 
   type = vtkm::interop::internal::BufferTypePicker(vtkm::Id());
   VTKM_TEST_ASSERT(type == GL_ELEMENT_ARRAY_BUFFER, "Bad OpenGL Buffer Type");

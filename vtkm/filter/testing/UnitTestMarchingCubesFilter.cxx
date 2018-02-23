@@ -38,7 +38,7 @@ class TangleField : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
   const vtkm::FloatDefault xmin, ymin, zmin, xmax, ymax, zmax;
@@ -167,8 +167,8 @@ public:
   VTKM_EXEC_CONT
   vtkm::Id operator()(vtkm::Id vertex) const
   {
-    typedef vtkm::CellShapeTagHexahedron HexTag;
-    typedef vtkm::CellTraits<HexTag> HexTraits;
+    using HexTag = vtkm::CellShapeTagHexahedron;
+    using HexTraits = vtkm::CellTraits<HexTag>;
 
     vtkm::Id cellId = vertex / HexTraits::NUM_POINTS;
     vtkm::Id localId = vertex % HexTraits::NUM_POINTS;
@@ -208,30 +208,28 @@ private:
 class MakeRadiantDataSet
 {
 public:
-  typedef vtkm::cont::ArrayHandleUniformPointCoordinates CoordinateArrayHandle;
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleUniformPointCoordinates,
-                                           EuclideanNorm>
-    DataArrayHandle;
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
-                                           CubeGridConnectivity>
-    ConnectivityArrayHandle;
-
-  typedef vtkm::cont::CellSetSingleType<
+  using CoordinateArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
+  using DataArrayHandle =
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleUniformPointCoordinates, EuclideanNorm>;
+  using ConnectivityArrayHandle =
     vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
-                                     CubeGridConnectivity>::StorageTag>
-    CellSet;
+                                     CubeGridConnectivity>;
+
+  using CellSet = vtkm::cont::CellSetSingleType<
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+                                     CubeGridConnectivity>::StorageTag>;
 
   vtkm::cont::DataSet Make3DRadiantDataSet(vtkm::IdComponent dim = 5);
 };
 
 class PolicyRadiantDataSet : public vtkm::filter::PolicyBase<PolicyRadiantDataSet>
 {
-  typedef MakeRadiantDataSet::DataArrayHandle DataHandleType;
-  typedef MakeRadiantDataSet::ConnectivityArrayHandle CountingHandleType;
+  using DataHandleType = MakeRadiantDataSet::DataArrayHandle;
+  using CountingHandleType = MakeRadiantDataSet::ConnectivityArrayHandle;
 
-  typedef vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
-                                           CubeGridConnectivity>
-    TransformHandleType;
+  using TransformHandleType =
+    vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandleCounting<vtkm::Id>,
+                                     CubeGridConnectivity>;
 
 public:
   struct TypeListTagRadiantTypes : vtkm::ListTagBase<DataHandleType::StorageTag,
@@ -240,13 +238,13 @@ public:
   {
   };
 
-  typedef TypeListTagRadiantTypes FieldStorageList;
+  using FieldStorageList = TypeListTagRadiantTypes;
 
   struct TypeListTagRadiantCellSetTypes : vtkm::ListTagBase<MakeRadiantDataSet::CellSet>
   {
   };
 
-  typedef TypeListTagRadiantCellSetTypes AllCellSetList;
+  using AllCellSetList = TypeListTagRadiantCellSetTypes;
 };
 
 inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComponent dim)
@@ -256,10 +254,10 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
   vtkm::cont::DataSet dataSet;
 
-  typedef vtkm::CellShapeTagHexahedron HexTag;
-  typedef vtkm::CellTraits<HexTag> HexTraits;
+  using HexTag = vtkm::CellShapeTagHexahedron;
+  using HexTraits = vtkm::CellTraits<HexTag>;
 
-  typedef vtkm::Vec<vtkm::Float32, 3> CoordType;
+  using CoordType = vtkm::Vec<vtkm::Float32, 3>;
 
   const vtkm::IdComponent nCells = dim * dim * dim;
 
@@ -327,7 +325,7 @@ void TestMarchingCubesUniformGrid()
 
     vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
     vtkm::cont::DynamicCellSet dcells = outputData.GetCellSet();
-    typedef vtkm::cont::CellSetSingleType<> CellSetType;
+    using CellSetType = vtkm::cont::CellSetSingleType<>;
     const CellSetType& cells = dcells.Cast<CellSetType>();
 
     //verify that the number of points is correct (72)
@@ -351,7 +349,7 @@ void TestMarchingCubesUniformGrid()
     //verify that the number of cells is correct (160)
     vtkm::cont::DynamicCellSet dcells = outputData.GetCellSet();
 
-    typedef vtkm::cont::CellSetSingleType<> CellSetType;
+    using CellSetType = vtkm::cont::CellSetSingleType<>;
     const CellSetType& cells = dcells.Cast<CellSetType>();
     VTKM_TEST_ASSERT(cells.GetNumberOfCells() == 160, "");
   }
@@ -361,7 +359,7 @@ void TestMarchingCubesCustomPolicy()
 {
   std::cout << "Testing MarchingCubes filter with custom field and cellset" << std::endl;
 
-  typedef MakeRadiantDataSet DataSetGenerator;
+  using DataSetGenerator = MakeRadiantDataSet;
   DataSetGenerator dataSetGenerator;
 
   const vtkm::IdComponent Dimension = 10;

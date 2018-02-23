@@ -80,7 +80,7 @@ template <>
 class FilterTraits<Threshold>
 { //currently the threshold filter only works on scalar data.
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

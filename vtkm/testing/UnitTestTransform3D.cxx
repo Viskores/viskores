@@ -43,8 +43,8 @@ struct TransformTests
 
   T RandomNum() { return this->RandomDistribution(g_RandomGenerator); }
 
-  typedef vtkm::Vec<T, 3> Vec;
-  typedef vtkm::Matrix<T, 4, 4> Transform;
+  using Vec = vtkm::Vec<T, 3>;
+  using Transform = vtkm::Matrix<T, 4, 4>;
 
   Vec RandomVector()
   {

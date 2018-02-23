@@ -42,7 +42,7 @@ public:
                                 CellSetIn topology,
                                 FieldOutCell<Scalar> outCells);
   typedef void ExecutionSignature(_1, _4, _2, PointCount, CellShape, PointIndices);
-  typedef _3 InputDomain;
+  using InputDomain = _3;
 
   VTKM_CONT
   MaxPointOrCellValue() {}
@@ -101,7 +101,7 @@ static void TestStructuredUniformPointCoords();
 
 void TestWorkletMapTopologyUniform()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
   std::cout << "Testing Topology Worklet ( Uniform ) on device adapter: "
             << DeviceAdapterTraits::GetName() << std::endl;
 

@@ -44,7 +44,7 @@ namespace
 template <typename T>
 T compute_delta(T fieldMinValue, T fieldMaxValue, vtkm::Id num)
 {
-  typedef vtkm::VecTraits<T> VecType;
+  using VecType = vtkm::VecTraits<T>;
   const T fieldRange = fieldMaxValue - fieldMinValue;
   return fieldRange / static_cast<typename VecType::ComponentType>(num);
 }
@@ -69,7 +69,7 @@ public:
   public:
     typedef void ControlSignature(FieldIn<> value, FieldOut<> binIndex);
     typedef void ExecutionSignature(_1, _2);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     vtkm::Id numberOfBins;
     FieldType minValue;
@@ -102,7 +102,7 @@ public:
                                   WholeArrayIn<IdType> counts,
                                   FieldOut<IdType> outputCount);
     typedef void ExecutionSignature(_1, _2, _3);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     template <typename WholeArrayType>
     VTKM_EXEC void operator()(const vtkm::Id& index,
@@ -129,7 +129,7 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Id>& binArray,
            DeviceAdapter vtkmNotUsed(device))
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     //todo: need to have a signature that can use an input range so we can
     //leverage fields that have already computed there range

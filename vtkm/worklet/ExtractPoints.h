@@ -81,7 +81,7 @@ public:
                                       const vtkm::cont::ArrayHandle<vtkm::Id>& pointIds,
                                       DeviceAdapter)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     DeviceAlgorithm::Copy(pointIds, this->ValidPointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
@@ -101,7 +101,7 @@ public:
                                       bool extractInside,
                                       DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;

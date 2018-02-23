@@ -32,7 +32,7 @@ namespace
 
 class TypeSet
 {
-  typedef std::set<std::string> NameSetType;
+  using NameSetType = std::set<std::string>;
   NameSetType NameSet;
 
 public:

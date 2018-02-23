@@ -141,7 +141,7 @@ inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Vec3HandleType;
+  using Vec3HandleType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
   Vec3HandleType vertices;
   Vec3HandleType normals;
 

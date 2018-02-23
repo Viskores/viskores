@@ -134,7 +134,7 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 class ChainGraph
 {
 public:
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
   // we will want a reference to the original data array
   const vtkm::cont::ArrayHandle<T, StorageType>& values;
@@ -386,8 +386,8 @@ void ChainGraph<T, StorageType, DeviceAdapter>::CompactActiveVertices()
   std::cout << "=======================" << std::endl;
   std::cout << std::endl;
 #endif
-  typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexType;
+  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
   // create a temporary array the same size
   vtkm::cont::ArrayHandle<vtkm::Id> newActiveVertices;
@@ -640,10 +640,10 @@ void ChainGraph<T, StorageType, DeviceAdapter>::DebugPrint(const char* message)
   std::cout << "---------------------------" << std::endl;
   std::cout << std::endl;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
-  typedef vtkm::cont::ArrayHandle<T> ValueArrayType;
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexType;
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, ValueArrayType> PermuteValueType;
+  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using ValueArrayType = vtkm::cont::ArrayHandle<T>;
+  using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
+  using PermuteValueType = vtkm::cont::ArrayHandlePermutation<IdArrayType, ValueArrayType>;
 
   // Full Vertex Arrays
   vtkm::Id nValues = valueIndex.GetNumberOfValues();

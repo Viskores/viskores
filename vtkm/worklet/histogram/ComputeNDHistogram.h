@@ -41,7 +41,7 @@ namespace histogram
 template <typename T>
 T compute_delta(T fieldMinValue, T fieldMaxValue, vtkm::Id num)
 {
-  typedef vtkm::VecTraits<T> VecType;
+  using VecType = vtkm::VecTraits<T>;
   const T fieldRange = fieldMaxValue - fieldMinValue;
   return fieldRange / static_cast<typename VecType::ComponentType>(num);
 }
@@ -56,7 +56,7 @@ class SetHistogramBin : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<> value, FieldIn<> binIndexIn, FieldOut<> binIndexOut);
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id numberOfBins;
   vtkm::Float64 minValue;
@@ -102,7 +102,7 @@ public:
   template <typename T, typename Storage>
   VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<T, Storage>& field) const
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     const vtkm::Vec<T, 2> initValue(field.GetPortalConstControl().Get(0));
     vtkm::Vec<T, 2> minMax = Algorithm::Reduce(field, initValue, vtkm::MinAndMax<T>());
@@ -131,7 +131,7 @@ public:
                                 FieldOut<> bin1DIndexOut,
                                 FieldOut<> oneVariableIndexOut);
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id numberOfBins;
 

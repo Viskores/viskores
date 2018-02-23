@@ -86,7 +86,7 @@ public:
                                 WholeArrayIn<IdType> regularToCritical, // (input) sorting indices
                                 FieldOut<IdType> sortVector); // (output) target for write back
   typedef _4 ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

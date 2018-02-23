@@ -32,9 +32,9 @@ void TestMagnitude()
 
   vtkm::worklet::Magnitude magnitudeWorklet;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Float64> ArrayReturnType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> ArrayVectorType;
-  typedef ArrayVectorType::PortalControl PortalType;
+  using ArrayReturnType = vtkm::cont::ArrayHandle<vtkm::Float64>;
+  using ArrayVectorType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
+  using PortalType = ArrayVectorType::PortalControl;
 
   ArrayVectorType pythagoreanTriples;
   pythagoreanTriples.Allocate(5);

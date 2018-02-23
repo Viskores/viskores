@@ -111,7 +111,7 @@ template <>
 class FilterTraits<ExtractGeometry>
 { //currently the ExtractGeometry filter only works on scalar data.
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

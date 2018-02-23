@@ -77,7 +77,7 @@ void TestStreamingSine()
   }
   input = vtkm::cont::make_ArrayHandle(data);
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAlgorithms;
+  using DeviceAlgorithms = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
   vtkm::worklet::SineWorklet sineWorklet;
   vtkm::worklet::DispatcherStreamingMapField<vtkm::worklet::SineWorklet> dispatcher(sineWorklet);
   dispatcher.SetNumberOfBlocks(NBlocks);

@@ -152,7 +152,7 @@ private:
 template <typename ArrayType>
 void FillArray2D(ArrayType& array, vtkm::Id dimX, vtkm::Id dimY)
 {
-  typedef vtkm::worklet::wavelets::GaussianWorklet2D WorkletType;
+  using WorkletType = vtkm::worklet::wavelets::GaussianWorklet2D;
   WorkletType worklet(dimX,
                       dimY,
                       100.0,
@@ -166,7 +166,7 @@ void FillArray2D(ArrayType& array, vtkm::Id dimX, vtkm::Id dimY)
 template <typename ArrayType>
 void FillArray3D(ArrayType& array, vtkm::Id dimX, vtkm::Id dimY, vtkm::Id dimZ)
 {
-  typedef vtkm::worklet::wavelets::GaussianWorklet3D<typename ArrayType::ValueType> WorkletType;
+  using WorkletType = vtkm::worklet::wavelets::GaussianWorklet3D<typename ArrayType::ValueType>;
   WorkletType worklet(dimX, dimY, dimZ);
   vtkm::worklet::DispatcherMapField<WorkletType> dispatcher(worklet);
   dispatcher.Invoke(array);

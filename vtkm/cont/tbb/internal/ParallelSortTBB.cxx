@@ -172,8 +172,8 @@ template <typename PlainType,
 class ParallelRadixSortInternal
 {
 public:
-  typedef ParallelRadixCompareInternal<PlainType, UnsignedType, CompareType, ValueManager, Base>
-    CompareInternal;
+  using CompareInternal =
+    ParallelRadixCompareInternal<PlainType, UnsignedType, CompareType, ValueManager, Base>;
 
   ParallelRadixSortInternal();
   ~ParallelRadixSortInternal();
@@ -745,14 +745,13 @@ template <typename PlainType,
           unsigned int Base = 8>
 class KeySort
 {
-  typedef value_manager::DummyValueManager DummyValueManager;
-  typedef internal::ParallelRadixSortInternal<PlainType,
-                                              CompareType,
-                                              UnsignedType,
-                                              Encoder,
-                                              DummyValueManager,
-                                              Base>
-    Internal;
+  using DummyValueManager = value_manager::DummyValueManager;
+  using Internal = internal::ParallelRadixSortInternal<PlainType,
+                                                       CompareType,
+                                                       UnsignedType,
+                                                       Encoder,
+                                                       DummyValueManager,
+                                                       Base>;
 
 public:
   void InitAndSort(PlainType* data, size_t num_elems, const CompareType& comp)
@@ -772,10 +771,9 @@ template <typename PlainType,
           int Base = 8>
 class PairSort
 {
-  typedef value_manager::PairValueManager<PlainType, ValueType, Base> ValueManager;
-  typedef internal::
-    ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>
-      Internal;
+  using ValueManager = value_manager::PairValueManager<PlainType, ValueType, Base>;
+  using Internal = internal::
+    ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, ValueManager, Base>;
 
 public:
   void InitAndSort(PlainType* keys, ValueType* vals, size_t num_elems, const CompareType& comp)

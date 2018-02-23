@@ -87,7 +87,7 @@ public:
                                 FieldInOut<TagType> bestPot,   // (output) best potential estimate
                                 FieldInOut<TagType> worstPot); // (output) worst potential estimate
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nBins; // Number of bins
   T mass;         // Particle mass

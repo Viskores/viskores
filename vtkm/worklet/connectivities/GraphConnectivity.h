@@ -36,7 +36,7 @@ public:
                                 WholeArrayInOut<IdType> comp);
 
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // TODO: Use Scatter?
   template <typename InPortalType, typename InOutPortalType>
@@ -62,7 +62,7 @@ class PointerJumping : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<IdType> index, WholeArrayInOut<IdType> comp);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename InOutPortalType>
   VTKM_EXEC void operator()(vtkm::Id index, InOutPortalType& comp) const
@@ -80,7 +80,7 @@ class IsStar : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<IdType> index, WholeArrayIn<IdType> comp, FieldOut<>);
   typedef _3 ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename InOutPortalType>
   VTKM_EXEC bool operator()(vtkm::Id index, InOutPortalType& comp) const

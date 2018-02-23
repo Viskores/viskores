@@ -134,7 +134,7 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 class MergeTree
 {
 public:
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
   // original data array
   const vtkm::cont::ArrayHandle<T, StorageType>& values;

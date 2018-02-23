@@ -70,15 +70,14 @@ template <typename DeviceAdapter>
 class ExecutionConnectivityExplicit : vtkm::exec::ExecutionObjectBase
 {
 private:
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::template ExecutionTypes<DeviceAdapter>::Portal
-      UInt8Portal;
+  using UInt8Portal =
+    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::template ExecutionTypes<DeviceAdapter>::Portal;
 
-  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<
-    DeviceAdapter>::Portal IdComponentPortal;
+  using IdComponentPortal = typename vtkm::cont::ArrayHandle<
+    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapter>::Portal;
 
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::Portal
-    IdPortal;
+  using IdPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::Portal;
 
 public:
   VTKM_CONT
@@ -187,7 +186,7 @@ public:
   template <typename DeviceAdapter>
   class ComputeStats : public vtkm::worklet::WorkletMapPointToCell
   {
-    typedef internal::ClipTables::DevicePortal<DeviceAdapter> ClipTablesPortal;
+    using ClipTablesPortal = internal::ClipTables::DevicePortal<DeviceAdapter>;
 
   public:
     typedef void ControlSignature(CellSetIn cellset,
@@ -250,7 +249,7 @@ public:
   template <typename DeviceAdapter>
   class GenerateCellSet : public vtkm::worklet::WorkletMapPointToCell
   {
-    typedef internal::ClipTables::DevicePortal<DeviceAdapter> ClipTablesPortal;
+    using ClipTablesPortal = internal::ClipTables::DevicePortal<DeviceAdapter>;
 
   public:
     struct EdgeInterp : vtkm::ListTagBase<EdgeInterpolation>
@@ -364,13 +363,12 @@ public:
   template <typename DeviceAdapter>
   class AmendConnectivity : public vtkm::exec::FunctorBase
   {
-    typedef
-      typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::Portal
-        IdPortal;
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<
-      DeviceAdapter>::PortalConst IdPortalConst;
-    typedef typename vtkm::cont::ArrayHandle<EdgeInterpolation>::template ExecutionTypes<
-      DeviceAdapter>::PortalConst EdgeInterpolationPortalConst;
+    using IdPortal =
+      typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::Portal;
+    using IdPortalConst = typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<
+      DeviceAdapter>::PortalConst;
+    using EdgeInterpolationPortalConst = typename vtkm::cont::ArrayHandle<
+      EdgeInterpolation>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   public:
     VTKM_CONT
@@ -436,9 +434,9 @@ public:
                                     vtkm::Float64 value,
                                     DeviceAdapter device)
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
-    typedef internal::ClipTables::DevicePortal<DeviceAdapter> ClipTablesPortal;
+    using ClipTablesPortal = internal::ClipTables::DevicePortal<DeviceAdapter>;
     ClipTablesPortal clipTablesDevicePortal = this->ClipTablesInstance.GetDevicePortal(device);
 
     // Step 1. compute counts for the elements of the cell set data structure
@@ -575,11 +573,11 @@ public:
     class Kernel : public vtkm::exec::FunctorBase
     {
     public:
-      typedef typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::Portal
-        FieldPortal;
+      using FieldPortal =
+        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::Portal;
 
-      typedef typename vtkm::cont::ArrayHandle<EdgeInterpolation>::template ExecutionTypes<
-        DeviceAdapter>::PortalConst EdgeInterpolationPortalConst;
+      using EdgeInterpolationPortalConst = typename vtkm::cont::ArrayHandle<
+        EdgeInterpolation>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
       VTKM_CONT
       Kernel(EdgeInterpolationPortalConst interpolation,
@@ -620,7 +618,7 @@ public:
     template <typename Storage>
     VTKM_CONT void operator()(const vtkm::cont::ArrayHandle<ValueType, Storage>& field) const
     {
-      typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+      using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
       vtkm::Id count = this->InterpolationArray.GetNumberOfValues();
 

@@ -57,7 +57,7 @@ public:
   public:
     typedef void ControlSignature(FieldIn<> shapes, ExecObject tables, FieldOut<> tetrahedronCount);
     typedef _3 ExecutionSignature(_1, _2);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     VTKM_CONT
     TetrahedraPerCell() {}
@@ -83,9 +83,9 @@ public:
                                   ExecObject tables,
                                   FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(CellShape, PointIndices, _2, _3, VisitIndex);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
-    typedef vtkm::worklet::ScatterCounting ScatterType;
+    using ScatterType = vtkm::worklet::ScatterCounting;
     VTKM_CONT
     ScatterType GetScatter() const { return this->Scatter; }
 

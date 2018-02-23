@@ -131,7 +131,7 @@ private:
 template <typename ValueType>
 class TransferToOpenGL<ValueType, vtkm::cont::DeviceAdapterTagCuda>
 {
-  typedef vtkm::cont::DeviceAdapterTagCuda DeviceAdapterTag;
+  using DeviceAdapterTag = vtkm::cont::DeviceAdapterTagCuda;
 
 public:
   VTKM_CONT explicit TransferToOpenGL(BufferState& state)

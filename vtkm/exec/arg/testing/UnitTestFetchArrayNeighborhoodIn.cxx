@@ -31,7 +31,7 @@ static const vtkm::Id3 POINT_DIMS = { 10, 4, 16 };
 template <typename T>
 struct TestPortal
 {
-  typedef T ValueType;
+  using ValueType = T;
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfValues() const { return POINT_DIMS[0] * POINT_DIMS[1] * POINT_DIMS[2]; }
@@ -47,7 +47,7 @@ struct TestPortal
 
 struct TestIndexPortal
 {
-  typedef vtkm::Id ValueType;
+  using ValueType = vtkm::Id;
 
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const { return index; }

@@ -66,7 +66,7 @@ class FilterTraits<PointElevation>
 {
 public:
   //Point Elevation can only convert Float and Double Vec3 arrays
-  typedef vtkm::TypeListTagFieldVec3 InputFieldTypeList;
+  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 } // namespace vtkm::filter

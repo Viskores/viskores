@@ -35,7 +35,7 @@
 
 #include <vector>
 
-typedef vtkm::Vec<vtkm::FloatDefault, 3> Coord3D;
+using Coord3D = vtkm::Vec<vtkm::FloatDefault, 3>;
 
 const vtkm::Float32 clipValue = 0.5;
 

@@ -33,7 +33,7 @@ public:
   void TestUniform2D() const
   {
     std::cout << "Testing extract structured uniform 2D" << std::endl;
-    typedef vtkm::cont::CellSetStructured<2> CellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<2>;
 
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DUniformDataSet1();
@@ -57,7 +57,7 @@ public:
   void TestUniform3D() const
   {
     std::cout << "Testing extract structured uniform 3D" << std::endl;
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
 
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
@@ -122,7 +122,7 @@ public:
   void TestUniform3D1() const
   {
     std::cout << "Testing extract structured uniform with sampling" << std::endl;
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
 
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet1();
@@ -172,7 +172,7 @@ public:
   void TestRectilinear2D() const
   {
     std::cout << "Testing extract structured rectilinear" << std::endl;
-    typedef vtkm::cont::CellSetStructured<2> CellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<2>;
 
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make2DRectilinearDataSet0();
@@ -197,7 +197,7 @@ public:
   void TestRectilinear3D() const
   {
     std::cout << "Testing extract structured rectilinear" << std::endl;
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
 
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DRectilinearDataSet0();

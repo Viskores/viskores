@@ -39,7 +39,7 @@ public:
                                 FieldInCell<> inCellField,
                                 FieldOutPoint<> outPointField);
   typedef void ExecutionSignature(CellCount, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename CellValueVecType, typename OutType>
   VTKM_EXEC void operator()(const vtkm::IdComponent& numCells,

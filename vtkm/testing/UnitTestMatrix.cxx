@@ -33,7 +33,7 @@ vtkm::Matrix<T, NumRow, NumCol> TestValue(vtkm::Id index, const vtkm::Matrix<T, 
   vtkm::Matrix<T, NumRow, NumCol> value;
   for (vtkm::IdComponent rowIndex = 0; rowIndex < NumRow; rowIndex++)
   {
-    typedef vtkm::Vec<T, NumCol> RowType;
+    using RowType = vtkm::Vec<T, NumCol>;
     RowType row = TestValue(index, RowType()) +
       RowType(static_cast<typename RowType::ComponentType>(10 * rowIndex));
     vtkm::MatrixSetRow(value, rowIndex, row);
@@ -53,8 +53,8 @@ struct MatrixTest
 {
   static const vtkm::IdComponent NUM_ROWS = NumRow;
   static const vtkm::IdComponent NUM_COLS = NumCol;
-  typedef vtkm::Matrix<T, NUM_ROWS, NUM_COLS> MatrixType;
-  typedef typename MatrixType::ComponentType ComponentType;
+  using MatrixType = vtkm::Matrix<T, NUM_ROWS, NUM_COLS>;
+  using ComponentType = typename MatrixType::ComponentType;
 
   static void BasicCreation()
   {
@@ -94,8 +94,8 @@ struct MatrixTest
 
   static void RowColAccessors()
   {
-    typedef vtkm::Vec<T, NUM_ROWS> ColumnType;
-    typedef vtkm::Vec<T, NUM_COLS> RowType;
+    using ColumnType = vtkm::Vec<T, NUM_ROWS>;
+    using RowType = vtkm::Vec<T, NUM_COLS>;
     const MatrixType const_matrix = TestValue(0, MatrixType());
     MatrixType matrix;
 
@@ -373,7 +373,7 @@ template <typename T, vtkm::IdComponent Size>
 struct SquareMatrixTest
 {
   static const vtkm::IdComponent SIZE = Size;
-  typedef vtkm::Matrix<T, Size, Size> MatrixType;
+  using MatrixType = vtkm::Matrix<T, Size, Size>;
 
   static void CheckMatrixSize()
   {
@@ -582,7 +582,7 @@ struct VectorMultFunctor
     // This is mostly to make sure the compile can convert from Tuples
     // to vectors.
     const int SIZE = vtkm::VecTraits<VectorType>::NUM_COMPONENTS;
-    typedef typename vtkm::VecTraits<VectorType>::ComponentType ComponentType;
+    using ComponentType = typename vtkm::VecTraits<VectorType>::ComponentType;
 
     vtkm::Matrix<ComponentType, SIZE, SIZE> matrix(0);
     VectorType inVec;

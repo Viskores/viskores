@@ -332,8 +332,8 @@ struct TryScalarFieldTests
 template <typename VectorType>
 struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
 {
-  typedef vtkm::VecTraits<VectorType> Traits;
-  typedef typename Traits::ComponentType ComponentType;
+  using Traits = vtkm::VecTraits<VectorType>;
+  using ComponentType = typename Traits::ComponentType;
   enum
   {
     NUM_COMPONENTS = Traits::NUM_COMPONENTS
@@ -696,7 +696,7 @@ struct AllTypesTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(test_equal(vtkm::Max(low, high), high), "Wrong max.");
     VTKM_MATH_ASSERT(test_equal(vtkm::Max(high, low), high), "Wrong max.");
 
-    typedef vtkm::VecTraits<T> Traits;
+    using Traits = vtkm::VecTraits<T>;
     T mixed1 = low;
     T mixed2 = high;
     Traits::SetComponent(mixed1, 0, Traits::GetComponent(high, 0));

@@ -79,14 +79,12 @@ inline VTKM_CONT vtkm::filter::Result Streamline::DoExecute(
     return vtkm::filter::Result();
 
   //todo: add check for rectilinear.
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> FieldHandle;
-  typedef
-    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
-  typedef vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
-                                                                T,
-                                                                DeviceAdapter>
-    RGEvalType;
-  typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, T> RK4RGType;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>;
+  using FieldPortalConstType =
+    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using RGEvalType =
+    vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType, T, DeviceAdapter>;
+  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, T>;
 
   //RGEvalType eval(input.GetCoordinateSystem(), input.GetCellSet(0), field);
   RGEvalType eval(coords, cells, field);

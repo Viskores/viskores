@@ -118,7 +118,7 @@ public:
                                 WholeArrayInOut<IdType> saddles,  // (in out) saddles
                                 WholeArrayInOut<IdType> extrema); // (in out) maxima
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   bool isJoinTree;
 
