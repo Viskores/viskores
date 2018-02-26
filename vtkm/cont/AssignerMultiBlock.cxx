@@ -23,7 +23,9 @@
 #include <vtkm/cont/MultiBlock.h>
 
 // clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include VTKM_DIY(diy/mpi.hpp)
+VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
 #include <algorithm> // std::lower_bound

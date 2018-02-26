@@ -26,7 +26,9 @@
 #include <vtkm/thirdparty/diy/Configure.h>
 
 // clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include VTKM_DIY(diy/assigner.hpp)
+VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
 namespace vtkm

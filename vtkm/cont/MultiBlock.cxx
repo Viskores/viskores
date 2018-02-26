@@ -32,12 +32,14 @@
 #include <vtkm/cont/MultiBlock.h>
 
 // clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include <vtkm/thirdparty/diy/Configure.h>
 #include VTKM_DIY(diy/decomposition.hpp)
 #include VTKM_DIY(diy/master.hpp)
 #include VTKM_DIY(diy/partners/all-reduce.hpp)
 #include VTKM_DIY(diy/partners/swap.hpp)
 #include VTKM_DIY(diy/reduce.hpp)
+VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
 namespace vtkm
