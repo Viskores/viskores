@@ -20,10 +20,11 @@
 
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 
-#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 #include <vtkm/exec/FunctorBase.h>
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
+
+#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -32,14 +33,31 @@
 namespace
 {
 
-struct TestExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
+template <typename Device>
+struct ExecutionObject
 {
   vtkm::Int32 Number;
 };
 
+struct TestExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
+{
+  vtkm::Int32 Number;
+
+  template <typename Device>
+  using ExecObjectType = ExecutionObject<Device>;
+
+  template <typename Device>
+  VTKM_CONT ExecObjectType<Device> PrepareForExecution(Device) const
+  {
+    ExecObjectType<Device> object;
+    object.Number = this->Number;
+    return object;
+  }
+};
+template <typename Device>
 struct TestKernel : public vtkm::exec::FunctorBase
 {
-  TestExecutionObject Object;
+  ExecutionObject<Device> Object;
 
   VTKM_EXEC
   void operator()(vtkm::Id) const
@@ -60,7 +78,7 @@ void TryExecObjectTransport(Device)
   vtkm::cont::arg::Transport<vtkm::cont::arg::TransportTagExecObject, TestExecutionObject, Device>
     transport;
 
-  TestKernel kernel;
+  TestKernel<Device> kernel;
   kernel.Object = transport(contObject, nullptr, 1, 1);
 
   vtkm::cont::DeviceAdapterAlgorithm<Device>::Schedule(kernel, 1);
