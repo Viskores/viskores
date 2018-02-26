@@ -77,16 +77,6 @@
 #define VTKM_NEVER_EXPORT __attribute__((visibility("hidden")))
 #endif
 
-// constexpr support was added to VisualStudio 2015 and above. So this makes
-// sure when that we gracefully fall back to just const when using 2013
-#if defined(VTKM_MSVC) && _MSC_VER < 1900
-#define VTKM_CONSTEXPR const
-#define VTKM_NOEXCEPT
-#else
-#define VTKM_CONSTEXPR constexpr
-#define VTKM_NOEXCEPT noexcept
-#endif
-
 // Clang will warn about weak vtables (-Wweak-vtables) on exception classes,
 // but there's no good way to eliminate them in this case because MSVC (See
 // http://stackoverflow.com/questions/24511376). These macros will silence the

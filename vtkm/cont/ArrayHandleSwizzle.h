@@ -87,7 +87,7 @@ struct ArrayHandleSwizzleTraits
 
   /// A std::array containing the ComponentMap for runtime querying.
   using RuntimeComponentMapType = std::array<vtkm::IdComponent, COUNT>;
-  static VTKM_CONSTEXPR RuntimeComponentMapType GenerateRuntimeComponentMap()
+  static constexpr RuntimeComponentMapType GenerateRuntimeComponentMap()
   {
     return RuntimeComponentMapType{ { ComponentMap... } };
   }
@@ -124,7 +124,7 @@ private:
   template <vtkm::IdComponent OutputIndex, vtkm::IdComponent Head>
   struct GetImpl<OutputIndex, Head>
   {
-    VTKM_CONSTEXPR vtkm::IdComponent operator()() const { return OutputIndex == 0 ? Head : -1; }
+    constexpr vtkm::IdComponent operator()() const { return OutputIndex == 0 ? Head : -1; }
   };
 
   // Recursive case:
@@ -133,17 +133,14 @@ private:
   {
     using Next = GetImpl<OutputIndex - 1, Tail...>;
 
-    VTKM_CONSTEXPR vtkm::IdComponent operator()() const
-    {
-      return OutputIndex == 0 ? Head : Next()();
-    }
+    constexpr vtkm::IdComponent operator()() const { return OutputIndex == 0 ? Head : Next()(); }
   };
 
 public:
   /// Get the component from ComponentMap at the specified index as a
   /// compile-time constant:
   template <vtkm::IdComponent OutputIndex>
-  static VTKM_CONSTEXPR vtkm::IdComponent Get()
+  static constexpr vtkm::IdComponent Get()
   {
     return GetImpl<OutputIndex, ComponentMap...>()();
   }

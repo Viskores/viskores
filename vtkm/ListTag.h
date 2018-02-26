@@ -36,7 +36,7 @@ namespace internal
 template <typename ListTag>
 struct ListTagCheck : std::is_base_of<vtkm::detail::ListRoot, ListTag>
 {
-  static VTKM_CONSTEXPR bool Valid = std::is_base_of<vtkm::detail::ListRoot, ListTag>::value;
+  static constexpr bool Valid = std::is_base_of<vtkm::detail::ListRoot, ListTag>::value;
 };
 
 } // namespace internal
@@ -111,7 +111,7 @@ template <typename ListTag, typename Type>
 struct ListContains
 {
   VTKM_IS_LIST_TAG(ListTag);
-  static VTKM_CONSTEXPR bool value = detail::ListContainsImpl<Type, typename ListTag::list>::value;
+  static constexpr bool value = detail::ListContainsImpl<Type, typename ListTag::list>::value;
 };
 
 } // namespace vtkm

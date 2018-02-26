@@ -167,7 +167,7 @@ template <int Neighborhood_>
 class WorkletPointNeighborhood : public WorkletPointNeighborhoodBase
 {
 public:
-  static VTKM_CONSTEXPR vtkm::IdComponent Neighborhood = Neighborhood_;
+  static constexpr vtkm::IdComponent Neighborhood = Neighborhood_;
 
   /// \brief A control signature tag for neighborhood input values.
   ///

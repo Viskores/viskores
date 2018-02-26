@@ -114,7 +114,7 @@ struct DetermineHasCorrectParameters
     using ControlSignatureTag = typename brigand::at_c<SigTypes, State::value>;
     using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
 
-    static VTKM_CONSTEXPR bool isCorrect = vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value;
+    static constexpr bool isCorrect = vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value;
 
     // If you get an error on the line below, that means that your code has called the
     // Invoke method on a dispatcher, and one of the arguments of the Invoke is the wrong

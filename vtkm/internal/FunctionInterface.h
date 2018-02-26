@@ -389,7 +389,7 @@ public:
   {
     this->Result = src.GetReturnValueSafe();
 
-    VTKM_CONSTEXPR vtkm::UInt16 minArity = (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY)
+    constexpr vtkm::UInt16 minArity = (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY)
       ? ARITY
       : FunctionInterface<SrcFunctionSignature>::ARITY;
 
@@ -774,8 +774,8 @@ public:
     using interfaceSig = typename detail::AsSigType<appended>::type;
     using NextInterfaceType = FunctionInterface<interfaceSig>;
 
-    static VTKM_CONSTEXPR std::size_t newArity = NextInterfaceType::ARITY;
-    static VTKM_CONSTEXPR std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
+    static constexpr std::size_t newArity = NextInterfaceType::ARITY;
+    static constexpr std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
     typedef std::integral_constant<bool, (newArity < oldArity)> ShouldDoNextTransformType;
 
     NextInterfaceType nextInterface = this->NewInterface.Append(newParameter);

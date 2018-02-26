@@ -324,7 +324,7 @@ template <typename T, int Size>
 void SingularMatrix(vtkm::Matrix<T, Size, Size>& singularMatrix)
 {
   FOR_ROW_COL(singularMatrix) { singularMatrix(row, col) = static_cast<T>(row + col); }
-  VTKM_CONSTEXPR bool larger_than_1 = Size > 1;
+  constexpr bool larger_than_1 = Size > 1;
   if (larger_than_1)
   {
     vtkm::MatrixSetRow(singularMatrix, 0, vtkm::MatrixGetRow(singularMatrix, (Size + 1) / 2));

@@ -96,14 +96,14 @@ template <typename T>
 struct FunctionInterfaceReturnContainer
 {
   T Value;
-  static VTKM_CONSTEXPR bool VALID = true;
+  static constexpr bool VALID = true;
 };
 
 template <>
 struct FunctionInterfaceReturnContainer<void>
 {
   // Nothing to store for void return.
-  static VTKM_CONSTEXPR bool VALID = false;
+  static constexpr bool VALID = false;
 };
 
 namespace detail
@@ -139,7 +139,7 @@ struct FunctionSigInfo;
 template <typename R, typename... ArgTypes>
 struct FunctionSigInfo<R(ArgTypes...)>
 {
-  static VTKM_CONSTEXPR std::size_t Arity = sizeof...(ArgTypes);
+  static constexpr std::size_t Arity = sizeof...(ArgTypes);
   using ArityType = std::integral_constant<int, static_cast<int>(Arity)>;
 
   using ResultType = R;

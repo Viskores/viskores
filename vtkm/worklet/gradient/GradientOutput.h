@@ -171,49 +171,21 @@ struct GradientVecOutput : public vtkm::exec::ExecutionObjectBase
 template <typename T, typename DeviceAdapter>
 struct GradientOutput : public GradientScalarOutput<T, DeviceAdapter>
 {
-#if defined(VTKM_MSVC) && (_MSC_VER == 1800) // workaround for VS2013
-  template <typename... Args>
-  GradientOutput(Args&&... args)
-    : GradientScalarOutput<T, DeviceAdapter>::GradientScalarOutput(std::forward<Args>(args)...)
-  {
-  }
-#else
   using GradientScalarOutput<T, DeviceAdapter>::GradientScalarOutput;
-#endif
 };
 
 template <typename DeviceAdapter>
 struct GradientOutput<vtkm::Vec<vtkm::Float32, 3>, DeviceAdapter>
   : public GradientVecOutput<vtkm::Vec<vtkm::Float32, 3>, DeviceAdapter>
 {
-
-#if defined(VTKM_MSVC) && (_MSC_VER == 1800) // workaround for VS2013
-  template <typename... Args>
-  GradientOutput(Args&&... args)
-    : GradientVecOutput<vtkm::Vec<vtkm::Float32, 3>, DeviceAdapter>::GradientVecOutput(
-        std::forward<Args>(args)...)
-  {
-  }
-#else
   using GradientVecOutput<vtkm::Vec<vtkm::Float32, 3>, DeviceAdapter>::GradientVecOutput;
-#endif
 };
 
 template <typename DeviceAdapter>
 struct GradientOutput<vtkm::Vec<vtkm::Float64, 3>, DeviceAdapter>
   : public GradientVecOutput<vtkm::Vec<vtkm::Float64, 3>, DeviceAdapter>
 {
-
-#if defined(VTKM_MSVC) && (_MSC_VER == 1800) // workaround for VS2013
-  template <typename... Args>
-  GradientOutput(Args&&... args)
-    : GradientVecOutput<vtkm::Vec<vtkm::Float64, 3>, DeviceAdapter>::GradientVecOutput(
-        std::forward<Args>(args)...)
-  {
-  }
-#else
   using GradientVecOutput<vtkm::Vec<vtkm::Float64, 3>, DeviceAdapter>::GradientVecOutput;
-#endif
 };
 }
 } // namespace vtkm::exec

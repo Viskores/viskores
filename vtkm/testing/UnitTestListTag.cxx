@@ -119,7 +119,7 @@ void CheckContains(TestClass<N>, ListTag, const std::vector<int>& contents)
   //Use intersect to verify at compile time that ListTag contains TestClass<N>
   using intersectWith = vtkm::ListTagBase<TestClass<N>>;
   using intersectResult = typename vtkm::ListTagIntersect<intersectWith, ListTag>::list;
-  VTKM_CONSTEXPR bool intersectContains = (brigand::size<intersectResult>::value != 0);
+  constexpr bool intersectContains = (brigand::size<intersectResult>::value != 0);
 
   bool listContains = vtkm::ListContains<ListTag, TestClass<N>>::value;
   bool shouldContain = std::find(contents.begin(), contents.end(), N) != contents.end();
@@ -135,8 +135,8 @@ void CheckContains(TestClass<N>, TestListTagUniversal, const std::vector<int>&)
   using intersectWith = vtkm::ListTagBase<TestClass<N>>;
   using intersectResult =
     typename vtkm::ListTagIntersect<intersectWith, TestListTagUniversal>::list;
-  VTKM_CONSTEXPR bool intersectContains = (brigand::size<intersectResult>::value != 0);
-  VTKM_CONSTEXPR bool listContains = vtkm::ListContains<TestListTagUniversal, TestClass<N>>::value;
+  constexpr bool intersectContains = (brigand::size<intersectResult>::value != 0);
+  constexpr bool listContains = vtkm::ListContains<TestListTagUniversal, TestClass<N>>::value;
 
   VTKM_TEST_ASSERT(intersectContains == listContains, "ListTagIntersect check failed.");
 }
