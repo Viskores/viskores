@@ -128,18 +128,6 @@ private:
     FloatVec3 BinSize;
   };
 
-  struct TwoLevelUniformGrid
-  {
-    Grid TopLevel;
-
-    vtkm::cont::ArrayHandle<DimVec3> LeafDimensions;
-    vtkm::cont::ArrayHandle<vtkm::Id> LeafStartIndex;
-
-    vtkm::cont::ArrayHandle<vtkm::Id> CellStartIndex;
-    vtkm::cont::ArrayHandle<vtkm::Id> CellCount;
-    vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
-  };
-
   VTKM_EXEC_CONT static DimVec3 ComputeGridDimension(vtkm::Id numberOfCells,
                                                      const FloatVec3& size,
                                                      vtkm::FloatDefault density)
@@ -503,7 +491,7 @@ public:
 
     auto cellset = this->CellSet.ResetCellSetList(cellSetTypes);
     const auto& coords = this->Coordinates;
-    TwoLevelUniformGrid ls;
+    TwoLevelUniformGridExecutionObjectFactory ls;
 
     // 1: Compute the top level grid
     auto bounds = this->Coordinates.GetBounds();
@@ -605,12 +593,12 @@ public:
     std::swap(this->LookupStructure, ls);
   }
 
-  template <typename DeviceAdapter>
-  struct TwoLevelUniformGridExecution : public vtkm::cont::ExecutionObjectFactoryBase
+  template <typename Device>
+  struct TwoLevelUniformGridExecution
   {
     template <typename T>
     using ArrayPortalConst =
-      typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+      typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<Device>::PortalConst;
 
     Grid TopLevel;
 
@@ -620,6 +608,34 @@ public:
     ArrayPortalConst<vtkm::Id> CellStartIndex;
     ArrayPortalConst<vtkm::Id> CellCount;
     ArrayPortalConst<vtkm::Id> CellIds;
+  };
+
+  struct TwoLevelUniformGridExecutionObjectFactory : public vtkm::cont::ExecutionObjectFactoryBase
+  {
+    template <typename DeviceAdapter>
+    using ExecObjectType = TwoLevelUniformGridExecution<DeviceAdapter>;
+
+    template <typename DeviceAdapter>
+    VTKM_CONT ExecObjectType<DeviceAdapter> PrepareForExecution(DeviceAdapter device) const
+    {
+      ExecObjectType<DeviceAdapter> deviceObject;
+      deviceObject.TopLevel = this->TopLevel;
+      deviceObject.LeafDimensions = this->LeafDimensions.PrepareForInput(device);
+      deviceObject.LeafStartIndex = this->LeafStartIndex.PrepareForInput(device);
+      deviceObject.CellStartIndex = this->CellStartIndex.PrepareForInput(device);
+      deviceObject.CellCount = this->CellCount.PrepareForInput(device);
+      deviceObject.CellIds = this->CellIds.PrepareForInput(device);
+      return deviceObject;
+    }
+
+    Grid TopLevel;
+
+    vtkm::cont::ArrayHandle<DimVec3> LeafDimensions;
+    vtkm::cont::ArrayHandle<vtkm::Id> LeafStartIndex;
+
+    vtkm::cont::ArrayHandle<vtkm::Id> CellStartIndex;
+    vtkm::cont::ArrayHandle<vtkm::Id> CellCount;
+    vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
   };
 
   class FindCellWorklet : public vtkm::worklet::WorkletMapField
@@ -715,31 +731,17 @@ public:
       points,
       this->CellSet.ResetCellSetList(cellSetTypes),
       this->Coordinates,
-      this->PrepareForDevice(device),
+      this->LookupStructure.PrepareForExecution(device),
       cellIds,
       parametricCoords);
   }
 
 private:
-  template <typename DeviceAdapter>
-  TwoLevelUniformGridExecution<DeviceAdapter> PrepareForDevice(DeviceAdapter device) const
-  {
-    TwoLevelUniformGridExecution<DeviceAdapter> deviceObject;
-    deviceObject.TopLevel = this->LookupStructure.TopLevel;
-    deviceObject.LeafDimensions = this->LookupStructure.LeafDimensions.PrepareForInput(device);
-    deviceObject.LeafStartIndex = this->LookupStructure.LeafStartIndex.PrepareForInput(device);
-    deviceObject.CellStartIndex = this->LookupStructure.CellStartIndex.PrepareForInput(device);
-    deviceObject.CellCount = this->LookupStructure.CellCount.PrepareForInput(device);
-    deviceObject.CellIds = this->LookupStructure.CellIds.PrepareForInput(device);
-    return deviceObject;
-  }
-
   vtkm::FloatDefault DensityL1, DensityL2;
 
   vtkm::cont::DynamicCellSet CellSet;
   vtkm::cont::CoordinateSystem Coordinates;
-
-  TwoLevelUniformGrid LookupStructure;
+  TwoLevelUniformGridExecutionObjectFactory LookupStructure;
 };
 }
 }
