@@ -38,237 +38,86 @@ namespace detail
 class CellEdgeTables
 {
 public:
-  static const vtkm::IdComponent MAX_NUM_EDGES = 12;
-
-private:
-  struct Tables
-  {
-    vtkm::IdComponent NumEdges[vtkm::NUMBER_OF_CELL_SHAPES];
-    vtkm::IdComponent PointsInEdge[vtkm::NUMBER_OF_CELL_SHAPES][MAX_NUM_EDGES][2];
-  };
+  static constexpr vtkm::Int32 MAX_NUM_EDGES = 12;
 
 public:
-  VTKM_EXEC_CONT static const Tables& Get()
+  VTKM_EXEC vtkm::Int32 NumEdges(vtkm::Int32 i) const
   {
-    static const Tables table = { {
-                                    // NumEdges
-                                    0,  //  0: CELL_SHAPE_EMPTY
-                                    0,  //  1: CELL_SHAPE_VERTEX
-                                    0,  //  2: Unused
-                                    0,  //  3: CELL_SHAPE_LINE
-                                    0,  //  4: Unused
-                                    3,  //  5: CELL_SHAPE_TRIANGLE
-                                    0,  //  6: Unused
-                                    -1, //  7: CELL_SHAPE_POLYGON  ---special case---
-                                    0,  //  8: Unused
-                                    4,  //  9: CELL_SHAPE_QUAD
-                                    6,  // 10: CELL_SHAPE_TETRA
-                                    0,  // 11: Unused
-                                    12, // 12: CELL_SHAPE_HEXAHEDRON
-                                    9,  // 13: CELL_SHAPE_WEDGE
-                                    8   // 14: CELL_SHAPE_PYRAMID
-                                  },
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32 numEdges[vtkm::NUMBER_OF_CELL_SHAPES] = {
+      // NumEdges
+      0,  //  0: CELL_SHAPE_EMPTY
+      0,  //  1: CELL_SHAPE_VERTEX
+      0,  //  2: Unused
+      0,  //  3: CELL_SHAPE_LINE
+      0,  //  4: Unused
+      3,  //  5: CELL_SHAPE_TRIANGLE
+      0,  //  6: Unused
+      -1, //  7: CELL_SHAPE_POLYGON  ---special case---
+      0,  //  8: Unused
+      4,  //  9: CELL_SHAPE_QUAD
+      6,  // 10: CELL_SHAPE_TETRA
+      0,  // 11: Unused
+      12, // 12: CELL_SHAPE_HEXAHEDRON
+      9,  // 13: CELL_SHAPE_WEDGE
+      8   // 14: CELL_SHAPE_PYRAMID
+    };
+    return numEdges[i];
+  }
 
-                                  {
-                                    // PointsInEdge
-                                    //  0: CELL_SHAPE_EMPTY
-                                    { { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    //  1: CELL_SHAPE_VERTEX
-                                    { { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    //  2: Unused
-                                    { { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    //  3: CELL_SHAPE_LINE
-                                    { { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    //  4: Unused
-                                    { { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    //  5: CELL_SHAPE_TRIANGLE
-                                    { { 0, 1 },
-                                      { 1, 2 },
-                                      { 2, 0 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    //  6: Unused
-                                    { { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    //  7: CELL_SHAPE_POLYGON  --- special case ---
-                                    { { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    //  8: Unused
-                                    { { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    //  9: CELL_SHAPE_QUAD
-                                    { { 0, 1 },
-                                      { 1, 2 },
-                                      { 2, 3 },
-                                      { 3, 0 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    // 10: CELL_SHAPE_TETRA
-                                    { { 0, 1 },
-                                      { 1, 2 },
-                                      { 2, 0 },
-                                      { 0, 3 },
-                                      { 1, 3 },
-                                      { 2, 3 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    // 11: Unused
-                                    { { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    // 12: CELL_SHAPE_HEXAHEDRON
-                                    { { 0, 1 },
-                                      { 1, 2 },
-                                      { 3, 2 },
-                                      { 0, 3 },
-                                      { 4, 5 },
-                                      { 5, 6 },
-                                      { 7, 6 },
-                                      { 4, 7 },
-                                      { 0, 4 },
-                                      { 1, 5 },
-                                      { 3, 7 },
-                                      { 2, 6 } },
-                                    // 13: CELL_SHAPE_WEDGE
-                                    { { 0, 1 },
-                                      { 1, 2 },
-                                      { 2, 0 },
-                                      { 3, 4 },
-                                      { 4, 5 },
-                                      { 5, 3 },
-                                      { 0, 3 },
-                                      { 1, 4 },
-                                      { 2, 5 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                    // 14: CELL_SHAPE_PYRAMID
-                                    { { 0, 1 },
-                                      { 1, 2 },
-                                      { 2, 3 },
-                                      { 3, 0 },
-                                      { 0, 4 },
-                                      { 1, 4 },
-                                      { 2, 4 },
-                                      { 3, 4 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 },
-                                      { -1, -1 } },
-                                  } };
+  VTKM_EXEC vtkm::Int32 PointsInEdge(vtkm::Int32 i, vtkm::Int32 j, vtkm::Int32 k) const
+  {
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32
+      pointsInEdge[vtkm::NUMBER_OF_CELL_SHAPES][MAX_NUM_EDGES][2] = {
+        // clang-format off
+        //  0: CELL_SHAPE_EMPTY
+        { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        //  1: CELL_SHAPE_VERTEX
+        { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        //  2: Unused
+        { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        //  3: CELL_SHAPE_LINE
+        { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        //  4: Unused
+        { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        //  5: CELL_SHAPE_TRIANGLE
+        { { 0, 1 },   { 1, 2 },   { 2, 0 },   { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        //  6: Unused
+        { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        //  7: CELL_SHAPE_POLYGON  --- special case ---
+        { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        //  8: Unused
+        { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        //  9: CELL_SHAPE_QUAD
+        { { 0, 1 },   { 1, 2 },   { 2, 3 },   { 3, 0 },   { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        // 10: CELL_SHAPE_TETRA
+        { { 0, 1 },   { 1, 2 },   { 2, 0 },   { 0, 3 },   { 1, 3 },   { 2, 3 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        // 11: Unused
+        { { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 },
+          { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        // 12: CELL_SHAPE_HEXAHEDRON
+        { { 0, 1 }, { 1, 2 }, { 3, 2 }, { 0, 3 }, { 4, 5 }, { 5, 6 },
+          { 7, 6 }, { 4, 7 }, { 0, 4 }, { 1, 5 }, { 3, 7 }, { 2, 6 } },
+        // 13: CELL_SHAPE_WEDGE
+        { { 0, 1 }, { 1, 2 }, { 2, 0 }, { 3, 4 },   { 4, 5 },   { 5, 3 },
+          { 0, 3 }, { 1, 4 }, { 2, 5 }, { -1, -1 }, { -1, -1 }, { -1, -1 } },
+        // 14: CELL_SHAPE_PYRAMID
+        { { 0, 1 }, { 1, 2 }, { 2, 3 },   { 3, 0 },   { 0, 4 },   { 1, 4 },
+          { 2, 4 }, { 3, 4 }, { -1, -1 }, { -1, -1 }, { -1, -1 }, { -1, -1 } }
+        // clang-format on
+      };
 
-    return table;
+    return pointsInEdge[i][j][k];
   }
 };
 
@@ -281,7 +130,7 @@ static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(vtkm::IdComponen
 {
   (void)numPoints; // Silence compiler warnings.
   VTKM_ASSERT(numPoints == vtkm::CellTraits<CellShapeTag>::NUM_POINTS);
-  return detail::CellEdgeTables::Get().NumEdges[CellShapeTag::Id];
+  return detail::CellEdgeTables{}.NumEdges(CellShapeTag::Id);
 }
 
 static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(vtkm::IdComponent numPoints,
@@ -303,7 +152,7 @@ static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(
   }
   else
   {
-    return detail::CellEdgeTables::Get().NumEdges[shape.Id];
+    return detail::CellEdgeTables{}.NumEdges(shape.Id);
   }
 }
 
@@ -322,8 +171,9 @@ static inline VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 2> CellEdgeLocalIndices(
     return vtkm::Vec<vtkm::IdComponent, 2>(0);
   }
 
-  return vtkm::make_Vec(detail::CellEdgeTables::Get().PointsInEdge[CellShapeTag::Id][edgeIndex][0],
-                        detail::CellEdgeTables::Get().PointsInEdge[CellShapeTag::Id][edgeIndex][1]);
+  detail::CellEdgeTables table;
+  return vtkm::make_Vec(table.PointsInEdge(CellShapeTag::Id, edgeIndex, 0),
+                        table.PointsInEdge(CellShapeTag::Id, edgeIndex, 1));
 }
 
 static inline VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 2> CellEdgeLocalIndices(
@@ -361,14 +211,15 @@ static inline VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 2> CellEdgeLocalIndices(
   }
   else
   {
-    if (edgeIndex >= detail::CellEdgeTables::Get().NumEdges[shape.Id])
+    detail::CellEdgeTables table;
+    if (edgeIndex >= table.NumEdges(shape.Id))
     {
       worklet.RaiseError("Invalid edge number.");
       return vtkm::Vec<vtkm::IdComponent, 2>(0);
     }
 
-    return vtkm::make_Vec(detail::CellEdgeTables::Get().PointsInEdge[shape.Id][edgeIndex][0],
-                          detail::CellEdgeTables::Get().PointsInEdge[shape.Id][edgeIndex][1]);
+    return vtkm::make_Vec(table.PointsInEdge(shape.Id, edgeIndex, 0),
+                          table.PointsInEdge(shape.Id, edgeIndex, 1));
   }
 }
 

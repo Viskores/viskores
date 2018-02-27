@@ -161,7 +161,7 @@ struct ExtendedTypes : vtkm::ListTagBase<vtkm::UInt8,
 {
 };
 
-const static std::string DIVIDER(40, '-');
+static const std::string DIVIDER(40, '-');
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of the parallel primitives provided by each

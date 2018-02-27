@@ -94,23 +94,28 @@ struct TestCellFacesFunctor
     std::set<EdgeType> edgesFoundInFaces;
     for (vtkm::IdComponent faceIndex = 0; faceIndex < numFaces; faceIndex++)
     {
-      vtkm::VecCConst<vtkm::IdComponent> facePoints =
-        vtkm::exec::CellFaceLocalIndices(faceIndex, shape, workletProxy);
-      vtkm::IdComponent numPointsInFace = facePoints.GetNumberOfComponents();
+      vtkm::exec::detail::CellFaceTables table;
+      const vtkm::IdComponent numPointsInFace =
+        vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, workletProxy);
+
       VTKM_TEST_ASSERT(numPointsInFace >= 3, "Face has fewer points than a triangle.");
 
       for (vtkm::IdComponent pointIndex = 0; pointIndex < numPointsInFace; pointIndex++)
       {
-        VTKM_TEST_ASSERT(facePoints[pointIndex] >= 0, "Invalid point index for face.");
-        VTKM_TEST_ASSERT(facePoints[pointIndex] <= numPoints, "Invalid point index for face.");
+        VTKM_TEST_ASSERT(table.PointsInFace(shape.Id, faceIndex, pointIndex) >= 0,
+                         "Invalid point index for face.");
+        VTKM_TEST_ASSERT(table.PointsInFace(shape.Id, faceIndex, pointIndex) <= numPoints,
+                         "Invalid point index for face.");
         EdgeType edge;
         if (pointIndex < numPointsInFace - 1)
         {
-          edge = EdgeType(facePoints[pointIndex], facePoints[pointIndex + 1]);
+          edge = EdgeType(table.PointsInFace(shape.Id, faceIndex, pointIndex),
+                          table.PointsInFace(shape.Id, faceIndex, pointIndex + 1));
         }
         else
         {
-          edge = EdgeType(facePoints[0], facePoints[pointIndex]);
+          edge = EdgeType(table.PointsInFace(shape.Id, faceIndex, 0),
+                          table.PointsInFace(shape.Id, faceIndex, pointIndex));
         }
         MakeEdgeCanonical(edge);
         VTKM_TEST_ASSERT(edgeSet.find(edge) != edgeSet.end(), "Edge in face not in cell's edges");

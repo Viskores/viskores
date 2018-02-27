@@ -183,6 +183,7 @@ void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
 
 void CudaAllocator::Initialize()
 {
+#if CUDART_VERSION >= 8000
   if (!IsInitialized)
   {
     int numDevices;
@@ -209,6 +210,10 @@ void CudaAllocator::Initialize()
     ManagedMemorySupported = managed;
     IsInitialized = true;
   }
+#else
+  ManagedMemorySupported = false;
+  IsInitialized = true;
+#endif
 }
 }
 }

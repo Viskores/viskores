@@ -39,46 +39,43 @@ namespace vtkm
 {
 namespace worklet
 {
+namespace triangulate
+{
+//
+// Worklet to turn quads into triangles
+// Vertices remain the same and each cell is processed with needing topology
+//
+class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
+{
+public:
+  typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
+  typedef void ExecutionSignature(PointIndices, _2, VisitIndex);
+  using InputDomain = _1;
+
+  using ScatterType = vtkm::worklet::ScatterUniform;
+  VTKM_CONT
+  ScatterType GetScatter() const { return ScatterType(2); }
+
+  // Each quad cell produces 2 triangle cells
+  template <typename ConnectivityInVec, typename ConnectivityOutVec>
+  VTKM_EXEC void operator()(const ConnectivityInVec& connectivityIn,
+                            ConnectivityOutVec& connectivityOut,
+                            vtkm::IdComponent visitIndex) const
+  {
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent StructuredTriangleIndices[2][3] = { { 0, 1, 2 },
+                                                                                      { 0, 2, 3 } };
+    connectivityOut[0] = connectivityIn[StructuredTriangleIndices[visitIndex][0]];
+    connectivityOut[1] = connectivityIn[StructuredTriangleIndices[visitIndex][1]];
+    connectivityOut[2] = connectivityIn[StructuredTriangleIndices[visitIndex][2]];
+  }
+};
+}
 
 /// \brief Compute the triangulate cells for a uniform grid data set
 template <typename DeviceAdapter>
 class TriangulateStructured
 {
 public:
-  TriangulateStructured() {}
-
-  //
-  // Worklet to turn quads into triangles
-  // Vertices remain the same and each cell is processed with needing topology
-  //
-  class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
-  {
-  public:
-    typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
-    typedef void ExecutionSignature(PointIndices, _2, VisitIndex);
-    using InputDomain = _1;
-
-    using ScatterType = vtkm::worklet::ScatterUniform;
-    VTKM_CONT
-    ScatterType GetScatter() const { return ScatterType(2); }
-
-    VTKM_CONT
-    TriangulateCell() {}
-
-    // Each quad cell produces 2 triangle cells
-    template <typename ConnectivityInVec, typename ConnectivityOutVec>
-    VTKM_EXEC void operator()(const ConnectivityInVec& connectivityIn,
-                              ConnectivityOutVec& connectivityOut,
-                              vtkm::IdComponent visitIndex) const
-    {
-      const static vtkm::IdComponent StructuredTriangleIndices[2][3] = { { 0, 1, 2 }, { 0, 2, 3 } };
-
-      connectivityOut[0] = connectivityIn[StructuredTriangleIndices[visitIndex][0]];
-      connectivityOut[1] = connectivityIn[StructuredTriangleIndices[visitIndex][1]];
-      connectivityOut[2] = connectivityIn[StructuredTriangleIndices[visitIndex][2]];
-    }
-  };
-
   template <typename CellSetType>
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
@@ -89,7 +86,7 @@ public:
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    vtkm::worklet::DispatcherMapTopology<TriangulateCell, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<triangulate::TriangulateCell, DeviceAdapter> dispatcher;
     dispatcher.Invoke(cellSet, vtkm::cont::make_ArrayHandleGroupVec<3>(connectivity));
 
     // Fill in array of output cells per input cell

@@ -271,6 +271,14 @@
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI
 
+//Mark what version of the CUDA compiler we have. This is needed to correctly
+//choose consistent implementation ( so we don't violate ODR ) when we compile
+//with CUDA 7.5
+#ifdef VTKM_ENABLE_CUDA
+#define VTKM_CUDA_VERSION_MAJOR @VTKM_CUDA_VERSION_MAJOR@
+#define VTKM_CUDA_VERSION_MINOR @VTKM_CUDA_VERSION_MINOR@
+#endif
+
 #if __cplusplus >= 201103L || \
     ( defined(VTKM_MSVC) && _MSC_VER >= 1900  ) || \
     ( defined(VTKM_ICC)  && defined(__INTEL_CXX11_MODE__) )

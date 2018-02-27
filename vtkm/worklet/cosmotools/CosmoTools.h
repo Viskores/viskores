@@ -130,6 +130,15 @@ void DebugPrint(const char* msg, vtkm::cont::ArrayHandleReverse<vtkm::cont::Arra
     std::cout << std::setw(5) << array.GetPortalConstControl().Get(i) << " ";
   std::cout << std::endl;
 }
+}
+
+namespace vtkm
+{
+namespace worklet
+{
+namespace cosmotools
+{
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -179,14 +188,6 @@ struct ScaleBiasFunctor
   VTKM_EXEC_CONT
   T operator()(T value) const { return (Scale * value + Bias); }
 };
-}
-
-namespace vtkm
-{
-namespace worklet
-{
-namespace cosmotools
-{
 
 template <typename T, typename StorageType, typename DeviceAdapter>
 class CosmoTools

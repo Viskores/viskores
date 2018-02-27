@@ -446,7 +446,10 @@ private:
 // https://github.com/RLovelett/eigen/blame/master/Eigen/src/Core/util/DisableStupidWarnings.h
 #pragma push
 #pragma diag_suppress 2737
+#if (__CUDACC_VER_MAJOR__ >= 8)
+//CUDA 7.5 doesn't like suppressing error codes that don't exist yet
 #pragma diag_suppress 2739
+#endif
 #endif
     auto fi =
       vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
