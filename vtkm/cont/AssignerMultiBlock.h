@@ -34,6 +34,12 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
+#ifdef VTKM_MSVC
+#pragma warning(push)
+// disable C4275: non-dll interface base class warnings
+#pragma warning(disable : 4275)
+#endif
+
 namespace vtkm
 {
 namespace cont
@@ -75,5 +81,9 @@ private:
 };
 }
 }
+
+#ifdef VTKM_MSVC
+#pragma warning(pop)
+#endif
 
 #endif
