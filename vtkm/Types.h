@@ -646,7 +646,7 @@ class VTKM_ALWAYS_EXPORT VecBase : public vtkm::detail::VecBaseCommon<T, Derived
 {
 public:
   using ComponentType = T;
-  static const vtkm::IdComponent NUM_COMPONENTS = Size;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = Size;
 
 protected:
   VTKM_EXEC_CONT
@@ -805,7 +805,7 @@ class VTKM_ALWAYS_EXPORT Vec : public detail::VecBase<T, Size, Vec<T, Size>>
 public:
 #ifdef VTKM_DOXYGEN_ONLY
   using ComponentType = T;
-  static const vtkm::IdComponent NUM_COMPONENTS = Size;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = Size;
 #endif
 
   VTKM_EXEC_CONT Vec() = default;
@@ -833,7 +833,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 0>
 {
 public:
   using ComponentType = T;
-  static const vtkm::IdComponent NUM_COMPONENTS = 0;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 0;
 
   VTKM_EXEC_CONT Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const ComponentType&) {}

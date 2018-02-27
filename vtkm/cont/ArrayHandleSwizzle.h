@@ -63,7 +63,7 @@ struct ValidateComponentMap;
 template <vtkm::IdComponent InputSize, vtkm::IdComponent Head>
 struct ValidateComponentMap<InputSize, Head>
 {
-  static const bool Valid = Head >= 0 && Head < InputSize;
+  static constexpr bool Valid = Head >= 0 && Head < InputSize;
 };
 
 // Recursive impl:
@@ -71,8 +71,8 @@ template <vtkm::IdComponent InputSize, vtkm::IdComponent Head, vtkm::IdComponent
 struct ValidateComponentMap<InputSize, Head, Tail...>
 {
   using Next = ValidateComponentMap<InputSize, Tail...>;
-  static const bool IsUnique = ComponentIsUnique<Head, Tail...>::IsUnique;
-  static const bool Valid = Head >= 0 && Head < InputSize && IsUnique && Next::Valid;
+  static constexpr bool IsUnique = ComponentIsUnique<Head, Tail...>::IsUnique;
+  static constexpr bool Valid = Head >= 0 && Head < InputSize && IsUnique && Next::Valid;
 };
 
 } // end namespace internal
@@ -82,7 +82,8 @@ template <typename InputValueType, vtkm::IdComponent... ComponentMap>
 struct ArrayHandleSwizzleTraits
 {
   /// The number of elements in the ComponentMap.
-  static const vtkm::IdComponent COUNT = static_cast<vtkm::IdComponent>(sizeof...(ComponentMap));
+  static constexpr vtkm::IdComponent COUNT =
+    static_cast<vtkm::IdComponent>(sizeof...(ComponentMap));
   VTKM_STATIC_ASSERT_MSG(COUNT > 0, "Invalid ComponentMap: Cannot swizzle zero components.");
 
   /// A std::array containing the ComponentMap for runtime querying.
@@ -114,7 +115,7 @@ struct ArrayHandleSwizzleTraits
 
   /// If true, we use all components in the input vector. If false, we'll need
   /// to make sure to preserve existing values on write.
-  static const bool ALL_COMPS_USED = InputTraits::NUM_COMPONENTS == COUNT;
+  static constexpr bool ALL_COMPS_USED = InputTraits::NUM_COMPONENTS == COUNT;
 
 private:
   template <vtkm::IdComponent OutputIndex, vtkm::IdComponent... Map>
@@ -153,7 +154,7 @@ private:
   template <vtkm::IdComponent OutputIndex, vtkm::IdComponent Head>
   struct SwizzleImpl<OutputIndex, Head>
   {
-    static const vtkm::IdComponent InputIndex = Head;
+    static constexpr vtkm::IdComponent InputIndex = Head;
 
     void operator()(const InputType& in, OutputType& out) const
     {
@@ -166,7 +167,7 @@ private:
   struct SwizzleImpl<OutputIndex, Head, Tail...>
   {
     using Next = SwizzleImpl<OutputIndex + 1, Tail...>;
-    static const vtkm::IdComponent InputIndex = Head;
+    static constexpr vtkm::IdComponent InputIndex = Head;
 
     void operator()(const InputType& in, OutputType& out) const
     {
@@ -191,7 +192,7 @@ private:
   template <vtkm::IdComponent OutputIndex, vtkm::IdComponent Head>
   struct UnSwizzleImpl<OutputIndex, Head>
   {
-    static const vtkm::IdComponent InputIndex = Head;
+    static constexpr vtkm::IdComponent InputIndex = Head;
 
     void operator()(const OutputType& out, InputType& in) const
     {
@@ -204,7 +205,7 @@ private:
   struct UnSwizzleImpl<OutputIndex, Head, Tail...>
   {
     using Next = UnSwizzleImpl<OutputIndex + 1, Tail...>;
-    static const vtkm::IdComponent InputIndex = Head;
+    static constexpr vtkm::IdComponent InputIndex = Head;
 
     void operator()(const OutputType& out, InputType& in) const
     {

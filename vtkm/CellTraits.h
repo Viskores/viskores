@@ -81,7 +81,7 @@ struct CellTraits
   /// This is only defined for cell shapes of a fixed number of points (i.e.
   /// \c IsSizedFixed is set to \c CellTraitsTagSizeFixed.
   ///
-  static const vtkm::IdComponent NUM_POINTS = 3;
+  static constexpr vtkm::IdComponent NUM_POINTS = 3;
 };
 #else  // VTKM_DOXYGEN_ONLY
   ;

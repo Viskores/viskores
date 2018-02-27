@@ -39,7 +39,7 @@ namespace internal
 template <vtkm::IdComponent Index>
 struct IndexTag
 {
-  static const vtkm::IdComponent INDEX = Index;
+  static constexpr vtkm::IdComponent INDEX = Index;
 };
 }
 } // namespace vtkm::internal

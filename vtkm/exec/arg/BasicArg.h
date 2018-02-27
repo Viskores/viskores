@@ -41,7 +41,7 @@ namespace arg
 template <vtkm::IdComponent ControlSignatureIndex>
 struct BasicArg : vtkm::exec::arg::ExecutionSignatureTagBase
 {
-  static const vtkm::IdComponent INDEX = ControlSignatureIndex;
+  static constexpr vtkm::IdComponent INDEX = ControlSignatureIndex;
   using AspectTag = vtkm::exec::arg::AspectTagDefault;
 };
 }

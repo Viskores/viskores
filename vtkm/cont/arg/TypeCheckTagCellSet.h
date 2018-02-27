@@ -40,7 +40,7 @@ struct TypeCheckTagCellSet
 template <typename CellSetType>
 struct TypeCheck<TypeCheckTagCellSet, CellSetType>
 {
-  static const bool value = vtkm::cont::internal::CellSetCheck<CellSetType>::type::value;
+  static constexpr bool value = vtkm::cont::internal::CellSetCheck<CellSetType>::type::value;
 };
 }
 }

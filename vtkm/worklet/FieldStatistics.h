@@ -42,11 +42,11 @@ class FieldStatistics
 {
 public:
   // For moments readability
-  static const vtkm::Id FIRST = 0;
-  static const vtkm::Id SECOND = 1;
-  static const vtkm::Id THIRD = 2;
-  static const vtkm::Id FOURTH = 3;
-  static const vtkm::Id NUM_POWERS = 4;
+  static constexpr vtkm::Id FIRST = 0;
+  static constexpr vtkm::Id SECOND = 1;
+  static constexpr vtkm::Id THIRD = 2;
+  static constexpr vtkm::Id FOURTH = 3;
+  static constexpr vtkm::Id NUM_POWERS = 4;
 
   struct StatInfo
   {

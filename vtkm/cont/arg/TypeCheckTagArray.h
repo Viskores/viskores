@@ -51,13 +51,13 @@ struct TypeCheckArrayValueType;
 template <typename TypeList, typename ArrayType>
 struct TypeCheckArrayValueType<TypeList, ArrayType, true>
 {
-  static const bool value = vtkm::ListContains<TypeList, typename ArrayType::ValueType>::value;
+  static constexpr bool value = vtkm::ListContains<TypeList, typename ArrayType::ValueType>::value;
 };
 
 template <typename TypeList, typename ArrayType>
 struct TypeCheckArrayValueType<TypeList, ArrayType, false>
 {
-  static const bool value = false;
+  static constexpr bool value = false;
 };
 
 } // namespace detail
@@ -65,7 +65,7 @@ struct TypeCheckArrayValueType<TypeList, ArrayType, false>
 template <typename TypeList, typename ArrayType>
 struct TypeCheck<TypeCheckTagArray<TypeList>, ArrayType>
 {
-  static const bool value = detail::TypeCheckArrayValueType<
+  static constexpr bool value = detail::TypeCheckArrayValueType<
     TypeList,
     ArrayType,
     vtkm::cont::internal::ArrayHandleCheck<ArrayType>::type::value>::value;

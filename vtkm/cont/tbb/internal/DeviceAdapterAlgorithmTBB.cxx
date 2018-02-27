@@ -50,7 +50,7 @@ void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagTBB>::ScheduleTask(
   vtkm::exec::tbb::internal::TaskTiling3D& functor,
   vtkm::Id3 size)
 {
-  static const vtkm::UInt32 TBB_GRAIN_SIZE_3D[3] = { 1, 4, 256 };
+  static constexpr vtkm::UInt32 TBB_GRAIN_SIZE_3D[3] = { 1, 4, 256 };
   const vtkm::Id MESSAGE_SIZE = 1024;
   char errorString[MESSAGE_SIZE];
   errorString[0] = '\0';

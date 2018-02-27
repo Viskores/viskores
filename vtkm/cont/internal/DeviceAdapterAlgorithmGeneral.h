@@ -430,7 +430,7 @@ public:
 
     // Don't bother with the keys_output if it's an ArrayHandleDiscard -- there
     // will be a runtime exception in Unique() otherwise:
-    if (!vtkm::cont::IsArrayHandleDiscard<KeysOutputType>::Value)
+    if (!vtkm::cont::IsArrayHandleDiscard<KeysOutputType>::value)
     {
       //find all the unique keys
       DerivedAlgorithm::Copy(keys, keys_output);

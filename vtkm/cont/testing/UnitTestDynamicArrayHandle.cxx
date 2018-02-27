@@ -53,7 +53,7 @@ namespace vtkm
 template <>
 struct VecTraits<std::string>
 {
-  static const vtkm::IdComponent NUM_COMPONENTS = 1;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 1;
   using HasMultipleComponents = vtkm::VecTraitsTagSingleComponent;
 };
 

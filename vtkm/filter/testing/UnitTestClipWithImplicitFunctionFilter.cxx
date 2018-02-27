@@ -31,9 +31,9 @@ using Coord3D = vtkm::Vec<vtkm::FloatDefault, 3>;
 
 vtkm::cont::DataSet MakeTestDatasetStructured()
 {
-  static const vtkm::Id xdim = 3, ydim = 3;
+  static constexpr vtkm::Id xdim = 3, ydim = 3;
   static const vtkm::Id2 dim(xdim, ydim);
-  static const vtkm::Id numVerts = xdim * ydim;
+  static constexpr vtkm::Id numVerts = xdim * ydim;
 
   vtkm::Float32 scalars[numVerts];
   for (vtkm::Id i = 0; i < numVerts; ++i)

@@ -132,7 +132,7 @@ struct TestingArrayHandles
   };
 
 private:
-  static const vtkm::Id ARRAY_SIZE = 100;
+  static constexpr vtkm::Id ARRAY_SIZE = 100;
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 

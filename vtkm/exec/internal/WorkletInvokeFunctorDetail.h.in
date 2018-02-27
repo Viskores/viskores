@@ -127,7 +127,7 @@ struct InvocationToFetch
   // Expected fields from ExecutionSignatureTag. If these do not exist in
   // ExecutionSignatureTag, then something that is not really an execution
   // signature tag was used in an ExecutionSignature.
-  static const vtkm::IdComponent ControlParameterIndex = ExecutionSignatureTag::INDEX;
+  static constexpr vtkm::IdComponent ControlParameterIndex = ExecutionSignatureTag::INDEX;
   using AspectTag = typename ExecutionSignatureTag::AspectTag;
 
   // Find the fetch tag from the control signature tag pointed to by
