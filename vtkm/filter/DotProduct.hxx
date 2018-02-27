@@ -67,5 +67,18 @@ inline VTKM_CONT vtkm::filter::Result DotProduct::DoExecute(
                               fieldMetadata.GetAssociation(),
                               fieldMetadata.GetCellSetName());
 }
+
+//-----------------------------------------------------------------------------
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool DotProduct::DoMapField(vtkm::filter::Result& result,
+                                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                                             const vtkm::filter::FieldMetadata& fieldMeta,
+                                             const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                                             DeviceAdapter device)
+{
+  //we copy the input handle to the result dataset, reusing the metadata
+  result.GetDataSet().AddField(fieldMeta.AsField(input));
+  return true;
+}
 }
 } // namespace vtkm::filter

@@ -46,6 +46,13 @@ public:
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
     const DeviceAdapter& tag);
 
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT bool DoMapField(vtkm::filter::Result& result,
+                            const vtkm::cont::ArrayHandle<T, StorageType>& input,
+                            const vtkm::filter::FieldMetadata& fieldMeta,
+                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                            DeviceAdapter tag);
+
 private:
   vtkm::worklet::DotProduct Worklet;
   std::string SecondaryFieldName;
