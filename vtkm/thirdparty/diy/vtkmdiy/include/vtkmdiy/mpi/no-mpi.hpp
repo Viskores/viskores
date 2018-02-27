@@ -13,6 +13,12 @@ using MPI_Comm = int;
 static const MPI_Comm MPI_COMM_NULL = 0;
 static const MPI_Comm MPI_COMM_WORLD = 1;
 
+/* MPI threading modes */
+static const int MPI_THREAD_SINGLE      = 0;
+static const int MPI_THREAD_FUNNELED    = 1;
+static const int MPI_THREAD_SERIALIZED  = 2;
+static const int MPI_THREAD_MULTIPLE    = 3;
+
 /* define datatypes */
 using MPI_Datatype = size_t;
 

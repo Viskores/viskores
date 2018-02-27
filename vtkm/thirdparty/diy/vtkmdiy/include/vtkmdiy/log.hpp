@@ -40,7 +40,7 @@ create_logger(std::string)
 
 template<class... Args>
 std::shared_ptr<spd::logger>
-set_logger(Args... args)
+set_logger(Args...)
 {
     return std::make_shared<spd::logger>();
 }

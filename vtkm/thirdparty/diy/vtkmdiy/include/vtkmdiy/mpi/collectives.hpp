@@ -1,5 +1,6 @@
 #include <vector>
 
+#include "../constants.h" // for DIY_UNUSED.
 #include "operations.hpp"
 
 namespace diy
@@ -20,21 +21,30 @@ namespace mpi
       MPI_Bcast(Datatype::address(x),
                 Datatype::count(x),
                 Datatype::datatype(), root, comm);
+#else
+      DIY_UNUSED(comm);
+      DIY_UNUSED(x);
+      DIY_UNUSED(root);
 #endif
     }
 
     static void broadcast(const communicator& comm, std::vector<T>& x, int root)
     {
 #ifndef DIY_NO_MPI
-      size_t sz = x.size();
+      size_t sz        = x.size();
+      int    elem_size = Datatype::count(x[0]);         // size of 1 vector element in units of mpi datatype
       Collectives<size_t, void*>::broadcast(comm, sz, root);
 
       if (comm.rank() != root)
           x.resize(sz);
 
       MPI_Bcast(Datatype::address(x[0]),
-                x.size(),
+                elem_size * x.size(),
                 Datatype::datatype(), root, comm);
+#else
+      DIY_UNUSED(comm);
+      DIY_UNUSED(x);
+      DIY_UNUSED(root);
 #endif
     }
 
@@ -47,16 +57,16 @@ namespace mpi
                  Datatype::datatype(), root, comm, &r.r);
       return r;
 #else
-      (void)x; (void)root;
+      DIY_UNUSED(comm);
+      DIY_UNUSED(x);
+      DIY_UNUSED(root);
       DIY_UNSUPPORTED_MPI_CALL(MPI_Ibcast);
 #endif
     }
 
     static void gather(const communicator& comm, const T& in, std::vector<T>& out, int root)
     {
-      size_t s  = comm.size();
-             s *= Datatype::count(in);
-      out.resize(s);
+      out.resize(comm.size());
 #ifndef DIY_NO_MPI
       MPI_Gather(Datatype::address(const_cast<T&>(in)),
                  Datatype::count(in),
@@ -66,7 +76,8 @@ namespace mpi
                  Datatype::datatype(),
                  root, comm);
 #else
-      (void) root;
+      DIY_UNUSED(comm);
+      DIY_UNUSED(root);
       out[0] = in;
 #endif
     }
@@ -75,15 +86,16 @@ namespace mpi
     {
 #ifndef DIY_NO_MPI
       std::vector<int>  counts(comm.size());
-      Collectives<int,void*>::gather(comm, (int) in.size(), counts, root);
+      int               elem_size = Datatype::count(in[0]);     // size of 1 vector element in units of mpi datatype
+      Collectives<int,void*>::gather(comm, (int)(elem_size * in.size()), counts, root);
 
       std::vector<int>  offsets(comm.size(), 0);
       for (unsigned i = 1; i < offsets.size(); ++i)
         offsets[i] = offsets[i-1] + counts[i-1];
 
-      std::vector<T> buffer(offsets.back() + counts.back());
+      std::vector<T> buffer((offsets.back() + counts.back()) / elem_size);
       MPI_Gatherv(Datatype::address(const_cast<T&>(in[0])),
-                  in.size(),
+                  elem_size * in.size(),
                   Datatype::datatype(),
                   Datatype::address(buffer[0]),
                   &counts[0],
@@ -95,12 +107,13 @@ namespace mpi
       size_t cur = 0;
       for (unsigned i = 0; i < (unsigned)comm.size(); ++i)
       {
-          out[i].reserve(counts[i]);
-          for (unsigned j = 0; j < (unsigned)counts[i]; ++j)
+          out[i].reserve(counts[i] / elem_size);
+          for (unsigned j = 0; j < (unsigned)(counts[i] / elem_size); ++j)
               out[i].push_back(buffer[cur++]);
       }
 #else
-      (void) comm; (void) root;
+      DIY_UNUSED(comm);
+      DIY_UNUSED(root);
       out.resize(1);
       out[0] = in;
 #endif
@@ -117,6 +130,9 @@ namespace mpi
                  Datatype::datatype(),
                  root, comm);
 #else
+      DIY_UNUSED(comm);
+      DIY_UNUSED(in);
+      DIY_UNUSED(root);
       DIY_UNSUPPORTED_MPI_CALL("MPI_Gather");
 #endif
     }
@@ -124,24 +140,26 @@ namespace mpi
     static void gather(const communicator& comm, const std::vector<T>& in, int root)
     {
 #ifndef DIY_NO_MPI
-      Collectives<int,void*>::gather(comm, (int) in.size(), root);
+      int elem_size = Datatype::count(in[0]);           // size of 1 vector element in units of mpi datatype
+      Collectives<int,void*>::gather(comm, (int)(elem_size * in.size()), root);
 
       MPI_Gatherv(Datatype::address(const_cast<T&>(in[0])),
-                  in.size(),
+                  elem_size * in.size(),
                   Datatype::datatype(),
                   0, 0, 0,
                   Datatype::datatype(),
                   root, comm);
 #else
+      DIY_UNUSED(comm);
+      DIY_UNUSED(in);
+      DIY_UNUSED(root);
       DIY_UNSUPPORTED_MPI_CALL("MPI_Gatherv");
 #endif
     }
 
     static void all_gather(const communicator& comm, const T& in, std::vector<T>& out)
     {
-      size_t s  = comm.size();
-             s *= Datatype::count(in);
-      out.resize(s);
+      out.resize(comm.size());
 #ifndef DIY_NO_MPI
       MPI_Allgather(Datatype::address(const_cast<T&>(in)),
                     Datatype::count(in),
@@ -151,6 +169,7 @@ namespace mpi
                     Datatype::datatype(),
                     comm);
 #else
+      DIY_UNUSED(comm);
       out[0] = in;
 #endif
     }
@@ -159,15 +178,16 @@ namespace mpi
     {
 #ifndef DIY_NO_MPI
       std::vector<int>  counts(comm.size());
-      Collectives<int,void*>::all_gather(comm, (int) in.size(), counts);
+      int               elem_size = Datatype::count(in[0]);     // size of 1 vector element in units of mpi datatype
+      Collectives<int,void*>::all_gather(comm, (int)(elem_size * in.size()), counts);
 
       std::vector<int>  offsets(comm.size(), 0);
       for (unsigned i = 1; i < offsets.size(); ++i)
         offsets[i] = offsets[i-1] + counts[i-1];
 
-      std::vector<T> buffer(offsets.back() + counts.back());
+      std::vector<T> buffer((offsets.back() + counts.back()) / elem_size);
       MPI_Allgatherv(Datatype::address(const_cast<T&>(in[0])),
-                     in.size(),
+                     elem_size * in.size(),
                      Datatype::datatype(),
                      Datatype::address(buffer[0]),
                      &counts[0],
@@ -179,12 +199,12 @@ namespace mpi
       size_t cur = 0;
       for (int i = 0; i < comm.size(); ++i)
       {
-          out[i].reserve(counts[i]);
-          for (int j = 0; j < counts[i]; ++j)
+          out[i].reserve(counts[i] / elem_size);
+          for (int j = 0; j < (int)(counts[i] / elem_size); ++j)
               out[i].push_back(buffer[cur++]);
       }
 #else
-      (void) comm;
+      DIY_UNUSED(comm);
       out.resize(1);
       out[0] = in;
 #endif
@@ -200,12 +220,13 @@ namespace mpi
                  detail::mpi_op<Op>::get(),
                  root, comm);
 #else
-      (void) comm; (void) root;
+      DIY_UNUSED(comm);
+      DIY_UNUSED(root);
       out = in;
 #endif
     }
 
-    static void reduce(const communicator& comm, const T& in, int root, const Op& op)
+    static void reduce(const communicator& comm, const T& in, int root, const Op&)
     {
 #ifndef DIY_NO_MPI
       MPI_Reduce(Datatype::address(const_cast<T&>(in)),
@@ -215,6 +236,9 @@ namespace mpi
                  detail::mpi_op<Op>::get(),
                  root, comm);
 #else
+      DIY_UNUSED(comm);
+      DIY_UNUSED(in);
+      DIY_UNUSED(root);
       DIY_UNSUPPORTED_MPI_CALL("MPI_Reduce");
 #endif
     }
@@ -229,7 +253,7 @@ namespace mpi
                     detail::mpi_op<Op>::get(),
                     comm);
 #else
-      (void) comm;
+      DIY_UNUSED(comm);
       out = in;
 #endif
     }
@@ -238,13 +262,15 @@ namespace mpi
     {
 #ifndef DIY_NO_MPI
       out.resize(in.size());
+      int elem_size = Datatype::count(in[0]);               // size of 1 vector element in units of mpi datatype
       MPI_Allreduce(Datatype::address(const_cast<T&>(in[0])),
                     Datatype::address(out[0]),
-                    in.size(),
+                    elem_size * in.size(),
                     Datatype::datatype(),
                     detail::mpi_op<Op>::get(),
                     comm);
 #else
+      DIY_UNUSED(comm);
       out = in;
 #endif
     }
@@ -259,7 +285,7 @@ namespace mpi
                detail::mpi_op<Op>::get(),
                comm);
 #else
-      (void) comm;
+      DIY_UNUSED(comm);
       out = in;
 #endif
     }
@@ -267,14 +293,18 @@ namespace mpi
     static void all_to_all(const communicator& comm, const std::vector<T>& in, std::vector<T>& out, int n = 1)
     {
 #ifndef DIY_NO_MPI
+      int elem_size = Datatype::count(in[0]);               // size of 1 vector element in units of mpi datatype
       // NB: this will fail if T is a vector
-      MPI_Alltoall(Datatype::address(const_cast<T&>(in[0])), n,
+      MPI_Alltoall(Datatype::address(const_cast<T&>(in[0])),
+                   elem_size * n,
                    Datatype::datatype(),
-                   Datatype::address(out[0]), n,
+                   Datatype::address(out[0]),
+                   elem_size * n,
                    Datatype::datatype(),
                    comm);
 #else
-      (void) comm; (void) n;
+      DIY_UNUSED(comm);
+      DIY_UNUSED(n);
       out = in;
 #endif
     }

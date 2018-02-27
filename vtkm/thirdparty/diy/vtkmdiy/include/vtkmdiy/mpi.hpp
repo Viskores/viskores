@@ -25,30 +25,37 @@ namespace mpi
 //! \ingroup MPI
 struct environment
 {
-  inline environment();
-  inline environment(int argc, char* argv[]);
+  inline environment(int threading = MPI_THREAD_FUNNELED);
+  inline environment(int argc, char* argv[], int threading = MPI_THREAD_FUNNELED);
   inline ~environment();
+
+  int   threading() const           { return provided_threading; }
+
+  int   provided_threading;
 };
 
 }
 }
 
 diy::mpi::environment::
-environment()
+environment(int threading)
 {
 #ifndef DIY_NO_MPI
   int argc = 0; char** argv;
-  MPI_Init(&argc, &argv);
+  MPI_Init_thread(&argc, &argv, threading, &provided_threading);
+#else
+  provided_threading = threading;
 #endif
 }
 
 diy::mpi::environment::
-environment(int argc, char* argv[])
+environment(int argc, char* argv[], int threading)
 {
 #ifndef DIY_NO_MPI
-  MPI_Init(&argc, &argv);
+  MPI_Init_thread(&argc, &argv, threading, &provided_threading);
 #else
   (void) argc; (void) argv;
+  provided_threading = threading;
 #endif
 }
 

@@ -162,8 +162,8 @@ namespace diy
            * serialize a block
       */
                     Master(mpi::communicator    comm,          //!< communicator
-                           int                  threads   = 1,  //!< number of threads DIY can use
-                           int                  limit     = -1, //!< number of blocks to store in memory
+                           int                  threads__ = 1,  //!< number of threads DIY can use
+                           int                  limit__   = -1, //!< number of blocks to store in memory
                            CreateBlock          create_   = 0,  //!< block create function; master manages creation if create != 0
                            DestroyBlock         destroy_  = 0,  //!< block destroy function; master manages destruction if destroy != 0
                            ExternalStorage*     storage   = 0,  //!< storage object (path, method, etc.) for storing temporary blocks being shuffled in/out of core
@@ -172,8 +172,8 @@ namespace diy
                            QueuePolicy*         q_policy  = new QueueSizePolicy(4096)): //!< policy for managing message queues specifies maximum size of message queues to keep in memory
                       blocks_(create_, destroy_, storage, save, load_),
                       queue_policy_(q_policy),
-                      limit_(limit),
-                      threads_(threads == -1 ? thread::hardware_concurrency() : threads),
+                      limit_(limit__),
+                      threads_(threads__ == -1 ? static_cast<int>(thread::hardware_concurrency()) : threads__),
                       storage_(storage),
                       // Communicator functionality
                       comm_(comm),
@@ -218,9 +218,9 @@ namespace diy
       //! return gid of the `i`-th block
       int           gid(int i) const                    { return gids_[i]; }
       //! return the local id of the local block with global id gid, or -1 if not local
-      int           lid(int gid) const                  { return local(gid) ?  lids_.find(gid)->second : -1; }
+      int           lid(int gid__) const                { return local(gid__) ?  lids_.find(gid__)->second : -1; }
       //! whether the block with global id gid is local
-      bool          local(int gid) const                { return lids_.find(gid) != lids_.end(); }
+      bool          local(int gid__) const              { return lids_.find(gid__) != lids_.end(); }
 
       //! exchange the queues between all the blocks (collective operation)
       inline void   exchange();
@@ -238,7 +238,7 @@ namespace diy
       int           threads() const                     { return threads_; }
       int           in_memory() const                   { return *blocks_.in_memory().const_access(); }
 
-      void          set_threads(int threads)            { threads_ = threads; }
+      void          set_threads(int threads__)          { threads_ = threads__; }
 
       CreateBlock   creator() const                     { return blocks_.creator(); }
       DestroyBlock  destroyer() const                   { return blocks_.destroyer(); }
@@ -263,25 +263,25 @@ namespace diy
 
     public:
       // Communicator functionality
-      IncomingQueues&   incoming(int gid)               { return incoming_[exchange_round_].map[gid].queues; }
-      OutgoingQueues&   outgoing(int gid)               { return outgoing_[gid].queues; }
-      CollectivesList&  collectives(int gid)            { return collectives_[gid]; }
-      size_t            incoming_count(int gid) const
+      IncomingQueues&   incoming(int gid__)             { return incoming_[exchange_round_].map[gid__].queues; }
+      OutgoingQueues&   outgoing(int gid__)             { return outgoing_[gid__].queues; }
+      CollectivesList&  collectives(int gid__)          { return collectives_[gid__]; }
+      size_t            incoming_count(int gid__) const
       {
         IncomingRoundMap::const_iterator round_it = incoming_.find(exchange_round_);
         if (round_it == incoming_.end())
           return 0;
-        IncomingQueuesMap::const_iterator queue_it = round_it->second.map.find(gid);
+        IncomingQueuesMap::const_iterator queue_it = round_it->second.map.find(gid__);
         if (queue_it == round_it->second.map.end())
           return 0;
         return queue_it->second.queues.size();
       }
-      size_t            outgoing_count(int gid) const   { OutgoingQueuesMap::const_iterator it = outgoing_.find(gid); if (it == outgoing_.end()) return 0; return it->second.queues.size(); }
+      size_t            outgoing_count(int gid__) const { OutgoingQueuesMap::const_iterator it = outgoing_.find(gid__); if (it == outgoing_.end()) return 0; return it->second.queues.size(); }
 
       void              set_expected(int expected)      { expected_ = expected; }
       void              add_expected(int i)             { expected_ += i; }
       int               expected() const                { return expected_; }
-      void              replace_link(int i, Link* link) { expected_ -= links_[i]->size_unique(); delete links_[i]; links_[i] = link; expected_ += links_[i]->size_unique(); }
+      void              replace_link(int i, Link* link__) { expected_ -= links_[i]->size_unique(); delete links_[i]; links_[i] = link__; expected_ += links_[i]->size_unique(); }
 
     public:
       // Communicator functionality
@@ -384,11 +384,11 @@ namespace diy
 struct diy::Master::ProcessBlock
 {
           ProcessBlock(Master&                    master_,
-                       const std::deque<int>&     blocks_,
+                       const std::deque<int>&     blocks__,
                        int                        local_limit_,
                        critical_resource<int>&    idx_):
               master(master_),
-              blocks(blocks_),
+              blocks(blocks__),
               local_limit(local_limit_),
               idx(idx_)
           {}
@@ -511,11 +511,11 @@ unload_queues(int i)
 
 void
 diy::Master::
-unload_incoming(int gid)
+unload_incoming(int gid__)
 {
   for (IncomingRoundMap::iterator round_itr = incoming_.begin(); round_itr != incoming_.end(); ++round_itr)
   {
-    IncomingQueuesMap::iterator qmap_itr = round_itr->second.map.find(gid);
+    IncomingQueuesMap::iterator qmap_itr = round_itr->second.map.find(gid__);
     if (qmap_itr == round_itr->second.map.end())
     {
       continue;
@@ -524,9 +524,9 @@ unload_incoming(int gid)
     for (InQueueRecords::iterator it = in_qrs.records.begin(); it != in_qrs.records.end(); ++it)
     {
       QueueRecord& qr = it->second;
-      if (queue_policy_->unload_incoming(*this, it->first, gid, qr.size))
+      if (queue_policy_->unload_incoming(*this, it->first, gid__, qr.size))
       {
-        log->debug("Unloading queue: {} <- {}", gid, it->first);
+        log->debug("Unloading queue: {} <- {}", gid__, it->first);
         qr.external = storage_->put(in_qrs.queues[it->first]);
       }
     }
@@ -535,9 +535,9 @@ unload_incoming(int gid)
 
 void
 diy::Master::
-unload_outgoing(int gid)
+unload_outgoing(int gid__)
 {
-  OutgoingQueuesRecord& out_qr = outgoing_[gid];
+  OutgoingQueuesRecord& out_qr = outgoing_[gid__];
 
   size_t out_queues_size = sizeof(size_t);   // map size
   size_t count = 0;
@@ -551,9 +551,9 @@ unload_outgoing(int gid)
     out_queues_size += it->second.size();   // buffer contents
     ++count;
   }
-  if (queue_policy_->unload_outgoing(*this, gid, out_queues_size - sizeof(size_t)))
+  if (queue_policy_->unload_outgoing(*this, gid__, out_queues_size - sizeof(size_t)))
   {
-      log->debug("Unloading outgoing queues: {} -> ...; size = {}\n", gid, out_queues_size);
+      log->debug("Unloading outgoing queues: {} -> ...; size = {}\n", gid__, out_queues_size);
       MemoryBuffer  bb;     bb.reserve(out_queues_size);
       diy::save(bb, count);
 
@@ -562,7 +562,7 @@ unload_outgoing(int gid)
         if (it->first.proc == comm_.rank())
         {
           // treat as incoming
-          if (queue_policy_->unload_incoming(*this, gid, it->first.gid, it->second.size()))
+          if (queue_policy_->unload_incoming(*this, gid__, it->first.gid, it->second.size()))
           {
             QueueRecord& qr = out_qr.external_local[it->first];
             qr.size = it->second.size();
@@ -608,15 +608,15 @@ load_queues(int i)
 
 void
 diy::Master::
-load_incoming(int gid)
+load_incoming(int gid__)
 {
-  IncomingQueuesRecords& in_qrs = incoming_[exchange_round_].map[gid];
+  IncomingQueuesRecords& in_qrs = incoming_[exchange_round_].map[gid__];
   for (InQueueRecords::iterator it = in_qrs.records.begin(); it != in_qrs.records.end(); ++it)
   {
     QueueRecord& qr = it->second;
     if (qr.external != -1)
     {
-        log->debug("Loading queue: {} <- {}", gid, it->first);
+        log->debug("Loading queue: {} <- {}", gid__, it->first);
         storage_->get(qr.external, in_qrs.queues[it->first]);
         qr.external = -1;
     }
@@ -625,11 +625,11 @@ load_incoming(int gid)
 
 void
 diy::Master::
-load_outgoing(int gid)
+load_outgoing(int gid__)
 {
   // TODO: we could adjust this mechanism to read directly from storage,
   //       bypassing an intermediate MemoryBuffer
-  OutgoingQueuesRecord& out_qr = outgoing_[gid];
+  OutgoingQueuesRecord& out_qr = outgoing_[gid__];
   if (out_qr.external != -1)
   {
     MemoryBuffer bb;
@@ -655,7 +655,7 @@ proxy(int i) const
 
 int
 diy::Master::
-add(int gid, void* b, Link* l)
+add(int gid__, void* b, Link* l)
 {
   if (*blocks_.in_memory().const_access() == limit_)
     unload_all();
@@ -664,13 +664,13 @@ add(int gid, void* b, Link* l)
 
   blocks_.add(b);
   links_.push_back(l);
-  gids_.push_back(gid);
+  gids_.push_back(gid__);
 
-  int lid = static_cast<int>(gids_.size()) - 1;
-  lids_[gid] = lid;
+  int lid__ = static_cast<int>(gids_.size()) - 1;
+  lids_[gid__] = lid__;
   add_expected(l->size_unique()); // NB: at every iteration we expect a message from each unique neighbor
 
-  return lid;
+  return lid__;
 }
 
 void*
