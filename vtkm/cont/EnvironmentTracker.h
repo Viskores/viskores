@@ -22,13 +22,8 @@
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/vtkm_cont_export.h>
-#include <vtkm/internal/Configure.h>
 #include <vtkm/internal/ExportMacros.h>
-
-#if defined(VTKM_ENABLE_MPI)
-// needed for diy mangling.
 #include <vtkm/thirdparty/diy/Configure.h>
-#endif
 
 namespace diy
 {
@@ -42,6 +37,11 @@ namespace vtkm
 {
 namespace cont
 {
+
+/// \brief Maintain MPI controller, if any, for distributed operation.
+///
+/// `EnvironmentTracker` is a class that provides static API to track the global
+/// MPI controller to use for operating in a distributed environment.
 class VTKM_CONT_EXPORT EnvironmentTracker
 {
 public:

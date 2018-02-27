@@ -39,9 +39,9 @@ namespace detail
             x_(x)                                   {}
 
     void  init()                                    {}
-    void  update(const CollectiveOp& other)         {}
-    void  global(const mpi::communicator& comm)     {}
-    void  copy_from(const CollectiveOp& other)      {}
+    void  update(const CollectiveOp&)               {}
+    void  global(const mpi::communicator&)          {}
+    void  copy_from(const CollectiveOp&)            {}
     void  result_out(void* dest) const              { *reinterpret_cast<T*>(dest) = x_; }
 
     private:

@@ -281,7 +281,7 @@ void
 diy::RegularDecomposer<Bounds>::
 decompose(int rank, const Assigner& assigner, Master& master)
 {
-  decompose(rank, assigner, [&master](int gid, const Bounds& core, const Bounds& bounds, const Bounds&, const Link& link)
+  decompose(rank, assigner, [&master](int gid, const Bounds&, const Bounds&, const Bounds&, const Link& link)
   {
     void*     b = master.create();
     Link*     l = new Link(link);

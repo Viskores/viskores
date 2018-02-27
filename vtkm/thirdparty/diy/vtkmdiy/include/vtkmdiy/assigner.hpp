@@ -15,17 +15,17 @@ namespace diy
       * \ingroup Assignment
       * \brief Manages how blocks are assigned to processes
       */
-                    Assigner(int size,     //!< total number of processes
-                             int nblocks   //!< total (global) number of blocks
+                    Assigner(int size__,     //!< total number of processes
+                             int nblocks__   //!< total (global) number of blocks
                              ):
-                      size_(size), nblocks_(nblocks)    {}
+                      size_(size__), nblocks_(nblocks__)  {}
 
       //! returns the total number of process ranks
       int           size() const                        { return size_; }
       //! returns the total number of global blocks
       int           nblocks() const                     { return nblocks_; }
       //! sets the total number of global blocks
-      void          set_nblocks(int nblocks)            { nblocks_ = nblocks; }
+      void          set_nblocks(int nblocks__)          { nblocks_ = nblocks__; }
       //! gets the local gids for a given process rank
       virtual void  local_gids(int rank, std::vector<int>& gids) const   =0;
       //! returns the process rank of the block with global id gid (need not be local)
@@ -43,10 +43,10 @@ namespace diy
       * \ingroup Assignment
       * \brief Assigns blocks to processes in contiguous gid (block global id) order
       */
-            ContiguousAssigner(int size,     //!< total number of processes
-                               int nblocks   //!< total (global) number of blocks
+            ContiguousAssigner(int size__,   //!< total number of processes
+                               int nblocks__ //!< total (global) number of blocks
                                ):
-              Assigner(size, nblocks)           {}
+              Assigner(size__, nblocks__)      {}
 
       using Assigner::size;
       using Assigner::nblocks;
@@ -75,10 +75,10 @@ namespace diy
       * \ingroup Assignment
       * \brief Assigns blocks to processes in cyclic or round-robin gid (block global id) order
       */
-            RoundRobinAssigner(int size,     //!< total number of processes
-                               int nblocks   //!< total (global) number of blocks
+            RoundRobinAssigner(int size__,   //!< total number of processes
+                               int nblocks__ //!< total (global) number of blocks
                                ):
-              Assigner(size, nblocks)           {}
+              Assigner(size__, nblocks__)         {}
 
       using Assigner::size;
       using Assigner::nblocks;
@@ -91,21 +91,21 @@ namespace diy
 
 void
 diy::ContiguousAssigner::
-local_gids(int rank, std::vector<int>& gids) const
+local_gids(int rank_, std::vector<int>& gids) const
 {
   int div = nblocks() / size();
   int mod = nblocks() % size();
 
   int from, to;
-  if (rank < mod)
-      from = rank * (div + 1);
+  if (rank_ < mod)
+      from = rank_ * (div + 1);
   else
-      from = mod * (div + 1) + (rank - mod) * div;
+      from = mod * (div + 1) + (rank_ - mod) * div;
 
-  if (rank + 1 < mod)
-      to = (rank + 1) * (div + 1);
+  if (rank_ + 1 < mod)
+      to = (rank_ + 1) * (div + 1);
   else
-      to = mod * (div + 1) + (rank + 1 - mod) * div;
+      to = mod * (div + 1) + (rank_ + 1 - mod) * div;
 
   for (int gid = from; gid < to; ++gid)
     gids.push_back(gid);
@@ -113,9 +113,9 @@ local_gids(int rank, std::vector<int>& gids) const
 
 void
 diy::RoundRobinAssigner::
-local_gids(int rank, std::vector<int>& gids) const
+local_gids(int rank_, std::vector<int>& gids) const
 {
-  int cur = rank;
+  int cur = rank_;
   while (cur < nblocks())
   {
     gids.push_back(cur);

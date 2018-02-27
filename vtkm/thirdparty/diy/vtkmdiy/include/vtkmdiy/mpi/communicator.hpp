@@ -9,15 +9,30 @@ namespace mpi
   {
     public:
                 inline
-                communicator(MPI_Comm comm = MPI_COMM_WORLD);
+                communicator(MPI_Comm comm = MPI_COMM_WORLD, bool owner = false);
+
+                inline
+                ~communicator();
+
+                communicator(const communicator& other):
+                    comm_(other.comm_),
+                    rank_(other.rank_),
+                    size_(other.size_),
+                    owner_(false)                   {}
+
+                communicator(communicator&& other):
+                    comm_(other.comm_),
+                    rank_(other.rank_),
+                    size_(other.size_),
+                    owner_(other.owner_)                    { other.owner_ = false; }
+
+    communicator&
+                operator=(const communicator& other)        { comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = false; return *this; }
+    communicator&
+                operator=(communicator&& other)             { comm_ = other.comm_; rank_ = other.rank_; size_ = other.size_; owner_ = other.owner_; other.owner_ = false; return *this; }
 
       int       rank() const                        { return rank_; }
       int       size() const                        { return size_; }
-
-      //void      send(int dest,
-      //               int tag,
-      //               const void* buf,
-      //               MPI_Datatype datatype) const   { }
 
       //! Send `x` to processor `dest` using `tag` (blocking).
       template<class T>
@@ -52,17 +67,24 @@ namespace mpi
 
                 operator MPI_Comm() const                   { return comm_; }
 
+      //! split
+      //! When keys are the same, the ties are broken by the rank in the original comm.
+      inline
+      communicator
+                split(int color, int key = 0) const;
+
     private:
       MPI_Comm  comm_;
       int       rank_;
       int       size_;
+      bool      owner_;
   };
 }
 }
 
 diy::mpi::communicator::
-communicator(MPI_Comm comm)
-:comm_(comm), rank_(0), size_(1)
+communicator(MPI_Comm comm, bool owner):
+    comm_(comm), rank_(0), size_(1), owner_(owner)
 {
 #ifndef DIY_NO_MPI
   if (comm != MPI_COMM_NULL)
@@ -70,6 +92,15 @@ communicator(MPI_Comm comm)
     MPI_Comm_rank(comm_, &rank_);
     MPI_Comm_size(comm_, &size_);
   }
+#endif
+}
+
+diy::mpi::communicator::
+~communicator()
+{
+#ifndef DIY_NO_MPI
+    if (owner_)
+        MPI_Comm_free(&comm_);
 #endif
 }
 
@@ -111,5 +142,18 @@ barrier() const
 {
 #ifndef DIY_NO_MPI
   MPI_Barrier(comm_);
+#endif
+}
+
+diy::mpi::communicator
+diy::mpi::communicator::
+split(int color, int key) const
+{
+#ifndef DIY_NO_MPI
+    MPI_Comm newcomm;
+    MPI_Comm_split(comm_, color, key, &newcomm);
+    return communicator(newcomm, true);
+#else
+    return communicator();
 #endif
 }

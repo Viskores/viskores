@@ -155,15 +155,12 @@ vtkm_library(
   WRAP_FOR_CUDA ${device_sources}
   HEADERS ${header_impls})
 target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
+target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
 
 if(VTKm_ENABLE_CUDA)
   add_dependencies(vtkm_cont vtkm_cont_cuda)
 endif()
 
-if(VTKm_ENABLE_MPI)
-  # This will become a required dependency eventually.
-  target_link_libraries(vtkm_cont PUBLIC diy)
-endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(testing)
