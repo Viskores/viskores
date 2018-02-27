@@ -74,7 +74,7 @@ inline VTKM_CONT bool DotProduct::DoMapField(vtkm::filter::Result& result,
                                              const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                              const vtkm::filter::FieldMetadata& fieldMeta,
                                              const vtkm::filter::PolicyBase<DerivedPolicy>&,
-                                             DeviceAdapter device)
+                                             DeviceAdapter)
 {
   //we copy the input handle to the result dataset, reusing the metadata
   result.GetDataSet().AddField(fieldMeta.AsField(input));
