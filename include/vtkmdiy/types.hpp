@@ -29,10 +29,10 @@ namespace diy
 
     struct Direction: public Point<int,DIY_MAX_DIM>
     {
-              Direction()                 { for (int i = 0; i < DIY_MAX_DIM; ++i) (*this)[i] = 0; }
+              Direction()                 { for (size_t i = 0; i < DIY_MAX_DIM; ++i) (*this)[i] = 0; }
               Direction(int dir)
       {
-          for (int i = 0; i < DIY_MAX_DIM; ++i) (*this)[i] = 0;
+          for (size_t i = 0; i < DIY_MAX_DIM; ++i) (*this)[i] = 0;
           if (dir & DIY_X0) (*this)[0] -= 1;
           if (dir & DIY_X1) (*this)[0] += 1;
           if (dir & DIY_Y0) (*this)[1] -= 1;
@@ -46,7 +46,7 @@ namespace diy
       bool
       operator==(const diy::Direction& y) const
       {
-        for (int i = 0; i < DIY_MAX_DIM; ++i)
+        for (size_t i = 0; i < DIY_MAX_DIM; ++i)
             if ((*this)[i] != y[i]) return false;
         return true;
       }
@@ -55,7 +55,7 @@ namespace diy
       bool
       operator<(const diy::Direction& y) const
       {
-        for (int i = 0; i < DIY_MAX_DIM; ++i)
+        for (size_t i = 0; i < DIY_MAX_DIM; ++i)
         {
             if ((*this)[i] < y[i]) return true;
             if ((*this)[i] > y[i]) return false;

@@ -53,9 +53,9 @@ namespace diy
     void                read(const std::string& fn)
     {
         std::ifstream in(fn.c_str(), std::ios::binary | std::ios::ate);
-        buffer.resize(in.tellg());
+        buffer.resize(static_cast<size_t>(in.tellg()));
         in.seekg(0);
-        in.read(&buffer[0], size());
+        in.read(&buffer[0], static_cast<std::streamsize>(size()));
         position = 0;
     }
 

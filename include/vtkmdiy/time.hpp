@@ -22,7 +22,7 @@ inline time_type get_time()
     host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
     clock_get_time(cclock, &ts);
     mach_port_deallocate(mach_task_self(), cclock);
-    return ts.tv_sec*1000 + ts.tv_nsec/1000000;
+    return ts.tv_sec*1000 + static_cast<unsigned int>(ts.tv_nsec/1000000);
 #elif defined(_WIN32)
     // SOURCE: http://stackoverflow.com/questions/5404277/porting-clock-gettime-to-windows
     __int64 wintime;

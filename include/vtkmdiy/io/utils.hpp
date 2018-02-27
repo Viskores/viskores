@@ -13,6 +13,8 @@
 #include <cstdlib>      // mkstemp() on Linux
 #include <sys/stat.h>
 
+#include "../constants.h" // for DIY_UNUSED
+
 namespace diy
 {
 namespace io
@@ -56,11 +58,11 @@ namespace utils
     _sopen_s(&fd, filename.c_str(), _O_WRONLY | _O_BINARY, _SH_DENYNO, _S_IWRITE);
     if (fd != -1)
     {
-      _chsize_s(fd, 0);
+      _chsize_s(fd, static_cast<__int64>(length));
       _close(fd);
     }
 #else
-    ::truncate(filename.c_str(), length);
+    ::truncate(filename.c_str(), static_cast<off_t>(length));
 #endif
   }
 
@@ -91,7 +93,7 @@ namespace utils
     _close(fd);
 #else
     fsync(fd);
-    close(fd);
+    ::close(fd);
 #endif
   }
 
@@ -99,6 +101,8 @@ namespace utils
   {
 #if !defined(_WIN32)
     fsync(fd);
+#else
+    DIY_UNUSED(fd);
 #endif
   }
 
