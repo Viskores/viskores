@@ -731,7 +731,7 @@ public:
       points,
       this->CellSet.ResetCellSetList(cellSetTypes),
       this->Coordinates,
-      this->LookupStructure.PrepareForExecution(device),
+      this->LookupStructure,
       cellIds,
       parametricCoords);
   }
