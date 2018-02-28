@@ -23,8 +23,6 @@
 #include <vtkm/exec/arg/AspectTagDefault.h>
 #include <vtkm/exec/arg/Fetch.h>
 
-#include <vtkm/cont/ExecutionObjectFactoryBase.h>
-
 #include <type_traits>
 
 namespace vtkm
@@ -51,14 +49,6 @@ struct Fetch<vtkm::exec::arg::FetchTagExecObject,
              ThreadIndicesType,
              ExecObjectType>
 {
-  // If you get a compile error here, it means you tried to use an object that
-  // is not an execution object as an argument that is expected to be one. All
-  // execution objects are expected to inherit from
-  // vtkm::exec::ExecutionObjectFactoryBase.
-  static_assert(
-    std::is_base_of<vtkm::cont::ExecutionObjectFactoryBase, ExecObjectType>::value,
-    "All execution objects are expected to inherit from vtkm::cont::ExecutionObjectFactoryBase");
-
   using ValueType = ExecObjectType;
 
   VTKM_SUPPRESS_EXEC_WARNINGS

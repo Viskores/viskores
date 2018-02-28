@@ -613,12 +613,10 @@ public:
   struct TwoLevelUniformGridExecutionObjectFactory : public vtkm::cont::ExecutionObjectFactoryBase
   {
     template <typename DeviceAdapter>
-    using ExecObjectType = TwoLevelUniformGridExecution<DeviceAdapter>;
-
-    template <typename DeviceAdapter>
-    VTKM_CONT ExecObjectType<DeviceAdapter> PrepareForExecution(DeviceAdapter device) const
+    VTKM_CONT TwoLevelUniformGridExecution<DeviceAdapter> PrepareForExecution(
+      DeviceAdapter device) const
     {
-      ExecObjectType<DeviceAdapter> deviceObject;
+      TwoLevelUniformGridExecution<DeviceAdapter> deviceObject;
       deviceObject.TopLevel = this->TopLevel;
       deviceObject.LeafDimensions = this->LeafDimensions.PrepareForInput(device);
       deviceObject.LeafStartIndex = this->LeafStartIndex.PrepareForInput(device);
