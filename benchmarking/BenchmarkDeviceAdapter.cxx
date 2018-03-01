@@ -46,7 +46,9 @@
 
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
 #include <tbb/task_scheduler_init.h>
-#endif // TBB
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
+#include <omp.h>
+#endif
 
 // This benchmark has a number of commandline options to customize its behavior.
 // See The BenchDevAlgoConfig documentations for details.
@@ -1193,6 +1195,8 @@ int main(int argc, char* argv[])
 {
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
   int numThreads = tbb::task_scheduler_init::automatic;
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
+  int numThreads = omp_get_max_threads();
 #endif // TBB
 
   vtkm::benchmarking::BenchDevAlgoConfig& config = vtkm::benchmarking::Config;
@@ -1323,8 +1327,12 @@ int main(int argc, char* argv[])
       std::istringstream parse(argv[i]);
       parse >> numThreads;
       std::cout << "Selected " << numThreads << " TBB threads." << std::endl;
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
+      std::istringstream parse(argv[i]);
+      parse >> numThreads;
+      std::cout << "Selected " << numThreads << " OpenMP threads." << std::endl;
 #else
-      std::cerr << "NumThreads valid only on TBB. Ignoring." << std::endl;
+      std::cerr << "NumThreads not valid on this device. Ignoring." << std::endl;
 #endif // TBB
     }
     else
@@ -1337,6 +1345,8 @@ int main(int argc, char* argv[])
 #if VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_TBB
   // Must not be destroyed as long as benchmarks are running:
   tbb::task_scheduler_init init(numThreads);
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
+  omp_set_num_threads(numThreads);
 #endif // TBB
 
   if (config.BenchmarkFlags == 0)

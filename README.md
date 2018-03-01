@@ -73,6 +73,8 @@ Optional dependencies are:
       + [Cuda Toolkit 7+](https://developer.nvidia.com/cuda-toolkit)
   + TBB Device Adapter
       + [TBB](https://www.threadingbuildingblocks.org/)
+  + OpenMP Device Adapter
+      + Requires a compiler that supports OpenMP >= 4.5.
   + OpenGL Rendering
       + The rendering module contains multiple rendering implementations
         including standalone rendering code. The rendering module also
