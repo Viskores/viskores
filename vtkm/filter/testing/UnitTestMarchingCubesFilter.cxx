@@ -297,33 +297,34 @@ void TestMarchingCubesUniformGrid()
   vtkm::Id3 dims(4, 4, 4);
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-  vtkm::filter::Result result;
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals(true);
   mc.SetIsoValue(0, 0.5);
+  mc.SetActiveField("nodevar");
 
-  result = mc.Execute(dataSet, dataSet.GetField("nodevar"));
-
+  auto result = mc.Execute(dataSet);
   {
-    const vtkm::cont::DataSet& outputData = result.GetDataSet();
-    VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
+    VTKM_TEST_ASSERT(result.GetNumberOfCellSets() == 1,
                      "Wrong number of cellsets in the output dataset");
-    VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
+    VTKM_TEST_ASSERT(result.GetNumberOfCoordinateSystems() == 1,
                      "Wrong number of coordinate systems in the output dataset");
     //since normals is on we have one field
-    VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
+    VTKM_TEST_ASSERT(result.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
+  }
 
-    //Map a field onto the resulting dataset
-    const bool isMapped = mc.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));
+  // let's execute with mapping fields.
+  result = mc.Execute(dataSet, vtkm::filter::FieldSelection({ "nodevar" }));
+  {
+    const bool isMapped = result.HasField("nodevar");
     VTKM_TEST_ASSERT(isMapped, "mapping should pass");
 
-    VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 2,
+    VTKM_TEST_ASSERT(result.GetNumberOfFields() == 2,
                      "Wrong number of fields in the output dataset");
 
-    vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
-    vtkm::cont::DynamicCellSet dcells = outputData.GetCellSet();
+    vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
+    vtkm::cont::DynamicCellSet dcells = result.GetCellSet();
     using CellSetType = vtkm::cont::CellSetSingleType<>;
     const CellSetType& cells = dcells.Cast<CellSetType>();
 
@@ -336,17 +337,15 @@ void TestMarchingCubesUniformGrid()
 
   //Now try with vertex merging disabled
   mc.SetMergeDuplicatePoints(false);
-  result = mc.Execute(dataSet, dataSet.GetField("nodevar"));
-
+  result = mc.Execute(dataSet);
   {
-    const vtkm::cont::DataSet& outputData = result.GetDataSet();
-    vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
+    vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
 
     VTKM_TEST_ASSERT(coords.GetData().GetNumberOfValues() == 480,
                      "Should have less coordinates than the unmerged version");
 
     //verify that the number of cells is correct (160)
-    vtkm::cont::DynamicCellSet dcells = outputData.GetCellSet();
+    vtkm::cont::DynamicCellSet dcells = result.GetCellSet();
 
     using CellSetType = vtkm::cont::CellSetSingleType<>;
     const CellSetType& cells = dcells.Cast<CellSetType>();
@@ -364,9 +363,6 @@ void TestMarchingCubesCustomPolicy()
   const vtkm::IdComponent Dimension = 10;
   vtkm::cont::DataSet dataSet = dataSetGenerator.Make3DRadiantDataSet(Dimension);
 
-  vtkm::cont::Field contourField = dataSet.GetField("distanceToOrigin");
-
-  vtkm::filter::Result result;
   vtkm::filter::MarchingCubes mc;
 
   mc.SetGenerateNormals(false);
@@ -375,17 +371,14 @@ void TestMarchingCubesCustomPolicy()
   mc.SetIsoValue(2, 0.45);
   mc.SetIsoValue(3, 0.45);
 
-  //We specify a custom execution policy here, since the contourField is a
+  //We specify a custom execution policy here, since the "distanceToOrigin" is a
   //custom field type
-  result = mc.Execute(dataSet, contourField, PolicyRadiantDataSet());
+  mc.SetActiveField("distanceToOrigin");
+  vtkm::cont::DataSet outputData =
+    mc.Execute(dataSet,
+               PolicyRadiantDataSet(),
+               vtkm::filter::FieldSelection({ "distanceToOrigin", "distanceToOther" }));
 
-  //Map a field onto the resulting dataset
-  vtkm::cont::Field projectedField = dataSet.GetField("distanceToOther");
-
-  mc.MapFieldOntoOutput(result, projectedField, PolicyRadiantDataSet());
-  mc.MapFieldOntoOutput(result, contourField, PolicyRadiantDataSet());
-
-  const vtkm::cont::DataSet& outputData = result.GetDataSet();
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
@@ -471,8 +464,9 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
   // Test default normals generation: high quality for structured, fast for unstructured.
   auto expected = structured ? hq_sg : fast;
 
-  auto result = mc.Execute(dataset, dataset.GetField("pointvar"));
-  result.GetDataSet().GetField("normals").GetData().CopyTo(normals);
+  mc.SetActiveField("pointvar");
+  auto result = mc.Execute(dataset);
+  result.GetField("normals").GetData().CopyTo(normals);
   VTKM_TEST_ASSERT(normals.GetNumberOfValues() == numVerts,
                    "Wrong number of values in normals field");
   for (vtkm::Id i = 0; i < numVerts; ++i)
@@ -493,8 +487,8 @@ void TestNormals(const vtkm::cont::DataSet& dataset, bool structured)
     expected = hq_ug;
   }
 
-  result = mc.Execute(dataset, dataset.GetField("pointvar"));
-  result.GetDataSet().GetField("normals").GetData().CopyTo(normals);
+  result = mc.Execute(dataset);
+  result.GetField("normals").GetData().CopyTo(normals);
   VTKM_TEST_ASSERT(normals.GetNumberOfValues() == numVerts,
                    "Wrong number of values in normals field");
   for (vtkm::Id i = 0; i < numVerts; ++i)
@@ -515,9 +509,8 @@ void TestMarchingCubesNormals()
   std::cout << "\tUnstructured dataset\n";
   vtkm::filter::CleanGrid makeUnstructured;
   makeUnstructured.SetCompactPointFields(false);
-  auto result = makeUnstructured.Execute(dataset);
-  makeUnstructured.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-  TestNormals(result.GetDataSet(), false);
+  auto result = makeUnstructured.Execute(dataset, vtkm::filter::FieldSelection({ "pointvar" }));
+  TestNormals(result, false);
 }
 
 void TestMarchingCubesFilter()

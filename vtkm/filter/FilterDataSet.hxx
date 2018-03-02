@@ -38,36 +38,17 @@ namespace filter
 {
 
 //----------------------------------------------------------------------------
-template <class Derived>
+template <typename Derived>
 inline VTKM_CONT FilterDataSet<Derived>::FilterDataSet()
-  : OutputFieldName()
-  , CellSetIndex(0)
+  : CellSetIndex(0)
   , CoordinateSystemIndex(0)
-  , Tracker(vtkm::cont::GetGlobalRuntimeDeviceTracker())
 {
 }
 
 //----------------------------------------------------------------------------
-template <class Derived>
+template <typename Derived>
 inline VTKM_CONT FilterDataSet<Derived>::~FilterDataSet()
 {
-}
-
-//-----------------------------------------------------------------------------
-template <typename Derived>
-inline VTKM_CONT Result FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet& input)
-{
-  return this->Execute(input, vtkm::filter::PolicyDefault());
-}
-
-//-----------------------------------------------------------------------------
-template <typename Derived>
-template <typename DerivedPolicy>
-inline VTKM_CONT Result
-FilterDataSet<Derived>::Execute(const vtkm::cont::DataSet& input,
-                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
-{
-  return this->PrepareForExecution(input, policy);
 }
 
 //-----------------------------------------------------------------------------
@@ -113,7 +94,8 @@ FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
   detail::FilterDataSetPrepareForExecutionFunctor<Derived, DerivedPolicy> functor(
     static_cast<Derived*>(this), input, policy);
 
-  vtkm::cont::TryExecute(functor, this->Tracker, typename DerivedPolicy::DeviceAdapterList());
+  vtkm::cont::TryExecute(
+    functor, this->GetRuntimeDeviceTracker(), typename DerivedPolicy::DeviceAdapterList());
 
   return functor.Result;
 }
@@ -143,7 +125,7 @@ inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
 
     using Traits = vtkm::filter::FilterTraits<Derived>;
     vtkm::cont::CastAndCall(
-      vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->Tracker);
+      vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->GetRuntimeDeviceTracker());
   }
 
   //the bool valid will be modified by the map algorithm to hold if the

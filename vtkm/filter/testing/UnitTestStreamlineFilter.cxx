@@ -58,13 +58,10 @@ void TestStreamline()
   streamline.SetSeeds(seedArray);
   vtkm::cont::Field vecField = ds.GetField("vector");
 
-  vtkm::filter::Result result;
-  result = streamline.Execute(ds, ds.GetField("vector"));
-
-  VTKM_TEST_ASSERT(result.IsValid(), "Streamline filter failed");
+  streamline.SetActiveField("vector");
+  auto output = streamline.Execute(ds);
 
   //Validate the result is correct.
-  vtkm::cont::DataSet output = result.GetDataSet();
   VTKM_TEST_ASSERT(output.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,

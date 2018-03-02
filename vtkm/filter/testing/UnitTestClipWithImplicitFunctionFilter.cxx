@@ -61,14 +61,11 @@ void TestClipStructured()
   vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
-  vtkm::filter::Result result;
   vtkm::filter::ClipWithImplicitFunction clip;
   clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(vtkm::Sphere(center, radius)));
 
-  result = clip.Execute(ds);
-  clip.MapFieldOntoOutput(result, ds.GetField("scalars"));
+  vtkm::cont::DataSet outputData = clip.Execute(ds, { "scalars" });
 
-  const vtkm::cont::DataSet& outputData = result.GetDataSet();
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,

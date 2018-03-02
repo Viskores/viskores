@@ -196,8 +196,7 @@ void RunTest()
   //Entropy is just a single number
   //It is stored in "Entropy" (type vtkm::Float64) field in the return dataset
   //The field has only one element, the entropy
-  vtkm::filter::Result resultData = ndEntropyFilter.Execute(ds);
-  vtkm::cont::DataSet& outputData = resultData.GetDataSet();
+  vtkm::cont::DataSet outputData = ndEntropyFilter.Execute(ds);
 
   vtkm::cont::ArrayHandle<vtkm::Float64> entropyHandle;
   outputData.GetField("Entropy").GetData().CopyTo(entropyHandle);

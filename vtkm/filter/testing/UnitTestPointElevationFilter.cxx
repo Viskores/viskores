@@ -78,26 +78,21 @@ void TestPointElevationNoPolicy()
   filter.SetRange(0.0, 2.0);
 
   filter.SetOutputFieldName("height");
-  vtkm::filter::Result result;
-  result = filter.Execute(inputData, inputData.GetCoordinateSystem());
+  filter.SetUseCoordinateSystemAsField(true);
+  auto result = filter.Execute(inputData);
 
   //verify the result
-  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "height", "Output field has wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                   "Output field has wrong association");
+  VTKM_TEST_ASSERT(result.HasField("height", vtkm::cont::Field::ASSOC_POINTS),
+                   "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  const bool valid = result.FieldAs(resultArrayHandle);
-  if (valid)
+  result.GetField("height", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(resultArrayHandle);
+  auto coordinates = inputData.GetCoordinateSystem().GetData();
+  for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    auto coordinates = inputData.GetCoordinateSystem().GetData();
-    for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
-    {
-      VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
-                                  resultArrayHandle.GetPortalConstControl().Get(i)),
-                       "Wrong result for PointElevation worklet");
-    }
+    VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
+                                resultArrayHandle.GetPortalConstControl().Get(i)),
+                     "Wrong result for PointElevation worklet");
   }
 }
 
@@ -113,29 +108,23 @@ void TestPointElevationWithPolicy()
   filter.SetLowPoint(0.0, 0.0, 0.0);
   filter.SetHighPoint(0.0, 1.0, 0.0);
   filter.SetRange(0.0, 2.0);
-
-  vtkm::filter::Result result;
+  filter.SetUseCoordinateSystemAsField(true);
 
   vtkm::filter::PolicyDefault p;
-  result = filter.Execute(inputData, inputData.GetCoordinateSystem(), p);
+  auto result = filter.Execute(inputData, p);
 
   //verify the result
-  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "elevation", "Output field has wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
+  VTKM_TEST_ASSERT(result.HasField("elevation", vtkm::cont::Field::ASSOC_POINTS),
                    "Output field has wrong association");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  const bool valid = result.FieldAs(resultArrayHandle);
-  if (valid)
+  result.GetField("elevation", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(resultArrayHandle);
+  auto coordinates = inputData.GetCoordinateSystem().GetData();
+  for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    auto coordinates = inputData.GetCoordinateSystem().GetData();
-    for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
-    {
-      VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
-                                  resultArrayHandle.GetPortalConstControl().Get(i)),
-                       "Wrong result for PointElevation worklet");
-    }
+    VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,
+                                resultArrayHandle.GetPortalConstControl().Get(i)),
+                     "Wrong result for PointElevation worklet");
   }
 }
 

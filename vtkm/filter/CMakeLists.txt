@@ -32,6 +32,8 @@ set(headers
   ExtractPoints.h
   ExtractStructured.h
   FieldMetadata.h
+  FieldSelection.h
+  Filter.h
   FilterCell.h
   FilterDataSet.h
   FilterDataSetWithField.h
@@ -73,6 +75,7 @@ set(header_template_sources
   ExtractGeometry.hxx
   ExtractPoints.hxx
   ExtractStructured.hxx
+  Filter.hxx
   FilterCell.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx

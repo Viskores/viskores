@@ -130,8 +130,8 @@ public:
     filter.SetGenerateNormals(true);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(0, 0.1);
-    vtkm::filter::Result result = filter.Execute(dataSet, dataSet.GetField("nodevar"));
-    vtkm::cont::DataSet& outputData = result.GetDataSet();
+    filter.SetActiveField("nodevar");
+    vtkm::cont::DataSet outputData = filter.Execute(dataSet);
 
     auto cellSet = outputData.GetCellSet().Cast<vtkm::cont::CellSetSingleType<>>();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
