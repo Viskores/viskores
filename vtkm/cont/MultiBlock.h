@@ -111,6 +111,15 @@ public:
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;
 
+  //@{
+  /// API to support range-based for loops on blocks.
+  std::vector<DataSet>::iterator begin() noexcept { return this->Blocks.begin(); }
+  std::vector<DataSet>::iterator end() noexcept { return this->Blocks.end(); }
+  std::vector<DataSet>::const_iterator begin() const noexcept { return this->Blocks.begin(); }
+  std::vector<DataSet>::const_iterator end() const noexcept { return this->Blocks.end(); }
+  std::vector<DataSet>::const_iterator cbegin() const noexcept { return this->Blocks.begin(); }
+  std::vector<DataSet>::const_iterator cend() const noexcept { return this->Blocks.end(); }
+  //@}
 private:
   std::vector<vtkm::cont::DataSet> Blocks;
 };
