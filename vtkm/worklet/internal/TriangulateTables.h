@@ -88,12 +88,16 @@ static vtkm::IdComponent TriangleIndexData[] = {
   3
 };
 
-template <typename Device>
+template <typename DeviceAdapter>
 class TriangulateTablesExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
 {
 public:
-  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst;
-
+  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst;
+  template <typename Device>
+  VTKM_CONT TriangulateTablesExecutionObject PrepareForExecution(Device) const
+  {
+    return *this;
+  }
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   TriangulateTablesExecutionObject() {}
@@ -102,9 +106,9 @@ public:
   TriangulateTablesExecutionObject(const TriangulateArrayHandle& counts,
                                    const TriangulateArrayHandle& offsets,
                                    const TriangulateArrayHandle& indices)
-    : Counts(counts.PrepareForInput(Device()))
-    , Offsets(offsets.PrepareForInput(Device()))
-    , Indices(indices.PrepareForInput(Device()))
+    : Counts(counts.PrepareForInput(DeviceAdapter()))
+    , Offsets(offsets.PrepareForInput(DeviceAdapter()))
+    , Indices(indices.PrepareForInput(DeviceAdapter()))
   {
   }
 
@@ -261,12 +265,16 @@ static vtkm::IdComponent TetrahedronIndexData[] = {
   4
 };
 
-template <typename Device>
+template <typename DeviceAdapter>
 class TetrahedralizeTablesExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
 {
 public:
-  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst;
-
+  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst;
+  template <typename Device>
+  VTKM_CONT TetrahedralizeTablesExecutionObject PrepareForExecution(Device) const
+  {
+    return *this;
+  }
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   TetrahedralizeTablesExecutionObject() {}
@@ -275,9 +283,9 @@ public:
   TetrahedralizeTablesExecutionObject(const TriangulateArrayHandle& counts,
                                       const TriangulateArrayHandle& offsets,
                                       const TriangulateArrayHandle& indices)
-    : Counts(counts.PrepareForInput(Device()))
-    , Offsets(offsets.PrepareForInput(Device()))
-    , Indices(indices.PrepareForInput(Device()))
+    : Counts(counts.PrepareForInput(DeviceAdapter()))
+    , Offsets(offsets.PrepareForInput(DeviceAdapter()))
+    , Indices(indices.PrepareForInput(DeviceAdapter()))
   {
   }
 

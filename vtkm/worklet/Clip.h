@@ -67,6 +67,68 @@ VTKM_EXEC_CONT vtkm::Vec<T, NumComponents> Scale(const vtkm::Vec<T, NumComponent
 }
 
 template <typename DeviceAdapter>
+class ExecutionObject
+{
+private:
+  using UInt8Portal =
+    typename vtkm::cont::ArrayHandle<vtkm::UInt8>::template ExecutionTypes<DeviceAdapter>::Portal;
+
+  using IdComponentPortal = typename vtkm::cont::ArrayHandle<
+    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapter>::Portal;
+
+  using IdPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::Portal;
+
+public:
+  VTKM_CONT
+  ExecutionObject()
+    : Shapes()
+    , NumIndices()
+    , Connectivity()
+    , IndexOffsets()
+  {
+  }
+
+  VTKM_CONT
+  ExecutionObject(const UInt8Portal& shapes,
+                  const IdComponentPortal& numIndices,
+                  const IdPortal& connectivity,
+                  const IdPortal& indexOffsets)
+    : Shapes(shapes)
+    , NumIndices(numIndices)
+    , Connectivity(connectivity)
+    , IndexOffsets(indexOffsets)
+  {
+  }
+  VTKM_EXEC
+  void SetCellShape(vtkm::Id cellIndex, vtkm::UInt8 shape) { this->Shapes.Set(cellIndex, shape); }
+
+  VTKM_EXEC
+  void SetNumberOfIndices(vtkm::Id cellIndex, vtkm::IdComponent numIndices)
+  {
+    this->NumIndices.Set(cellIndex, numIndices);
+  }
+
+  VTKM_EXEC
+  void SetIndexOffset(vtkm::Id cellIndex, vtkm::Id indexOffset)
+  {
+    this->IndexOffsets.Set(cellIndex, indexOffset);
+  }
+
+  VTKM_EXEC
+  void SetConnectivity(vtkm::Id connectivityIndex, vtkm::Id pointIndex)
+  {
+    this->Connectivity.Set(connectivityIndex, pointIndex);
+  }
+
+private:
+  UInt8Portal Shapes;
+  IdComponentPortal NumIndices;
+  IdPortal Connectivity;
+  IdPortal IndexOffsets;
+};
+
+template <typename DeviceAdapter>
 class ExecutionConnectivityExplicit : vtkm::cont::ExecutionObjectFactoryBase
 {
 private:
@@ -100,26 +162,12 @@ public:
     , IndexOffsets(indexOffsets)
   {
   }
-
-  VTKM_EXEC
-  void SetCellShape(vtkm::Id cellIndex, vtkm::UInt8 shape) { this->Shapes.Set(cellIndex, shape); }
-
-  VTKM_EXEC
-  void SetNumberOfIndices(vtkm::Id cellIndex, vtkm::IdComponent numIndices)
+  template <typename Device>
+  VTKM_CONT ExecutionObject<Device> PrepareForExecution(Device) const
   {
-    this->NumIndices.Set(cellIndex, numIndices);
-  }
-
-  VTKM_EXEC
-  void SetIndexOffset(vtkm::Id cellIndex, vtkm::Id indexOffset)
-  {
-    this->IndexOffsets.Set(cellIndex, indexOffset);
-  }
-
-  VTKM_EXEC
-  void SetConnectivity(vtkm::Id connectivityIndex, vtkm::Id pointIndex)
-  {
-    this->Connectivity.Set(connectivityIndex, pointIndex);
+    ExecutionObject<Device> object(
+      this->Shapes, this->NumIndices, this->Connectivity, this->IndexOffsets);
+    return object;
   }
 
 private:
@@ -285,20 +333,20 @@ public:
     template <typename CellShapeTag,
               typename ScalarsVecType,
               typename IndicesVecType,
+              typename ExecutinoObjectType,
               typename InterpolationWholeArrayType,
               typename ReverseMapWholeArrayType,
               typename CellMapType>
-    VTKM_EXEC void operator()(
-      CellShapeTag shape,
-      vtkm::Id inputCellIdx,
-      const ScalarsVecType& scalars,
-      const IndicesVecType& indices,
-      vtkm::Id clipTableIdx,
-      ClipStats cellSetIndices,
-      internal::ExecutionConnectivityExplicit<DeviceAdapter>& connectivityExplicit,
-      InterpolationWholeArrayType& interpolation,
-      ReverseMapWholeArrayType& newPointsConnectivityReverseMap,
-      CellMapType& cellMap) const
+    VTKM_EXEC void operator()(CellShapeTag shape,
+                              vtkm::Id inputCellIdx,
+                              const ScalarsVecType& scalars,
+                              const IndicesVecType& indices,
+                              vtkm::Id clipTableIdx,
+                              ClipStats cellSetIndices,
+                              ExecutinoObjectType& connectivityExplicit,
+                              InterpolationWholeArrayType& interpolation,
+                              ReverseMapWholeArrayType& newPointsConnectivityReverseMap,
+                              CellMapType& cellMap) const
     {
       (void)shape; //C4100 false positive workaround
       vtkm::Id idx = clipTableIdx;

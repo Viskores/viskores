@@ -722,7 +722,7 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& points,
     vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
     vtkm::cont::ArrayHandle<FloatVec3>& parametricCoords,
-    DeviceAdapter device,
+    DeviceAdapter,
     CellSetList cellSetTypes = CellSetList()) const
   {
     vtkm::worklet::DispatcherMapField<FindCellWorklet, DeviceAdapter>().Invoke(

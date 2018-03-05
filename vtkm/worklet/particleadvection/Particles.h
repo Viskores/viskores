@@ -54,6 +54,12 @@ private:
     DeviceAdapterTag>::Portal;
 
 public:
+  template <typename Device>
+  VTKM_CONT Particles PrepareForExecution(Device) const
+  {
+    return *this;
+  }
+
   VTKM_EXEC_CONT
   Particles()
     : Pos()

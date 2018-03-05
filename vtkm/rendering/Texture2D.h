@@ -129,6 +129,12 @@ public:
     {
     }
 
+    template <typename Device>
+    VTKM_CONT Texture2DSampler<Device> PrepareForExecution(Device) const
+    {
+      return *this;
+    }
+
     VTKM_EXEC
     inline ColorType GetColor(vtkm::Float32 u, vtkm::Float32 v) const
     {
