@@ -144,7 +144,41 @@ public:
                      "Wrong number of connected components");
   }
 
-  void operator()() const { this->TestTangleIsosurface(); }
+  void TestExplicitDataSet() const
+  {
+    vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
+
+    auto cellSet = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
+    vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
+    CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
+
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    Algorithm::Sort(componentArray);
+    Algorithm::Unique(componentArray);
+    VTKM_TEST_ASSERT(componentArray.GetNumberOfValues() == 1,
+                     "Wrong number of connected components");
+  }
+
+  void TestUniformDataSet() const
+  {
+    vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
+
+    auto cellSet = dataSet.GetCellSet();
+    vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
+    CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
+
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    Algorithm::Sort(componentArray);
+    Algorithm::Unique(componentArray);
+    VTKM_TEST_ASSERT(componentArray.GetNumberOfValues() == 1,
+                     "Wrong number of connected components");
+  }
+
+  void operator()() const {
+    this->TestTangleIsosurface();
+    this->TestExplicitDataSet();
+    this->TestUniformDataSet();
+  }
 };
 
 int UnitTestCellSetConnectivity(int, char* [])
