@@ -50,7 +50,7 @@ struct ResolveFieldTypeAndExecuteForDevice
 template <typename Derived, typename DerivedPolicy, typename ResultType>
 struct ResolveFieldTypeAndExecute
 {
-  typedef ResolveFieldTypeAndExecute<Derived, DerivedPolicy, ResultType> Self;
+  using Self = ResolveFieldTypeAndExecute<Derived, DerivedPolicy, ResultType>;
 
   Derived* DerivedClass;
   const vtkm::cont::DataSet& InputData;

@@ -67,8 +67,8 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
   //
   // In this diagram, the distance between p0 and the point marked x divided by
   // the length of the edge it is on is equal, by proportionality, to the u
-  // parametric coordiante. (The v coordinate follows the other edge
-  // accordingly.) Thus, if we can find the interesection at x (or more
+  // parametric coordinate. (The v coordinate follows the other edge
+  // accordingly.) Thus, if we can find the intersection at x (or more
   // specifically the distance between p0 and x), then we can find that
   // parametric coordinate.
   //
@@ -94,13 +94,13 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
   // compute it, we are done. We can skip the part about finding the actual
   // coordinates of the intersection.
   //
-  // Solving for the interesection is as simple as substituting the line's
+  // Solving for the intersection is as simple as substituting the line's
   // definition of p(d) into p for the plane equation. With some basic algebra
   // you get:
   //
   // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
   //
-  // From here, the u coordiante is simply d. The v coordinate follows
+  // From here, the u coordinate is simply d. The v coordinate follows
   // similarly.
   //
 

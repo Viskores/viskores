@@ -32,6 +32,7 @@
 #include <vtkm/benchmarking/Benchmarker.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <cctype>
 #include <random>
 #include <string>
 
@@ -41,7 +42,7 @@ namespace benchmarking
 {
 
 #define CUBE_SIZE 256
-const static std::string DIVIDER(40, '-');
+static const std::string DIVIDER(40, '-');
 
 enum BenchmarkName
 {
@@ -58,7 +59,7 @@ public:
                                 CellSetIn cellset,
                                 FieldOutCell<> outCells);
   typedef void ExecutionSignature(_1, PointCount, _3);
-  typedef _2 InputDomain;
+  using InputDomain = _2;
 
   template <typename PointValueVecType, typename OutType>
   VTKM_EXEC void operator()(const PointValueVecType& pointValues,
@@ -80,7 +81,7 @@ class AverageCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
 public:
   typedef void ControlSignature(FieldInCell<> inCells, CellSetIn topology, FieldOut<> outPoints);
   typedef void ExecutionSignature(_1, _3, CellCount);
-  typedef _2 InputDomain;
+  using InputDomain = _2;
 
   template <typename CellVecType, typename OutType>
   VTKM_EXEC void operator()(const CellVecType& cellValues,
@@ -109,7 +110,7 @@ public:
                                 CellSetIn cellset,
                                 FieldOutCell<IdComponentType> outCaseId);
   typedef void ExecutionSignature(_1, _3);
-  typedef _2 InputDomain;
+  using InputDomain = _2;
 
   T IsoValue;
 
@@ -122,7 +123,7 @@ public:
   template <typename FieldInType>
   VTKM_EXEC void operator()(const FieldInType& fieldIn, vtkm::IdComponent& caseNumber) const
   {
-    typedef typename vtkm::VecTraits<FieldInType>::ComponentType FieldType;
+    using FieldType = typename vtkm::VecTraits<FieldInType>::ComponentType;
     const FieldType iso = static_cast<FieldType>(this->IsoValue);
 
     caseNumber = ((fieldIn[0] > iso) | (fieldIn[1] > iso) << 1 | (fieldIn[2] > iso) << 2 |
@@ -142,11 +143,11 @@ using StorageListTag = ::vtkm::cont::StorageListTagBasic;
 template <class DeviceAdapterTag>
 class BenchmarkTopologyAlgorithms
 {
-  typedef vtkm::cont::StorageTagBasic StorageTag;
+  using StorageTag = vtkm::cont::StorageTagBasic;
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  typedef vtkm::cont::Timer<DeviceAdapterTag> Timer;
+  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
 
   using ValueDynamicHandle = vtkm::cont::DynamicArrayHandleBase<ValueTypes, StorageListTag>;
 
@@ -470,7 +471,9 @@ int main(int argc, char* argv[])
     for (int i = 1; i < argc; ++i)
     {
       std::string arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      });
       if (arg == "celltopoint")
       {
         benchmarks |= vtkm::benchmarking::CELL_TO_POINT;

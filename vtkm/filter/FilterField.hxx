@@ -158,10 +158,10 @@ FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
   vtkm::filter::FieldMetadata metaData(field);
   Result result;
 
-  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result> FunctorType;
+  using FunctorType = internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result>;
   FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
 
-  typedef vtkm::filter::FilterTraits<Derived> Traits;
+  using Traits = vtkm::filter::FilterTraits<Derived>;
   vtkm::cont::CastAndCall(
     vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->Tracker);
   return result;
@@ -181,7 +181,7 @@ FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
   vtkm::filter::FieldMetadata metaData(field);
   Result result;
 
-  typedef internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result> FunctorType;
+  using FunctorType = internal::ResolveFieldTypeAndExecute<Derived, DerivedPolicy, Result>;
   FunctorType functor(static_cast<Derived*>(this), input, metaData, policy, result);
   vtkm::cont::CastAndCall(field, functor, this->Tracker);
 

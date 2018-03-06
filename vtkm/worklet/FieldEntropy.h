@@ -75,7 +75,7 @@ public:
                     vtkm::Id numberOfBins,
                     DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     ///// calculate histogram using FieldHistogram worklet /////
     vtkm::Range range;

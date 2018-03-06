@@ -34,8 +34,8 @@ public:
   {
     std::cout << "Testing extract cell explicit by id:" << std::endl;
 
-    typedef vtkm::cont::CellSetExplicit<> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetExplicit<>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -67,7 +67,7 @@ public:
   {
     std::cout << "Testing extract cells with implicit function (box) on explicit:" << std::endl;
 
-    typedef vtkm::cont::CellSetExplicit<> CellSetType;
+    using CellSetType = vtkm::cont::CellSetExplicit<>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -109,8 +109,8 @@ public:
   {
     std::cout << "Testing extract cells structured by id:" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<2> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<2>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
 
     // Input data set created
@@ -143,8 +143,8 @@ public:
   {
     std::cout << "Testing extract cells structured by id:" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -176,7 +176,7 @@ public:
   {
     std::cout << "Testing extract cells with implicit function (box):" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -217,7 +217,7 @@ public:
   {
     std::cout << "Testing extract cells with implicit function (sphere):" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();

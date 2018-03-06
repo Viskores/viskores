@@ -128,7 +128,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
       VTKM_ASSERT(false);
   }
 
-  // It is posible that the warping will result in invalid cells. So use a
+  // It is possible that the warping will result in invalid cells. So use a
   // local random generator with a known seed that does not create invalid cells.
   std::default_random_engine rgen;
 

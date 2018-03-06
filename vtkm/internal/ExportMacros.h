@@ -77,14 +77,18 @@
 #define VTKM_NEVER_EXPORT __attribute__((visibility("hidden")))
 #endif
 
-// constexpr support was added to VisualStudio 2015 and above. So this makes
-// sure when that we gracefully fall back to just const when using 2013
-#if defined(VTKM_MSVC) && _MSC_VER < 1900
-#define VTKM_CONSTEXPR const
-#define VTKM_NOEXCEPT
+// cuda 7.5 doesn't support static const or static constexpr variables
+// that exist inside methods or classes, so in those cases we have to use
+// just constexpr
+#if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR < 8)
+#define VTKM_STATIC_CONSTEXPR_ARRAY constexpr
+// cuda 8+ doesn't support static constexpr pointers/fixed size arrays
+// that exist inside methods or classes, so in those cases we gracefully
+// fall back to static const
+#elif defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR >= 8)
+#define VTKM_STATIC_CONSTEXPR_ARRAY static const
 #else
-#define VTKM_CONSTEXPR constexpr
-#define VTKM_NOEXCEPT noexcept
+#define VTKM_STATIC_CONSTEXPR_ARRAY static constexpr
 #endif
 
 // Clang will warn about weak vtables (-Wweak-vtables) on exception classes,

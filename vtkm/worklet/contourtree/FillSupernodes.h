@@ -84,7 +84,7 @@ public:
                                 FieldIn<IdType> downCandidate, // (input)
                                 FieldOut<IdType> isSupernode); // (output)
   typedef _3 ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

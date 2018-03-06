@@ -167,7 +167,7 @@ struct VertexClustering
     template <typename PointType>
     VTKM_EXEC vtkm::Id GetClusterId(const PointType& p) const
     {
-      typedef typename PointType::ComponentType ComponentType;
+      using ComponentType = typename PointType::ComponentType;
       PointType gridOrigin(static_cast<ComponentType>(this->Grid.origin[0]),
                            static_cast<ComponentType>(this->Grid.origin[1]),
                            static_cast<ComponentType>(this->Grid.origin[2]));

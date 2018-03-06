@@ -24,6 +24,8 @@ set(headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   ContourTreeUniform.h
+  CrossProduct.h
+  DotProduct.h
   Entropy.h
   ExternalFaces.h
   ExtractGeometry.h
@@ -46,6 +48,7 @@ set(headers
   PointElevation.h
   PolicyBase.h
   PolicyDefault.h
+  Probe.h
   Result.h
   Streamline.h
   SurfaceNormals.h
@@ -63,6 +66,8 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
+  CrossProduct.hxx
+  DotProduct.hxx
   Entropy.hxx
   ExternalFaces.hxx
   ExtractGeometry.hxx
@@ -81,6 +86,7 @@ set(header_template_sources
   NDHistogram.hxx
   PointAverage.hxx
   PointElevation.hxx
+  Probe.hxx
   Streamline.hxx
   SurfaceNormals.hxx
   Tetrahedralize.hxx

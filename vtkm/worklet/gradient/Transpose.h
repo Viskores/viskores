@@ -42,7 +42,7 @@ struct Transpose3x3 : vtkm::worklet::WorkletMapField
   typedef void ControlSignature(FieldInOut<TransposeType<T>> field);
 
   typedef void ExecutionSignature(_1);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename FieldInVecType>
   VTKM_EXEC void operator()(FieldInVecType& field) const

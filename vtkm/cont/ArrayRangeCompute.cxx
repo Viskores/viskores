@@ -25,6 +25,11 @@ namespace vtkm
 namespace cont
 {
 
+void ThrowArrayRangeComputeFailed()
+{
+  throw vtkm::cont::ErrorExecution("Failed to run ArrayRangeComputation on any device.");
+}
+
 #define VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(T, Storage)                                                \
   VTKM_CONT                                                                                        \
   vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \

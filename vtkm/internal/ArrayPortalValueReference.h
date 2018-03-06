@@ -32,7 +32,7 @@ namespace internal
 /// \brief A value class for returning setable values of an ArrayPortal
 ///
 /// \c ArrayPortal classes have a pair of \c Get and \c Set methods that
-/// retreive and store values in the array. This is to make it easy to
+/// retrieve and store values in the array. This is to make it easy to
 /// implement the \c ArrayPortal even it is not really an array. However, there
 /// are some cases where the code structure expects a reference to a value that
 /// can be set. For example, the \c IteratorFromArrayPortal class must return

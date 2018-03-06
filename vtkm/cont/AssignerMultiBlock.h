@@ -20,20 +20,32 @@
 #ifndef vtk_m_cont_AssignerMultiBlock_h
 #define vtk_m_cont_AssignerMultiBlock_h
 
-#include <vtkm/internal/Configure.h>
+#include <vtkm/cont/vtkm_cont_export.h>
 
-#if defined(VTKM_ENABLE_MPI)
-#include <vtkm/cont/MultiBlock.h>
+#include <vtkm/Types.h>
+#include <vtkm/internal/ExportMacros.h>
+#include <vtkm/thirdparty/diy/Configure.h>
+
+#include <vector>
 
 // clang-format off
-#include <vtkm/thirdparty/diy/Configure.h>
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include VTKM_DIY(diy/assigner.hpp)
+VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
+
+#ifdef VTKM_MSVC
+#pragma warning(push)
+// disable C4275: non-dll interface base class warnings
+#pragma warning(disable : 4275)
+#endif
 
 namespace vtkm
 {
 namespace cont
 {
+
+class MultiBlock;
 
 /// \brief Assigner for `MultiBlock` blocks.
 ///
@@ -70,5 +82,8 @@ private:
 }
 }
 
-#endif // defined(VTKM_ENABLE_MPI)
+#ifdef VTKM_MSVC
+#pragma warning(pop)
+#endif
+
 #endif

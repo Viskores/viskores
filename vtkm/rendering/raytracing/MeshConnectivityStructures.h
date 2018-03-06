@@ -65,7 +65,7 @@ public:
   IdHandle CellConn;
   IdHandle CellOffsets;
   UCharHandle Shapes;
-  // Mesh Boundry
+  // Mesh Boundary
   Id4Handle ExternalTriangles;
   LinearBVH Bvh;
 
@@ -265,9 +265,9 @@ public:
   VTKM_EXEC
   inline vtkm::Int32 GetCellIndices(vtkm::Id cellIndices[8], const vtkm::Id& cellId) const
   {
+    CellTables tables;
     const vtkm::Int32 shapeId = static_cast<vtkm::Int32>(ShapesPortal.Get(cellId));
-    const vtkm::Int32 numIndices =
-      CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[shapeId]][2];
+    const vtkm::Int32 numIndices = tables.FaceLookUp(tables.CellTypeLookUp(shapeId), 2);
     BOUNDS_CHECK(CellOffsetsPortal, cellId);
     const vtkm::Id cellOffset = CellOffsetsPortal.Get(cellId);
 
@@ -304,7 +304,7 @@ public:
   IdHandle FaceConnectivity;
   CountingHandle CellOffsets;
   IdHandle CellConnectivity;
-  // Mesh Boundry
+  // Mesh Boundary
   LinearBVH Bvh;
   Id4Handle ExternalTriangles;
 
@@ -345,8 +345,9 @@ public:
     vtkm::cont::ArrayHandleConstant<vtkm::UInt8> shapes =
       Cellset.GetShapesArray(vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell());
 
+    CellTables tables;
     ShapeId = shapes.GetPortalConstControl().Get(0);
-    NumIndices = CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[ShapeId]][2];
+    NumIndices = tables.FaceLookUp(tables.CellTypeLookUp(ShapeId), 2);
 
     if (NumIndices == 0)
     {
@@ -356,7 +357,7 @@ public:
       throw vtkm::cont::ErrorBadValue(message.str());
     }
     vtkm::Id start = 0;
-    NumFaces = CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[ShapeId]][1];
+    NumFaces = tables.FaceLookUp(tables.CellTypeLookUp(ShapeId), 1);
     vtkm::Id numCells = CellConnectivity.GetPortalConstControl().GetNumberOfValues();
     CellOffsets = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(start, NumIndices, numCells);
 
@@ -547,7 +548,7 @@ public:
   vtkm::Bounds CoordinateBounds;
   vtkm::cont::CoordinateSystem Coords;
   vtkm::cont::CellSetStructured<3> Cellset;
-  // Mesh Boundry
+  // Mesh Boundary
   LinearBVH Bvh;
   Id4Handle ExternalTriangles;
 

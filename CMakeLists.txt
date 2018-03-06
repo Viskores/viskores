@@ -53,8 +53,11 @@ endif()
 if (NOT DEFINED VTKm_INSTALL_BIN_DIR)
   set(VTKm_INSTALL_BIN_DIR "bin")
 endif()
+if (NOT DEFINED VTKm_INSTALL_SHARE_DIR)
+  set(VTKm_INSTALL_SHARE_DIR "share/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}")
+endif()
 if (NOT DEFINED VTKm_INSTALL_CMAKE_MODULE_DIR)
-  set(VTKm_INSTALL_CMAKE_MODULE_DIR "share/vtkm-${VTKm_VERSION_MAJOR}.${VTKm_VERSION_MINOR}/cmake")
+  set(VTKm_INSTALL_CMAKE_MODULE_DIR "${VTKm_INSTALL_SHARE_DIR}/cmake")
 endif()
 
 set(VTKm_BINARY_INCLUDE_DIR "${VTKm_BINARY_DIR}/include")
@@ -91,7 +94,7 @@ if(NOT VTKm_Base_FOUND)
 endif()
 
 #-----------------------------------------------------------------------------
-# When using C++11 suport make sure you use the standard C++ extensions rather
+# When using C++11 support make sure you use the standard C++ extensions rather
 # than compiler-specific versions of the extensions (to preserve portability).
 set(CMAKE_CXX_EXTENSIONS False)
 
@@ -102,7 +105,7 @@ set(CMAKE_CXX_EXTENSIONS False)
 # We prefer to only export symbols of a small set of user facing classes,
 # rather than exporting all symbols. In practice we will try to not export
 # symbols for any third party library.
-option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
+vtkm_option(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY "Don't explicitly hide symbols from libraries." OFF)
 mark_as_advanced(VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
 if(NOT VTKm_USE_DEFAULT_SYMBOL_VISIBILITY)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -113,27 +116,27 @@ include(CMake/VTKmCompilerExtras.cmake)
 
 #-----------------------------------------------------------------------------
 # Configurable Options
-option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
-option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
-option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
-option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
-option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
-option(VTKm_ENABLE_OSMESA "Enable creating the OSMesa canvas" OFF)
-option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
+vtkm_option(VTKm_ENABLE_CUDA "Enable Cuda support" OFF)
+vtkm_option(VTKm_ENABLE_TBB "Enable TBB support" OFF)
+vtkm_option(VTKm_ENABLE_RENDERING "Enable rendering library" ON)
+vtkm_option(VTKm_ENABLE_TESTING "Enable VTKm Testing" ON)
+vtkm_option(VTKm_ENABLE_BENCHMARKS "Enable VTKm Benchmarking" OFF)
+vtkm_option(VTKm_ENABLE_OSMESA "Enable creating the OSMesa canvas" OFF)
+vtkm_option(VTKm_ENABLE_MPI "Enable MPI support" OFF)
 
-option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
-option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
+vtkm_option(VTKm_ENABLE_DOCUMENTATION "Build Doxygen documentation" OFF)
+vtkm_option(VTKm_ENABLE_EXAMPLES "Build examples" OFF)
 
-option(VTKm_USE_DOUBLE_PRECISION
+vtkm_option(VTKm_USE_DOUBLE_PRECISION
   "Use double precision for floating point calculations"
   OFF
   )
-option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
+vtkm_option(VTKm_USE_64BIT_IDS "Use 64-bit indices." ON)
 
-option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
+vtkm_option(VTKm_NO_ASSERT "Disable assertions in debugging builds." OFF)
 mark_as_advanced(VTKm_NO_ASSERT)
 
-option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
+vtkm_option(BUILD_SHARED_LIBS "Build VTK-m with shared libraries" ON)
 set(VTKm_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 
 if (VTKm_ENABLE_TESTING)
@@ -217,7 +220,7 @@ find_package(PythonInterp)
 #-----------------------------------------------------------------------------
 # Find Pyexpander in case somebody wants to update the auto generated
 # faux variadic template code
-find_package(Pyexpander)
+find_package(Pyexpander QUIET)
 
 #-----------------------------------------------------------------------------
 # Add subdirectories
@@ -274,9 +277,13 @@ set(VTKm_LOAD_COMPONENTS_COMMANDS "${VTKm_LOAD_COMPONENTS_COMMANDS}
   endif()
 endforeach()" )
 
+if (NOT DEFINED VTKm_BUILD_CMAKE_BASE_DIR)
+  set(VTKm_BUILD_CMAKE_BASE_DIR "${VTKm_BINARY_DIR}")
+endif ()
+
 configure_package_config_file(
   ${VTKm_SOURCE_DIR}/CMake/VTKmConfig.cmake.in
-  ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
+  ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
   INSTALL_DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   PATH_VARS
     VTKm_INSTALL_INCLUDE_DIR
@@ -287,23 +294,23 @@ configure_package_config_file(
   )
 
 write_basic_package_version_file(
-  ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
+  ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   VERSION ${VTKm_VERSION}
   COMPATIBILITY ExactVersion )
 install(
   FILES
-    ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
-    ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
+    ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfig.cmake
+    ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmConfigVersion.cmake
   DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   )
 
 # Install the readme and license files.
 install(FILES ${VTKm_SOURCE_DIR}/README.md
-  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
   RENAME VTKmREADME.md
   )
 install(FILES ${VTKm_SOURCE_DIR}/LICENSE.txt
-  DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
+  DESTINATION ${VTKm_INSTALL_SHARE_DIR}
   RENAME VTKmLICENSE.txt
   )
 
@@ -332,24 +339,27 @@ install(
 
 # Create and install exports for external projects
 export(EXPORT ${VTKm_EXPORT_NAME}
-  FILE ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
+  FILE ${VTKm_BUILD_CMAKE_BASE_DIR}/${VTKm_INSTALL_CONFIG_DIR}/VTKmTargets.cmake
   )
 install(EXPORT ${VTKm_EXPORT_NAME}
   DESTINATION ${VTKm_INSTALL_CONFIG_DIR}
   FILE VTKmTargets.cmake
   )
 
-# Enable CPack packaging
-set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The VTKm Toolkit")
-set(CPACK_PACKAGE_NAME "VTKm")
-set(CPACK_PACKAGE_VERSION_MAJOR ${VTKm_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${VTKm_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${VTKm_VERSION_PATCH})
-set(CPACK_PACKAGE_FILE_NAME "VTKm-${VTKm_VERSION}")
-set(CPACK_RESOURCE_FILE_LICENSE ${VTKm_SOURCE_DIR}/LICENSE.txt)
-set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
-include(CPack)
+vtkm_option(VTKm_ENABLE_CPACK "Enable CPack packaging of VTKm" ON)
+if (VTKm_ENABLE_CPACK)
+  # Enable CPack packaging
+  set(CPACK_PACKAGE_DESCRIPTION_FILE ${VTKm_SOURCE_DIR}/README.md)
+  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The VTKm Toolkit")
+  set(CPACK_PACKAGE_NAME "VTKm")
+  set(CPACK_PACKAGE_VERSION_MAJOR ${VTKm_VERSION_MAJOR})
+  set(CPACK_PACKAGE_VERSION_MINOR ${VTKm_VERSION_MINOR})
+  set(CPACK_PACKAGE_VERSION_PATCH ${VTKm_VERSION_PATCH})
+  set(CPACK_PACKAGE_FILE_NAME "VTKm-${VTKm_VERSION}")
+  set(CPACK_RESOURCE_FILE_LICENSE ${VTKm_SOURCE_DIR}/LICENSE.txt)
+  set(CPACK_RESOURCE_FILE_README ${VTKm_SOURCE_DIR}/README.md)
+  include(CPack)
+endif ()
 
 #-----------------------------------------------------------------------------
 # Build examples

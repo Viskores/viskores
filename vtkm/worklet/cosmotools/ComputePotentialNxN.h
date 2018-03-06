@@ -85,7 +85,7 @@ public:
                                 WholeArrayIn<TagType> zLoc,   // (input) z location in domain
                                 FieldOut<TagType> potential); // (output) bin ID
   typedef _5 ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nParticles; // Number of particles in halo
   T mass;              // Particle mass

@@ -48,8 +48,8 @@ public:
                                                   const vtkm::Id stride,
                                                   DeviceAdapter)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using OutputType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     vtkm::Id numberOfInputCells = cellSet.GetNumberOfCells();
     vtkm::Id numberOfSampledCells = numberOfInputCells / stride;

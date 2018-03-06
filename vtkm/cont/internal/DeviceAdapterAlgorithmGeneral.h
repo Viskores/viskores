@@ -1007,7 +1007,7 @@ private:
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.
 ///
-/// When worklets are launched inside the execution enviornment we need to
+/// When worklets are launched inside the execution environment we need to
 /// ask the device adapter what is the preferred execution style, be it
 /// a tiled iteration pattern, or strided. This class
 ///
@@ -1020,8 +1020,8 @@ class DeviceTaskTypes
 public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet,
-    const InvocationType& invocation,
+    WorkletType& worklet,
+    InvocationType& invocation,
     vtkm::Id,
     vtkm::Id globalIndexOffset = 0)
   {
@@ -1031,8 +1031,8 @@ public:
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet,
-    const InvocationType& invocation,
+    WorkletType& worklet,
+    InvocationType& invocation,
     vtkm::Id3,
     vtkm::Id globalIndexOffset = 0)
   {

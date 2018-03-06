@@ -19,8 +19,8 @@
 //  this software.
 //
 //=============================================================================
-#ifndef vtk_m_ArrayHandleConcatenate_h
-#define vtk_m_ArrayHandleConcatenate_h
+#ifndef vtk_m_cont_ArrayHandleConcatenate_h
+#define vtk_m_cont_ArrayHandleConcatenate_h
 
 #include <vtkm/cont/ArrayHandle.h>
 
@@ -323,4 +323,4 @@ VTKM_CONT ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2> make_ArrayH
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_ArrayHandleConcatenate_h
+#endif //vtk_m_cont_ArrayHandleConcatenate_h

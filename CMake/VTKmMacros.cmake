@@ -86,12 +86,6 @@ function(vtkm_setup_msvc_properties target )
   #      removed when doing header test builds.
   target_compile_options(${target} PRIVATE -wd4702 -wd4505)
 
-  # In VS2013 the C4127 warning has a bug in the implementation and
-  # generates false positive warnings for lots of template code
-  if(MSVC_VERSION LESS 1900)
-    target_compile_options(${target} PRIVATE -wd4127 )
-  endif()
-
 endfunction(vtkm_setup_msvc_properties)
 
 # vtkm_target_name(<name>)
@@ -186,7 +180,7 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   vtkm_setup_msvc_properties(TestBuild_${name})
 
   # Send the libraries created for test builds to their own directory so as to
-  # not polute the directory with useful libraries.
+  # not pollute the directory with useful libraries.
   set_target_properties(TestBuild_${name} PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
     LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds
@@ -896,3 +890,12 @@ function(_vtkm_parse_test_options varname options)
   endforeach()
   set(${varname} ${names} PARENT_SCOPE)
 endfunction()
+
+# -----------------------------------------------------------------------------
+# vtkm_option(variable doc [initial])
+#   Provides an option if it is not already defined.
+macro (vtkm_option variable)
+  if (NOT DEFINED "${variable}")
+    option("${variable}" ${ARGN})
+  endif ()
+endmacro ()

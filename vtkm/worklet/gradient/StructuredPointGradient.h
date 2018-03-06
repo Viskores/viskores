@@ -48,7 +48,7 @@ struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3
 
   typedef void ExecutionSignature(OnBoundary, _2, _3, _4);
 
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename PointsIn, typename FieldIn, typename GradientOutType>
   VTKM_EXEC void operator()(const vtkm::exec::arg::BoundaryState& boundary,

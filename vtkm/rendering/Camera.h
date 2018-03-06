@@ -438,7 +438,7 @@ public:
   /// \brief Rotate the camera about the view up vector centered at the focal point.
   ///
   /// Note that the view up vector is whatever was set via SetViewUp, and is
-  /// not necesarily perpendicular to the direction of projection. The angle is
+  /// not necessarily perpendicular to the direction of projection. The angle is
   /// given in degrees.
   ///
   /// Azimuth only makes sense for 3D cameras, so the camera mode will be set

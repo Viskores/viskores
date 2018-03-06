@@ -129,8 +129,8 @@ inline vtkm::filter::Result Gradient::DoExecute(
     transpose_3x3(outArray, adapter);
   }
 
-  VTKM_CONSTEXPR bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
-                                              vtkm::VecTraitsTagMultipleComponents>::value;
+  constexpr bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
+                                         vtkm::VecTraitsTagMultipleComponents>::value;
 
   vtkm::cont::Field::AssociationEnum fieldAssociation(this->ComputePointGradient
                                                         ? vtkm::cont::Field::ASSOC_POINTS

@@ -299,8 +299,8 @@ add_samples(Block* b, const diy::ReduceProxy& srp, Samples& samples) const
 
         Samples smpls;
         srp.dequeue(nbr_gid, smpls);
-        for (size_t i = 0; i < smpls.size(); ++i)
-            samples.push_back(smpls[i]);
+        for (size_t j = 0; j < smpls.size(); ++j)
+            samples.push_back(smpls[j]);
     }
 }
 

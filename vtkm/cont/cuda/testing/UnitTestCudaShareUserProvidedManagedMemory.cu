@@ -78,8 +78,8 @@ void TestPrepareForInput(bool managed)
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
   handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda());
 
-  ValueType* contArray = handle.Internals->ControlArray.GetArray();
-  ValueType* execArray = handle.Internals->ExecutionArray;
+  void* contArray = handle.Internals->ControlArray->GetBasePointer();
+  void* execArray = handle.Internals->ExecutionArray;
   VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForInput.");
   VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForInput.");
   VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
@@ -102,8 +102,8 @@ void TestPrepareForInPlace(bool managed)
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
   handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda());
 
-  ValueType* contArray = handle.Internals->ControlArray.GetArray();
-  ValueType* execArray = handle.Internals->ExecutionArray;
+  void* contArray = handle.Internals->ControlArray->GetBasePointer();
+  void* execArray = handle.Internals->ExecutionArray;
   VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForInPlace.");
   VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForInPlace.");
   VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
@@ -127,8 +127,8 @@ void TestPrepareForOutput(bool managed)
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
   handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda());
 
-  ValueType* contArray = handle.Internals->ControlArray.GetArray();
-  ValueType* execArray = handle.Internals->ExecutionArray;
+  void* contArray = handle.Internals->ControlArray->GetBasePointer();
+  void* execArray = handle.Internals->ExecutionArray;
   VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForOutput.");
   VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForOutput.");
   VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
@@ -151,12 +151,12 @@ void TestReleaseResourcesExecution(bool managed)
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
   handle.PrepareForInput(vtkm::cont::DeviceAdapterTagCuda());
 
-  ValueType* origArray = handle.Internals->ExecutionArray;
+  void* origArray = handle.Internals->ExecutionArray;
 
   handle.ReleaseResourcesExecution();
 
-  ValueType* contArray = handle.Internals->ControlArray.GetArray();
-  ValueType* execArray = handle.Internals->ExecutionArray;
+  void* contArray = handle.Internals->ControlArray->GetBasePointer();
+  void* execArray = handle.Internals->ExecutionArray;
 
   VTKM_TEST_ASSERT(contArray != nullptr, "No control array after ReleaseResourcesExecution.");
   VTKM_TEST_ASSERT(execArray == nullptr,
@@ -178,10 +178,10 @@ void TestRoundTrip(bool managed)
   vtkm::cont::ArrayHandle<ValueType> handle = CreateArrayHandle<ValueType>(32, managed);
   handle.PrepareForOutput(32, vtkm::cont::DeviceAdapterTagCuda());
 
-  ValueType* origContArray = handle.Internals->ControlArray.GetArray();
+  void* origContArray = handle.Internals->ControlArray->GetBasePointer();
   {
-    ValueType* contArray = handle.Internals->ControlArray.GetArray();
-    ValueType* execArray = handle.Internals->ExecutionArray;
+    void* contArray = handle.Internals->ControlArray->GetBasePointer();
+    void* execArray = handle.Internals->ExecutionArray;
     VTKM_TEST_ASSERT(contArray != nullptr, "No control array after PrepareForOutput.");
     VTKM_TEST_ASSERT(execArray != nullptr, "No execution array after PrepareForOutput.");
     VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(execArray),
@@ -222,8 +222,8 @@ void TestRoundTrip(bool managed)
   }
 
   {
-    ValueType* contArray = handle.Internals->ControlArray.GetArray();
-    ValueType* execArray = handle.Internals->ExecutionArray;
+    void* contArray = handle.Internals->ControlArray->GetBasePointer();
+    void* execArray = handle.Internals->ExecutionArray;
     VTKM_TEST_ASSERT(contArray != nullptr, "No control array after GetPortalConst.");
     VTKM_TEST_ASSERT(execArray == nullptr, "Execution array not cleared after GetPortalConst.");
     VTKM_TEST_ASSERT(CudaAllocator::IsDevicePointer(contArray),

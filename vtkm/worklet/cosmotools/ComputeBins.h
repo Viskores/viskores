@@ -84,7 +84,7 @@ public:
                                 FieldIn<TagType> zLoc,   // (input) z location in halo
                                 FieldOut<IdType> binId); // (output) bin Id
   typedef _4 ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   T xMin, xMax, yMin, yMax, zMin, zMax;
   vtkm::Id xNum, yNum, zNum;

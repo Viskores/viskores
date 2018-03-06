@@ -86,7 +86,7 @@ public:
     WholeArrayIn<IdType> lastPartId,       // (input) vector of last particle indices
     FieldOut<UInt32TagType> flag);         // (output) active bin neighbors mask
   typedef _8 ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id xNum, yNum, zNum;
   vtkm::Id NUM_NEIGHBORS;

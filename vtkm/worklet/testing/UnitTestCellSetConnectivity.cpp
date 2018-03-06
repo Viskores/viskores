@@ -30,7 +30,7 @@ class TangleField : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
   const vtkm::FloatDefault xmin, ymin, zmin, xmax, ymax, zmax;

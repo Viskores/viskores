@@ -281,7 +281,7 @@ void
 diy::RegularDecomposer<Bounds>::
 decompose(int rank, const Assigner& assigner, Master& master)
 {
-  decompose(rank, assigner, [&master](int gid, const Bounds& core, const Bounds& bounds, const Bounds& domain, const Link& link)
+  decompose(rank, assigner, [&master](int gid, const Bounds&, const Bounds&, const Bounds&, const Link& link)
   {
     void*     b = master.create();
     Link*     l = new Link(link);
@@ -314,49 +314,49 @@ decompose(int rank, const Assigner& assigner, const Creator& create)
     while (!all(offsets, 1))
     {
       // next offset
-      int i;
-      for (i = 0; i < dim; ++i)
-        if (offsets[i] == 1)
-          offsets[i] = -1;
+      int j;
+      for (j = 0; j < dim; ++j)
+        if (offsets[j] == 1)
+          offsets[j] = -1;
         else
           break;
-      ++offsets[i];
+      ++offsets[j];
 
       if (all(offsets, 0)) continue;      // skip ourselves
 
       DivisionsVector     nhbr_coords(dim);
       Direction           dir, wrap_dir;
       bool                inbounds = true;
-      for (int i = 0; i < dim; ++i)
+      for (int k = 0; k < dim; ++k)
       {
-        nhbr_coords[i] = coords[i] + offsets[i];
+        nhbr_coords[k] = coords[k] + offsets[k];
 
         // wrap
-        if (nhbr_coords[i] < 0)
+        if (nhbr_coords[k] < 0)
         {
-          if (wrap[i])
+          if (wrap[k])
           {
-            nhbr_coords[i] = divisions[i] - 1;
-            wrap_dir[i] = -1;
+            nhbr_coords[k] = divisions[k] - 1;
+            wrap_dir[k] = -1;
           }
           else
             inbounds = false;
         }
 
-        if (nhbr_coords[i] >= divisions[i])
+        if (nhbr_coords[k] >= divisions[k])
         {
-          if (wrap[i])
+          if (wrap[k])
           {
-            nhbr_coords[i] = 0;
-            wrap_dir[i] = 1;
+            nhbr_coords[k] = 0;
+            wrap_dir[k] = 1;
           }
           else
             inbounds = false;
         }
 
         // NB: this needs to match the addressing scheme in dir_t (in constants.h)
-        if (offsets[i] == -1 || offsets[i] == 1)
-          dir[i] = offsets[i];
+        if (offsets[k] == -1 || offsets[k] == 1)
+          dir[k] = offsets[k];
       }
       if (!inbounds) continue;
 
@@ -382,12 +382,12 @@ void
 diy::RegularDecomposer<Bounds>::
 decompose(int rank, const Assigner& assigner, Master& master, const Updater& update)
 {
-    decompose(rank, assigner, [&master,&update](int gid, const Bounds& core, const Bounds& bounds, const Bounds& domain, const Link& link)
+    decompose(rank, assigner, [&master,&update](int gid, const Bounds& core, const Bounds& bounds, const Bounds& domain_, const Link& link)
     {
         int lid = master.lid(gid);
         Link* l = new Link(link);
         master.replace_link(lid, l);
-        update(gid, lid, core, bounds, domain, *l);
+        update(gid, lid, core, bounds, domain_, *l);
     });
 }
 
@@ -407,7 +407,7 @@ void
 diy::RegularDecomposer<Bounds>::
 gid_to_coords(int gid, DivisionsVector& coords, const DivisionsVector& divisions)
 {
-  int dim = divisions.size();
+  int dim = static_cast<int>(divisions.size());
   for (int i = 0; i < dim; ++i)
   {
     coords.push_back(gid % divisions[i]);
@@ -421,7 +421,7 @@ diy::RegularDecomposer<Bounds>::
 coords_to_gid(const DivisionsVector& coords, const DivisionsVector& divisions)
 {
   int gid = 0;
-  for (int i = coords.size() - 1; i >= 0; --i)
+  for (int i = static_cast<int>(coords.size()) - 1; i >= 0; --i)
   {
     gid *= divisions[i];
     gid += coords[i];
@@ -515,21 +515,21 @@ struct Div
 template<class Bounds>
 void
 diy::RegularDecomposer<Bounds>::
-fill_divisions(std::vector<int>& divisions) const
+fill_divisions(std::vector<int>& divisions_) const
 {
     // prod = number of blocks unconstrained by user; c = number of unconstrained dimensions
     int prod = 1; int c = 0;
     for (int i = 0; i < dim; ++i)
-        if (divisions[i] != 0)
+        if (divisions_[i] != 0)
         {
-            prod *= divisions[i];
+            prod *= divisions_[i];
             ++c;
         }
 
     if (nblocks % prod != 0)
         throw std::runtime_error("Total number of blocks cannot be factored into provided divs");
 
-    if (c == (int) divisions.size())               // nothing to do; user provided all divs
+    if (c == (int) divisions_.size())               // nothing to do; user provided all divs
         return;
 
     // factor number of blocks left in unconstrained dimensions
@@ -543,7 +543,7 @@ fill_divisions(std::vector<int>& divisions) const
     // init missing_divs
     for (int i = 0; i < dim; i++)
     {
-        if (divisions[i] == 0)
+        if (divisions_[i] == 0)
         {
             Div<Coordinate> div;
             div.dim = i;
@@ -592,7 +592,7 @@ fill_divisions(std::vector<int>& divisions) const
 
     // assign the divisions
     for (size_t i = 0; i < missing_divs.size(); i++)
-        divisions[missing_divs[i].dim] = missing_divs[i].nb;
+        divisions_[missing_divs[i].dim] = missing_divs[i].nb;
 }
 
 template<class Bounds>

@@ -130,7 +130,7 @@ private:
 template <typename PortalType, typename FieldType, typename DeviceAdapterTag>
 class UniformGridEvaluate
 {
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
 
 public:
   VTKM_CONT
@@ -143,10 +143,10 @@ public:
   {
     vectors = vectorField.PrepareForInput(DeviceAdapterTag());
 
-    typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformType;
-    typedef vtkm::cont::CellSetStructured<3> StructuredType;
+    using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
+    using StructuredType = vtkm::cont::CellSetStructured<3>;
 
-    if (!coords.GetData().IsSameType<UniformType>())
+    if (!coords.GetData().IsType<UniformType>())
       throw vtkm::cont::ErrorInternal("Coordinates are not uniform.");
     if (!cellSet.IsSameType(StructuredType()))
       throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
@@ -174,10 +174,10 @@ public:
   VTKM_CONT
   UniformGridEvaluate(const vtkm::cont::DataSet& ds)
   {
-    typedef vtkm::cont::ArrayHandleUniformPointCoordinates UniformType;
+    using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
 
     auto coordArray = ds.GetCoordinateSystem().GetData();
-    if (!coordArray.IsSameType<UniformType>())
+    if (!coordArray.IsType<UniformType>())
       throw vtkm::cont::ErrorInternal("Given dataset is was not uniform.");
 
     bounds = ds.GetCoordinateSystem(0).GetBounds();
@@ -311,7 +311,7 @@ private:
 template <typename PortalType, typename FieldType, typename DeviceAdapterTag>
 class RectilinearGridEvaluate
 {
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
 
 public:
   VTKM_CONT
@@ -319,9 +319,9 @@ public:
                           const vtkm::cont::DynamicCellSet& cellSet,
                           const FieldHandle& vectorField)
   {
-    typedef vtkm::cont::CellSetStructured<3> StructuredType;
+    using StructuredType = vtkm::cont::CellSetStructured<3>;
 
-    if (!coords.GetData().IsSameType<RectilinearType>())
+    if (!coords.GetData().IsType<RectilinearType>())
       throw vtkm::cont::ErrorInternal("Coordinates are not rectilinear.");
     if (!cellSet.IsSameType(StructuredType()))
       throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
@@ -352,7 +352,7 @@ public:
     planeSize = dims[0] * dims[1];
     rowSize = dims[0];
     auto coordArray = dataset.GetCoordinateSystem().GetData();
-    if (coordArray.IsSameType<RectilinearType>())
+    if (coordArray.IsType<RectilinearType>())
     {
       RectilinearType gridPoints = coordArray.Cast<RectilinearType>();
       xAxis = gridPoints.GetPortalConstControl().GetFirstPortal();
@@ -492,11 +492,11 @@ public:
   }
 
 private:
-  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> AxisHandle;
-  typedef vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>
-    RectilinearType;
-  typedef typename RectilinearType::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-    RectilinearConstPortal;
+  using AxisHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+  using RectilinearType =
+    vtkm::cont::ArrayHandleCartesianProduct<AxisHandle, AxisHandle, AxisHandle>;
+  using RectilinearConstPortal =
+    typename RectilinearType::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
   typename AxisHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst xAxis;
   typename AxisHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst yAxis;
   typename AxisHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst zAxis;

@@ -72,7 +72,7 @@ class FilterTraits<Histogram>
   //this mainly has to do with getting the ranges for each bin
   //would require returning a more complex value type
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

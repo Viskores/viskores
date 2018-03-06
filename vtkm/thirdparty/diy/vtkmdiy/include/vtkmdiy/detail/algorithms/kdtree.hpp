@@ -399,8 +399,8 @@ add_histogram(Block* b, const diy::ReduceProxy& srp, Histogram& histogram) const
 
         Histogram hist;
         srp.dequeue(nbr_gid, hist);
-        for (size_t i = 0; i < hist.size(); ++i)
-            histogram[i] += hist[i];
+        for (size_t j = 0; j < hist.size(); ++j)
+            histogram[j] += hist[j];
     }
 }
 

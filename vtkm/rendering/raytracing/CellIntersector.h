@@ -47,10 +47,10 @@ VTKM_EXEC_CONT inline void IntersectZoo(T xpoints[8],
   vtkm::Int32 kx, ky, kz;
   WaterTight<T> intersector;
   intersector.FindDir(dir, sx, sy, sz, kx, ky, kz);
-  const vtkm::Int32 tableOffset =
-    CellTables::Get().ZooLookUp[CellTables::Get().CellTypeLookUp[shapeType]][0];
-  const vtkm::Int32 numTriangles =
-    CellTables::Get().ZooLookUp[CellTables::Get().CellTypeLookUp[shapeType]][1];
+
+  CellTables tables;
+  const vtkm::Int32 tableOffset = tables.ZooLookUp(tables.CellTypeLookUp(shapeType), 0);
+  const vtkm::Int32 numTriangles = tables.ZooLookUp(tables.CellTypeLookUp(shapeType), 1);
   // Decompose each face into two triangles
   for (int i = 0; i < 6; ++i)
     distances[i] = -1.;
@@ -58,16 +58,16 @@ VTKM_EXEC_CONT inline void IntersectZoo(T xpoints[8],
   {
     const vtkm::Int32 offset = tableOffset + i;
     vtkm::Vec<T, 3> a, c, b;
-    a[0] = xpoints[CellTables::Get().ZooTable[offset][1]];
-    a[1] = ypoints[CellTables::Get().ZooTable[offset][1]];
-    a[2] = zpoints[CellTables::Get().ZooTable[offset][1]];
-    b[0] = xpoints[CellTables::Get().ZooTable[offset][2]];
-    b[1] = ypoints[CellTables::Get().ZooTable[offset][2]];
-    b[2] = zpoints[CellTables::Get().ZooTable[offset][2]];
-    c[0] = xpoints[CellTables::Get().ZooTable[offset][3]];
-    c[1] = ypoints[CellTables::Get().ZooTable[offset][3]];
-    c[2] = zpoints[CellTables::Get().ZooTable[offset][3]];
-    const vtkm::Int32 faceId = CellTables::Get().ZooTable[offset][0];
+    a[0] = xpoints[tables.ZooTable(offset, 1)];
+    a[1] = ypoints[tables.ZooTable(offset, 1)];
+    a[2] = zpoints[tables.ZooTable(offset, 1)];
+    b[0] = xpoints[tables.ZooTable(offset, 2)];
+    b[1] = ypoints[tables.ZooTable(offset, 2)];
+    b[2] = zpoints[tables.ZooTable(offset, 2)];
+    c[0] = xpoints[tables.ZooTable(offset, 3)];
+    c[1] = ypoints[tables.ZooTable(offset, 3)];
+    c[2] = zpoints[tables.ZooTable(offset, 3)];
+    const vtkm::Int32 faceId = tables.ZooTable(offset, 0);
     T distance = -1.f;
 
     T uNotUsed, vNotUsed;
@@ -109,22 +109,24 @@ VTKM_EXEC_CONT inline void IntersectHex(T xpoints[8],
   vtkm::Int32 kx, ky, kz;
   WaterTight<T> intersector;
   intersector.FindDir(dir, sx, sy, sz, kx, ky, kz);
+
+  CellTables tables;
   // Decompose each face into two triangles
   for (int i = 0; i < 6; ++i)
   {
     vtkm::Vec<T, 3> a, c, b, d;
-    a[0] = xpoints[CellTables::Get().ShapesFaceList[i][1]];
-    a[1] = ypoints[CellTables::Get().ShapesFaceList[i][1]];
-    a[2] = zpoints[CellTables::Get().ShapesFaceList[i][1]];
-    b[0] = xpoints[CellTables::Get().ShapesFaceList[i][2]];
-    b[1] = ypoints[CellTables::Get().ShapesFaceList[i][2]];
-    b[2] = zpoints[CellTables::Get().ShapesFaceList[i][2]];
-    c[0] = xpoints[CellTables::Get().ShapesFaceList[i][3]];
-    c[1] = ypoints[CellTables::Get().ShapesFaceList[i][3]];
-    c[2] = zpoints[CellTables::Get().ShapesFaceList[i][3]];
-    d[0] = xpoints[CellTables::Get().ShapesFaceList[i][4]];
-    d[1] = ypoints[CellTables::Get().ShapesFaceList[i][4]];
-    d[2] = zpoints[CellTables::Get().ShapesFaceList[i][4]];
+    a[0] = xpoints[tables.ShapesFaceList(i, 1)];
+    a[1] = ypoints[tables.ShapesFaceList(i, 1)];
+    a[2] = zpoints[tables.ShapesFaceList(i, 1)];
+    b[0] = xpoints[tables.ShapesFaceList(i, 2)];
+    b[1] = ypoints[tables.ShapesFaceList(i, 2)];
+    b[2] = zpoints[tables.ShapesFaceList(i, 2)];
+    c[0] = xpoints[tables.ShapesFaceList(i, 3)];
+    c[1] = ypoints[tables.ShapesFaceList(i, 3)];
+    c[2] = zpoints[tables.ShapesFaceList(i, 3)];
+    d[0] = xpoints[tables.ShapesFaceList(i, 4)];
+    d[1] = ypoints[tables.ShapesFaceList(i, 4)];
+    d[2] = zpoints[tables.ShapesFaceList(i, 4)];
     T distance = -1.f;
     distances[i] = distance; //init to -1
 
@@ -191,20 +193,20 @@ VTKM_EXEC_CONT inline void IntersectTet(T xpoints[8],
   WaterTight<T> intersector;
   intersector.FindDir(dir, sx, sy, sz, kx, ky, kz);
 
-  const vtkm::Int32 tableOffset =
-    CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[CELL_SHAPE_TETRA]][0];
+  CellTables tables;
+  const vtkm::Int32 tableOffset = tables.FaceLookUp(tables.CellTypeLookUp(CELL_SHAPE_TETRA), 0);
   for (vtkm::Int32 i = 0; i < 4; ++i)
   {
     vtkm::Vec<T, 3> a, c, b;
-    a[0] = xpoints[CellTables::Get().ShapesFaceList[i + tableOffset][1]];
-    a[1] = ypoints[CellTables::Get().ShapesFaceList[i + tableOffset][1]];
-    a[2] = zpoints[CellTables::Get().ShapesFaceList[i + tableOffset][1]];
-    b[0] = xpoints[CellTables::Get().ShapesFaceList[i + tableOffset][2]];
-    b[1] = ypoints[CellTables::Get().ShapesFaceList[i + tableOffset][2]];
-    b[2] = zpoints[CellTables::Get().ShapesFaceList[i + tableOffset][2]];
-    c[0] = xpoints[CellTables::Get().ShapesFaceList[i + tableOffset][3]];
-    c[1] = ypoints[CellTables::Get().ShapesFaceList[i + tableOffset][3]];
-    c[2] = zpoints[CellTables::Get().ShapesFaceList[i + tableOffset][3]];
+    a[0] = xpoints[tables.ShapesFaceList(i + tableOffset, 1)];
+    a[1] = ypoints[tables.ShapesFaceList(i + tableOffset, 1)];
+    a[2] = zpoints[tables.ShapesFaceList(i + tableOffset, 1)];
+    b[0] = xpoints[tables.ShapesFaceList(i + tableOffset, 2)];
+    b[1] = ypoints[tables.ShapesFaceList(i + tableOffset, 2)];
+    b[2] = zpoints[tables.ShapesFaceList(i + tableOffset, 2)];
+    c[0] = xpoints[tables.ShapesFaceList(i + tableOffset, 3)];
+    c[1] = ypoints[tables.ShapesFaceList(i + tableOffset, 3)];
+    c[2] = zpoints[tables.ShapesFaceList(i + tableOffset, 3)];
     T distance = -1.f;
     distances[i] = distance; //init to -1
 
@@ -248,24 +250,24 @@ VTKM_EXEC_CONT inline void IntersectWedge(T xpoints[8],
   WaterTight<T> intersector;
   intersector.FindDir(dir, sx, sy, sz, kx, ky, kz);
   // TODO: try two sepate loops to see performance impact
-  const vtkm::Int32 tableOffset =
-    CellTables::Get().FaceLookUp[CellTables::Get().CellTypeLookUp[CELL_SHAPE_WEDGE]][0];
+  CellTables tables;
+  const vtkm::Int32 tableOffset = tables.FaceLookUp(tables.CellTypeLookUp(CELL_SHAPE_WEDGE), 0);
   // Decompose each face into two triangles
   for (int i = 0; i < 5; ++i)
   {
     vtkm::Vec<T, 3> a, c, b, d;
-    a[0] = xpoints[CellTables::Get().ShapesFaceList[i + tableOffset][1]];
-    a[1] = ypoints[CellTables::Get().ShapesFaceList[i + tableOffset][1]];
-    a[2] = zpoints[CellTables::Get().ShapesFaceList[i + tableOffset][1]];
-    b[0] = xpoints[CellTables::Get().ShapesFaceList[i + tableOffset][2]];
-    b[1] = ypoints[CellTables::Get().ShapesFaceList[i + tableOffset][2]];
-    b[2] = zpoints[CellTables::Get().ShapesFaceList[i + tableOffset][2]];
-    c[0] = xpoints[CellTables::Get().ShapesFaceList[i + tableOffset][3]];
-    c[1] = ypoints[CellTables::Get().ShapesFaceList[i + tableOffset][3]];
-    c[2] = zpoints[CellTables::Get().ShapesFaceList[i + tableOffset][3]];
-    d[0] = xpoints[CellTables::Get().ShapesFaceList[i + tableOffset][4]];
-    d[1] = ypoints[CellTables::Get().ShapesFaceList[i + tableOffset][4]];
-    d[2] = zpoints[CellTables::Get().ShapesFaceList[i + tableOffset][4]];
+    a[0] = xpoints[tables.ShapesFaceList(i + tableOffset, 1)];
+    a[1] = ypoints[tables.ShapesFaceList(i + tableOffset, 1)];
+    a[2] = zpoints[tables.ShapesFaceList(i + tableOffset, 1)];
+    b[0] = xpoints[tables.ShapesFaceList(i + tableOffset, 2)];
+    b[1] = ypoints[tables.ShapesFaceList(i + tableOffset, 2)];
+    b[2] = zpoints[tables.ShapesFaceList(i + tableOffset, 2)];
+    c[0] = xpoints[tables.ShapesFaceList(i + tableOffset, 3)];
+    c[1] = ypoints[tables.ShapesFaceList(i + tableOffset, 3)];
+    c[2] = zpoints[tables.ShapesFaceList(i + tableOffset, 3)];
+    d[0] = xpoints[tables.ShapesFaceList(i + tableOffset, 4)];
+    d[1] = ypoints[tables.ShapesFaceList(i + tableOffset, 4)];
+    d[2] = zpoints[tables.ShapesFaceList(i + tableOffset, 4)];
     T distance = -1.f;
     distances[i] = distance; //init to -1
 

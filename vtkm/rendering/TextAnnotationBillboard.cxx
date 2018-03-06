@@ -69,7 +69,6 @@ void TextAnnotationBillboard::Render(const vtkm::rendering::Camera& camera,
     vtkm::MatrixMultiply(projectionMatrix, viewMatrix), this->Position);
 
   canvas.SetViewToScreenSpace(camera, true);
-
   MatrixType translateMatrix =
     vtkm::Transform3DTranslate(screenPos[0], screenPos[1], -screenPos[2]);
 
@@ -98,7 +97,10 @@ void TextAnnotationBillboard::Render(const vtkm::rendering::Camera& camera,
   VectorType right = vtkm::Transform3DVector(fullTransformMatrix, VectorType(1, 0, 0));
   VectorType up = vtkm::Transform3DVector(fullTransformMatrix, VectorType(0, 1, 0));
 
-  worldAnnotator.AddText(origin, right, up, this->Scale, this->Anchor, this->TextColor, this->Text);
+  // scale depth from (1, -1) to (0, 1);
+  vtkm::Float32 depth = screenPos[2] * .5f + .5f;
+  worldAnnotator.AddText(
+    origin, right, up, this->Scale, this->Anchor, this->TextColor, this->Text, depth);
 
   canvas.SetViewToWorldSpace(camera, true);
 }

@@ -1070,7 +1070,6 @@ private:
     std::cout << "  Reduce with 0 values." << std::endl;
     array.Shrink(0);
     vtkm::Id reduce_sum_no_values = Algorithm::Reduce(array, vtkm::Id(0));
-
     VTKM_TEST_ASSERT(reduce_sum == OFFSET * ARRAY_SIZE, "Got bad sum from Reduce");
     VTKM_TEST_ASSERT(reduce_sum_with_intial_value == reduce_sum + ARRAY_SIZE,
                      "Got bad sum from Reduce with initial value");

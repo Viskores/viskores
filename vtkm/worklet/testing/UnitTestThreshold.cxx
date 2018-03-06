@@ -61,8 +61,8 @@ public:
   {
     std::cout << "Testing threshold on 2D uniform dataset" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<2> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<2>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet0();
 
@@ -92,8 +92,8 @@ public:
   {
     std::cout << "Testing threshold on 3D uniform dataset" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
 
@@ -124,8 +124,8 @@ public:
   {
     std::cout << "Testing threshold on 3D explicit dataset" << std::endl;
 
-    typedef vtkm::cont::CellSetExplicit<> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetExplicit<>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet0();
 

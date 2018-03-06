@@ -79,7 +79,7 @@ public:
                                 WholeArrayIn<IdType> haloId,
                                 FieldOut<IdType> isValidHalo);
   typedef _4 ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id pmin;
 

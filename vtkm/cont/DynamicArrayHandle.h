@@ -67,7 +67,7 @@ struct VTKM_CONT_EXPORT PolymorphicArrayHandleContainerBase
 ///
 /// The \c PolymorphicArrayHandleContainer is similar to the
 /// \c SimplePolymorphicContainer in that it can contain an object of an
-/// unkown type. However, this class specifically holds ArrayHandle objects
+/// unknown type. However, this class specifically holds ArrayHandle objects
 /// (with different template parameters) so that it can polymorphically answer
 /// simple questions about the object.
 ///
@@ -289,7 +289,7 @@ public:
     return this->CastToTypeStorage<ValueType, StorageTag>();
   }
 
-  /// Given a refernce to an ArrayHandle object, casts this array to the
+  /// Given a references to an ArrayHandle object, casts this array to the
   /// ArrayHandle's type and sets the given ArrayHandle to this array. Throws
   /// \c ErrorBadType if the cast does not work. Use \c
   /// ArrayHandleType to check if the cast can happen.

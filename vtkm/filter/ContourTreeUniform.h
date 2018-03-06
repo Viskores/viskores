@@ -99,7 +99,7 @@ template <>
 class FilterTraits<ContourTreeMesh2D>
 {
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 
 /// \brief Construct the ContourTree for a 3D Mesh
@@ -127,7 +127,7 @@ template <>
 class FilterTraits<ContourTreeMesh3D>
 {
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

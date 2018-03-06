@@ -17,7 +17,6 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
 #ifndef vtk_m_cont_PointLocatorUniformGrid_h
 #define vtk_m_cont_PointLocatorUniformGrid_h
 
@@ -176,7 +175,7 @@ public:
   template <typename DeviceAdapter>
   void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords, DeviceAdapter)
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> Algorithm;
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     // generate unique id for each input point
     vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(0, 1, coords.GetNumberOfValues());
     Algorithm::Copy(pointCounting, PointIds);

@@ -39,7 +39,7 @@ template <typename T>
 class TestPortal
 {
 public:
-  typedef T ValueType;
+  using ValueType = T;
 
   VTKM_EXEC
   vtkm::Id GetNumberOfValues() const { return ARRAY_SIZE; }
@@ -53,11 +53,11 @@ struct VecFromPortalPermuteTestFunctor
   template <typename T>
   void operator()(T) const
   {
-    typedef TestPortal<T> PortalType;
-    typedef vtkm::VecVariable<vtkm::Id, ARRAY_SIZE> IndexVecType;
-    typedef vtkm::VecFromPortalPermute<IndexVecType, PortalType> VecType;
-    typedef vtkm::TypeTraits<VecType> TTraits;
-    typedef vtkm::VecTraits<VecType> VTraits;
+    using PortalType = TestPortal<T>;
+    using IndexVecType = vtkm::VecVariable<vtkm::Id, ARRAY_SIZE>;
+    using VecType = vtkm::VecFromPortalPermute<IndexVecType, PortalType>;
+    using TTraits = vtkm::TypeTraits<VecType>;
+    using VTraits = vtkm::VecTraits<VecType>;
 
     std::cout << "Checking VecFromPortal traits" << std::endl;
 

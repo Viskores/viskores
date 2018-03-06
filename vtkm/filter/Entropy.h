@@ -57,7 +57,7 @@ template <>
 class FilterTraits<Entropy>
 {
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

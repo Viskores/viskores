@@ -64,7 +64,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANGXX)
   endif()
 
   # Set up the debug CXX_FLAGS for extra warnings
-  option(VTKm_EXTRA_COMPILER_WARNINGS "Add compiler flags to do stricter checking when building debug." ON)
+  vtkm_option(VTKm_EXTRA_COMPILER_WARNINGS "Add compiler flags to do stricter checking when building debug." ON)
   # We used to add the compiler flags globally, but this caused problems with
   # the CUDA compiler (and its lack of support for GCC pragmas).  Instead,
   # the vtkm_declare_headers and vtkm_unit_tests CMake functions add these flags
@@ -95,5 +95,4 @@ elseif (CMAKE_COMPILER_IS_MSVCXX)
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
   endif()
-
 endif()

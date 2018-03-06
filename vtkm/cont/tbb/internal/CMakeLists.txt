@@ -22,7 +22,9 @@ set(headers
   ArrayManagerExecutionTBB.h
   DeviceAdapterAlgorithmTBB.h
   DeviceAdapterTagTBB.h
+  ExecutionArrayInterfaceBasicTBB.h
   FunctorsTBB.h
+  ParallelSortTBB.h
   VirtualObjectTransferTBB.h
   )
 
@@ -34,7 +36,9 @@ if (VTKm_ENABLE_TBB)
   endif()
 endif()
 
-vtkm_declare_headers(parallel_sort.h TESTABLE OFF)
+vtkm_declare_headers(ParallelSortTBB.hxx
+                     TESTABLE OFF)
+
 vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})
 
 #-----------------------------------------------------------------------------
@@ -45,6 +49,8 @@ endif()
 add_library(vtkm_cont_tbb OBJECT
   ArrayManagerExecutionTBB.cxx
   DeviceAdapterAlgorithmTBB.cxx
+  ExecutionArrayInterfaceBasicTBB.cxx
+  ParallelSortTBB.cxx
   )
 
 vtkm_setup_msvc_properties(vtkm_cont_tbb)

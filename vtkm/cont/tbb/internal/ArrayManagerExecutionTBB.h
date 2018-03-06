@@ -20,11 +20,12 @@
 #ifndef vtk_m_cont_tbb_internal_ArrayManagerExecutionTBB_h
 #define vtk_m_cont_tbb_internal_ArrayManagerExecutionTBB_h
 
-#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
-
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 #include <vtkm/cont/internal/ArrayManagerExecution.h>
 #include <vtkm/cont/internal/ArrayManagerExecutionShareWithControl.h>
+
+#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
+#include <vtkm/cont/tbb/internal/ExecutionArrayInterfaceBasicTBB.h>
 
 // These must be placed in the vtkm::cont::internal namespace so that
 // the template can be found.
@@ -84,19 +85,6 @@ struct ExecutionPortalFactoryBasic<T, DeviceAdapterTagTBB>
   using typename Superclass::PortalConstType;
   using Superclass::CreatePortal;
   using Superclass::CreatePortalConst;
-};
-
-template <>
-struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasic<DeviceAdapterTagTBB>
-  : public ExecutionArrayInterfaceBasicShareWithControl
-{
-  using Superclass = ExecutionArrayInterfaceBasicShareWithControl;
-
-  VTKM_CONT
-  ExecutionArrayInterfaceBasic(StorageBasicBase& storage);
-
-  VTKM_CONT
-  virtual DeviceAdapterId GetDeviceId() const final { return VTKM_DEVICE_ADAPTER_TBB; }
 };
 
 } // namespace internal

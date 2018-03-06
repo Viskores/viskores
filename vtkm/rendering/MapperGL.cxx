@@ -459,17 +459,17 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> eVerts;
 
-    if (dcoords.IsSameType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
+    if (dcoords.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
     {
       uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       RenderTriangles(*this, numTri, uVerts, indices, sf, colorTable, scalarRange, camera);
     }
-    else if (dcoords.IsSameType<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>())
+    else if (dcoords.IsType<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>())
     {
       eVerts = dcoords.Cast<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>();
       RenderTriangles(*this, numTri, eVerts, indices, sf, colorTable, scalarRange, camera);
     }
-    else if (dcoords.IsSameType<vtkm::cont::ArrayHandleCartesianProduct<
+    else if (dcoords.IsType<vtkm::cont::ArrayHandleCartesianProduct<
                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>())

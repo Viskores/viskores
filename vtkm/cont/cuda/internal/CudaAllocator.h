@@ -42,7 +42,7 @@ struct VTKM_CONT_EXPORT CudaAllocator
   /// that can be accessed concurrently by the CPU and GPUs.
   static VTKM_CONT bool UsingManagedMemory();
 
-  /// Returns true if the pointer is accessable from a CUDA device.
+  /// Returns true if the pointer is accessible from a CUDA device.
   static VTKM_CONT bool IsDevicePointer(const void* ptr);
 
   /// Returns true if the pointer is a CUDA pointer allocated with

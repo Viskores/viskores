@@ -40,66 +40,66 @@ namespace vtkm
 namespace worklet
 {
 
+namespace tetrahedralize
+{
+//
+// Worklet to turn hexahedra into tetrahedra
+// Vertices remain the same and each cell is processed with needing topology
+//
+class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
+{
+public:
+  typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
+  typedef void ExecutionSignature(PointIndices, _2, ThreadIndices);
+  using InputDomain = _1;
+
+  using ScatterType = vtkm::worklet::ScatterUniform;
+
+  VTKM_CONT
+  ScatterType GetScatter() const { return ScatterType(5); }
+
+  // Each hexahedron cell produces five tetrahedron cells
+  template <typename ConnectivityInVec, typename ConnectivityOutVec, typename ThreadIndicesType>
+  VTKM_EXEC void operator()(const ConnectivityInVec& connectivityIn,
+                            ConnectivityOutVec& connectivityOut,
+                            const ThreadIndicesType threadIndices) const
+  {
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::IdComponent StructuredTetrahedronIndices[2][5][4] = {
+      { { 0, 1, 3, 4 }, { 1, 4, 5, 6 }, { 1, 4, 6, 3 }, { 1, 3, 6, 2 }, { 3, 6, 7, 4 } },
+      { { 2, 1, 5, 0 }, { 0, 2, 3, 7 }, { 2, 5, 6, 7 }, { 0, 7, 4, 5 }, { 0, 2, 7, 5 } }
+    };
+
+    vtkm::Id3 inputIndex = threadIndices.GetInputIndex3D();
+
+    // Calculate the type of tetrahedron generated because it alternates
+    vtkm::Id indexType = (inputIndex[0] + inputIndex[1] + inputIndex[2]) % 2;
+
+    vtkm::IdComponent visitIndex = threadIndices.GetVisitIndex();
+
+    connectivityOut[0] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][0]];
+    connectivityOut[1] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][1]];
+    connectivityOut[2] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][2]];
+    connectivityOut[3] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][3]];
+  }
+};
+}
+
 /// \brief Compute the tetrahedralize cells for a uniform grid data set
 template <typename DeviceAdapter>
 class TetrahedralizeStructured
 {
 public:
-  TetrahedralizeStructured() {}
-
-  //
-  // Worklet to turn hexahedra into tetrahedra
-  // Vertices remain the same and each cell is processed with needing topology
-  //
-  class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
-  {
-  public:
-    typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
-    typedef void ExecutionSignature(PointIndices, _2, ThreadIndices);
-    typedef _1 InputDomain;
-
-    typedef vtkm::worklet::ScatterUniform ScatterType;
-    VTKM_CONT
-    ScatterType GetScatter() const { return ScatterType(5); }
-
-    VTKM_CONT
-    TetrahedralizeCell() {}
-
-    // Each hexahedron cell produces five tetrahedron cells
-    template <typename ConnectivityInVec, typename ConnectivityOutVec, typename ThreadIndicesType>
-    VTKM_EXEC void operator()(const ConnectivityInVec& connectivityIn,
-                              ConnectivityOutVec& connectivityOut,
-                              const ThreadIndicesType threadIndices) const
-    {
-      const static vtkm::IdComponent StructuredTetrahedronIndices[2][5][4] = {
-        { { 0, 1, 3, 4 }, { 1, 4, 5, 6 }, { 1, 4, 6, 3 }, { 1, 3, 6, 2 }, { 3, 6, 7, 4 } },
-        { { 2, 1, 5, 0 }, { 0, 2, 3, 7 }, { 2, 5, 6, 7 }, { 0, 7, 4, 5 }, { 0, 2, 7, 5 } }
-      };
-
-      vtkm::Id3 inputIndex = threadIndices.GetInputIndex3D();
-
-      // Calculate the type of tetrahedron generated because it alternates
-      vtkm::Id indexType = (inputIndex[0] + inputIndex[1] + inputIndex[2]) % 2;
-
-      vtkm::IdComponent visitIndex = threadIndices.GetVisitIndex();
-
-      connectivityOut[0] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][0]];
-      connectivityOut[1] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][1]];
-      connectivityOut[2] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][2]];
-      connectivityOut[3] = connectivityIn[StructuredTetrahedronIndices[indexType][visitIndex][3]];
-    }
-  };
-
   template <typename CellSetType>
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
                                       vtkm::cont::ArrayHandle<vtkm::IdComponent>& outCellsPerCell)
   {
-    typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::cont::CellSetSingleType<> outCellSet(cellSet.GetName());
     vtkm::cont::ArrayHandle<vtkm::Id> connectivity;
 
-    vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell, DeviceAdapter> dispatcher;
+    vtkm::worklet::DispatcherMapTopology<tetrahedralize::TetrahedralizeCell, DeviceAdapter>
+      dispatcher;
     dispatcher.Invoke(cellSet, vtkm::cont::make_ArrayHandleGroupVec<4>(connectivity));
 
     // Fill in array of output cells per input cell

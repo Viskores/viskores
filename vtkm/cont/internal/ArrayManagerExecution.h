@@ -40,7 +40,7 @@ namespace internal
 /// any resources in its destructor.
 ///
 /// This class typically takes on one of two forms. If the control and
-/// execution environments have seperate memory spaces, then this class
+/// execution environments have separate memory spaces, then this class
 /// behaves how you would expect. It allocates/deallocates arrays and copies
 /// data. However, if the control and execution environments share the same
 /// memory space, this class should delegate all its operations to the

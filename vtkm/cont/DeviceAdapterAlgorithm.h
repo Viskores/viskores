@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_DeviceAdapterAlgorithm_h
-#define vtk_m_cont_internal_DeviceAdapterAlgorithm_h
+#ifndef vtk_m_cont_DeviceAdapterAlgorithm_h
+#define vtk_m_cont_DeviceAdapterAlgorithm_h
 
 #include <vtkm/Types.h>
 
@@ -631,7 +631,7 @@ class DeviceAdapterAtomicArrayImplementation;
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.
 ///
-/// When worklets are launched inside the execution enviornment we need to
+/// When worklets are launched inside the execution environment we need to
 /// ask the device adapter what is the preferred execution style, be it
 /// a tiled iteration pattern, or strided. This class
 ///

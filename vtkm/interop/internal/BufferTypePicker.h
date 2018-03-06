@@ -75,7 +75,7 @@ static inline VTKM_CONT GLenum BufferTypePicker(vtkm::UInt64)
 template <typename T>
 static inline VTKM_CONT GLenum BufferTypePicker(T)
 {
-  typedef vtkm::TypeTraits<T> Traits;
+  using Traits = vtkm::TypeTraits<T>;
   return detail::BufferTypePickerImpl(typename Traits::NumericTag(),
                                       typename Traits::DimensionalityTag());
 }

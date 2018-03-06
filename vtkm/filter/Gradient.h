@@ -129,7 +129,7 @@ public:
   {
   };
 
-  typedef TypeListTagGradientInputs InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagGradientInputs;
 };
 }
 } // namespace vtkm::filter

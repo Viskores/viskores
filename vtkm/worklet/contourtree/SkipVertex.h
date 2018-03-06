@@ -86,7 +86,7 @@ public:
                                 WholeArrayInOut<IdType> joinArcs,   // (i/o)
                                 WholeArrayInOut<IdType> splitArcs); // (i/o)
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

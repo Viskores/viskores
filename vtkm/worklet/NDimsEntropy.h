@@ -66,7 +66,7 @@ public:
   template <typename DeviceAdapter>
   vtkm::Float64 Run(DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     std::vector<vtkm::cont::ArrayHandle<vtkm::Id>> binIds;
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;

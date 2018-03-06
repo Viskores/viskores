@@ -90,7 +90,7 @@ public:
                                 WholeArrayOut<IdType> updegree,    // (output) compacted updegree
                                 WholeArrayOut<IdType> downdegree); // (output) compacted downdegree
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

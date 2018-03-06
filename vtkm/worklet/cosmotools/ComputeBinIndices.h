@@ -80,7 +80,7 @@ public:
                                 FieldOut<IdType> binY,
                                 FieldOut<IdType> binZ);
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id numBinsX, numBinsY, numBinsZ; // Number of bins each dimension
 

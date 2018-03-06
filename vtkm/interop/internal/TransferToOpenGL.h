@@ -214,7 +214,7 @@ public:
     //to openGL this works for all storage types.
     //
     //Second option is to call PrepareForInput and get a PortalConst in the
-    //exection environment.
+    //execution environment.
     //if we are StorageTagBasic this would allow us the ability to grab
     //the raw memory value and copy those, which we know are valid and remove
     //a unneeded copy.

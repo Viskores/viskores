@@ -102,7 +102,7 @@ class FunctionInterfaceDynamicTransformContContinue;
 /// series of transformations and operations can occur.
 ///
 /// Supporting arbitrary function and template arguments is difficult and
-/// really requires seperate implementations for ANSI and C++11 versions of
+/// really requires separate implementations for ANSI and C++11 versions of
 /// compilers. Thus, variatic template arguments are, at this point in time,
 /// something to be avoided when possible. The intention of \c
 /// FunctionInterface is to collect most of the variatic template code into one
@@ -234,7 +234,7 @@ class FunctionInterface
   friend class FunctionInterface;
 
 public:
-  typedef FunctionSignature Signature;
+  using Signature = FunctionSignature;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   FunctionInterface()
@@ -251,16 +251,16 @@ public:
   }
 
   // the number of parameters as an integral constant
-  typedef detail::FunctionSigInfo<FunctionSignature> SigInfo;
-  typedef typename SigInfo::ArityType SignatureArity;
-  typedef typename SigInfo::ResultType ResultType;
-  typedef typename SigInfo::Components ComponentSig;
-  typedef typename SigInfo::Parameters ParameterSig;
+  using SigInfo = detail::FunctionSigInfo<FunctionSignature>;
+  using SignatureArity = typename SigInfo::ArityType;
+  using ResultType = typename SigInfo::ResultType;
+  using ComponentSig = typename SigInfo::Components;
+  using ParameterSig = typename SigInfo::Parameters;
 
   template <vtkm::IdComponent ParameterIndex>
   struct ParameterType
   {
-    typedef typename detail::AtType<ParameterIndex, FunctionSignature>::type type;
+    using type = typename detail::AtType<ParameterIndex, FunctionSignature>::type;
   };
 
   static const bool RETURN_VALID = FunctionInterfaceReturnContainer<ResultType>::VALID;
@@ -389,7 +389,7 @@ public:
   {
     this->Result = src.GetReturnValueSafe();
 
-    VTKM_CONSTEXPR vtkm::UInt16 minArity = (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY)
+    constexpr vtkm::UInt16 minArity = (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY)
       ? ARITY
       : FunctionInterface<SrcFunctionSignature>::ARITY;
 
@@ -474,7 +474,7 @@ public:
   template <typename NewType>
   VTKM_CONT typename AppendType<NewType>::type Append(const NewType& newParameter) const
   {
-    typedef typename detail::AppendType<ComponentSig, NewType>::type AppendSignature;
+    using AppendSignature = typename detail::AppendType<ComponentSig, NewType>::type;
 
     FunctionInterface<AppendSignature> appendedFuncInterface;
     appendedFuncInterface.Copy(*this);
@@ -532,8 +532,8 @@ public:
     vtkm::internal::IndexTag<ParameterIndex> = vtkm::internal::IndexTag<ParameterIndex>()) const
   {
 
-    typedef
-      typename detail::ReplaceType<ComponentSig, ParameterIndex, NewType>::type ReplaceSigType;
+    using ReplaceSigType =
+      typename detail::ReplaceType<ComponentSig, ParameterIndex, NewType>::type;
     FunctionInterface<ReplaceSigType> replacedFuncInterface;
 
     detail::FunctionInterfaceMoveParameters<ParameterIndex - 1>::Move(
@@ -549,9 +549,8 @@ public:
   template <typename Transform>
   struct StaticTransformType
   {
-    typedef FunctionInterface<
-      typename detail::FunctionInterfaceStaticTransformType<FunctionSignature, Transform>::type>
-      type;
+    using type = FunctionInterface<
+      typename detail::FunctionInterfaceStaticTransformType<FunctionSignature, Transform>::type>;
   };
 
   /// \brief Transforms the \c FunctionInterface based on compile-time
@@ -695,11 +694,11 @@ public:
   VTKM_CONT void DynamicTransformCont(const TransformFunctor& transform,
                                       const FinishFunctor& finish) const
   {
-    typedef detail::FunctionInterfaceDynamicTransformContContinue<FunctionSignature,
-                                                                  ResultType(),
-                                                                  TransformFunctor,
-                                                                  FinishFunctor>
-      ContinueFunctorType;
+    using ContinueFunctorType =
+      detail::FunctionInterfaceDynamicTransformContContinue<FunctionSignature,
+                                                            ResultType(),
+                                                            TransformFunctor,
+                                                            FinishFunctor>;
 
     FunctionInterface<ResultType()> emptyInterface;
     ContinueFunctorType continueFunctor =
@@ -768,15 +767,15 @@ public:
   template <typename T>
   VTKM_CONT void operator()(const T& newParameter) const
   {
-    typedef typename FunctionInterface<NewFunction>::ComponentSig NewFSigComp;
+    using NewFSigComp = typename FunctionInterface<NewFunction>::ComponentSig;
 
     //Determine if we should do the next transform
     using appended = brigand::push_back<NewFSigComp, T>;
     using interfaceSig = typename detail::AsSigType<appended>::type;
     using NextInterfaceType = FunctionInterface<interfaceSig>;
 
-    static VTKM_CONSTEXPR std::size_t newArity = NextInterfaceType::ARITY;
-    static VTKM_CONSTEXPR std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
+    static constexpr std::size_t newArity = NextInterfaceType::ARITY;
+    static constexpr std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
     typedef std::integral_constant<bool, (newArity < oldArity)> ShouldDoNextTransformType;
 
     NextInterfaceType nextInterface = this->NewInterface.Append(newParameter);
@@ -788,11 +787,10 @@ public:
   template <typename NextFunction>
   void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface) const
   {
-    typedef FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
-                                                          NextFunction,
-                                                          TransformFunctor,
-                                                          FinishFunctor>
-      NextContinueType;
+    using NextContinueType = FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
+                                                                           NextFunction,
+                                                                           TransformFunctor,
+                                                                           FinishFunctor>;
     NextContinueType nextContinue =
       NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
     static const vtkm::IdComponent Index =
@@ -806,11 +804,10 @@ private:
   void DoNextTransform(vtkm::internal::FunctionInterface<NextFunction>& nextInterface,
                        std::true_type) const
   {
-    typedef FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
-                                                          NextFunction,
-                                                          TransformFunctor,
-                                                          FinishFunctor>
-      NextContinueType;
+    using NextContinueType = FunctionInterfaceDynamicTransformContContinue<OriginalFunction,
+                                                                           NextFunction,
+                                                                           TransformFunctor,
+                                                                           FinishFunctor>;
     NextContinueType nextContinue =
       NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
     static const vtkm::IdComponent Index =

@@ -47,7 +47,7 @@ namespace arg
 /// object associated where the fetch (nominally) gets its data from. This
 /// execution object is the data provided by the transport.
 ///
-/// There is no generic implementaiton of \c Fetch. There are partial
+/// There is no generic implementation of \c Fetch. There are partial
 /// specializations of \c Fetch for each mechanism (fetch-aspect tag
 /// combination) supported. If you get a compiler error about an incomplete
 /// type for \c Fetch, it means you used an invalid \c FetchTag - \c AspectTag

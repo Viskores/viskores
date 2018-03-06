@@ -62,7 +62,7 @@ struct ExternalFaces
                                   FieldOut<> numFacesInCell,
                                   FieldInPoint<Vec3> pointCoordinates);
     typedef _2 ExecutionSignature(CellShape, _3);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     VTKM_CONT
     NumExternalFacesPerStructuredCell(const vtkm::Vec<vtkm::Float64, 3>& min_point,
@@ -137,7 +137,7 @@ struct ExternalFaces
                                   FieldOut<> faceConnectivity,
                                   FieldInPoint<Vec3> pointCoordinates);
     typedef void ExecutionSignature(CellShape, VisitIndex, InputIndex, _2, _3, _4, _5, _6);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
@@ -306,9 +306,8 @@ struct ExternalFaces
 
       vtkm::IdComponent faceIndex = FindFaceIndexForVisit(visitIndex, pointCoordinates);
 
-      vtkm::VecCConst<vtkm::IdComponent> localFaceIndices =
-        vtkm::exec::CellFaceLocalIndices(faceIndex, shape, *this);
-      vtkm::IdComponent numFacePoints = localFaceIndices.GetNumberOfComponents();
+      const vtkm::IdComponent numFacePoints =
+        vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, *this);
       VTKM_ASSERT(numFacePoints == faceConnectivity.GetNumberOfComponents());
 
       typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(inputIndex);
@@ -316,9 +315,11 @@ struct ExternalFaces
       shapeOut = vtkm::CELL_SHAPE_QUAD;
       numFacePointsOut = 4;
 
+      vtkm::exec::detail::CellFaceTables table;
       for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
       {
-        faceConnectivity[facePointIndex] = inCellIndices[localFaceIndices[facePointIndex]];
+        faceConnectivity[facePointIndex] =
+          inCellIndices[table.PointsInFace(shape.Id, faceIndex, facePointIndex)];
       }
     }
 
@@ -334,7 +335,7 @@ struct ExternalFaces
   public:
     typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> numFacesInCell);
     typedef _2 ExecutionSignature(CellShape);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     template <typename CellShapeTag>
     VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag shape) const
@@ -352,7 +353,7 @@ struct ExternalFaces
                                   FieldOut<> originCells,
                                   FieldOut<> originFaces);
     typedef void ExecutionSignature(_2, _3, _4, CellShape, FromIndices, InputIndex, VisitIndex);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
@@ -602,23 +603,27 @@ public:
                               ConnectivityType& connectivityOut,
                               vtkm::Id& cellIdMapOut) const
     {
-      vtkm::IdComponent myIndex =
+      const vtkm::IdComponent myIndex =
         ExternalFaces::FindUniqueFace(cellSet, originCells, originFaces, visitIndex, this);
+      const vtkm::IdComponent myFace = originFaces[myIndex];
+
 
       typename CellSetType::CellShapeTag shapeIn = cellSet.GetCellShape(originCells[myIndex]);
-      shapeOut = vtkm::exec::CellFaceShape(originFaces[myIndex], shapeIn, *this);
+      shapeOut = vtkm::exec::CellFaceShape(myFace, shapeIn, *this);
       cellIdMapOut = originCells[myIndex];
 
-      vtkm::VecCConst<vtkm::IdComponent> localFaceIndices =
-        vtkm::exec::CellFaceLocalIndices(originFaces[myIndex], shapeIn, *this);
-      vtkm::IdComponent numFacePoints = localFaceIndices.GetNumberOfComponents();
+      const vtkm::IdComponent numFacePoints =
+        vtkm::exec::CellFaceNumberOfPoints(myFace, shapeIn, *this);
+
       VTKM_ASSERT(numFacePoints == connectivityOut.GetNumberOfComponents());
 
       typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(originCells[myIndex]);
 
+      vtkm::exec::detail::CellFaceTables table;
       for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
       {
-        connectivityOut[facePointIndex] = inCellIndices[localFaceIndices[facePointIndex]];
+        connectivityOut[facePointIndex] =
+          inCellIndices[table.PointsInFace(shapeIn.Id, myFace, facePointIndex)];
       }
     }
 
@@ -631,7 +636,7 @@ public:
   public:
     typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> isPolyDataCell);
     typedef _2 ExecutionSignature(CellShape);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     template <typename CellShapeTag>
     VTKM_EXEC vtkm::IdComponent operator()(CellShapeTag shape) const
@@ -663,7 +668,7 @@ public:
 
     typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> numPoints);
     typedef _2 ExecutionSignature(PointCount);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     VTKM_EXEC vtkm::Id operator()(vtkm::Id count) const { return count; }
   private:
@@ -792,12 +797,12 @@ public:
 
     vtkm::Id3 PointDimensions = inCellSet.GetPointDimensions();
 
-    typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
-    typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>
-      CartesianArrayHandle;
+    using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+    using CartesianArrayHandle =
+      vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
 
     auto coordData = coord.GetData();
-    if (coordData.IsSameType<CartesianArrayHandle>())
+    if (coordData.IsType<CartesianArrayHandle>())
     {
       auto vertices = coordData.Cast<CartesianArrayHandle>();
 
@@ -837,7 +842,7 @@ public:
 
     numExternalFacesDispatcher.Invoke(inCellSet, numExternalFaces, coordData);
 
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     vtkm::Id numberOfExternalFaces = DeviceAlgorithms::Reduce(numExternalFaces, 0, vtkm::Sum());
 
     vtkm::worklet::ScatterCounting scatterCellToExternalFace(numExternalFaces, DeviceAdapter());
@@ -1017,7 +1022,7 @@ public:
     else
     {
       // Join poly data to face data output
-      typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+      using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
       vtkm::cont::ArrayHandleConcatenate<ShapeArrayType, ShapeArrayType> faceShapesArray(
         faceShapes, polyDataShapes);
@@ -1035,8 +1040,8 @@ public:
       DeviceAlgorithm::Copy(connectivityArray, joinedConnectivity);
 
       // Adjust poly data offsets array with face connectivity size before join
-      typedef vtkm::cont::ArrayHandleTransform<OffsetsArrayType, BiasFunctor<vtkm::Id>>
-        TransformBiasArrayType;
+      using TransformBiasArrayType =
+        vtkm::cont::ArrayHandleTransform<OffsetsArrayType, BiasFunctor<vtkm::Id>>;
       TransformBiasArrayType adjustedPolyDataOffsets =
         vtkm::cont::make_ArrayHandleTransform<OffsetsArrayType>(
           polyDataOffsets, BiasFunctor<vtkm::Id>(faceConnectivity.GetNumberOfValues()));

@@ -78,7 +78,7 @@ public:
   typedef void ControlSignature(FieldIn<IdType> leftNeighbor,    // (input) left neighbor id
                                 FieldOut<IdType> rightNeighbor); // (output) right neighbor id
   typedef _2 ExecutionSignature(_1);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id xNum;
 

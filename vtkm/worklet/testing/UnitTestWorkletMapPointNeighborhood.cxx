@@ -44,7 +44,7 @@ struct MaxNeighborValue : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 
   typedef void ExecutionSignature(OnBoundary, _1, _3);
   //verify input domain can be something other than first parameter
-  typedef _2 InputDomain;
+  using InputDomain = _2;
 
   template <typename FieldIn, typename FieldOut>
   VTKM_EXEC void operator()(const vtkm::exec::arg::BoundaryState& boundary,
@@ -210,7 +210,7 @@ static void TestScatterUnfiormNeighbor();
 
 void TestWorkletPointNeighborhood()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
   std::cout << "Testing Point Neighborhood Worklet on device adapter: "
             << DeviceAdapterTraits::GetName() << std::endl;
 

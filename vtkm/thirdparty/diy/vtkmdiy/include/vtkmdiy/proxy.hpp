@@ -10,12 +10,12 @@ namespace diy
     template <class T>
     struct EnqueueIterator;
 
-                        Proxy(Master* master, int gid):
-                          gid_(gid),
-                          master_(master),
-                          incoming_(&master->incoming(gid)),
-                          outgoing_(&master->outgoing(gid)),
-                          collectives_(&master->collectives(gid))       {}
+                        Proxy(Master* master__, int gid__):
+                          gid_(gid__),
+                          master_(master__),
+                          incoming_(&master__->incoming(gid__)),
+                          outgoing_(&master__->outgoing(gid__)),
+                          collectives_(&master__->collectives(gid__))   {}
 
     int                 gid() const                                     { return gid_; }
 
@@ -134,11 +134,11 @@ namespace diy
   struct Master::ProxyWithLink: public Master::Proxy
   {
             ProxyWithLink(const Proxy&    proxy,
-                          void*           block,
-                          Link*           link):
+                          void*           block__,
+                          Link*           link__):
               Proxy(proxy),
-              block_(block),
-              link_(link)                                           {}
+              block_(block__),
+              link_(link__)                                         {}
 
       Link*   link() const                                          { return link_; }
       void*   block() const                                         { return block_; }

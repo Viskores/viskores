@@ -24,6 +24,8 @@ set(unit_tests
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
+  UnitTestCrossProductFilter.cxx
+  UnitTestDotProductFilter.cxx
   UnitTestEntropyFilter.cxx
   UnitTestExternalFacesFilter.cxx
   UnitTestExtractGeometryFilter.cxx
@@ -40,6 +42,7 @@ set(unit_tests
   UnitTestNDHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
+  UnitTestProbe.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx

@@ -111,7 +111,7 @@ public:
                                 WholeArrayInOut<IdType> prunesTo, // (i/o) where vertex is pruned to
                                 WholeArrayOut<IdType> outdegree); // (output) updegree of vertex
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   bool isJoinGraph;
 

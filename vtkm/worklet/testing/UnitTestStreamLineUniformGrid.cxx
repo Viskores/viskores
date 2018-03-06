@@ -113,7 +113,7 @@ void TestStreamLineUniformGrid()
 {
   std::cout << "Testing StreamLineUniformGrid Filter" << std::endl;
 
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
   // Parameters for streamlines
   vtkm::Id numSeeds = 5;

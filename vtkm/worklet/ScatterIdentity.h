@@ -40,7 +40,7 @@ namespace worklet
 ///
 struct ScatterIdentity
 {
-  typedef vtkm::cont::ArrayHandleIndex OutputToInputMapType;
+  using OutputToInputMapType = vtkm::cont::ArrayHandleIndex;
   VTKM_CONT
   OutputToInputMapType GetOutputToInputMap(vtkm::Id inputRange) const
   {
@@ -52,7 +52,7 @@ struct ScatterIdentity
     return this->GetOutputToInputMap(inputRange[0] * inputRange[1] * inputRange[2]);
   }
 
-  typedef vtkm::cont::ArrayHandleConstant<vtkm::IdComponent> VisitArrayType;
+  using VisitArrayType = vtkm::cont::ArrayHandleConstant<vtkm::IdComponent>;
   VTKM_CONT
   VisitArrayType GetVisitArray(vtkm::Id inputRange) const { return VisitArrayType(0, inputRange); }
   VTKM_CONT

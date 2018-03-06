@@ -39,7 +39,7 @@ public:
     typedef void ControlSignature(FieldIn<> inIndices, FieldOut<> outIndices);
     typedef void ExecutionSignature(_1, _2);
 
-    typedef vtkm::worklet::ScatterCounting ScatterType;
+    using ScatterType = vtkm::worklet::ScatterCounting;
 
     VTKM_CONT
     ScatterType GetScatter() const { return this->Scatter; }

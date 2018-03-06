@@ -22,6 +22,7 @@ set(headers
   ArrayManagerExecutionSerial.h
   DeviceAdapterAlgorithmSerial.h
   DeviceAdapterTagSerial.h
+  ExecutionArrayInterfaceBasicSerial.h
   VirtualObjectTransferSerial.h
   )
 vtkm_declare_headers(${headers})
@@ -29,6 +30,7 @@ vtkm_declare_headers(${headers})
 add_library(vtkm_cont_serial OBJECT
   ArrayManagerExecutionSerial.cxx
   DeviceAdapterAlgorithmSerial.cxx
+  ExecutionArrayInterfaceBasicSerial.cxx
   )
 
 

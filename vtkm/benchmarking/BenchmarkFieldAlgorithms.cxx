@@ -35,6 +35,7 @@
 #include <vtkm/benchmarking/Benchmarker.h>
 #include <vtkm/cont/testing/Testing.h>
 
+#include <cctype>
 #include <random>
 #include <string>
 
@@ -45,7 +46,7 @@ namespace benchmarking
 
 #define ARRAY_SIZE (1 << 22)
 #define CUBE_SIZE 256
-const static std::string DIVIDER(40, '-');
+static const std::string DIVIDER(40, '-');
 
 enum BenchmarkName
 {
@@ -204,7 +205,7 @@ class GenerateEdges : public vtkm::worklet::WorkletMapPointToCell
 public:
   typedef void ControlSignature(CellSetIn cellset, WholeArrayOut<> edgeIds);
   typedef void ExecutionSignature(PointIndices, ThreadIndices, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename ConnectivityInVec, typename ThreadIndicesType, typename IdPairTableType>
   VTKM_EXEC void operator()(const ConnectivityInVec& connectivity,
@@ -233,7 +234,7 @@ public:
                                 WholeArrayIn<> inputField,
                                 FieldOut<> output);
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename WeightType, typename T, typename S, typename D>
   VTKM_EXEC void operator()(const vtkm::Id2& low_high,
@@ -320,11 +321,11 @@ using StorageListTag = ::vtkm::cont::StorageListTagBasic;
 template <class DeviceAdapterTag>
 class BenchmarkFieldAlgorithms
 {
-  typedef vtkm::cont::StorageTagBasic StorageTag;
+  using StorageTag = vtkm::cont::StorageTagBasic;
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  typedef vtkm::cont::Timer<DeviceAdapterTag> Timer;
+  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
 
   using ValueDynamicHandle = vtkm::cont::DynamicArrayHandleBase<ValueTypes, StorageListTag>;
   using InterpDynamicHandle = vtkm::cont::DynamicArrayHandleBase<InterpValueTypes, StorageListTag>;
@@ -922,7 +923,9 @@ int main(int argc, char* argv[])
     for (int i = 1; i < argc; ++i)
     {
       std::string arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      });
       if (arg == "blackscholes")
       {
         benchmarks |= vtkm::benchmarking::BLACK_SCHOLES;

@@ -98,7 +98,7 @@ private:
 
       std::stringstream strStream(options);
 
-      //Format supports both space and "_" seperated tokens...
+      //Format supports both space and "_" separated tokens...
       if (token.find("DATA") != std::string::npos && token.find("FILE") != std::string::npos)
       {
         strStream >> bovFile >> std::ws;

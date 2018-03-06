@@ -398,7 +398,7 @@ static inline VTKM_EXEC_CONT bool test_equal_impl(ScalarType1 scalar1,
                                        vtkm::TypeTraitsScalarTag>::type::value),
                          "Trying to compare a scalar with a vector.");
 
-  // Do all comparisions using 64-bit floats.
+  // Do all comparisons using 64-bit floats.
   vtkm::Float64 value1 = vtkm::Float64(scalar1);
   vtkm::Float64 value2 = vtkm::Float64(scalar2);
 
@@ -519,7 +519,7 @@ static inline VTKM_EXEC_CONT bool test_equal(bool bool1, bool bool2)
 template <typename T>
 static inline VTKM_EXEC_CONT T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
 {
-  VTKM_CONSTEXPR bool larger_than_2bytes = sizeof(T) > 2;
+  constexpr bool larger_than_2bytes = sizeof(T) > 2;
   if (larger_than_2bytes)
   {
     return T(index * 100);

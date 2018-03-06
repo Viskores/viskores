@@ -41,8 +41,8 @@ public:
   {
     std::cout << "Testing mask cells structured:" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<2> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<2>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
@@ -69,8 +69,8 @@ public:
   {
     std::cout << "Testing mask cells structured:" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
     CellSetType cellSet;
@@ -96,8 +96,8 @@ public:
   {
     std::cout << "Testing mask cells explicit:" << std::endl;
 
-    typedef vtkm::cont::CellSetExplicit<> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetExplicit<>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();

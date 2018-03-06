@@ -53,9 +53,9 @@ namespace diy
     void                read(const std::string& fn)
     {
         std::ifstream in(fn.c_str(), std::ios::binary | std::ios::ate);
-        buffer.resize(in.tellg());
+        buffer.resize(static_cast<size_t>(in.tellg()));
         in.seekg(0);
-        in.read(&buffer[0], size());
+        in.read(&buffer[0], static_cast<std::streamsize>(size()));
         position = 0;
     }
 
@@ -186,7 +186,8 @@ namespace diy
     {
       size_t s = v.size();
       diy::save(bb, s);
-      diy::save(bb, &v[0], v.size());
+      if (s > 0)
+        diy::save(bb, &v[0], v.size());
     }
 
     static void         load(BinaryBuffer& bb, Vector& v)
@@ -194,7 +195,8 @@ namespace diy
       size_t s;
       diy::load(bb, s);
       v.resize(s);
-      diy::load(bb, &v[0], s);
+      if (s > 0)
+        diy::load(bb, &v[0], s);
     }
   };
 
@@ -207,7 +209,8 @@ namespace diy
     {
       size_t s = v.size();
       diy::save(bb, s);
-      diy::save(bb, &v[0], v.size());
+      if (s > 0)
+        diy::save(bb, &v[0], v.size());
     }
 
     static void         load(BinaryBuffer& bb, ValArray& v)
@@ -215,7 +218,8 @@ namespace diy
       size_t s;
       diy::load(bb, s);
       v.resize(s);
-      diy::load(bb, &v[0], s);
+      if (s > 0)
+        diy::load(bb, &v[0], s);
     }
   };
 
@@ -413,12 +417,15 @@ diy::MemoryBuffer::
 save_binary(const char* x, size_t count)
 {
   if (position + count > buffer.capacity())
-    buffer.reserve((position + count) * growth_multiplier());           // if we have to grow, grow geometrically
+  {
+    double newsize = static_cast<double>(position + count) * growth_multiplier();  // if we have to grow, grow geometrically
+    buffer.reserve(static_cast<size_t>(newsize));
+  }
 
   if (position + count > buffer.size())
     buffer.resize(position + count);
 
-  std::copy(x, x + count, &buffer[position]);
+  std::copy_n(x, count, &buffer[position]);
   position += count;
 }
 
@@ -426,7 +433,7 @@ void
 diy::MemoryBuffer::
 load_binary(char* x, size_t count)
 {
-  std::copy(&buffer[position], &buffer[position + count], x);
+  std::copy_n(&buffer[position], count, x);
   position += count;
 }
 
@@ -434,7 +441,7 @@ void
 diy::MemoryBuffer::
 load_binary_back(char* x, size_t count)
 {
-  std::copy(&buffer[buffer.size() - count], &buffer[buffer.size()], x);
+  std::copy_n(&buffer[buffer.size() - count], count, x);
   buffer.resize(buffer.size() - count);
 }
 
@@ -448,7 +455,7 @@ copy(MemoryBuffer& from, MemoryBuffer& to)
 
   size_t total = sizeof(size_t) + sz;
   to.buffer.resize(to.position + total);
-  std::copy(&from.buffer[from.position], &from.buffer[from.position + total], &to.buffer[to.position]);
+  std::copy_n(&from.buffer[from.position], total, &to.buffer[to.position]);
   to.position += total;
   from.position += total;
 }

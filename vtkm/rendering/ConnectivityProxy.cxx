@@ -25,6 +25,8 @@
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/raytracing/ConnectivityTracerFactory.h>
 #include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/raytracing/RayOperations.h>
+
 
 namespace vtkm
 {
@@ -200,7 +202,7 @@ public:
     }
     else
     {
-      throw vtkm::cont::ErrorBadValue("ENGERY MODE Not implemented for this use case\n");
+      throw vtkm::cont::ErrorBadValue("ENERGY MODE Not implemented for this use case\n");
     }
 
     Tracer->Trace(rays);

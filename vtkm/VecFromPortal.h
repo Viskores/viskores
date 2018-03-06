@@ -89,11 +89,11 @@ template <typename PortalType>
 struct TypeTraits<vtkm::VecFromPortal<PortalType>>
 {
 private:
-  typedef typename PortalType::ValueType ComponentType;
+  using ComponentType = typename PortalType::ValueType;
 
 public:
-  typedef typename vtkm::TypeTraits<ComponentType>::NumericTag NumericTag;
-  typedef TypeTraitsVectorTag DimensionalityTag;
+  using NumericTag = typename vtkm::TypeTraits<ComponentType>::NumericTag;
+  using DimensionalityTag = TypeTraitsVectorTag;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -106,11 +106,11 @@ public:
 template <typename PortalType>
 struct VecTraits<vtkm::VecFromPortal<PortalType>>
 {
-  typedef vtkm::VecFromPortal<PortalType> VecType;
+  using VecType = vtkm::VecFromPortal<PortalType>;
 
-  typedef typename VecType::ComponentType ComponentType;
-  typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
-  typedef vtkm::VecTraitsTagSizeVariable IsSizeStatic;
+  using ComponentType = typename VecType::ComponentType;
+  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT

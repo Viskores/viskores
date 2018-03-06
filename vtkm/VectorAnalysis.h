@@ -22,7 +22,7 @@
 #ifndef vtk_m_VectorAnalysis_h
 #define vtk_m_VectorAnalysis_h
 
-// This header file defines math functions that deal with linear albegra funcitons
+// This header file defines math functions that deal with linear albegra functions
 
 #include <vtkm/Math.h>
 #include <vtkm/TypeTraits.h>
@@ -59,7 +59,7 @@ VTKM_EXEC_CONT vtkm::Vec<ValueType, N> Lerp(const vtkm::Vec<ValueType, N>& value
                                             const vtkm::Vec<ValueType, N>& value1,
                                             const vtkm::Vec<ValueType, N>& weight)
 {
-  static const vtkm::Vec<ValueType, N> One(ValueType(1));
+  const vtkm::Vec<ValueType, N> One(ValueType(1));
   return (One - weight) * value0 + weight * value1;
 }
 

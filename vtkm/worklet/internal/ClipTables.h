@@ -31,12 +31,12 @@ namespace worklet
 {
 namespace internal
 {
-
+// clang-format off
 // table format:
 // ncells, {{celltype, nverts, {edge/verts(>=100), ...}}, ...}, \n
 // values < 100 represent edges where the corresponding vertex lies
 // values >= 100 reresent existing vertices of the input cell (vertex = value - 100)
-static vtkm::UInt8 ClipTablesData[] = {
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt8 ClipTablesData[] = {
   // vtkm::CELL_SHAPE_VERTEX
   0, // 0
   1,
@@ -19004,7 +19004,7 @@ static vtkm::UInt8 ClipTablesData[] = {
 };
 
 // Index into ClipTablesData for each shape and configuration
-static vtkm::UInt16 ClipTablesIndices[] = {
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt16 ClipTablesIndices[] = {
   // vtkm::CELL_SHAPE_VERTEX
   0,
   1,
@@ -19422,7 +19422,7 @@ enum
 };
 
 #define X 255
-static vtkm::UInt8 CellEdges[CELL_EDGES_SIZE] = {
+VTKM_STATIC_CONSTEXPR_ARRAY vtkm::UInt8 CellEdges[CELL_EDGES_SIZE] = {
   X, X, X, X, X, X, X, X, X, X, X, X,
   X, X, X, X, X, X, X, X, X, X, X, X, // vtkm::CELL_SHAPE_EMPTY_CELL
   X, X, X, X, X, X, X, X, X, X, X, X,
@@ -19455,11 +19455,12 @@ static vtkm::UInt8 CellEdges[CELL_EDGES_SIZE] = {
   2, 4, 3, 4, X, X, X, X, X, X, X, X // vtkm::CELL_SHAPE_PYRAMID
 };
 #undef X
+// clang-format on
 
 class ClipTables
 {
 public:
-  typedef vtkm::Vec<vtkm::IdComponent, 2> EdgeVec;
+  using EdgeVec = vtkm::Vec<vtkm::IdComponent, 2>;
 
   template <typename DeviceAdapter>
   class DevicePortal
@@ -19469,7 +19470,7 @@ public:
     vtkm::Id GetCaseIndex(vtkm::Id shape, vtkm::Id caseId) const
     {
       // index into ClipTablesIndices for each shape
-      static vtkm::Int16 CellIndexLookup[vtkm::NUMBER_OF_CELL_SHAPES] = {
+      VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32 CellIndexLookup[vtkm::NUMBER_OF_CELL_SHAPES] = {
         -1,  //  0 = vtkm::CELL_SHAPE_EMPTY_CELL
         0,   //  1 = vtkm::CELL_SHAPE_VERTEX
         -1,  //  2 = vtkm::CELL_SHAPE_POLY_VERTEX

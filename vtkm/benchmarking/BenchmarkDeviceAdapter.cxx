@@ -36,6 +36,7 @@
 #include <vtkm/worklet/StableSortIndices.h>
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <random>
 #include <string>
@@ -160,7 +161,7 @@ struct ExtendedTypes : vtkm::ListTagBase<vtkm::UInt8,
 {
 };
 
-const static std::string DIVIDER(40, '-');
+static const std::string DIVIDER(40, '-');
 
 /// This class runs a series of micro-benchmarks to measure
 /// performance of the parallel primitives provided by each
@@ -168,13 +169,13 @@ const static std::string DIVIDER(40, '-');
 template <class DeviceAdapterTag>
 class BenchmarkDeviceAdapter
 {
-  typedef vtkm::cont::StorageTagBasic StorageTag;
+  using StorageTag = vtkm::cont::StorageTagBasic;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Id, StorageTag> IdArrayHandle;
+  using IdArrayHandle = vtkm::cont::ArrayHandle<vtkm::Id, StorageTag>;
 
-  typedef vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
-  typedef vtkm::cont::Timer<DeviceAdapterTag> Timer;
+  using Timer = vtkm::cont::Timer<DeviceAdapterTag>;
 
 public:
   // Various kernels used by the different benchmarks to accelerate
@@ -182,8 +183,8 @@ public:
   template <typename Value>
   struct FillTestValueKernel : vtkm::exec::FunctorBase
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
+    using PortalType = typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     PortalType Output;
 
@@ -199,8 +200,8 @@ public:
   template <typename Value>
   struct FillScaledTestValueKernel : vtkm::exec::FunctorBase
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
+    using PortalType = typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     PortalType Output;
     const vtkm::Id IdScale;
@@ -218,8 +219,8 @@ public:
   template <typename Value>
   struct FillModuloTestValueKernel : vtkm::exec::FunctorBase
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
+    using PortalType = typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     PortalType Output;
     const vtkm::Id Modulus;
@@ -237,8 +238,8 @@ public:
   template <typename Value>
   struct FillBinaryTestValueKernel : vtkm::exec::FunctorBase
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
-    typedef typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal PortalType;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
+    using PortalType = typename ValueArrayHandle::template ExecutionTypes<DeviceAdapterTag>::Portal;
 
     PortalType Output;
     const vtkm::Id Modulus;
@@ -260,7 +261,7 @@ private:
   template <typename Value>
   struct BenchCopy
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     ValueArrayHandle ValueHandle_src;
     ValueArrayHandle ValueHandle_dst;
@@ -301,7 +302,7 @@ private:
   template <typename Value>
   struct BenchCopyIf
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     const vtkm::Id PERCENT_VALID;
     const vtkm::Id N_VALID;
@@ -358,7 +359,7 @@ private:
   template <typename Value>
   struct BenchLowerBounds
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     const vtkm::Id N_VALS;
     const vtkm::Id PERCENT_VALUES;
@@ -414,10 +415,10 @@ private:
   template <typename Value>
   struct BenchReduce
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     ValueArrayHandle InputHandle;
-    // We don't actually use this, but we need it to prevent sufficently
+    // We don't actually use this, but we need it to prevent sufficiently
     // smart compilers from optimizing the Reduce call out.
     Value Result;
 
@@ -460,7 +461,7 @@ private:
   template <typename Value>
   struct BenchReduceByKey
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     const vtkm::Id N_KEYS;
     const vtkm::Id PERCENT_KEYS;
@@ -517,7 +518,7 @@ private:
   template <typename Value>
   struct BenchScanInclusive
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
     ValueArrayHandle ValueHandle, OutHandle;
 
     VTKM_CONT
@@ -552,7 +553,7 @@ private:
   template <typename Value>
   struct BenchScanExclusive
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     ValueArrayHandle ValueHandle, OutHandle;
 
@@ -588,7 +589,7 @@ private:
   template <typename Value>
   struct BenchSort
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     ValueArrayHandle ValueHandle;
     std::mt19937 Rng;
@@ -630,7 +631,7 @@ private:
   template <typename Value>
   struct BenchSortByKey
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     std::mt19937 Rng;
     vtkm::Id N_KEYS;
@@ -796,7 +797,7 @@ private:
   template <typename Value>
   struct BenchUnique
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     const vtkm::Id N_VALID;
     const vtkm::Id PERCENT_VALID;
@@ -852,7 +853,7 @@ private:
   template <typename Value>
   struct BenchUpperBounds
   {
-    typedef vtkm::cont::ArrayHandle<Value, StorageTag> ValueArrayHandle;
+    using ValueArrayHandle = vtkm::cont::ArrayHandle<Value, StorageTag>;
 
     const vtkm::Id N_VALS;
     const vtkm::Id PERCENT_VALS;
@@ -1196,7 +1197,9 @@ int main(int argc, char* argv[])
   for (int i = 1; i < argc; ++i)
   {
     std::string arg = argv[i];
-    std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+    std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+      return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    });
     if (arg == "copy")
     {
       config.BenchmarkFlags |= vtkm::benchmarking::COPY;
@@ -1253,7 +1256,9 @@ int main(int argc, char* argv[])
     {
       ++i;
       arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      });
       if (arg == "base")
       {
         config.ExtendedTypeList = false;
@@ -1272,7 +1277,9 @@ int main(int argc, char* argv[])
     {
       ++i;
       arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      });
       if (arg == "off")
       {
         config.TestArraySizeBytes = false;
@@ -1288,7 +1295,9 @@ int main(int argc, char* argv[])
     {
       ++i;
       arg = argv[i];
-      std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+      std::transform(arg.begin(), arg.end(), arg.begin(), [](char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      });
       if (arg == "off")
       {
         config.TestArraySizeValues = false;

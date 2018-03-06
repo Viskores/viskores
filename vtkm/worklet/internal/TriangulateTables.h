@@ -35,8 +35,8 @@ namespace worklet
 namespace internal
 {
 
-typedef vtkm::cont::ArrayHandle<vtkm::IdComponent, vtkm::cont::StorageTagBasic>
-  TriangulateArrayHandle;
+using TriangulateArrayHandle =
+  vtkm::cont::ArrayHandle<vtkm::IdComponent, vtkm::cont::StorageTagBasic>;
 
 static vtkm::IdComponent TriangleCountData[vtkm::NUMBER_OF_CELL_SHAPES] = {
   0,  //  0 = vtkm::CELL_SHAPE_EMPTY_CELL
@@ -92,7 +92,7 @@ template <typename Device>
 class TriangulateTablesExecutionObject : public vtkm::exec::ExecutionObjectBase
 {
 public:
-  typedef typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst PortalType;
+  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
@@ -265,7 +265,7 @@ template <typename Device>
 class TetrahedralizeTablesExecutionObject : public vtkm::exec::ExecutionObjectBase
 {
 public:
-  typedef typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst PortalType;
+  using PortalType = typename TriangulateArrayHandle::ExecutionTypes<Device>::PortalConst;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
