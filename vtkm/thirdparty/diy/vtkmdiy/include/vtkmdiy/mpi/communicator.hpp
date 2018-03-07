@@ -40,17 +40,41 @@ namespace mpi
 
       //! Receive `x` from `dest` using `tag` (blocking).
       //! If `T` is an `std::vector<...>`, `recv` will resize it to fit exactly the sent number of values.
-      template<class T>
-      status    recv(int source, int tag, T& x) const       { return detail::recv<T>()(comm_, source, tag, x); }
+      template <class T>
+      status recv(int source, int tag, T &x) const
+      {
+#if defined(DIY_NO_MPI) && defined(__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ < 8 // CUDA 7.5 workaround
+        (void) source; (void)tag; (void)x;
+        DIY_UNSUPPORTED_MPI_CALL(MPI_Recv);
+#else
+        return detail::recv<T>{}(comm_, source, tag, x);
+#endif
+      }
 
       //! Non-blocking version of `send()`.
-      template<class T>
-      request   isend(int dest, int tag, const T& x) const  { return detail::isend<T>()(comm_, dest, tag, x); }
+      template <class T>
+      request isend(int dest, int tag, const T &x) const
+      {
+#if defined(DIY_NO_MPI) && defined(__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ < 8 // CUDA 7.5 workaround
+        (void) dest; (void)tag; (void)x;
+        DIY_UNSUPPORTED_MPI_CALL(MPI_Send);
+#else
+        return detail::isend<T>{}(comm_, dest, tag, x);
+#endif
+      }
 
       //! Non-blocking version of `recv()`.
       //! If `T` is an `std::vector<...>`, its size must be big enough to accommodate the sent values.
-      template<class T>
-      request   irecv(int source, int tag, T& x) const      { return detail::irecv<T>()(comm_, source, tag, x); }
+      template <class T>
+      request irecv(int source, int tag, T &x) const
+      {
+#if defined(DIY_NO_MPI) && defined(__CUDACC_VER_MAJOR__) && __CUDACC_VER_MAJOR__ < 8 // CUDA 7.5 workaround
+        (void)source; (void)tag; (void)x;
+        DIY_UNSUPPORTED_MPI_CALL(MPI_Irecv);
+#else
+        return detail::irecv<T>()(comm_, source, tag, x);
+#endif
+      }
 
       //! probe
       inline
