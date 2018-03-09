@@ -94,6 +94,7 @@ set(header_impls
   ArrayHandle.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
+  CoordinateSystem.hxx
   StorageBasic.hxx
   )
 
