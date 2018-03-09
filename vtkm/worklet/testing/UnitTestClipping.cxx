@@ -129,8 +129,9 @@ void TestClippingExplicit()
   vtkm::cont::DataSet ds = MakeTestDatasetExplicit();
 
   vtkm::worklet::Clip clip;
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, DeviceAdapter());
+  bool invertClip = false;
+  vtkm::cont::CellSetExplicit<> outputCellSet = clip.Run(
+    ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, invertClip, DeviceAdapter());
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
   vtkm::cont::ArrayHandle<Coord3D> coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
@@ -183,9 +184,10 @@ void TestClippingStrucutred()
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
 
+  bool invertClip = false;
   vtkm::worklet::Clip clip;
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-    clip.Run(ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, DeviceAdapter());
+  vtkm::cont::CellSetExplicit<> outputCellSet = clip.Run(
+    ds.GetCellSet(0), ds.GetField("scalars").GetData(), clipValue, invertClip, DeviceAdapter());
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetData();
   CoordsOutType coords = clip.ProcessPointField(coordsIn, DeviceAdapter());
@@ -243,12 +245,13 @@ void TestClippingWithImplicitFunction()
   vtkm::FloatDefault radius(0.5);
 
   vtkm::cont::DataSet ds = MakeTestDatasetStructured();
-
+  bool invertClip = false;
   vtkm::worklet::Clip clip;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(ds.GetCellSet(0),
              vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
              ds.GetCoordinateSystem("coords"),
+             invertClip,
              DeviceAdapter());
 
   auto coordsIn = ds.GetCoordinateSystem("coords").GetData();

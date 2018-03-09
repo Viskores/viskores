@@ -60,6 +60,7 @@ inline VTKM_CONT ClipWithField::ClipWithField()
   : vtkm::filter::FilterDataSetWithField<ClipWithField>()
   , ClipValue(0)
   , Worklet()
+  , Invert(false)
 {
 }
 
@@ -87,8 +88,8 @@ inline VTKM_CONT vtkm::filter::Result ClipWithField::DoExecute(
   const vtkm::cont::CoordinateSystem& inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-    this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy), field, this->ClipValue, device);
+  vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
+    vtkm::filter::ApplyPolicy(cells, policy), field, this->ClipValue, this->Invert, device);
 
   //create the output data
   vtkm::cont::DataSet output;

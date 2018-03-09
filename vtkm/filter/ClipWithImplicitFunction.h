@@ -38,10 +38,14 @@ namespace filter
 class ClipWithImplicitFunction : public vtkm::filter::FilterDataSet<ClipWithImplicitFunction>
 {
 public:
+  ClipWithImplicitFunction();
+
   void SetImplicitFunction(const vtkm::cont::ImplicitFunctionHandle& func)
   {
     this->Function = func;
   }
+
+  void SetInvertClip(bool invert) { this->Invert = invert; }
 
   const vtkm::cont::ImplicitFunctionHandle& GetImplicitFunction() const { return this->Function; }
 
@@ -62,6 +66,7 @@ public:
 private:
   vtkm::cont::ImplicitFunctionHandle Function;
   vtkm::worklet::Clip Worklet;
+  bool Invert;
 };
 }
 } // namespace vtkm::filter

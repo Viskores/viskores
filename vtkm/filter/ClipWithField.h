@@ -44,6 +44,9 @@ public:
   void SetClipValue(vtkm::Float64 value) { this->ClipValue = value; }
 
   VTKM_CONT
+  void SetInvertClip(bool invert) { this->Invert = invert; }
+
+  VTKM_CONT
   vtkm::Float64 GetClipValue() const { return this->ClipValue; }
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
@@ -65,6 +68,7 @@ public:
 private:
   vtkm::Float64 ClipValue;
   vtkm::worklet::Clip Worklet;
+  bool Invert;
 };
 
 template <>

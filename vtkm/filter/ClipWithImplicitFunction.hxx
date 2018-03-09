@@ -54,6 +54,12 @@ struct PointMapHelper
 } // end namespace clipwithimplicitfunction
 
 //-----------------------------------------------------------------------------
+
+ClipWithImplicitFunction::ClipWithImplicitFunction()
+  : Invert(false)
+{
+}
+
 template <typename DerivedPolicy, typename DeviceAdapter>
 inline vtkm::filter::Result ClipWithImplicitFunction::DoExecute(
   const vtkm::cont::DataSet& input,
@@ -69,7 +75,7 @@ inline vtkm::filter::Result ClipWithImplicitFunction::DoExecute(
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
-    vtkm::filter::ApplyPolicy(cells, policy), this->Function, inputCoords, device);
+    vtkm::filter::ApplyPolicy(cells, policy), this->Function, inputCoords, this->Invert, device);
 
   // compute output coordinates
   auto outputCoordsArray = this->Worklet.ProcessPointField(inputCoords.GetData(), device);
