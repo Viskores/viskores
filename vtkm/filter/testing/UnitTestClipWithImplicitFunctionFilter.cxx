@@ -93,10 +93,53 @@ void TestClipStructured()
   }
 }
 
+void TestClipStructuredInverted()
+{
+  std::cout << "Testing ClipWithImplicitFunctionInverted Filter on Structured data" << std::endl;
+
+  vtkm::cont::DataSet ds = MakeTestDatasetStructured();
+
+  vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
+  vtkm::FloatDefault radius(0.5);
+
+  vtkm::filter::Result result;
+  vtkm::filter::ClipWithImplicitFunction clip;
+  clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(vtkm::Sphere(center, radius)));
+  bool invert = true;
+  clip.SetInvertClip(invert);
+  result = clip.Execute(ds);
+  clip.MapFieldOntoOutput(result, ds.GetField("scalars"));
+
+  const vtkm::cont::DataSet& outputData = result.GetDataSet();
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
+                   "Wrong number of cellsets in the output dataset");
+  VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
+                   "Wrong number of coordinate systems in the output dataset");
+  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
+                   "Wrong number of fields in the output dataset");
+  VTKM_TEST_ASSERT(outputData.GetCellSet().GetNumberOfCells() == 4,
+                   "Wrong number of cells in the output dataset");
+
+  vtkm::cont::DynamicArrayHandle temp = outputData.GetField("scalars").GetData();
+  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
+  temp.CopyTo(resultArrayHandle);
+
+  VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == 13,
+                   "Wrong number of points in the output dataset");
+
+  vtkm::Float32 expected[13] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0.25, 0.25, 0.25, 0.25 };
+  for (int i = 0; i < 13; ++i)
+  {
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+                     "Wrong result for ClipWithImplicitFunction fliter on sturctured quads data");
+  }
+}
+
 void TestClip()
 {
   //todo: add more clip tests
   TestClipStructured();
+  TestClipStructuredInverted();
 }
 
 } // anonymous namespace
