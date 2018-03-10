@@ -127,10 +127,13 @@ private:
 
 
 //Uniform Grid Evaluator
-template <typename PortalType, typename FieldType, typename DeviceAdapterTag>
+template <typename PortalType,
+          typename FieldType,
+          typename DeviceAdapterTag,
+          typename StorageTag = VTKM_DEFAULT_STORAGE_TAG>
 class UniformGridEvaluate
 {
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, StorageTag>;
 
 public:
   VTKM_CONT

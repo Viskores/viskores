@@ -25,8 +25,10 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/MultiBlock.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/PolicyBase.h>
 #include <vtkm/filter/Result.h>
 
@@ -36,7 +38,7 @@ namespace filter
 {
 
 template <class Derived>
-class FilterDataSet
+class FilterDataSet : public vtkm::filter::Filter<FilterDataSet<Derived>>
 {
 public:
   VTKM_CONT
@@ -57,22 +59,6 @@ public:
   VTKM_CONT
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
 
-  VTKM_CONT
-  void SetRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker& tracker)
-  {
-    this->Tracker = tracker;
-  }
-
-  VTKM_CONT
-  const vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker() const { return this->Tracker; }
-
-  VTKM_CONT
-  Result Execute(const vtkm::cont::DataSet& input);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
   //From the field we can extract the association component
   // ASSOC_ANY -> unable to map
   // ASSOC_WHOLE_MESH -> (I think this is points)
@@ -92,10 +78,10 @@ private:
   VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-  std::string OutputFieldName;
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
-  vtkm::cont::RuntimeDeviceTracker Tracker;
+
+  friend class vtkm::filter::Filter<FilterDataSet<Derived>>;
 };
 }
 } // namespace vtkm::filter

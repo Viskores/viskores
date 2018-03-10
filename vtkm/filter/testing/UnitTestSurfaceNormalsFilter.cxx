@@ -71,32 +71,31 @@ void TestSurfaceNormals()
   vtkm::cont::DataSet ds = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSetPolygonal();
 
   vtkm::filter::SurfaceNormals filter;
-  vtkm::filter::Result result;
+  vtkm::cont::DataSet result;
 
   std::cout << "testing default output (generate only point normals):\n";
   result = filter.Execute(ds);
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "Normals", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                   "Field was given the wrong association.");
+  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_POINTS),
+                   "Point normals missing.");
 
   std::cout << "generate only cell normals:\n";
   filter.SetGenerateCellNormals(true);
   filter.SetGeneratePointNormals(false);
   result = filter.Execute(ds);
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "Normals", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
-                   "Field was given the wrong association.");
+  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_CELL_SET),
+                   "Cell normals missing.");
 
   std::cout << "generate both cell and point normals:\n";
   filter.SetGeneratePointNormals(true);
   result = filter.Execute(ds);
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "Normals", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                   "Field was given the wrong association.");
+  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_POINTS),
+                   "Point normals missing.");
+  VTKM_TEST_ASSERT(result.HasField("Normals", vtkm::cont::Field::ASSOC_CELL_SET),
+                   "Cell normals missing.");
 
   std::cout << "test result values:\n";
-  VerifyPointNormalValues(result.GetDataSet());
-  VerifyCellNormalValues(result.GetDataSet());
+  VerifyPointNormalValues(result);
+  VerifyCellNormalValues(result);
 }
 
 } // anonymous namespace

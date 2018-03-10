@@ -66,20 +66,7 @@ inline SurfaceNormals::SurfaceNormals()
   , NormalizeCellNormals(true)
   , GeneratePointNormals(true)
 {
-}
-
-inline vtkm::filter::Result SurfaceNormals::Execute(const vtkm::cont::DataSet& input)
-{
-  return this->Execute(input, input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-}
-
-template <typename DerivedPolicy>
-inline vtkm::filter::Result SurfaceNormals::Execute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
-{
-  return this->Execute(
-    input, input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()), policy);
+  this->SetUseCoordinateSystemAsField(true);
 }
 
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>

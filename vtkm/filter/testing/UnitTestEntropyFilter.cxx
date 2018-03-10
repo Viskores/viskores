@@ -116,16 +116,16 @@ void TestEntropy()
   vtkm::Id3 dims(32, 32, 32);
   vtkm::cont::DataSet dataSet = MakeIsosurfaceTestDataSet(dims);
 
-  vtkm::filter::Result resultEntropy;
   vtkm::filter::Entropy entropyFilter;
 
   ///// calculate entropy of "nodevar" field of the data set /////
   entropyFilter.SetNumberOfBins(50); //set number of bins
-  resultEntropy = entropyFilter.Execute(dataSet, "nodevar");
+  entropyFilter.SetActiveField("nodevar");
+  vtkm::cont::DataSet resultEntropy = entropyFilter.Execute(dataSet);
 
   ///// get entropy from resultEntropy /////
   vtkm::cont::ArrayHandle<vtkm::Float64> entropy;
-  resultEntropy.FieldAs(entropy);
+  resultEntropy.GetField("entropy").GetData().CopyTo(entropy);
   vtkm::cont::ArrayHandle<vtkm::Float64>::PortalConstControl portal =
     entropy.GetPortalConstControl();
   vtkm::Float64 entropyFromFilter = portal.Get(0);

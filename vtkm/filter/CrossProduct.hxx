@@ -43,15 +43,16 @@ inline VTKM_CONT vtkm::filter::Result CrossProduct::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType> outArray;
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> outArray;
 
   vtkm::worklet::DispatcherMapField<vtkm::worklet::CrossProduct, DeviceAdapter> dispatcher(
     this->Worklet);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType> secondaryField;
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> secondaryField;
   try
   {
-    vtkm::filter::ApplyPolicy(inDataSet.GetField(SecondaryFieldName), policy)
+    using Traits = vtkm::filter::FilterTraits<CrossProduct>;
+    vtkm::filter::ApplyPolicy(inDataSet.GetField(SecondaryFieldName), policy, Traits())
       .CopyTo(secondaryField);
   }
   catch (const vtkm::cont::Error&)

@@ -63,5 +63,16 @@ inline VTKM_CONT vtkm::filter::Result NDEntropy::DoExecute(
   //return outputData;
   return vtkm::filter::Result(outputData);
 }
+
+//-----------------------------------------------------------------------------
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool NDEntropy::DoMapField(vtkm::filter::Result&,
+                                            const vtkm::cont::ArrayHandle<T, StorageType>&,
+                                            const vtkm::filter::FieldMetadata&,
+                                            const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                                            DeviceAdapter)
+{
+  return false;
+}
 }
 }

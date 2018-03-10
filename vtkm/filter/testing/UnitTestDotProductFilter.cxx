@@ -105,32 +105,28 @@ void TestDotProduct()
     vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec1", field1);
     vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec2", field2);
 
-    vtkm::filter::Result result;
     vtkm::filter::DotProduct filter;
-
+    filter.SetActiveField("vec1");
     filter.SetSecondaryFieldName("vec2");
-    result = filter.Execute(dataSet, dataSet.GetField("vec1"));
+    vtkm::cont::DataSet result = filter.Execute(dataSet);
 
-    VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
-    VTKM_TEST_ASSERT(result.GetField().GetName() == "crossproduct", "Output field has wrong name.");
-    VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                     "Output field has wrong association");
+    VTKM_TEST_ASSERT(result.HasField("crossproduct", vtkm::cont::Field::ASSOC_POINTS),
+                     "Output field not generated.");
 
+    vtkm::cont::Field field = result.GetField("crossproduct", vtkm::cont::Field::ASSOC_POINTS);
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> outputArray;
-    if (result.FieldAs(outputArray))
+    field.GetData().CopyTo(outputArray);
+    auto v1Portal = field1.GetPortalConstControl();
+    auto v2Portal = field2.GetPortalConstControl();
+    auto outPortal = outputArray.GetPortalConstControl();
+
+    for (vtkm::Id j = 0; j < outputArray.GetNumberOfValues(); j++)
     {
-      auto v1Portal = field1.GetPortalConstControl();
-      auto v2Portal = field2.GetPortalConstControl();
-      auto outPortal = outputArray.GetPortalConstControl();
+      vtkm::Vec<vtkm::FloatDefault, 3> v1 = v1Portal.Get(j);
+      vtkm::Vec<vtkm::FloatDefault, 3> v2 = v2Portal.Get(j);
+      vtkm::FloatDefault res = outPortal.Get(j);
 
-      for (vtkm::Id j = 0; j < outputArray.GetNumberOfValues(); j++)
-      {
-        vtkm::Vec<vtkm::FloatDefault, 3> v1 = v1Portal.Get(j);
-        vtkm::Vec<vtkm::FloatDefault, 3> v2 = v2Portal.Get(j);
-        vtkm::FloatDefault res = outPortal.Get(j);
-
-        VTKM_TEST_ASSERT(test_equal(vtkm::dot(v1, v2), res), "Wrong result for dot product");
-      }
+      VTKM_TEST_ASSERT(test_equal(vtkm::dot(v1, v2), res), "Wrong result for dot product");
     }
   }
 }

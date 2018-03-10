@@ -66,24 +66,18 @@ void TestClipExplicit()
 
   vtkm::cont::DataSet ds = MakeTestDatasetExplicit();
 
-  vtkm::filter::Result result;
   vtkm::filter::ClipWithField clip;
   clip.SetClipValue(0.5);
+  clip.SetActiveField("scalars");
 
-  result = clip.Execute(ds, std::string("scalars"));
+  vtkm::filter::FieldSelection selection;
+  selection.AddField("scalars", vtkm::cont::Field::ASSOC_POINTS);
+  const vtkm::cont::DataSet outputData = clip.Execute(ds, selection);
 
-  const vtkm::cont::DataSet& outputData = result.GetDataSet();
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,
                    "Wrong number of coordinate systems in the output dataset");
-
-  VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 0,
-                   "Wrong number of fields in the output dataset");
-
-  VTKM_TEST_ASSERT(clip.MapFieldOntoOutput(result, ds.GetPointField("scalars")),
-                   "MapFieldOntoOutput failed.");
-
   VTKM_TEST_ASSERT(outputData.GetNumberOfFields() == 1,
                    "Wrong number of fields in the output dataset");
 
