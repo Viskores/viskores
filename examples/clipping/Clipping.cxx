@@ -93,10 +93,12 @@ int main(int argc, char* argv[])
 
   vtkm::cont::Timer<DeviceAdapter> total;
   vtkm::cont::Timer<DeviceAdapter> timer;
+  bool invertClip = false;
   vtkm::cont::CellSetExplicit<> outputCellSet =
     clip.Run(input.GetCellSet(0),
              scalarField.GetData().ResetTypeList(vtkm::TypeListTagScalarAll()),
              clipValue,
+             invertClip,
              DeviceAdapter());
   vtkm::Float64 clipTime = timer.GetElapsedTime();
 
