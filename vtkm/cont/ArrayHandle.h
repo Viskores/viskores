@@ -58,20 +58,28 @@ class VTKM_CONT_EXPORT ArrayHandleBase
 {
 };
 
-/// Checks to see if the given type and storage can form a valid array handle
+/// Checks to see if the given type and storage forms a valid array handle
 /// (some storage objects cannot support all types). This check is compatible
-/// with C++11 type_traits. It contains a
-/// typedef named type that is either std::true_type or std::false_type.
-/// Both of these have a typedef named value with the respective boolean value.
+/// with C++11 type_traits.
 ///
 template <typename T, typename StorageTag>
 struct IsValidArrayHandle
-{
-  //need to add the not
-  using type =
-    std::integral_constant<bool,
+  : std::integral_constant<bool,
                            !(std::is_base_of<vtkm::cont::internal::UndefinedStorage,
-                                             vtkm::cont::internal::Storage<T, StorageTag>>::value)>;
+                                             vtkm::cont::internal::Storage<T, StorageTag>>::value)>
+{
+};
+
+/// Checks to see if the given type and storage forms a invalid array handle
+/// (some storage objects cannot support all types). This check is compatible
+/// with C++11 type_traits.
+///
+template <typename T, typename StorageTag>
+struct IsInValidArrayHandle
+  : std::integral_constant<bool,
+                           (std::is_base_of<vtkm::cont::internal::UndefinedStorage,
+                                            vtkm::cont::internal::Storage<T, StorageTag>>::value)>
+{
 };
 
 /// Checks to see if the ArrayHandle for the given DeviceAdatper allows
@@ -97,6 +105,7 @@ private:
 
 public:
   using type = std::integral_constant<bool, !IsVoidType::value>;
+  static constexpr bool value = !IsVoidType::value;
 };
 
 /// Checks to see if the given object is an array handle. This check is
