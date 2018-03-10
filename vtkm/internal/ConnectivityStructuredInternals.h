@@ -63,8 +63,8 @@ public:
     return this->GetNumberOfPoints();
   }
 
-  static const vtkm::IdComponent NUM_POINTS_IN_CELL = 2;
-  static const vtkm::IdComponent MAX_CELL_TO_POINT = 2;
+  static constexpr vtkm::IdComponent NUM_POINTS_IN_CELL = 2;
+  static constexpr vtkm::IdComponent MAX_CELL_TO_POINT = 2;
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfPoints() const { return this->PointDimensions; }
@@ -171,8 +171,8 @@ public:
     return this->GetPointDimensions();
   }
 
-  static const vtkm::IdComponent NUM_POINTS_IN_CELL = 4;
-  static const vtkm::IdComponent MAX_CELL_TO_POINT = 4;
+  static constexpr vtkm::IdComponent NUM_POINTS_IN_CELL = 4;
+  static constexpr vtkm::IdComponent MAX_CELL_TO_POINT = 4;
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfCells() const { return vtkm::ReduceProduct(this->GetCellDimensions()); }
@@ -334,8 +334,8 @@ public:
     return this->GetPointDimensions();
   }
 
-  static const vtkm::IdComponent NUM_POINTS_IN_CELL = 8;
-  static const vtkm::IdComponent MAX_CELL_TO_POINT = 8;
+  static constexpr vtkm::IdComponent NUM_POINTS_IN_CELL = 8;
+  static constexpr vtkm::IdComponent MAX_CELL_TO_POINT = 8;
 
   VTKM_EXEC_CONT
   vtkm::Id GetNumberOfCells() const { return vtkm::ReduceProduct(this->GetCellDimensions()); }

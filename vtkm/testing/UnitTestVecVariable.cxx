@@ -62,7 +62,7 @@ struct VecVariableTestFunctor
   template <typename T>
   void operator()(T) const
   {
-    static const vtkm::IdComponent SIZE = 5;
+    static constexpr vtkm::IdComponent SIZE = 5;
     using VecType = vtkm::Vec<T, SIZE>;
     using VecVariableType = vtkm::VecVariable<T, SIZE>;
     using TTraits = vtkm::TypeTraits<VecVariableType>;

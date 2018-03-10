@@ -57,7 +57,7 @@ struct TestExecObjectWorklet
 namespace map_exec_field
 {
 
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 template <typename WorkletType>
 struct DoTestWorklet

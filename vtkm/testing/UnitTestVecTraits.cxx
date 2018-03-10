@@ -24,8 +24,8 @@
 namespace
 {
 
-static const vtkm::Id MAX_VECTOR_SIZE = 5;
-static const vtkm::Id VecInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
+static constexpr vtkm::Id MAX_VECTOR_SIZE = 5;
+static constexpr vtkm::Id VecInit[MAX_VECTOR_SIZE] = { 42, 54, 67, 12, 78 };
 
 struct TestVecTypeFunctor
 {

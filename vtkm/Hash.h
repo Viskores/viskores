@@ -32,8 +32,8 @@ using HashType = vtkm::UInt32;
 namespace detail
 {
 
-static const vtkm::HashType FNV1A_OFFSET = 2166136261;
-static const vtkm::HashType FNV1A_PRIME = 16777619;
+static constexpr vtkm::HashType FNV1A_OFFSET = 2166136261;
+static constexpr vtkm::HashType FNV1A_PRIME = 16777619;
 
 /// \brief Performs an FNV-1a hash on 32-bit integers returning a 32-bit hash
 ///

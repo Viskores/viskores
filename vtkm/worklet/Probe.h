@@ -319,7 +319,7 @@ public:
 
   //============================================================================
 private:
-  static const vtkm::UInt8 HIDDEN = 2; // from vtk
+  static constexpr vtkm::UInt8 HIDDEN = 2; // from vtk
 
   vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> ParametricCoordinates;

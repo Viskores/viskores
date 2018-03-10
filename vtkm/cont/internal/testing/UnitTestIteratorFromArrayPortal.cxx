@@ -31,7 +31,7 @@ namespace
 template <typename T>
 struct TemplatedTests
 {
-  static const vtkm::Id ARRAY_SIZE = 10;
+  static constexpr vtkm::Id ARRAY_SIZE = 10;
 
   using ValueType = T;
   using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;

@@ -41,7 +41,7 @@ struct TypeCheckTagKeys
 template <typename Type>
 struct TypeCheck<TypeCheckTagKeys, Type>
 {
-  static const bool value = false;
+  static constexpr bool value = false;
 };
 }
 }

@@ -34,7 +34,7 @@ namespace internal
 
 inline bool IsLittleEndian()
 {
-  static const vtkm::Int16 i16 = 0x1;
+  static constexpr vtkm::Int16 i16 = 0x1;
   const vtkm::Int8* i8p = reinterpret_cast<const vtkm::Int8*>(&i16);
   return (*i8p == 1);
 }

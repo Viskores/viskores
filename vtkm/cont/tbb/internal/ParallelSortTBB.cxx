@@ -686,7 +686,7 @@ private:
   size_t max_elems_;
   int max_threads_;
 
-  static const size_t kOutBufferSize = internal::kOutBufferSize;
+  static constexpr size_t kOutBufferSize = internal::kOutBufferSize;
   ValueType *original_, *tmp_;
   ValueType *src_, *dst_;
   ValueType*** out_buf_;

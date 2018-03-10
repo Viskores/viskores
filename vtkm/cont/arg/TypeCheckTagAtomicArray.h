@@ -49,15 +49,15 @@ struct TypeCheckTagAtomicArray
 template <typename TypeList, typename ArrayType>
 struct TypeCheck<TypeCheckTagAtomicArray<TypeList>, ArrayType>
 {
-  static const bool value = false;
+  static constexpr bool value = false;
 };
 
 template <typename T, typename TypeList>
 struct TypeCheck<TypeCheckTagAtomicArray<TypeList>,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>>
 {
-  static const bool value = (vtkm::ListContains<TypeList, T>::value &&
-                             vtkm::ListContains<vtkm::exec::AtomicArrayTypeListTag, T>::value);
+  static constexpr bool value = (vtkm::ListContains<TypeList, T>::value &&
+                                 vtkm::ListContains<vtkm::exec::AtomicArrayTypeListTag, T>::value);
 };
 }
 }

@@ -38,8 +38,8 @@ namespace UnitTestArrayHandleDiscardDetail
 template <typename ValueType>
 struct Test
 {
-  static const vtkm::Id ARRAY_SIZE = 100;
-  static const vtkm::Id NUM_KEYS = 3;
+  static constexpr vtkm::Id ARRAY_SIZE = 100;
+  static constexpr vtkm::Id NUM_KEYS = 3;
 
   using DeviceTag = vtkm::cont::DeviceAdapterTagSerial;
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;

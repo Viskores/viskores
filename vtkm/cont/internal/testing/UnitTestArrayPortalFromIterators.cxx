@@ -29,7 +29,7 @@ namespace
 template <typename T>
 struct TemplatedTests
 {
-  static const vtkm::Id ARRAY_SIZE = 10;
+  static constexpr vtkm::Id ARRAY_SIZE = 10;
 
   using ValueType = T;
   using ComponentType = typename vtkm::VecTraits<ValueType>::ComponentType;
@@ -76,7 +76,7 @@ struct TemplatedTests
   {
     ValueType array[ARRAY_SIZE];
 
-    static const ComponentType ORIGINAL_VALUE = 109;
+    constexpr ComponentType ORIGINAL_VALUE = 109;
     FillIterator(array, array + ARRAY_SIZE, ORIGINAL_VALUE);
 
     ::vtkm::cont::internal::ArrayPortalFromIterators<ValueType*> portal(array, array + ARRAY_SIZE);
@@ -124,7 +124,7 @@ struct TemplatedTests
     VTKM_TEST_ASSERT(CheckPortal(const_portal, ORIGINAL_VALUE),
                      "Const portal iterator has bad value.");
 
-    static const ComponentType SET_VALUE = 62;
+    constexpr ComponentType SET_VALUE = 62;
 
     std::cout << "  Check get/set methods." << std::endl;
     for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)

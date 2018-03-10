@@ -72,7 +72,7 @@ class quick_sort_range : private no_assign
   }
 
 public:
-  static const size_t grainsize = 500;
+  static constexpr size_t grainsize = 500;
   const Compare& comp;
   RandomAccessIterator begin;
   size_t size;

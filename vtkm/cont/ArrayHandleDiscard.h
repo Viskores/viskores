@@ -229,18 +229,13 @@ public:
 
 /// Helper to determine if an ArrayHandle type is an ArrayHandleDiscard.
 template <typename T>
-struct IsArrayHandleDiscard;
+struct IsArrayHandleDiscard : std::false_type
+{
+};
 
 template <typename T>
 struct IsArrayHandleDiscard<ArrayHandle<T, internal::StorageTagDiscard>> : std::true_type
 {
-  static const bool Value = true;
-};
-
-template <typename T, typename U>
-struct IsArrayHandleDiscard<ArrayHandle<T, U>> : std::false_type
-{
-  static const bool Value = false;
 };
 
 } // end namespace cont

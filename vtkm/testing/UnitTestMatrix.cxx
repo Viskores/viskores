@@ -51,8 +51,8 @@ namespace
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 struct MatrixTest
 {
-  static const vtkm::IdComponent NUM_ROWS = NumRow;
-  static const vtkm::IdComponent NUM_COLS = NumCol;
+  static constexpr vtkm::IdComponent NUM_ROWS = NumRow;
+  static constexpr vtkm::IdComponent NUM_COLS = NumCol;
   using MatrixType = vtkm::Matrix<T, NUM_ROWS, NUM_COLS>;
   using ComponentType = typename MatrixType::ComponentType;
 
@@ -372,7 +372,7 @@ T RecursiveDeterminant(const vtkm::Matrix<T, Size, Size>& A)
 template <typename T, vtkm::IdComponent Size>
 struct SquareMatrixTest
 {
-  static const vtkm::IdComponent SIZE = Size;
+  static constexpr vtkm::IdComponent SIZE = Size;
   using MatrixType = vtkm::Matrix<T, Size, Size>;
 
   static void CheckMatrixSize()

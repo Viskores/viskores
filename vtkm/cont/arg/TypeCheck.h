@@ -46,7 +46,7 @@ struct TypeCheck
   /// The static constant boolean \c value is set to \c true if the type is
   /// valid for the given check tag and \c false otherwise.
   ///
-  static const bool value = false;
+  static constexpr bool value = false;
 };
 }
 }

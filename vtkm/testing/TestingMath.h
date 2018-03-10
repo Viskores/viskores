@@ -48,7 +48,6 @@ class Lists
 public:
   static constexpr vtkm::IdComponent NUM_NUMBERS = 5;
 
-
   VTKM_EXEC_CONT vtkm::Float64 NumberList(vtkm::Int32 i) const
   {
     vtkm::Float64 numberList[NUM_NUMBERS] = { 0.25, 0.5, 1.0, 2.0, 3.75 };

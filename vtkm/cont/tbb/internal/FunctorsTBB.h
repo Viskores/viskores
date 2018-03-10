@@ -88,7 +88,7 @@ using WrappedBinaryOperator = vtkm::cont::internal::WrappedBinaryOperator<Result
 
 // The "grain size" of scheduling with TBB.  Not a lot of thought has gone
 // into picking this size.
-static const vtkm::Id TBB_GRAIN_SIZE = 1024;
+static constexpr vtkm::Id TBB_GRAIN_SIZE = 1024;
 
 template <typename InputPortalType, typename OutputPortalType>
 struct CopyBody

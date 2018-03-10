@@ -27,7 +27,7 @@
 namespace UnitTestVecFromPortalPermuteNamespace
 {
 
-static const vtkm::IdComponent ARRAY_SIZE = 10;
+static constexpr vtkm::IdComponent ARRAY_SIZE = 10;
 
 template <typename T>
 void CheckType(T, T)

@@ -84,7 +84,7 @@ struct VecTraits
   ///
   /// This is only defined for vectors of a static size.
   ///
-  static const vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
 
   /// Number of components in the given vector.
   ///
@@ -149,7 +149,7 @@ struct VecTraits<vtkm::Vec<T, Size>>
 
   /// Number of components in the vector.
   ///
-  static const vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
 
   /// Number of components in the given vector.
   ///
@@ -335,7 +335,7 @@ template <typename ScalarType>
 struct VecTraitsBasic
 {
   using ComponentType = ScalarType;
-  static const vtkm::IdComponent NUM_COMPONENTS = 1;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 1;
   using HasMultipleComponents = vtkm::VecTraitsTagSingleComponent;
   using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 

@@ -41,7 +41,7 @@
 
 namespace
 {
-static const vtkm::Id WIDTH = 512, HEIGHT = 512;
+static constexpr vtkm::Id WIDTH = 512, HEIGHT = 512;
 static vtkm::Id which = 0, NUM_DATASETS = 5;
 static bool done = false;
 static bool batch = false;

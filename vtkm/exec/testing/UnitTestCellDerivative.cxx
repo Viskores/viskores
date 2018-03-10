@@ -67,7 +67,7 @@ struct LinearField
   }
 };
 
-static const vtkm::IdComponent MAX_POINTS = 8;
+static constexpr vtkm::IdComponent MAX_POINTS = 8;
 
 template <typename CellShapeTag>
 void GetMinMaxPoints(CellShapeTag,

@@ -207,7 +207,7 @@ struct TypeListTagCommon : vtkm::ListTagBase<vtkm::Int32,
 template <typename Type>
 struct ListContains<vtkm::TypeListTagAll, Type>
 {
-  static const bool value = true;
+  static constexpr bool value = true;
 };
 
 } // namespace vtkm

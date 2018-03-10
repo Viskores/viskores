@@ -42,19 +42,19 @@ struct VecAxisAlignedPointCoordinatesNumComponents;
 template <>
 struct VecAxisAlignedPointCoordinatesNumComponents<1>
 {
-  static const vtkm::IdComponent NUM_COMPONENTS = 2;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 2;
 };
 
 template <>
 struct VecAxisAlignedPointCoordinatesNumComponents<2>
 {
-  static const vtkm::IdComponent NUM_COMPONENTS = 4;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 4;
 };
 
 template <>
 struct VecAxisAlignedPointCoordinatesNumComponents<3>
 {
-  static const vtkm::IdComponent NUM_COMPONENTS = 8;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 8;
 };
 
 struct VecAxisAlignedPointCoordinatesOffsetTable
@@ -90,7 +90,7 @@ class VecAxisAlignedPointCoordinates
 public:
   using ComponentType = vtkm::Vec<vtkm::FloatDefault, 3>;
 
-  static const vtkm::IdComponent NUM_COMPONENTS =
+  static constexpr vtkm::IdComponent NUM_COMPONENTS =
     detail::VecAxisAlignedPointCoordinatesNumComponents<NumDimensions>::NUM_COMPONENTS;
 
   VTKM_EXEC_CONT
@@ -160,7 +160,7 @@ struct VecTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 
-  static const vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
 
   VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const VecType&) { return NUM_COMPONENTS; }

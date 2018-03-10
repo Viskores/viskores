@@ -36,7 +36,7 @@ template <typename _SourcePortalType, vtkm::IdComponent _NUM_COMPONENTS>
 class VTKM_ALWAYS_EXPORT ArrayPortalGroupVec
 {
 public:
-  static const vtkm::IdComponent NUM_COMPONENTS = _NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = _NUM_COMPONENTS;
   using SourcePortalType = _SourcePortalType;
 
   using ComponentType = typename std::remove_const<typename SourcePortalType::ValueType>::type;

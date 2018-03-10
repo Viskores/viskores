@@ -32,7 +32,7 @@
 namespace
 {
 
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 struct TryExecuteTestFunctor
 {

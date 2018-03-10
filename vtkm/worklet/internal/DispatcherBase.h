@@ -363,7 +363,7 @@ protected:
   using ExecutionInterface =
     vtkm::internal::FunctionInterface<typename WorkletType::ExecutionSignature>;
 
-  static const vtkm::IdComponent NUM_INVOKE_PARAMS = ControlInterface::ARITY;
+  static constexpr vtkm::IdComponent NUM_INVOKE_PARAMS = ControlInterface::ARITY;
 
 private:
   // We don't really need these types, but declaring them checks the arguments
