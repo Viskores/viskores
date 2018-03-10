@@ -121,7 +121,8 @@ int main(int argc, char* argv[])
 
   // Convert 3D mesh of values into contour tree, pairs of vertex ids
   vtkm::filter::ContourTreeMesh3D filter;
-  result = filter.Execute(inDataSet, std::string("values"));
+  filter.SetActiveField("values");
+  result = filter.Execute(inDataSet);
 
   vtkm::cont::Field resultField = result.GetField();
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
