@@ -192,8 +192,7 @@ int main(int argc, char* argv[])
 
   // Convert 2D explicit cells to triangles
   vtkm::filter::Triangulate triangulate;
-  vtkm::filter::Result result = triangulate.Execute(inDataSet);
-  outDataSet = result.GetDataSet();
+  outDataSet = triangulate.Execute(inDataSet);
 
   // Render the output dataset of tets
   glutInit(&argc, argv);
