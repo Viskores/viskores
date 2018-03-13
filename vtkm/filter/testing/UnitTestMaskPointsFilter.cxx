@@ -35,15 +35,10 @@ public:
   {
     std::cout << "Testing mask points on 2D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(2);
-    result = maskPoints.Execute(dataset);
-
-    maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = maskPoints.Execute(dataset, { "pointvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 12),
                      "Wrong number of cells for MaskPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 12),
@@ -54,15 +49,10 @@ public:
   {
     std::cout << "Testing mask points on 3D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(5);
-    result = maskPoints.Execute(dataset);
-
-    maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = maskPoints.Execute(dataset, { "pointvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 25),
                      "Wrong number of cells for MaskPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 25),
@@ -73,16 +63,11 @@ public:
   {
     std::cout << "Testing mask points on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::Result result;
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(3);
     maskPoints.SetCompactPoints(false);
-    result = maskPoints.Execute(dataset);
-
-    maskPoints.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = maskPoints.Execute(dataset, { "pointvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 3),
                      "Wrong number of cells for MaskPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 11),

@@ -87,7 +87,7 @@ inline VTKM_CONT vtkm::filter::Result Threshold::DoExecute(
   output.AddCellSet(cellOut);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-  return output;
+  return vtkm::filter::Result(output);
 }
 
 //-----------------------------------------------------------------------------

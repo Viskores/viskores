@@ -386,13 +386,14 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::cont::DataSet dataSet;
     dataSet.AddCoordinateSystem(actualCoords);
     dataSet.AddCellSet(inCellSet);
+    dataSet.AddField(inScalarField);
     vtkm::filter::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
     externalFaces.SetPassPolyData(true);
-    vtkm::filter::Result result = externalFaces.Execute(dataSet);
-    externalFaces.MapFieldOntoOutput(result, inScalarField);
-    cellSet = result.GetDataSet().GetCellSet();
-    actualField = result.GetDataSet().GetField(0);
+    vtkm::cont::DataSet output =
+      externalFaces.Execute(dataSet, vtkm::filter::FieldSelection::MODE_ALL);
+    cellSet = output.GetCellSet();
+    actualField = output.GetField(0);
   }
 
   // Extract unique edges from the cell set.

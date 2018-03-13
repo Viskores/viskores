@@ -35,22 +35,14 @@ public:
   {
     std::cout << "Testing mask cells uniform grid :" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::Result result;
 
     // Setup and run filter to extract by stride
     vtkm::filter::Mask mask;
     vtkm::Id stride = 2;
     mask.SetStride(stride);
 
-    result = mask.Execute(dataset);
+    vtkm::cont::DataSet output = mask.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
 
-    // All point data and cell data can be transferred
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      mask.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for Mask");
 
@@ -67,22 +59,13 @@ public:
   {
     std::cout << "Testing mask cells uniform grid :" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     // Setup and run filter to extract by stride
     vtkm::filter::Mask mask;
     vtkm::Id stride = 9;
     mask.SetStride(stride);
 
-    result = mask.Execute(dataset);
-
-    // All point data and cell data can be transferred
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      mask.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = mask.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 7),
                      "Wrong result for Mask");
 
@@ -98,22 +81,13 @@ public:
   {
     std::cout << "Testing mask cells explicit:" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::Result result;
 
     // Setup and run filter to extract by stride
     vtkm::filter::Mask mask;
     vtkm::Id stride = 2;
     mask.SetStride(stride);
 
-    result = mask.Execute(dataset);
-
-    // All point data and cell data can be transferred
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      mask.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = mask.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 2),
                      "Wrong result for Mask");
 

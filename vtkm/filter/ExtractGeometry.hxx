@@ -112,7 +112,7 @@ inline VTKM_CONT vtkm::filter::Result ExtractGeometry::DoExecute(
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.AddCellSet(outCells);
 
-  return output;
+  return vtkm::filter::Result(output);
 }
 
 //-----------------------------------------------------------------------------

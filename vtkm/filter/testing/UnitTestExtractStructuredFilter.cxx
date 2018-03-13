@@ -35,7 +35,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::RangeId3 range(1, 4, 1, 4, 0, 1);
     vtkm::Id3 sample(1, 1, 1);
@@ -44,13 +43,7 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 9),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
@@ -81,7 +74,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -89,13 +81,7 @@ public:
     extract.SetVOI(1, 4, 1, 4, 1, 4);
     extract.SetSampleRate(1, 1, 1);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
@@ -126,7 +112,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -136,13 +121,7 @@ public:
     extract.SetVOI(minPoint, maxPoint);
     extract.SetSampleRate(1, 1, 1);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 125),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 64),
@@ -173,8 +152,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
-
     vtkm::filter::ExtractStructured extract;
 
     // VOI surrounds dataset
@@ -183,13 +160,7 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
@@ -219,8 +190,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
-
     vtkm::filter::ExtractStructured extract;
 
     // RangeId3 intersects dataset on far boundary
@@ -229,13 +198,7 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 64),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 27),
@@ -266,7 +229,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -276,13 +238,7 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
@@ -313,7 +269,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -323,13 +278,7 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 9),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
@@ -359,7 +308,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -369,13 +317,7 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
@@ -405,7 +347,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -415,13 +356,7 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 8),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
@@ -450,8 +385,6 @@ public:
   {
     std::cout << "Testing extract structured uniform" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
-
     vtkm::filter::ExtractStructured extract;
 
     // RangeId3 within data set with sampling
@@ -461,13 +394,7 @@ public:
     extract.SetSampleRate(sample);
     extract.SetIncludeBoundary(true);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 18),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
@@ -499,7 +426,6 @@ public:
   {
     std::cout << "Testing extract structured rectilinear" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DRectilinearDataSet0();
-    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -509,13 +435,7 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 4),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
@@ -543,7 +463,6 @@ public:
   {
     std::cout << "Testing extract structured rectilinear" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DRectilinearDataSet0();
-    vtkm::filter::Result result;
 
     vtkm::filter::ExtractStructured extract;
 
@@ -553,13 +472,7 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    result = extract.Execute(dataset);
-
-    extract.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    extract.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
-
+    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 8),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),

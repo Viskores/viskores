@@ -74,7 +74,7 @@ inline VTKM_CONT vtkm::filter::Result Mask::DoExecute(
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.AddCellSet(cellOut);
 
-  return output;
+  return vtkm::filter::Result(output);
 }
 
 //-----------------------------------------------------------------------------
