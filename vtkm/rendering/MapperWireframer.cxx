@@ -20,6 +20,7 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/exec/CellEdge.h>
 #include <vtkm/filter/ExternalFaces.h>

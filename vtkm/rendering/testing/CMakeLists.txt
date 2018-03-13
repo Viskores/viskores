@@ -33,7 +33,11 @@ set(unit_tests
   UnitTestMapperVolume.cxx
 )
 
-VTKm_unit_tests(SOURCES ${unit_tests})
+if (VTKm_ENABLE_CUDA)
+  vtkm_unit_tests(SOURCES ${unit_tests} CUDA)
+else()
+  vtkm_unit_tests(SOURCES ${unit_tests})
+endif()
 
 #add_subdirectory(osmesa)
 #add_subdirectory(egl)

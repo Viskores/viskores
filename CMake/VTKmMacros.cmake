@@ -342,6 +342,11 @@ function(vtkm_unit_tests)
                                ${VTKm_INCLUDE_DIRS}
                                )
 
+      set_source_files_properties(${VTKm_UT_SOURCES}
+                                  PROPERTIES CUDA_SOURCE_PROPERTY_FORMAT "OBJ"
+                                  )
+
+
       cuda_add_executable(${test_prog} ${TestSources})
 
       set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
