@@ -254,9 +254,7 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSet inDataSet = MakeTetrahedralizeTestDataSet(dims);
 
   vtkm::filter::Tetrahedralize tetrahedralize;
-  vtkm::filter::Result result = tetrahedralize.Execute(inDataSet);
-
-  tetDataSet = result.GetDataSet();
+  tetDataSet = tetrahedralize.Execute(inDataSet);
 
   // Render the output dataset of tets
   lastx = lasty = 0;

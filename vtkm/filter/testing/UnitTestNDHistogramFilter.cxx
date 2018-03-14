@@ -87,8 +87,7 @@ void RunTest()
   //So, e.g. (FieldA[i], FieldB[i], FieldC[i], Frequency[i] ) is a bin in the histogram
   //First three numbers are binID for FieldA, FieldB, FieldC
   //Frequency[i] is frequency for this bin
-  vtkm::filter::Result resultData = ndHistFilter.Execute(ds);
-  vtkm::cont::DataSet& outputData = resultData.GetDataSet();
+  vtkm::cont::DataSet outputData = ndHistFilter.Execute(ds);
 
   // Ground truth ND histogram
   vtkm::Id gtNonSparseBins = 33;

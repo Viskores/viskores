@@ -99,15 +99,11 @@ void TestClipStructuredInverted()
   vtkm::Vec<vtkm::FloatDefault, 3> center(1, 1, 0);
   vtkm::FloatDefault radius(0.5);
 
-  vtkm::filter::Result result;
   vtkm::filter::ClipWithImplicitFunction clip;
   clip.SetImplicitFunction(vtkm::cont::make_ImplicitFunctionHandle(vtkm::Sphere(center, radius)));
   bool invert = true;
   clip.SetInvertClip(invert);
-  result = clip.Execute(ds);
-  clip.MapFieldOntoOutput(result, ds.GetField("scalars"));
-
-  const vtkm::cont::DataSet& outputData = result.GetDataSet();
+  auto outputData = clip.Execute(ds, { "scalars" });
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");
   VTKM_TEST_ASSERT(outputData.GetNumberOfCoordinateSystems() == 1,

@@ -272,9 +272,7 @@ int main(int argc, char* argv[])
 
   // Convert cells to tetrahedra
   vtkm::filter::Tetrahedralize tetrahedralize;
-  vtkm::filter::Result result = tetrahedralize.Execute(inDataSet);
-
-  outDataSet = result.GetDataSet();
+  outDataSet = tetrahedralize.Execute(inDataSet);
 
   // Render the output dataset of tets
   lastx = lasty = 0;
