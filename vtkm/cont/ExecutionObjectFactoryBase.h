@@ -20,7 +20,6 @@
 #ifndef vtk_m_cont_ExecutionObjectFactoryBase_h
 #define vtk_m_cont_ExecutionObjectFactoryBase_h
 #include <vtkm/Types.h>
-#include <vtkm/exec/ExecutionObjectBase.h>
 namespace vtkm
 {
 namespace cont

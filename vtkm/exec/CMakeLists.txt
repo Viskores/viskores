@@ -29,7 +29,6 @@ set(headers
   ConnectivityExplicit.h
   ConnectivityPermuted.h
   ConnectivityStructured.h
-  ExecutionObjectBase.h
   ExecutionWholeArray.h
   FunctorBase.h
   Jacobian.h

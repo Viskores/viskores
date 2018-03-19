@@ -26,7 +26,6 @@
 
 #include <vtkm/cont/ExecutionObjectFactoryBase.h>
 
-#include <vtkm/exec/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -52,7 +51,7 @@ struct Transport<vtkm::cont::arg::TransportTagExecObject, ContObjectType, Device
   // inherit from vtkm::exec::ExecutionObjectFactoryBase.
   VTKM_STATIC_ASSERT_MSG(
     (std::is_base_of<vtkm::cont::ExecutionObjectFactoryBase, ContObjectType>::value),
-    "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectBase");
+    "All execution objects are expected to inherit from vtkm::exec::ExecutionObjectFactoryBase");
 
   using ExecObjectType = decltype(std::declval<ContObjectType>().PrepareForExecution(Device()));
   template <typename InputDomainType>
