@@ -169,20 +169,20 @@ const std::vector<vtkm::cont::DataSet>& MultiBlock::GetBlocks() const
 }
 
 VTKM_CONT
-void MultiBlock::AddBlock(vtkm::cont::DataSet& ds)
+void MultiBlock::AddBlock(const vtkm::cont::DataSet& ds)
 {
   this->Blocks.insert(this->Blocks.end(), ds);
   return;
 }
 
-void MultiBlock::AddBlocks(std::vector<vtkm::cont::DataSet>& mblocks)
+void MultiBlock::AddBlocks(const std::vector<vtkm::cont::DataSet>& mblocks)
 {
   this->Blocks.insert(this->Blocks.end(), mblocks.begin(), mblocks.end());
   return;
 }
 
 VTKM_CONT
-void MultiBlock::InsertBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
+void MultiBlock::InsertBlock(vtkm::Id index, const vtkm::cont::DataSet& ds)
 {
   if (index <= static_cast<vtkm::Id>(this->Blocks.size()))
     this->Blocks.insert(this->Blocks.begin() + index, ds);
@@ -194,7 +194,7 @@ void MultiBlock::InsertBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
 }
 
 VTKM_CONT
-void MultiBlock::ReplaceBlock(vtkm::Id index, vtkm::cont::DataSet& ds)
+void MultiBlock::ReplaceBlock(vtkm::Id index, const vtkm::cont::DataSet& ds)
 {
   if (index < static_cast<vtkm::Id>(this->Blocks.size()))
     this->Blocks.at(static_cast<std::size_t>(index)) = ds;
