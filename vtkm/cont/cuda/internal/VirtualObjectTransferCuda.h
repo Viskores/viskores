@@ -80,14 +80,18 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCud
       // will be wrong.
       VirtualDerivedType* deviceTarget;
       VTKM_CUDA_CALL(cudaMalloc(&deviceTarget, sizeof(VirtualDerivedType)));
-      VTKM_CUDA_CALL(cudaMemcpy(
-        deviceTarget, this->ControlObject, sizeof(VirtualDerivedType), cudaMemcpyHostToDevice));
+      VTKM_CUDA_CALL(cudaMemcpyAsync(deviceTarget,
+                                     this->ControlObject,
+                                     sizeof(VirtualDerivedType),
+                                     cudaMemcpyHostToDevice,
+                                     cudaStreamPerThread));
 
       // Allocate memory for the object that will eventually be a correct copy on the device.
       VTKM_CUDA_CALL(cudaMalloc(&this->ExecutionObject, sizeof(VirtualDerivedType)));
 
       // Initialize the device object
-      detail::ConstructVirtualObjectKernel<<<1, 1>>>(this->ExecutionObject, deviceTarget);
+      detail::ConstructVirtualObjectKernel<<<1, 1, 0, cudaStreamPerThread>>>(this->ExecutionObject,
+                                                                             deviceTarget);
       VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
 
       // Clean up intermediate copy
@@ -99,11 +103,15 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCud
       // will be wrong.
       VirtualDerivedType* deviceTarget;
       VTKM_CUDA_CALL(cudaMalloc(&deviceTarget, sizeof(VirtualDerivedType)));
-      VTKM_CUDA_CALL(cudaMemcpy(
-        deviceTarget, this->ControlObject, sizeof(VirtualDerivedType), cudaMemcpyHostToDevice));
+      VTKM_CUDA_CALL(cudaMemcpyAsync(deviceTarget,
+                                     this->ControlObject,
+                                     sizeof(VirtualDerivedType),
+                                     cudaMemcpyHostToDevice,
+                                     cudaStreamPerThread));
 
       // Initialize the device object
-      detail::UpdateVirtualObjectKernel<<<1, 1>>>(this->ExecutionObject, deviceTarget);
+      detail::UpdateVirtualObjectKernel<<<1, 1, 0, cudaStreamPerThread>>>(this->ExecutionObject,
+                                                                          deviceTarget);
       VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR();
 
       // Clean up intermediate copy
@@ -121,7 +129,7 @@ struct VirtualObjectTransfer<VirtualDerivedType, vtkm::cont::DeviceAdapterTagCud
   {
     if (this->ExecutionObject != nullptr)
     {
-      detail::DeleteVirtualObjectKernel<<<1, 1>>>(this->ExecutionObject);
+      detail::DeleteVirtualObjectKernel<<<1, 1, 0, cudaStreamPerThread>>>(this->ExecutionObject);
       VTKM_CUDA_CALL(cudaFree(this->ExecutionObject));
       this->ExecutionObject = nullptr;
     }
