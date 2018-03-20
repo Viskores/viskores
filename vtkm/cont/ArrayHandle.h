@@ -197,7 +197,7 @@ struct GetTypeInParentheses<void(T)>
 /// This macro also defines a Superclass typedef as well as ValueType and
 /// StorageTag.
 ///
-/// Note that this macor only works on ArrayHandle subclasses that are
+/// Note that this macro only works on ArrayHandle subclasses that are
 /// templated. For ArrayHandle sublcasses that are not templates, use
 /// VTKM_ARRAY_HANDLE_SUBCLASS_NT.
 ///
@@ -220,8 +220,8 @@ struct GetTypeInParentheses<void(T)>
 /// This macro also defines a Superclass typedef as well as ValueType and
 /// StorageTag.
 ///
-/// Note that this macor only works on ArrayHandle subclasses that are not
-/// templated. For ArrayHandle sublcasses that are are templates, use
+/// Note that this macro only works on ArrayHandle subclasses that are not
+/// templated. For ArrayHandle sublcasses that are templates, use
 /// VTKM_ARRAY_HANDLE_SUBCLASS.
 ///
 #define VTKM_ARRAY_HANDLE_SUBCLASS_NT(classname, superclass)                                       \
