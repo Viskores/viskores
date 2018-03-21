@@ -303,7 +303,7 @@ void TestMarchingCubesUniformGrid()
   mc.SetIsoValue(0, 0.5);
   mc.SetActiveField("nodevar");
 
-  auto result = mc.Execute(dataSet);
+  auto result = mc.Execute(dataSet, vtkm::filter::FieldSelection::MODE_NONE);
   {
     VTKM_TEST_ASSERT(result.GetNumberOfCellSets() == 1,
                      "Wrong number of cellsets in the output dataset");

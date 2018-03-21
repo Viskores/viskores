@@ -42,6 +42,14 @@ void TestFieldSelection()
   }
 
   {
+    // field selection with select none,  everything should be false no matter what.
+    vtkm::filter::FieldSelection selection(vtkm::filter::FieldSelection::MODE_NONE);
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == false, "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::ASSOC_POINTS) == false,
+                     "field selection failed.");
+  }
+
+  {
     // field selection with specific fields selected.
     vtkm::filter::FieldSelection selection;
     selection.AddField("foo");

@@ -39,8 +39,9 @@ class FieldSelection
 public:
   enum ModeEnum
   {
-    MODE_SELECTED,
-    MODE_ALL
+    MODE_NONE,
+    MODE_ALL,
+    MODE_SELECTED
   };
 
   VTKM_CONT
@@ -96,6 +97,9 @@ public:
   {
     switch (this->Mode)
     {
+      case MODE_NONE:
+        return false;
+
       case MODE_ALL:
         return true;
 
