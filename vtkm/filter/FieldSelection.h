@@ -41,11 +41,12 @@ public:
   {
     MODE_NONE,
     MODE_ALL,
-    MODE_SELECTED
+    MODE_SELECT,
+    MODE_EXCLUDE
   };
 
   VTKM_CONT
-  FieldSelection(ModeEnum mode = MODE_SELECTED)
+  FieldSelection(ModeEnum mode = MODE_SELECT)
     : Mode(mode)
   {
   }
@@ -53,8 +54,8 @@ public:
   /// Use this constructor create a field selection given the field names e.g.
   /// `FieldSelection({"field_one", "field_two"})`.
   VTKM_CONT
-  FieldSelection(std::initializer_list<std::string> fields)
-    : Mode(MODE_SELECTED)
+  FieldSelection(std::initializer_list<std::string> fields, ModeEnum mode = MODE_SELECT)
+    : Mode(mode)
   {
     for (const std::string& afield : fields)
     {
@@ -66,13 +67,14 @@ public:
   /// associations e.g.
   /// @code{cpp}
   /// FieldSelection({
-  ///      {"field_one", vtkm::cont::Field::ASSOC_POINTS},
-  ///      {"field_two", vtkm::cont::Field::ASSOC_CELL_SET} });
+  ///      std::pair{"field_one", vtkm::cont::Field::ASSOC_POINTS},
+  ///      std::pair{"field_two", vtkm::cont::Field::ASSOC_CELL_SET} });
   /// @endcode
   VTKM_CONT
   FieldSelection(
-    std::initializer_list<std::pair<std::string, vtkm::cont::Field::AssociationEnum>> fields)
-    : Mode(MODE_SELECTED)
+    std::initializer_list<std::pair<std::string, vtkm::cont::Field::AssociationEnum>> fields,
+    ModeEnum mode = MODE_SELECT)
+    : Mode(mode)
   {
     for (const auto& item : fields)
     {
@@ -103,30 +105,17 @@ public:
       case MODE_ALL:
         return true;
 
-      case MODE_SELECTED:
+      case MODE_SELECT:
       default:
-        if (this->Fields.find(Field(name, association)) != this->Fields.end())
-        {
-          return true;
-        }
-        // if not exact match, let's lookup for ASSOC_ANY.
-        for (const auto& aField : this->Fields)
-        {
-          if (aField.Name == name)
-          {
-            if (aField.Association == vtkm::cont::Field::ASSOC_ANY ||
-                association == vtkm::cont::Field::ASSOC_ANY)
-            {
-              return true;
-            }
-          }
-        }
-        return false;
+        return this->HasField(name, association);
+
+      case MODE_EXCLUDE:
+        return !this->HasField(name, association);
     }
   }
 
   //@{
-  /// Add fields to map. Note, if Mode is not MODE_SELECTED, then adding fields
+  /// Add fields to map. Note, if Mode is not MODE_SELECT, then adding fields
   /// will have no impact of the fields that will be mapped.
   VTKM_CONT
   void AddField(const vtkm::cont::Field& inputField)
@@ -141,6 +130,38 @@ public:
     this->Fields.insert(Field(fieldName, association));
   }
   //@}
+
+  /// Returns true if the input field has been added to this selection.
+  /// Note that depending on the mode of this selection, the result of HasField
+  /// is not necessarily the same as IsFieldSelected. (If the mode is MODE_SELECT,
+  /// then the result of the two will be the same.)
+  VTKM_CONT
+  bool HasField(const vtkm::cont::Field& inputField) const
+  {
+    return this->HasField(inputField.GetName(), inputField.GetAssociation());
+  }
+
+  bool HasField(const std::string& name,
+                vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY) const
+  {
+    if (this->Fields.find(Field(name, association)) != this->Fields.end())
+    {
+      return true;
+    }
+    // if not exact match, let's lookup for ASSOC_ANY.
+    for (const auto& aField : this->Fields)
+    {
+      if (aField.Name == name)
+      {
+        if (aField.Association == vtkm::cont::Field::ASSOC_ANY ||
+            association == vtkm::cont::Field::ASSOC_ANY)
+        {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
   /// Clear all fields added using `AddField`.
   VTKM_CONT
