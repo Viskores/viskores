@@ -748,6 +748,7 @@ private:
     const vtkm::Id N_VALID;
     const vtkm::Id PERCENT_VALID;
     ValueArrayHandle ValueHandle;
+    IndexArrayHandle IndexHandle;
 
     VTKM_CONT
     BenchStableSortIndicesUnique(vtkm::Id percent_valid)
@@ -759,12 +760,14 @@ private:
         FillModuloTestValueKernel<Value>(
           N_VALID, this->ValueHandle.PrepareForOutput(arraySize, DeviceAdapterTag())),
         arraySize);
+      this->IndexHandle = SSI::Sort(this->ValueHandle);
     }
 
     VTKM_CONT
     vtkm::Float64 operator()()
     {
-      IndexArrayHandle indices = SSI::Sort(this->ValueHandle);
+      IndexArrayHandle indices;
+      Algorithm::Copy(this->IndexHandle, indices);
       Timer timer;
       SSI::Unique(this->ValueHandle, indices);
       return timer.GetElapsedTime();
