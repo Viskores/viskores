@@ -48,8 +48,7 @@ public:
     extractGeometry.SetExtractBoundaryCells(false);
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
-    vtkm::cont::DataSet output =
-      extractGeometry.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for ExtractGeometry");
 
@@ -77,8 +76,7 @@ public:
     extractGeometry.SetExtractBoundaryCells(false);
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
-    vtkm::cont::DataSet output =
-      extractGeometry.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
                      "Wrong result for ExtractGeometry");
 
@@ -106,8 +104,7 @@ public:
     extractGeometry.SetExtractBoundaryCells(true);
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
-    vtkm::cont::DataSet output =
-      extractGeometry.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 64),
                      "Wrong result for ExtractGeometry");
 
@@ -134,8 +131,7 @@ public:
     extractGeometry.SetExtractBoundaryCells(true);
     extractGeometry.SetExtractOnlyBoundaryCells(true);
 
-    vtkm::cont::DataSet output =
-      extractGeometry.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
                      "Wrong result for ExtractGeometry");
 

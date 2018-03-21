@@ -34,7 +34,7 @@ void TestFieldSelection()
   }
 
   {
-    // field selection with select all,  everything should be false.
+    // field selection with select all,  everything should be true.
     vtkm::filter::FieldSelection selection(vtkm::filter::FieldSelection::MODE_ALL);
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == true, "field selection failed.");
     VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::ASSOC_POINTS) == true,

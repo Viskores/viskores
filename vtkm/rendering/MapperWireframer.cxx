@@ -390,8 +390,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::filter::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
     externalFaces.SetPassPolyData(true);
-    vtkm::cont::DataSet output =
-      externalFaces.Execute(dataSet, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = externalFaces.Execute(dataSet);
     cellSet = output.GetCellSet();
     actualField = output.GetField(0);
   }
