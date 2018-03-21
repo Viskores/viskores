@@ -78,16 +78,16 @@ public:
   const std::vector<vtkm::cont::DataSet>& GetBlocks() const;
   /// add DataSet "ds" to the end of the contained DataSet vector
   VTKM_CONT
-  void AddBlock(vtkm::cont::DataSet& ds);
+  void AddBlock(const vtkm::cont::DataSet& ds);
   /// add DataSet "ds" to position "index" of the contained DataSet vector
   VTKM_CONT
-  void InsertBlock(vtkm::Id index, vtkm::cont::DataSet& ds);
+  void InsertBlock(vtkm::Id index, const vtkm::cont::DataSet& ds);
   /// replace the "index" positioned element of the contained DataSet vector with "ds"
   VTKM_CONT
-  void ReplaceBlock(vtkm::Id index, vtkm::cont::DataSet& ds);
+  void ReplaceBlock(vtkm::Id index, const vtkm::cont::DataSet& ds);
   /// append the DataSet vector "mblocks"  to the end of the contained one
   VTKM_CONT
-  void AddBlocks(std::vector<vtkm::cont::DataSet>& mblocks);
+  void AddBlocks(const std::vector<vtkm::cont::DataSet>& mblocks);
   /// get the unified bounds of the same indexed coordinate system within all contained DataSet
   VTKM_CONT
   vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
