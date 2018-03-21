@@ -22,6 +22,7 @@
 
 #include <initializer_list>
 #include <set>
+#include <vtkm/Pair.h>
 #include <vtkm/cont/Field.h>
 
 namespace vtkm
@@ -66,13 +67,34 @@ public:
   /// Use this constructor create a field selection given the field names and
   /// associations e.g.
   /// @code{cpp}
+  /// using pair_type = std::pair<std::string, vtkm::cont::Field::AssociationEnum>;
   /// FieldSelection({
-  ///      std::pair{"field_one", vtkm::cont::Field::ASSOC_POINTS},
-  ///      std::pair{"field_two", vtkm::cont::Field::ASSOC_CELL_SET} });
+  ///      pair_type{"field_one", vtkm::cont::Field::ASSOC_POINTS},
+  ///      pair_type{"field_two", vtkm::cont::Field::ASSOC_CELL_SET} });
   /// @endcode
   VTKM_CONT
   FieldSelection(
     std::initializer_list<std::pair<std::string, vtkm::cont::Field::AssociationEnum>> fields,
+    ModeEnum mode = MODE_SELECT)
+    : Mode(mode)
+  {
+    for (const auto& item : fields)
+    {
+      this->AddField(item.first, item.second);
+    }
+  }
+
+  /// Use this constructor create a field selection given the field names and
+  /// associations e.g.
+  /// @code{cpp}
+  /// using pair_type = vtkm::Pair<std::string, vtkm::cont::Field::AssociationEnum>;
+  /// FieldSelection({
+  ///      pair_type{"field_one", vtkm::cont::Field::ASSOC_POINTS},
+  ///      pair_type{"field_two", vtkm::cont::Field::ASSOC_CELL_SET} });
+  /// @endcode
+  VTKM_CONT
+  FieldSelection(
+    std::initializer_list<vtkm::Pair<std::string, vtkm::cont::Field::AssociationEnum>> fields,
     ModeEnum mode = MODE_SELECT)
     : Mode(mode)
   {

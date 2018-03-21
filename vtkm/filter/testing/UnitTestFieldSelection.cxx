@@ -50,7 +50,7 @@ void TestFieldSelection()
   }
 
   {
-    std::cout << "field selection with specific fields selected." << std::endl;
+    std::cout << "field selection with specific fields selected (AddField)." << std::endl;
     vtkm::filter::FieldSelection selection;
     selection.AddField("foo");
     selection.AddField("bar", vtkm::cont::Field::ASSOC_CELL_SET);
@@ -65,7 +65,7 @@ void TestFieldSelection()
   }
 
   {
-    std::cout << "field selection with specific fields selected." << std::endl;
+    std::cout << "field selection with specific fields selected (initializer list)." << std::endl;
     vtkm::filter::FieldSelection selection{ "foo", "bar" };
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == true, "field selection failed.");
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::ASSOC_POINTS) == true,
@@ -78,8 +78,25 @@ void TestFieldSelection()
   }
 
   {
-    std::cout << "field selection with specific fields selected." << std::endl;
+    std::cout << "field selection with specific fields selected (std::pair initializer list)."
+              << std::endl;
     using pair_type = std::pair<std::string, vtkm::cont::Field::AssociationEnum>;
+    vtkm::filter::FieldSelection selection{ pair_type{ "foo", vtkm::cont::Field::ASSOC_ANY },
+                                            pair_type{ "bar", vtkm::cont::Field::ASSOC_CELL_SET } };
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == true, "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::ASSOC_POINTS) == true,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::ASSOC_POINTS) == false,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar", vtkm::cont::Field::ASSOC_CELL_SET) == true,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar") == true, "field selection failed.");
+  }
+
+  {
+    std::cout << "field selection with specific fields selected (vtkm::Pair initializer list)."
+              << std::endl;
+    using pair_type = vtkm::Pair<std::string, vtkm::cont::Field::AssociationEnum>;
     vtkm::filter::FieldSelection selection{ pair_type{ "foo", vtkm::cont::Field::ASSOC_ANY },
                                             pair_type{ "bar", vtkm::cont::Field::ASSOC_CELL_SET } };
     VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == true, "field selection failed.");
