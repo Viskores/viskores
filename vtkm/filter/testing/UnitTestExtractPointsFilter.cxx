@@ -47,8 +47,7 @@ public:
     extractPoints.SetExtractInside(true);
     extractPoints.SetCompactPoints(true);
 
-    vtkm::cont::DataSet output =
-      extractPoints.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27),
                      "Wrong result for ExtractPoints");
 
@@ -81,8 +80,7 @@ public:
     extractPoints.SetExtractInside(false);
     extractPoints.SetCompactPoints(true);
 
-    vtkm::cont::DataSet output =
-      extractPoints.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 98),
                      "Wrong result for ExtractPoints");
 
@@ -115,8 +113,7 @@ public:
     extractPoints.SetImplicitFunction(sphere);
     extractPoints.SetExtractInside(true);
 
-    vtkm::cont::DataSet output =
-      extractPoints.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27),
                      "Wrong result for ExtractPoints");
   }
@@ -136,8 +133,7 @@ public:
     extractPoints.SetImplicitFunction(box);
     extractPoints.SetExtractInside(true);
 
-    vtkm::cont::DataSet output =
-      extractPoints.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for ExtractPoints");
   }
@@ -157,8 +153,7 @@ public:
     extractPoints.SetImplicitFunction(box);
     extractPoints.SetExtractInside(false);
 
-    vtkm::cont::DataSet output =
-      extractPoints.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 3),
                      "Wrong result for ExtractPoints");
   }

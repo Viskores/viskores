@@ -62,25 +62,33 @@ public:
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
   VTKM_CONT
-  vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input,
-                              const FieldSelection& fieldSelection = FieldSelection());
+  vtkm::cont::DataSet Execute(
+    const vtkm::cont::DataSet& input,
+    const vtkm::filter::FieldSelection& fieldSelection =
+      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
 
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::DataSet Execute(const vtkm::cont::DataSet& input,
-                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                        const FieldSelection& fieldSelection = FieldSelection());
+  VTKM_CONT vtkm::cont::DataSet Execute(
+    const vtkm::cont::DataSet& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+    const vtkm::filter::FieldSelection& fieldSelection =
+      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
   //@}
 
   //@{
   /// MultiBlock variants of execute.
   VTKM_CONT
-  vtkm::cont::MultiBlock Execute(const vtkm::cont::MultiBlock& input,
-                                 const FieldSelection& fieldSelection = FieldSelection());
+  vtkm::cont::MultiBlock Execute(
+    const vtkm::cont::MultiBlock& input,
+    const vtkm::filter::FieldSelection& fieldSelection =
+      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
 
   template <typename DerivedPolicy>
-  VTKM_CONT vtkm::cont::MultiBlock Execute(const vtkm::cont::MultiBlock& input,
-                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                           const FieldSelection& fieldSelection = FieldSelection());
+  VTKM_CONT vtkm::cont::MultiBlock Execute(
+    const vtkm::cont::MultiBlock& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+    const vtkm::filter::FieldSelection& fieldSelection =
+      vtkm::filter::FieldSelection(vtkm::filter::FieldSelection::MODE_ALL));
   //@}
 
 private:

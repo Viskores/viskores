@@ -19,11 +19,14 @@
 //  this software.
 //
 //=============================================================================
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/MarchingCubes.h>
 
+#include <vtkm/cont/ArrayCopy.h>
+
 #include <vtkm/worklet/connectivities/CellSetConnectivity.h>
+
+#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 class TangleField : public vtkm::worklet::WorkletMapField
 {
@@ -94,7 +97,9 @@ static vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, pointFieldArray);
 
   vtkm::Id numCells = dims[0] * dims[1] * dims[2];
-  auto cellFieldArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numCells);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
+  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numCells),
+                        cellFieldArray);
 
   vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
   vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),

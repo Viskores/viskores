@@ -54,8 +54,9 @@ inline VTKM_CONT Filter<Derived>::~Filter()
 
 //----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(const vtkm::cont::DataSet& input,
-                                                              const FieldSelection& fieldSelection)
+inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::FieldSelection& fieldSelection)
 {
   return this->Execute(input, vtkm::filter::PolicyDefault(), fieldSelection);
 }
@@ -66,7 +67,7 @@ template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const FieldSelection& fieldSelection)
+  const vtkm::filter::FieldSelection& fieldSelection)
 {
   Derived* self = static_cast<Derived*>(this);
   //self->DoPreExecute(input, policy, fieldSelection);
@@ -93,7 +94,7 @@ inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
 template <typename Derived>
 inline VTKM_CONT vtkm::cont::MultiBlock Filter<Derived>::Execute(
   const vtkm::cont::MultiBlock& input,
-  const FieldSelection& fieldSelection)
+  const vtkm::filter::FieldSelection& fieldSelection)
 {
   return this->Execute(input, vtkm::filter::PolicyDefault(), fieldSelection);
 }
@@ -104,7 +105,7 @@ template <typename DerivedPolicy>
 inline VTKM_CONT vtkm::cont::MultiBlock Filter<Derived>::Execute(
   const vtkm::cont::MultiBlock& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-  const FieldSelection& fieldSelection)
+  const vtkm::filter::FieldSelection& fieldSelection)
 {
   // Derived* self = static_cast<Derived*>(this);
   //self->DoPreExecute(input, policy, fieldSelection);
