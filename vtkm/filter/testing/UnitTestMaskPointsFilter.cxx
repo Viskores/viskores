@@ -38,7 +38,8 @@ public:
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(2);
-    vtkm::cont::DataSet output = maskPoints.Execute(dataset, { "pointvar" });
+    maskPoints.SetFieldsToPass("pointvar");
+    vtkm::cont::DataSet output = maskPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 12),
                      "Wrong number of cells for MaskPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 12),
@@ -52,7 +53,8 @@ public:
 
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(5);
-    vtkm::cont::DataSet output = maskPoints.Execute(dataset, { "pointvar" });
+    maskPoints.SetFieldsToPass("pointvar");
+    vtkm::cont::DataSet output = maskPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 25),
                      "Wrong number of cells for MaskPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 25),
@@ -67,7 +69,8 @@ public:
     vtkm::filter::MaskPoints maskPoints;
     maskPoints.SetStride(3);
     maskPoints.SetCompactPoints(false);
-    vtkm::cont::DataSet output = maskPoints.Execute(dataset, { "pointvar" });
+    maskPoints.SetFieldsToPass("pointvar");
+    vtkm::cont::DataSet output = maskPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 3),
                      "Wrong number of cells for MaskPoints");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 11),

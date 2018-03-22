@@ -36,7 +36,8 @@ public:
     std::cout << "Testing triangulate structured" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
     vtkm::filter::Triangulate triangulate;
-    vtkm::cont::DataSet output = triangulate.Execute(dataset, { "pointvar", "cellvar" });
+    triangulate.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = triangulate.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 32),
                      "Wrong result for Triangulate");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 25),
@@ -56,7 +57,8 @@ public:
     std::cout << "Testing triangulate explicit" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DExplicitDataSet0();
     vtkm::filter::Triangulate triangulate;
-    vtkm::cont::DataSet output = triangulate.Execute(dataset, { "pointvar", "cellvar" });
+    triangulate.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = triangulate.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 14),
                      "Wrong result for Triangulate");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 16),
