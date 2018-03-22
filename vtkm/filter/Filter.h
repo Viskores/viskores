@@ -76,6 +76,23 @@ public:
   }
 
   VTKM_CONT
+  void SetFieldsToPass(const vtkm::filter::FieldSelection& fieldsToPass,
+                       vtkm::filter::FieldSelection::ModeEnum mode)
+  {
+    this->FieldsToPass = fieldsToPass;
+    this->FieldsToPass.SetMode(mode);
+  }
+
+  VTKM_CONT
+  void SetFieldsToPass(
+    const std::string& fieldname,
+    vtkm::cont::Field::AssociationEnum association,
+    vtkm::filter::FieldSelection::ModeEnum mode = vtkm::filter::FieldSelection::MODE_SELECT)
+  {
+    this->SetFieldsToPass({ fieldname, association }, mode);
+  }
+
+  VTKM_CONT
   const vtkm::filter::FieldSelection& GetFieldsToPass() const { return this->FieldsToPass; }
   VTKM_CONT
   vtkm::filter::FieldSelection& GetFieldsToPass() { return this->FieldsToPass; }
