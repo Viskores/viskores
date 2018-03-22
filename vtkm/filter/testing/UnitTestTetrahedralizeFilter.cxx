@@ -37,8 +37,9 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
 
     vtkm::filter::Tetrahedralize tetrahedralize;
+    tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
-    vtkm::cont::DataSet output = tetrahedralize.Execute(dataset, { "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 20),
                      "Wrong result for Tetrahedralize");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 18),
@@ -60,8 +61,9 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
 
     vtkm::filter::Tetrahedralize tetrahedralize;
+    tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
-    vtkm::cont::DataSet output = tetrahedralize.Execute(dataset, { "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11),
                      "Wrong result for Tetrahedralize");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 11),

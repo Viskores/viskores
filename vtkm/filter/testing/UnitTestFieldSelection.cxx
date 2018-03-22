@@ -50,6 +50,28 @@ void TestFieldSelection()
   }
 
   {
+    std::cout << "field selection of one field" << std::endl;
+    vtkm::filter::FieldSelection selection("foo");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == true, "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::ASSOC_POINTS) == true,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::ASSOC_CELL_SET) == true,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar") == false, "field selection failed.");
+  }
+
+  {
+    std::cout << "field selection of one field/association" << std::endl;
+    vtkm::filter::FieldSelection selection("foo", vtkm::cont::Field::ASSOC_POINTS);
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo") == true, "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::ASSOC_POINTS) == true,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("foo", vtkm::cont::Field::ASSOC_CELL_SET) == false,
+                     "field selection failed.");
+    VTKM_TEST_ASSERT(selection.IsFieldSelected("bar") == false, "field selection failed.");
+  }
+
+  {
     std::cout << "field selection with specific fields selected (AddField)." << std::endl;
     vtkm::filter::FieldSelection selection;
     selection.AddField("foo");

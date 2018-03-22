@@ -52,8 +52,45 @@ public:
   {
   }
 
-  /// Use this constructor create a field selection given the field names e.g.
-  /// `FieldSelection({"field_one", "field_two"})`.
+  /// Use this constructor to create a field selection given a single field name
+  /// \code{cpp}
+  /// FieldSelection("field_name");
+  /// \endcode
+  VTKM_CONT
+  FieldSelection(const std::string& field, ModeEnum mode = MODE_SELECT)
+    : Mode(mode)
+  {
+    this->AddField(field, vtkm::cont::Field::ASSOC_ANY);
+  }
+
+  /// Use this constructor to create a field selection given a single field name
+  /// \code{cpp}
+  /// FieldSelection("field_name");
+  /// \endcode
+  VTKM_CONT
+  FieldSelection(const char* field, ModeEnum mode = MODE_SELECT)
+    : Mode(mode)
+  {
+    this->AddField(field, vtkm::cont::Field::ASSOC_ANY);
+  }
+
+  /// Use this constructor to create a field selection given a single name and association.
+  /// \code{cpp}
+  /// FieldSelection("field_name", vtkm::cont::Field::ASSOC_POINTS)
+  /// \endcode{cpp}
+  VTKM_CONT
+  FieldSelection(const std::string& field,
+                 vtkm::cont::Field::AssociationEnum association,
+                 ModeEnum mode = MODE_SELECT)
+    : Mode(mode)
+  {
+    this->AddField(field, association);
+  }
+
+  /// Use this constructor to create a field selection given the field names.
+  /// \code{cpp}
+  /// FieldSelection({"field_one", "field_two"});
+  /// \endcode
   VTKM_CONT
   FieldSelection(std::initializer_list<std::string> fields, ModeEnum mode = MODE_SELECT)
     : Mode(mode)

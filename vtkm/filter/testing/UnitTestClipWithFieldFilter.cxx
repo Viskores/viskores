@@ -69,10 +69,9 @@ void TestClipExplicit()
   vtkm::filter::ClipWithField clip;
   clip.SetClipValue(0.5);
   clip.SetActiveField("scalars");
+  clip.SetFieldsToPass({ "scalars", vtkm::cont::Field::ASSOC_POINTS });
 
-  vtkm::filter::FieldSelection selection;
-  selection.AddField("scalars", vtkm::cont::Field::ASSOC_POINTS);
-  const vtkm::cont::DataSet outputData = clip.Execute(ds, selection);
+  const vtkm::cont::DataSet outputData = clip.Execute(ds);
 
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");

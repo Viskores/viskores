@@ -302,8 +302,9 @@ void TestMarchingCubesUniformGrid()
   mc.SetGenerateNormals(true);
   mc.SetIsoValue(0, 0.5);
   mc.SetActiveField("nodevar");
+  mc.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_NONE);
 
-  auto result = mc.Execute(dataSet, vtkm::filter::FieldSelection::MODE_NONE);
+  auto result = mc.Execute(dataSet);
   {
     VTKM_TEST_ASSERT(result.GetNumberOfCellSets() == 1,
                      "Wrong number of cellsets in the output dataset");
@@ -315,7 +316,8 @@ void TestMarchingCubesUniformGrid()
   }
 
   // let's execute with mapping fields.
-  result = mc.Execute(dataSet, vtkm::filter::FieldSelection({ "nodevar" }));
+  mc.SetFieldsToPass("nodevar");
+  result = mc.Execute(dataSet);
   {
     const bool isMapped = result.HasField("nodevar");
     VTKM_TEST_ASSERT(isMapped, "mapping should pass");
@@ -337,6 +339,7 @@ void TestMarchingCubesUniformGrid()
 
   //Now try with vertex merging disabled
   mc.SetMergeDuplicatePoints(false);
+  mc.SetFieldsToPass(vtkm::filter::FieldSelection::MODE_ALL);
   result = mc.Execute(dataSet);
   {
     vtkm::cont::CoordinateSystem coords = result.GetCoordinateSystem();
@@ -374,10 +377,8 @@ void TestMarchingCubesCustomPolicy()
   //We specify a custom execution policy here, since the "distanceToOrigin" is a
   //custom field type
   mc.SetActiveField("distanceToOrigin");
-  vtkm::cont::DataSet outputData =
-    mc.Execute(dataSet,
-               PolicyRadiantDataSet(),
-               vtkm::filter::FieldSelection({ "distanceToOrigin", "distanceToOther" }));
+  mc.SetFieldsToPass({ "distanceToOrigin", "distanceToOther" });
+  vtkm::cont::DataSet outputData = mc.Execute(dataSet, PolicyRadiantDataSet());
 
   VTKM_TEST_ASSERT(outputData.GetNumberOfCellSets() == 1,
                    "Wrong number of cellsets in the output dataset");
@@ -509,7 +510,8 @@ void TestMarchingCubesNormals()
   std::cout << "\tUnstructured dataset\n";
   vtkm::filter::CleanGrid makeUnstructured;
   makeUnstructured.SetCompactPointFields(false);
-  auto result = makeUnstructured.Execute(dataset, vtkm::filter::FieldSelection({ "pointvar" }));
+  makeUnstructured.SetFieldsToPass("pointvar");
+  auto result = makeUnstructured.Execute(dataset);
   TestNormals(result, false);
 }
 

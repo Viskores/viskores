@@ -37,7 +37,8 @@ void TestVertexClustering()
   vtkm::filter::VertexClustering clustering;
 
   clustering.SetNumberOfDivisions(vtkm::Id3(3, 3, 3));
-  vtkm::cont::DataSet output = clustering.Execute(dataSet, { "pointvar", "cellvar" });
+  clustering.SetFieldsToPass({ "pointvar", "cellvar" });
+  vtkm::cont::DataSet output = clustering.Execute(dataSet);
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Number of output coordinate systems mismatch");
 
