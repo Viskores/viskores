@@ -49,7 +49,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  bool IsWithinSpatialBoundary(const vtkm::Vec<FieldType, 3>& position) const
   {
     if (!bounds.Contains(position))
       return false;
@@ -57,11 +57,22 @@ public:
   }
 
   VTKM_EXEC_CONT
+  bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
+
+  VTKM_EXEC_CONT
   void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
   {
     dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
     dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
     dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+  }
+
+  VTKM_EXEC
+  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
+                FieldType time,
+                vtkm::Vec<FieldType, 3>& out) const
+  {
+    return Evaluate(pos, out);
   }
 
   VTKM_EXEC
@@ -93,12 +104,15 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  bool IsWithinSpatialBoundary(const vtkm::Vec<FieldType, 3>& position) const
   {
     if (!bounds.Contains(position))
       return false;
     return true;
   }
+
+  VTKM_EXEC_CONT
+  bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
 
   VTKM_EXEC_CONT
   void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
@@ -107,6 +121,15 @@ public:
     dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
     dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
   }
+
+  VTKM_EXEC
+  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
+                FieldType time,
+                vtkm::Vec<FieldType, 3>& out) const
+  {
+    return Evaluate(pos, out);
+  }
+
 
   VTKM_EXEC bool Evaluate(const vtkm::Vec<FieldType, 3>& pos, vtkm::Vec<FieldType, 3>& out) const
   {
@@ -124,7 +147,6 @@ public:
 private:
   vtkm::Bounds bounds;
 };
-
 
 //Uniform Grid Evaluator
 template <typename PortalType,
@@ -205,7 +227,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  bool IsWithinSpatialBoundary(const vtkm::Vec<FieldType, 3>& position) const
   {
     if (!bounds.Contains(position))
       return false;
@@ -213,11 +235,22 @@ public:
   }
 
   VTKM_EXEC_CONT
+  bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
+
+  VTKM_EXEC_CONT
   void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
   {
     dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
     dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
     dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+  }
+
+  VTKM_EXEC
+  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
+                FieldType time,
+                vtkm::Vec<FieldType, 3>& out) const
+  {
+    return Evaluate(pos, out);
   }
 
   VTKM_EXEC
@@ -372,7 +405,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinBoundary(const vtkm::Vec<FieldType, 3>& position) const
+  bool IsWithinSpatialBoundary(const vtkm::Vec<FieldType, 3>& position) const
   {
     if (!bounds.Contains(position))
       return false;
@@ -380,11 +413,22 @@ public:
   }
 
   VTKM_EXEC_CONT
+  bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
+
+  VTKM_EXEC_CONT
   void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
   {
     dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
     dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
     dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+  }
+
+  VTKM_EXEC
+  bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
+                FieldType time,
+                vtkm::Vec<FieldType, 3>& out) const
+  {
+    return Evaluate(pos, out);
   }
 
   VTKM_EXEC
