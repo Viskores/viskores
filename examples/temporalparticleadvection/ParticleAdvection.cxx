@@ -30,9 +30,57 @@
 
 #include <vtkm/cont/Timer.h>
 #include <vtkm/io/reader/BOVDataSetReader.h>
+#include <vtkm/io/writer/VTKDataSetWriter.h>
+
+// For offscreen rendering
+/*#include <vtkm/rendering/Actor.h>
+#include <vtkm/rendering/CanvasRayTracer.h>
+#include <vtkm/rendering/MapperWireframer.h>
+#include <vtkm/rendering/Scene.h>
+#include <vtkm/rendering/View3D.h>
+*/
 
 #include <cstdlib>
 #include <vector>
+
+int renderAndWriteDataSet(vtkm::cont::DataSet& dataset)
+{
+
+  std::cout << "Trying to render the dataset" << std::endl;
+
+  /*  vtkm::rendering::CanvasRayTracer canvas;
+  vtkm::rendering::MapperWireframer mapper;
+
+  vtkm::rendering::Actor actor(dataset.GetCellSet(),
+                               dataset.GetCoordinateSystem(),
+                               dataset.GetPointField(0),
+                               vtkm::rendering::ColorTable("temperature"));
+  vtkm::rendering::Scene scene;
+  scene.AddActor(actor);
+
+  // save images.
+  vtkm::rendering::View3D view(scene, mapper, canvas);
+  view.Initialize();
+  view.SetBackgroundColor(vtkm::rendering::Color(1,1,1,1));
+  view.SetForegroundColor(vtkm::rendering::Color(0,0,0,1));
+  for(int i = 0; i < 16; i++)
+  {
+    std::ostringstream filename;
+    filename << "clipped" << i << ".ppm";
+    std::cout << "Writing " << filename.str() << std::endl;
+    view.GetCamera().Azimuth(i*45.0);
+    std::cout << "shifted " << std::endl;
+    view.GetCamera().Elevation(i*45.0);
+    std::cout << "lifted " << std::endl;
+    view.Paint();
+    std::cout << "painted" << std::endl;
+    view.SaveAs(filename.str());
+  }*/
+
+  vtkm::io::writer::VTKDataSetWriter writer("vtkmwritten.vtk");
+  writer.WriteDataSet(dataset, static_cast<vtkm::Id>(0));
+  return 0;
+}
 
 
 void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
@@ -102,6 +150,7 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
     vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
     outData.AddCellSet(res.polyLines);
     outData.AddCoordinateSystem(outputCoords);
+    renderAndWriteDataSet(outData);
   }
 }
 

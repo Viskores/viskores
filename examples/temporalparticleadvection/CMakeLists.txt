@@ -22,7 +22,7 @@
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB
+  OPTIONAL_COMPONENTS Serial CUDA TBB Rendering
   )
 
 add_executable(Particle_Advection_SERIAL ParticleAdvection.cxx)
