@@ -243,7 +243,7 @@ public:
                   vtkm::worklet::particleadvection::ParticleStatus& status,
                   vtkm::Vec<FieldType, 3>& pointOut) const
   {
-    status = integrator.Step(pointIn, pointOut);
+    status = integrator.Step(pointIn, 0, pointOut);
   }
 
 private:

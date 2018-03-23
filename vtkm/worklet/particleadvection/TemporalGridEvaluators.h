@@ -56,10 +56,10 @@ public:
       throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
 
     vectors1 = vectorField1.PrepareForInput(DeviceAdapterTag());
-    vectors2 = vectorField1.PrepareForInput(DeviceAdapterTag());
+    vectors2 = vectorField2.PrepareForInput(DeviceAdapterTag());
 
     bounds1 = coords1.GetBounds();
-    bounds2 = coords1.GetBounds();
+    bounds2 = coords2.GetBounds();
 
     vtkm::cont::CellSetStructured<3> cells1;
     vtkm::cont::CellSetStructured<3> cells2;
@@ -100,7 +100,7 @@ public:
   VTKM_EXEC_CONT
   bool IsWithinTemporalBoundary(const FieldType time) const
   {
-    if (time < time1 || time > time2)
+    if (time < time1 || time >= time2)
       return false;
     return true;
   }
@@ -165,9 +165,9 @@ public:
                               (position[1] - bounds.Y.Min) * scalingFactor[1],
                               (position[2] - bounds.Z.Min) * scalingFactor[2]);
 
-    idx000[0] = floor(scaled[0]);
-    idx000[1] = floor(scaled[1]);
-    idx000[2] = floor(scaled[2]);
+    idx000[0] = floor(scaled[0]) <= dims[0] - 1 ? floor(scaled[0]) : dims[0] - 1;
+    idx000[1] = floor(scaled[1]) <= dims[1] - 1 ? floor(scaled[1]) : dims[1] - 1;
+    idx000[2] = floor(scaled[2]) <= dims[2] - 1 ? floor(scaled[2]) : dims[2] - 1;
 
     idx001 = idx000;
     idx001[0] = (idx001[0] + 1) <= dims[0] - 1 ? idx001[0] + 1 : dims[0] - 1;
@@ -251,6 +251,7 @@ public:
       return false;
 
     FieldType proportion = (particleTime - time1) / (time2 - time1);
+
     velocity[0] = (1.0f - proportion) * velocity1[0] + proportion * velocity2[0];
     velocity[1] = (1.0f - proportion) * velocity1[1] + proportion * velocity2[1];
     velocity[2] = (1.0f - proportion) * velocity1[2] + proportion * velocity2[2];

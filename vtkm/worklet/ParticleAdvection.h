@@ -38,6 +38,7 @@ struct ParticleAdvectionResult
     : positions()
     , status()
     , stepsTaken()
+    , times()
   {
   }
 
@@ -50,9 +51,22 @@ struct ParticleAdvectionResult
   {
   }
 
+  ParticleAdvectionResult(const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>& pos,
+                          const vtkm::cont::ArrayHandle<vtkm::Id>& stat,
+                          const vtkm::cont::ArrayHandle<vtkm::Id>& steps,
+                          const vtkm::cont::ArrayHandle<FieldType>& timeArray)
+    : positions(pos)
+    , status(stat)
+    , stepsTaken(steps)
+    , times(timeArray)
+  {
+  }
+
+
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> positions;
   vtkm::cont::ArrayHandle<vtkm::Id> status;
   vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken;
+  vtkm::cont::ArrayHandle<FieldType> times;
 };
 
 class ParticleAdvection
@@ -76,7 +90,10 @@ public:
       worklet;
 
     vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken, status;
+    vtkm::cont::ArrayHandle<FieldType> timeArray;
+
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
+
     //Allocate status and steps arrays.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> init(0, numSeeds);
     stepsTaken.Allocate(numSeeds);
@@ -86,41 +103,14 @@ public:
     status.Allocate(numSeeds);
     vtkm::cont::ArrayCopy(statusOK, status, DeviceAdapter());
 
-    worklet.Run(it, pts, nSteps, status, stepsTaken);
+    //Allocate memory to store the time for temporal integration.
+    vtkm::cont::ArrayHandleConstant<FieldType> time(0, numSeeds);
+    timeArray.Allocate(numSeeds);
+    vtkm::cont::ArrayCopy(time, timeArray, DeviceAdapter());
+
+    worklet.Run(it, pts, nSteps, status, stepsTaken, timeArray);
     //Create output.
-    ParticleAdvectionResult<FieldType> res(pts, status, stepsTaken);
-    return res;
-  }
-
-  template <typename IntegratorType,
-            typename FieldType,
-            typename PointStorage,
-            typename DeviceAdapter>
-  ParticleAdvectionResult<FieldType> Run(
-    const IntegratorType& it,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
-    const vtkm::cont::ArrayHandle<vtkm::Id>& stepsAlreadyTaken,
-    const vtkm::Id& nSteps,
-    const DeviceAdapter&)
-  {
-    vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType,
-                                                               FieldType,
-                                                               DeviceAdapter>
-      worklet;
-
-    vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken, status;
-    vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
-    //Allocate status and steps arrays.
-    stepsTaken.Allocate(numSeeds);
-    vtkm::cont::ArrayCopy(stepsAlreadyTaken, stepsTaken, DeviceAdapter());
-
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
-    status.Allocate(numSeeds);
-    vtkm::cont::ArrayCopy(statusOK, status, DeviceAdapter());
-
-    worklet.Run(it, pts, nSteps, status, stepsTaken);
-    //Create output.
-    ParticleAdvectionResult<FieldType> res(pts, status, stepsTaken);
+    ParticleAdvectionResult<FieldType> res(pts, status, stepsTaken, timeArray);
     return res;
   }
 };
@@ -177,18 +167,24 @@ public:
 
     //Allocate status and steps arrays.
     vtkm::Id numSeeds = seedArray.GetNumberOfValues();
-    vtkm::Id val = vtkm::worklet::particleadvection::ParticleStatus::STATUS_OK;
-    vtkm::cont::ArrayHandle<vtkm::Id> status, steps;
-    vtkm::cont::ArrayHandleConstant<vtkm::Id> ok(val, numSeeds);
-    status.Allocate(numSeeds);
 
-    DeviceAlgorithm::Copy(ok, status);
+    vtkm::cont::ArrayHandle<vtkm::Id> status, steps;
+    vtkm::cont::ArrayHandle<FieldType> timeArray;
+
+    vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
+    status.Allocate(numSeeds);
+    DeviceAlgorithm::Copy(statusOK, status);
 
     vtkm::cont::ArrayHandleConstant<vtkm::Id> zero(0, numSeeds);
     steps.Allocate(numSeeds);
     DeviceAlgorithm::Copy(zero, steps);
 
-    worklet.Run(it, seedArray, nSteps, positions, polyLines, status, steps);
+    //Allocate memory to store the time for temporal integration.
+    vtkm::cont::ArrayHandleConstant<FieldType> time(0, numSeeds);
+    timeArray.Allocate(numSeeds);
+    DeviceAlgorithm::Copy(time, timeArray);
+
+    worklet.Run(it, seedArray, nSteps, positions, polyLines, status, steps, timeArray);
 
     StreamlineResult<FieldType> res(positions, polyLines, status, steps);
     return res;

@@ -34,40 +34,26 @@
 #include <cstdlib>
 #include <vector>
 
-const vtkm::Id SPARSE = 0;
-const vtkm::Id DENSE = 1;
-const vtkm::Id MEDIUM = 2;
 
-template <typename T>
-static vtkm::Range subRange(vtkm::Range& range, T a, T b)
-{
-  vtkm::Float32 arg1, arg2, len;
-  arg1 = static_cast<vtkm::Float32>(a);
-  arg2 = static_cast<vtkm::Float32>(b);
-  len = static_cast<vtkm::Float32>(range.Length());
-  return vtkm::Range(range.Min + arg1 * len, range.Min + arg2 * len);
-}
-
-template <typename T>
-void ignore(T&&)
-{
-}
-
-void RunTest(const std::string& fname,
-             vtkm::Id numSeeds,
-             vtkm::Id numSteps,
-             vtkm::Float32 stepSize,
-             vtkm::Id seeding)
+void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
 {
   using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
-
   using FieldType = vtkm::Float32;
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
   using FieldPortalConstType =
     typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  vtkm::io::reader::BOVDataSetReader reader(fname);
-  vtkm::cont::DataSet ds = reader.ReadDataSet();
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray1;
+  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray2;
+  vtkm::Id numValues;
+
+  vtkm::io::reader::BOVDataSetReader reader1("slice1.bov");
+  vtkm::cont::DataSet ds1 = reader1.ReadDataSet();
+  ds1.GetField(0).GetData().CopyTo(fieldArray1);
+
+  vtkm::io::reader::BOVDataSetReader reader2("slice2.bov");
+  vtkm::cont::DataSet ds2 = reader2.ReadDataSet();
+  ds2.GetField(0).GetData().CopyTo(fieldArray2);
 
   using GridEvaluator =
     vtkm::worklet::particleadvection::TemporalGridEvaluator<FieldPortalConstType,
@@ -75,125 +61,67 @@ void RunTest(const std::string& fname,
                                                             DeviceAdapter>;
   using Integrator = vtkm::worklet::particleadvection::EulerIntegrator<GridEvaluator, FieldType>;
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
-  ds.GetField(0).GetData().CopyTo(fieldArray);
 
   //GridEvaluator eval(ds.GetCoordinateSystem(), ds.GetCellSet(0), fieldArray);
-  GridEvaluator eval(ds.GetCoordinateSystem(),
-                     ds.GetCellSet(0),
-                     fieldArray,
+  GridEvaluator eval(ds1.GetCoordinateSystem(),
+                     ds1.GetCellSet(0),
+                     fieldArray1,
                      0,
-                     ds.GetCoordinateSystem(),
-                     ds.GetCellSet(0),
-                     fieldArray,
-                     1.0);
+                     ds2.GetCoordinateSystem(),
+                     ds2.GetCellSet(0),
+                     fieldArray2,
+                     10.0);
+
   Integrator integrator(eval, stepSize);
 
   std::vector<vtkm::Vec<FieldType, 3>> seeds;
-  srand(314);
-
-  vtkm::Bounds bounds = ds.GetCoordinateSystem().GetBounds();
-  if (seeding == SPARSE)
-    bounds = ds.GetCoordinateSystem().GetBounds();
-  else if (seeding == DENSE)
-  {
-    if (fname.find("astro") != std::string::npos)
-    {
-      bounds.X = subRange(bounds.X, .1, .15);
-      bounds.Y = subRange(bounds.Y, .1, .15);
-      bounds.Z = subRange(bounds.Z, .1, .15);
-    }
-    else if (fname.find("fusion") != std::string::npos)
-    {
-      bounds.X = subRange(bounds.X, .8, .85);
-      bounds.Y = subRange(bounds.Y, .55, .60);
-      bounds.Z = subRange(bounds.Z, .55, .60);
-    }
-    else if (fname.find("fishtank") != std::string::npos)
-    {
-      bounds.X = subRange(bounds.X, .1, .15);
-      bounds.Y = subRange(bounds.Y, .1, .15);
-      bounds.Z = subRange(bounds.Z, .55, .60);
-    }
-  }
-  else if (seeding == MEDIUM)
-  {
-    if (fname.find("astro") != std::string::npos)
-    {
-      bounds.X = subRange(bounds.X, .4, .6);
-      bounds.Y = subRange(bounds.Y, .4, .6);
-      bounds.Z = subRange(bounds.Z, .4, .6);
-    }
-    else if (fname.find("fusion") != std::string::npos)
-    {
-      bounds.X = subRange(bounds.X, .01, .99);
-      bounds.Y = subRange(bounds.Y, .01, .99);
-      bounds.Z = subRange(bounds.Z, .45, .55);
-    }
-    else if (fname.find("fishtank") != std::string::npos)
-    {
-      bounds.X = subRange(bounds.X, .4, .6);
-      bounds.Y = subRange(bounds.Y, .4, .6);
-      bounds.Z = subRange(bounds.Z, .4, .6);
-    }
-  }
-
-  for (int i = 0; i < numSeeds; i++)
+  vtkm::Id x = 0, y = 5, z = 0;
+  for (int i = 0; i <= 11; i++)
   {
     vtkm::Vec<FieldType, 3> point;
-    vtkm::Float32 rx = (vtkm::Float32)rand() / (vtkm::Float32)RAND_MAX;
-    vtkm::Float32 ry = (vtkm::Float32)rand() / (vtkm::Float32)RAND_MAX;
-    vtkm::Float32 rz = (vtkm::Float32)rand() / (vtkm::Float32)RAND_MAX;
-    point[0] = static_cast<FieldType>(bounds.X.Min + rx * bounds.X.Length());
-    point[1] = static_cast<FieldType>(bounds.Y.Min + ry * bounds.Y.Length());
-    point[2] = static_cast<FieldType>(bounds.Z.Min + rz * bounds.Z.Length());
+    point[0] = x;
+    point[1] = y;
+    point[2] = z++;
     seeds.push_back(point);
   }
-
-  /*#ifdef __BUILDING_TBB_VERSION__
-  int nT = tbb::task_scheduler_init::default_num_threads();
-  if (numThreads != -1)
-    nT = (int)numThreads;
-  //make sure the task_scheduler_init object is in scope when running sth w/ TBB
-  tbb::task_scheduler_init init(nT);
-#else
-  ignore(numThreads);
-#endif
-*/
 
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seedArray;
   seedArray = vtkm::cont::make_ArrayHandle(seeds);
 
-  //  if (advectType == 0)
-  //  {
-  vtkm::worklet::ParticleAdvection particleAdvection;
-  particleAdvection.Run(integrator, seedArray, numSteps, DeviceAdapter());
-  //  }
-  /*else
+  if (advectType == 0)
+  {
+    vtkm::worklet::ParticleAdvection particleAdvection;
+    particleAdvection.Run(integrator, seedArray, numSteps, DeviceAdapter());
+  }
+  else
   {
     vtkm::worklet::Streamline streamline;
-    streamline.Run(integrator, seedArray, numSteps, DeviceAdapter());
-  }*/
+    vtkm::worklet::StreamlineResult<FieldType> res =
+      streamline.Run(integrator, seedArray, numSteps, DeviceAdapter());
+    vtkm::cont::DataSet outData;
+    vtkm::cont::CoordinateSystem outputCoords("coordinates", res.positions);
+    outData.AddCellSet(res.polyLines);
+    outData.AddCoordinateSystem(outputCoords);
+  }
 }
 
 int main(int argc, char** argv)
 {
-  vtkm::Id numSeeds, numSteps;
+  vtkm::Id numSteps;
   vtkm::Float32 stepSize;
-  std::string dataFile;
-  vtkm::Id seeding = SPARSE;
+  vtkm::Id advectionType;
 
-  if (argc < 5)
+  if (argc < 4)
   {
     std::cout << "Wrong number of parameters provided" << std::endl;
     exit(EXIT_FAILURE);
   }
 
-  dataFile = std::string(argv[1]);
-  numSeeds = atoi(argv[2]);
-  numSteps = atoi(argv[3]);
-  stepSize = atof(argv[4]);
+  numSteps = atoi(argv[1]);
+  stepSize = atof(argv[2]);
+  advectionType = atoi(argv[3]);
 
-  RunTest(dataFile, numSeeds, numSteps, stepSize, seeding);
+  RunTest(numSteps, stepSize, advectionType);
+
   return 0;
 }

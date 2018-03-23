@@ -92,6 +92,9 @@ public:
     }
   }
 
+  VTKM_EXEC
+  FieldType GetStepLength() const { return StepLength; }
+
 private:
   FieldEvaluateType Evaluator;
   FieldType StepLength;
@@ -149,6 +152,9 @@ public:
     else
       return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
   }
+
+  VTKM_EXEC
+  FieldType GetStepLength() const { return StepLength; }
 
 private:
   FieldEvaluateType Evaluator;

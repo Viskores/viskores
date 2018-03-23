@@ -83,19 +83,30 @@ public:
   VTKM_EXEC
   void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
   {
+    // Irrespective of what the advected status of the particle is,
+    // we need to set the output position as the last step taken by
+    // the particle, and increase the number of steps take by 1.
+    Pos.Set(idx, pt);
+    vtkm::Id nSteps = Steps.Get(idx);
+    Steps.Set(idx, ++nSteps);
+    // If the status is OK, we only need to check if the particle
+    // has completed the maximum steps required.
     if (status == ParticleStatus::STATUS_OK)
     {
-      Pos.Set(idx, pt);
-      vtkm::Id nSteps = Steps.Get(idx);
-      nSteps = nSteps + 1;
-      Steps.Set(idx, nSteps);
       if (nSteps == MaxSteps)
         SetTerminated(idx);
     }
-    else
+    // If the particle has exited spatial boundary, set corresponding status.
+    // This is needed for all particle advection cases.
+    else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
     {
-      Pos.Set(idx, pt);
       SetExitedSpatialBoundary(idx);
+    }
+    // If the particle has exited temporal boundary, set corresponding status.
+    // This is needed when we need temporal interpolation for velocity.
+    else if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
+    {
+      SetExitedTemporalBoundary(idx);
     }
   }
 
@@ -181,7 +192,8 @@ public:
   vtkm::Id GetStatus(const vtkm::Id& idx) const { return Status.Get(idx); }
   VTKM_EXEC
   T GetTime(const vtkm::Id& idx) const { return Time.Get(idx); }
-
+  VTKM_EXEC
+  void SetTime(const vtkm::Id& idx, T time) const { Time.Set(idx, time); }
 
 protected:
   PositionPortal Pos;
@@ -232,10 +244,10 @@ public:
     Status = statusArray.PrepareForInPlace(DeviceAdapterTag());
     Time = timeArray.PrepareForInPlace(DeviceAdapterTag());
     MaxSteps = maxSteps;
+    Length = maxSteps;
     vtkm::Id numPos = posArray.GetNumberOfValues();
     History = historyArray.PrepareForOutput(numPos * Length, DeviceAdapterTag());
     ValidPoint = validPointArray.PrepareForInPlace(DeviceAdapterTag());
-    Length = maxSteps;
   }
 
   VTKM_EXEC_CONT
@@ -335,6 +347,8 @@ public:
   vtkm::Id GetStatus(const vtkm::Id& idx) const { return Status.Get(idx); }
   VTKM_EXEC
   T GetTime(const vtkm::Id& idx) const { return Time.Get(idx); }
+  VTKM_EXEC
+  void SetTime(const vtkm::Id& idx, T time) const { Time.Set(idx, time); }
   vtkm::Vec<T, 3> GetHistory(const vtkm::Id& idx, const vtkm::Id& step) const
   {
     return History.Get(idx * Length + step);
