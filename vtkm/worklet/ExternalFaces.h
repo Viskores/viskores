@@ -315,11 +315,10 @@ struct ExternalFaces
       shapeOut = vtkm::CELL_SHAPE_QUAD;
       numFacePointsOut = 4;
 
-      vtkm::exec::detail::CellFaceTables table;
       for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
       {
         faceConnectivity[facePointIndex] =
-          inCellIndices[table.PointsInFace(shape.Id, faceIndex, facePointIndex)];
+          inCellIndices[vtkm::exec::CellFaceLocalIndex(facePointIndex, faceIndex, shape, *this)];
       }
     }
 
@@ -619,11 +618,10 @@ public:
 
       typename CellSetType::IndicesType inCellIndices = cellSet.GetIndices(originCells[myIndex]);
 
-      vtkm::exec::detail::CellFaceTables table;
       for (vtkm::IdComponent facePointIndex = 0; facePointIndex < numFacePoints; facePointIndex++)
       {
         connectivityOut[facePointIndex] =
-          inCellIndices[table.PointsInFace(shapeIn.Id, myFace, facePointIndex)];
+          inCellIndices[vtkm::exec::CellFaceLocalIndex(facePointIndex, myFace, shapeIn, *this)];
       }
     }
 

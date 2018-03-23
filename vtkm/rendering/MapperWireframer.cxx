@@ -199,10 +199,10 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
     }
     else
     {
-      vtkm::Vec<vtkm::IdComponent, 2> localEdgeIndices = vtkm::exec::CellEdgeLocalIndices(
-        pointIndices.GetNumberOfComponents(), visitIndex, shape, *this);
-      p1 = pointIndices[localEdgeIndices[0]];
-      p2 = pointIndices[localEdgeIndices[1]];
+      p1 = pointIndices[vtkm::exec::CellEdgeLocalIndex(
+        pointIndices.GetNumberOfComponents(), 0, visitIndex, shape, *this)];
+      p2 = pointIndices[vtkm::exec::CellEdgeLocalIndex(
+        pointIndices.GetNumberOfComponents(), 1, visitIndex, shape, *this)];
     }
     // These indices need to be arranged in a definite order, as they will later be sorted to
     // detect duplicates
