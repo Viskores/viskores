@@ -36,7 +36,21 @@ public:
   DotProduct();
 
   VTKM_CONT
-  void SetSecondaryFieldName(const std::string& nm) { SecondaryFieldName = nm; }
+  void SetPrimaryField(
+    const std::string& name,
+    vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+  {
+    this->SetActiveField(name, association);
+  }
+
+  VTKM_CONT
+  void SetSecondaryField(
+    const std::string& name,
+    vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+  {
+    this->SecondaryFieldName = name;
+    this->SecondaryFieldAssociation = association;
+  }
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
   VTKM_CONT vtkm::filter::Result DoExecute(
@@ -54,8 +68,8 @@ public:
                             DeviceAdapter tag);
 
 private:
-  vtkm::worklet::DotProduct Worklet;
   std::string SecondaryFieldName;
+  vtkm::cont::Field::AssociationEnum SecondaryFieldAssociation;
 };
 
 template <>

@@ -28,8 +28,8 @@ namespace filter
 //-----------------------------------------------------------------------------
 inline VTKM_CONT CrossProduct::CrossProduct()
   : vtkm::filter::FilterField<CrossProduct>()
-  , Worklet()
-  , SecondaryFieldName("")
+  , SecondaryFieldName()
+  , SecondaryFieldAssociation(vtkm::cont::Field::ASSOC_ANY)
 {
   this->SetOutputFieldName("crossproduct");
 }
@@ -45,14 +45,14 @@ inline VTKM_CONT vtkm::filter::Result CrossProduct::DoExecute(
 {
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> outArray;
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::CrossProduct, DeviceAdapter> dispatcher(
-    this->Worklet);
-
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> secondaryField;
   try
   {
     using Traits = vtkm::filter::FilterTraits<CrossProduct>;
-    vtkm::filter::ApplyPolicy(inDataSet.GetField(SecondaryFieldName), policy, Traits())
+    vtkm::filter::ApplyPolicy(
+      inDataSet.GetField(this->SecondaryFieldName, this->SecondaryFieldAssociation),
+      policy,
+      Traits())
       .CopyTo(secondaryField);
   }
   catch (const vtkm::cont::Error&)
@@ -60,6 +60,7 @@ inline VTKM_CONT vtkm::filter::Result CrossProduct::DoExecute(
     return vtkm::filter::Result();
   }
 
+  vtkm::worklet::DispatcherMapField<vtkm::worklet::CrossProduct, DeviceAdapter> dispatcher;
   dispatcher.Invoke(field, secondaryField, outArray);
 
   return vtkm::filter::Result(inDataSet,

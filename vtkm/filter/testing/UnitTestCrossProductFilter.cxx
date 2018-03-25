@@ -92,6 +92,8 @@ void TestCrossProduct()
   const int numCases = 7;
   for (int i = 0; i < numCases; i++)
   {
+    std::cout << "Case " << i << std::endl;
+
     vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
     vtkm::Id nVerts = dataSet.GetCoordinateSystem(0).GetData().GetNumberOfValues();
 
@@ -106,8 +108,8 @@ void TestCrossProduct()
     vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec2", field2);
 
     vtkm::filter::CrossProduct filter;
-    filter.SetSecondaryFieldName("vec2");
-    filter.SetActiveField("vec1");
+    filter.SetPrimaryField("vec1");
+    filter.SetSecondaryField("vec2");
     vtkm::cont::DataSet result = filter.Execute(dataSet);
 
     VTKM_TEST_ASSERT(result.HasField("crossproduct", vtkm::cont::Field::ASSOC_POINTS),
