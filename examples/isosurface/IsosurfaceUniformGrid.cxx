@@ -247,8 +247,9 @@ int main(int argc, char* argv[])
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0, 0.1);
   filter.SetActiveField("nodevar");
+  filter.SetFieldsToPass({ "nodevar" });
 
-  vtkm::cont::DataSet outputData = filter.Execute(dataSet, { "nodevar" });
+  vtkm::cont::DataSet outputData = filter.Execute(dataSet);
 
   //need to extract vertices, normals, and scalars
   using VertType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
