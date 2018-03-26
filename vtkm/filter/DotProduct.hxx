@@ -20,18 +20,42 @@
 
 #include <vtkm/worklet/DispatcherMapField.h>
 
+#include <vtkm/cont/ArrayHandleCast.h>
+
 namespace vtkm
 {
 namespace filter
 {
+
+namespace detail
+{
+
+template <typename T, typename DeviceAdapter>
+struct DotProductFunctor
+{
+  vtkm::cont::ArrayHandle<T> OutArray;
+
+  template <typename PrimaryFieldType, typename SecondaryFieldType>
+  void operator()(const SecondaryFieldType& secondaryField, const PrimaryFieldType& primaryField)
+  {
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::DotProduct, DeviceAdapter> dispatcher;
+    dispatcher.Invoke(primaryField,
+                      vtkm::cont::make_ArrayHandleCast<vtkm::Vec<T, 3>>(secondaryField),
+                      this->OutArray);
+  }
+};
+
+} // namespace detail
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT DotProduct::DotProduct()
   : vtkm::filter::FilterField<DotProduct>()
   , SecondaryFieldName()
   , SecondaryFieldAssociation(vtkm::cont::Field::ASSOC_ANY)
+  , UseCoordinateSystemAsSecondaryField(false)
+  , SecondaryCoordinateSystemIndex(0)
 {
-  this->SetOutputFieldName("crossproduct");
+  this->SetOutputFieldName("dotproduct");
 }
 
 //-----------------------------------------------------------------------------
@@ -43,28 +67,33 @@ inline VTKM_CONT vtkm::filter::Result DotProduct::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
 {
-  vtkm::cont::ArrayHandle<T> outArray;
-
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> secondaryField;
+  detail::DotProductFunctor<T, DeviceAdapter> functor;
   try
   {
-    using Traits = vtkm::filter::FilterTraits<DotProduct>;
-    vtkm::filter::ApplyPolicy(
-      inDataSet.GetField(this->SecondaryFieldName, this->SecondaryFieldAssociation),
-      policy,
-      Traits())
-      .CopyTo(secondaryField);
+    if (this->UseCoordinateSystemAsSecondaryField)
+    {
+      vtkm::cont::CastAndCall(
+        inDataSet.GetCoordinateSystem(this->GetSecondaryCoordinateSystemIndex()), functor, field);
+    }
+    else
+    {
+      using Traits = vtkm::filter::FilterTraits<DotProduct>;
+      using TypeList = vtkm::ListTagBase<vtkm::Vec<T, 3>>;
+      vtkm::filter::ApplyPolicy(
+        inDataSet.GetField(this->SecondaryFieldName, this->SecondaryFieldAssociation),
+        policy,
+        Traits())
+        .ResetTypeList(TypeList())
+        .CastAndCall(functor, field);
+    }
   }
   catch (const vtkm::cont::Error&)
   {
     return vtkm::filter::Result();
   }
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::DotProduct, DeviceAdapter> dispatcher;
-  dispatcher.Invoke(field, secondaryField, outArray);
-
   return vtkm::filter::Result(inDataSet,
-                              outArray,
+                              functor.OutArray,
                               this->GetOutputFieldName(),
                               fieldMetadata.GetAssociation(),
                               fieldMetadata.GetCellSetName());

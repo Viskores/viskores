@@ -83,6 +83,47 @@ void createVectors(std::size_t numPts,
   }
 }
 
+void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field1,
+                 const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& field2,
+                 const vtkm::cont::DataSet& result)
+{
+  VTKM_TEST_ASSERT(result.HasField("crossproduct", vtkm::cont::Field::ASSOC_POINTS),
+                   "Output field is missing.");
+
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> outputArray;
+  result.GetField("crossproduct", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(outputArray);
+
+  auto v1Portal = field1.GetPortalConstControl();
+  auto v2Portal = field2.GetPortalConstControl();
+  auto outPortal = outputArray.GetPortalConstControl();
+
+  VTKM_TEST_ASSERT(outputArray.GetNumberOfValues() == field1.GetNumberOfValues(),
+                   "Field sizes wrong");
+  VTKM_TEST_ASSERT(outputArray.GetNumberOfValues() == field2.GetNumberOfValues(),
+                   "Field sizes wrong");
+
+  for (vtkm::Id j = 0; j < outputArray.GetNumberOfValues(); j++)
+  {
+    vtkm::Vec<vtkm::FloatDefault, 3> v1 = v1Portal.Get(j);
+    vtkm::Vec<vtkm::FloatDefault, 3> v2 = v2Portal.Get(j);
+    vtkm::Vec<vtkm::FloatDefault, 3> res = outPortal.Get(j);
+
+    //Make sure result is orthogonal each input vector. Need to normalize to compare with zero.
+    vtkm::Vec<vtkm::FloatDefault, 3> v1N(vtkm::Normal(v1)), v2N(vtkm::Normal(v1)),
+      resN(vtkm::Normal(res));
+    VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v1N), vtkm::FloatDefault(0.0)),
+                     "Wrong result for cross product");
+    VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v2N), vtkm::FloatDefault(0.0)),
+                     "Wrong result for cross product");
+
+    vtkm::FloatDefault sinAngle =
+      vtkm::Magnitude(res) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
+    vtkm::FloatDefault cosAngle = vtkm::dot(v1, v2) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
+    VTKM_TEST_ASSERT(test_equal(sinAngle * sinAngle + cosAngle * cosAngle, vtkm::FloatDefault(1.0)),
+                     "Bad cross product length.");
+  }
+}
+
 void TestCrossProduct()
 {
   std::cout << "Testing CrossProduct Filter" << std::endl;
@@ -106,45 +147,40 @@ void TestCrossProduct()
 
     vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec1", field1);
     vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec2", field2);
+    dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("vecA", field1));
+    dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("vecB", field2));
 
-    vtkm::filter::CrossProduct filter;
-    filter.SetPrimaryField("vec1");
-    filter.SetSecondaryField("vec2");
-    vtkm::cont::DataSet result = filter.Execute(dataSet);
-
-    VTKM_TEST_ASSERT(result.HasField("crossproduct", vtkm::cont::Field::ASSOC_POINTS),
-                     "Output field is missing.");
-
-    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> outputArray;
-    result.GetField("crossproduct", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(outputArray);
-    auto v1Portal = field1.GetPortalConstControl();
-    auto v2Portal = field2.GetPortalConstControl();
-    auto outPortal = outputArray.GetPortalConstControl();
-
-    for (vtkm::Id j = 0; j < outputArray.GetNumberOfValues(); j++)
     {
-      vtkm::Vec<vtkm::FloatDefault, 3> v1 = v1Portal.Get(j);
-      vtkm::Vec<vtkm::FloatDefault, 3> v2 = v2Portal.Get(j);
-      vtkm::Vec<vtkm::FloatDefault, 3> res = outPortal.Get(j);
+      std::cout << "  Both vectors as normal fields" << std::endl;
+      vtkm::filter::CrossProduct filter;
+      filter.SetPrimaryField("vec1");
+      filter.SetSecondaryField("vec2");
+      vtkm::cont::DataSet result = filter.Execute(dataSet);
+      CheckResult(field1, field2, result);
+    }
 
-      //Make sure result is orthogonal each input vector. Need to normalize to compare with zero.
-      vtkm::Vec<vtkm::FloatDefault, 3> v1N(vtkm::Normal(v1)), v2N(vtkm::Normal(v1)),
-        resN(vtkm::Normal(res));
-      VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v1N), vtkm::FloatDefault(0.0)),
-                       "Wrong result for cross product");
-      VTKM_TEST_ASSERT(test_equal(vtkm::dot(resN, v2N), vtkm::FloatDefault(0.0)),
-                       "Wrong result for cross product");
+    {
+      std::cout << "  First field as coordinates" << std::endl;
+      vtkm::filter::CrossProduct filter;
+      filter.SetUseCoordinateSystemAsPrimaryField(true);
+      filter.SetPrimaryCoordinateSystem(1);
+      filter.SetSecondaryField("vec2");
+      vtkm::cont::DataSet result = filter.Execute(dataSet);
+      CheckResult(field1, field2, result);
+    }
 
-      vtkm::FloatDefault sinAngle =
-        vtkm::Magnitude(res) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
-      vtkm::FloatDefault cosAngle = vtkm::dot(v1, v2) * vtkm::RMagnitude(v1) * vtkm::RMagnitude(v2);
-      VTKM_TEST_ASSERT(
-        test_equal(sinAngle * sinAngle + cosAngle * cosAngle, vtkm::FloatDefault(1.0)),
-        "Bad cross product length.");
+    {
+      std::cout << "  Second field as coordinates" << std::endl;
+      vtkm::filter::CrossProduct filter;
+      filter.SetPrimaryField("vec1");
+      filter.SetUseCoordinateSystemAsSecondaryField(true);
+      filter.SetSecondaryCoordinateSystem(2);
+      vtkm::cont::DataSet result = filter.Execute(dataSet);
+      CheckResult(field1, field2, result);
     }
   }
 }
-}
+} // anonymous namespace
 
 int UnitTestCrossProductFilter(int, char* [])
 {

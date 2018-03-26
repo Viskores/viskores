@@ -20,16 +20,40 @@
 
 #include <vtkm/worklet/DispatcherMapField.h>
 
+#include <vtkm/cont/ArrayHandleCast.h>
+
 namespace vtkm
 {
 namespace filter
 {
+
+namespace detail
+{
+
+template <typename T, typename DeviceAdapter>
+struct CrossProductFunctor
+{
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> OutArray;
+
+  template <typename PrimaryFieldType, typename SecondaryFieldType>
+  void operator()(const SecondaryFieldType& secondaryField, const PrimaryFieldType& primaryField)
+  {
+    vtkm::worklet::DispatcherMapField<vtkm::worklet::CrossProduct, DeviceAdapter> dispatcher;
+    dispatcher.Invoke(primaryField,
+                      vtkm::cont::make_ArrayHandleCast<vtkm::Vec<T, 3>>(secondaryField),
+                      this->OutArray);
+  }
+};
+
+} // namespace detail
 
 //-----------------------------------------------------------------------------
 inline VTKM_CONT CrossProduct::CrossProduct()
   : vtkm::filter::FilterField<CrossProduct>()
   , SecondaryFieldName()
   , SecondaryFieldAssociation(vtkm::cont::Field::ASSOC_ANY)
+  , UseCoordinateSystemAsSecondaryField(false)
+  , SecondaryCoordinateSystemIndex(0)
 {
   this->SetOutputFieldName("crossproduct");
 }
@@ -43,28 +67,34 @@ inline VTKM_CONT vtkm::filter::Result CrossProduct::DoExecute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
 {
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> outArray;
-
-  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> secondaryField;
+  detail::CrossProductFunctor<T, DeviceAdapter> functor;
   try
   {
-    using Traits = vtkm::filter::FilterTraits<CrossProduct>;
-    vtkm::filter::ApplyPolicy(
-      inDataSet.GetField(this->SecondaryFieldName, this->SecondaryFieldAssociation),
-      policy,
-      Traits())
-      .CopyTo(secondaryField);
+    if (this->UseCoordinateSystemAsSecondaryField)
+    {
+      vtkm::cont::CastAndCall(
+        inDataSet.GetCoordinateSystem(this->GetSecondaryCoordinateSystemIndex()), functor, field);
+    }
+    else
+    {
+      using Traits = vtkm::filter::FilterTraits<CrossProduct>;
+      using TypeList = vtkm::ListTagBase<vtkm::Vec<T, 3>>;
+      vtkm::filter::ApplyPolicy(
+        inDataSet.GetField(this->SecondaryFieldName, this->SecondaryFieldAssociation),
+        policy,
+        Traits())
+        .ResetTypeList(TypeList())
+        .CastAndCall(functor, field);
+    }
   }
   catch (const vtkm::cont::Error&)
   {
     return vtkm::filter::Result();
   }
 
-  vtkm::worklet::DispatcherMapField<vtkm::worklet::CrossProduct, DeviceAdapter> dispatcher;
-  dispatcher.Invoke(field, secondaryField, outArray);
 
   return vtkm::filter::Result(inDataSet,
-                              outArray,
+                              functor.OutArray,
                               this->GetOutputFieldName(),
                               fieldMetadata.GetAssociation(),
                               fieldMetadata.GetCellSetName());
