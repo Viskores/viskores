@@ -46,8 +46,8 @@ public:
   typedef void ExecutionSignature(_1, _2);
   using InputDomain = _1;
 
-  template <typename T, typename IntegralCurveType>
-  VTKM_EXEC void operator()(const T& idx, IntegralCurveType& ic) const
+  template <typename IntegralCurveType>
+  VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
   {
     vtkm::Vec<FieldType, 3> inpos = ic.GetPos(idx);
     vtkm::Vec<FieldType, 3> outpos;

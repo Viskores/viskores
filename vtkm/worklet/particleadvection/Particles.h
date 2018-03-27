@@ -196,7 +196,7 @@ public:
   VTKM_EXEC
   vtkm::Id GetStatus(const vtkm::Id& idx) const { return Status.Get(idx); }
 
-public:
+protected:
   PosPortal Pos;
   IdPortal Steps, Status;
   vtkm::Id MaxSteps;
@@ -272,7 +272,7 @@ public:
 protected:
   bool fromArray = false;
 
-public:
+protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> PosArray;
   vtkm::cont::ArrayHandle<vtkm::Id> StepsArray;
   vtkm::cont::ArrayHandle<vtkm::Id> StatusArray;
@@ -283,10 +283,10 @@ public:
 
 
 template <typename T, typename DeviceAdapterTag>
-class StateRecordingParticleExecutionObject : ParticleExecutionObject<T, DeviceAdapterTag>
+class StateRecordingParticleExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
 {
 
-public:
+private:
   using IdPortal =
     typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal;
   using IdComponentPortal = typename vtkm::cont::ArrayHandle<
@@ -297,7 +297,10 @@ public:
 public:
   VTKM_EXEC_CONT
   StateRecordingParticleExecutionObject(const StateRecordingParticleExecutionObject& s)
-    : ParticleExecutionObject<T, DeviceAdapterTag>(s.Pos, s.Steps, s.Status, s.MaxSteps)
+    : Pos(s.Pos)
+    , Steps(s.Steps)
+    , Status(s.Status)
+    , MaxSteps(s.MaxSteps)
     , ValidPoint(s.ValidPoint)
     , History(s.History)
     , HistSize(s.HistSize)
@@ -306,7 +309,10 @@ public:
 
   VTKM_EXEC_CONT
   StateRecordingParticleExecutionObject()
-    : ParticleExecutionObject<T, DeviceAdapterTag>()
+    : Pos()
+    , Steps()
+    , Status()
+    , MaxSteps(0)
     , ValidPoint()
     , History()
     , HistSize(-1)
@@ -319,7 +325,10 @@ public:
                                         const IdPortal& _status,
                                         const IdPortal& _validPoint,
                                         const vtkm::Id& _maxSteps)
-    : ParticleExecutionObject<T, DeviceAdapterTag>(_pos, _steps, _status, _maxSteps)
+    : Pos(_pos)
+    , Steps(_steps)
+    , Status(_status)
+    , MaxSteps(_maxSteps)
     , ValidPoint(_validPoint)
     , History()
     , HistSize()
@@ -381,14 +390,92 @@ public:
   {
     return History.Get(idx * HistSize + step);
   }
+  /* Set/Change Status */
+  VTKM_EXEC
+  void SetOK(const vtkm::Id& idx)
+  {
+    Clear(idx);
+    Status.Set(idx, STATUS_OK);
+  }
+  VTKM_EXEC
+  void SetTerminated(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, TERMINATED);
+  }
+  VTKM_EXEC
+  void SetExitedSpatialBoundary(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, EXITED_SPATIAL_BOUNDARY);
+  }
+  VTKM_EXEC
+  void SetExitedTemporalBoundary(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, EXITED_TEMPORAL_BOUNDARY);
+  }
+  VTKM_EXEC
+  void SetError(const vtkm::Id& idx)
+  {
+    ClearBit(idx, STATUS_OK);
+    SetBit(idx, STATUS_ERROR);
+  }
 
+  /* Check Status */
+  VTKM_EXEC
+  bool OK(const vtkm::Id& idx) { return CheckBit(idx, STATUS_OK); }
+  VTKM_EXEC
+  bool Terminated(const vtkm::Id& idx) { return CheckBit(idx, TERMINATED); }
+  VTKM_EXEC
+  bool ExitedSpatialBoundary(const vtkm::Id& idx) { return CheckBit(idx, EXITED_SPATIAL_BOUNDARY); }
+  VTKM_EXEC
+  bool ExitedTemporalBoundary(const vtkm::Id& idx)
+  {
+    return CheckBit(idx, EXITED_TEMPORAL_BOUNDARY);
+  }
+  VTKM_EXEC
+  bool Error(const vtkm::Id& idx) { return CheckBit(idx, STATUS_ERROR); }
+  VTKM_EXEC
+  bool Integrateable(const vtkm::Id& idx)
+  {
+    return OK(idx) &&
+      !(Terminated(idx) || ExitedSpatialBoundary(idx) || ExitedTemporalBoundary(idx));
+  }
   VTKM_EXEC_CONT
   bool Done(const vtkm::Id& idx) { return !this->Integrateable(idx); }
+  /* Bit Operations */
+  VTKM_EXEC
+  void Clear(const vtkm::Id& idx) { Status.Set(idx, 0); }
+  VTKM_EXEC
+  void SetBit(const vtkm::Id& idx, const ParticleStatus& b)
+  {
+    Status.Set(idx, Status.Get(idx) | b);
+  }
+  VTKM_EXEC
+  void ClearBit(const vtkm::Id& idx, const ParticleStatus& b)
+  {
+    Status.Set(idx, Status.Get(idx) & ~b);
+  }
+  VTKM_EXEC
+  bool CheckBit(const vtkm::Id& idx, const ParticleStatus& b) const
+  {
+    return (Status.Get(idx) & b) != 0;
+  }
 
-public:
+  VTKM_EXEC
+  vtkm::Vec<T, 3> GetPos(const vtkm::Id& idx) const { return Pos.Get(idx); }
+  VTKM_EXEC
+  vtkm::Id GetStep(const vtkm::Id& idx) const { return Steps.Get(idx); }
+  VTKM_EXEC
+  vtkm::Id GetStatus(const vtkm::Id& idx) const { return Status.Get(idx); }
+protected:
   IdPortal ValidPoint;
   PosPortal History;
   vtkm::Id HistSize;
+  PosPortal Pos;
+  IdPortal Steps, Status;
+  vtkm::Id MaxSteps;
 };
 
 
@@ -520,7 +607,7 @@ public:
 protected:
   bool fromArray = false;
 
-public:
+protected:
   bool IsValidPoint = false;
   bool IsHistSize = false;
   vtkm::cont::ArrayHandle<vtkm::Id> StepsArray;
