@@ -46,8 +46,8 @@ public:
   typedef void ExecutionSignature(_1, _2);
   using InputDomain = _1;
 
-  template <typename IntegralCurveType>
-  VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
+  template <typename T, typename IntegralCurveType>
+  VTKM_EXEC void operator()(const T& idx, IntegralCurveType& ic) const
   {
     vtkm::Vec<FieldType, 3> inpos = ic.GetPos(idx);
     vtkm::Vec<FieldType, 3> outpos;
@@ -116,17 +116,21 @@ private:
   {
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using ParticleType = vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag>;
+    using ParticleExecutionObjectFactoryType =
+      vtkm::worklet::particleadvection::Particles<FieldType,
+                                                  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>,
+                                                  vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
     //Create and invoke the particle advection.
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
-    ParticleType particles(seedArray, stepsTaken, statusArray, maxSteps);
+    ParticleExecutionObjectFactoryType particlesExecutionObjectFacotry(
+      seedArray, stepsTaken, statusArray, maxSteps);
 
     //Invoke particle advection worklet
     ParticleAdvectWorkletType particleWorklet(integrator);
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
-    particleWorkletDispatch.Invoke(idxArray, particles);
+    particleWorkletDispatch.Invoke(idxArray, particlesExecutionObjectFacotry);
   }
 
   IntegratorType integrator;
@@ -185,8 +189,10 @@ private:
   {
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using StreamlineType =
-      vtkm::worklet::particleadvection::StateRecordingParticles<FieldType, DeviceAdapterTag>;
+    using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles<
+      FieldType,
+      vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>,
+      vtkm::cont::ArrayHandle<vtkm::Id>>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
 
