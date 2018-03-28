@@ -42,8 +42,8 @@
 #include <GL/glut.h>
 #endif
 
+#include <vtkm/cont/ColorTable.h>
 #include <vtkm/rendering/CanvasGL.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/MapperGL.h>
 #include <vtkm/rendering/View3D.h>
 
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
   scene.AddActor(vtkm::rendering::Actor(ds.GetCellSet(),
                                         ds.GetCoordinateSystem(),
                                         ds.GetField("pointvar"),
-                                        vtkm::rendering::ColorTable("thermal")));
+                                        vtkm::cont::ColorTable("inferno")));
 
   //Create vtkm rendering stuff.
   view = new vtkm::rendering::View3D(scene, mapper, canvas, bg);

@@ -25,6 +25,7 @@ set(headers
   CellFace.h
   CellInside.h
   CellInterpolate.h
+  ColorTable.h
   ConnectivityExplicit.h
   ConnectivityPermuted.h
   ConnectivityStructured.h
@@ -36,11 +37,16 @@ set(headers
   TaskBase.h
   )
 
+set(header_impls
+  ColorTable.hxx
+  )
+
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(arg)
 
-vtkm_declare_headers(${impl_headers} ${headers})
+vtkm_declare_headers(${headers})
+vtkm_declare_headers(${header_impls} TESTABLE OFF)
 
 
 #-----------------------------------------------------------------------------

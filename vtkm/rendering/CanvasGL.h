@@ -67,7 +67,7 @@ protected:
                const vtkm::rendering::Color& color) const override;
 
   void AddColorBar(const vtkm::Bounds& bounds,
-                   const vtkm::rendering::ColorTable& colorTable,
+                   const vtkm::cont::ColorTable& colorTable,
                    bool horizontal) const override;
 
   void AddColorSwatch(const vtkm::Vec<vtkm::Float64, 2>& point0,

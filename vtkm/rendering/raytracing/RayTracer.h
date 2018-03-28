@@ -22,8 +22,6 @@
 
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/rendering/ColorTable.h>
-
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 

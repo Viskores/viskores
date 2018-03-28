@@ -98,7 +98,7 @@ void Render(ViewType& view, const std::string& outputFile)
 template <typename MapperType, typename CanvasType, typename ViewType>
 void Render(const vtkm::cont::DataSet& ds,
             const std::string& fieldNm,
-            const vtkm::rendering::ColorTable& colorTable,
+            const vtkm::cont::ColorTable& colorTable,
             const std::string& outputFile)
 {
   MapperType mapper;
@@ -193,8 +193,8 @@ template <typename MapperType1, typename MapperType2, typename CanvasType, typen
 void MultiMapperRender(const vtkm::cont::DataSet& ds1,
                        const vtkm::cont::DataSet& ds2,
                        const std::string& fieldNm,
-                       const vtkm::rendering::ColorTable& colorTable1,
-                       const vtkm::rendering::ColorTable& colorTable2,
+                       const vtkm::cont::ColorTable& colorTable1,
+                       const vtkm::cont::ColorTable& colorTable2,
                        const std::string& outputFile)
 {
   MapperType1 mapper1;

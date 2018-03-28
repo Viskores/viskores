@@ -39,7 +39,7 @@ void RenderTests()
   canvas.AddLine(-0.8, -0.8, 0.8, 0.8, 1.0f, vtkm::rendering::Color::black);
   canvas.AddLine(-0.8, 0.8, 0.8, -0.8, 1.0f, vtkm::rendering::Color::black);
   vtkm::Bounds colorBarBounds(-0.8, -0.6, -0.8, 0.8, 0, 0);
-  canvas.AddColorBar(colorBarBounds, vtkm::rendering::ColorTable("thermal"), false);
+  canvas.AddColorBar(colorBarBounds, vtkm::cont::ColorTable("inferno"), false);
   canvas.BlendBackground();
   canvas.SaveAs("canvas.pnm");
 }

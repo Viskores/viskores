@@ -210,10 +210,14 @@ void CanvasGL::AddLine(const vtkm::Vec<vtkm::Float64, 2>& point0,
 }
 
 void CanvasGL::AddColorBar(const vtkm::Bounds& bounds,
-                           const vtkm::rendering::ColorTable& colorTable,
+                           const vtkm::cont::ColorTable& colorTable,
                            bool horizontal) const
 {
   const int n = 256;
+  //map through the color table for our 256 points as the first step
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
+  colorTable.Sample(n, colors);
+
   vtkm::Float32 startX = static_cast<vtkm::Float32>(bounds.X.Min);
   vtkm::Float32 startY = static_cast<vtkm::Float32>(bounds.Y.Min);
   vtkm::Float32 width = static_cast<vtkm::Float32>(bounds.X.Length());
@@ -221,22 +225,25 @@ void CanvasGL::AddColorBar(const vtkm::Bounds& bounds,
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glBegin(GL_QUADS);
+
+  auto colorPortal = colors.GetPortalConstControl();
+
   for (int i = 0; i < n; i++)
   {
     vtkm::Float32 v0 = static_cast<vtkm::Float32>(i) / static_cast<vtkm::Float32>(n);
     vtkm::Float32 v1 = static_cast<vtkm::Float32>(i + 1) / static_cast<vtkm::Float32>(n);
-    vtkm::rendering::Color c0 = colorTable.MapRGB(v0);
-    vtkm::rendering::Color c1 = colorTable.MapRGB(v1);
+    auto c0 = colorPortal.Get(i);
+    auto c1 = colorPortal.Get(i + 1);
     if (horizontal)
     {
       vtkm::Float32 x0 = startX + width * v0;
       vtkm::Float32 x1 = startX + width * v1;
       vtkm::Float32 y0 = startY;
       vtkm::Float32 y1 = startY + height;
-      glColor3f(c0.Components[0], c0.Components[1], c0.Components[2]);
+      glColor3ub(c0[0], c0[1], c0[2]);
       glVertex2f(x0, y0);
       glVertex2f(x0, y1);
-      glColor3f(c1.Components[0], c1.Components[1], c1.Components[2]);
+      glColor3ub(c1[0], c1[1], c1[2]);
       glVertex2f(x1, y1);
       glVertex2f(x1, y0);
     }
@@ -246,10 +253,10 @@ void CanvasGL::AddColorBar(const vtkm::Bounds& bounds,
       vtkm::Float32 x1 = startX + width;
       vtkm::Float32 y0 = startY + height * v0;
       vtkm::Float32 y1 = startY + height * v1;
-      glColor3f(c0.Components[0], c0.Components[1], c0.Components[2]);
+      glColor3ub(c0[0], c0[1], c0[2]);
       glVertex2f(x0, y1);
       glVertex2f(x1, y1);
-      glColor3f(c1.Components[0], c1.Components[1], c1.Components[2]);
+      glColor3ub(c1[0], c1[1], c1[2]);
       glVertex2f(x1, y0);
       glVertex2f(x0, y0);
     }

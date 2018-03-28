@@ -70,7 +70,7 @@ void RenderTests()
 
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("thermal");
+  vtkm::cont::ColorTable colorTable("inferno");
 
   glfwInit();
   GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "GLFW Test", nullptr, nullptr);

@@ -32,7 +32,6 @@ set(headers
   Color.h
   ColorBarAnnotation.h
   ColorLegendAnnotation.h
-  ColorTable.h
   ConnectivityProxy.h
   DecodePNG.h
   LineRenderer.h
@@ -68,7 +67,6 @@ set(sources
   Color.cxx
   ColorBarAnnotation.cxx
   ColorLegendAnnotation.cxx
-  ColorTable.cxx
   DecodePNG.cxx
   LineRenderer.cxx
   MapperConnectivity.cxx

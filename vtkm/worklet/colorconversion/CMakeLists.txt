@@ -22,9 +22,11 @@ set(headers
   Conversions.h
   ConvertToRGB.h
   ConvertToRGBA.h
+  LookupTable.h
   Portals.h
   ShiftScaleToRGB.h
   ShiftScaleToRGBA.h
+  TransferFunction.h
   )
 
 #-----------------------------------------------------------------------------

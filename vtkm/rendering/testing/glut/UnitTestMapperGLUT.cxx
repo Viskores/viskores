@@ -56,7 +56,7 @@ static void keyboardCall(unsigned char key, int vtkmNotUsed(x), int vtkmNotUsed(
 static void displayCall()
 {
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("thermal");
+  vtkm::cont::ColorTable colorTable("inferno");
 
   typedef vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> M;
   typedef vtkm::rendering::CanvasGL C;

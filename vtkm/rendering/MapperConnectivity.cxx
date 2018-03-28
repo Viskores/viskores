@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 #include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/ColorTable.h>
+
 #include <vtkm/rendering/ConnectivityProxy.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/MapperConnectivity.h>
@@ -76,7 +76,7 @@ VTKM_CONT
 void MapperConnectivity::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                                      const vtkm::cont::CoordinateSystem& coords,
                                      const vtkm::cont::Field& scalarField,
-                                     const vtkm::rendering::ColorTable& vtkmNotUsed(colorTable),
+                                     const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
                                      const vtkm::rendering::Camera& camera,
                                      const vtkm::Range& vtkmNotUsed(scalarRange))
 {

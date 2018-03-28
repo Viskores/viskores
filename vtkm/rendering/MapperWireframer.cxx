@@ -320,7 +320,7 @@ void MapperWireframer::EndScene()
 void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
                                    const vtkm::cont::CoordinateSystem& coords,
                                    const vtkm::cont::Field& inScalarField,
-                                   const vtkm::rendering::ColorTable& colorTable,
+                                   const vtkm::cont::ColorTable& colorTable,
                                    const vtkm::rendering::Camera& camera,
                                    const vtkm::Range& scalarRange)
 {
