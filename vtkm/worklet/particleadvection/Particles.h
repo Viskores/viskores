@@ -21,6 +21,8 @@
 #ifndef vtk_m_worklet_particleadvection_Particles_h
 #define vtk_m_worklet_particleadvection_Particles_h
 
+class ParticleExecutionObjectType;
+
 #include <vtkm/Types.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectFactoryBase.h>
@@ -43,15 +45,15 @@ enum ParticleStatus
   STATUS_ERROR = 1 << 6
 };
 
-template <typename T, typename DeviceAdapterTag>
+template <typename T, typename Device>
 class ParticleExecutionObject
 {
 
 private:
   using IdPortal =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal;
-  using PosPortal = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
-    DeviceAdapterTag>::Portal;
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::Portal;
+  using PosPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<Device>::Portal;
 
 public:
   VTKM_EXEC_CONT
@@ -85,15 +87,15 @@ public:
   }
 
   VTKM_EXEC_CONT
-  ParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
-                          vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
-                          vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
-                          const vtkm::Id& _maxSteps)
+  ParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> posArray,
+                          vtkm::cont::ArrayHandle<vtkm::Id> stepsArray,
+                          vtkm::cont::ArrayHandle<vtkm::Id> statusArray,
+                          vtkm::Id _maxSteps)
     : MaxSteps(_maxSteps)
   {
-    Pos = posArray.PrepareForInPlace(DeviceAdapterTag());
-    Steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
-    Status = statusArray.PrepareForInPlace(DeviceAdapterTag());
+    Pos = posArray.PrepareForInPlace(Device());
+    Steps = stepsArray.PrepareForInPlace(Device());
+    Status = statusArray.PrepareForInPlace(Device());
   }
 
   VTKM_EXEC
@@ -202,7 +204,7 @@ protected:
   vtkm::Id MaxSteps;
 };
 
-template <typename T, typename PosPortal, typename IdPortal>
+template <typename T>
 class Particles : public vtkm::cont::ExecutionObjectFactoryBase
 {
 private:
@@ -210,53 +212,22 @@ private:
 
 public:
   template <typename Device>
-  VTKM_CONT vtkm::worklet::particleadvection::ParticleExecutionObject<T, Device>
+  VTKM_CONT vtkm::worklet::particleadvection::ParticleExecutionObject<ItemType, Device>
     PrepareForExecution(Device) const
   {
     if (this->fromArray)
     {
-      vtkm::worklet::particleadvection::ParticleExecutionObject<T, Device> ExecutionObject(
+      vtkm::worklet::particleadvection::ParticleExecutionObject<ItemType, Device> ExecutionObject(
         this->PosArray, this->StepsArray, this->StatusArray, this->MaxSteps);
       return ExecutionObject;
     }
     else
     {
-      vtkm::worklet::particleadvection::ParticleExecutionObject<T, Device> ExecutionObject(
-        this->Pos, this->Steps, this->Status, this->MaxSteps);
-      return ExecutionObject;
+      return vtkm::worklet::particleadvection::ParticleExecutionObject<ItemType, Device>();
     }
   }
 
-  VTKM_EXEC_CONT
-  Particles()
-    : Pos()
-    , Steps()
-    , Status()
-    , MaxSteps(0)
-  {
-  }
-
-  VTKM_EXEC_CONT
-  Particles(const Particles& ic)
-    : Pos(ic.Pos)
-    , Steps(ic.Steps)
-    , Status(ic.Status)
-    , MaxSteps(ic.MaxSteps)
-  {
-  }
-  VTKM_EXEC_CONT
-  Particles(const PosPortal& _pos,
-            const IdPortal& _steps,
-            const IdPortal& _status,
-            const vtkm::Id& _maxSteps)
-    : Pos(_pos)
-    , Steps(_steps)
-    , Status(_status)
-    , MaxSteps(_maxSteps)
-  {
-  }
-
-  VTKM_EXEC_CONT
+  VTKM_CONT
   Particles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
@@ -269,6 +240,8 @@ public:
   {
   }
 
+  Particles() {}
+
 protected:
   bool fromArray = false;
 
@@ -276,23 +249,22 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> PosArray;
   vtkm::cont::ArrayHandle<vtkm::Id> StepsArray;
   vtkm::cont::ArrayHandle<vtkm::Id> StatusArray;
-  PosPortal Pos;
-  IdPortal Steps, Status;
   vtkm::Id MaxSteps;
 };
 
 
-template <typename T, typename DeviceAdapterTag>
-class StateRecordingParticleExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
+template <typename T, typename Device>
+class StateRecordingParticleExecutionObject
+  : vtkm::worklet::particleadvection::ParticleExecutionObject<T, Device>
 {
 
 private:
   using IdPortal =
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal;
-  using IdComponentPortal = typename vtkm::cont::ArrayHandle<
-    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapterTag>::Portal;
-  using PosPortal = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
-    DeviceAdapterTag>::Portal;
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<Device>::Portal;
+  using IdComponentPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<Device>::Portal;
+  using PosPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<Device>::Portal;
 
 public:
   VTKM_EXEC_CONT
@@ -309,13 +281,13 @@ public:
 
   VTKM_EXEC_CONT
   StateRecordingParticleExecutionObject()
-    : Pos()
+    : ValidPoint()
+    , History()
+    , HistSize(-1)
+    , Pos()
     , Steps()
     , Status()
     , MaxSteps(0)
-    , ValidPoint()
-    , History()
-    , HistSize(-1)
   {
   }
 
@@ -336,39 +308,39 @@ public:
   }
 
   VTKM_EXEC_CONT
-  StateRecordingParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
-                                        vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
-                                        vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
-                                        vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
-                                        vtkm::cont::ArrayHandle<vtkm::Id>& validPointArray,
-                                        const vtkm::Id& _maxSteps)
+  StateRecordingParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> posArray,
+                                        vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> historyArray,
+                                        vtkm::cont::ArrayHandle<vtkm::Id> stepsArray,
+                                        vtkm::cont::ArrayHandle<vtkm::Id> statusArray,
+                                        vtkm::cont::ArrayHandle<vtkm::Id> validPointArray,
+                                        vtkm::Id _maxSteps)
   {
-    this->Pos = posArray.PrepareForInPlace(DeviceAdapterTag());
-    this->Steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
-    this->Status = statusArray.PrepareForInPlace(DeviceAdapterTag());
-    this->ValidPoint = validPointArray.PrepareForInPlace(DeviceAdapterTag());
+    this->Pos = posArray.PrepareForInPlace(Device());
+    this->Steps = stepsArray.PrepareForInPlace(Device());
+    this->Status = statusArray.PrepareForInPlace(Device());
+    this->ValidPoint = validPointArray.PrepareForInPlace(Device());
     this->MaxSteps = _maxSteps;
     HistSize = _maxSteps;
     vtkm::Id NumPos = posArray.GetNumberOfValues();
-    History = historyArray.PrepareForOutput(NumPos * HistSize, DeviceAdapterTag());
+    History = historyArray.PrepareForOutput(NumPos * HistSize, Device());
   }
   VTKM_EXEC_CONT
-  StateRecordingParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
-                                        vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
-                                        vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
-                                        vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
-                                        vtkm::cont::ArrayHandle<vtkm::Id>& validPointArray,
-                                        const vtkm::Id& _maxSteps,
-                                        vtkm::Id& _histSize)
+  StateRecordingParticleExecutionObject(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> posArray,
+                                        vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> historyArray,
+                                        vtkm::cont::ArrayHandle<vtkm::Id> stepsArray,
+                                        vtkm::cont::ArrayHandle<vtkm::Id> statusArray,
+                                        vtkm::cont::ArrayHandle<vtkm::Id> validPointArray,
+                                        vtkm::Id _maxSteps,
+                                        vtkm::Id _histSize)
   {
-    this->Pos = posArray.PrepareForInPlace(DeviceAdapterTag());
-    this->Steps = stepsArray.PrepareForInPlace(DeviceAdapterTag());
-    this->Status = statusArray.PrepareForInPlace(DeviceAdapterTag());
-    this->ValidPoint = validPointArray.PrepareForInPlace(DeviceAdapterTag());
+    this->Pos = posArray.PrepareForInPlace(Device());
+    this->Steps = stepsArray.PrepareForInPlace(Device());
+    this->Status = statusArray.PrepareForInPlace(Device());
+    this->ValidPoint = validPointArray.PrepareForInPlace(Device());
     this->MaxSteps = _maxSteps;
     HistSize = _histSize;
     vtkm::Id NumPos = posArray.GetNumberOfValues();
-    History = historyArray.PrepareForOutput(NumPos * HistSize, DeviceAdapterTag());
+    History = historyArray.PrepareForOutput(NumPos * HistSize, Device());
   }
 
   VTKM_EXEC_CONT
@@ -479,8 +451,8 @@ protected:
 };
 
 
-template <typename T, typename PosPortal, typename IdPortal>
-class StateRecordingParticles
+template <typename T>
+class StateRecordingParticles : vtkm::worklet::particleadvection::Particles<T>
 {
 private:
   using ItemType = T;
@@ -518,52 +490,9 @@ public:
     }
     else
     {
-      vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<T, Device>
-        ExecutionObject(this->Pos, this->Steps, this->Status, this->ValidPoint, this->MaxSteps);
-      return ExecutionObject;
+      return vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<T, Device>();
     }
   }
-  VTKM_EXEC_CONT
-  StateRecordingParticles(const StateRecordingParticles& s)
-    : Pos(s.Pos)
-    , Steps(s.Steps)
-    , Status(s.Status)
-    , MaxSteps(s.MaxSteps)
-  {
-    this->ValidPoint = s.ValidPoint;
-    this->History = s.History;
-    this->HistSize = s.HistSize;
-    this->IsValidPoint = true;
-  }
-
-  VTKM_EXEC_CONT
-  StateRecordingParticles()
-    : Pos()
-    , Steps()
-    , Status()
-    , MaxSteps(0)
-    , ValidPoint()
-    , History()
-    , HistSize(-1)
-  {
-  }
-
-  VTKM_EXEC_CONT
-  StateRecordingParticles(const PosPortal& _pos,
-                          const IdPortal& _steps,
-                          const IdPortal& _status,
-                          const IdPortal& _validPoint,
-                          const vtkm::Id& _maxSteps)
-    : Pos(_pos)
-    , Steps(_steps)
-    , Status(_status)
-    , MaxSteps(_maxSteps)
-    , ValidPoint(_validPoint)
-    , History()
-    , HistSize()
-  {
-  }
-
   VTKM_EXEC_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
                           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
@@ -571,12 +500,9 @@ public:
                           vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& validPointArray,
                           const vtkm::Id& _maxSteps)
-    : ValidPoint()
-    , History()
-    , HistSize()
+    : ValidPointArray(validPointArray)
+    , HistoryArray(historyArray)
   {
-    this->HistoryArray = historyArray;
-    this->ValidPointArray = validPointArray;
     this->PosArray = posArray;
     this->StepsArray = stepsArray;
     this->StatusArray = statusArray;
@@ -584,7 +510,7 @@ public:
     this->MaxSteps = _maxSteps;
   }
 
-  VTKM_EXEC_CONT
+  VTKM_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
                           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
@@ -615,11 +541,7 @@ protected:
   vtkm::cont::ArrayHandle<vtkm::Id> ValidPointArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> HistoryArray;
   vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> PosArray;
-  IdPortal ValidPoint;
-  PosPortal History;
   vtkm::Id HistSize;
-  PosPortal Pos;
-  IdPortal Steps, Status;
   vtkm::Id MaxSteps;
 };
 

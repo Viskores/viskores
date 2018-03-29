@@ -117,9 +117,7 @@ private:
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
     using ParticleExecutionObjectFactoryType =
-      vtkm::worklet::particleadvection::Particles<FieldType,
-                                                  vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>,
-                                                  vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>>;
+      vtkm::worklet::particleadvection::Particles<FieldType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
     //Create and invoke the particle advection.
@@ -189,10 +187,7 @@ private:
   {
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles<
-      FieldType,
-      vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>,
-      vtkm::cont::ArrayHandle<vtkm::Id>>;
+    using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles<FieldType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
 
