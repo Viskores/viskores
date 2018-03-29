@@ -21,6 +21,4 @@
 list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   ".*warning: ignoring loop annotation.*"
   ".*warning: Included by graph for.*not generated, too many nodes. Consider increasing DOT_GRAPH_MAX_NODES."
-  ".*diy.include.*diy.mpi.io.hpp.*Wconversion.*"
-  ".*diy.include.*diy.mpi.datatypes.hpp.*Wunused-parameter.*"
 )

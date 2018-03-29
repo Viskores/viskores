@@ -54,6 +54,8 @@ set(headers
   CellSetSingleType.h
   CellSetStructured.h
   CellSetPermutation.h
+  ColorTable.h
+  ColorTableSamples.h
   CoordinateSystem.h
   DataSet.h
   DataSetBuilderExplicit.h
@@ -94,6 +96,7 @@ set(template_sources
   ArrayRangeCompute.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
+  CoordinateSystem.hxx
   StorageBasic.hxx
   )
 
@@ -108,6 +111,7 @@ set(sources
   internal/SimplePolymorphicContainer.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
   internal/ArrayHandleBasicImpl.cxx
+  PresetColorTables.cxx
   StorageBasic.cxx
   )
 
@@ -116,6 +120,7 @@ set(sources
 set(device_sources
   ArrayRangeCompute.cxx
   CellSetExplicit.cxx
+  ColorTable.cxx
   CoordinateSystem.cxx
   DataSet.cxx
   MultiBlock.cxx

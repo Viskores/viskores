@@ -32,9 +32,9 @@
 namespace
 {
 
-static const vtkm::Id NUM_UNIQUE = 100;
-static const vtkm::Id NUM_PER_GROUP = 10;
-static const vtkm::Id ARRAY_SIZE = NUM_UNIQUE * NUM_PER_GROUP;
+static constexpr vtkm::Id NUM_UNIQUE = 100;
+static constexpr vtkm::Id NUM_PER_GROUP = 10;
+static constexpr vtkm::Id ARRAY_SIZE = NUM_UNIQUE * NUM_PER_GROUP;
 
 template <typename KeyArray, typename ValueArray>
 void CheckAverageByKey(const KeyArray& uniqueKeys, const ValueArray& averagedValues)

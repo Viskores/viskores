@@ -233,8 +233,16 @@
 //Mark if we are building with MPI enabled.
 #cmakedefine VTKM_ENABLE_MPI
 
+//Mark what version of the CUDA compiler we have. This is needed to correctly
+//choose consistent implementation ( so we don't violate ODR ) when we compile
+//with CUDA 7.5
+#ifdef VTKM_ENABLE_CUDA
+#define VTKM_CUDA_VERSION_MAJOR @VTKM_CUDA_VERSION_MAJOR@
+#define VTKM_CUDA_VERSION_MINOR @VTKM_CUDA_VERSION_MINOR@
+#endif
+
 #if __cplusplus >= 201103L || \
-    ( defined(VTKM_MSVC) && _MSC_VER >= 1800  ) || \
+    ( defined(VTKM_MSVC) && _MSC_VER >= 1900  ) || \
     ( defined(VTKM_ICC)  && defined(__INTEL_CXX11_MODE__) )
 #define VTKM_HAVE_CXX_11
 #else
@@ -301,17 +309,6 @@
 //warning.
 //
 #pragma warning(disable:4251)
-
-// MSVC 2013 and earlier only:
-#if _MSC_VER <= 1800
-// Generates numerous warnings that implicit constructors can't
-// be constructed. This is understood and we don't care.
-#pragma warning(disable:4510)
-
-// Generates numerous warnings that implicit assignment operators can't
-// be constructed. This is understood and we don't care.
-#pragma warning(disable:4512)
-#endif // MSVC <= 2013
 
 #endif
 

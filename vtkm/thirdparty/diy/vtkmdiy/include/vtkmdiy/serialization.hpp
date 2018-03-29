@@ -53,9 +53,9 @@ namespace diy
     void                read(const std::string& fn)
     {
         std::ifstream in(fn.c_str(), std::ios::binary | std::ios::ate);
-        buffer.resize(in.tellg());
+        buffer.resize(static_cast<size_t>(in.tellg()));
         in.seekg(0);
-        in.read(&buffer[0], size());
+        in.read(&buffer[0], static_cast<std::streamsize>(size()));
         position = 0;
     }
 
@@ -89,7 +89,8 @@ namespace diy
   template<class T>
   struct Serialization: public detail::Default
   {
-#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 5)
+#if (defined(__clang__) && !defined(__ppc64__)) || (defined(__GNUC__) && __GNUC__ >= 5)
+    //exempt power-pc clang variants due to: https://gitlab.kitware.com/vtk/vtk-m/issues/201
     static_assert(std::is_trivially_copyable<T>::value, "Default serialization works only for trivially copyable types");
 #endif
 

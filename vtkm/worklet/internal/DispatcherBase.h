@@ -114,7 +114,7 @@ struct DetermineHasCorrectParameters
     using ControlSignatureTag = typename brigand::at_c<SigTypes, State::value>;
     using TypeCheckTag = typename ControlSignatureTag::TypeCheckTag;
 
-    static VTKM_CONSTEXPR bool isCorrect = vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value;
+    static constexpr bool isCorrect = vtkm::cont::arg::TypeCheck<TypeCheckTag, T>::value;
 
     // If you get an error on the line below, that means that your code has called the
     // Invoke method on a dispatcher, and one of the arguments of the Invoke is the wrong
@@ -363,7 +363,7 @@ protected:
   using ExecutionInterface =
     vtkm::internal::FunctionInterface<typename WorkletType::ExecutionSignature>;
 
-  static const vtkm::IdComponent NUM_INVOKE_PARAMS = ControlInterface::ARITY;
+  static constexpr vtkm::IdComponent NUM_INVOKE_PARAMS = ControlInterface::ARITY;
 
 private:
   // We don't really need these types, but declaring them checks the arguments
@@ -438,39 +438,32 @@ private:
     static_assert(isAllValid::value == expectedLen::value,
                   "All arguments failed the TypeCheck pass");
 
-#if defined(__CUDACC__)
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4068) //unknown pragma
+#endif
+#if defined(__NVCC__)
 // Disable warning "calling a __host__ function from a __host__ __device__"
 // In some cases nv_exec_check_disable doesn't work and therefore you need
 // to use the following suppressions
 // This have been found by eigen:
 // https://github.com/RLovelett/eigen/blame/master/Eigen/src/Core/util/DisableStupidWarnings.h
 // To discover new dia_supress values use -Xcudafe "--display_error_number"
-#if defined(VTKM_MSVC)
-#pragma warning(push)
-#pragma warning(disable : 4068) //unknown pragma
-#endif
-
 #pragma push
 #pragma diag_suppress 2737
+#if (__CUDACC_VER_MAJOR__ >= 8)
+//CUDA 7.5 doesn't like suppressing error codes that don't exist yet
 #pragma diag_suppress 2739
 #pragma diag_suppress 2828
-
-#if defined(VTKM_MSVC)
-#pragma warning(pop)
 #endif
-
 #endif
     auto fi =
       vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
-#if defined __CUDACC__
-#if defined(VTKM_MSVC)
-#pragma warning(push)
-#pragma warning(disable : 4068) //unknown pragma
-#endif
+#if defined(__NVCC__)
 #pragma pop
+#endif
 #if defined(VTKM_MSVC)
 #pragma warning(pop)
-#endif
 #endif
 
     auto ivc = vtkm::internal::Invocation<ParameterInterface,

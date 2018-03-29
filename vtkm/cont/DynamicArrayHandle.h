@@ -29,6 +29,7 @@
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/StorageListTag.h>
 
+#include <vtkm/cont/ArrayHandlePermutation.h>
 #include <vtkm/cont/internal/DynamicTransform.h>
 
 namespace vtkm
@@ -408,26 +409,17 @@ namespace detail
 
 struct DynamicArrayHandleTry
 {
-  DynamicArrayHandleTry(const PolymorphicArrayHandleContainerBase* const c)
-    : Container(c)
-  {
-  }
-
-  template <typename T, typename U, typename... Args>
-  void operator()(brigand::list<T, U>, Args&&... args) const
-  {
-    using storage = vtkm::cont::internal::Storage<T, U>;
-    using invalid = typename std::is_base_of<vtkm::cont::internal::UndefinedStorage, storage>::type;
-    this->run<T, U>(invalid{}, args...);
-  }
-
   template <typename T, typename U, typename Functor, typename... Args>
-  void run(std::false_type, Functor&& f, bool& called, Args&&... args) const
+  void operator()(brigand::list<T, U>,
+                  Functor&& f,
+                  bool& called,
+                  const PolymorphicArrayHandleContainerBase* const container,
+                  Args&&... args) const
   {
     if (!called)
     {
       using downcastType = const vtkm::cont::detail::PolymorphicArrayHandleContainer<T, U>* const;
-      downcastType downcastContainer = dynamic_cast<downcastType>(this->Container);
+      downcastType downcastContainer = dynamic_cast<downcastType>(container);
       if (downcastContainer)
       {
         f(downcastContainer->Array, std::forward<Args>(args)...);
@@ -435,19 +427,31 @@ struct DynamicArrayHandleTry
       }
     }
   }
-
-  template <typename T, typename U, typename... Args>
-  void run(std::true_type, Args&&...) const
-  {
-  }
-
-  const PolymorphicArrayHandleContainerBase* const Container;
 };
 
 VTKM_CONT_EXPORT void ThrowCastAndCallException(PolymorphicArrayHandleContainerBase*,
                                                 const std::type_info*,
                                                 const std::type_info*);
 } // namespace detail
+
+
+template <typename T>
+struct IsUndefinedStorage
+{
+};
+template <typename T, typename U>
+struct IsUndefinedStorage<brigand::list<T, U>> : vtkm::cont::internal::IsInValidArrayHandle<T, U>
+{
+};
+
+template <typename TypeList, typename StorageList>
+struct ListTagDynamicTypes : vtkm::detail::ListRoot
+{
+  using crossProduct = typename vtkm::ListCrossProduct<TypeList, StorageList>;
+  // using list = typename crossProduct::list;
+  using list = ::brigand::remove_if<typename crossProduct::list, IsUndefinedStorage<brigand::_1>>;
+};
+
 
 template <typename TypeList, typename StorageList>
 template <typename Functor, typename... Args>
@@ -456,14 +460,15 @@ VTKM_CONT void DynamicArrayHandleBase<TypeList, StorageList>::CastAndCall(Functo
 {
   //For optimizations we should compile once the cross product for the default types
   //and make it extern
-  using crossProduct = typename vtkm::ListCrossProduct<TypeList, StorageList>;
+  using crossProduct = ListTagDynamicTypes<TypeList, StorageList>;
 
   bool called = false;
   auto* ptr = this->ArrayContainer.get();
-  vtkm::ListForEach(detail::DynamicArrayHandleTry(ptr),
+  vtkm::ListForEach(detail::DynamicArrayHandleTry{},
                     crossProduct{},
                     std::forward<Functor>(f),
                     called,
+                    ptr,
                     std::forward<Args>(args)...);
   if (!called)
   {

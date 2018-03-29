@@ -45,7 +45,7 @@ namespace detail
 template <typename ValueType>
 struct VTKM_ALWAYS_EXPORT CompositeVectorSwizzleFunctor
 {
-  static const vtkm::IdComponent NUM_COMPONENTS = vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
   using ComponentMapType = vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS>;
 
   // Caution! This is a reference.
@@ -183,7 +183,7 @@ class VTKM_ALWAYS_EXPORT ArrayPortalCompositeVector
 
 public:
   using ValueType = typename PortalTypes::ResultType;
-  static const vtkm::IdComponent NUM_COMPONENTS = vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = vtkm::VecTraits<ValueType>::NUM_COMPONENTS;
 
   // Used internally.
   using ComponentMapType = vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS>;
@@ -262,7 +262,7 @@ class Storage<typename ArrayHandleCompositeVectorTraits<SignatureWithArrays>::Va
               vtkm::cont::internal::StorageTagCompositeVector<SignatureWithArrays>>
 {
   using FunctionInterfaceWithArrays = vtkm::internal::FunctionInterface<SignatureWithArrays>;
-  static const vtkm::IdComponent NUM_COMPONENTS = FunctionInterfaceWithArrays::ARITY;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = FunctionInterfaceWithArrays::ARITY;
   using ComponentMapType = vtkm::Vec<vtkm::IdComponent, NUM_COMPONENTS>;
 
   using FunctionInterfaceWithPortals =

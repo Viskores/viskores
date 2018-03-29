@@ -14,8 +14,6 @@
 #define BRIGAND_COMP_MSVC
 #if _MSC_VER == 1900
 #define BRIGAND_COMP_MSVC_2015
-#elif _MSC_VER == 1800
-#define BRIGAND_COMP_MSVC_2013
 #endif
 #elif __INTEL_COMPILER
 #define BRIGAND_COMP_INTEL
@@ -902,7 +900,7 @@ namespace detail
 #include <initializer_list>
 namespace brigand
 {
-#if defined(BRIGAND_COMP_MSVC_2013) || defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
+#if defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
   namespace detail
   {
     template<class P, class T>
@@ -961,7 +959,7 @@ namespace brigand
 }
 namespace brigand
 {
-#if defined(BRIGAND_COMP_MSVC_2013) || defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
+#if defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
   namespace detail
   {
     template<typename T>
@@ -1522,9 +1520,7 @@ namespace brigand
 namespace detail
 {
   template<class, class T> struct unique_x_t
-#ifdef BRIGAND_COMP_MSVC_2013
-  { operator T (); };
-#elif defined(BRIGAND_COMP_GCC)
+#if defined(BRIGAND_COMP_GCC)
   : type_<T>
   {};
 #else
@@ -1545,39 +1541,11 @@ namespace detail
     template<class... Us>
     static auto is_set(Us...) -> decltype(true_fn(static_cast<Us>(Pack())...));
     static std::false_type is_set(...);
-#ifdef BRIGAND_COMP_MSVC_2013
-    using type = decltype(is_set(Ts()...));
-#else
     using type = decltype(is_set(type_<Ts>()...));
-#endif
   };
-#ifdef BRIGAND_COMP_MSVC_2013
-  template<class> struct qrref {};
-  template<class> struct qref {};
-  template<class> struct qnoref {};
-  template<class T>
-  struct msvc_quali_ref
-  {
-    using type = qnoref<T>;
-  };
-  template<class T>
-  struct msvc_quali_ref<T&>
-  {
-    using type = qref<T>;
-  };
-  template<class T>
-  struct msvc_quali_ref<T&&>
-  {
-    using type = qrref<T>;
-  };
-#endif
 }
   template<class... Ts>
-#ifdef BRIGAND_COMP_MSVC_2013
-  using is_set = typename detail::is_set_impl<range<int, 0, static_cast<int>(sizeof...(Ts))>, detail::msvc_quali_ref<Ts>...>::type;
-#else
   using is_set = typename detail::is_set_impl<range<int, 0, static_cast<int>(sizeof...(Ts))>, Ts...>::type;
-#endif
 }
 #include <type_traits>
 namespace brigand

@@ -46,7 +46,7 @@ namespace benchmarking
 
 #define ARRAY_SIZE (1 << 22)
 #define CUBE_SIZE 256
-const static std::string DIVIDER(40, '-');
+static const std::string DIVIDER(40, '-');
 
 enum BenchmarkName
 {

@@ -186,7 +186,7 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T>& ve
     case 1:
     {
       using CommonType = typename ClosestCommonType<T>::Type;
-      VTKM_CONSTEXPR bool not_same = !std::is_same<T, CommonType>::value;
+      constexpr bool not_same = !std::is_same<T, CommonType>::value;
       if (not_same)
       {
         std::cerr << "Type " << vtkm::io::internal::DataTypeName<T>::Name()
@@ -209,7 +209,7 @@ vtkm::cont::DynamicArrayHandle CreateDynamicArrayHandle(const std::vector<T>& ve
       using InComponentType = typename vtkm::VecTraits<T>::ComponentType;
       using OutComponentType = typename ClosestFloat<InComponentType>::Type;
       using CommonType = vtkm::Vec<OutComponentType, 3>;
-      VTKM_CONSTEXPR bool not_same = !std::is_same<T, CommonType>::value;
+      constexpr bool not_same = !std::is_same<T, CommonType>::value;
       if (not_same)
       {
         std::cerr << "Type " << vtkm::io::internal::DataTypeName<InComponentType>::Name() << "["

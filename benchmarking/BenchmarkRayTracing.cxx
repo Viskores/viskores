@@ -79,8 +79,24 @@ struct BenchRayTracing
 
     Tracer.SetData(Coords.GetData(), Indices, field, NumberOfTriangles, range, bounds);
 
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> temp;
+    vtkm::cont::ColorTable table("cool to warm");
+    table.Sample(100, temp);
+
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> colors;
-    vtkm::rendering::ColorTable("cool2warm").Sample(100, colors);
+    colors.Allocate(100);
+    auto portal = colors.GetPortalControl();
+    auto colorPortal = temp.GetPortalConstControl();
+    constexpr vtkm::Float32 conversionToFloatSpace = (1.0f / 255.0f);
+    for (vtkm::Id i = 0; i < 100; ++i)
+    {
+      auto color = colorPortal.Get(i);
+      vtkm::Vec<vtkm::Float32, 4> t(color[0] * conversionToFloatSpace,
+                                    color[1] * conversionToFloatSpace,
+                                    color[2] * conversionToFloatSpace,
+                                    color[3] * conversionToFloatSpace);
+      portal.Set(i, t);
+    }
 
     Tracer.SetColorMap(colors);
     Tracer.Render(Rays);

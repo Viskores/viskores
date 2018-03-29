@@ -196,9 +196,10 @@ public:
     typedef void ExecutionSignature(_2, CellShape, PointCount, _3, _4);
 
     VTKM_CONT
-    ComputeStats(vtkm::Float64 value, const ClipTablesPortal& clipTables)
+    ComputeStats(vtkm::Float64 value, const ClipTablesPortal& clipTables, bool invert)
       : Value(value)
       , ClipTables(clipTables)
+      , Invert(invert)
     {
     }
 
@@ -215,7 +216,14 @@ public:
       vtkm::Id caseId = 0;
       for (vtkm::IdComponent i = 0; i < count; ++i)
       {
-        caseId |= (static_cast<vtkm::Float64>(scalars[i]) > this->Value) ? mask[i] : 0;
+        if (this->Invert)
+        {
+          caseId |= (static_cast<vtkm::Float64>(scalars[i]) <= this->Value) ? mask[i] : 0;
+        }
+        else
+        {
+          caseId |= (static_cast<vtkm::Float64>(scalars[i]) > this->Value) ? mask[i] : 0;
+        }
       }
 
       vtkm::Id idx = this->ClipTables.GetCaseIndex(shape.Id, caseId);
@@ -244,6 +252,7 @@ public:
   private:
     vtkm::Float64 Value;
     ClipTablesPortal ClipTables;
+    bool Invert;
   };
 
   template <typename DeviceAdapter>
@@ -432,6 +441,7 @@ public:
   vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
                                     const ScalarsArrayHandle& scalars,
                                     vtkm::Float64 value,
+                                    bool invert,
                                     DeviceAdapter device)
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
@@ -443,7 +453,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> clipTableIdxs;
     vtkm::cont::ArrayHandle<ClipStats> stats;
 
-    ComputeStats<DeviceAdapter> computeStats(value, clipTablesDevicePortal);
+    ComputeStats<DeviceAdapter> computeStats(value, clipTablesDevicePortal, invert);
     DispatcherMapTopology<ComputeStats<DeviceAdapter>, DeviceAdapter>(computeStats)
       .Invoke(cellSet, scalars, clipTableIdxs, stats);
 
@@ -521,10 +531,12 @@ public:
     ClipWithImplicitFunction(Clip* clipper,
                              const DynamicCellSet& cellSet,
                              const vtkm::ImplicitFunction* function,
+                             const bool invert,
                              vtkm::cont::CellSetExplicit<>* result)
       : Clipper(clipper)
       , CellSet(&cellSet)
       , Function(function)
+      , Invert(invert)
       , Result(result)
     {
     }
@@ -538,13 +550,15 @@ public:
         handle, this->Function);
 
       // Clip at locations where the implicit function evaluates to 0
-      *this->Result = this->Clipper->Run(*this->CellSet, clipScalars, 0.0, DeviceAdapter());
+      *this->Result =
+        this->Clipper->Run(*this->CellSet, clipScalars, 0.0, this->Invert, DeviceAdapter());
     }
 
   private:
     Clip* Clipper;
     const DynamicCellSet* CellSet;
     vtkm::ImplicitFunctionValue Function;
+    bool Invert;
     vtkm::cont::CellSetExplicit<>* Result;
   };
 
@@ -552,12 +566,13 @@ public:
   vtkm::cont::CellSetExplicit<> Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
                                     const vtkm::cont::ImplicitFunctionHandle& clipFunction,
                                     const vtkm::cont::CoordinateSystem& coords,
+                                    const bool invert,
                                     DeviceAdapter device)
   {
     vtkm::cont::CellSetExplicit<> output;
 
     ClipWithImplicitFunction<vtkm::cont::DynamicCellSetBase<CellSetList>, DeviceAdapter> clip(
-      this, cellSet, clipFunction.PrepareForExecution(device), &output);
+      this, cellSet, clipFunction.PrepareForExecution(device), invert, &output);
 
     CastAndCall(coords, clip);
     return output;

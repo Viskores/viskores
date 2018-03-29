@@ -87,5 +87,16 @@ inline VTKM_CONT vtkm::filter::Result NDHistogram::DoExecute(
   //return outputData;
   return vtkm::filter::Result(outputData);
 }
+
+//-----------------------------------------------------------------------------
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool NDHistogram::DoMapField(vtkm::filter::Result&,
+                                              const vtkm::cont::ArrayHandle<T, StorageType>&,
+                                              const vtkm::filter::FieldMetadata&,
+                                              const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                                              DeviceAdapter)
+{
+  return false;
+}
 }
 }

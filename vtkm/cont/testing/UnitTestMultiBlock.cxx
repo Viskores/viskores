@@ -34,15 +34,13 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/exec/ConnectivityStructured.h>
-
-#if defined(VTKM_ENABLE_MPI)
+#include <vtkm/thirdparty/diy/Configure.h>
 
 // clang-format off
-#include <vtkm/thirdparty/diy/Configure.h>
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include VTKM_DIY(diy/master.hpp)
+VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
-
-#endif
 
 void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet);
 static void MultiBlockTest()
@@ -56,10 +54,7 @@ static void MultiBlockTest()
   multiblock.AddBlock(TDset1);
   multiblock.AddBlock(TDset2);
 
-  int procsize = 1;
-#if defined(VTKM_ENABLE_MPI)
-  procsize = vtkm::cont::EnvironmentTracker::GetCommunicator().size();
-#endif
+  const int procsize = vtkm::cont::EnvironmentTracker::GetCommunicator().size();
 
   VTKM_TEST_ASSERT(multiblock.GetNumberOfBlocks() == 2, "Incorrect number of blocks");
   VTKM_TEST_ASSERT(multiblock.GetGlobalNumberOfBlocks() == 2 * procsize,
@@ -160,7 +155,6 @@ static void MultiBlockTest()
 
 void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& RightDateSet)
 {
-
   for (vtkm::Id j = 0; j < LeftDateSet.GetNumberOfFields(); j++)
   {
     vtkm::cont::ArrayHandle<vtkm::Float32> LDataArray;
@@ -174,11 +168,7 @@ void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& Righ
 
 int UnitTestMultiBlock(int argc, char* argv[])
 {
-  (void)argc;
-  (void)argv;
-#if defined(VTKM_ENABLE_MPI)
   diy::mpi::environment env(argc, argv);
   vtkm::cont::EnvironmentTracker::SetCommunicator(diy::mpi::communicator(MPI_COMM_WORLD));
-#endif
   return vtkm::cont::testing::Testing::Run(MultiBlockTest);
 }

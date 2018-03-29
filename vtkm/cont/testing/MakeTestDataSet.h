@@ -322,7 +322,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DRegularDataSet0()
   dataSet.AddField(make_Field(
     "cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 4, vtkm::CopyFlag::On));
 
-  static const vtkm::IdComponent dim = 3;
+  static constexpr vtkm::IdComponent dim = 3;
   vtkm::cont::CellSetStructured<dim> cellSet("cells");
   cellSet.SetPointDimensions(vtkm::make_Vec(3, 2, 3));
   dataSet.AddCellSet(cellSet);
@@ -349,7 +349,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DRegularDataSet1()
   dataSet.AddField(make_Field(
     "cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellvar, 1, vtkm::CopyFlag::On));
 
-  static const vtkm::IdComponent dim = 3;
+  static constexpr vtkm::IdComponent dim = 3;
   vtkm::cont::CellSetStructured<dim> cellSet("cells");
   cellSet.SetPointDimensions(vtkm::make_Vec(2, 2, 2));
   dataSet.AddCellSet(cellSet);

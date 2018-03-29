@@ -28,8 +28,10 @@ VTKM_THIRDPARTY_POST_INCLUDE
 // These static vars are in an anon namespace to work around MSVC linker issues.
 namespace
 {
+#if CUDART_VERSION >= 8000
 // Has CudaAllocator::Initialize been called?
 static bool IsInitialized = false;
+#endif
 
 // True if all devices support concurrent pagable managed memory.
 static bool ManagedMemorySupported = false;
@@ -183,6 +185,7 @@ void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
 
 void CudaAllocator::Initialize()
 {
+#if CUDART_VERSION >= 8000
   if (!IsInitialized)
   {
     int numDevices;
@@ -209,6 +212,9 @@ void CudaAllocator::Initialize()
     ManagedMemorySupported = managed;
     IsInitialized = true;
   }
+#else
+  ManagedMemorySupported = false;
+#endif
 }
 }
 }

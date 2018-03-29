@@ -262,17 +262,17 @@ vtkm::cont::DataSet MakeTestDataSet()
 //
 // Verify the histogram result and tally
 //
-void VerifyHistogram(const vtkm::filter::Result& result,
+void VerifyHistogram(const vtkm::cont::DataSet& result,
                      vtkm::Id numberOfBins,
                      const vtkm::Range& range,
                      vtkm::Float64 delta,
                      bool output = true)
 {
-  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "histogram", "Output field has wrong name.");
+  VTKM_TEST_ASSERT(result.HasField("histogram"), "Output field missing");
 
   vtkm::cont::ArrayHandle<vtkm::Id> bins;
-  result.FieldAs(bins);
+  result.GetField("histogram").GetData().CopyTo(bins);
+
   vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl binPortal = bins.GetPortalConstControl();
 
   vtkm::Id sum = 0;
@@ -304,30 +304,33 @@ void TestHistogram()
   // Data attached is the poisson distribution
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
-  vtkm::filter::Result result;
   vtkm::filter::Histogram histogram;
 
   // Run data
   histogram.SetNumberOfBins(10);
-  result = histogram.Execute(ds, "p_poisson");
+  histogram.SetActiveField("p_poisson");
+  auto result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
   range = histogram.GetDataRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
   histogram.SetNumberOfBins(100);
-  result = histogram.Execute(ds, "p_normal");
+  histogram.SetActiveField("p_normal");
+  result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
   range = histogram.GetDataRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);
 
   histogram.SetNumberOfBins(1);
-  result = histogram.Execute(ds, "p_chiSquare");
+  histogram.SetActiveField("p_chiSquare");
+  result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
   range = histogram.GetDataRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
   histogram.SetNumberOfBins(1000000);
-  result = histogram.Execute(ds, "p_uniform");
+  histogram.SetActiveField("p_uniform");
+  result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
   range = histogram.GetDataRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);

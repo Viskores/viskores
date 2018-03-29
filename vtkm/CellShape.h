@@ -96,7 +96,7 @@ struct CellShapeIdToTag
 #define VTKM_DEFINE_CELL_TAG(name, idname)                                                         \
   struct CellShapeTag##name                                                                        \
   {                                                                                                \
-    static const vtkm::UInt8 Id = vtkm::idname;                                                    \
+    static constexpr vtkm::UInt8 Id = vtkm::idname;                                                \
   };                                                                                               \
   namespace internal                                                                               \
   {                                                                                                \

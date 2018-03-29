@@ -348,7 +348,7 @@ void RenderRTTest(const vtkm::cont::DataSet& ds, int N)
     using V3 = vtkm::rendering::View3D;
 
     //std::cout<<"Render: "<<i<<std::endl;
-    vtkm::rendering::ColorTable colorTable("thermal");
+    vtkm::cont::ColorTable colorTable("inferno");
     vtkm::rendering::testing::Render<M, C, V3>(ds, "scalar", colorTable);
   }
 }
@@ -366,7 +366,7 @@ void RenderVolTest(const vtkm::cont::DataSet& ds, int N)
     using V3 = vtkm::rendering::View3D;
 
     //std::cout<<"Render: "<<i<<std::endl;
-    vtkm::rendering::ColorTable colorTable("thermal");
+    vtkm::cont::ColorTable colorTable("inferno");
     vtkm::rendering::testing::Render<M, C, V3>(ds, "scalar", colorTable);
   }
 }

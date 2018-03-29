@@ -25,6 +25,7 @@
 #include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
+#include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm
 {
@@ -41,19 +42,31 @@ struct VecAxisAlignedPointCoordinatesNumComponents;
 template <>
 struct VecAxisAlignedPointCoordinatesNumComponents<1>
 {
-  static const vtkm::IdComponent NUM_COMPONENTS = 2;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 2;
 };
 
 template <>
 struct VecAxisAlignedPointCoordinatesNumComponents<2>
 {
-  static const vtkm::IdComponent NUM_COMPONENTS = 4;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 4;
 };
 
 template <>
 struct VecAxisAlignedPointCoordinatesNumComponents<3>
 {
-  static const vtkm::IdComponent NUM_COMPONENTS = 8;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 8;
+};
+
+struct VecAxisAlignedPointCoordinatesOffsetTable
+{
+  VTKM_EXEC_CONT vtkm::FloatDefault Get(vtkm::Int32 i, vtkm::Int32 j) const
+  {
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::FloatDefault offsetTable[8][3] = {
+      { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f },
+      { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }
+    };
+    return offsetTable[i][j];
+  }
 };
 
 } // namespace detail
@@ -77,7 +90,7 @@ class VecAxisAlignedPointCoordinates
 public:
   using ComponentType = vtkm::Vec<vtkm::FloatDefault, 3>;
 
-  static const vtkm::IdComponent NUM_COMPONENTS =
+  static constexpr vtkm::IdComponent NUM_COMPONENTS =
     detail::VecAxisAlignedPointCoordinatesNumComponents<NumDimensions>::NUM_COMPONENTS;
 
   VTKM_EXEC_CONT
@@ -104,15 +117,10 @@ public:
   VTKM_EXEC_CONT
   ComponentType operator[](vtkm::IdComponent index) const
   {
-    static const vtkm::FloatDefault VecAxisAlignedPointCoordinatesOffsetTable[8][3] = {
-      { 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f },
-      { 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f }
-    };
-
-    const auto& offset = VecAxisAlignedPointCoordinatesOffsetTable[index];
-    return ComponentType(this->Origin[0] + offset[0] * this->Spacing[0],
-                         this->Origin[1] + offset[1] * this->Spacing[1],
-                         this->Origin[2] + offset[2] * this->Spacing[2]);
+    detail::VecAxisAlignedPointCoordinatesOffsetTable table;
+    return ComponentType(this->Origin[0] + table.Get(index, 0) * this->Spacing[0],
+                         this->Origin[1] + table.Get(index, 1) * this->Spacing[1],
+                         this->Origin[2] + table.Get(index, 2) * this->Spacing[2]);
   }
 
   VTKM_EXEC_CONT
@@ -152,7 +160,7 @@ struct VecTraits<vtkm::VecAxisAlignedPointCoordinates<NumDimensions>>
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 
-  static const vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = VecType::NUM_COMPONENTS;
 
   VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const VecType&) { return NUM_COMPONENTS; }

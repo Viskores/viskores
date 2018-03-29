@@ -35,7 +35,6 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
@@ -48,15 +47,7 @@ public:
     extractPoints.SetExtractInside(true);
     extractPoints.SetCompactPoints(true);
 
-    result = extractPoints.Execute(dataset);
-
-    // Only point data can be transferred to result
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      extractPoints.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27),
                      "Wrong result for ExtractPoints");
 
@@ -77,7 +68,6 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
@@ -90,15 +80,7 @@ public:
     extractPoints.SetExtractInside(false);
     extractPoints.SetCompactPoints(true);
 
-    result = extractPoints.Execute(dataset);
-
-    // Only point data can be transferred to result
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      extractPoints.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 98),
                      "Wrong result for ExtractPoints");
 
@@ -120,7 +102,6 @@ public:
   {
     std::cout << "Testing extract points with implicit function (sphere):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
@@ -132,15 +113,7 @@ public:
     extractPoints.SetImplicitFunction(sphere);
     extractPoints.SetExtractInside(true);
 
-    result = extractPoints.Execute(dataset);
-
-    // Only point data can be transferred to result
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      extractPoints.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27),
                      "Wrong result for ExtractPoints");
   }
@@ -149,7 +122,6 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.f, 0.f, 0.f);
@@ -161,15 +133,7 @@ public:
     extractPoints.SetImplicitFunction(box);
     extractPoints.SetExtractInside(true);
 
-    result = extractPoints.Execute(dataset);
-
-    // Only point data can be transferred to result
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      extractPoints.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for ExtractPoints");
   }
@@ -178,7 +142,6 @@ public:
   {
     std::cout << "Testing extract points with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.f, 0.f, 0.f);
@@ -190,15 +153,7 @@ public:
     extractPoints.SetImplicitFunction(box);
     extractPoints.SetExtractInside(false);
 
-    result = extractPoints.Execute(dataset);
-
-    // Only point data can be transferred to result
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      extractPoints.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = extractPoints.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 3),
                      "Wrong result for ExtractPoints");
   }

@@ -31,17 +31,17 @@
 namespace kx
 {
 
-static const int kRadixBits = 8;
-static const size_t kInsertSortThreshold = 64;
-static const int kRadixMask = (1 << kRadixBits) - 1;
-static const int kRadixBin = 1 << kRadixBits;
+static constexpr int kRadixBits = 8;
+static constexpr size_t kInsertSortThreshold = 64;
+static constexpr int kRadixMask = (1 << kRadixBits) - 1;
+static constexpr int kRadixBin = 1 << kRadixBits;
 
 //================= HELPING FUNCTIONS ====================
 
 template <class T>
 struct RadixTraitsUnsigned
 {
-  static const int nBytes = sizeof(T);
+  static constexpr int nBytes = sizeof(T);
   int kth_byte(const T& x, int k) { return (x >> (kRadixBits * k)) & kRadixMask; }
   bool compare(const T& x, const T& y) { return x < y; }
 };
@@ -49,7 +49,7 @@ struct RadixTraitsUnsigned
 template <class T>
 struct RadixTraitsSigned
 {
-  static const int nBytes = sizeof(T);
+  static constexpr int nBytes = sizeof(T);
   static const T kMSB = T(0x80) << ((sizeof(T) - 1) * 8);
   int kth_byte(const T& x, int k) { return ((x ^ kMSB) >> (kRadixBits * k)) & kRadixMask; }
   bool compare(const T& x, const T& y) { return x < y; }

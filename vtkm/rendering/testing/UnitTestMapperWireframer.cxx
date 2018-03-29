@@ -108,18 +108,18 @@ void RenderTests()
   typedef vtkm::rendering::View1D V1;
 
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("OrRd");
+  vtkm::cont::ColorTable colorTable("samsel fire");
 
   vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
+    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "wf_reg3D.pnm");
   vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
+    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "wf_rect3D.pnm");
   vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
+    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "wf_expl3D.pnm");
   vtkm::rendering::testing::Render<M, C, V3>(
-    Make3DUniformDataSet(), "pointvar", colorTable, "uniform3D.pnm");
+    Make3DUniformDataSet(), "pointvar", colorTable, "wf_uniform3D.pnm");
   vtkm::rendering::testing::Render<M, C, V2>(
-    Make2DExplicitDataSet(), "cellVar", colorTable, "lines2D.pnm");
+    Make2DExplicitDataSet(), "cellVar", colorTable, "wf_lines2D.pnm");
   //
   // Test the 1D cell set line plot with multiple lines
   //
@@ -130,11 +130,11 @@ void RenderTests()
   colors.push_back(vtkm::rendering::Color(1.f, 0.f, 0.f));
   colors.push_back(vtkm::rendering::Color(0.f, 1.f, 0.f));
   vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DUniformDataSet0(), fields, colors, "lines1D.pnm");
+    maker.Make1DUniformDataSet0(), fields, colors, "wf_lines1D.pnm");
   //test log y
   vtkm::rendering::Color red = vtkm::rendering::Color::red;
   vtkm::rendering::testing::Render<M, C, V1>(
-    maker.Make1DUniformDataSet1(), "pointvar", red, "linesLogY1D.pnm", true);
+    maker.Make1DUniformDataSet1(), "pointvar", red, "wf_linesLogY1D.pnm", true);
 }
 
 } //namespace

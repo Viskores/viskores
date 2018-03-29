@@ -99,7 +99,7 @@ template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Float64, 
 template <typename T, typename Enable = void>
 struct load_through_texture
 {
-  static const vtkm::IdComponent WillUseTexture = 0;
+  static constexpr vtkm::IdComponent WillUseTexture = 0;
 
   __device__ static T get(const T* const data) { return *data; }
 };
@@ -111,7 +111,7 @@ template <typename T>
 struct load_through_texture<T, typename std::enable_if<UseScalarTextureLoad<const T>::value>::type>
 {
 
-  static const vtkm::IdComponent WillUseTexture = 1;
+  static constexpr vtkm::IdComponent WillUseTexture = 1;
 
   __device__ static T get(const T* const data)
   {
@@ -128,7 +128,7 @@ struct load_through_texture<T, typename std::enable_if<UseScalarTextureLoad<cons
 template <typename T>
 struct load_through_texture<T, typename std::enable_if<UseVecTextureLoads<const T>::value>::type>
 {
-  static const vtkm::IdComponent WillUseTexture = 1;
+  static constexpr vtkm::IdComponent WillUseTexture = 1;
 
   __device__ static T get(const T* const data)
   {
@@ -189,7 +189,7 @@ struct load_through_texture<
   T,
   typename std::enable_if<UseMultipleScalarTextureLoads<const T>::value>::type>
 {
-  static const vtkm::IdComponent WillUseTexture = 1;
+  static constexpr vtkm::IdComponent WillUseTexture = 1;
 
   using NonConstT = typename std::remove_const<T>::type;
 

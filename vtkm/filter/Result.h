@@ -47,7 +47,7 @@ class Result
 {
 public:
   VTKM_CONT
-  Result()
+  explicit Result()
     : DataSetValid(false)
     , FieldValid(false)
     , FieldAssociation(vtkm::cont::Field::ASSOC_ANY)
@@ -57,7 +57,7 @@ public:
   /// Use this constructor for DataSet filters (not Field filters).
   ///
   VTKM_CONT
-  Result(const vtkm::cont::DataSet& dataSet)
+  explicit Result(const vtkm::cont::DataSet& dataSet)
     : DataSetValid(true)
     , Data(dataSet)
     , FieldValid(false)
@@ -70,9 +70,10 @@ public:
   /// association).
   ///
   VTKM_CONT
-  Result(const vtkm::cont::DataSet& dataSet,
-         const std::string& fieldName,
-         vtkm::cont::Field::AssociationEnum fieldAssociation = vtkm::cont::Field::ASSOC_ANY)
+  explicit Result(
+    const vtkm::cont::DataSet& dataSet,
+    const std::string& fieldName,
+    vtkm::cont::Field::AssociationEnum fieldAssociation = vtkm::cont::Field::ASSOC_ANY)
     : DataSetValid(true)
     , Data(dataSet)
     , FieldValid(true)
@@ -87,7 +88,7 @@ public:
   /// \c DataSet will be created by adding the field to the input.
   ///
   VTKM_CONT
-  Result(const vtkm::cont::DataSet& inDataSet, const vtkm::cont::Field& field)
+  explicit Result(const vtkm::cont::DataSet& inDataSet, const vtkm::cont::Field& field)
     : DataSetValid(true)
     , Data(vtkm::cont::DataSet(inDataSet))
     , FieldValid(true)
@@ -108,11 +109,11 @@ public:
   /// for \c ASSOC_WHOLE_MESH and \c ASSOC_POINTS associations.
   ///
   template <typename T, typename Storage>
-  VTKM_CONT Result(const vtkm::cont::DataSet& inDataSet,
-                   const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
-                   const std::string& fieldName,
-                   vtkm::cont::Field::AssociationEnum fieldAssociation,
-                   const std::string& elementSetName = "")
+  VTKM_CONT explicit Result(const vtkm::cont::DataSet& inDataSet,
+                            const vtkm::cont::ArrayHandle<T, Storage>& fieldArray,
+                            const std::string& fieldName,
+                            vtkm::cont::Field::AssociationEnum fieldAssociation,
+                            const std::string& elementSetName = "")
     : DataSetValid(true)
     , Data(vtkm::cont::DataSet(inDataSet))
     , FieldValid(true)
@@ -147,11 +148,11 @@ public:
   /// for \c ASSOC_WHOLE_MESH and \c ASSOC_POINTS associations.
   ///
   VTKM_CONT
-  Result(const vtkm::cont::DataSet& inDataSet,
-         const vtkm::cont::DynamicArrayHandle& fieldArray,
-         const std::string& fieldName,
-         vtkm::cont::Field::AssociationEnum fieldAssociation,
-         const std::string& elementSetName = "")
+  explicit Result(const vtkm::cont::DataSet& inDataSet,
+                  const vtkm::cont::DynamicArrayHandle& fieldArray,
+                  const std::string& fieldName,
+                  vtkm::cont::Field::AssociationEnum fieldAssociation,
+                  const std::string& elementSetName = "")
     : DataSetValid(true)
     , Data(vtkm::cont::DataSet(inDataSet))
     , FieldValid(true)

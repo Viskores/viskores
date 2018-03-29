@@ -209,7 +209,9 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
     vtkm::Id x = index % BarWidth;
     vtkm::Id y = index / BarWidth;
     vtkm::Id sample = Horizontal ? x : y;
-    vtkm::Vec<vtkm::Float32, 4> color = colorMap.Get(sample);
+
+
+    const vtkm::Vec<vtkm::UInt8, 4> color = colorMap.Get(sample);
 
     vtkm::Float32 normalizedHeight =
       Horizontal ? vtkm::Float32(y) / BarHeight : vtkm::Float32(x) / BarWidth;
@@ -220,24 +222,29 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
     vtkm::Id offset = y * ImageWidth + x;
     // If the colortable has alpha values, we blend each color sample with translucent white.
     // The height of the resultant translucent bar indicates the opacity.
-    if (color[3] < 1.0f && normalizedHeight <= color[3])
+
+    constexpr vtkm::Float32 conversionToFloatSpace = (1.0f / 255.0f);
+    vtkm::Float32 alpha = color[3] * conversionToFloatSpace;
+    if (alpha < 1 && normalizedHeight <= alpha)
     {
-      vtkm::Float32 intensity = 0.4f;
-      vtkm::Vec<vtkm::Float32, 4> blendedColor;
-      vtkm::Vec<vtkm::Float32, 4> srcColor = color;
-      vtkm::Float32 inverseIntensity = (1.0f - intensity);
-      vtkm::Float32 alpha = srcColor[3] * inverseIntensity;
-      blendedColor[0] = 1.0f * intensity + srcColor[0] * alpha;
-      blendedColor[1] = 1.0f * intensity + srcColor[1] * alpha;
-      blendedColor[2] = 1.0f * intensity + srcColor[2] * alpha;
-      blendedColor[3] = 1.0f;
+      constexpr vtkm::Float32 intensity = 0.4f;
+      constexpr vtkm::Float32 inverseIntensity = (1.0f - intensity);
+      alpha *= inverseIntensity;
+      vtkm::Vec<vtkm::Float32, 4> blendedColor(
+        1.0f * intensity + (color[0] * conversionToFloatSpace) * alpha,
+        1.0f * intensity + (color[1] * conversionToFloatSpace) * alpha,
+        1.0f * intensity + (color[2] * conversionToFloatSpace) * alpha,
+        1.0f);
       frameBuffer.Set(offset, blendedColor);
     }
     else
     {
       // make sure this is opaque
-      color[3] = 1.f;
-      frameBuffer.Set(offset, color);
+      vtkm::Vec<vtkm::Float32, 4> fColor((color[0] * conversionToFloatSpace),
+                                         (color[1] * conversionToFloatSpace),
+                                         (color[2] * conversionToFloatSpace),
+                                         1.0f);
+      frameBuffer.Set(offset, fColor);
     }
   }
 
@@ -292,7 +299,7 @@ struct ColorBarExecutor
                    vtkm::Id2 xBounds,
                    vtkm::Id2 yBounds,
                    bool horizontal,
-                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap,
+                   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& colorMap,
                    const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorBuffer)
     : Dims(dims)
     , XBounds(xBounds)
@@ -320,7 +327,7 @@ struct ColorBarExecutor
   vtkm::Id2 XBounds;
   vtkm::Id2 YBounds;
   bool Horizontal;
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorMap;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>>& ColorMap;
   const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& ColorBuffer;
 }; // struct ColorSwatchExecutor
 
@@ -525,7 +532,7 @@ void Canvas::AddLine(vtkm::Float64 x0,
 }
 
 void Canvas::AddColorBar(const vtkm::Bounds& bounds,
-                         const vtkm::rendering::ColorTable& colorTable,
+                         const vtkm::cont::ColorTable& colorTable,
                          bool horizontal) const
 {
   vtkm::Float64 width = static_cast<vtkm::Float64>(this->GetWidth());
@@ -539,8 +546,8 @@ void Canvas::AddColorBar(const vtkm::Bounds& bounds,
   vtkm::Id barWidth = x[1] - x[0];
   vtkm::Id barHeight = y[1] - y[0];
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> colorMap;
   vtkm::Id numSamples = horizontal ? barWidth : barHeight;
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> colorMap;
   colorTable.Sample(static_cast<vtkm::Int32>(numSamples), colorMap);
 
   vtkm::Id2 dims(this->GetWidth(), this->GetHeight());
@@ -552,7 +559,7 @@ void Canvas::AddColorBar(vtkm::Float32 x,
                          vtkm::Float32 y,
                          vtkm::Float32 width,
                          vtkm::Float32 height,
-                         const vtkm::rendering::ColorTable& colorTable,
+                         const vtkm::cont::ColorTable& colorTable,
                          bool horizontal) const
 {
   this->AddColorBar(

@@ -19,11 +19,13 @@
 //============================================================================
 #include <vtkm/cont/AssignerMultiBlock.h>
 
-#if defined(VTKM_ENABLE_MPI)
+#include <vtkm/cont/EnvironmentTracker.h>
+#include <vtkm/cont/MultiBlock.h>
 
 // clang-format off
-#include <vtkm/cont/EnvironmentTracker.h>
+VTKM_THIRDPARTY_PRE_INCLUDE
 #include VTKM_DIY(diy/mpi.hpp)
+VTKM_THIRDPARTY_POST_INCLUDE
 // clang-format on
 
 #include <algorithm> // std::lower_bound
@@ -40,28 +42,30 @@ AssignerMultiBlock::AssignerMultiBlock(const vtkm::cont::MultiBlock& mb)
   , IScanBlockCounts()
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  const auto nblocks = mb.GetNumberOfBlocks();
+  const auto num_blocks = mb.GetNumberOfBlocks();
 
   vtkm::Id iscan;
-  diy::mpi::scan(comm, nblocks, iscan, std::plus<vtkm::Id>());
+  diy::mpi::scan(comm, num_blocks, iscan, std::plus<vtkm::Id>());
   diy::mpi::all_gather(comm, iscan, this->IScanBlockCounts);
 
   this->set_nblocks(static_cast<int>(this->IScanBlockCounts.back()));
 }
 
 VTKM_CONT
-void AssignerMultiBlock::local_gids(int rank, std::vector<int>& gids) const
+void AssignerMultiBlock::local_gids(int my_rank, std::vector<int>& gids) const
 {
-  if (rank == 0)
+  const size_t s_rank = static_cast<size_t>(my_rank);
+  if (my_rank == 0)
   {
     assert(this->IScanBlockCounts.size() > 0);
-    gids.resize(this->IScanBlockCounts[rank]);
+    gids.resize(static_cast<size_t>(this->IScanBlockCounts[s_rank]));
     std::iota(gids.begin(), gids.end(), 0);
   }
-  else if (rank > 0 && rank < static_cast<int>(this->IScanBlockCounts.size()))
+  else if (my_rank > 0 && s_rank < this->IScanBlockCounts.size())
   {
-    gids.resize(this->IScanBlockCounts[rank] - this->IScanBlockCounts[rank - 1]);
-    std::iota(gids.begin(), gids.end(), this->IScanBlockCounts[rank - 1]);
+    gids.resize(
+      static_cast<size_t>(this->IScanBlockCounts[s_rank] - this->IScanBlockCounts[s_rank - 1]));
+    std::iota(gids.begin(), gids.end(), static_cast<int>(this->IScanBlockCounts[s_rank - 1]));
   }
 }
 
@@ -76,5 +80,3 @@ int AssignerMultiBlock::rank(int gid) const
 
 } // vtkm::cont
 } // vtkm
-
-#endif // defined(VTKM_ENABLE_MPI)

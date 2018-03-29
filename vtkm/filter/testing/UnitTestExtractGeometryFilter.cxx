@@ -35,7 +35,6 @@ public:
   {
     std::cout << "Testing extract geometry with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
@@ -49,14 +48,7 @@ public:
     extractGeometry.SetExtractBoundaryCells(false);
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
-    result = extractGeometry.Execute(dataset);
-
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      extractGeometry.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for ExtractGeometry");
 
@@ -71,7 +63,6 @@ public:
   {
     std::cout << "Testing extract geometry with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.f, 1.f, 1.f);
@@ -85,14 +76,7 @@ public:
     extractGeometry.SetExtractBoundaryCells(false);
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
-    result = extractGeometry.Execute(dataset);
-
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      extractGeometry.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
                      "Wrong result for ExtractGeometry");
 
@@ -107,7 +91,6 @@ public:
   {
     std::cout << "Testing extract geometry with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.5f, 0.5f);
@@ -121,14 +104,7 @@ public:
     extractGeometry.SetExtractBoundaryCells(true);
     extractGeometry.SetExtractOnlyBoundaryCells(false);
 
-    result = extractGeometry.Execute(dataset);
-
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      extractGeometry.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 64),
                      "Wrong result for ExtractGeometry");
 
@@ -142,7 +118,6 @@ public:
   {
     std::cout << "Testing extract geometry with implicit function (box):" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
-    vtkm::filter::Result result;
 
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.5f, 0.5f);
@@ -156,14 +131,7 @@ public:
     extractGeometry.SetExtractBoundaryCells(true);
     extractGeometry.SetExtractOnlyBoundaryCells(true);
 
-    result = extractGeometry.Execute(dataset);
-
-    for (vtkm::IdComponent i = 0; i < dataset.GetNumberOfFields(); ++i)
-    {
-      extractGeometry.MapFieldOntoOutput(result, dataset.GetField(i));
-    }
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = extractGeometry.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 56),
                      "Wrong result for ExtractGeometry");
 

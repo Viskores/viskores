@@ -33,7 +33,14 @@ set(unit_tests
   UnitTestMapperVolume.cxx
 )
 
-vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
+vtkm_unit_tests(NAME Rendering BACKEND SERIAL SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
+if (TARGET vtkm::tbb)
+  vtkm_unit_tests(NAME Rendering BACKEND TBB SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
+endif()
+if (TARGET vtkm::cuda)
+  vtkm_unit_tests(NAME Rendering BACKEND CUDA SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
+endif()
+
 
 if(VTKm_ENABLE_GL_CONTEXT)
   # message(STATUS "rendering testing/glfw needs a FindGLFW")

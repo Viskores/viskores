@@ -163,11 +163,8 @@ private:
 
     vtkm::filter::Probe probe;
     probe.SetGeometry(geometry);
-    auto result = probe.Execute(input);
-    probe.MapFieldOntoOutput(result, input.GetField("pointdata"));
-    probe.MapFieldOntoOutput(result, input.GetField("celldata"));
-
-    auto output = result.GetDataSet();
+    probe.SetFieldsToPass({ "pointdata", "celldata" });
+    auto output = probe.Execute(input);
 
     TestResultArray(output.GetField("pointdata").GetData().template Cast<FieldArrayType>(),
                     GetExpectedPointData());
@@ -188,11 +185,8 @@ private:
 
     vtkm::filter::Probe probe;
     probe.SetGeometry(geometry);
-    auto result = probe.Execute(input);
-    probe.MapFieldOntoOutput(result, input.GetField("pointdata"));
-    probe.MapFieldOntoOutput(result, input.GetField("celldata"));
-
-    auto output = result.GetDataSet();
+    probe.SetFieldsToPass({ "pointdata", "celldata" });
+    auto output = probe.Execute(input);
 
     TestResultArray(output.GetField("pointdata").GetData().template Cast<FieldArrayType>(),
                     GetExpectedPointData());
@@ -213,11 +207,8 @@ private:
 
     vtkm::filter::Probe probe;
     probe.SetGeometry(geometry);
-    auto result = probe.Execute(input);
-    probe.MapFieldOntoOutput(result, input.GetField("pointdata"));
-    probe.MapFieldOntoOutput(result, input.GetField("celldata"));
-
-    auto output = result.GetDataSet();
+    probe.SetFieldsToPass({ "pointdata", "celldata" });
+    auto output = probe.Execute(input);
 
     TestResultArray(output.GetField("pointdata").GetData().template Cast<FieldArrayType>(),
                     GetExpectedPointData());

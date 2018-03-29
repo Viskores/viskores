@@ -24,12 +24,16 @@ set(headers
   ClipWithField.h
   ClipWithImplicitFunction.h
   ContourTreeUniform.h
+  CrossProduct.h
+  DotProduct.h
   Entropy.h
   ExternalFaces.h
   ExtractGeometry.h
   ExtractPoints.h
   ExtractStructured.h
   FieldMetadata.h
+  FieldSelection.h
+  Filter.h
   FilterCell.h
   FilterDataSet.h
   FilterDataSetWithField.h
@@ -64,11 +68,14 @@ set(header_template_sources
   ClipWithField.hxx
   ClipWithImplicitFunction.hxx
   ContourTreeUniform.hxx
+  CrossProduct.hxx
+  DotProduct.hxx
   Entropy.hxx
   ExternalFaces.hxx
   ExtractGeometry.hxx
   ExtractPoints.hxx
   ExtractStructured.hxx
+  Filter.hxx
   FilterCell.hxx
   FilterDataSet.hxx
   FilterDataSetWithField.hxx

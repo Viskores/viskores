@@ -168,6 +168,16 @@ public:
 
     return vtkm::filter::Result(output);
   }
+
+  template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+  VTKM_CONT bool DoMapField(vtkm::filter::Result&,
+                            const vtkm::cont::ArrayHandle<T, StorageType>&,
+                            const vtkm::filter::FieldMetadata&,
+                            const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                            DeviceAdapter)
+  {
+    return false;
+  }
 };
 
 struct UploadData
@@ -370,11 +380,11 @@ int main(int argc, char** argv)
   glutDisplayFunc([]() {
     const vtkm::Float32 c = static_cast<vtkm::Float32>(gTimer.GetElapsedTime());
 
-    vtkm::filter::Result rdata = gFilter->Execute(*gData, GameOfLifePolicy());
-    gRenderer->render(rdata.GetDataSet());
+    vtkm::cont::DataSet oData = gFilter->Execute(*gData, GameOfLifePolicy());
+    gRenderer->render(oData);
     glutSwapBuffers();
 
-    *gData = rdata.GetDataSet();
+    *gData = oData;
 
     if (c > 120)
     {

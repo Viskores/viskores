@@ -74,7 +74,7 @@ public:
 namespace map_whole_array
 {
 
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 struct DoTestWholeArrayWorklet
 {

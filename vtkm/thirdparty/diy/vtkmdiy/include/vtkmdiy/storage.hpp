@@ -24,8 +24,8 @@ namespace diy
 
       // TODO: add error checking
       virtual inline void save_binary(const char* x, size_t count) override   { fwrite(x, 1, count, file); head += count; }
-      virtual inline void load_binary(char* x, size_t count) override         { fread(x, 1, count, file); }
-      virtual inline void load_binary_back(char* x, size_t count) override    { fseek(file, tail, SEEK_END); fread(x, 1, count, file); tail += count; fseek(file, head, SEEK_SET); }
+      virtual inline void load_binary(char* x, size_t count) override         { auto n = fread(x, 1, count, file); (void) n;}
+      virtual inline void load_binary_back(char* x, size_t count) override    { fseek(file, static_cast<long>(tail), SEEK_END); auto n = fread(x, 1, count, file); tail += count; fseek(file, static_cast<long>(head), SEEK_SET); (void) n;}
 
       size_t              size() const                                { return head; }
 
@@ -73,11 +73,13 @@ namespace diy
 
         size_t sz = bb.buffer.size();
 #if defined(_WIN32)
-        size_t written = _write(fh, &bb.buffer[0], static_cast<unsigned int>(sz));
+        using r_type = int;
+        r_type written = _write(fh, &bb.buffer[0], static_cast<unsigned int>(sz));
 #else
-        size_t written = write(fh, &bb.buffer[0], sz);
+        using r_type = ssize_t;
+        r_type written = write(fh, &bb.buffer[0], sz);
 #endif
-        if (written < sz || written == (size_t)-1)
+        if (written < static_cast<r_type>(sz) || written == r_type(-1))
           log->warn("Could not write the full buffer to {}: written = {}; size = {}", filename, written, sz);
         io::utils::close(fh);
         bb.wipe();
@@ -125,7 +127,7 @@ namespace diy
         _read(fh, &bb.buffer[0], static_cast<unsigned int>(fr.size));
 #else
         int fh = open(fr.name.c_str(), O_RDONLY | O_SYNC, 0600);
-        read(fh, &bb.buffer[0], fr.size);
+        auto n = read(fh, &bb.buffer[0], fr.size); (void) n;
 #endif
         io::utils::close(fh);
         remove_file(fr);
@@ -184,7 +186,7 @@ namespace diy
         else
         {
             // pick a template at random (very basic load balancing mechanism)
-            filename  = filename_templates_[std::rand() % filename_templates_.size()].c_str();
+            filename  = filename_templates_[static_cast<size_t>(std::rand()) % filename_templates_.size()].c_str();
         }
         int fh = diy::io::utils::mkstemp(filename);
         return fh;

@@ -23,6 +23,7 @@ set(unit_tests
   UnitTestCudaArrayHandleVirtualCoordinates.cu
   UnitTestCudaCellLocatorTwoLevelUniformGrid.cu
   UnitTestCudaComputeRange.cu
+  UnitTestCudaColorTable.cu
   UnitTestCudaDataSetExplicit.cu
   UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu

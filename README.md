@@ -61,7 +61,7 @@ VTK-m Requires:
       + GCC 4.8+
       + Clang 3.3+
       + XCode 5.0+
-      + MSVC 2013+
+      + MSVC 2015+
   + [CMake](http://www.cmake.org/download/)
       + CMake 3.3+ (for any build)
       + CMake 3.9+ (for CUDA build)
@@ -153,7 +153,7 @@ camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
 camera.SetClippingRange(1.f, 100.f);
 camera.SetFieldOfView(60.f);
 camera.SetPosition(totalExtent*(mag * 2.f));
-vtkm::rendering::ColorTable colorTable("thermal");
+vtkm::cont::ColorTable colorTable("inferno");
 
 // Create a mapper, canvas and view that will be used to render the scene
 vtkm::rendering::Scene scene;

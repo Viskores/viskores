@@ -29,8 +29,8 @@
 namespace
 {
 
-static const vtkm::Id ARRAY_SIZE = 1033;
-static const vtkm::Id NUM_UNIQUE = ARRAY_SIZE / 10;
+static constexpr vtkm::Id ARRAY_SIZE = 1033;
+static constexpr vtkm::Id NUM_UNIQUE = ARRAY_SIZE / 10;
 
 template <typename KeyPortal, typename IdPortal, typename IdComponentPortal>
 void CheckKeyReduce(const KeyPortal& originalKeys,

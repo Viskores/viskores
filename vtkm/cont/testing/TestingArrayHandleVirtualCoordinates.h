@@ -75,7 +75,7 @@ private:
   static void TestAll()
   {
     using PointType = vtkm::Vec<vtkm::FloatDefault, 3>;
-    static const vtkm::Id length = 64;
+    static constexpr vtkm::Id length = 64;
 
     vtkm::cont::ArrayHandle<PointType> out;
 

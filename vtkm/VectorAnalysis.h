@@ -59,7 +59,7 @@ VTKM_EXEC_CONT vtkm::Vec<ValueType, N> Lerp(const vtkm::Vec<ValueType, N>& value
                                             const vtkm::Vec<ValueType, N>& value1,
                                             const vtkm::Vec<ValueType, N>& weight)
 {
-  static const vtkm::Vec<ValueType, N> One(ValueType(1));
+  const vtkm::Vec<ValueType, N> One(ValueType(1));
   return (One - weight) * value0 + weight * value1;
 }
 

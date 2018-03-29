@@ -105,7 +105,7 @@ inline VTKM_CONT vtkm::filter::Result CleanGrid::DoExecute(const vtkm::cont::Dat
     }
   }
 
-  return outData;
+  return Result(outData);
 }
 
 template <typename ValueType, typename Storage, typename Policy, typename Device>

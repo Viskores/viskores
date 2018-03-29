@@ -35,18 +35,10 @@ void TestVertexClustering()
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose();
 
   vtkm::filter::VertexClustering clustering;
-  vtkm::filter::Result result;
 
   clustering.SetNumberOfDivisions(vtkm::Id3(3, 3, 3));
-  result = clustering.Execute(dataSet);
-
-  VTKM_TEST_ASSERT(result.IsValid(), "results should be valid");
-  VTKM_TEST_ASSERT(clustering.MapFieldOntoOutput(result, dataSet.GetPointField("pointvar")),
-                   "Point field mapping failed.");
-  VTKM_TEST_ASSERT(clustering.MapFieldOntoOutput(result, dataSet.GetCellField("cellvar")),
-                   "Cell field mapping failed.");
-
-  vtkm::cont::DataSet output = result.GetDataSet();
+  clustering.SetFieldsToPass({ "pointvar", "cellvar" });
+  vtkm::cont::DataSet output = clustering.Execute(dataSet);
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Number of output coordinate systems mismatch");
 

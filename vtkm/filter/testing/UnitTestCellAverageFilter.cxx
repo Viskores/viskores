@@ -32,19 +32,16 @@ void TestCellAverageRegular3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::filter::Result result;
   vtkm::filter::CellAverage cellAverage;
   cellAverage.SetOutputFieldName("avgvals");
+  cellAverage.SetActiveField("pointvar");
+  vtkm::cont::DataSet result = cellAverage.Execute(dataSet);
 
-  result = cellAverage.Execute(dataSet, dataSet.GetField("pointvar"));
+  VTKM_TEST_ASSERT(result.HasField("avgvals", vtkm::cont::Field::ASSOC_CELL_SET) == true,
+                   "Result field not present.");
 
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "avgvals", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
-                   "Field was given the wrong association.");
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  bool valid = result.FieldAs(resultArrayHandle);
-
-  if (valid)
+  result.GetField("avgvals", vtkm::cont::Field::ASSOC_CELL_SET).GetData().CopyTo(resultArrayHandle);
   {
     vtkm::Float32 expected[4] = { 60.1875f, 70.2125f, 120.3375f, 130.3625f };
     for (vtkm::Id i = 0; i < 4; ++i)
@@ -56,16 +53,15 @@ void TestCellAverageRegular3D()
 
   std::cout << "Run again for point coordinates" << std::endl;
   cellAverage.SetOutputFieldName("avgpos");
+  cellAverage.SetUseCoordinateSystemAsField(true);
+  result = cellAverage.Execute(dataSet);
 
-  result = cellAverage.Execute(dataSet, dataSet.GetCoordinateSystem());
+  VTKM_TEST_ASSERT(result.HasField("avgpos", vtkm::cont::Field::ASSOC_CELL_SET),
+                   "Result field not present.");
 
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "avgpos", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
-                   "Field was given the wrong association.");
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> resultPointArray;
-  valid = result.FieldAs(resultPointArray);
-
-  if (valid)
+  vtkm::cont::Field resultPointField = result.GetField("avgpos", vtkm::cont::Field::ASSOC_CELL_SET);
+  resultPointField.GetData().CopyTo(resultPointArray);
   {
     vtkm::FloatDefault expected[4][3] = {
       { 0.5f, 0.5f, 0.5f }, { 1.5f, 0.5f, 0.5f }, { 0.5f, 0.5f, 1.5f }, { 1.5f, 0.5f, 1.5f }
@@ -87,27 +83,23 @@ void TestCellAverageRegular2D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make2DUniformDataSet0();
 
-  vtkm::filter::Result result;
   vtkm::filter::CellAverage cellAverage;
+  cellAverage.SetActiveField("pointvar");
 
-  result = cellAverage.Execute(dataSet, dataSet.GetField("pointvar"));
+  vtkm::cont::DataSet result = cellAverage.Execute(dataSet);
 
   // If no name is given, should have the same name as the input.
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "pointvar", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
-                   "Field was given the wrong association.");
-  vtkm::cont::Field resultField = result.GetField();
+  VTKM_TEST_ASSERT(result.HasField("pointvar", vtkm::cont::Field::ASSOC_CELL_SET),
+                   "Field missing.");
+
+  vtkm::cont::Field resultField = result.GetField("pointvar", vtkm::cont::Field::ASSOC_CELL_SET);
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   resultField.GetData().CopyTo(resultArrayHandle);
-
-  if (result.IsValid())
+  vtkm::Float32 expected[2] = { 30.1f, 40.1f };
+  for (int i = 0; i < 2; ++i)
   {
-    vtkm::Float32 expected[2] = { 30.1f, 40.1f };
-    for (int i = 0; i < 2; ++i)
-    {
-      VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
-                       "Wrong result for CellAverage worklet on 2D regular data");
-    }
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+                     "Wrong result for CellAverage worklet on 2D regular data");
   }
 }
 
@@ -118,26 +110,23 @@ void TestCellAverageExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::Result result;
   vtkm::filter::CellAverage cellAverage;
+  cellAverage.SetActiveField("pointvar");
 
-  result = cellAverage.Execute(dataSet, dataSet.GetField("pointvar"));
+  vtkm::cont::DataSet result = cellAverage.Execute(dataSet);
 
   // If no name is given, should have the same name as the input.
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "pointvar", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
-                   "Field was given the wrong association.");
-  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  const bool valid = result.FieldAs(resultArrayHandle);
+  VTKM_TEST_ASSERT(result.HasField("pointvar", vtkm::cont::Field::ASSOC_CELL_SET),
+                   "Field missing.");
 
-  if (valid)
+  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
+  vtkm::cont::Field resultField = result.GetField("pointvar", vtkm::cont::Field::ASSOC_CELL_SET);
+  resultField.GetData().CopyTo(resultArrayHandle);
+  vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
+  for (int i = 0; i < 2; ++i)
   {
-    vtkm::Float32 expected[2] = { 20.1333f, 35.2f };
-    for (int i = 0; i < 2; ++i)
-    {
-      VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
-                       "Wrong result for CellAverage worklet on 3D regular data");
-    }
+    VTKM_TEST_ASSERT(test_equal(resultArrayHandle.GetPortalConstControl().Get(i), expected[i]),
+                     "Wrong result for CellAverage worklet on 3D regular data");
   }
 }
 

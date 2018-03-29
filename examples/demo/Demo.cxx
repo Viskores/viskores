@@ -35,7 +35,7 @@
 #include <iostream>
 
 void makeScene(const vtkm::cont::DataSet& inputData,
-               const vtkm::rendering::ColorTable& colorTable,
+               const vtkm::cont::ColorTable& colorTable,
                const std::string& fieldName,
                vtkm::rendering::Scene& scene)
 {
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
   camera.SetClippingRange(1.f, 100.f);
   camera.SetFieldOfView(60.f);
   camera.SetPosition(totalExtent * (mag * 2.f));
-  vtkm::rendering::ColorTable colorTable("thermal");
+  vtkm::cont::ColorTable colorTable("inferno");
 
   // Create a scene for rendering the input data
   vtkm::rendering::Scene scene;

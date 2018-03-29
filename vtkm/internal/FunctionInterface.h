@@ -263,11 +263,11 @@ public:
     using type = typename detail::AtType<ParameterIndex, FunctionSignature>::type;
   };
 
-  static const bool RETURN_VALID = FunctionInterfaceReturnContainer<ResultType>::VALID;
+  static constexpr bool RETURN_VALID = FunctionInterfaceReturnContainer<ResultType>::VALID;
 
   /// The number of parameters in this \c Function Interface.
   ///
-  static const vtkm::IdComponent ARITY = SigInfo::Arity;
+  static constexpr vtkm::IdComponent ARITY = SigInfo::Arity;
 
   /// Returns the number of parameters held in this \c FunctionInterface. The
   /// return value is the same as \c ARITY.
@@ -389,7 +389,7 @@ public:
   {
     this->Result = src.GetReturnValueSafe();
 
-    VTKM_CONSTEXPR vtkm::UInt16 minArity = (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY)
+    constexpr vtkm::UInt16 minArity = (ARITY < FunctionInterface<SrcFunctionSignature>::ARITY)
       ? ARITY
       : FunctionInterface<SrcFunctionSignature>::ARITY;
 
@@ -774,8 +774,8 @@ public:
     using interfaceSig = typename detail::AsSigType<appended>::type;
     using NextInterfaceType = FunctionInterface<interfaceSig>;
 
-    static VTKM_CONSTEXPR std::size_t newArity = NextInterfaceType::ARITY;
-    static VTKM_CONSTEXPR std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
+    static constexpr std::size_t newArity = NextInterfaceType::ARITY;
+    static constexpr std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
     typedef std::integral_constant<bool, (newArity < oldArity)> ShouldDoNextTransformType;
 
     NextInterfaceType nextInterface = this->NewInterface.Append(newParameter);
@@ -793,7 +793,7 @@ public:
                                                                            FinishFunctor>;
     NextContinueType nextContinue =
       NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
-    static const vtkm::IdComponent Index =
+    static constexpr vtkm::IdComponent Index =
       vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1;
     vtkm::internal::IndexTag<Index> indexTag;
     this->Transform(this->OriginalInterface.GetParameter(indexTag), nextContinue, indexTag);
@@ -810,7 +810,7 @@ private:
                                                                            FinishFunctor>;
     NextContinueType nextContinue =
       NextContinueType(this->OriginalInterface, nextInterface, this->Transform, this->Finish);
-    static const vtkm::IdComponent Index =
+    static constexpr vtkm::IdComponent Index =
       vtkm::internal::FunctionInterface<NextFunction>::ARITY + 1;
     vtkm::internal::IndexTag<Index> indexTag;
     this->Transform(this->OriginalInterface.GetParameter(indexTag), nextContinue, indexTag);

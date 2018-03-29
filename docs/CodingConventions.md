@@ -168,8 +168,7 @@ class ExposedClass;
     namespace references are preferred).
 
   + All code must be valid by the C++11 specifications. It must also
-    compile correctly with Microsoft Visual Studio 2013, which implements a
-    subset of the C++11 standard.
+    compile with Microsoft Visual Studio 2015.
 
   + New code must include regression tests that will run on the dashboards.
     Generally a new class will have an associated "UnitTest" that will test

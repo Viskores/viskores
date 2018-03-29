@@ -41,7 +41,7 @@ void CheckReference(vtkm::Id index, vtkm::internal::ArrayPortalValueReference<Ar
   VTKM_TEST_ASSERT(test_equal(ref, TestValue(index, ValueType())), "Got bad value from reference.");
 }
 
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 struct DoTestForType
 {

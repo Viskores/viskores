@@ -38,7 +38,11 @@
 ///
 /// The VTKM_NO_ASSERT cmake and preprocessor option allows debugging builds
 /// to remove assertions for performance reasons.
-#if !defined(NDEBUG) && !defined(VTKM_NO_ASSERT)
+#if defined(VTKM_CUDA_VERSION_MAJOR) && (VTKM_CUDA_VERSION_MAJOR == 7)
+//CUDA 7.5 doesn't support assert in device code
+#define VTKM_ASSERT(condition) (void)(condition)
+#elif !defined(NDEBUG) && !defined(VTKM_NO_ASSERT)
+//Only assert if we are in debug mode and don't have VTKM_NO_ASSERT defined
 #define VTKM_ASSERT(condition) assert(condition)
 #else
 #define VTKM_ASSERT(condition) (void)(condition)

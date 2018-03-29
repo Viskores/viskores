@@ -116,6 +116,20 @@ void CastAndCall(const vtkm::cont::CellSetPermutation<PermutationType, CellSetTy
   f(cellset, std::forward<Args>(args)...);
 }
 
+/// CastAndCall if the condition is true.
+template <typename... Args>
+void ConditionalCastAndCall(std::true_type, Args&&... args)
+{
+  vtkm::cont::CastAndCall(std::forward<Args>(args)...);
+}
+
+/// No-op variant since the condition is false.
+template <typename... Args>
+void ConditionalCastAndCall(std::false_type, Args&&...)
+{
+}
+
+
 namespace internal
 {
 

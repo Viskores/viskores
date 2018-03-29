@@ -59,7 +59,7 @@ struct CellTraits
   /// This defines the topological dimensions of the cell type. 3 for
   /// polyhedra, 2 for polygons, 1 for lines, 0 for points.
   ///
-  const static vtkm::IdComponent TOPOLOGICAL_DIMENSIONS = 3;
+  static const vtkm::IdComponent TOPOLOGICAL_DIMENSIONS = 3;
 
   /// This tag is typedef'ed to
   /// vtkm::CellTopologicalDimensionsTag<TOPOLOGICAL_DIMENSIONS>. This provides
@@ -81,7 +81,7 @@ struct CellTraits
   /// This is only defined for cell shapes of a fixed number of points (i.e.
   /// \c IsSizedFixed is set to \c CellTraitsTagSizeFixed.
   ///
-  static const vtkm::IdComponent NUM_POINTS = 3;
+  static constexpr vtkm::IdComponent NUM_POINTS = 3;
 };
 #else  // VTKM_DOXYGEN_ONLY
   ;

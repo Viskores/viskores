@@ -31,7 +31,7 @@ namespace
 
 using Device = vtkm::cont::DeviceAdapterTagSerial;
 
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 struct TestExecObject
 {
@@ -94,7 +94,7 @@ namespace arg
 template <>
 struct TypeCheck<TestTypeCheckTag, vtkm::Id*>
 {
-  static const bool value = true;
+  static constexpr bool value = true;
 };
 
 template <>
@@ -197,7 +197,7 @@ struct Fetch<TestFetchTagOutput,
 namespace
 {
 
-static const vtkm::Id EXPECTED_EXEC_OBJECT_VALUE = 123;
+static constexpr vtkm::Id EXPECTED_EXEC_OBJECT_VALUE = 123;
 
 class TestWorkletBase : public vtkm::worklet::internal::WorkletBase
 {

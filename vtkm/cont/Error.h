@@ -27,7 +27,7 @@
 #include <exception>
 #include <string>
 
-#include <vtkm/internal/ExportMacros.h> // For VTKM_NOEXCEPT
+#include <vtkm/internal/ExportMacros.h>
 
 namespace vtkm
 {
@@ -55,7 +55,7 @@ public:
 #endif
 
   // For std::exception compatibility:
-  const char* what() const VTKM_NOEXCEPT override { return this->Message.c_str(); }
+  const char* what() const noexcept override { return this->Message.c_str(); }
 
 protected:
   Error() {}

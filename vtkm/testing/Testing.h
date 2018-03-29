@@ -519,7 +519,7 @@ static inline VTKM_EXEC_CONT bool test_equal(bool bool1, bool bool2)
 template <typename T>
 static inline VTKM_EXEC_CONT T TestValue(vtkm::Id index, T, vtkm::TypeTraitsIntegerTag)
 {
-  VTKM_CONSTEXPR bool larger_than_2bytes = sizeof(T) > 2;
+  constexpr bool larger_than_2bytes = sizeof(T) > 2;
   if (larger_than_2bytes)
   {
     return T(index * 100);

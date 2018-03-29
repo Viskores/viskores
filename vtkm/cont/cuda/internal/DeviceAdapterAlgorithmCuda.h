@@ -163,7 +163,7 @@ public:
       // 3. cudaErrorNoKernelImageForDevice we built for a compute version
       //    greater than the device we are running on
       // Most likely others that I don't even know about
-      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice<<<1, 1>>>();
+      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice<<<1, 1, 0, cudaStreamPerThread>>>();
       if (cudaSuccess != cudaGetLastError())
       {
         numDevices = 0;

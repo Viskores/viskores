@@ -195,7 +195,7 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                          PSortTag)
 {
   using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
-  VTKM_CONSTEXPR bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
+  constexpr bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
   if (larger_than_64bits)
   {
     /// More efficient sort:

@@ -51,8 +51,8 @@ namespace
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 struct MatrixTest
 {
-  static const vtkm::IdComponent NUM_ROWS = NumRow;
-  static const vtkm::IdComponent NUM_COLS = NumCol;
+  static constexpr vtkm::IdComponent NUM_ROWS = NumRow;
+  static constexpr vtkm::IdComponent NUM_COLS = NumCol;
   using MatrixType = vtkm::Matrix<T, NUM_ROWS, NUM_COLS>;
   using ComponentType = typename MatrixType::ComponentType;
 
@@ -324,7 +324,7 @@ template <typename T, int Size>
 void SingularMatrix(vtkm::Matrix<T, Size, Size>& singularMatrix)
 {
   FOR_ROW_COL(singularMatrix) { singularMatrix(row, col) = static_cast<T>(row + col); }
-  VTKM_CONSTEXPR bool larger_than_1 = Size > 1;
+  constexpr bool larger_than_1 = Size > 1;
   if (larger_than_1)
   {
     vtkm::MatrixSetRow(singularMatrix, 0, vtkm::MatrixGetRow(singularMatrix, (Size + 1) / 2));
@@ -372,7 +372,7 @@ T RecursiveDeterminant(const vtkm::Matrix<T, Size, Size>& A)
 template <typename T, vtkm::IdComponent Size>
 struct SquareMatrixTest
 {
-  static const vtkm::IdComponent SIZE = Size;
+  static constexpr vtkm::IdComponent SIZE = Size;
   using MatrixType = vtkm::Matrix<T, Size, Size>;
 
   static void CheckMatrixSize()

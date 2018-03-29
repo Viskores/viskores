@@ -31,7 +31,7 @@ namespace
 // need to ensure we instatiate each algorithm in a source
 // file to verify compilation.
 //
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 void CopyTest()
 {

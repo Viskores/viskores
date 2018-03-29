@@ -19,11 +19,14 @@
 //  this software.
 //
 //=============================================================================
-#include <vtkm/cont/testing/MakeTestDataSet.h>
-#include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/MarchingCubes.h>
 
+#include <vtkm/cont/ArrayCopy.h>
+
 #include <vtkm/worklet/connectivities/CellSetConnectivity.h>
+
+#include <vtkm/cont/testing/MakeTestDataSet.h>
+#include <vtkm/cont/testing/Testing.h>
 
 class TangleField : public vtkm::worklet::WorkletMapField
 {
@@ -94,7 +97,9 @@ static vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, pointFieldArray);
 
   vtkm::Id numCells = dims[0] * dims[1] * dims[2];
-  auto cellFieldArray = vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numCells);
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> cellFieldArray;
+  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandleCounting<vtkm::Id>(0, 1, numCells),
+                        cellFieldArray);
 
   vtkm::Vec<vtkm::FloatDefault, 3> origin(0.0f, 0.0f, 0.0f);
   vtkm::Vec<vtkm::FloatDefault, 3> spacing(1.0f / static_cast<vtkm::FloatDefault>(dims[0]),
@@ -104,7 +109,7 @@ static vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims, origin, spacing);
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
-  static const vtkm::IdComponent ndim = 3;
+  static constexpr vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
   cellSet.SetPointDimensions(vdims);
   dataSet.AddCellSet(cellSet);
@@ -130,8 +135,8 @@ public:
     filter.SetGenerateNormals(true);
     filter.SetMergeDuplicatePoints(true);
     filter.SetIsoValue(0, 0.1);
-    vtkm::filter::Result result = filter.Execute(dataSet, dataSet.GetField("nodevar"));
-    vtkm::cont::DataSet& outputData = result.GetDataSet();
+    filter.SetActiveField("nodevar");
+    vtkm::cont::DataSet outputData = filter.Execute(dataSet);
 
     auto cellSet = outputData.GetCellSet().Cast<vtkm::cont::CellSetSingleType<>>();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
@@ -144,7 +149,41 @@ public:
                      "Wrong number of connected components");
   }
 
-  void operator()() const { this->TestTangleIsosurface(); }
+  void TestExplicitDataSet() const
+  {
+    vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DExplicitDataSet5();
+
+    auto cellSet = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
+    vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
+    CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
+
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    Algorithm::Sort(componentArray);
+    Algorithm::Unique(componentArray);
+    VTKM_TEST_ASSERT(componentArray.GetNumberOfValues() == 1,
+                     "Wrong number of connected components");
+  }
+
+  void TestUniformDataSet() const
+  {
+    vtkm::cont::DataSet dataSet = vtkm::cont::testing::MakeTestDataSet().Make3DUniformDataSet1();
+
+    auto cellSet = dataSet.GetCellSet();
+    vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
+    CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
+
+    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    Algorithm::Sort(componentArray);
+    Algorithm::Unique(componentArray);
+    VTKM_TEST_ASSERT(componentArray.GetNumberOfValues() == 1,
+                     "Wrong number of connected components");
+  }
+
+  void operator()() const {
+    this->TestTangleIsosurface();
+    this->TestExplicitDataSet();
+    this->TestUniformDataSet();
+  }
 };
 
 int UnitTestCellSetConnectivity(int, char* [])

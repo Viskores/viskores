@@ -56,7 +56,7 @@ struct OutputIndex : vtkm::exec::arg::ExecutionSignatureTagBase
   // ControlSignature because the templating is going to grab a fetch tag
   // whether we use it or not. 1 should be guaranteed to be valid since you
   // need at least one argument for the output domain.
-  static const vtkm::IdComponent INDEX = 1;
+  static constexpr vtkm::IdComponent INDEX = 1;
   using AspectTag = vtkm::exec::arg::AspectTagOutputIndex;
 };
 
