@@ -852,6 +852,12 @@ vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* ColorTable::GetHand
   return this->Impl->ExecHandle;
 }
 
+//---------------------------------------------------------------------------
+vtkm::Id ColorTable::GetModifiedCount() const
+{
+  return this->Impl->HostSideCache->GetModifiedCount();
+}
+
 
 /*
 #define ColorTableExportMapFunctions(T)                                                            \

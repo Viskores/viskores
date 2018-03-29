@@ -33,6 +33,7 @@ set(unit_tests
   UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
+  UnitTestFieldToColors.cxx
   UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx
   UnitTestMarchingCubesFilter.cxx
