@@ -100,11 +100,8 @@ enum struct ColorSpace
 /// mode where colors will pass through white when interpolating between two
 /// saturated colors.
 ///
-/// To map an vtkm::cont::ArrayHandle through the color and opacity transfer
-/// functions and into a RGB or RGBA array you will need to use
-/// vtkm::worklet::ColorTransferFunction. ColorTransferFunction has
-/// controls if you want to modify which ColorSpace (RGB, HSV, LAB, Diverging) you want to
-/// interpolate through.
+/// To map a field from a vtkm::cont::DataSet through the color and opacity transfer
+/// functions and into a RGB or RGBA array you should use vtkm::filter::FieldToColor.
 ///
 class VTKM_CONT_EXPORT ColorTable
 {
@@ -635,9 +632,12 @@ public:
   /// This object is only valid as long as the ColorTable is unmodified
   vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* GetHandleForExecution() const;
 
-  //Todo:
-  //
-  // 1. Implement Preset Methods
+
+  /// \brief returns the modified count for the virtual object handle of the exec color table
+  ///
+  /// The modified count allows consumers of a shared color table to keep track
+  /// if the color table has been modified since the last time they used it.
+  vtkm::Id GetModifiedCount() const;
 };
 }
 } //namespace vtkm::cont
