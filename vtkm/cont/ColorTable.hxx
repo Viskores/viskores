@@ -34,6 +34,22 @@ namespace cont
 {
 namespace detail
 {
+
+template <typename T>
+inline T* get_ptr(T* t)
+{
+  return t;
+}
+#if defined(VTKM_MSVC)
+//ArrayPortalToIteratorBegin could be returning a checked_array_iterator so
+//we need to grab the underlying pointer
+template <typename T>
+inline T* get_ptr(stdext::checked_array_iterator<T*> t)
+{
+  return t.base();
+}
+#endif
+
 struct map_color_table
 {
   template <typename DeviceAdapter, typename ColorTable, typename... Args>
@@ -81,23 +97,11 @@ struct transfer_color_table_to_device
     portal->ColorSize = static_cast<vtkm::Int32>(internals->ColorPosHandle.GetNumberOfValues());
     portal->OpacitySize = static_cast<vtkm::Int32>(internals->OpacityPosHandle.GetNumberOfValues());
 
-#if !defined(VTKM_MSVC) || (defined(_ITERATOR_DEBUG_LEVEL) && _ITERATOR_DEBUG_LEVEL == 0)
-    portal->ColorNodes = vtkm::cont::ArrayPortalToIteratorBegin(p1);
-    portal->RGB = vtkm::cont::ArrayPortalToIteratorBegin(p2);
-    portal->ONodes = vtkm::cont::ArrayPortalToIteratorBegin(p3);
-    portal->Alpha = vtkm::cont::ArrayPortalToIteratorBegin(p4);
-    portal->MidSharp = vtkm::cont::ArrayPortalToIteratorBegin(p5);
-#else
-    //ArrayPortalToIteratorBegin is returning a checked_array_iterator so
-    //we need to grab the underlying pointer
-    portal->ColorNodes = vtkm::cont::ArrayPortalToIteratorBegin(p1).base();
-    portal->RGB = vtkm::cont::ArrayPortalToIteratorBegin(p2).base();
-    portal->ONodes = vtkm::cont::ArrayPortalToIteratorBegin(p3).base();
-    portal->Alpha = vtkm::cont::ArrayPortalToIteratorBegin(p4).base();
-    portal->MidSharp = vtkm::cont::ArrayPortalToIteratorBegin(p5).base();
-
-#endif
-
+    portal->ColorNodes = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p1));
+    portal->RGB = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p2));
+    portal->ONodes = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p3));
+    portal->Alpha = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p4));
+    portal->MidSharp = detail::get_ptr(vtkm::cont::ArrayPortalToIteratorBegin(p5));
     return true;
   }
 };
