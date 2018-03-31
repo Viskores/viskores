@@ -38,7 +38,7 @@ namespace filter
 {
 
 template <class Derived>
-class FilterDataSetWithField : public vtkm::filter::Filter<FilterDataSetWithField<Derived>>
+class FilterDataSetWithField : public vtkm::filter::Filter<Derived>
 {
 public:
   VTKM_CONT
@@ -123,7 +123,7 @@ private:
   vtkm::cont::Field::AssociationEnum ActiveFieldAssociation;
   bool UseCoordinateSystemAsField;
 
-  friend class vtkm::filter::Filter<FilterDataSetWithField<Derived>>;
+  friend class vtkm::filter::Filter<Derived>;
 };
 }
 } // namespace vtkm::filter

@@ -38,7 +38,7 @@ namespace filter
 {
 
 template <class Derived>
-class FilterDataSet : public vtkm::filter::Filter<FilterDataSet<Derived>>
+class FilterDataSet : public vtkm::filter::Filter<Derived>
 {
 public:
   VTKM_CONT
@@ -81,7 +81,7 @@ private:
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
 
-  friend class vtkm::filter::Filter<FilterDataSet<Derived>>;
+  friend class vtkm::filter::Filter<Derived>;
 };
 }
 } // namespace vtkm::filter
