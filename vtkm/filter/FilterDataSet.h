@@ -59,21 +59,21 @@ public:
   VTKM_CONT
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
 
+private:
+  /// These are provided to satisfy the Filter API requirements.
+
   //From the field we can extract the association component
   // ASSOC_ANY -> unable to map
   // ASSOC_WHOLE_MESH -> (I think this is points)
   // ASSOC_POINTS -> map using point mapping
   // ASSOC_CELL_SET -> how do we map this?
   // ASSOC_LOGICAL_DIM -> unable to map?
-  VTKM_CONT
-  bool MapFieldOntoOutput(Result& result, const vtkm::cont::Field& field);
-
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(Result& result,
                                     const vtkm::cont::Field& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-private:
+
   template <typename DerivedPolicy>
   VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
                                        const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
