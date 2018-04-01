@@ -257,11 +257,11 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
   const vtkm::Id nVerts = base_size * base_size * base_size;
   vtkm::Float32* pointvar = new vtkm::Float32[nVerts];
 
-  for (vtkm::Int32 z = 0; z < base_size; ++z)
-    for (vtkm::Int32 y = 0; y < base_size; ++y)
-      for (vtkm::Int32 x = 0; x < base_size; ++x)
+  for (vtkm::Id z = 0; z < base_size; ++z)
+    for (vtkm::Id y = 0; y < base_size; ++y)
+      for (vtkm::Id x = 0; x < base_size; ++x)
       {
-        vtkm::Int32 index = z * base_size * base_size + y * base_size + x;
+        vtkm::Id index = z * base_size * base_size + y * base_size + x;
         pointvar[index] = vtkm::Sqrt(vtkm::Float32(x * x + y * y + z * z));
       }
 
