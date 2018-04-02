@@ -23,7 +23,6 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/AssignerMultiBlock.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/DecomposerMultiBlock.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/EnvironmentTracker.h>
@@ -37,6 +36,7 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include VTKM_DIY(diy/decomposition.hpp)
 #include VTKM_DIY(diy/master.hpp)
 #include VTKM_DIY(diy/partners/all-reduce.hpp)
+#include VTKM_DIY(diy/partners/broadcast.hpp)
 #include VTKM_DIY(diy/partners/swap.hpp)
 #include VTKM_DIY(diy/reduce.hpp)
 VTKM_THIRDPARTY_POST_INCLUDE
@@ -214,10 +214,22 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) c
                      []() -> void* { return new vtkm::Bounds(); },
                      [](void* ptr) { delete static_cast<vtkm::Bounds*>(ptr); });
 
+  // create the assigner that assigns blocks to ranks.
+  // AssignerMultiBlock is similar to diy::ContiguousAssigner except the number
+  // of blocks on each rank is defermiend by the blocks in the MultiBlock on
+  // each rank and those can be different.
   vtkm::cont::AssignerMultiBlock assigner(*this);
 
+  const int nblocks = assigner.nblocks(); // this is the total number of blocks across all ranks.
+  if (nblocks == 0)
+  {
+    // short circuit if there are no blocks in this multiblock globally.
+    return vtkm::Bounds();
+  }
+
   // populate master with blocks from `this`.
-  diy::decompose(world.rank(), assigner, master);
+  diy::RegularDecomposer<diy::DiscreteBounds> decomposer(1, diy::interval(0, nblocks - 1), nblocks);
+  decomposer.decompose(world.rank(), assigner, master);
 
   auto self = (*this);
   master.foreach ([&](vtkm::Bounds* data, const diy::Master::ProxyWithLink& cp) {
@@ -232,32 +244,61 @@ VTKM_CONT vtkm::Bounds MultiBlock::GetBounds(vtkm::Id coordinate_system_index) c
     }
   });
 
-  vtkm::cont::DecomposerMultiBlock decomposer(assigner);
-  diy::RegularSwapPartners partners(decomposer, /*k=*/2);
-
+  // lets do a reduction to block-0.
+  diy::RegularMergePartners partners(decomposer, /*k=*/2);
   auto callback =
-    [](vtkm::Bounds* data, const diy::ReduceProxy& srp, const diy::RegularSwapPartners&) {
+    [](vtkm::Bounds* data, const diy::ReduceProxy& srp, const diy::RegularMergePartners&) {
+      const auto selfid = srp.gid();
+
       // 1. dequeue.
       std::vector<int> incoming;
       srp.incoming(incoming);
       vtkm::Bounds message;
       for (const int gid : incoming)
       {
-        srp.dequeue(gid, message);
-        data->Include(message);
+        if (gid != selfid)
+        {
+          srp.dequeue(gid, message);
+          data->Include(message);
+        }
       }
       // 2. enqueue
       for (int cc = 0; cc < srp.out_link().size(); ++cc)
       {
-        srp.enqueue(srp.out_link().target(cc), *data);
+        auto target = srp.out_link().target(cc);
+        if (target.gid != selfid)
+        {
+          srp.enqueue(target, *data);
+        }
       }
     };
+  // reduce and produce aggregated bounds on block(gid=0).
   diy::reduce(master, assigner, partners, callback);
-  if (master.size())
+
+  // now that the rank with block(gid=0) has the reduced bounds, let's ship
+  // them around to all ranks. Since nblocks is generally quite larger than
+  // nranks, we create a new assigner/decomposer.
+  vtkm::Bounds reduced_bounds;
+  if (master.local(0))
   {
-    return (*master.block<vtkm::Bounds>(0));
+    reduced_bounds = *static_cast<vtkm::Bounds*>(master.get(master.lid(0)));
   }
-  return vtkm::Bounds();
+  master.clear();
+
+  diy::ContiguousAssigner bAssigner(world.size(), world.size());
+  diy::RegularDecomposer<diy::DiscreteBounds> bDecomposer(
+    1, diy::interval(0, world.size() - 1), world.size());
+  bDecomposer.decompose(world.rank(), bAssigner, master);
+  *master.block<vtkm::Bounds>(0) = reduced_bounds;
+  diy::RegularBroadcastPartners bPartners(bDecomposer, /*k=*/2);
+
+  // we can use the same `callback` as earlier since all blocks are
+  // initialized to empty, hence `vtkm::Bounds::Include()` should simply work
+  // as a copy.
+  diy::reduce(master, bAssigner, bPartners, callback);
+
+  assert(master.size() == 1);
+  return *master.block<vtkm::Bounds>(0);
 }
 
 VTKM_CONT vtkm::Bounds MultiBlock::GetBlockBounds(const std::size_t& block_index,
@@ -300,9 +341,19 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(
                      []() -> void* { return new BlockMetaData(); },
                      [](void* ptr) { delete static_cast<BlockMetaData*>(ptr); });
 
+  // create assigner that assigns blocks to ranks.
   vtkm::cont::AssignerMultiBlock assigner(*this);
 
-  diy::decompose(comm.rank(), assigner, master);
+  const int nblocks = assigner.nblocks(); // this is the total number of blocks across all ranks.
+  if (nblocks == 0)
+  {
+    // short circuit if there are no blocks in this multiblock globally.
+    return vtkm::cont::ArrayHandle<vtkm::Range>();
+  }
+
+  // populate master.
+  diy::RegularDecomposer<diy::DiscreteBounds> decomposer(1, diy::interval(0, nblocks - 1), nblocks);
+  decomposer.decompose(comm.rank(), assigner, master);
 
   auto self = (*this);
   master.foreach ([&](BlockMetaData* data, const diy::Master::ProxyWithLink& cp) {
@@ -315,41 +366,70 @@ VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> MultiBlock::GetGlobalRange(
     }
   });
 
-  vtkm::cont::DecomposerMultiBlock decomposer(assigner);
-  diy::RegularSwapPartners partners(decomposer, /*k=*/2);
+  // lets reduce range to block(gid=0).
+  diy::RegularMergePartners partners(decomposer, /*k=*/2);
   auto callback =
-    [](BlockMetaData* data, const diy::ReduceProxy& srp, const diy::RegularSwapPartners&) {
-      std::vector<int> incoming;
-      srp.incoming(incoming);
+    [](BlockMetaData* data, const diy::ReduceProxy& srp, const diy::RegularMergePartners&) {
+      const auto selfid = srp.gid();
 
       // 1. dequeue
       BlockMetaData message;
+      std::vector<int> incoming;
+      srp.incoming(incoming);
       for (const int gid : incoming)
       {
-        srp.dequeue(gid, message);
-        data->resize(std::max(data->size(), message.size()));
-        for (size_t cc = 0; cc < data->size(); ++cc)
+        if (gid != selfid)
         {
-          (*data)[cc].Include(message[cc]);
+          srp.dequeue(gid, message);
+          data->resize(std::max(data->size(), message.size()));
+          for (size_t cc = 0; cc < data->size(); ++cc)
+          {
+            (*data)[cc].Include(message[cc]);
+          }
         }
       }
+
       // 2. enqueue
       for (int cc = 0; cc < srp.out_link().size(); ++cc)
       {
-        srp.enqueue(srp.out_link().target(cc), *data);
+        auto target = srp.out_link().target(cc);
+        if (target.gid != selfid)
+        {
+          srp.enqueue(target, *data);
+        }
       }
     };
 
+  // reduce and produce aggregated range on block(gid=0).
   diy::reduce(master, assigner, partners, callback);
 
-  BlockMetaData ranges;
-  if (master.size())
+  // now broadcast out the range to all ranks.
+  BlockMetaData reduced_range;
+  if (master.local(0))
   {
-    ranges = *(master.block<BlockMetaData>(0));
+    reduced_range = *(master.block<BlockMetaData>(master.lid(0)));
   }
-  vtkm::cont::ArrayHandle<vtkm::Range> tmprange = vtkm::cont::make_ArrayHandle(ranges);
+  master.clear();
+
+  diy::ContiguousAssigner bAssigner(comm.size(), comm.size());
+  diy::RegularDecomposer<diy::DiscreteBounds> bDecomposer(
+    1, diy::interval(0, comm.size() - 1), comm.size());
+  bDecomposer.decompose(comm.rank(), bAssigner, master);
+  *master.block<BlockMetaData>(0) = reduced_range;
+  diy::RegularBroadcastPartners bPartners(bDecomposer, /*k=*/2);
+
+  // we can use the same `callback` as earlier since all blocks are
+  // initialized to empty, hence `vtkm::Range::Include()` should simply work
+  // as a copy.
+  diy::reduce(master, bAssigner, bPartners, callback);
+
+  assert(master.size() == 1);
+
+  reduced_range = *master.block<BlockMetaData>(0);
+
+  vtkm::cont::ArrayHandle<vtkm::Range> tmprange = vtkm::cont::make_ArrayHandle(reduced_range);
   vtkm::cont::ArrayHandle<vtkm::Range> range;
-  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandle(ranges), range);
+  vtkm::cont::ArrayCopy(vtkm::cont::make_ArrayHandle(reduced_range), range);
   return range;
 }
 
