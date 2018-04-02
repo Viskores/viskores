@@ -41,17 +41,6 @@ struct Actor::InternalsType
   VTKM_CONT
   InternalsType(const vtkm::cont::DynamicCellSet& cells,
                 const vtkm::cont::CoordinateSystem& coordinates,
-                const vtkm::cont::Field& scalarField)
-    : Cells(cells)
-    , Coordinates(coordinates)
-    , ScalarField(scalarField)
-  {
-    this->ColorTable.LoadPreset("Cool to Warm");
-  }
-
-  VTKM_CONT
-  InternalsType(const vtkm::cont::DynamicCellSet& cells,
-                const vtkm::cont::CoordinateSystem& coordinates,
                 const vtkm::cont::Field& scalarField,
                 const vtkm::rendering::Color& color)
     : Cells(cells)
@@ -65,7 +54,7 @@ struct Actor::InternalsType
   InternalsType(const vtkm::cont::DynamicCellSet& cells,
                 const vtkm::cont::CoordinateSystem& coordinates,
                 const vtkm::cont::Field& scalarField,
-                const vtkm::cont::ColorTable& colorTable)
+                const vtkm::cont::ColorTable& colorTable = vtkm::cont::ColorTable::Preset::DEFAULT)
     : Cells(cells)
     , Coordinates(coordinates)
     , ScalarField(scalarField)

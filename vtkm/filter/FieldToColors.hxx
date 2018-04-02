@@ -18,6 +18,11 @@
 //  this software.
 //============================================================================
 
+#ifndef vtk_m_filter_Field_to_Colors_hxx
+#define vtk_m_filter_Field_to_Colors_hxx
+
+#include <vtkm/filter/FieldToColors.h>
+
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ColorTable.hxx>
 
@@ -268,3 +273,5 @@ inline VTKM_CONT vtkm::filter::Result FieldToColors::DoExecute(
 }
 }
 } // namespace vtkm::filter
+
+#endif //vtk_m_filter_Field_to_Colors_hxx
