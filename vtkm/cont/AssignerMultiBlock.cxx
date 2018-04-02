@@ -44,9 +44,16 @@ AssignerMultiBlock::AssignerMultiBlock(const vtkm::cont::MultiBlock& mb)
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
   const auto num_blocks = mb.GetNumberOfBlocks();
 
-  vtkm::Id iscan;
-  diy::mpi::scan(comm, num_blocks, iscan, std::plus<vtkm::Id>());
-  diy::mpi::all_gather(comm, iscan, this->IScanBlockCounts);
+  if (comm.size() > 1)
+  {
+    vtkm::Id iscan;
+    diy::mpi::scan(comm, num_blocks, iscan, std::plus<vtkm::Id>());
+    diy::mpi::all_gather(comm, iscan, this->IScanBlockCounts);
+  }
+  else
+  {
+    this->IScanBlockCounts.push_back(num_blocks);
+  }
 
   this->set_nblocks(static_cast<int>(this->IScanBlockCounts.back()));
 }
