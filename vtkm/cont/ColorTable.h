@@ -108,6 +108,35 @@ class VTKM_CONT_EXPORT ColorTable
   std::shared_ptr<detail::ColorTableInternals> Impl;
 
 public:
+  // Note: these are in flux and will change soon.
+  enum struct Preset
+  {
+    DEFAULT,
+    COOL_TO_WARM,
+    BLACK_BODY_RADIATION,
+    SAMSEL_FIRE,
+    INFERNO,
+    LINEAR_YGB,
+    COLD_AND_HOT,
+    RAINBOW_DESATURATED,
+    COOL_TO_WARN_EXTENDED,
+    X_RAY,
+    BLACK_BLUE_AND_WHITE,
+    VIRDIS,
+    LINEAR_GREEN,
+    JET,
+    RAINBOW
+  };
+
+  /// \brief Construct a color table from a preset
+  ///
+  /// Constructs a color table from a given preset, which might include a NaN color.
+  /// The alpha table will have 2 entries of alpha = 1.0 with linear interpolation
+  ///
+  /// Note: these are a select set of the presets you can get by providing a string identifier.
+  ///
+  ColorTable(vtkm::cont::ColorTable::Preset preset);
+
   /// \brief Construct a color table from a preset color table
   ///
   /// Constructs a color table from a given preset, which might include a NaN color.
@@ -166,7 +195,12 @@ public:
 
   ~ColorTable();
 
+  bool LoadPreset(vtkm::cont::ColorTable::Preset preset);
+
   /// Returns the name of all preset color tables
+  ///
+  /// This list will include all presets defined in vtkm::cont::ColorTable::Preset and could
+  /// include extras as well.
   ///
   std::set<std::string> GetPresets() const;
 
