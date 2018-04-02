@@ -109,7 +109,7 @@ public:
 
     //verify that we can get the presets
     std::set<std::string> names = table.GetPresets();
-    VTKM_TEST_ASSERT(names.size() == 14, "incorrect number of names in preset set");
+    VTKM_TEST_ASSERT(names.size() == 15, "incorrect number of names in preset set");
 
     VTKM_TEST_ASSERT(names.count("inferno") == 1, "names should contain inferno");
     VTKM_TEST_ASSERT(names.count("black-body radiation") == 1,
@@ -288,8 +288,7 @@ public:
     vtkm::Range range{ 0.0, 50.0 };
     auto diverging = vtkm::cont::ColorSpace::DIVERGING;
 
-    vtkm::cont::ColorTable table;
-    table.LoadPreset("Cool to Warm");
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::COOL_TO_WARM);
     VTKM_TEST_ASSERT(table.GetColorSpace() == diverging,
                      "color space not switched when loading preset");
 
@@ -426,8 +425,7 @@ public:
   static void TestSampling()
   {
 
-    vtkm::cont::ColorTable table;
-    table.LoadPreset("Linear green");
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::LINEAR_GREEN);
     VTKM_TEST_ASSERT((table.GetRange() == vtkm::Range{ 0.0, 1.0 }),
                      "loading linear green table failed with wrong range");
     VTKM_TEST_ASSERT((table.GetNumberOfPoints() == 21),
@@ -453,8 +451,7 @@ public:
   {
     //build a color table with clamping off and verify that sampling works
     vtkm::Range range{ 0.0, 50.0 };
-    vtkm::cont::ColorTable table;
-    table.LoadPreset("Cool to Warm");
+    vtkm::cont::ColorTable table(vtkm::cont::ColorTable::Preset::COOL_TO_WARM);
     table.RescaleToRange(range);
     table.SetClampingOff();
     table.SetAboveRangeColor(vtkm::Vec<float, 3>{ 1.0f, 0.0f, 0.0f }); //red

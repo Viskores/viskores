@@ -166,7 +166,7 @@ public:
   ///
   /// Note: The color table will have 0 entries
   /// Note: The alpha table will have 0 entries
-  ColorTable(ColorSpace space = ColorSpace::LAB);
+  explicit ColorTable(ColorSpace space);
 
   /// Construct a color table with a 2 positions
   ///
