@@ -108,7 +108,7 @@ class VTKM_CONT_EXPORT ColorTable
   std::shared_ptr<detail::ColorTableInternals> Impl;
 
 public:
-  /// Construct a color table from a preset color table
+  /// \brief Construct a color table from a preset color table
   ///
   /// Constructs a color table from a given preset, which might include a NaN color.
   /// The alpha table will have 2 entries of alpha = 1.0 with linear interpolation
@@ -131,20 +131,20 @@ public:
   /// "Jet"
   /// "Rainbow"
   ///
-  ColorTable(const std::string& name);
+  explicit ColorTable(const std::string& name);
 
   /// Construct a color table with a zero positions, and an invalid range
   ///
   /// Note: The color table will have 0 entries
   /// Note: The alpha table will have 0 entries
-  ColorTable(ColorSpace space = ColorSpace::RGB);
+  ColorTable(ColorSpace space = ColorSpace::LAB);
 
   /// Construct a color table with a 2 positions
   ///
   /// Note: The color table will have 2 entries of rgb = {1.0,1.0,1.0}
   /// Note: The alpha table will have 2 entries of alpha = 1.0 with linear
   ///       interpolation
-  ColorTable(const vtkm::Range& range, ColorSpace space = ColorSpace::RGB);
+  ColorTable(const vtkm::Range& range, ColorSpace space = ColorSpace::LAB);
 
   /// Construct a color table with 2 positions
   //
@@ -153,7 +153,7 @@ public:
   ColorTable(const vtkm::Range& range,
              const vtkm::Vec<float, 3>& rgb1,
              const vtkm::Vec<float, 3>& rgb2,
-             ColorSpace space = ColorSpace::RGB);
+             ColorSpace space = ColorSpace::LAB);
 
   /// Construct color and alpha and table with 2 positions
   ///
@@ -161,7 +161,7 @@ public:
   ColorTable(const vtkm::Range& range,
              const vtkm::Vec<float, 4>& rgba1,
              const vtkm::Vec<float, 4>& rgba2,
-             ColorSpace space = ColorSpace::RGB);
+             ColorSpace space = ColorSpace::LAB);
 
 
   ~ColorTable();

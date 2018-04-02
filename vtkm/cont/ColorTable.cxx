@@ -45,7 +45,7 @@ ColorTable::ColorTable(const std::string& name)
     //so that the internal host side cache is constructed and we leave
     //the constructor in a valid state. We use RGB as it is the default
     //when the no parameter constructor is called
-    this->SetColorSpace(ColorSpace::RGB);
+    this->SetColorSpace(ColorSpace::LAB);
   }
   this->AddSegmentAlpha(this->Impl->TableRange.Min, 1.0f, this->Impl->TableRange.Max, 1.0f);
 }
