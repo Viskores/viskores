@@ -25,6 +25,8 @@
 
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/ColorTable.hxx>
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/internal/CreateResult.h>
 
 
 namespace vtkm
@@ -143,7 +145,7 @@ inline VTKM_CONT void FieldToColors::SetNumberOfSamplingPoints(vtkm::Int32 count
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result FieldToColors::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet FieldToColors::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
@@ -215,7 +217,7 @@ inline VTKM_CONT vtkm::filter::Result FieldToColors::DoExecute(
 
     if (!ran)
     {
-      return vtkm::filter::Result();
+      throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
     }
     outField = vtkm::cont::Field(outputName, vtkm::cont::Field::ASSOC_POINTS, output);
   }
@@ -263,13 +265,13 @@ inline VTKM_CONT vtkm::filter::Result FieldToColors::DoExecute(
 
     if (!ran)
     {
-      return vtkm::filter::Result();
+      throw vtkm::cont::ErrorFilterExecution("Unsupported input mode.");
     }
     outField = vtkm::cont::Field(outputName, vtkm::cont::Field::ASSOC_POINTS, output);
   }
 
 
-  return vtkm::filter::Result(input, outField);
+  return internal::CreateResult(input, outField);
 }
 }
 } // namespace vtkm::filter

@@ -48,7 +48,7 @@ public:
   void SetSeeds(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>& seeds);
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::Result DoExecute(
+  VTKM_CONT vtkm::cont::DataSet DoExecute(
     const vtkm::cont::DataSet& input,
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
     const vtkm::filter::FieldMetadata& fieldMeta,
@@ -58,7 +58,7 @@ public:
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT bool DoMapField(vtkm::filter::Result& result,
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,

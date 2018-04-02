@@ -30,7 +30,6 @@
 
 #include <vtkm/filter/Filter.h>
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/Result.h>
 
 namespace vtkm
 {
@@ -94,24 +93,27 @@ private:
   // ASSOC_CELL_SET -> how do we map this?
   // ASSOC_LOGICAL_DIM -> unable to map?
   template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(Result& result,
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
-                                       const vtkm::cont::Field& field,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::Field& field,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //How do we specify float/double coordinate types?
   template <typename DerivedPolicy>
-  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
-                                       const vtkm::cont::CoordinateSystem& field,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::CoordinateSystem& field,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
   vtkm::Id CellSetIndex;

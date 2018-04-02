@@ -111,7 +111,6 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
     vtkm::filter::Threshold threshold;
-    vtkm::filter::Result result;
 
     threshold.SetLowerThreshold(500.1);
     threshold.SetUpperThreshold(500.1);

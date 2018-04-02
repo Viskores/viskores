@@ -42,7 +42,10 @@ struct ResolveFieldTypeAndExecuteForDevice
   {
     instance.Result = instance.DerivedClass->DoExecute(
       instance.InputData, field, instance.Metadata, instance.Policy, tag);
-    return instance.Result.IsValid();
+    // `DoExecute` is expected to throw an exception on any failure. If it
+    // returned anything, it's taken as a success and we won't try executing on
+    // other available devices.
+    return true;
   }
 };
 

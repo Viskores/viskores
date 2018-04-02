@@ -50,14 +50,14 @@ public:
   const vtkm::cont::ImplicitFunctionHandle& GetImplicitFunction() const { return this->Function; }
 
   template <typename DerivedPolicy, typename DeviceAdapter>
-  vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
-                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                 const DeviceAdapter& tag);
+  vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter.
   //This call is only valid after Execute has been called.
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  bool DoMapField(vtkm::filter::Result& result,
+  bool DoMapField(vtkm::cont::DataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,
                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,

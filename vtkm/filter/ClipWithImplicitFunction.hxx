@@ -61,7 +61,7 @@ ClipWithImplicitFunction::ClipWithImplicitFunction()
 }
 
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline vtkm::filter::Result ClipWithImplicitFunction::DoExecute(
+inline vtkm::cont::DataSet ClipWithImplicitFunction::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
@@ -86,14 +86,13 @@ inline vtkm::filter::Result ClipWithImplicitFunction::DoExecute(
   output.AddCellSet(outputCellSet);
   output.AddCoordinateSystem(outputCoords);
 
-  vtkm::filter::Result result(output);
-  return result;
+  return output;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline bool ClipWithImplicitFunction::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -115,7 +114,7 @@ inline bool ClipWithImplicitFunction::DoMapField(
   }
 
   //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField(fieldMeta.AsField(output));
+  result.AddField(fieldMeta.AsField(output));
 
   return true;
 }

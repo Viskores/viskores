@@ -50,9 +50,9 @@ public:
   void AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins);
 
   template <typename Policy, typename Device>
-  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& inData,
-                                           vtkm::filter::PolicyBase<Policy> policy,
-                                           Device);
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData,
+                                          vtkm::filter::PolicyBase<Policy> policy,
+                                          Device);
 
   // This index is the field position in FieldNames
   // (or the input _fieldName string vector of SetFields() Function)
@@ -65,7 +65,7 @@ public:
   vtkm::Range GetDataRange(size_t fieldIdx);
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT bool DoMapField(vtkm::filter::Result& result,
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,

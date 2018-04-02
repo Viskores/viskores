@@ -21,7 +21,6 @@
 #include <vtkm/filter/FieldMetadata.h>
 #include <vtkm/filter/FilterTraits.h>
 #include <vtkm/filter/PolicyDefault.h>
-#include <vtkm/filter/Result.h>
 
 #include <vtkm/filter/internal/ResolveFieldTypeAndExecute.h>
 #include <vtkm/filter/internal/ResolveFieldTypeAndMap.h>
@@ -68,24 +67,21 @@ inline VTKM_CONT vtkm::cont::DataSet Filter<Derived>::Execute(
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   Derived* self = static_cast<Derived*>(this);
-  //self->DoPreExecute(input, policy, fieldSelection);
-  Result result = self->PrepareForExecution(input, policy);
-  //self->DoPostExecute(result.GetDataSet(), input, policy);
-  if (!result.IsValid())
-  {
-    throw vtkm::cont::ErrorExecution("Failed to execute filter.");
-  }
+  vtkm::cont::DataSet output = self->PrepareForExecution(input, policy);
+  // the above will throw `vtkm::cont::ErrorExecution` if the execution fails
+  // so we don't need to do anything special to validate the output.
 
   for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
   {
     auto field = input.GetField(cc);
     if (this->GetFieldsToPass().IsFieldSelected(field))
     {
-      self->MapFieldOntoOutput(result, field, policy);
+      // todo: should we thrown ErrorExecution if mapping failed?
+      self->MapFieldOntoOutput(output, field, policy);
     }
   }
 
-  return result.GetDataSet();
+  return output;
 }
 
 //----------------------------------------------------------------------------
@@ -103,16 +99,12 @@ inline VTKM_CONT vtkm::cont::MultiBlock Filter<Derived>::Execute(
   const vtkm::cont::MultiBlock& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
-  // Derived* self = static_cast<Derived*>(this);
-  //self->DoPreExecute(input, policy, fieldSelection);
-
   vtkm::cont::MultiBlock output;
   for (auto& inDataSet : input)
   {
     vtkm::cont::DataSet outDataSet = this->Execute(inDataSet, policy);
     output.AddBlock(outDataSet);
   }
-  //self->DoPreExecute(output, input, policy);
   return output;
 }
 }
