@@ -48,6 +48,11 @@ AxisAnnotation3D::AxisAnnotation3D()
 
 AxisAnnotation3D::~AxisAnnotation3D()
 {
+  for (int i = 0; i < Labels.size(); i++)
+  {
+    delete Labels[i];
+  }
+  Labels.clear();
 }
 
 void AxisAnnotation3D::SetTickInvert(bool x, bool y, bool z)

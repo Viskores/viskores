@@ -43,6 +43,11 @@ AxisAnnotation2D::AxisAnnotation2D()
 
 AxisAnnotation2D::~AxisAnnotation2D()
 {
+  for (int i = 0; i < Labels.size(); i++)
+  {
+    delete Labels[i];
+  }
+  Labels.clear();
 }
 
 void AxisAnnotation2D::SetRangeForAutoTicks(const Range& range)

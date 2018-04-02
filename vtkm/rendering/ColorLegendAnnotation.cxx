@@ -33,6 +33,11 @@ ColorLegendAnnotation::ColorLegendAnnotation()
 
 ColorLegendAnnotation::~ColorLegendAnnotation()
 {
+  for (int i = 0; i < Annot.size(); i++)
+  {
+    delete Annot[i];
+  }
+  Annot.clear();
 }
 
 void ColorLegendAnnotation::Clear()
