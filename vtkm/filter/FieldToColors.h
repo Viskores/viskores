@@ -35,7 +35,7 @@ class FieldToColors : public vtkm::filter::FilterField<FieldToColors>
 {
 public:
   VTKM_CONT
-  FieldToColors(const vtkm::cont::ColorTable& table = vtkm::cont::ColorTable::Preset::DEFAULT);
+  FieldToColors(const vtkm::cont::ColorTable& table = vtkm::cont::ColorTable());
 
   enum FieldToColorsInputMode
   {

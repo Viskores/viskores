@@ -112,19 +112,19 @@ public:
   enum struct Preset
   {
     DEFAULT,
+    VIRIDIS,
     COOL_TO_WARM,
+    COOL_TO_WARN_EXTENDED,
+    COLD_AND_HOT,
+    INFERNO,
     BLACK_BODY_RADIATION,
     SAMSEL_FIRE,
-    INFERNO,
     LINEAR_YGB,
-    COLD_AND_HOT,
-    RAINBOW_DESATURATED,
-    COOL_TO_WARN_EXTENDED,
-    X_RAY,
     BLACK_BLUE_AND_WHITE,
-    VIRDIS,
     LINEAR_GREEN,
+    X_RAY,
     JET,
+    RAINBOW_DESATURATED,
     RAINBOW
   };
 
@@ -135,7 +135,7 @@ public:
   ///
   /// Note: these are a select set of the presets you can get by providing a string identifier.
   ///
-  ColorTable(vtkm::cont::ColorTable::Preset preset);
+  ColorTable(vtkm::cont::ColorTable::Preset preset = vtkm::cont::ColorTable::Preset::DEFAULT);
 
   /// \brief Construct a color table from a preset color table
   ///
@@ -268,8 +268,8 @@ public:
   void SetNaNColor(const vtkm::Vec<float, 3>& c);
   const vtkm::Vec<float, 3>& GetNaNColor() const;
 
-  /// Remove all existing all values in both color and alpha tables
-  /// doesn't remove the clamping, below, and above range state or colors
+  /// Remove all existing values in both color and alpha tables.
+  /// Does not remove the clamping, below, and above range state or colors.
   void Clear();
 
   /// Remove only color table values

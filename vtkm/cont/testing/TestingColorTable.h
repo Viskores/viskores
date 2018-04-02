@@ -114,7 +114,7 @@ public:
     VTKM_TEST_ASSERT(names.count("inferno") == 1, "names should contain inferno");
     VTKM_TEST_ASSERT(names.count("black-body radiation") == 1,
                      "names should contain black-body radiation");
-    VTKM_TEST_ASSERT(names.count("virdis") == 1, "names should contain virdis");
+    VTKM_TEST_ASSERT(names.count("viridis") == 1, "names should contain viridis");
     VTKM_TEST_ASSERT(names.count("black, blue and white") == 1,
                      "names should contain black, blue and white");
     VTKM_TEST_ASSERT(names.count("samsel fire") == 1, "names should contain samsel fire");
