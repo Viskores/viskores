@@ -41,6 +41,17 @@ void EnvironmentTracker::SetCommunicator(const diy::mpi::communicator& comm)
 
 const diy::mpi::communicator& EnvironmentTracker::GetCommunicator()
 {
+#ifndef DIY_NO_MPI
+  int flag;
+  MPI_Initialized(&flag);
+  if (!flag)
+  {
+    int argc = 0;
+    char** argv = nullptr;
+    MPI_Init(&argc, &argv);
+    internal::GlobalCommuncator = diy::mpi::communicator(MPI_COMM_WORLD);
+  }
+#endif
   return vtkm::cont::internal::GlobalCommuncator;
 }
 } // namespace vtkm::cont
