@@ -99,7 +99,7 @@ public:
   //@}
 
   //@{
-  /// Executes the filter on the input and producer an result dataset.
+  /// Executes the filter on the input and produces a result dataset.
   ///
   /// On success, this the dataset produced. On error, vtkm::cont::ErrorExecution will be thrown.
   VTKM_CONT

@@ -124,14 +124,6 @@ FilterField<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT bool FilterField<Derived>::MapFieldOntoOutput(Result& result,
-                                                               const vtkm::cont::Field& field)
-{
-  return this->MapFieldOntoOutput(result, field, vtkm::filter::PolicyDefault());
-}
-
-//-----------------------------------------------------------------------------
-template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT bool FilterField<Derived>::MapFieldOntoOutput(
   Result& result,
