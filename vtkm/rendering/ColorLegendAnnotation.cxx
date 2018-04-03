@@ -33,11 +33,6 @@ ColorLegendAnnotation::ColorLegendAnnotation()
 
 ColorLegendAnnotation::~ColorLegendAnnotation()
 {
-  for (int i = 0; i < Annot.size(); i++)
-  {
-    delete Annot[i];
-  }
-  Annot.clear();
 }
 
 void ColorLegendAnnotation::Clear()
@@ -74,13 +69,14 @@ void ColorLegendAnnotation::Render(const vtkm::rendering::Camera& camera,
 
   while (this->Annot.size() < this->Labels.size())
   {
-    this->Annot.push_back(new vtkm::rendering::TextAnnotationScreen(
-      "test", this->LabelColor, this->FontScale, vtkm::Vec<vtkm::Float32, 2>(0, 0), 0));
+    this->Annot.push_back(
+      std::move(std::unique_ptr<TextAnnotationScreen>(new vtkm::rendering::TextAnnotationScreen(
+        "test", this->LabelColor, this->FontScale, vtkm::Vec<vtkm::Float32, 2>(0, 0), 0))));
   }
 
   for (unsigned int i = 0; i < this->Annot.size(); ++i)
   {
-    TextAnnotationScreen* txt = Annot[i];
+    TextAnnotationScreen* txt = Annot[i].get();
     txt->SetText(Labels[i]);
     txt->SetPosition(r + .02f, (b + t) / 2.f);
     txt->SetAlignment(TextAnnotationScreen::Left, TextAnnotationScreen::VCenter);

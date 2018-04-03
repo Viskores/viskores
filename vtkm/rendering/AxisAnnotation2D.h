@@ -50,7 +50,8 @@ protected:
 
   TextAnnotation::HorizontalAlignment AlignH;
   TextAnnotation::VerticalAlignment AlignV;
-  std::vector<TextAnnotation*> Labels;
+  std::vector<std::unique_ptr<TextAnnotation>> Labels;
+  //  std::vector<TextAnnotation*> Labels;
 
   std::vector<vtkm::Float64> PositionsMajor;
   std::vector<vtkm::Float64> ProportionsMajor;

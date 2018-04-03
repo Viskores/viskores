@@ -39,7 +39,7 @@ private:
   vtkm::Float32 FontScale;
   vtkm::rendering::Color LabelColor;
   std::vector<std::string> Labels;
-  std::vector<TextAnnotationScreen*> Annot;
+  std::vector<std::unique_ptr<TextAnnotationScreen>> Annot;
   std::vector<vtkm::rendering::Color> ColorSwatchList;
 
 public:

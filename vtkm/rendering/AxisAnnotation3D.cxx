@@ -48,11 +48,6 @@ AxisAnnotation3D::AxisAnnotation3D()
 
 AxisAnnotation3D::~AxisAnnotation3D()
 {
-  for (int i = 0; i < Labels.size(); i++)
-  {
-    delete Labels[i];
-  }
-  Labels.clear();
 }
 
 void AxisAnnotation3D::SetTickInvert(bool x, bool y, bool z)
@@ -85,11 +80,12 @@ void AxisAnnotation3D::Render(const Camera& camera,
   unsigned int nmajor = (unsigned int)proportions.size();
   while (this->Labels.size() < nmajor)
   {
-    this->Labels.push_back(new TextAnnotationBillboard("test",
-                                                       this->Color,
-                                                       vtkm::Float32(this->FontScale),
-                                                       vtkm::Vec<vtkm::Float32, 3>(0, 0, 0),
-                                                       0));
+    this->Labels.push_back(std::move(std::unique_ptr<TextAnnotationBillboard>(
+      new vtkm::rendering::TextAnnotationBillboard("test",
+                                                   this->Color,
+                                                   vtkm::Float32(this->FontScale),
+                                                   vtkm::Vec<vtkm::Float32, 3>(0, 0, 0),
+                                                   0))));
   }
 
   std::stringstream numberToString;
