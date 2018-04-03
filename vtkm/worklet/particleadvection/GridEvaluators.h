@@ -394,7 +394,7 @@ public:
       return false;
     vtkm::Id3 idx000, idx001, idx010, idx011, idx100, idx101, idx110, idx111;
 
-    vtkm::Vec<vtkm::Id, 3> cellPos;
+    vtkm::Vec<vtkm::Id, 3> cellPos = dims;
     vtkm::Id index;
     /*Get floor X location*/
     for (index = 0; index < dims[0] - 1; index++)

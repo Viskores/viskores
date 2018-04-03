@@ -92,7 +92,7 @@ public:
                                                             FieldType,
                                                             DeviceAdapterTag>;
 
-  ParticleAdvectionWorklet() {}
+  VTKM_EXEC_CONT ParticleAdvectionWorklet() {}
 
   template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
@@ -148,7 +148,7 @@ public:
                                                             FieldType,
                                                             DeviceAdapterTag>;
 
-  StreamlineWorklet() {}
+  VTKM_EXEC_CONT StreamlineWorklet() {}
 
   template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,

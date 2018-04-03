@@ -249,7 +249,6 @@ public:
 
   static void TestAddPoints()
   {
-    vtkm::Range initalRange{ 0, 1.0 };
     vtkm::Range range{ -20, 20.0 };
     auto rgbspace = vtkm::cont::ColorSpace::RGB;
 
