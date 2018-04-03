@@ -74,6 +74,7 @@ set(headers
   ErrorBadDevice.h
   ErrorBadType.h
   ErrorBadValue.h
+  ErrorFilterExecution.h
   ErrorExecution.h
   ErrorInternal.h
   Field.h
