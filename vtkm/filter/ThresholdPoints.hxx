@@ -18,6 +18,8 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/cont/ErrorFilterExecution.h>
+
 namespace
 {
 
@@ -144,7 +146,7 @@ inline VTKM_CONT void ThresholdPoints::SetThresholdBetween(const vtkm::Float64 v
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result ThresholdPoints::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet ThresholdPoints::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -157,8 +159,7 @@ inline VTKM_CONT vtkm::filter::Result ThresholdPoints::DoExecute(
   // field to threshold on must be a point field
   if (fieldMeta.IsPointField() == false)
   {
-    //todo: we need to mark this as a failure of input, not a failure of the algorithm
-    return vtkm::filter::Result();
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
   // run the worklet on the cell set and input field
@@ -203,20 +204,18 @@ inline VTKM_CONT vtkm::filter::Result ThresholdPoints::DoExecute(
   if (this->CompactPoints)
   {
     this->Compactor.SetCompactPointFields(true);
-    vtkm::filter::Result result;
-    result = this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy), DeviceAdapter());
-    return result;
+    return this->Compactor.DoExecute(output, GetCellSetSingleTypePolicy(policy), DeviceAdapter());
   }
   else
   {
-    return vtkm::filter::Result(output);
+    return output;
   }
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ThresholdPoints::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -231,7 +230,7 @@ inline VTKM_CONT bool ThresholdPoints::DoMapField(
     }
     else
     {
-      result.GetDataSet().AddField(fieldMeta.AsField(input));
+      result.AddField(fieldMeta.AsField(input));
       return true;
     }
   }

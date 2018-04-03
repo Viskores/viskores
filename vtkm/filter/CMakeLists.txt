@@ -52,7 +52,6 @@ set(headers
   PolicyBase.h
   PolicyDefault.h
   Probe.h
-  Result.h
   Streamline.h
   SurfaceNormals.h
   Tetrahedralize.h

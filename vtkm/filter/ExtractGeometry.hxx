@@ -87,7 +87,7 @@ inline VTKM_CONT ExtractGeometry::ExtractGeometry()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result ExtractGeometry::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet ExtractGeometry::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
@@ -111,14 +111,13 @@ inline VTKM_CONT vtkm::filter::Result ExtractGeometry::DoExecute(
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.AddCellSet(outCells);
-
-  return vtkm::filter::Result(output);
+  return output;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExtractGeometry::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -140,7 +139,7 @@ inline VTKM_CONT bool ExtractGeometry::DoMapField(
   }
 
   // use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField(fieldMeta.AsField(output));
+  result.AddField(fieldMeta.AsField(output));
   return true;
 }
 }

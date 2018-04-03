@@ -37,7 +37,7 @@ inline VTKM_CONT ExtractStructured::ExtractStructured()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result ExtractStructured::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet ExtractStructured::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
@@ -58,13 +58,13 @@ inline VTKM_CONT vtkm::filter::Result ExtractStructured::DoExecute(
   vtkm::cont::DataSet output;
   output.AddCellSet(vtkm::cont::DynamicCellSet(cellset));
   output.AddCoordinateSystem(outputCoordinates);
-  return vtkm::filter::Result(output);
+  return output;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExtractStructured::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -74,7 +74,7 @@ inline VTKM_CONT bool ExtractStructured::DoMapField(
   {
     vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessPointField(input, device);
 
-    result.GetDataSet().AddField(fieldMeta.AsField(output));
+    result.AddField(fieldMeta.AsField(output));
     return true;
   }
 
@@ -83,7 +83,7 @@ inline VTKM_CONT bool ExtractStructured::DoMapField(
   {
     vtkm::cont::ArrayHandle<T> output = this->Worklet.ProcessCellField(input, device);
 
-    result.GetDataSet().AddField(fieldMeta.AsField(output));
+    result.AddField(fieldMeta.AsField(output));
     return true;
   }
 

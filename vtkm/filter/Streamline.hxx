@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/cont/ArrayHandleIndex.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
@@ -57,7 +58,7 @@ inline VTKM_CONT void Streamline::SetSeeds(
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result Streamline::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet Streamline::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -66,17 +67,23 @@ inline VTKM_CONT vtkm::filter::Result Streamline::DoExecute(
 {
   //Check for some basics.
   if (this->Seeds.GetNumberOfValues() == 0)
-    return vtkm::filter::Result();
+  {
+    throw vtkm::cont::ErrorFilterExecution("No seeds provided.");
+  }
 
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
   if (!IsCellSupported(cells))
-    return vtkm::filter::Result();
+  {
+    throw vtkm::cont::ErrorFilterExecution("Cell type not supported.");
+  }
 
   if (!fieldMeta.IsPointField())
-    return vtkm::filter::Result();
+  {
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
+  }
 
   //todo: add check for rectilinear.
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>;
@@ -102,12 +109,12 @@ inline VTKM_CONT vtkm::filter::Result Streamline::DoExecute(
   outData.AddCellSet(res.polyLines);
   outData.AddCoordinateSystem(outputCoords);
 
-  return vtkm::filter::Result(outData);
+  return outData;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT bool Streamline::DoMapField(vtkm::filter::Result&,
+inline VTKM_CONT bool Streamline::DoMapField(vtkm::cont::DataSet&,
                                              const vtkm::cont::ArrayHandle<T, StorageType>&,
                                              const vtkm::filter::FieldMetadata&,
                                              const vtkm::filter::PolicyBase<DerivedPolicy>&,

@@ -124,9 +124,9 @@ class GameOfLife : public vtkm::filter::FilterDataSet<GameOfLife>
 
 public:
   template <typename Policy, typename Device>
-  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
-                                           vtkm::filter::PolicyBase<Policy> policy,
-                                           Device)
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                          vtkm::filter::PolicyBase<Policy> policy,
+                                          Device)
 
   {
     if (!this->PrintedDeviceMsg)
@@ -164,11 +164,11 @@ public:
     vtkm::cont::Field stateField("state", vtkm::cont::Field::ASSOC_POINTS, state);
     output.AddField(stateField);
 
-    return vtkm::filter::Result(output);
+    return output;
   }
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT bool DoMapField(vtkm::filter::Result&,
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet&,
                             const vtkm::cont::ArrayHandle<T, StorageType>&,
                             const vtkm::filter::FieldMetadata&,
                             const vtkm::filter::PolicyBase<DerivedPolicy>&,

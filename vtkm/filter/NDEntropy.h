@@ -50,12 +50,12 @@ public:
   void AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins);
 
   template <typename Policy, typename Device>
-  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& inData,
-                                           vtkm::filter::PolicyBase<Policy> policy,
-                                           Device);
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& inData,
+                                          vtkm::filter::PolicyBase<Policy> policy,
+                                          Device);
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT bool DoMapField(vtkm::filter::Result& result,
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,

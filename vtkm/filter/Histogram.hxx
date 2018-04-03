@@ -18,6 +18,7 @@
 //  this software.
 //============================================================================
 
+#include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/FieldHistogram.h>
 
@@ -37,7 +38,7 @@ inline VTKM_CONT Histogram::Histogram()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result Histogram::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
@@ -51,11 +52,11 @@ inline VTKM_CONT vtkm::filter::Result Histogram::DoExecute(
   worklet.Run(field, this->NumberOfBins, this->DataRange, delta, binArray, device);
 
   this->BinDelta = static_cast<vtkm::Float64>(delta);
-  return vtkm::filter::Result(inDataSet,
-                              binArray,
-                              this->GetOutputFieldName(),
-                              fieldMetadata.GetAssociation(),
-                              fieldMetadata.GetCellSetName());
+  return internal::CreateResult(inDataSet,
+                                binArray,
+                                this->GetOutputFieldName(),
+                                fieldMetadata.GetAssociation(),
+                                fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

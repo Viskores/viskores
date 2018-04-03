@@ -34,7 +34,7 @@ inline void Probe::SetGeometry(const vtkm::cont::DataSet& geometry)
 }
 
 template <typename DerivedPolicy, typename DeviceAdapter>
-VTKM_CONT inline vtkm::filter::Result Probe::DoExecute(
+VTKM_CONT inline vtkm::cont::DataSet Probe::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
@@ -54,11 +54,11 @@ VTKM_CONT inline vtkm::filter::Result Probe::DoExecute(
   output.AddField(vtkm::cont::Field(
     "HIDDEN", vtkm::cont::Field::ASSOC_CELL_SET, output.GetCellSet().GetName(), hcf));
 
-  return vtkm::filter::Result(output);
+  return output;
 }
 
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-VTKM_CONT inline bool Probe::DoMapField(vtkm::filter::Result& result,
+VTKM_CONT inline bool Probe::DoMapField(vtkm::cont::DataSet& result,
                                         const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                         const vtkm::filter::FieldMetadata& fieldMeta,
                                         const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -68,13 +68,13 @@ VTKM_CONT inline bool Probe::DoMapField(vtkm::filter::Result& result,
   {
     auto fieldArray =
       this->Worklet.ProcessPointField(input, device, typename DerivedPolicy::AllCellSetList());
-    result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
+    result.AddField(fieldMeta.AsField(fieldArray));
     return true;
   }
   else if (fieldMeta.IsCellField())
   {
     auto fieldArray = this->Worklet.ProcessCellField(input, device);
-    result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
+    result.AddField(fieldMeta.AsField(fieldArray));
     return true;
   }
 
