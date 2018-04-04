@@ -83,7 +83,9 @@ public:
 
   VTKM_CONT ~StorageBasicBase();
 
+  VTKM_CONT StorageBasicBase(StorageBasicBase&& src);
   VTKM_CONT StorageBasicBase(const StorageBasicBase& src);
+  VTKM_CONT StorageBasicBase operator=(StorageBasicBase&& src);
   VTKM_CONT StorageBasicBase operator=(const StorageBasicBase& src);
 
   /// \brief Return the number of bytes allocated for this storage object(Capacity).

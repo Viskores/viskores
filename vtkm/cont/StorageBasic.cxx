@@ -117,6 +117,19 @@ StorageBasicBase::~StorageBasicBase()
   this->ReleaseResources();
 }
 
+StorageBasicBase::StorageBasicBase(StorageBasicBase&& src)
+  : Array(src.Array)
+  , AllocatedByteSize(src.AllocatedByteSize)
+  , NumberOfValues(src.NumberOfValues)
+  , DeleteFunction(src.DeleteFunction)
+
+{
+  src.Array = nullptr;
+  src.AllocatedByteSize = 0;
+  src.NumberOfValues = 0;
+  src.DeleteFunction = nullptr;
+}
+
 StorageBasicBase::StorageBasicBase(const StorageBasicBase& src)
   : Array(src.Array)
   , AllocatedByteSize(src.AllocatedByteSize)
@@ -130,6 +143,21 @@ StorageBasicBase::StorageBasicBase(const StorageBasicBase& src)
       "Attempted to copy a storage array that needs deallocation. "
       "This is disallowed to prevent complications with deallocation.");
   }
+}
+
+StorageBasicBase StorageBasicBase::operator=(StorageBasicBase&& src)
+{
+  this->ReleaseResources();
+  this->Array = src.Array;
+  this->AllocatedByteSize = src.AllocatedByteSize;
+  this->NumberOfValues = src.NumberOfValues;
+  this->DeleteFunction = src.DeleteFunction;
+
+  src.Array = nullptr;
+  src.AllocatedByteSize = 0;
+  src.NumberOfValues = 0;
+  src.DeleteFunction = nullptr;
+  return *this;
 }
 
 StorageBasicBase StorageBasicBase::operator=(const StorageBasicBase& src)
