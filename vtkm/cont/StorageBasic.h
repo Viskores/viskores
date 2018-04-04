@@ -41,6 +41,12 @@ struct VTKM_ALWAYS_EXPORT StorageTagBasic
 namespace internal
 {
 
+/// Function that does all of VTK-m de-allocations for storage basic.
+/// This is exists so that stolen arrays can call the correct free
+/// function ( _aligned_malloc / cuda_free ).
+VTKM_CONT_EXPORT void free_memory(void* ptr);
+
+
 /// Class that does all of VTK-m allocations
 /// for storage basic. This is exists so that
 /// stolen arrays can call the correct free
@@ -48,14 +54,14 @@ namespace internal
 struct VTKM_CONT_EXPORT StorageBasicAllocator
 {
   void* allocate(size_t size, size_t align);
-  void free_memory(void* p);
 
   template <typename T>
-  void deallocate(T* p)
+  inline void deallocate(T* p)
   {
-    this->free_memory(static_cast<void*>(p));
+    internal::free_memory(static_cast<void*>(p));
   }
 };
+
 /// Base class for basic storage classes. This allow us to implement
 /// vtkm::cont::Storage<T, StorageTagBasic > for any T type with no overhead
 /// as all heavy logic is provide by a type-agnostic API including allocations, etc.
@@ -64,7 +70,17 @@ class VTKM_CONT_EXPORT StorageBasicBase
 public:
   using AllocatorType = StorageBasicAllocator;
   VTKM_CONT StorageBasicBase();
+
+  /// A non owning view of already allocated memory
   VTKM_CONT StorageBasicBase(const void* array, vtkm::Id size, vtkm::UInt64 sizeOfValue);
+
+  /// Transfer the ownership of already allocated memory to VTK-m
+  VTKM_CONT StorageBasicBase(const void* array,
+                             vtkm::Id size,
+                             vtkm::UInt64 sizeOfValue,
+                             void (*deleteFunction)(void*));
+
+
   VTKM_CONT ~StorageBasicBase();
 
   VTKM_CONT StorageBasicBase(const StorageBasicBase& src);
@@ -106,7 +122,23 @@ public:
   /// \brief Returns if vtkm will deallocate this memory. VTK-m StorageBasic
   /// is designed that VTK-m will not deallocate user passed memory, or
   /// instances that have been stolen (\c StealArray)
-  VTKM_CONT bool WillDeallocate() const { return this->DeallocateOnRelease; }
+  VTKM_CONT bool WillDeallocate() const { return this->DeleteFunction != nullptr; }
+
+  /// \brief Return the free function that will be used to free this memory.
+  ///
+  /// Get the function that VTK-m will call to deallocate the memory. This
+  /// is useful when stealing memory from VTK-m so that you call the correct
+  /// free/delete function when releasing the memory
+  using DeleteFunctionSignature = void (*)(void*);
+  DeleteFunctionSignature GetDeleteFunction() const { return this->DeleteFunction; }
+
+  /// \brief Change the Change the pointer that this class is using. Should only be used
+  /// by ExecutionArrayInterface sublcasses.
+  /// Note: This will release any previous allocated memory!
+  VTKM_CONT void SetBasePointer(const void* ptr,
+                                vtkm::Id numberOfValues,
+                                vtkm::UInt64 sizeOfValue,
+                                void (*deleteFunction)(void*));
 
   /// Return the memory location of the first element of the array data.
   VTKM_CONT void* GetBasePointer() const;
@@ -121,7 +153,7 @@ protected:
   void* Array;
   vtkm::UInt64 AllocatedByteSize;
   vtkm::Id NumberOfValues;
-  bool DeallocateOnRelease;
+  void (*DeleteFunction)(void*);
 };
 
 /// A basic implementation of an Storage object.
@@ -146,7 +178,11 @@ public:
   VTKM_CONT Storage();
 
   /// \brief construct storage that VTK-m is not responsible for
-  VTKM_CONT Storage(const ValueType* array, vtkm::Id numberOfValues = 0);
+  VTKM_CONT Storage(const ValueType* array, vtkm::Id numberOfValues);
+
+  /// \brief construct storage that was previously allocated and now VTK-m is
+  ///  responsible for
+  VTKM_CONT Storage(const ValueType* array, vtkm::Id numberOfValues, void (*deleteFunction)(void*));
 
   VTKM_CONT void Allocate(vtkm::Id numberOfValues);
 
@@ -171,7 +207,8 @@ public:
   /// Storage will never deallocate the array or be able to reallocate it. This
   /// is helpful for taking a reference for an array created internally by
   /// VTK-m and not having to keep a VTK-m object around. Obviously the caller
-  /// becomes responsible for destroying the memory.
+  /// becomes responsible for destroying the memory, and should before hand
+  /// grab the correct DeleteFunction by calling \c GetDeleteFunction
   ///
   VTKM_CONT ValueType* StealArray();
 };
