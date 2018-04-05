@@ -453,6 +453,7 @@ private:
 #pragma diag_suppress 2737
 #if (__CUDACC_VER_MAJOR__ >= 8)
 //CUDA 7.5 doesn't like suppressing error codes that don't exist yet
+#pragma diag_suppress 2668
 #pragma diag_suppress 2739
 #pragma diag_suppress 2828
 #endif
