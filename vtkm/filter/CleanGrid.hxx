@@ -34,9 +34,9 @@ inline VTKM_CONT CleanGrid::CleanGrid()
 }
 
 template <typename Policy, typename Device>
-inline VTKM_CONT vtkm::filter::Result CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
-                                                           vtkm::filter::PolicyBase<Policy> policy,
-                                                           Device)
+inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
+                                                          vtkm::filter::PolicyBase<Policy> policy,
+                                                          Device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
@@ -105,12 +105,12 @@ inline VTKM_CONT vtkm::filter::Result CleanGrid::DoExecute(const vtkm::cont::Dat
     }
   }
 
-  return Result(outData);
+  return outData;
 }
 
 template <typename ValueType, typename Storage, typename Policy, typename Device>
 inline VTKM_CONT bool CleanGrid::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   vtkm::filter::PolicyBase<Policy>,
@@ -119,11 +119,11 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
   if (this->GetCompactPointFields() && fieldMeta.IsPointField())
   {
     vtkm::cont::ArrayHandle<ValueType> compactedArray = this->MapPointField(input, Device());
-    result.GetDataSet().AddField(fieldMeta.AsField(compactedArray));
+    result.AddField(fieldMeta.AsField(compactedArray));
   }
   else
   {
-    result.GetDataSet().AddField(fieldMeta.AsField(input));
+    result.AddField(fieldMeta.AsField(input));
   }
 
   return true;

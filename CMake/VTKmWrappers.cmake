@@ -215,7 +215,7 @@ function(vtkm_declare_headers)
   #TODO: look at the testable and cuda options
   set(options CUDA)
   set(oneValueArgs TESTABLE)
-  set(multiValueArgs)
+  set(multiValueArgs EXCLUDE_FROM_TESTING)
   cmake_parse_arguments(VTKm_DH "${options}"
     "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
@@ -229,30 +229,21 @@ function(vtkm_declare_headers)
       set(VTKm_DH_TESTABLE ON)
   endif()
 
-  set(hfiles ${VTKm_DH_UNPARSED_ARGUMENTS})
+  set(hfiles ${VTKm_DH_UNPARSED_ARGUMENTS} ${VTKm_DH_EXCLUDE_FROM_TESTING})
   vtkm_get_kit_name(name dir_prefix)
 
   #only do header testing if enable testing is turned on
   if (VTKm_ENABLE_TESTING AND VTKm_DH_TESTABLE)
+    set_source_files_properties(${VTKm_DH_EXCLUDE_FROM_TESTING}
+      PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE
+      )
+
     vtkm_add_header_build_test(
       "${name}" "${dir_prefix}" "${VTKm_DH_CUDA}" ${hfiles})
   endif()
 
   vtkm_install_headers("${dir_prefix}" ${hfiles})
 endfunction(vtkm_declare_headers)
-
-#-----------------------------------------------------------------------------
-function(vtkm_install_template_sources)
-  set(hfiles ${ARGN})
-  vtkm_get_kit_name(name dir_prefix)
-
-  # CMake does not add installed files as project files, and template sources
-  # are not declared as source files anywhere, add a fake target here to let
-  # an IDE know that these sources exist.
-  add_custom_target(${name}_template_srcs SOURCES ${hfiles})
-
-  vtkm_install_headers("${dir_prefix}" ${hfiles})
-endfunction(vtkm_install_template_sources)
 
 #-----------------------------------------------------------------------------
 # Add a VTK-m library. The name of the library will match the "kit" name
@@ -318,10 +309,9 @@ function(vtkm_library)
   vtkm_generate_export_header(${lib_name})
 
   #test and install the headers
-  vtkm_declare_headers(${VTKm_LIB_HEADERS})
-
-  #install the template sources
-  vtkm_install_template_sources(${VTKm_LIB_TEMPLATE_SOURCES})
+  vtkm_declare_headers(${VTKm_LIB_HEADERS}
+                       EXCLUDE_FROM_TESTING ${VTKm_LIB_TEMPLATE_SOURCES}
+                       )
 
   #install the library itself
   install(TARGETS ${lib_name}

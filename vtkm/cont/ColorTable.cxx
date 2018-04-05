@@ -31,8 +31,24 @@ namespace cont
 
 namespace detail
 {
+bool loadColorTablePreset(vtkm::cont::ColorTable::Preset preset, vtkm::cont::ColorTable& table);
 std::set<std::string> GetPresetNames();
 bool loadColorTablePreset(std::string name, vtkm::cont::ColorTable& table);
+}
+
+//----------------------------------------------------------------------------
+ColorTable::ColorTable(vtkm::cont::ColorTable::Preset preset)
+  : Impl(std::make_shared<detail::ColorTableInternals>())
+{
+  const bool loaded = this->LoadPreset(preset);
+  if (!loaded)
+  { //if we failed to load the requested color table, call SetColorSpace
+    //so that the internal host side cache is constructed and we leave
+    //the constructor in a valid state. We use RGB as it is the default
+    //when the no parameter constructor is called
+    this->SetColorSpace(ColorSpace::LAB);
+  }
+  this->AddSegmentAlpha(this->Impl->TableRange.Min, 1.0f, this->Impl->TableRange.Max, 1.0f);
 }
 
 //----------------------------------------------------------------------------
@@ -45,7 +61,7 @@ ColorTable::ColorTable(const std::string& name)
     //so that the internal host side cache is constructed and we leave
     //the constructor in a valid state. We use RGB as it is the default
     //when the no parameter constructor is called
-    this->SetColorSpace(ColorSpace::RGB);
+    this->SetColorSpace(ColorSpace::LAB);
   }
   this->AddSegmentAlpha(this->Impl->TableRange.Min, 1.0f, this->Impl->TableRange.Max, 1.0f);
 }
@@ -86,6 +102,12 @@ ColorTable::ColorTable(const vtkm::Range& range,
 //----------------------------------------------------------------------------
 ColorTable::~ColorTable()
 {
+}
+
+//----------------------------------------------------------------------------
+bool ColorTable::LoadPreset(vtkm::cont::ColorTable::Preset preset)
+{
+  return detail::loadColorTablePreset(preset, *this);
 }
 
 //----------------------------------------------------------------------------
@@ -850,6 +872,12 @@ vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* ColorTable::GetHand
   this->Impl->ColorArraysChanged = false;
   this->Impl->OpacityArraysChanged = false;
   return this->Impl->ExecHandle;
+}
+
+//---------------------------------------------------------------------------
+vtkm::Id ColorTable::GetModifiedCount() const
+{
+  return this->Impl->HostSideCache->GetModifiedCount();
 }
 
 

@@ -100,18 +100,44 @@ enum struct ColorSpace
 /// mode where colors will pass through white when interpolating between two
 /// saturated colors.
 ///
-/// To map an vtkm::cont::ArrayHandle through the color and opacity transfer
-/// functions and into a RGB or RGBA array you will need to use
-/// vtkm::worklet::ColorTransferFunction. ColorTransferFunction has
-/// controls if you want to modify which ColorSpace (RGB, HSV, LAB, Diverging) you want to
-/// interpolate through.
+/// To map a field from a vtkm::cont::DataSet through the color and opacity transfer
+/// functions and into a RGB or RGBA array you should use vtkm::filter::FieldToColor.
 ///
 class VTKM_CONT_EXPORT ColorTable
 {
   std::shared_ptr<detail::ColorTableInternals> Impl;
 
 public:
-  /// Construct a color table from a preset color table
+  // Note: these are in flux and will change soon.
+  enum struct Preset
+  {
+    DEFAULT,
+    VIRIDIS,
+    COOL_TO_WARM,
+    COOL_TO_WARN_EXTENDED,
+    COLD_AND_HOT,
+    INFERNO,
+    BLACK_BODY_RADIATION,
+    SAMSEL_FIRE,
+    LINEAR_YGB,
+    BLACK_BLUE_AND_WHITE,
+    LINEAR_GREEN,
+    X_RAY,
+    JET,
+    RAINBOW_DESATURATED,
+    RAINBOW
+  };
+
+  /// \brief Construct a color table from a preset
+  ///
+  /// Constructs a color table from a given preset, which might include a NaN color.
+  /// The alpha table will have 2 entries of alpha = 1.0 with linear interpolation
+  ///
+  /// Note: these are a select set of the presets you can get by providing a string identifier.
+  ///
+  ColorTable(vtkm::cont::ColorTable::Preset preset = vtkm::cont::ColorTable::Preset::DEFAULT);
+
+  /// \brief Construct a color table from a preset color table
   ///
   /// Constructs a color table from a given preset, which might include a NaN color.
   /// The alpha table will have 2 entries of alpha = 1.0 with linear interpolation
@@ -134,20 +160,20 @@ public:
   /// "Jet"
   /// "Rainbow"
   ///
-  ColorTable(const std::string& name);
+  explicit ColorTable(const std::string& name);
 
   /// Construct a color table with a zero positions, and an invalid range
   ///
   /// Note: The color table will have 0 entries
   /// Note: The alpha table will have 0 entries
-  ColorTable(ColorSpace space = ColorSpace::RGB);
+  explicit ColorTable(ColorSpace space);
 
   /// Construct a color table with a 2 positions
   ///
   /// Note: The color table will have 2 entries of rgb = {1.0,1.0,1.0}
   /// Note: The alpha table will have 2 entries of alpha = 1.0 with linear
   ///       interpolation
-  ColorTable(const vtkm::Range& range, ColorSpace space = ColorSpace::RGB);
+  ColorTable(const vtkm::Range& range, ColorSpace space = ColorSpace::LAB);
 
   /// Construct a color table with 2 positions
   //
@@ -156,7 +182,7 @@ public:
   ColorTable(const vtkm::Range& range,
              const vtkm::Vec<float, 3>& rgb1,
              const vtkm::Vec<float, 3>& rgb2,
-             ColorSpace space = ColorSpace::RGB);
+             ColorSpace space = ColorSpace::LAB);
 
   /// Construct color and alpha and table with 2 positions
   ///
@@ -164,12 +190,17 @@ public:
   ColorTable(const vtkm::Range& range,
              const vtkm::Vec<float, 4>& rgba1,
              const vtkm::Vec<float, 4>& rgba2,
-             ColorSpace space = ColorSpace::RGB);
+             ColorSpace space = ColorSpace::LAB);
 
 
   ~ColorTable();
 
+  bool LoadPreset(vtkm::cont::ColorTable::Preset preset);
+
   /// Returns the name of all preset color tables
+  ///
+  /// This list will include all presets defined in vtkm::cont::ColorTable::Preset and could
+  /// include extras as well.
   ///
   std::set<std::string> GetPresets() const;
 
@@ -237,8 +268,8 @@ public:
   void SetNaNColor(const vtkm::Vec<float, 3>& c);
   const vtkm::Vec<float, 3>& GetNaNColor() const;
 
-  /// Remove all existing all values in both color and alpha tables
-  /// doesn't remove the clamping, below, and above range state or colors
+  /// Remove all existing values in both color and alpha tables.
+  /// Does not remove the clamping, below, and above range state or colors.
   void Clear();
 
   /// Remove only color table values
@@ -635,9 +666,12 @@ public:
   /// This object is only valid as long as the ColorTable is unmodified
   vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* GetHandleForExecution() const;
 
-  //Todo:
-  //
-  // 1. Implement Preset Methods
+
+  /// \brief returns the modified count for the virtual object handle of the exec color table
+  ///
+  /// The modified count allows consumers of a shared color table to keep track
+  /// if the color table has been modified since the last time they used it.
+  vtkm::Id GetModifiedCount() const;
 };
 }
 } //namespace vtkm::cont

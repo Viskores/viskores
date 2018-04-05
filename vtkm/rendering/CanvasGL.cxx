@@ -214,9 +214,9 @@ void CanvasGL::AddColorBar(const vtkm::Bounds& bounds,
                            bool horizontal) const
 {
   const int n = 256;
-  //map through the color table for our 256 points as the first step
+  //map through the color table for our 256 + 1 points as the first step
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> colors;
-  colorTable.Sample(n, colors);
+  colorTable.Sample(n + 1, colors);
 
   vtkm::Float32 startX = static_cast<vtkm::Float32>(bounds.X.Min);
   vtkm::Float32 startY = static_cast<vtkm::Float32>(bounds.Y.Min);

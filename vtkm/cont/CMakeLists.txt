@@ -62,7 +62,6 @@ set(headers
   DataSetBuilderRectilinear.h
   DataSetBuilderUniform.h
   DataSetFieldAdd.h
-  DecomposerMultiBlock.h
   DeviceAdapter.h
   DeviceAdapterAlgorithm.h
   DeviceAdapterListTag.h
@@ -74,6 +73,7 @@ set(headers
   ErrorBadDevice.h
   ErrorBadType.h
   ErrorBadValue.h
+  ErrorFilterExecution.h
   ErrorExecution.h
   ErrorInternal.h
   Field.h

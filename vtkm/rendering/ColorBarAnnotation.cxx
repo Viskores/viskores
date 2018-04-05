@@ -27,11 +27,11 @@ namespace rendering
 {
 
 ColorBarAnnotation::ColorBarAnnotation()
+  : ColorTable(vtkm::cont::ColorSpace::LAB)
+  , Position(vtkm::Range(-0.88, +0.88), vtkm::Range(+0.87, +0.92), vtkm::Range(0, 0))
+  , Horizontal(true)
+  , FieldName("")
 {
-  vtkm::Bounds bounds(vtkm::Range(-0.88, +0.88), vtkm::Range(+0.87, +0.92), vtkm::Range(0, 0));
-  Position = bounds;
-  Horizontal = true;
-  FieldName = "";
 }
 
 ColorBarAnnotation::~ColorBarAnnotation()

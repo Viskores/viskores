@@ -119,9 +119,8 @@ int main(int argc, char* argv[])
   filter.SetGenerateNormals(false);
   filter.SetMergeDuplicatePoints(false);
   filter.SetIsoValue(0, isovalue);
-  vtkm::filter::Result result = filter.Execute(inputData, inputData.GetField(fieldName));
-  filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
-  vtkm::cont::DataSet& outputData = result.GetDataSet();
+  filter.SetActiveField(fieldName);
+  vtkm::cont::DataSet outputData = filter.Execute(inputData);
   // Render a separate image with the output isosurface
   std::cout << "about to render the results of the MarchingCubes filter" << std::endl;
   vtkm::rendering::Scene scene2;

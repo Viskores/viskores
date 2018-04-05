@@ -57,10 +57,16 @@ public:
   // For std::exception compatibility:
   const char* what() const noexcept override { return this->Message.c_str(); }
 
+  /// Returns true if this exception is device independent. For exceptions that
+  /// are not device independent, `vtkm::TryExecute`, for example, may try
+  /// executing the code on other available devices.
+  bool GetIsDeviceIndependent() const { return this->IsDeviceIndependent; }
+
 protected:
   Error() {}
-  Error(const std::string message)
+  Error(const std::string& message, bool is_device_independent = false)
     : Message(message)
+    , IsDeviceIndependent(is_device_independent)
   {
   }
 
@@ -68,6 +74,7 @@ protected:
 
 private:
   std::string Message;
+  bool IsDeviceIndependent;
 };
 
 VTKM_SILENCE_WEAK_VTABLE_WARNING_END

@@ -25,10 +25,6 @@
 #include <vtkm/filter/internal/ResolveFieldTypeAndExecute.h>
 #include <vtkm/filter/internal/ResolveFieldTypeAndMap.h>
 
-#include <vtkm/cont/Error.h>
-#include <vtkm/cont/ErrorBadAllocation.h>
-#include <vtkm/cont/ErrorExecution.h>
-
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
@@ -57,7 +53,7 @@ namespace detail
 template <typename Derived, typename DerivedPolicy>
 struct FilterDataSetPrepareForExecutionFunctor
 {
-  vtkm::filter::Result Result;
+  vtkm::cont::DataSet Result;
   Derived* Self;
   const vtkm::cont::DataSet& Input;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
@@ -76,7 +72,10 @@ struct FilterDataSetPrepareForExecutionFunctor
   VTKM_CONT bool operator()(Device)
   {
     this->Result = this->Self->DoExecute(this->Input, this->Policy, Device());
-    return this->Result.IsValid();
+    // `DoExecute` is expected to throw an exception on any failure. If it
+    // returned anything, it's taken as a success and we won't try executing on
+    // other available devices.
+    return true;
   }
 
 private:
@@ -86,9 +85,9 @@ private:
 
 template <typename Derived>
 template <typename DerivedPolicy>
-inline VTKM_CONT Result
-FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
-                                            const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
+inline VTKM_CONT vtkm::cont::DataSet FilterDataSet<Derived>::PrepareForExecution(
+  const vtkm::cont::DataSet& input,
+  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   // When we move to C++11, this could probably be an anonymous class
   detail::FilterDataSetPrepareForExecutionFunctor<Derived, DerivedPolicy> functor(
@@ -102,35 +101,25 @@ FilterDataSet<Derived>::PrepareForExecution(const vtkm::cont::DataSet& input,
 
 //-----------------------------------------------------------------------------
 template <typename Derived>
-inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(Result& result,
-                                                                 const vtkm::cont::Field& field)
-{
-  return this->MapFieldOntoOutput(result, field, vtkm::filter::PolicyDefault());
-}
-
-//-----------------------------------------------------------------------------
-template <typename Derived>
 template <typename DerivedPolicy>
 inline VTKM_CONT bool FilterDataSet<Derived>::MapFieldOntoOutput(
-  Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::Field& field,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
 {
   bool valid = false;
-  if (result.IsValid())
-  {
-    vtkm::filter::FieldMetadata metaData(field);
-    using FunctorType = internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
-    FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
 
-    using Traits = vtkm::filter::FilterTraits<Derived>;
-    vtkm::cont::CastAndCall(
-      vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->GetRuntimeDeviceTracker());
-  }
+  vtkm::filter::FieldMetadata metaData(field);
+  using FunctorType = internal::ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
+  FunctorType functor(static_cast<Derived*>(this), result, metaData, policy, valid);
+
+  using Traits = vtkm::filter::FilterTraits<Derived>;
+  vtkm::cont::CastAndCall(
+    vtkm::filter::ApplyPolicy(field, policy, Traits()), functor, this->GetRuntimeDeviceTracker());
 
   //the bool valid will be modified by the map algorithm to hold if the
   //mapping occurred or not. If the mapping was good a new field has been
-  //added to the Result that was passed in.
+  //added to the result that was passed in.
   return valid;
 }
 }

@@ -135,11 +135,30 @@ struct TemplatedTests
     }
   }
 
+  void UserFreeFunction()
+  {
+    ValueType* temp = new ValueType[ARRAY_SIZE];
+    StorageType arrayStorage(
+      temp, ARRAY_SIZE, [](void* ptr) { delete[] static_cast<ValueType*>(ptr); });
+    VTKM_TEST_ASSERT(temp == arrayStorage.GetArray(),
+                     "improper pointer after telling storage to own user allocated memory");
+
+    const ValueType BASIC_ALLOC_VALUE = ValueType(48);
+    this->SetStorage(arrayStorage, BASIC_ALLOC_VALUE);
+    VTKM_TEST_ASSERT(this->CheckStorage(arrayStorage, BASIC_ALLOC_VALUE),
+                     "Array not holding value.");
+
+    arrayStorage.Allocate(ARRAY_SIZE * 2);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE * 2,
+                     "Array not reallocated correctly.");
+  }
+
   void operator()()
   {
     ValueType* stolenArray = StealArray1();
 
     BasicAllocation();
+    UserFreeFunction();
 
     StealArray2(stolenArray);
   }

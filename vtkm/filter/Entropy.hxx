@@ -21,6 +21,8 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/FieldEntropy.h>
 
+#include <vtkm/filter/internal/CreateResult.h>
+
 namespace vtkm
 {
 namespace filter
@@ -35,7 +37,7 @@ inline VTKM_CONT Entropy::Entropy()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result Entropy::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet Entropy::DoExecute(
   const vtkm::cont::DataSet& inDataSet,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMetadata,
@@ -51,11 +53,11 @@ inline VTKM_CONT vtkm::filter::Result Entropy::DoExecute(
   entropy.Allocate(1);
   entropy.GetPortalControl().Set(0, e);
 
-  return vtkm::filter::Result(inDataSet,
-                              entropy,
-                              this->GetOutputFieldName(),
-                              fieldMetadata.GetAssociation(),
-                              fieldMetadata.GetCellSetName());
+  return internal::CreateResult(inDataSet,
+                                entropy,
+                                this->GetOutputFieldName(),
+                                fieldMetadata.GetAssociation(),
+                                fieldMetadata.GetCellSetName());
 }
 }
 } // namespace vtkm::filter
