@@ -69,6 +69,15 @@ public:
     vtkm::cont::ColorTable tableRGBA(range, rgba1, rgba2, diverging);
     VTKM_TEST_ASSERT(tableRGBA.GetColorSpace() == diverging, "color space not saved");
     VTKM_TEST_ASSERT(tableRGBA.GetRange() == range, "color range not saved");
+
+    //verify we can store a vector of tables
+    std::vector<vtkm::cont::ColorTable> tables;
+    tables.push_back(table);
+    tables.push_back(tableRGB);
+    tables.push_back(tableRGBA);
+    tables.push_back(tableRGBA);
+    tables.push_back(tableRGB);
+    tables.push_back(table);
   }
 
   static void TestLoadPresets()

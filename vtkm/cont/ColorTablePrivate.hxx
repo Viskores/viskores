@@ -48,9 +48,9 @@ struct ColorTableInternals
   //  AboveRangeColor
   //Note the pointers inside the host side portal are not valid, as they
   //are execution
-  vtkm::exec::ColorTableBase* HostSideCache = nullptr;
+  std::unique_ptr<vtkm::exec::ColorTableBase> HostSideCache;
   //Execution side version of the ColorTableBase.
-  vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* ExecHandle = nullptr;
+  std::unique_ptr<vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>> ExecHandle;
 
   std::vector<double> ColorNodePos;
   std::vector<vtkm::Vec<float, 3>> ColorRGB;
