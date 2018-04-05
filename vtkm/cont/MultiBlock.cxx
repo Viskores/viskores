@@ -139,24 +139,6 @@ vtkm::Id MultiBlock::GetNumberOfBlocks() const
 }
 
 VTKM_CONT
-vtkm::Id MultiBlock::GetGlobalNumberOfBlocks() const
-{
-  auto world = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  const auto local_count = this->GetNumberOfBlocks();
-
-  diy::Master master(world, 1, -1);
-  int block_not_used = 1;
-  master.add(world.rank(), &block_not_used, new diy::Link());
-  // empty link since we're only using collectives.
-  master.foreach ([=](void*, const diy::Master::ProxyWithLink& cp) {
-    cp.all_reduce(local_count, std::plus<vtkm::Id>());
-  });
-  master.process_collectives();
-  vtkm::Id global_count = master.proxy(0).get<vtkm::Id>();
-  return global_count;
-}
-
-VTKM_CONT
 const vtkm::cont::DataSet& MultiBlock::GetBlock(vtkm::Id blockId) const
 {
   return this->Blocks[static_cast<std::size_t>(blockId)];

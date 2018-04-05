@@ -64,13 +64,6 @@ public:
   VTKM_CONT
   vtkm::Id GetNumberOfBlocks() const;
 
-  /// Returns the number of blocks across all ranks. For non-MPI builds, this
-  /// will be same as `GetNumberOfBlocks()`.
-  /// This method is not thread-safe and may involve global communication across
-  /// all ranks in distributed environments with MPI.
-  VTKM_CONT
-  vtkm::Id GetGlobalNumberOfBlocks() const;
-
   VTKM_CONT
   const vtkm::cont::DataSet& GetBlock(vtkm::Id blockId) const;
 
