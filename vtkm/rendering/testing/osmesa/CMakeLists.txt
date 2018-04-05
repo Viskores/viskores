@@ -17,11 +17,10 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
-vtkm_configure_component_OSMesa()
-if (VTKm_OSMesa_FOUND)
-  set(unit_tests
+
+set(unit_tests
     UnitTestMapperOSMesa.cxx
     )
-  VTKm_unit_tests(SOURCES ${unit_tests})
-endif()
+
+vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
 

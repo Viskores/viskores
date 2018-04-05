@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
   vtkm::rendering::Camera camera = vtkm::rendering::Camera();
 
   //Set3DView
-  vtkm::Bounds coordsBounds = coords.GetBounds(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+  vtkm::Bounds coordsBounds = coords.GetBounds();
 
   camera.ResetToBounds(coordsBounds);
 

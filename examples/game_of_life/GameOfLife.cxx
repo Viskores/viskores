@@ -17,6 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+// Must be included before any other GL includes:
+#include <GL/glew.h>
 
 // Must be included before any other GL includes:
 #include <GL/glew.h>

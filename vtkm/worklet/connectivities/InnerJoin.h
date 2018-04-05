@@ -104,6 +104,6 @@ public:
     Merge merge(scatter);
     vtkm::worklet::DispatcherMapField<Merge, DeviceAdapter> mergeDisp(merge);
     mergeDisp.Invoke(key1, value1, lbs, value2, keyOut, value1Out, value2Out);
-  };
+  }
 };
 #endif //vtk_m_worklet_connectivity_InnerJoin_h

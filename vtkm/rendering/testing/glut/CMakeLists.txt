@@ -17,15 +17,19 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
+if(NOT TARGET GLUT::GLUT)
+  find_package(GLUT QUIET)
 
-vtkm_configure_component_GLUT()
-if(VTKm_GLUT_FOUND)
-  set(unit_tests
-    UnitTestMapperGLUT.cxx
-    )
-  VTKm_unit_tests(
-    SOURCES ${unit_tests}
-    TEST_ARGS -B
-    )
+  if(NOT TARGET GLUT::GLUT)
+    return()
+  endif()
 endif()
+
+set(unit_tests
+  UnitTestMapperGLUT.cxx
+  )
+
+vtkm_unit_tests(SOURCES ${unit_tests}
+                TEST_ARGS -B
+                LIBRARIES vtkm_rendering GLUT::GLUT)
 

@@ -1,22 +1,24 @@
-##============================================================================
+##=============================================================================
+##
 ##  Copyright (c) Kitware, Inc.
 ##  All rights reserved.
 ##  See LICENSE.txt for details.
+##
 ##  This software is distributed WITHOUT ANY WARRANTY; without even
 ##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 ##  PURPOSE.  See the above copyright notice for more information.
 ##
-##  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-##  Copyright 2014 UT-Battelle, LLC.
-##  Copyright 2014 Los Alamos National Security.
+##  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+##  Copyright 2017 UT-Battelle, LLC.
+##  Copyright 2017 Los Alamos National Security.
 ##
 ##  Under the terms of Contract DE-NA0003525 with NTESS,
 ##  the U.S. Government retains certain rights in this software.
-##
 ##  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
-##============================================================================
+##
+##=============================================================================
 
 #Currently all we are going to build is a set of options that are possible
 #based on the compiler. For now we are going on the presumption
@@ -66,7 +68,23 @@
 #
 #
 
-function(set_vectorization_flags_properties vec_levels_var)
+# guard agaisnt building vectorization_flags more than once
+if(TARGET vtkm_vectorization_flags)
+  return()
+endif()
+
+add_library(vtkm_vectorization_flags INTERFACE)
+if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+  install(TARGETS vtkm_vectorization_flags EXPORT ${VTKm_EXPORT_NAME})
+endif()
+
+# If we are using MSVC stop after the interface so that the interface is
+# consistently defined even for compilers such as MSVC that we don't
+# have vectorization flag support for yet.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  return()
+endif()
+
 set(vec_levels none native)
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -77,26 +95,27 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   set(native_flags -march=native)
   set(avx_flags -mavx)
   set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
-
   if (CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.7 OR
-      CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.7)
-    #if GNU is less than 4.9 you get avx, avx2
-    list(APPEND vec_levels avx2)
-  elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
-    #if GNU is less than 5.1 you get avx, avx2, and some avx512
-    list(APPEND vec_levels avx2 avx512)
-    set(avx512_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
-  else()
-    #if GNU is 5.1+ you get avx, avx2, and more avx512
-    list(APPEND vec_levels avx2 avx512)
-    set(avx512_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd -mavx512vl -mavx512bw -mavx512dq -mavx512ifma -mavx512vbmi)
-  endif()
+  CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.7)
+  #if GNU is less than 4.9 you get avx, avx2
+  list(APPEND vec_levels avx2)
+elseif(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.1)
+  #if GNU is less than 5.1 you get avx, avx2, and some avx512
+  list(APPEND vec_levels avx2 avx512-knl)
+  set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
+else()
+  #if GNU is 5.1+ you get avx, avx2, and more avx512
+  list(APPEND vec_levels avx2 avx512-skx avx512-knl)
+  set(knl_flags ${avx2_flags} -mavx512f -mavx512pf -mavx512er -mavx512cd)
+  set(skylake_flags ${avx2_flags} -mavx512f -mavx512dq -mavx512cd -mavx512bw -mavx512vl)
+endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  list(APPEND vec_levels avx avx2 avx512)
+  list(APPEND vec_levels avx avx2 avx512-skx avx512-knl)
   set(native_flags -march=native)
   set(avx_flags -mavx)
   set(avx2_flags ${avx_flags} -mf16c -mavx2 -mfma -mlzcnt -mbmi -mbmi2)
-  set(avx512_flags ${avx2_flags} -mavx512)
+  set(knl_flags ${avx2_flags} -avx512f -avx512cd -avx512dq -avx512bw -avx512vl)
+  set(skylake_flags ${avx2_flags} -avx512f -avx512cd -avx512er -avx512pf)
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
   #While Clang support AVX512, no version of AppleClang has that support yet
   list(APPEND vec_levels avx avx2)
@@ -123,25 +142,19 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16.0)
     list(APPEND vec_levels avx avx2)
   else()
-    list(APPEND vec_levels avx avx2 avx512 knl)
-    set(avx512_flags -xCORE-AVX512)
-    set(knl_flags -xMIC-AVX512)
+    list(APPEND vec_levels avx avx2 avx512-skx avx512-knl)
+    set(knl_flags ${knl_flags} -xMIC-AVX512)
+    set(skylake_flags ${skylake_flags} -xCORE-AVX512)
   endif()
 endif()
 
 set_property(GLOBAL PROPERTY VTKm_NATIVE_FLAGS ${native_flags})
 set_property(GLOBAL PROPERTY VTKm_AVX_FLAGS ${avx_flags})
 set_property(GLOBAL PROPERTY VTKm_AVX2_FLAGS ${avx2_flags})
-set_property(GLOBAL PROPERTY VTKm_AVX512_FLAGS ${avx512_flags})
-set_property(GLOBAL PROPERTY VTKm_KNLAVX512_FLAGS ${knl_flags})
-set(${vec_levels_var} ${vec_levels} PARENT_SCOPE)
 
-endfunction() # set_vectorization_flags_properties
+set_property(GLOBAL PROPERTY VTKm_KNL_FLAGS ${knl_flags})
+set_property(GLOBAL PROPERTY VTKm_SKYLAKE_FLAGS ${skylake_flags})
 
-
-set_vectorization_flags_properties(vec_levels)
-
-#
 # Now that we have set up what levels the compiler lets setup the CMake option
 # We use a combo box style property, so that ccmake and cmake-gui have a
 # nice interface
@@ -163,16 +176,21 @@ elseif(VTKm_Vectorization STREQUAL "avx")
   get_property(flags GLOBAL PROPERTY VTKm_AVX_FLAGS)
 elseif(VTKm_Vectorization STREQUAL "avx2")
   get_property(flags GLOBAL PROPERTY VTKm_AVX2_FLAGS)
-elseif(VTKm_Vectorization STREQUAL "avx512")
-  get_property(flags GLOBAL PROPERTY VTKm_AVX512_FLAGS)
-elseif(VTKm_Vectorization STREQUAL "knl")
-  get_property(flags GLOBAL PROPERTY VTKm_KNLAVX512_FLAGS)
+elseif(VTKm_Vectorization STREQUAL "avx512-skx")
+  get_property(flags GLOBAL PROPERTY VTKm_SKYLAKE_FLAGS)
+elseif(VTKm_Vectorization STREQUAL "avx512-knl")
+  get_property(flags GLOBAL PROPERTY VTKm_KNL_FLAGS)
 endif()
 
-#guard against adding the flags multiple times, which happens when multiple
-#backends include this file
-if(NOT VTKm_Vectorization_flags_added)
-  set(VTKm_Vectorization_flags_added true)
-  set_property(GLOBAL PROPERTY VTKm_Vectorization_FLAGS ${flags})
-  list(APPEND VTKm_COMPILE_OPTIONS ${flags})
+target_compile_options(vtkm_vectorization_flags
+  INTERFACE $<$<COMPILE_LANGUAGE:CXX>:${flags}>
+  )
+
+if(TARGET vtkm::cuda AND flags AND NOT CMAKE_CUDA_HOST_COMPILER)
+  # Also propagate down these optimizations when building host side code
+  # with cuda. To be safe we only do this when we know the C++ and CUDA
+  # host compiler are from the same vendor
+  target_compile_options(vtkm_vectorization_flags
+    INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="${flags}">
+    )
 endif()

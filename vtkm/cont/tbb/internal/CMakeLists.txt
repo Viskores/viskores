@@ -31,7 +31,7 @@ set(headers
 if (VTKm_ENABLE_TBB)
   if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.3)
     if("${TBB_VERSION_MAJOR}.${TBB_VERSION_MINOR}" VERSION_LESS 4.0)
-      MESSAGE(FATAL_ERROR "VTK-m not tested with TBB before version 4.0. Please upgrade your TBB library.")
+      # MESSAGE(FATAL_ERROR "VTK-m not tested with TBB before version 4.0. Please upgrade your TBB library.")
     endif()
   endif()
 endif()
@@ -46,23 +46,9 @@ if (NOT VTKm_ENABLE_TBB)
   return()
 endif()
 
-add_library(vtkm_cont_tbb OBJECT
-  ArrayManagerExecutionTBB.cxx
-  DeviceAdapterAlgorithmTBB.cxx
-  ExecutionArrayInterfaceBasicTBB.cxx
-  ParallelSortTBB.cxx
-  )
-
-vtkm_setup_msvc_properties(vtkm_cont_tbb)
-
-target_compile_features(vtkm_cont_tbb PRIVATE cxx_auto_type)
-target_compile_definitions(vtkm_cont_tbb PRIVATE vtkm_cont_EXPORTS)
-if(BUILD_SHARED_LIBS)
-  set_property(TARGET vtkm_cont_tbb PROPERTY POSITION_INDEPENDENT_CODE ON)
-endif()
-
-target_include_directories(vtkm_cont_tbb PRIVATE
-    "${VTKm_SOURCE_DIR}"
-    "${VTKm_BINARY_INCLUDE_DIR}"
-    ${VTKm_BACKEND_INCLUDE_DIRS}
-  )
+target_sources(vtkm_cont PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionTBB.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmTBB.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicTBB.cxx
+  ${CMAKE_CURRENT_SOURCE_DIR}/ParallelSortTBB.cxx
+)

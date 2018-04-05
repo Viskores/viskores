@@ -19,31 +19,21 @@
 ##  this software.
 ##
 ##=============================================================================
-
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 project(GameOfLife CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED
-  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
-  )
+find_package(VTKm REQUIRED QUIET)
+vtkm_find_gl(OPTIONAL GL GLUT GLEW)
 
-if(VTKm_CUDA_FOUND)
+if(TARGET OpenGL::GL AND
+   TARGET GLUT::GLUT AND
+   TARGET GLEW::GLEW)
+  if(TARGET vtkm::cuda)
+    add_executable(GameOfLife GameOfLife.cu LoadShaders.h)
+  else()
+    add_executable(GameOfLife GameOfLife.cxx LoadShaders.h)
+  endif()
 
-  set(old_nvcc_flags ${CUDA_NVCC_FLAGS})
-  set(old_cxx_flags ${CMAKE_CXX_FLAGS})
-  vtkm_setup_nvcc_flags( old_nvcc_flags old_cxx_flags)
-  vtkm_disable_troublesome_thrust_warnings()
-
-  cuda_add_executable(GameOfLife GameOfLife.cu LoadShaders.h)
-
-  set(CUDA_NVCC_FLAGS ${old_nvcc_flags})
-  set(CMAKE_CXX_FLAGS ${old_cxx_flags})
-else()
-  add_executable(GameOfLife GameOfLife.cxx LoadShaders.h)
+  target_link_libraries(GameOfLife PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
 endif()
-
-
-target_include_directories(GameOfLife PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(GameOfLife PRIVATE ${VTKm_LIBRARIES})
-target_compile_options(GameOfLife PRIVATE ${VTKm_COMPILE_OPTIONS})

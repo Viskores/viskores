@@ -19,79 +19,47 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(Tetrahedra CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
-  )
+find_package(VTKm REQUIRED QUIET)
+vtkm_find_gl(OPTIONAL GL GLUT GLEW)
 
-
-if(VTKm_OpenGL_FOUND AND VTKm_GLUT_FOUND)
+if(TARGET OpenGL::GL AND
+   TARGET GLUT::GLUT AND
+   TARGET GLEW::GLEW)
   add_executable(TetrahedralizeExplicitGrid_SERIAL TetrahedralizeExplicitGrid.cxx)
-  target_include_directories(TetrahedralizeExplicitGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(TetrahedralizeExplicitGrid_SERIAL PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(TetrahedralizeExplicitGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
-
   add_executable(TriangulateExplicitGrid_SERIAL TriangulateExplicitGrid.cxx)
-  target_include_directories(TriangulateExplicitGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(TriangulateExplicitGrid_SERIAL PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(TriangulateExplicitGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
-
   add_executable(TetrahedralizeUniformGrid_SERIAL TetrahedralizeUniformGrid.cxx)
-  target_include_directories(TetrahedralizeUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(TetrahedralizeUniformGrid_SERIAL PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(TetrahedralizeUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
-
   add_executable(TriangulateUniformGrid_SERIAL TriangulateUniformGrid.cxx)
-  target_include_directories(TriangulateUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(TriangulateUniformGrid_SERIAL PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(TriangulateUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
 
-  if(VTKm_CUDA_FOUND)
-    # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS})
+  target_link_libraries(TetrahedralizeExplicitGrid_SERIAL PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+  target_link_libraries(TriangulateExplicitGrid_SERIAL PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+  target_link_libraries(TetrahedralizeUniformGrid_SERIAL PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+  target_link_libraries(TriangulateUniformGrid_SERIAL PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
 
-    cuda_add_executable(TetrahedralizeExplicitGrid_CUDA TetrahedralizeExplicitGrid.cu)
-    target_include_directories(TetrahedralizeExplicitGrid_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(TetrahedralizeExplicitGrid_CUDA PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(TetrahedralizeExplicitGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+  if(TARGET vtkm::cuda)
+    add_executable(TetrahedralizeExplicitGrid_CUDA TetrahedralizeExplicitGrid.cu)
+    add_executable(TriangulateExplicitGrid_CUDA TriangulateExplicitGrid.cu)
+    add_executable(TetrahedralizeUniformGrid_CUDA TetrahedralizeUniformGrid.cu)
+    add_executable(TriangulateUniformGrid_CUDA TriangulateUniformGrid.cu)
 
-    cuda_add_executable(TriangulateExplicitGrid_CUDA TriangulateExplicitGrid.cu)
-    target_include_directories(TriangulateExplicitGrid_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(TriangulateExplicitGrid_CUDA PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(TriangulateExplicitGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
-
-    cuda_add_executable(TetrahedralizeUniformGrid_CUDA TetrahedralizeUniformGrid.cu)
-    target_include_directories(TetrahedralizeUniformGrid_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(TetrahedralizeUniformGrid_CUDA PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(TetrahedralizeUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
-
-    cuda_add_executable(TriangulateUniformGrid_CUDA TriangulateUniformGrid.cu)
-    target_include_directories(TriangulateUniformGrid_CUDA PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(TriangulateUniformGrid_CUDA PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(TriangulateUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+    target_link_libraries(TetrahedralizeExplicitGrid_CUDA PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+    target_link_libraries(TriangulateExplicitGrid_CUDA PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+    target_link_libraries(TetrahedralizeUniformGrid_CUDA PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+    target_link_libraries(TriangulateUniformGrid_CUDA PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
   endif()
 
-  if(VTKm_ENABLE_TBB)
+  if(TARGET vtkm::tbb)
     add_executable(TetrahedralizeExplicitGrid_TBB TetrahedralizeExplicitGridTBB.cxx)
-    target_include_directories(TetrahedralizeExplicitGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(TetrahedralizeExplicitGrid_TBB PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(TetrahedralizeExplicitGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
-
     add_executable(TriangulateExplicitGrid_TBB TriangulateExplicitGridTBB.cxx)
-    target_include_directories(TriangulateExplicitGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(TriangulateExplicitGrid_TBB PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(TriangulateExplicitGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
-
     add_executable(TetrahedralizeUniformGrid_TBB TetrahedralizeUniformGridTBB.cxx)
-    target_include_directories(TetrahedralizeUniformGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(TetrahedralizeUniformGrid_TBB PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(TetrahedralizeUniformGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
-
     add_executable(TriangulateUniformGrid_TBB TriangulateUniformGridTBB.cxx)
-    target_include_directories(TriangulateUniformGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(TriangulateUniformGrid_TBB PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(TriangulateUniformGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
-  endif()
 
+    target_link_libraries(TetrahedralizeExplicitGrid_TBB PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+    target_link_libraries(TriangulateExplicitGrid_TBB PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+    target_link_libraries(TetrahedralizeUniformGrid_TBB PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+    target_link_libraries(TriangulateUniformGrid_TBB PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+  endif()
 endif()

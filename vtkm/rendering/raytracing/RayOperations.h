@@ -162,8 +162,7 @@ public:
     vtkm::UInt8 statusUInt8;
     if (status < 0 || status > 255)
     {
-      throw vtkm::cont::ErrorBadValue("Rays GetStatusCount: invalid status");
-      return 0;
+      throw vtkm::cont::ErrorBadValue("Rays GetStatusCound: invalid status");
     }
 
     statusUInt8 = static_cast<vtkm::UInt8>(status);

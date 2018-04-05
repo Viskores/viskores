@@ -90,6 +90,7 @@ public:
   VTKM_EXEC_CONT
   FillSupernodes() {}
 
+  VTKM_EXEC
   vtkm::Id operator()(const vtkm::Id& upCandidate, const vtkm::Id& downCandidate) const
   {
     vtkm::Id isSupernode = ((upCandidate != 1) || (downCandidate != 1));

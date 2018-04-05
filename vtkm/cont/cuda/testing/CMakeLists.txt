@@ -34,4 +34,4 @@ set(unit_tests
   UnitTestCudaPointLocatorUniformGrid.cxx
   UnitTestCudaVirtualObjectHandle.cu
   )
-vtkm_unit_tests(CUDA SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests})

@@ -19,31 +19,24 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(TauTiming CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB Rendering
-  )
+find_package(VTKm REQUIRED QUIET)
 
-add_executable(Tau_timing_SERIAL TauTiming.cxx)
-target_include_directories(Tau_timing_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(Tau_timing_SERIAL ${VTKm_LIBRARIES})
-target_compile_options(Tau_timing_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
+if(TARGET vtkm_rendering)
 
-if(VTKm_TBB_FOUND)
-  add_executable(Tau_timing_TBB TauTimingTBB.cxx)
-  target_include_directories(Tau_timing_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(Tau_timing_TBB ${VTKm_LIBRARIES})
-  target_compile_options(Tau_timing_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
-endif()
+  add_executable(Tau_timing_SERIAL TauTiming.cxx)
+  target_link_libraries(Tau_timing_SERIAL vtkm_cont)
 
-if(VTKm_OpenGL_FOUND)
-  if(VTKm_CUDA_FOUND)
-    # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS})
-    cuda_add_executable(Tau_timing_CUDA TauTiming.cu)
-    target_include_directories(Tau_timing_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(Tau_timing_CUDA PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(Tau_timing_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+  if(TARGET vtkm::tbb)
+    add_executable(Tau_timing_TBB TauTimingTBB.cxx)
+    target_link_libraries(Tau_timing_TBB vtkm_cont)
   endif()
- endif()
+
+  if(TARGET vtkm::cuda)
+    add_executable(Tau_timing_CUDA TauTiming.cu)
+    target_link_libraries(Tau_timing_CUDA PRIVATE vtkm_cont)
+  endif()
+endif()

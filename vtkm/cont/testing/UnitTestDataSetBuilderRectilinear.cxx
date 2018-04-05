@@ -178,12 +178,14 @@ void RectilinearTests()
       std::vector<T> varP1D(static_cast<unsigned long>(numPoints));
       for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
       {
-        varP1D[i] = static_cast<T>(i * 1.1f);
+        float fi = static_cast<float>(i);
+        varP1D[i] = static_cast<T>(fi * 1.1f);
       }
       std::vector<T> varC1D(static_cast<unsigned long>(numCells));
       for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
       {
-        varC1D[i] = static_cast<T>(i * 1.1f);
+        float fi = static_cast<float>(i);
+        varC1D[i] = static_cast<T>(fi * 1.1f);
       }
       std::cout << "  Create with std::vector" << std::endl;
       dataSet = dataSetBuilder.Create(xCoordinates);
@@ -205,12 +207,14 @@ void RectilinearTests()
       std::vector<T> varP2D(static_cast<unsigned long>(numPoints));
       for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
       {
-        varP2D[i] = static_cast<T>(i * 1.1f);
+        float fi = static_cast<float>(i);
+        varP2D[i] = static_cast<T>(fi * 1.1f);
       }
       std::vector<T> varC2D(static_cast<unsigned long>(numCells));
       for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
       {
-        varC2D[i] = static_cast<T>(i * 1.1f);
+        float fi = static_cast<float>(i);
+        varC2D[i] = static_cast<T>(fi * 1.1f);
       }
       std::cout << "  Create with std::vector" << std::endl;
       dataSet = dataSetBuilder.Create(xCoordinates, yCoordinates);
@@ -246,12 +250,14 @@ void RectilinearTests()
       std::vector<T> varP3D(static_cast<unsigned long>(numPoints));
       for (unsigned long i = 0; i < static_cast<unsigned long>(numPoints); i++)
       {
-        varP3D[i] = static_cast<T>(i * 1.1f);
+        float fi = static_cast<float>(i);
+        varP3D[i] = static_cast<T>(fi * 1.1f);
       }
       std::vector<T> varC3D(static_cast<unsigned long>(numCells));
       for (unsigned long i = 0; i < static_cast<unsigned long>(numCells); i++)
       {
-        varC3D[i] = static_cast<T>(i * 1.1f);
+        float fi = static_cast<float>(i);
+        varC3D[i] = static_cast<T>(fi * 1.1f);
       }
 
       std::cout << "  Create with std::vector" << std::endl;

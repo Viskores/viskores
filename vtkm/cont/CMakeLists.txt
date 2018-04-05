@@ -45,7 +45,6 @@ set(headers
   ArrayPortalToIterators.h
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
-  ArrayRangeCompute.hxx
   AssignerMultiBlock.h
   CellLocator.h
   CellLocatorTwoLevelUniformGrid.h
@@ -92,8 +91,9 @@ set(headers
   VirtualObjectHandle.h
   )
 
-set(header_impls
+set(template_sources
   ArrayHandle.hxx
+  ArrayRangeCompute.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
   CoordinateSystem.hxx
@@ -104,7 +104,6 @@ set(sources
   ArrayHandle.cxx
   AssignerMultiBlock.cxx
   CellSet.cxx
-  CellSetExplicit.cxx
   CellSetStructured.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
@@ -129,41 +128,30 @@ set(device_sources
   TryExecute.cxx
   )
 
-vtkm_declare_headers(${headers})
-
 #-----------------------------------------------------------------------------
+vtkm_library( NAME vtkm_cont
+              SOURCES ${sources}
+              TEMPLATE_SOURCES ${template_sources}
+              HEADERS ${headers}
+              WRAP_FOR_CUDA ${device_sources}
+            )
 add_subdirectory(internal)
 add_subdirectory(arg)
-
 add_subdirectory(serial)
-set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_serial>)
-
 add_subdirectory(tbb)
-if (VTKm_ENABLE_TBB)
-  set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_tbb>)
-endif()
-
 add_subdirectory(cuda)
-if (VTKm_ENABLE_CUDA)
-  get_property(vtkm_cont_cuda_object_files GLOBAL
-               PROPERTY vtkm_cont_cuda_object_files )
-  # mark the file as generated, this needs to be done in this directory
-  # for 'reasons'.
-  set_source_files_properties(${vtkm_cont_cuda_object_files}
-                              PROPERTIES GENERATED TRUE)
 
-  set(sources ${sources} ${vtkm_cont_cuda_object_files})
+set(backends )
+if(TARGET vtkm::tbb)
+  list(APPEND backends vtkm::tbb)
 endif()
-
-vtkm_library(
-  SOURCES ${sources}
-  WRAP_FOR_CUDA ${device_sources}
-  HEADERS ${header_impls})
-target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
-target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
-
-if(VTKm_ENABLE_CUDA)
-  add_dependencies(vtkm_cont vtkm_cont_cuda)
+if(TARGET vtkm::cuda)
+  list(APPEND backends vtkm::cuda)
+endif()
+target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
+if(TARGET vtkm_diy)
+  # This will become a required dependency eventually.
+  target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
 endif()
 
 #-----------------------------------------------------------------------------

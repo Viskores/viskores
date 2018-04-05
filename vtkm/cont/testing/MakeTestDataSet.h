@@ -261,7 +261,7 @@ inline vtkm::cont::DataSet MakeTestDataSet::Make3DUniformDataSet2()
     for (vtkm::Id y = 0; y < base_size; ++y)
       for (vtkm::Id x = 0; x < base_size; ++x)
       {
-        vtkm::Id index = z * base_size * base_size + y * base_size + x;
+        std::size_t index = static_cast<std::size_t>(z * base_size * base_size + y * base_size + x);
         pointvar[index] = vtkm::Sqrt(vtkm::Float32(x * x + y * y + z * z));
       }
 

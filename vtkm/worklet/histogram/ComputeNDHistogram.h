@@ -73,7 +73,8 @@ public:
   VTKM_EXEC
   void operator()(const FieldType& value, const vtkm::Id& binIndexIn, vtkm::Id& binIndexOut) const
   {
-    vtkm::Id localBinIdx = static_cast<vtkm::Id>((value - minValue) / delta);
+    const vtkm::Float64 fvalue = static_cast<vtkm::Float64>(value);
+    vtkm::Id localBinIdx = static_cast<vtkm::Id>((fvalue - minValue) / delta);
     if (localBinIdx < 0)
       localBinIdx = 0;
     else if (localBinIdx >= numberOfBins)
