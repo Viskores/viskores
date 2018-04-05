@@ -70,7 +70,7 @@ set(unit_tests
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
   UnitTestFieldRangeCompute.cxx
-  UnitTestMultiBlock.cxx,MPI
+  UnitTestMultiBlock.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestStorageBasic.cxx
   UnitTestStorageImplicit.cxx

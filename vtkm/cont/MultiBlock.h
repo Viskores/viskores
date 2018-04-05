@@ -97,17 +97,6 @@ public:
   vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
                               vtkm::Id coordinate_system_index = 0) const;
 
-  //@{
-  /// Get the unified range of the same field within all contained DataSet.
-  /// These methods are not thread-safe and may involve global communication
-  /// across all ranks in distributed environments with MPI.
-  VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name) const;
-
-  VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int& index) const;
-  //@}
-
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;
 
