@@ -72,7 +72,7 @@ public:
     {
       comp.Set(index, comp.Get(parent));
     }
-  };
+  }
 };
 
 class IsStar : public vtkm::worklet::WorkletMapField
