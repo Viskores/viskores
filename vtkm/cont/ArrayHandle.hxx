@@ -53,6 +53,15 @@ ArrayHandle<T, S>::ArrayHandle(const typename ArrayHandle<T, S>::StorageType& st
 }
 
 template <typename T, typename S>
+ArrayHandle<T, S>::ArrayHandle(typename ArrayHandle<T, S>::StorageType&& storage)
+  : Internals(new InternalStruct)
+{
+  this->Internals->ControlArray = std::move(storage);
+  this->Internals->ControlArrayValid = true;
+  this->Internals->ExecutionArrayValid = false;
+}
+
+template <typename T, typename S>
 ArrayHandle<T, S>::~ArrayHandle()
 {
 }

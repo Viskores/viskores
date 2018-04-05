@@ -303,6 +303,13 @@ public:
   ///
   ArrayHandle(const StorageType& storage);
 
+
+  /// Special constructor for subclass specializations that need to set the
+  /// initial state of the control array. When this constructor is used, it
+  /// is assumed that the control array is valid.
+  ///
+  ArrayHandle(StorageType&& storage);
+
   /// Destructs an empty ArrayHandle.
   ///
   /// Implemented so that it is defined exclusively in the control environment.
