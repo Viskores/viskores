@@ -46,6 +46,8 @@ set(headers
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
   AssignerMultiBlock.h
+  BoundsCompute.h
+  BoundsGlobalCompute.h
   CellLocator.h
   CellLocatorTwoLevelUniformGrid.h
   CellSet.h
@@ -77,6 +79,8 @@ set(headers
   ErrorExecution.h
   ErrorInternal.h
   Field.h
+  FieldRangeCompute.h
+  FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
   MultiBlock.h
   PointLocatorUniformGrid.h
@@ -97,17 +101,23 @@ set(template_sources
   CellSetExplicit.hxx
   CellSetStructured.hxx
   CoordinateSystem.hxx
+  FieldRangeCompute.hxx
+  FieldRangeGlobalCompute.hxx
   StorageBasic.hxx
   )
 
 set(sources
   ArrayHandle.cxx
   AssignerMultiBlock.cxx
+  BoundsCompute.cxx
+  BoundsGlobalCompute.cxx
   CellSet.cxx
   CellSetStructured.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
   Field.cxx
+  FieldRangeCompute.cxx
+  FieldRangeGlobalCompute.cxx
   internal/SimplePolymorphicContainer.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
   internal/ArrayHandleBasicImpl.cxx
@@ -137,6 +147,7 @@ vtkm_library( NAME vtkm_cont
             )
 add_subdirectory(internal)
 add_subdirectory(arg)
+add_subdirectory(diy)
 add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(cuda)
