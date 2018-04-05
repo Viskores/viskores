@@ -137,6 +137,7 @@ vtkm_library( NAME vtkm_cont
             )
 add_subdirectory(internal)
 add_subdirectory(arg)
+add_subdirectory(diy)
 add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(cuda)
