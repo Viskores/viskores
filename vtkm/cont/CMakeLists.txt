@@ -46,6 +46,8 @@ set(headers
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
   AssignerMultiBlock.h
+  BoundsCompute.h
+  BoundsGlobalCompute.h
   CellLocator.h
   CellLocatorTwoLevelUniformGrid.h
   CellSet.h
@@ -107,6 +109,8 @@ set(template_sources
 set(sources
   ArrayHandle.cxx
   AssignerMultiBlock.cxx
+  BoundsCompute.cxx
+  BoundsGlobalCompute.cxx
   CellSet.cxx
   CellSetStructured.cxx
   DynamicArrayHandle.cxx
