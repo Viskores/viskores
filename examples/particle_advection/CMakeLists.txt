@@ -19,29 +19,21 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(ParticleAdvection CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB
-  )
+find_package(VTKm REQUIRED QUIET)
 
 add_executable(Particle_Advection_SERIAL ParticleAdvection.cxx)
-target_include_directories(Particle_Advection_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(Particle_Advection_SERIAL ${VTKm_LIBRARIES})
-target_compile_options(Particle_Advection_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
+target_link_libraries(Particle_Advection_SERIAL PRIVATE vtkm_cont)
 
-if(VTKm_TBB_FOUND)
+if(TARGET vtkm::tbb)
   add_executable(Particle_Advection_TBB ParticleAdvectionTBB.cxx)
-  target_include_directories(Particle_Advection_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(Particle_Advection_TBB ${VTKm_LIBRARIES})
-  target_compile_options(Particle_Advection_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
+  target_link_libraries(Particle_Advection_TBB PRIVATE vtkm_cont)
 endif()
 
-if(VTKm_CUDA_FOUND)
-  # Cuda compiles do not respect target_include_directories
-  cuda_include_directories(${VTKm_INCLUDE_DIRS})
-  cuda_add_executable(Particle_Advection_CUDA ParticleAdvection.cu)
-  target_include_directories(Particle_Advection_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(Particle_Advection_CUDA PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(Particle_Advection_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+if(TARGET vtkm::cuda)
+  add_executable(Particle_Advection_CUDA ParticleAdvection.cu)
+  target_link_libraries(Particle_Advection_CUDA PRIVATE vtkm_cont)
 endif()

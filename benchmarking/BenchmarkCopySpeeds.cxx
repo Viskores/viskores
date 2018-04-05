@@ -20,7 +20,7 @@
 
 #include <vtkm/TypeTraits.h>
 
-#include <vtkm/benchmarking/Benchmarker.h>
+#include "Benchmarker.h"
 
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -122,7 +122,7 @@ void BenchmarkValueType()
     try
     {
       bench.GatherSamples(functor);
-      vtkm::UInt64 speed = static_cast<vtkm::UInt64>(size / stats::Mean(bench.GetSamples()));
+      vtkm::UInt64 speed = size / static_cast<vtkm::UInt64>(stats::Mean(bench.GetSamples()));
       speedStr = HumanSize(speed) + std::string("/s");
     }
     catch (vtkm::cont::ErrorBadAllocation&)

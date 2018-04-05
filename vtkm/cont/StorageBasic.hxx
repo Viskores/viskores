@@ -42,6 +42,14 @@ Storage<T, vtkm::cont::StorageTagBasic>::Storage(const T* array, vtkm::Id number
 }
 
 template <typename T>
+Storage<T, vtkm::cont::StorageTagBasic>::Storage(const T* array,
+                                                 vtkm::Id numberOfValues,
+                                                 void (*deleteFunction)(void*))
+  : StorageBasicBase(const_cast<T*>(array), numberOfValues, sizeof(T), deleteFunction)
+{
+}
+
+template <typename T>
 void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 {
   this->AllocateValues(numberOfValues, sizeof(T));
@@ -78,7 +86,7 @@ const T* Storage<T, vtkm::cont::StorageTagBasic>::GetArray() const
 template <typename T>
 T* Storage<T, vtkm::cont::StorageTagBasic>::StealArray()
 {
-  this->DeallocateOnRelease = false;
+  this->DeleteFunction = nullptr;
   return static_cast<T*>(this->Array);
 }
 

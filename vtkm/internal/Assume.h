@@ -53,9 +53,10 @@
 
 #if defined(VTKM_MSVC)
 #define VTKM_ASSUME_IMPL(cond) __assume(cond)
-#elif defined(VTKM_ICC)
+#elif defined(VTKM_ICC) && !defined(__GNUC__)
 #define VTKM_ASSUME_IMPL(cond) __assume(cond)
-#elif defined(VTKM_GCC) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
+#elif (defined(VTKM_GCC) || defined(VTKM_ICC)) &&                                                  \
+  (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
 // Added in 4.5.0:
 #define VTKM_ASSUME_IMPL(cond)                                                                     \
   if (!(cond))                                                                                     \

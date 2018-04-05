@@ -64,6 +64,9 @@
 //  Proceedings of the IEEE Symposium on Large Data Analysis and Visualization
 //  (LDAV), October 2016, Baltimore, Maryland.
 
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/internal/CreateResult.h>
+
 #include <vtkm/worklet/ContourTreeUniform.h>
 
 namespace vtkm
@@ -79,7 +82,7 @@ ContourTreeMesh2D::ContourTreeMesh2D()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-vtkm::filter::Result ContourTreeMesh2D::DoExecute(
+vtkm::cont::DataSet ContourTreeMesh2D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -88,8 +91,7 @@ vtkm::filter::Result ContourTreeMesh2D::DoExecute(
 {
   if (fieldMeta.IsPointField() == false)
   {
-    std::cout << "ERROR: Point field expected" << std::endl;
-    return vtkm::filter::Result();
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
   // Collect sizing information from the dataset
@@ -108,11 +110,11 @@ vtkm::filter::Result ContourTreeMesh2D::DoExecute(
   vtkm::worklet::ContourTreeMesh2D worklet;
   worklet.Run(field, nRows, nCols, saddlePeak, device);
 
-  return vtkm::filter::Result(input,
-                              saddlePeak,
-                              this->GetOutputFieldName(),
-                              fieldMeta.GetAssociation(),
-                              fieldMeta.GetCellSetName());
+  return internal::CreateResult(input,
+                                saddlePeak,
+                                this->GetOutputFieldName(),
+                                fieldMeta.GetAssociation(),
+                                fieldMeta.GetCellSetName());
 }
 //-----------------------------------------------------------------------------
 ContourTreeMesh3D::ContourTreeMesh3D()
@@ -122,7 +124,7 @@ ContourTreeMesh3D::ContourTreeMesh3D()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-vtkm::filter::Result ContourTreeMesh3D::DoExecute(
+vtkm::cont::DataSet ContourTreeMesh3D::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -131,8 +133,7 @@ vtkm::filter::Result ContourTreeMesh3D::DoExecute(
 {
   if (fieldMeta.IsPointField() == false)
   {
-    std::cout << "ERROR: Point field expected" << std::endl;
-    return vtkm::filter::Result();
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
   // Collect sizing information from the dataset
@@ -152,11 +153,11 @@ vtkm::filter::Result ContourTreeMesh3D::DoExecute(
   vtkm::worklet::ContourTreeMesh3D worklet;
   worklet.Run(field, nRows, nCols, nSlices, saddlePeak, device);
 
-  return vtkm::filter::Result(input,
-                              saddlePeak,
-                              this->GetOutputFieldName(),
-                              fieldMeta.GetAssociation(),
-                              fieldMeta.GetCellSetName());
+  return internal::CreateResult(input,
+                                saddlePeak,
+                                this->GetOutputFieldName(),
+                                fieldMeta.GetAssociation(),
+                                fieldMeta.GetCellSetName());
 }
 }
 } // namespace vtkm::filter

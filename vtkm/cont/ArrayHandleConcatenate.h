@@ -37,6 +37,7 @@ class VTKM_ALWAYS_EXPORT ArrayPortalConcatenate
 public:
   using ValueType = typename PortalType1::ValueType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalConcatenate()
     : portal1()

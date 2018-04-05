@@ -36,7 +36,7 @@ namespace detail
 struct ColorTableInternals
 {
 
-  ColorSpace CSpace = ColorSpace::RGB;
+  ColorSpace CSpace = ColorSpace::LAB;
   vtkm::Range TableRange = { 1.0, 0.0 };
 
   //Host side version of the ColorTableBase. This holds data such as:

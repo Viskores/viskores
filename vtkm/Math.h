@@ -2309,11 +2309,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 ModF(vtkm::Float64 x, vtkm::Float64& 
 ///
 static inline VTKM_EXEC_CONT vtkm::Int32 Abs(vtkm::Int32 x)
 {
-#if VTKM_SIZE_INT == 4
   return abs(x);
-#else
-#error Unknown size of Int32.
-#endif
 }
 static inline VTKM_EXEC_CONT vtkm::Int64 Abs(vtkm::Int64 x)
 {

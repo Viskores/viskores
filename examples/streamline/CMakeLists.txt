@@ -19,32 +19,28 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(Streamline CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
-  )
+find_package(VTKm REQUIRED QUIET)
+vtkm_find_gl(OPTIONAL GL GLUT GLEW)
 
-if(VTKm_OpenGL_FOUND AND VTKm_GLUT_FOUND)
-  add_executable(StreamLineUniformGrid_SERIAL StreamLineUniformGrid.cxx)
-  target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_COMPILE_OPTIONS})
+if(TARGET OpenGL::GL AND
+   TARGET GLUT::GLUT AND
+   TARGET GLEW::GLEW)
 
-  if(VTKm_CUDA_FOUND)
-    # Cuda compiles do not respect target_include_directories
-    cuda_include_directories(${VTKm_INCLUDE_DIRS})
-    cuda_add_executable(StreamLineUniformGrid_CUDA StreamLineUniformGrid.cu)
-    target_include_directories(StreamLineUniformGrid_SERIAL PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(StreamLineUniformGrid_CUDA PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(StreamLineUniformGrid_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+    add_executable(StreamLineUniformGrid_SERIAL StreamLineUniformGrid.cxx)
+    target_link_libraries(StreamLineUniformGrid_SERIAL PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+
+  if(TARGET vtkm::cont)
+    add_executable(StreamLineUniformGrid_CUDA StreamLineUniformGrid.cu)
+    target_link_libraries(StreamLineUniformGrid_CUDA PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
   endif()
 
-  if(VTKm_TBB_FOUND)
+  if(TARGET vtkm::tbb)
     add_executable(StreamLineUniformGrid_TBB StreamLineUniformGridTBB.cxx)
-    target_include_directories(StreamLineUniformGrid_TBB PRIVATE ${VTKm_INCLUDE_DIRS})
-    target_link_libraries(StreamLineUniformGrid_TBB PRIVATE ${VTKm_LIBRARIES})
-    target_compile_options(StreamLineUniformGrid_TBB PRIVATE ${VTKm_COMPILE_OPTIONS})
+    target_link_libraries(StreamLineUniformGrid_TBB PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
   endif()
 
 endif()

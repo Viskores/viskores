@@ -19,18 +19,14 @@
 ##  this software.
 ##
 ##=============================================================================
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(UnifiedMemory CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB OpenGL GLUT
-  )
+find_package(VTKm REQUIRED QUIET)
 
-if(VTKm_CUDA_FOUND)
-  vtkm_disable_troublesome_thrust_warnings()
-  # Cuda compiles do not respect target_include_directories
-  cuda_include_directories(${VTKm_INCLUDE_DIRS})
-  cuda_add_executable(UnifiedMemory_CUDA UnifiedMemory.cu)
-  target_link_libraries(UnifiedMemory_CUDA PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(UnifiedMemory_CUDA PRIVATE ${VTKm_COMPILE_OPTIONS})
+if(TARGET vtkm::cuda)
+  add_executable(UnifiedMemory_CUDA UnifiedMemory.cu)
+  target_link_libraries(UnifiedMemory_CUDA PRIVATE vtkm_cont)
 endif()
 

@@ -23,4 +23,4 @@
 set(unit_tests
   UnitTestTaskTilingTBB.cxx
   )
-vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES libvtkm_cont)
+vtkm_unit_tests(SOURCES ${unit_tests})

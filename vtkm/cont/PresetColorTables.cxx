@@ -318,7 +318,7 @@ static constexpr ColorTable<21> LinearGreen = {
   }
 };
 
-static constexpr ColorTable<256> Virdis =
+static constexpr ColorTable<256> Viridis =
 {
   vtkm::cont::ColorSpace::LAB,
   { 0.000000, 0.267004, 0.004874, 0.329415, 0.003922, 0.268510, 0.009605, 0.335427, 0.007843,
@@ -521,10 +521,10 @@ void loadBlackBlueWhite(vtkm::cont::ColorTable& table)
   table.SetColorSpace(BlackBlueWhite.space);
   table.SetNaNColor(vtkm::Vec<float, 3>{ 1.0f, 1.0f, 0.0f });
 }
-void loadVirdis(vtkm::cont::ColorTable& table)
+void loadViridis(vtkm::cont::ColorTable& table)
 {
-  table.FillColorTableFromDataPointer(Virdis.size, Virdis.values);
-  table.SetColorSpace(Virdis.space);
+  table.FillColorTableFromDataPointer(Viridis.size, Viridis.values);
+  table.SetColorSpace(Viridis.space);
   table.SetNaNColor(vtkm::Vec<float, 3>{ 1.0f, 0.0f, 0.0f });
 }
 void loadLinearGreen(vtkm::cont::ColorTable& table)
@@ -548,26 +548,34 @@ struct LoadColorTablePresetCommand
 {
   using FunctionType = void (*)(vtkm::cont::ColorTable& table);
 
+  vtkm::cont::ColorTable::Preset id;
   std::string name;
   FunctionType function;
 };
 
-constexpr int numberOfPresets = 14;
+constexpr int numberOfPresets = 15;
 struct LoadColorTablePresetCommand presets[numberOfPresets] = {
-  { "cool to warm", loadCoolToWarm },
-  { "black-body radiation", loadBlackBody },
-  { "samsel fire", loadSamselFire },
-  { "inferno", loadInferno },
-  { "linear ygb", loadLinearYGB },
-  { "cold and hot", loadColdAndHot },
-  { "rainbow desaturated", loadRainbowDesaturated },
-  { "cool to warm (extended)", loadCoolToWarmExtended },
-  { "x ray", loadXRay },
-  { "black, blue and white", loadBlackBlueWhite },
-  { "virdis", loadVirdis },
-  { "linear green", loadLinearGreen },
-  { "jet", loadJet },
-  { "rainbow", loadRainbow },
+  { vtkm::cont::ColorTable::Preset::DEFAULT, "default", loadViridis },
+  { vtkm::cont::ColorTable::Preset::VIRIDIS, "viridis", loadViridis },
+  { vtkm::cont::ColorTable::Preset::COOL_TO_WARM, "cool to warm", loadCoolToWarm },
+  { vtkm::cont::ColorTable::Preset::COOL_TO_WARN_EXTENDED,
+    "cool to warm (extended)",
+    loadCoolToWarmExtended },
+  { vtkm::cont::ColorTable::Preset::COLD_AND_HOT, "cold and hot", loadColdAndHot },
+  { vtkm::cont::ColorTable::Preset::INFERNO, "inferno", loadInferno },
+  { vtkm::cont::ColorTable::Preset::BLACK_BODY_RADIATION, "black-body radiation", loadBlackBody },
+  { vtkm::cont::ColorTable::Preset::SAMSEL_FIRE, "samsel fire", loadSamselFire },
+  { vtkm::cont::ColorTable::Preset::LINEAR_YGB, "linear ygb", loadLinearYGB },
+  { vtkm::cont::ColorTable::Preset::BLACK_BLUE_AND_WHITE,
+    "black, blue and white",
+    loadBlackBlueWhite },
+  { vtkm::cont::ColorTable::Preset::LINEAR_GREEN, "linear green", loadLinearGreen },
+  { vtkm::cont::ColorTable::Preset::X_RAY, "x ray", loadXRay },
+  { vtkm::cont::ColorTable::Preset::JET, "jet", loadJet },
+  { vtkm::cont::ColorTable::Preset::RAINBOW_DESATURATED,
+    "rainbow desaturated",
+    loadRainbowDesaturated },
+  { vtkm::cont::ColorTable::Preset::RAINBOW, "rainbow", loadRainbow },
 };
 }
 
@@ -577,6 +585,21 @@ namespace cont
 {
 namespace detail
 {
+
+VTKM_CONT_EXPORT
+bool loadColorTablePreset(vtkm::cont::ColorTable::Preset preset, vtkm::cont::ColorTable& table)
+{
+  for (int i = 0; i < numberOfPresets; ++i)
+  {
+    if (preset == presets[i].id)
+    {
+      presets[i].function(table);
+      return true;
+    }
+  }
+  return false;
+}
+
 VTKM_CONT_EXPORT std::set<std::string> GetPresetNames()
 {
   std::set<std::string> names;

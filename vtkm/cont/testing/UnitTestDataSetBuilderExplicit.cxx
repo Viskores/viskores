@@ -115,20 +115,22 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
   vtkm::cont::DataSet dataSet;
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::DataSetBuilderExplicit dsb;
+  float f = 0.0f;
   if (useSeparatedCoords)
   {
     std::vector<T> xvals(numPoints), yvals(numPoints), zvals(numPoints);
     std::vector<T> varP(numPoints), varC(numCells);
-    for (std::size_t i = 0; i < numPoints; i++)
+    for (std::size_t i = 0; i < numPoints; i++, f++)
     {
       xvals[i] = coords[i * 3 + 0];
       yvals[i] = coords[i * 3 + 1];
       zvals[i] = coords[i * 3 + 2];
-      varP[i] = static_cast<T>(i * 1.1f);
+      varP[i] = static_cast<T>(f * 1.1f);
     }
-    for (std::size_t i = 0; i < numCells; i++)
+    f = 0.0f;
+    for (std::size_t i = 0; i < numCells; i++, f++)
     {
-      varC[i] = static_cast<T>(i * 1.1f);
+      varC[i] = static_cast<T>(f * 1.1f);
     }
     vtkm::cont::ArrayHandle<T> X, Y, Z, P, C;
     DFA::Copy(vtkm::cont::make_ArrayHandle(xvals), X);
@@ -146,16 +148,17 @@ vtkm::cont::DataSet CreateDataSetArr(bool useSeparatedCoords,
   {
     std::vector<vtkm::Vec<T, 3>> tmp(numPoints);
     std::vector<vtkm::Vec<T, 1>> varP(numPoints), varC(numCells);
-    for (std::size_t i = 0; i < numPoints; i++)
+    for (std::size_t i = 0; i < numPoints; i++, f++)
     {
       tmp[i][0] = coords[i * 3 + 0];
       tmp[i][1] = coords[i * 3 + 1];
       tmp[i][2] = coords[i * 3 + 2];
-      varP[i][0] = static_cast<T>(i * 1.1f);
+      varP[i][0] = static_cast<T>(f * 1.1f);
     }
-    for (std::size_t i = 0; i < numCells; i++)
+    f = 0.0f;
+    for (std::size_t i = 0; i < numCells; i++, f++)
     {
-      varC[i][0] = static_cast<T>(i * 1.1f);
+      varC[i][0] = static_cast<T>(f * 1.1f);
     }
     vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> pts;
     DFA::Copy(vtkm::cont::make_ArrayHandle(tmp), pts);
@@ -181,19 +184,21 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::DataSetBuilderExplicit dsb;
 
+  float f = 0.0f;
   if (useSeparatedCoords)
   {
     std::vector<T> X(numPoints), Y(numPoints), Z(numPoints), varP(numPoints), varC(numCells);
-    for (std::size_t i = 0; i < numPoints; i++)
+    for (std::size_t i = 0; i < numPoints; i++, f++)
     {
       X[i] = coords[i * 3 + 0];
       Y[i] = coords[i * 3 + 1];
       Z[i] = coords[i * 3 + 2];
-      varP[i] = static_cast<T>(i * 1.1f);
+      varP[i] = static_cast<T>(f * 1.1f);
     }
-    for (std::size_t i = 0; i < numCells; i++)
+    f = 0.0f;
+    for (std::size_t i = 0; i < numCells; i++, f++)
     {
-      varC[i] = static_cast<T>(i * 1.1f);
+      varC[i] = static_cast<T>(f * 1.1f);
     }
     dataSet = dsb.Create(
       X, Y, Z, createVec(numCells, shape), createVec(numCells, indices), createVec(numConn, conn));
@@ -205,16 +210,17 @@ vtkm::cont::DataSet CreateDataSetVec(bool useSeparatedCoords,
   {
     std::vector<vtkm::Vec<T, 3>> pts(numPoints);
     std::vector<vtkm::Vec<T, 1>> varP(numPoints), varC(numCells);
-    for (std::size_t i = 0; i < numPoints; i++)
+    for (std::size_t i = 0; i < numPoints; i++, f++)
     {
       pts[i][0] = coords[i * 3 + 0];
       pts[i][1] = coords[i * 3 + 1];
       pts[i][2] = coords[i * 3 + 2];
-      varP[i][0] = static_cast<T>(i * 1.1f);
+      varP[i][0] = static_cast<T>(f * 1.1f);
     }
-    for (std::size_t i = 0; i < numCells; i++)
+    f = 0.0f;
+    for (std::size_t i = 0; i < numCells; i++, f++)
     {
-      varC[i][0] = static_cast<T>(i * 1.1f);
+      varC[i][0] = static_cast<T>(f * 1.1f);
     }
     dataSet = dsb.Create(
       pts, createVec(numCells, shape), createVec(numCells, indices), createVec(numConn, conn));

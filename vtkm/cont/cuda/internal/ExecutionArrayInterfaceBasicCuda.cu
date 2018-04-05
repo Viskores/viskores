@@ -98,6 +98,15 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Allocate(TypelessExecut
     err << "Failed to allocate " << numBytes << " bytes on device: " << error.what();
     throw vtkm::cont::ErrorBadAllocation(err.str());
   }
+
+  // If we just allocated managed cuda memory and don't a host memory pointer
+  // we can share out managed memory. This allows for the use case of where we
+  // first allocate on CUDA and than want to use it on the host
+  if (CudaAllocator::IsManagedPointer(execArray.Array) && execArray.ArrayControl == nullptr)
+  {
+    this->ControlStorage.SetBasePointer(
+      execArray.Array, numberOfValues, sizeOfValue, [](void* ptr) { CudaAllocator::Free(ptr); });
+  }
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::Free(
