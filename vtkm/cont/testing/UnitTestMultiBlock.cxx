@@ -23,6 +23,7 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
@@ -74,9 +75,12 @@ static void MultiBlockTest()
   GlobalBound.Include(Set1Bounds);
   GlobalBound.Include(Set2Bounds);
 
-  VTKM_TEST_ASSERT(multiblock.GetBounds() == GlobalBound, "Global bounds info incorrect");
-  VTKM_TEST_ASSERT(multiblock.GetBlockBounds(0) == Set1Bounds, "Local bounds info incorrect");
-  VTKM_TEST_ASSERT(multiblock.GetBlockBounds(1) == Set2Bounds, "Local bounds info incorrect");
+  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(multiblock) == GlobalBound,
+                   "Global bounds info incorrect");
+  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(multiblock.GetBlock(0)) == Set1Bounds,
+                   "Local bounds info incorrect");
+  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(multiblock.GetBlock(1)) == Set2Bounds,
+                   "Local bounds info incorrect");
 
   vtkm::Range Set1Field1Range;
   vtkm::Range Set1Field2Range;

@@ -81,14 +81,6 @@ public:
   /// append the DataSet vector "mblocks"  to the end of the contained one
   VTKM_CONT
   void AddBlocks(const std::vector<vtkm::cont::DataSet>& mblocks);
-  /// get the unified bounds of the same indexed coordinate system within all contained DataSet
-  VTKM_CONT
-  vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
-
-  /// get the bounds of a coordinate system within a given DataSet
-  VTKM_CONT
-  vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
-                              vtkm::Id coordinate_system_index = 0) const;
 
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;
