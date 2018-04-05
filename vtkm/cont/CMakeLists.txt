@@ -77,6 +77,8 @@ set(headers
   ErrorExecution.h
   ErrorInternal.h
   Field.h
+  FieldRangeCompute.h
+  FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
   MultiBlock.h
   PointLocatorUniformGrid.h
@@ -97,6 +99,8 @@ set(template_sources
   CellSetExplicit.hxx
   CellSetStructured.hxx
   CoordinateSystem.hxx
+  FieldRangeCompute.hxx
+  FieldRangeGlobalCompute.hxx
   StorageBasic.hxx
   )
 
@@ -108,6 +112,8 @@ set(sources
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
   Field.cxx
+  FieldRangeCompute.cxx
+  FieldRangeGlobalCompute.cxx
   internal/SimplePolymorphicContainer.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
   internal/ArrayHandleBasicImpl.cxx
