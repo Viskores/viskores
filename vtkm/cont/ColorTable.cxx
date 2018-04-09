@@ -153,12 +153,10 @@ ColorSpace ColorTable::GetColorSpace() const
 //----------------------------------------------------------------------------
 void ColorTable::SetColorSpace(ColorSpace space)
 {
-  if (this->Impl->CSpace != space || this->Impl->HostSideCache == nullptr)
+  if (this->Impl->CSpace != space || this->Impl->HostSideCache.get() == nullptr)
   {
     this->Impl->CSpace = space;
     //Remove any existing host and execution data
-    delete this->Impl->HostSideCache;
-    delete this->Impl->ExecHandle;
 
     using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>;
     switch (space)
@@ -166,36 +164,36 @@ void ColorTable::SetColorSpace(ColorSpace space)
       case vtkm::cont::ColorSpace::RGB:
       {
         auto* hostPortal = new vtkm::exec::ColorTableRGB();
-        this->Impl->ExecHandle = new HandleType(hostPortal, false);
-        this->Impl->HostSideCache = hostPortal;
+        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
+        this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       case vtkm::cont::ColorSpace::HSV:
       {
         auto* hostPortal = new vtkm::exec::ColorTableHSV();
-        this->Impl->ExecHandle = new HandleType(hostPortal, false);
-        this->Impl->HostSideCache = hostPortal;
+        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
+        this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       case vtkm::cont::ColorSpace::HSV_WRAP:
       {
         auto* hostPortal = new vtkm::exec::ColorTableHSVWrap();
-        this->Impl->ExecHandle = new HandleType(hostPortal, false);
-        this->Impl->HostSideCache = hostPortal;
+        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
+        this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       case vtkm::cont::ColorSpace::LAB:
       {
         auto* hostPortal = new vtkm::exec::ColorTableLab();
-        this->Impl->ExecHandle = new HandleType(hostPortal, false);
-        this->Impl->HostSideCache = hostPortal;
+        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
+        this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       case vtkm::cont::ColorSpace::DIVERGING:
       {
         auto* hostPortal = new vtkm::exec::ColorTableDiverging();
-        this->Impl->ExecHandle = new HandleType(hostPortal, false);
-        this->Impl->HostSideCache = hostPortal;
+        this->Impl->ExecHandle.reset(new HandleType(hostPortal, false));
+        this->Impl->HostSideCache.reset(hostPortal);
         break;
       }
       default:
@@ -864,14 +862,14 @@ vtkm::cont::VirtualObjectHandle<vtkm::exec::ColorTableBase>* ColorTable::GetHand
   if (this->Impl->ColorArraysChanged || this->Impl->OpacityArraysChanged)
   {
     vtkm::cont::TryExecute(
-      detail::transfer_color_table_to_device{}, this->Impl->HostSideCache, this->Impl.get());
+      detail::transfer_color_table_to_device{}, this->Impl->HostSideCache.get(), this->Impl.get());
 
     this->Impl->HostSideCache->Modified();
   }
 
   this->Impl->ColorArraysChanged = false;
   this->Impl->OpacityArraysChanged = false;
-  return this->Impl->ExecHandle;
+  return this->Impl->ExecHandle.get();
 }
 
 //---------------------------------------------------------------------------
