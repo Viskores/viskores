@@ -38,12 +38,16 @@ namespace cont
 
 VTKM_CONT
 AssignerMultiBlock::AssignerMultiBlock(const vtkm::cont::MultiBlock& mb)
+  : AssignerMultiBlock(mb.GetNumberOfBlocks())
+{
+}
+
+VTKM_CONT
+AssignerMultiBlock::AssignerMultiBlock(vtkm::Id num_blocks)
   : diy::Assigner(vtkm::cont::EnvironmentTracker::GetCommunicator().size(), 1)
   , IScanBlockCounts()
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
-  const auto num_blocks = mb.GetNumberOfBlocks();
-
   if (comm.size() > 1)
   {
     vtkm::Id iscan;
