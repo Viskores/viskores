@@ -38,7 +38,7 @@ function(vtkm_get_kit_name kitvar)
 endfunction(vtkm_get_kit_name)
 
 #-----------------------------------------------------------------------------
-function(vtkm_pyexpander_generated_file)
+function(vtkm_pyexpander_generated_file generated_file_name)
   # If pyexpander is available, add targets to build and check
   if(PYEXPANDER_FOUND AND PYTHONINTERP_FOUND)
     add_custom_command(
