@@ -265,11 +265,12 @@ if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
   # Install support files.
   install(
     FILES
-      ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmCPUVectorization.cmake
+      ${VTKm_SOURCE_DIR}/CMake/VTKmDetectCUDAVersion.cu
       ${VTKm_SOURCE_DIR}/CMake/VTKmDeviceAdapters.cmake
-      ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
       ${VTKm_SOURCE_DIR}/CMake/VTKmExportHeaderTemplate.h.in
+      ${VTKm_SOURCE_DIR}/CMake/VTKmRenderingContexts.cmake
+      ${VTKm_SOURCE_DIR}/CMake/VTKmWrappers.cmake
     DESTINATION ${VTKm_INSTALL_CMAKE_MODULE_DIR}
     )
 
