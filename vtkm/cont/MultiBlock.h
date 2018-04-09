@@ -44,10 +44,10 @@ public:
   MultiBlock(const vtkm::cont::MultiBlock& src);
   /// create a new MultiBlock with a DataSet vector "mblocks"
   VTKM_CONT
-  MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks);
+  explicit MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks);
   /// create a new MultiBlock with the capacity set to be "size"
   VTKM_CONT
-  MultiBlock(vtkm::Id size);
+  explicit MultiBlock(vtkm::Id size);
 
   VTKM_CONT
   MultiBlock();
