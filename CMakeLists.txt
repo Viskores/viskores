@@ -126,16 +126,6 @@ set(CMAKE_CXX_EXTENSIONS False)
 # Setup default build types
 include(VTKmBuildType)
 
-# Determine VTK-m version
-include(Utilities/Git/Git.cmake)
-include(VTKmDetermineVersion)
-
-# Load hardcoded version in case this is not a Git repository
-file(STRINGS version.txt version_txt)
-extract_version_components("${version_txt}" "VTKm")
-# Get the version from git if we can
-determine_version(${VTKm_SOURCE_DIR} ${GIT_EXECUTABLE} "VTKm")
-
 # Create vtkm_compiler_flags library. This is an interface library that
 # holds all the C++ compiler flags that are needed for consumers and
 # when building VTK-m.
