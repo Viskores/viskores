@@ -311,28 +311,28 @@ void TestHistogram()
   histogram.SetActiveField("p_poisson");
   auto result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
-  range = histogram.GetDataRange();
+  range = histogram.GetComputedRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
   histogram.SetNumberOfBins(100);
   histogram.SetActiveField("p_normal");
   result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
-  range = histogram.GetDataRange();
+  range = histogram.GetComputedRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);
 
   histogram.SetNumberOfBins(1);
   histogram.SetActiveField("p_chiSquare");
   result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
-  range = histogram.GetDataRange();
+  range = histogram.GetComputedRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
   histogram.SetNumberOfBins(1000000);
   histogram.SetActiveField("p_uniform");
   result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
-  range = histogram.GetDataRange();
+  range = histogram.GetComputedRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);
 
 } // TestFieldHistogram

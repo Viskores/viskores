@@ -40,6 +40,7 @@ set(unit_tests
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMultiBlockFilters.cxx
+  UnitTestMultiBlockHistogramFilter.cxx
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
