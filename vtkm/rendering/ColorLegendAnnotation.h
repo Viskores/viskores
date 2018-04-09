@@ -45,6 +45,8 @@ private:
 public:
   ColorLegendAnnotation();
   ~ColorLegendAnnotation();
+  ColorLegendAnnotation(const ColorLegendAnnotation&) = delete;
+  ColorLegendAnnotation& operator=(const ColorLegendAnnotation&) = delete;
 
   void Clear();
   void AddItem(const std::string& label, vtkm::rendering::Color color);

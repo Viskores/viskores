@@ -66,6 +66,10 @@ public:
 
   ~AxisAnnotation2D();
 
+  AxisAnnotation2D(const AxisAnnotation2D&) = delete;
+
+  AxisAnnotation2D& operator=(const AxisAnnotation2D&) = delete;
+
   void SetLogarithmic(bool l) { this->Logarithmic = l; }
 
   void SetMoreOrLessTickAdjustment(int offset) { this->MoreOrLessTickAdjustment = offset; }
