@@ -34,6 +34,7 @@
 #  - OpenGL::GL
 # For OpenGL Will also provide the more explicit targets of:
 #  - OpenGL::OpenGL
+#  - OpenGL::GLU
 #  - OpenGL::GLX
 #  - OpenGL::EGL
 function(vtkm_find_gl)
@@ -59,18 +60,16 @@ function(vtkm_find_gl)
   endforeach()
 
   #Find GL
-  if(CMAKE_VERSION VERSION_LESS 3.10)
-    if(DO_GL_FIND AND NOT TARGET OpenGL::GL)
+  if(DO_GL_FIND AND NOT TARGET OpenGL::GL)
+    if(CMAKE_VERSION VERSION_LESS 3.10)
       find_package(OpenGL ${GL_REQUIRED} ${QUIETLY} MODULE)
-    endif()
-  else()
-    #clunky but we need to make sure we use the upstream module if it exists
-    set(orig_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
-    set(CMAKE_MODULE_PATH "")
-    if(DO_GL_FIND AND NOT TARGET OpenGL::GL)
+    else()
+      #clunky but we need to make sure we use the upstream module if it exists
+      set(orig_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
+      set(CMAKE_MODULE_PATH "")
       find_package(OpenGL ${GL_REQUIRED} ${QUIETLY} MODULE)
+      set(CMAKE_MODULE_PATH ${orig_CMAKE_MODULE_PATH})
     endif()
-    set(CMAKE_MODULE_PATH ${orig_CMAKE_MODULE_PATH})
   endif()
 
   #Find GLEW
@@ -106,11 +105,11 @@ if(VTKm_ENABLE_GL_CONTEXT)
                           INTERFACE OpenGL::OpenGL OpenGL::GLX GLEW::GLEW)
   elseif(TARGET OpenGL::GL)
     target_link_libraries(vtkm_rendering_gl_context
-                          INTERFACE OpenGL::GL GLEW::GLEW)
+                          INTERFACE OpenGL::GL OpenGL::GLU GLEW::GLEW)
   endif()
 elseif(VTKm_ENABLE_OSMESA_CONTEXT)
   target_link_libraries(vtkm_rendering_gl_context
-                        INTERFACE OpenGL::GL GLEW::GLEW)
+                        INTERFACE OpenGL::GL OpenGL::GLU GLEW::GLEW)
 elseif(VTKm_ENABLE_EGL_CONTEXT)
   target_link_libraries(vtkm_rendering_gl_context
                         INTERFACE OpenGL::OpenGL OpenGL::EGL GLEW::GLEW)
