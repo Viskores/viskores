@@ -82,50 +82,12 @@
 # error Both VTKM_USE_64BIT_IDS and VTKM_NO_64BIT_IDS defined.  Do not know what to do.
 #endif
 
-#define VTKM_SIZE_FLOAT @VTKm_SIZE_FLOAT@
-#define VTKM_SIZE_DOUBLE @VTKm_SIZE_DOUBLE@
-#define VTKM_SIZE_CHAR @VTKm_SIZE_CHAR@
-#define VTKM_SIZE_SHORT @VTKm_SIZE_SHORT@
-#define VTKM_SIZE_INT @VTKm_SIZE_INT@
 #define VTKM_SIZE_LONG @VTKm_SIZE_LONG@
 #define VTKM_SIZE_LONG_LONG @VTKm_SIZE_LONG_LONG@
-
-#ifdef VTKM_USE_DOUBLE_PRECISION
-# ifndef VTKM_SIZE_SCALAR
-#  define VTKM_SIZE_SCALAR VTKM_SIZE_DOUBLE
-# endif
-# ifndef VTKM_ALIGNMENT_TWO_SCALAR
-#  define VTKM_ALIGNMENT_TWO_SCALAR 16
-# endif
-# ifndef VTKM_ALIGNMENT_FOUR_SCALAR
-#  define VTKM_ALIGNMENT_FOUR_SCALAR 8
-# endif
-#else
-# ifndef VTKM_SIZE_SCALAR
-#  define VTKM_SIZE_SCALAR VTKM_SIZE_FLOAT
-#  define VTKM_ALIGNMENT_SCALAR VTKM_SIZE_SCALAR
-# endif
-# ifndef VTKM_ALIGNMENT_TWO_SCALAR
-#  define VTKM_ALIGNMENT_TWO_SCALAR 8
-# endif
-# ifndef VTKM_ALIGNMENT_FOUR_SCALAR
-#  define VTKM_ALIGNMENT_FOUR_SCALAR 16
-# endif
-#endif
 
 // Defines the cache line size in bytes to align allocations to
 #ifndef VTKM_ALLOCATION_ALIGNMENT
 #define VTKM_ALLOCATION_ALIGNMENT 64
-#endif
-
-#ifdef VTKM_USE_64BIT_IDS
-# ifndef VTKM_SIZE_ID
-#  define VTKM_SIZE_ID 8
-# endif
-#else
-# ifndef VTKM_SIZE_ID
-#  define VTKM_SIZE_ID 4
-# endif
 #endif
 
 // Define a pair of macros, VTKM_THIRDPARTY_PRE_INCLUDE and VTKM_THIRDPARTY_POST_INCLUDE,

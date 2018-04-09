@@ -52,6 +52,19 @@ namespace cont
 namespace internal
 {
 
+void free_memory(void* mem)
+{
+#if defined(VTKM_MEMALIGN_POSIX)
+  free(mem);
+#elif defined(VTKM_MEMALIGN_WIN)
+  _aligned_free(mem);
+#elif defined(VTKM_MEMALIGN_SSE)
+  _mm_free(mem);
+#else
+  free(mem);
+#endif
+}
+
 void* StorageBasicAllocator::allocate(size_t size, size_t align)
 {
 #if defined(VTKM_MEMALIGN_POSIX)
@@ -70,25 +83,11 @@ void* StorageBasicAllocator::allocate(size_t size, size_t align)
   return mem;
 }
 
-void StorageBasicAllocator::free_memory(void* mem)
-{
-#if defined(VTKM_MEMALIGN_POSIX)
-  free(mem);
-#elif defined(VTKM_MEMALIGN_WIN)
-  _aligned_free(mem);
-#elif defined(VTKM_MEMALIGN_SSE)
-  _mm_free(mem);
-#else
-  free(mem);
-#endif
-}
-
-
 StorageBasicBase::StorageBasicBase()
   : Array(nullptr)
   , AllocatedByteSize(0)
   , NumberOfValues(0)
-  , DeallocateOnRelease(true)
+  , DeleteFunction(internal::free_memory)
 {
 }
 
@@ -98,7 +97,18 @@ StorageBasicBase::StorageBasicBase(const void* array,
   : Array(const_cast<void*>(array))
   , AllocatedByteSize(static_cast<vtkm::UInt64>(numberOfValues) * sizeOfValue)
   , NumberOfValues(numberOfValues)
-  , DeallocateOnRelease(array == nullptr ? true : false)
+  , DeleteFunction(array == nullptr ? internal::free_memory : nullptr)
+{
+}
+
+StorageBasicBase::StorageBasicBase(const void* array,
+                                   vtkm::Id numberOfValues,
+                                   vtkm::UInt64 sizeOfValue,
+                                   void (*deleteFunction)(void*))
+  : Array(const_cast<void*>(array))
+  , AllocatedByteSize(static_cast<vtkm::UInt64>(numberOfValues) * sizeOfValue)
+  , NumberOfValues(numberOfValues)
+  , DeleteFunction(deleteFunction)
 {
 }
 
@@ -107,14 +117,27 @@ StorageBasicBase::~StorageBasicBase()
   this->ReleaseResources();
 }
 
+StorageBasicBase::StorageBasicBase(StorageBasicBase&& src)
+  : Array(src.Array)
+  , AllocatedByteSize(src.AllocatedByteSize)
+  , NumberOfValues(src.NumberOfValues)
+  , DeleteFunction(src.DeleteFunction)
+
+{
+  src.Array = nullptr;
+  src.AllocatedByteSize = 0;
+  src.NumberOfValues = 0;
+  src.DeleteFunction = nullptr;
+}
+
 StorageBasicBase::StorageBasicBase(const StorageBasicBase& src)
   : Array(src.Array)
   , AllocatedByteSize(src.AllocatedByteSize)
   , NumberOfValues(src.NumberOfValues)
-  , DeallocateOnRelease(src.DeallocateOnRelease)
+  , DeleteFunction(src.DeleteFunction)
 
 {
-  if (src.DeallocateOnRelease)
+  if (src.DeleteFunction)
   {
     throw vtkm::cont::ErrorBadValue(
       "Attempted to copy a storage array that needs deallocation. "
@@ -122,9 +145,24 @@ StorageBasicBase::StorageBasicBase(const StorageBasicBase& src)
   }
 }
 
+StorageBasicBase StorageBasicBase::operator=(StorageBasicBase&& src)
+{
+  this->ReleaseResources();
+  this->Array = src.Array;
+  this->AllocatedByteSize = src.AllocatedByteSize;
+  this->NumberOfValues = src.NumberOfValues;
+  this->DeleteFunction = src.DeleteFunction;
+
+  src.Array = nullptr;
+  src.AllocatedByteSize = 0;
+  src.NumberOfValues = 0;
+  src.DeleteFunction = nullptr;
+  return *this;
+}
+
 StorageBasicBase StorageBasicBase::operator=(const StorageBasicBase& src)
 {
-  if (src.DeallocateOnRelease)
+  if (src.DeleteFunction)
   {
     throw vtkm::cont::ErrorBadValue(
       "Attempted to copy a storage array that needs deallocation. "
@@ -135,27 +173,8 @@ StorageBasicBase StorageBasicBase::operator=(const StorageBasicBase& src)
   this->Array = src.Array;
   this->AllocatedByteSize = src.AllocatedByteSize;
   this->NumberOfValues = src.NumberOfValues;
-  this->DeallocateOnRelease = src.DeallocateOnRelease;
+  this->DeleteFunction = src.DeleteFunction;
   return *this;
-}
-
-void StorageBasicBase::ReleaseResources()
-{
-  if (this->AllocatedByteSize > 0)
-  {
-    VTKM_ASSERT(this->Array != nullptr);
-    if (this->DeallocateOnRelease)
-    {
-      AllocatorType{}.free_memory(this->Array);
-    }
-    this->Array = nullptr;
-    this->AllocatedByteSize = 0;
-    this->NumberOfValues = 0;
-  }
-  else
-  {
-    VTKM_ASSERT(this->Array == nullptr);
-  }
 }
 
 void StorageBasicBase::AllocateValues(vtkm::Id numberOfValues, vtkm::UInt64 sizeOfValue)
@@ -181,7 +200,7 @@ void StorageBasicBase::AllocateValues(vtkm::Id numberOfValues, vtkm::UInt64 size
     return;
   }
 
-  if (!this->DeallocateOnRelease)
+  if (!this->DeleteFunction)
   {
     throw vtkm::cont::ErrorBadValue("User allocated arrays cannot be reallocated.");
   }
@@ -193,9 +212,10 @@ void StorageBasicBase::AllocateValues(vtkm::Id numberOfValues, vtkm::UInt64 size
     this->Array = AllocatorType{}.allocate(allocsize, VTKM_ALLOCATION_ALIGNMENT);
     this->AllocatedByteSize = allocsize;
     this->NumberOfValues = numberOfValues;
+    this->DeleteFunction = internal::free_memory;
     if (this->Array == nullptr)
     {
-      // Make sureour state is OK.
+      // Make sure our state is OK.
       this->AllocatedByteSize = 0;
       this->NumberOfValues = 0;
       throw vtkm::cont::ErrorBadAllocation("Could not allocate basic control array.");
@@ -207,7 +227,6 @@ void StorageBasicBase::AllocateValues(vtkm::Id numberOfValues, vtkm::UInt64 size
     VTKM_ASSERT(this->NumberOfValues == 0);
     VTKM_ASSERT(this->AllocatedByteSize == 0);
   }
-  this->DeallocateOnRelease = true;
 }
 
 void StorageBasicBase::Shrink(vtkm::Id numberOfValues)
@@ -218,6 +237,37 @@ void StorageBasicBase::Shrink(vtkm::Id numberOfValues)
   }
 
   this->NumberOfValues = numberOfValues;
+}
+
+void StorageBasicBase::ReleaseResources()
+{
+  if (this->AllocatedByteSize > 0)
+  {
+    VTKM_ASSERT(this->Array != nullptr);
+    if (this->DeleteFunction)
+    {
+      this->DeleteFunction(this->Array);
+    }
+    this->Array = nullptr;
+    this->AllocatedByteSize = 0;
+    this->NumberOfValues = 0;
+  }
+  else
+  {
+    VTKM_ASSERT(this->Array == nullptr);
+  }
+}
+
+void StorageBasicBase::SetBasePointer(const void* ptr,
+                                      vtkm::Id numberOfValues,
+                                      vtkm::UInt64 sizeOfValue,
+                                      void (*deleteFunction)(void*))
+{
+  this->ReleaseResources();
+  this->Array = const_cast<void*>(ptr);
+  this->AllocatedByteSize = static_cast<vtkm::UInt64>(numberOfValues) * sizeOfValue;
+  this->NumberOfValues = numberOfValues;
+  this->DeleteFunction = deleteFunction;
 }
 
 void* StorageBasicBase::GetBasePointer() const

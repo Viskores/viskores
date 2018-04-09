@@ -239,6 +239,17 @@ struct SynchronizeFunctor
   }
 };
 
+struct TransformFunctor
+{
+  template <typename Device, typename... Args>
+  VTKM_CONT bool operator()(Device, Args&&... args) const
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::cont::DeviceAdapterAlgorithm<Device>::Transform(std::forward<Args>(args)...);
+    return true;
+  }
+};
+
 struct UniqueFunctor
 {
   template <typename Device, typename... Args>
@@ -493,6 +504,21 @@ struct Algorithm
   }
 
   VTKM_CONT static void Synchronize() { vtkm::cont::TryExecute(SynchronizeFunctor()); }
+
+  template <typename T,
+            typename U,
+            typename V,
+            typename StorageT,
+            typename StorageU,
+            typename StorageV,
+            typename BinaryFunctor>
+  VTKM_CONT static void Transform(const vtkm::cont::ArrayHandle<T, StorageT>& input1,
+                                  const vtkm::cont::ArrayHandle<U, StorageU>& input2,
+                                  vtkm::cont::ArrayHandle<V, StorageV>& output,
+                                  BinaryFunctor binaryFunctor)
+  {
+    vtkm::cont::TryExecute(TransformFunctor(), input1, input2, output, binaryFunctor);
+  }
 
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)

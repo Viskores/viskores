@@ -156,6 +156,20 @@ struct VTKM_CONT_EXPORT ArrayHandleImpl
   {
   }
 
+  VTKM_CONT
+  template <typename T>
+  explicit ArrayHandleImpl(vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>&& storage)
+    : ControlArrayValid(true)
+    , ControlArray(
+        new vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>(std::move(storage)))
+    , ExecutionInterface(nullptr)
+    , ExecutionArrayValid(false)
+    , ExecutionArray(nullptr)
+    , ExecutionArrayEnd(nullptr)
+    , ExecutionArrayCapacity(nullptr)
+  {
+  }
+
   VTKM_CONT ~ArrayHandleImpl();
 
   VTKM_CONT ArrayHandleImpl(const ArrayHandleImpl&) = delete;
@@ -225,8 +239,10 @@ public:
 
   VTKM_CONT ArrayHandle();
   VTKM_CONT ArrayHandle(const Thisclass& src);
-  VTKM_CONT ArrayHandle(const Thisclass&& src);
+  VTKM_CONT ArrayHandle(Thisclass&& src);
+
   VTKM_CONT ArrayHandle(const StorageType& storage);
+  VTKM_CONT ArrayHandle(StorageType&& storage);
 
   VTKM_CONT ~ArrayHandle();
 

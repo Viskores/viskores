@@ -27,12 +27,12 @@
 // Size of 32 bits.
 #define EXPECTED_SIZE 4
 
-#if VTKM_SIZE_ID != EXPECTED_SIZE
-#error VTKM_SIZE_ID an unexpected size.
+#if defined(VTKM_USE_64BIT_IDS)
+#error vtkm::Id an unexpected size.
 #endif
 
-#if VTKM_SIZE_SCALAR != EXPECTED_SIZE
-#error VTKM_SIZE_SCALAR an unexpected size.
+#if defined(VTKM_USE_DOUBLE_PRECISION)
+#error vtkm::FloatDefault an unexpected size.
 #endif
 
 namespace
@@ -40,9 +40,7 @@ namespace
 
 void TestTypeSizes()
 {
-  VTKM_TEST_ASSERT(VTKM_SIZE_ID == EXPECTED_SIZE, "VTKM_SIZE_ID an unexpected size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::Id) == EXPECTED_SIZE, "vtkm::Id an unexpected size.");
-  VTKM_TEST_ASSERT(VTKM_SIZE_SCALAR == EXPECTED_SIZE, "VTKM_SIZE_SCALAR an unexpected size.");
   VTKM_TEST_ASSERT(sizeof(vtkm::FloatDefault) == EXPECTED_SIZE,
                    "vtkm::FloatDefault an unexpected size.");
 }

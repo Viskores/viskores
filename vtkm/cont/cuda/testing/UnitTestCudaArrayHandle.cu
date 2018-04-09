@@ -18,6 +18,12 @@
 //  this software.
 //============================================================================
 
-//This file merely exists so that we can simplify the logic for invoking
-//nvcc telling that cuda code exists.
-#include "MultiBackend.cxx"
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
+
+#include <vtkm/cont/cuda/DeviceAdapterCuda.h>
+#include <vtkm/cont/testing/TestingArrayHandles.h>
+
+int UnitTestCudaArrayHandle(int, char* [])
+{
+  return vtkm::cont::testing::TestingArrayHandles<vtkm::cont::DeviceAdapterTagCuda>::Run();
+}

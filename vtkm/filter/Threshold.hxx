@@ -66,7 +66,7 @@ inline VTKM_CONT Threshold::Threshold()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result Threshold::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet Threshold::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -86,13 +86,12 @@ inline VTKM_CONT vtkm::filter::Result Threshold::DoExecute(
   vtkm::cont::DataSet output;
   output.AddCellSet(cellOut);
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-
-  return vtkm::filter::Result(output);
+  return output;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT bool Threshold::DoMapField(vtkm::filter::Result& result,
+inline VTKM_CONT bool Threshold::DoMapField(vtkm::cont::DataSet& result,
                                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                             const vtkm::filter::FieldMetadata& fieldMeta,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -101,13 +100,13 @@ inline VTKM_CONT bool Threshold::DoMapField(vtkm::filter::Result& result,
   if (fieldMeta.IsPointField())
   {
     //we copy the input handle to the result dataset, reusing the metadata
-    result.GetDataSet().AddField(fieldMeta.AsField(input));
+    result.AddField(fieldMeta.AsField(input));
     return true;
   }
   else if (fieldMeta.IsCellField())
   {
     vtkm::cont::ArrayHandle<T> out = this->Worklet.ProcessCellField(input, device);
-    result.GetDataSet().AddField(fieldMeta.AsField(out));
+    result.AddField(fieldMeta.AsField(out));
     return true;
   }
   else

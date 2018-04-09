@@ -17,33 +17,11 @@
 ##  Laboratory (LANL), the U.S. Government retains certain rights in
 ##  this software.
 ##============================================================================
+set(headers
+  Serialization.h)
 
-set(benchmark_srcs
-  BenchmarkArrayTransfer.cxx
-  BenchmarkCopySpeeds.cxx
-  BenchmarkDeviceAdapter.cxx
-  BenchmarkFieldAlgorithms.cxx
-  BenchmarkTopologyAlgorithms.cxx
-  )
+set(header_template_sources
+  Serialization.hxx)
 
-set(benchmark_headers
-  Benchmarker.h
-  )
-
-if(VTKm_ENABLE_RENDERING)
-  list(APPEND benchmark_srcs BenchmarkRayTracing.cxx)
-endif()
-
-vtkm_save_benchmarks(${benchmark_srcs}
-  HEADERS ${benchmark_headers}
-  )
-
-vtkm_benchmarks(VTKM_DEVICE_ADAPTER_SERIAL)
-
-if (VTKm_ENABLE_CUDA)
-  vtkm_benchmarks(VTKM_DEVICE_ADAPTER_CUDA)
-endif()
-if (VTKm_ENABLE_TBB)
-  vtkm_benchmarks(VTKM_DEVICE_ADAPTER_TBB)
-endif()
-
+vtkm_declare_headers(${headers}
+  EXCLUDE_FROM_TESTING ${header_template_sources})

@@ -28,15 +28,6 @@
 #include <vtkm/filter/FieldMetadata.h>
 #include <vtkm/filter/PolicyBase.h>
 
-//forward declarations needed
-namespace vtkm
-{
-namespace filter
-{
-class Result;
-}
-}
-
 namespace vtkm
 {
 namespace filter
@@ -59,13 +50,13 @@ struct ResolveFieldTypeAndMap
   using Self = ResolveFieldTypeAndMap<Derived, DerivedPolicy>;
 
   Derived* DerivedClass;
-  vtkm::filter::Result& InputResult;
+  vtkm::cont::DataSet& InputResult;
   const vtkm::filter::FieldMetadata& Metadata;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
   bool& RanProperly;
 
   ResolveFieldTypeAndMap(Derived* derivedClass,
-                         vtkm::filter::Result& inResult,
+                         vtkm::cont::DataSet& inResult,
                          const vtkm::filter::FieldMetadata& fieldMeta,
                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                          bool& ran)

@@ -19,7 +19,8 @@
 //============================================================================
 
 #include <vtkm/cont/DynamicCellSet.h>
-
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm
@@ -36,7 +37,7 @@ inline VTKM_CONT CellAverage::CellAverage()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result CellAverage::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet CellAverage::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
@@ -45,7 +46,7 @@ inline VTKM_CONT vtkm::filter::Result CellAverage::DoExecute(
 {
   if (!fieldMetadata.IsPointField())
   {
-    return vtkm::filter::Result();
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
   vtkm::cont::DynamicCellSet cellSet = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -66,7 +67,7 @@ inline VTKM_CONT vtkm::filter::Result CellAverage::DoExecute(
     outputName = fieldMetadata.GetName();
   }
 
-  return vtkm::filter::Result(
+  return internal::CreateResult(
     input, outArray, outputName, vtkm::cont::Field::ASSOC_CELL_SET, cellSet.GetName());
 }
 }

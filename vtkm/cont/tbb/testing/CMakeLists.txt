@@ -32,4 +32,5 @@ set(unit_tests
   UnitTestTBBPointLocatorUniformGrid.cxx
   UnitTestTBBVirtualObjectHandle.cxx
   )
-vtkm_unit_tests(TBB SOURCES ${unit_tests} LIBRARIES libvtkm_cont)
+
+vtkm_unit_tests(SOURCES ${unit_tests} BACKEND TBB)

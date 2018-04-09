@@ -101,17 +101,35 @@ public:
   {
   }
 
-  VTKM_EXEC
-  bool operator()(const vtkm::Id& i, const vtkm::Id& j, bool ascending)
+  inline VTKM_EXEC bool operator()(const vtkm::Id& i, const vtkm::Id& j, bool ascending) const
   {
+// For numerous calls of this function GCC is able to determine if i is
+// always greater than j ( or vice-versa ) and optimizes those call sites.
+// But when it does these optimizations is presumes that i and j will not
+// overflow and emits a Wstrict-overflow warning
+#ifdef VTKM_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
     if (values.Get(i) < values.Get(j))
+    {
       return ascending ^ true;
+    }
     else if (values.Get(j) < values.Get(i))
+    {
       return ascending ^ false;
+    }
     else if (i < j)
+    {
       return ascending ^ true;
+    }
     else if (j < i)
+    {
       return ascending ^ false;
+    }
+#ifdef VTKM_GCC
+#pragma GCC diagnostic pop
+#endif
     // fall through to return false
     return false;
   }

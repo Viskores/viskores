@@ -52,7 +52,6 @@ set(headers
   PolicyBase.h
   PolicyDefault.h
   Probe.h
-  Result.h
   Streamline.h
   SurfaceNormals.h
   Tetrahedralize.h
@@ -102,9 +101,9 @@ set(header_template_sources
   VertexClustering.hxx
 )
 
-vtkm_declare_headers(${headers})
-
-vtkm_install_template_sources(${header_template_sources})
+vtkm_declare_headers(${headers}
+  EXCLUDE_FROM_TESTING ${header_template_sources}
+  )
 
 add_subdirectory(internal)
 

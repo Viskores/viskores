@@ -52,7 +52,7 @@ inline vtkm::filter::PolicyBase<CellSetExplicitPolicy<DerivedPolicy>> GetCellSet
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result ExternalFaces::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
@@ -107,14 +107,14 @@ inline VTKM_CONT vtkm::filter::Result ExternalFaces::DoExecute(
   }
   else
   {
-    return vtkm::filter::Result(output);
+    return output;
   }
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExternalFaces::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -128,7 +128,7 @@ inline VTKM_CONT bool ExternalFaces::DoMapField(
     }
     else
     {
-      result.GetDataSet().AddField(fieldMeta.AsField(input));
+      result.AddField(fieldMeta.AsField(input));
       return true;
     }
   }
@@ -136,7 +136,7 @@ inline VTKM_CONT bool ExternalFaces::DoMapField(
   {
     vtkm::cont::ArrayHandle<T> fieldArray;
     fieldArray = this->Worklet.ProcessCellField(input, device);
-    result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
+    result.AddField(fieldMeta.AsField(fieldArray));
     return true;
   }
 

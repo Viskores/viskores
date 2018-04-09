@@ -19,15 +19,11 @@
 ##============================================================================
 
 set(headers
+  OpenGLHeaders.h
   RunTriangulator.h
   )
 
-set(opengl_headers
-  OpenGLHeaders.h
-  )
-
-if(VTKm_OpenGL_FOUND)
-  list(APPEND headers ${opengl_headers})
-endif()
+set_source_files_properties(OpenGLHeaders.h
+                            PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE)
 
 vtkm_declare_headers(${headers})

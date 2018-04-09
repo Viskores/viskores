@@ -27,6 +27,6 @@ add_subdirectory(internal)
 vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})
 
 #-----------------------------------------------------------------------------
-if (VTKm_ENABLE_TBB)
+if (TARGET vtkm::tbb)
   add_subdirectory(testing)
 endif()

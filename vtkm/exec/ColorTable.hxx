@@ -368,7 +368,7 @@ void ColorTableBase::FindColors(double value,
     rgb1 = this->NaNColor;
     rgb2 = this->NaNColor;
   }
-  else if (this->ColorSize == 0.0f)
+  else if (this->ColorSize == 0)
   { //If we have no entires use the below range value
     rgb1 = this->BelowRangeColor;
     rgb2 = this->BelowRangeColor;
@@ -425,7 +425,7 @@ float ColorTableBase::MapThroughOpacitySpace(double value) const
   { //If we are trying to find the opacity of NaN use a constant of 1.0
     return 1.0f;
   }
-  else if (this->OpacitySize == 0.0f)
+  else if (this->OpacitySize == 0)
   { //no opacity control functions so use a constant of 1.0
     return 1.0f;
   }

@@ -23,12 +23,13 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/BoundsCompute.h>
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DataSetFieldAdd.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
-#include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/FieldRangeCompute.h>
 #include <vtkm/cont/MultiBlock.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
@@ -54,11 +55,7 @@ static void MultiBlockTest()
   multiblock.AddBlock(TDset1);
   multiblock.AddBlock(TDset2);
 
-  const int procsize = vtkm::cont::EnvironmentTracker::GetCommunicator().size();
-
   VTKM_TEST_ASSERT(multiblock.GetNumberOfBlocks() == 2, "Incorrect number of blocks");
-  VTKM_TEST_ASSERT(multiblock.GetGlobalNumberOfBlocks() == 2 * procsize,
-                   "Incorrect number of blocks");
 
   vtkm::cont::DataSet TestDSet = multiblock.GetBlock(0);
   VTKM_TEST_ASSERT(TDset1.GetNumberOfFields() == TestDSet.GetNumberOfFields(),
@@ -78,9 +75,12 @@ static void MultiBlockTest()
   GlobalBound.Include(Set1Bounds);
   GlobalBound.Include(Set2Bounds);
 
-  VTKM_TEST_ASSERT(multiblock.GetBounds() == GlobalBound, "Global bounds info incorrect");
-  VTKM_TEST_ASSERT(multiblock.GetBlockBounds(0) == Set1Bounds, "Local bounds info incorrect");
-  VTKM_TEST_ASSERT(multiblock.GetBlockBounds(1) == Set2Bounds, "Local bounds info incorrect");
+  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(multiblock) == GlobalBound,
+                   "Global bounds info incorrect");
+  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(multiblock.GetBlock(0)) == Set1Bounds,
+                   "Local bounds info incorrect");
+  VTKM_TEST_ASSERT(vtkm::cont::BoundsCompute(multiblock.GetBlock(1)) == Set2Bounds,
+                   "Local bounds info incorrect");
 
   vtkm::Range Set1Field1Range;
   vtkm::Range Set1Field2Range;
@@ -99,26 +99,12 @@ static void MultiBlockTest()
   Field2GlobeRange.Include(Set1Field2Range);
   Field2GlobeRange.Include(Set2Field2Range);
 
-  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("pointvar").GetPortalConstControl().Get(0) ==
+  using vtkm::cont::FieldRangeCompute;
+  VTKM_TEST_ASSERT(FieldRangeCompute(multiblock, "pointvar").GetPortalConstControl().Get(0) ==
                      Field1GlobeRange,
                    "Local field value range info incorrect");
-  VTKM_TEST_ASSERT(multiblock.GetGlobalRange("cellvar").GetPortalConstControl().Get(0) ==
+  VTKM_TEST_ASSERT(FieldRangeCompute(multiblock, "cellvar").GetPortalConstControl().Get(0) ==
                      Field2GlobeRange,
-                   "Local field value range info incorrect");
-
-  TDset1.GetField(0).GetRange(&Set1Field1Range);
-  TDset1.GetField(1).GetRange(&Set1Field2Range);
-  TDset2.GetField(0).GetRange(&Set2Field1Range);
-  TDset2.GetField(1).GetRange(&Set2Field2Range);
-
-  Field1GlobeRange.Include(Set1Field1Range);
-  Field1GlobeRange.Include(Set2Field1Range);
-  Field2GlobeRange.Include(Set1Field2Range);
-  Field2GlobeRange.Include(Set2Field2Range);
-
-  VTKM_TEST_ASSERT(multiblock.GetGlobalRange(0).GetPortalControl().Get(0) == Field1GlobeRange,
-                   "Local field value range info incorrect");
-  VTKM_TEST_ASSERT(multiblock.GetGlobalRange(1).GetPortalControl().Get(0) == Field2GlobeRange,
                    "Local field value range info incorrect");
 
   vtkm::Range SourceRange; //test the validity of member function GetField(FieldName, BlockId)
@@ -166,9 +152,7 @@ void DataSet_Compare(vtkm::cont::DataSet& LeftDateSet, vtkm::cont::DataSet& Righ
   return;
 }
 
-int UnitTestMultiBlock(int argc, char* argv[])
+int UnitTestMultiBlock(int, char* [])
 {
-  diy::mpi::environment env(argc, argv);
-  vtkm::cont::EnvironmentTracker::SetCommunicator(diy::mpi::communicator(MPI_COMM_WORLD));
   return vtkm::cont::testing::Testing::Run(MultiBlockTest);
 }

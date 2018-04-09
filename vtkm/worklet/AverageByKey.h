@@ -57,7 +57,7 @@ struct AverageByKey
         ComponentType component = valuesIn[index];
         sum = sum + component;
       }
-      return sum / valuesIn.GetNumberOfComponents();
+      return sum / static_cast<ComponentType>(valuesIn.GetNumberOfComponents());
     }
   };
 

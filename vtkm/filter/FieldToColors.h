@@ -35,7 +35,7 @@ class FieldToColors : public vtkm::filter::FilterField<FieldToColors>
 {
 public:
   VTKM_CONT
-  FieldToColors(const vtkm::cont::ColorTable& table);
+  FieldToColors(const vtkm::cont::ColorTable& table = vtkm::cont::ColorTable());
 
   enum FieldToColorsInputMode
   {
@@ -50,6 +50,13 @@ public:
     RGBA
   };
 
+  void SetColorTable(const vtkm::cont::ColorTable& table)
+  {
+    this->Table = table;
+    this->ModifiedCount = -1;
+  }
+  const vtkm::cont::ColorTable& GetColorTable() const { return this->Table; }
+
   void SetMappingMode(FieldToColorsInputMode mode) { this->InputMode = mode; }
   void SetMappingToScalar() { this->InputMode = FieldToColorsInputMode::SCALAR; }
   void SetMappingToMagnitude() { this->InputMode = FieldToColorsInputMode::MAGNITUDE; }
@@ -59,26 +66,26 @@ public:
   bool IsMappingMagnitude() const { return this->InputMode == FieldToColorsInputMode::MAGNITUDE; }
   bool IsMappingComponent() const { return this->InputMode == FieldToColorsInputMode::COMPONENT; }
 
-  void SetMappingComponent(vtkm::Int32 comp) { this->Component = comp; }
-  vtkm::Int32 GetMappingComponent() const { return this->Component; }
+  void SetMappingComponent(vtkm::IdComponent comp) { this->Component = comp; }
+  vtkm::IdComponent GetMappingComponent() const { return this->Component; }
 
   void SetOutputMode(FieldToColorsOutputMode mode) { this->OutputMode = mode; }
   void SetOutputToRGB() { this->OutputMode = FieldToColorsOutputMode::RGB; }
   void SetOutputToRGBA() { this->OutputMode = FieldToColorsOutputMode::RGBA; }
   FieldToColorsOutputMode GetOutputMode() const { return this->OutputMode; }
-  bool IsMappingRGB() const { return this->OutputMode == FieldToColorsOutputMode::RGB; }
-  bool IsMappingRGBA() const { return this->OutputMode == FieldToColorsOutputMode::RGBA; }
+  bool IsOutputRGB() const { return this->OutputMode == FieldToColorsOutputMode::RGB; }
+  bool IsOutputRGBA() const { return this->OutputMode == FieldToColorsOutputMode::RGBA; }
 
 
   void SetNumberOfSamplingPoints(vtkm::Int32 count);
   vtkm::Int32 GetNumberOfSamplingPoints() const { return this->SampleCount; }
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
-                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                           const DeviceAdapter& tag);
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                          const vtkm::filter::FieldMetadata& fieldMeta,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                          const DeviceAdapter& tag);
 
 private:
   vtkm::cont::ColorTable Table;
@@ -86,7 +93,7 @@ private:
   FieldToColorsOutputMode OutputMode;
   vtkm::cont::ColorTableSamplesRGB SamplesRGB;
   vtkm::cont::ColorTableSamplesRGBA SamplesRGBA;
-  vtkm::Int32 Component;
+  vtkm::IdComponent Component;
   vtkm::Int32 SampleCount;
   vtkm::Id ModifiedCount;
 };

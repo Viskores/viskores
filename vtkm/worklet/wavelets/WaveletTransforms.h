@@ -226,7 +226,6 @@ public:
     else
     {
       sigPretendX = sigPretendY = sigPretendZ = 0; // so the compiler doesn't complain
-      vtkm::cont::ErrorInternal("Invalid extension mode for cubes!");
     }
 
     if (sigPretendX == sigPretendDimX || // decides to pad a zero
@@ -329,10 +328,6 @@ public:
       cube = 3;
       idx = inZ * dimX3 * dimY3 + inY * dimX3 + inX_local;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -407,10 +402,6 @@ public:
       cube = 3;
       idx = inZ * dimX3 * dimY3 + inY_local * dimX3 + inX;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -482,10 +473,6 @@ public:
       vtkm::Id inZ_local = inZ - dimZ1 - pretendDimZ2;
       cube = 3;
       idx = inZ_local * dimX3 * dimY3 + inY * dimX3 + inX;
-    }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
     }
   }
 
@@ -614,10 +601,6 @@ public:
       cube = 4; // ext4
       idx = inZ * dimX4 * dimY4 + inY * dimX4 + inX_local;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -734,10 +717,6 @@ public:
       cube = 4; // ext4
       idx = inZ * dimX4 * dimY4 + inY_local * dimX4 + inX;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -851,10 +830,6 @@ public:
       cube = 4; // ext4
       idx = inZ_local * dimX4 * dimY4 + inY * dimX4 + inX;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -878,7 +853,6 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _4;
 
-  VTKM_EXEC_CONT
   ForwardTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                               vtkm::Id filter_len,
@@ -963,7 +937,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid cube index!");
       return -1;
     }
   }
@@ -1034,7 +1007,6 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _4;
 
-  VTKM_EXEC_CONT
   ForwardTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                             const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                             vtkm::Id filter_len,
@@ -1119,7 +1091,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid cube index!");
       return -1;
     }
   }
@@ -1190,7 +1161,6 @@ public:
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _4;
 
-  VTKM_EXEC_CONT
   ForwardTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                               vtkm::Id filter_len,
@@ -1275,7 +1245,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid cube index!");
       return -1;
     }
   }
@@ -1362,7 +1331,6 @@ public:
   using InputDomain = _6;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
                               vtkm::Id fil_len,
@@ -1470,7 +1438,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -1596,7 +1563,6 @@ public:
   using InputDomain = _6;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                             const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
                             vtkm::Id fil_len,
@@ -1704,7 +1670,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -1830,7 +1795,6 @@ public:
   using InputDomain = _6;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
                               vtkm::Id fil_len,
@@ -1940,7 +1904,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -2156,10 +2119,6 @@ public:
         mat = 4; // ext4
         idx = inY * x4 + (inX - x1 - xa - x2 - x3 - xd);
       }
-      else
-      {
-        vtkm::cont::ErrorInternal("Invalid index!");
-      }
     }
     else // top-down mode
     {
@@ -2192,10 +2151,6 @@ public:
       {
         mat = 4; // ext4
         idx = (inY - y1 - ya - y2 - y3 - yd) * x4 + inX;
-      }
-      else
-      {
-        vtkm::cont::ErrorInternal("Invalid index!");
       }
     }
   }
@@ -2268,10 +2223,6 @@ public:
         mat = 3;
         idx = inY * dimX3 + (inX - dimX1 - pretendDimX2);
       }
-      else
-      {
-        vtkm::cont::ErrorInternal("Invalid index!");
-      }
     }
     else // top-down mode
     {
@@ -2289,10 +2240,6 @@ public:
       {
         mat = 3;
         idx = (inY - dimY1 - pretendDimY2) * dimX3 + inX;
-      }
-      else
-      {
-        vtkm::cont::ErrorInternal("Invalid index!");
       }
     }
   }
@@ -2430,10 +2377,6 @@ public:
         sigPretendY++;
       }
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid extension mode for matrices!");
-    }
 
     if (sigPretendX == sigPretendDimX || sigPretendY == sigPretendDimY)
     {
@@ -2466,7 +2409,6 @@ public:
   using InputDomain = _4;
 
   // Constructor
-  VTKM_EXEC_CONT
   ForwardTransform2D(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                      const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                      vtkm::Id filter_len,
@@ -2529,7 +2471,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -2657,7 +2598,6 @@ public:
   using InputDomain = _6;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransform2D(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                      const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
                      vtkm::Id fil_len,
@@ -2759,7 +2699,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -2963,7 +2902,6 @@ public:
   using InputDomain = _1;
 
   // Constructor
-  VTKM_EXEC_CONT
   ForwardTransform(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                    const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                    vtkm::Id filLen,
@@ -3130,7 +3068,6 @@ public:
   using InputDomain = _1;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransformEven(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                        const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                        vtkm::Id filtL,

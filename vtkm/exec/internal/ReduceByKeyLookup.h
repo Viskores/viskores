@@ -66,6 +66,7 @@ struct ReduceByKeyLookup : vtkm::exec::ExecutionObjectBase
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ReduceByKeyLookup() {}
 };

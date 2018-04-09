@@ -37,7 +37,7 @@ void NDEntropy::AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins)
 }
 
 template <typename Policy, typename Device>
-inline VTKM_CONT vtkm::filter::Result NDEntropy::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
   const vtkm::cont::DataSet& inData,
   vtkm::filter::PolicyBase<Policy> vtkmNotUsed(policy),
   Device device)
@@ -59,14 +59,12 @@ inline VTKM_CONT vtkm::filter::Result NDEntropy::DoExecute(
   vtkm::cont::DataSet outputData;
   outputData.AddField(vtkm::cont::make_Field(
     "Entropy", vtkm::cont::Field::ASSOC_POINTS, &entropy, 1, vtkm::CopyFlag::On));
-
-  //return outputData;
-  return vtkm::filter::Result(outputData);
+  return outputData;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT bool NDEntropy::DoMapField(vtkm::filter::Result&,
+inline VTKM_CONT bool NDEntropy::DoMapField(vtkm::cont::DataSet&,
                                             const vtkm::cont::ArrayHandle<T, StorageType>&,
                                             const vtkm::filter::FieldMetadata&,
                                             const vtkm::filter::PolicyBase<DerivedPolicy>&,

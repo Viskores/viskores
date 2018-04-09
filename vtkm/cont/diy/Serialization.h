@@ -17,8 +17,35 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+#ifndef vtk_m_cont_diy_Serialization_h
+#define vtk_m_cont_diy_Serialization_h
 
-//Define the CUDA device adapter as being the default
-#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_CUDA
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/internal/ExportMacros.h>
 
-#include "Demo.cxx"
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <vtkm/thirdparty/diy/Configure.h>
+#include VTKM_DIY(diy/serialization.hpp)
+VTKM_THIRDPARTY_POST_INCLUDE
+
+namespace diy
+{
+
+/// This provides specializations to extend DIY's serialization code to
+/// load/save vtkm::cont::ArrayHandle instances.
+template <typename T, typename StorageTag>
+struct Serialization<vtkm::cont::ArrayHandle<T, StorageTag>>
+{
+  VTKM_CONT
+  static void save(BinaryBuffer& bb, const vtkm::cont::ArrayHandle<T, StorageTag>& indata);
+
+  VTKM_CONT
+  static void load(BinaryBuffer& bb, vtkm::cont::ArrayHandle<T, StorageTag>& outdata);
+};
+
+} // namespace diy
+
+#include <vtkm/cont/diy/Serialization.hxx>
+
+#endif
