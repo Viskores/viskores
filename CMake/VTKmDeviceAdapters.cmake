@@ -105,27 +105,22 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   # 1 - native
   #   - Uses system introspection to determine compile flags
   # 2 - fermi
-  #   - Uses: --generate-code=arch=compute_20,code=compute_20
+  #   - Uses: --generate-code=arch=compute_20,code=sm_20
   # 3 - kepler
-  #   - Uses: --generate-code=arch=compute_30,code=compute_30
-  #   - Uses: --generate-code=arch=compute_35,code=compute_35
+  #   - Uses: --generate-code=arch=compute_30,code=sm_30
+  #   - Uses: --generate-code=arch=compute_35,code=sm_35
   # 4 - maxwell
-  #   - Uses: --generate-code=arch=compute_50,code=compute_50
-  #   - Uses: --generate-code=arch=compute_52,code=compute_52
+  #   - Uses: --generate-code=arch=compute_50,code=sm_50
   # 5 - pascal
-  #   - Uses: --generate-code=arch=compute_60,code=compute_60
-  #   - Uses: --generate-code=arch=compute_61,code=compute_61
+  #   - Uses: --generate-code=arch=compute_60,code=sm_60
   # 6 - volta
-  #   - Uses: --generate-code=arch=compute_70,code=compute_70
+  #   - Uses: --generate-code=arch=compute_70,code=sm_70
   # 7 - all
-  #   - Uses: --generate-code=arch=compute_20,code=compute_20
-  #   - Uses: --generate-code=arch=compute_30,code=compute_30
-  #   - Uses: --generate-code=arch=compute_35,code=compute_35
-  #   - Uses: --generate-code=arch=compute_50,code=compute_50
-  #   - Uses: --generate-code=arch=compute_52,code=compute_52
-  #   - Uses: --generate-code=arch=compute_60,code=compute_60
-  #   - Uses: --generate-code=arch=compute_61,code=compute_61
-  #   - Uses: --generate-code=arch=compute_70,code=compute_70
+  #   - Uses: --generate-code=arch=compute_30,code=sm_30
+  #   - Uses: --generate-code=arch=compute_35,code=sm_35
+  #   - Uses: --generate-code=arch=compute_50,code=sm_50
+  #   - Uses: --generate-code=arch=compute_60,code=sm_60
+  #   - Uses: --generate-code=arch=compute_70,code=sm_70
   #
 
   #specify the property
@@ -173,33 +168,30 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
         set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
                 "device type(s) for cuda[native]")
       else()
-        set(VTKm_CUDA_Architecture "fermi")
+        set(VTKm_CUDA_Architecture "kepler")
       endif()
     endif()
   endif()
 
-  #since when we are native we can fail, and fall back to "fermi" these have
+  #since when we are native we can fail, and fall back to "kepler" these have
   #to happen after, and separately of the native check
   if(VTKm_CUDA_Architecture STREQUAL "fermi")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_20,code=compute_20")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_20,code=sm_20")
   elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_30,code=compute_30")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_35,code=compute_35")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_30,code=sm_30")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_35,code=sm_35")
   elseif(VTKm_CUDA_Architecture STREQUAL "maxwell")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_50,code=compute_50")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_52,code=compute_52")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_50,code=sm_50")
   elseif(VTKm_CUDA_Architecture STREQUAL "pascal")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_60,code=compute_60")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_61,code=compute_61")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_60,code=sm_60")
   elseif(VTKm_CUDA_Architecture STREQUAL "volta")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_70,code=compute_70")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_70,code=sm_70")
   elseif(VTKm_CUDA_Architecture STREQUAL "all")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_30,code=compute_30")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_35,code=compute_35")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_50,code=compute_50")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_52,code=compute_52")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_60,code=compute_60")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_61,code=compute_61")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_30,code=sm_30")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_35,code=sm_35")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_50,code=sm_50")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_60,code=sm_60")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_70,code=sm_70")
   endif()
 
 endif()
