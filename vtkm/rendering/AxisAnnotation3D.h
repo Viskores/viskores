@@ -53,13 +53,17 @@ protected:
   vtkm::Float32 FontOffset;
   vtkm::Float32 LineWidth;
   vtkm::rendering::Color Color;
-  std::vector<TextAnnotationBillboard*> Labels;
+  std::vector<std::unique_ptr<TextAnnotationBillboard>> Labels;
   int MoreOrLessTickAdjustment;
 
 public:
   AxisAnnotation3D();
 
   ~AxisAnnotation3D();
+
+  AxisAnnotation3D(const AxisAnnotation3D&) = delete;
+
+  AxisAnnotation3D& operator=(const AxisAnnotation3D&) = delete;
 
   VTKM_CONT
   void SetMoreOrLessTickAdjustment(int offset) { this->MoreOrLessTickAdjustment = offset; }
