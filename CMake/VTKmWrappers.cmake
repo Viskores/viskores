@@ -293,7 +293,7 @@ function(vtkm_library)
   endif()
 
   # Setup the SOVERSION and VERSION information for this vtkm library
-  set_property(TARGET ${lib_name} PROPERTY VERSION ${VTKm_VERSION})
+  set_property(TARGET ${lib_name} PROPERTY VERSION 1)
   set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
 
   # Support custom library suffix names, for other projects wanting to inject
