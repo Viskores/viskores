@@ -269,13 +269,13 @@ private:
 public:
   VTKM_EXEC_CONT
   StateRecordingParticleExecutionObject(const StateRecordingParticleExecutionObject& s)
-    : Pos(s.Pos)
+    : ValidPoint(s.ValidPoint)
+    , History(s.History)
+    , HistSize(s.HistSize)
+    , Pos(s.Pos)
     , Steps(s.Steps)
     , Status(s.Status)
     , MaxSteps(s.MaxSteps)
-    , ValidPoint(s.ValidPoint)
-    , History(s.History)
-    , HistSize(s.HistSize)
   {
   }
 
