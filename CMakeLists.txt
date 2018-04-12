@@ -126,11 +126,14 @@ set(CMAKE_CXX_EXTENSIONS False)
 # Setup default build types
 include(VTKmBuildType)
 
+# Include the vtk-m wrappers
+include(VTKmWrappers)
+
 # Create vtkm_compiler_flags library. This is an interface library that
 # holds all the C++ compiler flags that are needed for consumers and
 # when building VTK-m.
 include(VTKmCompilerFlags)
-include(VTKmWrappers)
+
 
 #-----------------------------------------------------------------------------
 # When building VTK-m it self we want to explicitly disable compiler extensions
