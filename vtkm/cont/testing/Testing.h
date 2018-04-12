@@ -20,9 +20,15 @@
 #ifndef vtk_m_cont_testing_Testing_h
 #define vtk_m_cont_testing_Testing_h
 
+#include <vtkm/cont/EnvironmentTracker.h>
 #include <vtkm/cont/Error.h>
-
 #include <vtkm/testing/Testing.h>
+#include <vtkm/thirdparty/diy/Configure.h>
+
+// clang-format off
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include VTKM_DIY(diy/mpi.hpp)
+VTKM_THIRDPARTY_POST_INCLUDE
 
 namespace vtkm
 {
@@ -65,6 +71,32 @@ public:
     return 0;
   }
 };
+
+struct Environment
+{
+  VTKM_CONT Environment(int* argc, char*** argv)
+  {
+#if defined(VTKM_ENABLE_MPI)
+    int provided_threading;
+    MPI_Init_thread(argc, argv, MPI_THREAD_FUNNELED, &provided_threading);
+
+    // set the global communicator to use in VTKm.
+    diy::mpi::communicator comm(MPI_COMM_WORLD);
+    vtkm::cont::EnvironmentTracker::SetCommunicator(comm);
+#else
+    (void) argc;
+    (void) argv;
+#endif
+  }
+
+  VTKM_CONT ~Environment()
+  {
+#if defined(VTKM_ENABLE_MPI)
+    MPI_Finalize();
+#endif
+  }
+};
+
 }
 }
 } // namespace vtkm::cont::testing
