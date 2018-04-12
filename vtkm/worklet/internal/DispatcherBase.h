@@ -457,6 +457,8 @@ private:
 #pragma diag_suppress 2735
 #pragma diag_suppress 2739
 #pragma diag_suppress 2828
+#pragma diag_suppress 2864
+#pragma diag_suppress 2867
 #endif
 #endif
     auto fi =
