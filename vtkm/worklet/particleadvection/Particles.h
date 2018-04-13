@@ -253,16 +253,38 @@ public:
   VTKM_EXEC_CONT
   void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
   {
-    if (status != ParticleStatus::STATUS_OK)
-      return;
+    // Irrespective of what the advected status of the particle is,
+    // we need to set the output position as the last step taken by
+    // the particle, and increase the number of steps take by 1.
+    Pos.Set(idx, pt);
     vtkm::Id nSteps = Steps.Get(idx);
+    Steps.Set(idx, ++nSteps);
+
+    // Update the step for streamline storing portals.
+    // This includes updating the history and the valid points.
     vtkm::Id loc = idx * Length + nSteps;
     History.Set(loc, pt);
     ValidPoint.Set(loc, 1);
-    nSteps = nSteps + 1;
-    Steps.Set(idx, nSteps);
-    if (nSteps == MaxSteps)
-      SetTerminated(idx);
+
+    // If the status is OK, we only need to check if the particle
+    // has completed the maximum steps required.
+    if (status == ParticleStatus::STATUS_OK)
+    {
+      if (nSteps == MaxSteps)
+        SetTerminated(idx);
+    }
+    // If the particle has exited spatial boundary, set corresponding status.
+    // This is needed for all particle advection cases.
+    else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
+    {
+      SetExitedSpatialBoundary(idx);
+    }
+    // If the particle has exited temporal boundary, set corresponding status.
+    // This is needed when we need temporal interpolation for velocity.
+    else if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
+    {
+      SetExitedTemporalBoundary(idx);
+    }
   }
 
   /* Set/Change Status */
