@@ -33,7 +33,6 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Histogram.h>
 
 
 template <typename T>
@@ -85,7 +84,7 @@ vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum, std::string Field
 }
 template <typename D>
 void Result_Verify(const vtkm::cont::MultiBlock& Result,
-                   D Filter,
+                   D& Filter,
                    const vtkm::cont::MultiBlock& Blocks,
                    std::string FieldName)
 {
@@ -123,12 +122,6 @@ void TestMultiBlockFilters()
   std::size_t BlockNum = 7;
   vtkm::cont::MultiBlock result;
   vtkm::cont::MultiBlock Blocks;
-
-  Blocks = MultiBlockBuilder<vtkm::Float64>(BlockNum, "cellvar");
-  vtkm::filter::Histogram histogram;
-  histogram.SetActiveField("cellvar");
-  result = histogram.Execute(Blocks);
-  Result_Verify(result, histogram, Blocks, std::string("cellvar"));
 
   Blocks = MultiBlockBuilder<vtkm::Id>(BlockNum, "pointvar");
   vtkm::filter::CellAverage cellAverage;

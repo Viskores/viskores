@@ -169,6 +169,9 @@ if (VTKm_ENABLE_TESTING)
   add_test(NAME CopyrightStatement
     COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckCopyright.cmake"
     )
+  # increase timeout since on some machines CopyrightStatement test takes a long time.
+  set_tests_properties(CopyrightStatement PROPERTIES TIMEOUT 300)
+
   add_test(NAME SourceInBuild
     COMMAND ${CMAKE_COMMAND} "-DVTKm_SOURCE_DIR=${VTKm_SOURCE_DIR}" -P "${VTKm_SOURCE_DIR}/CMake/VTKmCheckSourceInBuild.cmake"
     )

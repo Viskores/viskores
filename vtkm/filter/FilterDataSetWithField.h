@@ -85,7 +85,6 @@ public:
   bool GetUseCoordinateSystemAsField() const { return this->UseCoordinateSystemAsField; }
   //@}
 
-private:
   //From the field we can extract the association component
   // ASSOC_ANY -> unable to map
   // ASSOC_WHOLE_MESH -> (I think this is points)
@@ -102,6 +101,7 @@ private:
     const vtkm::cont::DataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
+private:
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
     const vtkm::cont::DataSet& input,

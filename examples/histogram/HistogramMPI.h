@@ -17,27 +17,25 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-
-#ifndef vtk_m_filter_Histogram_h
-#define vtk_m_filter_Histogram_h
+#ifndef vtk_m_examples_histogram_HistogramMPI_h
+#define vtk_m_examples_histogram_HistogramMPI_h
 
 #include <vtkm/filter/FilterField.h>
+#include <vtkm/filter/FilterTraits.h>
 
-namespace vtkm
-{
-namespace filter
+namespace example
 {
 
-/// \brief Construct the histogram of a given Field
+/// \brief Construct the HistogramMPI of a given Field
 ///
-/// Construct a histogram with a default of 10 bins.
+/// Construct a HistogramMPI with a default of 10 bins.
 ///
-class Histogram : public vtkm::filter::FilterField<Histogram>
+class HistogramMPI : public vtkm::filter::FilterField<HistogramMPI>
 {
 public:
-  //Construct a histogram with a default of 10 bins
+  //Construct a HistogramMPI with a default of 10 bins
   VTKM_CONT
-  Histogram();
+  HistogramMPI();
 
   VTKM_CONT
   void SetNumberOfBins(vtkm::Id count) { this->NumberOfBins = count; }
@@ -46,7 +44,7 @@ public:
   vtkm::Id GetNumberOfBins() const { return this->NumberOfBins; }
 
   //@{
-  /// Get/Set the range to use to generate the histogram. If range is set to
+  /// Get/Set the range to use to generate the HistogramMPI. If range is set to
   /// empty, the field's global range (computed using `vtkm::cont::FieldRangeGlobalCompute`)
   /// will be used.
   VTKM_CONT
@@ -93,18 +91,25 @@ private:
   vtkm::Range ComputedRange;
   vtkm::Range Range;
 };
+} // namespace example
 
+namespace vtkm
+{
+namespace filter
+{
 template <>
-class FilterTraits<Histogram>
-{ //currently the Histogram filter only works on scalar data.
+class FilterTraits<example::HistogramMPI>
+{ //currently the HistogramMPI filter only works on scalar data.
   //this mainly has to do with getting the ranges for each bin
   //would require returning a more complex value type
 public:
-  using InputFieldTypeList = TypeListTagScalarAll;
+  using InputFieldTypeList = vtkm::TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter
 
-#include <vtkm/filter/Histogram.hxx>
+
+
+#include "HistogramMPI.hxx"
 
 #endif // vtk_m_filter_Histogram_h

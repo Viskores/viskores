@@ -89,16 +89,7 @@ public:
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
   //@}
 
-private:
   /// These are provided to satisfy the Filter API requirements.
-
-  /// They simply pass the field to the result dataset as there's no mapping
-  /// needed for FilterField.
-  template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
-                                    const vtkm::cont::Field& field,
-                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
     const vtkm::cont::DataSet& input,
@@ -116,7 +107,7 @@ private:
     const vtkm::cont::CoordinateSystem& field,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-
+private:
   std::string OutputFieldName;
   vtkm::Id CoordinateSystemIndex;
   std::string ActiveFieldName;

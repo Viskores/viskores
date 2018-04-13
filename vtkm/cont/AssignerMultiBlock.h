@@ -68,6 +68,9 @@ public:
   VTKM_CONT
   AssignerMultiBlock(const vtkm::cont::MultiBlock& mb);
 
+  VTKM_CONT
+  AssignerMultiBlock(vtkm::Id num_blocks);
+
   ///@{
   /// diy::Assigner API implementation.
   VTKM_CONT

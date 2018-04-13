@@ -27,6 +27,7 @@ namespace vtkm
 {
 namespace filter
 {
+
 template <typename Filter>
 class FilterTraits
 {

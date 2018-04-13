@@ -58,7 +58,6 @@ public:
   VTKM_CONT
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
 
-private:
   /// These are provided to satisfy the Filter API requirements.
 
   //From the field we can extract the association component
@@ -72,12 +71,12 @@ private:
                                     const vtkm::cont::Field& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-
   template <typename DerivedPolicy>
   VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
     const vtkm::cont::DataSet& input,
     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
+private:
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
 

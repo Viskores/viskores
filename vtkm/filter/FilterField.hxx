@@ -123,17 +123,5 @@ inline VTKM_CONT vtkm::cont::DataSet FilterField<Derived>::PrepareForExecution(
 
   return result;
 }
-
-//-----------------------------------------------------------------------------
-template <typename Derived>
-template <typename DerivedPolicy>
-inline VTKM_CONT bool FilterField<Derived>::MapFieldOntoOutput(
-  vtkm::cont::DataSet& result,
-  const vtkm::cont::Field& field,
-  const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  result.AddField(field);
-  return true;
-}
 }
 }
