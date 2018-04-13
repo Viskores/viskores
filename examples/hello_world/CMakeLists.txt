@@ -30,19 +30,21 @@ if(TARGET OpenGL::GL AND
    TARGET GLUT::GLUT AND
    TARGET GLEW::GLEW)
 
+  set(gl_libs OpenGL::GL GLEW::GLEW GLUT::GLUT)
+
   add_executable(HelloWorld_SERIAL HelloWorld.cxx LoadShaders.h)
   target_link_libraries(HelloWorld_SERIAL
-                        PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+                        PRIVATE vtkm_cont ${gl_libs})
 
   if(TARGET vtkm::tbb)
     add_executable(HelloWorld_TBB HelloWorldTBB.cxx LoadShaders.h)
     target_link_libraries(HelloWorld_TBB
-                          PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+                          PRIVATE vtkm_cont ${gl_libs})
   endif()
 
   if(TARGET vtkm::cuda)
     add_executable(HelloWorld_CUDA HelloWorld.cu LoadShaders.h)
     target_link_libraries(HelloWorld_CUDA
-                          PRIVATE vtkm_cont OpenGL::GL GLEW::GLEW GLUT::GLUT)
+                          PRIVATE vtkm_cont ${gl_libs})
   endif()
 endif()

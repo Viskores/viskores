@@ -293,7 +293,7 @@ function(vtkm_library)
   endif()
 
   # Setup the SOVERSION and VERSION information for this vtkm library
-  set_property(TARGET ${lib_name} PROPERTY VERSION ${VTKm_VERSION})
+  set_property(TARGET ${lib_name} PROPERTY VERSION 1)
   set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
 
   # Support custom library suffix names, for other projects wanting to inject
@@ -333,6 +333,7 @@ endfunction(vtkm_library)
 #   BACKEND <type>
 #   LIBRARIES <dependent_library_list>
 #   TEST_ARGS <argument_list>
+#   MPI
 #   <options>
 #   )
 #
@@ -348,24 +349,20 @@ endfunction(vtkm_library)
 # [TEST_ARGS] : arguments that should be passed on the command line to the
 #               test executable
 #
-# Supported <options> are documented below. These can be specified for
-# all tests or for individual tests. When specifying these for individual tests,
-# simply add them after the test name in the <source_list> separated by a comma.
-# e.g. `UnitTestMultiBlock,MPI`.
-#
-# Supported <options> are
-# * MPI : the test(s) will be executed using `mpirun`.
+# [MPI]       : when specified, the tests should be run in parallel if
+#               MPI is enabled.
 #
 function(vtkm_unit_tests)
   if (NOT VTKm_ENABLE_TESTING)
     return()
   endif()
 
-  set(options MPI)
+  set(options)
+  set(global_options ${options} MPI)
   set(oneValueArgs BACKEND NAME)
   set(multiValueArgs SOURCES LIBRARIES TEST_ARGS)
   cmake_parse_arguments(VTKm_UT
-    "${options}" "${oneValueArgs}" "${multiValueArgs}"
+    "${global_options}" "${oneValueArgs}" "${multiValueArgs}"
     ${ARGN}
     )
   vtkm_parse_test_options(VTKm_UT_SOURCES "${options}" ${VTKm_UT_SOURCES})
@@ -383,10 +380,18 @@ function(vtkm_unit_tests)
     string(APPEND test_prog "_${backend}")
   endif()
 
+  if(VTKm_UT_MPI)
+    # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
+    string(APPEND "test_prog" "_mpi")
+    set(extraArgs EXTRA_INCLUDE "vtkm/cont/testing/Testing.h"
+                  FUNCTION "vtkm::cont::testing::Environment env")
+  else()
+    set(extraArgs)
+  endif()
+
   #the creation of the test source list needs to occur before the labeling as
   #cuda. This is so that we get the correctly named entry points generated
-  #
-  create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES})
+  create_test_sourcelist(test_sources ${test_prog}.cxx ${VTKm_UT_SOURCES} ${extraArgs})
   if(backend STREQUAL "CUDA")
     vtkm_compile_as_cuda(cu_srcs ${VTKm_UT_SOURCES})
     set(VTKm_UT_SOURCES ${cu_srcs})
@@ -409,11 +414,20 @@ function(vtkm_unit_tests)
   if(backend STREQUAL "CUDA")
     set(timeout 1500)
   endif()
+
   foreach (test ${VTKm_UT_SOURCES})
     get_filename_component(tname ${test} NAME_WE)
-    add_test(NAME ${tname}${backend}
-      COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
-      )
+    if(VTKm_UT_MPI AND VTKm_ENABLE_MPI)
+      add_test(NAME ${tname}${backend}
+        COMMAND ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} 3 ${MPIEXEC_PREFLAGS}
+                $<TARGET_FILE:${test_prog}> ${tname} ${VTKm_UT_TEST_ARGS}
+                ${MPIEXEC_POSTFLAGS}
+        )
+    else()
+      add_test(NAME ${tname}${backend}
+        COMMAND ${test_prog} ${tname} ${VTKm_UT_TEST_ARGS}
+        )
+    endif()
     set_tests_properties("${tname}${backend}" PROPERTIES TIMEOUT ${timeout})
   endforeach (test)
 

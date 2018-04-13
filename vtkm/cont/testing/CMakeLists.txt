@@ -80,3 +80,10 @@ set(unit_tests
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})
+
+
+# add distributed tests i.e. test to run with MPI
+# if MPI is enabled.
+set(mpi_unit_tests
+  UnitTestFieldRangeGlobalCompute.cxx)
+vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests})

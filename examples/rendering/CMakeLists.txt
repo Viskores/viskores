@@ -20,7 +20,7 @@
 ##
 ##=============================================================================
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
-project(Rendering CXX)
+project(RenderingExample CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
@@ -34,12 +34,12 @@ if(NOT TARGET GLUT::GLUT)
   return()
 endif()
 
-add_executable(Rendering_SERIAL Rendering.cxx)
-target_link_libraries(Rendering_SERIAL PRIVATE vtkm_rendering GLUT::GLUT)
+add_executable(RenderingExample_SERIAL Rendering.cxx)
+target_link_libraries(RenderingExample_SERIAL PRIVATE vtkm_rendering GLUT::GLUT)
 
 if(TARGET vtkm::tbb)
-  add_executable(Rendering_TBB Rendering.cxx)
+  add_executable(RenderingExample_TBB Rendering.cxx)
   target_compile_definitions(Rendering_TBB PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
-  target_link_libraries(Rendering_TBB PRIVATE vtkm_rendering GLUT::GLUT)
+  target_link_libraries(RenderingExample_TBB PRIVATE vtkm_rendering GLUT::GLUT)
 endif()

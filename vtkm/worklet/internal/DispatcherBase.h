@@ -344,6 +344,51 @@ inline void deduce(Trampoline&& trampoline, ContParams&& sig, Args&&... args)
   for_each_dynamic_arg<sizeof...(Args)>()(std::forward<Trampoline>(trampoline), sig, args...);
 }
 
+
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4068) //unknown pragma
+#endif
+#if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)
+// Disable warning "calling a __host__ function from a __host__ __device__"
+// In some cases nv_exec_check_disable doesn't work and therefore you need
+// to use the following suppressions
+#pragma push
+
+#if (__CUDACC_VER_MAJOR__ < 8)
+#pragma diag_suppress 2670
+#pragma diag_suppress 2668
+#endif
+
+#if (__CUDACC_VER_MAJOR__ >= 8)
+#pragma diag_suppress 2735
+#pragma diag_suppress 2737
+#pragma diag_suppress 2739
+#endif
+
+#if (__CUDACC_VER_MAJOR__ >= 9)
+#pragma diag_suppress 2828
+#pragma diag_suppress 2864
+#pragma diag_suppress 2867
+#endif
+
+#endif
+//This is a separate function as the pragma guards can cause nvcc
+//to have an internal compiler error (codegen #3028)
+template <typename... Args>
+inline auto make_funcIFace(Args&&... args) -> decltype(
+  vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...))
+{
+  return vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
+}
+#if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)
+#pragma pop
+#endif
+#if defined(VTKM_MSVC)
+#pragma warning(pop)
+#endif
+
+
 } // namespace detail
 
 /// Base class for all dispatcher classes. Every worklet type should have its
@@ -438,34 +483,9 @@ private:
     static_assert(isAllValid::value == expectedLen::value,
                   "All arguments failed the TypeCheck pass");
 
-#if defined(VTKM_MSVC)
-#pragma warning(push)
-#pragma warning(disable : 4068) //unknown pragma
-#endif
-#if defined(__NVCC__)
-// Disable warning "calling a __host__ function from a __host__ __device__"
-// In some cases nv_exec_check_disable doesn't work and therefore you need
-// to use the following suppressions
-// This have been found by eigen:
-// https://github.com/RLovelett/eigen/blame/master/Eigen/src/Core/util/DisableStupidWarnings.h
-// To discover new dia_supress values use -Xcudafe "--display_error_number"
-#pragma push
-#pragma diag_suppress 2737
-#if (__CUDACC_VER_MAJOR__ >= 8)
-//CUDA 7.5 doesn't like suppressing error codes that don't exist yet
-#pragma diag_suppress 2668
-#pragma diag_suppress 2739
-#pragma diag_suppress 2828
-#endif
-#endif
-    auto fi =
-      vtkm::internal::make_FunctionInterface<void, typename std::decay<Args>::type...>(args...);
-#if defined(__NVCC__)
-#pragma pop
-#endif
-#if defined(VTKM_MSVC)
-#pragma warning(pop)
-#endif
+    //This is a separate function as the pragma guards can cause nvcc
+    //to have an internal compiler error (codegen #3028)
+    auto fi = detail::make_funcIFace(std::forward<Args>(args)...);
 
     auto ivc = vtkm::internal::Invocation<ParameterInterface,
                                           ControlInterface,
@@ -476,6 +496,8 @@ private:
       fi, vtkm::internal::NullType{}, vtkm::internal::NullType{});
     static_cast<const DerivedClass*>(this)->DoInvoke(ivc);
   }
+
+
 
 public:
   template <typename... Args>

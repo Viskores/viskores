@@ -56,8 +56,15 @@ endif()
 
 # Enable large object support so we can have 2^32 addressable sections
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/bigobj\" -Xcudafe=\"--diag_suppress=1394 --diag_suppress=766 --display_error_number\"")
+  if(CMAKE_VERSION VERSION_LESS 3.11)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/bigobj\"")
+  else()
+    target_compile_options(vtkm_compiler_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:/bigobj>>)
+    if(TARGET vtkm::cuda)
+      target_compile_options(vtkm_compiler_flags INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/bigobj">>)
+    endif()
+  endif()
 endif()
 
 # Setup the include directories that are needed for vtkm
@@ -97,7 +104,7 @@ if(VTKM_COMPILER_IS_MSVC)
   #CMake COMPILE_LANGUAGE doesn't work with MSVC, ans since we want these flags
   #only for C++ compilation we have to resort to setting CMAKE_CXX_FLAGS :(
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4702 /wd4505")
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/wd4702 /wd4505\"")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/wd4702 /wd4505\" -Xcudafe=\"--diag_suppress=1394 --diag_suppress=766 --display_error_number\"")
 
   if(MSVC_VERSION LESS 1900)
     # In VS2013 the C4127 warning has a bug in the implementation and
@@ -116,10 +123,16 @@ elseif(VTKM_COMPILER_IS_ICC)
   target_compile_definitions(vtkm_developer_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-wd1478 -wd13379>)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
-  set(flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
+  set(cxx_flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
+  set(cuda_flags "-Xcudafe=\"--display_error_number\"")
   target_compile_options(vtkm_compiler_flags
-    INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${flags}>>
+    INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>>
     )
+  if(TARGET vtkm::cuda)
+    target_compile_options(vtkm_compiler_flags
+      INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CUDA>:${cuda_flags}>>
+      )
+  endif()
 endif()
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
