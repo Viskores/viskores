@@ -89,25 +89,11 @@ public:
     Pos.Set(idx, pt);
     vtkm::Id nSteps = Steps.Get(idx);
     Steps.Set(idx, ++nSteps);
-    // If the status is OK, we only need to check if the particle
-    // has completed the maximum steps required.
-    if (status == ParticleStatus::STATUS_OK)
-    {
-      if (nSteps == MaxSteps)
-        SetTerminated(idx);
-    }
-    // If the particle has exited spatial boundary, set corresponding status.
-    // This is needed for all particle advection cases.
-    else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
-    {
-      SetExitedSpatialBoundary(idx);
-    }
-    // If the particle has exited temporal boundary, set corresponding status.
-    // This is needed when we need temporal interpolation for velocity.
-    else if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
-    {
-      SetExitedTemporalBoundary(idx);
-    }
+
+    // Check if the particle has completed the maximum steps required.
+    // If yes, set it to teminated.
+    if (nSteps == MaxSteps)
+      SetTerminated(idx);
   }
 
   /* Set/Change Status */
@@ -266,25 +252,10 @@ public:
     History.Set(loc, pt);
     ValidPoint.Set(loc, 1);
 
-    // If the status is OK, we only need to check if the particle
-    // has completed the maximum steps required.
-    if (status == ParticleStatus::STATUS_OK)
-    {
-      if (nSteps == MaxSteps)
-        SetTerminated(idx);
-    }
-    // If the particle has exited spatial boundary, set corresponding status.
-    // This is needed for all particle advection cases.
-    else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
-    {
-      SetExitedSpatialBoundary(idx);
-    }
-    // If the particle has exited temporal boundary, set corresponding status.
-    // This is needed when we need temporal interpolation for velocity.
-    else if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
-    {
-      SetExitedTemporalBoundary(idx);
-    }
+    // Check if the particle has completed the maximum steps required.
+    // If yes, set it to teminated.
+    if (nSteps == MaxSteps)
+      SetTerminated(idx);
   }
 
   /* Set/Change Status */

@@ -56,10 +56,10 @@ public:
                       vtkm::Vec<FieldType, 3>& outpos) const
   {
     vtkm::Vec<FieldType, 3> velocity;
-    ParticleStatus status = this->CheckStep(inpos, this->StepLength, time, velocity);
+    ParticleStatus status = CheckStep(inpos, this->StepLength, time, velocity);
     if (status == ParticleStatus::STATUS_OK)
     {
-      outpos = inpos + this->StepLength * velocity;
+      outpos = inpos + StepLength * velocity;
     }
     else
     {
@@ -76,10 +76,14 @@ public:
   {
     vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
 
+    FieldType var1 = (stepLength / static_cast<FieldType>(2));
+    FieldType var2 = time + var1;
+    FieldType var3 = time + stepLength;
+
     bool status1 = Evaluator.Evaluate(inpos, time, k1);
-    bool status2 = Evaluator.Evaluate(inpos + (stepLength / 2) * k1, time, k2);
-    bool status3 = Evaluator.Evaluate(inpos + (stepLength / 2) * k2, time, k3);
-    bool status4 = Evaluator.Evaluate(inpos + stepLength * k3, time, k4);
+    bool status2 = Evaluator.Evaluate(inpos + var1 * k1, var2, k2);
+    bool status3 = Evaluator.Evaluate(inpos + var1 * k2, var2, k3);
+    bool status4 = Evaluator.Evaluate(inpos + stepLength * k3, var3, k4);
 
     if (status1 & status2 & status3 & status4 == ParticleStatus::STATUS_OK)
     {
@@ -88,7 +92,7 @@ public:
     }
     else
     {
-      return ParticleStatus::AT_SPATIAL_BOUNDARY;
+      return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
     }
   }
 
@@ -126,7 +130,7 @@ public:
     ParticleStatus status = CheckStep(inpos, StepLength, time, velocity);
     if (status == ParticleStatus::STATUS_OK)
     {
-      outpos = inpos + this->StepLength * velocity;
+      outpos = inpos + StepLength * velocity;
     }
     else
     {
@@ -146,7 +150,7 @@ public:
     if (!Evaluator.IsWithinTemporalBoundary(time))
       return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
 
-    bool result = this->Evaluator.Evaluate(inpos, time, velocity);
+    bool result = Evaluator.Evaluate(inpos, time, velocity);
     if (result)
       return ParticleStatus::STATUS_OK;
     else

@@ -44,15 +44,11 @@ public:
 
   {
     using UniformType = vtkm::cont::ArrayHandleUniformPointCoordinates;
-
     using StructuredType = vtkm::cont::CellSetStructured<3>;
-    if (!coords1.GetData().IsType<UniformType>())
+
+    if (!coords1.GetData().IsType<UniformType>() || !coords2.GetData().IsType<UniformType>())
       throw vtkm::cont::ErrorInternal("Coordinates are not uniform.");
-    if (!cellSet1.IsSameType(StructuredType()))
-      throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
-    if (!coords2.GetData().IsType<UniformType>())
-      throw vtkm::cont::ErrorInternal("Coordinates are not uniform.");
-    if (!cellSet2.IsSameType(StructuredType()))
+    if (!cellSet1.IsSameType(StructuredType()) || !cellSet2.IsSameType(StructuredType()))
       throw vtkm::cont::ErrorInternal("Cells are not 3D structured.");
 
     vectors1 = vectorField1.PrepareForInput(DeviceAdapterTag());
@@ -79,13 +75,13 @@ public:
     planeSize2 = dims2[1] * dims2[1];
     rowSize2 = dims2[0];
 
-    scalingFactor1[0] = dims1[0] / (FieldType)(bounds1.X.Max - bounds1.X.Min);
-    scalingFactor1[1] = dims1[1] / (FieldType)(bounds1.Y.Max - bounds1.Y.Min);
-    scalingFactor1[2] = dims1[2] / (FieldType)(bounds1.Z.Max - bounds1.Z.Min);
+    scale1[0] = dims1[0] / (FieldType)(bounds1.X.Max - bounds1.X.Min);
+    scale1[1] = dims1[1] / (FieldType)(bounds1.Y.Max - bounds1.Y.Min);
+    scale1[2] = dims1[2] / (FieldType)(bounds1.Z.Max - bounds1.Z.Min);
 
-    scalingFactor2[0] = dims2[0] / (FieldType)(bounds2.X.Max - bounds2.X.Min);
-    scalingFactor2[1] = dims2[1] / (FieldType)(bounds2.Y.Max - bounds2.Y.Min);
-    scalingFactor2[2] = dims2[2] / (FieldType)(bounds2.Z.Max - bounds2.Z.Min);
+    scale2[0] = dims2[0] / (FieldType)(bounds2.X.Max - bounds2.X.Min);
+    scale2[1] = dims2[1] / (FieldType)(bounds2.Y.Max - bounds2.Y.Min);
+    scale2[2] = dims2[2] / (FieldType)(bounds2.Z.Max - bounds2.Z.Min);
   };
 
 
@@ -128,9 +124,9 @@ public:
     time1 = time2;
     planeSize1 = planeSize2;
     rowSize1 = rowSize2;
-    scalingFactor1[0] = scalingFactor2[0];
-    scalingFactor1[1] = scalingFactor2[1];
-    scalingFactor1[2] = scalingFactor2[2];
+    scale1[0] = scale2[0];
+    scale1[1] = scale2[1];
+    scale1[2] = scale2[2];
 
     vectors2 = vectorField.PrepareForInput(DeviceAdapterTag());
     bounds2 = coords.GetBounds();
@@ -140,9 +136,9 @@ public:
     time2 = time;
     planeSize2 = dims2[1] * dims2[1];
     rowSize2 = dims2[0];
-    scalingFactor2[0] = dims2[0] / (FieldType)(bounds2.X.Max - bounds2.X.Min);
-    scalingFactor2[1] = dims2[1] / (FieldType)(bounds2.Y.Max - bounds2.Y.Min);
-    scalingFactor2[2] = dims2[2] / (FieldType)(bounds2.Z.Max - bounds2.Z.Min);
+    scale2[0] = dims2[0] / (FieldType)(bounds2.X.Max - bounds2.X.Min);
+    scale2[1] = dims2[1] / (FieldType)(bounds2.Y.Max - bounds2.Y.Min);
+    scale2[2] = dims2[2] / (FieldType)(bounds2.Z.Max - bounds2.Z.Min);
   };
 
   VTKM_EXEC
@@ -153,21 +149,21 @@ public:
                    const vtkm::Id3 dims,
                    const vtkm::Id& planeSize,
                    const vtkm::Id& rowSize,
-                   const vtkm::Vec<FieldType, 3>& scalingFactor) const
+                   const vtkm::Vec<FieldType, 3>& scale) const
   {
     if (!bounds.Contains(position))
       return false;
     //Set the indices for the interpolation.
     vtkm::Id3 idx000, idx001, idx010, idx011, idx100, idx101, idx110, idx111;
 
-    vtkm::Vec<FieldType, 3> scaled =
-      vtkm::Vec<FieldType, 3>((position[0] - bounds.X.Min) * scalingFactor[0],
-                              (position[1] - bounds.Y.Min) * scalingFactor[1],
-                              (position[2] - bounds.Z.Min) * scalingFactor[2]);
+    vtkm::Vec<FieldType, 3> normalized =
+      vtkm::Vec<FieldType, 3>((position[0] - bounds.X.Min) * scale[0],
+                              (position[1] - bounds.Y.Min) * scale[1],
+                              (position[2] - bounds.Z.Min) * scale[2]);
 
-    idx000[0] = floor(scaled[0]) <= dims[0] - 1 ? floor(scaled[0]) : dims[0] - 1;
-    idx000[1] = floor(scaled[1]) <= dims[1] - 1 ? floor(scaled[1]) : dims[1] - 1;
-    idx000[2] = floor(scaled[2]) <= dims[2] - 1 ? floor(scaled[2]) : dims[2] - 1;
+    idx000[0] = floor(normalized[0]) <= dims[0] - 1 ? floor(normalized[0]) : dims[0] - 1;
+    idx000[1] = floor(normalized[1]) <= dims[1] - 1 ? floor(normalized[1]) : dims[1] - 1;
+    idx000[2] = floor(normalized[2]) <= dims[2] - 1 ? floor(normalized[2]) : dims[2] - 1;
 
     idx001 = idx000;
     idx001[0] = (idx001[0] + 1) <= dims[0] - 1 ? idx001[0] + 1 : dims[0] - 1;
@@ -197,7 +193,7 @@ public:
 
     // Interpolation in X
     vtkm::Vec<FieldType, 3> v00, v01, v10, v11;
-    FieldType a = scaled[0] - floor(scaled[0]);
+    FieldType a = normalized[0] - floor(normalized[0]);
     v00[0] = (1.0f - a) * v000[0] + a * v001[0];
     v00[1] = (1.0f - a) * v000[1] + a * v001[1];
     v00[2] = (1.0f - a) * v000[2] + a * v001[2];
@@ -216,7 +212,7 @@ public:
 
     // Interpolation in Y
     vtkm::Vec<FieldType, 3> v0, v1;
-    a = scaled[1] - floor(scaled[1]);
+    a = normalized[1] - floor(normalized[1]);
     v0[0] = (1.0f - a) * v00[0] + a * v01[0];
     v0[1] = (1.0f - a) * v00[1] + a * v01[1];
     v0[2] = (1.0f - a) * v00[2] + a * v01[2];
@@ -225,7 +221,7 @@ public:
     v1[1] = (1.0f - a) * v10[1] + a * v11[1];
     v1[2] = (1.0f - a) * v10[2] + a * v11[2];
 
-    a = scaled[2] - floor(scaled[2]);
+    a = normalized[2] - floor(normalized[2]);
     velocity[0] = (1.0f - a) * v0[0] + a * v1[0];
     velocity[1] = (1.0f - a) * v0[1] + a * v1[1];
     velocity[2] = (1.0f - a) * v0[2] + a * v1[2];
@@ -239,14 +235,14 @@ public:
   {
     vtkm::Vec<FieldType, 3> velocity1;
     bool result;
-    result = Interpolate(
-      position, velocity1, vectors1, bounds1, dims1, planeSize1, rowSize1, scalingFactor1);
+    result =
+      Interpolate(position, velocity1, vectors1, bounds1, dims1, planeSize1, rowSize1, scale1);
     if (!result)
       return false;
 
     vtkm::Vec<FieldType, 3> velocity2;
-    result = Interpolate(
-      position, velocity2, vectors2, bounds2, dims2, planeSize1, rowSize1, scalingFactor2);
+    result =
+      Interpolate(position, velocity2, vectors2, bounds2, dims2, planeSize1, rowSize1, scale2);
     if (!result)
       return false;
 
@@ -260,9 +256,9 @@ public:
 
 private:
   FieldType time1, time2;
-  vtkm::Vec<FieldType, 3> scalingFactor1, scalingFactor2;
+  vtkm::Vec<FieldType, 3> scale1, scale2;
   /*
-   * Currently we are only adding functionality to work with unifrom grids.
+   * Currently only adding functionality to work with unifrom grids.
    * Reason being they are easy to work with.
    */
   vtkm::Bounds bounds1;
@@ -270,13 +266,13 @@ private:
   vtkm::Id3 dims1;
   vtkm::Id3 dims2;
   /*
-   * Assumption is that the resolution of the different slices of data may be
+   * The resolution of the different slices of data may be
    * different, but needs to be uniform.
    */
   vtkm::Id planeSize1, planeSize2;
   vtkm::Id rowSize1, rowSize2;
   /*
-   * This are the portals that contain the actual data for the interpolation.
+   * These are the portals that contain the actual data for the interpolation.
    */
   PortalType vectors1;
   PortalType vectors2;

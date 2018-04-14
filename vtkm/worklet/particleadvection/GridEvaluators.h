@@ -182,16 +182,19 @@ public:
     cellSet.CopyTo(cells);
     dims = cells.GetSchedulingRange(vtkm::TopologyElementTagPoint());
 
-    vtkm::Vec<FieldType, 3> castDims = dims;
-    spacing[0] = static_cast<FieldType>((bounds.X.Max - bounds.X.Min) / (castDims[0] - 1));
-    spacing[1] = static_cast<FieldType>((bounds.Y.Max - bounds.Y.Min) / (castDims[1] - 1));
-    spacing[2] = static_cast<FieldType>((bounds.Z.Max - bounds.Z.Min) / (castDims[2] - 1));
-    oldMin[0] =
-      static_cast<FieldType>(bounds.X.Min / ((bounds.X.Max - bounds.X.Min) / castDims[0]));
-    oldMin[1] =
-      static_cast<FieldType>(bounds.Y.Min / ((bounds.Y.Max - bounds.Y.Min) / castDims[1]));
-    oldMin[2] =
-      static_cast<FieldType>(bounds.Z.Min / ((bounds.Z.Max - bounds.Z.Min) / castDims[2]));
+    // For a Unifrom Grid, the calculation of the Cell for a point is just
+    // mapping the point inside the volume into the range 0 to dim - 2.
+    // scale is the multiplier for the new point to map into the new range.
+    // The mathematics behind this
+    //
+    // scale = (output_max - output_min) / (input_max - input_min)
+    // output = (input - input_min) * scale + output_min
+    //
+    // In our case output_min is 0
+    scale[0] = (dims[0] - 1) / (bounds.X.Max - bounds.X.Min);
+    scale[1] = (dims[1] - 1) / (bounds.Y.Max - bounds.Y.Min);
+    scale[2] = (dims[2] - 1) / (bounds.Z.Max - bounds.Z.Min);
+
     planeSize = dims[0] * dims[1];
     rowSize = dims[0];
   }
@@ -209,19 +212,20 @@ public:
     vtkm::cont::CellSetStructured<3> cells;
     ds.GetCellSet(0).CopyTo(cells);
     dims = cells.GetSchedulingRange(vtkm::TopologyElementTagPoint());
-    vtkm::Vec<FieldType, 3> castdims;
-    castdims[0] = static_cast<FieldType>(dims[0]);
-    castdims[1] = static_cast<FieldType>(dims[1]);
-    castdims[2] = static_cast<FieldType>(dims[2]);
-    spacing[0] = static_cast<FieldType>((bounds.X.Max - bounds.X.Min) / (castdims[0] - 1));
-    spacing[1] = static_cast<FieldType>((bounds.Y.Max - bounds.Y.Min) / (castdims[1] - 1));
-    spacing[2] = static_cast<FieldType>((bounds.Z.Max - bounds.Z.Min) / (castdims[2] - 1));
-    oldMin[0] =
-      static_cast<FieldType>(bounds.X.Min / ((bounds.X.Max - bounds.X.Min) / castdims[0]));
-    oldMin[1] =
-      static_cast<FieldType>(bounds.Y.Min / ((bounds.Y.Max - bounds.Y.Min) / castdims[1]));
-    oldMin[2] =
-      static_cast<FieldType>(bounds.Z.Min / ((bounds.Z.Max - bounds.Z.Min) / castdims[2]));
+
+    // For a Unifrom Grid, the calculation of the Cell for a point is just
+    // mapping the point inside the volume into the range 0 to dim - 2.
+    // scale is the multiplier for the new point to map into the new range.
+    // The mathematics behind this
+    //
+    // scale = (output_max - output_min) / (input_max - input_min)
+    // output = (input - input_min) * scale + output_min
+    //
+    // In our case output_min is 0
+    scale[0] = (dims[0] - 1) / (bounds.X.Max - bounds.X.Min);
+    scale[1] = (dims[1] - 1) / (bounds.Y.Max - bounds.Y.Min);
+    scale[2] = (dims[2] - 1) / (bounds.Z.Max - bounds.Z.Min);
+
     planeSize = dims[0] * dims[1];
     rowSize = dims[0];
   }
@@ -262,14 +266,17 @@ public:
     // Set the eight corner indices with no wraparound
     vtkm::Id3 idx000, idx001, idx010, idx011, idx100, idx101, idx110, idx111;
 
+    // The normalized point is the result of mapping the input point of the volume
+    // to a unit spacing volume with origin as (0,0,0)
+    // The method used is described in the constructor.
     vtkm::Vec<FieldType, 3> normalizedPos;
-    normalizedPos[0] = pos[0] / spacing[0];
-    normalizedPos[1] = pos[1] / spacing[1];
-    normalizedPos[2] = pos[2] / spacing[2];
+    normalizedPos[0] = (pos[0] - bounds.X.Min) * scale[0];
+    normalizedPos[1] = (pos[1] - bounds.Y.Min) * scale[1];
+    normalizedPos[2] = (pos[2] - bounds.Z.Min) * scale[2];
 
-    idx000[0] = static_cast<vtkm::Id>(floor(normalizedPos[0] - oldMin[0]));
-    idx000[1] = static_cast<vtkm::Id>(floor(normalizedPos[1] - oldMin[1]));
-    idx000[2] = static_cast<vtkm::Id>(floor(normalizedPos[2] - oldMin[2]));
+    idx000[0] = floor(normalizedPos[0]);
+    idx000[1] = floor(normalizedPos[1]);
+    idx000[2] = floor(normalizedPos[2]);
 
     idx001 = idx000;
     idx001[0] = (idx001[0] + 1) <= dims[0] - 1 ? idx001[0] + 1 : dims[0] - 1;
@@ -299,7 +306,8 @@ public:
 
     // Interpolation in X
     vtkm::Vec<FieldType, 3> v00, v01, v10, v11;
-    FieldType a = pos[0] - static_cast<FieldType>(floor(pos[0]));
+
+    FieldType a = normalizedPos[0] - floor(normalizedPos[0]);
     v00[0] = (1.0f - a) * v000[0] + a * v001[0];
     v00[1] = (1.0f - a) * v000[1] + a * v001[1];
     v00[2] = (1.0f - a) * v000[2] + a * v001[2];
@@ -318,7 +326,8 @@ public:
 
     // Interpolation in Y
     vtkm::Vec<FieldType, 3> v0, v1;
-    a = pos[1] - static_cast<FieldType>(floor(pos[1]));
+
+    a = normalizedPos[1] - floor(normalizedPos[1]);
     v0[0] = (1.0f - a) * v00[0] + a * v01[0];
     v0[1] = (1.0f - a) * v00[1] + a * v01[1];
     v0[2] = (1.0f - a) * v00[2] + a * v01[2];
@@ -327,7 +336,7 @@ public:
     v1[1] = (1.0f - a) * v10[1] + a * v11[1];
     v1[2] = (1.0f - a) * v10[2] + a * v11[2];
 
-    a = pos[2] - static_cast<FieldType>(floor(pos[2]));
+    a = normalizedPos[2] - floor(normalizedPos[2]);
     out[0] = (1.0f - a) * v0[0] + a * v1[0];
     out[1] = (1.0f - a) * v0[1] + a * v1[1];
     out[2] = (1.0f - a) * v0[2] + a * v1[2];
@@ -340,8 +349,7 @@ private:
   PortalType vectors;
   vtkm::Id planeSize;
   vtkm::Id rowSize;
-  vtkm::Vec<FieldType, 3> spacing;
-  vtkm::Vec<FieldType, 3> oldMin;
+  vtkm::Vec<FieldType, 3> scale;
 };
 
 template <typename PortalType, typename FieldType, typename DeviceAdapterTag>
@@ -438,12 +446,15 @@ public:
       return false;
     vtkm::Id3 idx000, idx001, idx010, idx011, idx100, idx101, idx110, idx111;
 
+    // Currently the cell search for the Rectilinear Grid is done linearly
+    // along all the axes. There needs to be a fast cell lookup method to
+    // expedite this.
     vtkm::Vec<vtkm::Id, 3> cellPos;
     vtkm::Id index;
     /*Get floor X location*/
     for (index = 0; index < dims[0] - 1; index++)
     {
-      if (xAxis.Get(index) <= pos[0] && pos[0] < xAxis.Get(index + 1))
+      if (xAxis.Get(index) <= pos[0] && pos[0] <= xAxis.Get(index + 1))
       {
         cellPos[0] = index;
         break;
@@ -452,7 +463,7 @@ public:
     /*Get floor Y location*/
     for (index = 0; index < dims[1] - 1; index++)
     {
-      if (yAxis.Get(index) <= pos[1] && pos[1] < yAxis.Get(index + 1))
+      if (yAxis.Get(index) <= pos[1] && pos[1] <= yAxis.Get(index + 1))
       {
         cellPos[1] = index;
         break;
@@ -461,7 +472,7 @@ public:
     /*Get floor Z location*/
     for (index = 0; index < dims[2] - 1; index++)
     {
-      if (zAxis.Get(index) <= pos[2] && pos[2] < zAxis.Get(index + 1))
+      if (zAxis.Get(index) <= pos[2] && pos[2] <= zAxis.Get(index + 1))
       {
         cellPos[2] = index;
         break;

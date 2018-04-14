@@ -49,37 +49,38 @@ public:
   template <typename IntegralCurveType>
   VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
   {
-    std::cout << "Advecting particle " << idx << std::endl;
-
     vtkm::Vec<FieldType, 3> inpos = ic.GetPos(idx);
     FieldType stepLength = integrator.GetStepLength();
     vtkm::Vec<FieldType, 3> outpos;
-    std::cout << "Starting at : " << inpos[0] << ", " << inpos[1] << ", " << inpos[2] << std::endl;
+    FieldType time = ic.GetTime(idx);
     while (!ic.Done(idx))
     {
-      FieldType time = ic.GetTime(idx);
       ParticleStatus status = integrator.Step(inpos, time, outpos);
+      // If the status is OK, we only need to check if the particle
+      // has completed the maximum steps required.
       if (status == ParticleStatus::STATUS_OK)
       {
         ic.TakeStep(idx, outpos, status);
-        time += stepLength;
-        std::cout << "Time : " << time << " at ";
-        ic.SetTime(idx, time);
-        std::cout << outpos[0] << ", " << outpos[1] << ", " << outpos[2] << std::endl;
         inpos = outpos;
+        // This is to keep track of the particle's time.
+        // This is what the Evaluator uses to determine if the particle
+        // has exited temporal boundary.
+        time += stepLength;
+        ic.SetTime(idx, time);
       }
+      // If the particle has exited spatial boundary, set corresponding status.
       else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
       {
-        //ic.TakeStep(idx, outpos, status);
+        ic.TakeStep(idx, outpos, status);
         ic.SetExitedSpatialBoundary(idx);
       }
+      // If the particle has exited temporal boundary, set corresponding status.
       else if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
       {
-        //ic.TakeStep(idx, outpos, status);
+        ic.TakeStep(idx, outpos, status);
         ic.SetExitedTemporalBoundary(idx);
       }
     }
-    std::cout << "Finished particle " << idx << std::endl;
   }
 
   ParticleAdvectWorklet(const IntegratorType& it)
