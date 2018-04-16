@@ -493,7 +493,7 @@ public:
       return vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<T, Device>();
     }
   }
-  VTKM_EXEC_CONT
+  VTKM_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
                           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
