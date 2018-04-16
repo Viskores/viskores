@@ -34,15 +34,9 @@ namespace cont
 VTKM_CONT
 vtkm::Bounds BoundsCompute(const vtkm::cont::DataSet& dataset, vtkm::Id coordinate_system_index)
 {
-  try
-  {
-    return dataset.GetCoordinateSystem(coordinate_system_index).GetBounds();
-  }
-  catch (vtkm::cont::ErrorBadValue&)
-  {
-    // missing coordinate_system_index, return empty bounds.
-    return vtkm::Bounds();
-  }
+  return dataset.GetNumberOfCoordinateSystems() > coordinate_system_index
+    ? dataset.GetCoordinateSystem(coordinate_system_index).GetBounds()
+    : vtkm::Bounds();
 }
 
 //-----------------------------------------------------------------------------
