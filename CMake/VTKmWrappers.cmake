@@ -292,6 +292,11 @@ function(vtkm_library)
     set_property(TARGET ${lib_name} PROPERTY CXX_VISIBILITY_PRESET "hidden")
   endif()
 
+  # allow the static cuda runtime find the driver (libcuda.dyllib) at runtime.
+  if(APPLE)
+    set_property(TARGET ${lib_name} PROPERTY BUILD_RPATH ${CMAKE_CUDA_IMPLICIT_LINK_DIRECTORIES})
+  endif()
+
   # Setup the SOVERSION and VERSION information for this vtkm library
   set_property(TARGET ${lib_name} PROPERTY VERSION 1)
   set_property(TARGET ${lib_name} PROPERTY SOVERSION 1)
