@@ -170,7 +170,7 @@ struct RenderBitmapFontExecutor
 
     vtkm::worklet::DispatcherMapField<RenderBitmapFont, Device> dispatcher(Worklet);
     dispatcher.Invoke(
-      ScreenCoords, TextureCoords, FontTexture.GetExecObject<Device>(), ColorBuffer, DepthBuffer);
+      ScreenCoords, TextureCoords, FontTexture.GetExecObjectFactory(), ColorBuffer, DepthBuffer);
     return true;
   }
 
