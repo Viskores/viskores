@@ -953,7 +953,7 @@ public:
   {
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
-    vtkm::Id inputCube, inputIdx;
+    vtkm::Id inputCube = 0, inputIdx = 0;
     using OutputValueType = typename OutputPortalType::ValueType;
 
     if (workX % 2 == 0) // calculate cA
@@ -1107,7 +1107,7 @@ public:
   {
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
-    vtkm::Id inputCube, inputIdx;
+    vtkm::Id inputCube = 0, inputIdx = 0;
     using OutputValueType = typename OutputPortalType::ValueType;
 
     if (workY % 2 == 0) // calculate cA
@@ -1261,7 +1261,7 @@ public:
   {
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
-    vtkm::Id inputCube, inputIdx;
+    vtkm::Id inputCube = 0, inputIdx = 0;
     using OutputValueType = typename OutputPortalType::ValueType;
 
     if (workZ % 2 == 0) // calculate cA
@@ -1458,7 +1458,7 @@ public:
   {
     vtkm::Id workX, workY, workZ;
     vtkm::Id k1, k2, xi;
-    vtkm::Id inputCube, inputIdx;
+    vtkm::Id inputCube = 0, inputIdx = 0;
     Output1Dto3D(workIdx, workX, workY, workZ);
 
     if (filterLen % 2 != 0) // odd filter
@@ -1690,7 +1690,7 @@ public:
   {
     vtkm::Id workX, workY, workZ;
     vtkm::Id k1, k2, yi;
-    vtkm::Id inputCube, inputIdx;
+    vtkm::Id inputCube = 0, inputIdx = 0;
     Output1Dto3D(workIdx, workX, workY, workZ);
 
     if (filterLen % 2 != 0) // odd filter
@@ -1924,7 +1924,7 @@ public:
   {
     vtkm::Id workX, workY, workZ;
     vtkm::Id k1, k2, zi;
-    vtkm::Id inputCube, inputIdx;
+    vtkm::Id inputCube = 0, inputIdx = 0;
     Output1Dto3D(workIdx, workX, workY, workZ);
 
     if (filterLen % 2 != 0) // odd filter
