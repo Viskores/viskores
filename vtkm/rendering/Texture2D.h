@@ -97,8 +97,7 @@ public:
 
   VTKM_CONT Texture2DSampler GetExecObjectFactory() const
   {
-    Texture2DSampler executionObjectFactory(Width, Height, Data, FilterMode, WrapMode);
-    return executionObjectFactory;
+    return Texture2DSampler(Width, Height, Data, FilterMode, WrapMode);
   }
 
   template <typename Device>
@@ -234,26 +233,16 @@ public:
       , FilterMode(filterMode)
       , WrapMode(wrapMode)
     {
-      this->DefaultConstructor = false;
     }
 
     template <typename Device>
     VTKM_CONT Texture2DSamplerExecutionObject<Device> PrepareForExecution(Device) const
     {
-      if (DefaultConstructor)
-      {
-        Texture2DSamplerExecutionObject<Device> ExecutionObject(
-          this->Width, this->Height, this->Data, this->FilterMode, this->WrapMode);
-        return ExecutionObject;
-      }
-      else
-      {
-        Texture2DSamplerExecutionObject<Device> ExecutionObject;
-        return ExecutionObject;
-      }
+      return Texture2DSamplerExecutionObject<Device>(
+        this->Width, this->Height, this->Data, this->FilterMode, this->WrapMode);
     }
 
-    bool DefaultConstructor = true;
+  private:
     vtkm::Id Width;
     vtkm::Id Height;
     TextureDataHandle Data;

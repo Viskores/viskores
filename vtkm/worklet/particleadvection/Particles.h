@@ -215,16 +215,9 @@ public:
   VTKM_CONT vtkm::worklet::particleadvection::ParticleExecutionObject<ItemType, Device>
     PrepareForExecution(Device) const
   {
-    if (this->fromArray)
-    {
-      vtkm::worklet::particleadvection::ParticleExecutionObject<ItemType, Device> ExecutionObject(
-        this->PosArray, this->StepsArray, this->StatusArray, this->MaxSteps);
-      return ExecutionObject;
-    }
-    else
-    {
-      return vtkm::worklet::particleadvection::ParticleExecutionObject<ItemType, Device>();
-    }
+
+    return vtkm::worklet::particleadvection::ParticleExecutionObject<ItemType, Device>(
+      this->PosArray, this->StepsArray, this->StatusArray, this->MaxSteps);
   }
 
   VTKM_CONT
@@ -232,8 +225,7 @@ public:
             vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
             const vtkm::Id& _maxSteps)
-    : fromArray(true)
-    , PosArray(posArray)
+    : PosArray(posArray)
     , StepsArray(stepsArray)
     , StatusArray(statusArray)
     , MaxSteps(_maxSteps)
@@ -462,36 +454,14 @@ public:
   VTKM_CONT vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<T, Device>
     PrepareForExecution(Device) const
   {
-    if (this->fromArray)
-    {
-      if (this->IsHistSize)
-      {
-        vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<T, Device>
-          ExecutionObject(this->PosArray,
-                          this->HistoryArray,
-                          this->StepsArray,
-                          this->StatusArray,
-                          this->ValidPointArray,
-                          this->MaxSteps,
-                          this->HistSize);
-        return ExecutionObject;
-      }
-      else
-      {
-        vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<T, Device>
-          ExecutionObject(this->PosArray,
-                          this->HistoryArray,
-                          this->StepsArray,
-                          this->StatusArray,
-                          this->ValidPointArray,
-                          this->MaxSteps);
-        return ExecutionObject;
-      }
-    }
-    else
-    {
-      return vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<T, Device>();
-    }
+    return vtkm::worklet::particleadvection::StateRecordingParticleExecutionObject<T, Device>(
+      this->PosArray,
+      this->HistoryArray,
+      this->StepsArray,
+      this->StatusArray,
+      this->ValidPointArray,
+      this->MaxSteps,
+      this->HistSize);
   }
   VTKM_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
@@ -502,11 +472,11 @@ public:
                           const vtkm::Id& _maxSteps)
     : ValidPointArray(validPointArray)
     , HistoryArray(historyArray)
+    , HistSize(_maxSteps)
   {
     this->PosArray = posArray;
     this->StepsArray = stepsArray;
     this->StatusArray = statusArray;
-    this->fromArray = true;
     this->MaxSteps = _maxSteps;
   }
 
@@ -525,17 +495,10 @@ public:
     this->PosArray = posArray;
     this->StepsArray = stepsArray;
     this->StatusArray = statusArray;
-    this->fromArray = true;
-    this->IsHistSize = true;
     this->MaxSteps = _maxSteps;
   }
 
 protected:
-  bool fromArray = false;
-
-protected:
-  bool IsValidPoint = false;
-  bool IsHistSize = false;
   vtkm::cont::ArrayHandle<vtkm::Id> StepsArray;
   vtkm::cont::ArrayHandle<vtkm::Id> StatusArray;
   vtkm::cont::ArrayHandle<vtkm::Id> ValidPointArray;
