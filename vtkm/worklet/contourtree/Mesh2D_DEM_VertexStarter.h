@@ -123,6 +123,15 @@ public:
   {
   }
 
+// For numerous calls of this function GCC is able to determine if i is
+// always greater than j ( or vice-versa ) and optimizes those call sites.
+// But when it does these optimizations is presumes that i and j will not
+// overflow and emits a Wstrict-overflow warning
+#ifdef VTKM_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
+
   // Locate the next vertex in direction indicated
   template <typename InFieldPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& vertex,
@@ -213,7 +222,12 @@ public:
     linkMask = mask;
     chain = destination;
   } // operator()
-};  // Mesh2D_DEM_VertexStarter
+
+#ifdef VTKM_GCC
+#pragma GCC diagnostic pop
+#endif
+
+}; // Mesh2D_DEM_VertexStarter
 }
 }
 }
