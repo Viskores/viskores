@@ -89,15 +89,10 @@ static vtkm::IdComponent TriangleIndexData[] = {
 };
 
 template <typename DeviceAdapter>
-class TriangulateTablesExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
+class TriangulateTablesExecutionObject
 {
 public:
   using PortalType = typename TriangulateArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst;
-  template <typename Device>
-  VTKM_CONT TriangulateTablesExecutionObject PrepareForExecution(Device) const
-  {
-    return *this;
-  }
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   TriangulateTablesExecutionObject() {}
@@ -152,6 +147,42 @@ private:
   PortalType Indices;
 };
 
+class TriangulateTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectFactoryBase
+{
+public:
+  template <typename Device>
+  VTKM_CONT TriangulateTablesExecutionObject<Device> PrepareForExecution(Device) const
+  {
+    if (BasicImpl)
+    {
+      return TriangulateTablesExecutionObject<Device>();
+    }
+    return TriangulateTablesExecutionObject<Device>(this->Counts, this->Offsets, this->Indices);
+  }
+  VTKM_CONT
+  TriangulateTablesExecutionObjectFactory()
+    : BasicImpl(true)
+  {
+  }
+
+  VTKM_CONT
+  TriangulateTablesExecutionObjectFactory(const TriangulateArrayHandle& counts,
+                                          const TriangulateArrayHandle& offsets,
+                                          const TriangulateArrayHandle& indices)
+    : BasicImpl(false)
+    , Counts(counts)
+    , Offsets(offsets)
+    , Indices(indices)
+  {
+  }
+
+private:
+  bool BasicImpl;
+  TriangulateArrayHandle Counts;
+  TriangulateArrayHandle Offsets;
+  TriangulateArrayHandle Indices;
+};
+
 class TriangulateTables
 {
 public:
@@ -165,10 +196,9 @@ public:
   {
   }
 
-  template <typename Device>
-  vtkm::worklet::internal::TriangulateTablesExecutionObject<Device> PrepareForInput(Device) const
+  vtkm::worklet::internal::TriangulateTablesExecutionObjectFactory PrepareForInput() const
   {
-    return vtkm::worklet::internal::TriangulateTablesExecutionObject<Device>(
+    return vtkm::worklet::internal::TriangulateTablesExecutionObjectFactory(
       this->Counts, this->Offsets, this->Indices);
   }
 
@@ -266,7 +296,7 @@ static vtkm::IdComponent TetrahedronIndexData[] = {
 };
 
 template <typename DeviceAdapter>
-class TetrahedralizeTablesExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
+class TetrahedralizeTablesExecutionObject
 {
 public:
   using PortalType = typename TriangulateArrayHandle::ExecutionTypes<DeviceAdapter>::PortalConst;
@@ -314,6 +344,43 @@ private:
   PortalType Indices;
 };
 
+class TetrahedralizeTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectFactoryBase
+{
+public:
+  template <typename Device>
+  VTKM_CONT TetrahedralizeTablesExecutionObject<Device> PrepareForExecution(Device) const
+  {
+    if (BasicImpl)
+    {
+      return TetrahedralizeTablesExecutionObject<Device>();
+    }
+    return TetrahedralizeTablesExecutionObject<Device>(this->Counts, this->Offsets, this->Indices);
+  }
+
+  VTKM_CONT
+  TetrahedralizeTablesExecutionObjectFactory()
+    : BasicImpl(true)
+  {
+  }
+
+  VTKM_CONT
+  TetrahedralizeTablesExecutionObjectFactory(const TriangulateArrayHandle& counts,
+                                             const TriangulateArrayHandle& offsets,
+                                             const TriangulateArrayHandle& indices)
+    : BasicImpl(false)
+    , Counts(counts)
+    , Offsets(offsets)
+    , Indices(indices)
+  {
+  }
+
+private:
+  bool BasicImpl;
+  TriangulateArrayHandle Counts;
+  TriangulateArrayHandle Offsets;
+  TriangulateArrayHandle Indices;
+};
+
 class TetrahedralizeTables
 {
 public:
@@ -328,10 +395,9 @@ public:
   {
   }
 
-  template <typename Device>
-  vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<Device> PrepareForInput(Device) const
+  vtkm::worklet::internal::TetrahedralizeTablesExecutionObjectFactory PrepareForInput() const
   {
-    return vtkm::worklet::internal::TetrahedralizeTablesExecutionObject<Device>(
+    return vtkm::worklet::internal::TetrahedralizeTablesExecutionObjectFactory(
       this->Counts, this->Offsets, this->Indices);
   }
 
