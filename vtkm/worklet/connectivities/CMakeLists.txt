@@ -23,6 +23,8 @@ set(headers
   CellSetDualGraph.h
   GraphConnectivity.h
   InnerJoin.h
+  ImageConnectivity.h
+  UnionFind.h
   )
 
 #-----------------------------------------------------------------------------
