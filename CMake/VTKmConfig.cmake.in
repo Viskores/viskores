@@ -19,17 +19,34 @@
 ##============================================================================
 
 # When this file is run by CMake through the find_package command, the
-# following variables will be defined:
+# following targets will exist:
+#   vtkm_cont       Target that contains most of VTK-m
 #
-# vtkm        Target that should be used to link to VTK-m
+#   vtkm_rendering  Target that contains all the rendering code
 #
-# vtkm_rendering Target that contains all the rendering code
+#   vtkm::tbb       Target that contains tbb related link information
+#                   implicitly linked to by `vtkm_cont` if tbb is enabled
 #
-# vtkm::tbb   Target that contains tbb related link information
-#             implicitly linked to by `vtkm` if tbb is enabled
+#   vtkm::cuda      Target that contains cuda related link information
+#                   implicitly linked to by `vtkm_cont` if cuda is enabled
 #
-# vtkm::cuda  Target that contains cuda related link information
-#              implicitly linked to by `vtkm` if cuda is enabled
+# The following local variables will also be defined:
+#
+#  VTKm_VERSION         Holds the version string of "Major.Minor"
+#  VTKm_VERSION_FULL    Holds the version string of "Major.Minor.Patch.GitSha1"
+#  VTKm_VERSION_MAJOR   Holds just the major version number
+#  VTKm_VERSION_MINOR   Holds just the minor version number
+#  VTKm_VERSION_PATCH   Holds just the patch version number
+#
+#  VTKm_BUILD_SHARED_LIBS     Will be enabled if VTK-m was built shared/dynamic
+#  VTKm_ENABLE_CUDA           Will be enabled if VTK-m was built with CUDA support
+#  VTKm_ENABLE_TBB            Will be enabled if VTK-m was built with TBB support
+#  VTKm_ENABLE_MPI            Will be enabled if VTK-m was built with MPI support
+#  VTKm_ENABLE_RENDERING      Will be enabled if VTK-m was built with rendering support
+#  VTKm_ENABLE_GL_CONTEXT     Will be enabled if VTK-m rendering was built with a GL context
+#  VTKm_ENABLE_OSMESA_CONTEXT Will be enabled if VTK-m rendering was built with a osmesa context
+#  VTKm_ENABLE_EGL_CONTEXT    Will be enabled if VTK-m rendering was built with a EGL context
+#
 #
 
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
@@ -59,10 +76,8 @@ endif()
 
 if(VTKm_PACKAGE_IN_BUILD)
   set_and_check(VTKm_CMAKE_MODULE_PATH "@VTKm_SOURCE_DIR@/CMake")
-  set_and_check(VTKm_INCLUDE_DIRS ${VTKm_INCLUDE_DIRS} "@VTKm_SOURCE_DIR@")
 else()
   set_and_check(VTKm_CMAKE_MODULE_PATH "@PACKAGE_VTKm_INSTALL_CMAKE_MODULE_DIR@")
-  set_and_check(VTKm_INCLUDE_DIRS "@PACKAGE_VTKm_INSTALL_INCLUDE_DIR@")
 endif()
 
 # Load the library exports, but only if not compiling VTK-m itself
