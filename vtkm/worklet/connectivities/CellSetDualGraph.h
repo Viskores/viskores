@@ -70,7 +70,7 @@ struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
     cellIndexOut = cellIndex;
     edgeIndices = vtkm::exec::CellEdgeCanonicalId(
       pointIndices.GetNumberOfComponents(), visitIndex, cellShape, pointIndices, *this);
-  };
+  }
 
 private:
   ScatterType Scatter;

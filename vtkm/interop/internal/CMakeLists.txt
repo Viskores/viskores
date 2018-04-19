@@ -28,6 +28,6 @@ set(headers
 vtkm_declare_headers(${headers} TESTABLE FALSE)
 
 #-----------------------------------------------------------------------------
-if(VTKm_OpenGL_FOUND)
+if(TARGET vtkm_rendering)
   add_subdirectory(testing)
 endif()

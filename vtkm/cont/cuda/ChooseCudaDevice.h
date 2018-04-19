@@ -66,13 +66,13 @@ struct compute_info
     //if we both the same SM level check performance
     if ((this->Major >= 3 && other.Major >= 3) || (this->Major == other.Major))
     {
-      return betterPerfomance(other);
+      return betterPerformance(other);
     }
     //prefer the greater SM otherwise
     return this->Major > other.Major;
   }
 
-  bool betterPerfomance(const compute_info other) const
+  bool betterPerformance(const compute_info other) const
   {
     if (this->Performance == other.Performance)
     {

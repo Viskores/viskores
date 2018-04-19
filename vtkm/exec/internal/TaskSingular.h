@@ -48,7 +48,7 @@ public:
   VTKM_CONT
   TaskSingular(const WorkletType& worklet,
                const InvocationType& invocation,
-               const vtkm::Id& globalIndexOffset = 0)
+               vtkm::Id globalIndexOffset = 0)
     : Worklet(worklet)
     , Invocation(invocation)
     , GlobalIndexOffset(globalIndexOffset)

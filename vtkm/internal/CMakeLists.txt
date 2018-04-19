@@ -32,8 +32,8 @@ set(VTKM_ENABLE_TBB ${VTKm_ENABLE_TBB})
 set(VTKM_ENABLE_MPI ${VTKm_ENABLE_MPI})
 
 if(VTKM_ENABLE_CUDA)
-  set(VTKM_CUDA_VERSION_MAJOR ${CUDA_VERSION_MAJOR})
-  set(VTKM_CUDA_VERSION_MINOR ${CUDA_VERSION_MINOR})
+  string(REGEX REPLACE "([0-9]+)\\.([0-9]+).*" "\\1" VTKM_CUDA_VERSION_MAJOR ${CMAKE_CUDA_COMPILER_VERSION})
+  string(REGEX REPLACE "([0-9]+)\\.([0-9]+).*" "\\2" VTKM_CUDA_VERSION_MINOR ${CMAKE_CUDA_COMPILER_VERSION})
 endif()
 
 vtkm_get_kit_name(kit_name kit_dir)
@@ -43,11 +43,13 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
 vtkm_install_headers(
   vtkm/internal ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h)
 
+unset(VTKM_ENABLE_MPI)
 unset(VTKM_ENABLE_TBB)
 unset(VTKM_ENABLE_CUDA)
 
 unset(VTKM_USE_64BIT_IDS)
 unset(VTKM_USE_DOUBLE_PRECISION)
+unset(VTKM_NO_ASSERT)
 
 
 set(headers

@@ -35,12 +35,12 @@ public:
   {
     std::cout << "Testing threshold points on 2D regular dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make2DUniformDataSet1();
-    vtkm::filter::Result result;
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdBetween(40.0f, 71.0f);
     thresholdPoints.SetActiveField("pointvar");
-    auto output = thresholdPoints.Execute(dataset, vtkm::filter::FieldSelection({ "pointvar" }));
+    thresholdPoints.SetFieldsToPass("pointvar");
+    auto output = thresholdPoints.Execute(dataset);
 
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11),
                      "Wrong result for ThresholdPoints");
@@ -63,7 +63,8 @@ public:
     thresholdPoints.SetThresholdAbove(1.0f);
     thresholdPoints.SetCompactPoints(true);
     thresholdPoints.SetActiveField("pointvar");
-    auto output = thresholdPoints.Execute(dataset, vtkm::filter::FieldSelection({ "pointvar" }));
+    thresholdPoints.SetFieldsToPass("pointvar");
+    auto output = thresholdPoints.Execute(dataset);
 
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 27),
                      "Wrong result for ThresholdPoints");
@@ -81,13 +82,13 @@ public:
   {
     std::cout << "Testing threshold points on 3D explicit dataset" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::Result result;
 
     vtkm::filter::ThresholdPoints thresholdPoints;
     thresholdPoints.SetThresholdBelow(50.0);
     thresholdPoints.SetCompactPoints(true);
     thresholdPoints.SetActiveField("pointvar");
-    auto output = thresholdPoints.Execute(dataset, vtkm::filter::FieldSelection({ "pointvar" }));
+    thresholdPoints.SetFieldsToPass("pointvar");
+    auto output = thresholdPoints.Execute(dataset);
 
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 6),
                      "Wrong result for ThresholdPoints");
@@ -107,11 +108,11 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
     vtkm::filter::ThresholdPoints thresholdPoints;
-    vtkm::filter::Result result;
 
     thresholdPoints.SetThresholdBetween(500.0, 600.0);
     thresholdPoints.SetActiveField("pointvar");
-    auto output = thresholdPoints.Execute(dataset, vtkm::filter::FieldSelection({ "pointvar" }));
+    thresholdPoints.SetFieldsToPass("pointvar");
+    auto output = thresholdPoints.Execute(dataset);
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 0),

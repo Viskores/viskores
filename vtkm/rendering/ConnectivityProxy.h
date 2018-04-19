@@ -25,7 +25,6 @@
 #include <typeinfo>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/View.h>
 #include <vtkm/rendering/raytracing/Camera.h>

@@ -90,11 +90,11 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
   }
 
   template <typename ColorBufferPortal, typename DepthBufferPortal>
-  void Plot(vtkm::Float32 x,
-            vtkm::Float32 y,
-            vtkm::Float32 intensity,
-            ColorBufferPortal& colorBuffer,
-            DepthBufferPortal& depthBuffer) const
+  VTKM_EXEC void Plot(vtkm::Float32 x,
+                      vtkm::Float32 y,
+                      vtkm::Float32 intensity,
+                      ColorBufferPortal& colorBuffer,
+                      DepthBufferPortal& depthBuffer) const
   {
     vtkm::Id index =
       static_cast<vtkm::Id>(vtkm::Round(y)) * Width + static_cast<vtkm::Id>(vtkm::Round(x));

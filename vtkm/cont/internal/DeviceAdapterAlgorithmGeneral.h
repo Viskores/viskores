@@ -901,7 +901,6 @@ public:
   {
   }
 
-  VTKM_EXEC
   T Add(vtkm::Id index, const T& value) const
   {
     T* lockedValue;
@@ -917,7 +916,6 @@ public:
 #endif
   }
 
-  VTKM_EXEC
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
   {
     T* lockedValue;
@@ -941,19 +939,16 @@ private:
   IteratorsType Iterators;
 
 #if defined(VTKM_MSVC) //MSVC atomics
-  VTKM_EXEC
   vtkm::Int32 vtkmAtomicAdd(vtkm::Int32* address, const vtkm::Int32& value) const
   {
     return InterlockedExchangeAdd(reinterpret_cast<volatile long*>(address), value);
   }
 
-  VTKM_EXEC
   vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const
   {
     return InterlockedExchangeAdd64(reinterpret_cast<volatile long long*>(address), value);
   }
 
-  VTKM_EXEC
   vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
                                  const vtkm::Int32& newValue,
                                  const vtkm::Int32& oldValue) const
@@ -962,7 +957,6 @@ private:
       reinterpret_cast<volatile long*>(address), newValue, oldValue);
   }
 
-  VTKM_EXEC
   vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
                                  const vtkm::Int64& newValue,
                                  const vtkm::Int64& oldValue) const
@@ -973,19 +967,16 @@ private:
 
 #else //gcc built-in atomics
 
-  VTKM_EXEC
   vtkm::Int32 vtkmAtomicAdd(vtkm::Int32* address, const vtkm::Int32& value) const
   {
     return __sync_fetch_and_add(address, value);
   }
 
-  VTKM_EXEC
   vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const
   {
     return __sync_fetch_and_add(address, value);
   }
 
-  VTKM_EXEC
   vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
                                  const vtkm::Int32& newValue,
                                  const vtkm::Int32& oldValue) const
@@ -993,7 +984,6 @@ private:
     return __sync_val_compare_and_swap(address, oldValue, newValue);
   }
 
-  VTKM_EXEC
   vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
                                  const vtkm::Int64& newValue,
                                  const vtkm::Int64& oldValue) const

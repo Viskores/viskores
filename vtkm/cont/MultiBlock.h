@@ -44,10 +44,10 @@ public:
   MultiBlock(const vtkm::cont::MultiBlock& src);
   /// create a new MultiBlock with a DataSet vector "mblocks"
   VTKM_CONT
-  MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks);
+  explicit MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks);
   /// create a new MultiBlock with the capacity set to be "size"
   VTKM_CONT
-  MultiBlock(vtkm::Id size);
+  explicit MultiBlock(vtkm::Id size);
 
   VTKM_CONT
   MultiBlock();
@@ -63,13 +63,6 @@ public:
 
   VTKM_CONT
   vtkm::Id GetNumberOfBlocks() const;
-
-  /// Returns the number of blocks across all ranks. For non-MPI builds, this
-  /// will be same as `GetNumberOfBlocks()`.
-  /// This method is not thread-safe and may involve global communication across
-  /// all ranks in distributed environments with MPI.
-  VTKM_CONT
-  vtkm::Id GetGlobalNumberOfBlocks() const;
 
   VTKM_CONT
   const vtkm::cont::DataSet& GetBlock(vtkm::Id blockId) const;
@@ -88,25 +81,6 @@ public:
   /// append the DataSet vector "mblocks"  to the end of the contained one
   VTKM_CONT
   void AddBlocks(const std::vector<vtkm::cont::DataSet>& mblocks);
-  /// get the unified bounds of the same indexed coordinate system within all contained DataSet
-  VTKM_CONT
-  vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
-
-  /// get the bounds of a coordinate system within a given DataSet
-  VTKM_CONT
-  vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
-                              vtkm::Id coordinate_system_index = 0) const;
-
-  //@{
-  /// Get the unified range of the same field within all contained DataSet.
-  /// These methods are not thread-safe and may involve global communication
-  /// across all ranks in distributed environments with MPI.
-  VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name) const;
-
-  VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int& index) const;
-  //@}
 
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;

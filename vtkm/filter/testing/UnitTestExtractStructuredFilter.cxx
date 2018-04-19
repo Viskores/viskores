@@ -43,7 +43,8 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 9),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
@@ -81,7 +82,8 @@ public:
     extract.SetVOI(1, 4, 1, 4, 1, 4);
     extract.SetSampleRate(1, 1, 1);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
@@ -121,7 +123,8 @@ public:
     extract.SetVOI(minPoint, maxPoint);
     extract.SetSampleRate(1, 1, 1);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 125),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 64),
@@ -160,7 +163,8 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
@@ -198,7 +202,8 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 64),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 27),
@@ -238,7 +243,8 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
@@ -278,7 +284,8 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 9),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
@@ -317,7 +324,8 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 27),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 8),
@@ -356,7 +364,8 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 8),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
@@ -394,7 +403,8 @@ public:
     extract.SetSampleRate(sample);
     extract.SetIncludeBoundary(true);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 18),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 4),
@@ -435,7 +445,8 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 4),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),
@@ -472,7 +483,8 @@ public:
     extract.SetVOI(range);
     extract.SetSampleRate(sample);
 
-    vtkm::cont::DataSet output = extract.Execute(dataset, { "pointvar", "cellvar" });
+    extract.SetFieldsToPass({ "pointvar", "cellvar" });
+    vtkm::cont::DataSet output = extract.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfPoints(), 8),
                      "Wrong result for ExtractStructured worklet");
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet(0).GetNumberOfCells(), 1),

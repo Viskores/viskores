@@ -33,7 +33,7 @@ struct Actor::InternalsType
   vtkm::cont::DynamicCellSet Cells;
   vtkm::cont::CoordinateSystem Coordinates;
   vtkm::cont::Field ScalarField;
-  vtkm::rendering::ColorTable ColorTable;
+  vtkm::cont::ColorTable ColorTable;
 
   vtkm::Range ScalarRange;
   vtkm::Bounds SpatialBounds;
@@ -42,7 +42,19 @@ struct Actor::InternalsType
   InternalsType(const vtkm::cont::DynamicCellSet& cells,
                 const vtkm::cont::CoordinateSystem& coordinates,
                 const vtkm::cont::Field& scalarField,
-                const vtkm::rendering::ColorTable& colorTable)
+                const vtkm::rendering::Color& color)
+    : Cells(cells)
+    , Coordinates(coordinates)
+    , ScalarField(scalarField)
+    , ColorTable(vtkm::Range{ 0, 1 }, color.Components, color.Components)
+  {
+  }
+
+  VTKM_CONT
+  InternalsType(const vtkm::cont::DynamicCellSet& cells,
+                const vtkm::cont::CoordinateSystem& coordinates,
+                const vtkm::cont::Field& scalarField,
+                const vtkm::cont::ColorTable& colorTable = vtkm::cont::ColorTable::Preset::DEFAULT)
     : Cells(cells)
     , Coordinates(coordinates)
     , ScalarField(scalarField)
@@ -53,10 +65,8 @@ struct Actor::InternalsType
 
 Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
              const vtkm::cont::CoordinateSystem& coordinates,
-             const vtkm::cont::Field& scalarField,
-             const vtkm::rendering::Color& color)
-  : Internals(
-      new InternalsType(cells, coordinates, scalarField, vtkm::rendering::ColorTable(color)))
+             const vtkm::cont::Field& scalarField)
+  : Internals(new InternalsType(cells, coordinates, scalarField))
 {
   this->Init(coordinates, scalarField);
 }
@@ -64,7 +74,16 @@ Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
 Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
              const vtkm::cont::CoordinateSystem& coordinates,
              const vtkm::cont::Field& scalarField,
-             const vtkm::rendering::ColorTable& colorTable)
+             const vtkm::rendering::Color& color)
+  : Internals(new InternalsType(cells, coordinates, scalarField, color))
+{
+  this->Init(coordinates, scalarField);
+}
+
+Actor::Actor(const vtkm::cont::DynamicCellSet& cells,
+             const vtkm::cont::CoordinateSystem& coordinates,
+             const vtkm::cont::Field& scalarField,
+             const vtkm::cont::ColorTable& colorTable)
   : Internals(new InternalsType(cells, coordinates, scalarField, colorTable))
 {
   this->Init(coordinates, scalarField);
@@ -108,7 +127,7 @@ const vtkm::cont::Field& Actor::GetScalarField() const
   return this->Internals->ScalarField;
 }
 
-const vtkm::rendering::ColorTable& Actor::GetColorTable() const
+const vtkm::cont::ColorTable& Actor::GetColorTable() const
 {
   return this->Internals->ColorTable;
 }

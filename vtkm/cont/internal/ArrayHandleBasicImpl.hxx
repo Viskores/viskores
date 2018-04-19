@@ -40,7 +40,7 @@ ArrayHandle<T, StorageTagBasic>::ArrayHandle(const Thisclass& src)
 }
 
 template <typename T>
-ArrayHandle<T, StorageTagBasic>::ArrayHandle(const Thisclass&& src)
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(Thisclass&& src)
   : Internals(std::move(src.Internals))
 {
 }
@@ -48,6 +48,12 @@ ArrayHandle<T, StorageTagBasic>::ArrayHandle(const Thisclass&& src)
 template <typename T>
 ArrayHandle<T, StorageTagBasic>::ArrayHandle(const StorageType& storage)
   : Internals(new internal::ArrayHandleImpl(storage))
+{
+}
+
+template <typename T>
+ArrayHandle<T, StorageTagBasic>::ArrayHandle(StorageType&& storage)
+  : Internals(new internal::ArrayHandleImpl(std::move(storage)))
 {
 }
 

@@ -21,6 +21,7 @@
 #ifndef vtk_m_worklet_particleadvection_Integrators_h
 #define vtk_m_worklet_particleadvection_Integrators_h
 
+#include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/DataSet.h>

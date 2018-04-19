@@ -35,11 +35,102 @@ public:
   VTKM_CONT
   CrossProduct();
 
+  //@{
+  /// Choose the primary field to operate on. In the cross product operation A x B, A is
+  /// the primary field.
   VTKM_CONT
-  void SetSecondaryFieldName(const std::string& nm) { SecondaryFieldName = nm; }
+  void SetPrimaryField(
+    const std::string& name,
+    vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+  {
+    this->SetActiveField(name, association);
+  }
+
+  VTKM_CONT const std::string& GetPrimaryFieldName() const { return this->SecondaryFieldName; }
+  VTKM_CONT vtkm::cont::Field::AssociationEnum GetPrimaryFieldAssociation() const
+  {
+    return this->SecondaryFieldAssociation;
+  }
+  //@}
+
+  //@{
+  /// When set to true, uses a coordinate system as the primary field instead of the one selected
+  /// by name. Use SetPrimaryCoordinateSystem to select which coordinate system.
+  VTKM_CONT
+  void SetUseCoordinateSystemAsPrimaryField(bool flag)
+  {
+    this->SetUseCoordinateSystemAsField(flag);
+  }
+  VTKM_CONT
+  bool GetUseCoordinateSystemAsPrimaryField() const
+  {
+    return this->GetUseCoordinateSystemAsField();
+  }
+  //@}
+
+  //@{
+  /// Select the coordinate system index to use as the primary field. This only has an effect when
+  /// UseCoordinateSystemAsPrimaryField is true.
+  VTKM_CONT
+  void SetPrimaryCoordinateSystem(vtkm::Id index) { this->SetActiveCoordinateSystem(index); }
+  VTKM_CONT
+  vtkm::Id GetPrimaryCoordinateSystemIndex() const
+  {
+    return this->GetActiveCoordinateSystemIndex();
+  }
+  //@}
+
+  //@{
+  /// Choose the secondary field to operate on. In the cross product operation A x B, B is
+  /// the secondary field.
+  VTKM_CONT
+  void SetSecondaryField(
+    const std::string& name,
+    vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+  {
+    this->SecondaryFieldName = name;
+    this->SecondaryFieldAssociation = association;
+  }
+
+  VTKM_CONT const std::string& GetSecondaryFieldName() const { return this->GetActiveFieldName(); }
+  VTKM_CONT vtkm::cont::Field::AssociationEnum GetSecondaryFieldAssociation() const
+  {
+    return this->GetActiveFieldAssociation();
+  }
+  //@}
+
+  //@{
+  /// When set to true, uses a coordinate system as the primary field instead of the one selected
+  /// by name. Use SetPrimaryCoordinateSystem to select which coordinate system.
+  VTKM_CONT
+  void SetUseCoordinateSystemAsSecondaryField(bool flag)
+  {
+    this->UseCoordinateSystemAsSecondaryField = flag;
+  }
+  VTKM_CONT
+  bool GetUseCoordinateSystemAsSecondaryField() const
+  {
+    return this->UseCoordinateSystemAsSecondaryField;
+  }
+  //@}
+
+  //@{
+  /// Select the coordinate system index to use as the primary field. This only has an effect when
+  /// UseCoordinateSystemAsPrimaryField is true.
+  VTKM_CONT
+  void SetSecondaryCoordinateSystem(vtkm::Id index)
+  {
+    this->SecondaryCoordinateSystemIndex = index;
+  }
+  VTKM_CONT
+  vtkm::Id GetSecondaryCoordinateSystemIndex() const
+  {
+    return this->SecondaryCoordinateSystemIndex;
+  }
+  //@}
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::Result DoExecute(
+  VTKM_CONT vtkm::cont::DataSet DoExecute(
     const vtkm::cont::DataSet& input,
     const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& field,
     const vtkm::filter::FieldMetadata& fieldMeta,
@@ -47,15 +138,17 @@ public:
     const DeviceAdapter& tag);
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT bool DoMapField(vtkm::filter::Result& result,
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                             DeviceAdapter tag);
 
 private:
-  vtkm::worklet::CrossProduct Worklet;
   std::string SecondaryFieldName;
+  vtkm::cont::Field::AssociationEnum SecondaryFieldAssociation;
+  bool UseCoordinateSystemAsSecondaryField;
+  vtkm::Id SecondaryCoordinateSystemIndex;
 };
 
 template <>

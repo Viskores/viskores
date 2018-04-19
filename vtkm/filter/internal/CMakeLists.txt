@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  CreateResult.h
   ResolveFieldTypeAndExecute.h
   ResolveFieldTypeAndMap.h
 )

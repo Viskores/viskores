@@ -66,7 +66,6 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
   Particles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
@@ -216,7 +215,6 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
                           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,

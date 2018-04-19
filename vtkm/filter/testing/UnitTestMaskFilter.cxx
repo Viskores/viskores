@@ -41,7 +41,7 @@ public:
     vtkm::Id stride = 2;
     mask.SetStride(stride);
 
-    vtkm::cont::DataSet output = mask.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = mask.Execute(dataset);
 
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 8),
                      "Wrong result for Mask");
@@ -65,7 +65,7 @@ public:
     vtkm::Id stride = 9;
     mask.SetStride(stride);
 
-    vtkm::cont::DataSet output = mask.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = mask.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 7),
                      "Wrong result for Mask");
 
@@ -87,7 +87,7 @@ public:
     vtkm::Id stride = 2;
     mask.SetStride(stride);
 
-    vtkm::cont::DataSet output = mask.Execute(dataset, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = mask.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 2),
                      "Wrong result for Mask");
 

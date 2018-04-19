@@ -95,7 +95,7 @@ static inline VTKM_EXEC bool CellInside(const vtkm::Vec<T, 3>& pcoords, vtkm::Ce
     pcoords[2] >= T(0) && pcoords[2] <= T(1);
 }
 
-/// Checks if the paramteric coordinates `pcoords` are on the inside for the
+/// Checks if the parametric coordinates `pcoords` are on the inside for the
 /// specified cell type.
 ///
 template <typename T>

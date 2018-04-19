@@ -132,9 +132,7 @@ std::string fieldName = "pointvar";
 // Create an isosurface filter
 vtkm::filter::MarchingCubes filter;
 filter.SetIsoValue(0, isovalue);
-vtkm::filter::Result result = filter.Execute( inputData,
-                                              inputData.GetField(fieldName) );
-filter.MapFieldOntoOutput(result, inputData.GetField(fieldName));
+vtkm::cont::DataSet outputData = filter.Execute(inputData);
 
 // compute the bounds and extends of the input data
 vtkm::Bounds coordsBounds = inputData.GetCoordinateSystem().GetBounds();
@@ -153,7 +151,7 @@ camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
 camera.SetClippingRange(1.f, 100.f);
 camera.SetFieldOfView(60.f);
 camera.SetPosition(totalExtent*(mag * 2.f));
-vtkm::rendering::ColorTable colorTable("thermal");
+vtkm::cont::ColorTable colorTable("inferno");
 
 // Create a mapper, canvas and view that will be used to render the scene
 vtkm::rendering::Scene scene;
@@ -162,7 +160,6 @@ vtkm::rendering::CanvasRayTracer canvas(512, 512);
 vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
 
 // Render an image of the output isosurface
-vtkm::cont::DataSet& outputData = result.GetDataSet();
 scene.AddActor(vtkm::rendering::Actor(outputData.GetCellSet(),
                                       outputData.GetCoordinateSystem(),
                                       outputData.GetField(fieldName),

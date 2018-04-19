@@ -68,6 +68,7 @@ public:
   {
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   T Add(vtkm::Id index, const T& value) const
   {
@@ -79,6 +80,7 @@ public:
   // the index is equal to oldValue, then newValue is written to the index.
   // The operation was successful if return value is equal to oldValue
   //
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
   {

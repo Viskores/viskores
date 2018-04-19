@@ -332,7 +332,7 @@ findpkg_finish(TBB_MALLOC_PROXY)
 
 #=============================================================================
 #parse all the version numbers from tbb
-if(NOT TBB_VERSION)
+if(NOT TBB_VERSION_MAJOR AND NOT TBB_VERSION_MINOR)
 
  #only read the start of the file
  file(READ

@@ -199,10 +199,10 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
     }
     else
     {
-      vtkm::Vec<vtkm::IdComponent, 2> localEdgeIndices = vtkm::exec::CellEdgeLocalIndices(
-        pointIndices.GetNumberOfComponents(), visitIndex, shape, *this);
-      p1 = pointIndices[localEdgeIndices[0]];
-      p2 = pointIndices[localEdgeIndices[1]];
+      p1 = pointIndices[vtkm::exec::CellEdgeLocalIndex(
+        pointIndices.GetNumberOfComponents(), 0, visitIndex, shape, *this)];
+      p2 = pointIndices[vtkm::exec::CellEdgeLocalIndex(
+        pointIndices.GetNumberOfComponents(), 1, visitIndex, shape, *this)];
     }
     // These indices need to be arranged in a definite order, as they will later be sorted to
     // detect duplicates
@@ -320,7 +320,7 @@ void MapperWireframer::EndScene()
 void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
                                    const vtkm::cont::CoordinateSystem& coords,
                                    const vtkm::cont::Field& inScalarField,
-                                   const vtkm::rendering::ColorTable& colorTable,
+                                   const vtkm::cont::ColorTable& colorTable,
                                    const vtkm::rendering::Camera& camera,
                                    const vtkm::Range& scalarRange)
 {
@@ -390,8 +390,7 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     vtkm::filter::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
     externalFaces.SetPassPolyData(true);
-    vtkm::cont::DataSet output =
-      externalFaces.Execute(dataSet, vtkm::filter::FieldSelection::MODE_ALL);
+    vtkm::cont::DataSet output = externalFaces.Execute(dataSet);
     cellSet = output.GetCellSet();
     actualField = output.GetField(0);
   }

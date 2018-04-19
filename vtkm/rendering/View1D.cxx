@@ -116,7 +116,15 @@ void View1D::RenderColorLegendAnnotations()
     for (int i = 0; i < this->GetScene().GetNumberOfActors(); ++i)
     {
       vtkm::rendering::Actor act = this->GetScene().GetActor(i);
-      this->Legend.AddItem(act.GetScalarField().GetName(), act.GetColorTable().MapRGB(0));
+
+      vtkm::Vec<double, 4> colorData;
+      act.GetColorTable().GetPoint(0, colorData);
+
+      //colorData[0] is the transfer function x position
+      vtkm::rendering::Color color{ static_cast<vtkm::Float32>(colorData[1]),
+                                    static_cast<vtkm::Float32>(colorData[2]),
+                                    static_cast<vtkm::Float32>(colorData[3]) };
+      this->Legend.AddItem(act.GetScalarField().GetName(), color);
     }
     this->Legend.SetLabelColor(this->GetCanvas().GetForegroundColor());
     this->Legend.Render(this->GetCamera(), this->GetWorldAnnotator(), this->GetCanvas());

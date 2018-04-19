@@ -29,7 +29,6 @@
 
 #include <vtkm/filter/Filter.h>
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/Result.h>
 
 namespace vtkm
 {
@@ -37,7 +36,7 @@ namespace filter
 {
 
 template <class Derived>
-class FilterField : public vtkm::filter::Filter<FilterField<Derived>>
+class FilterField : public vtkm::filter::Filter<Derived>
 {
 public:
   VTKM_CONT
@@ -90,40 +89,32 @@ public:
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
   //@}
 
-
   /// These are provided to satisfy the Filter API requirements.
-  /// They simply pass the field to the result dataset as there's no mapping
-  /// needed for FilterField.
-  VTKM_CONT
-  bool MapFieldOntoOutput(Result& result, const vtkm::cont::Field& field);
+  template <typename DerivedPolicy>
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(Result& result,
-                                    const vtkm::cont::Field& field,
-                                    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::Field& field,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+
+  template <typename DerivedPolicy>
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::CoordinateSystem& field,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
 private:
-  template <typename DerivedPolicy>
-  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
-                                       const vtkm::cont::Field& field,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
-                                       const vtkm::cont::CoordinateSystem& field,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
   std::string OutputFieldName;
   vtkm::Id CoordinateSystemIndex;
   std::string ActiveFieldName;
   vtkm::cont::Field::AssociationEnum ActiveFieldAssociation;
   bool UseCoordinateSystemAsField;
 
-  friend class vtkm::filter::Filter<FilterField<Derived>>;
+  friend class vtkm::filter::Filter<Derived>;
 };
 }
 } // namespace vtkm::filter

@@ -726,6 +726,7 @@ public:
     {
       return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
     }
+    VTKM_EXEC
     inline vtkm::Float64 rcp(vtkm::Float64 f) const { return 1.0 / f; }
     VTKM_EXEC
     inline vtkm::Float64 rcp_safe(vtkm::Float64 f) const
@@ -884,6 +885,7 @@ public:
     {
       return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
     }
+    VTKM_EXEC
     inline vtkm::Float32 rcp_safe(vtkm::Float32 f) const
     {
       return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);

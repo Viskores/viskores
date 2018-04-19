@@ -172,9 +172,7 @@ public:
   /// This constructor supports any vtkm worklet and the associated invocation
   /// parameters that go along with it
   template <typename WorkletType, typename InvocationType>
-  TaskTiling1D(WorkletType& worklet,
-               InvocationType& invocation,
-               const vtkm::Id& globalIndexOffset = 0)
+  TaskTiling1D(WorkletType& worklet, InvocationType& invocation, vtkm::Id globalIndexOffset)
     : Worklet(nullptr)
     , Invocation(nullptr)
     , ExecuteFunction(nullptr)
@@ -193,7 +191,7 @@ public:
   /// explicit Copy constructor.
   /// Note this required so that compilers don't use the templated constructor
   /// as the copy constructor which will cause compile issues
-  TaskTiling1D(const TaskTiling1D& task)
+  TaskTiling1D(TaskTiling1D& task)
     : Worklet(task.Worklet)
     , Invocation(task.Invocation)
     , ExecuteFunction(task.ExecuteFunction)
@@ -201,6 +199,8 @@ public:
     , GlobalIndexOffset(task.GlobalIndexOffset)
   {
   }
+
+  TaskTiling1D(TaskTiling1D&& task) = default;
 
   void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer& buffer)
   {
@@ -262,9 +262,7 @@ public:
   }
 
   template <typename WorkletType, typename InvocationType>
-  TaskTiling3D(WorkletType& worklet,
-               InvocationType& invocation,
-               const vtkm::Id& globalIndexOffset = 0)
+  TaskTiling3D(WorkletType& worklet, InvocationType& invocation, vtkm::Id globalIndexOffset = 0)
     : Worklet(nullptr)
     , Invocation(nullptr)
     , ExecuteFunction(nullptr)
@@ -283,7 +281,7 @@ public:
   /// explicit Copy constructor.
   /// Note this required so that compilers don't use the templated constructor
   /// as the copy constructor which will cause compile issues
-  TaskTiling3D(const TaskTiling3D& task)
+  TaskTiling3D(TaskTiling3D& task)
     : Worklet(task.Worklet)
     , Invocation(task.Invocation)
     , ExecuteFunction(task.ExecuteFunction)
@@ -291,6 +289,8 @@ public:
     , GlobalIndexOffset(task.GlobalIndexOffset)
   {
   }
+
+  TaskTiling3D(TaskTiling3D&& task) = default;
 
   void SetErrorMessageBuffer(const vtkm::exec::internal::ErrorMessageBuffer& buffer)
   {

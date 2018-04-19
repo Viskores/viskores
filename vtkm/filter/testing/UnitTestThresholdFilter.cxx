@@ -41,7 +41,8 @@ public:
     threshold.SetLowerThreshold(60.1);
     threshold.SetUpperThreshold(60.1);
     threshold.SetActiveField("pointvar");
-    auto output = threshold.Execute(dataset, vtkm::filter::FieldSelection({ "cellvar" }));
+    threshold.SetFieldsToPass("cellvar");
+    auto output = threshold.Execute(dataset);
 
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
@@ -64,7 +65,8 @@ public:
     threshold.SetLowerThreshold(20.1);
     threshold.SetUpperThreshold(20.1);
     threshold.SetActiveField("pointvar");
-    auto output = threshold.Execute(dataset, vtkm::filter::FieldSelection({ "cellvar" }));
+    threshold.SetFieldsToPass("cellvar");
+    auto output = threshold.Execute(dataset);
 
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
@@ -88,7 +90,8 @@ public:
     threshold.SetLowerThreshold(20.1);
     threshold.SetUpperThreshold(20.1);
     threshold.SetActiveField("pointvar");
-    auto output = threshold.Execute(dataset, vtkm::filter::FieldSelection({ "cellvar" }));
+    threshold.SetFieldsToPass("cellvar");
+    auto output = threshold.Execute(dataset);
 
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");
@@ -108,12 +111,12 @@ public:
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet1();
 
     vtkm::filter::Threshold threshold;
-    vtkm::filter::Result result;
 
     threshold.SetLowerThreshold(500.1);
     threshold.SetUpperThreshold(500.1);
     threshold.SetActiveField("pointvar");
-    auto output = threshold.Execute(dataset, vtkm::filter::FieldSelection({ "cellvar" }));
+    threshold.SetFieldsToPass("cellvar");
+    auto output = threshold.Execute(dataset);
 
     VTKM_TEST_ASSERT(output.GetNumberOfFields() == 1,
                      "Wrong number of fields in the output dataset");

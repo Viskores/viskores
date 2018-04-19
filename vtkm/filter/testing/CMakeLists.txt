@@ -33,12 +33,14 @@ set(unit_tests
   UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
   UnitTestFieldSelection.cxx
+  UnitTestFieldToColors.cxx
   UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx
   UnitTestMarchingCubesFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMultiBlockFilters.cxx
+  UnitTestMultiBlockHistogramFilter.cxx
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx

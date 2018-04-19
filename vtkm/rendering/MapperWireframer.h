@@ -22,12 +22,12 @@
 
 #include <memory>
 
+#include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
 
 namespace vtkm
@@ -58,7 +58,7 @@ public:
   virtual void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,
                            const vtkm::cont::Field& scalarField,
-                           const vtkm::rendering::ColorTable& colorTable,
+                           const vtkm::cont::ColorTable& colorTable,
                            const vtkm::rendering::Camera& camera,
                            const vtkm::Range& scalarRange) override;
 

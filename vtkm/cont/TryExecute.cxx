@@ -21,6 +21,7 @@
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadType.h>
 #include <vtkm/cont/ErrorBadValue.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/cont/TryExecute.h>
 
 namespace vtkm
@@ -65,6 +66,11 @@ void HandleTryExecuteException(vtkm::Int8 deviceId,
   }
   catch (vtkm::cont::Error& e)
   {
+    if (e.GetIsDeviceIndependent())
+    {
+      // re-throw the exception as it's a device-independent exception.
+      throw;
+    }
     //general errors should be caught and let us try the next device adapter.
     std::cerr << "exception is: " << e.GetMessage() << std::endl;
   }

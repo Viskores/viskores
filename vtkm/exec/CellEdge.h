@@ -41,7 +41,7 @@ public:
   static constexpr vtkm::Int32 MAX_NUM_EDGES = 12;
 
 public:
-  VTKM_EXEC vtkm::Int32 NumEdges(vtkm::Int32 i) const
+  VTKM_EXEC vtkm::Int32 NumEdges(vtkm::Int32 cellShapeId) const
   {
     VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32 numEdges[vtkm::NUMBER_OF_CELL_SHAPES] = {
       // NumEdges
@@ -61,10 +61,12 @@ public:
       9,  // 13: CELL_SHAPE_WEDGE
       8   // 14: CELL_SHAPE_PYRAMID
     };
-    return numEdges[i];
+    return numEdges[cellShapeId];
   }
 
-  VTKM_EXEC vtkm::Int32 PointsInEdge(vtkm::Int32 i, vtkm::Int32 j, vtkm::Int32 k) const
+  VTKM_EXEC vtkm::Int32 PointsInEdge(vtkm::Int32 cellShapeId,
+                                     vtkm::Int32 edgeIndex,
+                                     vtkm::Int32 localPointIndex) const
   {
     VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32
       pointsInEdge[vtkm::NUMBER_OF_CELL_SHAPES][MAX_NUM_EDGES][2] = {
@@ -117,7 +119,7 @@ public:
         // clang-format on
       };
 
-    return pointsInEdge[i][j][k];
+    return pointsInEdge[cellShapeId][edgeIndex][localPointIndex];
   }
 };
 
@@ -157,57 +159,63 @@ static inline VTKM_EXEC vtkm::IdComponent CellEdgeNumberOfEdges(
 }
 
 template <typename CellShapeTag>
-static inline VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 2> CellEdgeLocalIndices(
-  vtkm::IdComponent numPoints,
-  vtkm::IdComponent edgeIndex,
-  CellShapeTag shape,
-  const vtkm::exec::FunctorBase& worklet)
+static inline VTKM_EXEC vtkm::IdComponent CellEdgeLocalIndex(vtkm::IdComponent numPoints,
+                                                             vtkm::IdComponent pointIndex,
+                                                             vtkm::IdComponent edgeIndex,
+                                                             CellShapeTag shape,
+                                                             const vtkm::exec::FunctorBase& worklet)
 {
+  VTKM_ASSUME(pointIndex >= 0);
+  VTKM_ASSUME(pointIndex < 2);
   VTKM_ASSUME(edgeIndex >= 0);
   VTKM_ASSUME(edgeIndex < detail::CellEdgeTables::MAX_NUM_EDGES);
   if (edgeIndex >= vtkm::exec::CellEdgeNumberOfEdges(numPoints, shape, worklet))
   {
     worklet.RaiseError("Invalid edge number.");
-    return vtkm::Vec<vtkm::IdComponent, 2>(0);
+    return 0;
   }
 
   detail::CellEdgeTables table;
-  return vtkm::make_Vec(table.PointsInEdge(CellShapeTag::Id, edgeIndex, 0),
-                        table.PointsInEdge(CellShapeTag::Id, edgeIndex, 1));
+  return table.PointsInEdge(CellShapeTag::Id, edgeIndex, pointIndex);
 }
 
-static inline VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 2> CellEdgeLocalIndices(
-  vtkm::IdComponent numPoints,
-  vtkm::IdComponent edgeIndex,
-  vtkm::CellShapeTagPolygon,
-  const vtkm::exec::FunctorBase&)
+static inline VTKM_EXEC vtkm::IdComponent CellEdgeLocalIndex(vtkm::IdComponent numPoints,
+                                                             vtkm::IdComponent pointIndex,
+                                                             vtkm::IdComponent edgeIndex,
+                                                             vtkm::CellShapeTagPolygon,
+                                                             const vtkm::exec::FunctorBase&)
 {
   VTKM_ASSUME(numPoints >= 3);
+  VTKM_ASSUME(pointIndex >= 0);
+  VTKM_ASSUME(pointIndex < 2);
   VTKM_ASSUME(edgeIndex >= 0);
   VTKM_ASSUME(edgeIndex < numPoints);
 
-  if (edgeIndex < numPoints - 1)
+  if (edgeIndex + pointIndex < numPoints)
   {
-    return vtkm::Vec<vtkm::IdComponent, 2>(edgeIndex, edgeIndex + 1);
+    return edgeIndex + pointIndex;
   }
   else
   {
-    return vtkm::Vec<vtkm::IdComponent, 2>(edgeIndex, 0);
+    return 0;
   }
 }
 
-static inline VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 2> CellEdgeLocalIndices(
-  vtkm::IdComponent numPoints,
-  vtkm::IdComponent edgeIndex,
-  vtkm::CellShapeTagGeneric shape,
-  const vtkm::exec::FunctorBase& worklet)
+static inline VTKM_EXEC vtkm::IdComponent CellEdgeLocalIndex(vtkm::IdComponent numPoints,
+                                                             vtkm::IdComponent pointIndex,
+                                                             vtkm::IdComponent edgeIndex,
+                                                             vtkm::CellShapeTagGeneric shape,
+                                                             const vtkm::exec::FunctorBase& worklet)
 {
+  VTKM_ASSUME(pointIndex >= 0);
+  VTKM_ASSUME(pointIndex < 2);
   VTKM_ASSUME(edgeIndex >= 0);
   VTKM_ASSUME(edgeIndex < detail::CellEdgeTables::MAX_NUM_EDGES);
 
   if (shape.Id == vtkm::CELL_SHAPE_POLYGON)
   {
-    return CellEdgeLocalIndices(numPoints, edgeIndex, vtkm::CellShapeTagPolygon(), worklet);
+    return CellEdgeLocalIndex(
+      numPoints, pointIndex, edgeIndex, vtkm::CellShapeTagPolygon(), worklet);
   }
   else
   {
@@ -215,11 +223,10 @@ static inline VTKM_EXEC vtkm::Vec<vtkm::IdComponent, 2> CellEdgeLocalIndices(
     if (edgeIndex >= table.NumEdges(shape.Id))
     {
       worklet.RaiseError("Invalid edge number.");
-      return vtkm::Vec<vtkm::IdComponent, 2>(0);
+      return 0;
     }
 
-    return vtkm::make_Vec(table.PointsInEdge(shape.Id, edgeIndex, 0),
-                          table.PointsInEdge(shape.Id, edgeIndex, 1));
+    return table.PointsInEdge(shape.Id, edgeIndex, pointIndex);
   }
 }
 
@@ -237,11 +244,10 @@ static inline VTKM_EXEC vtkm::Id2 CellEdgeCanonicalId(
   const GlobalPointIndicesVecType& globalPointIndicesVec,
   const vtkm::exec::FunctorBase& worklet)
 {
-  vtkm::Vec<vtkm::IdComponent, 2> localPointIndices =
-    vtkm::exec::CellEdgeLocalIndices(numPoints, edgeIndex, shape, worklet);
-
-  vtkm::Id pointIndex0 = globalPointIndicesVec[localPointIndices[0]];
-  vtkm::Id pointIndex1 = globalPointIndicesVec[localPointIndices[1]];
+  vtkm::Id pointIndex0 =
+    globalPointIndicesVec[vtkm::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, worklet)];
+  vtkm::Id pointIndex1 =
+    globalPointIndicesVec[vtkm::exec::CellEdgeLocalIndex(numPoints, 1, edgeIndex, shape, worklet)];
   if (pointIndex0 < pointIndex1)
   {
     return vtkm::Id2(pointIndex0, pointIndex1);

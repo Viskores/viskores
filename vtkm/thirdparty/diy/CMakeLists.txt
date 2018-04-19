@@ -59,8 +59,8 @@ endif()
 install(TARGETS vtkm_diy
   EXPORT ${VTKm_EXPORT_NAME})
 
-## Install headers
-install(DIRECTORY vtkmdiy
-  DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
-install(FILES ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h
-  DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
+  ## Install headers
+  install(DIRECTORY vtkmdiy
+    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
+  install(FILES ${VTKm_BINARY_INCLUDE_DIR}/${kit_dir}/Configure.h
+    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)

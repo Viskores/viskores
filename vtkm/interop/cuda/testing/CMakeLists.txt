@@ -22,6 +22,4 @@ set(unit_tests
   UnitTestTransferToOpenGLCuda.cu
   )
 
-vtkm_disable_troublesome_thrust_warnings()
-
-vtkm_unit_tests(CUDA SOURCES ${unit_tests})
+vtkm_unit_tests( SOURCES ${unit_tests})

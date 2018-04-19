@@ -41,11 +41,13 @@ namespace vtkm
 /// extrapolates. If w=0 => v0 is returned if w=1 => v1 is returned.
 ///
 template <typename ValueType, typename WeightType>
-VTKM_EXEC_CONT ValueType Lerp(const ValueType& value0,
-                              const ValueType& value1,
-                              const WeightType& weight)
+inline VTKM_EXEC_CONT ValueType Lerp(const ValueType& value0,
+                                     const ValueType& value1,
+                                     const WeightType& weight)
 {
-  return static_cast<ValueType>((WeightType(1) - weight) * value0 + weight * value1);
+  using ScalarType = typename detail::FloatingPointReturnType<ValueType>::Type;
+  return static_cast<ValueType>((WeightType(1) - weight) * static_cast<ScalarType>(value0) +
+                                weight * static_cast<ScalarType>(value1));
 }
 template <typename ValueType, vtkm::IdComponent N, typename WeightType>
 VTKM_EXEC_CONT vtkm::Vec<ValueType, N> Lerp(const vtkm::Vec<ValueType, N>& value0,

@@ -33,6 +33,7 @@ set(headers
   ExtractStructured.h
   FieldMetadata.h
   FieldSelection.h
+  FieldToColors.h
   Filter.h
   FilterCell.h
   FilterDataSet.h
@@ -51,7 +52,6 @@ set(headers
   PolicyBase.h
   PolicyDefault.h
   Probe.h
-  Result.h
   Streamline.h
   SurfaceNormals.h
   Tetrahedralize.h
@@ -75,6 +75,7 @@ set(header_template_sources
   ExtractGeometry.hxx
   ExtractPoints.hxx
   ExtractStructured.hxx
+  FieldToColors.hxx
   Filter.hxx
   FilterCell.hxx
   FilterDataSet.hxx
@@ -100,9 +101,9 @@ set(header_template_sources
   VertexClustering.hxx
 )
 
-vtkm_declare_headers(${headers})
-
-vtkm_install_template_sources(${header_template_sources})
+vtkm_declare_headers(${headers}
+  EXCLUDE_FROM_TESTING ${header_template_sources}
+  )
 
 add_subdirectory(internal)
 

@@ -42,7 +42,10 @@ namespace vtkm
 class VTKM_ALWAYS_EXPORT VirtualObjectBase
 {
 public:
-  VTKM_EXEC_CONT virtual ~VirtualObjectBase() = default;
+  VTKM_EXEC_CONT virtual ~VirtualObjectBase(){
+    //we implement this as we need a destructor with cuda markup
+    //but using =default causes warnings with CUDA 9
+  };
 
   VTKM_EXEC_CONT void Modified() { this->ModifiedCount++; }
 
@@ -54,7 +57,11 @@ protected:
   {
   }
 
-  VTKM_EXEC_CONT VirtualObjectBase(const VirtualObjectBase&) = default;
+  VTKM_EXEC_CONT VirtualObjectBase(const VirtualObjectBase& other)
+  { //we implement this as we need a copy constructor with cuda markup
+    //but using =default causes warnings with CUDA 9
+    this->ModifiedCount = other.ModifiedCount;
+  }
 
   VTKM_EXEC_CONT VirtualObjectBase(VirtualObjectBase&& other)
     : ModifiedCount(other.ModifiedCount)

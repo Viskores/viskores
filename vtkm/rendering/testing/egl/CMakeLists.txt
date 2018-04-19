@@ -18,11 +18,7 @@
 ##  this software.
 ##============================================================================
 
-vtkm_configure_component_EGL()
-if (VTKm_EGL_FOUND)
-  set(unit_tests
-   UnitTestMapperEGL.cxx
-   )
-  VTKm_unit_tests(SOURCES ${unit_tests})
-endif()
-
+set(unit_tests
+ UnitTestMapperEGL.cxx
+ )
+vtkm_unit_tests(SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
