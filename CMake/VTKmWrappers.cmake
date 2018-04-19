@@ -119,7 +119,7 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
 //This is used by headers that include thrust to properly define a proper
 //device backend / system
 #define VTKM_TEST_HEADER_BUILD
-#include <${dir_prefix}/${headername}.h>
+#include <${dir_prefix}/${headername}.${headerextension}>
 int ${headername}_${headerextension}_testbuild_symbol;"
         )
       list(APPEND srcs ${src})
