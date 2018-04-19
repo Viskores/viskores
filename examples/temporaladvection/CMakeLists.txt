@@ -21,27 +21,21 @@
 ##=============================================================================
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET
-  OPTIONAL_COMPONENTS Serial CUDA TBB Rendering
-  )
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(ParticleAdvection CXX)
+
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET)
 
 add_executable(exeserial ParticleAdvection.cxx)
-target_include_directories(exeserial PRIVATE ${VTKm_INCLUDE_DIRS})
-target_link_libraries(exeserial ${VTKm_LIBRARIES})
-target_compile_options(exeserial PRIVATE ${VTKm_COMPILE_OPTIONS})
+target_link_libraries(exeserial PRIVATE vtkm_cont)
 
-if(VTKm_TBB_FOUND)
+if(TARGET vtkm::tbb)
   add_executable(exetbb ParticleAdvectionTBB.cxx)
-  target_include_directories(exetbb PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(exetbb ${VTKm_LIBRARIES})
-  target_compile_options(exetbb PRIVATE ${VTKm_COMPILE_OPTIONS})
+  target_link_libraries(exetbb PRIVATE vtkm_cont)
 endif()
 
-if(VTKm_CUDA_FOUND)
-  # Cuda compiles do not respect target_include_directories
-  cuda_include_directories(${VTKm_INCLUDE_DIRS})
-  cuda_add_executable(execuda ParticleAdvection.cu)
-  target_include_directories(execuda PRIVATE ${VTKm_INCLUDE_DIRS})
-  target_link_libraries(execuda PRIVATE ${VTKm_LIBRARIES})
-  target_compile_options(execuda PRIVATE ${VTKm_COMPILE_OPTIONS})
+if(TARGET vtkm::cuda)
+  add_executable(execuda ParticleAdvection.cu)
+  target_link_libraries(execuda PRIVATE vtkm_cont)
 endif()
