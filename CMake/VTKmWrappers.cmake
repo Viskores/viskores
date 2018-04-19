@@ -104,13 +104,14 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
   set(srcs)
   foreach (header ${hfiles})
     get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
-    if( cant_be_tested )
+    if( NOT cant_be_tested )
       get_filename_component(headername ${header} NAME_WE)
+      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext})
 
       #By using file generate we will not trigger CMake execution when
       #a header gets touched
       file(GENERATE
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext}
+        OUTPUT ${src}
         CONTENT "
 //mark that we are including headers as test for completeness.
 //This is used by headers that include thrust to properly define a proper
