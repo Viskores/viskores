@@ -100,7 +100,6 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     set(ext "cu")
   endif()
 
-  set(valid_hfiles )
   set(srcs)
   foreach (header ${hfiles})
     get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
@@ -123,11 +122,10 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
 int ${headername}_${headerextension}_testbuild_symbol;"
         )
       list(APPEND srcs ${src})
-      list(APPEND valid_hfiles ${header})
     endif()
   endforeach()
 
-  set_source_files_properties(${valid_hfiles}
+  set_source_files_properties(${hfiles}
     PROPERTIES HEADER_FILE_ONLY TRUE
     )
 
@@ -142,7 +140,7 @@ int ${headername}_${headerextension}_testbuild_symbol;"
     #If the target already exists just add more sources to it
     target_sources(TestBuild_${name} PRIVATE ${srcs})
   else()
-    add_library(TestBuild_${name} STATIC ${srcs} ${valid_hfiles})
+    add_library(TestBuild_${name} STATIC ${srcs} ${hfiles})
     # Send the libraries created for test builds to their own directory so as to
     # not pollute the directory with useful libraries.
     set_property(TARGET TestBuild_${name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
