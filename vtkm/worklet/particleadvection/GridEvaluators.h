@@ -57,7 +57,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
+  bool IsWithinTemporalBoundary(const FieldType vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC_CONT
   void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
@@ -121,7 +121,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
+  bool IsWithinTemporalBoundary(const FieldType vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC_CONT
   void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
@@ -257,7 +257,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
+  bool IsWithinTemporalBoundary(const FieldType vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC_CONT
   void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
@@ -448,7 +448,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
+  bool IsWithinTemporalBoundary(const FieldType vtkmNotUsed(time)) const { return true; }
 
   VTKM_EXEC_CONT
   void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const

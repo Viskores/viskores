@@ -142,6 +142,8 @@ public:
       time += stepLength;
       return ParticleStatus::EXITED_TEMPORAL_BOUNDARY;
     }
+    //If the control reaches here, it is an invalid case.
+    return ParticleStatus::STATUS_ERROR;
   }
 
   VTKM_EXEC
@@ -193,14 +195,14 @@ public:
     bool status3 = this->Evaluator.Evaluate(inpos + var1 * k2, var2, k3);
     bool status4 = this->Evaluator.Evaluate(inpos + stepLength * k3, var3, k4);
 
-    if (status1 & status2 & status3 & status4 == ParticleStatus::STATUS_OK)
+    if ((status1 & status2 & status3 & status4) == ParticleStatus::STATUS_OK)
     {
       velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
       return ParticleStatus::STATUS_OK;
     }
     else
     {
-      return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
+      return ParticleStatus::AT_SPATIAL_BOUNDARY;
     }
   }
 };
@@ -223,7 +225,7 @@ public:
 
   VTKM_EXEC
   ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
-                           FieldType stepLength,
+                           FieldType vtkmNotUsed(stepLength),
                            FieldType time,
                            vtkm::Vec<FieldType, 3>& velocity) const
   {
