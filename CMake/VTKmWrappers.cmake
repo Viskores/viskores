@@ -157,6 +157,10 @@ int ${headername}_${headerextension}_testbuild_symbol;"
       target_link_libraries(TestBuild_${name} PRIVATE vtkm_diy)
     endif()
 
+    if(TARGET vtkm_rendering_gl_context)
+      target_link_libraries(TestBuild_${name} PRIVATE vtkm_rendering_gl_context)
+    endif()
+
 
   endif()
 
