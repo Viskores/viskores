@@ -81,7 +81,7 @@ public:
   }
 
   VTKM_EXEC
-  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
+  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus vtkmNotUsed(status))
   {
     // Irrespective of what the advected status of the particle is,
     // we need to set the output position as the last step taken by
@@ -237,7 +237,7 @@ public:
   }
 
   VTKM_EXEC_CONT
-  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus status)
+  void TakeStep(const vtkm::Id& idx, const vtkm::Vec<T, 3>& pt, ParticleStatus vtkmNotUsed(status))
   {
     // Irrespective of what the advected status of the particle is,
     // we need to set the output position as the last step taken by

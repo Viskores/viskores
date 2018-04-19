@@ -50,23 +50,38 @@ public:
   VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
   {
     vtkm::Vec<FieldType, 3> inpos = ic.GetPos(idx);
-    FieldType stepLength = integrator.GetStepLength();
     vtkm::Vec<FieldType, 3> outpos;
     FieldType time = ic.GetTime(idx);
+    ParticleStatus status;
     while (!ic.Done(idx))
     {
-      ParticleStatus status = integrator.Step(inpos, time, outpos);
+      status = integrator.Step(inpos, time, outpos);
       // If the status is OK, we only need to check if the particle
       // has completed the maximum steps required.
       if (status == ParticleStatus::STATUS_OK)
       {
         ic.TakeStep(idx, outpos, status);
-        inpos = outpos;
         // This is to keep track of the particle's time.
         // This is what the Evaluator uses to determine if the particle
         // has exited temporal boundary.
-        time += stepLength;
         ic.SetTime(idx, time);
+        inpos = outpos;
+      }
+      // If the particle is at spatial or temporal  boundary, take steps to just
+      // push it a little out of the boundary so that it will start advection in
+      // another domain, or in another time slice. Taking small steps enables
+      // reducing the error introduced at spatial or temporal boundaries.
+      if (status == ParticleStatus::AT_SPATIAL_BOUNDARY ||
+          status == ParticleStatus::AT_TEMPORAL_BOUNDARY)
+      {
+        vtkm::Id numSteps = ic.GetStep(idx);
+        status = integrator.PushOutOfBoundary(inpos, numSteps, time, outpos);
+        ic.TakeStep(idx, outpos, status);
+        ic.SetTime(idx, time);
+        if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)
+          ic.SetExitedSpatialBoundary(idx);
+        if (status == ParticleStatus::EXITED_TEMPORAL_BOUNDARY)
+          ic.SetExitedTemporalBoundary(idx);
       }
       // If the particle has exited spatial boundary, set corresponding status.
       else if (status == ParticleStatus::EXITED_SPATIAL_BOUNDARY)

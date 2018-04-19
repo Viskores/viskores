@@ -101,6 +101,23 @@ public:
     return true;
   }
 
+  VTKM_EXEC_CONT
+  void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
+  {
+    // Based on the direction of the velocity we need to be able to tell where
+    // the particle will exit the domain from to actually push it out of domain.
+    boundary[0] = static_cast<FieldType>(dir[0] > 0 ? bounds2.X.Max : bounds2.X.Min);
+    boundary[1] = static_cast<FieldType>(dir[1] > 0 ? bounds2.Y.Max : bounds2.Y.Min);
+    boundary[2] = static_cast<FieldType>(dir[2] > 0 ? bounds2.Z.Max : bounds2.Z.Min);
+  }
+
+  VTKM_EXEC_CONT
+  void GetTemporalBoundary(FieldType& boundary) const
+  {
+    // Return the time of the newest time slice
+    boundary = time2;
+  }
+
   /*
    * This method is intended to swap the initial datsets, by adding a new
    * dataset. The first dataset is replaced by the second, also the corresponding

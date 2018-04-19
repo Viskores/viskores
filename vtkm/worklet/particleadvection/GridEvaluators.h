@@ -60,16 +60,25 @@ public:
   bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
 
   VTKM_EXEC_CONT
-  void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
+  void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
   {
-    dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
-    dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
-    dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+    // Based on the direction of the velocity we need to be able to tell where
+    // the particle will exit the domain from to actually push it out of domain.
+    boundary[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    boundary[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    boundary[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+  }
+
+  VTKM_EXEC_CONT
+  void GetTemporalBoundary(FieldType& boundary) const
+  {
+    // Return the time of the newest time slice
+    boundary = 0;
   }
 
   VTKM_EXEC
   bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                FieldType time,
+                FieldType vtkmNotUsed(time),
                 vtkm::Vec<FieldType, 3>& out) const
   {
     return Evaluate(pos, out);
@@ -115,16 +124,25 @@ public:
   bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
 
   VTKM_EXEC_CONT
-  void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
+  void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
   {
-    dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
-    dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
-    dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+    // Based on the direction of the velocity we need to be able to tell where
+    // the particle will exit the domain from to actually push it out of domain.
+    boundary[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    boundary[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    boundary[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+  }
+
+  VTKM_EXEC_CONT
+  void GetTemporalBoundary(FieldType& boundary) const
+  {
+    // Return the time of the newest time slice
+    boundary = 0;
   }
 
   VTKM_EXEC
   bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                FieldType time,
+                FieldType vtkmNotUsed(time),
                 vtkm::Vec<FieldType, 3>& out) const
   {
     return Evaluate(pos, out);
@@ -242,16 +260,25 @@ public:
   bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
 
   VTKM_EXEC_CONT
-  void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
+  void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
   {
-    dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
-    dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
-    dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+    // Based on the direction of the velocity we need to be able to tell where
+    // the particle will exit the domain from to actually push it out of domain.
+    boundary[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    boundary[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    boundary[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+  }
+
+  VTKM_EXEC_CONT
+  void GetTemporalBoundary(FieldType& boundary) const
+  {
+    // Return the time of the newest time slice
+    boundary = 0;
   }
 
   VTKM_EXEC
   bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                FieldType time,
+                FieldType vtkmNotUsed(time),
                 vtkm::Vec<FieldType, 3>& out) const
   {
     return Evaluate(pos, out);
@@ -424,16 +451,25 @@ public:
   bool IsWithinTemporalBoundary(const FieldType time) const { return true; }
 
   VTKM_EXEC_CONT
-  void GetBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& dirBounds) const
+  void GetSpatialBoundary(vtkm::Vec<FieldType, 3>& dir, vtkm::Vec<FieldType, 3>& boundary) const
   {
-    dirBounds[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
-    dirBounds[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
-    dirBounds[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+    // Based on the direction of the velocity we need to be able to tell where
+    // the particle will exit the domain from to actually push it out of domain.
+    boundary[0] = static_cast<FieldType>(dir[0] > 0 ? bounds.X.Max : bounds.X.Min);
+    boundary[1] = static_cast<FieldType>(dir[1] > 0 ? bounds.Y.Max : bounds.Y.Min);
+    boundary[2] = static_cast<FieldType>(dir[2] > 0 ? bounds.Z.Max : bounds.Z.Min);
+  }
+
+  VTKM_EXEC_CONT
+  void GetTemporalBoundary(FieldType& boundary) const
+  {
+    // Return the time of the newest time slice
+    boundary = 0;
   }
 
   VTKM_EXEC
   bool Evaluate(const vtkm::Vec<FieldType, 3>& pos,
-                FieldType time,
+                FieldType vtkmNotUsed(time),
                 vtkm::Vec<FieldType, 3>& out) const
   {
     return Evaluate(pos, out);
@@ -449,35 +485,32 @@ public:
     // Currently the cell search for the Rectilinear Grid is done linearly
     // along all the axes. There needs to be a fast cell lookup method to
     // expedite this.
-    vtkm::Vec<vtkm::Id, 3> cellPos;
+    vtkm::Vec<vtkm::Id, 3> cellPos(-1, -1, -1);
     vtkm::Id index;
     /*Get floor X location*/
     for (index = 0; index < dims[0] - 1; index++)
-    {
       if (xAxis.Get(index) <= pos[0] && pos[0] <= xAxis.Get(index + 1))
       {
         cellPos[0] = index;
         break;
       }
-    }
     /*Get floor Y location*/
     for (index = 0; index < dims[1] - 1; index++)
-    {
       if (yAxis.Get(index) <= pos[1] && pos[1] <= yAxis.Get(index + 1))
       {
         cellPos[1] = index;
         break;
       }
-    }
     /*Get floor Z location*/
     for (index = 0; index < dims[2] - 1; index++)
-    {
       if (zAxis.Get(index) <= pos[2] && pos[2] <= zAxis.Get(index + 1))
       {
         cellPos[2] = index;
         break;
       }
-    }
+
+    if (cellPos[0] == -1 || cellPos[1] == -1 || cellPos[2] == -1)
+      return false;
 
     idx000[0] = cellPos[0];
     idx000[1] = cellPos[1];
