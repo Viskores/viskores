@@ -106,7 +106,9 @@ function(vtkm_add_header_build_test name dir_prefix use_cuda)
     get_source_file_property(cant_be_tested ${header} VTKm_CANT_BE_HEADER_TESTED)
     if( NOT cant_be_tested )
       get_filename_component(headername ${header} NAME_WE)
-      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}.${ext})
+      get_filename_component(headerextension ${header} EXT)
+      string(SUBSTRING ${headerextension} 1 -1 headerextension)
+      set(src ${CMAKE_CURRENT_BINARY_DIR}/TB_${headername}_${headerextension}.${ext})
 
       #By using file generate we will not trigger CMake execution when
       #a header gets touched
