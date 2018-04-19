@@ -382,12 +382,12 @@ function(vtkm_unit_tests)
     set(test_prog "UnitTests_${kit}")
   endif()
   if(VTKm_UT_BACKEND)
-    string(APPEND test_prog "_${backend}")
+    set(test_prog "${test_prog}_${backend}")
   endif()
 
   if(VTKm_UT_MPI)
     # for MPI tests, suffix test name and add MPI_Init/MPI_Finalize calls.
-    string(APPEND "test_prog" "_mpi")
+    set(test_prog "${test_prog}_mpi")
     set(extraArgs EXTRA_INCLUDE "vtkm/cont/testing/Testing.h"
                   FUNCTION "vtkm::cont::testing::Environment env")
   else()
