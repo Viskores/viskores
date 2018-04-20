@@ -239,16 +239,18 @@ public:
   {
     // Irrespective of what the advected status of the particle is,
     // we need to set the output position as the last step taken by
-    // the particle, and increase the number of steps take by 1.
+    // the particle.
     Pos.Set(idx, pt);
     vtkm::Id nSteps = Steps.Get(idx);
-    Steps.Set(idx, ++nSteps);
 
     // Update the step for streamline storing portals.
     // This includes updating the history and the valid points.
     vtkm::Id loc = idx * Length + nSteps;
     History.Set(loc, pt);
     ValidPoint.Set(loc, 1);
+
+    // Increase the number of steps take by 1.
+    Steps.Set(idx, ++nSteps);
 
     // Check if the particle has completed the maximum steps required.
     // If yes, set it to teminated.
