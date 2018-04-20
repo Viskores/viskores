@@ -44,7 +44,7 @@ inline vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType> IteratorE
   const PortalType& portal)
 {
   vtkm::exec::cuda::internal::IteratorFromArrayPortal<PortalType> iterator(portal);
-  iterator += static_cast<std::size_t>(portal.GetNumberOfValues());
+  iterator += static_cast<std::ptrdiff_t>(portal.GetNumberOfValues());
   return iterator;
 }
 
