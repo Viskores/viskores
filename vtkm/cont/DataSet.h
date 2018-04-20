@@ -159,6 +159,11 @@ public:
     return static_cast<vtkm::IdComponent>(this->CoordSystems.size());
   }
 
+  /// Copies the structure i.e. coordinates systems and cellsets from the source
+  /// dataset. The fields are left unchanged.
+  VTKM_CONT
+  void CopyStructure(const vtkm::cont::DataSet& source);
+
   VTKM_CONT
   void PrintSummary(std::ostream& out) const;
 
