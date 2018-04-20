@@ -922,12 +922,12 @@ static inline VTKM_EXEC_CONT vtkm::Float32 RemainderQuotient(vtkm::Float32 numer
 {
   int iQuotient;
 #ifdef VTKM_CUDA
-  const vtkm::Float64 result =
+  const vtkm::Float32 result =
     VTKM_CUDA_MATH_FUNCTION_32(remquo)(numerator, denominator, &iQuotient);
 #else
   const vtkm::Float32 result = std::remquo(numerator, denominator, &iQuotient);
 #endif
-  quotient = iQuotient;
+  quotient = static_cast<QType>(iQuotient);
   return result;
 }
 template <typename QType>
@@ -942,7 +942,7 @@ static inline VTKM_EXEC_CONT vtkm::Float64 RemainderQuotient(vtkm::Float64 numer
 #else
   const vtkm::Float64 result = std::remquo(numerator, denominator, &iQuotient);
 #endif
-  quotient = iQuotient;
+  quotient = static_cast<QType>(iQuotient);
   return result;
 }
 

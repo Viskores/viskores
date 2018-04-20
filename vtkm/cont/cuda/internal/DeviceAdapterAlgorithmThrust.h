@@ -77,6 +77,11 @@ namespace cuda
 namespace internal
 {
 
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 static __global__ void DetermineProperXGridSize(vtkm::UInt32 desired_size,
                                                 vtkm::UInt32* actual_size)
 {
@@ -170,6 +175,10 @@ __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_
 {
   result = binary_op(a, b);
 }
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif
 
 inline void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d)
 {
