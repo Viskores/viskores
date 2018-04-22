@@ -85,9 +85,9 @@ public:
   ParticleStatus PushOutOfBoundary(vtkm::Vec<FieldType, 3>& inpos,
                                    vtkm::Id numSteps,
                                    FieldType& time,
+                                   ParticleStatus status,
                                    vtkm::Vec<FieldType, 3>& outpos) const
   {
-    ParticleStatus status;
     FieldType stepLength = StepLength;
     vtkm::Vec<FieldType, 3> velocity, currentVelocity;
     CheckStep(inpos, 0.0f, time, currentVelocity);
