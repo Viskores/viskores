@@ -34,7 +34,9 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename FieldEvaluateType, typename FieldType>
+template <typename FieldEvaluateType,
+          typename FieldType,
+          template <typename, typename> class IntegratorType>
 class Integrator
 {
 protected:
@@ -148,10 +150,14 @@ public:
   }
 
   VTKM_EXEC
-  virtual ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
-                                   FieldType stepLength,
-                                   FieldType time,
-                                   vtkm::Vec<FieldType, 3>& velocity) const = 0;
+  ParticleStatus CheckStep(const vtkm::Vec<FieldType, 3>& inpos,
+                           FieldType stepLength,
+                           FieldType time,
+                           vtkm::Vec<FieldType, 3>& velocity) const
+  {
+    using ConcreteType = IntegratorType<FieldEvaluateType, FieldType>;
+    return static_cast<const ConcreteType*>(this)->CheckStep(inpos, stepLength, time, velocity);
+  }
 
   VTKM_EXEC_CONT
   FieldType SetMinimizeError(bool minimizeError) const { this->MinimizeError = minimizeError; }
@@ -164,18 +170,18 @@ protected:
 };
 
 template <typename FieldEvaluateType, typename FieldType>
-class RK4Integrator : public Integrator<FieldEvaluateType, FieldType>
+class RK4Integrator : public Integrator<FieldEvaluateType, FieldType, RK4Integrator>
 {
 public:
   VTKM_EXEC_CONT
   RK4Integrator()
-    : Integrator<FieldEvaluateType, FieldType>()
+    : Integrator<FieldEvaluateType, FieldType, RK4Integrator>()
   {
   }
 
   VTKM_EXEC_CONT
   RK4Integrator(const FieldEvaluateType& evaluator, const FieldType stepLength)
-    : Integrator<FieldEvaluateType, FieldType>(evaluator, stepLength)
+    : Integrator<FieldEvaluateType, FieldType, RK4Integrator>(evaluator, stepLength)
   {
   }
 
@@ -209,18 +215,18 @@ public:
 };
 
 template <typename FieldEvaluateType, typename FieldType>
-class EulerIntegrator : public Integrator<FieldEvaluateType, FieldType>
+class EulerIntegrator : public Integrator<FieldEvaluateType, FieldType, EulerIntegrator>
 {
 public:
   VTKM_EXEC_CONT
   EulerIntegrator()
-    : Integrator<FieldEvaluateType, FieldType>()
+    : Integrator<FieldEvaluateType, FieldType, EulerIntegrator>()
   {
   }
 
   VTKM_EXEC_CONT
   EulerIntegrator(const FieldEvaluateType& evaluator, const FieldType stepLength)
-    : Integrator<FieldEvaluateType, FieldType>(evaluator, stepLength)
+    : Integrator<FieldEvaluateType, FieldType, EulerIntegrator>(evaluator, stepLength)
   {
   }
 
