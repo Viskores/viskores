@@ -175,13 +175,15 @@ class RK4Integrator : public Integrator<FieldEvaluateType, FieldType, RK4Integra
 public:
   VTKM_EXEC_CONT
   RK4Integrator()
-    : Integrator<FieldEvaluateType, FieldType, RK4Integrator>()
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>()
   {
   }
 
   VTKM_EXEC_CONT
   RK4Integrator(const FieldEvaluateType& evaluator, const FieldType stepLength)
-    : Integrator<FieldEvaluateType, FieldType, RK4Integrator>(evaluator, stepLength)
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>(
+        evaluator,
+        stepLength)
   {
   }
 
@@ -220,13 +222,15 @@ class EulerIntegrator : public Integrator<FieldEvaluateType, FieldType, EulerInt
 public:
   VTKM_EXEC_CONT
   EulerIntegrator()
-    : Integrator<FieldEvaluateType, FieldType, EulerIntegrator>()
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::EulerIntegrator>()
   {
   }
 
   VTKM_EXEC_CONT
   EulerIntegrator(const FieldEvaluateType& evaluator, const FieldType stepLength)
-    : Integrator<FieldEvaluateType, FieldType, EulerIntegrator>(evaluator, stepLength)
+    : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::EulerIntegrator>(
+        evaluator,
+        stepLength)
   {
   }
 
