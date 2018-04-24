@@ -1,3 +1,25 @@
+//============================================================================
+//  Copyright (c) Kitware, Inc.
+//  All rights reserved.
+//  See LICENSE.txt for details.
+//  This software is distributed WITHOUT ANY WARRANTY; without even
+//  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+//  PURPOSE.  See the above copyright notice for more information.
+//
+//  Copyright 2014 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2014 UT-Battelle, LLC.
+//  Copyright 2014 Los Alamos National Security.
+//
+//  Under the terms of Contract DE-NA0003525 with NTESS,
+//  the U.S. Government retains certain rights in this software.
+//
+//  Under the terms of Contract DE-AC52-06NA25396 with Los Alamos National
+//  Laboratory (LANL), the U.S. Government retains certain rights in
+//  this software.
+//============================================================================
+#ifndef vtk_m_worklet_particleadvection_temporalgridevaluators_h
+#define vtk_m_worklet_particleadvection_TemporalGridEvaluators_h
+
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -294,6 +316,10 @@ private:
   PortalType vectors1;
   PortalType vectors2;
 };
-}
-}
-}
+
+} //namespace particleadvection
+} //namespace worklet
+} //namespace vtkm
+
+
+#endif //vtk_m_worklet_particleadvection_temporalgridevaluators_h
