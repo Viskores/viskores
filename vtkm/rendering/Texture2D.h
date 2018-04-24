@@ -191,15 +191,17 @@ public:
     VTKM_EXEC
     inline void GetNextCoords(vtkm::Id x, vtkm::Id y, vtkm::Id& xn, vtkm::Id& yn) const
     {
-      if (WrapMode == TextureWrapMode::Clamp)
+      switch (WrapMode)
       {
-        xn = (x + 1) < Width ? (x + 1) : x;
-        yn = (y + 1) < Height ? (y + 1) : y;
-      }
-      else if (WrapMode == TextureWrapMode::Repeat)
-      {
-        xn = (x + 1) % Width;
-        yn = (y + 1) % Height;
+        case TextureWrapMode::Clamp:
+          xn = (x + 1) < Width ? (x + 1) : x;
+          yn = (y + 1) < Height ? (y + 1) : y;
+          break;
+        case TextureWrapMode::Repeat:
+        default:
+          xn = (x + 1) % Width;
+          yn = (y + 1) % Height;
+          break;
       }
     }
 
