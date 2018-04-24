@@ -841,7 +841,7 @@ public:
       BasicArrayType ext1, ext2, ext3, ext4;
       vtkm::Id extDimX = inPretendDimX;
       vtkm::Id extDimY = inPretendDimY;
-      vtkm::Id ext1DimZ, ext2DimZ, ext3DimZ, ext4DimZ;
+      vtkm::Id ext1DimZ = 0, ext2DimZ = 0, ext3DimZ = 0, ext4DimZ = 0;
       this->IDWTHelper3DFrontBack(coeffIn,
                                   inDimX,
                                   inDimY,
@@ -910,7 +910,7 @@ public:
       BasicArrayType ext1, ext2, ext3, ext4;
       vtkm::Id extDimX = inPretendDimX;
       vtkm::Id extDimZ = inPretendDimZ;
-      vtkm::Id ext1DimY, ext2DimY, ext3DimY, ext4DimY;
+      vtkm::Id ext1DimY = 0, ext2DimY = 0, ext3DimY = 0, ext4DimY = 0;
       this->IDWTHelper3DTopDown(afterZ,
                                 inPretendDimX,
                                 inPretendDimY,
@@ -973,7 +973,7 @@ public:
       BasicArrayType ext1, ext2, ext3, ext4;
       vtkm::Id extDimY = inPretendDimY;
       vtkm::Id extDimZ = inPretendDimZ;
-      vtkm::Id ext1DimX, ext2DimX, ext3DimX, ext4DimX;
+      vtkm::Id ext1DimX = 0, ext2DimX = 0, ext3DimX = 0, ext4DimX = 0;
       this->IDWTHelper3DLeftRight(afterY,
                                   inPretendDimX,
                                   inPretendDimY,
@@ -1893,7 +1893,7 @@ public:
     {
       BasicArrayType ext1, ext2, ext3, ext4;
       vtkm::Id extDimX = inPretendDimX;
-      vtkm::Id ext1DimY, ext2DimY, ext3DimY, ext4DimY;
+      vtkm::Id ext1DimY = 0, ext2DimY = 0, ext3DimY = 0, ext4DimY = 0;
       this->IDWTHelper2DTopDown(coeffIn,
                                 inDimX,
                                 inDimY,
@@ -1946,7 +1946,7 @@ public:
     {
       BasicArrayType ext1, ext2, ext3, ext4;
       vtkm::Id extDimY = inPretendDimY;
-      vtkm::Id ext1DimX, ext2DimX, ext3DimX, ext4DimX;
+      vtkm::Id ext1DimX = 0, ext2DimX = 0, ext3DimX = 0, ext4DimX = 0;
       this->IDWTHelper2DLeftRight(afterY,
                                   inPretendDimX,
                                   inPretendDimY,

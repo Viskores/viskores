@@ -2487,7 +2487,7 @@ public:
   {
     vtkm::Id workX, workY, output1D;
     Output1Dto2D(workIndex, workX, workY);
-    vtkm::Id inputMatrix, inputIdx;
+    vtkm::Id inputMatrix = 0, inputIdx = 0;
     using OutputValueType = typename OutputPortalType::ValueType;
 
     if (modeLR)
@@ -2718,7 +2718,7 @@ public:
                             const vtkm::Id& workIdx) const
   {
     vtkm::Id workX, workY;
-    vtkm::Id k1, k2, xi, yi, inputMatrix, inputIdx;
+    vtkm::Id k1 = 0, k2 = 0, xi = 0, yi = 0, inputMatrix = 0, inputIdx = 0;
     Output1Dto2D(workIdx, workX, workY);
 
     // left-right, odd filter
