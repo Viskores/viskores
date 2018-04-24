@@ -124,7 +124,7 @@ elseif(VTKM_COMPILER_IS_ICC)
 
 elseif(VTKM_COMPILER_IS_GNU OR VTKM_COMPILER_IS_CLANG)
   set(cxx_flags -Wall -Wno-long-long -Wcast-align -Wconversion -Wchar-subscripts -Wextra -Wpointer-arith -Wformat -Wformat-security -Wshadow -Wunused-parameter -fno-common)
-  set(cuda_flags "-Xcudafe=\"--display_error_number\"")
+  set(cuda_flags -Xcudafe=--display_error_number -Xcompiler=-Wall,-Wno-unknown-pragmas,-Wno-unused-local-typedefs,-Wno-unused-local-typedefs,-Wno-unused-function,-Wno-long-long,-Wcast-align,-Wconversion,-Wchar-subscripts,-Wpointer-arith,-Wformat,-Wformat-security,-Wshadow,-Wunused-parameter,-fno-common)
   target_compile_options(vtkm_compiler_flags
     INTERFACE $<BUILD_INTERFACE:$<$<COMPILE_LANGUAGE:CXX>:${cxx_flags}>>
     )

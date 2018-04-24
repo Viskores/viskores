@@ -180,22 +180,24 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
                                  cudaStreamPerThread));
 }
 
-void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(const void* controlPtr,
-                                                                      const void* executionPtr,
-                                                                      vtkm::UInt64 numBytes) const
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(
+  const void* vtkmNotUsed(controlPtr),
+  const void* executionPtr,
+  vtkm::UInt64 numBytes) const
 {
   CudaAllocator::PrepareForInput(executionPtr, static_cast<size_t>(numBytes));
 }
 
-void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForWrite(const void* controlPtr,
-                                                                       const void* executionPtr,
-                                                                       vtkm::UInt64 numBytes) const
+void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForWrite(
+  const void* vtkmNotUsed(controlPtr),
+  const void* executionPtr,
+  vtkm::UInt64 numBytes) const
 {
   CudaAllocator::PrepareForOutput(executionPtr, static_cast<size_t>(numBytes));
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForReadWrite(
-  const void* controlPtr,
+  const void* vtkmNotUsed(controlPtr),
   const void* executionPtr,
   vtkm::UInt64 numBytes) const
 {
