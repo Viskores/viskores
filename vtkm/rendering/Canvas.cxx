@@ -213,8 +213,9 @@ struct DrawColorBar : public vtkm::worklet::WorkletMapField
 
     const vtkm::Vec<vtkm::UInt8, 4> color = colorMap.Get(sample);
 
-    vtkm::Float32 normalizedHeight =
-      Horizontal ? vtkm::Float32(y) / BarHeight : vtkm::Float32(x) / BarWidth;
+    vtkm::Float32 normalizedHeight = Horizontal
+      ? static_cast<vtkm::Float32>(y) / static_cast<vtkm::Float32>(BarHeight)
+      : static_cast<vtkm::Float32>(x) / static_cast<vtkm::Float32>(BarWidth);
     // offset to global image coord
     x += BarBottomLeft[0];
     y += BarBottomLeft[1];
