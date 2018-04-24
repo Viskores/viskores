@@ -151,16 +151,16 @@ public:
     VTKM_EXEC
     inline ColorType GetNearestNeighbourFilteredColor(vtkm::Float32 u, vtkm::Float32 v) const
     {
-      vtkm::Id x = static_cast<vtkm::Id>(vtkm::Round(u * (Width - 1)));
-      vtkm::Id y = static_cast<vtkm::Id>(vtkm::Round(v * (Height - 1)));
+      vtkm::Id x = static_cast<vtkm::Id>(vtkm::Round(u * static_cast<vtkm::Float32>(Width - 1)));
+      vtkm::Id y = static_cast<vtkm::Id>(vtkm::Round(v * static_cast<vtkm::Float32>(Height - 1)));
       return GetColorAtCoords(x, y);
     }
 
     VTKM_EXEC
     inline ColorType GetLinearFilteredColor(vtkm::Float32 u, vtkm::Float32 v) const
     {
-      u = u * Width - 0.5f;
-      v = v * Height - 0.5f;
+      u = u * static_cast<vtkm::Float32>(Width) - 0.5f;
+      v = v * static_cast<vtkm::Float32>(Height) - 0.5f;
       vtkm::Id x = static_cast<vtkm::Id>(vtkm::Floor(u));
       vtkm::Id y = static_cast<vtkm::Id>(vtkm::Floor(v));
       vtkm::Float32 uRatio = u - static_cast<vtkm::Float32>(x);
