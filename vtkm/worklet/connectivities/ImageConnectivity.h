@@ -31,6 +31,14 @@
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 #include <vtkm/worklet/connectivities/UnionFind.h>
 
+namespace vtkm
+{
+namespace worklet
+{
+namespace connectivity
+{
+namespace detail
+{
 template <int Dimension>
 class ImageGraft;
 
@@ -42,18 +50,20 @@ public:
                                 FieldInNeighborhood<> comp,
                                 FieldInNeighborhood<> color,
                                 FieldOut<> newComp);
+
   typedef _4 ExecutionSignature(_2, _3);
 
   template <typename Comp, typename NeighborColor>
   VTKM_EXEC vtkm::Id operator()(const Comp& comp, const NeighborColor& color) const
   {
     vtkm::Id myComp = comp.Get(0, 0, 0);
+    auto myColor = color.Get(0, 0, 0);
 
     for (int j = -1; j <= 1; j++)
     {
       for (int i = -1; i <= 1; i++)
       {
-        if (color.Get(0, 0, 0) == color.Get(i, j, 0))
+        if (myColor == color.Get(i, j, 0))
         {
           myComp = vtkm::Min(myComp, comp.Get(i, j, 0));
         }
@@ -62,71 +72,91 @@ public:
     return myComp;
   }
 };
+}
 
-template <typename DeviceAdapter>
 class ImageConnectivity
 {
 public:
-  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-  template <typename OutputPortalType>
-  void Run(const vtkm::cont::DataSet& input, OutputPortalType& componentsOut) const
+  class RunImpl
   {
-    // TODO: template pixel type?
-    vtkm::cont::ArrayHandle<vtkm::UInt8> pixels;
-    input.GetField("color", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(pixels);
-
-    Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
-                    componentsOut);
-
-    vtkm::cont::ArrayHandle<vtkm::Id> newComponents;
-
-    vtkm::cont::ArrayHandle<vtkm::Id> pixelIds;
-    Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
-                    pixelIds);
-
-    bool allStar = false;
-    vtkm::cont::ArrayHandle<bool> isStar;
-
-    using DispatcherType = vtkm::worklet::DispatcherPointNeighborhood<ImageGraft<2>, DeviceAdapter>;
-
-    do
+  public:
+    template <typename StorageT, typename OutputPortalType, typename Device>
+    void operator()(const vtkm::cont::ArrayHandle<vtkm::UInt8, StorageT>& pixels,
+                    const vtkm::cont::CellSetStructured<2>& input,
+                    OutputPortalType& componentsOut,
+                    Device) const
     {
-      DispatcherType().Invoke(input.GetCellSet(0), componentsOut, pixels, newComponents);
+      using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
 
-      // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
-      vtkm::worklet::DispatcherMapField<IsStar, DeviceAdapter> isStarDisp;
-      isStarDisp.Invoke(pixelIds, newComponents, isStar);
-      allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());
+      // TODO: template pixel type?
 
-      vtkm::worklet::DispatcherMapField<PointerJumping, DeviceAdapter> pointJumpingDispatcher;
-      pointJumpingDispatcher.Invoke(pixelIds, newComponents);
+      Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
+                      componentsOut);
 
-      Algorithm::Copy(newComponents, componentsOut);
+      vtkm::cont::ArrayHandle<vtkm::Id> newComponents;
 
-    } while (!allStar);
+      vtkm::cont::ArrayHandle<vtkm::Id> pixelIds;
+      Algorithm::Copy(vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, pixels.GetNumberOfValues()),
+                      pixelIds);
 
-    // renumber connected component to the range of [0, number of components).
-    vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
-    Algorithm::Copy(componentsOut, uniqueComponents);
-    Algorithm::Sort(uniqueComponents);
-    Algorithm::Unique(uniqueComponents);
+      bool allStar = false;
+      vtkm::cont::ArrayHandle<bool> isStar;
 
-    vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
-    Algorithm::Copy(
-      vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, uniqueComponents.GetNumberOfValues()),
-      uniqueColor);
-    vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
-    vtkm::cont::ArrayHandle<vtkm::Id> pixelIdsOut;
-    InnerJoin<DeviceAdapter>().Run(componentsOut,
-                                   pixelIds,
-                                   uniqueComponents,
-                                   uniqueColor,
-                                   cellColors,
-                                   pixelIdsOut,
-                                   componentsOut);
+      using DispatcherType =
+        vtkm::worklet::DispatcherPointNeighborhood<detail::ImageGraft<2>, Device>;
 
-    Algorithm::SortByKey(pixelIdsOut, componentsOut);
+      do
+      {
+        DispatcherType().Invoke(input, componentsOut, pixels, newComponents);
+
+        // Detection of allStar has to come before pointer jumping. Don't try to rearrange it.
+        vtkm::worklet::DispatcherMapField<IsStar, Device> isStarDisp;
+        isStarDisp.Invoke(pixelIds, newComponents, isStar);
+        allStar = Algorithm::Reduce(isStar, true, vtkm::LogicalAnd());
+
+        vtkm::worklet::DispatcherMapField<PointerJumping, Device> pointJumpingDispatcher;
+        pointJumpingDispatcher.Invoke(pixelIds, newComponents);
+
+        Algorithm::Copy(newComponents, componentsOut);
+
+      } while (!allStar);
+
+      // renumber connected component to the range of [0, number of components).
+      vtkm::cont::ArrayHandle<vtkm::Id> uniqueComponents;
+      Algorithm::Copy(componentsOut, uniqueComponents);
+      Algorithm::Sort(uniqueComponents);
+      Algorithm::Unique(uniqueComponents);
+
+      vtkm::cont::ArrayHandle<vtkm::Id> uniqueColor;
+      Algorithm::Copy(
+        vtkm::cont::ArrayHandleCounting<vtkm::Id>(0, 1, uniqueComponents.GetNumberOfValues()),
+        uniqueColor);
+      vtkm::cont::ArrayHandle<vtkm::Id> cellColors;
+      vtkm::cont::ArrayHandle<vtkm::Id> pixelIdsOut;
+      InnerJoin<Device>().Run(componentsOut,
+                              pixelIds,
+                              uniqueComponents,
+                              uniqueColor,
+                              cellColors,
+                              pixelIdsOut,
+                              componentsOut);
+
+      Algorithm::SortByKey(pixelIdsOut, componentsOut);
+    }
+  };
+
+  template <typename T, typename S, typename OutputPortalType, typename Device>
+  void Run(const vtkm::cont::CellSetStructured<2>& input,
+           const vtkm::cont::DynamicArrayHandleBase<T, S>& pixels,
+           OutputPortalType& componentsOut,
+           Device device) const
+  {
+    using Types = vtkm::ListTagBase<vtkm::UInt8>;
+    vtkm::cont::CastAndCall(pixels.ResetTypeList(Types{}), RunImpl(), input, componentsOut, device);
   }
 };
+}
+}
+}
 
 #endif
