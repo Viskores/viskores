@@ -126,7 +126,7 @@ struct MinRepresentable<double>
   static constexpr vtkm::Int64 value = 4503599627370496L;
 };
 
-bool rangeAlmostEqual(const vtkm::Range& r)
+inline bool rangeAlmostEqual(const vtkm::Range& r)
 {
   vtkm::Int64 irange[2];
   // needs to be a memcpy to avoid strict aliasing issues, doing a count
@@ -141,7 +141,7 @@ bool rangeAlmostEqual(const vtkm::Range& r)
 }
 
 template <typename T>
-double expandRange(T r[2])
+inline double expandRange(T r[2])
 {
   constexpr bool is_float32_type = std::is_same<T, vtkm::Float32>::value;
   using IRange = typename std::conditional<is_float32_type, vtkm::Int32, vtkm::Int64>::type;
@@ -179,7 +179,7 @@ double expandRange(T r[2])
   return static_cast<double>(r[1]);
 }
 
-vtkm::Range adjustRange(const vtkm::Range& r)
+inline vtkm::Range adjustRange(const vtkm::Range& r)
 {
   const bool spans_zero_boundary = r.Min < 0 && r.Max > 0;
   if (spans_zero_boundary)
@@ -214,12 +214,12 @@ vtkm::Range adjustRange(const vtkm::Range& r)
 
 
 template <typename T>
-vtkm::cont::ArrayHandle<T> buildSampleHandle(std::vector<T>& samples,
-                                             vtkm::Int32 numSamples,
-                                             T start,
-                                             T end,
-                                             T inc,
-                                             bool appendNanAndRangeColors)
+inline vtkm::cont::ArrayHandle<T> buildSampleHandle(std::vector<T>& samples,
+                                                    vtkm::Int32 numSamples,
+                                                    T start,
+                                                    T end,
+                                                    T inc,
+                                                    bool appendNanAndRangeColors)
 {
   int extra_values = (appendNanAndRangeColors) ? 0 : 4;
   samples.reserve(static_cast<std::size_t>(numSamples + extra_values));
@@ -249,11 +249,11 @@ vtkm::cont::ArrayHandle<T> buildSampleHandle(std::vector<T>& samples,
 }
 
 template <typename ColorTable, typename OutputColors>
-bool sampleColorTable(const ColorTable* self,
-                      vtkm::Int32 numSamples,
-                      OutputColors& colors,
-                      double tolerance,
-                      bool appendNanAndRangeColors)
+inline bool sampleColorTable(const ColorTable* self,
+                             vtkm::Int32 numSamples,
+                             OutputColors& colors,
+                             double tolerance,
+                             bool appendNanAndRangeColors)
 {
   vtkm::Range r = self->GetRange();
   //We want the samples to start at Min, and end at Max so that means
@@ -290,56 +290,56 @@ bool sampleColorTable(const ColorTable* self,
 }
 
 
-vtkm::Vec<double, 3> hsvTorgb(const vtkm::Vec<double, 3>& hsv)
+inline vtkm::Vec<float, 3> hsvTorgb(const vtkm::Vec<float, 3>& hsv)
 {
-  vtkm::Vec<double, 3> rgb;
-  constexpr double onethird = 1.0 / 3.0;
-  constexpr double onesixth = 1.0 / 6.0;
-  constexpr double twothird = 2.0 / 3.0;
-  constexpr double fivesixth = 5.0 / 6.0;
+  vtkm::Vec<float, 3> rgb;
+  constexpr float onethird = 1.0f / 3.0f;
+  constexpr float onesixth = 1.0f / 6.0f;
+  constexpr float twothird = 2.0f / 3.0f;
+  constexpr float fivesixth = 5.0f / 6.0f;
 
   // compute RGB from HSV
   if (hsv[0] > onesixth && hsv[0] <= onethird) // green/red
   {
-    rgb[1] = 1.0;
-    rgb[0] = (onethird - hsv[0]) * 6;
-    rgb[2] = 0.0;
+    rgb[1] = 1.0f;
+    rgb[0] = (onethird - hsv[0]) * 6.0f;
+    rgb[2] = 0.0f;
   }
-  else if (hsv[0] > onethird && hsv[0] <= 0.5) // green/blue
+  else if (hsv[0] > onethird && hsv[0] <= 0.5f) // green/blue
   {
-    rgb[1] = 1.0;
-    rgb[2] = (hsv[0] - onethird) * 6;
-    rgb[0] = 0.0;
+    rgb[1] = 1.0f;
+    rgb[2] = (hsv[0] - onethird) * 6.0f;
+    rgb[0] = 0.0f;
   }
   else if (hsv[0] > 0.5 && hsv[0] <= twothird) // blue/green
   {
-    rgb[2] = 1.0;
-    rgb[1] = (twothird - hsv[0]) * 6;
-    rgb[0] = 0.0;
+    rgb[2] = 1.0f;
+    rgb[1] = (twothird - hsv[0]) * 6.0f;
+    rgb[0] = 0.0f;
   }
   else if (hsv[0] > twothird && hsv[0] <= fivesixth) // blue/red
   {
-    rgb[2] = 1.0;
-    rgb[0] = (hsv[0] - twothird) * 6;
-    rgb[1] = 0.0;
+    rgb[2] = 1.0f;
+    rgb[0] = (hsv[0] - twothird) * 6.0f;
+    rgb[1] = 0.0f;
   }
   else if (hsv[0] > fivesixth && hsv[0] <= 1.0) // red/blue
   {
-    rgb[0] = 1.0;
-    rgb[2] = (1.0 - hsv[0]) * 6;
-    rgb[1] = 0.0;
+    rgb[0] = 1.0f;
+    rgb[2] = (1.0f - hsv[0]) * 6.0f;
+    rgb[1] = 0.0f;
   }
   else // red/green
   {
-    rgb[0] = 1.0;
+    rgb[0] = 1.0f;
     rgb[1] = hsv[0] * 6;
-    rgb[2] = 0.0;
+    rgb[2] = 0.0f;
   }
 
   // add Saturation to the equation.
-  rgb[0] = (hsv[1] * rgb[0] + (1.0 - hsv[1]));
-  rgb[1] = (hsv[1] * rgb[1] + (1.0 - hsv[1]));
-  rgb[2] = (hsv[1] * rgb[2] + (1.0 - hsv[1]));
+  rgb[0] = (hsv[1] * rgb[0] + (1.0f - hsv[1]));
+  rgb[1] = (hsv[1] * rgb[1] + (1.0f - hsv[1]));
+  rgb[2] = (hsv[1] * rgb[2] + (1.0f - hsv[1]));
 
   rgb[0] *= hsv[2];
   rgb[1] *= hsv[2];
@@ -348,22 +348,27 @@ vtkm::Vec<double, 3> hsvTorgb(const vtkm::Vec<double, 3>& hsv)
 }
 
 // clang-format off
-bool outside_vrange(double x) { return x < 0.0 || x > 1.0; }
-bool outside_vrange(const vtkm::Vec<double, 2>& x)
+inline bool outside_vrange(double x) { return x < 0.0 || x > 1.0; }
+inline bool outside_vrange(const vtkm::Vec<double, 2>& x)
   { return x[0] < 0.0 || x[0] > 1.0 || x[1] < 0.0 || x[1] > 1.0; }
-bool outside_vrange(const vtkm::Vec<double, 3>& x)
+inline bool outside_vrange(const vtkm::Vec<double, 3>& x)
   { return x[0] < 0.0 || x[0] > 1.0 || x[1] < 0.0 || x[1] > 1.0 || x[2] < 0.0 || x[2] > 1.0; }
+inline bool outside_vrange(float x) { return x < 0.0f || x > 1.0f; }
+inline bool outside_vrange(const vtkm::Vec<float, 2>& x)
+  { return x[0] < 0.0f || x[0] > 1.0f || x[1] < 0.0f || x[1] > 1.0f; }
+inline bool outside_vrange(const vtkm::Vec<float, 3>& x)
+  { return x[0] < 0.0f || x[0] > 1.0f || x[1] < 0.0f || x[1] > 1.0f || x[2] < 0.0f || x[2] > 1.0f; }
 
-bool outside_range() { return false; }
+inline bool outside_range() { return false; }
 
 template <typename T>
-bool outside_range(T&& t) { return outside_vrange(t); }
+inline bool outside_range(T&& t) { return outside_vrange(t); }
 
 template <typename T, typename U>
-bool outside_range(T&& t, U&& u) { return outside_vrange(t) || outside_vrange(u); }
+inline bool outside_range(T&& t, U&& u) { return outside_vrange(t) || outside_vrange(u); }
 
 template <typename T, typename U, typename V, typename... Args>
-bool outside_range(T&& t, U&& u, V&& v, Args&&... args)
+inline bool outside_range(T&& t, U&& u, V&& v, Args&&... args)
 {
   return outside_vrange(t) || outside_vrange(u) || outside_vrange(v) ||
          outside_range(std::forward<Args>(args)...);

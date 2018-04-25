@@ -84,7 +84,7 @@ inline vtkm::Vec<float, 3> HSVToRGB(const vtkm::Vec<float, 3>& hsv)
     rgb[0] = (onethird - hsv[0]) * 6.0f;
     rgb[2] = 0.0f;
   }
-  else if (hsv[0] > onethird && hsv[0] <= 0.5) // green/blue
+  else if (hsv[0] > onethird && hsv[0] <= 0.5f) // green/blue
   {
     rgb[1] = 1.0f;
     rgb[2] = (hsv[0] - onethird) * 6.0f;
