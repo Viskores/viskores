@@ -27,6 +27,14 @@
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 #include <vtkm/worklet/connectivities/UnionFind.h>
 
+namespace vtkm
+{
+namespace worklet
+{
+namespace connectivity
+{
+namespace detail
+{
 class Graft : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -37,6 +45,7 @@ public:
                                 WholeArrayInOut<IdType> comp);
 
   typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+
   using InputDomain = _1;
 
   // TODO: Use Scatter?
@@ -57,7 +66,7 @@ public:
     }
   }
 };
-
+}
 
 template <typename DeviceAdapter>
 class GraphConnectivity
@@ -83,7 +92,7 @@ public:
 
     do
     {
-      vtkm::worklet::DispatcherMapField<Graft, DeviceAdapter> graftDispatcher;
+      vtkm::worklet::DispatcherMapField<detail::Graft, DeviceAdapter> graftDispatcher;
       graftDispatcher.Invoke(
         cellIds, indexOffsetArray, numIndexArray, connectivityArray, components);
 
@@ -114,4 +123,7 @@ public:
     Algorithm::SortByKey(cellIdsOut, componentsOut);
   }
 };
+}
+}
+}
 #endif //vtk_m_worklet_connectivity_graph_connectivity_h

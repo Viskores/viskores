@@ -23,6 +23,8 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 
+using namespace vtkm::worklet::connectivity;
+
 template <typename DeviceAdapter>
 class TestInnerJoin
 {

@@ -25,10 +25,12 @@
 
 #include <vtkm/worklet/connectivities/CellSetDualGraph.h>
 
+using namespace vtkm::worklet::connectivity;
+
 template <typename DeviceAdapter>
 class TestCellSetDualGraph
 {
-public:
+private:
   template <typename T, typename Storage>
   bool TestArrayHandle(const vtkm::cont::ArrayHandle<T, Storage>& ah,
                        const T* expected,
@@ -50,6 +52,7 @@ public:
     return true;
   }
 
+public:
   void TestTriangleMesh() const
   {
     std::vector<vtkm::Id> connectivity = { 0, 2, 4, 1, 3, 5, 2, 6, 4, 5, 3, 7, 2, 9, 6, 4, 6, 8 };

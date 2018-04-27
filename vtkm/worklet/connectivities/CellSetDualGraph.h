@@ -28,10 +28,20 @@
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
+namespace vtkm
+{
+namespace worklet
+{
+namespace connectivity
+{
+namespace detail
+{
 struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
 {
   typedef void ControlSignature(CellSetIn, FieldOutCell<> numEdgesInCell);
+
   typedef _2 ExecutionSignature(CellShape, PointCount);
+
   using InputDomain = _1;
 
   template <typename CellShapeTag>
@@ -46,6 +56,7 @@ struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
   typedef void ControlSignature(CellSetIn, FieldOutCell<> cellIndices, FieldOutCell<> edgeIndices);
 
   typedef void ExecutionSignature(CellShape, InputIndex, PointIndices, VisitIndex, _2, _3);
+
   using InputDomain = _1;
 
   using ScatterType = vtkm::worklet::ScatterCounting;
@@ -84,6 +95,7 @@ struct CellToCellConnectivity : public vtkm::worklet::WorkletMapField
                                 WholeArrayOut<> to);
 
   typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
+
   using InputDomain = _1;
 
   template <typename ConnectivityPortalType, typename CellIdPortalType>
@@ -99,6 +111,7 @@ struct CellToCellConnectivity : public vtkm::worklet::WorkletMapField
     to.Set(index * 2 + 1, cells.Get(offset));
   }
 };
+} // vtkm::worklet::connectivity::detail
 
 template <typename DeviceAdapter>
 class CellSetDualGraph
@@ -119,12 +132,14 @@ public:
   {
     // Get number of edges for each cell and use it as scatter count.
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numEdgesPerCell;
-    vtkm::worklet::DispatcherMapTopology<EdgeCount, DeviceAdapter> edgesPerCellDisp;
+    vtkm::worklet::DispatcherMapTopology<detail::EdgeCount, DeviceAdapter> edgesPerCellDisp;
     edgesPerCellDisp.Invoke(cellSet, numEdgesPerCell);
 
     // Get uncompress Cell to Edge mapping
     vtkm::worklet::ScatterCounting scatter{ numEdgesPerCell, DeviceAdapter() };
-    vtkm::worklet::DispatcherMapTopology<EdgeExtract, DeviceAdapter> edgeExtractDisp{ scatter };
+    vtkm::worklet::DispatcherMapTopology<detail::EdgeExtract, DeviceAdapter> edgeExtractDisp{
+      scatter
+    };
     edgeExtractDisp.Invoke(cellSet, cellIds, cellEdges);
   }
 
@@ -166,7 +181,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> connTo;
     connFrom.Allocate(sharedEdges.GetNumberOfValues() * 2);
     connTo.Allocate(sharedEdges.GetNumberOfValues() * 2);
-    vtkm::worklet::DispatcherMapField<CellToCellConnectivity, DeviceAdapter> c2cDisp;
+    vtkm::worklet::DispatcherMapField<detail::CellToCellConnectivity, DeviceAdapter> c2cDisp;
     c2cDisp.Invoke(lb, cellIds, connFrom, connTo);
 
     // Turn dual graph into Compressed Sparse Row format
@@ -183,4 +198,8 @@ public:
     Algorithm::ScanExclusive(numIndicesArray, indexOffsetArray);
   }
 };
+}
+}
+}
+
 #endif //vtk_m_worklet_CellSetDualGraph_h

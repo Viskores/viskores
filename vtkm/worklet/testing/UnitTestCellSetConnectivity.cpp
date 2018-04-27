@@ -28,6 +28,8 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 
+using namespace vtkm::worklet::connectivity;
+
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
