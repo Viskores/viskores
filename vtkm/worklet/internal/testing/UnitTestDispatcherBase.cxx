@@ -252,11 +252,13 @@ class TestDispatcher : public vtkm::worklet::internal::DispatcherBase<TestDispat
   using Superclass = vtkm::worklet::internal::DispatcherBase<TestDispatcher<WorkletType>,
                                                              WorkletType,
                                                              TestWorkletBase>;
+  using ScatterType = typename Superclass::ScatterType;
 
 public:
   VTKM_CONT
-  TestDispatcher(const WorkletType& worklet = WorkletType())
-    : Superclass(worklet)
+  TestDispatcher(const WorkletType& worklet = WorkletType(),
+                 const ScatterType& scatter = ScatterType())
+    : Superclass(worklet, scatter)
   {
   }
 

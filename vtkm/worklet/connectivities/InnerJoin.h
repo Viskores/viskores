@@ -47,15 +47,6 @@ public:
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
-
-    VTKM_CONT
-    Merge(const ScatterType& scatter)
-      : Scatter(scatter)
-    {
-    }
-
     // TODO: type trait for array portal?
     template <typename KeyType, typename ValueType1, typename InPortalType, typename ValueType2>
     VTKM_EXEC void operator()(KeyType key,
@@ -72,9 +63,6 @@ public:
       value1Out = value1;
       value2Out = v2;
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
@@ -101,8 +89,7 @@ public:
     Algorithm::Transform(ubs, lbs, counts, vtkm::Subtract());
 
     vtkm::worklet::ScatterCounting scatter{ counts, DeviceAdapter() };
-    Merge merge(scatter);
-    vtkm::worklet::DispatcherMapField<Merge, DeviceAdapter> mergeDisp(merge);
+    vtkm::worklet::DispatcherMapField<Merge, DeviceAdapter> mergeDisp(scatter);
     mergeDisp.Invoke(key1, value1, lbs, value2, keyOut, value1Out, value2Out);
   }
 };

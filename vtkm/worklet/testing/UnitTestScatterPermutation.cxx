@@ -44,9 +44,10 @@ public:
 
   using ScatterType = vtkm::worklet::ScatterPermutation<>;
 
-  Worklet(const vtkm::cont::ArrayHandle<vtkm::Id>& permutation)
-    : Scatter(permutation)
+  VTKM_CONT
+  static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id>& permutation)
   {
+    return ScatterType(permutation);
   }
 
   VTKM_EXEC void operator()(vtkm::Id pointId,
@@ -57,12 +58,6 @@ public:
     outPointId = pointId;
     outVisit = visit;
   }
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->Scatter; }
-
-private:
-  ScatterType Scatter;
 };
 
 template <typename CellSetType>
@@ -71,8 +66,8 @@ void RunTest(const CellSetType& cellset, const vtkm::cont::ArrayHandle<vtkm::Id>
   vtkm::cont::ArrayHandle<vtkm::Id> outPointId;
   vtkm::cont::ArrayHandle<vtkm::IdComponent> outVisit;
 
-  Worklet worklet(permutation);
-  vtkm::worklet::DispatcherMapTopology<Worklet>(worklet).Invoke(cellset, outPointId, outVisit);
+  vtkm::worklet::DispatcherMapTopology<Worklet> dispatcher(Worklet::MakeScatter(permutation));
+  dispatcher.Invoke(cellset, outPointId, outVisit);
 
   for (vtkm::Id i = 0; i < permutation.GetNumberOfValues(); ++i)
   {

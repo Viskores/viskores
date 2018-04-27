@@ -55,12 +55,11 @@ public:
 
   using ScatterType = vtkm::worklet::ScatterPermutation<>;
 
-  explicit ParametricToWorldCoordinates(const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds)
-    : Scatter(cellIds)
+  VTKM_CONT
+  static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds)
   {
+    return ScatterType(cellIds);
   }
-
-  const ScatterType& GetScatter() const { return this->Scatter; }
 
   template <typename CellShapeTagType, typename PointsVecType>
   VTKM_EXEC void operator()(CellShapeTagType cellShape,
@@ -70,9 +69,6 @@ public:
   {
     wc = vtkm::exec::CellInterpolate(points, pc, cellShape, *this);
   }
-
-private:
-  ScatterType Scatter;
 };
 
 template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
@@ -185,9 +181,9 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
     pcoords.GetPortalControl().Set(i, pc);
   }
 
-  ParametricToWorldCoordinates pc2wc(cellIds);
-  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates>(pc2wc).Invoke(
-    ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
+  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
+    ParametricToWorldCoordinates::MakeScatter(cellIds));
+  dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
 }
 
 template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
