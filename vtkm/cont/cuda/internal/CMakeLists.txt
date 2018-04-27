@@ -43,4 +43,5 @@ target_sources(vtkm_cont PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionCuda.cu
   ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicCuda.cu
   ${CMAKE_CURRENT_SOURCE_DIR}/CudaAllocator.cu
+  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmThrust.cu
 )
