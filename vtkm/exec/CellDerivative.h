@@ -181,26 +181,26 @@ ParametricDerivative(const FieldVecType &field,
 namespace detail
 {
 
-template <typename FieldVecType,
+template <typename FieldType,
+          int NumPoints,
           typename WorldCoordType,
           typename ParametricCoordType,
           typename CellShapeTag>
-VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor3DCell(
-  const FieldVecType& field,
+VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor3DCell(
+  const vtkm::Vec<FieldType, NumPoints>& field,
   const WorldCoordType& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  CellShapeTag)
+  CellShapeTag tag)
 {
-  using FieldType = typename FieldVecType::ComponentType;
   using GradientType = vtkm::Vec<FieldType, 3>;
 
   // For reasons that should become apparent in a moment, we actually want
   // the transpose of the Jacobian.
   vtkm::Matrix<FieldType, 3, 3> jacobianTranspose;
-  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, jacobianTranspose, CellShapeTag());
+  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, jacobianTranspose, tag);
   jacobianTranspose = vtkm::MatrixTranspose(jacobianTranspose);
 
-  GradientType parametricDerivative = ParametricDerivative(field, pcoords, CellShapeTag());
+  GradientType parametricDerivative = ParametricDerivative(field, pcoords, tag);
 
   // If we write out the matrices below, it should become clear that the
   // Jacobian transpose times the field derivative in world space equals
@@ -219,6 +219,44 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor3D
 
   bool valid; // Ignored.
   return vtkm::SolveLinearSystem(jacobianTranspose, parametricDerivative, valid);
+}
+
+template <typename T,
+          int N,
+          int NumPoints,
+          typename WorldCoordType,
+          typename ParametricCoordType,
+          typename CellShapeTag>
+VTKM_EXEC vtkm::Vec<vtkm::Vec<T, N>, 3> CellDerivativeFor3DCell(
+  const vtkm::Vec<vtkm::Vec<T, N>, NumPoints>& field,
+  const WorldCoordType& wCoords,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  CellShapeTag tag)
+{
+  //We have been given a vector field so we need to solve for each
+  //component of the vector. For explanation of the logic used see the
+  //scalar version of CellDerivativeFor3DCell.
+  vtkm::Matrix<T, 3, 3> perComponentJacobianTranspose;
+  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, perComponentJacobianTranspose, tag);
+  perComponentJacobianTranspose = vtkm::MatrixTranspose(perComponentJacobianTranspose);
+
+  bool valid; // Ignored.
+  vtkm::Vec<vtkm::Vec<T, N>, 3> result(vtkm::Vec<T, N>(0.0f));
+  vtkm::Vec<T, NumPoints> perPoint;
+  for (vtkm::IdComponent i = 0; i < N; ++i)
+  {
+    for (vtkm::IdComponent c = 0; c < NumPoints; ++c)
+    {
+      perPoint[c] = field[c][i];
+    }
+    vtkm::Vec<T, 3> p = ParametricDerivative(perPoint, pcoords, tag);
+    vtkm::Vec<T, 3> grad = vtkm::SolveLinearSystem(perComponentJacobianTranspose, p, valid);
+
+    result[0][i] += grad[0];
+    result[1][i] += grad[1];
+    result[2][i] += grad[2];
+  }
+  return result;
 }
 
 template <typename FieldType, typename LUType, typename ParametricCoordType, typename CellShapeTag>
