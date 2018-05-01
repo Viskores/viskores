@@ -3007,42 +3007,49 @@ public:
   template <typename InputPortalType, typename OutputPortalType>
   VTKM_EXEC void operator()(const InputPortalType& coeffs,
                             OutputPortalType& sigOut,
-                            const vtkm::Id& workIndex) const
+                            vtkm::Id workIndex) const
   {
-    if (workIndex < cALen2) // valid calculation region
+    if (workIndex >= cALen2) // valid calculation region
     {
-      vtkm::Id xi;     // coeff indices
-      vtkm::Id k1, k2; // indices for low and high filter
-      VAL sum = 0.0;
-
-      if (workIndex % 2 != 0)
-      {
-        k1 = this->filterLen - 2;
-        k2 = this->filterLen - 1;
-      }
-      else
-      {
-        k1 = this->filterLen - 1;
-        k2 = this->filterLen - 2;
-      }
-
-      xi = (workIndex + 1) / 2;
-      while (k1 > -1) // k1 >= 0
-      {
-        sum += lowFilter.Get(k1) * MAKEVAL(coeffs.Get(xi++));
-        k1 -= 2;
-      }
-
-      xi = workIndex / 2;
-      while (k2 > -1) // k2 >= 0
-      {
-        sum += highFilter.Get(k2) * MAKEVAL(coeffs.Get(this->cALenExtended + xi++));
-        k2 -= 2;
-      }
-
-      sigOut.Set(workIndex, static_cast<typename OutputPortalType::ValueType>(sum));
+      return;
     }
+    vtkm::Id xi1 = (workIndex + 1) / 2;                     // coeff indices
+    vtkm::Id xi2 = this->cALenExtended + ((workIndex) / 2); // coeff indices
+    VAL sum = 0.0;
+
+    const bool odd = workIndex % 2 != 0;
+    if (odd)
+    {
+      vtkm::Id k1 = this->filterLen - 2;
+      vtkm::Id k2 = this->filterLen - 1;
+      for (; k1 >= 0; k1 -= 2, k2 -= 2)
+      {
+        sum += lowFilter.Get(k1) * MAKEVAL(coeffs.Get(xi1++));
+        sum += highFilter.Get(k2) * MAKEVAL(coeffs.Get(xi2++));
+      }
+      if (k2 >= 0)
+      {
+        sum += highFilter.Get(k2) * MAKEVAL(coeffs.Get(xi2++));
+      }
+    }
+    else //even
+    {
+      vtkm::Id k1 = this->filterLen - 1;
+      vtkm::Id k2 = this->filterLen - 2;
+      for (; k2 >= 0; k1 -= 2, k2 -= 2)
+      {
+        sum += lowFilter.Get(k1) * MAKEVAL(coeffs.Get(xi1++));
+        sum += highFilter.Get(k2) * MAKEVAL(coeffs.Get(xi2++));
+      }
+      if (k1 >= 0)
+      {
+        sum += lowFilter.Get(k1) * MAKEVAL(coeffs.Get(xi1++));
+      }
+    }
+
+    sigOut.Set(workIndex, static_cast<typename OutputPortalType::ValueType>(sum));
   }
+
 #undef MAKEVAL
 #undef VAL
 

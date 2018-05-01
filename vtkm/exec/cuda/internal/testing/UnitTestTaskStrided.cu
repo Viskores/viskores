@@ -23,7 +23,7 @@
 #include <vtkm/exec/FunctorBase.h>
 #include <vtkm/exec/arg/BasicArg.h>
 #include <vtkm/exec/arg/ThreadIndicesBasic.h>
-#include <vtkm/exec/internal/TaskSingular.h>
+#include <vtkm/exec/cuda/internal/TaskStrided.h>
 
 #include <vtkm/StaticAssert.h>
 
@@ -165,14 +165,14 @@ using InvocationType2 = vtkm::internal::Invocation<ExecutionParameterInterface,
                                                    MyVisitArrayPortal>;
 
 template <typename TaskType>
-static __global__ void ScheduleTaskSingular(TaskType task, vtkm::Id start, vtkm::Id end)
+static __global__ void ScheduleTaskStrided(TaskType task, vtkm::Id start, vtkm::Id end)
 {
 
   const vtkm::Id index = blockIdx.x * blockDim.x + threadIdx.x;
-
+  const vtkm::Id inc = blockDim.x * gridDim.x;
   if (index >= start && index < end)
   {
-    task(index);
+    task(index, end, inc);
   }
 }
 
@@ -269,14 +269,13 @@ void TestNormalFunctorInvoke()
       TestExecObject(output.PrepareForOutput(3, DeviceAdapter())));
 
   std::cout << "  Try void return." << std::endl;
-  using TaskSingular1 = vtkm::exec::internal::TaskSingular<TestWorkletProxy, InvocationType1>;
   TestWorkletProxy worklet;
   InvocationType1 invocation1(execObjects);
 
   using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
   auto task1 = TaskTypes::MakeTask(worklet, invocation1, vtkm::Id());
 
-  ScheduleTaskSingular<decltype(task1)><<<32, 256>>>(task1, 1, 2);
+  ScheduleTaskStrided<decltype(task1)><<<32, 256>>>(task1, 1, 2);
   cudaDeviceSynchronize();
   input.SyncControlArray();
   output.SyncControlArray();
@@ -291,13 +290,12 @@ void TestNormalFunctorInvoke()
     TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
     TestExecObject(output.PrepareForOutput(3, DeviceAdapter())));
 
-  using TaskSingular2 = vtkm::exec::internal::TaskSingular<TestWorkletProxy, InvocationType2>;
   InvocationType2 invocation2(execObjects);
 
   using TaskTypes = typename vtkm::cont::DeviceTaskTypes<DeviceAdapter>;
   auto task2 = TaskTypes::MakeTask(worklet, invocation2, vtkm::Id());
 
-  ScheduleTaskSingular<decltype(task2)><<<32, 256>>>(task2, 2, 3);
+  ScheduleTaskStrided<decltype(task2)><<<32, 256>>>(task2, 2, 3);
   cudaDeviceSynchronize();
   input.SyncControlArray();
   output.SyncControlArray();
@@ -323,7 +321,8 @@ void TestErrorFunctorInvoke()
       TestExecObject(input.PrepareForInPlace(DeviceAdapter())),
       TestExecObject(output.PrepareForInPlace(DeviceAdapter())));
 
-  using TaskSingular1 = vtkm::exec::internal::TaskSingular<TestWorkletErrorProxy, InvocationType1>;
+  using TaskStrided1 =
+    vtkm::exec::cuda::internal::TaskStrided1D<TestWorkletErrorProxy, InvocationType1>;
   TestWorkletErrorProxy worklet;
   InvocationType1 invocation(execObjects);
 
@@ -340,7 +339,7 @@ void TestErrorFunctorInvoke()
   vtkm::exec::internal::ErrorMessageBuffer errorMessage(deviceErrorPtr, errorArraySize);
   task.SetErrorMessageBuffer(errorMessage);
 
-  ScheduleTaskSingular<decltype(task)><<<32, 256>>>(task, 1, 2);
+  ScheduleTaskStrided<decltype(task)><<<32, 256>>>(task, 1, 2);
   cudaDeviceSynchronize();
 
   VTKM_TEST_ASSERT(errorMessage.IsErrorRaised(), "Error not raised correctly.");
@@ -348,7 +347,7 @@ void TestErrorFunctorInvoke()
 }
 
 template <typename DeviceAdapter>
-void TestTaskSingular()
+void TestTaskStrided()
 {
   TestNormalFunctorInvoke<DeviceAdapter>();
   TestErrorFunctorInvoke<DeviceAdapter>();
@@ -356,7 +355,7 @@ void TestTaskSingular()
 
 } // anonymous namespace
 
-int UnitTestTaskSingularCuda(int, char* [])
+int UnitTestTaskStrided(int, char* [])
 {
-  return vtkm::cont::testing::Testing::Run(TestTaskSingular<vtkm::cont::DeviceAdapterTagCuda>);
+  return vtkm::cont::testing::Testing::Run(TestTaskStrided<vtkm::cont::DeviceAdapterTagCuda>);
 }

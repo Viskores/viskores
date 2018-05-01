@@ -22,8 +22,9 @@ set(headers
   ArrayPortalFromThrust.h
   ExecutionPolicy.h
   IteratorFromArrayPortal.h
-  WrappedOperators.h
+  TaskStrided.h
   ThrustPatches.h
+  WrappedOperators.h
   )
 
 #-----------------------------------------------------------------------------
