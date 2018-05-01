@@ -154,6 +154,15 @@ public:
     using Types = vtkm::ListTagBase<vtkm::UInt8>;
     vtkm::cont::CastAndCall(pixels.ResetTypeList(Types{}), RunImpl(), input, componentsOut, device);
   }
+
+  template <typename T, typename S, typename OutputPortalType, typename Device>
+  void Run(const vtkm::cont::CellSetStructured<2>& input,
+           const vtkm::cont::ArrayHandle<T, S>& pixels,
+           OutputPortalType& componentsOut,
+           Device device) const
+  {
+    vtkm::cont::CastAndCall(pixels, RunImpl(), input, componentsOut, device);
+  }
 };
 }
 }
