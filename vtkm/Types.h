@@ -388,7 +388,10 @@ namespace detail
 #if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
 #endif // gcc || clang
 #endif // use cuda < 8
 template <typename T, typename DerivedClass>
@@ -479,7 +482,10 @@ public:
 #if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
 #endif // gcc || clang
 #endif // not using cuda < 8
 
@@ -596,11 +602,7 @@ public:
   VTKM_EXEC_CONT
   const ComponentType* GetPointer() const { return &this->Component(0); }
 };
-#if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-#pragma GCC diagnostic pop
-#endif // gcc || clang
-#endif // use cuda < 8
+
 
 /// Base implementation of all Vec classes.
 ///
@@ -623,12 +625,28 @@ protected:
     }
   }
 
+#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#endif // gcc || clang
+#endif //not using cuda < 8
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4244)
+#endif
+
   template <typename OtherValueType, typename OtherDerivedType>
-  VTKM_EXEC_CONT VecBase(const VecBase<OtherValueType, Size, OtherDerivedType>& src)
+  VTKM_EXEC_CONT explicit VecBase(const VecBase<OtherValueType, Size, OtherDerivedType>& src)
   {
+    //DO NOT CHANGE THIS AND THE ABOVE PRAGMA'S UNLESS YOU FULLY UNDERSTAND THE
+    //ISSUE https://gitlab.kitware.com/vtk/vtk-m/issues/221
     for (vtkm::IdComponent i = 0; i < Size; ++i)
     {
-      this->Components[i] = static_cast<T>(src[i]);
+      this->Components[i] = src[i];
     }
   }
 
@@ -649,12 +667,6 @@ public:
     return this->Components[idx];
   }
 
-#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif // gcc || clang
-#endif // not using cuda < 8
 
   template <typename OtherComponentType, typename OtherClass>
   inline VTKM_EXEC_CONT DerivedClass
@@ -721,10 +733,19 @@ public:
 #pragma GCC diagnostic pop
 #endif // gcc || clang
 #endif // not using cuda < 8
+#if defined(VTKM_MSVC)
+#pragma warning(pop)
+#endif
 
 protected:
   ComponentType Components[NUM_COMPONENTS];
 };
+
+#if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif // gcc || clang
+#endif // use cuda < 8
 
 /// Base of all VecC and VecCConst classes.
 ///
@@ -771,10 +792,9 @@ public:
     : Superclass(value)
   {
   }
-  // VTKM_EXEC_CONT explicit Vec(const T* values) : Superclass(values) {  }
 
   template <typename OtherType>
-  VTKM_EXEC_CONT Vec(const Vec<OtherType, Size>& src)
+  VTKM_EXEC_CONT explicit Vec(const Vec<OtherType, Size>& src)
     : Superclass(src)
   {
   }
@@ -835,14 +855,6 @@ public:
     : Superclass(src)
   {
   }
-
-  // This convenience operator removed because it was causing ambiguous
-  // overload errors
-  //  VTKM_EXEC_CONT
-  //  operator T() const
-  //  {
-  //    return this->Components[0];
-  //  }
 };
 
 //-----------------------------------------------------------------------------
@@ -934,21 +946,6 @@ public:
     this->Components[2] = z;
     this->Components[3] = w;
   }
-};
-
-/// Provides the appropriate type when not sure if using a Vec or a scalar in a
-/// templated class or function. The \c Type in the struct is the same as the
-/// \c ComponentType when \c NumComponents is 1 and a \c Vec otherwise.
-///
-template <typename ComponentType, vtkm::IdComponent NumComponents>
-struct VecOrScalar
-{
-  using Type = vtkm::Vec<ComponentType, NumComponents>;
-};
-template <typename ComponentType>
-struct VecOrScalar<ComponentType, 1>
-{
-  using Type = ComponentType;
 };
 
 /// Initializes and returns a Vec of length 2.
