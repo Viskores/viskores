@@ -52,9 +52,7 @@ public:
   typedef void ExecutionSignature(PointIndices, _2, VisitIndex);
   using InputDomain = _1;
 
-  using ScatterType = vtkm::worklet::ScatterUniform;
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(2); }
+  using ScatterType = vtkm::worklet::ScatterUniform<2>;
 
   // Each quad cell produces 2 triangle cells
   template <typename ConnectivityInVec, typename ConnectivityOutVec>

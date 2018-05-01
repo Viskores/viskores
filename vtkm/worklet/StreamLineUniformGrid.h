@@ -170,9 +170,7 @@ public:
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, VisitIndex);
     using InputDomain = _1;
 
-    using ScatterType = vtkm::worklet::ScatterUniform;
-    VTKM_CONT
-    ScatterType GetScatter() const { return ScatterType(2); }
+    using ScatterType = vtkm::worklet::ScatterUniform<2>;
 
     FieldPortalConstType field;
     const vtkm::Id3 vdims;

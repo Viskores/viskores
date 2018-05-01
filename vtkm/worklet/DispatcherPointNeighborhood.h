@@ -43,11 +43,24 @@ class DispatcherPointNeighborhood
     vtkm::worklet::internal::DispatcherBase<DispatcherPointNeighborhood<WorkletType, Device>,
                                             WorkletType,
                                             vtkm::worklet::WorkletPointNeighborhoodBase>;
+  using ScatterType = typename Superclass::ScatterType;
 
 public:
+  // If you get a compile error here about there being no appropriate constructor for ScatterType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // ScatterType and that you need to create one (because there is no default way to construct
+  // the scatter). By convention, worklets that define a custom scatter type usually provide a
+  // static method named MakeScatter that constructs a scatter object.
   VTKM_CONT
-  DispatcherPointNeighborhood(const WorkletType& worklet = WorkletType())
-    : Superclass(worklet)
+  DispatcherPointNeighborhood(const WorkletType& worklet = WorkletType(),
+                              const ScatterType& scatter = ScatterType())
+    : Superclass(worklet, scatter)
+  {
+  }
+
+  VTKM_CONT
+  DispatcherPointNeighborhood(const ScatterType& scatter)
+    : Superclass(WorkletType(), scatter)
   {
   }
 

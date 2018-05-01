@@ -198,8 +198,7 @@ public:
                              vtkm::cont::ArrayHandle<vtkm::UInt8>& interpContourId,
                              const vtkm::cont::ArrayHandle<vtkm::IdComponent>& edgeTable,
                              const vtkm::cont::ArrayHandle<vtkm::IdComponent>& numTriTable,
-                             const vtkm::cont::ArrayHandle<vtkm::IdComponent>& triTable,
-                             const vtkm::worklet::ScatterCounting& scatter)
+                             const vtkm::cont::ArrayHandle<vtkm::IdComponent>& triTable)
     : InterpWeightsPortal(interpWeights.PrepareForOutput(3 * size, DeviceAdapter()))
     , InterpIdPortal(interpIds.PrepareForOutput(3 * size, DeviceAdapter()))
     , InterpCellIdPortal(interpCellIds.PrepareForOutput(3 * size, DeviceAdapter()))
@@ -207,7 +206,6 @@ public:
     , EdgeTable(edgeTable.PrepareForInput(DeviceAdapter()))
     , NumTriTable(numTriTable.PrepareForInput(DeviceAdapter()))
     , TriTable(triTable.PrepareForInput(DeviceAdapter()))
-    , Scatter(scatter)
   {
     // Interp needs to be 3 times longer than size as they are per point of the
     // output triangle
@@ -219,7 +217,6 @@ public:
   typename PortalTypes<vtkm::IdComponent>::PortalConst EdgeTable;
   typename PortalTypes<vtkm::IdComponent>::PortalConst NumTriTable;
   typename PortalTypes<vtkm::IdComponent>::PortalConst TriTable;
-  vtkm::worklet::ScatterCounting Scatter;
 };
 
 /// \brief Compute the weights for each edge that is used to generate
@@ -234,6 +231,12 @@ public:
   };
 
   using ScatterType = vtkm::worklet::ScatterCounting;
+
+  template <typename ArrayHandleType>
+  VTKM_CONT static ScatterType MakeScatter(const ArrayHandleType& numOutputTrisPerCell)
+  {
+    return ScatterType(numOutputTrisPerCell, DeviceAdapter());
+  }
 
   typedef void ControlSignature(
     CellSetIn cellset, // Cell set
@@ -348,9 +351,6 @@ public:
       MetaData.InterpWeightsPortal.Set(outputPointId + triVertex, interpolant);
     }
   }
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->MetaData.Scatter; }
 
 private:
   EdgeWeightGenerateMetaData<DeviceAdapter> MetaData;
@@ -512,9 +512,10 @@ public:
   using InputDomain = _1;
   using ScatterType = vtkm::worklet::ScatterPermutation<typename PointIdsArray::StorageTag>;
 
-  NormalsWorkletPass1(const vtkm::cont::ArrayHandle<vtkm::Id2>& edges)
-    : Scatter(vtkm::cont::make_ArrayHandleTransform(edges, EdgeVertex<0>()))
+  VTKM_CONT
+  static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id2>& edges)
   {
+    return ScatterType(vtkm::cont::make_ArrayHandleTransform(edges, EdgeVertex<0>()));
   }
 
   template <typename FromIndexType,
@@ -563,11 +564,6 @@ public:
     vtkm::worklet::gradient::StructuredPointGradient<T> gradient;
     gradient(boundary, points, field, normal);
   }
-
-  ScatterType GetScatter() const { return this->Scatter; }
-
-private:
-  ScatterType Scatter;
 };
 
 class NormalsWorkletPass2 : public vtkm::worklet::WorkletMapCellToPoint
@@ -590,9 +586,10 @@ public:
   using InputDomain = _1;
   using ScatterType = vtkm::worklet::ScatterPermutation<typename PointIdsArray::StorageTag>;
 
-  NormalsWorkletPass2(const vtkm::cont::ArrayHandle<vtkm::Id2>& edges)
-    : Scatter(vtkm::cont::make_ArrayHandleTransform(edges, EdgeVertex<1>()))
+  VTKM_CONT
+  static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id2>& edges)
   {
+    return ScatterType(vtkm::cont::make_ArrayHandleTransform(edges, EdgeVertex<1>()));
   }
 
   template <typename FromIndexType,
@@ -656,11 +653,6 @@ public:
     auto weight = weights.Get(edgeId);
     normal = vtkm::Normal(vtkm::Lerp(grad0, grad1, weight));
   }
-
-  ScatterType GetScatter() const { return this->Scatter; }
-
-private:
-  ScatterType Scatter;
 };
 
 template <typename NormalCType,
@@ -685,12 +677,14 @@ struct GenerateNormalsDeduced
     // The final normal is interpolated from the two gradient values and stored
     // in the normals array.
     //
-    NormalsWorkletPass1 pass1(*edges);
-    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1>(pass1).Invoke(
+    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1> dispatcherNormalsPass1(
+      NormalsWorkletPass1::MakeScatter(*edges));
+    dispatcherNormalsPass1.Invoke(
       *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *normals);
 
-    NormalsWorkletPass2 pass2(*edges);
-    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2>(pass2).Invoke(
+    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2> dispatcherNormalsPass2(
+      NormalsWorkletPass2::MakeScatter(*edges));
+    dispatcherNormalsPass2.Invoke(
       *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *weights, *normals);
   }
 };
@@ -969,7 +963,8 @@ private:
     vtkm::cont::ArrayHandle<vtkm::UInt8> contourIds;
     vtkm::cont::ArrayHandle<vtkm::Id> originalCellIdsForPoints;
     {
-      vtkm::worklet::ScatterCounting scatter(numOutputTrisPerCell, DeviceAdapter());
+      auto scatter =
+        EdgeWeightGenerate<ValueType, DeviceAdapter>::MakeScatter(numOutputTrisPerCell);
 
       // Maps output cells to input cells. Store this for cell field mapping.
       this->CellIdMap = scatter.GetOutputToInputMap();
@@ -982,11 +977,10 @@ private:
         contourIds,
         this->EdgeTable,
         this->NumTrianglesTable,
-        this->TriangleTable,
-        scatter);
+        this->TriangleTable);
 
       EdgeWeightGenerate<ValueType, DeviceAdapter> weightGenerate(metaData);
-      GenerateDispatcher edgeDispatcher(weightGenerate);
+      GenerateDispatcher edgeDispatcher(weightGenerate, scatter);
       edgeDispatcher.Invoke(
         cells,
         //cast to a scalar field if not one, as cellderivative only works on those
