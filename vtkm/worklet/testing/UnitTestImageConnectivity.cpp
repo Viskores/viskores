@@ -25,7 +25,6 @@
 
 #include <vtkm/worklet/connectivities/ImageConnectivity.h>
 
-using namespace vtkm::worklet::connectivity;
 
 template <typename DeviceAdapter>
 class TestImageConnectivity
@@ -50,7 +49,7 @@ public:
     data.AddField(colorField);
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
-    ImageConnectivity().Run(data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(),
+    vtkm::worklet::connectivity::ImageConnectivity().Run(data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(),
       colorField.GetData(), component, DeviceAdapter());
 
     std::vector<vtkm::Id> componentExpected = {

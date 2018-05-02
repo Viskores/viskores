@@ -23,7 +23,6 @@
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/worklet/connectivities/InnerJoin.h>
 
-using namespace vtkm::worklet::connectivity;
 
 template <typename DeviceAdapter>
 class TestInnerJoin
@@ -69,7 +68,8 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> outA;
     vtkm::cont::ArrayHandle<vtkm::Id> outB;
 
-    InnerJoin<DeviceAdapter>().Run(A_arr, idxA, B_arr, idxB, joinedIndex, outA, outB);
+    vtkm::worklet::connectivity::InnerJoin<DeviceAdapter>().Run(
+      A_arr, idxA, B_arr, idxB, joinedIndex, outA, outB);
 
     vtkm::Id expectedIndex[] = { 5, 5, 8, 8, 9 };
     VTKM_TEST_ASSERT(TestArrayHandle(joinedIndex, expectedIndex, 5), "Wrong joined keys");

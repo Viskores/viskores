@@ -25,8 +25,6 @@
 
 #include <vtkm/worklet/connectivities/CellSetDualGraph.h>
 
-using namespace vtkm::worklet::connectivity;
-
 template <typename DeviceAdapter>
 class TestCellSetDualGraph
 {
@@ -64,7 +62,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> indexOffsetArray;
     vtkm::cont::ArrayHandle<vtkm::Id> connectivityArray;
 
-    CellSetDualGraph<DeviceAdapter>().Run(
+    vtkm::worklet::connectivity::CellSetDualGraph<DeviceAdapter>().Run(
       cellSet, numIndicesArray, indexOffsetArray, connectivityArray);
 
     vtkm::Id expectedNumIndices[] = { 1, 1, 3, 1, 1, 1 };
