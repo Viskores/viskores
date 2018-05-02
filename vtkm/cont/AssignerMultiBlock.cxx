@@ -44,7 +44,7 @@ AssignerMultiBlock::AssignerMultiBlock(const vtkm::cont::MultiBlock& mb)
 
 VTKM_CONT
 AssignerMultiBlock::AssignerMultiBlock(vtkm::Id num_blocks)
-  : diy::Assigner(vtkm::cont::EnvironmentTracker::GetCommunicator().size(), 1)
+  : diy::StaticAssigner(vtkm::cont::EnvironmentTracker::GetCommunicator().size(), 1)
   , IScanBlockCounts()
 {
   auto comm = vtkm::cont::EnvironmentTracker::GetCommunicator();
