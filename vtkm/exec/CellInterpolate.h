@@ -27,6 +27,11 @@
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/exec/FunctorBase.h>
 
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif // gcc || clang
+
 namespace vtkm
 {
 namespace exec
@@ -440,5 +445,9 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
 }
 }
 } // namespace vtkm::exec
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif // gcc || clang
 
 #endif //vtk_m_exec_Interpolate_h
