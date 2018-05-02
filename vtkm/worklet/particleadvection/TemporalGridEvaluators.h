@@ -97,13 +97,19 @@ public:
     planeSize2 = dims2[1] * dims2[1];
     rowSize2 = dims2[0];
 
-    scale1[0] = dims1[0] / (FieldType)(bounds1.X.Max - bounds1.X.Min);
-    scale1[1] = dims1[1] / (FieldType)(bounds1.Y.Max - bounds1.Y.Min);
-    scale1[2] = dims1[2] / (FieldType)(bounds1.Z.Max - bounds1.Z.Min);
+    scale1[0] =
+      static_cast<FieldType>(dims1[0] - 1) / static_cast<FieldType>(bounds1.X.Max - bounds1.X.Min);
+    scale1[1] =
+      static_cast<FieldType>(dims1[1] - 1) / static_cast<FieldType>(bounds1.Y.Max - bounds1.Y.Min);
+    scale1[2] =
+      static_cast<FieldType>(dims1[2] - 1) / static_cast<FieldType>(bounds1.Z.Max - bounds1.Z.Min);
 
-    scale2[0] = dims2[0] / (FieldType)(bounds2.X.Max - bounds2.X.Min);
-    scale2[1] = dims2[1] / (FieldType)(bounds2.Y.Max - bounds2.Y.Min);
-    scale2[2] = dims2[2] / (FieldType)(bounds2.Z.Max - bounds2.Z.Min);
+    scale2[0] =
+      static_cast<FieldType>(dims2[0] - 1) / static_cast<FieldType>(bounds2.X.Max - bounds2.X.Min);
+    scale2[1] =
+      static_cast<FieldType>(dims2[1] - 1) / static_cast<FieldType>(bounds2.Y.Max - bounds2.Y.Min);
+    scale2[2] =
+      static_cast<FieldType>(dims2[2] - 1) / static_cast<FieldType>(bounds2.Z.Max - bounds2.Z.Min);
   };
 
 
@@ -175,9 +181,13 @@ public:
     time2 = time;
     planeSize2 = dims2[1] * dims2[1];
     rowSize2 = dims2[0];
-    scale2[0] = dims2[0] / (FieldType)(bounds2.X.Max - bounds2.X.Min);
-    scale2[1] = dims2[1] / (FieldType)(bounds2.Y.Max - bounds2.Y.Min);
-    scale2[2] = dims2[2] / (FieldType)(bounds2.Z.Max - bounds2.Z.Min);
+
+    scale2[0] =
+      static_cast<FieldType>(dims2[0] - 1) / static_cast<FieldType>(bounds2.X.Max - bounds2.X.Min);
+    scale2[1] =
+      static_cast<FieldType>(dims2[1] - 1) / static_cast<FieldType>(bounds2.Y.Max - bounds2.Y.Min);
+    scale2[2] =
+      static_cast<FieldType>(dims2[2] - 1) / static_cast<FieldType>(bounds2.Z.Max - bounds2.Z.Min);
   };
 
   VTKM_EXEC
@@ -196,13 +206,13 @@ public:
     vtkm::Id3 idx000, idx001, idx010, idx011, idx100, idx101, idx110, idx111;
 
     vtkm::Vec<FieldType, 3> normalized =
-      vtkm::Vec<FieldType, 3>((position[0] - bounds.X.Min) * scale[0],
-                              (position[1] - bounds.Y.Min) * scale[1],
-                              (position[2] - bounds.Z.Min) * scale[2]);
+      vtkm::Vec<FieldType, 3>((position[0] - static_cast<FieldType>(bounds.X.Min)) * scale[0],
+                              (position[1] - static_cast<FieldType>(bounds.Y.Min)) * scale[1],
+                              (position[2] - static_cast<FieldType>(bounds.Z.Min)) * scale[2]);
 
-    idx000[0] = floor(normalized[0]) <= dims[0] - 1 ? floor(normalized[0]) : dims[0] - 1;
-    idx000[1] = floor(normalized[1]) <= dims[1] - 1 ? floor(normalized[1]) : dims[1] - 1;
-    idx000[2] = floor(normalized[2]) <= dims[2] - 1 ? floor(normalized[2]) : dims[2] - 1;
+    idx000[0] = static_cast<vtkm::IdComponent>(floor(normalized[0]));
+    idx000[1] = static_cast<vtkm::IdComponent>(floor(normalized[1]));
+    idx000[2] = static_cast<vtkm::IdComponent>(floor(normalized[2]));
 
     idx001 = idx000;
     idx001[0] = (idx001[0] + 1) <= dims[0] - 1 ? idx001[0] + 1 : dims[0] - 1;
@@ -232,7 +242,7 @@ public:
 
     // Interpolation in X
     vtkm::Vec<FieldType, 3> v00, v01, v10, v11;
-    FieldType a = normalized[0] - floor(normalized[0]);
+    FieldType a = normalized[0] - static_cast<FieldType>(floor(normalized[0]));
     v00[0] = (1.0f - a) * v000[0] + a * v001[0];
     v00[1] = (1.0f - a) * v000[1] + a * v001[1];
     v00[2] = (1.0f - a) * v000[2] + a * v001[2];
@@ -251,7 +261,7 @@ public:
 
     // Interpolation in Y
     vtkm::Vec<FieldType, 3> v0, v1;
-    a = normalized[1] - floor(normalized[1]);
+    a = normalized[1] - static_cast<FieldType>(floor(normalized[1]));
     v0[0] = (1.0f - a) * v00[0] + a * v01[0];
     v0[1] = (1.0f - a) * v00[1] + a * v01[1];
     v0[2] = (1.0f - a) * v00[2] + a * v01[2];
@@ -260,7 +270,7 @@ public:
     v1[1] = (1.0f - a) * v10[1] + a * v11[1];
     v1[2] = (1.0f - a) * v10[2] + a * v11[2];
 
-    a = normalized[2] - floor(normalized[2]);
+    a = normalized[2] - static_cast<FieldType>(floor(normalized[2]));
     velocity[0] = (1.0f - a) * v0[0] + a * v1[0];
     velocity[1] = (1.0f - a) * v0[1] + a * v1[1];
     velocity[2] = (1.0f - a) * v0[2] + a * v1[2];

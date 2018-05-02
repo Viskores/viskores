@@ -97,10 +97,10 @@ public:
     if (MinimizeError)
     {
       //Take short steps and minimize error
-      FieldType threshold = StepLength / numSteps;
+      FieldType threshold = StepLength / static_cast<FieldType>(numSteps);
       do
       {
-        stepLength /= 2.0;
+        stepLength /= static_cast<FieldType>(2.0);
         status = CheckStep(inpos, stepLength, time, velocity);
         if (status == ParticleStatus::STATUS_OK)
         {
