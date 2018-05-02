@@ -103,9 +103,9 @@ __global__ void TaskStrided3DLaunch(TaskType task, dim3 size)
                    blockIdx.z * blockDim.z + threadIdx.z);
   const dim3 inc(blockDim.x * gridDim.x, blockDim.y * gridDim.y, blockDim.z * gridDim.z);
 
-  for (uint k = start.z; k < size.z; k += inc.z)
+  for (vtkm::Id k = start.z; k < size.z; k += inc.z)
   {
-    for (uint j = start.y; j < size.y; j += inc.y)
+    for (vtkm::Id j = start.y; j < size.y; j += inc.y)
     {
       task(start.x, size.x, inc.x, j, k);
     }
