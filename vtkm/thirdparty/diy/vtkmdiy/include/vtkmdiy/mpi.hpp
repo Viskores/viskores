@@ -16,6 +16,7 @@
 #include "mpi/communicator.hpp"
 #include "mpi/collectives.hpp"
 #include "mpi/io.hpp"
+#include "mpi/window.hpp"
 
 namespace diy
 {
