@@ -123,7 +123,8 @@ public:
 
     vtkm::cont::PointLocatorUniformGrid<vtkm::Float32> uniformGrid(
       { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    auto locator = uniformGrid.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    uniformGrid.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    auto locator = uniformGrid.PrepareForExecution(VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
     ///// randomly generate training points/////
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;

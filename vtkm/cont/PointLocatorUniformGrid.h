@@ -190,10 +190,13 @@ public:
   /// \param coords An ArrayHandle of x, y, z coordinates of input points.
   /// \param device Tag for selecting device adapter
   template <typename DeviceAdapter>
-  Locator<DeviceAdapter> Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
-                               DeviceAdapter)
+  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords, DeviceAdapter)
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+
+    // Save training data points.
+    Algorithm::Copy(coords, Coords);
+
     // generate unique id for each input point
     vtkm::cont::ArrayHandleCounting<vtkm::Id> pointCounting(0, 1, coords.GetNumberOfValues());
     Algorithm::Copy(pointCounting, PointIds);
@@ -210,22 +213,27 @@ public:
     vtkm::cont::ArrayHandleCounting<vtkm::Id> cell_ids_counting(0, 1, Dims[0] * Dims[1] * Dims[2]);
     Algorithm::UpperBounds(CellIds, cell_ids_counting, CellUpper);
     Algorithm::LowerBounds(CellIds, cell_ids_counting, CellLower);
+  };
 
+  template <typename DeviceAdapter>
+  Locator<DeviceAdapter> PrepareForExecution(DeviceAdapter)
+  {
     // TODO: lifetime of coords???
     return Locator<DeviceAdapter>(Min,
                                   Max,
                                   Dims,
-                                  coords.GetPortalConstControl(),
-                                  PointIds.GetPortalConstControl(),
-                                  CellLower.GetPortalConstControl(),
-                                  CellUpper.GetPortalConstControl());
-  };
+                                  Coords.PrepareForInput(DeviceAdapter()),
+                                  PointIds.PrepareForInput(DeviceAdapter()),
+                                  CellLower.PrepareForInput(DeviceAdapter()),
+                                  CellUpper.PrepareForInput(DeviceAdapter()));
+  }
 
 private:
   vtkm::Vec<T, 3> Min;
   vtkm::Vec<T, 3> Max;
   vtkm::Vec<vtkm::Id, 3> Dims;
 
+  vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>> Coords;
   vtkm::cont::ArrayHandle<vtkm::Id> PointIds;
   vtkm::cont::ArrayHandle<vtkm::Id> CellIds;
   vtkm::cont::ArrayHandle<vtkm::Id> CellLower;
