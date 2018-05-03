@@ -261,7 +261,8 @@ private:
 public:
   VTKM_EXEC_CONT
   StateRecordingParticleExecutionObject(const StateRecordingParticleExecutionObject& s)
-    : ValidPoint(s.ValidPoint)
+    : vtkm::worklet::particleadvection::ParticleExecutionObject<T, Device>()
+    , ValidPoint(s.ValidPoint)
     , History(s.History)
     , HistSize(s.HistSize)
     , Pos(s.Pos)
@@ -273,7 +274,8 @@ public:
 
   VTKM_EXEC_CONT
   StateRecordingParticleExecutionObject()
-    : ValidPoint()
+    : vtkm::worklet::particleadvection::ParticleExecutionObject<T, Device>()
+    , ValidPoint()
     , History()
     , HistSize(-1)
     , Pos()
@@ -433,6 +435,7 @@ public:
   vtkm::Id GetStep(const vtkm::Id& idx) const { return Steps.Get(idx); }
   VTKM_EXEC
   vtkm::Id GetStatus(const vtkm::Id& idx) const { return Status.Get(idx); }
+
 protected:
   IdPortal ValidPoint;
   PosPortal History;

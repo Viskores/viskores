@@ -317,6 +317,8 @@ class RectilinearGridEvaluate
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
 
 public:
+  VTKM_CONT RectilinearGridEvaluate() = default;
+
   VTKM_CONT
   RectilinearGridEvaluate(const vtkm::cont::CoordinateSystem& coords,
                           const vtkm::cont::DynamicCellSet& cellSet,
