@@ -152,7 +152,7 @@ public:
     pow4Array.Allocate(dataSize);
 
     // Raw moments via Worklet
-    vtkm::worklet::DispatcherMapField<CalculatePowers> calculatePowersDispatcher(
+    vtkm::worklet::DispatcherMapField<CalculatePowers, DeviceAdapter> calculatePowersDispatcher(
       CalculatePowers(4));
     calculatePowersDispatcher.Invoke(fieldArray, pow1Array, pow2Array, pow3Array, pow4Array);
 
@@ -163,7 +163,7 @@ public:
     statinfo.rawMoment[FOURTH] = DeviceAlgorithms::ScanInclusive(pow4Array, pow4Array) / numValues;
 
     // Subtract the mean from every value and leave in tempArray
-    vtkm::worklet::DispatcherMapField<SubtractConst> subtractConstDispatcher(
+    vtkm::worklet::DispatcherMapField<SubtractConst, DeviceAdapter> subtractConstDispatcher(
       SubtractConst(statinfo.mean));
     subtractConstDispatcher.Invoke(fieldArray, tempArray);
 

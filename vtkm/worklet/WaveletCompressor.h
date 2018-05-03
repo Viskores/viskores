@@ -512,12 +512,12 @@ public:
     // Use a worklet to calculate point-wise error, and its square
     using DifferencerWorklet = vtkm::worklet::wavelets::Differencer;
     DifferencerWorklet dw;
-    vtkm::worklet::DispatcherMapField<DifferencerWorklet> dwDispatcher(dw);
+    vtkm::worklet::DispatcherMapField<DifferencerWorklet, DeviceTag> dwDispatcher(dw);
     dwDispatcher.Invoke(original, reconstruct, errorArray);
 
     using SquareWorklet = vtkm::worklet::wavelets::SquareWorklet;
     SquareWorklet sw;
-    vtkm::worklet::DispatcherMapField<SquareWorklet> swDispatcher(sw);
+    vtkm::worklet::DispatcherMapField<SquareWorklet, DeviceTag> swDispatcher(sw);
     swDispatcher.Invoke(errorArray, errorSquare);
 
     VAL varErr = WaveletBase::DeviceCalculateVariance(errorArray, DeviceTag());

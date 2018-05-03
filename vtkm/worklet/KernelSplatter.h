@@ -431,7 +431,8 @@ struct KernelSplatterFilterUniformGrid
     IdHandleType localNeighborIds;
 
     GetFootprint footprint_worklet(origin_, spacing_, pointDimensions, kernel_);
-    vtkm::worklet::DispatcherMapField<GetFootprint> footprintDispatcher(footprint_worklet);
+    vtkm::worklet::DispatcherMapField<GetFootprint, DeviceAdapter> footprintDispatcher(
+      footprint_worklet);
 
     START_TIMER_BLOCK(GetFootprint)
     footprintDispatcher.Invoke(
@@ -494,7 +495,7 @@ struct KernelSplatterFilterUniformGrid
     IdPermType offsets(neighbor2SplatId, numNeighborsExclusiveSum);
     debug::OutputArrayDebug(offsets, "offsets");
 
-    vtkm::worklet::DispatcherMapField<ComputeLocalNeighborId> idDispatcher;
+    vtkm::worklet::DispatcherMapField<ComputeLocalNeighborId, DeviceAdapter> idDispatcher;
     START_TIMER_BLOCK(idDispatcher)
     idDispatcher.Invoke(modulii, offsets, localNeighborIds);
     END_TIMER_BLOCK(idDispatcher)
@@ -527,7 +528,8 @@ struct KernelSplatterFilterUniformGrid
     FloatHandleType splatValues;
 
     GetSplatValue splatterDispatcher_worklet(origin_, spacing_, pointDimensions, kernel_);
-    vtkm::worklet::DispatcherMapField<GetSplatValue> splatterDispatcher(splatterDispatcher_worklet);
+    vtkm::worklet::DispatcherMapField<GetSplatValue, DeviceAdapter> splatterDispatcher(
+      splatterDispatcher_worklet);
 
     START_TIMER_BLOCK(GetSplatValue)
     splatterDispatcher.Invoke(ptSplatPoints,
@@ -580,7 +582,7 @@ struct KernelSplatterFilterUniformGrid
     // initialize each field value to zero to begin with
     //---------------------------------------------------------------
     IdCountingType indexArray(vtkm::Id(0), 1, numVolumePoints);
-    vtkm::worklet::DispatcherMapField<zero_voxel> zeroDispatcher;
+    vtkm::worklet::DispatcherMapField<zero_voxel, DeviceAdapter> zeroDispatcher;
     zeroDispatcher.Invoke(indexArray, scalarSplatOutput);
     //
     indexArray.ReleaseResources();
@@ -589,7 +591,7 @@ struct KernelSplatterFilterUniformGrid
     // Scatter operation to write the previously-computed splat
     // value sums into their corresponding entries in the output array
     //---------------------------------------------------------------
-    vtkm::worklet::DispatcherMapField<UpdateVoxelSplats> scatterDispatcher;
+    vtkm::worklet::DispatcherMapField<UpdateVoxelSplats, DeviceAdapter> scatterDispatcher;
 
     START_TIMER_BLOCK(UpdateVoxelSplats)
     scatterDispatcher.Invoke(uniqueVoxelIds, voxelSplatSums, scalarSplatOutput);
