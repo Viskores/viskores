@@ -75,6 +75,30 @@ public:
   }
 };
 
+class PointLocatorUniformGridWorklet : public vtkm::worklet::WorkletMapField
+{
+public:
+  typedef void ControlSignature(FieldIn<> qcIn,
+                                ExecObject locator,
+                                FieldOut<> nnIdOut,
+                                FieldOut<> nnDistOut);
+
+  typedef void ExecutionSignature(_1, _2, _3, _4);
+
+  VTKM_CONT
+  PointLocatorUniformGridWorklet() {}
+
+  // TODO: change IdType, it is used for other purpose.
+  template <typename CoordiVecType, typename Locator, typename IdType, typename CoordiType>
+  VTKM_EXEC void operator()(const CoordiVecType& qc,
+                            const Locator& locator,
+                            IdType& nnIdOut,
+                            CoordiType& nnDis) const
+  {
+    locator.FindNearestPoint(qc, nnIdOut, nnDis);
+  };
+};
+
 template <typename DeviceAdapter>
 class TestingPointLocatorUniformGrid
 {
@@ -97,10 +121,11 @@ public:
     }
     auto coordi_Handle = vtkm::cont::make_ArrayHandle(coordi);
 
-    vtkm::worklet::PointLocatorUniformGrid<vtkm::Float32> uniformGrid(
+    vtkm::cont::PointLocatorUniformGrid<vtkm::Float32> uniformGrid(
       { 0.0f, 0.0f, 0.0f }, { 10.0f, 10.0f, 10.0f }, { 5, 5, 5 });
-    uniformGrid.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    auto locator = uniformGrid.Build(coordi_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
+    ///// randomly generate training points/////
     std::vector<vtkm::Vec<vtkm::Float32, 3>> qcVec;
     for (vtkm::Int32 i = 0; i < nTestingPoint; i++)
     {
@@ -111,9 +136,12 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
 
-    uniformGrid.FindNearestPoint(
-      coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
+    PointLocatorUniformGridWorklet pointLocatorUniformGridWorklet;
+    vtkm::worklet::DispatcherMapField<PointLocatorUniformGridWorklet> locatorDispatcher(
+      pointLocatorUniformGridWorklet);
+    locatorDispatcher.Invoke(qc_Handle, locator, nnId_Handle, nnDis_Handle);
 
+    // brute force
     vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> bfnnDis_Handle;
     NearestNeighborSearchBruteForce3DWorklet nnsbf3dWorklet;
