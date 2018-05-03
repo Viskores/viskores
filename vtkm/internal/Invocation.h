@@ -70,7 +70,7 @@ struct Invocation
   /// constituent element of the input (such as the points or cells). This
   /// index points to the parameter that defines this input domain.
   ///
-  static const vtkm::IdComponent InputDomainIndex = _InputDomainIndex;
+  static constexpr vtkm::IdComponent InputDomainIndex = _InputDomainIndex;
 
   /// \brief An array representing the output to input map.
   ///

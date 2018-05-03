@@ -33,8 +33,6 @@
 #include <vtkm/worklet/ScatterUniform.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/exec/ExecutionWholeArray.h>
-
 namespace vtkm
 {
 
@@ -157,24 +155,22 @@ public:
     }
   };
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef
-    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
+  using FieldPortalConstType =
+    typename FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   class MakeStreamLines : public vtkm::worklet::WorkletMapField
   {
   public:
     typedef void ControlSignature(FieldIn<IdType> seedId,
                                   FieldIn<> position,
-                                  ExecObject numIndices,
-                                  ExecObject validPoint,
-                                  ExecObject streamLines);
+                                  WholeArrayOut<IdComponentType> numIndices,
+                                  WholeArrayOut<IdComponentType> validPoint,
+                                  WholeArrayOut<Vec3> streamLines);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, VisitIndex);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
-    typedef vtkm::worklet::ScatterUniform ScatterType;
-    VTKM_CONT
-    ScatterType GetScatter() const { return ScatterType(2); }
+    using ScatterType = vtkm::worklet::ScatterUniform<2>;
 
     FieldPortalConstType field;
     const vtkm::Id3 vdims;
@@ -200,13 +196,13 @@ public:
     {
     }
 
-    VTKM_EXEC
-    void operator()(vtkm::Id& seedId,
-                    vtkm::Vec<FieldType, 3>& seedPos,
-                    vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>& numIndices,
-                    vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>& validPoint,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Vec<FieldType, 3>>& slLists,
-                    vtkm::IdComponent visitIndex) const
+    template <typename IdComponentPortalType, typename FieldVec3PortalType>
+    VTKM_EXEC void operator()(vtkm::Id& seedId,
+                              vtkm::Vec<FieldType, 3>& seedPos,
+                              IdComponentPortalType& numIndices,
+                              IdComponentPortalType& validPoint,
+                              FieldVec3PortalType& slLists,
+                              vtkm::IdComponent visitIndex) const
     {
       // Set initial offset into the output streams array
       vtkm::Vec<FieldType, 3> pos = seedPos;
@@ -348,7 +344,7 @@ public:
                           vtkm::Id maxSteps,
                           FieldType timeStep)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     // Get information from input dataset
     vtkm::cont::CellSetStructured<3> inCellSet;
@@ -400,14 +396,10 @@ public:
     // Worklet to make the streamlines
     MakeStreamLines makeStreamLines(
       timeStep, streamMode, maxSteps, vdims, fieldArray.PrepareForInput(DeviceAdapter()));
-    typedef typename vtkm::worklet::DispatcherMapField<MakeStreamLines> MakeStreamLinesDispatcher;
+    using MakeStreamLinesDispatcher = typename vtkm::worklet::DispatcherMapField<MakeStreamLines>;
     MakeStreamLinesDispatcher makeStreamLinesDispatcher(makeStreamLines);
     makeStreamLinesDispatcher.Invoke(
-      seedIdArray,
-      seedPosArray,
-      vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>(numIndices, numCells),
-      vtkm::exec::ExecutionWholeArray<vtkm::IdComponent>(validPoint, maxConnectivityLen),
-      vtkm::exec::ExecutionWholeArray<vtkm::Vec<FieldType, 3>>(streamArray, maxConnectivityLen));
+      seedIdArray, seedPosArray, numIndices, validPoint, streamArray);
 
     // Size of connectivity based on size of returned streamlines
     vtkm::cont::ArrayHandle<vtkm::IdComponent> numIndicesOut;

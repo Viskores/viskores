@@ -31,6 +31,8 @@
 // Here are the actual implementation of the algorithms.
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmThrust.h>
 
+#include <vtkm/exec/cuda/internal/TaskStrided.h>
+
 #include <cuda.h>
 
 namespace vtkm
@@ -163,7 +165,7 @@ public:
       // 3. cudaErrorNoKernelImageForDevice we built for a compute version
       //    greater than the device we are running on
       // Most likely others that I don't even know about
-      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice<<<1, 1>>>();
+      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice<<<1, 1, 0, cudaStreamPerThread>>>();
       if (cudaSuccess != cudaGetLastError())
       {
         numDevices = 0;
@@ -257,24 +259,24 @@ class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagCuda>
 {
 public:
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet,
-    const InvocationType& invocation,
+  static vtkm::exec::cuda::internal::TaskStrided1D<WorkletType, InvocationType> MakeTask(
+    WorkletType& worklet,
+    InvocationType& invocation,
     vtkm::Id,
     vtkm::Id globalIndexOffset = 0)
   {
-    using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
+    using Task = vtkm::exec::cuda::internal::TaskStrided1D<WorkletType, InvocationType>;
     return Task(worklet, invocation, globalIndexOffset);
   }
 
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet,
-    const InvocationType& invocation,
+  static vtkm::exec::cuda::internal::TaskStrided3D<WorkletType, InvocationType> MakeTask(
+    WorkletType& worklet,
+    InvocationType& invocation,
     vtkm::Id3,
     vtkm::Id globalIndexOffset = 0)
   {
-    using Task = vtkm::exec::internal::TaskSingular<WorkletType, InvocationType>;
+    using Task = vtkm::exec::cuda::internal::TaskStrided3D<WorkletType, InvocationType>;
     return Task(worklet, invocation, globalIndexOffset);
   }
 };

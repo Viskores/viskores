@@ -37,6 +37,11 @@ set(FILES_TO_CHECK
   )
 
 set(EXCEPTIONS
+  kxsort.h
+  )
+
+set(DIRECTORY_EXCEPTIONS
+  ${VTKm_SOURCE_DIR}/vtkm/thirdparty/diy/vtkmdiy
   )
 
 if (NOT VTKm_SOURCE_DIR)
@@ -44,6 +49,12 @@ if (NOT VTKm_SOURCE_DIR)
 endif (NOT VTKm_SOURCE_DIR)
 
 function(check_directory directory parent_CMakeLists_contents)
+  foreach(exception IN LISTS DIRECTORY_EXCEPTIONS)
+    if(directory MATCHES "^${exception}$")
+      return()
+    endif()
+  endforeach(exception)
+
   message("Checking directory ${directory}...")
 
   get_filename_component(directory_name "${directory}" NAME)

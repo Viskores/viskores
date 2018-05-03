@@ -20,6 +20,7 @@
 
 set(headers
   ErrorMessageBuffer.h
+  FastVec.h
   ReduceByKeyLookup.h
   TaskSingular.h
   WorkletInvokeFunctorDetail.h

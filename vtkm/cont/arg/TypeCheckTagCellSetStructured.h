@@ -45,7 +45,8 @@ struct TypeCheck<TypeCheckTagCellSetStructured, CellSetType>
   using is_2d_cellset = std::is_same<CellSetType, vtkm::cont::CellSetStructured<2>>;
   using is_1d_cellset = std::is_same<CellSetType, vtkm::cont::CellSetStructured<1>>;
 
-  static const bool value = is_3d_cellset::value || is_2d_cellset::value || is_1d_cellset::value;
+  static constexpr bool value =
+    is_3d_cellset::value || is_2d_cellset::value || is_1d_cellset::value;
 };
 }
 }

@@ -48,11 +48,10 @@ class Particles : public vtkm::exec::ExecutionObjectBase
 {
 
 private:
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal
-      IdPortal;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
-    DeviceAdapterTag>::Portal PosPortal;
+  using IdPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+  using PosPortal = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
+    DeviceAdapterTag>::Portal;
 
 public:
   VTKM_EXEC_CONT
@@ -85,7 +84,6 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
   Particles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
             vtkm::cont::ArrayHandle<vtkm::Id>& statusArray,
@@ -208,13 +206,12 @@ class StateRecordingParticles : public Particles<T, DeviceAdapterTag>
 {
 
 private:
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal
-      IdPortal;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<
-    DeviceAdapterTag>::Portal IdComponentPortal;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
-    DeviceAdapterTag>::Portal PosPortal;
+  using IdPortal =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+  using IdComponentPortal = typename vtkm::cont::ArrayHandle<
+    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapterTag>::Portal;
+  using PosPortal = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>::template ExecutionTypes<
+    DeviceAdapterTag>::Portal;
 
 public:
   VTKM_EXEC_CONT
@@ -248,7 +245,6 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
                           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,
@@ -266,7 +262,6 @@ public:
     History = historyArray.PrepareForOutput(NumPos * HistSize, DeviceAdapterTag());
   }
 
-  VTKM_EXEC_CONT
   StateRecordingParticles(vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& posArray,
                           vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& historyArray,
                           vtkm::cont::ArrayHandle<vtkm::Id>& stepsArray,

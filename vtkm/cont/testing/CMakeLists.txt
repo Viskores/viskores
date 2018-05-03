@@ -23,7 +23,9 @@ set(headers
   MakeTestDataSet.h
   Testing.h
   TestingArrayHandles.h
+  TestingArrayHandleVirtualCoordinates.h
   TestingCellLocatorTwoLevelUniformGrid.h
+  TestingColorTable.h
   TestingComputeRange.h
   TestingDeviceAdapter.h
   TestingDataSetExplicit.h
@@ -31,12 +33,13 @@ set(headers
   TestingFancyArrayHandles.h
   TestingImplicitFunction.h
   TestingPointLocatorUniformGrid.h
-  TestingVirtualObjectCache.h
+  TestingVirtualObjectHandle.h
   )
 
 vtkm_declare_headers(${headers})
 
 set(unit_tests
+  UnitTestAlgorithm.cxx
   UnitTestArrayCopy.cxx
   UnitTestArrayHandleCartesianProduct.cxx
   UnitTestArrayHandleCompositeVector.cxx
@@ -52,6 +55,7 @@ set(unit_tests
   UnitTestArrayHandleUniformPointCoordinates.cxx
   UnitTestArrayHandleConcatenate.cxx
   UnitTestArrayPortalToIterators.cxx
+  UnitTestCellLocator.cxx
   UnitTestCellSetExplicit.cxx
   UnitTestCellSetPermutation.cxx
   UnitTestContTesting.cxx
@@ -65,6 +69,7 @@ set(unit_tests
   UnitTestDeviceAdapterAlgorithmGeneral.cxx
   UnitTestDynamicArrayHandle.cxx
   UnitTestDynamicCellSet.cxx
+  UnitTestFieldRangeCompute.cxx
   UnitTestMultiBlock.cxx
   UnitTestRuntimeDeviceInformation.cxx
   UnitTestStorageBasic.cxx
@@ -75,3 +80,10 @@ set(unit_tests
   )
 
 vtkm_unit_tests(SOURCES ${unit_tests})
+
+
+# add distributed tests i.e. test to run with MPI
+# if MPI is enabled.
+set(mpi_unit_tests
+  UnitTestFieldRangeGlobalCompute.cxx)
+vtkm_unit_tests(MPI SOURCES ${mpi_unit_tests})

@@ -130,6 +130,15 @@ void DebugPrint(const char* msg, vtkm::cont::ArrayHandleReverse<vtkm::cont::Arra
     std::cout << std::setw(5) << array.GetPortalConstControl().Get(i) << " ";
   std::cout << std::endl;
 }
+}
+
+namespace vtkm
+{
+namespace worklet
+{
+namespace cosmotools
+{
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -143,19 +152,8 @@ struct ScatterWorklet : public vtkm::worklet::WorkletMapField
   typedef void ExecutionSignature(_1, _2);
   using ScatterType = vtkm::worklet::ScatterCounting;
 
-  VTKM_CONT
-  ScatterType GetScatter() const { return this->Scatter; }
-
-  VTKM_CONT
-  ScatterWorklet(const vtkm::worklet::ScatterCounting& scatter)
-    : Scatter(scatter)
-  {
-  }
-
   VTKM_EXEC
   void operator()(T inputIndex, T& outputIndex) const { outputIndex = inputIndex; }
-private:
-  ScatterType Scatter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -179,14 +177,6 @@ struct ScaleBiasFunctor
   VTKM_EXEC_CONT
   T operator()(T value) const { return (Scale * value + Bias); }
 };
-}
-
-namespace vtkm
-{
-namespace worklet
-{
-namespace cosmotools
-{
 
 template <typename T, typename StorageType, typename DeviceAdapter>
 class CosmoTools

@@ -84,7 +84,6 @@
 #ifndef vtkm_worklet_contourtree_join_tree_transferrer_h
 #define vtkm_worklet_contourtree_join_tree_transferrer_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
@@ -107,7 +106,7 @@ public:
     WholeArrayOut<IdType> saddles,     // (output) saddle array for writing
     WholeArrayOut<IdType> arcArray);   // (output) arc / max array for writing
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

@@ -45,6 +45,8 @@ struct Bounds
   VTKM_EXEC_CONT
   Bounds() {}
 
+  Bounds(const Bounds&) = default;
+
   VTKM_EXEC_CONT
   Bounds(const vtkm::Range& xRange, const vtkm::Range& yRange, const vtkm::Range& zRange)
     : X(xRange)
@@ -88,14 +90,7 @@ struct Bounds
   {
   }
 
-  VTKM_EXEC_CONT
-  const vtkm::Bounds& operator=(const vtkm::Bounds& src)
-  {
-    this->X = src.X;
-    this->Y = src.Y;
-    this->Z = src.Z;
-    return *this;
-  }
+  vtkm::Bounds& operator=(const vtkm::Bounds& src) = default;
 
   /// \b Determine if the bounds are valid (i.e. has at least one valid point).
   ///
@@ -145,7 +140,7 @@ struct Bounds
   /// \b Expand bounds to include other bounds.
   ///
   /// This version of \c Include expands these bounds just enough to include
-  /// that of another bounds. Esentially it is the union of the two bounds.
+  /// that of another bounds. Essentially it is the union of the two bounds.
   ///
   VTKM_EXEC_CONT
   void Include(const vtkm::Bounds& bounds)

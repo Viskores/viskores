@@ -60,7 +60,7 @@ public:
                                   ExecObject tables,
                                   FieldOut<> triangleCount);
     typedef _4 ExecutionSignature(_1, _2, _3);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     VTKM_CONT
     TrianglesPerCell() {}
@@ -86,16 +86,14 @@ public:
                                   ExecObject tables,
                                   FieldOutCell<> connectivityOut);
     typedef void ExecutionSignature(CellShape, PointIndices, _2, _3, VisitIndex);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
-    typedef vtkm::worklet::ScatterCounting ScatterType;
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
+    using ScatterType = vtkm::worklet::ScatterCounting;
 
     template <typename CountArrayType>
-    VTKM_CONT TriangulateCell(const CountArrayType& countArray)
-      : Scatter(countArray, DeviceAdapter())
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
     {
+      return ScatterType(countArray, DeviceAdapter());
     }
 
     // Each cell produces triangles and write result at the offset
@@ -112,9 +110,6 @@ public:
       connectivityOut[1] = connectivityIn[triIndices[1]];
       connectivityOut[2] = connectivityIn[triIndices[2]];
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   template <typename CellSetType>
@@ -140,9 +135,8 @@ public:
       inShapes, inNumIndices, tables.PrepareForInput(DeviceAdapter()), outCellsPerCell);
 
     // Build new cells
-    TriangulateCell triangulateWorklet(outCellsPerCell);
     vtkm::worklet::DispatcherMapTopology<TriangulateCell, DeviceAdapter> triangulateDispatcher(
-      triangulateWorklet);
+      TriangulateCell::MakeScatter(outCellsPerCell));
     triangulateDispatcher.Invoke(cellSet,
                                  tables.PrepareForInput(DeviceAdapter()),
                                  vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));

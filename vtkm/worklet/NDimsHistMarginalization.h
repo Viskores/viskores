@@ -73,7 +73,7 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Id>& marginalFreqs,
            DeviceAdapter vtkmNotUsed(device))
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     //total variables
     vtkm::Id numOfVariable = static_cast<vtkm::Id>(binId.size());
@@ -160,7 +160,7 @@ public:
            vtkm::cont::ArrayHandle<vtkm::Id>& marginalFreqs,
            DeviceAdapter vtkmNotUsed(device))
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     //total variables
     vtkm::Id numOfVariable = static_cast<vtkm::Id>(binId.size());
@@ -172,7 +172,7 @@ public:
 
     vtkm::cont::ArrayHandle<vtkm::Id> freqs;
     DeviceAlgorithms::Copy(freqsIn, freqs);
-    vtkm::Id numMarginalVariables = 0; //count num of marginal varaibles
+    vtkm::Id numMarginalVariables = 0; //count num of marginal variables
     for (vtkm::Id i = 0; i < numOfVariable; i++)
     {
       if (marginalVariables.GetPortalConstControl().Get(i) == true)

@@ -26,7 +26,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/ImplicitFunction.h>
+#include <vtkm/cont/ImplicitFunctionHandle.h>
 
 namespace vtkm
 {
@@ -51,7 +51,7 @@ public:
     typedef _3 ExecutionSignature(_2);
 
     VTKM_CONT
-    ExtractPointsByVOI(const vtkm::exec::ImplicitFunction& function, bool extractInside)
+    ExtractPointsByVOI(const vtkm::ImplicitFunction* function, bool extractInside)
       : Function(function)
       , passValue(extractInside)
       , failValue(!extractInside)
@@ -62,14 +62,14 @@ public:
     bool operator()(const vtkm::Vec<vtkm::Float64, 3>& coordinate) const
     {
       bool pass = passValue;
-      vtkm::Float64 value = this->Function.Value(coordinate);
+      vtkm::Float64 value = this->Function->Value(coordinate);
       if (value > 0)
         pass = failValue;
       return pass;
     }
 
   private:
-    vtkm::exec::ImplicitFunction Function;
+    const vtkm::ImplicitFunction* Function;
     bool passValue;
     bool failValue;
   };
@@ -81,7 +81,7 @@ public:
                                       const vtkm::cont::ArrayHandle<vtkm::Id>& pointIds,
                                       DeviceAdapter)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     DeviceAlgorithm::Copy(pointIds, this->ValidPointIds);
 
     // Make CellSetSingleType with VERTEX at each point id
@@ -97,11 +97,11 @@ public:
   template <typename CellSetType, typename CoordinateType, typename DeviceAdapter>
   vtkm::cont::CellSetSingleType<> Run(const CellSetType& cellSet,
                                       const CoordinateType& coordinates,
-                                      const vtkm::cont::ImplicitFunction& implicitFunction,
+                                      const vtkm::cont::ImplicitFunctionHandle& implicitFunction,
                                       bool extractInside,
                                       DeviceAdapter device)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     // Worklet output will be a boolean passFlag array
     vtkm::cont::ArrayHandle<bool> passFlags;

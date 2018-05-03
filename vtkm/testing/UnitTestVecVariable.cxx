@@ -62,11 +62,11 @@ struct VecVariableTestFunctor
   template <typename T>
   void operator()(T) const
   {
-    static const vtkm::IdComponent SIZE = 5;
-    typedef vtkm::Vec<T, SIZE> VecType;
-    typedef vtkm::VecVariable<T, SIZE> VecVariableType;
-    typedef vtkm::TypeTraits<VecVariableType> TTraits;
-    typedef vtkm::VecTraits<VecVariableType> VTraits;
+    static constexpr vtkm::IdComponent SIZE = 5;
+    using VecType = vtkm::Vec<T, SIZE>;
+    using VecVariableType = vtkm::VecVariable<T, SIZE>;
+    using TTraits = vtkm::TypeTraits<VecVariableType>;
+    using VTraits = vtkm::VecTraits<VecVariableType>;
 
     std::cout << "Check NumericTag." << std::endl;
     this->CheckNumericTag(typename TTraits::NumericTag(),

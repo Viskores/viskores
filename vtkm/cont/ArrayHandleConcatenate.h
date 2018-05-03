@@ -19,8 +19,8 @@
 //  this software.
 //
 //=============================================================================
-#ifndef vtk_m_ArrayHandleConcatenate_h
-#define vtk_m_ArrayHandleConcatenate_h
+#ifndef vtk_m_cont_ArrayHandleConcatenate_h
+#define vtk_m_cont_ArrayHandleConcatenate_h
 
 #include <vtkm/cont/ArrayHandle.h>
 
@@ -37,6 +37,7 @@ class VTKM_ALWAYS_EXPORT ArrayPortalConcatenate
 public:
   using ValueType = typename PortalType1::ValueType;
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   ArrayPortalConcatenate()
     : portal1()
@@ -323,4 +324,4 @@ VTKM_CONT ArrayHandleConcatenate<ArrayHandleType1, ArrayHandleType2> make_ArrayH
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_ArrayHandleConcatenate_h
+#endif //vtk_m_cont_ArrayHandleConcatenate_h

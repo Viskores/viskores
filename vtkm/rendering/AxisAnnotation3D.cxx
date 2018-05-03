@@ -80,11 +80,12 @@ void AxisAnnotation3D::Render(const Camera& camera,
   unsigned int nmajor = (unsigned int)proportions.size();
   while (this->Labels.size() < nmajor)
   {
-    this->Labels.push_back(new TextAnnotationBillboard("test",
-                                                       this->Color,
-                                                       vtkm::Float32(this->FontScale),
-                                                       vtkm::Vec<vtkm::Float32, 3>(0, 0, 0),
-                                                       0));
+    this->Labels.push_back(std::unique_ptr<TextAnnotationBillboard>(
+      new vtkm::rendering::TextAnnotationBillboard("test",
+                                                   this->Color,
+                                                   vtkm::Float32(this->FontScale),
+                                                   vtkm::Vec<vtkm::Float32, 3>(0, 0, 0),
+                                                   0)));
   }
 
   std::stringstream numberToString;
@@ -159,6 +160,9 @@ void AxisAnnotation3D::Render(const Camera& camera,
     this->Labels[i]->SetPosition(vtkm::Float32(tickPos[0] - tickSize[0]),
                                  vtkm::Float32(tickPos[1] - tickSize[1]),
                                  vtkm::Float32(tickPos[2] - tickSize[2]));
+    vtkm::Vec<vtkm::Float32, 3> pp(vtkm::Float32(tickPos[0] - tickSize[0]),
+                                   vtkm::Float32(tickPos[1] - tickSize[1]),
+                                   vtkm::Float32(tickPos[2] - tickSize[2]));
     this->Labels[i]->SetAlignment(TextAnnotation::HCenter, TextAnnotation::VCenter);
   }
 
@@ -177,13 +181,13 @@ void AxisAnnotation3D::Render(const Camera& camera,
         switch (this->Axis)
         {
           case 0:
-            tickSize[1] = this->TickMajorSize;
+            tickSize[1] = this->TickMinorSize;
             break;
           case 1:
-            tickSize[0] = this->TickMajorSize;
+            tickSize[0] = this->TickMinorSize;
             break;
           case 2:
-            tickSize[0] = this->TickMajorSize;
+            tickSize[0] = this->TickMinorSize;
             break;
         }
       }
@@ -192,13 +196,13 @@ void AxisAnnotation3D::Render(const Camera& camera,
         switch (this->Axis)
         {
           case 0:
-            tickSize[2] = this->TickMajorSize;
+            tickSize[2] = this->TickMinorSize;
             break;
           case 1:
-            tickSize[2] = this->TickMajorSize;
+            tickSize[2] = this->TickMinorSize;
             break;
           case 2:
-            tickSize[1] = this->TickMajorSize;
+            tickSize[1] = this->TickMinorSize;
             break;
         }
       }

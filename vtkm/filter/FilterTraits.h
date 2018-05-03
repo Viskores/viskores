@@ -27,6 +27,7 @@ namespace vtkm
 {
 namespace filter
 {
+
 template <typename Filter>
 class FilterTraits
 {
@@ -34,7 +35,7 @@ public:
   // A filter is able to state what subset of types it supports
   // by default. By default we use ListTagUniversal to represent that the
   // filter accepts all types specified by the users provided policy
-  typedef vtkm::ListTagUniversal InputFieldTypeList;
+  using InputFieldTypeList = vtkm::ListTagUniversal;
 };
 
 template <typename DerivedPolicy, typename FilterType>

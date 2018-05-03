@@ -51,11 +51,11 @@ public:
   void SetRange(vtkm::Float64 low, vtkm::Float64 high);
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
-                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                           const DeviceAdapter& tag);
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                          const vtkm::filter::FieldMetadata& fieldMeta,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                          const DeviceAdapter& tag);
 
 private:
   vtkm::worklet::PointElevation Worklet;
@@ -66,7 +66,7 @@ class FilterTraits<PointElevation>
 {
 public:
   //Point Elevation can only convert Float and Double Vec3 arrays
-  typedef vtkm::TypeListTagFieldVec3 InputFieldTypeList;
+  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 } // namespace vtkm::filter

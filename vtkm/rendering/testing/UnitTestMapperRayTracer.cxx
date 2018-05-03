@@ -36,16 +36,20 @@ void RenderTests()
   typedef vtkm::rendering::MapperRayTracer M;
   typedef vtkm::rendering::CanvasRayTracer C;
   typedef vtkm::rendering::View3D V3;
+  typedef vtkm::rendering::View2D V2;
 
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("thermal");
+  vtkm::cont::ColorTable colorTable("inferno");
 
   vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");
+    maker.Make3DRegularDataSet0(), "pointvar", colorTable, "rt_reg3D.pnm");
   vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rect3D.pnm");
+    maker.Make3DRectilinearDataSet0(), "pointvar", colorTable, "rt_rect3D.pnm");
   vtkm::rendering::testing::Render<M, C, V3>(
-    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "expl3D.pnm");
+    maker.Make3DExplicitDataSet4(), "pointvar", colorTable, "rt_expl3D.pnm");
+
+  vtkm::rendering::testing::Render<M, C, V2>(
+    maker.Make2DUniformDataSet1(), "pointvar", colorTable, "rt_uni2D.pnm");
 }
 
 } //namespace

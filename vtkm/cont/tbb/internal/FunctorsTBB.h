@@ -88,7 +88,7 @@ using WrappedBinaryOperator = vtkm::cont::internal::WrappedBinaryOperator<Result
 
 // The "grain size" of scheduling with TBB.  Not a lot of thought has gone
 // into picking this size.
-static const vtkm::Id TBB_GRAIN_SIZE = 1024;
+static constexpr vtkm::Id TBB_GRAIN_SIZE = 1024;
 
 template <typename InputPortalType, typename OutputPortalType>
 struct CopyBody
@@ -98,7 +98,6 @@ struct CopyBody
   vtkm::Id InputOffset;
   vtkm::Id OutputOffset;
 
-  VTKM_EXEC_CONT
   CopyBody(const InputPortalType& inPortal,
            const OutputPortalType& outPortal,
            vtkm::Id inOffset,
@@ -127,12 +126,14 @@ struct CopyBody
     }
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename InIter, typename OutIter>
   VTKM_EXEC void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type) const
   {
     std::copy(src, srcEnd, dst);
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC
   void operator()(const ::tbb::blocked_range<vtkm::Id>& range) const
   {

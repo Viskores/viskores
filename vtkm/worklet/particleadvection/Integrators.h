@@ -21,6 +21,7 @@
 #ifndef vtk_m_worklet_particleadvection_Integrators_h
 #define vtk_m_worklet_particleadvection_Integrators_h
 
+#include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/DataSet.h>
@@ -171,7 +172,8 @@ public:
     {
       return ParticleStatus::EXITED_SPATIAL_BOUNDARY;
     }
-    vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
+    vtkm::Vec<FieldType, 3> k1 = vtkm::TypeTraits<vtkm::Vec<FieldType, 3>>::ZeroInitialization();
+    vtkm::Vec<FieldType, 3> k2 = k1, k3 = k1, k4 = k1;
     bool firstOrderValid = this->Evaluator.Evaluate(inpos, k1);
     bool secondOrderValid = this->Evaluator.Evaluate(inpos + (stepLength / 2) * k1, k2);
     bool thirdOrderValid = this->Evaluator.Evaluate(inpos + (stepLength / 2) * k2, k3);
@@ -179,6 +181,7 @@ public:
     velocity = (k1 + 2 * k2 + 2 * k3 + k4) / 6.0f;
     if (firstOrderValid && secondOrderValid && thirdOrderValid && fourthOrderValid)
     {
+
       return ParticleStatus::STATUS_OK;
     }
     else

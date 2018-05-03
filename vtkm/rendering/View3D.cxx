@@ -28,8 +28,9 @@ namespace rendering
 View3D::View3D(const vtkm::rendering::Scene& scene,
                const vtkm::rendering::Mapper& mapper,
                const vtkm::rendering::Canvas& canvas,
-               const vtkm::rendering::Color& backgroundColor)
-  : View(scene, mapper, canvas, backgroundColor)
+               const vtkm::rendering::Color& backgroundColor,
+               const vtkm::rendering::Color& foregroundColor)
+  : View(scene, mapper, canvas, backgroundColor, foregroundColor)
 {
 }
 
@@ -37,8 +38,9 @@ View3D::View3D(const vtkm::rendering::Scene& scene,
                const vtkm::rendering::Mapper& mapper,
                const vtkm::rendering::Canvas& canvas,
                const vtkm::rendering::Camera& camera,
-               const vtkm::rendering::Color& backgroundColor)
-  : View(scene, mapper, canvas, camera, backgroundColor)
+               const vtkm::rendering::Color& backgroundColor,
+               const vtkm::rendering::Color& foregroundColor)
+  : View(scene, mapper, canvas, camera, backgroundColor, foregroundColor)
 {
 }
 
@@ -67,6 +69,7 @@ void View3D::RenderScreenAnnotations()
   if (this->GetScene().GetNumberOfActors() > 0)
   {
     //this->ColorBarAnnotation.SetAxisColor(vtkm::rendering::Color(1,1,1));
+    this->ColorBarAnnotation.SetFieldName(this->GetScene().GetActor(0).GetScalarField().GetName());
     this->ColorBarAnnotation.SetRange(this->GetScene().GetActor(0).GetScalarRange(), 5);
     this->ColorBarAnnotation.SetColorTable(this->GetScene().GetActor(0).GetColorTable());
     this->ColorBarAnnotation.Render(

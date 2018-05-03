@@ -67,7 +67,6 @@
 #ifndef vtkm_worklet_contourtree_regular_to_critical_up_h
 #define vtkm_worklet_contourtree_regular_to_critical_up_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -85,7 +84,7 @@ public:
                                 FieldIn<IdType> candidate,       // (input) candidate index
                                 WholeArrayOut<IdType> critical); // (output)
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

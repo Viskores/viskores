@@ -21,6 +21,7 @@
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
@@ -31,35 +32,32 @@
 namespace
 {
 
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 struct TryExecuteTestFunctor
 {
   vtkm::IdComponent NumCalls;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> InArray;
-  vtkm::cont::ArrayHandle<vtkm::FloatDefault> OutArray;
 
   VTKM_CONT
-  TryExecuteTestFunctor(vtkm::cont::ArrayHandle<vtkm::FloatDefault> inArray,
-                        vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray)
+  TryExecuteTestFunctor()
     : NumCalls(0)
-    , InArray(inArray)
-    , OutArray(outArray)
   {
   }
 
   template <typename Device>
-  VTKM_CONT bool operator()(Device)
+  VTKM_CONT bool operator()(Device,
+                            const vtkm::cont::ArrayHandle<vtkm::FloatDefault>& in,
+                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>& out)
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<Device>;
-    Algorithm::Copy(this->InArray, this->OutArray);
+    Algorithm::Copy(in, out);
     this->NumCalls++;
     return true;
   }
 };
 
 template <typename DeviceList>
-void TryExecuteWithList(DeviceList, bool expectSuccess)
+void TryExecuteWithDevice(DeviceList, bool expectSuccess)
 {
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> inArray;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
@@ -67,9 +65,9 @@ void TryExecuteWithList(DeviceList, bool expectSuccess)
   inArray.Allocate(ARRAY_SIZE);
   SetPortal(inArray.GetPortalControl());
 
-  TryExecuteTestFunctor functor(inArray, outArray);
+  TryExecuteTestFunctor functor;
 
-  bool result = vtkm::cont::TryExecute(functor, DeviceList());
+  bool result = vtkm::cont::TryExecute(functor, DeviceList(), inArray, outArray);
 
   if (expectSuccess)
   {
@@ -81,6 +79,96 @@ void TryExecuteWithList(DeviceList, bool expectSuccess)
   {
     VTKM_TEST_ASSERT(!result, "Call returned true when expected failure.");
   }
+
+  //verify the ability to pass rvalue functors
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray2;
+  result = vtkm::cont::TryExecute(TryExecuteTestFunctor(), DeviceList(), inArray, outArray2);
+  if (expectSuccess)
+  {
+    VTKM_TEST_ASSERT(result, "Call returned failure when expected success.");
+    CheckPortal(outArray2.GetPortalConstControl());
+  }
+  else
+  {
+    VTKM_TEST_ASSERT(!result, "Call returned true when expected failure.");
+  }
+}
+
+template <typename DeviceList>
+void TryExecuteAllExplicit(DeviceList, bool expectSuccess)
+{
+  vtkm::cont::RuntimeDeviceTracker tracker;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> inArray;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> outArray;
+
+  inArray.Allocate(ARRAY_SIZE);
+  SetPortal(inArray.GetPortalControl());
+
+  bool result =
+    vtkm::cont::TryExecute(TryExecuteTestFunctor(), tracker, DeviceList(), inArray, outArray);
+  if (expectSuccess)
+  {
+    VTKM_TEST_ASSERT(result, "Call returned failure when expected success.");
+    CheckPortal(outArray.GetPortalConstControl());
+  }
+  else
+  {
+    VTKM_TEST_ASSERT(!result, "Call returned true when expected failure.");
+  }
+}
+
+struct EdgeCaseFunctor
+{
+  template <typename DeviceList>
+  bool operator()(DeviceList, int, float, bool) const
+  {
+    return true;
+  }
+  template <typename DeviceList>
+  bool operator()(DeviceList) const
+  {
+    return true;
+  }
+};
+
+void TryExecuteAllEdgeCases()
+{
+  using ValidDevice = vtkm::cont::DeviceAdapterTagSerial;
+  using SingleValidList = vtkm::ListTagBase<ValidDevice>;
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+
+  std::cout << "TryExecute no Runtime, no Device, no parameters." << std::endl;
+  vtkm::cont::TryExecute(EdgeCaseFunctor());
+
+  std::cout << "TryExecute no Runtime, no Device, with parameters." << std::endl;
+  vtkm::cont::TryExecute(EdgeCaseFunctor(), int{ 42 }, float{ 3.14f }, bool{ true });
+
+  std::cout << "TryExecute with Runtime, no Device, no parameters." << std::endl;
+  vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker);
+
+  std::cout << "TryExecute with Runtime, no Device, with parameters." << std::endl;
+  vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker, int{ 42 }, float{ 3.14f }, bool{ true });
+
+  std::cout << "TryExecute no Runtime, with Device, no parameters." << std::endl;
+  vtkm::cont::TryExecute(EdgeCaseFunctor(), SingleValidList());
+
+  std::cout << "TryExecute no Runtime, with Device, with parameters." << std::endl;
+  vtkm::cont::TryExecute(
+    EdgeCaseFunctor(), SingleValidList(), int{ 42 }, float{ 3.14f }, bool{ true });
+
+  std::cout << "TryExecute with Runtime, with Device, no parameters." << std::endl;
+  vtkm::cont::TryExecute(EdgeCaseFunctor(), tracker, SingleValidList());
+
+  std::cout << "TryExecute with Runtime, with Device, with parameters." << std::endl;
+  vtkm::cont::TryExecute(
+    EdgeCaseFunctor(), tracker, SingleValidList(), int{ 42 }, float{ 3.14f }, bool{ true });
+}
+
+template <typename DeviceList>
+void TryExecuteTests(DeviceList list, bool expectSuccess)
+{
+  TryExecuteAllExplicit(list, expectSuccess);
+  TryExecuteWithDevice(list, expectSuccess);
 }
 
 static void Run()
@@ -88,21 +176,24 @@ static void Run()
   using ValidDevice = vtkm::cont::DeviceAdapterTagSerial;
   using InvalidDevice = vtkm::cont::DeviceAdapterTagError;
 
+
+  TryExecuteAllEdgeCases();
+
   std::cout << "Try a list with a single entry." << std::endl;
   using SingleValidList = vtkm::ListTagBase<ValidDevice>;
-  TryExecuteWithList(SingleValidList(), true);
+  TryExecuteTests(SingleValidList(), true);
 
   std::cout << "Try a list with two valid devices." << std::endl;
   using DoubleValidList = vtkm::ListTagBase<ValidDevice, ValidDevice>;
-  TryExecuteWithList(DoubleValidList(), true);
+  TryExecuteTests(DoubleValidList(), true);
 
   std::cout << "Try a list with only invalid device." << std::endl;
   using SingleInvalidList = vtkm::ListTagBase<InvalidDevice>;
-  TryExecuteWithList(SingleInvalidList(), false);
+  TryExecuteTests(SingleInvalidList(), false);
 
   std::cout << "Try a list with an invalid and valid device." << std::endl;
   using InvalidAndValidList = vtkm::ListTagBase<InvalidDevice, ValidDevice>;
-  TryExecuteWithList(InvalidAndValidList(), true);
+  TryExecuteTests(InvalidAndValidList(), true);
 }
 
 } // anonymous namespace

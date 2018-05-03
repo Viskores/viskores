@@ -41,7 +41,7 @@
 
 namespace
 {
-static const vtkm::Id WIDTH = 512, HEIGHT = 512;
+static constexpr vtkm::Id WIDTH = 512, HEIGHT = 512;
 static vtkm::Id which = 0, NUM_DATASETS = 5;
 static bool done = false;
 static bool batch = false;
@@ -70,7 +70,7 @@ void RenderTests()
 
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("thermal");
+  vtkm::cont::ColorTable colorTable("inferno");
 
   glfwInit();
   GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "GLFW Test", nullptr, nullptr);

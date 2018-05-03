@@ -68,7 +68,6 @@
 #define vtkm_worklet_contourtree_regular_to_candidate_h
 
 #include "vtkm/worklet/contourtree/Types.h"
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -87,7 +86,7 @@ public:
                                 WholeArrayIn<IdType> regularToCritical, // (input) sorting indices
                                 FieldOut<IdType> sortVector); // (output) target for write back
   typedef _4 ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

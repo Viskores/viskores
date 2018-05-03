@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_set_candidate_particles_h
 #define vtkm_worklet_cosmotools_set_candidate_particles_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -85,7 +84,7 @@ public:
                                 FieldIn<IdType> partCount,  // (input) count of particles in bin
                                 WholeArrayOut<IdType> candidate); // (input) z location in bin
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   T cutoffPotential; // Lowest potential for a candidate bin
 

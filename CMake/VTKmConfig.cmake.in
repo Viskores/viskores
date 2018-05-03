@@ -19,24 +19,39 @@
 ##============================================================================
 
 # When this file is run by CMake through the find_package command, the
-# following variables will be defined:
+# following targets will exist:
+#   vtkm_cont       Target that contains most of VTK-m
 #
-# VTKm_INCLUDE_DIRS - Directories containing VTK-m and dependent headers
-# VTKm_LIBRARIES - The libraries required when using VTK-m
-# VTKm_COMPILE_OPTIONS - Options VTK-m suggests to add to the compiler
+#   vtkm_rendering  Target that contains all the rendering code
 #
-# Note that the VTK-m package supports several components. It is important
-# to request the components being used (as done through find_package arguments).
-# If no components are requested, then the dependent packages will not be
-# found and loaded. The following components are supported:
+#   vtkm::tbb       Target that contains tbb related link information
+#                   implicitly linked to by `vtkm_cont` if tbb is enabled
 #
-# @VTKm_AVAILABLE_COMPONENTS_LIST@
+#   vtkm::cuda      Target that contains cuda related link information
+#                   implicitly linked to by `vtkm_cont` if cuda is enabled
+#
+# The following local variables will also be defined:
+#
+#  VTKm_VERSION         Holds the version string of "Major.Minor"
+#  VTKm_VERSION_FULL    Holds the version string of "Major.Minor.Patch.GitSha1"
+#  VTKm_VERSION_MAJOR   Holds just the major version number
+#  VTKm_VERSION_MINOR   Holds just the minor version number
+#  VTKm_VERSION_PATCH   Holds just the patch version number
+#
+#  VTKm_BUILD_SHARED_LIBS     Will be enabled if VTK-m was built shared/dynamic
+#  VTKm_ENABLE_CUDA           Will be enabled if VTK-m was built with CUDA support
+#  VTKm_ENABLE_TBB            Will be enabled if VTK-m was built with TBB support
+#  VTKm_ENABLE_MPI            Will be enabled if VTK-m was built with MPI support
+#  VTKm_ENABLE_RENDERING      Will be enabled if VTK-m was built with rendering support
+#  VTKm_ENABLE_GL_CONTEXT     Will be enabled if VTK-m rendering was built with a GL context
+#  VTKm_ENABLE_OSMESA_CONTEXT Will be enabled if VTK-m rendering was built with a osmesa context
+#  VTKm_ENABLE_EGL_CONTEXT    Will be enabled if VTK-m rendering was built with a EGL context
+#
 #
 
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
 @PACKAGE_INIT@
-
 
 # The VTKm version number
 set(VTKm_VERSION_MAJOR "@VTKm_VERSION_MAJOR@")
@@ -45,60 +60,39 @@ set(VTKm_VERSION_PATCH "@VTKm_VERSION_PATCH@")
 set(VTKm_VERSION_FULL "@VTKm_VERSION_FULL@")
 set(VTKm_VERSION "@VTKm_VERSION@")
 
+set(VTKm_BUILD_SHARED_LIBS "@VTKm_BUILD_SHARED_LIBS@")
+set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
+set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
+set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
+set(VTKm_ENABLE_GL_CONTEXT "@VTKm_ENABLE_GL_CONTEXT@")
+set(VTKm_ENABLE_OSMESA_CONTEXT "@VTKm_ENABLE_OSMESA_CONTEXT@")
+set(VTKm_ENABLE_EGL_CONTEXT "@VTKm_ENABLE_EGL_CONTEXT@")
+set(VTKm_ENABLE_MPI "@VTKm_ENABLE_MPI@")
+
 # This is true when the package is still in the build directory (not installed)
-if(CMAKE_CURRENT_LIST_DIR STREQUAL "@VTKm_BINARY_DIR@/@VTKm_INSTALL_CONFIG_DIR@")
+if(CMAKE_CURRENT_LIST_DIR STREQUAL "@VTKm_BUILD_CMAKE_BASE_DIR@/@VTKm_INSTALL_CONFIG_DIR@")
   set(VTKm_PACKAGE_IN_BUILD TRUE)
 endif()
 
 if(VTKm_PACKAGE_IN_BUILD)
   set_and_check(VTKm_CMAKE_MODULE_PATH "@VTKm_SOURCE_DIR@/CMake")
-  set_and_check(VTKm_INCLUDE_DIRS ${VTKm_INCLUDE_DIRS} "@VTKm_SOURCE_DIR@")
 else()
   set_and_check(VTKm_CMAKE_MODULE_PATH "@PACKAGE_VTKm_INSTALL_CMAKE_MODULE_DIR@")
-  set_and_check(VTKm_INCLUDE_DIRS "@PACKAGE_VTKm_INSTALL_INCLUDE_DIR@")
 endif()
-
-set(VTKm_BUILD_SHARED_LIBS "@BUILD_SHARED_LIBS@")
-set(VTKm_ENABLE_CUDA "@VTKm_ENABLE_CUDA@")
-set(VTKm_ENABLE_TBB "@VTKm_ENABLE_TBB@")
-set(VTKm_ENABLE_OSMESA "@VTKm_ENABLE_OSMESA@")
-set(VTKm_ENABLE_RENDERING "@VTKm_ENABLE_RENDERING@")
 
 # Load the library exports, but only if not compiling VTK-m itself
 set_and_check(VTKm_CONFIG_DIR "@PACKAGE_VTKm_INSTALL_CONFIG_DIR@")
-if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@CMAKE_BINARY_DIR@")
+if(NOT "${CMAKE_BINARY_DIR}" STREQUAL "@VTKm_BINARY_DIR@")
   include(${VTKm_CONFIG_DIR}/VTKmTargets.cmake)
-endif()
-
-# Clear out the libraries. We will add more when loading components.
-set(VTKm_LIBRARIES)
-
-# The VTKm variables used to configure components and packages silently.
-set(VTKm_CONFIGURE_QUIET "${VTKm_FIND_QUIETLY}")
-set(VTKm_FIND_PACKAGE_QUIETLY "")
-if(VTKm_CONFIGURE_QUIET)
-  set(VTKm_FIND_PACKAGE_QUIETLY "QUIET")
 endif()
 
 # VTKm requires some CMake Find modules not included with CMake, so
 # include the CMake modules distributed with VTKm.
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
-# This includes a host of macros used by VTK-m CMake.
-include(VTKmMacros)
+# This includes a host of functions used by VTK-m CMake.
+include(VTKmWrappers)
 
-# Extra compile options that VTKm has generated, such as vectorization settings.
-# This should be specified to any target with the CMake command target_compile_options
-# that uses VTK-m.
-set(VTKm_COMPILE_OPTIONS "@VTKm_COMPILE_OPTIONS@")
-
-# All projects using VTK-m should include the "Base" configuration (otherwise
-# nothing may compile). Make sure the Base configuration is added to
-# VTKm_FIND_COMPONENTS and the component is required.
-set(VTKm_FIND_COMPONENTS "Base" ${VTKm_FIND_COMPONENTS})
-set(VTKm_FIND_REQUIRED_Base TRUE)
-
-# Load the selected components
-@VTKm_LOAD_COMPONENTS_COMMANDS@
-
-check_required_components(VTKm)
+if(VTKm_ENABLE_RENDERING)
+  include(VTKmRenderingContexts)
+endif()

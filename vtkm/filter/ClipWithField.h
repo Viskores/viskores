@@ -44,19 +44,22 @@ public:
   void SetClipValue(vtkm::Float64 value) { this->ClipValue = value; }
 
   VTKM_CONT
+  void SetInvertClip(bool invert) { this->Invert = invert; }
+
+  VTKM_CONT
   vtkm::Float64 GetClipValue() const { return this->ClipValue; }
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
-                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                           const DeviceAdapter& tag);
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                          const vtkm::filter::FieldMetadata& fieldMeta,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                          const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter.
   //This call is only valid after Execute has been called.
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT bool DoMapField(vtkm::filter::Result& result,
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -65,13 +68,14 @@ public:
 private:
   vtkm::Float64 ClipValue;
   vtkm::worklet::Clip Worklet;
+  bool Invert;
 };
 
 template <>
 class FilterTraits<ClipWithField>
 { //currently the Clip filter only works on scalar data.
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

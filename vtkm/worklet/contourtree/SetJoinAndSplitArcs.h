@@ -67,7 +67,6 @@
 #ifndef vtkm_worklet_contourtree_set_join_and_split_arcs_h
 #define vtkm_worklet_contourtree_set_join_and_split_arcs_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
@@ -89,7 +88,7 @@ public:
                                 FieldOut<IdType> joinArc,               // (output)
                                 FieldOut<IdType> splitArc);             // (output)
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

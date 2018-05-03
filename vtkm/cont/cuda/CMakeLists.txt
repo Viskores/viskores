@@ -25,16 +25,11 @@ set(headers
   )
 
 #-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
-  vtkm_disable_troublesome_thrust_warnings()
-endif()
-
-#-----------------------------------------------------------------------------
 add_subdirectory(internal)
 vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
 
 #-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
+if (TARGET vtkm::cuda)
   add_subdirectory(testing)
 endif()
 

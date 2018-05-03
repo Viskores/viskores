@@ -80,35 +80,35 @@ struct ListContainsImpl;
 template <typename Type>
 struct ListContainsImpl<Type, brigand::empty_sequence>
 {
-  static VTKM_CONSTEXPR bool value = false;
+  static constexpr bool value = false;
 };
 
 //-----------------------------------------------------------------------------
 template <typename Type>
 struct ListContainsImpl<Type, brigand::list<vtkm::detail::UniversalTag>>
 {
-  static VTKM_CONSTEXPR bool value = true;
+  static constexpr bool value = true;
 };
 
 //-----------------------------------------------------------------------------
 template <typename Type, typename T1>
 struct ListContainsImpl<Type, brigand::list<T1>>
 {
-  static VTKM_CONSTEXPR bool value = std::is_same<Type, T1>::value;
+  static constexpr bool value = std::is_same<Type, T1>::value;
 };
 
 //-----------------------------------------------------------------------------
 template <typename Type, typename T1, typename T2>
 struct ListContainsImpl<Type, brigand::list<T1, T2>>
 {
-  static VTKM_CONSTEXPR bool value = std::is_same<Type, T1>::value || std::is_same<Type, T2>::value;
+  static constexpr bool value = std::is_same<Type, T1>::value || std::is_same<Type, T2>::value;
 };
 
 //-----------------------------------------------------------------------------
 template <typename Type, typename T1, typename T2, typename T3>
 struct ListContainsImpl<Type, brigand::list<T1, T2, T3>>
 {
-  static VTKM_CONSTEXPR bool value =
+  static constexpr bool value =
     std::is_same<Type, T1>::value || std::is_same<Type, T2>::value || std::is_same<Type, T3>::value;
 };
 
@@ -116,8 +116,8 @@ struct ListContainsImpl<Type, brigand::list<T1, T2, T3>>
 template <typename Type, typename T1, typename T2, typename T3, typename T4>
 struct ListContainsImpl<Type, brigand::list<T1, T2, T3, T4>>
 {
-  static VTKM_CONSTEXPR bool value = std::is_same<Type, T1>::value ||
-    std::is_same<Type, T2>::value || std::is_same<Type, T3>::value || std::is_same<Type, T4>::value;
+  static constexpr bool value = std::is_same<Type, T1>::value || std::is_same<Type, T2>::value ||
+    std::is_same<Type, T3>::value || std::is_same<Type, T4>::value;
 };
 
 //-----------------------------------------------------------------------------
@@ -126,7 +126,7 @@ struct ListContainsImpl
 {
   using find_result = brigand::find<List, std::is_same<brigand::_1, Type>>;
   using size = brigand::size<find_result>;
-  static VTKM_CONSTEXPR bool value = (size::value != 0);
+  static constexpr bool value = (size::value != 0);
 };
 
 //-----------------------------------------------------------------------------
@@ -165,30 +165,30 @@ struct ListIntersect<SameListTag, SameListTag>
   using type = SameListTag;
 };
 
-template <typename Functor>
-VTKM_CONT void ListForEachImpl(Functor&&, brigand::empty_sequence)
+template <typename Functor, typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&&, brigand::list<>, Args&&...)
 {
 }
 
-template <typename Functor, typename T1>
-VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1>)
+template <typename Functor, typename T1, typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1>, Args&&... args)
 {
-  f(T1{});
+  f(T1{}, std::forward<Args>(args)...);
 }
 
-template <typename Functor, typename T1, typename T2>
-VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2>)
+template <typename Functor, typename T1, typename T2, typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2>, Args&&... args)
 {
-  f(T1{});
-  f(T2{});
+  f(T1{}, std::forward<Args>(args)...);
+  f(T2{}, std::forward<Args>(args)...);
 }
 
-template <typename Functor, typename T1, typename T2, typename T3>
-VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2, T3>)
+template <typename Functor, typename T1, typename T2, typename T3, typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2, T3>, Args&&... args)
 {
-  f(T1{});
-  f(T2{});
-  f(T3{});
+  f(T1{}, std::forward<Args>(args)...);
+  f(T2{}, std::forward<Args>(args)...);
+  f(T3{}, std::forward<Args>(args)...);
 }
 
 template <typename Functor,
@@ -196,15 +196,40 @@ template <typename Functor,
           typename T2,
           typename T3,
           typename T4,
-          typename... ArgTypes>
-VTKM_CONT void ListForEachImpl(Functor&& f, brigand::list<T1, T2, T3, T4, ArgTypes...>)
+          typename... ArgTypes,
+          typename... Args>
+VTKM_CONT void ListForEachImpl(Functor&& f,
+                               brigand::list<T1, T2, T3, T4, ArgTypes...>&&,
+                               Args&&... args)
 {
-  f(T1{});
-  f(T2{});
-  f(T3{});
-  f(T4{});
-  ListForEachImpl(f, brigand::list<ArgTypes...>());
+  f(T1{}, std::forward<Args>(args)...);
+  f(T2{}, std::forward<Args>(args)...);
+  f(T3{}, std::forward<Args>(args)...);
+  f(T4{}, std::forward<Args>(args)...);
+  ListForEachImpl(
+    std::forward<Functor>(f), brigand::list<ArgTypes...>{}, std::forward<Args>(args)...);
 }
+
+template <typename R1, typename R2>
+struct ListCrossProductImpl
+{
+  // This is a lazy Cartesian product generator.
+  // This version was settled on as being the best default
+  // version as all compilers including Intel handle this
+  // implementation without issue for very large cross products
+  using type = brigand::reverse_fold<
+    brigand::list<R1, R2>,
+    brigand::list<brigand::list<>>,
+    brigand::lazy::join<brigand::lazy::transform<
+      brigand::_2,
+      brigand::defer<brigand::lazy::join<brigand::lazy::transform<
+        brigand::parent<brigand::_1>,
+        brigand::defer<brigand::bind<
+          brigand::list,
+          brigand::lazy::push_front<brigand::_1, brigand::parent<brigand::_1>>>>>>>>>>;
+};
+
+
 
 } // namespace detail
 

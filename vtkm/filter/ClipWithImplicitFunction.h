@@ -21,11 +21,9 @@
 #ifndef vtk_m_filter_ClipWithImplicitFunction_h
 #define vtk_m_filter_ClipWithImplicitFunction_h
 
-#include <vtkm/cont/ImplicitFunction.h>
+#include <vtkm/cont/ImplicitFunctionHandle.h>
 #include <vtkm/filter/FilterDataSet.h>
 #include <vtkm/worklet/Clip.h>
-
-#include <memory>
 
 namespace vtkm
 {
@@ -34,44 +32,41 @@ namespace filter
 
 /// \brief Clip a dataset using an implicit function
 ///
-/// Clip a dataset using a given implicit function value, such as vtkm::cont::Sphere
-/// or vtkm::cont::Frustum.
+/// Clip a dataset using a given implicit function value, such as vtkm::Sphere
+/// or vtkm::Frustum.
 /// The resulting geometry will not be water tight.
 class ClipWithImplicitFunction : public vtkm::filter::FilterDataSet<ClipWithImplicitFunction>
 {
 public:
-  template <typename ImplicitFunctionType, typename DerivedPolicy>
-  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  ClipWithImplicitFunction();
 
-  template <typename ImplicitFunctionType>
-  void SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func)
+  void SetImplicitFunction(const vtkm::cont::ImplicitFunctionHandle& func)
   {
     this->Function = func;
   }
 
-  std::shared_ptr<vtkm::cont::ImplicitFunction> GetImplicitFunction() const
-  {
-    return this->Function;
-  }
+  void SetInvertClip(bool invert) { this->Invert = invert; }
+
+  const vtkm::cont::ImplicitFunctionHandle& GetImplicitFunction() const { return this->Function; }
 
   template <typename DerivedPolicy, typename DeviceAdapter>
-  vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
-                                 const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                 const DeviceAdapter& tag);
+  vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                const DeviceAdapter& tag);
 
   //Map a new field onto the resulting dataset after running the filter.
   //This call is only valid after Execute has been called.
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  bool DoMapField(vtkm::filter::Result& result,
+  bool DoMapField(vtkm::cont::DataSet& result,
                   const vtkm::cont::ArrayHandle<T, StorageType>& input,
                   const vtkm::filter::FieldMetadata& fieldMeta,
                   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
                   const DeviceAdapter& tag);
 
 private:
-  std::shared_ptr<vtkm::cont::ImplicitFunction> Function;
+  vtkm::cont::ImplicitFunctionHandle Function;
   vtkm::worklet::Clip Worklet;
+  bool Invert;
 };
 }
 } // namespace vtkm::filter

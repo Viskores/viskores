@@ -36,18 +36,18 @@ namespace cont
 class VTKM_CONT_EXPORT MultiBlock
 {
 public:
-  /// creat a new MultiBlcok containng a single DataSet "ds"
+  /// create a new MultiBlock containng a single DataSet "ds"
   VTKM_CONT
   MultiBlock(const vtkm::cont::DataSet& ds);
-  /// creat a new MultiBlcok with the exisiting one "src"
+  /// create a new MultiBlock with the existing one "src"
   VTKM_CONT
   MultiBlock(const vtkm::cont::MultiBlock& src);
-  /// creat a new MultiBlcok with a DataSet vector "mblocks"
+  /// create a new MultiBlock with a DataSet vector "mblocks"
   VTKM_CONT
-  MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks);
-  /// creat a new MultiBlcok with the capacity set to be "size"
+  explicit MultiBlock(const std::vector<vtkm::cont::DataSet>& mblocks);
+  /// create a new MultiBlock with the capacity set to be "size"
   VTKM_CONT
-  MultiBlock(vtkm::Id size);
+  explicit MultiBlock(vtkm::Id size);
 
   VTKM_CONT
   MultiBlock();
@@ -57,7 +57,7 @@ public:
 
   VTKM_CONT
   ~MultiBlock();
-  /// get the field "field_name" from blcok "block_index"
+  /// get the field "field_name" from block "block_index"
   VTKM_CONT
   vtkm::cont::Field GetField(const std::string& field_name, const int& block_index);
 
@@ -71,69 +71,31 @@ public:
   const std::vector<vtkm::cont::DataSet>& GetBlocks() const;
   /// add DataSet "ds" to the end of the contained DataSet vector
   VTKM_CONT
-  void AddBlock(vtkm::cont::DataSet& ds);
+  void AddBlock(const vtkm::cont::DataSet& ds);
   /// add DataSet "ds" to position "index" of the contained DataSet vector
   VTKM_CONT
-  void InsertBlock(vtkm::Id index, vtkm::cont::DataSet& ds);
+  void InsertBlock(vtkm::Id index, const vtkm::cont::DataSet& ds);
   /// replace the "index" positioned element of the contained DataSet vector with "ds"
   VTKM_CONT
-  void ReplaceBlock(vtkm::Id index, vtkm::cont::DataSet& ds);
+  void ReplaceBlock(vtkm::Id index, const vtkm::cont::DataSet& ds);
   /// append the DataSet vector "mblocks"  to the end of the contained one
   VTKM_CONT
-  void AddBlocks(std::vector<vtkm::cont::DataSet>& mblocks);
-  /// get the unified bounds of the same indexed coordinate system within all contained DataSet
-  VTKM_CONT
-  vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index = 0) const;
-
-  template <typename TypeList>
-  VTKM_CONT vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index, TypeList) const;
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT vtkm::Bounds GetBounds(vtkm::Id coordinate_system_index, TypeList, StorageList) const;
-  /// get the bounds of a coordinate system within a given DataSet
-  VTKM_CONT
-  vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
-                              vtkm::Id coordinate_system_index = 0) const;
-
-  template <typename TypeList>
-  VTKM_CONT vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
-                                        vtkm::Id coordinate_system_index,
-                                        TypeList) const;
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT vtkm::Bounds GetBlockBounds(const std::size_t& block_index,
-                                        vtkm::Id coordinate_system_index,
-                                        TypeList,
-                                        StorageList) const;
-  /// get the unified range of the same feild within all contained DataSet
-  VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name) const;
-
-  template <typename TypeList>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name,
-                                                                TypeList) const;
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const std::string& field_name,
-                                                                TypeList,
-                                                                StorageList) const;
-
-  VTKM_CONT
-  vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int& index) const;
-
-  template <typename TypeList>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int& index, TypeList) const;
-
-  template <typename TypeList, typename StorageList>
-  VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> GetGlobalRange(const int& index,
-                                                                TypeList,
-                                                                StorageList) const;
+  void AddBlocks(const std::vector<vtkm::cont::DataSet>& mblocks);
 
   VTKM_CONT
   void PrintSummary(std::ostream& stream) const;
 
+  //@{
+  /// API to support range-based for loops on blocks.
+  std::vector<DataSet>::iterator begin() noexcept { return this->Blocks.begin(); }
+  std::vector<DataSet>::iterator end() noexcept { return this->Blocks.end(); }
+  std::vector<DataSet>::const_iterator begin() const noexcept { return this->Blocks.begin(); }
+  std::vector<DataSet>::const_iterator end() const noexcept { return this->Blocks.end(); }
+  std::vector<DataSet>::const_iterator cbegin() const noexcept { return this->Blocks.begin(); }
+  std::vector<DataSet>::const_iterator cend() const noexcept { return this->Blocks.end(); }
+  //@}
 private:
-  std::vector<vtkm::cont::DataSet> blocks;
+  std::vector<vtkm::cont::DataSet> Blocks;
 };
 }
 } // namespace vtkm::cont

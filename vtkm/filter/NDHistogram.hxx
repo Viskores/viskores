@@ -48,7 +48,7 @@ vtkm::Range NDHistogram::GetDataRange(size_t fieldIdx)
 }
 
 template <typename Policy, typename Device>
-inline VTKM_CONT vtkm::filter::Result NDHistogram::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(
   const vtkm::cont::DataSet& inData,
   vtkm::filter::PolicyBase<Policy> vtkmNotUsed(policy),
   Device device)
@@ -84,8 +84,18 @@ inline VTKM_CONT vtkm::filter::Result NDHistogram::DoExecute(
   }
   outputData.AddField(vtkm::cont::Field("Frequency", vtkm::cont::Field::ASSOC_POINTS, freqs));
 
-  //return outputData;
-  return vtkm::filter::Result(outputData);
+  return outputData;
+}
+
+//-----------------------------------------------------------------------------
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool NDHistogram::DoMapField(vtkm::cont::DataSet&,
+                                              const vtkm::cont::ArrayHandle<T, StorageType>&,
+                                              const vtkm::filter::FieldMetadata&,
+                                              const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                                              DeviceAdapter)
+{
+  return false;
 }
 }
 }

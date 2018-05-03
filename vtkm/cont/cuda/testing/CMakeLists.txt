@@ -19,9 +19,12 @@
 ##============================================================================
 
 set(unit_tests
+  UnitTestCudaArrayHandle.cu
   UnitTestCudaArrayHandleFancy.cu
+  UnitTestCudaArrayHandleVirtualCoordinates.cu
   UnitTestCudaCellLocatorTwoLevelUniformGrid.cu
   UnitTestCudaComputeRange.cu
+  UnitTestCudaColorTable.cu
   UnitTestCudaDataSetExplicit.cu
   UnitTestCudaDataSetSingleType.cu
   UnitTestCudaDeviceAdapter.cu
@@ -29,6 +32,6 @@ set(unit_tests
   UnitTestCudaMath.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
   UnitTestCudaPointLocatorUniformGrid.cxx
-  UnitTestCudaVirtualObjectCache.cu
+  UnitTestCudaVirtualObjectHandle.cu
   )
-vtkm_unit_tests(CUDA SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests})

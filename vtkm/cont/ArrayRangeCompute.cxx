@@ -25,6 +25,11 @@ namespace vtkm
 namespace cont
 {
 
+void ThrowArrayRangeComputeFailed()
+{
+  throw vtkm::cont::ErrorExecution("Failed to run ArrayRangeComputation on any device.");
+}
+
 #define VTKM_ARRAY_RANGE_COMPUTE_IMPL_T(T, Storage)                                                \
   VTKM_CONT                                                                                        \
   vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(                                          \
@@ -70,6 +75,10 @@ VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Int8, 4, vtkm::cont::StorageTagBasic);
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::UInt8, 4, vtkm::cont::StorageTagBasic);
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float32, 4, vtkm::cont::StorageTagBasic);
 VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::Float64, 4, vtkm::cont::StorageTagBasic);
+
+VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC(vtkm::FloatDefault,
+                                  3,
+                                  vtkm::cont::ArrayHandleVirtualCoordinates::StorageTag);
 
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_T
 #undef VTKM_ARRAY_RANGE_COMPUTE_IMPL_VEC

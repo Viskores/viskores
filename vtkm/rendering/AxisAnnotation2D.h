@@ -50,7 +50,8 @@ protected:
 
   TextAnnotation::HorizontalAlignment AlignH;
   TextAnnotation::VerticalAlignment AlignV;
-  std::vector<TextAnnotation*> Labels;
+  std::vector<std::unique_ptr<TextAnnotation>> Labels;
+  //  std::vector<TextAnnotation*> Labels;
 
   std::vector<vtkm::Float64> PositionsMajor;
   std::vector<vtkm::Float64> ProportionsMajor;
@@ -64,6 +65,10 @@ public:
   AxisAnnotation2D();
 
   ~AxisAnnotation2D();
+
+  AxisAnnotation2D(const AxisAnnotation2D&) = delete;
+
+  AxisAnnotation2D& operator=(const AxisAnnotation2D&) = delete;
 
   void SetLogarithmic(bool l) { this->Logarithmic = l; }
 
@@ -127,7 +132,7 @@ public:
 
   void Render(const vtkm::rendering::Camera& camera,
               const vtkm::rendering::WorldAnnotator& worldAnnotator,
-              vtkm::rendering::Canvas& canvas) VTKM_OVERRIDE;
+              vtkm::rendering::Canvas& canvas) override;
 };
 }
 } //namespace vtkm::rendering

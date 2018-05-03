@@ -113,7 +113,7 @@ void TestStreamLineUniformGrid()
 {
   std::cout << "Testing StreamLineUniformGrid Filter" << std::endl;
 
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
   // Parameters for streamlines
   vtkm::Id numSeeds = 5;
@@ -156,8 +156,7 @@ void TestStreamLineUniformGrid()
   // Check output
   vtkm::cont::CellSetExplicit<> outCellSet;
   outDataSet.GetCellSet(0).CopyTo(outCellSet);
-  const vtkm::cont::DynamicArrayHandleCoordinateSystem& coordArray =
-    outDataSet.GetCoordinateSystem(0).GetData();
+  auto coordArray = outDataSet.GetCoordinateSystem(0).GetData();
 
   vtkm::Id numberOfCells = outCellSet.GetNumberOfCells();
   vtkm::Id numberOfPoints = coordArray.GetNumberOfValues();

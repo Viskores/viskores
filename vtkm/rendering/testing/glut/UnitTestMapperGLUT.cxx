@@ -20,11 +20,13 @@
 #include <vtkm/Bounds.h>
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 
+#include <GL/glew.h>
 #if defined(__APPLE__)
 #include <GLUT/glut.h>
 #else
 #include <GL/glut.h>
 #endif
+
 #include <string.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
@@ -37,7 +39,7 @@
 
 namespace
 {
-static const vtkm::Id WIDTH = 512, HEIGHT = 512;
+static constexpr vtkm::Id WIDTH = 512, HEIGHT = 512;
 static vtkm::Id windowID, which = 0, NUM_DATASETS = 4;
 static bool done = false;
 static bool batch = false;
@@ -56,7 +58,7 @@ static void keyboardCall(unsigned char key, int vtkmNotUsed(x), int vtkmNotUsed(
 static void displayCall()
 {
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("thermal");
+  vtkm::cont::ColorTable colorTable("inferno");
 
   typedef vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> M;
   typedef vtkm::rendering::CanvasGL C;

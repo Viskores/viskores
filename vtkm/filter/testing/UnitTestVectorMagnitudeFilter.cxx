@@ -47,26 +47,20 @@ void TestVectorMagnitude()
 
   vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "double_vec_pointvar", finput);
 
-  vtkm::filter::Result result;
   vtkm::filter::VectorMagnitude vm;
+  vm.SetActiveField("double_vec_pointvar");
+  auto result = vm.Execute(dataSet);
 
-  result = vm.Execute(dataSet, dataSet.GetField("double_vec_pointvar"));
-
-  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "magnitude", "Output field has wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                   "Output field has wrong association");
+  VTKM_TEST_ASSERT(result.HasField("magnitude", vtkm::cont::Field::ASSOC_POINTS),
+                   "Output field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Float64> resultArrayHandle;
-  bool valid = result.FieldAs(resultArrayHandle);
-  if (valid)
+  result.GetField("magnitude", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(resultArrayHandle);
+  for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
   {
-    for (vtkm::Id i = 0; i < resultArrayHandle.GetNumberOfValues(); ++i)
-    {
-      VTKM_TEST_ASSERT(test_equal(std::sqrt(3 * fvars[i] * fvars[i]),
-                                  resultArrayHandle.GetPortalConstControl().Get(i)),
-                       "Wrong result for Magnitude worklet");
-    }
+    VTKM_TEST_ASSERT(test_equal(std::sqrt(3 * fvars[i] * fvars[i]),
+                                resultArrayHandle.GetPortalConstControl().Get(i)),
+                     "Wrong result for Magnitude worklet");
   }
 }
 }

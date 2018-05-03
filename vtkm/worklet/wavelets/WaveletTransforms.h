@@ -59,7 +59,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension
                                 WholeArrayIn<ScalarAll>); // signal
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -226,7 +226,6 @@ public:
     else
     {
       sigPretendX = sigPretendY = sigPretendZ = 0; // so the compiler doesn't complain
-      vtkm::cont::ErrorInternal("Invalid extension mode for cubes!");
     }
 
     if (sigPretendX == sigPretendDimX || // decides to pad a zero
@@ -329,10 +328,6 @@ public:
       cube = 3;
       idx = inZ * dimX3 * dimY3 + inY * dimX3 + inX_local;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -407,10 +402,6 @@ public:
       cube = 3;
       idx = inZ * dimX3 * dimY3 + inY_local * dimX3 + inX;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -482,10 +473,6 @@ public:
       vtkm::Id inZ_local = inZ - dimZ1 - pretendDimZ2;
       cube = 3;
       idx = inZ_local * dimX3 * dimY3 + inY * dimX3 + inX;
-    }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
     }
   }
 
@@ -614,10 +601,6 @@ public:
       cube = 4; // ext4
       idx = inZ * dimX4 * dimY4 + inY * dimX4 + inX_local;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -734,10 +717,6 @@ public:
       cube = 4; // ext4
       idx = inZ * dimX4 * dimY4 + inY_local * dimX4 + inX;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -851,10 +830,6 @@ public:
       cube = 4; // ext4
       idx = inZ_local * dimX4 * dimY4 + inY * dimX4 + inX;
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid index!");
-    }
   }
 
 private:
@@ -876,9 +851,8 @@ public:
                                 WholeArrayIn<ScalarAll>,   // right extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _4 InputDomain;
+  using InputDomain = _4;
 
-  VTKM_EXEC_CONT
   ForwardTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                               vtkm::Id filter_len,
@@ -963,7 +937,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid cube index!");
       return -1;
     }
   }
@@ -980,8 +953,8 @@ public:
   {
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
-    vtkm::Id inputCube, inputIdx;
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    vtkm::Id inputCube = 0, inputIdx = 0;
+    using OutputValueType = typename OutputPortalType::ValueType;
 
     if (workX % 2 == 0) // calculate cA
     {
@@ -1032,9 +1005,8 @@ public:
                                 WholeArrayIn<ScalarAll>,   // right extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _4 InputDomain;
+  using InputDomain = _4;
 
-  VTKM_EXEC_CONT
   ForwardTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                             const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                             vtkm::Id filter_len,
@@ -1119,7 +1091,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid cube index!");
       return -1;
     }
   }
@@ -1136,8 +1107,8 @@ public:
   {
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
-    vtkm::Id inputCube, inputIdx;
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    vtkm::Id inputCube = 0, inputIdx = 0;
+    using OutputValueType = typename OutputPortalType::ValueType;
 
     if (workY % 2 == 0) // calculate cA
     {
@@ -1188,9 +1159,8 @@ public:
                                 WholeArrayIn<ScalarAll>,   // right extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _4 InputDomain;
+  using InputDomain = _4;
 
-  VTKM_EXEC_CONT
   ForwardTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                               vtkm::Id filter_len,
@@ -1275,7 +1245,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid cube index!");
       return -1;
     }
   }
@@ -1292,8 +1261,8 @@ public:
   {
     vtkm::Id workX, workY, workZ, output1D;
     Output1Dto3D(workIndex, workX, workY, workZ);
-    vtkm::Id inputCube, inputIdx;
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    vtkm::Id inputCube = 0, inputIdx = 0;
+    using OutputValueType = typename OutputPortalType::ValueType;
 
     if (workZ % 2 == 0) // calculate cA
     {
@@ -1359,10 +1328,9 @@ public:
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coefficients
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
-  typedef _6 InputDomain;
+  using InputDomain = _6;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
                               vtkm::Id fil_len,
@@ -1470,7 +1438,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -1491,7 +1458,7 @@ public:
   {
     vtkm::Id workX, workY, workZ;
     vtkm::Id k1, k2, xi;
-    vtkm::Id inputCube, inputIdx;
+    vtkm::Id inputCube = 0, inputIdx = 0;
     Output1Dto3D(workIdx, workX, workY, workZ);
 
     if (filterLen % 2 != 0) // odd filter
@@ -1593,10 +1560,9 @@ public:
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coefficients
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
-  typedef _6 InputDomain;
+  using InputDomain = _6;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                             const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
                             vtkm::Id fil_len,
@@ -1704,7 +1670,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -1725,7 +1690,7 @@ public:
   {
     vtkm::Id workX, workY, workZ;
     vtkm::Id k1, k2, yi;
-    vtkm::Id inputCube, inputIdx;
+    vtkm::Id inputCube = 0, inputIdx = 0;
     Output1Dto3D(workIdx, workX, workY, workZ);
 
     if (filterLen % 2 != 0) // odd filter
@@ -1827,10 +1792,9 @@ public:
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coefficients
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
-  typedef _6 InputDomain;
+  using InputDomain = _6;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                               const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
                               vtkm::Id fil_len,
@@ -1940,7 +1904,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -1961,7 +1924,7 @@ public:
   {
     vtkm::Id workX, workY, workZ;
     vtkm::Id k1, k2, zi;
-    vtkm::Id inputCube, inputIdx;
+    vtkm::Id inputCube = 0, inputIdx = 0;
     Output1Dto3D(workIdx, workX, workY, workZ);
 
     if (filterLen % 2 != 0) // odd filter
@@ -2156,10 +2119,6 @@ public:
         mat = 4; // ext4
         idx = inY * x4 + (inX - x1 - xa - x2 - x3 - xd);
       }
-      else
-      {
-        vtkm::cont::ErrorInternal("Invalid index!");
-      }
     }
     else // top-down mode
     {
@@ -2192,10 +2151,6 @@ public:
       {
         mat = 4; // ext4
         idx = (inY - y1 - ya - y2 - y3 - yd) * x4 + inX;
-      }
-      else
-      {
-        vtkm::cont::ErrorInternal("Invalid index!");
       }
     }
   }
@@ -2268,10 +2223,6 @@ public:
         mat = 3;
         idx = inY * dimX3 + (inX - dimX1 - pretendDimX2);
       }
-      else
-      {
-        vtkm::cont::ErrorInternal("Invalid index!");
-      }
     }
     else // top-down mode
     {
@@ -2289,10 +2240,6 @@ public:
       {
         mat = 3;
         idx = (inY - dimY1 - pretendDimY2) * dimX3 + inX;
-      }
-      else
-      {
-        vtkm::cont::ErrorInternal("Invalid index!");
       }
     }
   }
@@ -2312,7 +2259,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -2430,10 +2377,6 @@ public:
         sigPretendY++;
       }
     }
-    else
-    {
-      vtkm::cont::ErrorInternal("Invalid extension mode for matrices!");
-    }
 
     if (sigPretendX == sigPretendDimX || sigPretendY == sigPretendDimY)
     {
@@ -2463,10 +2406,9 @@ public:
                                 WholeArrayIn<ScalarAll>,   // right/bottom extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
-  typedef _4 InputDomain;
+  using InputDomain = _4;
 
   // Constructor
-  VTKM_EXEC_CONT
   ForwardTransform2D(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                      const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                      vtkm::Id filter_len,
@@ -2529,7 +2471,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -2546,8 +2487,8 @@ public:
   {
     vtkm::Id workX, workY, output1D;
     Output1Dto2D(workIndex, workX, workY);
-    vtkm::Id inputMatrix, inputIdx;
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    vtkm::Id inputMatrix = 0, inputIdx = 0;
+    using OutputValueType = typename OutputPortalType::ValueType;
 
     if (modeLR)
     {
@@ -2654,10 +2595,9 @@ public:
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coeffs
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
-  typedef _6 InputDomain;
+  using InputDomain = _6;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransform2D(const vtkm::cont::ArrayHandle<vtkm::Float64>& lo_fil,
                      const vtkm::cont::ArrayHandle<vtkm::Float64>& hi_fil,
                      vtkm::Id fil_len,
@@ -2759,7 +2699,6 @@ public:
     }
     else
     {
-      vtkm::cont::ErrorInternal("Invalid matrix index!");
       return -1;
     }
   }
@@ -2779,7 +2718,7 @@ public:
                             const vtkm::Id& workIdx) const
   {
     vtkm::Id workX, workY;
-    vtkm::Id k1, k2, xi, yi, inputMatrix, inputIdx;
+    vtkm::Id k1 = 0, k2 = 0, xi = 0, yi = 0, inputMatrix = 0, inputIdx = 0;
     Output1Dto2D(workIdx, workX, workY);
 
     // left-right, odd filter
@@ -2960,10 +2899,9 @@ public:
   typedef void ControlSignature(WholeArrayIn<ScalarAll>,   // sigIn
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
-  VTKM_EXEC_CONT
   ForwardTransform(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                    const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                    vtkm::Id filLen,
@@ -2990,7 +2928,7 @@ public:
                             OutputPortalType& coeffOut,
                             const vtkm::Id& workIndex) const
   {
-    typedef typename OutputPortalType::ValueType OutputValueType;
+    using OutputValueType = typename OutputPortalType::ValueType;
     if (workIndex < approxLen + detailLen)
     {
       if (workIndex % 2 == 0) // calculate cA
@@ -3045,7 +2983,7 @@ public:
                                                            // cA followed by cD
                                 WholeArrayOut<ScalarAll>); // output
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3069,42 +3007,49 @@ public:
   template <typename InputPortalType, typename OutputPortalType>
   VTKM_EXEC void operator()(const InputPortalType& coeffs,
                             OutputPortalType& sigOut,
-                            const vtkm::Id& workIndex) const
+                            vtkm::Id workIndex) const
   {
-    if (workIndex < cALen2) // valid calculation region
+    if (workIndex >= cALen2) // valid calculation region
     {
-      vtkm::Id xi;     // coeff indices
-      vtkm::Id k1, k2; // indices for low and high filter
-      VAL sum = 0.0;
-
-      if (workIndex % 2 != 0)
-      {
-        k1 = this->filterLen - 2;
-        k2 = this->filterLen - 1;
-      }
-      else
-      {
-        k1 = this->filterLen - 1;
-        k2 = this->filterLen - 2;
-      }
-
-      xi = (workIndex + 1) / 2;
-      while (k1 > -1) // k1 >= 0
-      {
-        sum += lowFilter.Get(k1) * MAKEVAL(coeffs.Get(xi++));
-        k1 -= 2;
-      }
-
-      xi = workIndex / 2;
-      while (k2 > -1) // k2 >= 0
-      {
-        sum += highFilter.Get(k2) * MAKEVAL(coeffs.Get(this->cALenExtended + xi++));
-        k2 -= 2;
-      }
-
-      sigOut.Set(workIndex, static_cast<typename OutputPortalType::ValueType>(sum));
+      return;
     }
+    vtkm::Id xi1 = (workIndex + 1) / 2;                     // coeff indices
+    vtkm::Id xi2 = this->cALenExtended + ((workIndex) / 2); // coeff indices
+    VAL sum = 0.0;
+
+    const bool odd = workIndex % 2 != 0;
+    if (odd)
+    {
+      vtkm::Id k1 = this->filterLen - 2;
+      vtkm::Id k2 = this->filterLen - 1;
+      for (; k1 >= 0; k1 -= 2, k2 -= 2)
+      {
+        sum += lowFilter.Get(k1) * MAKEVAL(coeffs.Get(xi1++));
+        sum += highFilter.Get(k2) * MAKEVAL(coeffs.Get(xi2++));
+      }
+      if (k2 >= 0)
+      {
+        sum += highFilter.Get(k2) * MAKEVAL(coeffs.Get(xi2++));
+      }
+    }
+    else //even
+    {
+      vtkm::Id k1 = this->filterLen - 1;
+      vtkm::Id k2 = this->filterLen - 2;
+      for (; k2 >= 0; k1 -= 2, k2 -= 2)
+      {
+        sum += lowFilter.Get(k1) * MAKEVAL(coeffs.Get(xi1++));
+        sum += highFilter.Get(k2) * MAKEVAL(coeffs.Get(xi2++));
+      }
+      if (k1 >= 0)
+      {
+        sum += lowFilter.Get(k1) * MAKEVAL(coeffs.Get(xi1++));
+      }
+    }
+
+    sigOut.Set(workIndex, static_cast<typename OutputPortalType::ValueType>(sum));
   }
+
 #undef MAKEVAL
 #undef VAL
 
@@ -3127,10 +3072,9 @@ public:
                                                            // cA followed by cD
                                 WholeArrayOut<ScalarAll>); // output
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
-  VTKM_EXEC_CONT
   InverseTransformEven(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
                        const vtkm::cont::ArrayHandle<vtkm::Float64>& hiFilter,
                        vtkm::Id filtL,
@@ -3217,7 +3161,7 @@ class ThresholdWorklet : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldInOut<ScalarAll>); // Thresholding in-place
   typedef void ExecutionSignature(_1);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   ThresholdWorklet(vtkm::Float64 t)
@@ -3246,7 +3190,7 @@ class SquaredDeviation : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
   typedef _2 ExecutionSignature(_1);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   template <typename ValueType>
@@ -3272,7 +3216,7 @@ class Differencer : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<ScalarAll>, FieldIn<ScalarAll>, FieldOut<ScalarAll>);
   typedef _3 ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename ValueType1, typename ValueType2>
   VTKM_EXEC ValueType1 operator()(const ValueType1& v1, const ValueType2& v2) const
@@ -3286,7 +3230,7 @@ class SquareWorklet : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
   typedef _2 ExecutionSignature(_1);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename ValueType>
   VTKM_EXEC ValueType operator()(const ValueType& v) const
@@ -3300,7 +3244,7 @@ class CopyWorklet : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(WholeArrayIn<ScalarAll>, WholeArrayOut<ScalarAll>);
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3325,7 +3269,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3353,7 +3297,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3381,7 +3325,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3409,7 +3353,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3437,7 +3381,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3465,7 +3409,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3493,7 +3437,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3521,7 +3465,7 @@ public:
   typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
   typedef void ExecutionSignature(_1, _2, WorkIndex);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3677,7 +3621,7 @@ private:
                                 // each becomes a wild card if negative
 };
 
-// Worklet: Copys a small rectangle to become a part of a big rectangle
+// Worklet: Copies a small rectangle to become a part of a big rectangle
 class RectangleCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -3731,7 +3675,7 @@ private:
   vtkm::Id outXStart, outYStart;
 };
 
-// Worklet: Copys a small cube to become a part of a big cube
+// Worklet: Copies a small cube to become a part of a big cube
 class CubeCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:

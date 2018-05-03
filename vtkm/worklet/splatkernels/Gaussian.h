@@ -24,7 +24,7 @@
 
 //
 // Gaussian kernel.
-// Compact support is achived by truncating the kernel beyond the cutoff radius
+// Compact support is achieved by truncating the kernel beyond the cutoff radius
 // This implementation uses a factor of 5 between smoothing length and cutoff
 //
 
@@ -58,7 +58,8 @@ struct Gaussian : public KernelBase<Gaussian<Dimensions>>
 
   //---------------------------------------------------------------------
   // return the multiplier between smoothing length and max cutoff distance
-  VTKM_CONSTEXPR double getDilationFactor() const { return 5.0; }
+  VTKM_EXEC_CONT
+  constexpr double getDilationFactor() const { return 5.0; }
 
   //---------------------------------------------------------------------
   // compute w(h) for the given distance

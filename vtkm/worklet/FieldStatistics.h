@@ -42,11 +42,11 @@ class FieldStatistics
 {
 public:
   // For moments readability
-  static const vtkm::Id FIRST = 0;
-  static const vtkm::Id SECOND = 1;
-  static const vtkm::Id THIRD = 2;
-  static const vtkm::Id FOURTH = 3;
-  static const vtkm::Id NUM_POWERS = 4;
+  static constexpr vtkm::Id FIRST = 0;
+  static constexpr vtkm::Id SECOND = 1;
+  static constexpr vtkm::Id THIRD = 2;
+  static constexpr vtkm::Id FOURTH = 3;
+  static constexpr vtkm::Id NUM_POWERS = 4;
 
   struct StatInfo
   {
@@ -71,7 +71,7 @@ public:
                                   FieldOut<> pow3Array,
                                   FieldOut<> pow4Array);
     typedef void ExecutionSignature(_1, _2, _3, _4, _5);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     vtkm::Id numPowers;
 
@@ -100,7 +100,7 @@ public:
   public:
     typedef void ControlSignature(FieldIn<> value, FieldOut<> diff);
     typedef _2 ExecutionSignature(_1);
-    typedef _1 InputDomain;
+    using InputDomain = _1;
 
     FieldType constant;
 
@@ -117,8 +117,8 @@ public:
   template <typename Storage>
   void Run(vtkm::cont::ArrayHandle<FieldType, Storage> fieldArray, StatInfo& statinfo)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithms;
-    typedef typename vtkm::cont::ArrayHandle<FieldType, Storage>::PortalConstControl FieldPortal;
+    using DeviceAlgorithms = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using FieldPortal = typename vtkm::cont::ArrayHandle<FieldType, Storage>::PortalConstControl;
 
     // Copy original data to array for sorting
     vtkm::cont::ArrayHandle<FieldType> tempArray;

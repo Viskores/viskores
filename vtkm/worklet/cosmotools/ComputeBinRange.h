@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_compute_bin_range_h
 #define vtkm_worklet_cosmotools_compute_bin_range_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -79,7 +78,7 @@ public:
   typedef void ControlSignature(FieldIn<IdType> leftNeighbor,    // (input) left neighbor id
                                 FieldOut<IdType> rightNeighbor); // (output) right neighbor id
   typedef _2 ExecutionSignature(_1);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id xNum;
 

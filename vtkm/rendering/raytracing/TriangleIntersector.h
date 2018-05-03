@@ -22,7 +22,6 @@
 #include <cstring>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCompositeVector.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Ray.h>
 #include <vtkm/rendering/raytracing/RayOperations.h>
@@ -38,8 +37,11 @@ namespace raytracing
 
 namespace
 {
-VTKM_EXEC_CONSTANT static vtkm::Int32 END_FLAG2 = -1000000000;
-VTKM_EXEC_CONSTANT static vtkm::Float32 EPSILON2 = 0.0001f;
+
+enum : vtkm::Int32
+{
+  END_FLAG2 = -1000000000
+};
 }
 
 template <typename TriIntersector>
@@ -99,6 +101,8 @@ public:
                               const Precision& originY,
                               const Precision& originZ) const
   {
+    const vtkm::Float32 EPSILON2 = 0.0001f;
+
     vtkm::Vec<Precision, 3> e1 = b - a;
     vtkm::Vec<Precision, 3> e2 = c - a;
 
@@ -722,6 +726,7 @@ public:
     {
       return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
     }
+    VTKM_EXEC
     inline vtkm::Float64 rcp(vtkm::Float64 f) const { return 1.0 / f; }
     VTKM_EXEC
     inline vtkm::Float64 rcp_safe(vtkm::Float64 f) const
@@ -774,7 +779,7 @@ public:
 
       vtkm::Int32 todo[64];
       vtkm::Int32 stackptr = 0;
-      vtkm::Int32 barrier = (vtkm::Int32)END_FLAG2;
+      vtkm::Int32 barrier = END_FLAG2;
       currentNode = 0;
 
       todo[stackptr] = barrier;
@@ -880,6 +885,7 @@ public:
     {
       return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
     }
+    VTKM_EXEC
     inline vtkm::Float32 rcp_safe(vtkm::Float32 f) const
     {
       return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
@@ -923,7 +929,7 @@ public:
 
       vtkm::Int32 todo[64];
       vtkm::Int32 stackptr = 0;
-      vtkm::Int32 barrier = (vtkm::Int32)END_FLAG2;
+      vtkm::Int32 barrier = END_FLAG2;
       currentNode = 0;
 
       todo[stackptr] = barrier;

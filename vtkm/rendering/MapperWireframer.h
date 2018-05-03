@@ -22,12 +22,12 @@
 
 #include <memory>
 
+#include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Canvas.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Mapper.h>
 
 namespace vtkm
@@ -42,26 +42,27 @@ public:
   MapperWireframer();
   virtual ~MapperWireframer();
 
-  virtual vtkm::rendering::Canvas* GetCanvas() const VTKM_OVERRIDE;
-  virtual void SetCanvas(vtkm::rendering::Canvas* canvas) VTKM_OVERRIDE;
+  virtual vtkm::rendering::Canvas* GetCanvas() const override;
+  virtual void SetCanvas(vtkm::rendering::Canvas* canvas) override;
 
   bool GetShowInternalZones() const;
   void SetShowInternalZones(bool showInternalZones);
+  void SetCompositeBackground(bool on);
 
   bool GetIsOverlay() const;
   void SetIsOverlay(bool isOverlay);
 
-  virtual void StartScene() VTKM_OVERRIDE;
-  virtual void EndScene() VTKM_OVERRIDE;
+  virtual void StartScene() override;
+  virtual void EndScene() override;
 
   virtual void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,
                            const vtkm::cont::Field& scalarField,
-                           const vtkm::rendering::ColorTable& colorTable,
+                           const vtkm::cont::ColorTable& colorTable,
                            const vtkm::rendering::Camera& camera,
-                           const vtkm::Range& scalarRange) VTKM_OVERRIDE;
+                           const vtkm::Range& scalarRange) override;
 
-  virtual vtkm::rendering::Mapper* NewCopy() const VTKM_OVERRIDE;
+  virtual vtkm::rendering::Mapper* NewCopy() const override;
 
 private:
   struct InternalsType;

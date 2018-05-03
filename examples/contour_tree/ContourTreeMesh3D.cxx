@@ -116,14 +116,13 @@ int main(int argc, char* argv[])
   vtkm::cont::DataSetFieldAdd dsf;
   dsf.AddPointField(inDataSet, "values", values);
 
-  // Output data set is pairs of saddle and peak vertex IDs
-  vtkm::filter::Result result;
-
   // Convert 3D mesh of values into contour tree, pairs of vertex ids
   vtkm::filter::ContourTreeMesh3D filter;
-  result = filter.Execute(inDataSet, std::string("values"));
+  filter.SetActiveField("values");
+  // Output data set is pairs of saddle and peak vertex IDs
+  vtkm::cont::DataSet output = filter.Execute(inDataSet);
 
-  vtkm::cont::Field resultField = result.GetField();
+  vtkm::cont::Field resultField = output.GetField("saddlePeak");
   vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
   resultField.GetData().CopyTo(saddlePeak);
 

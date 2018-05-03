@@ -28,47 +28,15 @@ namespace vtkm
 namespace filter
 {
 
-namespace detail
-{
-
-template <typename Device>
-struct CleanCompactPointArrayFunctor
-{
-  vtkm::cont::DataSet& OutDataSet;
-  std::string Name;
-  const vtkm::filter::CleanGrid* Self;
-
-  CleanCompactPointArrayFunctor(vtkm::cont::DataSet& outDataSet,
-                                const std::string& name,
-                                const vtkm::filter::CleanGrid* self)
-    : OutDataSet(outDataSet)
-    , Name(name)
-    , Self(self)
-  {
-  }
-
-  template <typename ArrayHandleType>
-  void operator()(const ArrayHandleType& coordSystemArray) const
-  {
-    VTKM_IS_ARRAY_HANDLE(ArrayHandleType);
-
-    vtkm::cont::ArrayHandle<typename ArrayHandleType::ValueType> outArray =
-      this->Self->MapPointField(coordSystemArray, Device());
-    this->OutDataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem(this->Name, outArray));
-  }
-};
-
-} // namespace detail
-
 inline VTKM_CONT CleanGrid::CleanGrid()
   : CompactPointFields(true)
 {
 }
 
 template <typename Policy, typename Device>
-inline VTKM_CONT vtkm::filter::Result CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
-                                                           vtkm::filter::PolicyBase<Policy> policy,
-                                                           Device)
+inline VTKM_CONT vtkm::cont::DataSet CleanGrid::DoExecute(const vtkm::cont::DataSet& inData,
+                                                          vtkm::filter::PolicyBase<Policy> policy,
+                                                          Device)
 {
   VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
@@ -128,9 +96,8 @@ inline VTKM_CONT vtkm::filter::Result CleanGrid::DoExecute(const vtkm::cont::Dat
 
     if (this->GetCompactPointFields())
     {
-      vtkm::filter::ApplyPolicy(coordSystem, policy, vtkm::filter::FilterTraits<CleanGrid>())
-        .CastAndCall(
-          detail::CleanCompactPointArrayFunctor<Device>(outData, coordSystem.GetName(), this));
+      auto outArray = this->MapPointField(coordSystem.GetData(), Device());
+      outData.AddCoordinateSystem(vtkm::cont::CoordinateSystem(coordSystem.GetName(), outArray));
     }
     else
     {
@@ -143,7 +110,7 @@ inline VTKM_CONT vtkm::filter::Result CleanGrid::DoExecute(const vtkm::cont::Dat
 
 template <typename ValueType, typename Storage, typename Policy, typename Device>
 inline VTKM_CONT bool CleanGrid::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<ValueType, Storage>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   vtkm::filter::PolicyBase<Policy>,
@@ -152,11 +119,11 @@ inline VTKM_CONT bool CleanGrid::DoMapField(
   if (this->GetCompactPointFields() && fieldMeta.IsPointField())
   {
     vtkm::cont::ArrayHandle<ValueType> compactedArray = this->MapPointField(input, Device());
-    result.GetDataSet().AddField(fieldMeta.AsField(compactedArray));
+    result.AddField(fieldMeta.AsField(compactedArray));
   }
   else
   {
-    result.GetDataSet().AddField(fieldMeta.AsField(input));
+    result.AddField(fieldMeta.AsField(input));
   }
 
   return true;

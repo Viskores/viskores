@@ -49,7 +49,8 @@ vtkm::cont::DataSet MakePointElevationTestDataSet()
   }
 
   vtkm::Id numCells = (dim - 1) * (dim - 1);
-  dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
+  dataSet.AddCoordinateSystem(
+    vtkm::cont::make_CoordinateSystem("coordinates", coordinates, vtkm::CopyFlag::On));
 
   vtkm::cont::CellSetExplicit<> cellSet("cells");
   cellSet.PrepareToAddCells(numCells, numCells * 4);
@@ -87,9 +88,7 @@ void TestPointElevation()
     pointElevationWorklet);
   dispatcher.Invoke(dataSet.GetCoordinateSystem(), result);
 
-  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> coordinates;
-  dataSet.GetCoordinateSystem().GetData().CopyTo(coordinates);
-
+  auto coordinates = dataSet.GetCoordinateSystem().GetData();
   for (vtkm::Id i = 0; i < result.GetNumberOfValues(); ++i)
   {
     VTKM_TEST_ASSERT(test_equal(coordinates.GetPortalConstControl().Get(i)[1] * 2.0,

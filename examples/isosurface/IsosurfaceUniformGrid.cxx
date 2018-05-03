@@ -245,14 +245,13 @@ int main(int argc, char* argv[])
   vtkm::filter::MarchingCubes filter;
   filter.SetGenerateNormals(true);
   filter.SetMergeDuplicatePoints(false);
-  filter.SetIsoValue(0, 0.5);
-  vtkm::filter::Result result = filter.Execute(dataSet, dataSet.GetField("nodevar"));
+  filter.SetIsoValue(0, 0.1);
+  filter.SetActiveField("nodevar");
+  filter.SetFieldsToPass({ "nodevar" });
 
-  filter.MapFieldOntoOutput(result, dataSet.GetField("nodevar"));
+  vtkm::cont::DataSet outputData = filter.Execute(dataSet);
 
   //need to extract vertices, normals, and scalars
-  vtkm::cont::DataSet& outputData = result.GetDataSet();
-
   using VertType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>;
   vtkm::cont::CoordinateSystem coords = outputData.GetCoordinateSystem();
 

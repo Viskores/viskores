@@ -110,7 +110,7 @@ public:
                         vtkm::Id startIdx,
                         DeviceTag)
   {
-    typedef vtkm::worklet::wavelets::CopyWorklet CopyType;
+    using CopyType = vtkm::worklet::wavelets::CopyWorklet;
     CopyType cp(startIdx);
     vtkm::worklet::DispatcherMapField<CopyType, DeviceTag> dispatcher(cp);
     dispatcher.Invoke(srcArray, dstArray);
@@ -120,7 +120,7 @@ public:
   template <typename ArrayType, typename DeviceTag>
   void DeviceAssignZero(ArrayType& array, vtkm::Id index, DeviceTag)
   {
-    typedef vtkm::worklet::wavelets::AssignZeroWorklet ZeroWorklet;
+    using ZeroWorklet = vtkm::worklet::wavelets::AssignZeroWorklet;
     ZeroWorklet worklet(index);
     vtkm::worklet::DispatcherMapField<ZeroWorklet, DeviceTag> dispatcher(worklet);
     dispatcher.Invoke(array);
@@ -134,7 +134,7 @@ public:
                              vtkm::Id rowIdx,
                              DeviceTag)
   {
-    typedef vtkm::worklet::wavelets::AssignZero2DWorklet AssignZero2DType;
+    using AssignZero2DType = vtkm::worklet::wavelets::AssignZero2DWorklet;
     AssignZero2DType zeroWorklet(dimX, dimY, -1, rowIdx);
     vtkm::worklet::DispatcherMapField<AssignZero2DType, DeviceTag> dispatcher(zeroWorklet);
     dispatcher.Invoke(array);
@@ -148,7 +148,7 @@ public:
                                 vtkm::Id colIdx,
                                 DeviceTag)
   {
-    typedef vtkm::worklet::wavelets::AssignZero2DWorklet AssignZero2DType;
+    using AssignZero2DType = vtkm::worklet::wavelets::AssignZero2DWorklet;
     AssignZero2DType zeroWorklet(dimX, dimY, colIdx, -1);
     vtkm::worklet::DispatcherMapField<AssignZero2DType, DeviceTag> dispatcher(zeroWorklet);
     dispatcher.Invoke(array);
@@ -163,7 +163,7 @@ public:
                                 vtkm::Id zeroX, // X idx to set zero
                                 DeviceTag)
   {
-    typedef vtkm::worklet::wavelets::AssignZero3DWorklet AssignZero3DType;
+    using AssignZero3DType = vtkm::worklet::wavelets::AssignZero3DWorklet;
     AssignZero3DType zeroWorklet(dimX, dimY, dimZ, zeroX, -1, -1);
     vtkm::worklet::DispatcherMapField<AssignZero3DType, DeviceTag> dispatcher(zeroWorklet);
     dispatcher.Invoke(array);
@@ -178,7 +178,7 @@ public:
                                 vtkm::Id zeroY, // Y idx to set zero
                                 DeviceTag)
   {
-    typedef vtkm::worklet::wavelets::AssignZero3DWorklet AssignZero3DType;
+    using AssignZero3DType = vtkm::worklet::wavelets::AssignZero3DWorklet;
     AssignZero3DType zeroWorklet(dimX, dimY, dimZ, -1, zeroY, -1);
     vtkm::worklet::DispatcherMapField<AssignZero3DType, DeviceTag> dispatcher(zeroWorklet);
     dispatcher.Invoke(array);
@@ -193,7 +193,7 @@ public:
                                 vtkm::Id zeroZ, // Y idx to set zero
                                 DeviceTag)
   {
-    typedef vtkm::worklet::wavelets::AssignZero3DWorklet AssignZero3DType;
+    using AssignZero3DType = vtkm::worklet::wavelets::AssignZero3DWorklet;
     AssignZero3DType zeroWorklet(dimX, dimY, dimZ, -1, -1, zeroZ);
     vtkm::worklet::DispatcherMapField<AssignZero3DType, DeviceTag> dispatcher(zeroWorklet);
     dispatcher.Invoke(array);
@@ -280,7 +280,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Float64> squaredDeviation;
 
     // Use a worklet
-    typedef vtkm::worklet::wavelets::SquaredDeviation SDWorklet;
+    using SDWorklet = vtkm::worklet::wavelets::SquaredDeviation;
     SDWorklet sdw(mean);
     vtkm::worklet::DispatcherMapField<SDWorklet, DeviceTag> dispatcher(sdw);
     dispatcher.Invoke(array, squaredDeviation);
@@ -303,7 +303,7 @@ public:
                              vtkm::Id startY,
                              DeviceTag)
   {
-    typedef vtkm::worklet::wavelets::RectangleCopyTo CopyToWorklet;
+    using CopyToWorklet = vtkm::worklet::wavelets::RectangleCopyTo;
     CopyToWorklet cp(smallX, smallY, bigX, bigY, startX, startY);
     vtkm::worklet::DispatcherMapField<CopyToWorklet, DeviceTag> dispatcher(cp);
     dispatcher.Invoke(smallRect, bigRect);
@@ -324,7 +324,7 @@ public:
                         vtkm::Id startZ,
                         DeviceTag)
   {
-    typedef vtkm::worklet::wavelets::CubeCopyTo CopyToWorklet;
+    using CopyToWorklet = vtkm::worklet::wavelets::CubeCopyTo;
     CopyToWorklet cp(smallX, smallY, smallZ, bigX, bigY, bigZ, startX, startY, startZ);
     vtkm::worklet::DispatcherMapField<CopyToWorklet, DeviceTag> dispatcher(cp);
     dispatcher.Invoke(smallCube, bigCube);

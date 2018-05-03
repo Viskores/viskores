@@ -23,7 +23,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
-
+#include <vtkm/cont/ErrorFilterExecution.h>
 #include <vtkm/worklet/DispatcherMapTopology.h>
 
 namespace vtkm
@@ -60,12 +60,13 @@ inline VTKM_CONT ClipWithField::ClipWithField()
   : vtkm::filter::FilterDataSetWithField<ClipWithField>()
   , ClipValue(0)
   , Worklet()
+  , Invert(false)
 {
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result ClipWithField::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet ClipWithField::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -76,9 +77,7 @@ inline VTKM_CONT vtkm::filter::Result ClipWithField::DoExecute(
 
   if (fieldMeta.IsPointField() == false)
   {
-    //todo: we need to mark this as a failure of input, not a failure
-    //of the algorithm
-    return vtkm::filter::Result();
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
   //get the cells and coordinates of the dataset
@@ -87,28 +86,24 @@ inline VTKM_CONT vtkm::filter::Result ClipWithField::DoExecute(
   const vtkm::cont::CoordinateSystem& inputCoords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  vtkm::cont::CellSetExplicit<> outputCellSet =
-    this->Worklet.Run(vtkm::filter::ApplyPolicy(cells, policy), field, this->ClipValue, device);
+  vtkm::cont::CellSetExplicit<> outputCellSet = this->Worklet.Run(
+    vtkm::filter::ApplyPolicy(cells, policy), field, this->ClipValue, this->Invert, device);
 
   //create the output data
   vtkm::cont::DataSet output;
   output.AddCellSet(outputCellSet);
 
   // Compute the new boundary points and add them to the output:
-  vtkm::cont::DynamicArrayHandle outputCoordsArray;
-  PointMapHelper<DeviceAdapter> pointMapper(this->Worklet, outputCoordsArray);
-  vtkm::filter::ApplyPolicy(inputCoords, policy).CastAndCall(pointMapper);
+  auto outputCoordsArray = this->Worklet.ProcessPointField(inputCoords.GetData(), device);
   vtkm::cont::CoordinateSystem outputCoords(inputCoords.GetName(), outputCoordsArray);
   output.AddCoordinateSystem(outputCoords);
-  vtkm::filter::Result result(output);
-
-  return result;
+  return output;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ClipWithField::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -130,8 +125,7 @@ inline VTKM_CONT bool ClipWithField::DoMapField(
   }
 
   //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField(fieldMeta.AsField(output));
-
+  result.AddField(fieldMeta.AsField(output));
   return true;
 }
 }

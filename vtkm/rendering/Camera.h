@@ -345,8 +345,19 @@ public:
   }
   VTKM_CONT
   void Pan(vtkm::Vec<vtkm::Float32, 2> direction) { this->Pan(direction[0], direction[1]); }
+
   VTKM_CONT
   void Pan(vtkm::Vec<vtkm::Float64, 2> direction) { this->Pan(direction[0], direction[1]); }
+
+  VTKM_CONT
+  vtkm::Vec<vtkm::Float32, 2> GetPan() const
+  {
+    vtkm::Vec<vtkm::Float32, 2> pan;
+    pan[0] = this->Camera3D.XPan;
+    pan[1] = this->Camera3D.YPan;
+    return pan;
+  }
+
 
   /// \brief Zooms the camera in or out
   ///
@@ -358,6 +369,9 @@ public:
 
   VTKM_CONT
   void Zoom(vtkm::Float64 zoom) { this->Zoom(static_cast<vtkm::Float32>(zoom)); }
+
+  VTKM_CONT
+  vtkm::Float32 GetZoom() const { return this->Camera3D.Zoom; }
 
   /// \brief Moves the camera as if a point was dragged along a sphere.
   ///
@@ -424,7 +438,7 @@ public:
   /// \brief Rotate the camera about the view up vector centered at the focal point.
   ///
   /// Note that the view up vector is whatever was set via SetViewUp, and is
-  /// not necesarily perpendicular to the direction of projection. The angle is
+  /// not necessarily perpendicular to the direction of projection. The angle is
   /// given in degrees.
   ///
   /// Azimuth only makes sense for 3D cameras, so the camera mode will be set

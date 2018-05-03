@@ -45,9 +45,9 @@ namespace exec
 namespace
 {
 #define VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(pointIndex, weight0, weight1, weight2)                 \
-  parametricDerivative[0] += field[pointIndex] * weight0;                                          \
-  parametricDerivative[1] += field[pointIndex] * weight1;                                          \
-  parametricDerivative[2] += field[pointIndex] * weight2
+  parametricDerivative[0] += field[pointIndex] * (weight0);                                        \
+  parametricDerivative[1] += field[pointIndex] * (weight1);                                        \
+  parametricDerivative[2] += field[pointIndex] * (weight2)
 
 // Find the derivative of a field in parametric space. That is, find the
 // vector [ds/du, ds/dv, ds/dw].
@@ -64,14 +64,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> ParametricDerivativ
   GradientType rc = GradientType(FieldType(1)) - pc;
 
   GradientType parametricDerivative(FieldType(0));
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(0, -rc[1] * rc[2], -rc[0] * rc[2], -rc[0] * rc[1]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(1, rc[1] * rc[2], -pc[0] * rc[2], -pc[0] * rc[1]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(2, pc[1] * rc[2], pc[0] * rc[2], -pc[0] * pc[1]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(3, -pc[1] * rc[2], rc[0] * rc[2], -rc[0] * pc[1]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(4, -rc[1] * pc[2], -rc[0] * pc[2], rc[0] * rc[1]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(5, rc[1] * pc[2], -pc[0] * pc[2], pc[0] * rc[1]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(6, pc[1] * pc[2], pc[0] * pc[2], pc[0] * pc[1]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D(7, -pc[1] * pc[2], rc[0] * pc[2], rc[0] * pc[1]);
+  VTKM_DERIVATIVE_WEIGHTS_HEXAHEDRON(pc, rc, VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D);
   return parametricDerivative;
 }
 
@@ -81,22 +74,16 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> ParametricDerivativ
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagWedge)
 {
-#if 0
-  // This is not working. Just leverage the hexahedron code that is working.
   using FieldType = typename FieldVecType::ComponentType;
-  using GradientType = vtkm::Vec<FieldType,3>;
+  using GradientType = vtkm::Vec<FieldType, 3>;
 
   GradientType pc(pcoords);
-  GradientType rc = GradientType(1) - pc;
+  GradientType rc = GradientType(FieldType(1)) - pc;
 
-  GradientType parametricDerivative(0);
+  GradientType parametricDerivative(FieldType(0));
   VTKM_DERIVATIVE_WEIGHTS_WEDGE(pc, rc, VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D);
 
   return parametricDerivative;
-#else
-  return ParametricDerivative(
-    vtkm::exec::internal::PermuteWedgeToHex(field), pcoords, vtkm::CellShapeTagHexahedron());
-#endif
 }
 
 template <typename FieldVecType, typename ParametricCoordType>
@@ -105,29 +92,23 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> ParametricDerivativ
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
   vtkm::CellShapeTagPyramid)
 {
-#if 0
-  // This is not working. Just leverage the hexahedron code that is working.
   using FieldType = typename FieldVecType::ComponentType;
-  using GradientType = vtkm::Vec<FieldType,3>;
+  using GradientType = vtkm::Vec<FieldType, 3>;
 
   GradientType pc(pcoords);
-  GradientType rc = GradientType(1) - pc;
+  GradientType rc = GradientType(FieldType(1)) - pc;
 
-  GradientType parametricDerivative(0);
+  GradientType parametricDerivative(FieldType(0));
   VTKM_DERIVATIVE_WEIGHTS_PYRAMID(pc, rc, VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D);
 
   return parametricDerivative;
-#else
-  return ParametricDerivative(
-    vtkm::exec::internal::PermutePyramidToHex(field), pcoords, vtkm::CellShapeTagHexahedron());
-#endif
 }
 
 #undef VTKM_ACCUM_PARAMETRIC_DERIVATIVE_3D
 
 #define VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(pointIndex, weight0, weight1)                          \
-  parametricDerivative[0] += field[pointIndex] * weight0;                                          \
-  parametricDerivative[1] += field[pointIndex] * weight1
+  parametricDerivative[0] += field[pointIndex] * (weight0);                                        \
+  parametricDerivative[1] += field[pointIndex] * (weight1)
 
 template <typename FieldVecType, typename ParametricCoordType>
 VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 2> ParametricDerivative(
@@ -142,10 +123,7 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 2> ParametricDerivativ
   GradientType rc = GradientType(FieldType(1)) - pc;
 
   GradientType parametricDerivative(FieldType(0));
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(0, -rc[1], -rc[0]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(1, rc[1], -pc[0]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(2, pc[1], pc[0]);
-  VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D(3, -pc[1], rc[0]);
+  VTKM_DERIVATIVE_WEIGHTS_QUAD(pc, rc, VTKM_ACCUM_PARAMETRIC_DERIVATIVE_2D);
 
   return parametricDerivative;
 }
@@ -203,26 +181,26 @@ ParametricDerivative(const FieldVecType &field,
 namespace detail
 {
 
-template <typename FieldVecType,
+template <typename FieldType,
+          int NumPoints,
           typename WorldCoordType,
           typename ParametricCoordType,
           typename CellShapeTag>
-VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor3DCell(
-  const FieldVecType& field,
+VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor3DCell(
+  const vtkm::Vec<FieldType, NumPoints>& field,
   const WorldCoordType& wCoords,
   const vtkm::Vec<ParametricCoordType, 3>& pcoords,
-  CellShapeTag)
+  CellShapeTag tag)
 {
-  using FieldType = typename FieldVecType::ComponentType;
   using GradientType = vtkm::Vec<FieldType, 3>;
 
   // For reasons that should become apparent in a moment, we actually want
   // the transpose of the Jacobian.
   vtkm::Matrix<FieldType, 3, 3> jacobianTranspose;
-  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, jacobianTranspose, CellShapeTag());
+  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, jacobianTranspose, tag);
   jacobianTranspose = vtkm::MatrixTranspose(jacobianTranspose);
 
-  GradientType parametricDerivative = ParametricDerivative(field, pcoords, CellShapeTag());
+  GradientType parametricDerivative = ParametricDerivative(field, pcoords, tag);
 
   // If we write out the matrices below, it should become clear that the
   // Jacobian transpose times the field derivative in world space equals
@@ -241,6 +219,44 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivativeFor3D
 
   bool valid; // Ignored.
   return vtkm::SolveLinearSystem(jacobianTranspose, parametricDerivative, valid);
+}
+
+template <typename T,
+          int N,
+          int NumPoints,
+          typename WorldCoordType,
+          typename ParametricCoordType,
+          typename CellShapeTag>
+VTKM_EXEC vtkm::Vec<vtkm::Vec<T, N>, 3> CellDerivativeFor3DCell(
+  const vtkm::Vec<vtkm::Vec<T, N>, NumPoints>& field,
+  const WorldCoordType& wCoords,
+  const vtkm::Vec<ParametricCoordType, 3>& pcoords,
+  CellShapeTag tag)
+{
+  //We have been given a vector field so we need to solve for each
+  //component of the vector. For explanation of the logic used see the
+  //scalar version of CellDerivativeFor3DCell.
+  vtkm::Matrix<T, 3, 3> perComponentJacobianTranspose;
+  vtkm::exec::JacobianFor3DCell(wCoords, pcoords, perComponentJacobianTranspose, tag);
+  perComponentJacobianTranspose = vtkm::MatrixTranspose(perComponentJacobianTranspose);
+
+  bool valid; // Ignored.
+  vtkm::Vec<vtkm::Vec<T, N>, 3> result(vtkm::Vec<T, N>(0.0f));
+  vtkm::Vec<T, NumPoints> perPoint;
+  for (vtkm::IdComponent i = 0; i < N; ++i)
+  {
+    for (vtkm::IdComponent c = 0; c < NumPoints; ++c)
+    {
+      perPoint[c] = field[c][i];
+    }
+    vtkm::Vec<T, 3> p = ParametricDerivative(perPoint, pcoords, tag);
+    vtkm::Vec<T, 3> grad = vtkm::SolveLinearSystem(perComponentJacobianTranspose, p, valid);
+
+    result[0][i] += grad[0];
+    result[1][i] += grad[1];
+    result[2][i] += grad[2];
+  }
+  return result;
 }
 
 template <typename FieldType, typename LUType, typename ParametricCoordType, typename CellShapeTag>
@@ -277,7 +293,7 @@ VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeFor2DCellFinish(
   using FieldTraits = vtkm::VecTraits<FieldType>;
   using FieldComponentType = typename FieldTraits::ComponentType;
 
-  vtkm::Vec<FieldType, 3> gradient;
+  vtkm::Vec<FieldType, 3> gradient(vtkm::TypeTraits<FieldType>::ZeroInitialization());
 
   for (vtkm::IdComponent fieldComponent = 0;
        fieldComponent < FieldTraits::GetNumberOfComponents(field[0]);
@@ -484,7 +500,7 @@ VTKM_EXEC vtkm::Vec<FieldType, 3> CellDerivativeLineImpl(
   using FieldComponentType = typename FieldTraits::ComponentType;
   using GradientType = vtkm::Vec<FieldType, 3>;
 
-  GradientType gradient;
+  GradientType gradient(vtkm::TypeTraits<FieldType>::ZeroInitialization());
   for (vtkm::IdComponent fieldComponent = 0;
        fieldComponent < FieldTraits::GetNumberOfComponents(deltaField);
        fieldComponent++)
@@ -571,7 +587,7 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivativeFinish(
   using FieldTraits = vtkm::VecTraits<ValueType>;
   using FieldComponentType = typename FieldTraits::ComponentType;
 
-  vtkm::Vec<ValueType, 3> gradient;
+  vtkm::Vec<ValueType, 3> gradient(vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   for (vtkm::IdComponent fieldComponent = 0;
        fieldComponent < FieldTraits::GetNumberOfComponents(field[0]);
@@ -872,7 +888,7 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivativeFinish(
   using FieldTraits = vtkm::VecTraits<ValueType>;
   using FieldComponentType = typename FieldTraits::ComponentType;
 
-  vtkm::Vec<ValueType, 3> gradient;
+  vtkm::Vec<ValueType, 3> gradient(vtkm::TypeTraits<ValueType>::ZeroInitialization());
 
   for (vtkm::IdComponent fieldComponent = 0;
        fieldComponent < FieldTraits::GetNumberOfComponents(field[0]);

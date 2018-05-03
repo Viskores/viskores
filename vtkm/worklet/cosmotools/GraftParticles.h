@@ -61,8 +61,8 @@
 #ifndef vtkm_worklet_cosmotools_graft_particle_h
 #define vtkm_worklet_cosmotools_graft_particle_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
+#include <vtkm/worklet/cosmotools/TagTypes.h>
 
 namespace vtkm
 {
@@ -76,22 +76,18 @@ template <typename T>
 class GraftParticles : public vtkm::worklet::WorkletMapField
 {
 public:
-  struct TagType : vtkm::ListTagBase<T>
-  {
-  };
-
   typedef void ControlSignature(
-    FieldIn<IdType> index,            // (input) index into particles
-    FieldIn<IdType> partId,           // (input) particle id sorted by bin
-    FieldIn<IdType> binId,            // (input) bin id sorted by bin
-    FieldIn<vtkm::UInt32> activeFlag, // (input) flag indicates which of neighbor ranges are used
-    WholeArrayIn<IdType> partIdArray, // (input) particle id sorted by bin entire array
-    WholeArrayIn<TagType> location,   // (input) location of particles
-    WholeArrayIn<IdType> firstParticleId, // (input) first particle index vector
-    WholeArrayIn<IdType> lastParticleId,  // (input) last particle index vector
+    FieldIn<IdType> index,             // (input) index into particles
+    FieldIn<IdType> partId,            // (input) particle id sorted by bin
+    FieldIn<IdType> binId,             // (input) bin id sorted by bin
+    FieldIn<UInt32TagType> activeFlag, // (input) flag indicates which of neighbor ranges are used
+    WholeArrayIn<IdType> partIdArray,  // (input) particle id sorted by bin entire array
+    WholeArrayIn<Vec3TagType<T>> location, // (input) location of particles
+    WholeArrayIn<IdType> firstParticleId,  // (input) first particle index vector
+    WholeArrayIn<IdType> lastParticleId,   // (input) last particle index vector
     WholeArrayOut<IdType> haloId);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id xNum, yNum, zNum;
   vtkm::Id NUM_NEIGHBORS;

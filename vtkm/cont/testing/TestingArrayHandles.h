@@ -132,7 +132,7 @@ struct TestingArrayHandles
   };
 
 private:
-  static const vtkm::Id ARRAY_SIZE = 100;
+  static constexpr vtkm::Id ARRAY_SIZE = 100;
 
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
 
@@ -166,7 +166,7 @@ private:
     }
   };
 
-  struct VerifyUserAllocatedHandle
+  struct VerifyUserOwnedMemory
   {
     template <typename T>
     VTKM_CONT void operator()(T) const
@@ -220,42 +220,6 @@ private:
         //can just make sure the allocation didn't throw an exception
       }
 
-      std::cout << "Check CopyInto from control array" << std::endl;
-      { //Release the execution resources so that data is only
-        //in the control environment
-        arrayHandle.ReleaseResourcesExecution();
-
-        //Copy data from handle into iterator
-        T array[ARRAY_SIZE];
-        arrayHandle.CopyInto(array, DeviceAdapterTag());
-        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
-      }
-
-      std::cout << "Check CopyInto from execution array" << std::endl;
-      { //Copy the data to the execution environment
-        vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
-
-        //Copy data from handle into iterator
-        T array[ARRAY_SIZE];
-        result.CopyInto(array, DeviceAdapterTag());
-        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
-      }
-
-      if (!std::is_same<DeviceAdapterTag, vtkm::cont::DeviceAdapterTagSerial>::value)
-      {
-        std::cout << "Check using different device adapter" << std::endl;
-        //Copy the data to the execution environment
-        vtkm::cont::ArrayHandle<T> result;
-        DispatcherPassThrough().Invoke(arrayHandle, result);
-
-        //CopyInto allows you to copy the data even
-        //if you request it from a different device adapter
-        T array[ARRAY_SIZE];
-        result.CopyInto(array, vtkm::cont::DeviceAdapterTagSerial());
-        array_handle_testing::CheckValues(array, array + ARRAY_SIZE, T());
-      }
-
       { //as output with a length larger than the memory provided by the user
         //this should fail
         bool gotException = false;
@@ -273,6 +237,85 @@ private:
         VTKM_TEST_ASSERT(gotException,
                          "PrepareForOutput should fail when asked to "
                          "re-allocate user provided memory.");
+      }
+    }
+  };
+
+
+  struct VerifyUserTransferredMemory
+  {
+    template <typename T>
+    VTKM_CONT void operator()(T) const
+    {
+      T* buffer = new T[ARRAY_SIZE];
+      for (vtkm::Id index = 0; index < ARRAY_SIZE; index++)
+      {
+        buffer[static_cast<std::size_t>(index)] = TestValue(index, T());
+      }
+
+      auto user_free_function = [](void* ptr) { delete[] static_cast<T*>(ptr); };
+      vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic> storage(
+        buffer, ARRAY_SIZE, user_free_function);
+      vtkm::cont::ArrayHandle<T> arrayHandle(std::move(storage));
+
+      VTKM_TEST_ASSERT(arrayHandle.GetNumberOfValues() == ARRAY_SIZE,
+                       "ArrayHandle has wrong number of entries.");
+
+      std::cout << "Check array with user transferred memory." << std::endl;
+      array_handle_testing::CheckArray(arrayHandle);
+
+      std::cout << "Check out execution array behavior." << std::endl;
+      { //as input
+        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::PortalConst
+          executionPortal;
+        executionPortal = arrayHandle.PrepareForInput(DeviceAdapterTag());
+
+        //use a worklet to verify the input transfer worked properly
+        vtkm::cont::ArrayHandle<T> result;
+        DispatcherPassThrough().Invoke(arrayHandle, result);
+        array_handle_testing::CheckArray(result);
+      }
+
+      std::cout << "Check out inplace." << std::endl;
+      { //as inplace
+        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
+          executionPortal;
+        executionPortal = arrayHandle.PrepareForInPlace(DeviceAdapterTag());
+
+        //use a worklet to verify the inplace transfer worked properly
+        vtkm::cont::ArrayHandle<T> result;
+        DispatcherPassThrough().Invoke(arrayHandle, result);
+        array_handle_testing::CheckArray(result);
+      }
+
+      std::cout << "Check out output." << std::endl;
+      { //as output with same length as user provided. This should work
+        //as no new memory needs to be allocated
+        typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<DeviceAdapterTag>::Portal
+          executionPortal;
+        executionPortal = arrayHandle.PrepareForOutput(ARRAY_SIZE, DeviceAdapterTag());
+
+        //we can't verify output contents as those aren't fetched, we
+        //can just make sure the allocation didn't throw an exception
+      }
+
+      { //as the memory ownership has been transferred to VTK-m this should
+        //allow VTK-m to free the memory and allocate a new block
+        bool gotException = false;
+        try
+        {
+          //you should not be able to allocate a size larger than the
+          //user provided and get the results
+          arrayHandle.PrepareForOutput(ARRAY_SIZE * 2, DeviceAdapterTag());
+          arrayHandle.GetPortalControl();
+        }
+        catch (vtkm::cont::Error&)
+        {
+          gotException = true;
+        }
+        VTKM_TEST_ASSERT(!gotException,
+                         "PrepareForOutput shouldn't fail when asked to "
+                         "re-allocate user transferred memory.");
       }
     }
   };
@@ -405,7 +448,8 @@ private:
     void operator()() const
     {
       vtkm::testing::Testing::TryTypes(VerifyEmptyArrays());
-      vtkm::testing::Testing::TryTypes(VerifyUserAllocatedHandle());
+      vtkm::testing::Testing::TryTypes(VerifyUserOwnedMemory());
+      vtkm::testing::Testing::TryTypes(VerifyUserTransferredMemory());
       vtkm::testing::Testing::TryTypes(VerifyVTKMAllocatedHandle());
       vtkm::testing::Testing::TryTypes(VerifyEqualityOperators());
     }

@@ -35,34 +35,43 @@ namespace internal
 struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
 {
   using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
+  using DepthBufferType = vtkm::rendering::Canvas::DepthBufferType;
   using FontTextureType = vtkm::rendering::Canvas::FontTextureType;
 
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, ExecObject, WholeArrayInOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  typedef void ControlSignature(FieldIn<>,
+                                FieldIn<>,
+                                ExecObject,
+                                WholeArrayInOut<>,
+                                WholeArrayInOut<>);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
   VTKM_CONT
   RenderBitmapFont() {}
 
   VTKM_CONT
-  RenderBitmapFont(const vtkm::Vec<vtkm::Float32, 4>& color, vtkm::Id width, vtkm::Id height)
+  RenderBitmapFont(const vtkm::Vec<vtkm::Float32, 4>& color,
+                   vtkm::Id width,
+                   vtkm::Id height,
+                   vtkm::Float32 depth)
     : Color(color)
     , Width(width)
     , Height(height)
+    , Depth(depth)
   {
   }
 
-  template <typename ColorBufferPortal, typename FontTexture>
+  template <typename ColorBufferPortal, typename FontTexture, typename DepthBufferPortal>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 4>& screenCoords,
                             const vtkm::Vec<vtkm::Float32, 4>& textureCoords,
                             const FontTexture& fontTexture,
-                            ColorBufferPortal& colorBuffer) const
+                            ColorBufferPortal& colorBuffer,
+                            DepthBufferPortal& depthBuffer) const
   {
     vtkm::Float32 x0 = Clamp(screenCoords[0], 0.0f, static_cast<vtkm::Float32>(Width - 1));
     vtkm::Float32 x1 = Clamp(screenCoords[2], 0.0f, static_cast<vtkm::Float32>(Width - 1));
     vtkm::Float32 y0 = Clamp(screenCoords[1], 0.0f, static_cast<vtkm::Float32>(Height - 1));
     vtkm::Float32 y1 = Clamp(screenCoords[3], 0.0f, static_cast<vtkm::Float32>(Height - 1));
-
     // For crisp text rendering, we sample the font texture at points smaller than the pixel
     // sizes. Here we sample at increments of 0.25f, and scale the reported intensities accordingly
     vtkm::Float32 dx = x1 - x0, dy = y1 - y0;
@@ -75,28 +84,43 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
         vtkm::Float32 u = vtkm::Lerp(textureCoords[0], textureCoords[2], tu);
         vtkm::Float32 v = vtkm::Lerp(textureCoords[1], textureCoords[3], tv);
         vtkm::Float32 intensity = fontTexture.GetColor(u, v)[0] * 0.25f;
-        Plot(x, y, intensity, colorBuffer);
+        Plot(x, y, intensity, colorBuffer, depthBuffer);
       }
     }
   }
 
-  template <typename ColorBufferPortal>
-  void Plot(vtkm::Float32 x,
-            vtkm::Float32 y,
-            vtkm::Float32 intensity,
-            ColorBufferPortal& colorBuffer) const
+  template <typename ColorBufferPortal, typename DepthBufferPortal>
+  VTKM_EXEC void Plot(vtkm::Float32 x,
+                      vtkm::Float32 y,
+                      vtkm::Float32 intensity,
+                      ColorBufferPortal& colorBuffer,
+                      DepthBufferPortal& depthBuffer) const
   {
     vtkm::Id index =
       static_cast<vtkm::Id>(vtkm::Round(y)) * Width + static_cast<vtkm::Id>(vtkm::Round(x));
     vtkm::Vec<vtkm::Float32, 4> srcColor = colorBuffer.Get(index);
+    vtkm::Float32 currentDepth = depthBuffer.Get(index);
+    bool swap = Depth > currentDepth;
+
     intensity = intensity * Color[3];
-    vtkm::Float32 inverseIntensity = 1.0f - intensity;
-    vtkm::Float32 alpha = srcColor[3] * inverseIntensity;
+    vtkm::Vec<vtkm::Float32, 4> color = intensity * Color;
+    color[3] = intensity;
+    vtkm::Vec<vtkm::Float32, 4> front = color;
+    vtkm::Vec<vtkm::Float32, 4> back = srcColor;
+
+    if (swap)
+    {
+      front = srcColor;
+      back = color;
+    }
+
     vtkm::Vec<vtkm::Float32, 4> blendedColor;
-    blendedColor[0] = Color[0] * intensity + srcColor[0] * alpha;
-    blendedColor[1] = Color[1] * intensity + srcColor[1] * alpha;
-    blendedColor[2] = Color[2] * intensity + srcColor[2] * alpha;
-    blendedColor[3] = alpha + intensity;
+    vtkm::Float32 alpha = (1.f - front[3]);
+    blendedColor[0] = front[0] + back[0] * alpha;
+    blendedColor[1] = front[1] + back[1] * alpha;
+    blendedColor[2] = front[2] + back[2] * alpha;
+    blendedColor[3] = back[3] * alpha + front[3];
+
     colorBuffer.Set(index, blendedColor);
   }
 
@@ -109,11 +133,13 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
   vtkm::Vec<vtkm::Float32, 4> Color;
   vtkm::Id Width;
   vtkm::Id Height;
+  vtkm::Float32 Depth;
 }; // struct RenderBitmapFont
 
 struct RenderBitmapFontExecutor
 {
   using ColorBufferType = vtkm::rendering::Canvas::ColorBufferType;
+  using DepthBufferType = vtkm::rendering::Canvas::DepthBufferType;
   using FontTextureType = vtkm::rendering::Canvas::FontTextureType;
   using ScreenCoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
   using TextureCoordsArrayHandle = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
@@ -124,13 +150,16 @@ struct RenderBitmapFontExecutor
                            const FontTextureType& fontTexture,
                            const vtkm::Vec<vtkm::Float32, 4>& color,
                            const ColorBufferType& colorBuffer,
+                           const DepthBufferType& depthBuffer,
                            vtkm::Id width,
-                           vtkm::Id height)
+                           vtkm::Id height,
+                           vtkm::Float32 depth)
     : ScreenCoords(screenCoords)
     , TextureCoords(textureCoords)
     , FontTexture(fontTexture)
     , ColorBuffer(colorBuffer)
-    , Worklet(color, width, height)
+    , DepthBuffer(depthBuffer)
+    , Worklet(color, width, height, depth)
   {
   }
 
@@ -141,7 +170,7 @@ struct RenderBitmapFontExecutor
 
     vtkm::worklet::DispatcherMapField<RenderBitmapFont, Device> dispatcher(Worklet);
     dispatcher.Invoke(
-      ScreenCoords, TextureCoords, FontTexture.GetExecObject<Device>(), ColorBuffer);
+      ScreenCoords, TextureCoords, FontTexture.GetExecObject<Device>(), ColorBuffer, DepthBuffer);
     return true;
   }
 
@@ -149,6 +178,7 @@ struct RenderBitmapFontExecutor
   TextureCoordsArrayHandle TextureCoords;
   FontTextureType FontTexture;
   ColorBufferType ColorBuffer;
+  DepthBufferType DepthBuffer;
   RenderBitmapFont Worklet;
 }; // struct RenderBitmapFontExecutor
 } // namespace internal
@@ -201,7 +231,8 @@ void TextRenderer::RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform
                               vtkm::Float32 scale,
                               const vtkm::Vec<vtkm::Float32, 2>& anchor,
                               const vtkm::rendering::Color& color,
-                              const std::string& text)
+                              const std::string& text,
+                              const vtkm::Float32& depth)
 {
   vtkm::Float32 textWidth = this->Font.GetTextWidth(text);
   vtkm::Float32 fx = -(0.5f + 0.5f * anchor[0]) * textWidth;
@@ -246,8 +277,10 @@ void TextRenderer::RenderText(const vtkm::Matrix<vtkm::Float32, 4, 4>& transform
                                                             FontTexture,
                                                             color.Components,
                                                             Canvas->GetColorBuffer(),
+                                                            Canvas->GetDepthBuffer(),
                                                             Canvas->GetWidth(),
-                                                            Canvas->GetHeight()));
+                                                            Canvas->GetHeight(),
+                                                            depth));
 }
 }
 } // namespace vtkm::rendering

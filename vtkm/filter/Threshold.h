@@ -55,16 +55,16 @@ public:
   vtkm::Float64 GetUpperThreshold() const { return this->UpperValue; }
 
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
-                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                           DeviceAdapter tag);
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                          const vtkm::filter::FieldMetadata& fieldMeta,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                          DeviceAdapter tag);
 
   //Map a new field onto the resulting dataset after running the filter
   //this call is only valid
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT bool DoMapField(vtkm::filter::Result& result,
+  VTKM_CONT bool DoMapField(vtkm::cont::DataSet& result,
                             const vtkm::cont::ArrayHandle<T, StorageType>& input,
                             const vtkm::filter::FieldMetadata& fieldMeta,
                             const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -80,7 +80,7 @@ template <>
 class FilterTraits<Threshold>
 { //currently the threshold filter only works on scalar data.
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

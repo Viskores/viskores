@@ -33,30 +33,27 @@ void TestCellGradientUniform3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetOutputFieldName("Gradient");
 
-  gradient.SetComputeVorticity(true);  //this wont work as we have a scalar field
-  gradient.SetComputeQCriterion(true); //this wont work as we have a scalar field
+  gradient.SetComputeVorticity(true);  //this won't work as we have a scalar field
+  gradient.SetComputeQCriterion(true); //this won't work as we have a scalar field
 
-  result = gradient.Execute(dataSet, dataSet.GetField("pointvar"));
+  gradient.SetActiveField("pointvar");
 
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "Gradient", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
-                   "Field was given the wrong association.");
+  vtkm::cont::DataSet result = gradient.Execute(dataSet);
+
+  VTKM_TEST_ASSERT(result.HasField("Gradient", vtkm::cont::Field::ASSOC_CELL_SET),
+                   "Field missing.");
 
   //verify that the vorticity and qcriterion fields don't exist
-  const vtkm::cont::DataSet& outputDS = result.GetDataSet();
-  VTKM_TEST_ASSERT(outputDS.HasField("Vorticity") == false,
+  VTKM_TEST_ASSERT(result.HasField("Vorticity") == false,
                    "scalar gradients can't generate vorticity");
-  VTKM_TEST_ASSERT(outputDS.HasField("QCriterion") == false,
+  VTKM_TEST_ASSERT(result.HasField("QCriterion") == false,
                    "scalar gradients can't generate qcriterion");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> resultArrayHandle;
-  const bool valid = result.FieldAs(resultArrayHandle);
-  VTKM_TEST_ASSERT(valid, "result of gradient is not expected type");
-
+  result.GetField("Gradient").GetData().CopyTo(resultArrayHandle);
   vtkm::Vec<vtkm::Float64, 3> expected[4] = {
     { 10.025, 30.075, 60.125 },
     { 10.025, 30.075, 60.125 },
@@ -89,31 +86,26 @@ void TestCellGradientUniform3DWithVectorField()
   vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec_pointvar", input);
 
   //we need to add Vec3 array to the dataset
-  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetOutputFieldName("vec_gradient");
   gradient.SetComputeVorticity(true);
   gradient.SetComputeQCriterion(true);
+  gradient.SetActiveField("vec_pointvar");
 
-  result = gradient.Execute(dataSet, dataSet.GetField("vec_pointvar"));
+  vtkm::cont::DataSet result = gradient.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "vec_gradient",
-                   "Field was given the wrong name.");
-
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
-                   "Field was given the wrong association.");
+  VTKM_TEST_ASSERT(result.HasField("vec_gradient", vtkm::cont::Field::ASSOC_CELL_SET),
+                   "Result field missing.");
 
   //verify that the vorticity and qcriterion fields DO exist
-  const vtkm::cont::DataSet& outputDS = result.GetDataSet();
-  VTKM_TEST_ASSERT(outputDS.HasField("Vorticity") == true,
-                   "vec gradients should generate vorticity");
-  VTKM_TEST_ASSERT(outputDS.HasField("QCriterion") == true,
+  VTKM_TEST_ASSERT(result.HasField("Vorticity") == true, "vec gradients should generate vorticity");
+  VTKM_TEST_ASSERT(result.HasField("QCriterion") == true,
                    "vec gradients should generate qcriterion");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3>> resultArrayHandle;
-  const bool valid = result.FieldAs(resultArrayHandle);
-  VTKM_TEST_ASSERT(valid, "result of gradient is not expected type");
-
+  result.GetField("vec_gradient", vtkm::cont::Field::ASSOC_CELL_SET)
+    .GetData()
+    .CopyTo(resultArrayHandle);
   vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> expected[4] = {
     { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
     { { 10.025, 10.025, 10.025 }, { 30.075, 30.075, 30.075 }, { 60.125, 60.125, 60.125 } },
@@ -141,20 +133,19 @@ void TestCellGradientExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetOutputFieldName("gradient");
+  gradient.SetActiveField("pointvar");
 
-  result = gradient.Execute(dataSet, dataSet.GetField("pointvar"));
+  vtkm::cont::DataSet result = gradient.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "gradient", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET,
-                   "Field was given the wrong association.");
+  VTKM_TEST_ASSERT(result.HasField("gradient", vtkm::cont::Field::ASSOC_CELL_SET),
+                   "Result field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> resultArrayHandle;
-  const bool valid = result.FieldAs(resultArrayHandle);
-  VTKM_TEST_ASSERT(valid, "result of gradient is not expected type");
-
+  result.GetField("gradient", vtkm::cont::Field::ASSOC_CELL_SET)
+    .GetData()
+    .CopyTo(resultArrayHandle);
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, -0.0f } };
   for (int i = 0; i < 2; ++i)
   {
@@ -183,23 +174,19 @@ void TestPointGradientUniform3DWithVectorField()
   vtkm::cont::DataSetFieldAdd::AddPointField(dataSet, "vec_pointvar", input);
 
   //we need to add Vec3 array to the dataset
-  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetComputePointGradient(true);
   gradient.SetOutputFieldName("vec_gradient");
+  gradient.SetActiveField("vec_pointvar");
+  vtkm::cont::DataSet result = gradient.Execute(dataSet);
 
-  result = gradient.Execute(dataSet, dataSet.GetField("vec_pointvar"));
-
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "vec_gradient",
-                   "Field was given the wrong name.");
-
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                   "Field was given the wrong association.");
+  VTKM_TEST_ASSERT(result.HasField("vec_gradient", vtkm::cont::Field::ASSOC_POINTS),
+                   "Result field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3>> resultArrayHandle;
-  const bool valid = result.FieldAs(resultArrayHandle);
-  VTKM_TEST_ASSERT(valid, "result of gradient is not expected type");
-
+  result.GetField("vec_gradient", vtkm::cont::Field::ASSOC_POINTS)
+    .GetData()
+    .CopyTo(resultArrayHandle);
   vtkm::Vec<vtkm::Vec<vtkm::Float64, 3>, 3> expected[4] = {
     { { 10.0, 10.0, 10.0 }, { 30.0, 30.0, 30.0 }, { 60.1, 60.1, 60.1 } },
     { { 10.0, 10.0, 10.0 }, { 30.1, 30.1, 30.1 }, { 60.1, 60.1, 60.1 } },
@@ -227,20 +214,18 @@ void TestPointGradientExplicit()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DExplicitDataSet0();
 
-  vtkm::filter::Result result;
   vtkm::filter::Gradient gradient;
   gradient.SetComputePointGradient(true);
   gradient.SetOutputFieldName("gradient");
+  gradient.SetActiveField("pointvar");
 
-  result = gradient.Execute(dataSet, dataSet.GetField("pointvar"));
+  vtkm::cont::DataSet result = gradient.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "gradient", "Field was given the wrong name.");
-  VTKM_TEST_ASSERT(result.GetField().GetAssociation() == vtkm::cont::Field::ASSOC_POINTS,
-                   "Field was given the wrong association.");
+  VTKM_TEST_ASSERT(result.HasField("gradient", vtkm::cont::Field::ASSOC_POINTS),
+                   "Result field missing.");
 
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> resultArrayHandle;
-  const bool valid = result.FieldAs(resultArrayHandle);
-  VTKM_TEST_ASSERT(valid, "result of gradient is not expected type");
+  result.GetField("gradient", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(resultArrayHandle);
 
   vtkm::Vec<vtkm::Float32, 3> expected[2] = { { 10.f, 10.1f, 0.0f }, { 10.f, 10.1f, 0.0f } };
   for (int i = 0; i < 2; ++i)

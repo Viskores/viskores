@@ -24,7 +24,7 @@
 
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
-#include <vtkm/rendering/ColorTable.h>
+#include <vtkm/Types.h>
 
 #include <memory>
 #include <vector>

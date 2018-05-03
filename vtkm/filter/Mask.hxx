@@ -59,7 +59,7 @@ inline VTKM_CONT Mask::Mask()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result Mask::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet Mask::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter&)
@@ -73,13 +73,12 @@ inline VTKM_CONT vtkm::filter::Result Mask::DoExecute(
   vtkm::cont::DataSet output;
   output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
   output.AddCellSet(cellOut);
-
   return output;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT bool Mask::DoMapField(vtkm::filter::Result& result,
+inline VTKM_CONT bool Mask::DoMapField(vtkm::cont::DataSet& result,
                                        const vtkm::cont::ArrayHandle<T, StorageType>& input,
                                        const vtkm::filter::FieldMetadata& fieldMeta,
                                        const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -100,8 +99,7 @@ inline VTKM_CONT bool Mask::DoMapField(vtkm::filter::Result& result,
     return false;
   }
 
-  result.GetDataSet().AddField(output);
-
+  result.AddField(output);
   return true;
 }
 }

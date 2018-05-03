@@ -93,18 +93,6 @@ public:
     VTKM_ASSERT(storage == this->Storage);
   }
 
-  /// This methods copies data from the execution array into the given
-  /// iterator.
-  ///
-  template <class IteratorTypeControl>
-  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
-  {
-    using IteratorType = typename StorageType::PortalConstType::IteratorType;
-    IteratorType beginIterator = this->Storage->GetPortalConst().GetIteratorBegin();
-
-    std::copy(beginIterator, beginIterator + this->Storage->GetNumberOfValues(), dest);
-  }
-
   /// Shrinks the storage.
   ///
   VTKM_CONT
@@ -151,10 +139,23 @@ struct VTKM_CONT_EXPORT ExecutionArrayInterfaceBasicShareWithControl
 
   VTKM_CONT ExecutionArrayInterfaceBasicShareWithControl(StorageBasicBase& storage);
 
-  VTKM_CONT void Allocate(TypelessExecutionArray& execArray, vtkm::UInt64 numBytes) const final;
+  VTKM_CONT void Allocate(TypelessExecutionArray& execArray,
+                          vtkm::Id numberOfValues,
+                          vtkm::UInt64 sizeOfValue) const final;
   VTKM_CONT void Free(TypelessExecutionArray& execArray) const final;
+
   VTKM_CONT void CopyFromControl(const void* src, void* dst, vtkm::UInt64 bytes) const final;
   VTKM_CONT void CopyToControl(const void* src, void* dst, vtkm::UInt64 bytes) const final;
+
+  VTKM_CONT void UsingForRead(const void* controlPtr,
+                              const void* executionPtr,
+                              vtkm::UInt64 numBytes) const final;
+  VTKM_CONT void UsingForWrite(const void* controlPtr,
+                               const void* executionPtr,
+                               vtkm::UInt64 numBytes) const final;
+  VTKM_CONT void UsingForReadWrite(const void* controlPtr,
+                                   const void* executionPtr,
+                                   vtkm::UInt64 numBytes) const final;
 };
 }
 }

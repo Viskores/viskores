@@ -86,7 +86,6 @@
 #include "vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation_Macros.h"
 #include "vtkm/worklet/contourtree/Types.h"
 #include "vtkm/worklet/contourtree/VertexValueComparator.h"
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -112,7 +111,7 @@ public:
                                 WholeArrayInOut<IdType> prunesTo, // (i/o) where vertex is pruned to
                                 WholeArrayOut<IdType> outdegree); // (output) updegree of vertex
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   bool isJoinGraph;
 

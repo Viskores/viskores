@@ -79,11 +79,11 @@ public:
                                       const UnaryPredicate& predicate,
                                       DeviceAdapter)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     vtkm::cont::ArrayHandle<bool> passFlags;
 
-    typedef ThresholdPointField<UnaryPredicate> ThresholdWorklet;
+    using ThresholdWorklet = ThresholdPointField<UnaryPredicate>;
 
     ThresholdWorklet worklet(predicate);
     DispatcherMapTopology<ThresholdWorklet, DeviceAdapter> dispatcher(worklet);

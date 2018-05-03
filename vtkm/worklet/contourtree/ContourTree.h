@@ -173,12 +173,12 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 class ContourTree
 {
 public:
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
-  typedef vtkm::cont::ArrayHandle<T> ValueArrayType;
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexType;
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, ValueArrayType> PermuteValueType;
+  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using ValueArrayType = vtkm::cont::ArrayHandle<T>;
+  using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
+  using PermuteValueType = vtkm::cont::ArrayHandlePermutation<IdArrayType, ValueArrayType>;
 
   // reference to the underlying data
   const vtkm::cont::ArrayHandle<T, StorageType> values;
@@ -248,7 +248,7 @@ public:
                                 WholeArrayIn<IdType> superarcs,
                                 FieldOut<IdType> hasSuperArc);
   typedef _3 ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   bool vertexIsAssigned;
 
@@ -915,7 +915,8 @@ void ContourTree<T, StorageType, DeviceAdapter>::CollectSaddlePeak(
   DeviceAlgorithm::Copy(tempArray, saddlePeak);
 
 #ifdef DEBUG_PRINT
-  for (vtkm::UInt32 superarc = 0; superarc < superarcVector.size(); superarc++)
+  const vtkm::Id arcVecSize = static_cast<vtkm::Id>(superarcVector.size());
+  for (vtkm::Id superarc = 0; superarc < arcVecSize; superarc++)
   {
     std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).first << " ";
     std::cout << std::setw(PRINT_WIDTH) << saddlePeak.GetPortalControl().Get(superarc).second

@@ -106,11 +106,11 @@ public:
 
   virtual ~CellSetExplicit();
 
-  vtkm::Id GetNumberOfCells() const VTKM_OVERRIDE;
-  vtkm::Id GetNumberOfPoints() const VTKM_OVERRIDE;
-  vtkm::Id GetNumberOfFaces() const VTKM_OVERRIDE;
-  vtkm::Id GetNumberOfEdges() const VTKM_OVERRIDE;
-  void PrintSummary(std::ostream& out) const VTKM_OVERRIDE;
+  vtkm::Id GetNumberOfCells() const override;
+  vtkm::Id GetNumberOfPoints() const override;
+  vtkm::Id GetNumberOfFaces() const override;
+  vtkm::Id GetNumberOfEdges() const override;
+  void PrintSummary(std::ostream& out) const override;
 
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagCell) const;
   VTKM_CONT vtkm::Id GetSchedulingRange(vtkm::TopologyElementTagPoint) const;

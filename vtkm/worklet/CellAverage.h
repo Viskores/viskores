@@ -38,7 +38,7 @@ public:
                                 FieldInPoint<> inPoints,
                                 FieldOutCell<> outCells);
   typedef void ExecutionSignature(PointCount, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename PointValueVecType, typename OutType>
   VTKM_EXEC void operator()(const vtkm::IdComponent& numPoints,

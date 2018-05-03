@@ -68,6 +68,7 @@ private:
     }
   }
 
+  VTKM_SUPPRESS_EXEC_WARNINGS
   template <typename InIter, typename OutIter>
   VTKM_EXEC static void DoCopy(InIter src, InIter srcEnd, OutIter dst, std::true_type)
   {
@@ -82,6 +83,11 @@ public:
     const vtkm::Id inSize = input.GetNumberOfValues();
     auto inputPortal = input.PrepareForInput(DeviceAdapterTagSerial());
     auto outputPortal = output.PrepareForOutput(inSize, DeviceAdapterTagSerial());
+
+    if (inSize <= 0)
+    {
+      return;
+    }
 
     using InputType = decltype(inputPortal.Get(0));
     using OutputType = decltype(outputPortal.Get(0));
@@ -275,28 +281,6 @@ public:
     values_output.Shrink(writePos + 1);
   }
 
-  template <typename T, class CIn, class COut>
-  VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                   vtkm::cont::ArrayHandle<T, COut>& output)
-  {
-    vtkm::Id numberOfValues = input.GetNumberOfValues();
-
-    auto inputPortal = input.PrepareForInput(Device());
-    auto outputPortal = output.PrepareForOutput(numberOfValues, Device());
-
-    if (numberOfValues <= 0)
-    {
-      return vtkm::TypeTraits<T>::ZeroInitialization();
-    }
-
-    std::partial_sum(vtkm::cont::ArrayPortalToIteratorBegin(inputPortal),
-                     vtkm::cont::ArrayPortalToIteratorEnd(inputPortal),
-                     vtkm::cont::ArrayPortalToIteratorBegin(outputPortal));
-
-    // Return the value at the last index in the array, which is the full sum.
-    return outputPortal.Get(numberOfValues - 1);
-  }
-
   template <typename T, class CIn, class COut, class BinaryFunctor>
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output,
@@ -321,6 +305,13 @@ public:
 
     // Return the value at the last index in the array, which is the full sum.
     return outputPortal.Get(numberOfValues - 1);
+  }
+
+  template <typename T, class CIn, class COut>
+  VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                   vtkm::cont::ArrayHandle<T, COut>& output)
+  {
+    return ScanInclusive(input, output, vtkm::Sum());
   }
 
   template <typename T, class CIn, class COut, class BinaryFunctor>
@@ -442,7 +433,7 @@ public:
                                   const BinaryCompare& binary_compare)
   {
     internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
-    VTKM_CONSTEXPR bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
+    constexpr bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
     if (larger_than_64bits)
     {
       /// More efficient sort:
@@ -507,8 +498,8 @@ class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagSerial>
 {
 public:
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(const WorkletType& worklet,
-                                                             const InvocationType& invocation,
+  static vtkm::exec::serial::internal::TaskTiling1D MakeTask(WorkletType& worklet,
+                                                             InvocationType& invocation,
                                                              vtkm::Id,
                                                              vtkm::Id globalIndexOffset = 0)
   {
@@ -516,8 +507,8 @@ public:
   }
 
   template <typename WorkletType, typename InvocationType>
-  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(const WorkletType& worklet,
-                                                             const InvocationType& invocation,
+  static vtkm::exec::serial::internal::TaskTiling3D MakeTask(WorkletType& worklet,
+                                                             InvocationType& invocation,
                                                              vtkm::Id3,
                                                              vtkm::Id globalIndexOffset = 0)
   {

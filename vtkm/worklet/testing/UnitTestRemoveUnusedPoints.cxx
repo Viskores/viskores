@@ -60,13 +60,12 @@ void CheckOutputCellSet(const vtkm::cont::CellSetExplicit<>& cellSet,
   VTKM_TEST_ASSERT(pointIds4[2] == 3, "Wrong point id for cell");
   VTKM_TEST_ASSERT(pointIds4[3] == 4, "Wrong point id for cell");
 
-  vtkm::Float32 fieldValues[5];
-  field.CopyInto(fieldValues, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
-  VTKM_TEST_ASSERT(test_equal(fieldValues[0], TestValue(0, vtkm::Float32())), "Bad field");
-  VTKM_TEST_ASSERT(test_equal(fieldValues[1], TestValue(2, vtkm::Float32())), "Bad field");
-  VTKM_TEST_ASSERT(test_equal(fieldValues[2], TestValue(4, vtkm::Float32())), "Bad field");
-  VTKM_TEST_ASSERT(test_equal(fieldValues[3], TestValue(6, vtkm::Float32())), "Bad field");
-  VTKM_TEST_ASSERT(test_equal(fieldValues[4], TestValue(8, vtkm::Float32())), "Bad field");
+  auto fieldPortal = field.GetPortalConstControl();
+  VTKM_TEST_ASSERT(test_equal(fieldPortal.Get(0), TestValue(0, vtkm::Float32())), "Bad field");
+  VTKM_TEST_ASSERT(test_equal(fieldPortal.Get(1), TestValue(2, vtkm::Float32())), "Bad field");
+  VTKM_TEST_ASSERT(test_equal(fieldPortal.Get(2), TestValue(4, vtkm::Float32())), "Bad field");
+  VTKM_TEST_ASSERT(test_equal(fieldPortal.Get(3), TestValue(6, vtkm::Float32())), "Bad field");
+  VTKM_TEST_ASSERT(test_equal(fieldPortal.Get(4), TestValue(8, vtkm::Float32())), "Bad field");
 }
 
 void RunTest()

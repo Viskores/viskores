@@ -173,9 +173,12 @@ vtkm::cont::DataSet MakeTestDataSet()
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   // Set point scalars
-  dataSet.AddField(vtkm::cont::Field("fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts));
-  dataSet.AddField(vtkm::cont::Field("fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts));
-  dataSet.AddField(vtkm::cont::Field("fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
 
   return dataSet;
 }
@@ -193,8 +196,7 @@ void RunTest()
   //Entropy is just a single number
   //It is stored in "Entropy" (type vtkm::Float64) field in the return dataset
   //The field has only one element, the entropy
-  vtkm::filter::Result resultData = ndEntropyFilter.Execute(ds);
-  vtkm::cont::DataSet& outputData = resultData.GetDataSet();
+  vtkm::cont::DataSet outputData = ndEntropyFilter.Execute(ds);
 
   vtkm::cont::ArrayHandle<vtkm::Float64> entropyHandle;
   outputData.GetField("Entropy").GetData().CopyTo(entropyHandle);

@@ -25,7 +25,6 @@
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/testing/Testing.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/ParticleAdvection.h>
 #include <vtkm/worklet/particleadvection/GridEvaluators.h>
 #include <vtkm/worklet/particleadvection/Integrators.h>
@@ -163,8 +162,8 @@ void CreateConstantVectorField(vtkm::Id num,
                                const vtkm::Vec<FieldType, 3>& vec,
                                vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>& vecField)
 {
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
   vtkm::cont::ArrayHandleConstant<vtkm::Vec<FieldType, 3>> vecConst;
   vecConst = vtkm::cont::make_ArrayHandleConstant(vec, num);
@@ -200,9 +199,9 @@ void ValidateEvaluator(const EvalType& eval,
                        const vtkm::Vec<FieldType, 3>& vec,
                        const std::string& msg)
 {
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-  typedef TestEvaluatorWorklet<FieldType, EvalType> EvalTester;
-  typedef vtkm::worklet::DispatcherMapField<EvalTester> EvalTesterDispatcher;
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using EvalTester = TestEvaluatorWorklet<FieldType, EvalType>;
+  using EvalTesterDispatcher = vtkm::worklet::DispatcherMapField<EvalTester>;
   EvalTester evalTester(eval);
   EvalTesterDispatcher evalTesterDispatcher(evalTester);
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> pointsHandle =
@@ -258,10 +257,10 @@ void ValidateIntegrator(const IntegratorType& integrator,
                         const std::vector<vtkm::Vec<FieldType, 3>>& expStepResults,
                         const std::string& msg)
 {
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-  typedef TestIntegratorWorklet<FieldType, IntegratorType> IntegratorTester;
-  typedef vtkm::worklet::DispatcherMapField<IntegratorTester> IntegratorTesterDispatcher;
-  typedef vtkm::worklet::particleadvection::ParticleStatus Status;
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using IntegratorTester = TestIntegratorWorklet<FieldType, IntegratorType>;
+  using IntegratorTesterDispatcher = vtkm::worklet::DispatcherMapField<IntegratorTester>;
+  using Status = vtkm::worklet::particleadvection::ParticleStatus;
   IntegratorTester integratorTester(integrator);
   IntegratorTesterDispatcher integratorTesterDispatcher(integratorTester);
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> pointsHandle =
@@ -292,30 +291,30 @@ void ValidateIntegrator(const IntegratorType& integrator,
 
 void TestEvaluators()
 {
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-  typedef vtkm::Float32 FieldType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using FieldType = vtkm::Float32;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
+  using FieldPortalConstType = FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   //Constant field evaluator and RK4 integrator.
-  typedef vtkm::worklet::particleadvection::ConstantField<FieldType> CEvalType;
-  typedef vtkm::worklet::particleadvection::RK4Integrator<CEvalType, FieldType> RK4CType;
+  using CEvalType = vtkm::worklet::particleadvection::ConstantField<FieldType>;
+  using RK4CType = vtkm::worklet::particleadvection::RK4Integrator<CEvalType, FieldType>;
 
   //Uniform grid evaluator and RK4 integrator.
-  typedef vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
-                                                                FieldType,
-                                                                DeviceAdapter>
-    UniformEvalType;
-  typedef vtkm::worklet::particleadvection::RK4Integrator<UniformEvalType, FieldType>
-    RK4UniformType;
+  using UniformEvalType =
+    vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
+                                                          FieldType,
+                                                          DeviceAdapter>;
+  using RK4UniformType =
+    vtkm::worklet::particleadvection::RK4Integrator<UniformEvalType, FieldType>;
 
   //Rectilinear grid evaluator and RK4 integrator.
-  typedef vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldPortalConstType,
-                                                                    FieldType,
-                                                                    DeviceAdapter>
-    RectilinearEvalType;
-  typedef vtkm::worklet::particleadvection::RK4Integrator<RectilinearEvalType, FieldType>
-    RK4RectilinearType;
+  using RectilinearEvalType =
+    vtkm::worklet::particleadvection::RectilinearGridEvaluate<FieldPortalConstType,
+                                                              FieldType,
+                                                              DeviceAdapter>;
+  using RK4RectilinearType =
+    vtkm::worklet::particleadvection::RK4Integrator<RectilinearEvalType, FieldType>;
 
   std::vector<vtkm::Vec<FieldType, 3>> vecs;
   vecs.push_back(vtkm::Vec<FieldType, 3>(1, 0, 0));
@@ -411,10 +410,10 @@ void TestEvaluators()
 
 void TestParticleWorklets()
 {
-  typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
-  typedef vtkm::Float32 FieldType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst FieldPortalConstType;
+  using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
+  using FieldType = vtkm::Float32;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
+  using FieldPortalConstType = FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   FieldType stepSize = 0.05f;
 
@@ -434,11 +433,10 @@ void TestParticleWorklets()
   }
   vtkm::cont::DataSet ds = dataSetBuilder.Create(dims);
 
-  typedef vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
-                                                                FieldType,
-                                                                DeviceAdapter>
-    RGEvalType;
-  typedef vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType> RK4RGType;
+  using RGEvalType = vtkm::worklet::particleadvection::UniformGridEvaluate<FieldPortalConstType,
+                                                                           FieldType,
+                                                                           DeviceAdapter>;
+  using RK4RGType = vtkm::worklet::particleadvection::RK4Integrator<RGEvalType, FieldType>;
 
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray;
   fieldArray = vtkm::cont::make_ArrayHandle(field);

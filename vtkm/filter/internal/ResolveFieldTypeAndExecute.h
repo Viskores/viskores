@@ -35,65 +35,52 @@ namespace filter
 namespace internal
 {
 
+struct ResolveFieldTypeAndExecuteForDevice
+{
+  template <typename DeviceAdapterTag, typename InstanceType, typename FieldType>
+  bool operator()(DeviceAdapterTag tag, InstanceType&& instance, FieldType&& field) const
+  {
+    instance.Result = instance.DerivedClass->DoExecute(
+      instance.InputData, field, instance.Metadata, instance.Policy, tag);
+    // `DoExecute` is expected to throw an exception on any failure. If it
+    // returned anything, it's taken as a success and we won't try executing on
+    // other available devices.
+    return true;
+  }
+};
+
+
 template <typename Derived, typename DerivedPolicy, typename ResultType>
 struct ResolveFieldTypeAndExecute
 {
-  typedef ResolveFieldTypeAndExecute<Derived, DerivedPolicy, ResultType> Self;
+  using Self = ResolveFieldTypeAndExecute<Derived, DerivedPolicy, ResultType>;
 
   Derived* DerivedClass;
   const vtkm::cont::DataSet& InputData;
   const vtkm::filter::FieldMetadata& Metadata;
   const vtkm::filter::PolicyBase<DerivedPolicy>& Policy;
-  vtkm::cont::RuntimeDeviceTracker Tracker;
   ResultType& Result;
 
   ResolveFieldTypeAndExecute(Derived* derivedClass,
                              const vtkm::cont::DataSet& inputData,
                              const vtkm::filter::FieldMetadata& fieldMeta,
                              const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                             const vtkm::cont::RuntimeDeviceTracker& tracker,
                              ResultType& result)
     : DerivedClass(derivedClass)
     , InputData(inputData)
     , Metadata(fieldMeta)
     , Policy(policy)
-    , Tracker(tracker)
     , Result(result)
   {
   }
 
-private:
   template <typename T, typename StorageTag>
-  struct ResolveFieldTypeAndExecuteForDevice
+  void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& field,
+                  vtkm::cont::RuntimeDeviceTracker& tracker) const
   {
-    typedef vtkm::cont::ArrayHandle<T, StorageTag> FieldArrayHandle;
-    ResolveFieldTypeAndExecuteForDevice(const Self& instance, const FieldArrayHandle& field)
-      : Instance(instance)
-      , Field(field)
-    {
-    }
-
-    const Self& Instance;
-    const vtkm::cont::ArrayHandle<T, StorageTag>& Field;
-
-    template <typename DeviceAdapterTag>
-    bool operator()(DeviceAdapterTag tag) const
-    {
-      this->Instance.Result = this->Instance.DerivedClass->DoExecute(
-        this->Instance.InputData, this->Field, this->Instance.Metadata, this->Instance.Policy, tag);
-      return this->Instance.Result.IsValid();
-    }
-
-  private:
-    void operator=(const ResolveFieldTypeAndExecuteForDevice<T, StorageTag>&) = delete;
-  };
-
-public:
-  template <typename T, typename StorageTag>
-  void operator()(const vtkm::cont::ArrayHandle<T, StorageTag>& field) const
-  {
-    ResolveFieldTypeAndExecuteForDevice<T, StorageTag> doResolve(*this, field);
-    vtkm::cont::TryExecute(doResolve, this->Tracker, typename DerivedPolicy::DeviceAdapterList());
+    ResolveFieldTypeAndExecuteForDevice doResolve;
+    vtkm::cont::TryExecute(
+      doResolve, tracker, typename DerivedPolicy::DeviceAdapterList(), *this, field);
   }
 
 private:

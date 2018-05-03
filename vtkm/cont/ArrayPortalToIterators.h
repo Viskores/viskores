@@ -75,7 +75,7 @@ private:
   PortalType Portal;
 };
 
-/// Convienience function for converting an ArrayPortal to a begin iterator.
+/// Convenience function for converting an ArrayPortal to a begin iterator.
 ///
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename PortalType>
@@ -86,7 +86,7 @@ ArrayPortalToIteratorBegin(const PortalType& portal)
   return iterators.GetBegin();
 }
 
-/// Convienience function for converting an ArrayPortal to an end iterator.
+/// Convenience function for converting an ArrayPortal to an end iterator.
 ///
 VTKM_SUPPRESS_EXEC_WARNINGS
 template <typename PortalType>

@@ -32,6 +32,7 @@
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
 #include <vtkm/exec/internal/TaskSingular.h>
 
+#include <vtkm/BinaryPredicates.h>
 #include <vtkm/TypeTraits.h>
 
 #include <vtkm/internal/Windows.h>
@@ -429,7 +430,7 @@ public:
 
     // Don't bother with the keys_output if it's an ArrayHandleDiscard -- there
     // will be a runtime exception in Unique() otherwise:
-    if (!vtkm::cont::IsArrayHandleDiscard<KeysOutputType>::Value)
+    if (!vtkm::cont::IsArrayHandleDiscard<KeysOutputType>::value)
     {
       //find all the unique keys
       DerivedAlgorithm::Copy(keys, keys_output);
@@ -475,11 +476,16 @@ public:
 
   //--------------------------------------------------------------------------
   // Scan Exclusive By Key
-  template <typename T, typename U, typename KIn, typename VIn, typename VOut, class BinaryFunctor>
-  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output,
-                                           const U& initialValue,
+  template <typename KeyT,
+            typename ValueT,
+            typename KIn,
+            typename VIn,
+            typename VOut,
+            class BinaryFunctor>
+  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<KeyT, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
+                                           vtkm::cont::ArrayHandle<ValueT, VOut>& output,
+                                           const ValueT& initialValue,
                                            BinaryFunctor binaryFunctor)
   {
     VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
@@ -513,13 +519,16 @@ public:
     }
 
     // 2. Shift input and initialize elements at head flags position to initValue
-    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> temp;
+    vtkm::cont::ArrayHandle<ValueT, vtkm::cont::StorageTagBasic> temp;
     {
       auto inputPortal = values.PrepareForInput(DeviceAdapterTag());
       auto keyStatePortal = keystate.PrepareForInput(DeviceAdapterTag());
       auto tempPortal = temp.PrepareForOutput(numberOfKeys, DeviceAdapterTag());
 
-      ShiftCopyAndInit<U, decltype(inputPortal), decltype(keyStatePortal), decltype(tempPortal)>
+      ShiftCopyAndInit<ValueT,
+                       decltype(inputPortal),
+                       decltype(keyStatePortal),
+                       decltype(tempPortal)>
         kernel(inputPortal, keyStatePortal, tempPortal, initialValue);
       DerivedAlgorithm::Schedule(kernel, numberOfKeys);
     }
@@ -527,13 +536,13 @@ public:
     DerivedAlgorithm::ScanInclusiveByKey(keys, temp, output, binaryFunctor);
   }
 
-  template <typename T, typename U, class KIn, typename VIn, typename VOut>
-  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output)
+  template <typename KeyT, typename ValueT, class KIn, typename VIn, typename VOut>
+  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<KeyT, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
+                                           vtkm::cont::ArrayHandle<ValueT, VOut>& output)
   {
     DerivedAlgorithm::ScanExclusiveByKey(
-      keys, values, output, vtkm::TypeTraits<U>::ZeroInitialization(), vtkm::Sum());
+      keys, values, output, vtkm::TypeTraits<ValueT>::ZeroInitialization(), vtkm::Sum());
   }
 
   //--------------------------------------------------------------------------
@@ -632,18 +641,18 @@ public:
     return GetExecutionValue(output, numValues - 1);
   }
 
-  template <typename T, typename U, class KIn, class VIn, class VOut>
-  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& values_output)
+  template <typename KeyT, typename ValueT, class KIn, class VIn, class VOut>
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<KeyT, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
+                                           vtkm::cont::ArrayHandle<ValueT, VOut>& values_output)
   {
     return DerivedAlgorithm::ScanInclusiveByKey(keys, values, values_output, vtkm::Add());
   }
 
-  template <typename T, typename U, class KIn, class VIn, class VOut, class BinaryFunctor>
-  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& values_output,
+  template <typename KeyT, typename ValueT, class KIn, class VIn, class VOut, class BinaryFunctor>
+  VTKM_CONT static void ScanInclusiveByKey(const vtkm::cont::ArrayHandle<KeyT, KIn>& keys,
+                                           const vtkm::cont::ArrayHandle<ValueT, VIn>& values,
+                                           vtkm::cont::ArrayHandle<ValueT, VOut>& values_output,
                                            BinaryFunctor binary_functor)
   {
     VTKM_ASSERT(keys.GetNumberOfValues() == values.GetNumberOfValues());
@@ -675,7 +684,7 @@ public:
     // the value summed currently, the second being 0 or 1, with 1 being used
     // when this is a value of a key we need to write ( END or START_AND_END)
     {
-      vtkm::cont::ArrayHandle<U, VOut> reducedValues;
+      vtkm::cont::ArrayHandle<ValueT, VOut> reducedValues;
       vtkm::cont::ArrayHandle<ReduceKeySeriesStates> stencil;
       auto scanInput = vtkm::cont::make_ArrayHandleZip(values, keystate);
       auto scanOutput = vtkm::cont::make_ArrayHandleZip(reducedValues, stencil);
@@ -754,12 +763,43 @@ public:
     DerivedAlgorithm::Sort(zipHandle, internal::KeyCompare<T, U, BinaryCompare>(binary_compare));
   }
 
+  template <typename T,
+            typename U,
+            typename V,
+            typename StorageT,
+            typename StorageU,
+            typename StorageV,
+            typename BinaryFunctor>
+  VTKM_CONT static void Transform(const vtkm::cont::ArrayHandle<T, StorageT>& input1,
+                                  const vtkm::cont::ArrayHandle<U, StorageU>& input2,
+                                  vtkm::cont::ArrayHandle<V, StorageV>& output,
+                                  BinaryFunctor binaryFunctor)
+  {
+    vtkm::Id numValues = vtkm::Min(input1.GetNumberOfValues(), input2.GetNumberOfValues());
+    if (numValues <= 0)
+    {
+      return;
+    }
+
+    auto input1Portal = input1.PrepareForInput(DeviceAdapterTag());
+    auto input2Portal = input2.PrepareForInput(DeviceAdapterTag());
+    auto outputPortal = output.PrepareForOutput(numValues, DeviceAdapterTag());
+
+    BinaryTransformKernel<decltype(input1Portal),
+                          decltype(input2Portal),
+                          decltype(outputPortal),
+                          BinaryFunctor>
+      binaryKernel(input1Portal, input2Portal, outputPortal, binaryFunctor);
+    DerivedAlgorithm::Schedule(binaryKernel, numValues);
+  }
+
+  //};
   //--------------------------------------------------------------------------
   // Unique
   template <typename T, class Storage>
   VTKM_CONT static void Unique(vtkm::cont::ArrayHandle<T, Storage>& values)
   {
-    Unique(values, std::equal_to<T>());
+    DerivedAlgorithm::Unique(values, vtkm::Equal());
   }
 
   template <typename T, class Storage, class BinaryCompare>
@@ -861,7 +901,6 @@ public:
   {
   }
 
-  VTKM_EXEC
   T Add(vtkm::Id index, const T& value) const
   {
     T* lockedValue;
@@ -877,7 +916,6 @@ public:
 #endif
   }
 
-  VTKM_EXEC
   T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
   {
     T* lockedValue;
@@ -901,19 +939,16 @@ private:
   IteratorsType Iterators;
 
 #if defined(VTKM_MSVC) //MSVC atomics
-  VTKM_EXEC
   vtkm::Int32 vtkmAtomicAdd(vtkm::Int32* address, const vtkm::Int32& value) const
   {
     return InterlockedExchangeAdd(reinterpret_cast<volatile long*>(address), value);
   }
 
-  VTKM_EXEC
   vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const
   {
     return InterlockedExchangeAdd64(reinterpret_cast<volatile long long*>(address), value);
   }
 
-  VTKM_EXEC
   vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
                                  const vtkm::Int32& newValue,
                                  const vtkm::Int32& oldValue) const
@@ -922,7 +957,6 @@ private:
       reinterpret_cast<volatile long*>(address), newValue, oldValue);
   }
 
-  VTKM_EXEC
   vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
                                  const vtkm::Int64& newValue,
                                  const vtkm::Int64& oldValue) const
@@ -933,19 +967,16 @@ private:
 
 #else //gcc built-in atomics
 
-  VTKM_EXEC
   vtkm::Int32 vtkmAtomicAdd(vtkm::Int32* address, const vtkm::Int32& value) const
   {
     return __sync_fetch_and_add(address, value);
   }
 
-  VTKM_EXEC
   vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const
   {
     return __sync_fetch_and_add(address, value);
   }
 
-  VTKM_EXEC
   vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
                                  const vtkm::Int32& newValue,
                                  const vtkm::Int32& oldValue) const
@@ -953,7 +984,6 @@ private:
     return __sync_val_compare_and_swap(address, oldValue, newValue);
   }
 
-  VTKM_EXEC
   vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
                                  const vtkm::Int64& newValue,
                                  const vtkm::Int64& oldValue) const
@@ -967,7 +997,7 @@ private:
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.
 ///
-/// When worklets are launched inside the execution enviornment we need to
+/// When worklets are launched inside the execution environment we need to
 /// ask the device adapter what is the preferred execution style, be it
 /// a tiled iteration pattern, or strided. This class
 ///
@@ -980,8 +1010,8 @@ class DeviceTaskTypes
 public:
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet,
-    const InvocationType& invocation,
+    WorkletType& worklet,
+    InvocationType& invocation,
     vtkm::Id,
     vtkm::Id globalIndexOffset = 0)
   {
@@ -991,8 +1021,8 @@ public:
 
   template <typename WorkletType, typename InvocationType>
   static vtkm::exec::internal::TaskSingular<WorkletType, InvocationType> MakeTask(
-    const WorkletType& worklet,
-    const InvocationType& invocation,
+    WorkletType& worklet,
+    InvocationType& invocation,
     vtkm::Id3,
     vtkm::Id globalIndexOffset = 0)
   {

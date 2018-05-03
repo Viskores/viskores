@@ -163,7 +163,6 @@ public:
     if (status < 0 || status > 255)
     {
       throw vtkm::cont::ErrorBadValue("Rays GetStatusCound: invalid status");
-      return 0;
     }
 
     statusUInt8 = static_cast<vtkm::UInt8>(status);
@@ -210,7 +209,7 @@ public:
       .Invoke(rays.Status, masks);
 
     //
-    // Make empty composite vectors so we dont use up extra storage
+    // Make empty composite vectors so we don't use up extra storage
     //
     vtkm::IdComponent inComp[3];
     inComp[0] = 0;

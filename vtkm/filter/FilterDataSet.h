@@ -25,10 +25,11 @@
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/cont/DynamicCellSet.h>
 #include <vtkm/cont/Field.h>
+#include <vtkm/cont/MultiBlock.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/Result.h>
 
 namespace vtkm
 {
@@ -36,7 +37,7 @@ namespace filter
 {
 
 template <class Derived>
-class FilterDataSet
+class FilterDataSet : public vtkm::filter::Filter<Derived>
 {
 public:
   VTKM_CONT
@@ -57,21 +58,7 @@ public:
   VTKM_CONT
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
 
-  VTKM_CONT
-  void SetRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker& tracker)
-  {
-    this->Tracker = tracker;
-  }
-
-  VTKM_CONT
-  const vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker() const { return this->Tracker; }
-
-  VTKM_CONT
-  Result Execute(const vtkm::cont::DataSet& input);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  /// These are provided to satisfy the Filter API requirements.
 
   //From the field we can extract the association component
   // ASSOC_ANY -> unable to map
@@ -79,23 +66,21 @@ public:
   // ASSOC_POINTS -> map using point mapping
   // ASSOC_CELL_SET -> how do we map this?
   // ASSOC_LOGICAL_DIM -> unable to map?
-  VTKM_CONT
-  bool MapFieldOntoOutput(Result& result, const vtkm::cont::Field& field);
-
   template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(Result& result,
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-private:
   template <typename DerivedPolicy>
-  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
-  std::string OutputFieldName;
+private:
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
-  vtkm::cont::RuntimeDeviceTracker Tracker;
+
+  friend class vtkm::filter::Filter<Derived>;
 };
 }
 } // namespace vtkm::filter

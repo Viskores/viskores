@@ -83,12 +83,12 @@ template <typename IndexVecType, typename PortalType>
 struct TypeTraits<vtkm::VecFromPortalPermute<IndexVecType, PortalType>>
 {
 private:
-  typedef vtkm::VecFromPortalPermute<IndexVecType, PortalType> VecType;
-  typedef typename PortalType::ValueType ComponentType;
+  using VecType = vtkm::VecFromPortalPermute<IndexVecType, PortalType>;
+  using ComponentType = typename PortalType::ValueType;
 
 public:
-  typedef typename vtkm::TypeTraits<ComponentType>::NumericTag NumericTag;
-  typedef TypeTraitsVectorTag DimensionalityTag;
+  using NumericTag = typename vtkm::TypeTraits<ComponentType>::NumericTag;
+  using DimensionalityTag = TypeTraitsVectorTag;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -98,11 +98,11 @@ public:
 template <typename IndexVecType, typename PortalType>
 struct VecTraits<vtkm::VecFromPortalPermute<IndexVecType, PortalType>>
 {
-  typedef vtkm::VecFromPortalPermute<IndexVecType, PortalType> VecType;
+  using VecType = vtkm::VecFromPortalPermute<IndexVecType, PortalType>;
 
-  typedef typename VecType::ComponentType ComponentType;
-  typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
-  typedef vtkm::VecTraitsTagSizeVariable IsSizeStatic;
+  using ComponentType = typename VecType::ComponentType;
+  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
 
   VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
@@ -125,6 +125,14 @@ struct VecTraits<vtkm::VecFromPortalPermute<IndexVecType, PortalType>>
     src.CopyInto(dest);
   }
 };
+
+template <typename IndexVecType, typename PortalType>
+inline VTKM_EXEC VecFromPortalPermute<IndexVecType, PortalType> make_VecFromPortalPermute(
+  const IndexVecType* index,
+  const PortalType& portal)
+{
+  return VecFromPortalPermute<IndexVecType, PortalType>(index, portal);
+}
 
 } // namespace vtkm
 

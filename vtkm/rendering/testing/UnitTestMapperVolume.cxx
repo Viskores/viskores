@@ -39,9 +39,9 @@ void RenderTests()
   typedef vtkm::rendering::View3D V3;
 
   vtkm::cont::testing::MakeTestDataSet maker;
-  vtkm::rendering::ColorTable colorTable("thermal");
-  colorTable.AddAlphaControlPoint(0.0, .01f);
-  colorTable.AddAlphaControlPoint(1.0, .01f);
+  vtkm::cont::ColorTable colorTable("inferno");
+  colorTable.AddPointAlpha(0.0, .01f);
+  colorTable.AddPointAlpha(1.0, .01f);
 
   vtkm::rendering::testing::Render<M, C, V3>(
     maker.Make3DRegularDataSet0(), "pointvar", colorTable, "reg3D.pnm");

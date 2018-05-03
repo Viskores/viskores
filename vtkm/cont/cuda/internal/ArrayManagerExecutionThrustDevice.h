@@ -24,20 +24,15 @@
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/Storage.h>
 
-// Disable warnings we check vtkm for but Thrust does not.
-VTKM_THIRDPARTY_PRE_INCLUDE
-#include <thrust/copy.h>
-#include <thrust/device_malloc_allocator.h>
-#include <thrust/system/cuda/vector.h>
-
-#include <thrust/system/cuda/execution_policy.h>
-
-VTKM_THIRDPARTY_POST_INCLUDE
-
 #include <vtkm/cont/cuda/ErrorCuda.h>
 #include <vtkm/cont/cuda/internal/CudaAllocator.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 #include <vtkm/exec/cuda/internal/ArrayPortalFromThrust.h>
+
+VTKM_THIRDPARTY_PRE_INCLUDE
+#include <thrust/copy.h>
+#include <thrust/device_ptr.h>
+VTKM_THIRDPARTY_POST_INCLUDE
 
 #include <limits>
 
@@ -53,15 +48,13 @@ namespace internal
 /// \c ArrayManagerExecutionThrustDevice provides an implementation for a \c
 /// ArrayManagerExecution class for a thrust device adapter that is designed
 /// for the cuda backend which has separate memory spaces for host and device.
-/// This implementation contains a thrust::system::cuda::pointer to contain the
-/// data.
 template <typename T, class StorageTag>
 class ArrayManagerExecutionThrustDevice
 {
 public:
   using ValueType = T;
-  using PointerType = typename thrust::system::cuda::pointer<ValueType>;
-  using difference_type = typename PointerType::difference_type;
+  using PointerType = T*;
+  using difference_type = std::ptrdiff_t;
 
   using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
 
@@ -71,9 +64,9 @@ public:
   VTKM_CONT
   ArrayManagerExecutionThrustDevice(StorageType* storage)
     : Storage(storage)
-    , Begin(static_cast<ValueType*>(nullptr))
-    , End(static_cast<ValueType*>(nullptr))
-    , Capacity(static_cast<ValueType*>(nullptr))
+    , Begin(nullptr)
+    , End(nullptr)
+    , Capacity(nullptr)
   {
   }
 
@@ -83,10 +76,7 @@ public:
   /// Returns the size of the array.
   ///
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const
-  {
-    return static_cast<vtkm::Id>(this->End.get() - this->Begin.get());
-  }
+  vtkm::Id GetNumberOfValues() const { return static_cast<vtkm::Id>(this->End - this->Begin); }
 
   /// Allocates the appropriate size of the array and copies the given data
   /// into the array.
@@ -144,14 +134,13 @@ public:
   PortalType PrepareForOutput(vtkm::Id numberOfValues)
   {
     // Can we reuse the existing buffer?
-    vtkm::Id curCapacity = this->Begin.get() != nullptr
-      ? static_cast<vtkm::Id>(this->Capacity.get() - this->Begin.get())
-      : 0;
+    vtkm::Id curCapacity =
+      this->Begin != nullptr ? static_cast<vtkm::Id>(this->Capacity - this->Begin) : 0;
 
     // Just mark a new end if we don't need to increase the allocation:
     if (curCapacity >= numberOfValues)
     {
-      this->End = PointerType(this->Begin.get() + static_cast<difference_type>(numberOfValues));
+      this->End = this->Begin + static_cast<difference_type>(numberOfValues);
 
       return PortalType(this->Begin, this->End);
     }
@@ -173,9 +162,8 @@ public:
     // Attempt to allocate:
     try
     {
-      ValueType* tmp =
+      this->Begin =
         static_cast<ValueType*>(vtkm::cont::cuda::internal::CudaAllocator::Allocate(bufferSize));
-      this->Begin = PointerType(tmp);
     }
     catch (const std::exception& error)
     {
@@ -184,7 +172,7 @@ public:
       throw vtkm::cont::ErrorBadAllocation(err.str());
     }
 
-    this->Capacity = PointerType(this->Begin.get() + static_cast<difference_type>(numberOfValues));
+    this->Capacity = this->Begin + static_cast<difference_type>(numberOfValues);
     this->End = this->Capacity;
 
     return PortalType(this->Begin, this->End);
@@ -206,23 +194,14 @@ public:
     storage->Allocate(this->GetNumberOfValues());
     try
     {
-      ::thrust::copy(
-        this->Begin, this->End, vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
+      ::thrust::copy(thrust::cuda::pointer<ValueType>(this->Begin),
+                     thrust::cuda::pointer<ValueType>(this->End),
+                     vtkm::cont::ArrayPortalToIteratorBegin(storage->GetPortal()));
     }
     catch (...)
     {
       vtkm::cont::cuda::internal::throwAsVTKmException();
     }
-  }
-
-  /// Copies the data currently in the device array into the given iterators.
-  /// Although the iterator is supposed to be from the control environment,
-  /// thrust can generally handle iterators for a device as well.
-  ///
-  template <class IteratorTypeControl>
-  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
-  {
-    ::thrust::copy(this->Begin, this->End, dest);
   }
 
   /// Resizes the device vector.
@@ -231,22 +210,21 @@ public:
   {
     // The operation will succeed even if this assertion fails, but this
     // is still supposed to be a precondition to Shrink.
-    VTKM_ASSERT(this->Begin.get() != nullptr &&
-                this->Begin.get() + numberOfValues <= this->End.get());
+    VTKM_ASSERT(this->Begin != nullptr && this->Begin + numberOfValues <= this->End);
 
-    this->End = PointerType(this->Begin.get() + static_cast<difference_type>(numberOfValues));
+    this->End = this->Begin + static_cast<difference_type>(numberOfValues);
   }
 
   /// Frees all memory.
   ///
   VTKM_CONT void ReleaseResources()
   {
-    if (this->Begin.get() != nullptr)
+    if (this->Begin != nullptr)
     {
-      vtkm::cont::cuda::internal::CudaAllocator::Free(this->Begin.get());
-      this->Begin = PointerType(static_cast<ValueType*>(nullptr));
-      this->End = PointerType(static_cast<ValueType*>(nullptr));
-      this->Capacity = PointerType(static_cast<ValueType*>(nullptr));
+      vtkm::cont::cuda::internal::CudaAllocator::Free(this->Begin);
+      this->Begin = nullptr;
+      this->End = nullptr;
+      this->Capacity = nullptr;
     }
   }
 
@@ -268,7 +246,7 @@ private:
       this->PrepareForOutput(this->Storage->GetNumberOfValues());
       ::thrust::copy(vtkm::cont::ArrayPortalToIteratorBegin(this->Storage->GetPortalConst()),
                      vtkm::cont::ArrayPortalToIteratorEnd(this->Storage->GetPortalConst()),
-                     this->Begin);
+                     thrust::cuda::pointer<ValueType>(this->Begin));
     }
     catch (...)
     {

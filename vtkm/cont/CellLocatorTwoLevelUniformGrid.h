@@ -106,9 +106,14 @@ private:
   {
     DimVec3 Min;
     DimVec3 Max;
+
+    VTKM_EXEC
+    bool Empty() const
+    {
+      return (this->Max[0] < this->Min[0]) || (this->Max[1] < this->Min[1]) ||
+        (this->Max[2] < this->Min[2]);
+    }
   };
-
-
 
   struct Bounds
   {
@@ -139,7 +144,7 @@ private:
                                                      const FloatVec3& size,
                                                      vtkm::FloatDefault density)
   {
-    vtkm::FloatDefault nsides = 1.0f;
+    vtkm::FloatDefault nsides = 0.0f;
     vtkm::FloatDefault volume = 1.0f;
     vtkm::FloatDefault maxside = vtkm::Max(size[0], vtkm::Max(size[1], size[2]));
     for (int i = 0; i < 3; ++i)
@@ -159,6 +164,18 @@ private:
                              static_cast<DimensionType>(size[2] * r)));
   }
 
+  VTKM_EXEC static vtkm::Id ComputeFlatIndex(const DimVec3& idx, const DimVec3 dim)
+  {
+    return idx[0] + (dim[0] * (idx[1] + (dim[1] * idx[2])));
+  }
+
+  VTKM_EXEC static Grid ComputeLeafGrid(const DimVec3& idx, const DimVec3& dim, const Grid& l1Grid)
+  {
+    return { dim,
+             l1Grid.Origin + (static_cast<FloatVec3>(idx) * l1Grid.BinSize),
+             l1Grid.BinSize / static_cast<FloatVec3>(dim) };
+  }
+
   template <typename PointsVecType>
   VTKM_EXEC static Bounds ComputeCellBounds(const PointsVecType& points)
   {
@@ -174,6 +191,82 @@ private:
 
     return { FloatVec3(minp), FloatVec3(maxp) };
   }
+
+  VTKM_EXEC static BinsBBox ComputeIntersectingBins(const Bounds cellBounds, const Grid& grid)
+  {
+    auto minb = static_cast<DimVec3>((cellBounds.Min - grid.Origin) / grid.BinSize);
+    auto maxb = static_cast<DimVec3>((cellBounds.Max - grid.Origin) / grid.BinSize);
+
+    return { vtkm::Max(DimVec3(0), minb), vtkm::Min(grid.Dimensions - DimVec3(1), maxb) };
+  }
+
+  VTKM_EXEC static vtkm::Id GetNumberOfBins(const BinsBBox& binsBBox)
+  {
+    return binsBBox.Empty() ? 0 : ((binsBBox.Max[0] - binsBBox.Min[0] + 1) *
+                                   (binsBBox.Max[1] - binsBBox.Min[1] + 1) *
+                                   (binsBBox.Max[2] - binsBBox.Min[2] + 1));
+  }
+
+  class BBoxIterator
+  {
+  public:
+    VTKM_EXEC_CONT BBoxIterator(const BinsBBox& bbox, const DimVec3& dim)
+      : BBox(bbox)
+      , Dim(dim)
+      , Idx(bbox.Min)
+      , StepY(dim[0] - (bbox.Max[0] - bbox.Min[0] + 1))
+      , StepZ((dim[0] * dim[1]) - ((bbox.Max[1] - bbox.Min[1] + 1) * dim[0]))
+      , FlatIdx(ComputeFlatIndex(this->Idx, dim))
+      , DoneFlag(bbox.Empty())
+    {
+    }
+
+    VTKM_EXEC_CONT void Init()
+    {
+      this->Idx = this->BBox.Min;
+      this->FlatIdx = ComputeFlatIndex(this->Idx, this->Dim);
+      this->DoneFlag = this->BBox.Empty();
+    }
+
+    VTKM_EXEC_CONT bool Done() const { return this->DoneFlag; }
+
+    VTKM_EXEC_CONT void Next()
+    {
+      if (!this->DoneFlag)
+      {
+        ++this->Idx[0];
+        this->FlatIdx += 1;
+        if (this->Idx[0] > this->BBox.Max[0])
+        {
+          this->Idx[0] = this->BBox.Min[0];
+          ++this->Idx[1];
+          this->FlatIdx += this->StepY;
+          if (this->Idx[1] > this->BBox.Max[1])
+          {
+            this->Idx[1] = this->BBox.Min[1];
+            ++this->Idx[2];
+            this->FlatIdx += this->StepZ;
+            if (this->Idx[2] > this->BBox.Max[2])
+            {
+              this->DoneFlag = true;
+            }
+          }
+        }
+      }
+    }
+
+    VTKM_EXEC_CONT const DimVec3& GetIdx() const { return this->Idx; }
+
+    VTKM_EXEC_CONT vtkm::Id GetFlatIdx() const { return this->FlatIdx; }
+
+  private:
+    BinsBBox BBox;
+    DimVec3 Dim;
+    DimVec3 Idx;
+    vtkm::Id StepY, StepZ;
+    vtkm::Id FlatIdx;
+    bool DoneFlag;
+  };
 
   // TODO: This function may return false positives for non 3D cells as the
   // tests are done on the projection of the point on the cell. Extra checks
@@ -196,73 +289,6 @@ private:
     }
     return false;
   }
-
-  VTKM_EXEC static BinsBBox ComputeIntersectingBins(const Bounds cellBounds, const Grid& grid)
-  {
-    auto minb = (cellBounds.Min - grid.Origin) / grid.BinSize;
-    auto maxb = (cellBounds.Max - grid.Origin) / grid.BinSize;
-    return { vtkm::Max(DimVec3(0), DimVec3(minb)),
-             vtkm::Min(grid.Dimensions - DimVec3(1), DimVec3(maxb)) };
-  }
-
-  VTKM_EXEC static vtkm::Id GetNumberOfBins(const BinsBBox& binsBBox)
-  {
-    return (binsBBox.Max[0] - binsBBox.Min[0] + 1) * (binsBBox.Max[1] - binsBBox.Min[1] + 1) *
-      (binsBBox.Max[2] - binsBBox.Min[2] + 1);
-  }
-
-  class BBoxIterator
-  {
-  public:
-    VTKM_EXEC_CONT BBoxIterator(const BinsBBox& bbox, const DimVec3& dim)
-      : BBox(bbox)
-      , Dim(dim)
-      , Idx(bbox.Min)
-      , Step(1,
-             dim[0] - (bbox.Max[0] - bbox.Min[0] + 1),
-             (dim[0] * dim[1]) - ((bbox.Max[1] - bbox.Min[1] + 1) * dim[0]))
-      , FlatIdx(bbox.Min[0] + (dim[0] * (bbox.Min[1] + (dim[1] * bbox.Min[2]))))
-    {
-    }
-
-    VTKM_EXEC_CONT void Init()
-    {
-      this->Idx = this->BBox.Min;
-      this->FlatIdx =
-        this->Idx[0] + (this->Dim[0] * (this->Idx[1] + (this->Dim[1] * this->Idx[2])));
-    }
-
-    VTKM_EXEC_CONT bool Done() const { return this->Idx[2] > this->BBox.Max[2]; }
-
-    VTKM_EXEC_CONT void Next()
-    {
-      ++this->Idx[0];
-      this->FlatIdx += this->Step[0];
-      if (this->Idx[0] > this->BBox.Max[0])
-      {
-        this->Idx[0] = this->BBox.Min[0];
-        ++this->Idx[1];
-        this->FlatIdx += this->Step[1];
-        if (this->Idx[1] > this->BBox.Max[1])
-        {
-          this->Idx[1] = this->BBox.Min[1];
-          ++this->Idx[2];
-          this->FlatIdx += this->Step[2];
-        }
-      }
-    }
-
-    VTKM_EXEC_CONT const DimVec3& GetIdx() const { return this->Idx; }
-
-    VTKM_EXEC_CONT vtkm::Id GetFlatIdx() const { return this->FlatIdx; }
-
-  private:
-    BinsBBox BBox;
-    DimVec3 Dim;
-    DimVec3 Idx;
-    vtkm::Id3 Step;
-    vtkm::Id FlatIdx;
-  };
 
 public:
   class CountBinsL1 : public vtkm::worklet::WorkletMapPointToCell
@@ -377,12 +403,7 @@ public:
       numBins = 0;
       for (BBoxIterator i(binsBBox, this->L1Grid.Dimensions); !i.Done(); i.Next())
       {
-        Grid leaf;
-        leaf.Dimensions = binDimensions.Get(i.GetFlatIdx());
-        leaf.Origin =
-          this->L1Grid.Origin + (static_cast<FloatVec3>(i.GetIdx()) * this->L1Grid.BinSize);
-        leaf.BinSize = this->L1Grid.BinSize / static_cast<FloatVec3>(leaf.Dimensions);
-
+        Grid leaf = ComputeLeafGrid(i.GetIdx(), binDimensions.Get(i.GetFlatIdx()), this->L1Grid);
         auto binsBBoxL2 = ComputeIntersectingBins(cellBounds, leaf);
         numBins += GetNumberOfBins(binsBBoxL2);
       }
@@ -427,14 +448,10 @@ public:
 
       for (BBoxIterator i(binsBBox, this->L1Grid.Dimensions); !i.Done(); i.Next())
       {
-        Grid leaf;
-        leaf.Dimensions = binDimensions.Get(i.GetFlatIdx());
-        leaf.Origin =
-          this->L1Grid.Origin + (static_cast<FloatVec3>(i.GetIdx()) * this->L1Grid.BinSize);
-        leaf.BinSize = this->L1Grid.BinSize / static_cast<FloatVec3>(leaf.Dimensions);
-
+        Grid leaf = ComputeLeafGrid(i.GetIdx(), binDimensions.Get(i.GetFlatIdx()), this->L1Grid);
         auto binsBBoxL2 = ComputeIntersectingBins(cellBounds, leaf);
         vtkm::Id leafStart = binStarts.Get(i.GetFlatIdx());
+
         for (BBoxIterator j(binsBBoxL2, leaf.Dimensions); !j.Done(); j.Next())
         {
           binIds.Set(offset, leafStart + j.GetFlatIdx());
@@ -479,24 +496,17 @@ public:
 
   /// Builds the cell locator lookup structure
   ///
-  template <typename DeviceAdapter,
-            typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG,
-            typename CoordsTypeList = VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG,
-            typename CoordsStorageList = VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>
-  void Build(DeviceAdapter,
-             CellSetList cellSetTypes = CellSetList(),
-             CoordsTypeList coordsValueTypes = CoordsTypeList(),
-             CoordsStorageList coordsStorageType = CoordsStorageList())
+  template <typename DeviceAdapter, typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
+  void Build(DeviceAdapter, CellSetList cellSetTypes = CellSetList())
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
     auto cellset = this->CellSet.ResetCellSetList(cellSetTypes);
-    auto points =
-      this->Coordinates.GetData().ResetTypeAndStorageLists(coordsValueTypes, coordsStorageType);
+    const auto& coords = this->Coordinates;
     TwoLevelUniformGrid ls;
 
     // 1: Compute the top level grid
-    auto bounds = this->Coordinates.GetBounds(coordsValueTypes, coordsStorageType);
+    auto bounds = this->Coordinates.GetBounds();
     FloatVec3 bmin(static_cast<vtkm::FloatDefault>(bounds.X.Min),
                    static_cast<vtkm::FloatDefault>(bounds.Y.Min),
                    static_cast<vtkm::FloatDefault>(bounds.Z.Min));
@@ -504,7 +514,7 @@ public:
                    static_cast<vtkm::FloatDefault>(bounds.Y.Max),
                    static_cast<vtkm::FloatDefault>(bounds.Z.Max));
     auto size = bmax - bmin;
-    auto fudge = vtkm::Max(FloatVec3(1e-6f), size * 1e-3f);
+    auto fudge = vtkm::Max(FloatVec3(1e-6f), size * 1e-4f);
     size += 2.0f * fudge;
 
     ls.TopLevel.Dimensions =
@@ -516,7 +526,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> binCounts;
     CountBinsL1 countL1(ls.TopLevel);
     vtkm::worklet::DispatcherMapTopology<CountBinsL1, DeviceAdapter>(countL1).Invoke(
-      cellset, points, binCounts);
+      cellset, coords, binCounts);
 
     // 3: Total number of unique (cell, bin) pairs (for pre-allocating arrays)
     vtkm::Id numPairsL1 = Algorithm::ScanExclusive(binCounts, binCounts);
@@ -526,7 +536,7 @@ public:
     binIds.Allocate(numPairsL1);
     FindBinsL1 findL1(ls.TopLevel);
     vtkm::worklet::DispatcherMapTopology<FindBinsL1, DeviceAdapter>(findL1).Invoke(
-      cellset, points, binCounts, binIds);
+      cellset, coords, binCounts, binIds);
     binCounts.ReleaseResources();
 
     // 5: From above, find the number of cells that intersect each top level bin
@@ -560,7 +570,7 @@ public:
     // 8: For each cell, find the number of l2 bins they intersect
     CountBinsL2 countL2(ls.TopLevel);
     vtkm::worklet::DispatcherMapTopology<CountBinsL2, DeviceAdapter>(countL2).Invoke(
-      cellset, points, ls.LeafDimensions, binCounts);
+      cellset, coords, ls.LeafDimensions, binCounts);
 
     // 9: Total number of unique (cell, bin) pairs (for pre-allocating arrays)
     vtkm::Id numPairsL2 = Algorithm::ScanExclusive(binCounts, binCounts);
@@ -570,7 +580,7 @@ public:
     ls.CellIds.Allocate(numPairsL2);
     FindBinsL2 findL2(ls.TopLevel);
     vtkm::worklet::DispatcherMapTopology<FindBinsL2, DeviceAdapter>(findL2).Invoke(
-      cellset, points, ls.LeafDimensions, ls.LeafStartIndex, binCounts, binIds, ls.CellIds);
+      cellset, coords, ls.LeafDimensions, ls.LeafStartIndex, binCounts, binIds, ls.CellIds);
     binCounts.ReleaseResources();
 
     // 11: From above, find the cells that each l2 bin intersects
@@ -648,28 +658,22 @@ public:
           binId3[1] < topLevelGrid.Dimensions[1] && binId3[2] >= 0 &&
           binId3[2] < topLevelGrid.Dimensions[2])
       {
-        vtkm::Id binId = binId3[0] +
-          (topLevelGrid.Dimensions[0] * (binId3[1] + (topLevelGrid.Dimensions[1] * binId3[2])));
+        vtkm::Id binId = ComputeFlatIndex(binId3, topLevelGrid.Dimensions);
 
-        Grid leafGrid;
-        leafGrid.Dimensions = lookupStruct.LeafDimensions.Get(binId);
-        if (leafGrid.Dimensions[0] + leafGrid.Dimensions[1] + leafGrid.Dimensions[2] == 0)
+        auto ldim = lookupStruct.LeafDimensions.Get(binId);
+        if (!ldim[0] || !ldim[1] || !ldim[2])
         {
           return;
         }
 
-        leafGrid.Origin =
-          topLevelGrid.Origin + static_cast<FloatVec3>(binId3) * topLevelGrid.BinSize;
-        leafGrid.BinSize = topLevelGrid.BinSize / static_cast<FloatVec3>(leafGrid.Dimensions);
+        auto leafGrid = ComputeLeafGrid(binId3, ldim, topLevelGrid);
+
+        DimVec3 leafId3 = static_cast<DimVec3>((p - leafGrid.Origin) / leafGrid.BinSize);
+        // precision issues may cause leafId3 to be out of range so clamp it
+        leafId3 = vtkm::Max(DimVec3(0), vtkm::Min(ldim - DimVec3(1), leafId3));
 
         vtkm::Id leafStart = lookupStruct.LeafStartIndex.Get(binId);
-        DimVec3 leafId3 = static_cast<DimVec3>((p - leafGrid.Origin) / leafGrid.BinSize);
-        vtkm::Id leafId = leafStart +
-          (leafId3[0] +
-           (leafGrid.Dimensions[0] * (leafId3[1] + (leafGrid.Dimensions[1] * leafId3[2]))));
-        VTKM_ASSERT(leafId3[0] >= 0 && leafId3[0] < leafGrid.Dimensions[0] && leafId3[1] >= 0 &&
-                    leafId3[1] < leafGrid.Dimensions[1] && leafId3[2] >= 0 &&
-                    leafId3[2] < leafGrid.Dimensions[2]);
+        vtkm::Id leafId = leafStart + ComputeFlatIndex(leafId3, leafGrid.Dimensions);
 
         vtkm::Id start = lookupStruct.CellStartIndex.Get(leafId);
         vtkm::Id end = start + lookupStruct.CellCount.Get(leafId);
@@ -699,22 +703,18 @@ public:
   template <typename PointComponentType,
             typename PointStorageType,
             typename DeviceAdapter,
-            typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG,
-            typename CoordsTypeList = VTKM_DEFAULT_COORDINATE_SYSTEM_TYPE_LIST_TAG,
-            typename CoordsStorageList = VTKM_DEFAULT_COORDINATE_SYSTEM_STORAGE_LIST_TAG>
+            typename CellSetList = VTKM_DEFAULT_CELL_SET_LIST_TAG>
   void FindCells(
     const vtkm::cont::ArrayHandle<vtkm::Vec<PointComponentType, 3>, PointStorageType>& points,
     vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
     vtkm::cont::ArrayHandle<FloatVec3>& parametricCoords,
     DeviceAdapter device,
-    CellSetList cellSetTypes = CellSetList(),
-    CoordsTypeList coordsValueTypes = CoordsTypeList(),
-    CoordsStorageList coordsStorageType = CoordsStorageList()) const
+    CellSetList cellSetTypes = CellSetList()) const
   {
     vtkm::worklet::DispatcherMapField<FindCellWorklet, DeviceAdapter>().Invoke(
       points,
       this->CellSet.ResetCellSetList(cellSetTypes),
-      this->Coordinates.GetData().ResetTypeAndStorageLists(coordsValueTypes, coordsStorageType),
+      this->Coordinates,
       this->PrepareForDevice(device),
       cellIds,
       parametricCoords);

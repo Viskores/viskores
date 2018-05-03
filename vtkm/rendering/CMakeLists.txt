@@ -18,6 +18,28 @@
 ##  this software.
 ##============================================================================
 
+if(NOT VTKm_ENABLE_RENDERING)
+  return()
+endif()
+
+# determine what context(s) for rendering we want to build
+vtkm_option(VTKm_ENABLE_GL_CONTEXT "Enable GL context for vtkm rendering" OFF)
+if(UNIX AND NOT APPLE)
+  vtkm_option(VTKm_ENABLE_OSMESA_CONTEXT "Enable OSMesa context for vtkm rendering" OFF)
+  vtkm_option(VTKm_ENABLE_EGL_CONTEXT "Enable EGL context for vtkm rendering" OFF)
+  mark_as_advanced(VTKm_ENABLE_OSMESA_CONTEXT)
+  mark_as_advanced(VTKm_ENABLE_EGL_CONTEXT)
+endif()
+if(VTKm_ENABLE_GL_CONTEXT AND VTKm_ENABLE_OSMESA_CONTEXT)
+  message(FATAL_ERROR "VTK-m GL and OSMesa contexts are mutually exclusive")
+endif()
+if(VTKm_ENABLE_GL_CONTEXT AND VTKm_ENABLE_EGL_CONTEXT)
+  message(FATAL_ERROR "VTK-m GL and EGL contexts are mutually exclusive")
+endif()
+if(VTKm_ENABLE_EGL_CONTEXT AND VTKm_ENABLE_OSMESA_CONTEXT)
+  message(FATAL_ERROR "VTK-m EGL and OSMesa contexts are mutually exclusive")
+endif()
+
 set(headers
   Actor.h
   AxisAnnotation.h
@@ -32,7 +54,6 @@ set(headers
   Color.h
   ColorBarAnnotation.h
   ColorLegendAnnotation.h
-  ColorTable.h
   ConnectivityProxy.h
   DecodePNG.h
   LineRenderer.h
@@ -65,25 +86,18 @@ set(sources
   BitmapFontFactory.cxx
   BoundingBoxAnnotation.cxx
   Camera.cxx
-  Canvas.cxx
-  CanvasRayTracer.cxx
   Color.cxx
   ColorBarAnnotation.cxx
   ColorLegendAnnotation.cxx
-  ColorTable.cxx
-  ConnectivityProxy.cxx
   DecodePNG.cxx
   LineRenderer.cxx
-  Mapper.cxx
+  MapperConnectivity.cxx
   MapperRayTracer.cxx
   MapperVolume.cxx
-  MapperConnectivity.cxx
-  MapperWireframer.cxx
   Scene.cxx
   TextAnnotation.cxx
   TextAnnotationBillboard.cxx
   TextAnnotationScreen.cxx
-  TextRenderer.cxx
   View.cxx
   View1D.cxx
   View2D.cxx
@@ -91,15 +105,14 @@ set(sources
   WorldAnnotator.cxx
 
   internal/RunTriangulator.cxx
-  raytracing/BoundingVolumeHierarchy.cxx
-  raytracing/Camera.cxx
-  raytracing/ChannelBuffer.cxx
+  raytracing/ConnectivityBase.cxx
+  raytracing/ConnectivityTracerBase.cxx
+  raytracing/ConnectivityTracerFactory.cxx
   raytracing/Logger.cxx
-  raytracing/RayTracer.cxx
-  raytracing/RayOperations.cxx
-  raytracing/VolumeRendererStructured.cxx
   )
 
+# Note that EGL and OSMesa Canvas depend on the GL version being built. Only
+# the None backend supports not building the opengl version
 set(opengl_headers
   CanvasGL.h
   MapperGL.h
@@ -133,79 +146,60 @@ set(osmesa_sources
 # This list of sources has code that uses devices and so might need to be
 # compiled with a device-specific compiler (like CUDA).
 set(device_sources
-  Mapper.cxx
-  MapperWireframer.cxx
   Canvas.cxx
   CanvasRayTracer.cxx
   ConnectivityProxy.cxx
+  Mapper.cxx
+  MapperWireframer.cxx
   TextRenderer.cxx
+
   raytracing/BoundingVolumeHierarchy.cxx
   raytracing/Camera.cxx
   raytracing/ChannelBuffer.cxx
-  raytracing/VolumeRendererStructured.cxx
+  raytracing/ConnectivityTracer.cxx
   raytracing/RayOperations.cxx
   raytracing/RayTracer.cxx
+  raytracing/VolumeRendererStructured.cxx
   )
 
 #-----------------------------------------------------------------------------
-vtkm_configure_component_OpenGL()
-if(VTKm_OpenGL_FOUND)
-  list(APPEND headers ${opengl_headers})
-  list(APPEND sources ${opengl_sources})
-
-  vtkm_configure_component_OSMesa()
-  if(VTKm_OSMesa_FOUND)
-    list(APPEND headers ${osmesa_headers})
-    list(APPEND sources ${osmesa_sources})
-  endif()
-
-#  vtkm_configure_component_EGL()
-#  if(VTKm_EGL_FOUND)
-#    list(APPEND headers ${egl_headers})
-#    list(APPEND sources ${egl_sources})
-#  endif()
-endif()
-
-if(VTKm_ENABLE_OSMESA AND NOT VTKm_OSMesa_FOUND)
-  message(SEND_ERROR "OSMesa was requested by not properly configured.
-Either make sure the OSMesa headers and library are properly found or set
-VTKm_ENABLE_OSMESA to OFF.")
-endif()
-
-vtkm_declare_headers(${headers})
-
 vtkm_library(
+  NAME vtkm_rendering
   SOURCES ${sources}
+  HEADERS ${headers}
   WRAP_FOR_CUDA ${device_sources}
   )
 
-# EGL Libs are added here to ensure propper linking when statically compiling.
-# This is safe to do even when not using EGL as the values will then be empty.
-target_link_libraries(vtkm_rendering
-                      PUBLIC vtkm_cont
-                      PRIVATE ${VTKm_OPENGL_LIBRARIES}
-                              ${VTKm_BACKEND_LIBRARIES}
-                              ${EGL_LIBRARIES}
-                      )
+if(VTKm_ENABLE_GL_CONTEXT)
+  vtkm_declare_headers(${opengl_headers})
+  target_sources(vtkm_rendering PRIVATE ${opengl_sources})
+elseif(VTKm_ENABLE_OSMESA_CONTEXT)
+  vtkm_declare_headers(${opengl_headers} ${osmesa_headers})
+  target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${osmesa_sources})
+elseif(VTKm_ENABLE_EGL_CONTEXT)
+  vtkm_declare_headers(${opengl_headers} ${egl_headers})
+  target_sources(vtkm_rendering PRIVATE ${opengl_sources} ${egl_sources})
+endif()
 
-# EGL Dirs are added here to ensure propper linking when statically compiling.
-# This is safe to do even when not using EGL as the values will then be empty.
-target_include_directories(vtkm_rendering
-                          PRIVATE ${VTKm_OPENGL_INCLUDE_DIRS}
-                                  ${VTKm_BACKEND_INCLUDE_DIRS}
-                                  ${EGL_INCLUDE_DIRS}
-                          )
+#-----------------------------------------------------------------------------
+target_link_libraries(vtkm_rendering PUBLIC vtkm_cont)
+
 
 if(UNIX AND NOT APPLE)
   target_link_libraries(vtkm_rendering PRIVATE rt )
 endif()
 
+#-----------------------------------------------------------------------------
+include(VTKmRenderingContexts)
+target_link_libraries(vtkm_rendering PUBLIC vtkm_rendering_gl_context)
 
-# Subclasses need rendering library
-vtkm_configure_component_Rendering()
-
-add_subdirectory(internal)
-add_subdirectory(raytracing)
+if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+  install(TARGETS vtkm_rendering_gl_context
+    EXPORT ${VTKm_EXPORT_NAME}
+    )
+endif()
 
 #-----------------------------------------------------------------------------
+add_subdirectory(internal)
+add_subdirectory(raytracing)
 add_subdirectory(testing)

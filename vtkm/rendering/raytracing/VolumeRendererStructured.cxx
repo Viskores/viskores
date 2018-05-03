@@ -28,10 +28,10 @@
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/CellSetStructured.h>
+#include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/ErrorBadValue.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/Ray.h>
@@ -134,7 +134,7 @@ public:
     {
       //
       // When searching for points, we consider the max value of the cell
-      // to be apart of the next cell. If the point falls on the boundry of the
+      // to be apart of the next cell. If the point falls on the boundary of the
       // data set, then it is technically inside a cell. This checks for that case
       //
       if (point[dim] == MaxPoint[dim])
@@ -342,14 +342,16 @@ public:
   typedef void ControlSignature(FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
+                                FieldIn<>,
                                 WholeArrayInOut<>,
                                 WholeArrayIn<ScalarRenderingTypes>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& rayDir,
                             const vtkm::Vec<vtkm::Float32, 3>& rayOrigin,
                             const vtkm::Float32& minDistance,
+                            const vtkm::Float32& maxDistance,
                             ColorBufferType& colorBuffer,
                             ScalarPortalType& scalars,
                             const vtkm::Id& pixelIndex) const
@@ -370,7 +372,17 @@ public:
     }
     //get the initial sample position;
     vtkm::Vec<vtkm::Float32, 3> sampleLocation;
-    sampleLocation = rayOrigin + (0.0001f + minDistance) * rayDir;
+    // find the distance to the first sample
+    vtkm::Float32 distance = minDistance + 0.0001f;
+    sampleLocation = rayOrigin + distance * rayDir;
+    // since the calculations are slightly different, we could hit an
+    // edge case where the first sample location may not be in the data set.
+    // Thus, advance to the next sample location
+    while (!Locator.IsInside(sampleLocation) && distance < maxDistance)
+    {
+      distance += SampleDistance;
+      sampleLocation = rayOrigin + distance * rayDir;
+    }
     /*
             7----------6
            /|         /|
@@ -399,7 +411,7 @@ public:
     vtkm::Vec<vtkm::Float32, 3> invSpacing(0.f, 0.f, 0.f);
 
 
-    while (Locator.IsInside(sampleLocation))
+    while (Locator.IsInside(sampleLocation) && distance < maxDistance)
     {
       vtkm::Float32 mint = vtkm::Min(tx, vtkm::Min(ty, tz));
       vtkm::Float32 maxt = vtkm::Max(tx, vtkm::Max(ty, tz));
@@ -464,6 +476,7 @@ public:
       color[2] = color[2] + sampleColor[2] * sampleColor[3];
       color[3] = sampleColor[3] + color[3];
       //advance
+      distance += SampleDistance;
       sampleLocation = sampleLocation + SampleDistance * rayDir;
 
       //this is linear could just do an addition
@@ -525,14 +538,16 @@ public:
   typedef void ControlSignature(FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
+                                FieldIn<>,
                                 WholeArrayInOut<>,
                                 WholeArrayIn<ScalarRenderingTypes>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex);
+  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType, typename ColorBufferType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& rayDir,
                             const vtkm::Vec<vtkm::Float32, 3>& rayOrigin,
                             const vtkm::Float32& minDistance,
+                            const vtkm::Float32& maxDistance,
                             ColorBufferType& colorBuffer,
                             const ScalarPortalType& scalars,
                             const vtkm::Id& pixelIndex) const
@@ -551,7 +566,17 @@ public:
       return; //TODO: Compact? or just image subset...
     //get the initial sample position;
     vtkm::Vec<vtkm::Float32, 3> sampleLocation;
-    sampleLocation = rayOrigin + (0.0001f + minDistance) * rayDir;
+    // find the distance to the first sample
+    vtkm::Float32 distance = minDistance + 0.0001f;
+    sampleLocation = rayOrigin + distance * rayDir;
+    // since the calculations are slightly different, we could hit an
+    // edge case where the first sample location may not be in the data set.
+    // Thus, advance to the next sample location
+    while (!Locator.IsInside(sampleLocation) && distance < maxDistance)
+    {
+      distance += SampleDistance;
+      sampleLocation = rayOrigin + distance * rayDir;
+    }
 
     /*
             7----------6
@@ -571,7 +596,7 @@ public:
     vtkm::Vec<vtkm::Float32, 3> bottomLeft(0.f, 0.f, 0.f);
     vtkm::Vec<vtkm::Float32, 3> invSpacing(0.f, 0.f, 0.f);
     vtkm::Vec<vtkm::Id, 3> cell(0, 0, 0);
-    while (Locator.IsInside(sampleLocation))
+    while (Locator.IsInside(sampleLocation) && distance < maxDistance)
     {
       vtkm::Float32 mint = vtkm::Min(tx, vtkm::Min(ty, tz));
       vtkm::Float32 maxt = vtkm::Max(tx, vtkm::Max(ty, tz));
@@ -605,6 +630,7 @@ public:
       color[2] = color[2] + sampleColor[2] * alpha;
       color[3] = alpha + color[3];
       //advance
+      distance += SampleDistance;
       sampleLocation = sampleLocation + SampleDistance * rayDir;
 
       if (color[3] >= 1.f)
@@ -690,7 +716,7 @@ public:
 
     minDistance = vtkm::Max(
       vtkm::Max(vtkm::Max(vtkm::Min(ymin, ymax), vtkm::Min(xmin, xmax)), vtkm::Min(zmin, zmax)),
-      0.f);
+      minDistance);
     vtkm::Float32 exitDistance =
       vtkm::Min(vtkm::Min(vtkm::Max(ymin, ymax), vtkm::Max(xmin, xmax)), vtkm::Max(zmin, zmax));
     maxDistance = vtkm::Min(maxDistance, exitDistance);
@@ -819,7 +845,12 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                 vtkm::Float32(ScalarRange.Max),
                                                 SampleDistance,
                                                 locator))
-        .Invoke(rays.Dir, rays.Origin, rays.MinDistance, rays.Buffers.at(0).Buffer, *ScalarField);
+        .Invoke(rays.Dir,
+                rays.Origin,
+                rays.MinDistance,
+                rays.MaxDistance,
+                rays.Buffers.at(0).Buffer,
+                *ScalarField);
     }
     else
     {
@@ -829,7 +860,12 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                          vtkm::Float32(ScalarRange.Max),
                                                          SampleDistance,
                                                          locator))
-        .Invoke(rays.Dir, rays.Origin, rays.MinDistance, rays.Buffers.at(0).Buffer, *ScalarField);
+        .Invoke(rays.Dir,
+                rays.Origin,
+                rays.MinDistance,
+                rays.MaxDistance,
+                rays.Buffers.at(0).Buffer,
+                *ScalarField);
     }
   }
   else
@@ -845,7 +881,12 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                     vtkm::Float32(ScalarRange.Max),
                                                     SampleDistance,
                                                     locator))
-        .Invoke(rays.Dir, rays.Origin, rays.MinDistance, rays.Buffers.at(0).Buffer, *ScalarField);
+        .Invoke(rays.Dir,
+                rays.Origin,
+                rays.MinDistance,
+                rays.MaxDistance,
+                rays.Buffers.at(0).Buffer,
+                *ScalarField);
     }
     else
     {
@@ -856,7 +897,12 @@ void VolumeRendererStructured::RenderOnDevice(vtkm::rendering::raytracing::Ray<P
                                                              vtkm::Float32(ScalarRange.Max),
                                                              SampleDistance,
                                                              locator))
-        .Invoke(rays.Dir, rays.Origin, rays.MinDistance, rays.Buffers.at(0).Buffer, *ScalarField);
+        .Invoke(rays.Dir,
+                rays.Origin,
+                rays.MinDistance,
+                rays.MaxDistance,
+                rays.Buffers.at(0).Buffer,
+                *ScalarField);
     }
   }
 

@@ -28,11 +28,17 @@ VTKM_THIRDPARTY_POST_INCLUDE
 // These static vars are in an anon namespace to work around MSVC linker issues.
 namespace
 {
+#if CUDART_VERSION >= 8000
 // Has CudaAllocator::Initialize been called?
 static bool IsInitialized = false;
+#endif
 
 // True if all devices support concurrent pagable managed memory.
 static bool ManagedMemorySupported = false;
+
+// Avoid overhead of cudaMemAdvise and cudaMemPrefetchAsync for small buffers.
+// This value should be > 0 or else these functions will error out.
+static std::size_t Threshold = 1 << 20;
 }
 
 namespace vtkm
@@ -52,6 +58,7 @@ bool CudaAllocator::UsingManagedMemory()
 
 bool CudaAllocator::IsDevicePointer(const void* ptr)
 {
+  CudaAllocator::Initialize();
   if (!ptr)
   {
     return false;
@@ -72,7 +79,7 @@ bool CudaAllocator::IsDevicePointer(const void* ptr)
 
 bool CudaAllocator::IsManagedPointer(const void* ptr)
 {
-  if (!ptr)
+  if (!ptr || !ManagedMemorySupported)
   {
     return false;
   }
@@ -93,6 +100,12 @@ bool CudaAllocator::IsManagedPointer(const void* ptr)
 void* CudaAllocator::Allocate(std::size_t numBytes)
 {
   CudaAllocator::Initialize();
+  // When numBytes is zero cudaMallocManaged returns an error and the behavior
+  // of cudaMalloc is not documented. Just return nullptr.
+  if (numBytes == 0)
+  {
+    return nullptr;
+  }
 
   void* ptr = nullptr;
   if (ManagedMemorySupported)
@@ -109,70 +122,70 @@ void* CudaAllocator::Allocate(std::size_t numBytes)
 
 void CudaAllocator::Free(void* ptr)
 {
-  CudaAllocator::Initialize();
-
   VTKM_CUDA_CALL(cudaFree(ptr));
 }
 
 void CudaAllocator::PrepareForControl(const void* ptr, std::size_t numBytes)
 {
-  CudaAllocator::Initialize();
-
-  if (ManagedMemorySupported)
+  if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
+#if CUDART_VERSION >= 8000
     // TODO these hints need to be benchmarked and adjusted once we start
     // sharing the pointers between cont/exec
-    VTKM_CUDA_CALL(
-      cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, cudaCpuDeviceId));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, cudaCpuDeviceId));
+    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, cudaCpuDeviceId));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, cudaCpuDeviceId, cudaStreamPerThread));
+#endif // CUDA >= 8.0
   }
 }
 
 void CudaAllocator::PrepareForInput(const void* ptr, std::size_t numBytes)
 {
-  CudaAllocator::Initialize();
-
-  if (ManagedMemorySupported)
+  if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
+#if CUDART_VERSION >= 8000
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetReadMostly, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetReadMostly, dev));
+    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
+#endif // CUDA >= 8.0
   }
 }
 
 void CudaAllocator::PrepareForOutput(const void* ptr, std::size_t numBytes)
 {
-  CudaAllocator::Initialize();
-
-  if (ManagedMemorySupported)
+  if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
+#if CUDART_VERSION >= 8000
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
+    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
+#endif // CUDA >= 8.0
   }
 }
 
 void CudaAllocator::PrepareForInPlace(const void* ptr, std::size_t numBytes)
 {
-  CudaAllocator::Initialize();
-
-  if (ManagedMemorySupported)
+  if (IsManagedPointer(ptr) && numBytes >= Threshold)
   {
+#if CUDART_VERSION >= 8000
     int dev;
     VTKM_CUDA_CALL(cudaGetDevice(&dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
-    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetPreferredLocation, dev));
+    // VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseUnsetReadMostly, dev));
+    VTKM_CUDA_CALL(cudaMemAdvise(ptr, numBytes, cudaMemAdviseSetAccessedBy, dev));
     VTKM_CUDA_CALL(cudaMemPrefetchAsync(ptr, numBytes, dev, cudaStreamPerThread));
+#endif // CUDA >= 8.0
   }
 }
 
 void CudaAllocator::Initialize()
 {
+#if CUDART_VERSION >= 8000
   if (!IsInitialized)
   {
     int numDevices;
@@ -199,6 +212,9 @@ void CudaAllocator::Initialize()
     ManagedMemorySupported = managed;
     IsInitialized = true;
   }
+#else
+  ManagedMemorySupported = false;
+#endif
 }
 }
 }

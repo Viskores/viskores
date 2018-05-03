@@ -27,6 +27,8 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+#include <vtkm/exec/ColorTable.h>
+
 #include <vector>
 
 namespace vtkm
@@ -45,14 +47,14 @@ typedef TypeListTagId4 Id4Type;
 class MapColorAndVertices : public vtkm::worklet::WorkletMapField
 {
 public:
-  const vtkm::rendering::ColorTable ColorTable;
+  const vtkm::exec::ColorTableBase* ColorTable;
   const vtkm::Float32 SMin, SDiff;
 
   VTKM_CONT
-  MapColorAndVertices(const vtkm::rendering::ColorTable& colorTable,
+  MapColorAndVertices(const vtkm::exec::ColorTableBase* table,
                       vtkm::Float32 sMin,
                       vtkm::Float32 sDiff)
-    : ColorTable(colorTable)
+    : ColorTable(table)
     , SMin(sMin)
     , SDiff(sDiff)
   {
@@ -86,30 +88,30 @@ public:
     vtkm::Vec<vtkm::Float32, 3> p3 = verts.Get(idx[3]);
 
     vtkm::Float32 s;
-    vtkm::rendering::Color color1;
-    vtkm::rendering::Color color2;
-    vtkm::rendering::Color color3;
+    vtkm::Vec<float, 3> color1;
+    vtkm::Vec<float, 3> color2;
+    vtkm::Vec<float, 3> color3;
 
     if (SDiff == 0)
     {
       s = 0;
-      color1 = ColorTable.MapRGB(s);
-      color2 = ColorTable.MapRGB(s);
-      color3 = ColorTable.MapRGB(s);
+      color1 = ColorTable->MapThroughColorSpace(s);
+      color2 = ColorTable->MapThroughColorSpace(s);
+      color3 = ColorTable->MapThroughColorSpace(s);
     }
     else
     {
       s = scalar.Get(i1);
       s = (s - SMin) / SDiff;
-      color1 = ColorTable.MapRGB(s);
+      color1 = ColorTable->MapThroughColorSpace(s);
 
       s = scalar.Get(i2);
       s = (s - SMin) / SDiff;
-      color2 = ColorTable.MapRGB(s);
+      color2 = ColorTable->MapThroughColorSpace(s);
 
       s = scalar.Get(i3);
       s = (s - SMin) / SDiff;
-      color3 = ColorTable.MapRGB(s);
+      color3 = ColorTable->MapThroughColorSpace(s);
     }
 
     const vtkm::Id offset = 9;
@@ -117,23 +119,23 @@ public:
     v_array.Set(i * offset, p1[0]);
     v_array.Set(i * offset + 1, p1[1]);
     v_array.Set(i * offset + 2, p1[2]);
-    c_array.Set(i * offset, color1.Components[0]);
-    c_array.Set(i * offset + 1, color1.Components[1]);
-    c_array.Set(i * offset + 2, color1.Components[2]);
+    c_array.Set(i * offset, color1[0]);
+    c_array.Set(i * offset + 1, color1[1]);
+    c_array.Set(i * offset + 2, color1[2]);
 
     v_array.Set(i * offset + 3, p2[0]);
     v_array.Set(i * offset + 4, p2[1]);
     v_array.Set(i * offset + 5, p2[2]);
-    c_array.Set(i * offset + 3, color2.Components[0]);
-    c_array.Set(i * offset + 4, color2.Components[1]);
-    c_array.Set(i * offset + 5, color2.Components[2]);
+    c_array.Set(i * offset + 3, color2[0]);
+    c_array.Set(i * offset + 4, color2[1]);
+    c_array.Set(i * offset + 5, color2[2]);
 
     v_array.Set(i * offset + 6, p3[0]);
     v_array.Set(i * offset + 7, p3[1]);
     v_array.Set(i * offset + 8, p3[2]);
-    c_array.Set(i * offset + 6, color3.Components[0]);
-    c_array.Set(i * offset + 7, color3.Components[1]);
-    c_array.Set(i * offset + 8, color3.Components[2]);
+    c_array.Set(i * offset + 6, color3[0]);
+    c_array.Set(i * offset + 7, color3[1]);
+    c_array.Set(i * offset + 8, color3[2]);
   }
 };
 
@@ -141,17 +143,18 @@ template <typename PtType>
 struct MapColorAndVerticesInvokeFunctor
 {
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> TriangleIndices;
-  vtkm::rendering::ColorTable ColorTable;
+  vtkm::cont::ColorTable ColorTable;
   const vtkm::cont::ArrayHandle<vtkm::Float32> Scalar;
   const vtkm::Range ScalarRange;
   const PtType Vertices;
-  MapColorAndVertices Worklet;
+  vtkm::Float32 SMin;
+  vtkm::Float32 SDiff;
   vtkm::cont::ArrayHandle<vtkm::Float32> OutColor;
   vtkm::cont::ArrayHandle<vtkm::Float32> OutVertices;
 
   VTKM_CONT
   MapColorAndVerticesInvokeFunctor(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
-                                   const vtkm::rendering::ColorTable& colorTable,
+                                   const vtkm::cont::ColorTable& colorTable,
                                    const vtkm::cont::ArrayHandle<Float32>& scalar,
                                    const vtkm::Range& scalarRange,
                                    const PtType& vertices,
@@ -164,20 +167,21 @@ struct MapColorAndVerticesInvokeFunctor
     , Scalar(scalar)
     , ScalarRange(scalarRange)
     , Vertices(vertices)
-    , Worklet(colorTable, s_min, s_max - s_min)
-    ,
-
-    OutColor(out_color)
+    , SMin(s_min)
+    , SDiff(s_max - s_min)
+    , OutColor(out_color)
     , OutVertices(out_vertices)
   {
   }
 
   template <typename Device>
-  VTKM_CONT bool operator()(Device) const
+  VTKM_CONT bool operator()(Device device) const
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-    vtkm::worklet::DispatcherMapField<MapColorAndVertices, Device> dispatcher(this->Worklet);
+    auto colorHandle = this->ColorTable.GetHandleForExecution();
+    MapColorAndVertices worklet(colorHandle->PrepareForExecution(device), this->SMin, this->SDiff);
+    vtkm::worklet::DispatcherMapField<MapColorAndVertices, Device> dispatcher(worklet);
 
     vtkm::cont::ArrayHandleIndex indexArray(this->TriangleIndices.GetNumberOfValues());
     dispatcher.Invoke(indexArray,
@@ -194,14 +198,24 @@ template <typename PtType>
 VTKM_CONT void RenderStructuredLineSegments(vtkm::Id numVerts,
                                             const PtType& verts,
                                             const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
-                                            vtkm::rendering::ColorTable ct,
+                                            vtkm::cont::ColorTable ct,
                                             bool logY)
 {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glLineWidth(1);
   vtkm::UInt8 r, g, b, a;
-  ct.MapRGB(0).GetRGBA(r, g, b, a);
+
+  //This is horrible as the color table API isn't designed for users to query
+  //on a single value basis. We use the GetPoint and GetPointAlpha escape hatches
+  //and manually convert from float to uchar
+  vtkm::Vec<double, 4> data;
+  ct.GetPoint(0, data);
+  r = static_cast<vtkm::UInt8>(data[1] * 255.0 + 0.5);
+  g = static_cast<vtkm::UInt8>(data[2] * 255.0 + 0.5);
+  b = static_cast<vtkm::UInt8>(data[3] * 255.0 + 0.5);
+  ct.GetPointAlpha(0, data);
+  a = static_cast<vtkm::UInt8>(data[1] * 255.0 + 0.5);
 
   glColor4ub(r, g, b, a);
   glBegin(GL_LINE_STRIP);
@@ -220,14 +234,23 @@ template <typename PtType>
 VTKM_CONT void RenderExplicitLineSegments(vtkm::Id numVerts,
                                           const PtType& verts,
                                           const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
-                                          vtkm::rendering::ColorTable ct,
+                                          vtkm::cont::ColorTable ct,
                                           bool logY)
 {
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glLineWidth(1);
   vtkm::UInt8 r, g, b, a;
-  ct.MapRGB(0).GetRGBA(r, g, b, a);
+  //This is horrible as the color table API isn't designed for users to query
+  //on a single value basis. We use the GetPoint and GetPointAlpha escape hatches
+  //and manually convert from float to uchar
+  vtkm::Vec<double, 4> data;
+  ct.GetPoint(0, data);
+  r = static_cast<vtkm::UInt8>(data[1] * 255.0 + 0.5);
+  g = static_cast<vtkm::UInt8>(data[2] * 255.0 + 0.5);
+  b = static_cast<vtkm::UInt8>(data[3] * 255.0 + 0.5);
+  ct.GetPointAlpha(0, data);
+  a = static_cast<vtkm::UInt8>(data[1] * 255.0 + 0.5);
 
   glColor4ub(r, g, b, a);
   glBegin(GL_LINE_STRIP);
@@ -248,7 +271,7 @@ VTKM_CONT void RenderTriangles(MapperGL& mapper,
                                const PtType& verts,
                                const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
                                const vtkm::cont::ArrayHandle<vtkm::Float32>& scalar,
-                               const vtkm::rendering::ColorTable& ct,
+                               const vtkm::cont::ColorTable& ct,
                                const vtkm::Range& scalarRange,
                                const vtkm::rendering::Camera& camera)
 {
@@ -426,13 +449,13 @@ MapperGL::~MapperGL()
 void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,
                            const vtkm::cont::Field& scalarField,
-                           const vtkm::rendering::ColorTable& colorTable,
+                           const vtkm::cont::ColorTable& colorTable,
                            const vtkm::rendering::Camera& camera,
                            const vtkm::Range& scalarRange)
 {
   vtkm::cont::ArrayHandle<vtkm::Float32> sf;
   sf = scalarField.GetData().Cast<vtkm::cont::ArrayHandle<vtkm::Float32>>();
-  vtkm::cont::DynamicArrayHandleCoordinateSystem dcoords = coords.GetData();
+  auto dcoords = coords.GetData();
   vtkm::Id numVerts = coords.GetData().GetNumberOfValues();
 
   //Handle 1D cases.
@@ -459,20 +482,20 @@ void MapperGL::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     vtkm::cont::ArrayHandleUniformPointCoordinates uVerts;
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> eVerts;
 
-    if (dcoords.IsSameType(vtkm::cont::ArrayHandleUniformPointCoordinates()))
+    if (dcoords.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
     {
       uVerts = dcoords.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
       RenderTriangles(*this, numTri, uVerts, indices, sf, colorTable, scalarRange, camera);
     }
-    else if (dcoords.IsSameType(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>()))
+    else if (dcoords.IsType<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>())
     {
       eVerts = dcoords.Cast<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>>();
       RenderTriangles(*this, numTri, eVerts, indices, sf, colorTable, scalarRange, camera);
     }
-    else if (dcoords.IsSameType(vtkm::cont::ArrayHandleCartesianProduct<
-                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
-                                vtkm::cont::ArrayHandle<vtkm::FloatDefault>>()))
+    else if (dcoords.IsType<vtkm::cont::ArrayHandleCartesianProduct<
+               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+               vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>())
     {
       vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                               vtkm::cont::ArrayHandle<vtkm::FloatDefault>,

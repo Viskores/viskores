@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_internal_VirtualObjectTransfer_h
 #define vtk_m_cont_internal_VirtualObjectTransfer_h
 
+#include <vtkm/VirtualObjectBase.h>
+
 namespace vtkm
 {
 namespace cont
@@ -27,23 +29,31 @@ namespace cont
 namespace internal
 {
 
-template <typename VirtualObject, typename TargetClass, typename DeviceAdapter>
+template <typename VirtualDerivedType, typename DeviceAdapter>
 struct VirtualObjectTransfer
 #ifdef VTKM_DOXYGEN_ONLY
 {
-  /// Takes a void* to host copy of the target object, transfers it to the
-  /// device, binds it to the VirtualObject, and returns a void* to an internal
-  /// state structure.
+  /// A VirtualObjectTransfer is constructed with a pointer to the derived type that (eventually)
+  /// gets transferred to the execution environment of the given DeviceAdapter.
   ///
-  static void* Create(VirtualObject& object, const void* hostTarget);
+  VTKM_CONT VirtualObjectTransfer(const VirtualDerivedType* virtualObject);
 
-  /// Performs cleanup of the device state used to track the VirtualObject on
-  /// the device.
+  /// \brief Transfers the virtual object to the execution environment.
   ///
-  static void Cleanup(void* deviceState);
+  /// This method transfers the virtual object to the execution environment and returns a pointer
+  /// to the object that can be used in the execution environment (but not necessarily the control
+  /// environment). If the \c updateData flag is true, then the data is always copied to the
+  /// execution environment (such as if the data were updated since the last call to \c
+  /// PrepareForExecution). If the \c updateData flag is false and the object was already
+  /// transferred previously, the previously created object is returned.
+  ///
+  VTKM_CONT const VirtualDerivedType* PrepareForExecution(bool updateData);
 
-  /// Update the device state with the state of target
-  static void Update(void* deviceState, const void* target);
+  /// \brief Frees up any resources in the execution environment.
+  ///
+  /// Any previously returned virtual object from \c PrepareForExecution becomes invalid.
+  ///
+  VTKM_CONT void ReleaseResources();
 }
 #endif
 ;

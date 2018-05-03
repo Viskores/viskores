@@ -23,22 +23,16 @@ set(headers
   TransferToOpenGL.h
   )
 
-if(VTKm_ENABLE_TESTING)
-  # Determine if we actually want to compile OpenGL Interop tests.
-  vtkm_configure_component_OpenGL()
+#-----------------------------------------------------------------------------
+vtkm_declare_headers(${headers} TESTABLE FALSE)
+
+if(VTKm_ENABLE_TESTING AND TARGET vtkm_rendering)
+  add_subdirectory(testing)
 endif()
 
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 
-if(VTKm_CUDA_FOUND)
+if(TARGET vtkm::cuda)
   add_subdirectory(cuda)
-endif()
-
-#-----------------------------------------------------------------------------
-vtkm_declare_headers(${headers} TESTABLE FALSE)
-
-#-----------------------------------------------------------------------------
-if(VTKm_OpenGL_FOUND)
-  add_subdirectory(testing)
 endif()

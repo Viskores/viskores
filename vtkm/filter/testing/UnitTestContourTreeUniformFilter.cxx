@@ -87,14 +87,15 @@ public:
     // Create the input uniform cell set with values to contour
     vtkm::cont::DataSet inDataSet = MakeTestDataSet().Make2DUniformDataSet1();
 
-    // Output data set is pairs of saddle and peak vertex IDs
-    vtkm::filter::Result result;
 
     // Convert 2D mesh of values into contour tree, pairs of vertex ids
     vtkm::filter::ContourTreeMesh2D contourTreeMesh2D;
-    result = contourTreeMesh2D.Execute(inDataSet, std::string("pointvar"));
+    contourTreeMesh2D.SetActiveField("pointvar");
 
-    vtkm::cont::Field Result = result.GetField();
+    // Output data set is pairs of saddle and peak vertex IDs
+    vtkm::cont::DataSet result = contourTreeMesh2D.Execute(inDataSet);
+
+    vtkm::cont::Field Result = result.GetField("saddlePeak");
     vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
     Result.GetData().CopyTo(saddlePeak);
 
@@ -126,14 +127,14 @@ public:
     // Create the input uniform cell set with values to contour
     vtkm::cont::DataSet inDataSet = MakeTestDataSet().Make3DUniformDataSet1();
 
-    // Output data set is pairs of saddle and peak vertex IDs
-    vtkm::filter::Result result;
-
     // Convert 2D mesh of values into contour tree, pairs of vertex ids
     vtkm::filter::ContourTreeMesh3D contourTreeMesh3D;
-    result = contourTreeMesh3D.Execute(inDataSet, std::string("pointvar"));
+    contourTreeMesh3D.SetActiveField("pointvar");
 
-    vtkm::cont::Field Result = result.GetField();
+    // Output data set is pairs of saddle and peak vertex IDs
+    vtkm::cont::DataSet result = contourTreeMesh3D.Execute(inDataSet);
+
+    vtkm::cont::Field Result = result.GetField("saddlePeak");
     vtkm::cont::ArrayHandle<vtkm::Pair<vtkm::Id, vtkm::Id>> saddlePeak;
     Result.GetData().CopyTo(saddlePeak);
 

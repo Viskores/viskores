@@ -34,7 +34,9 @@ set(headers
   Bounds.h
   CellShape.h
   CellTraits.h
+  Flags.h
   Hash.h
+  ImplicitFunction.h
   ListTag.h
   Math.h
   Matrix.h
@@ -55,6 +57,7 @@ set(headers
   VectorAnalysis.h
   VecTraits.h
   VecVariable.h
+  VirtualObjectBase.h
   UnaryPredicates.h
   )
 
@@ -64,6 +67,7 @@ vtkm_declare_headers(${headers})
 
 #-----------------------------------------------------------------------------
 #first add all the components vtkm that are shared between control and exec
+add_subdirectory(thirdparty/diy)
 add_subdirectory(testing)
 add_subdirectory(internal)
 
@@ -82,15 +86,9 @@ add_subdirectory(filter)
 
 #-----------------------------------------------------------------------------
 # Build rendering
-if(VTKm_ENABLE_RENDERING)
-  add_subdirectory(rendering)
-endif()
+add_subdirectory(rendering)
 
 add_subdirectory(interop)
-
-#-----------------------------------------------------------------------------
-#add the benchmarking folder
-add_subdirectory(benchmarking)
 
 #-----------------------------------------------------------------------------
 #add the io folder

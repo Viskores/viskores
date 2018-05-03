@@ -56,9 +56,12 @@ vtkm::cont::DataSet MakeTestDataSet()
   };
 
   // Set point scalars
-  dataSet.AddField(vtkm::cont::Field("fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts));
-  dataSet.AddField(vtkm::cont::Field("fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts));
-  dataSet.AddField(vtkm::cont::Field("fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
 
   return dataSet;
 }
@@ -84,8 +87,7 @@ void RunTest()
   //So, e.g. (FieldA[i], FieldB[i], FieldC[i], Frequency[i] ) is a bin in the histogram
   //First three numbers are binID for FieldA, FieldB, FieldC
   //Frequency[i] is frequency for this bin
-  vtkm::filter::Result resultData = ndHistFilter.Execute(ds);
-  vtkm::cont::DataSet& outputData = resultData.GetDataSet();
+  vtkm::cont::DataSet outputData = ndHistFilter.Execute(ds);
 
   // Ground truth ND histogram
   vtkm::Id gtNonSparseBins = 33;

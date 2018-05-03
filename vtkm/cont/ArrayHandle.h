@@ -23,6 +23,7 @@
 #include <vtkm/cont/vtkm_cont_export.h>
 
 #include <vtkm/Assert.h>
+#include <vtkm/Flags.h>
 #include <vtkm/Types.h>
 
 #include <vtkm/cont/ArrayPortalToIterators.h>
@@ -31,6 +32,7 @@
 #include <vtkm/cont/Storage.h>
 #include <vtkm/cont/StorageBasic.h>
 
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <vector>
@@ -56,20 +58,28 @@ class VTKM_CONT_EXPORT ArrayHandleBase
 {
 };
 
-/// Checks to see if the given type and storage can form a valid array handle
+/// Checks to see if the given type and storage forms a valid array handle
 /// (some storage objects cannot support all types). This check is compatible
-/// with C++11 type_traits. It contains a
-/// typedef named type that is either std::true_type or std::false_type.
-/// Both of these have a typedef named value with the respective boolean value.
+/// with C++11 type_traits.
 ///
 template <typename T, typename StorageTag>
 struct IsValidArrayHandle
-{
-  //need to add the not
-  using type =
-    std::integral_constant<bool,
+  : std::integral_constant<bool,
                            !(std::is_base_of<vtkm::cont::internal::UndefinedStorage,
-                                             vtkm::cont::internal::Storage<T, StorageTag>>::value)>;
+                                             vtkm::cont::internal::Storage<T, StorageTag>>::value)>
+{
+};
+
+/// Checks to see if the given type and storage forms a invalid array handle
+/// (some storage objects cannot support all types). This check is compatible
+/// with C++11 type_traits.
+///
+template <typename T, typename StorageTag>
+struct IsInValidArrayHandle
+  : std::integral_constant<bool,
+                           (std::is_base_of<vtkm::cont::internal::UndefinedStorage,
+                                            vtkm::cont::internal::Storage<T, StorageTag>>::value)>
+{
 };
 
 /// Checks to see if the ArrayHandle for the given DeviceAdatper allows
@@ -95,6 +105,7 @@ private:
 
 public:
   using type = std::integral_constant<bool, !IsVoidType::value>;
+  static constexpr bool value = !IsVoidType::value;
 };
 
 /// Checks to see if the given object is an array handle. This check is
@@ -186,7 +197,7 @@ struct GetTypeInParentheses<void(T)>
 /// This macro also defines a Superclass typedef as well as ValueType and
 /// StorageTag.
 ///
-/// Note that this macor only works on ArrayHandle subclasses that are
+/// Note that this macro only works on ArrayHandle subclasses that are
 /// templated. For ArrayHandle sublcasses that are not templates, use
 /// VTKM_ARRAY_HANDLE_SUBCLASS_NT.
 ///
@@ -209,8 +220,8 @@ struct GetTypeInParentheses<void(T)>
 /// This macro also defines a Superclass typedef as well as ValueType and
 /// StorageTag.
 ///
-/// Note that this macor only works on ArrayHandle subclasses that are not
-/// templated. For ArrayHandle sublcasses that are are templates, use
+/// Note that this macro only works on ArrayHandle subclasses that are not
+/// templated. For ArrayHandle sublcasses that are templates, use
 /// VTKM_ARRAY_HANDLE_SUBCLASS.
 ///
 #define VTKM_ARRAY_HANDLE_SUBCLASS_NT(classname, superclass)                                       \
@@ -292,6 +303,13 @@ public:
   ///
   ArrayHandle(const StorageType& storage);
 
+
+  /// Special constructor for subclass specializations that need to set the
+  /// initial state of the control array. When this constructor is used, it
+  /// is assumed that the control array is valid.
+  ///
+  ArrayHandle(StorageType&& storage);
+
   /// Destructs an empty ArrayHandle.
   ///
   /// Implemented so that it is defined exclusively in the control environment.
@@ -359,12 +377,6 @@ public:
   /// Returns the number of entries in the array.
   ///
   VTKM_CONT vtkm::Id GetNumberOfValues() const;
-
-  /// Copies data into the given iterator for the control environment. This
-  /// method can skip copying into an internally managed control array.
-  ///
-  template <typename IteratorType, typename DeviceAdapterTag>
-  VTKM_CONT void CopyInto(IteratorType dest, DeviceAdapterTag) const;
 
   /// \brief Allocates an array large enough to hold the given number of values.
   ///
@@ -489,12 +501,13 @@ public:
 
   struct VTKM_ALWAYS_EXPORT InternalStruct
   {
-    StorageType ControlArray;
-    bool ControlArrayValid;
+    mutable StorageType ControlArray;
+    mutable bool ControlArrayValid;
 
-    std::unique_ptr<vtkm::cont::internal::ArrayHandleExecutionManagerBase<ValueType, StorageTag>>
+    mutable std::unique_ptr<
+      vtkm::cont::internal::ArrayHandleExecutionManagerBase<ValueType, StorageTag>>
       ExecutionArray;
-    bool ExecutionArrayValid;
+    mutable bool ExecutionArrayValid;
   };
 
   VTKM_CONT
@@ -509,23 +522,35 @@ public:
 /// A convenience function for creating an ArrayHandle from a standard C array.
 ///
 template <typename T>
-VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> make_ArrayHandle(const T* array,
-                                                                                   vtkm::Id length)
+VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>
+make_ArrayHandle(const T* array, vtkm::Id length, vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
 {
   using ArrayHandleType = vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>;
-  using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>;
-  return ArrayHandleType(StorageType(array, length));
+  if (copy == vtkm::CopyFlag::On)
+  {
+    ArrayHandleType handle;
+    handle.Allocate(length);
+    std::copy(
+      array, array + length, vtkm::cont::ArrayPortalToIteratorBegin(handle.GetPortalControl()));
+    return handle;
+  }
+  else
+  {
+    using StorageType = vtkm::cont::internal::Storage<T, vtkm::cont::StorageTagBasic>;
+    return ArrayHandleType(StorageType(array, length));
+  }
 }
 
 /// A convenience function for creating an ArrayHandle from an std::vector.
 ///
 template <typename T, typename Allocator>
 VTKM_CONT vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> make_ArrayHandle(
-  const std::vector<T, Allocator>& array)
+  const std::vector<T, Allocator>& array,
+  vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
 {
   if (!array.empty())
   {
-    return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()));
+    return make_ArrayHandle(&array.front(), static_cast<vtkm::Id>(array.size()), copy);
   }
   else
   {
@@ -652,32 +677,6 @@ VTKM_NEVER_EXPORT VTKM_CONT inline void printSummary_ArrayHandle(
 #include <vtkm/cont/internal/ArrayExportMacros.h>
 
 #ifndef vtkm_cont_ArrayHandle_cxx
-
-#ifdef VTKM_MSVC
-#define _VTKM_SHARED_PTR_EXPORT(Type)                                                              \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT                                                  \
-    std::shared_ptr<vtkm::cont::ArrayHandle<Type, vtkm::cont::StorageTagBasic>::InternalStruct>;   \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr<                                 \
-    vtkm::cont::ArrayHandle<vtkm::Vec<Type, 2>, vtkm::cont::StorageTagBasic>::InternalStruct>;     \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr<                                 \
-    vtkm::cont::ArrayHandle<vtkm::Vec<Type, 3>, vtkm::cont::StorageTagBasic>::InternalStruct>;     \
-  extern template class VTKM_CONT_TEMPLATE_EXPORT std::shared_ptr<                                 \
-    vtkm::cont::ArrayHandle<vtkm::Vec<Type, 4>, vtkm::cont::StorageTagBasic>::InternalStruct>;
-
-_VTKM_SHARED_PTR_EXPORT(char)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Int8)
-_VTKM_SHARED_PTR_EXPORT(vtkm::UInt8)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Int16)
-_VTKM_SHARED_PTR_EXPORT(vtkm::UInt16)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Int32)
-_VTKM_SHARED_PTR_EXPORT(vtkm::UInt32)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Int64)
-_VTKM_SHARED_PTR_EXPORT(vtkm::UInt64)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Float32)
-_VTKM_SHARED_PTR_EXPORT(vtkm::Float64)
-
-#undef _VTKM_SHARED_PTR_EXPORT
-#endif // VTKM_MSVC
 
 namespace vtkm
 {

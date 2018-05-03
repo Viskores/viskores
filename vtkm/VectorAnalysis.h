@@ -22,7 +22,7 @@
 #ifndef vtk_m_VectorAnalysis_h
 #define vtk_m_VectorAnalysis_h
 
-// This header file defines math functions that deal with linear albegra funcitons
+// This header file defines math functions that deal with linear albegra functions
 
 #include <vtkm/Math.h>
 #include <vtkm/TypeTraits.h>
@@ -41,11 +41,13 @@ namespace vtkm
 /// extrapolates. If w=0 => v0 is returned if w=1 => v1 is returned.
 ///
 template <typename ValueType, typename WeightType>
-VTKM_EXEC_CONT ValueType Lerp(const ValueType& value0,
-                              const ValueType& value1,
-                              const WeightType& weight)
+inline VTKM_EXEC_CONT ValueType Lerp(const ValueType& value0,
+                                     const ValueType& value1,
+                                     const WeightType& weight)
 {
-  return static_cast<ValueType>((WeightType(1) - weight) * value0 + weight * value1);
+  using ScalarType = typename detail::FloatingPointReturnType<ValueType>::Type;
+  return static_cast<ValueType>((WeightType(1) - weight) * static_cast<ScalarType>(value0) +
+                                weight * static_cast<ScalarType>(value1));
 }
 template <typename ValueType, vtkm::IdComponent N, typename WeightType>
 VTKM_EXEC_CONT vtkm::Vec<ValueType, N> Lerp(const vtkm::Vec<ValueType, N>& value0,
@@ -59,7 +61,7 @@ VTKM_EXEC_CONT vtkm::Vec<ValueType, N> Lerp(const vtkm::Vec<ValueType, N>& value
                                             const vtkm::Vec<ValueType, N>& value1,
                                             const vtkm::Vec<ValueType, N>& weight)
 {
-  static const vtkm::Vec<ValueType, N> One(ValueType(1));
+  const vtkm::Vec<ValueType, N> One(ValueType(1));
   return (One - weight) * value0 + weight * value1;
 }
 
@@ -71,9 +73,10 @@ VTKM_EXEC_CONT vtkm::Vec<ValueType, N> Lerp(const vtkm::Vec<ValueType, N>& value
 /// when possible.
 ///
 template <typename T>
-VTKM_EXEC_CONT typename vtkm::VecTraits<T>::ComponentType MagnitudeSquared(const T& x)
+VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type MagnitudeSquared(const T& x)
 {
-  return vtkm::dot(x, x);
+  using U = typename detail::FloatingPointReturnType<T>::Type;
+  return static_cast<U>(vtkm::dot(x, x));
 }
 
 // ----------------------------------------------------------------------------

@@ -42,7 +42,7 @@ public:
                const vtkm::Vec<vtkm::Float64, 3>& point1,
                vtkm::Float32 lineWidth,
                const vtkm::rendering::Color& color,
-               bool inFront) const VTKM_OVERRIDE;
+               bool inFront) const override;
 
   void AddText(const vtkm::Vec<vtkm::Float32, 3>& origin,
                const vtkm::Vec<vtkm::Float32, 3>& right,
@@ -50,7 +50,8 @@ public:
                vtkm::Float32 scale,
                const vtkm::Vec<vtkm::Float32, 2>& anchor,
                const vtkm::rendering::Color& color,
-               const std::string& text) const VTKM_OVERRIDE;
+               const std::string& text,
+               const vtkm::Float32 depth = 0.f) const override;
 
 private:
   BitmapFont Font;

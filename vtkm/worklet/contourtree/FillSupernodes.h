@@ -67,7 +67,6 @@
 #ifndef vtkm_worklet_contourtree_fill_supernodes_h
 #define vtkm_worklet_contourtree_fill_supernodes_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -85,12 +84,13 @@ public:
                                 FieldIn<IdType> downCandidate, // (input)
                                 FieldOut<IdType> isSupernode); // (output)
   typedef _3 ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT
   FillSupernodes() {}
 
+  VTKM_EXEC
   vtkm::Id operator()(const vtkm::Id& upCandidate, const vtkm::Id& downCandidate) const
   {
     vtkm::Id isSupernode = ((upCandidate != 1) || (downCandidate != 1));

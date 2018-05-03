@@ -14,8 +14,6 @@
 #define BRIGAND_COMP_MSVC
 #if _MSC_VER == 1900
 #define BRIGAND_COMP_MSVC_2015
-#elif _MSC_VER == 1800
-#define BRIGAND_COMP_MSVC_2013
 #endif
 #elif __INTEL_COMPILER
 #define BRIGAND_COMP_INTEL
@@ -235,6 +233,19 @@ namespace detail
 }
 namespace brigand
 {
+  template<typename T, typename U>
+  struct same
+  {
+    using type = T;
+  };
+  template<typename T>
+  struct same<T, std::true_type>
+  {
+    static_assert(std::is_same<T, std::true_type>::value, "");
+    using type = T;
+  };
+
+
   namespace detail
   {
     template<class T> struct element_at;
@@ -243,21 +254,20 @@ namespace brigand
     {
       template<class T> type_<T> static at(Ts..., type_<T>*, ...);
 
-      //CUDA 9 version that is required
-      template<class R, class... Other> type_<R> static at_with_type(Ts..., R, Other...);
+      //CUDA 9 and Intel 18 version that is required
+      template<class T, class... Other> T static at_with_type(Ts..., T*, Other...);
     };
 
-    template<class T> T extract_type(type_<T>*);
-
     template<std::size_t N, typename Seq> struct at_impl;
-#if defined(BRIGAND_COMP_CUDA_9)
-    //Only needed for CUDA 9 RC1 as it has some compiler bugs
+#if defined(BRIGAND_COMP_CUDA_9) || defined(BRIGAND_COMP_INTEL)
+    //Both CUDA 9 and the Intel 18 compiler series have a problem deducing the
+    //type so we are just going
     template <std::size_t N, template <typename...> class L, class... Ts>
     struct at_impl<N, L<Ts...>>
     {
       using base_with_type = decltype(
         element_at<filled_list<void const*, N>>::at_with_type(static_cast<type_<Ts>*>(nullptr)...));
-      using type = decltype(extract_type(typename base_with_type::type{}));
+      using type = typename base_with_type::type;
     };
 #else
     // This is the original implementation
@@ -890,7 +900,7 @@ namespace detail
 #include <initializer_list>
 namespace brigand
 {
-#if defined(BRIGAND_COMP_MSVC_2013) || defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
+#if defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
   namespace detail
   {
     template<class P, class T>
@@ -949,7 +959,7 @@ namespace brigand
 }
 namespace brigand
 {
-#if defined(BRIGAND_COMP_MSVC_2013) || defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
+#if defined(BRIGAND_COMP_CUDA) || defined(BRIGAND_COMP_INTEL)
   namespace detail
   {
     template<typename T>
@@ -1510,9 +1520,7 @@ namespace brigand
 namespace detail
 {
   template<class, class T> struct unique_x_t
-#ifdef BRIGAND_COMP_MSVC_2013
-  { operator T (); };
-#elif defined(BRIGAND_COMP_GCC)
+#if defined(BRIGAND_COMP_GCC)
   : type_<T>
   {};
 #else
@@ -1533,39 +1541,11 @@ namespace detail
     template<class... Us>
     static auto is_set(Us...) -> decltype(true_fn(static_cast<Us>(Pack())...));
     static std::false_type is_set(...);
-#ifdef BRIGAND_COMP_MSVC_2013
-    using type = decltype(is_set(Ts()...));
-#else
     using type = decltype(is_set(type_<Ts>()...));
-#endif
   };
-#ifdef BRIGAND_COMP_MSVC_2013
-  template<class> struct qrref {};
-  template<class> struct qref {};
-  template<class> struct qnoref {};
-  template<class T>
-  struct msvc_quali_ref
-  {
-    using type = qnoref<T>;
-  };
-  template<class T>
-  struct msvc_quali_ref<T&>
-  {
-    using type = qref<T>;
-  };
-  template<class T>
-  struct msvc_quali_ref<T&&>
-  {
-    using type = qrref<T>;
-  };
-#endif
 }
   template<class... Ts>
-#ifdef BRIGAND_COMP_MSVC_2013
-  using is_set = typename detail::is_set_impl<range<int, 0, static_cast<int>(sizeof...(Ts))>, detail::msvc_quali_ref<Ts>...>::type;
-#else
   using is_set = typename detail::is_set_impl<range<int, 0, static_cast<int>(sizeof...(Ts))>, Ts...>::type;
-#endif
 }
 #include <type_traits>
 namespace brigand

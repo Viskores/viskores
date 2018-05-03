@@ -174,7 +174,7 @@ endif ()
 # will never adequately match the user's setup, so there is no feasible way
 # to detect the "best" version to use. The user will have to manually
 # select the right files. (Chances are the distributions are shipping their
-# custom version of tbb, anyway, so the problem is probably nonexistant.)
+# custom version of tbb, anyway, so the problem is probably nonexistent.)
 if (WIN32 AND MSVC)
   set(COMPILER_PREFIX "vc7.1")
   if (MSVC_VERSION EQUAL 1400)
@@ -332,7 +332,7 @@ findpkg_finish(TBB_MALLOC_PROXY)
 
 #=============================================================================
 #parse all the version numbers from tbb
-if(NOT TBB_VERSION)
+if(NOT TBB_VERSION_MAJOR AND NOT TBB_VERSION_MINOR)
 
  #only read the start of the file
  file(READ

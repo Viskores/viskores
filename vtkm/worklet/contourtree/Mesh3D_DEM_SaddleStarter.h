@@ -83,7 +83,6 @@
 #ifndef vtkm_worklet_contourtree_mesh3d_dem_saddle_starter_h
 #define vtkm_worklet_contourtree_mesh3d_dem_saddle_starter_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/LinkComponentCaseTable3D.h>
 #include <vtkm/worklet/contourtree/Mesh3D_DEM_Triangulation_Macros.h>
@@ -115,12 +114,12 @@ public:
     WholeArrayOut<IdType> edgeFar,      // (output) high end of edges
     WholeArrayOut<IdType> activeEdges); // (output) active edge list
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
-  typedef typename vtkm::cont::ArrayHandle<vtkm::IdComponent>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst IdComponentPortalType;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<
-    DeviceAdapter>::PortalConst IdPortalType;
+  using IdComponentPortalType = typename vtkm::cont::ArrayHandle<
+    vtkm::IdComponent>::template ExecutionTypes<DeviceAdapter>::PortalConst;
+  using IdPortalType = typename vtkm::cont::ArrayHandle<vtkm::UInt16>::template ExecutionTypes<
+    DeviceAdapter>::PortalConst;
 
   vtkm::Id nRows;                       // (input) number of rows in 3D
   vtkm::Id nCols;                       // (input) number of cols in 3D

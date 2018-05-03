@@ -46,8 +46,8 @@ class Matrix
 {
 public:
   using ComponentType = T;
-  static const vtkm::IdComponent NUM_ROWS = NumRow;
-  static const vtkm::IdComponent NUM_COLUMNS = NumCol;
+  static constexpr vtkm::IdComponent NUM_ROWS = NumRow;
+  static constexpr vtkm::IdComponent NUM_COLUMNS = NumCol;
 
   VTKM_EXEC_CONT
   Matrix() {}
@@ -329,7 +329,7 @@ VTKM_EXEC_CONT void MatrixLUPFactorFindUpperTriangleElements(vtkm::Matrix<T, Siz
 /// LU-factorization takes a matrix A and decomposes it into a lower triangular
 /// matrix L and upper triangular matrix U such that A = LU. The
 /// LUP-factorization also allows permutation of A, which makes the
-/// decomposition always posible so long as A is not singular. In addition to
+/// decomposition always possible so long as A is not singular. In addition to
 /// matrices L and U, LUP also finds permutation matrix P containing all zeros
 /// except one 1 per row and column such that PA = LU.
 ///
@@ -547,7 +547,7 @@ private:
 
 public:
   using ComponentType = T;
-  static const vtkm::IdComponent NUM_COMPONENTS = NumRow * NumCol;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = NumRow * NumCol;
   using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
   using IsSizeStatic = vtkm::VecTraitsTagSizeStatic;
 

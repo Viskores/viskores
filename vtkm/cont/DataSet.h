@@ -20,6 +20,8 @@
 #ifndef vtk_m_cont_DataSet_h
 #define vtk_m_cont_DataSet_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
@@ -33,29 +35,17 @@ namespace vtkm
 namespace cont
 {
 
-class DataSet
+class VTKM_CONT_EXPORT DataSet
 {
 public:
-  VTKM_CONT
-  DataSet() {}
+  VTKM_CONT DataSet();
+
+  VTKM_CONT void Clear();
+
+  VTKM_CONT void AddField(const Field& field) { this->Fields.push_back(field); }
 
   VTKM_CONT
-  void Clear()
-  {
-    this->CoordSystems.clear();
-    this->Fields.clear();
-    this->CellSets.clear();
-  }
-
-  VTKM_CONT
-  void AddField(Field field) { this->Fields.push_back(field); }
-
-  VTKM_CONT
-  const vtkm::cont::Field& GetField(vtkm::Id index) const
-  {
-    VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
-    return this->Fields[static_cast<std::size_t>(index)];
-  }
+  const vtkm::cont::Field& GetField(vtkm::Id index) const;
 
   VTKM_CONT
   bool HasField(const std::string& name,
@@ -69,19 +59,7 @@ public:
   VTKM_CONT
   vtkm::Id GetFieldIndex(
     const std::string& name,
-    vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY) const
-  {
-    bool found;
-    vtkm::Id index = this->FindFieldIndex(name, assoc, found);
-    if (found)
-    {
-      return index;
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadValue("No field with requested name: " + name);
-    }
-  }
+    vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY) const;
 
   VTKM_CONT
   const vtkm::cont::Field& GetField(
@@ -104,14 +82,13 @@ public:
   }
 
   VTKM_CONT
-  void AddCoordinateSystem(vtkm::cont::CoordinateSystem cs) { this->CoordSystems.push_back(cs); }
+  void AddCoordinateSystem(const vtkm::cont::CoordinateSystem& cs)
+  {
+    this->CoordSystems.push_back(cs);
+  }
 
   VTKM_CONT
-  const vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0) const
-  {
-    VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfCoordinateSystems()));
-    return this->CoordSystems[static_cast<std::size_t>(index)];
-  }
+  const vtkm::cont::CoordinateSystem& GetCoordinateSystem(vtkm::Id index = 0) const;
 
   VTKM_CONT
   bool HasCoordinateSystem(const std::string& name) const
@@ -122,19 +99,7 @@ public:
   }
 
   VTKM_CONT
-  vtkm::Id GetCoordinateSystemIndex(const std::string& name) const
-  {
-    bool found;
-    vtkm::Id index = this->FindCoordinateSystemIndex(name, found);
-    if (found)
-    {
-      return index;
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadValue("No coordinate system with requested name");
-    }
-  }
+  vtkm::Id GetCoordinateSystemIndex(const std::string& name) const;
 
   VTKM_CONT
   const vtkm::cont::CoordinateSystem& GetCoordinateSystem(const std::string& name) const
@@ -143,7 +108,7 @@ public:
   }
 
   VTKM_CONT
-  void AddCellSet(vtkm::cont::DynamicCellSet cellSet) { this->CellSets.push_back(cellSet); }
+  void AddCellSet(const vtkm::cont::DynamicCellSet& cellSet) { this->CellSets.push_back(cellSet); }
 
   template <typename CellSetType>
   VTKM_CONT void AddCellSet(const CellSetType& cellSet)
@@ -168,19 +133,7 @@ public:
   }
 
   VTKM_CONT
-  vtkm::Id GetCellSetIndex(const std::string& name) const
-  {
-    bool found;
-    vtkm::Id index = this->FindCellSetIndex(name, found);
-    if (found)
-    {
-      return index;
-    }
-    else
-    {
-      throw vtkm::cont::ErrorBadValue("No cell set with requested name");
-    }
-  }
+  vtkm::Id GetCellSetIndex(const std::string& name) const;
 
   VTKM_CONT
   vtkm::cont::DynamicCellSet GetCellSet(const std::string& name) const
@@ -206,28 +159,13 @@ public:
     return static_cast<vtkm::IdComponent>(this->CoordSystems.size());
   }
 
+  /// Copies the structure i.e. coordinates systems and cellsets from the source
+  /// dataset. The fields are left unchanged.
   VTKM_CONT
-  void PrintSummary(std::ostream& out) const
-  {
-    out << "DataSet:\n";
-    out << "  CoordSystems[" << this->CoordSystems.size() << "]\n";
-    for (std::size_t index = 0; index < this->CoordSystems.size(); index++)
-    {
-      this->CoordSystems[index].PrintSummary(out);
-    }
+  void CopyStructure(const vtkm::cont::DataSet& source);
 
-    out << "  CellSets[" << this->GetNumberOfCellSets() << "]\n";
-    for (vtkm::Id index = 0; index < this->GetNumberOfCellSets(); index++)
-    {
-      this->GetCellSet(index).PrintSummary(out);
-    }
-
-    out << "  Fields[" << this->GetNumberOfFields() << "]\n";
-    for (vtkm::Id index = 0; index < this->GetNumberOfFields(); index++)
-    {
-      this->GetField(index).PrintSummary(out);
-    }
-  }
+  VTKM_CONT
+  void PrintSummary(std::ostream& out) const;
 
 private:
   std::vector<vtkm::cont::CoordinateSystem> CoordSystems;
@@ -237,51 +175,13 @@ private:
   VTKM_CONT
   vtkm::Id FindFieldIndex(const std::string& name,
                           vtkm::cont::Field::AssociationEnum association,
-                          bool& found) const
-  {
-    for (std::size_t index = 0; index < this->Fields.size(); ++index)
-    {
-      if ((association == vtkm::cont::Field::ASSOC_ANY ||
-           association == this->Fields[index].GetAssociation()) &&
-          this->Fields[index].GetName() == name)
-      {
-        found = true;
-        return static_cast<vtkm::Id>(index);
-      }
-    }
-    found = false;
-    return -1;
-  }
+                          bool& found) const;
 
   VTKM_CONT
-  vtkm::Id FindCoordinateSystemIndex(const std::string& name, bool& found) const
-  {
-    for (std::size_t index = 0; index < this->CoordSystems.size(); ++index)
-    {
-      if (this->CoordSystems[index].GetName() == name)
-      {
-        found = true;
-        return static_cast<vtkm::Id>(index);
-      }
-    }
-    found = false;
-    return -1;
-  }
+  vtkm::Id FindCoordinateSystemIndex(const std::string& name, bool& found) const;
 
   VTKM_CONT
-  vtkm::Id FindCellSetIndex(const std::string& name, bool& found) const
-  {
-    for (std::size_t index = 0; index < static_cast<size_t>(this->GetNumberOfCellSets()); ++index)
-    {
-      if (this->CellSets[index].GetName() == name)
-      {
-        found = true;
-        return static_cast<vtkm::Id>(index);
-      }
-    }
-    found = false;
-    return -1;
-  }
+  vtkm::Id FindCellSetIndex(const std::string& name, bool& found) const;
 };
 
 } // namespace cont

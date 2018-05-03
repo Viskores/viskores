@@ -50,7 +50,7 @@ struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
                                 GradientOutputs outputFields);
 
   typedef void ExecutionSignature(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename FromIndexType,
             typename CellSetInType,

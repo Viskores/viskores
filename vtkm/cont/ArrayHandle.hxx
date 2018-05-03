@@ -53,6 +53,15 @@ ArrayHandle<T, S>::ArrayHandle(const typename ArrayHandle<T, S>::StorageType& st
 }
 
 template <typename T, typename S>
+ArrayHandle<T, S>::ArrayHandle(typename ArrayHandle<T, S>::StorageType&& storage)
+  : Internals(new InternalStruct)
+{
+  this->Internals->ControlArray = std::move(storage);
+  this->Internals->ControlArrayValid = true;
+  this->Internals->ExecutionArrayValid = false;
+}
+
+template <typename T, typename S>
 ArrayHandle<T, S>::~ArrayHandle()
 {
 }
@@ -149,45 +158,6 @@ vtkm::Id ArrayHandle<T, S>::GetNumberOfValues() const
   else
   {
     return 0;
-  }
-}
-
-template <typename T, typename S>
-template <typename IteratorType, typename DeviceAdapterTag>
-void ArrayHandle<T, S>::CopyInto(IteratorType dest, DeviceAdapterTag) const
-{
-  using pointer_type = typename std::iterator_traits<IteratorType>::pointer;
-  using value_type = typename std::remove_pointer<pointer_type>::type;
-
-  static_assert(!std::is_const<value_type>::value, "CopyInto requires a non const iterator.");
-
-  VTKM_IS_DEVICE_ADAPTER_TAG(DeviceAdapterTag);
-
-  if (!this->Internals->ControlArrayValid && !this->Internals->ExecutionArrayValid)
-  {
-    throw vtkm::cont::ErrorBadValue("ArrayHandle has no data to copy into Iterator.");
-  }
-
-  if (!this->Internals->ControlArrayValid &&
-      this->Internals->ExecutionArray->IsDeviceAdapter(DeviceAdapterTag()))
-  {
-    /// Dynamically cast ArrayHandleExecutionManagerBase into a concrete
-    /// class and call CopyInto. The dynamic conversion will be sucessful
-    /// becuase the check to ensure the ExecutionArray is of the type
-    /// DeviceAdapterTag has already passed
-    using ConcreteType =
-      vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>;
-    ConcreteType* ConcreteExecutionArray =
-      dynamic_cast<ConcreteType*>(this->Internals->ExecutionArray.get());
-
-    ConcreteExecutionArray->CopyInto(dest);
-  }
-  else
-  {
-    PortalConstControl portal = this->GetPortalConstControl();
-    std::copy(vtkm::cont::ArrayPortalToIteratorBegin(portal),
-              vtkm::cont::ArrayPortalToIteratorEnd(portal),
-              dest);
   }
 }
 
@@ -338,9 +308,8 @@ void ArrayHandle<T, S>::PrepareForDevice(DeviceAdapterTag) const
       this->SyncControlArray();
       // Need to change some state that does not change the logical state from
       // an external point of view.
-      InternalStruct* internals = const_cast<InternalStruct*>(this->Internals.get());
-      internals->ExecutionArray.reset();
-      internals->ExecutionArrayValid = false;
+      this->Internals->ExecutionArray.reset();
+      this->Internals->ExecutionArrayValid = false;
     }
   }
 
@@ -348,10 +317,9 @@ void ArrayHandle<T, S>::PrepareForDevice(DeviceAdapterTag) const
   VTKM_ASSERT(!this->Internals->ExecutionArrayValid);
   // Need to change some state that does not change the logical state from
   // an external point of view.
-  InternalStruct* internals = const_cast<InternalStruct*>(this->Internals.get());
-  internals->ExecutionArray.reset(
+  this->Internals->ExecutionArray.reset(
     new vtkm::cont::internal::ArrayHandleExecutionManager<T, StorageTag, DeviceAdapterTag>(
-      &internals->ControlArray));
+      &this->Internals->ControlArray));
 }
 
 template <typename T, typename S>
@@ -361,19 +329,18 @@ void ArrayHandle<T, S>::SyncControlArray() const
   {
     // Need to change some state that does not change the logical state from
     // an external point of view.
-    InternalStruct* internals = const_cast<InternalStruct*>(this->Internals.get());
     if (this->Internals->ExecutionArrayValid)
     {
-      internals->ExecutionArray->RetrieveOutputData(&internals->ControlArray);
-      internals->ControlArrayValid = true;
+      this->Internals->ExecutionArray->RetrieveOutputData(&this->Internals->ControlArray);
+      this->Internals->ControlArrayValid = true;
     }
     else
     {
       // This array is in the null state (there is nothing allocated), but
       // the calling function wants to do something with the array. Put this
       // class into a valid state by allocating an array of size 0.
-      internals->ControlArray.Allocate(0);
-      internals->ControlArrayValid = true;
+      this->Internals->ControlArray.Allocate(0);
+      this->Internals->ControlArrayValid = true;
     }
   }
 }

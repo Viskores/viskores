@@ -34,12 +34,12 @@ ExecutionArrayInterfaceBasicShareWithControl::ExecutionArrayInterfaceBasicShareW
 }
 
 void ExecutionArrayInterfaceBasicShareWithControl::Allocate(TypelessExecutionArray& execArray,
-                                                            vtkm::UInt64 numBytes) const
+                                                            vtkm::Id numberOfValues,
+                                                            vtkm::UInt64 sizeOfValue) const
 {
-  this->ControlStorage.AllocateBytes(numBytes);
-
+  this->ControlStorage.AllocateValues(numberOfValues, sizeOfValue);
   execArray.Array = this->ControlStorage.GetBasePointer();
-  execArray.ArrayEnd = this->ControlStorage.GetEndPointer();
+  execArray.ArrayEnd = this->ControlStorage.GetEndPointer(numberOfValues, sizeOfValue);
   execArray.ArrayCapacity = this->ControlStorage.GetCapacityPointer();
 }
 
@@ -76,6 +76,22 @@ void ExecutionArrayInterfaceBasicShareWithControl::CopyToControl(const void* src
     vtkm::UInt8* dstBegin = static_cast<vtkm::UInt8*>(dst);
     std::copy(srcBegin, srcEnd, dstBegin);
   }
+}
+
+void ExecutionArrayInterfaceBasicShareWithControl::UsingForRead(const void*,
+                                                                const void*,
+                                                                vtkm::UInt64) const
+{
+}
+void ExecutionArrayInterfaceBasicShareWithControl::UsingForWrite(const void*,
+                                                                 const void*,
+                                                                 vtkm::UInt64) const
+{
+}
+void ExecutionArrayInterfaceBasicShareWithControl::UsingForReadWrite(const void*,
+                                                                     const void*,
+                                                                     vtkm::UInt64) const
+{
 }
 }
 }

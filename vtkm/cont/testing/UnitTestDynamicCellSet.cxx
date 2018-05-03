@@ -34,17 +34,16 @@ struct NonDefaultCellSetList
 {
 };
 
-bool CheckCalled;
-
 template <typename ExpectedCellType>
 struct CheckFunctor
 {
-  void operator()(const ExpectedCellType&) const { CheckCalled = true; }
+  void operator()(const ExpectedCellType&, bool& called) const { called = true; }
 
   template <typename UnexpectedType>
-  void operator()(const UnexpectedType&) const
+  void operator()(const UnexpectedType&, bool& called) const
   {
     VTKM_TEST_FAIL("CastAndCall functor called with wrong type.");
+    called = false;
   }
 };
 
@@ -60,17 +59,17 @@ void CheckDynamicCellSet(const CellSetType& cellSet,
 
   dynamicCellSet.template Cast<CellSetType>();
 
-  CheckCalled = false;
-  dynamicCellSet.CastAndCall(CheckFunctor<CellSetType>());
+  bool called = false;
+  dynamicCellSet.CastAndCall(CheckFunctor<CellSetType>(), called);
 
   VTKM_TEST_ASSERT(
-    CheckCalled, "The functor was never called (and apparently a bad value exception not thrown).");
+    called, "The functor was never called (and apparently a bad value exception not thrown).");
 
-  CheckCalled = false;
-  CastAndCall(dynamicCellSet, CheckFunctor<CellSetType>());
+  called = false;
+  CastAndCall(dynamicCellSet, CheckFunctor<CellSetType>(), called);
 
   VTKM_TEST_ASSERT(
-    CheckCalled, "The functor was never called (and apparently a bad value exception not thrown).");
+    called, "The functor was never called (and apparently a bad value exception not thrown).");
 }
 
 template <typename CellSetType, typename CellSetList>

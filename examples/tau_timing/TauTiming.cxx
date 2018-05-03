@@ -64,14 +64,14 @@ VTKM_EXEC_CONT vtkm::Vec<T, 3> Normalize(vtkm::Vec<T, 3> v)
     return one / magnitude * v;
 }
 
-typedef VTKM_DEFAULT_DEVICE_ADAPTER_TAG DeviceAdapter;
+using DeviceAdapter = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
 
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
   typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
   const vtkm::FloatDefault xmin, ymin, zmin, xmax, ymax, zmax;
@@ -343,12 +343,12 @@ void RenderRTTest(const vtkm::cont::DataSet& ds, int N)
     if (printProgress && i % 10 == 0)
       std::cout << "   " << i << " of " << N << std::endl;
 
-    typedef vtkm::rendering::MapperRayTracer M;
-    typedef vtkm::rendering::CanvasRayTracer C;
-    typedef vtkm::rendering::View3D V3;
+    using M = vtkm::rendering::MapperRayTracer;
+    using C = vtkm::rendering::CanvasRayTracer;
+    using V3 = vtkm::rendering::View3D;
 
     //std::cout<<"Render: "<<i<<std::endl;
-    vtkm::rendering::ColorTable colorTable("thermal");
+    vtkm::cont::ColorTable colorTable("inferno");
     vtkm::rendering::testing::Render<M, C, V3>(ds, "scalar", colorTable);
   }
 }
@@ -361,12 +361,12 @@ void RenderVolTest(const vtkm::cont::DataSet& ds, int N)
     if (printProgress && i % 10 == 0)
       std::cout << "   " << i << " of " << N << std::endl;
 
-    typedef vtkm::rendering::MapperVolume M;
-    typedef vtkm::rendering::CanvasRayTracer C;
-    typedef vtkm::rendering::View3D V3;
+    using M = vtkm::rendering::MapperVolume;
+    using C = vtkm::rendering::CanvasRayTracer;
+    using V3 = vtkm::rendering::View3D;
 
     //std::cout<<"Render: "<<i<<std::endl;
-    vtkm::rendering::ColorTable colorTable("thermal");
+    vtkm::cont::ColorTable colorTable("inferno");
     vtkm::rendering::testing::Render<M, C, V3>(ds, "scalar", colorTable);
   }
 }

@@ -32,6 +32,7 @@ set(headers
   DeviceAdapterAlgorithmGeneral.h
   DeviceAdapterDefaultSelection.h
   DeviceAdapterError.h
+  DeviceAdapterListHelpers.h
   DeviceAdapterTag.h
   DynamicTransform.h
   FunctorsGeneral.h

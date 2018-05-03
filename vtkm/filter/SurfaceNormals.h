@@ -36,6 +36,9 @@ namespace filter
 class SurfaceNormals : public vtkm::filter::FilterCell<SurfaceNormals>
 {
 public:
+  /// Create SurfaceNormals filter. This calls
+  /// this->SetUseCoordinateSystemAsField(true) since that is the most common
+  /// use-case for surface normals.
   SurfaceNormals();
 
   /// Set/Get if cell normals should be generated. Default is off.
@@ -62,24 +65,12 @@ public:
   void SetPointNormalsName(const std::string& name) { this->PointNormalsName = name; }
   const std::string& GetPointNormalsName() const { return this->PointNormalsName; }
 
-  using vtkm::filter::FilterCell<SurfaceNormals>::Execute;
-
-  /// Execute the filter using the active coordinate system.
-  VTKM_CONT
-  vtkm::filter::Result Execute(const vtkm::cont::DataSet& input);
-
-  /// Execute the filter using the active coordinate system.
-  template <typename DerivedPolicy>
-  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  vtkm::filter::Result DoExecute(
-    const vtkm::cont::DataSet& input,
-    const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
-    const vtkm::filter::FieldMetadata& fieldMeta,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-    const DeviceAdapter& device);
+  vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
+                                const vtkm::filter::FieldMetadata& fieldMeta,
+                                const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                const DeviceAdapter& device);
 
 private:
   bool GenerateCellNormals;

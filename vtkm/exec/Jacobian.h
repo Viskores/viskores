@@ -68,98 +68,38 @@ struct Space2D
   }
 };
 
-// Given a series of point values for a wedge, return a new series of point
-// for a hexahedron that has the same interpolation within the wedge.
-template <typename FieldVecType>
-VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 8> PermuteWedgeToHex(
-  const FieldVecType& field)
-{
-  vtkm::Vec<typename FieldVecType::ComponentType, 8> hexField;
-
-  hexField[0] = field[0];
-  hexField[1] = field[2];
-  hexField[2] = field[2] + field[1] - field[0];
-  hexField[3] = field[1];
-  hexField[4] = field[3];
-  hexField[5] = field[5];
-  hexField[6] = field[5] + field[4] - field[3];
-  hexField[7] = field[4];
-
-  return hexField;
-}
-
-// Given a series of point values for a pyramid, return a new series of point
-// for a hexahedron that has the same interpolation within the pyramid.
-template <typename FieldVecType>
-VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 8> PermutePyramidToHex(
-  const FieldVecType& field)
-{
-  using T = typename FieldVecType::ComponentType;
-
-  vtkm::Vec<T, 8> hexField;
-
-  T baseCenter = T(0.25f) * (field[0] + field[1] + field[2] + field[3]);
-
-  hexField[0] = field[0];
-  hexField[1] = field[1];
-  hexField[2] = field[2];
-  hexField[3] = field[3];
-  hexField[4] = field[4] + (field[0] - baseCenter);
-  hexField[5] = field[4] + (field[1] - baseCenter);
-  hexField[6] = field[4] + (field[2] - baseCenter);
-  hexField[7] = field[4] + (field[3] - baseCenter);
-
-  return hexField;
-}
-
 } //namespace internal
 
 #define VTKM_DERIVATIVE_WEIGHTS_HEXAHEDRON(pc, rc, call)                                           \
-  call(0, -rc[1] * rc[2], -rc[0] * rc[2], -rc[0] * rc[1]);                                         \
-  call(1, rc[1] * rc[2], -pc[0] * rc[2], -pc[0] * rc[1]);                                          \
-  call(2, pc[1] * rc[2], pc[0] * rc[2], -pc[0] * pc[1]);                                           \
-  call(3, -pc[1] * rc[2], rc[0] * rc[2], -rc[0] * pc[1]);                                          \
-  call(4, -rc[1] * pc[2], -rc[0] * pc[2], rc[0] * rc[1]);                                          \
-  call(5, rc[1] * pc[2], -pc[0] * pc[2], pc[0] * rc[1]);                                           \
-  call(6, pc[1] * pc[2], pc[0] * pc[2], pc[0] * pc[1]);                                            \
-  call(7, -pc[1] * pc[2], rc[0] * pc[2], rc[0] * pc[1])
-
-#define VTKM_DERIVATIVE_WEIGHTS_VOXEL(pc, rc, call)                                                \
-  call(0, -rc[1] * rc[2], -rc[0] * rc[2], -rc[0] * rc[1]);                                         \
-  call(1, rc[1] * rc[2], -pc[0] * rc[2], -pc[0] * rc[1]);                                          \
-  call(2, -pc[1] * rc[2], rc[0] * rc[2], -rc[0] * pc[1]);                                          \
-  call(3, pc[1] * rc[2], pc[0] * rc[2], -pc[0] * pc[1]);                                           \
-  call(4, -rc[1] * pc[2], -rc[0] * pc[2], rc[0] * rc[1]);                                          \
-  call(5, rc[1] * pc[2], -pc[0] * pc[2], pc[0] * rc[1]);                                           \
-  call(6, -pc[1] * pc[2], rc[0] * pc[2], rc[0] * pc[1]);                                           \
-  call(7, pc[1] * pc[2], pc[0] * pc[2], pc[0] * pc[1])
+  call(0, (-rc[1] * rc[2]), (-rc[0] * rc[2]), (-rc[0] * rc[1]));                                   \
+  call(1, (rc[1] * rc[2]), (-pc[0] * rc[2]), (-pc[0] * rc[1]));                                    \
+  call(2, (pc[1] * rc[2]), (pc[0] * rc[2]), (-pc[0] * pc[1]));                                     \
+  call(3, (-pc[1] * rc[2]), (rc[0] * rc[2]), (-rc[0] * pc[1]));                                    \
+  call(4, (-rc[1] * pc[2]), (-rc[0] * pc[2]), (rc[0] * rc[1]));                                    \
+  call(5, (rc[1] * pc[2]), (-pc[0] * pc[2]), (pc[0] * rc[1]));                                     \
+  call(6, (pc[1] * pc[2]), (pc[0] * pc[2]), (pc[0] * pc[1]));                                      \
+  call(7, (-pc[1] * pc[2]), (rc[0] * pc[2]), (rc[0] * pc[1]))
 
 #define VTKM_DERIVATIVE_WEIGHTS_WEDGE(pc, rc, call)                                                \
-  call(0, -rc[2], -rc[2], -1.0f + pc[0] + pc[1]);                                                  \
-  call(1, 0.0f, rc[2], -pc[1]);                                                                    \
-  call(2, rc[2], 0.0f, -pc[0]);                                                                    \
-  call(3, -pc[2], -pc[2], 1.0f - pc[0] - pc[1]);                                                   \
-  call(4, 0.0f, pc[2], pc[1]);                                                                     \
-  call(5, pc[2], 0.0f, pc[0])
+  call(0, (-rc[2]), (-rc[2]), (pc[0] - rc[1]));                                                    \
+  call(1, (0.0f), (rc[2]), (-pc[1]));                                                              \
+  call(2, (rc[2]), (0.0f), (-pc[0]));                                                              \
+  call(3, (-pc[2]), (-pc[2]), (rc[0] - pc[1]));                                                    \
+  call(4, (0.0f), (pc[2]), (pc[1]));                                                               \
+  call(5, (pc[2]), (0.0f), (pc[0]))
 
 #define VTKM_DERIVATIVE_WEIGHTS_PYRAMID(pc, rc, call)                                              \
-  call(0, -rc[1] * rc[2], -rc[0] * rc[2], -rc[0] * rc[1]);                                         \
-  call(1, rc[1] * rc[2], -pc[0] * rc[2], -pc[0] * rc[1]);                                          \
-  call(2, pc[1] * rc[2], pc[0] * rc[2], -pc[0] * pc[1]);                                           \
-  call(3, -pc[1] * rc[2], rc[0] * rc[2], -rc[0] * pc[1]);                                          \
-  call(3, 0.0f, 0.0f, 1.0f)
+  call(0, (-rc[1] * rc[2]), (-rc[0] * rc[2]), (-rc[0] * rc[1]));                                   \
+  call(1, (rc[1] * rc[2]), (-pc[0] * rc[2]), (-pc[0] * rc[1]));                                    \
+  call(2, (pc[1] * rc[2]), (pc[0] * rc[2]), (-pc[0] * pc[1]));                                     \
+  call(3, (-pc[1] * rc[2]), (rc[0] * rc[2]), (-rc[0] * pc[1]));                                    \
+  call(4, (0.0f), (0.0f), (1.0f))
 
 #define VTKM_DERIVATIVE_WEIGHTS_QUAD(pc, rc, call)                                                 \
-  call(0, -rc[1], -rc[0]);                                                                         \
-  call(1, rc[1], -pc[0]);                                                                          \
-  call(2, pc[1], pc[0]);                                                                           \
-  call(3, -pc[1], rc[0])
-
-#define VTKM_DERIVATIVE_WEIGHTS_PIXEL(pc, rc, call)                                                \
-  call(0, -rc[1], -rc[0]);                                                                         \
-  call(1, rc[1], -pc[0]);                                                                          \
-  call(2, -pc[1], rc[0]);                                                                          \
-  call(3, pc[1], pc[0])
+  call(0, (-rc[1]), (-rc[0]));                                                                     \
+  call(1, (rc[1]), (-pc[0]));                                                                      \
+  call(2, (pc[1]), (pc[0]));                                                                       \
+  call(3, (-pc[1]), (rc[0]))
 
 //-----------------------------------------------------------------------------
 // This returns the Jacobian of a hexahedron's (or other 3D cell's) coordinates
@@ -205,17 +145,11 @@ VTKM_EXEC void JacobianFor3DCell(const WorldCoordType& wCoords,
                                  vtkm::Matrix<JacobianType, 3, 3>& jacobian,
                                  vtkm::CellShapeTagWedge)
 {
-#if 0
-  // This is not working. Just leverage the hexahedron code that is working.
-  vtkm::Vec<JacobianType,3> pc(pcoords);
-  vtkm::Vec<JacobianType,3> rc = vtkm::Vec<JacobianType,3>(1) - pc;
+  vtkm::Vec<JacobianType, 3> pc(pcoords);
+  vtkm::Vec<JacobianType, 3> rc = vtkm::Vec<JacobianType, 3>(JacobianType(1)) - pc;
 
-  jacobian = vtkm::Matrix<JacobianType,3,3>(0);
+  jacobian = vtkm::Matrix<JacobianType, 3, 3>(JacobianType(0));
   VTKM_DERIVATIVE_WEIGHTS_WEDGE(pc, rc, VTKM_ACCUM_JACOBIAN_3D);
-#else
-  JacobianFor3DCell(
-    internal::PermuteWedgeToHex(wCoords), pcoords, jacobian, vtkm::CellShapeTagHexahedron());
-#endif
 }
 
 template <typename WorldCoordType, typename ParametricCoordType, typename JacobianType>
@@ -224,17 +158,11 @@ VTKM_EXEC void JacobianFor3DCell(const WorldCoordType& wCoords,
                                  vtkm::Matrix<JacobianType, 3, 3>& jacobian,
                                  vtkm::CellShapeTagPyramid)
 {
-#if 0
-  // This is not working. Just leverage the hexahedron code that is working.
-  vtkm::Vec<JacobianType,3> pc(pcoords);
-  vtkm::Vec<JacobianType,3> rc = vtkm::Vec<JacobianType,3>(1) - pc;
+  vtkm::Vec<JacobianType, 3> pc(pcoords);
+  vtkm::Vec<JacobianType, 3> rc = vtkm::Vec<JacobianType, 3>(JacobianType(1)) - pc;
 
-  jacobian = vtkm::Matrix<JacobianType,3,3>(0);
+  jacobian = vtkm::Matrix<JacobianType, 3, 3>(JacobianType(0));
   VTKM_DERIVATIVE_WEIGHTS_PYRAMID(pc, rc, VTKM_ACCUM_JACOBIAN_3D);
-#else
-  JacobianFor3DCell(
-    internal::PermutePyramidToHex(wCoords), pcoords, jacobian, vtkm::CellShapeTagHexahedron());
-#endif
 }
 
 // Derivatives in quadrilaterals are computed in much the same way as
@@ -316,13 +244,6 @@ void JacobianFor2DCell(const WorldCoordType &wCoords,
 
 #undef VTKM_ACCUM_JACOBIAN_3D
 #undef VTKM_ACCUM_JACOBIAN_2D
-
-#undef VTKM_DERIVATIVE_WEIGHTS_HEXAHEDRON
-#undef VTKM_DERIVATIVE_WEIGHTS_VOXEL
-#undef VTKM_DERIVATIVE_WEIGHTS_WEDGE
-#undef VTKM_DERIVATIVE_WEIGHTS_PYRAMID
-#undef VTKM_DERIVATIVE_WEIGHTS_QUAD
-#undef VTKM_DERIVATIVE_WEIGHTS_PIXEL
 }
 } // namespace vtkm::exec
 #endif //vtk_m_exec_Jacobian_h

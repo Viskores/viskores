@@ -175,9 +175,12 @@ vtkm::cont::DataSet MakeTestDataSet()
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   // Set point scalars
-  dataSet.AddField(vtkm::cont::Field("fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts));
-  dataSet.AddField(vtkm::cont::Field("fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts));
-  dataSet.AddField(vtkm::cont::Field("fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
 
   return dataSet;
 }
@@ -189,7 +192,7 @@ vtkm::cont::DataSet MakeTestDataSet()
 // marginal histogram
 // In this example, we have three variable var0, var1, var2
 // the condition is P(Var0, Var2 | 1<Var1<4)
-// because var0 and var2 are the marginal varaible, we do not care the case var==0 or var==2
+// because var0 and var2 are the marginal variable, we do not care the case var==0 or var==2
 // it supposes that we do not have input as var ==0 or 2
 struct VariableCondition
 {

@@ -79,7 +79,7 @@ template <typename DeviceAdapter>
 class TestingPointLocatorUniformGrid
 {
 public:
-  typedef vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> Algorithm;
+  using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
   void TestTest() const
   {
     vtkm::Int32 nTrainingPoints = 1000;
@@ -111,7 +111,7 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id> nnId_Handle;
     vtkm::cont::ArrayHandle<vtkm::Float32> nnDis_Handle;
 
-    uniformGrid.Run(
+    uniformGrid.FindNearestPoint(
       coordi_Handle, qc_Handle, nnId_Handle, nnDis_Handle, VTKM_DEFAULT_DEVICE_ADAPTER_TAG());
 
     vtkm::cont::ArrayHandle<vtkm::Id> bfnnId_Handle;
@@ -139,7 +139,7 @@ public:
       }
     }
 
-    VTKM_TEST_ASSERT(false, "Uniform Grid NN search result incorrect.");
+    VTKM_TEST_ASSERT(passTest, "Uniform Grid NN search result incorrect.");
   }
 
   void operator()() const { this->TestTest(); }

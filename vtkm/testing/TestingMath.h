@@ -43,56 +43,93 @@
 namespace UnitTestMathNamespace
 {
 
-const vtkm::IdComponent NUM_NUMBERS = 5;
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 NumberList[NUM_NUMBERS] = { 0.25, 0.5, 1.0, 2.0, 3.75 };
+class Lists
+{
+public:
+  static constexpr vtkm::IdComponent NUM_NUMBERS = 5;
 
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 AngleList[NUM_NUMBERS] = { 0.643501108793284, // angle for 3, 4, 5 triangle.
-                                               0.78539816339745,  // pi/4
-                                               0.5235987755983,   // pi/6
-                                               1.0471975511966,   // pi/3
-                                               0.0 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 OppositeList[NUM_NUMBERS] = { 3.0,
-                                                  1.0,
-                                                  1.0,
-                                                  1.732050807568877 /*sqrt(3)*/,
-                                                  0.0 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 AdjacentList[NUM_NUMBERS] = { 4.0,
-                                                  1.0,
-                                                  1.732050807568877 /*sqrt(3)*/,
-                                                  1.0,
-                                                  1.0 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 HypotenuseList[NUM_NUMBERS] = { 5.0,
-                                                    1.414213562373095 /*sqrt(2)*/,
-                                                    2.0,
-                                                    2.0,
-                                                    1.0 };
-
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 NumeratorList[NUM_NUMBERS] = { 6.5, 5.8, 9.3, 77.0, 0.1 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 DenominatorList[NUM_NUMBERS] = { 2.3, 1.6, 3.1, 19.0, 0.4 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 FModRemainderList[NUM_NUMBERS] = { 1.9, 1.0, 0.0, 1.0, 0.1 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 RemainderList[NUM_NUMBERS] = { -0.4, -0.6, 0.0, 1.0, 0.1 };
-VTKM_EXEC_CONSTANT
-const vtkm::Int64 QuotientList[NUM_NUMBERS] = { 3, 4, 3, 4, 0 };
-
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 XList[NUM_NUMBERS] = { 4.6, 0.1, 73.4, 55.0, 3.75 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 FractionalList[NUM_NUMBERS] = { 0.6, 0.1, 0.4, 0.0, 0.75 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 FloorList[NUM_NUMBERS] = { 4.0, 0.0, 73.0, 55.0, 3.0 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 CeilList[NUM_NUMBERS] = { 5.0, 1.0, 74.0, 55.0, 4.0 };
-VTKM_EXEC_CONSTANT
-const vtkm::Float64 RoundList[NUM_NUMBERS] = { 5.0, 0.0, 73.0, 55.0, 4.0 };
+  VTKM_EXEC_CONT vtkm::Float64 NumberList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 numberList[NUM_NUMBERS] = { 0.25, 0.5, 1.0, 2.0, 3.75 };
+    return numberList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 AngleList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 angleList[NUM_NUMBERS] = { 0.643501108793284, // angle for 3, 4, 5 triangle.
+                                             0.78539816339745,  // pi/4
+                                             0.5235987755983,   // pi/6
+                                             1.0471975511966,   // pi/3
+                                             0.0 };
+    return angleList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 OppositeList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 oppositeList[NUM_NUMBERS] = { 3.0, 1.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 0.0 };
+    return oppositeList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 AdjacentList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 adjacentList[NUM_NUMBERS] = { 4.0, 1.0, 1.732050807568877 /*sqrt(3)*/, 1.0, 1.0 };
+    return adjacentList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 HypotenuseList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 hypotenuseList[NUM_NUMBERS] = {
+      5.0, 1.414213562373095 /*sqrt(2)*/, 2.0, 2.0, 1.0
+    };
+    return hypotenuseList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 NumeratorList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 numeratorList[NUM_NUMBERS] = { 6.5, 5.8, 9.3, 77.0, 0.1 };
+    return numeratorList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 DenominatorList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 denominatorList[NUM_NUMBERS] = { 2.3, 1.6, 3.1, 19.0, 0.4 };
+    return denominatorList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 FModRemainderList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 fModRemainderList[NUM_NUMBERS] = { 1.9, 1.0, 0.0, 1.0, 0.1 };
+    return fModRemainderList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 RemainderList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 remainderList[NUM_NUMBERS] = { -0.4, -0.6, 0.0, 1.0, 0.1 };
+    return remainderList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Int64 QuotientList(vtkm::Int32 i) const
+  {
+    vtkm::Int64 quotientList[NUM_NUMBERS] = { 3, 4, 3, 4, 0 };
+    return quotientList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 XList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 xList[NUM_NUMBERS] = { 4.6, 0.1, 73.4, 55.0, 3.75 };
+    return xList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 FractionalList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 fractionalList[NUM_NUMBERS] = { 0.6, 0.1, 0.4, 0.0, 0.75 };
+    return fractionalList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 FloorList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 floorList[NUM_NUMBERS] = { 4.0, 0.0, 73.0, 55.0, 3.0 };
+    return floorList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 CeilList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 ceilList[NUM_NUMBERS] = { 5.0, 1.0, 74.0, 55.0, 4.0 };
+    return ceilList[i];
+  }
+  VTKM_EXEC_CONT vtkm::Float64 RoundList(vtkm::Int32 i) const
+  {
+    vtkm::Float64 roundList[NUM_NUMBERS] = { 5.0, 0.0, 73.0, 55.0, 4.0 };
+    return roundList[i];
+  }
+};
 
 //-----------------------------------------------------------------------------
 template <typename T>
@@ -130,9 +167,9 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   void TestPow() const
   {
     //    std::cout << "Running power tests." << std::endl;
-    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS; index++)
+    for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS; index++)
     {
-      T x = static_cast<T>(NumberList[index]);
+      T x = static_cast<T>(Lists{}.NumberList(index));
       T powx = vtkm::Pow(x, static_cast<T>(2.0));
       T sqrx = x * x;
       VTKM_MATH_ASSERT(test_equal(powx, sqrx), "Power gave wrong result.");
@@ -206,13 +243,14 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   void TestRemainders() const
   {
     //    std::cout << "Testing remainders." << std::endl;
-    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS; index++)
+    Lists table;
+    for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS; index++)
     {
-      T numerator = static_cast<T>(NumeratorList[index]);
-      T denominator = static_cast<T>(DenominatorList[index]);
-      T fmodremainder = static_cast<T>(FModRemainderList[index]);
-      T remainder = static_cast<T>(RemainderList[index]);
-      vtkm::Int64 quotient = QuotientList[index];
+      T numerator = static_cast<T>(table.NumeratorList(index));
+      T denominator = static_cast<T>(table.DenominatorList(index));
+      T fmodremainder = static_cast<T>(table.FModRemainderList(index));
+      T remainder = static_cast<T>(table.RemainderList(index));
+      vtkm::Int64 quotient = table.QuotientList(index);
 
       VTKM_MATH_ASSERT(test_equal(vtkm::FMod(numerator, denominator), fmodremainder),
                        "Bad FMod remainder.");
@@ -229,13 +267,14 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   void TestRound() const
   {
     //    std::cout << "Testing round." << std::endl;
-    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS; index++)
+    Lists table;
+    for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS; index++)
     {
-      T x = static_cast<T>(XList[index]);
-      T fractional = static_cast<T>(FractionalList[index]);
-      T floor = static_cast<T>(FloorList[index]);
-      T ceil = static_cast<T>(CeilList[index]);
-      T round = static_cast<T>(RoundList[index]);
+      T x = static_cast<T>(table.XList(index));
+      T fractional = static_cast<T>(table.FractionalList(index));
+      T floor = static_cast<T>(table.FloorList(index));
+      T ceil = static_cast<T>(table.CeilList(index));
+      T round = static_cast<T>(table.RoundList(index));
 
       T intPart;
       VTKM_MATH_ASSERT(test_equal(vtkm::ModF(x, intPart), fractional),
@@ -300,8 +339,8 @@ struct TryScalarFieldTests
 template <typename VectorType>
 struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
 {
-  typedef vtkm::VecTraits<VectorType> Traits;
-  typedef typename Traits::ComponentType ComponentType;
+  using Traits = vtkm::VecTraits<VectorType>;
+  using ComponentType = typename Traits::ComponentType;
   enum
   {
     NUM_COMPONENTS = Traits::NUM_COMPONENTS
@@ -311,8 +350,8 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   void TestTriangleTrig() const
   {
     //    std::cout << "Testing normal trig functions." << std::endl;
-
-    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
+    Lists table;
+    for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType angle;
       VectorType opposite;
@@ -320,17 +359,21 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
       VectorType hypotenuse;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
+        Traits::SetComponent(angle,
+                             componentIndex,
+                             static_cast<ComponentType>(table.AngleList(componentIndex + index)));
         Traits::SetComponent(
-          angle, componentIndex, static_cast<ComponentType>(AngleList[componentIndex + index]));
-        Traits::SetComponent(opposite,
-                             componentIndex,
-                             static_cast<ComponentType>(OppositeList[componentIndex + index]));
-        Traits::SetComponent(adjacent,
-                             componentIndex,
-                             static_cast<ComponentType>(AdjacentList[componentIndex + index]));
-        Traits::SetComponent(hypotenuse,
-                             componentIndex,
-                             static_cast<ComponentType>(HypotenuseList[componentIndex + index]));
+          opposite,
+          componentIndex,
+          static_cast<ComponentType>(table.OppositeList(componentIndex + index)));
+        Traits::SetComponent(
+          adjacent,
+          componentIndex,
+          static_cast<ComponentType>(table.AdjacentList(componentIndex + index)));
+        Traits::SetComponent(
+          hypotenuse,
+          componentIndex,
+          static_cast<ComponentType>(table.HypotenuseList(componentIndex + index)));
       }
 
       VTKM_MATH_ASSERT(test_equal(vtkm::Sin(angle), opposite / hypotenuse), "Sin failed test.");
@@ -363,14 +406,14 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
 
     const VectorType zero(0);
     const VectorType half(0.5);
-
-    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
+    Lists table;
+    for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType x;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
         Traits::SetComponent(
-          x, componentIndex, static_cast<ComponentType>(AngleList[componentIndex + index]));
+          x, componentIndex, static_cast<ComponentType>(table.AngleList(componentIndex + index)));
       }
 
       const VectorType minusX = zero - x;
@@ -391,13 +434,14 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
   template <typename FunctionType>
   VTKM_EXEC void RaiseToTest(FunctionType function, ComponentType exponent) const
   {
-    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
+    Lists table;
+    for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType original;
       VectorType raiseresult;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        ComponentType x = static_cast<ComponentType>(NumberList[componentIndex + index]);
+        ComponentType x = static_cast<ComponentType>(table.NumberList(componentIndex + index));
         Traits::SetComponent(original, componentIndex, x);
         Traits::SetComponent(raiseresult, componentIndex, vtkm::Pow(x, exponent));
       }
@@ -462,13 +506,14 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
                              ComponentType exponentbias = 0.0,
                              ComponentType resultbias = 0.0) const
   {
-    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
+    Lists table;
+    for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType original;
       VectorType raiseresult;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        ComponentType x = static_cast<ComponentType>(NumberList[componentIndex + index]);
+        ComponentType x = static_cast<ComponentType>(table.NumberList(componentIndex + index));
         Traits::SetComponent(original, componentIndex, x);
         Traits::SetComponent(
           raiseresult, componentIndex, vtkm::Pow(base, x + exponentbias) + resultbias);
@@ -533,14 +578,15 @@ struct ScalarVectorFieldTests : public vtkm::exec::FunctorBase
                              ComponentType base,
                              ComponentType bias = 0.0) const
   {
-    for (vtkm::IdComponent index = 0; index < NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
+    Lists table;
+    for (vtkm::IdComponent index = 0; index < Lists::NUM_NUMBERS - NUM_COMPONENTS + 1; index++)
     {
       VectorType basevector(base);
       VectorType original;
       VectorType biased;
       for (vtkm::IdComponent componentIndex = 0; componentIndex < NUM_COMPONENTS; componentIndex++)
       {
-        ComponentType x = static_cast<ComponentType>(NumberList[componentIndex + index]);
+        ComponentType x = static_cast<ComponentType>(table.NumberList(componentIndex + index));
         Traits::SetComponent(original, componentIndex, x);
         Traits::SetComponent(biased, componentIndex, x + bias);
       }
@@ -654,7 +700,7 @@ struct AllTypesTests : public vtkm::exec::FunctorBase
     VTKM_MATH_ASSERT(test_equal(vtkm::Max(low, high), high), "Wrong max.");
     VTKM_MATH_ASSERT(test_equal(vtkm::Max(high, low), high), "Wrong max.");
 
-    typedef vtkm::VecTraits<T> Traits;
+    using Traits = vtkm::VecTraits<T>;
     T mixed1 = low;
     T mixed2 = high;
     Traits::SetComponent(mixed1, 0, Traits::GetComponent(high, 0));

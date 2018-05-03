@@ -21,7 +21,6 @@
 #include <vtkm/rendering/CanvasRayTracer.h>
 
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/rendering/Canvas.h>
 #include <vtkm/rendering/Color.h>
 #include <vtkm/rendering/raytracing/Ray.h>
@@ -51,23 +50,24 @@ public:
                                 FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
-                                ExecObject,
-                                ExecObject);
+                                WholeArrayOut<vtkm::ListTagBase<vtkm::Float32>>,
+                                WholeArrayOut<vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 4>>>);
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
-  template <typename Precision, typename ColorPortalType>
-  VTKM_EXEC void operator()(
-    const vtkm::Id& pixelIndex,
-    ColorPortalType& colorBufferIn,
-    const Precision& inDepth,
-    const vtkm::Vec<Precision, 3>& origin,
-    const vtkm::Vec<Precision, 3>& dir,
-    vtkm::exec::ExecutionWholeArray<vtkm::Float32>& depthBuffer,
-    vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32, 4>>& colorBuffer,
-    const vtkm::Id& index) const
+  template <typename Precision,
+            typename ColorPortalType,
+            typename DepthBufferPortalType,
+            typename ColorBufferPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& pixelIndex,
+                            ColorPortalType& colorBufferIn,
+                            const Precision& inDepth,
+                            const vtkm::Vec<Precision, 3>& origin,
+                            const vtkm::Vec<Precision, 3>& dir,
+                            DepthBufferPortalType& depthBuffer,
+                            ColorBufferPortalType& colorBuffer,
+                            const vtkm::Id& index) const
   {
     vtkm::Vec<Precision, 3> intersection = origin + inDepth * dir;
     vtkm::Vec<vtkm::Float32, 4> point;
-
     point[0] = static_cast<vtkm::Float32>(intersection[0]);
     point[1] = static_cast<vtkm::Float32>(intersection[1]);
     point[2] = static_cast<vtkm::Float32>(intersection[2]);
@@ -90,18 +90,19 @@ public:
     // blend the mapped color with existing canvas color
     vtkm::Vec<vtkm::Float32, 4> inColor = colorBuffer.Get(pixelIndex);
 
-    vtkm::Float32 alpha = inColor[3] * (1.f - color[3]);
+    // if transparency exists, all alphas have been pre-multiplied
+    vtkm::Float32 alpha = (1.f - color[3]);
     color[0] = color[0] + inColor[0] * alpha;
     color[1] = color[1] + inColor[1] * alpha;
     color[2] = color[2] + inColor[2] * alpha;
-    color[3] = alpha + color[3];
+    color[3] = inColor[3] * alpha + color[3];
 
     // clamp
     for (vtkm::Int32 i = 0; i < 4; ++i)
     {
       color[i] = vtkm::Min(1.f, vtkm::Max(color[i], 0.f));
     }
-    // The existng depth should already been feed into thge ray mapper
+    // The existing depth should already been feed into the ray mapper
     // so no color contribution will exist past the existing depth.
 
     depthBuffer.Set(pixelIndex, depth);
@@ -140,14 +141,13 @@ public:
   {
     VTKM_IS_DEVICE_ADAPTER_TAG(Device);
     vtkm::worklet::DispatcherMapField<SurfaceConverter, Device>(SurfaceConverter(ViewProjMat))
-      .Invoke(
-        Rays.PixelIdx,
-        Colors,
-        Rays.Distance,
-        Rays.Origin,
-        Rays.Dir,
-        vtkm::exec::ExecutionWholeArray<vtkm::Float32>(Canvas->GetDepthBuffer()),
-        vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Float32, 4>>(Canvas->GetColorBuffer()));
+      .Invoke(Rays.PixelIdx,
+              Colors,
+              Rays.Distance,
+              Rays.Origin,
+              Rays.Dir,
+              Canvas->GetDepthBuffer(),
+              Canvas->GetColorBuffer());
     return true;
   }
 };

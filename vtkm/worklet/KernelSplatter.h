@@ -22,8 +22,6 @@
 
 #include <vtkm/Math.h>
 
-#include <vtkm/exec/ExecutionWholeArray.h>
-
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandlePermutation.h>
@@ -75,9 +73,9 @@ namespace debug
 template <typename T, typename S = VTKM_DEFAULT_STORAGE_TAG>
 void OutputArrayDebug(const vtkm::cont::ArrayHandle<T, S>& outputArray, const std::string& name)
 {
-  typedef T ValueType;
-  typedef vtkm::cont::internal::Storage<T, S> StorageType;
-  typedef typename StorageType::PortalConstType PortalConstType;
+  using ValueType = T;
+  using StorageType = vtkm::cont::internal::Storage<T, S>;
+  using PortalConstType = typename StorageType::PortalConstType;
   PortalConstType readPortal = outputArray.GetPortalConstControl();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::vector<ValueType> result(readPortal.GetNumberOfValues());
@@ -92,8 +90,8 @@ template <typename T, int S>
 void OutputArrayDebug(const vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>& outputArray,
                       const std::string& name)
 {
-  typedef T ValueType;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>::PortalConstControl PortalConstType;
+  using ValueType = T;
+  using PortalConstType = typename vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>::PortalConstControl;
   PortalConstType readPortal = outputArray.GetPortalConstControl();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
@@ -110,8 +108,8 @@ void OutputArrayDebug(
     outputArray,
   const std::string& name)
 {
-  typedef typename vtkm::cont::ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>::
-    PortalConstControl PortalConstType;
+  using PortalConstType = typename vtkm::cont::
+    ArrayHandlePermutation<I, vtkm::cont::ArrayHandle<vtkm::Vec<T, S>>>::PortalConstControl;
   PortalConstType readPortal = outputArray.GetPortalConstControl();
   vtkm::cont::ArrayPortalToIterators<PortalConstType> iterators(readPortal);
   std::cout << name.c_str() << " " << outputArray.GetNumberOfValues() << "\n";
@@ -148,21 +146,21 @@ void OutputArrayDebug(
 template <typename Kernel, typename DeviceAdapter>
 struct KernelSplatterFilterUniformGrid
 {
-  typedef vtkm::cont::ArrayHandle<vtkm::Float64> DoubleHandleType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Float32> FloatHandleType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Id3> VecHandleType;
-  typedef vtkm::cont::ArrayHandle<vtkm::Id> IdHandleType;
+  using DoubleHandleType = vtkm::cont::ArrayHandle<vtkm::Float64>;
+  using FloatHandleType = vtkm::cont::ArrayHandle<vtkm::Float32>;
+  using VecHandleType = vtkm::cont::ArrayHandle<vtkm::Id3>;
+  using IdHandleType = vtkm::cont::ArrayHandle<vtkm::Id>;
   //
-  typedef vtkm::Vec<vtkm::Float32, 3> FloatVec;
-  typedef vtkm::Vec<vtkm::Float64, 3> PointType;
-  typedef vtkm::cont::ArrayHandle<PointType> PointHandleType;
+  using FloatVec = vtkm::Vec<vtkm::Float32, 3>;
+  using PointType = vtkm::Vec<vtkm::Float64, 3>;
+  using PointHandleType = vtkm::cont::ArrayHandle<PointType>;
   //
-  typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, VecHandleType> VecPermType;
-  typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, PointHandleType> PointVecPermType;
-  typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType> IdPermType;
-  typedef vtkm::cont::ArrayHandlePermutation<IdHandleType, FloatHandleType> FloatPermType;
+  using VecPermType = vtkm::cont::ArrayHandlePermutation<IdHandleType, VecHandleType>;
+  using PointVecPermType = vtkm::cont::ArrayHandlePermutation<IdHandleType, PointHandleType>;
+  using IdPermType = vtkm::cont::ArrayHandlePermutation<IdHandleType, IdHandleType>;
+  using FloatPermType = vtkm::cont::ArrayHandlePermutation<IdHandleType, FloatHandleType>;
   //
-  typedef vtkm::cont::ArrayHandleCounting<vtkm::Id> IdCountingType;
+  using IdCountingType = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
 
   //-----------------------------------------------------------------------
   // zero an array,
@@ -363,16 +361,16 @@ struct KernelSplatterFilterUniformGrid
   class UpdateVoxelSplats : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, ExecObject);
+    typedef void ControlSignature(FieldIn<>, FieldIn<>, WholeArrayOut<Scalar>);
     typedef void ExecutionSignature(_1, _2, _3);
 
     VTKM_CONT
     UpdateVoxelSplats() {}
 
-    VTKM_EXEC_CONT
-    void operator()(const vtkm::Id& voxelIndex,
-                    const vtkm::Float64& splatValue,
-                    vtkm::exec::ExecutionWholeArray<vtkm::Float32>& execArg) const
+    template <typename ExecArgPortalType>
+    VTKM_EXEC_CONT void operator()(const vtkm::Id& voxelIndex,
+                                   const vtkm::Float64& splatValue,
+                                   ExecArgPortalType& execArg) const
     {
       execArg.Set(voxelIndex, static_cast<vtkm::Float32>(splatValue));
     }
@@ -594,9 +592,7 @@ struct KernelSplatterFilterUniformGrid
     vtkm::worklet::DispatcherMapField<UpdateVoxelSplats> scatterDispatcher;
 
     START_TIMER_BLOCK(UpdateVoxelSplats)
-    scatterDispatcher.Invoke(uniqueVoxelIds,
-                             voxelSplatSums,
-                             vtkm::exec::ExecutionWholeArray<vtkm::Float32>(scalarSplatOutput));
+    scatterDispatcher.Invoke(uniqueVoxelIds, voxelSplatSums, scalarSplatOutput);
     END_TIMER_BLOCK(UpdateVoxelSplats)
     debug::OutputArrayDebug(scalarSplatOutput, "scalarSplatOutput");
     //

@@ -48,7 +48,7 @@ public:
   VTKM_CONT
   TaskSingular(const WorkletType& worklet,
                const InvocationType& invocation,
-               const vtkm::Id& globalIndexOffset = 0)
+               vtkm::Id globalIndexOffset = 0)
     : Worklet(worklet)
     , Invocation(invocation)
     , GlobalIndexOffset(globalIndexOffset)
@@ -75,7 +75,7 @@ public:
   }
 
 private:
-  WorkletType Worklet;
+  typename std::remove_const<WorkletType>::type Worklet;
   // This is held by by value so that when we transfer the invocation object
   // over to CUDA it gets properly copied to the device. While we want to
   // hold by reference to reduce the number of copies, it is not possible

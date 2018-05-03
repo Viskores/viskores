@@ -33,9 +33,22 @@ set(unit_tests
   UnitTestMapperVolume.cxx
 )
 
-VTKm_unit_tests(SOURCES ${unit_tests})
+vtkm_unit_tests(NAME Rendering BACKEND SERIAL SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
+if (TARGET vtkm::tbb)
+  vtkm_unit_tests(NAME Rendering BACKEND TBB SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
+endif()
+if (TARGET vtkm::cuda)
+  vtkm_unit_tests(NAME Rendering BACKEND CUDA SOURCES ${unit_tests} LIBRARIES vtkm_rendering)
+endif()
 
-#add_subdirectory(osmesa)
-#add_subdirectory(egl)
-#add_subdirectory(glfw)
 
+if(VTKm_ENABLE_GL_CONTEXT)
+  # message(STATUS "rendering testing/glfw needs a FindGLFW")
+  # message(STATUS "rendering testing/glut needs compile corrections")
+  # add_subdirectory(glfw)
+  # add_subdirectory(glut)
+elseif(VTKm_ENABLE_OSMESA_CONTEXT)
+  add_subdirectory(osmesa)
+elseif(VTKm_ENABLE_EGL_CONTEXT)
+  add_subdirectory(egl)
+endif()

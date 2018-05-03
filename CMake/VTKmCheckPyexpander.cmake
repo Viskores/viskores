@@ -70,7 +70,7 @@ if(${diff_result})
   # If diff returned non-zero, it failed and the two files are different.
   get_filename_component(filename ${SOURCE_FILE} NAME)
   message(SEND_ERROR
-    "The source file ${filename} does not match the generated file. If you have modified this file directly, then you have messed up. Modify the ${filename}.in file instead and then copy the pyexpander result to ${filename}. If you modified ${filename}.in, then you might just need to copy the pyresult back to the source directory. If you have not modifed either, then you have likely checked out an inappropriate change. Check the git logs to see what changes were made.
+    "The source file ${filename} does not match the generated file. If you have modified this file directly, then you have messed up. Modify the ${filename}.in file instead and then copy the pyexpander result to ${filename}. If you modified ${filename}.in, then you might just need to copy the pyresult back to the source directory. If you have not modified either, then you have likely checked out an inappropriate change. Check the git logs to see what changes were made.
 If the changes have resulted from modifying ${filename}.in, then you can finish by moving ${GENERATED_FILE}.save over ${SOURCE_FILE}")
 else()
   # Now that we have done the comparison, remove the generated file so there is

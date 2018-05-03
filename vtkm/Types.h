@@ -48,7 +48,7 @@
  * \brief Transportation controls for Control Environment Objects.
  *
  * vtkm::cont::arg includes the classes that allows the vtkm::worklet::Dispatchers
- * to request Control Environment Objects to be transfered to the Execution Environment.
+ * to request Control Environment Objects to be transferred to the Execution Environment.
  *
  * \namespace vtkm::cont::cuda
  * \brief CUDA implementation for Control Environment.
@@ -143,39 +143,21 @@ namespace vtkm
 //*****************************************************************************
 // Typedefs for basic types.
 //*****************************************************************************
-
-#if VTKM_SIZE_FLOAT == 4
 using Float32 = float;
-#else
-#error Could not find a 32-bit float.
-#endif
-
-#if VTKM_SIZE_DOUBLE == 8
 using Float64 = double;
-#else
-#error Could not find a 64-bit float.
-#endif
-
-#if VTKM_SIZE_CHAR == 1
 using Int8 = signed char;
 using UInt8 = unsigned char;
-#else
-#error Could not find an 8-bit integer.
-#endif
-
-#if VTKM_SIZE_SHORT == 2
 using Int16 = short;
 using UInt16 = unsigned short;
-#else
-#error Could not find a 16-bit integer.
-#endif
-
-#if VTKM_SIZE_INT == 4
 using Int32 = int;
 using UInt32 = unsigned int;
-#else
-#error Could not find a 32-bit integer.
-#endif
+
+/// Represents a component ID (index of component in a vector). The number
+/// of components, being a value fixed at compile time, is generally assumed
+/// to be quite small. However, we are currently using a 32-bit width
+/// integer because modern processors tend to access them more efficiently
+/// than smaller widths.
+using IdComponent = vtkm::Int32;
 
 //In this order so that we exactly match the logic that exists in VTK
 #if VTKM_SIZE_LONG_LONG == 8
@@ -188,40 +170,19 @@ using UInt64 = unsigned long;
 #error Could not find a 64-bit integer.
 #endif
 
-//-----------------------------------------------------------------------------
-
-#if VTKM_SIZE_ID == 4
-
 /// Represents an ID (index into arrays).
-using Id = vtkm::Int32;
-
-#elif VTKM_SIZE_ID == 8
-
-/// Represents an ID.
+#ifdef VTKM_USE_64BIT_IDS
 using Id = vtkm::Int64;
-
 #else
-#error Unknown Id Size
+using Id = vtkm::Int32;
 #endif
 
-/// Represents a component ID (index of component in a vector). The number
-/// of components, being a value fixed at compile time, is generally assumed
-/// to be quite small. However, we are currently using a 32-bit width
-/// integer because modern processors tend to access them more efficiently
-/// than smaller widths.
-using IdComponent = vtkm::Int32;
-
+/// The floating point type to use when no other precision is specified.
 #ifdef VTKM_USE_DOUBLE_PRECISION
-
-/// The floating point type to use when no other precision is specified.
 using FloatDefault = vtkm::Float64;
-
-#else //VTKM_USE_DOUBLE_PRECISION
-
-/// The floating point type to use when no other precision is specified.
+#else
 using FloatDefault = vtkm::Float32;
-
-#endif //VTKM_USE_DOUBLE_PRECISION
+#endif
 
 namespace internal
 {
@@ -239,7 +200,7 @@ template <vtkm::IdComponent Size>
 struct VecComponentWiseUnaryOperation
 {
   template <typename T, typename UnaryOpType>
-  VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
+  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
   {
     T result;
     for (vtkm::IdComponent i = 0; i < Size; ++i)
@@ -254,7 +215,7 @@ template <>
 struct VecComponentWiseUnaryOperation<1>
 {
   template <typename T, typename UnaryOpType>
-  VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
+  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
   {
     return T(unaryOp(v[0]));
   }
@@ -264,7 +225,7 @@ template <>
 struct VecComponentWiseUnaryOperation<2>
 {
   template <typename T, typename UnaryOpType>
-  VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
+  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
   {
     return T(unaryOp(v[0]), unaryOp(v[1]));
   }
@@ -274,7 +235,7 @@ template <>
 struct VecComponentWiseUnaryOperation<3>
 {
   template <typename T, typename UnaryOpType>
-  VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
+  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
   {
     return T(unaryOp(v[0]), unaryOp(v[1]), unaryOp(v[2]));
   }
@@ -284,7 +245,7 @@ template <>
 struct VecComponentWiseUnaryOperation<4>
 {
   template <typename T, typename UnaryOpType>
-  VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
+  inline VTKM_EXEC_CONT T operator()(const T& v, const UnaryOpType& unaryOp) const
   {
     return T(unaryOp(v[0]), unaryOp(v[1]), unaryOp(v[2]), unaryOp(v[3]));
   }
@@ -351,7 +312,7 @@ private:
 struct Add
 {
   template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
+  inline VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
   {
     return T(a + b);
   }
@@ -360,7 +321,7 @@ struct Add
 struct Subtract
 {
   template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
+  inline VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
   {
     return T(a - b);
   }
@@ -369,7 +330,7 @@ struct Subtract
 struct Multiply
 {
   template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
+  inline VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
   {
     return T(a * b);
   }
@@ -378,7 +339,7 @@ struct Multiply
 struct Divide
 {
   template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
+  inline VTKM_EXEC_CONT T operator()(const T& a, const T& b) const
   {
     return T(a / b);
   }
@@ -387,7 +348,7 @@ struct Divide
 struct Negate
 {
   template <typename T>
-  VTKM_EXEC_CONT T operator()(const T& x) const
+  inline VTKM_EXEC_CONT T operator()(const T& x) const
   {
     return T(-x);
   }
@@ -427,7 +388,10 @@ namespace detail
 #if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
 #endif // gcc || clang
 #endif // use cuda < 8
 template <typename T, typename DerivedClass>
@@ -437,7 +401,6 @@ public:
   using ComponentType = T;
 
 protected:
-  VTKM_EXEC_CONT
   VecBaseCommon() = default;
 
   VTKM_EXEC_CONT
@@ -449,15 +412,15 @@ protected:
 private:
   // Only for internal use
   VTKM_EXEC_CONT
-  vtkm::IdComponent NumComponents() const { return this->Derived().GetNumberOfComponents(); }
+  inline vtkm::IdComponent NumComponents() const { return this->Derived().GetNumberOfComponents(); }
 
   // Only for internal use
   VTKM_EXEC_CONT
-  const T& Component(vtkm::IdComponent index) const { return this->Derived()[index]; }
+  inline const T& Component(vtkm::IdComponent index) const { return this->Derived()[index]; }
 
   // Only for internal use
   VTKM_EXEC_CONT
-  T& Component(vtkm::IdComponent index) { return this->Derived()[index]; }
+  inline T& Component(vtkm::IdComponent index) { return this->Derived()[index]; }
 
 public:
   template <vtkm::IdComponent OtherSize>
@@ -516,31 +479,18 @@ public:
   VTKM_EXEC_CONT
   bool operator!=(const DerivedClass& other) const { return !(this->operator==(other)); }
 
-  VTKM_EXEC_CONT
-  ComponentType Dot(const VecBaseCommon<ComponentType, DerivedClass>& other) const
-  {
-    // Why the static_cast here and below? Because * on small integers (char,
-    // short) promotes the result to a 32-bit int. After helpfully promoting
-    // the width of the result, some compilers then warn you about casting it
-    // back to the type you were expecting in the first place. The static_cast
-    // suppresses this warning.
-    ComponentType result = static_cast<ComponentType>(this->Component(0) * other.Component(0));
-    for (vtkm::IdComponent i = 1; i < this->NumComponents(); ++i)
-    {
-      result = static_cast<ComponentType>(result + this->Component(i) * other.Component(i));
-    }
-    return result;
-  }
-
 #if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
 #endif // gcc || clang
 #endif // not using cuda < 8
 
   template <vtkm::IdComponent Size>
-  VTKM_EXEC_CONT vtkm::Vec<ComponentType, Size> operator+(
+  inline VTKM_EXEC_CONT vtkm::Vec<ComponentType, Size> operator+(
     const vtkm::Vec<ComponentType, Size>& other) const
   {
     VTKM_ASSERT(Size == this->NumComponents());
@@ -553,7 +503,8 @@ public:
   }
 
   template <typename OtherClass>
-  VTKM_EXEC_CONT DerivedClass& operator+=(const VecBaseCommon<ComponentType, OtherClass>& other)
+  inline VTKM_EXEC_CONT DerivedClass& operator+=(
+    const VecBaseCommon<ComponentType, OtherClass>& other)
   {
     const OtherClass& other_derived = static_cast<const OtherClass&>(other);
     VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
@@ -565,7 +516,7 @@ public:
   }
 
   template <vtkm::IdComponent Size>
-  VTKM_EXEC_CONT vtkm::Vec<ComponentType, Size> operator-(
+  inline VTKM_EXEC_CONT vtkm::Vec<ComponentType, Size> operator-(
     const vtkm::Vec<ComponentType, Size>& other) const
   {
     VTKM_ASSERT(Size == this->NumComponents());
@@ -578,7 +529,8 @@ public:
   }
 
   template <typename OtherClass>
-  VTKM_EXEC_CONT DerivedClass& operator-=(const VecBaseCommon<ComponentType, OtherClass>& other)
+  inline VTKM_EXEC_CONT DerivedClass& operator-=(
+    const VecBaseCommon<ComponentType, OtherClass>& other)
   {
     const OtherClass& other_derived = static_cast<const OtherClass&>(other);
     VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
@@ -590,7 +542,7 @@ public:
   }
 
   template <vtkm::IdComponent Size>
-  VTKM_EXEC_CONT vtkm::Vec<ComponentType, Size> operator*(
+  inline VTKM_EXEC_CONT vtkm::Vec<ComponentType, Size> operator*(
     const vtkm::Vec<ComponentType, Size>& other) const
   {
     vtkm::Vec<ComponentType, Size> result;
@@ -602,7 +554,8 @@ public:
   }
 
   template <typename OtherClass>
-  VTKM_EXEC_CONT DerivedClass& operator*=(const VecBaseCommon<ComponentType, OtherClass>& other)
+  inline VTKM_EXEC_CONT DerivedClass& operator*=(
+    const VecBaseCommon<ComponentType, OtherClass>& other)
   {
     const OtherClass& other_derived = static_cast<const OtherClass&>(other);
     VTKM_ASSERT(this->NumComponents() == other_derived.GetNumberOfComponents());
@@ -614,7 +567,7 @@ public:
   }
 
   template <vtkm::IdComponent Size>
-  VTKM_EXEC_CONT vtkm::Vec<ComponentType, Size> operator/(
+  inline VTKM_EXEC_CONT vtkm::Vec<ComponentType, Size> operator/(
     const vtkm::Vec<ComponentType, Size>& other) const
   {
     vtkm::Vec<ComponentType, Size> result;
@@ -649,11 +602,7 @@ public:
   VTKM_EXEC_CONT
   const ComponentType* GetPointer() const { return &this->Component(0); }
 };
-#if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-#pragma GCC diagnostic pop
-#endif // gcc || clang
-#endif // use cuda < 8
+
 
 /// Base implementation of all Vec classes.
 ///
@@ -662,10 +611,9 @@ class VTKM_ALWAYS_EXPORT VecBase : public vtkm::detail::VecBaseCommon<T, Derived
 {
 public:
   using ComponentType = T;
-  static const vtkm::IdComponent NUM_COMPONENTS = Size;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = Size;
 
 protected:
-  VTKM_EXEC_CONT
   VecBase() = default;
 
   VTKM_EXEC_CONT
@@ -677,45 +625,51 @@ protected:
     }
   }
 
+#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunknown-pragmas"
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wfloat-conversion"
+#endif // gcc || clang
+#endif //not using cuda < 8
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4244)
+#endif
+
   template <typename OtherValueType, typename OtherDerivedType>
-  VTKM_EXEC_CONT VecBase(const VecBase<OtherValueType, Size, OtherDerivedType>& src)
+  VTKM_EXEC_CONT explicit VecBase(const VecBase<OtherValueType, Size, OtherDerivedType>& src)
   {
+    //DO NOT CHANGE THIS AND THE ABOVE PRAGMA'S UNLESS YOU FULLY UNDERSTAND THE
+    //ISSUE https://gitlab.kitware.com/vtk/vtk-m/issues/221
     for (vtkm::IdComponent i = 0; i < Size; ++i)
     {
-      this->Components[i] = static_cast<T>(src[i]);
+      this->Components[i] = src[i];
     }
   }
 
 public:
-  VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfComponents() const { return NUM_COMPONENTS; }
+  inline VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfComponents() const { return NUM_COMPONENTS; }
 
-  VTKM_EXEC_CONT
-  //DRP
-  /*  inline */ const ComponentType& operator[](vtkm::IdComponent idx) const
-  {
-    VTKM_ASSERT(idx >= 0);
-    VTKM_ASSERT(idx < NUM_COMPONENTS);
-    return this->Components[idx];
-  }
-  VTKM_EXEC_CONT
-  //DRP
-  /*inline*/ ComponentType& operator[](vtkm::IdComponent idx)
+  inline VTKM_EXEC_CONT const ComponentType& operator[](vtkm::IdComponent idx) const
   {
     VTKM_ASSERT(idx >= 0);
     VTKM_ASSERT(idx < NUM_COMPONENTS);
     return this->Components[idx];
   }
 
-#if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
-#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif // gcc || clang
-#endif // not using cuda < 8
+  inline VTKM_EXEC_CONT ComponentType& operator[](vtkm::IdComponent idx)
+  {
+    VTKM_ASSERT(idx >= 0);
+    VTKM_ASSERT(idx < NUM_COMPONENTS);
+    return this->Components[idx];
+  }
+
 
   template <typename OtherComponentType, typename OtherClass>
-  VTKM_EXEC_CONT DerivedClass
+  inline VTKM_EXEC_CONT DerivedClass
   operator+(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
   {
     const OtherClass& other_derived = static_cast<const OtherClass&>(other);
@@ -730,7 +684,7 @@ public:
   }
 
   template <typename OtherComponentType, typename OtherClass>
-  VTKM_EXEC_CONT DerivedClass
+  inline VTKM_EXEC_CONT DerivedClass
   operator-(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
   {
     const OtherClass& other_derived = static_cast<const OtherClass&>(other);
@@ -745,7 +699,7 @@ public:
   }
 
   template <typename OtherComponentType, typename OtherClass>
-  VTKM_EXEC_CONT DerivedClass
+  inline VTKM_EXEC_CONT DerivedClass
   operator*(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
   {
     const OtherClass& other_derived = static_cast<const OtherClass&>(other);
@@ -760,7 +714,7 @@ public:
   }
 
   template <typename OtherComponentType, typename OtherClass>
-  VTKM_EXEC_CONT DerivedClass
+  inline VTKM_EXEC_CONT DerivedClass
   operator/(const VecBaseCommon<OtherComponentType, OtherClass>& other) const
   {
     const OtherClass& other_derived = static_cast<const OtherClass&>(other);
@@ -779,10 +733,19 @@ public:
 #pragma GCC diagnostic pop
 #endif // gcc || clang
 #endif // not using cuda < 8
+#if defined(VTKM_MSVC)
+#pragma warning(pop)
+#endif
 
 protected:
   ComponentType Components[NUM_COMPONENTS];
 };
+
+#if (defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8))
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif // gcc || clang
+#endif // use cuda < 8
 
 /// Base of all VecC and VecCConst classes.
 ///
@@ -806,7 +769,7 @@ protected:
 /// The \c Vec class is most often used to represent vectors in the
 /// mathematical sense as a quantity with a magnitude and direction. Vectors
 /// are, of course, used extensively in computational geometry as well as
-/// phyiscal simulations. The \c Vec class can be (and is) repurposed for more
+/// physical simulations. The \c Vec class can be (and is) repurposed for more
 /// general usage of holding a fixed-length sequence of objects.
 ///
 /// There is no real limit to the size of the sequence (other than the largest
@@ -821,18 +784,17 @@ class VTKM_ALWAYS_EXPORT Vec : public detail::VecBase<T, Size, Vec<T, Size>>
 public:
 #ifdef VTKM_DOXYGEN_ONLY
   using ComponentType = T;
-  static const vtkm::IdComponent NUM_COMPONENTS = Size;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = Size;
 #endif
 
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
   }
-  // VTKM_EXEC_CONT explicit Vec(const T* values) : Superclass(values) {  }
 
   template <typename OtherType>
-  VTKM_EXEC_CONT Vec(const Vec<OtherType, Size>& src)
+  VTKM_EXEC_CONT explicit Vec(const Vec<OtherType, Size>& src)
     : Superclass(src)
   {
   }
@@ -849,9 +811,9 @@ class VTKM_ALWAYS_EXPORT Vec<T, 0>
 {
 public:
   using ComponentType = T;
-  static const vtkm::IdComponent NUM_COMPONENTS = 0;
+  static constexpr vtkm::IdComponent NUM_COMPONENTS = 0;
 
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const ComponentType&) {}
 
   template <typename OtherType>
@@ -882,7 +844,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 1> : public detail::VecBase<T, 1, Vec<T, 1>>
   using Superclass = detail::VecBase<T, 1, Vec<T, 1>>;
 
 public:
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -893,14 +855,6 @@ public:
     : Superclass(src)
   {
   }
-
-  // This convenience operator removed because it was causing ambiguous
-  // overload errors
-  //  VTKM_EXEC_CONT
-  //  operator T() const
-  //  {
-  //    return this->Components[0];
-  //  }
 };
 
 //-----------------------------------------------------------------------------
@@ -912,7 +866,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 2> : public detail::VecBase<T, 2, Vec<T, 2>>
   using Superclass = detail::VecBase<T, 2, Vec<T, 2>>;
 
 public:
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -941,7 +895,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 3> : public detail::VecBase<T, 3, Vec<T, 3>>
   using Superclass = detail::VecBase<T, 3, Vec<T, 3>>;
 
 public:
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -972,7 +926,7 @@ class VTKM_ALWAYS_EXPORT Vec<T, 4> : public detail::VecBase<T, 4, Vec<T, 4>>
   using Superclass = detail::VecBase<T, 4, Vec<T, 4>>;
 
 public:
-  VTKM_EXEC_CONT Vec() = default;
+  Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
   {
@@ -992,21 +946,6 @@ public:
     this->Components[2] = z;
     this->Components[3] = w;
   }
-};
-
-/// Provides the appropriate type when not sure if using a Vec or a scalar in a
-/// templated class or function. The \c Type in the struct is the same as the
-/// \c ComponentType when \c NumComponents is 1 and a \c Vec otherwise.
-///
-template <typename ComponentType, vtkm::IdComponent NumComponents>
-struct VecOrScalar
-{
-  using Type = vtkm::Vec<ComponentType, NumComponents>;
-};
-template <typename ComponentType>
-struct VecOrScalar<ComponentType, 1>
-{
-  using Type = ComponentType;
 };
 
 /// Initializes and returns a Vec of length 2.
@@ -1100,24 +1039,24 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
-  const T& operator[](vtkm::IdComponent index) const
+  inline VTKM_EXEC_CONT const T& operator[](vtkm::IdComponent index) const
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->NumberOfComponents);
     return this->Components[index];
   }
 
-  VTKM_EXEC_CONT
-  T& operator[](vtkm::IdComponent index)
+  inline VTKM_EXEC_CONT T& operator[](vtkm::IdComponent index)
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->NumberOfComponents);
     return this->Components[index];
   }
 
-  VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfComponents() const { return this->NumberOfComponents; }
+  inline VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfComponents() const
+  {
+    return this->NumberOfComponents;
+  }
 
   VTKM_EXEC_CONT
   VecC<T>& operator=(const VecC<T>& src)
@@ -1201,16 +1140,17 @@ public:
   {
   }
 
-  VTKM_EXEC_CONT
-  const T& operator[](vtkm::IdComponent index) const
+  inline VTKM_EXEC_CONT const T& operator[](vtkm::IdComponent index) const
   {
     VTKM_ASSERT(index >= 0);
     VTKM_ASSERT(index < this->NumberOfComponents);
     return this->Components[index];
   }
 
-  VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfComponents() const { return this->NumberOfComponents; }
+  inline VTKM_EXEC_CONT vtkm::IdComponent GetNumberOfComponents() const
+  {
+    return this->NumberOfComponents;
+  }
 
 private:
   const T* const Components;
@@ -1228,7 +1168,7 @@ private:
 /// Creates a \c VecC from an input array.
 ///
 template <typename T>
-VTKM_EXEC_CONT static inline vtkm::VecC<T> make_VecC(T* array, vtkm::IdComponent size)
+static inline VTKM_EXEC_CONT vtkm::VecC<T> make_VecC(T* array, vtkm::IdComponent size)
 {
   return vtkm::VecC<T>(array, size);
 }
@@ -1236,54 +1176,93 @@ VTKM_EXEC_CONT static inline vtkm::VecC<T> make_VecC(T* array, vtkm::IdComponent
 /// Creates a \c VecCConst from a constant input array.
 ///
 template <typename T>
-VTKM_EXEC_CONT static inline vtkm::VecCConst<T> make_VecC(const T* array, vtkm::IdComponent size)
+static inline VTKM_EXEC_CONT vtkm::VecCConst<T> make_VecC(const T* array, vtkm::IdComponent size)
 {
   return vtkm::VecCConst<T>(array, size);
 }
 
-// A pre-declaration of vtkm::Pair so that classes templated on them can refer
-// to it. The actual implementation is in vtkm/Pair.h.
-template <typename U, typename V>
-struct Pair;
-
-template <typename T, vtkm::IdComponent Size>
-static inline VTKM_EXEC_CONT T dot(const vtkm::Vec<T, Size>& a, const vtkm::Vec<T, Size>& b)
+namespace detail
 {
-  T result = T(a[0] * b[0]);
-  for (vtkm::IdComponent i = 1; i < Size; ++i)
+template <typename T>
+struct DotType
+{
+  //results when < 32bit can be float if somehow we are using float16/float8, otherwise is
+  // int32 or uint32 depending on if it signed or not.
+  using float_type = vtkm::Float32;
+  using integer_type =
+    typename std::conditional<std::is_signed<T>::value, vtkm::Int32, vtkm::UInt32>::type;
+  using promote_type =
+    typename std::conditional<std::is_integral<T>::value, integer_type, float_type>::type;
+  using type =
+    typename std::conditional<(sizeof(T) < sizeof(vtkm::Float32)), promote_type, T>::type;
+};
+
+template <typename T>
+static inline VTKM_EXEC_CONT typename DotType<typename T::ComponentType>::type vec_dot(const T& a,
+                                                                                       const T& b)
+{
+  using U = typename DotType<typename T::ComponentType>::type;
+  U result = a[0] * b[0];
+  for (vtkm::IdComponent i = 1; i < a.GetNumberOfComponents(); ++i)
   {
-    result = T(result + a[i] * b[i]);
+    result = result + a[i] * b[i];
   }
   return result;
 }
-
-template <typename T>
-static inline VTKM_EXEC_CONT T dot(const vtkm::Vec<T, 2>& a, const vtkm::Vec<T, 2>& b)
+template <typename T, vtkm::IdComponent Size>
+static inline VTKM_EXEC_CONT typename DotType<T>::type vec_dot(const vtkm::Vec<T, Size>& a,
+                                                               const vtkm::Vec<T, Size>& b)
 {
-  return T((a[0] * b[0]) + (a[1] * b[1]));
+  using U = typename DotType<T>::type;
+  U result = a[0] * b[0];
+  for (vtkm::IdComponent i = 1; i < Size; ++i)
+  {
+    result = result + a[i] * b[i];
+  }
+  return result;
+}
 }
 
 template <typename T>
-static inline VTKM_EXEC_CONT T dot(const vtkm::Vec<T, 3>& a, const vtkm::Vec<T, 3>& b)
+static inline VTKM_EXEC_CONT auto dot(const T& a, const T& b) -> decltype(detail::vec_dot(a, b))
 {
-  return T((a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]));
+  return detail::vec_dot(a, b);
 }
-
 template <typename T>
-static inline VTKM_EXEC_CONT T dot(const vtkm::Vec<T, 4>& a, const vtkm::Vec<T, 4>& b)
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 2>& a,
+                                                                   const vtkm::Vec<T, 2>& b)
 {
-  return T((a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]) + (a[3] * b[3]));
+  return (a[0] * b[0]) + (a[1] * b[1]);
 }
-
-template <typename T, typename VecType>
-static inline VTKM_EXEC_CONT T dot(const vtkm::detail::VecBaseCommon<T, VecType>& a,
-                                   const vtkm::detail::VecBaseCommon<T, VecType>& b)
+template <typename T>
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 3>& a,
+                                                                   const vtkm::Vec<T, 3>& b)
 {
-  return a.Dot(b);
+  return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
 }
+template <typename T>
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 4>& a,
+                                                                   const vtkm::Vec<T, 4>& b)
+{
+  return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]) + (a[3] * b[3]);
+}
+// Integer types of a width less than an integer get implicitly casted to
+// an integer when doing a multiplication.
+#define VTK_M_SCALAR_DOT(stype)                                                                    \
+  static inline VTKM_EXEC_CONT detail::DotType<stype>::type dot(stype a, stype b) { return a * b; }
+VTK_M_SCALAR_DOT(vtkm::Int8)
+VTK_M_SCALAR_DOT(vtkm::UInt8)
+VTK_M_SCALAR_DOT(vtkm::Int16)
+VTK_M_SCALAR_DOT(vtkm::UInt16)
+VTK_M_SCALAR_DOT(vtkm::Int32)
+VTK_M_SCALAR_DOT(vtkm::UInt32)
+VTK_M_SCALAR_DOT(vtkm::Int64)
+VTK_M_SCALAR_DOT(vtkm::UInt64)
+VTK_M_SCALAR_DOT(vtkm::Float32)
+VTK_M_SCALAR_DOT(vtkm::Float64)
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, Size>& a)
+inline VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, Size>& a)
 {
   T result = a[0];
   for (vtkm::IdComponent i = 1; i < Size; ++i)
@@ -1294,25 +1273,25 @@ VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, Size>& a)
 }
 
 template <typename T>
-VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, 2>& a)
+inline VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, 2>& a)
 {
   return a[0] + a[1];
 }
 
 template <typename T>
-VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, 3>& a)
+inline VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, 3>& a)
 {
   return a[0] + a[1] + a[2];
 }
 
 template <typename T>
-VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, 4>& a)
+inline VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, 4>& a)
 {
   return a[0] + a[1] + a[2] + a[3];
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, Size>& a)
+inline VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, Size>& a)
 {
   T result = a[0];
   for (vtkm::IdComponent i = 1; i < Size; ++i)
@@ -1323,67 +1302,57 @@ VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, Size>& a)
 }
 
 template <typename T>
-VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, 2>& a)
+inline VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, 2>& a)
 {
   return a[0] * a[1];
 }
 
 template <typename T>
-VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, 3>& a)
+inline VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, 3>& a)
 {
   return a[0] * a[1] * a[2];
 }
 
 template <typename T>
-VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, 4>& a)
+inline VTKM_EXEC_CONT T ReduceProduct(const vtkm::Vec<T, 4>& a)
 {
   return a[0] * a[1] * a[2] * a[3];
 }
 
-// Integer types of a width less than an integer get implicitly casted to
-// an integer when doing a multiplication.
-#define VTK_M_INTEGER_PROMOTION_SCALAR_DOT(type)                                                   \
-  static inline VTKM_EXEC_CONT type dot(type a, type b) { return static_cast<type>(a * b); }
-VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::Int8)
-VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::UInt8)
-VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::Int16)
-VTK_M_INTEGER_PROMOTION_SCALAR_DOT(vtkm::UInt16)
-#define VTK_M_SCALAR_DOT(type)                                                                     \
-  static inline VTKM_EXEC_CONT type dot(type a, type b) { return a * b; }
-VTK_M_SCALAR_DOT(vtkm::Int32)
-VTK_M_SCALAR_DOT(vtkm::UInt32)
-VTK_M_SCALAR_DOT(vtkm::Int64)
-VTK_M_SCALAR_DOT(vtkm::UInt64)
-VTK_M_SCALAR_DOT(vtkm::Float32)
-VTK_M_SCALAR_DOT(vtkm::Float64)
+// A pre-declaration of vtkm::Pair so that classes templated on them can refer
+// to it. The actual implementation is in vtkm/Pair.h.
+template <typename U, typename V>
+struct Pair;
 
 } // End of namespace vtkm
 
 // Declared outside of vtkm namespace so that the operator works with all code.
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(T scalar, const vtkm::Vec<T, Size>& vec)
+VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(T scalar, const vtkm::Vec<T, Size>& vec)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindLeftBinaryOp<T, vtkm::Multiply>(scalar));
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(const vtkm::Vec<T, Size>& vec, T scalar)
+VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(const vtkm::Vec<T, Size>& vec, T scalar)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindRightBinaryOp<T, vtkm::Multiply>(scalar));
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(vtkm::Float64 scalar, const vtkm::Vec<T, Size>& vec)
+VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(vtkm::Float64 scalar,
+                                                   const vtkm::Vec<T, Size>& vec)
 {
   return vtkm::Vec<T, Size>(vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindLeftBinaryOp<vtkm::Float64, vtkm::Multiply, T>(scalar)));
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> operator*(const vtkm::Vec<T, Size>& vec, vtkm::Float64 scalar)
+VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator*(const vtkm::Vec<T, Size>& vec,
+                                                   vtkm::Float64 scalar)
 {
   return vtkm::Vec<T, Size>(vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindRightBinaryOp<vtkm::Float64, vtkm::Multiply, T>(scalar)));
@@ -1406,14 +1375,15 @@ VTKM_EXEC_CONT vtkm::Vec<vtkm::Float64, Size> operator*(const vtkm::Vec<vtkm::Fl
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> operator/(const vtkm::Vec<T, Size>& vec, T scalar)
+VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator/(const vtkm::Vec<T, Size>& vec, T scalar)
 {
   return vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindRightBinaryOp<T, vtkm::Divide>(scalar));
 }
 
 template <typename T, vtkm::IdComponent Size>
-VTKM_EXEC_CONT vtkm::Vec<T, Size> operator/(const vtkm::Vec<T, Size>& vec, vtkm::Float64 scalar)
+VTKM_EXEC_CONT vtkm::Vec<T, Size> inline operator/(const vtkm::Vec<T, Size>& vec,
+                                                   vtkm::Float64 scalar)
 {
   return vtkm::Vec<T, Size>(vtkm::internal::VecComponentWiseUnaryOperation<Size>()(
     vec, vtkm::internal::BindRightBinaryOp<vtkm::Float64, vtkm::Divide, T>(scalar)));

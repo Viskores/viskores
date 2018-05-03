@@ -132,18 +132,6 @@ public:
     this->ArrayManager.RetrieveOutputData(storage);
   }
 
-  /// Similar to RetrieveOutputData except that instead of writing to the
-  /// controlArray itself, it writes to the given control environment
-  /// iterator. This allows the user to retrieve data without necessarily
-  /// allocating an array in the ArrayContainerControl (assuming that control
-  /// and exeuction have seperate memory spaces).
-  ///
-  template <class IteratorTypeControl>
-  VTKM_CONT void CopyInto(IteratorTypeControl dest) const
-  {
-    this->ArrayManager.CopyInto(dest);
-  }
-
   /// \brief Reduces the size of the array without changing its values.
   ///
   /// This method allows you to resize the array without reallocating it. The

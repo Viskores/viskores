@@ -46,7 +46,7 @@ public:
   vtkm::Bounds CoordBounds;
 
 protected:
-  vtkm::cont::DynamicArrayHandleCoordinateSystem CoordsHandle;
+  vtkm::cont::ArrayHandleVirtualCoordinates CoordsHandle;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Triangles;
   bool IsConstructed;
   bool CanConstruct;
@@ -55,7 +55,7 @@ public:
   LinearBVH();
 
   VTKM_CONT
-  LinearBVH(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
+  LinearBVH(vtkm::cont::ArrayHandleVirtualCoordinates coordsHandle,
             vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
             vtkm::Bounds coordBounds);
 
@@ -69,7 +69,7 @@ public:
   void Construct();
 
   VTKM_CONT
-  void SetData(vtkm::cont::DynamicArrayHandleCoordinateSystem coordsHandle,
+  void SetData(vtkm::cont::ArrayHandleVirtualCoordinates coordsHandle,
                vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> triangles,
                vtkm::Bounds coordBounds);
 
@@ -80,7 +80,7 @@ public:
   bool GetIsConstructed() const;
 
   VTKM_CONT
-  vtkm::cont::DynamicArrayHandleCoordinateSystem GetCoordsHandle() const;
+  vtkm::cont::ArrayHandleVirtualCoordinates GetCoordsHandle() const;
 
   VTKM_CONT
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> GetTriangles() const;

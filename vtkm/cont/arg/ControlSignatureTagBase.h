@@ -53,7 +53,7 @@ namespace internal
 template <typename ControlSignatureTag>
 struct ControlSignatureTagCheck
 {
-  static VTKM_CONSTEXPR bool Valid =
+  static constexpr bool Valid =
     std::is_base_of<vtkm::cont::arg::ControlSignatureTagBase, ControlSignatureTag>::value;
 };
 

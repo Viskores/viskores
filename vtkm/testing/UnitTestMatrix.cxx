@@ -33,7 +33,7 @@ vtkm::Matrix<T, NumRow, NumCol> TestValue(vtkm::Id index, const vtkm::Matrix<T, 
   vtkm::Matrix<T, NumRow, NumCol> value;
   for (vtkm::IdComponent rowIndex = 0; rowIndex < NumRow; rowIndex++)
   {
-    typedef vtkm::Vec<T, NumCol> RowType;
+    using RowType = vtkm::Vec<T, NumCol>;
     RowType row = TestValue(index, RowType()) +
       RowType(static_cast<typename RowType::ComponentType>(10 * rowIndex));
     vtkm::MatrixSetRow(value, rowIndex, row);
@@ -51,10 +51,10 @@ namespace
 template <typename T, vtkm::IdComponent NumRow, vtkm::IdComponent NumCol>
 struct MatrixTest
 {
-  static const vtkm::IdComponent NUM_ROWS = NumRow;
-  static const vtkm::IdComponent NUM_COLS = NumCol;
-  typedef vtkm::Matrix<T, NUM_ROWS, NUM_COLS> MatrixType;
-  typedef typename MatrixType::ComponentType ComponentType;
+  static constexpr vtkm::IdComponent NUM_ROWS = NumRow;
+  static constexpr vtkm::IdComponent NUM_COLS = NumCol;
+  using MatrixType = vtkm::Matrix<T, NUM_ROWS, NUM_COLS>;
+  using ComponentType = typename MatrixType::ComponentType;
 
   static void BasicCreation()
   {
@@ -74,18 +74,18 @@ struct MatrixTest
     FOR_ROW_COL(matrix) { matrix[row][col] = ComponentType(value(row, col) * 2); }
     FOR_ROW_COL(matrix)
     {
-      VTKM_TEST_ASSERT(test_equal(matrix(row, col), value(row, col) * 2), "Bad set or retreive.");
+      VTKM_TEST_ASSERT(test_equal(matrix(row, col), value(row, col) * 2), "Bad set or retrieve.");
       const MatrixType const_matrix = matrix;
       VTKM_TEST_ASSERT(test_equal(const_matrix(row, col), value(row, col) * 2),
-                       "Bad set or retreive.");
+                       "Bad set or retrieve.");
     }
 
     FOR_ROW_COL(matrix) { matrix(row, col) = value(row, col); }
     const MatrixType const_matrix = matrix;
     FOR_ROW_COL(matrix)
     {
-      VTKM_TEST_ASSERT(test_equal(matrix[row][col], value(row, col)), "Bad set or retreive.");
-      VTKM_TEST_ASSERT(test_equal(const_matrix[row][col], value(row, col)), "Bad set or retreive.");
+      VTKM_TEST_ASSERT(test_equal(matrix[row][col], value(row, col)), "Bad set or retrieve.");
+      VTKM_TEST_ASSERT(test_equal(const_matrix[row][col], value(row, col)), "Bad set or retrieve.");
     }
     VTKM_TEST_ASSERT(matrix == const_matrix, "Equal test operator not working.");
     VTKM_TEST_ASSERT(!(matrix != const_matrix), "Not-Equal test operator not working.");
@@ -94,8 +94,8 @@ struct MatrixTest
 
   static void RowColAccessors()
   {
-    typedef vtkm::Vec<T, NUM_ROWS> ColumnType;
-    typedef vtkm::Vec<T, NUM_COLS> RowType;
+    using ColumnType = vtkm::Vec<T, NUM_ROWS>;
+    using RowType = vtkm::Vec<T, NUM_COLS>;
     const MatrixType const_matrix = TestValue(0, MatrixType());
     MatrixType matrix;
 
@@ -309,11 +309,22 @@ void NonSingularMatrix(vtkm::Matrix<T, 5, 5>& mat)
   mat(4, 4) = 4;
 }
 
+template <typename T, vtkm::IdComponent S>
+void PrintMatrix(const vtkm::Matrix<T, S, S>& m)
+{
+  std::cout << "matrix\n";
+  for (vtkm::IdComponent i = 0; i < S; ++i)
+  {
+    std::cout << "\t" << m[i] << "\n";
+  }
+  std::cout << std::flush;
+}
+
 template <typename T, int Size>
 void SingularMatrix(vtkm::Matrix<T, Size, Size>& singularMatrix)
 {
   FOR_ROW_COL(singularMatrix) { singularMatrix(row, col) = static_cast<T>(row + col); }
-  VTKM_CONSTEXPR bool larger_than_1 = Size > 1;
+  constexpr bool larger_than_1 = Size > 1;
   if (larger_than_1)
   {
     vtkm::MatrixSetRow(singularMatrix, 0, vtkm::MatrixGetRow(singularMatrix, (Size + 1) / 2));
@@ -361,8 +372,8 @@ T RecursiveDeterminant(const vtkm::Matrix<T, Size, Size>& A)
 template <typename T, vtkm::IdComponent Size>
 struct SquareMatrixTest
 {
-  static const vtkm::IdComponent SIZE = Size;
-  typedef vtkm::Matrix<T, Size, Size> MatrixType;
+  static constexpr vtkm::IdComponent SIZE = Size;
+  using MatrixType = vtkm::Matrix<T, Size, Size>;
 
   static void CheckMatrixSize()
   {
@@ -461,16 +472,20 @@ struct SquareMatrixTest
     // Check that a singular matrix is identified.
     MatrixType singularMatrix;
     SingularMatrix(singularMatrix);
+
+    // On some some compilers in release mode this creation of a matrix and
+    // than solving the linear system breaks if we don't first print the values.
+    // I believe this somehow was tickling a compiler optimization bug.
+    // But for now we will live with a bit more console output to work around
+    // the issue
+    PrintMatrix(singularMatrix);
     x = vtkm::SolveLinearSystem(singularMatrix, b, valid);
-    if (valid)
-    {
-      // This condition should never be reached. However, I have found that
-      // without it valid remains true for some compiler optimizations. What
-      // I think happens is that the optimizer finds that the result is never
-      // used and so removes the actual computation. Without the computation,
-      // the validity is never determined.
-      std::cout << "Result: " << x << std::endl;
-    }
+    //
+    // We need to print the results of the SolveLinearSystem to screen to
+    // make sure the compiler doesn't optimize out the operation which
+    // previously was happening
+    std::cout << "Result: " << x << std::endl;
+
     VTKM_TEST_ASSERT(!valid, "Expected matrix to be declared singular.");
   }
 
@@ -567,7 +582,7 @@ struct VectorMultFunctor
     // This is mostly to make sure the compile can convert from Tuples
     // to vectors.
     const int SIZE = vtkm::VecTraits<VectorType>::NUM_COMPONENTS;
-    typedef typename vtkm::VecTraits<VectorType>::ComponentType ComponentType;
+    using ComponentType = typename vtkm::VecTraits<VectorType>::ComponentType;
 
     vtkm::Matrix<ComponentType, SIZE, SIZE> matrix(0);
     VectorType inVec;

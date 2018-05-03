@@ -56,9 +56,12 @@ vtkm::cont::DataSet MakeTestDataSet()
   };
 
   // Set point scalars
-  dataSet.AddField(vtkm::cont::Field("fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts));
-  dataSet.AddField(vtkm::cont::Field("fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts));
-  dataSet.AddField(vtkm::cont::Field("fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldA", vtkm::cont::Field::ASSOC_POINTS, fieldA, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldB", vtkm::cont::Field::ASSOC_POINTS, fieldB, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "fieldC", vtkm::cont::Field::ASSOC_POINTS, fieldC, nVerts, vtkm::CopyFlag::On));
 
   return dataSet;
 }

@@ -19,6 +19,7 @@
 //============================================================================
 
 #include <vtkm/rendering/ColorBarAnnotation.h>
+#include <vtkm/rendering/TextAnnotationScreen.h>
 
 namespace vtkm
 {
@@ -26,11 +27,31 @@ namespace rendering
 {
 
 ColorBarAnnotation::ColorBarAnnotation()
+  : ColorTable(vtkm::cont::ColorSpace::LAB)
+  , Position(vtkm::Range(-0.88, +0.88), vtkm::Range(+0.87, +0.92), vtkm::Range(0, 0))
+  , Horizontal(true)
+  , FieldName("")
 {
 }
 
 ColorBarAnnotation::~ColorBarAnnotation()
 {
+}
+
+void ColorBarAnnotation::SetFieldName(const std::string& fieldName)
+{
+  FieldName = fieldName;
+}
+
+void ColorBarAnnotation::SetPosition(const vtkm::Bounds& position)
+{
+  Position = position;
+  vtkm::Float64 x = Position.X.Length();
+  vtkm::Float64 y = Position.Y.Length();
+  if (x > y)
+    Horizontal = true;
+  else
+    Horizontal = false;
 }
 
 void ColorBarAnnotation::SetRange(const vtkm::Range& range, vtkm::IdComponent numTicks)
@@ -52,17 +73,50 @@ void ColorBarAnnotation::Render(const vtkm::rendering::Camera& camera,
                                 const vtkm::rendering::WorldAnnotator& worldAnnotator,
                                 vtkm::rendering::Canvas& canvas)
 {
-  vtkm::Bounds bounds(vtkm::Range(-0.88, +0.88), vtkm::Range(+0.87, +0.92), vtkm::Range(0, 0));
 
-  canvas.AddColorBar(bounds, this->ColorTable, true);
+  canvas.AddColorBar(Position, this->ColorTable, Horizontal);
 
-  this->Axis.SetColor(vtkm::rendering::Color(1, 1, 1));
+  this->Axis.SetColor(canvas.GetForegroundColor());
   this->Axis.SetLineWidth(1);
-  this->Axis.SetScreenPosition(bounds.X.Min, bounds.Y.Min, bounds.X.Max, bounds.Y.Min);
-  this->Axis.SetMajorTickSize(0, .02, 1.0);
+
+  if (Horizontal)
+  {
+    this->Axis.SetScreenPosition(Position.X.Min, Position.Y.Min, Position.X.Max, Position.Y.Min);
+    this->Axis.SetLabelAlignment(TextAnnotation::HCenter, TextAnnotation::Top);
+    this->Axis.SetMajorTickSize(0, .02, 1.0);
+  }
+  else
+  {
+    this->Axis.SetScreenPosition(Position.X.Min, Position.Y.Min, Position.X.Min, Position.Y.Max);
+    this->Axis.SetLabelAlignment(TextAnnotation::Right, TextAnnotation::VCenter);
+    this->Axis.SetMajorTickSize(.02, 0.0, 1.0);
+  }
+
   this->Axis.SetMinorTickSize(0, 0, 0); // no minor ticks
-  this->Axis.SetLabelAlignment(TextAnnotation::HCenter, TextAnnotation::Top);
   this->Axis.Render(camera, worldAnnotator, canvas);
+
+  if (FieldName != "")
+  {
+    vtkm::Vec<vtkm::Float32, 2> labelPos;
+    if (Horizontal)
+    {
+      labelPos[0] = vtkm::Float32(Position.X.Min);
+      labelPos[1] = vtkm::Float32(Position.Y.Max);
+    }
+    else
+    {
+      labelPos[0] = vtkm::Float32(Position.X.Min - 0.07);
+      labelPos[1] = vtkm::Float32(Position.Y.Max + 0.03);
+    }
+
+    vtkm::rendering::TextAnnotationScreen var(FieldName,
+                                              canvas.GetForegroundColor(),
+                                              .045f, // font scale
+                                              labelPos,
+                                              0.f); // rotation
+
+    var.Render(camera, worldAnnotator, canvas);
+  }
 }
 }
 } // namespace vtkm::rendering

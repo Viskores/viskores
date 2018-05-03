@@ -227,8 +227,8 @@ public:
   /// DynamicCellSet). You can use \c ResetCellSetList to get different
   /// behavior from \c CastAndCall.
   ///
-  template <typename Functor>
-  VTKM_CONT void CastAndCall(const Functor& f) const;
+  template <typename Functor, typename... Args>
+  VTKM_CONT void CastAndCall(Functor&& f, Args&&...) const;
 
   /// \brief Create a new cell set of the same type as this cell set.
   ///
@@ -272,51 +272,43 @@ private:
 namespace detail
 {
 
-template <typename Functor>
-struct DynamicCellSetTryCellSet
+struct DynamicCellSetTry
 {
-  vtkm::cont::internal::SimplePolymorphicContainerBase* CellSetContainer;
-  const Functor& Function;
-  bool FoundCast;
-
-  VTKM_CONT
-  DynamicCellSetTryCellSet(vtkm::cont::internal::SimplePolymorphicContainerBase* cellSetContainer,
-                           const Functor& f)
-    : CellSetContainer(cellSetContainer)
-    , Function(f)
-    , FoundCast(false)
+  DynamicCellSetTry(
+    const vtkm::cont::internal::SimplePolymorphicContainerBase* const cellSetContainer)
+    : Container(cellSetContainer)
   {
   }
 
-  template <typename CellSetType>
-  VTKM_CONT void operator()(CellSetType)
+  template <typename CellSetType, typename Functor, typename... Args>
+  void operator()(CellSetType, Functor&& f, bool& called, Args&&... args) const
   {
-    if (!this->FoundCast)
+    using downcastType = const vtkm::cont::internal::SimplePolymorphicContainer<CellSetType>* const;
+    if (!called)
     {
-      CellSetType* cellSet = detail::DynamicCellSetTryCast<CellSetType>(this->CellSetContainer);
-      if (cellSet != nullptr)
+      downcastType downcastContainer = dynamic_cast<downcastType>(this->Container);
+      if (downcastContainer)
       {
-        this->Function(*cellSet);
-        this->FoundCast = true;
+        f(downcastContainer->Item, std::forward<Args>(args)...);
+        called = true;
       }
     }
   }
 
-private:
-  void operator=(const DynamicCellSetTryCellSet<Functor>&) = delete;
+  const vtkm::cont::internal::SimplePolymorphicContainerBase* const Container;
 };
 
 } // namespace detail
 
 template <typename CellSetList>
-template <typename Functor>
-VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(const Functor& f) const
+template <typename Functor, typename... Args>
+VTKM_CONT void DynamicCellSetBase<CellSetList>::CastAndCall(Functor&& f, Args&&... args) const
 {
-  using TryCellSetType = detail::DynamicCellSetTryCellSet<Functor>;
-  TryCellSetType tryCellSet = TryCellSetType(this->CellSetContainer.get(), f);
-
-  vtkm::ListForEach(tryCellSet, CellSetList());
-  if (!tryCellSet.FoundCast)
+  bool called = false;
+  detail::DynamicCellSetTry tryCellSet(this->CellSetContainer.get());
+  vtkm::ListForEach(
+    tryCellSet, CellSetList{}, std::forward<Functor>(f), called, std::forward<Args>(args)...);
+  if (!called)
   {
     throw vtkm::cont::ErrorBadValue("Could not find appropriate cast for cell set.");
   }

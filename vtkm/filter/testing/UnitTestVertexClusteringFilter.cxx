@@ -35,18 +35,10 @@ void TestVertexClustering()
   vtkm::cont::DataSet dataSet = maker.Make3DExplicitDataSetCowNose();
 
   vtkm::filter::VertexClustering clustering;
-  vtkm::filter::Result result;
 
   clustering.SetNumberOfDivisions(vtkm::Id3(3, 3, 3));
-  result = clustering.Execute(dataSet);
-
-  VTKM_TEST_ASSERT(result.IsValid(), "results should be valid");
-  VTKM_TEST_ASSERT(clustering.MapFieldOntoOutput(result, dataSet.GetPointField("pointvar")),
-                   "Point field mapping failed.");
-  VTKM_TEST_ASSERT(clustering.MapFieldOntoOutput(result, dataSet.GetCellField("cellvar")),
-                   "Cell field mapping failed.");
-
-  vtkm::cont::DataSet output = result.GetDataSet();
+  clustering.SetFieldsToPass({ "pointvar", "cellvar" });
+  vtkm::cont::DataSet output = clustering.Execute(dataSet);
   VTKM_TEST_ASSERT(output.GetNumberOfCoordinateSystems() == 1,
                    "Number of output coordinate systems mismatch");
 
@@ -67,7 +59,7 @@ void TestVertexClustering()
   vtkm::Float32 output_cellvar[] = { 145.f, 134.f, 138.f, 140.f, 149.f, 144.f };
 
   {
-    typedef vtkm::cont::CellSetSingleType<> CellSetType;
+    using CellSetType = vtkm::cont::CellSetSingleType<>;
     CellSetType cellSet;
     output.GetCellSet(0).CopyTo(cellSet);
     auto cellArray =
@@ -78,9 +70,7 @@ void TestVertexClustering()
   }
 
   {
-    typedef vtkm::Vec<vtkm::Float64, 3> PointType;
-    vtkm::cont::ArrayHandle<PointType> pointArray;
-    output.GetCoordinateSystem(0).GetData().CopyTo(pointArray);
+    auto pointArray = output.GetCoordinateSystem(0).GetData();
     std::cerr << "output_points = " << pointArray.GetNumberOfValues() << "\n";
     std::cerr << "output_point[] = ";
     vtkm::cont::printSummary_ArrayHandle(pointArray, std::cerr, true);
@@ -89,9 +79,8 @@ void TestVertexClustering()
   vtkm::cont::printSummary_ArrayHandle(pointvar, std::cerr, true);
   vtkm::cont::printSummary_ArrayHandle(cellvar, std::cerr, true);
 
-  typedef vtkm::Vec<vtkm::Float64, 3> PointType;
-  vtkm::cont::ArrayHandle<PointType> pointArray;
-  output.GetCoordinateSystem(0).GetData().CopyTo(pointArray);
+  using PointType = vtkm::Vec<vtkm::Float64, 3>;
+  auto pointArray = output.GetCoordinateSystem(0).GetData();
   VTKM_TEST_ASSERT(pointArray.GetNumberOfValues() == output_points,
                    "Number of output points mismatch");
   for (vtkm::Id i = 0; i < pointArray.GetNumberOfValues(); ++i)

@@ -84,7 +84,6 @@
 #ifndef vtk_m_worklet_contourtree_active_edge_transferrer_h
 #define vtk_m_worklet_contourtree_active_edge_transferrer_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -109,12 +108,11 @@ public:
     WholeArrayInOut<IdType> edgeFar,       // (i/o) high end of each edge
     WholeArrayOut<IdType> newActiveEdges); // (output) new active edge list
   typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Passed in constructor because of argument limit on operator
-  typedef
-    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst
-      IdPortalType;
+  using IdPortalType =
+    typename vtkm::cont::ArrayHandle<vtkm::Id>::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
   IdPortalType activeEdges; // (input) active edges
   IdPortalType prunesTo;    // (input) where a vertex prunes to

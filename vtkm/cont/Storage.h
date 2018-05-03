@@ -132,7 +132,7 @@ public:
   VTKM_CONT
   PortalConstType GetPortalConst() const;
 
-  /// Retuns the number of entries allocated in the array.
+  /// Returns the number of entries allocated in the array.
   VTKM_CONT
   vtkm::Id GetNumberOfValues() const;
 

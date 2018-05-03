@@ -54,7 +54,7 @@ namespace internal
 template <typename ExecutionSignatureTag>
 struct ExecutionSignatureTagCheck
 {
-  static const bool Valid =
+  static constexpr bool Valid =
     std::is_base_of<vtkm::exec::arg::ExecutionSignatureTagBase, ExecutionSignatureTag>::value;
 };
 

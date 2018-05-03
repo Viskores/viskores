@@ -25,11 +25,13 @@
 
 #include <vtkm/Matrix.h>
 #include <vtkm/Types.h>
+#include <vtkm/cont/ColorTable.h>
 #include <vtkm/rendering/BitmapFont.h>
 #include <vtkm/rendering/Camera.h>
 #include <vtkm/rendering/Color.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/Texture2D.h>
+
+#define VTKM_DEFAULT_CANVAS_DEPTH 1.001f
 
 namespace vtkm
 {
@@ -86,6 +88,12 @@ public:
 
   VTKM_CONT
   void SetBackgroundColor(const vtkm::rendering::Color& color);
+
+  VTKM_CONT
+  const vtkm::rendering::Color& GetForegroundColor() const;
+
+  VTKM_CONT
+  void SetForegroundColor(const vtkm::rendering::Color& color);
 
   VTKM_CONT
   vtkm::Id2 GetScreenPoint(vtkm::Float32 x,
@@ -147,7 +155,7 @@ public:
 
   VTKM_CONT
   virtual void AddColorBar(const vtkm::Bounds& bounds,
-                           const vtkm::rendering::ColorTable& colorTable,
+                           const vtkm::cont::ColorTable& colorTable,
                            bool horizontal) const;
 
   VTKM_CONT
@@ -155,7 +163,7 @@ public:
                    vtkm::Float32 y,
                    vtkm::Float32 width,
                    vtkm::Float32 height,
-                   const vtkm::rendering::ColorTable& colorTable,
+                   const vtkm::cont::ColorTable& colorTable,
                    bool horizontal) const;
 
   virtual void AddText(const vtkm::Vec<vtkm::Float32, 2>& position,
@@ -182,7 +190,8 @@ public:
                vtkm::Float32 scale,
                const vtkm::Vec<vtkm::Float32, 2>& anchor,
                const vtkm::rendering::Color& color,
-               const std::string& text) const;
+               const std::string& text,
+               const vtkm::Float32& depth = 0) const;
 
 
   friend class AxisAnnotation2D;

@@ -50,9 +50,6 @@ namespace
 static vtkm::cont::DataSet outDataSet;
 static vtkm::Id numberOfInPoints;
 
-// Point location of vertices from a CastAndCall but needs a static cast eventually
-static vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>> vertexArray;
-
 } // anonymous namespace
 
 //
@@ -126,30 +123,6 @@ vtkm::cont::DataSet MakeTriangulateExplicitDataSet()
 }
 
 //
-// Functor to retrieve vertex locations from the CoordinateSystem
-// Actually need a static cast to ArrayHandle from DynamicArrayHandleCoordinateSystem
-// but haven't been able to figure out what that is
-//
-struct GetVertexArray
-{
-  template <typename ArrayHandleType>
-  VTKM_CONT void operator()(ArrayHandleType array) const
-  {
-    this->GetVertexPortal(array.GetPortalConstControl());
-  }
-
-private:
-  template <typename PortalType>
-  VTKM_CONT void GetVertexPortal(const PortalType& portal) const
-  {
-    for (vtkm::Id index = 0; index < portal.GetNumberOfValues(); index++)
-    {
-      vertexArray.GetPortalControl().Set(index, portal.Get(index));
-    }
-  }
-};
-
-//
 // Initialize the OpenGL state
 //
 void initializeGL()
@@ -173,10 +146,7 @@ void displayCall()
   outDataSet.GetCellSet(0).CopyTo(cellSet);
   vtkm::Id numberOfCells = cellSet.GetNumberOfCells();
 
-  // Need the actual vertex points from a static cast of the dynamic array but can't get it right
-  // So use cast and call on a functor that stores that dynamic array into static array we created
-  vertexArray.Allocate(numberOfInPoints);
-  vtkm::cont::CastAndCall(outDataSet.GetCoordinateSystem(), GetVertexArray());
+  auto vertexArray = outDataSet.GetCoordinateSystem().GetData();
 
   // Draw the two triangles belonging to each quad
   vtkm::Float32 color[4][3] = {
@@ -222,8 +192,7 @@ int main(int argc, char* argv[])
 
   // Convert 2D explicit cells to triangles
   vtkm::filter::Triangulate triangulate;
-  vtkm::filter::Result result = triangulate.Execute(inDataSet);
-  outDataSet = result.GetDataSet();
+  outDataSet = triangulate.Execute(inDataSet);
 
   // Render the output dataset of tets
   glutInit(&argc, argv);
@@ -239,7 +208,6 @@ int main(int argc, char* argv[])
   glutMainLoop();
 
   outDataSet.Clear();
-  vertexArray.ReleaseResources();
   return 0;
 }
 

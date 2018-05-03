@@ -40,8 +40,8 @@ public:
   void TestStructured() const
   {
     std::cout << "Testing TetrahedralizeStructured" << std::endl;
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Create the input uniform cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DUniformDataSet0();
@@ -68,8 +68,8 @@ public:
   void TestExplicit() const
   {
     std::cout << "Testing TetrahedralizeExplicit" << std::endl;
-    typedef vtkm::cont::CellSetExplicit<> CellSetType;
-    typedef vtkm::cont::CellSetSingleType<> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetExplicit<>;
+    using OutCellSetType = vtkm::cont::CellSetSingleType<>;
 
     // Create the input explicit cell set
     vtkm::cont::DataSet dataSet = MakeTestDataSet().Make3DExplicitDataSet5();

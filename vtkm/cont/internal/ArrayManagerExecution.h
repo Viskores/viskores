@@ -40,7 +40,7 @@ namespace internal
 /// any resources in its destructor.
 ///
 /// This class typically takes on one of two forms. If the control and
-/// execution environments have seperate memory spaces, then this class
+/// execution environments have separate memory spaces, then this class
 /// behaves how you would expect. It allocates/deallocates arrays and copies
 /// data. However, if the control and execution environments share the same
 /// memory space, this class should delegate all its operations to the
@@ -124,15 +124,6 @@ public:
   ///
   VTKM_CONT
   void RetrieveOutputData(vtkm::cont::internal::Storage<T, StorageTag>* storage) const;
-
-  /// Similar to RetrieveOutputData except that instead of writing to the
-  /// controlArray itself, it writes to the given control environment
-  /// iterator. This allows the user to retrieve data without necessarily
-  /// allocating an array in the ArrayContainerControl (assuming that control
-  /// and exeuction have seperate memory spaces).
-  ///
-  template <class IteratorTypeControl>
-  VTKM_CONT void CopyInto(IteratorTypeControl dest) const;
 
   /// \brief Reduces the size of the array without changing its values.
   ///

@@ -26,16 +26,6 @@
 #include <vtkm/VecTraits.h>
 #include <vtkm/cont/testing/Testing.h>
 
-// We use these to check if the aligned allocator provided by
-// StorageBasic can be used with all STL containers
-#include <deque>
-#include <list>
-#include <map>
-#include <queue>
-#include <set>
-#include <stack>
-#include <vector>
-
 namespace
 {
 
@@ -72,51 +62,6 @@ struct TemplatedTests
 
   typename vtkm::VecTraits<ValueType>::ComponentType STOLEN_ARRAY_VALUE() { return 29; }
 
-  void TestAlignedAllocatorSTL()
-  {
-    using Allocator = typename StorageType::AllocatorType;
-    std::vector<ValueType, Allocator> vec(ARRAY_SIZE, ValueType());
-    StorageType store(&vec[0], ARRAY_SIZE);
-  }
-
-  // This test checks that we can compile and use the allocator with all
-  // STL containers
-  void CompileSTLAllocator()
-  {
-    using Allocator = typename StorageType::AllocatorType;
-    using PairAllocator =
-      typename StorageType::AllocatorType::template rebind<std::pair<ValueType, ValueType>>::other;
-    std::vector<ValueType, Allocator> v;
-    v.push_back(ValueType());
-
-    std::deque<ValueType, Allocator> d;
-    d.push_front(ValueType());
-
-    std::list<ValueType, Allocator> l;
-    l.push_front(ValueType());
-
-    std::set<ValueType, std::less<ValueType>, Allocator> set;
-    set.insert(ValueType());
-
-    std::map<ValueType, ValueType, std::less<ValueType>, PairAllocator> m;
-    m[ValueType()] = ValueType();
-
-    std::multiset<ValueType, std::less<ValueType>, Allocator> ms;
-    ms.insert(ValueType());
-
-    std::multimap<ValueType, ValueType, std::less<ValueType>, PairAllocator> mm;
-    mm.insert(std::pair<ValueType, ValueType>(ValueType(), ValueType()));
-
-    std::stack<ValueType, std::deque<ValueType, Allocator>> stack;
-    stack.push(ValueType());
-
-    std::queue<ValueType, std::deque<ValueType, Allocator>> queue;
-    queue.push(ValueType());
-
-    std::priority_queue<ValueType, std::vector<ValueType, Allocator>> pqueue;
-    pqueue.push(ValueType());
-  }
-
   /// Returned value should later be passed to StealArray2.  It is best to
   /// put as much between the two test parts to maximize the chance of a
   /// deallocated array being overridden (and thus detected).
@@ -151,7 +96,7 @@ struct TemplatedTests
                        "Stolen array did not retain values.");
     }
     typename StorageType::AllocatorType allocator;
-    allocator.deallocate(stolenArray, ARRAY_SIZE);
+    allocator.deallocate(stolenArray);
   }
 
   void BasicAllocation()
@@ -190,16 +135,32 @@ struct TemplatedTests
     }
   }
 
+  void UserFreeFunction()
+  {
+    ValueType* temp = new ValueType[ARRAY_SIZE];
+    StorageType arrayStorage(
+      temp, ARRAY_SIZE, [](void* ptr) { delete[] static_cast<ValueType*>(ptr); });
+    VTKM_TEST_ASSERT(temp == arrayStorage.GetArray(),
+                     "improper pointer after telling storage to own user allocated memory");
+
+    const ValueType BASIC_ALLOC_VALUE = ValueType(48);
+    this->SetStorage(arrayStorage, BASIC_ALLOC_VALUE);
+    VTKM_TEST_ASSERT(this->CheckStorage(arrayStorage, BASIC_ALLOC_VALUE),
+                     "Array not holding value.");
+
+    arrayStorage.Allocate(ARRAY_SIZE * 2);
+    VTKM_TEST_ASSERT(arrayStorage.GetNumberOfValues() == ARRAY_SIZE * 2,
+                     "Array not reallocated correctly.");
+  }
+
   void operator()()
   {
     ValueType* stolenArray = StealArray1();
 
     BasicAllocation();
+    UserFreeFunction();
 
     StealArray2(stolenArray);
-
-    TestAlignedAllocatorSTL();
-    CompileSTLAllocator();
   }
 };
 

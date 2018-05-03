@@ -18,7 +18,6 @@
 //  this software.
 //============================================================================
 
-#include <vector>
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/worklet/NDimsEntropy.h>
 
@@ -38,7 +37,7 @@ void NDEntropy::AddFieldAndBin(const std::string& fieldName, vtkm::Id numOfBins)
 }
 
 template <typename Policy, typename Device>
-inline VTKM_CONT vtkm::filter::Result NDEntropy::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
   const vtkm::cont::DataSet& inData,
   vtkm::filter::PolicyBase<Policy> vtkmNotUsed(policy),
   Device device)
@@ -57,14 +56,21 @@ inline VTKM_CONT vtkm::filter::Result NDEntropy::DoExecute(
 
   // Run worklet to calculate multi-variate entropy
   vtkm::Float64 entropy = ndEntropy.Run(device);
-
   vtkm::cont::DataSet outputData;
-  std::vector<vtkm::Float64> entropyHandle;
-  entropyHandle.push_back(entropy);
-  outputData.AddField(vtkm::cont::Field("Entropy", vtkm::cont::Field::ASSOC_POINTS, entropyHandle));
+  outputData.AddField(vtkm::cont::make_Field(
+    "Entropy", vtkm::cont::Field::ASSOC_POINTS, &entropy, 1, vtkm::CopyFlag::On));
+  return outputData;
+}
 
-  //return outputData;
-  return vtkm::filter::Result(outputData);
+//-----------------------------------------------------------------------------
+template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
+inline VTKM_CONT bool NDEntropy::DoMapField(vtkm::cont::DataSet&,
+                                            const vtkm::cont::ArrayHandle<T, StorageType>&,
+                                            const vtkm::filter::FieldMetadata&,
+                                            const vtkm::filter::PolicyBase<DerivedPolicy>&,
+                                            DeviceAdapter)
+{
+  return false;
 }
 }
 }

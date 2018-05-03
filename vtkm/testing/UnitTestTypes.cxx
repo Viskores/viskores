@@ -45,7 +45,7 @@ void CheckTypeSizes()
 template <typename ComponentType, vtkm::IdComponent Size>
 void DoGeneralVecTypeTestNegate(const vtkm::Vec<ComponentType, Size>&)
 {
-  typedef vtkm::Vec<ComponentType, Size> VectorType;
+  using VectorType = vtkm::Vec<ComponentType, Size>;
   for (vtkm::Id valueIndex = 0; valueIndex < 10; valueIndex++)
   {
     VectorType original = TestValue(valueIndex, VectorType());
@@ -189,7 +189,7 @@ void GeneralVecCTypeTest(const vtkm::Vec<ComponentType, Size>&)
   div = aSrc / b;
   VTKM_TEST_ASSERT(test_equal(div, correct_div), "Tuples not divided correctly.");
 
-  ComponentType d = vtkm::dot(a, b);
+  ComponentType d = static_cast<ComponentType>(vtkm::dot(a, b));
   ComponentType correct_d = 0;
   for (vtkm::IdComponent i = 0; i < Size; ++i)
   {
@@ -286,7 +286,7 @@ void GeneralVecCConstTypeTest(const vtkm::Vec<ComponentType, Size>&)
   div = aSrc / b;
   VTKM_TEST_ASSERT(test_equal(div, correct_div), "Tuples not divided correctly.");
 
-  ComponentType d = vtkm::dot(a, b);
+  ComponentType d = static_cast<ComponentType>(vtkm::dot(a, b));
   ComponentType correct_d = 0;
   for (vtkm::IdComponent i = 0; i < Size; ++i)
   {
@@ -321,7 +321,7 @@ void GeneralVecTypeTest(const vtkm::Vec<ComponentType, Size>&)
 {
   std::cout << "Checking general Vec functionality." << std::endl;
 
-  typedef vtkm::Vec<ComponentType, Size> T;
+  using T = vtkm::Vec<ComponentType, Size>;
 
   // Vector types should preserve the trivial properties of their components.
   // This insures that algorithms like std::copy will optimize fully.
@@ -403,7 +403,7 @@ void GeneralVecTypeTest(const vtkm::Vec<ComponentType, Size>&)
   div = a / ComponentType(2);
   VTKM_TEST_ASSERT(test_equal(div, b), "Tuple does not divide by Scalar correctly.");
 
-  ComponentType d = vtkm::dot(a, b);
+  ComponentType d = static_cast<ComponentType>(vtkm::dot(a, b));
   ComponentType correct_d = 0;
   for (vtkm::IdComponent i = 0; i < T::NUM_COMPONENTS; ++i)
   {
@@ -445,7 +445,7 @@ void TypeTest(const vtkm::Vec<ComponentType, Size>&)
 template <typename Scalar>
 void TypeTest(const vtkm::Vec<Scalar, 2>&)
 {
-  typedef vtkm::Vec<Scalar, 2> Vector;
+  using Vector = vtkm::Vec<Scalar, 2>;
 
   GeneralVecTypeTest(Vector());
 
@@ -477,7 +477,7 @@ void TypeTest(const vtkm::Vec<Scalar, 2>&)
   VTKM_TEST_ASSERT(test_equal(div, vtkm::make_Vec(1, 2)),
                    "Vector does not divide by Scalar correctly.");
 
-  Scalar d = vtkm::dot(a, b);
+  Scalar d = static_cast<Scalar>(vtkm::dot(a, b));
   VTKM_TEST_ASSERT(test_equal(d, Scalar(10)), "dot(Vector2) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
@@ -506,7 +506,7 @@ void TypeTest(const vtkm::Vec<Scalar, 2>&)
 template <typename Scalar>
 void TypeTest(const vtkm::Vec<Scalar, 3>&)
 {
-  typedef vtkm::Vec<Scalar, 3> Vector;
+  using Vector = vtkm::Vec<Scalar, 3>;
 
   GeneralVecTypeTest(Vector());
 
@@ -539,7 +539,7 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
   div = a / Scalar(2);
   VTKM_TEST_ASSERT(test_equal(div, b), "Vector does not divide by Scalar correctly.");
 
-  Scalar d = vtkm::dot(a, b);
+  Scalar d = static_cast<Scalar>(vtkm::dot(a, b));
   VTKM_TEST_ASSERT(test_equal(d, Scalar(28)), "dot(Vector3) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
@@ -568,7 +568,7 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
 template <typename Scalar>
 void TypeTest(const vtkm::Vec<Scalar, 4>&)
 {
-  typedef vtkm::Vec<Scalar, 4> Vector;
+  using Vector = vtkm::Vec<Scalar, 4>;
 
   GeneralVecTypeTest(Vector());
 
@@ -601,7 +601,7 @@ void TypeTest(const vtkm::Vec<Scalar, 4>&)
   div = a / Scalar(2);
   VTKM_TEST_ASSERT(test_equal(div, b), "Vector does not divide by Scalar correctly.");
 
-  Scalar d = vtkm::dot(a, b);
+  Scalar d = static_cast<Scalar>(vtkm::dot(a, b));
   VTKM_TEST_ASSERT(test_equal(d, Scalar(60)), "dot(Vector4) wrong");
 
   VTKM_TEST_ASSERT(!(a < b), "operator< wrong");
@@ -669,6 +669,17 @@ void TypeTest(Scalar)
   }
 
   if (vtkm::dot(a, b) != 8)
+  {
+    VTKM_TEST_FAIL("dot(Scalar) wrong");
+  }
+
+  //verify we don't roll over
+  Scalar c = 128;
+  Scalar d = 32;
+  auto r = vtkm::dot(c, d);
+  VTKM_TEST_ASSERT((sizeof(r) >= sizeof(int)),
+                   "dot(Scalar) didn't promote smaller than 32bit types");
+  if (r != 4096)
   {
     VTKM_TEST_FAIL("dot(Scalar) wrong");
   }

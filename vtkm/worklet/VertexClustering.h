@@ -78,28 +78,20 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
     return pointsIn[pointsIn.GetNumberOfComponents() / 2];
   }
 
-  template <typename KeyType, typename DeviceAdapterTag>
   struct RunTrampoline
   {
-    const vtkm::worklet::Keys<KeyType>& Keys;
-    vtkm::cont::DynamicArrayHandle& OutputPoints;
-
-    VTKM_CONT
-    RunTrampoline(const vtkm::worklet::Keys<KeyType>& keys, vtkm::cont::DynamicArrayHandle& output)
-      : Keys(keys)
-      , OutputPoints(output)
+    template <typename InputPointsArrayType, typename KeyType, typename DeviceAdapterTag>
+    VTKM_CONT void operator()(const InputPointsArrayType& points,
+                              const vtkm::worklet::Keys<KeyType>& keys,
+                              vtkm::cont::DynamicArrayHandle& output,
+                              DeviceAdapterTag) const
     {
-    }
 
-    template <typename InputPointsArrayType>
-    VTKM_CONT void operator()(const InputPointsArrayType& points) const
-    {
       vtkm::cont::ArrayHandle<typename InputPointsArrayType::ValueType> out;
-
       vtkm::worklet::DispatcherReduceByKey<SelectRepresentativePoint, DeviceAdapterTag> dispatcher;
-      dispatcher.Invoke(this->Keys, points, out);
+      dispatcher.Invoke(keys, points, out);
 
-      this->OutputPoints = out;
+      output = out;
     }
   };
 
@@ -107,11 +99,11 @@ struct SelectRepresentativePoint : public vtkm::worklet::WorkletReduceByKey
   VTKM_CONT static vtkm::cont::DynamicArrayHandle Run(
     const vtkm::worklet::Keys<KeyType>& keys,
     const InputDynamicPointsArrayType& inputPoints,
-    DeviceAdapterTag)
+    DeviceAdapterTag tag)
   {
     vtkm::cont::DynamicArrayHandle output;
-    RunTrampoline<KeyType, DeviceAdapterTag> trampoline(keys, output);
-    vtkm::cont::CastAndCall(inputPoints, trampoline);
+    RunTrampoline trampoline;
+    vtkm::cont::CastAndCall(inputPoints, trampoline, keys, output, tag);
     return output;
   }
 };
@@ -175,7 +167,7 @@ struct VertexClustering
     template <typename PointType>
     VTKM_EXEC vtkm::Id GetClusterId(const PointType& p) const
     {
-      typedef typename PointType::ComponentType ComponentType;
+      using ComponentType = typename PointType::ComponentType;
       PointType gridOrigin(static_cast<ComponentType>(this->Grid.origin[0]),
                            static_cast<ComponentType>(this->Grid.origin[1]),
                            static_cast<ComponentType>(this->Grid.origin[2]));
@@ -530,9 +522,7 @@ public:
 
     /// output
     vtkm::cont::DataSet output;
-
-    output.AddCoordinateSystem(
-      vtkm::cont::CoordinateSystem("coordinates", vtkm::cont::DynamicArrayHandle(repPointArray)));
+    output.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", repPointArray));
 
     vtkm::cont::CellSetSingleType<> triangles("cells");
     triangles.Fill(repPointArray.GetNumberOfValues(),

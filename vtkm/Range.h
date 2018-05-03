@@ -49,6 +49,8 @@ struct Range
   {
   }
 
+  Range(const Range&) = default;
+
   template <typename T1, typename T2>
   VTKM_EXEC_CONT Range(const T1& min, const T2& max)
     : Min(static_cast<vtkm::Float64>(min))
@@ -56,13 +58,7 @@ struct Range
   {
   }
 
-  VTKM_EXEC_CONT
-  const vtkm::Range& operator=(const vtkm::Range& src)
-  {
-    this->Min = src.Min;
-    this->Max = src.Max;
-    return *this;
-  }
+  vtkm::Range& operator=(const vtkm::Range& src) = default;
 
   /// \b Determine if the range is valid (i.e. has at least one valid point).
   ///
@@ -141,13 +137,16 @@ struct Range
   /// \b Expand range to include other range.
   ///
   /// This version of \c Include expands this range just enough to include that
-  /// of another range. Esentially it is the union of the two ranges.
+  /// of another range. Essentially it is the union of the two ranges.
   ///
   VTKM_EXEC_CONT
   void Include(const vtkm::Range& range)
   {
-    this->Include(range.Min);
-    this->Include(range.Max);
+    if (range.IsNonEmpty())
+    {
+      this->Include(range.Min);
+      this->Include(range.Max);
+    }
   }
 
   /// \b Return the union of this and another range.

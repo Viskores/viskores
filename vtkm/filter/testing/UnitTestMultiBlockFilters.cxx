@@ -33,7 +33,6 @@
 #include <vtkm/cont/testing/MakeTestDataSet.h>
 #include <vtkm/cont/testing/Testing.h>
 #include <vtkm/filter/CellAverage.h>
-#include <vtkm/filter/Histogram.h>
 
 
 template <typename T>
@@ -83,27 +82,31 @@ vtkm::cont::MultiBlock MultiBlockBuilder(std::size_t BlockNum, std::string Field
   }
   return Blocks;
 }
-template <typename T, typename D>
-void Result_Verify(T ResultVec, D Filter, vtkm::cont::MultiBlock& Blocks, std::string FieldName)
+template <typename D>
+void Result_Verify(const vtkm::cont::MultiBlock& Result,
+                   D& Filter,
+                   const vtkm::cont::MultiBlock& Blocks,
+                   std::string FieldName)
 {
-  VTKM_TEST_ASSERT(ResultVec.size() == static_cast<std::size_t>(Blocks.GetNumberOfBlocks()),
+  VTKM_TEST_ASSERT(Result.GetNumberOfBlocks() == Blocks.GetNumberOfBlocks(),
                    "result block number incorrect");
-  for (vtkm::Id j = 0; static_cast<std::size_t>(j) < ResultVec.size(); j++)
+  const std::string outputFieldName = Filter.GetOutputFieldName();
+  for (vtkm::Id j = 0; j < Result.GetNumberOfBlocks(); j++)
   {
-    vtkm::filter::Result BlockResult = Filter.Execute(Blocks.GetBlock(j), FieldName);
+    Filter.SetActiveField(FieldName);
+    vtkm::cont::DataSet BlockResult = Filter.Execute(Blocks.GetBlock(j));
 
-    VTKM_TEST_ASSERT(
-      ResultVec[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues() ==
-        BlockResult.GetField().GetData().GetNumberOfValues(),
-      "result vectors' size incorrect");
+    VTKM_TEST_ASSERT(Result.GetBlock(j).GetField(outputFieldName).GetData().GetNumberOfValues() ==
+                       BlockResult.GetField(outputFieldName).GetData().GetNumberOfValues(),
+                     "result vectors' size incorrect");
 
     vtkm::cont::ArrayHandle<vtkm::Id> MBlockArray;
-    ResultVec[static_cast<std::size_t>(j)].GetField().GetData().CopyTo(MBlockArray);
+    Result.GetBlock(j).GetField(outputFieldName).GetData().CopyTo(MBlockArray);
     vtkm::cont::ArrayHandle<vtkm::Id> SDataSetArray;
-    BlockResult.GetField().GetData().CopyTo(SDataSetArray);
+    BlockResult.GetField(outputFieldName).GetData().CopyTo(SDataSetArray);
 
     for (vtkm::Id i = 0;
-         i < ResultVec[static_cast<std::size_t>(j)].GetField().GetData().GetNumberOfValues();
+         i < Result.GetBlock(j).GetField(outputFieldName).GetData().GetNumberOfValues();
          i++)
     {
       VTKM_TEST_ASSERT(MBlockArray.GetPortalConstControl().Get(i) ==
@@ -117,21 +120,15 @@ void Result_Verify(T ResultVec, D Filter, vtkm::cont::MultiBlock& Blocks, std::s
 void TestMultiBlockFilters()
 {
   std::size_t BlockNum = 7;
-  std::vector<vtkm::filter::Result> results;
+  vtkm::cont::MultiBlock result;
   vtkm::cont::MultiBlock Blocks;
-
-  Blocks = MultiBlockBuilder<vtkm::Float64>(BlockNum, "cellvar");
-  vtkm::filter::Histogram histogram;
-  results = histogram.Execute(Blocks, std::string("cellvar"));
-  Result_Verify(results, histogram, Blocks, std::string("cellvar"));
 
   Blocks = MultiBlockBuilder<vtkm::Id>(BlockNum, "pointvar");
   vtkm::filter::CellAverage cellAverage;
-  results = cellAverage.Execute(Blocks, std::string("pointvar"));
-
-  Result_Verify(results, cellAverage, Blocks, std::string("pointvar"));
-
-  return;
+  cellAverage.SetOutputFieldName("average");
+  cellAverage.SetActiveField("pointvar");
+  result = cellAverage.Execute(Blocks);
+  Result_Verify(result, cellAverage, Blocks, std::string("pointvar"));
 }
 
 int UnitTestMultiBlockFilters(int, char* [])

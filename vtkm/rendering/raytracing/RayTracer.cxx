@@ -23,9 +23,10 @@
 #include <math.h>
 #include <stdio.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
+#include <vtkm/cont/ColorTable.h>
 #include <vtkm/cont/Timer.h>
 #include <vtkm/cont/TryExecute.h>
-#include <vtkm/rendering/ColorTable.h>
+
 #include <vtkm/rendering/raytracing/Camera.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/RayTracingTypeDefs.h>
@@ -233,15 +234,15 @@ public:
   template <typename Precision>
   VTKM_CONT void run(Ray<Precision>& rays,
                      LinearBVH& bvh,
-                     vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
-                     const vtkm::cont::Field* scalarField,
+                     vtkm::cont::ArrayHandleVirtualCoordinates& coordsHandle,
+                     const vtkm::cont::Field& scalarField,
                      const vtkm::Range& scalarRange)
   {
-    bool isSupportedField = (scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
-                             scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+    bool isSupportedField = (scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
+                             scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
     if (!isSupportedField)
       throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
-    bool isAssocPoints = scalarField->GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    bool isAssocPoints = scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
 
     vtkm::worklet::DispatcherMapField<CalculateNormals, Device>(CalculateNormals(bvh.LeafNodes))
       .Invoke(rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, coordsHandle);
@@ -251,14 +252,14 @@ public:
       vtkm::worklet::DispatcherMapField<LerpScalar<Precision>, Device>(
         LerpScalar<Precision>(
           bvh.LeafNodes, vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.U, rays.V, rays.Scalar, *scalarField);
+        .Invoke(rays.HitIdx, rays.U, rays.V, rays.Scalar, scalarField);
     }
     else
     {
       vtkm::worklet::DispatcherMapField<NodalScalar<Precision>, Device>(
         NodalScalar<Precision>(
           bvh.LeafNodes, vtkm::Float32(scalarRange.Min), vtkm::Float32(scalarRange.Max)))
-        .Invoke(rays.HitIdx, rays.Scalar, *scalarField);
+        .Invoke(rays.HitIdx, rays.Scalar, scalarField);
     }
   } // Run
 
@@ -346,7 +347,8 @@ public:
       vtkm::Vec<Precision, 3> reflect = 2.f * vtkm::dot(lightDir, normal) * normal - lightDir;
       vtkm::Normalize(reflect);
       Precision cosPhi = vtkm::dot(reflect, viewDir);
-      Precision specularConstant = Precision(pow(vtkm::Max(cosPhi, zero), SpecularExponent));
+      Precision specularConstant =
+        Precision(pow(vtkm::Max(cosPhi, zero), (Precision)SpecularExponent));
       vtkm::Int32 colorIdx = vtkm::Int32(scalar * Precision(ColorMapSize - 1));
 
       //Just in case clamp the value to the valid range
@@ -375,7 +377,7 @@ public:
                      const vtkm::rendering::raytracing::Camera& camera)
   {
     // TODO: support light positions
-    vtkm::Vec<vtkm::Float32, 3> scale(5, 5, 5);
+    vtkm::Vec<vtkm::Float32, 3> scale(2, 2, 2);
     vtkm::Vec<vtkm::Float32, 3> lightPosition = camera.GetPosition() + scale * camera.GetUp();
     const vtkm::Int32 colorMapSize = vtkm::Int32(colorMap.GetNumberOfValues());
     vtkm::worklet::DispatcherMapField<MapScalarToColor, Device>(
@@ -396,16 +398,16 @@ Camera& RayTracer::GetCamera()
   return camera;
 }
 
-void RayTracer::SetData(const vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
+void RayTracer::SetData(const vtkm::cont::ArrayHandleVirtualCoordinates& coordsHandle,
                         const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
-                        const vtkm::cont::Field& scalarField,
+                        vtkm::cont::Field& scalarField,
                         const vtkm::Id& numberOfTriangles,
                         const vtkm::Range& scalarRange,
                         const vtkm::Bounds& dataBounds)
 {
   CoordsHandle = coordsHandle;
   Indices = indices;
-  ScalarField = &scalarField;
+  ScalarField = scalarField;
   NumberOfTriangles = numberOfTriangles;
   ScalarRange = scalarRange;
   DataBounds = dataBounds;

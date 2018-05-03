@@ -21,13 +21,16 @@
 set(unit_tests
   UnitTestTBBArrayHandle.cxx
   UnitTestTBBArrayHandleFancy.cxx
+  UnitTestTBBArrayHandleVirtualCoordinates.cxx
   UnitTestTBBCellLocatorTwoLevelUniformGrid.cxx
+  UnitTestTBBColorTable.cxx
   UnitTestTBBComputeRange.cxx
   UnitTestTBBDataSetExplicit.cxx
   UnitTestTBBDataSetSingleType.cxx
   UnitTestTBBDeviceAdapter.cxx
   UnitTestTBBImplicitFunction.cxx
   UnitTestTBBPointLocatorUniformGrid.cxx
-  UnitTestTBBVirtualObjectCache.cxx
+  UnitTestTBBVirtualObjectHandle.cxx
   )
-vtkm_unit_tests(TBB SOURCES ${unit_tests})
+
+vtkm_unit_tests(SOURCES ${unit_tests} BACKEND TBB)

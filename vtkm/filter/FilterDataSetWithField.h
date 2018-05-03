@@ -28,8 +28,8 @@
 #include <vtkm/cont/MultiBlock.h>
 #include <vtkm/cont/RuntimeDeviceTracker.h>
 
+#include <vtkm/filter/Filter.h>
 #include <vtkm/filter/PolicyBase.h>
-#include <vtkm/filter/Result.h>
 
 namespace vtkm
 {
@@ -37,7 +37,7 @@ namespace filter
 {
 
 template <class Derived>
-class FilterDataSetWithField
+class FilterDataSetWithField : public vtkm::filter::Filter<Derived>
 {
 public:
   VTKM_CONT
@@ -58,48 +58,32 @@ public:
   VTKM_CONT
   vtkm::Id GetActiveCoordinateSystemIndex() const { return this->CoordinateSystemIndex; }
 
+  //@{
+  /// Choose the field to operate on. Note, if
+  /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
   VTKM_CONT
-  void SetRuntimeDeviceTracker(const vtkm::cont::RuntimeDeviceTracker& tracker)
+  void SetActiveField(const std::string& name,
+                      vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
   {
-    this->Tracker = tracker;
+    this->ActiveFieldName = name;
+    this->ActiveFieldAssociation = association;
   }
 
+  VTKM_CONT const std::string& GetActiveFieldName() const { return this->ActiveFieldName; }
+  VTKM_CONT vtkm::cont::Field::AssociationEnum GetActiveFieldAssociation() const
+  {
+    return this->ActiveFieldAssociation;
+  }
+  //@}
+
+  //@{
+  /// To simply use the active coordinate system as the field to operate on, set
+  /// UseCoordinateSystemAsField to true.
   VTKM_CONT
-  const vtkm::cont::RuntimeDeviceTracker& GetRuntimeDeviceTracker() const { return this->Tracker; }
-
+  void SetUseCoordinateSystemAsField(bool val) { this->UseCoordinateSystemAsField = val; }
   VTKM_CONT
-  Result Execute(const vtkm::cont::DataSet& input, const std::string& inFieldName);
-
-  VTKM_CONT
-  Result Execute(const vtkm::cont::DataSet& input, const vtkm::cont::Field& field);
-
-  VTKM_CONT
-  Result Execute(const vtkm::cont::DataSet& input, const vtkm::cont::CoordinateSystem& field);
-
-  VTKM_CONT
-  std::vector<vtkm::filter::Result> Execute(const vtkm::cont::MultiBlock& input,
-                                            const std::string& inFieldName);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT std::vector<vtkm::filter::Result> Execute(
-    const vtkm::cont::MultiBlock& input,
-    const std::string& inFieldName,
-    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
-                           const std::string& inFieldName,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
-                           const vtkm::cont::Field& field,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
-
-  template <typename DerivedPolicy>
-  VTKM_CONT Result Execute(const vtkm::cont::DataSet& input,
-                           const vtkm::cont::CoordinateSystem& field,
-                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  bool GetUseCoordinateSystemAsField() const { return this->UseCoordinateSystemAsField; }
+  //@}
 
   //From the field we can extract the association component
   // ASSOC_ANY -> unable to map
@@ -107,30 +91,38 @@ public:
   // ASSOC_POINTS -> map using point mapping
   // ASSOC_CELL_SET -> how do we map this?
   // ASSOC_LOGICAL_DIM -> unable to map?
-  VTKM_CONT
-  bool MapFieldOntoOutput(Result& result, const vtkm::cont::Field& field);
-
   template <typename DerivedPolicy>
-  VTKM_CONT bool MapFieldOntoOutput(Result& result,
+  VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
+  template <typename DerivedPolicy>
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+
 private:
   template <typename DerivedPolicy>
-  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
-                                       const vtkm::cont::Field& field,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::Field& field,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   //How do we specify float/double coordinate types?
   template <typename DerivedPolicy>
-  VTKM_CONT Result PrepareForExecution(const vtkm::cont::DataSet& input,
-                                       const vtkm::cont::CoordinateSystem& field,
-                                       const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
+  VTKM_CONT vtkm::cont::DataSet PrepareForExecution(
+    const vtkm::cont::DataSet& input,
+    const vtkm::cont::CoordinateSystem& field,
+    const vtkm::filter::PolicyBase<DerivedPolicy>& policy);
 
   std::string OutputFieldName;
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
-  vtkm::cont::RuntimeDeviceTracker Tracker;
+  std::string ActiveFieldName;
+  vtkm::cont::Field::AssociationEnum ActiveFieldAssociation;
+  bool UseCoordinateSystemAsField;
+
+  friend class vtkm::filter::Filter<Derived>;
 };
 }
 } // namespace vtkm::filter

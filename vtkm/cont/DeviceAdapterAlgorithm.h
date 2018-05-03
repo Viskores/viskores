@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_DeviceAdapterAlgorithm_h
-#define vtk_m_cont_internal_DeviceAdapterAlgorithm_h
+#ifndef vtk_m_cont_DeviceAdapterAlgorithm_h
+#define vtk_m_cont_DeviceAdapterAlgorithm_h
 
 #include <vtkm/Types.h>
 
@@ -223,14 +223,14 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static T ScanInclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output);
 
-  /// \brief Streaming version of scan inclusive
+  /// \brief Streaming version of scan exclusive
   ///
   /// Computes a scan one block at a time.
   ///
   /// \return The total sum.
   ///
   template <typename T, class CIn, class COut>
-  VTKM_CONT static T StreamingScanInclusive(const vtkm::Id numBlocks,
+  VTKM_CONT static T StreamingScanExclusive(const vtkm::Id numBlocks,
                                             const vtkm::cont::ArrayHandle<T, CIn>& input,
                                             vtkm::cont::ArrayHandle<T, COut>& output);
 
@@ -282,18 +282,6 @@ struct DeviceAdapterAlgorithm
                                            const vtkm::cont::ArrayHandle<U, VIn>& values,
                                            vtkm::cont::ArrayHandle<U, VOut>& values_output);
 
-  /// \brief Streaming version of scan inclusive
-  ///
-  /// Computes a scan one block at a time.
-  ///
-  /// \return The total sum.
-  ///
-  template <typename T, class CIn, class COut, class BinaryFunctor>
-  VTKM_CONT static T StreamingScanInclusive(const vtkm::Id numBlocks,
-                                            const vtkm::cont::ArrayHandle<T, CIn>& input,
-                                            vtkm::cont::ArrayHandle<T, COut>& output,
-                                            BinaryFunctor binary_functor);
-
   /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
   /// Computes an exclusive prefix sum operation on the \c input ArrayHandle,
@@ -310,20 +298,43 @@ struct DeviceAdapterAlgorithm
   VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
                                    vtkm::cont::ArrayHandle<T, COut>& output);
 
-  /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
+  /// \brief Compute an exclusive prefix sum operation on the input ArrayHandle.
   ///
-  /// Computes a segmented exclusive prefix sum (or any user binary operation)
-  /// on the \c keys and \c values ArrayHandle(s). Each segmented exclusive
-  /// prefix sum is run on consecutive equal keys with the binary operation
-  /// applied to all values inside that range. Once finished the result is
-  /// stored in \c values_output ArrayHandle.
+  /// Computes an exclusive prefix sum operation on the \c input ArrayHandle,
+  /// storing the results in the \c output ArrayHandle. ExclusiveScan is
+  /// similar to the stl partial sum function, exception that ExclusiveScan
+  /// doesn't do a serial summation. This means that if you have defined a
+  /// custom plus operator for T it must be associative, or you will get
+  /// inconsistent results. When the input and output ArrayHandles are the same
+  /// ArrayHandle the operation will be done inplace.
   ///
-  template <typename T, typename U, typename KIn, typename VIn, typename VOut, class BinaryFunctor>
-  VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
-                                           const vtkm::cont::ArrayHandle<U, VIn>& values,
-                                           vtkm::cont::ArrayHandle<U, VOut>& output,
-                                           const U& initialValue,
-                                           BinaryFunctor binaryFunctor);
+  /// \return The total sum.
+  ///
+  template <typename T, class CIn, class COut, class BinaryFunctor>
+  VTKM_CONT static T ScanExclusive(const vtkm::cont::ArrayHandle<T, CIn>& input,
+                                   vtkm::cont::ArrayHandle<T, COut>& output,
+                                   BinaryFunctor binaryFunctor,
+                                   const T& initialValue)
+
+    /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
+    ///
+    /// Computes a segmented exclusive prefix sum (or any user binary operation)
+    /// on the \c keys and \c values ArrayHandle(s). Each segmented exclusive
+    /// prefix sum is run on consecutive equal keys with the binary operation
+    /// applied to all values inside that range. Once finished the result is
+    /// stored in \c values_output ArrayHandle.
+    ///
+    template <typename T,
+              typename U,
+              typename KIn,
+              typename VIn,
+              typename VOut,
+              class BinaryFunctor>
+    VTKM_CONT static void ScanExclusiveByKey(const vtkm::cont::ArrayHandle<T, KIn>& keys,
+                                             const vtkm::cont::ArrayHandle<U, VIn>& values,
+                                             vtkm::cont::ArrayHandle<U, VOut>& output,
+                                             const U& initialValue,
+                                             BinaryFunctor binaryFunctor);
 
   /// \brief Compute a segmented exclusive prefix sum operation on the input key value pairs.
   ///
@@ -427,6 +438,26 @@ struct DeviceAdapterAlgorithm
     /// Waits for any asynchronous operations running on the device to complete.
     ///
     VTKM_CONT static void Synchronize();
+
+  /// \brief Apply a given binary operation function element-wise to input arrays.
+  ///
+  /// Apply the give binary operation to pairs of elements from the two input array
+  /// \c input1 and \c input2. The number of elements in the input arrays do not
+  /// have to be the same, in this case, only the smaller of the two numbers of elements
+  /// will be applied.
+  /// Outputs of the binary operation is stored in \c output.
+  ///
+  template <typename T,
+            typename U,
+            typename V,
+            typename StorageT,
+            typename StorageU,
+            typename StorageV,
+            typename BinaryFunctor>
+  VTKM_CONT static void Transform(const vtkm::cont::ArrayHandle<T, StorageT>& input1,
+                                  const vtkm::cont::ArrayHandle<U, StorageU>& input2,
+                                  vtkm::cont::ArrayHandle<V, StorageV>& output,
+                                  BinaryFunctor binaryFunctor);
 
   /// \brief Reduce an array to only the unique values it contains
   ///
@@ -600,7 +631,7 @@ class DeviceAdapterAtomicArrayImplementation;
 /// \brief Class providing a device-specific support for selecting the optimal
 /// Task type for a given worklet.
 ///
-/// When worklets are launched inside the execution enviornment we need to
+/// When worklets are launched inside the execution environment we need to
 /// ask the device adapter what is the preferred execution style, be it
 /// a tiled iteration pattern, or strided. This class
 ///

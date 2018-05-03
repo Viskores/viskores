@@ -40,9 +40,11 @@ $# Ignore the following comment. It is meant for the generated file.
 #ifndef vtk_m_exec_internal_WorkletInvokeFunctorDetail_h
 #define vtk_m_exec_internal_WorkletInvokeFunctorDetail_h
 
-#if !defined(vtk_m_exec_internal_TaskSingular_h) && !defined(vtk_m_exec_internal_TaskTiling_h) &&  \\
-  !defined(VTKM_TEST_HEADER_BUILD)
-#error WorkletInvokeFunctorDetail.h must be included from TaskSingular.h or TaskTiling.h
+#if !defined(vtk_m_exec_internal_TaskSingular_h) && \\
+    !defined(vtk_m_exec_internal_TaskTiling_h) &&  \\
+    !defined(vtk_m_exec_cuda_internal_TaskStrided_h) && \\
+    !defined(VTKM_TEST_HEADER_BUILD)
+#error WorkletInvokeFunctorDetail.h must be included from TaskSingular.h, TaskTiling.h, TaskStrided.h
 #endif
 
 #include <vtkm/internal/FunctionInterface.h>
@@ -51,7 +53,7 @@ $# Ignore the following comment. It is meant for the generated file.
 #include <vtkm/exec/arg/Fetch.h>
 
 $# This needs to match the max_parameters in FunctionInterfaceDetailPre.h.in
-$py(max_parameters=10)\
+$py(max_parameters=20)\
 #if VTKM_MAX_FUNCTION_PARAMETERS != $(max_parameters)
 #error Mismatch of maximum parameters between FunctionInterfaceDatailPre.h.in and WorkletInvokeFunctorDetail.h.in
 #endif
@@ -127,7 +129,7 @@ struct InvocationToFetch
   // Expected fields from ExecutionSignatureTag. If these do not exist in
   // ExecutionSignatureTag, then something that is not really an execution
   // signature tag was used in an ExecutionSignature.
-  static const vtkm::IdComponent ControlParameterIndex = ExecutionSignatureTag::INDEX;
+  static constexpr vtkm::IdComponent ControlParameterIndex = ExecutionSignatureTag::INDEX;
   using AspectTag = typename ExecutionSignatureTag::AspectTag;
 
   // Find the fetch tag from the control signature tag pointed to by

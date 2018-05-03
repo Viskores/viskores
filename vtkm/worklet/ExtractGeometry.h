@@ -27,7 +27,7 @@
 #include <vtkm/cont/CellSetPermutation.h>
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DataSet.h>
-#include <vtkm/cont/ImplicitFunction.h>
+#include <vtkm/cont/ImplicitFunctionHandle.h>
 
 namespace vtkm
 {
@@ -58,7 +58,7 @@ public:
     }
 
     VTKM_CONT
-    ExtractCellsByVOI(const vtkm::exec::ImplicitFunction& function,
+    ExtractCellsByVOI(const vtkm::ImplicitFunction* function,
                       bool extractInside,
                       bool extractBoundaryCells,
                       bool extractOnlyBoundaryCells)
@@ -77,11 +77,12 @@ public:
       // Count points inside/outside volume of interest
       vtkm::IdComponent inCnt = 0;
       vtkm::IdComponent outCnt = 0;
-      for (vtkm::IdComponent indx = 0; indx < numIndices; indx++)
+      vtkm::Id indx;
+      for (indx = 0; indx < numIndices; indx++)
       {
-        vtkm::Id ptId = connectivityIn[indx];
+        vtkm::Id ptId = connectivityIn[static_cast<vtkm::IdComponent>(indx)];
         vtkm::Vec<FloatDefault, 3> coordinate = coordinates.Get(ptId);
-        vtkm::FloatDefault value = this->Function.Value(coordinate);
+        vtkm::FloatDefault value = this->Function->Value(coordinate);
         if (value <= 0)
           inCnt++;
         if (value >= 0)
@@ -106,7 +107,7 @@ public:
     }
 
   private:
-    vtkm::exec::ImplicitFunction Function;
+    const vtkm::ImplicitFunction* Function;
     bool ExtractInside;
     bool ExtractBoundaryCells;
     bool ExtractOnlyBoundaryCells;
@@ -141,8 +142,8 @@ public:
                                                   const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
                                                   DeviceAdapter)
   {
-    typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutputType;
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
+    using OutputType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     DeviceAlgorithm::Copy(cellIds, this->ValidCellIds);
 
@@ -155,7 +156,7 @@ public:
   vtkm::cont::CellSetPermutation<CellSetType> Run(
     const CellSetType& cellSet,
     const vtkm::cont::CoordinateSystem& coordinates,
-    const vtkm::cont::ImplicitFunction& implicitFunction,
+    const vtkm::cont::ImplicitFunctionHandle& implicitFunction,
     bool extractInside,
     bool extractBoundaryCells,
     bool extractOnlyBoundaryCells,

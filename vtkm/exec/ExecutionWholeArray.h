@@ -29,14 +29,16 @@ namespace vtkm
 namespace exec
 {
 
+/// The following classes have been deprecated and are meant to be used
+/// internally only. Please use the \c WholeArrayIn, \c WholeArrayOut, and
+/// \c WholeArrayInOut \c ControlSignature tags instead.
+
 /// \c ExecutionWholeArray is an execution object that allows an array handle
 /// content to be a parameter in an execution environment
 /// function. This can be used to allow worklets to have a shared search
-/// structure
+/// structure.
 ///
-template <typename T,
-          typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
-          typename DeviceAdapterTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template <typename T, typename StorageTag, typename DeviceAdapterTag>
 class ExecutionWholeArray : public vtkm::exec::ExecutionObjectBase
 {
 public:
@@ -86,9 +88,7 @@ private:
 /// function. This can be used to allow worklets to have a shared search
 /// structure
 ///
-template <typename T,
-          typename StorageTag = VTKM_DEFAULT_STORAGE_TAG,
-          typename DeviceAdapterTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG>
+template <typename T, typename StorageTag, typename DeviceAdapterTag>
 class ExecutionWholeArrayConst : public vtkm::exec::ExecutionObjectBase
 {
 public:

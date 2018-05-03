@@ -35,19 +35,19 @@
 namespace
 {
 
-typedef vtkm::Id Type1;
+using Type1 = vtkm::Id;
 const Type1 Arg1 = 1234;
 
-typedef vtkm::Float64 Type2;
+using Type2 = vtkm::Float64;
 const Type2 Arg2 = 5678.125;
 
-typedef std::string Type3;
+using Type3 = std::string;
 const Type3 Arg3("Third argument");
 
-typedef vtkm::Vec<vtkm::Float32, 3> Type4;
+using Type4 = vtkm::Vec<vtkm::Float32, 3>;
 const Type4 Arg4(1.2f, 3.4f, 5.6f);
 
-typedef vtkm::Id3 Type5;
+using Type5 = vtkm::Id3;
 const Type5 Arg5(4, 5, 6);
 
 struct ThreeArgFunctor
@@ -79,7 +79,7 @@ struct GetReferenceFunctor
   template <typename T>
   struct ReturnType
   {
-    typedef const typename std::remove_reference<T>::type* type;
+    using type = const typename std::remove_reference<T>::type*;
   };
 
   template <typename T>
@@ -94,7 +94,7 @@ struct PointerTransform
   template <typename T, vtkm::IdComponent Index>
   struct ReturnType
   {
-    typedef const T* type;
+    using type = const T*;
   };
 
   template <typename T, typename IndexTag>
@@ -405,7 +405,7 @@ void TestStaticTransform()
   OriginalType funcInterface = vtkm::internal::make_FunctionInterface<void>(Arg1, Arg2, Arg3);
 
   std::cout << "Transform with reported type." << std::endl;
-  typedef OriginalType::StaticTransformType<PointerTransform>::type ReportedType;
+  using ReportedType = OriginalType::StaticTransformType<PointerTransform>::type;
   ReportedType funcInterfaceTransform1 = funcInterface.StaticTransformCont(PointerTransform());
   funcInterfaceTransform1.InvokeCont(ThreePointerArgFunctor());
   funcInterfaceTransform1 = funcInterface.StaticTransformExec(PointerTransform());
@@ -500,7 +500,7 @@ void TestInvokeTime()
   vtkm::Float64 invokeCallTime = timer.GetElapsedTime();
   std::cout << "Time for invoking function interface: " << invokeCallTime << " seconds"
             << std::endl;
-  std::cout << "Pointless result (makeing sure compiler computes it) " << f.Field << std::endl;
+  std::cout << "Pointless result (making sure compiler computes it) " << f.Field << std::endl;
 
 #if !defined(NDEBUG) && defined(VTKM_MSVC)
   // We expect function calls through the FunctionInterface class to take

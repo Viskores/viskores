@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_compute_potential_h
 #define vtkm_worklet_cosmotools_compute_potential_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -90,7 +89,7 @@ public:
     WholeArrayIn<IdType> lastParticleId,  // (input) last particle in halo
     FieldOut<TagType> potential);         // (output) bin ID
   typedef _8 ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   T mass;
 

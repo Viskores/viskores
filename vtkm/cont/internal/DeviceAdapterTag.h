@@ -47,7 +47,7 @@ struct DeviceAdapterTraits;
 template <typename DeviceAdapter>
 struct DeviceAdapterTagCheck
 {
-  static const bool Valid = false;
+  static constexpr bool Valid = false;
 };
 }
 }
@@ -68,12 +68,12 @@ struct DeviceAdapterTagCheck
   {                                                                                                \
     static DeviceAdapterId GetId() { return DeviceAdapterId(Id); }                                 \
     static DeviceAdapterNameType GetName() { return DeviceAdapterNameType(#Name); }                \
-    static const bool Valid = true;                                                                \
+    static constexpr bool Valid = true;                                                            \
   };                                                                                               \
   template <>                                                                                      \
   struct DeviceAdapterTagCheck<vtkm::cont::DeviceAdapterTag##Name>                                 \
   {                                                                                                \
-    static const bool Valid = true;                                                                \
+    static constexpr bool Valid = true;                                                            \
   };                                                                                               \
   }                                                                                                \
   }
@@ -94,12 +94,12 @@ struct DeviceAdapterTagCheck
   {                                                                                                \
     static DeviceAdapterId GetId() { return DeviceAdapterId(Id); }                                 \
     static DeviceAdapterNameType GetName() { return DeviceAdapterNameType(#Name); }                \
-    static const bool Valid = false;                                                               \
+    static constexpr bool Valid = false;                                                           \
   };                                                                                               \
   template <>                                                                                      \
   struct DeviceAdapterTagCheck<vtkm::cont::DeviceAdapterTag##Name>                                 \
   {                                                                                                \
-    static const bool Valid = false;                                                               \
+    static constexpr bool Valid = false;                                                           \
   };                                                                                               \
   }                                                                                                \
   }

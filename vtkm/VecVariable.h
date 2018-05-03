@@ -40,7 +40,7 @@ template <typename T, vtkm::IdComponent MaxSize>
 class VecVariable
 {
 public:
-  typedef T ComponentType;
+  using ComponentType = T;
 
   VTKM_EXEC_CONT
   VecVariable()
@@ -48,8 +48,8 @@ public:
   {
   }
 
-  template <vtkm::IdComponent SrcSize>
-  VTKM_EXEC_CONT VecVariable(const vtkm::VecVariable<ComponentType, SrcSize>& src)
+  template <typename SrcVecType>
+  VTKM_EXEC_CONT VecVariable(const SrcVecType& src)
     : NumComponents(src.GetNumberOfComponents())
   {
     VTKM_ASSERT(this->NumComponents <= MaxSize);
@@ -59,22 +59,11 @@ public:
     }
   }
 
-  template <vtkm::IdComponent SrcSize>
-  VTKM_EXEC_CONT VecVariable(const vtkm::Vec<ComponentType, SrcSize>& src)
-    : NumComponents(SrcSize)
-  {
-    VTKM_ASSERT(this->NumComponents <= MaxSize);
-    for (vtkm::IdComponent index = 0; index < this->NumComponents; index++)
-    {
-      this->Data[index] = src[index];
-    }
-  }
-
   VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfComponents() const { return this->NumComponents; }
+  inline vtkm::IdComponent GetNumberOfComponents() const { return this->NumComponents; }
 
   template <vtkm::IdComponent DestSize>
-  VTKM_EXEC_CONT void CopyInto(vtkm::Vec<ComponentType, DestSize>& dest) const
+  VTKM_EXEC_CONT inline void CopyInto(vtkm::Vec<ComponentType, DestSize>& dest) const
   {
     vtkm::IdComponent numComponents = vtkm::Min(DestSize, this->NumComponents);
     for (vtkm::IdComponent index = 0; index < numComponents; index++)
@@ -84,10 +73,13 @@ public:
   }
 
   VTKM_EXEC_CONT
-  const ComponentType& operator[](vtkm::IdComponent index) const { return this->Data[index]; }
+  inline const ComponentType& operator[](vtkm::IdComponent index) const
+  {
+    return this->Data[index];
+  }
 
   VTKM_EXEC_CONT
-  ComponentType& operator[](vtkm::IdComponent index) { return this->Data[index]; }
+  inline ComponentType& operator[](vtkm::IdComponent index) { return this->Data[index]; }
 
   VTKM_EXEC_CONT
   void Append(ComponentType value)
@@ -105,8 +97,8 @@ private:
 template <typename T, vtkm::IdComponent MaxSize>
 struct TypeTraits<vtkm::VecVariable<T, MaxSize>>
 {
-  typedef typename vtkm::TypeTraits<T>::NumericTag NumericTag;
-  typedef TypeTraitsVectorTag DimensionalityTag;
+  using NumericTag = typename vtkm::TypeTraits<T>::NumericTag;
+  using DimensionalityTag = TypeTraitsVectorTag;
 
   VTKM_EXEC_CONT
   static vtkm::VecVariable<T, MaxSize> ZeroInitialization()
@@ -118,11 +110,11 @@ struct TypeTraits<vtkm::VecVariable<T, MaxSize>>
 template <typename T, vtkm::IdComponent MaxSize>
 struct VecTraits<vtkm::VecVariable<T, MaxSize>>
 {
-  typedef vtkm::VecVariable<T, MaxSize> VecType;
+  using VecType = vtkm::VecVariable<T, MaxSize>;
 
-  typedef typename VecType::ComponentType ComponentType;
-  typedef vtkm::VecTraitsTagMultipleComponents HasMultipleComponents;
-  typedef vtkm::VecTraitsTagSizeVariable IsSizeStatic;
+  using ComponentType = typename VecType::ComponentType;
+  using HasMultipleComponents = vtkm::VecTraitsTagMultipleComponents;
+  using IsSizeStatic = vtkm::VecTraitsTagSizeVariable;
 
   VTKM_EXEC_CONT
   static vtkm::IdComponent GetNumberOfComponents(const VecType& vector)

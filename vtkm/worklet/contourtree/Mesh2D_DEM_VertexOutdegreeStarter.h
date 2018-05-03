@@ -83,7 +83,6 @@
 #ifndef vtkm_worklet_contourtree_mesh2d_dem_vertex_outdegree_starter_h
 #define vtkm_worklet_contourtree_mesh2d_dem_vertex_outdegree_starter_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation_Macros.h>
 
@@ -104,7 +103,7 @@ public:
                                 FieldOut<IdType> outdegree,    // (output) outdegree
                                 FieldOut<IdType> isCritical);  // (output) whether critical
   typedef void ExecutionSignature(_1, _2, _3, _4, _5 /*, _6*/);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nRows; // (input) number of rows in 2D
   vtkm::Id nCols; // (input) number of cols in 2D

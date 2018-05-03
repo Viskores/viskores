@@ -32,7 +32,7 @@ inline VTKM_CONT VertexClustering::VertexClustering()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result VertexClustering::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet VertexClustering::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& tag)
@@ -40,23 +40,22 @@ inline VTKM_CONT vtkm::filter::Result VertexClustering::DoExecute(
   // todo this code needs to obey the policy for what storage types
   // the output should use
   //need to compute bounds first
-  vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds(
-    typename DerivedPolicy::CoordinateTypeList(), typename DerivedPolicy::CoordinateStorageList());
+  vtkm::Bounds bounds = input.GetCoordinateSystem().GetBounds();
 
   vtkm::cont::DataSet outDataSet =
     this->Worklet.Run(vtkm::filter::ApplyPolicyUnstructured(input.GetCellSet(), policy),
-                      vtkm::filter::ApplyPolicy(input.GetCoordinateSystem(), policy),
+                      input.GetCoordinateSystem(),
                       bounds,
                       this->GetNumberOfDivisions(),
                       tag);
 
-  return vtkm::filter::Result(outDataSet);
+  return outDataSet;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool VertexClustering::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -78,7 +77,7 @@ inline VTKM_CONT bool VertexClustering::DoMapField(
   }
 
   //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
+  result.AddField(fieldMeta.AsField(fieldArray));
 
   return true;
 }

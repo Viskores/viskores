@@ -83,7 +83,6 @@
 #ifndef vtkm_worklet_contourtree_mesh2d_dem_vertex_starter_h
 #define vtkm_worklet_contourtree_mesh2d_dem_vertex_starter_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Mesh2D_DEM_Triangulation_Macros.h>
 #include <vtkm/worklet/contourtree/VertexValueComparator.h>
@@ -109,7 +108,7 @@ public:
                                 FieldOut<IdType> chain,       // (output) modify the chains
                                 FieldOut<IdType> linkMask);   // (output) modify the mask
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nRows; // (input) number of rows in 2D
   vtkm::Id nCols; // (input) number of cols in 2D
@@ -123,6 +122,15 @@ public:
     , ascending(Ascending)
   {
   }
+
+// For numerous calls of this function GCC is able to determine if i is
+// always greater than j ( or vice-versa ) and optimizes those call sites.
+// But when it does these optimizations is presumes that i and j will not
+// overflow and emits a Wstrict-overflow warning
+#ifdef VTKM_GCC
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
 
   // Locate the next vertex in direction indicated
   template <typename InFieldPortalType>
@@ -214,7 +222,12 @@ public:
     linkMask = mask;
     chain = destination;
   } // operator()
-};  // Mesh2D_DEM_VertexStarter
+
+#ifdef VTKM_GCC
+#pragma GCC diagnostic pop
+#endif
+
+}; // Mesh2D_DEM_VertexStarter
 }
 }
 }

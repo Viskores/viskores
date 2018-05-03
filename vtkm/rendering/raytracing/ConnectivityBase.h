@@ -20,7 +20,8 @@
 #ifndef vtk_m_rendering_raytracing_Connectivity_Base_h
 #define vtk_m_rendering_raytracing_Connectivity_Base_h
 
-#include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/vtkm_rendering_export.h>
+
 #include <vtkm/rendering/raytracing/Ray.h>
 
 namespace vtkm
@@ -30,7 +31,7 @@ namespace rendering
 namespace raytracing
 {
 
-class ConnectivityBase
+class VTKM_RENDERING_EXPORT ConnectivityBase
 {
 public:
   enum IntegrationMode
@@ -39,8 +40,8 @@ public:
     Energy
   };
 
-  ConnectivityBase() {}
-  virtual ~ConnectivityBase() {}
+  ConnectivityBase();
+  virtual ~ConnectivityBase();
 
   virtual void Trace(Ray<vtkm::Float64>& rays) = 0;
 
@@ -49,7 +50,7 @@ public:
   virtual void SetVolumeData(const vtkm::cont::Field& scalarField,
                              const vtkm::Range& scalarBounds) = 0;
 
-  virtual void SetEnergyData(const vtkm::cont::Field& absorbtion,
+  virtual void SetEnergyData(const vtkm::cont::Field& absorption,
                              const vtkm::Int32 numBins,
                              const vtkm::cont::Field& emission = vtkm::cont::Field()) = 0;
 
@@ -59,6 +60,7 @@ public:
 
   virtual void SetColorMap(
     const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>& colorMap) = 0;
+
 }; // class ConnectivityBase
 }
 }

@@ -22,21 +22,18 @@ set(headers
   ArrayPortalFromThrust.h
   ExecutionPolicy.h
   IteratorFromArrayPortal.h
-  WrappedOperators.h
+  TaskStrided.h
   ThrustPatches.h
+  WrappedOperators.h
   )
 
 #-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
-  vtkm_disable_troublesome_thrust_warnings()
-endif()
-
 vtkm_declare_headers(CUDA ${headers} TESTABLE ${VTKm_ENABLE_CUDA})
 
 set_source_files_properties(ThrustPatches.h
                             PROPERTIES VTKm_CANT_BE_HEADER_TESTED TRUE)
 
 #-----------------------------------------------------------------------------
-if (VTKm_ENABLE_CUDA)
+if (TARGET vtkm::cuda)
   add_subdirectory(testing)
 endif()

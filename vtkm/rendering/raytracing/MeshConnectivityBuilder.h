@@ -32,7 +32,6 @@
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/WorkletMapTopology.h>
 
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/raytracing/CellTables.h>
 #include <vtkm/rendering/raytracing/Logger.h>
 #include <vtkm/rendering/raytracing/MortonCodes.h>
@@ -95,7 +94,7 @@ public:
   VTKM_CONT
   MortonNeighbor() {}
   typedef void ControlSignature(WholeArrayIn<>,
-                                ExecObject,
+                                WholeArrayInOut<Id3Type>,
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
@@ -106,23 +105,24 @@ public:
   inline vtkm::Int32 GetShapeOffset(const vtkm::UInt8& shapeType) const
   {
 
+    CellTables tables;
     //TODO: This might be better as if if if
     vtkm::Int32 tableOffset = 0;
     if (shapeType == vtkm::CELL_SHAPE_TETRA)
     {
-      tableOffset = FaceLookUp[1][0];
+      tableOffset = tables.FaceLookUp(1, 0);
     }
     else if (shapeType == vtkm::CELL_SHAPE_HEXAHEDRON)
     {
-      tableOffset = FaceLookUp[0][0];
+      tableOffset = tables.FaceLookUp(0, 0);
     }
     else if (shapeType == vtkm::CELL_SHAPE_WEDGE)
     {
-      tableOffset = FaceLookUp[2][0];
+      tableOffset = tables.FaceLookUp(2, 0);
     }
     else if (shapeType == vtkm::CELL_SHAPE_PYRAMID)
     {
-      tableOffset = FaceLookUp[3][0];
+      tableOffset = tables.FaceLookUp(3, 0);
     }
     else
       printf("Error shape not recognized %d\n", (int)shapeType);
@@ -146,18 +146,18 @@ public:
 
 
   template <typename MortonPortalType,
+            typename FaceIdPairsPortalType,
             typename ConnPortalType,
             typename ShapePortalType,
             typename OffsetPortalType,
             typename ExternalFaceFlagType>
-  VTKM_EXEC inline void operator()(
-    const MortonPortalType& mortonCodes,
-    vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Id, 3>>& faceIdPairs,
-    const vtkm::Id& index,
-    const ConnPortalType& connectivity,
-    const ShapePortalType& shapes,
-    const OffsetPortalType& offsets,
-    ExternalFaceFlagType& flags) const
+  VTKM_EXEC inline void operator()(const MortonPortalType& mortonCodes,
+                                   FaceIdPairsPortalType& faceIdPairs,
+                                   const vtkm::Id& index,
+                                   const ConnPortalType& connectivity,
+                                   const ShapePortalType& shapes,
+                                   const OffsetPortalType& offsets,
+                                   ExternalFaceFlagType& flags) const
   {
     if (index == 0)
     {
@@ -172,6 +172,7 @@ public:
     bool isInternal = false;
     vtkm::Id connectedCell = -1;
 
+    CellTables tables;
     while (currentIndex > -1 && myCode == myNeighbor)
     {
       myNeighbor = mortonCodes.Get(currentIndex);
@@ -186,12 +187,13 @@ public:
         vtkm::Id cellId2 = faceIdPairs.Get(currentIndex)[0];
         BOUNDS_CHECK(shapes, cellId1);
         BOUNDS_CHECK(shapes, cellId2);
-        vtkm::Id shape1Offset = GetShapeOffset(shapes.Get(cellId1)) + faceIdPairs.Get(index)[1];
-        vtkm::Id shape2Offset =
-          GetShapeOffset(shapes.Get(cellId2)) + faceIdPairs.Get(currentIndex)[1];
+        vtkm::Int32 shape1Offset =
+          GetShapeOffset(shapes.Get(cellId1)) + static_cast<vtkm::Int32>(faceIdPairs.Get(index)[1]);
+        vtkm::Int32 shape2Offset = GetShapeOffset(shapes.Get(cellId2)) +
+          static_cast<vtkm::Int32>(faceIdPairs.Get(currentIndex)[1]);
 
-        vtkm::Int32 icount1 = ShapesFaceList[shape1Offset][0];
-        vtkm::Int32 icount2 = ShapesFaceList[shape2Offset][0];
+        const vtkm::Int32 icount1 = tables.ShapesFaceList(shape1Offset, 0);
+        const vtkm::Int32 icount2 = tables.ShapesFaceList(shape2Offset, 0);
         //Check to see if we have the same number of idices
         if (icount1 != icount2)
           continue;
@@ -201,22 +203,25 @@ public:
         vtkm::Vec<vtkm::Id, 4> indices1;
         vtkm::Vec<vtkm::Id, 4> indices2;
 
-        for (vtkm::Int32 i = 1; i <= ShapesFaceList[shape1Offset][0]; ++i)
+        const auto faceLength = tables.ShapesFaceList(shape1Offset, 0);
+        for (vtkm::Int32 i = 1; i <= faceLength; ++i)
         {
           BOUNDS_CHECK(offsets, cellId1);
           BOUNDS_CHECK(offsets, cellId2);
-          BOUNDS_CHECK(connectivity, (offsets.Get(cellId1) + ShapesFaceList[shape1Offset][i]));
-          BOUNDS_CHECK(connectivity, (offsets.Get(cellId2) + ShapesFaceList[shape2Offset][i]));
+          BOUNDS_CHECK(connectivity,
+                       (offsets.Get(cellId1) + tables.ShapesFaceList(shape1Offset, i)));
+          BOUNDS_CHECK(connectivity,
+                       (offsets.Get(cellId2) + tables.ShapesFaceList(shape2Offset, i)));
           indices1[i - 1] =
-            connectivity.Get(offsets.Get(cellId1) + ShapesFaceList[shape1Offset][i]);
+            connectivity.Get(offsets.Get(cellId1) + tables.ShapesFaceList(shape1Offset, i));
           indices2[i - 1] =
-            connectivity.Get(offsets.Get(cellId2) + ShapesFaceList[shape2Offset][i]);
+            connectivity.Get(offsets.Get(cellId2) + tables.ShapesFaceList(shape2Offset, i));
         }
 
         bool isEqual = true;
-        for (vtkm::Int32 i = 0; i < ShapesFaceList[shape1Offset][0]; ++i)
+        for (vtkm::Int32 i = 0; i < faceLength; ++i)
         {
-          if (!IsIn(indices1[i], indices2, ShapesFaceList[shape1Offset][0]))
+          if (!IsIn(indices1[i], indices2, faceLength))
             isEqual = false;
         }
 
@@ -232,7 +237,7 @@ public:
       currentIndex--;
     }
 
-    //this means that this cell is resposible for both itself and the other cell
+    //this means that this cell is responsible for both itself and the other cell
     //set the connecttion for the other cell
     if (isInternal)
     {
@@ -279,13 +284,14 @@ public:
                                    const OutIndicesPortalType& outputIndices,
                                    const vtkm::Id& outputOffset) const
   {
+    CellTables tables;
 
     vtkm::Id cellId = faceIdPair[0];
     BOUNDS_CHECK(shapeOffsets, cellId);
     vtkm::Id offset = shapeOffsets.Get(cellId);
     BOUNDS_CHECK(shapes, cellId);
     vtkm::Int32 shapeId = static_cast<vtkm::Int32>(shapes.Get(cellId));
-    vtkm::Int32 shapesFaceOffset = FaceLookUp[CellTypeLookUp[shapeId]][0];
+    vtkm::Int32 shapesFaceOffset = tables.FaceLookUp(tables.CellTypeLookUp(shapeId), 0);
     if (shapesFaceOffset == -1)
     {
       printf("Unsupported Shape Type %d\n", shapeId);
@@ -294,12 +300,12 @@ public:
 
     vtkm::Vec<vtkm::Id, 4> faceIndices(-1, -1, -1, -1);
     vtkm::Int32 tableIndex = static_cast<vtkm::Int32>(shapesFaceOffset + faceIdPair[1]);
-    const vtkm::Int32 numIndices = ShapesFaceList[tableIndex][0];
+    const vtkm::Int32 numIndices = tables.ShapesFaceList(tableIndex, 0);
 
     for (vtkm::Int32 i = 1; i <= numIndices; ++i)
     {
-      BOUNDS_CHECK(indices, offset + ShapesFaceList[tableIndex][i]);
-      faceIndices[i - 1] = indices.Get(offset + ShapesFaceList[tableIndex][i]);
+      BOUNDS_CHECK(indices, offset + tables.ShapesFaceList(tableIndex, i));
+      faceIndices[i - 1] = indices.Get(offset + tables.ShapesFaceList(tableIndex, i));
     }
     vtkm::Vec<vtkm::Id, 4> triangle;
     triangle[0] = cellId;
@@ -327,14 +333,16 @@ public:
 class WriteFaceConn : public vtkm::worklet::WorkletMapField
 {
 public:
+  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, WholeArrayOut<IdType>);
+  typedef void ExecutionSignature(_1, _2, _3);
+
   VTKM_CONT
   WriteFaceConn() {}
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, ExecObject);
-  typedef void ExecutionSignature(_1, _2, _3);
-  template <typename FaceOffsetsPortalType>
+
+  template <typename FaceOffsetsPortalType, typename FaceConnectivityPortalType>
   VTKM_EXEC inline void operator()(const vtkm::Vec<vtkm::Id, 3>& faceIdPair,
                                    const FaceOffsetsPortalType& faceOffsets,
-                                   vtkm::exec::ExecutionWholeArray<vtkm::Id>& faceConn) const
+                                   FaceConnectivityPortalType& faceConn) const
   {
     vtkm::Id cellId = faceIdPair[0];
     BOUNDS_CHECK(faceOffsets, cellId);
@@ -343,18 +351,6 @@ public:
     faceConn.Set(faceOffset, faceIdPair[2]);
   }
 }; //class WriteFaceConn
-
-// Each one of size segments will process
-// one face of the hex and domain
-VTKM_EXEC_CONSTANT
-static vtkm::Int32 SegmentToFace[6] = { 0, 2, 1, 3, 4, 5 };
-
-// Each face/segment has 2 varying dimensions
-VTKM_EXEC_CONSTANT
-static vtkm::Int32 SegmentDirections[6][2] = { { 0, 2 }, //face 0 and 2 have the same directions
-                                               { 0, 2 }, { 1, 2 }, //1 and 3
-                                               { 1, 2 }, { 0, 1 }, // 4 and 5
-                                               { 0, 1 } };
 
 class StructuredExternalTriangles : public vtkm::worklet::WorkletMapField
 {
@@ -395,6 +391,18 @@ public:
   template <typename TrianglePortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& index, TrianglePortalType& triangles) const
   {
+    // Each one of size segments will process
+    // one face of the hex and domain
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32 SegmentToFace[6] = { 0, 2, 1, 3, 4, 5 };
+
+    // Each face/segment has 2 varying dimensions
+    VTKM_STATIC_CONSTEXPR_ARRAY vtkm::Int32 SegmentDirections[6][2] = {
+      { 0, 2 },           //face 0 and 2 have the same directions
+      { 0, 2 }, { 1, 2 }, //1 and 3
+      { 1, 2 }, { 0, 1 }, // 4 and 5
+      { 0, 1 }
+    };
+
     //
     // We get one index per extenal face
     //
@@ -449,7 +457,9 @@ public:
     // Look up the offset into the face list for each cell type
     // This should always be zero, but in case this table changes I don't
     // want to break anything.
-    vtkm::Int32 shapesFaceOffset = FaceLookUp[CellTypeLookUp[CELL_SHAPE_HEXAHEDRON]][0];
+    CellTables tables;
+    vtkm::Int32 shapesFaceOffset =
+      tables.FaceLookUp(tables.CellTypeLookUp(CELL_SHAPE_HEXAHEDRON), 0);
 
     vtkm::Vec<vtkm::Id, 4> faceIndices;
     vtkm::Int32 tableIndex = shapesFaceOffset + cellFace;
@@ -457,7 +467,7 @@ public:
     // Load the face
     for (vtkm::Int32 i = 1; i <= 4; ++i)
     {
-      faceIndices[i - 1] = cellIndices[ShapesFaceList[tableIndex][i]];
+      faceIndices[i - 1] = cellIndices[tables.ShapesFaceList(tableIndex, i)];
     }
     const vtkm::Id outputOffset = index * 2;
     vtkm::Vec<vtkm::Id, 4> triangle;
@@ -489,17 +499,19 @@ public:
                                    const ShapePortalType& shapes,
                                    vtkm::Id& triangleCount) const
   {
+    CellTables tables;
     vtkm::Id cellId = faceIdPair[0];
     vtkm::Id cellFace = faceIdPair[1];
     vtkm::Int32 shapeType = static_cast<vtkm::Int32>(shapes.Get(cellId));
-    vtkm::Int32 faceStartIndex = FaceLookUp[CellTypeLookUp[shapeType]][0];
+    vtkm::Int32 faceStartIndex = tables.FaceLookUp(tables.CellTypeLookUp(shapeType), 0);
     if (faceStartIndex == -1)
     {
       //Unsupported Shape Type this should never happen
       triangleCount = 0;
       return;
     }
-    vtkm::Int32 faceType = ShapesFaceList[faceStartIndex + cellFace][0];
+    vtkm::Int32 faceType =
+      tables.ShapesFaceList(faceStartIndex + static_cast<vtkm::Int32>(cellFace), 0);
     // The face will either have 4 or 3 indices, so quad or tri
     triangleCount = (faceType == 4) ? 2 : 1;
 
@@ -518,7 +530,7 @@ public:
 
   VTKM_CONT
   void BuildConnectivity(vtkm::cont::CellSetSingleType<>& cellSetUnstructured,
-                         DynamicArrayHandleExplicitCoordinateSystem& coordinates,
+                         const vtkm::cont::ArrayHandleVirtualCoordinates& coordinates,
                          vtkm::Bounds coordsBounds)
   {
     Logger* logger = Logger::GetInstance();
@@ -564,9 +576,8 @@ public:
 
 
     // scatter the coonectivity into the original order
-    vtkm::worklet::DispatcherMapField<WriteFaceConn>(WriteFaceConn())
-      .Invoke(
-        cellFaceId, this->FaceOffsets, vtkm::exec::ExecutionWholeArray<vtkm::Id>(faceConnectivity));
+    vtkm::worklet::DispatcherMapField<WriteFaceConn, DeviceAdapter>(WriteFaceConn())
+      .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
 
     FaceConnectivity = faceConnectivity;
@@ -578,7 +589,7 @@ public:
 
   VTKM_CONT
   void BuildConnectivity(vtkm::cont::CellSetExplicit<>& cellSetUnstructured,
-                         DynamicArrayHandleExplicitCoordinateSystem& coordinates,
+                         const vtkm::cont::ArrayHandleVirtualCoordinates& coordinates,
                          vtkm::Bounds coordsBounds)
   {
     Logger* logger = Logger::GetInstance();
@@ -622,9 +633,8 @@ public:
       this->ExtractExternalFaces(cellFaceId, faceConnectivity, shapes, conn, shapeOffsets);
 
     // scatter the coonectivity into the original order
-    vtkm::worklet::DispatcherMapField<WriteFaceConn>(WriteFaceConn())
-      .Invoke(
-        cellFaceId, this->FaceOffsets, vtkm::exec::ExecutionWholeArray<vtkm::Id>(faceConnectivity));
+    vtkm::worklet::DispatcherMapField<WriteFaceConn, DeviceAdapter>(WriteFaceConn())
+      .Invoke(cellFaceId, this->FaceOffsets, faceConnectivity);
 
     FaceConnectivity = faceConnectivity;
     OutsideTriangles = externalTriangles;
@@ -648,7 +658,7 @@ public:
     triangles.PrepareForOutput(numFaces * 2, DeviceAdapter());
     vtkm::cont::ArrayHandleCounting<vtkm::Id> counting(0, 1, numFaces);
 
-    vtkm::worklet::DispatcherMapField<StructuredExternalTriangles>(
+    vtkm::worklet::DispatcherMapField<StructuredExternalTriangles, DeviceAdapter>(
       StructuredExternalTriangles(cellSetStructured.PrepareForInput(
         DeviceAdapter(), vtkm::TopologyElementTagPoint(), vtkm::TopologyElementTagCell())))
       .Invoke(counting, triangles);
@@ -678,7 +688,7 @@ protected:
     const ShapeHandleType shapes,
     const ConnHandleType conn,
     const OffsetsHandleType shapeOffsets,
-    DynamicArrayHandleExplicitCoordinateSystem& coordinates,
+    const vtkm::cont::ArrayHandleVirtualCoordinates& coords,
     vtkm::cont::ArrayHandle<vtkm::Id>& faceConnectivity,
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 3>>& cellFaceId,
     vtkm::Float32 BoundingBox[6])
@@ -687,6 +697,9 @@ protected:
     vtkm::cont::Timer<DeviceAdapter> timer;
 
     vtkm::Id numCells = shapes.GetNumberOfValues();
+
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> coordinates;
+    vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::Copy(coords, coordinates);
 
     /*-----------------------------------------------------------------*/
 
@@ -712,13 +725,13 @@ protected:
 
     // We are creating a spatial hash based on morton codes calculated
     // from the centriod (point average)  of each face. Each centroid is
-    // calculated in way (consistant order of floating point calcs) that
+    // calculated in way (consistent order of floating point calcs) that
     // ensures that each face maps to the same morton code. It is possbilbe
     // that two non-connecting faces map to the same morton code,  but if
     // if a face has a matching face from another cell, it will be mapped
     // to the same morton code. We check for this.
 
-    // set up everyting we need to gen morton codes
+    // set up everything we need to gen morton codes
     vtkm::Vec<vtkm::Float32, 3> inverseExtent;
     inverseExtent[0] = 1.f / (BoundingBox[1] - BoundingBox[0]);
     inverseExtent[1] = 1.f / (BoundingBox[3] - BoundingBox[2]);
@@ -739,8 +752,10 @@ protected:
     vtkm::worklet::DispatcherMapTopology<MortonCodeFace, DeviceAdapter>(
       MortonCodeFace(inverseExtent, minPoint))
       .Invoke(cellSet, coordinates, cellOffsets, faceMortonCodes, cellFaceId);
+
     // Sort the "faces" (i.e., morton codes)
     vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>::SortByKey(faceMortonCodes, cellFaceId);
+
     // Allocate space for the final face-to-face conectivity
     faceConnectivity.PrepareForOutput(totalFaces, DeviceAdapter());
 
@@ -749,12 +764,7 @@ protected:
       .Invoke(faceConnectivity);
 
     vtkm::worklet::DispatcherMapField<MortonNeighbor, DeviceAdapter>(MortonNeighbor())
-      .Invoke(faceMortonCodes,
-              vtkm::exec::ExecutionWholeArray<vtkm::Vec<vtkm::Id, 3>>(cellFaceId),
-              conn,
-              shapes,
-              shapeOffsets,
-              faceConnectivity);
+      .Invoke(faceMortonCodes, cellFaceId, conn, shapes, shapeOffsets, faceConnectivity);
 
     vtkm::Float64 time = timer.GetElapsedTime();
     Logger::GetInstance()->AddLogData("gen_face_conn", time);

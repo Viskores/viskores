@@ -23,9 +23,6 @@
 #include <vtkm/rendering/vtkm_rendering_export.h>
 
 #include <vtkm/Range.h>
-#if defined(_MSC_VER) && _MSC_VER < 1900
-#define snprintf _snprintf
-#endif
 
 #include <vtkm/cont/DataSet.h>
 #include <vtkm/rendering/AxisAnnotation.h>
@@ -56,13 +53,17 @@ protected:
   vtkm::Float32 FontOffset;
   vtkm::Float32 LineWidth;
   vtkm::rendering::Color Color;
-  std::vector<TextAnnotationBillboard*> Labels;
+  std::vector<std::unique_ptr<TextAnnotationBillboard>> Labels;
   int MoreOrLessTickAdjustment;
 
 public:
   AxisAnnotation3D();
 
   ~AxisAnnotation3D();
+
+  AxisAnnotation3D(const AxisAnnotation3D&) = delete;
+
+  AxisAnnotation3D& operator=(const AxisAnnotation3D&) = delete;
 
   VTKM_CONT
   void SetMoreOrLessTickAdjustment(int offset) { this->MoreOrLessTickAdjustment = offset; }
@@ -123,7 +124,7 @@ public:
 
   virtual void Render(const vtkm::rendering::Camera& camera,
                       const vtkm::rendering::WorldAnnotator& worldAnnotator,
-                      vtkm::rendering::Canvas& canvas) VTKM_OVERRIDE;
+                      vtkm::rendering::Canvas& canvas) override;
 };
 }
 } //namespace vtkm::rendering

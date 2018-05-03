@@ -17,6 +17,9 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/worklet/SurfaceNormals.h>
 
 namespace vtkm
@@ -66,24 +69,11 @@ inline SurfaceNormals::SurfaceNormals()
   , NormalizeCellNormals(true)
   , GeneratePointNormals(true)
 {
-}
-
-inline vtkm::filter::Result SurfaceNormals::Execute(const vtkm::cont::DataSet& input)
-{
-  return this->Execute(input, input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
-}
-
-template <typename DerivedPolicy>
-inline vtkm::filter::Result SurfaceNormals::Execute(
-  const vtkm::cont::DataSet& input,
-  const vtkm::filter::PolicyBase<DerivedPolicy>& policy)
-{
-  return this->Execute(
-    input, input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()), policy);
+  this->SetUseCoordinateSystemAsField(true);
 }
 
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline vtkm::filter::Result SurfaceNormals::DoExecute(
+inline vtkm::cont::DataSet SurfaceNormals::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>, StorageType>& points,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -94,7 +84,7 @@ inline vtkm::filter::Result SurfaceNormals::DoExecute(
 
   if (!this->GenerateCellNormals && !this->GeneratePointNormals)
   {
-    return vtkm::filter::Result();
+    throw vtkm::cont::ErrorFilterExecution("No normals selected.");
   }
 
   const auto& cellset = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -104,32 +94,32 @@ inline vtkm::filter::Result SurfaceNormals::DoExecute(
   faceted.SetNormalize(this->NormalizeCellNormals);
   faceted.Run(vtkm::filter::ApplyPolicy(cellset, policy), points, faceNormals, device);
 
-  vtkm::filter::Result result;
+  vtkm::cont::DataSet result;
   if (this->GeneratePointNormals)
   {
     vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> pointNormals;
     vtkm::worklet::SmoothSurfaceNormals smooth;
     smooth.Run(vtkm::filter::ApplyPolicy(cellset, policy), faceNormals, pointNormals, device);
 
-    result = vtkm::filter::Result(input,
-                                  pointNormals,
-                                  internal::ComputePointNormalsName(this),
-                                  vtkm::cont::Field::ASSOC_POINTS);
+    result = internal::CreateResult(input,
+                                    pointNormals,
+                                    internal::ComputePointNormalsName(this),
+                                    vtkm::cont::Field::ASSOC_POINTS);
     if (this->GenerateCellNormals)
     {
-      result.GetDataSet().AddField(vtkm::cont::Field(internal::ComputeCellNormalsName(this),
-                                                     vtkm::cont::Field::ASSOC_CELL_SET,
-                                                     cellset.GetName(),
-                                                     faceNormals));
+      result.AddField(vtkm::cont::Field(internal::ComputeCellNormalsName(this),
+                                        vtkm::cont::Field::ASSOC_CELL_SET,
+                                        cellset.GetName(),
+                                        faceNormals));
     }
   }
   else
   {
-    result = vtkm::filter::Result(input,
-                                  faceNormals,
-                                  internal::ComputeCellNormalsName(this),
-                                  vtkm::cont::Field::ASSOC_CELL_SET,
-                                  cellset.GetName());
+    result = internal::CreateResult(input,
+                                    faceNormals,
+                                    internal::ComputeCellNormalsName(this),
+                                    vtkm::cont::Field::ASSOC_CELL_SET,
+                                    cellset.GetName());
   }
 
   return result;

@@ -111,7 +111,7 @@ template <typename T, typename StorageType, typename DeviceAdapter>
 class Mesh3D_DEM_Triangulation
 {
 public:
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter> DeviceAlgorithm;
+  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
   // original data array
   const vtkm::cont::ArrayHandle<T, StorageType>& values;
@@ -240,8 +240,8 @@ void Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
 
   // copy the chain maximum from arcArray
   // : mergeGraph.chainExtremum[vID] = inverseIndex[mergeGraph.arcArray[mergeGraph.valueIndex[vID]]]
-  typedef vtkm::cont::ArrayHandle<vtkm::Id> IdArrayType;
-  typedef vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType> PermuteIndexType;
+  using IdArrayType = vtkm::cont::ArrayHandle<vtkm::Id>;
+  using PermuteIndexType = vtkm::cont::ArrayHandlePermutation<IdArrayType, IdArrayType>;
 
   vtkm::cont::ArrayHandle<vtkm::Id> tArray;
   tArray.Allocate(nCriticalPoints);

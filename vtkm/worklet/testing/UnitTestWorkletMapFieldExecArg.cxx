@@ -24,41 +24,40 @@
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
-#include <vtkm/exec/ExecutionWholeArray.h>
-
 #include <vtkm/cont/testing/Testing.h>
 
-class TestExecObjectWorklet : public vtkm::worklet::WorkletMapField
+struct TestExecObjectWorklet
 {
-public:
-  typedef void ControlSignature(FieldIn<>, ExecObject, ExecObject, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
-
-  template <typename T, typename StorageTag>
-  VTKM_EXEC void operator()(const vtkm::Id& index,
-                            const vtkm::exec::ExecutionWholeArrayConst<T, StorageTag>& execIn,
-                            vtkm::exec::ExecutionWholeArray<T, StorageTag>& execOut,
-                            T& out) const
+  template <typename T>
+  class Worklet : public vtkm::worklet::WorkletMapField
   {
-    if (!test_equal(execIn.Get(index), TestValue(index, T()) + T(100)))
+  public:
+    typedef void ControlSignature(FieldIn<IdType>,
+                                  WholeArrayIn<vtkm::ListTagBase<T>>,
+                                  WholeArrayOut<vtkm::ListTagBase<T>>,
+                                  FieldOut<vtkm::ListTagBase<T>>);
+    typedef void ExecutionSignature(_1, _2, _3, _4);
+
+    template <typename InPortalType, typename OutPortalType>
+    VTKM_EXEC void operator()(const vtkm::Id& index,
+                              const InPortalType& execIn,
+                              OutPortalType& execOut,
+                              T& out) const
     {
-      this->RaiseError("Got wrong input value.");
+      if (!test_equal(execIn.Get(index), TestValue(index, T()) + T(100)))
+      {
+        this->RaiseError("Got wrong input value.");
+      }
+      out = execIn.Get(index) - T(100);
+      execOut.Set(index, out);
     }
-    out = execIn.Get(index) - T(100);
-    execOut.Set(index, out);
-  }
-
-  template <typename T1, typename T2, typename T3>
-  VTKM_EXEC void operator()(const vtkm::Id&, const T1&, const T2&, const T3&) const
-  {
-    this->RaiseError("Cannot call this worklet with different types.");
-  }
+  };
 };
 
 namespace map_exec_field
 {
 
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 template <typename WorkletType>
 struct DoTestWorklet
@@ -78,13 +77,11 @@ struct DoTestWorklet
     vtkm::cont::ArrayHandle<T> inputHandle = vtkm::cont::make_ArrayHandle(inputArray, ARRAY_SIZE);
     vtkm::cont::ArrayHandle<T> outputHandle;
     vtkm::cont::ArrayHandle<T> outputFieldArray;
+    outputHandle.Allocate(ARRAY_SIZE);
 
     std::cout << "Create and run dispatcher." << std::endl;
-    vtkm::worklet::DispatcherMapField<WorkletType> dispatcher;
-    dispatcher.Invoke(counting,
-                      vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
-                      vtkm::exec::ExecutionWholeArray<T>(outputHandle, ARRAY_SIZE),
-                      outputFieldArray);
+    vtkm::worklet::DispatcherMapField<typename WorkletType::template Worklet<T>> dispatcher;
+    dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldArray);
 
     std::cout << "Check result." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());
@@ -94,12 +91,10 @@ struct DoTestWorklet
     // Clear out output arrays.
     outputFieldArray = vtkm::cont::ArrayHandle<T>();
     outputHandle = vtkm::cont::ArrayHandle<T>();
+    outputHandle.Allocate(ARRAY_SIZE);
 
     vtkm::cont::DynamicArrayHandle outputFieldDynamic(outputFieldArray);
-    dispatcher.Invoke(counting,
-                      vtkm::exec::ExecutionWholeArrayConst<T>(inputHandle),
-                      vtkm::exec::ExecutionWholeArray<T>(outputHandle, ARRAY_SIZE),
-                      outputFieldDynamic);
+    dispatcher.Invoke(counting, inputHandle, outputHandle, outputFieldDynamic);
 
     std::cout << "Check dynamic array result." << std::endl;
     CheckPortal(outputHandle.GetPortalConstControl());
@@ -109,8 +104,8 @@ struct DoTestWorklet
 
 void TestWorkletMapFieldExecArg()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
-  std::cout << "Testing Worklet with ExecutionWholeArray on device adapter: "
+  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  std::cout << "Testing Worklet with WholeArray on device adapter: "
             << DeviceAdapterTraits::GetName() << std::endl;
 
   std::cout << "--- Worklet accepting all types." << std::endl;

@@ -83,7 +83,6 @@
 #ifndef vtkm_worklet_contourtree_chain_doubler_h
 #define vtkm_worklet_contourtree_chain_doubler_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -104,7 +103,7 @@ class ChainDoubler : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<IdType> vertexID, WholeArrayInOut<IdType> chains);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

@@ -31,7 +31,7 @@
 namespace
 {
 
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 template <typename PortalType>
 struct TestKernelOut : public vtkm::exec::FunctorBase

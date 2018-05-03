@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_compute_bin_indices_h
 #define vtkm_worklet_cosmotools_compute_bin_indices_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -81,7 +80,7 @@ public:
                                 FieldOut<IdType> binY,
                                 FieldOut<IdType> binZ);
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id numBinsX, numBinsY, numBinsZ; // Number of bins each dimension
 

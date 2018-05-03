@@ -83,7 +83,7 @@ vtkm::rendering::Canvas* MapperRayTracer::GetCanvas() const
 void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                                   const vtkm::cont::CoordinateSystem& coords,
                                   const vtkm::cont::Field& scalarField,
-                                  const vtkm::rendering::ColorTable& vtkmNotUsed(colorTable),
+                                  const vtkm::cont::ColorTable& vtkmNotUsed(colorTable),
                                   const vtkm::rendering::Camera& camera,
                                   const vtkm::Range& scalarRange)
 {
@@ -107,9 +107,9 @@ void MapperRayTracer::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     this->Internals->Rays, camera, *this->Internals->Canvas);
 
   vtkm::Bounds dataBounds = coords.GetBounds();
-
+  vtkm::cont::Field& field = const_cast<vtkm::cont::Field&>(scalarField);
   this->Internals->Tracer.SetData(
-    coords.GetData(), indices, scalarField, numberOfTriangles, scalarRange, dataBounds);
+    coords.GetData(), indices, field, numberOfTriangles, scalarRange, dataBounds);
 
   this->Internals->Tracer.SetColorMap(this->ColorMap);
   this->Internals->Tracer.Render(this->Internals->Rays);

@@ -183,15 +183,7 @@ template <typename ArrayHandleType,
           typename InverseFunctorType = NullFunctorType>
 struct VTKM_ALWAYS_EXPORT StorageTagTransform
 {
-#if defined(VTKM_MSVC) && (_MSC_VER == 1800) // workaround for VS2013
-private:
-  using ArrayHandleValueType = typename ArrayHandleType::ValueType;
-
-public:
-  using ValueType = decltype(FunctorType{}(ArrayHandleValueType{}));
-#else
   using ValueType = decltype(FunctorType{}(typename ArrayHandleType::ValueType{}));
-#endif
 };
 
 template <typename ArrayHandleType, typename FunctorType>
@@ -436,7 +428,7 @@ public:
   {
     throw vtkm::cont::ErrorInternal(
       "ArrayHandleTransform read only. "
-      "There should be no occurance of the ArrayHandle trying to pull "
+      "There should be no occurrence of the ArrayHandle trying to pull "
       "data from the execution environment.");
   }
 

@@ -94,17 +94,11 @@ public:
   };
 
   /// All worklets must define their scatter operation.
-  typedef vtkm::worklet::ScatterIdentity ScatterType;
-
-  /// In addition to defining the scatter type, the worklet must produce the
-  /// scatter. The default vtkm::worklet::ScatterIdentity  has no state,
-  /// so just return an instance.
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(); }
+  using ScatterType = vtkm::worklet::ScatterIdentity;
 
   /// All neighborhood worklets must define their boundary type operation.
   /// The boundary type determines how loading on boundaries will work.
-  typedef vtkm::worklet::BoundaryClamp BoundaryType;
+  using BoundaryType = vtkm::worklet::BoundaryClamp;
 
   /// In addition to defining the boundary type, the worklet must produce the
   /// boundary condition. The default BoundaryClamp has no state, so just return an
@@ -167,7 +161,7 @@ template <int Neighborhood_>
 class WorkletPointNeighborhood : public WorkletPointNeighborhoodBase
 {
 public:
-  static VTKM_CONSTEXPR vtkm::IdComponent Neighborhood = Neighborhood_;
+  static constexpr vtkm::IdComponent Neighborhood = Neighborhood_;
 
   /// \brief A control signature tag for neighborhood input values.
   ///

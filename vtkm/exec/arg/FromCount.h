@@ -50,7 +50,7 @@ struct AspectTagFromCount
 ///
 struct FromCount : vtkm::exec::arg::ExecutionSignatureTagBase
 {
-  static const vtkm::IdComponent INDEX = 1;
+  static constexpr vtkm::IdComponent INDEX = 1;
   using AspectTag = vtkm::exec::arg::AspectTagFromCount;
 };
 

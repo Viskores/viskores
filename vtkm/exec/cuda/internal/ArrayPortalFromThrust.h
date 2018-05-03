@@ -99,12 +99,9 @@ template <> struct UseMultipleScalarTextureLoads<const vtkm::Vec<vtkm::Float64, 
 template <typename T, typename Enable = void>
 struct load_through_texture
 {
-  static const vtkm::IdComponent WillUseTexture = 0;
+  static constexpr vtkm::IdComponent WillUseTexture = 0;
 
-  __device__ static T get(const thrust::system::cuda::pointer<const T>& data)
-  {
-    return *(data.get());
-  }
+  __device__ static T get(const T* const data) { return *data; }
 };
 
 //only load through a texture if we have sm 35 support
@@ -114,15 +111,15 @@ template <typename T>
 struct load_through_texture<T, typename std::enable_if<UseScalarTextureLoad<const T>::value>::type>
 {
 
-  static const vtkm::IdComponent WillUseTexture = 1;
+  static constexpr vtkm::IdComponent WillUseTexture = 1;
 
-  __device__ static T get(const thrust::system::cuda::pointer<const T>& data)
+  __device__ static T get(const T* const data)
   {
 #if __CUDA_ARCH__ >= 350
     // printf("__CUDA_ARCH__ UseScalarTextureLoad");
-    return __ldg(data.get());
+    return __ldg(data);
 #else
-    return *(data.get());
+    return *data;
 #endif
   }
 };
@@ -131,64 +128,57 @@ struct load_through_texture<T, typename std::enable_if<UseScalarTextureLoad<cons
 template <typename T>
 struct load_through_texture<T, typename std::enable_if<UseVecTextureLoads<const T>::value>::type>
 {
-  static const vtkm::IdComponent WillUseTexture = 1;
+  static constexpr vtkm::IdComponent WillUseTexture = 1;
 
-  __device__ static T get(const thrust::system::cuda::pointer<const T>& data)
+  __device__ static T get(const T* const data)
   {
 #if __CUDA_ARCH__ >= 350
     // printf("__CUDA_ARCH__ UseVecTextureLoads");
     return getAs(data);
 #else
-    return *(data.get());
+    return *data;
 #endif
   }
 
-  __device__ static vtkm::Vec<vtkm::Int32, 2> getAs(
-    const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Int32, 2>>& data)
+  __device__ static vtkm::Vec<vtkm::Int32, 2> getAs(const vtkm::Vec<vtkm::Int32, 2>* const data)
   {
-    const int2 temp = __ldg((const int2*)data.get());
+    const int2 temp = __ldg((const int2*)data);
     return vtkm::Vec<vtkm::Int32, 2>(temp.x, temp.y);
   }
 
-  __device__ static vtkm::Vec<vtkm::UInt32, 2> getAs(
-    const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::UInt32, 2>>& data)
+  __device__ static vtkm::Vec<vtkm::UInt32, 2> getAs(const vtkm::Vec<vtkm::UInt32, 2>* const data)
   {
-    const uint2 temp = __ldg((const uint2*)data.get());
+    const uint2 temp = __ldg((const uint2*)data);
     return vtkm::Vec<vtkm::UInt32, 2>(temp.x, temp.y);
   }
 
-  __device__ static vtkm::Vec<vtkm::Int32, 4> getAs(
-    const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Int32, 4>>& data)
+  __device__ static vtkm::Vec<vtkm::Int32, 4> getAs(const vtkm::Vec<vtkm::Int32, 4>* const data)
   {
-    const int4 temp = __ldg((const int4*)data.get());
+    const int4 temp = __ldg((const int4*)data);
     return vtkm::Vec<vtkm::Int32, 4>(temp.x, temp.y, temp.z, temp.w);
   }
 
-  __device__ static vtkm::Vec<vtkm::UInt32, 4> getAs(
-    const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::UInt32, 4>>& data)
+  __device__ static vtkm::Vec<vtkm::UInt32, 4> getAs(const vtkm::Vec<vtkm::UInt32, 4>* const data)
   {
-    const uint4 temp = __ldg((const uint4*)data.get());
+    const uint4 temp = __ldg((const uint4*)data);
     return vtkm::Vec<vtkm::UInt32, 4>(temp.x, temp.y, temp.z, temp.w);
   }
 
-  __device__ static vtkm::Vec<vtkm::Float32, 2> getAs(
-    const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Float32, 2>>& data)
+  __device__ static vtkm::Vec<vtkm::Float32, 2> getAs(const vtkm::Vec<vtkm::Float32, 2>* const data)
   {
-    const float2 temp = __ldg((const float2*)data.get());
+    const float2 temp = __ldg((const float2*)data);
     return vtkm::Vec<vtkm::Float32, 2>(temp.x, temp.y);
   }
 
-  __device__ static vtkm::Vec<vtkm::Float32, 4> getAs(
-    const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Float32, 4>>& data)
+  __device__ static vtkm::Vec<vtkm::Float32, 4> getAs(const vtkm::Vec<vtkm::Float32, 4>* const data)
   {
-    const float4 temp = __ldg((const float4*)data.get());
+    const float4 temp = __ldg((const float4*)data);
     return vtkm::Vec<vtkm::Float32, 4>(temp.x, temp.y, temp.z, temp.w);
   }
 
-  __device__ static vtkm::Vec<vtkm::Float64, 2> getAs(
-    const thrust::system::cuda::pointer<const vtkm::Vec<vtkm::Float64, 2>>& data)
+  __device__ static vtkm::Vec<vtkm::Float64, 2> getAs(const vtkm::Vec<vtkm::Float64, 2>* const data)
   {
-    const double2 temp = __ldg((const double2*)data.get());
+    const double2 temp = __ldg((const double2*)data);
     return vtkm::Vec<vtkm::Float64, 2>(temp.x, temp.y);
   }
 };
@@ -199,26 +189,26 @@ struct load_through_texture<
   T,
   typename std::enable_if<UseMultipleScalarTextureLoads<const T>::value>::type>
 {
-  static const vtkm::IdComponent WillUseTexture = 1;
+  static constexpr vtkm::IdComponent WillUseTexture = 1;
 
   using NonConstT = typename std::remove_const<T>::type;
 
-  __device__ static T get(const thrust::system::cuda::pointer<const T>& data)
+  __device__ static T get(const T* const data)
   {
 #if __CUDA_ARCH__ >= 350
     // printf("__CUDA_ARCH__ UseMultipleScalarTextureLoads");
     return getAs(data);
 #else
-    return *(data.get());
+    return *data;
 #endif
   }
 
-  __device__ static T getAs(const thrust::system::cuda::pointer<const T>& data)
+  __device__ static T getAs(const T* const data)
   {
     //we need to fetch each component individually
     const vtkm::IdComponent NUM_COMPONENTS = T::NUM_COMPONENTS;
     using ComponentType = typename T::ComponentType;
-    const ComponentType* recasted_data = (const ComponentType*)(data.get());
+    const ComponentType* recasted_data = (const ComponentType*)(data);
     NonConstT result;
 #pragma unroll
     for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; ++i)
@@ -241,13 +231,13 @@ class ArrayPortalFromThrust : public ArrayPortalFromThrustBase
 {
 public:
   using ValueType = T;
-  using IteratorType = thrust::system::cuda::pointer<T>;
+  using IteratorType = T*;
+  using difference_type = std::ptrdiff_t;
 
   VTKM_EXEC_CONT ArrayPortalFromThrust() {}
 
   VTKM_CONT
-  ArrayPortalFromThrust(thrust::system::cuda::pointer<T> begin,
-                        thrust::system::cuda::pointer<T> end)
+  ArrayPortalFromThrust(IteratorType begin, IteratorType end)
     : BeginIterator(begin)
     , EndIterator(end)
   {
@@ -274,15 +264,13 @@ public:
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
-    using SizeType = typename ::thrust::iterator_traits<IteratorType>::difference_type;
-    return *(this->BeginIterator + static_cast<SizeType>(index));
+    return *(this->BeginIterator + static_cast<difference_type>(index));
   }
 
   VTKM_EXEC_CONT
   void Set(vtkm::Id index, ValueType value) const
   {
-    using SizeType = typename ::thrust::iterator_traits<IteratorType>::difference_type;
-    *(this->BeginIterator + static_cast<SizeType>(index)) = value;
+    *(this->BeginIterator + static_cast<difference_type>(index)) = value;
   }
 
   VTKM_EXEC_CONT
@@ -301,13 +289,17 @@ class ConstArrayPortalFromThrust : public ArrayPortalFromThrustBase
 {
 public:
   using ValueType = T;
-  using IteratorType = thrust::system::cuda::pointer<const T>;
+  using IteratorType = const T*;
+  using difference_type = std::ptrdiff_t;
 
-  VTKM_EXEC_CONT ConstArrayPortalFromThrust() {}
+  VTKM_EXEC_CONT ConstArrayPortalFromThrust()
+    : BeginIterator(nullptr)
+    , EndIterator(nullptr)
+  {
+  }
 
   VTKM_CONT
-  ConstArrayPortalFromThrust(const thrust::system::cuda::pointer<const T> begin,
-                             const thrust::system::cuda::pointer<const T> end)
+  ConstArrayPortalFromThrust(IteratorType begin, IteratorType end)
     : BeginIterator(begin)
     , EndIterator(end)
   {

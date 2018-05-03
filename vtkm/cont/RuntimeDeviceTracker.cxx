@@ -29,7 +29,10 @@
 #include <vtkm/cont/tbb/DeviceAdapterTBB.h>
 
 #include <algorithm>
+#include <map>
+#include <mutex>
 #include <sstream>
+#include <thread>
 
 #define VTKM_MAX_DEVICE_ADAPTER_ID 8
 
@@ -155,8 +158,22 @@ void RuntimeDeviceTracker::ForceDeviceImpl(vtkm::cont::DeviceAdapterId deviceId,
 VTKM_CONT
 vtkm::cont::RuntimeDeviceTracker GetGlobalRuntimeDeviceTracker()
 {
-  static vtkm::cont::RuntimeDeviceTracker globalTracker;
-  return globalTracker;
+  static std::mutex mtx;
+  static std::map<std::thread::id, vtkm::cont::RuntimeDeviceTracker> globalTrackers;
+  std::thread::id this_id = std::this_thread::get_id();
+
+  std::unique_lock<std::mutex> lock(mtx);
+  auto iter = globalTrackers.find(this_id);
+  if (iter != globalTrackers.end())
+  {
+    return iter->second;
+  }
+  else
+  {
+    vtkm::cont::RuntimeDeviceTracker tracker;
+    globalTrackers[this_id] = tracker;
+    return tracker;
+  }
 }
 }
 } // namespace vtkm::cont

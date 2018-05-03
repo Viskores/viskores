@@ -20,6 +20,7 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
+
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/exec/CellEdge.h>
 #include <vtkm/filter/ExternalFaces.h>
@@ -39,6 +40,108 @@ namespace rendering
 {
 namespace
 {
+
+class CreateConnectivity : public vtkm::worklet::WorkletMapField
+{
+public:
+  VTKM_CONT
+  CreateConnectivity() {}
+
+  typedef void ControlSignature(FieldIn<>, WholeArrayOut<>);
+
+  typedef void ExecutionSignature(_1, _2);
+
+  template <typename ConnPortalType>
+  VTKM_EXEC void operator()(const vtkm::Id& i, ConnPortalType& connPortal) const
+  {
+    connPortal.Set(i * 2 + 0, i);
+    connPortal.Set(i * 2 + 1, i + 1);
+  }
+}; // conn
+
+struct ConnFunctor
+{
+
+  template <typename Device>
+  VTKM_CONT bool operator()(Device,
+                            vtkm::cont::ArrayHandleCounting<vtkm::Id>& iter,
+                            vtkm::cont::ArrayHandle<vtkm::Id>& conn)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::worklet::DispatcherMapField<CreateConnectivity, Device>(CreateConnectivity())
+      .Invoke(iter, conn);
+    return true;
+  }
+};
+
+class Convert1DCoordinates : public vtkm::worklet::WorkletMapField
+{
+private:
+  bool LogY;
+  bool LogX;
+
+public:
+  VTKM_CONT
+  Convert1DCoordinates(bool logY, bool logX)
+    : LogY(logY)
+    , LogX(logX)
+  {
+  }
+
+  typedef void ControlSignature(FieldIn<>,
+                                FieldIn<vtkm::TypeListTagScalarAll>,
+                                FieldOut<>,
+                                FieldOut<>);
+
+  typedef void ExecutionSignature(_1, _2, _3, _4);
+  template <typename ScalarType>
+  VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& inCoord,
+                            const ScalarType& scalar,
+                            vtkm::Vec<vtkm::Float32, 3>& outCoord,
+                            vtkm::Float32& fieldOut) const
+  {
+    //
+    // Rendering supports lines based on a cellSetStructured<1>
+    // where only the x coord matters. It creates a y based on
+    // the scalar values and connects all the points with lines.
+    // So, we need to convert it back to something that can
+    // actuall be rendered.
+    //
+    outCoord[0] = inCoord[0];
+    outCoord[1] = static_cast<vtkm::Float32>(scalar);
+    outCoord[2] = 0.f;
+    if (LogY)
+    {
+      outCoord[1] = vtkm::Log10(outCoord[1]);
+    }
+    if (LogX)
+    {
+      outCoord[0] = vtkm::Log10(outCoord[0]);
+    }
+    // all lines have the same color
+    fieldOut = 1.f;
+  }
+}; // convert coords
+
+struct ConvertFunctor
+{
+
+  template <typename Device, typename CoordType, typename ScalarType>
+  VTKM_CONT bool operator()(Device,
+                            CoordType coords,
+                            ScalarType scalars,
+                            vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>>& outCoords,
+                            vtkm::cont::ArrayHandle<vtkm::Float32>& outScalars,
+                            bool logY,
+                            bool logX)
+  {
+    VTKM_IS_DEVICE_ADAPTER_TAG(Device);
+    vtkm::worklet::DispatcherMapField<Convert1DCoordinates, Device>(
+      Convert1DCoordinates(logY, logX))
+      .Invoke(coords, scalars, outCoords, outScalars);
+    return true;
+  }
+};
 
 #if defined(VTKM_MSVC)
 #pragma warning(push)
@@ -74,12 +177,10 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
 
   VTKM_CONT
   template <typename CountArrayType, typename DeviceTag>
-  EdgesExtracter(const CountArrayType& counts, DeviceTag device)
-    : Scatter(counts, device)
+  static ScatterType MakeScatter(const CountArrayType& counts, DeviceTag device)
   {
+    return ScatterType(counts, device);
   }
-
-  VTKM_CONT ScatterType GetScatter() const { return this->Scatter; }
 
   template <typename CellShapeTag, typename PointIndexVecType, typename EdgeIndexVecType>
   VTKM_EXEC void operator()(CellShapeTag shape,
@@ -96,19 +197,16 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
     }
     else
     {
-      vtkm::Vec<vtkm::IdComponent, 2> localEdgeIndices = vtkm::exec::CellEdgeLocalIndices(
-        pointIndices.GetNumberOfComponents(), visitIndex, shape, *this);
-      p1 = pointIndices[localEdgeIndices[0]];
-      p2 = pointIndices[localEdgeIndices[1]];
+      p1 = pointIndices[vtkm::exec::CellEdgeLocalIndex(
+        pointIndices.GetNumberOfComponents(), 0, visitIndex, shape, *this)];
+      p2 = pointIndices[vtkm::exec::CellEdgeLocalIndex(
+        pointIndices.GetNumberOfComponents(), 1, visitIndex, shape, *this)];
     }
     // These indices need to be arranged in a definite order, as they will later be sorted to
     // detect duplicates
     edgeIndices[0] = p1 < p2 ? p1 : p2;
     edgeIndices[1] = p1 < p2 ? p2 : p1;
   }
-
-private:
-  ScatterType Scatter;
 }; // struct EdgesExtracter
 
 #if defined(VTKM_MSVC)
@@ -133,9 +231,8 @@ struct ExtractUniqueEdges
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
     vtkm::worklet::DispatcherMapTopology<EdgesCounter, DeviceTag>().Invoke(CellSet, counts);
-    EdgesExtracter extractWorklet(counts, DeviceTag());
     vtkm::worklet::DispatcherMapTopology<EdgesExtracter, DeviceTag> extractDispatcher(
-      extractWorklet);
+      EdgesExtracter::MakeScatter(counts, DeviceTag()));
     extractDispatcher.Invoke(CellSet, EdgeIndices);
     vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Sort<vtkm::Id2>(EdgeIndices);
     vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Unique<vtkm::Id2>(EdgeIndices);
@@ -155,12 +252,14 @@ struct MapperWireframer::InternalsType
     : Canvas(canvas)
     , ShowInternalZones(showInternalZones)
     , IsOverlay(isOverlay)
+    , CompositeBackground(true)
   {
   }
 
   vtkm::rendering::Canvas* Canvas;
   bool ShowInternalZones;
   bool IsOverlay;
+  bool CompositeBackground;
 }; // struct MapperWireframer::InternalsType
 
 MapperWireframer::MapperWireframer()
@@ -215,26 +314,79 @@ void MapperWireframer::EndScene()
 void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
                                    const vtkm::cont::CoordinateSystem& coords,
                                    const vtkm::cont::Field& inScalarField,
-                                   const vtkm::rendering::ColorTable& colorTable,
+                                   const vtkm::cont::ColorTable& colorTable,
                                    const vtkm::rendering::Camera& camera,
                                    const vtkm::Range& scalarRange)
 {
   vtkm::cont::DynamicCellSet cellSet = inCellSet;
-  vtkm::cont::Field field = inScalarField;
-  if (!(this->Internals->ShowInternalZones))
+
+  bool is1D = cellSet.IsSameType(vtkm::cont::CellSetStructured<1>());
+
+  vtkm::cont::CoordinateSystem actualCoords = coords;
+  vtkm::cont::Field actualField = inScalarField;
+
+  if (is1D)
+  {
+
+    bool isSupportedField = inScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    if (!isSupportedField)
+    {
+      throw vtkm::cont::ErrorBadValue(
+        "WireFramer: field must be associated with points for 1D cell set");
+    }
+    vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>> newCoords;
+    vtkm::cont::ArrayHandle<vtkm::Float32> newScalars;
+    //
+    // Convert the cell set into something we can draw
+    //
+    vtkm::cont::TryExecute(ConvertFunctor(),
+                           coords.GetData(),
+                           inScalarField.GetData(),
+                           newCoords,
+                           newScalars,
+                           this->LogarithmY,
+                           this->LogarithmX);
+
+    actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
+    actualField =
+      vtkm::cont::Field(inScalarField.GetName(), vtkm::cont::Field::ASSOC_POINTS, newScalars);
+
+    vtkm::Id numCells = cellSet.GetNumberOfCells();
+    vtkm::cont::ArrayHandle<vtkm::Id> conn;
+    vtkm::cont::ArrayHandleCounting<vtkm::Id> iter =
+      vtkm::cont::make_ArrayHandleCounting(vtkm::Id(0), vtkm::Id(1), numCells);
+    conn.Allocate(numCells * 2);
+    vtkm::cont::TryExecute(ConnFunctor(), iter, conn);
+
+    vtkm::cont::CellSetSingleType<> newCellSet("cells");
+    newCellSet.Fill(newCoords.GetNumberOfValues(), vtkm::CELL_SHAPE_LINE, 2, conn);
+    cellSet = vtkm::cont::DynamicCellSet(newCellSet);
+  }
+  bool isLines = false;
+  // Check for a cell set that is already lines
+  // Since there is no need to de external faces or
+  // render the depth of the mesh to hide internal zones
+  if (cellSet.IsSameType(vtkm::cont::CellSetSingleType<>()))
+  {
+    auto singleType = cellSet.Cast<vtkm::cont::CellSetSingleType<>>();
+    isLines = singleType.GetCellShape(0) == vtkm::CELL_SHAPE_LINE;
+  }
+
+  bool doExternalFaces = !(this->Internals->ShowInternalZones) && !isLines && !is1D;
+  if (doExternalFaces)
   {
     // If internal zones are to be hidden, the number of edges processed can be reduced by
     // running the external faces filter on the input cell set.
     vtkm::cont::DataSet dataSet;
-    dataSet.AddCoordinateSystem(coords);
+    dataSet.AddCoordinateSystem(actualCoords);
     dataSet.AddCellSet(inCellSet);
+    dataSet.AddField(inScalarField);
     vtkm::filter::ExternalFaces externalFaces;
     externalFaces.SetCompactPoints(false);
     externalFaces.SetPassPolyData(true);
-    vtkm::filter::Result result = externalFaces.Execute(dataSet);
-    externalFaces.MapFieldOntoOutput(result, inScalarField);
-    cellSet = result.GetDataSet().GetCellSet();
-    field = result.GetDataSet().GetField(0);
+    vtkm::cont::DataSet output = externalFaces.Execute(dataSet);
+    cellSet = output.GetCellSet();
+    actualField = output.GetField(0);
   }
 
   // Extract unique edges from the cell set.
@@ -246,7 +398,9 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     this->Internals->Canvas, this->Internals->ShowInternalZones, this->Internals->IsOverlay);
   // Render the cell set using a raytracer, on a separate canvas, and use the generated depth
   // buffer, which represents the solid mesh, to avoid drawing on the internal zones
-  if (!(this->Internals->ShowInternalZones) && !(this->Internals->IsOverlay))
+  bool renderDepth =
+    !(this->Internals->ShowInternalZones) && !(this->Internals->IsOverlay) && !isLines && !is1D;
+  if (renderDepth)
   {
     CanvasRayTracer canvas(this->Internals->Canvas->GetWidth(),
                            this->Internals->Canvas->GetHeight());
@@ -257,18 +411,28 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
     MapperRayTracer raytracer;
     raytracer.SetCanvas(&canvas);
     raytracer.SetActiveColorTable(colorTable);
-    raytracer.RenderCells(cellSet, coords, field, colorTable, camera, scalarRange);
+    raytracer.RenderCells(cellSet, actualCoords, actualField, colorTable, camera, scalarRange);
     renderer.SetSolidDepthBuffer(canvas.GetDepthBuffer());
   }
-  else if (this->Internals->IsOverlay)
+  else
   {
     renderer.SetSolidDepthBuffer(this->Internals->Canvas->GetDepthBuffer());
   }
 
   renderer.SetCamera(camera);
   renderer.SetColorMap(this->ColorMap);
-  renderer.SetData(coords, edgeIndices, field, scalarRange);
+  renderer.SetData(actualCoords, edgeIndices, actualField, scalarRange);
   renderer.Render();
+
+  if (this->Internals->CompositeBackground)
+  {
+    this->Internals->Canvas->BlendBackground();
+  }
+}
+
+void MapperWireframer::SetCompositeBackground(bool on)
+{
+  this->Internals->CompositeBackground = on;
 }
 
 vtkm::rendering::Mapper* MapperWireframer::NewCopy() const

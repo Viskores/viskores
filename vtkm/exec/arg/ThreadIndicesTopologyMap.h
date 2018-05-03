@@ -36,7 +36,7 @@ namespace detail
 {
 
 /// Most cell shape tags have a default constructor, but the generic cell shape
-/// tag does not to prevent accidently losing the Id, which, unlike the other
+/// tag does not to prevent accidentally losing the Id, which, unlike the other
 /// cell shapes, can vary.
 ///
 template <typename CellShapeTag>
@@ -158,42 +158,42 @@ private:
 namespace detail
 {
 
-/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// Given a \c Vec of (semi) arbitrary size, inflate it to a vtkm::Id3 by padding with zeros.
 ///
 static inline VTKM_EXEC vtkm::Id3 InflateTo3D(vtkm::Id3 index)
 {
   return index;
 }
 
-/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// Given a \c Vec of (semi) arbitrary size, inflate it to a vtkm::Id3 by padding with zeros.
 /// \overload
 static inline VTKM_EXEC vtkm::Id3 InflateTo3D(vtkm::Id2 index)
 {
   return vtkm::Id3(index[0], index[1], 0);
 }
 
-/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// Given a \c Vec of (semi) arbitrary size, inflate it to a vtkm::Id3 by padding with zeros.
 /// \overload
 static inline VTKM_EXEC vtkm::Id3 InflateTo3D(vtkm::Vec<vtkm::Id, 1> index)
 {
   return vtkm::Id3(index[0], 0, 0);
 }
 
-/// Given a \c Vec of (semi) aribtrary size, inflate it to a vtkm::Id3 by padding with zeros.
+/// Given a \c Vec of (semi) arbitrary size, inflate it to a vtkm::Id3 by padding with zeros.
 /// \overload
 static inline VTKM_EXEC vtkm::Id3 InflateTo3D(vtkm::Id index)
 {
   return vtkm::Id3(index, 0, 0);
 }
 
-/// Given a vtkm::Id3, reduce down to an identifer of choice.
+/// Given a vtkm::Id3, reduce down to an identifier of choice.
 ///
 static inline VTKM_EXEC vtkm::Id3 Deflate(const vtkm::Id3& index, vtkm::Id3)
 {
   return index;
 }
 
-/// Given a vtkm::Id3, reduce down to an identifer of choice.
+/// Given a vtkm::Id3, reduce down to an identifier of choice.
 /// \overload
 static inline VTKM_EXEC vtkm::Id2 Deflate(const vtkm::Id3& index, vtkm::Id2)
 {

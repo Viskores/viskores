@@ -22,8 +22,6 @@
 
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/rendering/ColorTable.h>
-
 #include <vtkm/rendering/raytracing/BoundingVolumeHierarchy.h>
 #include <vtkm/rendering/raytracing/Camera.h>
 
@@ -34,13 +32,13 @@ namespace rendering
 namespace raytracing
 {
 
-class RayTracer
+class VTKM_RENDERING_EXPORT RayTracer
 {
 protected:
   LinearBVH Bvh;
   Camera camera;
-  vtkm::cont::DynamicArrayHandleCoordinateSystem CoordsHandle;
-  const vtkm::cont::Field* ScalarField;
+  vtkm::cont::ArrayHandleVirtualCoordinates CoordsHandle;
+  vtkm::cont::Field ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Indices;
   vtkm::cont::ArrayHandle<vtkm::Float32> Scalars;
   vtkm::Id NumberOfTriangles;
@@ -61,9 +59,9 @@ public:
   Camera& GetCamera();
 
   VTKM_CONT
-  void SetData(const vtkm::cont::DynamicArrayHandleCoordinateSystem& coordsHandle,
+  void SetData(const vtkm::cont::ArrayHandleVirtualCoordinates& coordsHandle,
                const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& indices,
-               const vtkm::cont::Field& scalarField,
+               vtkm::cont::Field& scalarField,
                const vtkm::Id& numberOfTriangles,
                const vtkm::Range& scalarRange,
                const vtkm::Bounds& dataBounds);

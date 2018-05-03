@@ -24,8 +24,6 @@
 
 #include <vtkm/cont/DataSet.h>
 
-#include <vtkm/rendering/ColorTable.h>
-
 #include <vtkm/rendering/raytracing/Ray.h>
 
 namespace vtkm
@@ -79,7 +77,7 @@ protected:
   bool IsSceneDirty;
   bool IsUniformDataSet;
   vtkm::Bounds SpatialExtent;
-  vtkm::cont::DynamicArrayHandleCoordinateSystem Coordinates;
+  vtkm::cont::ArrayHandleVirtualCoordinates Coordinates;
   vtkm::cont::CellSetStructured<3> Cellset;
   const vtkm::cont::Field* ScalarField;
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorMap;

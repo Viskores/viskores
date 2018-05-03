@@ -58,7 +58,7 @@ private:
   void TestNumeric(T, vtkm::TypeTraitsIntegerTag) const
   {
     std::cout << "  integer" << std::endl;
-    typedef typename vtkm::VecTraits<T>::ComponentType VT;
+    using VT = typename vtkm::VecTraits<T>::ComponentType;
     VT value = VT(2.001);
     VTKM_TEST_ASSERT(value == 2, "Integer does not round to integer.");
   }
@@ -66,7 +66,7 @@ private:
   void TestNumeric(T, vtkm::TypeTraitsRealTag) const
   {
     std::cout << "  real" << std::endl;
-    typedef typename vtkm::VecTraits<T>::ComponentType VT;
+    using VT = typename vtkm::VecTraits<T>::ComponentType;
     VT value = VT(2.001);
     VTKM_TEST_ASSERT(test_equal(float(value), float(2.001)),
                      "Real does not hold floaing point number.");

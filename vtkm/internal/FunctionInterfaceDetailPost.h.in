@@ -42,7 +42,7 @@ $# Ignore the following comment. It is meant for the generated file.
 #include <vtkm/internal/FunctionInterface.h>
 
 $# This needs to match the max_parameters in FunctionInterfaceDetailPre.h.in
-$py(max_parameters=10)\
+$py(max_parameters=20)\
 #if VTKM_MAX_FUNCTION_PARAMETERS != $(max_parameters)
 #error Mismatch of maximum parameters between FunctionInterfaceDatailPre.h.in and FunctionInterfaceDetailPost.h.in
 #endif
@@ -138,11 +138,14 @@ $for(param_index in xrange(1,num_params+1))\
 $endfor\
   )
 {
-  FunctionInterface<$signature(num_params)> fi;
+  detail::ParameterContainer<$signature(num_params)> container =
+    {
 $for(param_index in xrange(1,num_params+1))\
-  fi.template SetParameter<$(param_index)>(p$(param_index));
+    p$(param_index)$comma_if(param_index<num_params)
 $endfor\
-  return fi;
+    };
+
+  return FunctionInterface<$signature(num_params)>{container};
 }
 
 $endfor\

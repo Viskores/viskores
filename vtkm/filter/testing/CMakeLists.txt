@@ -24,22 +24,28 @@ set(unit_tests
   UnitTestClipWithFieldFilter.cxx
   UnitTestClipWithImplicitFunctionFilter.cxx
   UnitTestContourTreeUniformFilter.cxx
+  UnitTestCrossProductFilter.cxx
+  UnitTestDotProductFilter.cxx
   UnitTestEntropyFilter.cxx
   UnitTestExternalFacesFilter.cxx
   UnitTestExtractGeometryFilter.cxx
   UnitTestExtractPointsFilter.cxx
   UnitTestExtractStructuredFilter.cxx
   UnitTestFieldMetadata.cxx
+  UnitTestFieldSelection.cxx
+  UnitTestFieldToColors.cxx
   UnitTestGradient.cxx
   UnitTestHistogramFilter.cxx
   UnitTestMarchingCubesFilter.cxx
   UnitTestMaskFilter.cxx
   UnitTestMaskPointsFilter.cxx
   UnitTestMultiBlockFilters.cxx
+  UnitTestMultiBlockHistogramFilter.cxx
   UnitTestNDEntropyFilter.cxx
   UnitTestNDHistogramFilter.cxx
   UnitTestPointAverageFilter.cxx
   UnitTestPointElevationFilter.cxx
+  UnitTestProbe.cxx
   UnitTestStreamlineFilter.cxx
   UnitTestSurfaceNormalsFilter.cxx
   UnitTestTetrahedralizeFilter.cxx

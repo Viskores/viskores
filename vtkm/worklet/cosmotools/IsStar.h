@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_is_star_h
 #define vtkm_worklet_cosmotools_is_star_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -79,9 +78,9 @@ public:
   typedef void ControlSignature(FieldIn<IdType> index,
                                 WholeArrayInOut<IdType> haloIdCurrent,
                                 WholeArrayInOut<IdType> haloIdLast,
-                                WholeArrayInOut<bool> rootedStar);
+                                WholeArrayInOut<> rootedStar);
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

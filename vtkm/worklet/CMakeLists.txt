@@ -25,11 +25,13 @@ set(headers
   Clip.h
   ContourTreeUniform.h
   CosmoTools.h
+  CrossProduct.h
   DispatcherMapField.h
   DispatcherMapTopology.h
   DispatcherPointNeighborhood.h
   DispatcherReduceByKey.h
   DispatcherStreamingMapField.h
+  DotProduct.h
   ExternalFaces.h
   ExtractGeometry.h
   ExtractPoints.h
@@ -48,10 +50,13 @@ set(headers
   NDimsEntropy.h
   NDimsHistogram.h
   NDimsHistMarginalization.h
+  Normalize.h
   ParticleAdvection.h
   PointAverage.h
   PointElevation.h
+  Probe.h
   RemoveUnusedPoints.h
+  ScalarsToColors.h
   ScatterCounting.h
   ScatterIdentity.h
   ScatterPermutation.h
@@ -71,6 +76,12 @@ set(headers
   WorkletReduceByKey.h
   )
 
+
+set(header_impls
+  ScalarsToColors.hxx
+  )
+
+
 #-----------------------------------------------------------------------------
 add_subdirectory(internal)
 add_subdirectory(contour)
@@ -85,6 +96,7 @@ add_subdirectory(wavelets)
 add_subdirectory(particleadvection)
 
 vtkm_declare_headers(${headers})
+vtkm_declare_headers(${header_impls} TESTABLE OFF)
 
 
 #-----------------------------------------------------------------------------

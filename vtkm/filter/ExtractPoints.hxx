@@ -45,15 +45,6 @@ namespace filter
 {
 
 //-----------------------------------------------------------------------------
-template <typename ImplicitFunctionType, typename DerivedPolicy>
-inline void ExtractPoints::SetImplicitFunction(const std::shared_ptr<ImplicitFunctionType>& func,
-                                               const vtkm::filter::PolicyBase<DerivedPolicy>&)
-{
-  func->ResetDevices(DerivedPolicy::DeviceAdapterList);
-  this->Function = func;
-}
-
-//-----------------------------------------------------------------------------
 inline VTKM_CONT ExtractPoints::ExtractPoints()
   : vtkm::filter::FilterDataSet<ExtractPoints>()
   , ExtractInside(true)
@@ -63,7 +54,7 @@ inline VTKM_CONT ExtractPoints::ExtractPoints()
 
 //-----------------------------------------------------------------------------
 template <typename DerivedPolicy, typename DeviceAdapter>
-inline vtkm::filter::Result ExtractPoints::DoExecute(
+inline vtkm::cont::DataSet ExtractPoints::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
   const DeviceAdapter& device)
@@ -78,8 +69,8 @@ inline vtkm::filter::Result ExtractPoints::DoExecute(
   vtkm::worklet::ExtractPoints worklet;
 
   outCellSet = worklet.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                           vtkm::filter::ApplyPolicy(coords, policy),
-                           *this->Function,
+                           coords.GetData(),
+                           this->Function,
                            this->ExtractInside,
                            device);
 
@@ -96,14 +87,14 @@ inline vtkm::filter::Result ExtractPoints::DoExecute(
   }
   else
   {
-    return vtkm::filter::Result(output);
+    return output;
   }
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool ExtractPoints::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
@@ -118,7 +109,7 @@ inline VTKM_CONT bool ExtractPoints::DoMapField(
     }
     else
     {
-      result.GetDataSet().AddField(fieldMeta.AsField(input));
+      result.AddField(fieldMeta.AsField(input));
       return true;
     }
   }

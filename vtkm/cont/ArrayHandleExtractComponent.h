@@ -40,7 +40,7 @@ public:
   using Traits = vtkm::VecTraits<VectorType>;
   using ValueType = typename Traits::ComponentType;
 
-  static const vtkm::IdComponent COMPONENT = Component;
+  static constexpr vtkm::IdComponent COMPONENT = Component;
 
   VTKM_EXEC_CONT
   ArrayPortalExtractComponent()
@@ -90,7 +90,7 @@ private:
 template <typename ArrayHandleType, vtkm::IdComponent Component>
 class StorageTagExtractComponent
 {
-  static const vtkm::IdComponent COMPONENT = Component;
+  static constexpr vtkm::IdComponent COMPONENT = Component;
 };
 
 namespace internal
@@ -270,7 +270,7 @@ class ArrayHandleExtractComponent
       StorageTagExtractComponent<ArrayHandleType, Component>>
 {
 public:
-  static const vtkm::IdComponent COMPONENT = Component;
+  static constexpr vtkm::IdComponent COMPONENT = Component;
 
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleExtractComponent,

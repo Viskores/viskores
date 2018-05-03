@@ -80,7 +80,7 @@ public:
 
 namespace mapfield
 {
-static const vtkm::Id ARRAY_SIZE = 10;
+static constexpr vtkm::Id ARRAY_SIZE = 10;
 
 template <typename WorkletType>
 struct DoStaticTestWorklet
@@ -175,7 +175,7 @@ struct DoTestWorklet
 
 void TestWorkletMapField()
 {
-  typedef vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> DeviceAdapterTraits;
+  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
   std::cout << "Testing Map Field on device adapter: " << DeviceAdapterTraits::GetName()
             << std::endl;
 

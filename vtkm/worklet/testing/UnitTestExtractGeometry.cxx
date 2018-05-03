@@ -34,8 +34,8 @@ public:
   {
     std::cout << "Testing extract cell explicit by id:" << std::endl;
 
-    typedef vtkm::cont::CellSetExplicit<> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetExplicit<>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -67,7 +67,7 @@ public:
   {
     std::cout << "Testing extract cells with implicit function (box) on explicit:" << std::endl;
 
-    typedef vtkm::cont::CellSetExplicit<> CellSetType;
+    using CellSetType = vtkm::cont::CellSetExplicit<>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
@@ -77,7 +77,6 @@ public:
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(0.5f, 0.0f, 0.0f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(2.0f, 2.0f, 2.0f);
-    vtkm::cont::Box box(minPoint, maxPoint);
 
     bool extractInside = true;
     bool extractBoundaryCells = false;
@@ -88,7 +87,7 @@ public:
     vtkm::cont::DynamicCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coordinates"),
-                          box,
+                          vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
                           extractInside,
                           extractBoundaryCells,
                           extractOnlyBoundaryCells,
@@ -110,8 +109,8 @@ public:
   {
     std::cout << "Testing extract cells structured by id:" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<2> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<2>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
 
     // Input data set created
@@ -144,8 +143,8 @@ public:
   {
     std::cout << "Testing extract cells structured by id:" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
-    typedef vtkm::cont::CellSetPermutation<CellSetType> OutCellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
+    using OutCellSetType = vtkm::cont::CellSetPermutation<CellSetType>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -177,7 +176,7 @@ public:
   {
     std::cout << "Testing extract cells with implicit function (box):" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -187,7 +186,6 @@ public:
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> minPoint(1.0f, 1.0f, 1.0f);
     vtkm::Vec<vtkm::FloatDefault, 3> maxPoint(3.0f, 3.0f, 3.0f);
-    vtkm::cont::Box box(minPoint, maxPoint);
 
     bool extractInside = true;
     bool extractBoundaryCells = false;
@@ -198,7 +196,7 @@ public:
     vtkm::cont::DynamicCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
-                          box,
+                          vtkm::cont::make_ImplicitFunctionHandle<vtkm::Box>(minPoint, maxPoint),
                           extractInside,
                           extractBoundaryCells,
                           extractOnlyBoundaryCells,
@@ -219,7 +217,7 @@ public:
   {
     std::cout << "Testing extract cells with implicit function (sphere):" << std::endl;
 
-    typedef vtkm::cont::CellSetStructured<3> CellSetType;
+    using CellSetType = vtkm::cont::CellSetStructured<3>;
 
     // Input data set created
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet1();
@@ -229,7 +227,6 @@ public:
     // Implicit function
     vtkm::Vec<vtkm::FloatDefault, 3> center(2.f, 2.f, 2.f);
     vtkm::FloatDefault radius(1.8f);
-    vtkm::cont::Sphere sphere(center, radius);
 
     bool extractInside = true;
     bool extractBoundaryCells = false;
@@ -240,7 +237,7 @@ public:
     vtkm::cont::DynamicCellSet outCellSet =
       extractGeometry.Run(cellSet,
                           dataset.GetCoordinateSystem("coords"),
-                          sphere,
+                          vtkm::cont::make_ImplicitFunctionHandle<vtkm::Sphere>(center, radius),
                           extractInside,
                           extractBoundaryCells,
                           extractOnlyBoundaryCells,

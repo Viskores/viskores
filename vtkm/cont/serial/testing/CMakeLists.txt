@@ -21,13 +21,15 @@
 set(unit_tests
   UnitTestSerialArrayHandle.cxx
   UnitTestSerialArrayHandleFancy.cxx
+  UnitTestSerialArrayHandleVirtualCoordinates.cxx
   UnitTestSerialCellLocatorTwoLevelUniformGrid.cxx
   UnitTestSerialComputeRange.cxx
+  UnitTestSerialColorTable.cxx
   UnitTestSerialDataSetExplicit.cxx
   UnitTestSerialDataSetSingleType.cxx
   UnitTestSerialDeviceAdapter.cxx
   UnitTestSerialImplicitFunction.cxx
   UnitTestSerialPointLocatorUniformGrid.cxx
-  UnitTestSerialVirtualObjectCache.cxx
+  UnitTestSerialVirtualObjectHandle.cxx
   )
-vtkm_unit_tests(TBB SOURCES ${unit_tests})
+vtkm_unit_tests(SOURCES ${unit_tests} BACKEND SERIAL)

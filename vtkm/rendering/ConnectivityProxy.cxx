@@ -20,11 +20,12 @@
 #include <cstdlib>
 #include <typeinfo>
 #include <vtkm/rendering/CanvasRayTracer.h>
-#include <vtkm/rendering/ColorTable.h>
 #include <vtkm/rendering/ConnectivityProxy.h>
 #include <vtkm/rendering/Mapper.h>
 #include <vtkm/rendering/raytracing/ConnectivityTracerFactory.h>
 #include <vtkm/rendering/raytracing/Logger.h>
+#include <vtkm/rendering/raytracing/RayOperations.h>
+
 
 namespace vtkm
 {
@@ -66,7 +67,7 @@ protected:
     {
       VTKM_IS_DEVICE_ADAPTER_TAG(Device);
 
-      Internals->SpatialBounds = Internals->Coords.GetBounds(Device());
+      Internals->SpatialBounds = Internals->Coords.GetBounds();
       return true;
     }
   };
@@ -200,7 +201,7 @@ public:
     }
     else
     {
-      throw vtkm::cont::ErrorBadValue("ENGERY MODE Not implemented for this use case\n");
+      throw vtkm::cont::ErrorBadValue("ENERGY MODE Not implemented for this use case\n");
     }
 
     Tracer->Trace(rays);

@@ -227,23 +227,28 @@ vtkm::cont::DataSet MakeTestDataSet()
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   // Set point scalars
-  dataSet.AddField(
-    vtkm::cont::Field("p_poisson", vtkm::cont::Field::ASSOC_POINTS, poisson, nVerts));
-  dataSet.AddField(vtkm::cont::Field("p_normal", vtkm::cont::Field::ASSOC_POINTS, normal, nVerts));
-  dataSet.AddField(
-    vtkm::cont::Field("p_chiSquare", vtkm::cont::Field::ASSOC_POINTS, chiSquare, nVerts));
-  dataSet.AddField(
-    vtkm::cont::Field("p_uniform", vtkm::cont::Field::ASSOC_POINTS, uniform, nVerts));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "p_poisson", vtkm::cont::Field::ASSOC_POINTS, poisson, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "p_normal", vtkm::cont::Field::ASSOC_POINTS, normal, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "p_chiSquare", vtkm::cont::Field::ASSOC_POINTS, chiSquare, nVerts, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "p_uniform", vtkm::cont::Field::ASSOC_POINTS, uniform, nVerts, vtkm::CopyFlag::On));
 
   // Set cell scalars
-  dataSet.AddField(
-    vtkm::cont::Field("c_poisson", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
-  dataSet.AddField(
-    vtkm::cont::Field("c_normal", vtkm::cont::Field::ASSOC_CELL_SET, "cells", normal, nCells));
-  dataSet.AddField(vtkm::cont::Field(
-    "c_chiSquare", vtkm::cont::Field::ASSOC_CELL_SET, "cells", chiSquare, nCells));
-  dataSet.AddField(
-    vtkm::cont::Field("c_uniform", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_poisson", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_normal", vtkm::cont::Field::ASSOC_CELL_SET, "cells", normal, nCells, vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field("c_chiSquare",
+                                          vtkm::cont::Field::ASSOC_CELL_SET,
+                                          "cells",
+                                          chiSquare,
+                                          nCells,
+                                          vtkm::CopyFlag::On));
+  dataSet.AddField(vtkm::cont::make_Field(
+    "c_uniform", vtkm::cont::Field::ASSOC_CELL_SET, "cells", poisson, nCells, vtkm::CopyFlag::On));
 
   vtkm::cont::CellSetStructured<dimension> cellSet("cells");
 
@@ -257,17 +262,17 @@ vtkm::cont::DataSet MakeTestDataSet()
 //
 // Verify the histogram result and tally
 //
-void VerifyHistogram(const vtkm::filter::Result& result,
+void VerifyHistogram(const vtkm::cont::DataSet& result,
                      vtkm::Id numberOfBins,
                      const vtkm::Range& range,
                      vtkm::Float64 delta,
                      bool output = true)
 {
-  VTKM_TEST_ASSERT(result.IsValid(), "result should be valid");
-  VTKM_TEST_ASSERT(result.GetField().GetName() == "histogram", "Output field has wrong name.");
+  VTKM_TEST_ASSERT(result.HasField("histogram"), "Output field missing");
 
   vtkm::cont::ArrayHandle<vtkm::Id> bins;
-  result.FieldAs(bins);
+  result.GetField("histogram").GetData().CopyTo(bins);
+
   vtkm::cont::ArrayHandle<vtkm::Id>::PortalConstControl binPortal = bins.GetPortalConstControl();
 
   vtkm::Id sum = 0;
@@ -299,32 +304,35 @@ void TestHistogram()
   // Data attached is the poisson distribution
   vtkm::cont::DataSet ds = MakeTestDataSet();
 
-  vtkm::filter::Result result;
   vtkm::filter::Histogram histogram;
 
   // Run data
   histogram.SetNumberOfBins(10);
-  result = histogram.Execute(ds, "p_poisson");
+  histogram.SetActiveField("p_poisson");
+  auto result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
-  range = histogram.GetDataRange();
+  range = histogram.GetComputedRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
   histogram.SetNumberOfBins(100);
-  result = histogram.Execute(ds, "p_normal");
+  histogram.SetActiveField("p_normal");
+  result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
-  range = histogram.GetDataRange();
+  range = histogram.GetComputedRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);
 
   histogram.SetNumberOfBins(1);
-  result = histogram.Execute(ds, "p_chiSquare");
+  histogram.SetActiveField("p_chiSquare");
+  result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
-  range = histogram.GetDataRange();
+  range = histogram.GetComputedRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta);
 
   histogram.SetNumberOfBins(1000000);
-  result = histogram.Execute(ds, "p_uniform");
+  histogram.SetActiveField("p_uniform");
+  result = histogram.Execute(ds);
   delta = histogram.GetBinDelta();
-  range = histogram.GetDataRange();
+  range = histogram.GetComputedRange();
   VerifyHistogram(result, histogram.GetNumberOfBins(), range, delta, false);
 
 } // TestFieldHistogram

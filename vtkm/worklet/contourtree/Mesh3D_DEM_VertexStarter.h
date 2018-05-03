@@ -84,7 +84,6 @@
 #define vtkm_worklet_contourtree_mesh3d_dem_vertex_starter_h
 
 #include <iostream>
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Mesh3D_DEM_Triangulation_Macros.h>
 #include <vtkm/worklet/contourtree/VertexValueComparator.h>
@@ -110,7 +109,7 @@ public:
                                 FieldOut<IdType> chain,       // (output) modify the chains
                                 FieldOut<IdType> linkMask);   // (output) modify the mask
   typedef void ExecutionSignature(_1, _2, _3, _4);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nRows;   // (input) number of rows in 3D
   vtkm::Id nCols;   // (input) number of cols in 3D

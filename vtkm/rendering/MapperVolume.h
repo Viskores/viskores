@@ -36,20 +36,20 @@ public:
 
   ~MapperVolume();
 
-  void SetCanvas(vtkm::rendering::Canvas* canvas) VTKM_OVERRIDE;
-  virtual vtkm::rendering::Canvas* GetCanvas() const VTKM_OVERRIDE;
+  void SetCanvas(vtkm::rendering::Canvas* canvas) override;
+  virtual vtkm::rendering::Canvas* GetCanvas() const override;
 
   virtual void RenderCells(const vtkm::cont::DynamicCellSet& cellset,
                            const vtkm::cont::CoordinateSystem& coords,
                            const vtkm::cont::Field& scalarField,
-                           const vtkm::rendering::ColorTable&, //colorTable
+                           const vtkm::cont::ColorTable&, //colorTable
                            const vtkm::rendering::Camera& camera,
-                           const vtkm::Range& scalarRange) VTKM_OVERRIDE;
+                           const vtkm::Range& scalarRange) override;
 
-  virtual void StartScene() VTKM_OVERRIDE;
-  virtual void EndScene() VTKM_OVERRIDE;
+  virtual void StartScene() override;
+  virtual void EndScene() override;
 
-  vtkm::rendering::Mapper* NewCopy() const VTKM_OVERRIDE;
+  vtkm::rendering::Mapper* NewCopy() const override;
   void SetSampleDistance(const vtkm::Float32 distance);
   void SetCompositeBackground(const bool compositeBackground);
 

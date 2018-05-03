@@ -58,7 +58,7 @@ VTKM_EXEC_CONT vtkm::Vec<T, 3> Transform3DPoint(const vtkm::Matrix<T, 4, 4>& mat
 /// transformed by the given matrix in homogeneous coordinates.
 ///
 /// Unlike Transform3DPoint, this method honors the fourth component of the
-/// transformed homogeneous coordiante. This makes it applicable for perspective
+/// transformed homogeneous coordinate. This makes it applicable for perspective
 /// transformations, but requires some more computations.
 ///
 template <typename T>

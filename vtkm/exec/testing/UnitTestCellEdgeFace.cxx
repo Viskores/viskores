@@ -71,7 +71,8 @@ struct TestCellFacesFunctor
     std::set<EdgeType> edgeSet;
     for (vtkm::IdComponent edgeIndex = 0; edgeIndex < numEdges; edgeIndex++)
     {
-      EdgeType edge = vtkm::exec::CellEdgeLocalIndices(numPoints, edgeIndex, shape, workletProxy);
+      EdgeType edge(vtkm::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, workletProxy),
+                    vtkm::exec::CellEdgeLocalIndex(numPoints, 1, edgeIndex, shape, workletProxy));
       VTKM_TEST_ASSERT(edge[0] >= 0, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[0] < numPoints, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[1] >= 0, "Bad index in edge.");
@@ -94,23 +95,29 @@ struct TestCellFacesFunctor
     std::set<EdgeType> edgesFoundInFaces;
     for (vtkm::IdComponent faceIndex = 0; faceIndex < numFaces; faceIndex++)
     {
-      vtkm::VecCConst<vtkm::IdComponent> facePoints =
-        vtkm::exec::CellFaceLocalIndices(faceIndex, shape, workletProxy);
-      vtkm::IdComponent numPointsInFace = facePoints.GetNumberOfComponents();
+      const vtkm::IdComponent numPointsInFace =
+        vtkm::exec::CellFaceNumberOfPoints(faceIndex, shape, workletProxy);
+
       VTKM_TEST_ASSERT(numPointsInFace >= 3, "Face has fewer points than a triangle.");
 
       for (vtkm::IdComponent pointIndex = 0; pointIndex < numPointsInFace; pointIndex++)
       {
-        VTKM_TEST_ASSERT(facePoints[pointIndex] >= 0, "Invalid point index for face.");
-        VTKM_TEST_ASSERT(facePoints[pointIndex] <= numPoints, "Invalid point index for face.");
+        vtkm::IdComponent localFaceIndex =
+          vtkm::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, workletProxy);
+        VTKM_TEST_ASSERT(localFaceIndex >= 0, "Invalid point index for face.");
+        VTKM_TEST_ASSERT(localFaceIndex < numPoints, "Invalid point index for face.");
         EdgeType edge;
         if (pointIndex < numPointsInFace - 1)
         {
-          edge = EdgeType(facePoints[pointIndex], facePoints[pointIndex + 1]);
+          edge = EdgeType(
+            vtkm::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, workletProxy),
+            vtkm::exec::CellFaceLocalIndex(pointIndex + 1, faceIndex, shape, workletProxy));
         }
         else
         {
-          edge = EdgeType(facePoints[0], facePoints[pointIndex]);
+          edge =
+            EdgeType(vtkm::exec::CellFaceLocalIndex(0, faceIndex, shape, workletProxy),
+                     vtkm::exec::CellFaceLocalIndex(pointIndex, faceIndex, shape, workletProxy));
         }
         MakeEdgeCanonical(edge);
         VTKM_TEST_ASSERT(edgeSet.find(edge) != edgeSet.end(), "Edge in face not in cell's edges");
@@ -153,7 +160,8 @@ struct TestCellFacesFunctor
     std::set<EdgeType> edgeSet;
     for (vtkm::IdComponent edgeIndex = 0; edgeIndex < numEdges; edgeIndex++)
     {
-      EdgeType edge = vtkm::exec::CellEdgeLocalIndices(numPoints, edgeIndex, shape, workletProxy);
+      EdgeType edge(vtkm::exec::CellEdgeLocalIndex(numPoints, 0, edgeIndex, shape, workletProxy),
+                    vtkm::exec::CellEdgeLocalIndex(numPoints, 1, edgeIndex, shape, workletProxy));
       VTKM_TEST_ASSERT(edge[0] >= 0, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[0] < numPoints, "Bad index in edge.");
       VTKM_TEST_ASSERT(edge[1] >= 0, "Bad index in edge.");

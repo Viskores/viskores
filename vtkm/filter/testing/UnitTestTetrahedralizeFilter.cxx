@@ -35,16 +35,11 @@ public:
   {
     std::cout << "Testing tetrahedralize structured" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DUniformDataSet0();
-    vtkm::filter::Result result;
 
     vtkm::filter::Tetrahedralize tetrahedralize;
+    tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
-    result = tetrahedralize.Execute(dataset);
-
-    tetrahedralize.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    tetrahedralize.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 20),
                      "Wrong result for Tetrahedralize");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 18),
@@ -64,16 +59,11 @@ public:
   {
     std::cout << "Testing tetrahedralize explicit" << std::endl;
     vtkm::cont::DataSet dataset = MakeTestDataSet().Make3DExplicitDataSet5();
-    vtkm::filter::Result result;
 
     vtkm::filter::Tetrahedralize tetrahedralize;
+    tetrahedralize.SetFieldsToPass({ "pointvar", "cellvar" });
 
-    result = tetrahedralize.Execute(dataset);
-
-    tetrahedralize.MapFieldOntoOutput(result, dataset.GetField("pointvar"));
-    tetrahedralize.MapFieldOntoOutput(result, dataset.GetField("cellvar"));
-
-    vtkm::cont::DataSet output = result.GetDataSet();
+    vtkm::cont::DataSet output = tetrahedralize.Execute(dataset);
     VTKM_TEST_ASSERT(test_equal(output.GetCellSet().GetNumberOfCells(), 11),
                      "Wrong result for Tetrahedralize");
     VTKM_TEST_ASSERT(test_equal(output.GetField("pointvar").GetData().GetNumberOfValues(), 11),

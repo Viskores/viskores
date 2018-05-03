@@ -44,7 +44,7 @@ class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 public:
   typedef void ControlSignature(FieldIn<IdType> idx, ExecObject ic);
   typedef void ExecutionSignature(_1, _2);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   template <typename IntegralCurveType>
   VTKM_EXEC void operator()(const vtkm::Id& idx, IntegralCurveType& ic) const
@@ -86,13 +86,13 @@ template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag
 class ParticleAdvectionWorklet
 {
 public:
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> DeviceAlgorithm;
-  typedef vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType,
-                                                                  FieldType,
-                                                                  DeviceAdapterTag>
-    ParticleAdvectWorkletType;
+  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
+  using ParticleAdvectWorkletType =
+    vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType,
+                                                            FieldType,
+                                                            DeviceAdapterTag>;
 
-  ParticleAdvectionWorklet() {}
+  VTKM_EXEC_CONT ParticleAdvectionWorklet() {}
 
   template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
@@ -139,16 +139,16 @@ template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag
 class StreamlineWorklet
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> FieldHandle;
-  typedef typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag> DeviceAlgorithm;
-  typedef typename FieldHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst
-    FieldPortalConstType;
-  typedef vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType,
-                                                                  FieldType,
-                                                                  DeviceAdapterTag>
-    ParticleAdvectWorkletType;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
+  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
+  using FieldPortalConstType =
+    typename FieldHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
+  using ParticleAdvectWorkletType =
+    vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType,
+                                                            FieldType,
+                                                            DeviceAdapterTag>;
 
-  StreamlineWorklet() {}
+  VTKM_EXEC_CONT StreamlineWorklet() {}
 
   template <typename PointStorage, typename FieldStorage>
   void Run(const IntegratorType& it,
@@ -183,10 +183,10 @@ private:
            vtkm::cont::ArrayHandle<vtkm::Id>& status,
            vtkm::cont::ArrayHandle<vtkm::Id>& stepsTaken)
   {
-    typedef typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>
-      ParticleWorkletDispatchType;
-    typedef vtkm::worklet::particleadvection::StateRecordingParticles<FieldType, DeviceAdapterTag>
-      StreamlineType;
+    using ParticleWorkletDispatchType =
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
+    using StreamlineType =
+      vtkm::worklet::particleadvection::StateRecordingParticles<FieldType, DeviceAdapterTag>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
 

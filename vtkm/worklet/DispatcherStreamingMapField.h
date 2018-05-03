@@ -59,21 +59,21 @@ struct DispatcherStreamingMapFieldTransformFunctor
   template <typename ArrayHandleType>
   struct DetermineReturnType<ArrayHandleType, true>
   {
-    typedef vtkm::cont::ArrayHandleStreaming<ArrayHandleType> type;
+    using type = vtkm::cont::ArrayHandleStreaming<ArrayHandleType>;
   };
 
   template <typename NotArrayHandleType>
   struct DetermineReturnType<NotArrayHandleType, false>
   {
-    typedef NotArrayHandleType type;
+    using type = NotArrayHandleType;
   };
 
   template <typename ParameterType, vtkm::IdComponent Index>
   struct ReturnType
   {
-    typedef typename DetermineReturnType<
+    using type = typename DetermineReturnType<
       ParameterType,
-      vtkm::cont::internal::ArrayHandleCheck<ParameterType>::type::value>::type type;
+      vtkm::cont::internal::ArrayHandleCheck<ParameterType>::type::value>::type;
   };
 
   template <typename ParameterType, bool IsArrayHandle>
@@ -125,7 +125,7 @@ struct DispatcherStreamingMapFieldTransferFunctor
   template <typename ParameterType, vtkm::IdComponent Index>
   struct ReturnType
   {
-    typedef ParameterType type;
+    using type = ParameterType;
   };
 
   template <typename ParameterType, bool IsArrayHandle>
@@ -169,15 +169,29 @@ class DispatcherStreamingMapField
                                                    WorkletType,
                                                    vtkm::worklet::WorkletMapField>
 {
-  typedef vtkm::worklet::internal::DispatcherBase<DispatcherStreamingMapField<WorkletType, Device>,
-                                                  WorkletType,
-                                                  vtkm::worklet::WorkletMapField>
-    Superclass;
+  using Superclass =
+    vtkm::worklet::internal::DispatcherBase<DispatcherStreamingMapField<WorkletType, Device>,
+                                            WorkletType,
+                                            vtkm::worklet::WorkletMapField>;
+  using ScatterType = typename Superclass::ScatterType;
 
 public:
+  // If you get a compile error here about there being no appropriate constructor for ScatterType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // ScatterType and that you need to create one (because there is no default way to construct
+  // the scatter). By convention, worklets that define a custom scatter type usually provide a
+  // static method named MakeScatter that constructs a scatter object.
   VTKM_CONT
-  DispatcherStreamingMapField(const WorkletType& worklet = WorkletType())
-    : Superclass(worklet)
+  DispatcherStreamingMapField(const WorkletType& worklet = WorkletType(),
+                              const ScatterType& scatter = ScatterType())
+    : Superclass(worklet, scatter)
+    , NumberOfBlocks(1)
+  {
+  }
+
+  VTKM_CONT
+  DispatcherStreamingMapField(const ScatterType& scatter)
+    : Superclass(WorkletType(), scatter)
     , NumberOfBlocks(1)
   {
   }
@@ -194,7 +208,7 @@ public:
     this->InvokeTransportParameters(invocation,
                                     numInstances,
                                     globalIndexOffset,
-                                    this->Worklet.GetScatter().GetOutputRange(numInstances),
+                                    this->Scatter.GetOutputRange(numInstances),
                                     device);
   }
 
@@ -202,7 +216,7 @@ public:
   VTKM_CONT void DoInvoke(const Invocation& invocation) const
   {
     // This is the type for the input domain
-    typedef typename Invocation::InputDomainType InputDomainType;
+    using InputDomainType = typename Invocation::InputDomainType;
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.
@@ -217,12 +231,12 @@ public:
     if (fullSize % NumberOfBlocks != 0)
       blockSize += 1;
 
-    typedef detail::
-      DispatcherStreamingMapFieldTransformFunctor<typename Invocation::ControlInterface, Device>
-        TransformFunctorType;
-    typedef detail::
-      DispatcherStreamingMapFieldTransferFunctor<typename Invocation::ControlInterface, Device>
-        TransferFunctorType;
+    using TransformFunctorType =
+      detail::DispatcherStreamingMapFieldTransformFunctor<typename Invocation::ControlInterface,
+                                                          Device>;
+    using TransferFunctorType =
+      detail::DispatcherStreamingMapFieldTransferFunctor<typename Invocation::ControlInterface,
+                                                         Device>;
 
     for (vtkm::Id block = 0; block < NumberOfBlocks; block++)
     {
@@ -232,20 +246,19 @@ public:
         numberOfInstances = fullSize - blockSize * block;
       vtkm::Id globalIndexOffset = blockSize * block;
 
-      typedef typename Invocation::ParameterInterface ParameterInterfaceType;
-      typedef
-        typename ParameterInterfaceType::template StaticTransformType<TransformFunctorType>::type
-          ReportedType;
+      using ParameterInterfaceType = typename Invocation::ParameterInterface;
+      using ReportedType =
+        typename ParameterInterfaceType::template StaticTransformType<TransformFunctorType>::type;
       ReportedType newParams = invocation.Parameters.StaticTransformCont(
         TransformFunctorType(block, blockSize, numberOfInstances, fullSize));
 
-      typedef typename Invocation::template ChangeParametersType<ReportedType>::type ChangedType;
+      using ChangedType = typename Invocation::template ChangeParametersType<ReportedType>::type;
       ChangedType changedParams = invocation.ChangeParameters(newParams);
 
       this->BasicInvoke(changedParams, numberOfInstances, globalIndexOffset, Device());
 
       // Loop over parameters again to sync results for this block into control array
-      typedef typename ChangedType::ParameterInterface ParameterInterfaceType2;
+      using ParameterInterfaceType2 = typename ChangedType::ParameterInterface;
       const ParameterInterfaceType2& parameters2 = changedParams.Parameters;
       parameters2.StaticTransformCont(TransferFunctorType());
     }
@@ -262,26 +275,23 @@ private:
                                            const OutputRangeType& outputRange,
                                            DeviceAdapter device) const
   {
-    typedef typename Invocation::ParameterInterface ParameterInterfaceType;
+    using ParameterInterfaceType = typename Invocation::ParameterInterface;
     const ParameterInterfaceType& parameters = invocation.Parameters;
 
-    typedef vtkm::worklet::internal::detail::DispatcherBaseTransportFunctor<
+    using TransportFunctorType = vtkm::worklet::internal::detail::DispatcherBaseTransportFunctor<
       typename Invocation::ControlInterface,
       typename Invocation::InputDomainType,
-      DeviceAdapter>
-      TransportFunctorType;
-    typedef
-      typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type
-        ExecObjectParameters;
+      DeviceAdapter>;
+    using ExecObjectParameters =
+      typename ParameterInterfaceType::template StaticTransformType<TransportFunctorType>::type;
 
     ExecObjectParameters execObjectParameters = parameters.StaticTransformCont(
       TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
 
     // Get the arrays used for scattering input to output.
-    typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
-      this->Worklet.GetScatter().GetOutputToInputMap(inputRange);
-    typename WorkletType::ScatterType::VisitArrayType visitArray =
-      this->Worklet.GetScatter().GetVisitArray(inputRange);
+    typename ScatterType::OutputToInputMapType outputToInputMap =
+      this->Scatter.GetOutputToInputMap(inputRange);
+    typename ScatterType::VisitArrayType visitArray = this->Scatter.GetVisitArray(inputRange);
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.

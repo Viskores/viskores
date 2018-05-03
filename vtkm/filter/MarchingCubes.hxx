@@ -23,6 +23,7 @@
 #include <vtkm/cont/CellSetStructured.h>
 #include <vtkm/cont/DynamicArrayHandle.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
 
 #include <vtkm/worklet/DispatcherMapTopology.h>
 #include <vtkm/worklet/ScatterCounting.h>
@@ -102,7 +103,7 @@ inline vtkm::Float64 MarchingCubes::GetIsoValue(vtkm::Id index) const
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
+inline VTKM_CONT vtkm::cont::DataSet MarchingCubes::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& field,
   const vtkm::filter::FieldMetadata& fieldMeta,
@@ -111,14 +112,12 @@ inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
 {
   if (fieldMeta.IsPointField() == false)
   {
-    //todo: we need to mark this as a failure of input, not a failure
-    //of the algorithm
-    return vtkm::filter::Result();
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
   if (this->IsoValues.size() == 0)
   {
-    return vtkm::filter::Result();
+    throw vtkm::cont::ErrorFilterExecution("No iso-values provided.");
   }
 
   // Check the fields of the dataset to see what kinds of fields are present so
@@ -141,7 +140,7 @@ inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
   const vtkm::cont::CoordinateSystem& coords =
     input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex());
 
-  typedef vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>> Vec3HandleType;
+  using Vec3HandleType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
   Vec3HandleType vertices;
   Vec3HandleType normals;
 
@@ -167,7 +166,7 @@ inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
     outputCells = this->Worklet.Run(&ivalues[0],
                                     static_cast<vtkm::Id>(ivalues.size()),
                                     vtkm::filter::ApplyPolicy(cells, policy),
-                                    vtkm::filter::ApplyPolicy(coords, policy),
+                                    coords.GetData(),
                                     field,
                                     vertices,
                                     normals,
@@ -178,7 +177,7 @@ inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
     outputCells = this->Worklet.Run(&ivalues[0],
                                     static_cast<vtkm::Id>(ivalues.size()),
                                     vtkm::filter::ApplyPolicy(cells, policy),
-                                    vtkm::filter::ApplyPolicy(coords, policy),
+                                    coords.GetData(),
                                     field,
                                     vertices,
                                     device);
@@ -212,13 +211,13 @@ inline VTKM_CONT vtkm::filter::Result MarchingCubes::DoExecute(
     this->Worklet.ReleaseCellMapArrays();
   }
 
-  return vtkm::filter::Result(output);
+  return output;
 }
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
 inline VTKM_CONT bool MarchingCubes::DoMapField(
-  vtkm::filter::Result& result,
+  vtkm::cont::DataSet& result,
   const vtkm::cont::ArrayHandle<T, StorageType>& input,
   const vtkm::filter::FieldMetadata& fieldMeta,
   const vtkm::filter::PolicyBase<DerivedPolicy>&,
@@ -240,8 +239,7 @@ inline VTKM_CONT bool MarchingCubes::DoMapField(
   }
 
   //use the same meta data as the input so we get the same field name, etc.
-  result.GetDataSet().AddField(fieldMeta.AsField(fieldArray));
-
+  result.AddField(fieldMeta.AsField(fieldArray));
   return true;
 }
 }

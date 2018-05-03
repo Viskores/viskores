@@ -82,45 +82,12 @@
 # error Both VTKM_USE_64BIT_IDS and VTKM_NO_64BIT_IDS defined.  Do not know what to do.
 #endif
 
-#define VTKM_SIZE_FLOAT @VTKm_SIZE_FLOAT@
-#define VTKM_SIZE_DOUBLE @VTKm_SIZE_DOUBLE@
-#define VTKM_SIZE_CHAR @VTKm_SIZE_CHAR@
-#define VTKM_SIZE_SHORT @VTKm_SIZE_SHORT@
-#define VTKM_SIZE_INT @VTKm_SIZE_INT@
 #define VTKM_SIZE_LONG @VTKm_SIZE_LONG@
 #define VTKM_SIZE_LONG_LONG @VTKm_SIZE_LONG_LONG@
 
-#ifdef VTKM_USE_DOUBLE_PRECISION
-# ifndef VTKM_SIZE_SCALAR
-#  define VTKM_SIZE_SCALAR VTKM_SIZE_DOUBLE
-# endif
-# ifndef VTKM_ALIGNMENT_TWO_SCALAR
-#  define VTKM_ALIGNMENT_TWO_SCALAR 16
-# endif
-# ifndef VTKM_ALIGNMENT_FOUR_SCALAR
-#  define VTKM_ALIGNMENT_FOUR_SCALAR 8
-# endif
-#else
-# ifndef VTKM_SIZE_SCALAR
-#  define VTKM_SIZE_SCALAR VTKM_SIZE_FLOAT
-#  define VTKM_ALIGNMENT_SCALAR VTKM_SIZE_SCALAR
-# endif
-# ifndef VTKM_ALIGNMENT_TWO_SCALAR
-#  define VTKM_ALIGNMENT_TWO_SCALAR 8
-# endif
-# ifndef VTKM_ALIGNMENT_FOUR_SCALAR
-#  define VTKM_ALIGNMENT_FOUR_SCALAR 16
-# endif
-#endif
-
-#ifdef VTKM_USE_64BIT_IDS
-# ifndef VTKM_SIZE_ID
-#  define VTKM_SIZE_ID 8
-# endif
-#else
-# ifndef VTKM_SIZE_ID
-#  define VTKM_SIZE_ID 4
-# endif
+// Defines the cache line size in bytes to align allocations to
+#ifndef VTKM_ALLOCATION_ALIGNMENT
+#define VTKM_ALLOCATION_ALIGNMENT 64
 #endif
 
 // Define a pair of macros, VTKM_THIRDPARTY_PRE_INCLUDE and VTKM_THIRDPARTY_POST_INCLUDE,
@@ -263,8 +230,19 @@
 #cmakedefine VTKM_ENABLE_TBB
 #endif
 
+//Mark if we are building with MPI enabled.
+#cmakedefine VTKM_ENABLE_MPI
+
+//Mark what version of the CUDA compiler we have. This is needed to correctly
+//choose consistent implementation ( so we don't violate ODR ) when we compile
+//with CUDA 7.5
+#ifdef VTKM_ENABLE_CUDA
+#define VTKM_CUDA_VERSION_MAJOR @VTKM_CUDA_VERSION_MAJOR@
+#define VTKM_CUDA_VERSION_MINOR @VTKM_CUDA_VERSION_MINOR@
+#endif
+
 #if __cplusplus >= 201103L || \
-    ( defined(VTKM_MSVC) && _MSC_VER >= 1800  ) || \
+    ( defined(VTKM_MSVC) && _MSC_VER >= 1900  ) || \
     ( defined(VTKM_ICC)  && defined(__INTEL_CXX11_MODE__) )
 #define VTKM_HAVE_CXX_11
 #else
@@ -304,7 +282,7 @@
 
 #ifdef VTKM_MSVC
 //With MSVC the types that we generate cause warning C4503 (long symbol names)
-//this doesn't affect the resulting binary so we just supress that warning
+//this doesn't affect the resulting binary so we just suppress that warning
 //
 #pragma warning(disable:4503)
 
@@ -314,7 +292,7 @@
 //a valid use is MSVC-specific. Even less fortunate is the fact that if
 //another header violates the warning, it is impossible to suppress it
 //because it happens in a system header file (xutility), which was included
-//far before the actual offending code occured. Even less fortunate than
+//far before the actual offending code occurred. Even less fortunate than
 //that, a boost header we (indirectly) use sets off this warning, cannot
 //be suppressed, and is not going to be fixed
 //(https://svn.boost.org/trac/boost/ticket/11426). The best solution is to

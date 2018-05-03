@@ -67,7 +67,6 @@
 #ifndef vtkm_worklet_contourtree_reset_degrees_h
 #define vtkm_worklet_contourtree_reset_degrees_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -85,7 +84,7 @@ public:
                                 WholeArrayOut<IdType> updegree,    // output
                                 WholeArrayOut<IdType> downdegree); // output
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

@@ -88,18 +88,18 @@ public:
 
   /// Output field
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
-                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                           const DeviceAdapter& tag);
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                          const vtkm::filter::FieldMetadata& fieldMeta,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                          const DeviceAdapter& tag);
 };
 
 template <>
 class FilterTraits<ContourTreeMesh2D>
 {
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 
 /// \brief Construct the ContourTree for a 3D Mesh
@@ -116,18 +116,18 @@ public:
 
   /// Output field "saddlePeak" which is pairs of vertex ids indicating saddle and peak of contour
   template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-  VTKM_CONT vtkm::filter::Result DoExecute(const vtkm::cont::DataSet& input,
-                                           const vtkm::cont::ArrayHandle<T, StorageType>& field,
-                                           const vtkm::filter::FieldMetadata& fieldMeta,
-                                           const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
-                                           const DeviceAdapter& tag);
+  VTKM_CONT vtkm::cont::DataSet DoExecute(const vtkm::cont::DataSet& input,
+                                          const vtkm::cont::ArrayHandle<T, StorageType>& field,
+                                          const vtkm::filter::FieldMetadata& fieldMeta,
+                                          const vtkm::filter::PolicyBase<DerivedPolicy>& policy,
+                                          const DeviceAdapter& tag);
 };
 
 template <>
 class FilterTraits<ContourTreeMesh3D>
 {
 public:
-  typedef TypeListTagScalarAll InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagScalarAll;
 };
 }
 } // namespace vtkm::filter

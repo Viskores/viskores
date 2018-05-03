@@ -67,7 +67,6 @@
 #ifndef vtkm_worklet_contourtree_degree_delta_h
 #define vtkm_worklet_contourtree_degree_delta_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -86,7 +85,7 @@ public:
     WholeArrayIn<IdType> sortVector,  // (input) sorted vector of vertices
     WholeArrayOut<IdType> candidate); // (output) candidate
   typedef void ExecutionSignature(_1, _2, _3);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nCandidates;
 

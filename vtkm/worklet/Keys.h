@@ -79,7 +79,7 @@ public:
   };
 
   VTKM_CONT
-  Keys() {}
+  Keys() = default;
 
   /// \b Construct a Keys class from an array of keys.
   ///
@@ -271,7 +271,7 @@ namespace arg
 template <typename KeyType>
 struct TypeCheck<vtkm::cont::arg::TypeCheckTagKeys, vtkm::worklet::Keys<KeyType>>
 {
-  static const bool value = true;
+  static constexpr bool value = true;
 };
 
 template <typename KeyType, typename Device>

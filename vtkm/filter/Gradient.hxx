@@ -19,26 +19,29 @@
 //============================================================================
 
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/cont/ErrorFilterExecution.h>
+#include <vtkm/filter/internal/CreateResult.h>
 #include <vtkm/worklet/Gradient.h>
 
 namespace
 {
 //-----------------------------------------------------------------------------
 template <typename HandleType>
-inline void add_field(vtkm::filter::Result& result,
+inline void add_field(vtkm::cont::DataSet& result,
                       const HandleType& handle,
-                      const std::string name)
+                      const std::string name,
+                      vtkm::cont::Field::AssociationEnum assoc,
+                      const std::string& cellsetname)
 {
-  const vtkm::cont::Field::AssociationEnum assoc = result.GetField().GetAssociation();
   if ((assoc == vtkm::cont::Field::ASSOC_WHOLE_MESH) || (assoc == vtkm::cont::Field::ASSOC_POINTS))
   {
     vtkm::cont::Field field(name, assoc, handle);
-    result.GetDataSet().AddField(field);
+    result.AddField(field);
   }
   else
   {
-    vtkm::cont::Field field(name, assoc, result.GetField().GetAssocCellSet(), handle);
-    result.GetDataSet().AddField(field);
+    vtkm::cont::Field field(name, assoc, cellsetname, handle);
+    result.AddField(field);
   }
 }
 
@@ -80,7 +83,7 @@ Gradient::Gradient()
 
 //-----------------------------------------------------------------------------
 template <typename T, typename StorageType, typename DerivedPolicy, typename DeviceAdapter>
-inline vtkm::filter::Result Gradient::DoExecute(
+inline vtkm::cont::DataSet Gradient::DoExecute(
   const vtkm::cont::DataSet& input,
   const vtkm::cont::ArrayHandle<T, StorageType>& inField,
   const vtkm::filter::FieldMetadata& fieldMetadata,
@@ -89,10 +92,7 @@ inline vtkm::filter::Result Gradient::DoExecute(
 {
   if (!fieldMetadata.IsPointField())
   {
-    //we currently only support point fields, as we need to write the
-    //worklet to efficiently map a cell field to the points of a cell
-    //without doing a memory explosion
-    return vtkm::filter::Result();
+    throw vtkm::cont::ErrorFilterExecution("Point field expected.");
   }
 
   const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
@@ -115,45 +115,52 @@ inline vtkm::filter::Result Gradient::DoExecute(
   if (this->ComputePointGradient)
   {
     vtkm::worklet::PointGradient gradient;
-    outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                            vtkm::filter::ApplyPolicy(coords, policy),
-                            inField,
-                            gradientfields,
-                            adapter);
+    outArray = gradient.Run(
+      vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields, adapter);
   }
   else
   {
     vtkm::worklet::CellGradient gradient;
-    outArray = gradient.Run(vtkm::filter::ApplyPolicy(cells, policy),
-                            vtkm::filter::ApplyPolicy(coords, policy),
-                            inField,
-                            gradientfields,
-                            adapter);
+    outArray = gradient.Run(
+      vtkm::filter::ApplyPolicy(cells, policy), coords, inField, gradientfields, adapter);
   }
   if (!this->RowOrdering)
   {
     transpose_3x3(outArray, adapter);
   }
 
-  VTKM_CONSTEXPR bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
-                                              vtkm::VecTraitsTagMultipleComponents>::value;
+  constexpr bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
+                                         vtkm::VecTraitsTagMultipleComponents>::value;
 
   vtkm::cont::Field::AssociationEnum fieldAssociation(this->ComputePointGradient
                                                         ? vtkm::cont::Field::ASSOC_POINTS
                                                         : vtkm::cont::Field::ASSOC_CELL_SET);
-  vtkm::filter::Result result(input, outArray, outputName, fieldAssociation, cells.GetName());
+  vtkm::cont::DataSet result =
+    internal::CreateResult(input, outArray, outputName, fieldAssociation, cells.GetName());
 
   if (this->GetComputeDivergence() && isVector)
   {
-    add_field(result, gradientfields.Divergence, this->GetDivergenceName());
+    add_field(result,
+              gradientfields.Divergence,
+              this->GetDivergenceName(),
+              fieldAssociation,
+              cells.GetName());
   }
   if (this->GetComputeVorticity() && isVector)
   {
-    add_field(result, gradientfields.Vorticity, this->GetVorticityName());
+    add_field(result,
+              gradientfields.Vorticity,
+              this->GetVorticityName(),
+              fieldAssociation,
+              cells.GetName());
   }
   if (this->GetComputeQCriterion() && isVector)
   {
-    add_field(result, gradientfields.QCriterion, this->GetQCriterionName());
+    add_field(result,
+              gradientfields.QCriterion,
+              this->GetQCriterionName(),
+              fieldAssociation,
+              cells.GetName());
   }
   return result;
 }

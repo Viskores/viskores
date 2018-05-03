@@ -19,6 +19,7 @@
 ##============================================================================
 
 set(headers
+  Algorithm.h
   ArrayCopy.h
   ArrayHandle.h
   ArrayHandleCast.h
@@ -38,12 +39,16 @@ set(headers
   ArrayHandleSwizzle.h
   ArrayHandleTransform.h
   ArrayHandleUniformPointCoordinates.h
+  ArrayHandleVirtualCoordinates.h
   ArrayHandleZip.h
   ArrayPortal.h
   ArrayPortalToIterators.h
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
-  ArrayRangeCompute.hxx
+  AssignerMultiBlock.h
+  BoundsCompute.h
+  BoundsGlobalCompute.h
+  CellLocator.h
   CellLocatorTwoLevelUniformGrid.h
   CellSet.h
   CellSetExplicit.h
@@ -51,6 +56,8 @@ set(headers
   CellSetSingleType.h
   CellSetStructured.h
   CellSetPermutation.h
+  ColorTable.h
+  ColorTableSamples.h
   CoordinateSystem.h
   DataSet.h
   DataSetBuilderExplicit.h
@@ -62,14 +69,19 @@ set(headers
   DeviceAdapterListTag.h
   DynamicArrayHandle.h
   DynamicCellSet.h
+  EnvironmentTracker.h
   Error.h
   ErrorBadAllocation.h
+  ErrorBadDevice.h
   ErrorBadType.h
   ErrorBadValue.h
+  ErrorFilterExecution.h
   ErrorExecution.h
   ErrorInternal.h
   Field.h
-  ImplicitFunction.h
+  FieldRangeCompute.h
+  FieldRangeGlobalCompute.h
+  ImplicitFunctionHandle.h
   MultiBlock.h
   PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
@@ -80,29 +92,36 @@ set(headers
   StorageListTag.h
   Timer.h
   TryExecute.h
-  VirtualObjectCache.h
+  VirtualObjectHandle.h
   )
 
-set(header_impls
+set(template_sources
   ArrayHandle.hxx
+  ArrayRangeCompute.hxx
   CellSetExplicit.hxx
   CellSetStructured.hxx
-  ImplicitFunction.hxx
+  CoordinateSystem.hxx
+  FieldRangeCompute.hxx
+  FieldRangeGlobalCompute.hxx
   StorageBasic.hxx
   )
 
 set(sources
   ArrayHandle.cxx
+  AssignerMultiBlock.cxx
+  BoundsCompute.cxx
+  BoundsGlobalCompute.cxx
   CellSet.cxx
-  CellSetExplicit.cxx
   CellSetStructured.cxx
-  CoordinateSystem.cxx
   DynamicArrayHandle.cxx
+  EnvironmentTracker.cxx
   Field.cxx
-  ImplicitFunction.cxx
+  FieldRangeCompute.cxx
+  FieldRangeGlobalCompute.cxx
   internal/SimplePolymorphicContainer.cxx
-  MultiBlock.cxx
   internal/ArrayManagerExecutionShareWithControl.cxx
+  internal/ArrayHandleBasicImpl.cxx
+  PresetColorTables.cxx
   StorageBasic.cxx
   )
 
@@ -111,43 +130,39 @@ set(sources
 set(device_sources
   ArrayRangeCompute.cxx
   CellSetExplicit.cxx
+  ColorTable.cxx
+  CoordinateSystem.cxx
+  DataSet.cxx
+  MultiBlock.cxx
   RuntimeDeviceTracker.cxx
+  TryExecute.cxx
   )
 
-vtkm_declare_headers(${headers})
-
 #-----------------------------------------------------------------------------
+vtkm_library( NAME vtkm_cont
+              SOURCES ${sources}
+              TEMPLATE_SOURCES ${template_sources}
+              HEADERS ${headers}
+              WRAP_FOR_CUDA ${device_sources}
+            )
 add_subdirectory(internal)
 add_subdirectory(arg)
-
+add_subdirectory(diy)
 add_subdirectory(serial)
-set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_serial>)
-
 add_subdirectory(tbb)
-if (VTKm_ENABLE_TBB)
-  set(sources ${sources} $<TARGET_OBJECTS:vtkm_cont_tbb>)
-endif()
-
 add_subdirectory(cuda)
-if (VTKm_ENABLE_CUDA)
-  get_property(vtkm_cont_cuda_object_files GLOBAL
-               PROPERTY vtkm_cont_cuda_object_files )
-  # mark the file as generated, this needs to be done in this directory
-  # for 'reasons'.
-  set_source_files_properties(${vtkm_cont_cuda_object_files}
-                              PROPERTIES GENERATED TRUE)
 
-  set(sources ${sources} ${vtkm_cont_cuda_object_files})
+set(backends )
+if(TARGET vtkm::tbb)
+  list(APPEND backends vtkm::tbb)
 endif()
-
-vtkm_library(
-  SOURCES ${sources}
-  WRAP_FOR_CUDA ${device_sources}
-  HEADERS ${header_impls})
-target_include_directories(vtkm_cont PRIVATE ${VTKm_BACKEND_INCLUDE_DIRS})
-
-if(VTKm_ENABLE_CUDA)
-  add_dependencies(vtkm_cont vtkm_cont_cuda)
+if(TARGET vtkm::cuda)
+  list(APPEND backends vtkm::cuda)
+endif()
+target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
+if(TARGET vtkm_diy)
+  # This will become a required dependency eventually.
+  target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
 endif()
 
 #-----------------------------------------------------------------------------

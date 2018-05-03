@@ -27,11 +27,18 @@ namespace
 
 void TestBounds()
 {
-  typedef vtkm::Vec<vtkm::Float64, 3> Vec3;
+  using Vec3 = vtkm::Vec<vtkm::Float64, 3>;
 
   std::cout << "Empty bounds." << std::endl;
   vtkm::Bounds emptyBounds;
   VTKM_TEST_ASSERT(!emptyBounds.IsNonEmpty(), "Non empty bounds not empty.");
+
+  vtkm::Bounds emptyBounds2;
+  VTKM_TEST_ASSERT(!emptyBounds2.IsNonEmpty(), "2nd empty bounds not empty.");
+  VTKM_TEST_ASSERT(!emptyBounds.Union(emptyBounds2).IsNonEmpty(),
+                   "Union of empty bounds not empty.");
+  emptyBounds2.Include(emptyBounds);
+  VTKM_TEST_ASSERT(!emptyBounds2.IsNonEmpty(), "Include empty in empty is not empty.");
 
   std::cout << "Single value bounds." << std::endl;
   vtkm::Bounds singleValueBounds(1.0, 1.0, 2.0, 2.0, 3.0, 3.0);

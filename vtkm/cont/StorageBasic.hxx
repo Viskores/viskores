@@ -31,173 +31,63 @@ namespace internal
 
 template <typename T>
 Storage<T, vtkm::cont::StorageTagBasic>::Storage()
-  : Array(nullptr)
-  , NumberOfValues(0)
-  , AllocatedSize(0)
-  , DeallocateOnRelease(true)
+  : StorageBasicBase()
 {
 }
 
 template <typename T>
 Storage<T, vtkm::cont::StorageTagBasic>::Storage(const T* array, vtkm::Id numberOfValues)
-  : Array(const_cast<T*>(array))
-  , NumberOfValues(numberOfValues)
-  , AllocatedSize(numberOfValues)
-  , DeallocateOnRelease(array == nullptr ? true : false)
+  : StorageBasicBase(const_cast<T*>(array), numberOfValues, sizeof(T))
 {
 }
 
 template <typename T>
-Storage<T, vtkm::cont::StorageTagBasic>::~Storage()
+Storage<T, vtkm::cont::StorageTagBasic>::Storage(const T* array,
+                                                 vtkm::Id numberOfValues,
+                                                 void (*deleteFunction)(void*))
+  : StorageBasicBase(const_cast<T*>(array), numberOfValues, sizeof(T), deleteFunction)
 {
-  this->ReleaseResources();
-}
-
-template <typename T>
-Storage<T, vtkm::cont::StorageTagBasic>::Storage(const Storage<T, StorageTagBasic>& src)
-  : Array(src.Array)
-  , NumberOfValues(src.NumberOfValues)
-  , AllocatedSize(src.AllocatedSize)
-  , DeallocateOnRelease(src.DeallocateOnRelease)
-{
-  if (src.DeallocateOnRelease)
-  {
-    throw vtkm::cont::ErrorBadValue(
-      "Attempted to copy a storage array that needs deallocation. "
-      "This is disallowed to prevent complications with deallocation.");
-  }
-}
-
-template <typename T>
-Storage<T, vtkm::cont::StorageTagBasic>& Storage<T, vtkm::cont::StorageTagBasic>::operator=(
-  const Storage<T, StorageTagBasic>& src)
-{
-  if (src.DeallocateOnRelease)
-  {
-    throw vtkm::cont::ErrorBadValue(
-      "Attempted to copy a storage array that needs deallocation. "
-      "This is disallowed to prevent complications with deallocation.");
-  }
-
-  this->ReleaseResources();
-  this->Array = src.Array;
-  this->NumberOfValues = src.NumberOfValues;
-  this->AllocatedSize = src.AllocatedSize;
-  this->DeallocateOnRelease = src.DeallocateOnRelease;
-
-  return *this;
-}
-
-template <typename T>
-void Storage<T, vtkm::cont::StorageTagBasic>::ReleaseResources()
-{
-  if (this->NumberOfValues > 0)
-  {
-    VTKM_ASSERT(this->Array != nullptr);
-    if (this->DeallocateOnRelease)
-    {
-      AllocatorType allocator;
-      allocator.deallocate(this->Array, static_cast<std::size_t>(this->AllocatedSize));
-    }
-    this->Array = nullptr;
-    this->NumberOfValues = 0;
-    this->AllocatedSize = 0;
-  }
-  else
-  {
-    VTKM_ASSERT(this->Array == nullptr);
-  }
 }
 
 template <typename T>
 void Storage<T, vtkm::cont::StorageTagBasic>::Allocate(vtkm::Id numberOfValues)
 {
-  if (numberOfValues < 0)
-  {
-    throw vtkm::cont::ErrorBadAllocation("Cannot allocate an array with negative size.");
-  }
-
-  // Check that the number of bytes won't be more than a size_t can hold.
-  const size_t maxNumValues = std::numeric_limits<size_t>::max() / sizeof(T);
-  if (static_cast<vtkm::UInt64>(numberOfValues) > static_cast<vtkm::UInt64>(maxNumValues))
-  {
-    throw ErrorBadAllocation("Requested allocation exceeds size_t capacity.");
-  }
-  this->AllocateBytes(static_cast<vtkm::UInt64>(numberOfValues) *
-                      static_cast<vtkm::UInt64>(sizeof(T)));
+  this->AllocateValues(numberOfValues, sizeof(T));
 }
 
 template <typename T>
-void Storage<T, vtkm::cont::StorageTagBasic>::AllocateBytes(vtkm::UInt64 numberOfBytes)
+typename Storage<T, vtkm::cont::StorageTagBasic>::PortalType
+Storage<T, vtkm::cont::StorageTagBasic>::GetPortal()
 {
-  const vtkm::Id numberOfValues =
-    static_cast<vtkm::Id>(numberOfBytes / static_cast<vtkm::UInt64>(sizeof(T)));
-
-  // If we are allocating less data, just shrink the array.
-  // (If allocation empty, drop down so we can deallocate memory.)
-  if ((numberOfValues <= this->AllocatedSize) && (numberOfValues > 0))
-  {
-    this->NumberOfValues = numberOfValues;
-    return;
-  }
-
-  if (!this->DeallocateOnRelease)
-  {
-    throw vtkm::cont::ErrorBadValue("User allocated arrays cannot be reallocated.");
-  }
-
-  this->ReleaseResources();
-  try
-  {
-    if (numberOfValues > 0)
-    {
-      AllocatorType allocator;
-      this->Array = allocator.allocate(static_cast<std::size_t>(numberOfValues));
-      this->AllocatedSize = numberOfValues;
-      this->NumberOfValues = numberOfValues;
-    }
-    else
-    {
-      // ReleaseResources should have already set AllocatedSize to 0.
-      VTKM_ASSERT(this->AllocatedSize == 0);
-    }
-  }
-  catch (std::bad_alloc&)
-  {
-    // Make sureour state is OK.
-    this->Array = nullptr;
-    this->NumberOfValues = 0;
-    this->AllocatedSize = 0;
-    throw vtkm::cont::ErrorBadAllocation("Could not allocate basic control array.");
-  }
-
-  this->DeallocateOnRelease = true;
+  auto v = static_cast<T*>(this->Array);
+  return PortalType(v, v + this->NumberOfValues);
 }
 
 template <typename T>
-void Storage<T, vtkm::cont::StorageTagBasic>::Shrink(vtkm::Id numberOfValues)
+typename Storage<T, vtkm::cont::StorageTagBasic>::PortalConstType
+Storage<T, vtkm::cont::StorageTagBasic>::GetPortalConst() const
 {
-  this->ShrinkBytes(static_cast<vtkm::UInt64>(numberOfValues) *
-                    static_cast<vtkm::UInt64>(sizeof(T)));
+  auto v = static_cast<T*>(this->Array);
+  return PortalConstType(v, v + this->NumberOfValues);
 }
 
 template <typename T>
-void Storage<T, vtkm::cont::StorageTagBasic>::ShrinkBytes(vtkm::UInt64 numberOfBytes)
+T* Storage<T, vtkm::cont::StorageTagBasic>::GetArray()
 {
-  if (numberOfBytes > this->GetNumberOfBytes())
-  {
-    throw vtkm::cont::ErrorBadValue("Shrink method cannot be used to grow array.");
-  }
+  return static_cast<T*>(this->Array);
+}
 
-  this->NumberOfValues =
-    static_cast<vtkm::Id>(numberOfBytes / static_cast<vtkm::UInt64>(sizeof(T)));
+template <typename T>
+const T* Storage<T, vtkm::cont::StorageTagBasic>::GetArray() const
+{
+  return static_cast<T*>(this->Array);
 }
 
 template <typename T>
 T* Storage<T, vtkm::cont::StorageTagBasic>::StealArray()
 {
-  this->DeallocateOnRelease = false;
-  return this->Array;
+  this->DeleteFunction = nullptr;
+  return static_cast<T*>(this->Array);
 }
 
 } // namespace internal

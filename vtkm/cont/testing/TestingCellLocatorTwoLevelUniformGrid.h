@@ -55,12 +55,11 @@ public:
 
   using ScatterType = vtkm::worklet::ScatterPermutation<>;
 
-  explicit ParametricToWorldCoordinates(const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds)
-    : Scatter(cellIds)
+  VTKM_CONT
+  static ScatterType MakeScatter(const vtkm::cont::ArrayHandle<vtkm::Id>& cellIds)
   {
+    return ScatterType(cellIds);
   }
-
-  const ScatterType& GetScatter() const { return this->Scatter; }
 
   template <typename CellShapeTagType, typename PointsVecType>
   VTKM_EXEC void operator()(CellShapeTagType cellShape,
@@ -70,9 +69,6 @@ public:
   {
     wc = vtkm::exec::CellInterpolate(points, pc, cellShape, *this);
   }
-
-private:
-  ScatterType Scatter;
 };
 
 template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
@@ -91,10 +87,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
 
   // copy points
   vtkm::cont::ArrayHandle<PointType> points;
-  Algorithm::Copy(uniformDs.GetCoordinateSystem()
-                    .GetData()
-                    .template Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>(),
-                  points);
+  Algorithm::Copy(uniformDs.GetCoordinateSystem().GetData(), points);
 
   vtkm::Id numberOfCells = uniformDs.GetCellSet().GetNumberOfCells();
   vtkm::Id numberOfIndices = numberOfCells * PointsPerCell;
@@ -131,7 +124,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
       VTKM_ASSERT(false);
   }
 
-  // It is posible that the warping will result in invalid cells. So use a
+  // It is possible that the warping will result in invalid cells. So use a
   // local random generator with a known seed that does not create invalid cells.
   std::default_random_engine rgen;
 
@@ -188,9 +181,9 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
     pcoords.GetPortalControl().Set(i, pc);
   }
 
-  ParametricToWorldCoordinates pc2wc(cellIds);
-  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates>(pc2wc).Invoke(
-    ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
+  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
+    ParametricToWorldCoordinates::MakeScatter(cellIds));
+  dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
 }
 
 template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>

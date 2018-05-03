@@ -37,15 +37,28 @@ class DispatcherMapField
                                                    WorkletType,
                                                    vtkm::worklet::WorkletMapField>
 {
-  typedef vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType, Device>,
-                                                  WorkletType,
-                                                  vtkm::worklet::WorkletMapField>
-    Superclass;
+  using Superclass =
+    vtkm::worklet::internal::DispatcherBase<DispatcherMapField<WorkletType, Device>,
+                                            WorkletType,
+                                            vtkm::worklet::WorkletMapField>;
+  using ScatterType = typename Superclass::ScatterType;
 
 public:
+  // If you get a compile error here about there being no appropriate constructor for ScatterType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // ScatterType and that you need to create one (because there is no default way to construct
+  // the scatter). By convention, worklets that define a custom scatter type usually provide a
+  // static method named MakeScatter that constructs a scatter object.
   VTKM_CONT
-  DispatcherMapField(const WorkletType& worklet = WorkletType())
-    : Superclass(worklet)
+  DispatcherMapField(const WorkletType& worklet = WorkletType(),
+                     const ScatterType& scatter = ScatterType())
+    : Superclass(worklet, scatter)
+  {
+  }
+
+  VTKM_CONT
+  DispatcherMapField(const ScatterType& scatter)
+    : Superclass(WorkletType(), scatter)
   {
   }
 
@@ -53,7 +66,7 @@ public:
   VTKM_CONT void DoInvoke(const Invocation& invocation) const
   {
     // This is the type for the input domain
-    typedef typename Invocation::InputDomainType InputDomainType;
+    using InputDomainType = typename Invocation::InputDomainType;
 
     // We can pull the input domain parameter (the data specifying the input
     // domain) from the invocation object.

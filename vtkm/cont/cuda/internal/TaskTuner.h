@@ -41,293 +41,167 @@ namespace cuda
 namespace internal
 {
 
-template <class FunctorType>
-__global__ void Schedule1DIndexKernel(FunctorType functor, vtkm::Id, vtkm::Id);
-template <class FunctorType>
-__global__ void Schedule1DIndexKernel2(FunctorType functor, vtkm::Id, vtkm::Id);
-template <class FunctorType>
-__global__ void Schedule3DIndexKernel(FunctorType functor, dim3 size);
-template <class FunctorType>
-__global__ void Schedule3DIndexKernel2(FunctorType functor, dim3 size);
+int getNumSMs(int dId);
 
-void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d);
+template <typename TaskType>
+__global__ void TaskStrided1DLaunch(TaskType task, vtkm::Id);
+template <typename TaskType>
+__global__ void TaskStrided3DLaunch(TaskType task, dim3 size);
 
-
-template <typename Task>
-__global__ void TaskStrided1DLaunch(Task task, vtkm::Id size)
+struct PerfRecord1d
 {
-  const vtkm::Id start = static_cast<vtkm::Id>(blockIdx.x * blockDim.x + threadIdx.x);
-  const vtkm::Id inc = static_cast<vtkm::Id>(blockDim.x * gridDim.x);
-  for (vtkm::Id i = start; i < size; i += inc)
-  {
-    task(i);
-  }
-}
-
-class PerfRecord
-{
-public:
-  PerfRecord(float elapsedT, dim3 block)
+  PerfRecord1d(float elapsedT, int g, int b)
     : elapsedTime(elapsedT)
-    , blockSize(block)
+    , grid(g)
+    , block(b)
   {
   }
 
-  bool operator<(const PerfRecord& other) const { return elapsedTime < other.elapsedTime; }
+  bool operator<(const PerfRecord1d& other) const { return elapsedTime < other.elapsedTime; }
 
   float elapsedTime;
-  dim3 blockSize;
+  int grid;
+  int block;
 };
 
-template <typename Task>
-static void BlockSizeGuesser(vtkm::Id size, int& grids, int& blocks, float& occupancy)
+inline std::ostream& operator<<(std::ostream& os, const PerfRecord1d& record)
 {
-  int blockSize;   // The launch configurator returned block size
-  int minGridSize; // The minimum grid size needed to achieve the
-                   // maximum occupancy for a full device launch
-  int gridSize;    // The actual grid size needed, based on number of SM's
-  int device;      // device to run on
-  int numSMs;      // number of SMs on the active device
-
-  cudaGetDevice(&device);
-  cudaDeviceGetAttribute(&numSMs, cudaDevAttrMultiProcessorCount, device);
-
-  cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, Schedule1DIndexKernel2<Task>, 0, 0);
-
-
-  blockSize /= (numSMs * 2);
-  // Round up according to array size
-  // gridSize = (size + blockSize - 1) / blockSize;
-  gridSize = 32 * numSMs;
-  // std::cout << "numSMs: " << numSMs << std::endl;
-
-  // calculate theoretical occupancy
-  int maxActiveBlocks;
-  cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-    &maxActiveBlocks, Schedule1DIndexKernel2<Task>, blockSize, 0);
-
-  cudaDeviceProp props;
-  cudaGetDeviceProperties(&props, device);
-
-  grids = gridSize;
-  blocks = blockSize;
-  occupancy = (maxActiveBlocks * blockSize / props.warpSize) /
-    (float)(props.maxThreadsPerMultiProcessor / props.warpSize);
+  os << "TaskStrided1DLaunch<<<" << record.grid << "," << record.block
+     << ">>> required: " << record.elapsedTime << "\n";
+  return os;
 }
 
-template <class Functor>
-static void compare_1d_dynamic_block_picker(Functor functor,
-                                            vtkm::Id size,
-                                            const vtkm::Id& currentGridSize,
-                                            const vtkm::Id& currentBlockSize)
+
+struct PerfRecord3d
 {
-  const std::type_info& ti = typeid(functor);
-  std::cout << "fixed 1d block size performance " << ti.name() << std::endl;
+  PerfRecord3d(float elapsedT, int g, dim3 b)
+    : elapsedTime(elapsedT)
+    , grid(g)
+    , block(b)
   {
-    cudaEvent_t start, stop;
-    VTKM_CUDA_CALL(cudaEventCreate(&start));
-    VTKM_CUDA_CALL(cudaEventCreate(&stop));
-
-    VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
-    Schedule1DIndexKernel<Functor><<<currentGridSize, currentBlockSize, 0, cudaStreamPerThread>>>(
-      functor, vtkm::Id(0), size);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
-
-    VTKM_CUDA_CALL(cudaEventSynchronize(stop));
-    float elapsedTimeMilliseconds;
-    VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
-
-    VTKM_CUDA_CALL(cudaEventDestroy(start));
-    VTKM_CUDA_CALL(cudaEventDestroy(stop));
-
-    std::cout << "Schedule1DIndexKernel size: " << size << std::endl;
-    std::cout << "GridSize of: " << currentGridSize << " BlockSize of: " << currentBlockSize
-              << " required: " << elapsedTimeMilliseconds << std::endl;
   }
 
-  std::cout << "dynamic 1d block size performance " << ti.name() << std::endl;
-  {
+  bool operator<(const PerfRecord3d& other) const { return elapsedTime < other.elapsedTime; }
 
-    int grids, blocks;
-    float occupancy;
-    BlockSizeGuesser<Functor>(size, grids, blocks, occupancy);
+  float elapsedTime;
+  int grid;
+  dim3 block;
+};
 
-    cudaEvent_t start, stop;
-    VTKM_CUDA_CALL(cudaEventCreate(&start));
-    VTKM_CUDA_CALL(cudaEventCreate(&stop));
+inline std::ostream& operator<<(std::ostream& os, const PerfRecord3d& record)
+{
 
-
-    VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
-    Schedule1DIndexKernel2<Functor><<<grids, blocks, 0, cudaStreamPerThread>>>(
-      functor, vtkm::Id(0), size);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
-
-    VTKM_CUDA_CALL(cudaEventSynchronize(stop));
-    float elapsedTimeMilliseconds;
-    VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
-
-    VTKM_CUDA_CALL(cudaEventDestroy(start));
-    VTKM_CUDA_CALL(cudaEventDestroy(stop));
-
-    std::cout << "Schedule1DIndexKernel2 size: " << size << std::endl;
-    std::cout << "GridSize of: " << grids << " BlockSize of: " << blocks
-              << " required: " << elapsedTimeMilliseconds << std::endl;
-  }
-  std::cout << std::endl;
+  os << "TaskStrided3DLaunch<<<" << record.grid << ",(" << record.block.x << "," << record.block.y
+     << "," << record.block.z << ")>>> required: " << record.elapsedTime << "\n";
+  return os;
 }
 
-template <class Functor>
-static void compare_3d_dynamic_block_picker(Functor functor,
-                                            vtkm::Id3 ranges,
-                                            const dim3& gridSize3d,
-                                            const dim3& blockSize3d)
+
+template <typename TaskT>
+static void parameter_sweep_1d_schedule(const TaskT& task, const vtkm::Id& numInstances)
 {
-  const std::type_info& ti = typeid(functor);
-  std::cout << "fixed 3d block size performance " << ti.name() << std::endl;
+  std::vector<PerfRecord1d> results;
+  constexpr vtkm::UInt32 gridIndexTable[12] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 };
+  constexpr vtkm::UInt32 blockIndexTable[12] = { 4,   8,   16,   32,   64,   128,
+                                                 256, 512, 1024, 2048, 4096, 8192 };
+
+  int deviceId;
+  VTKM_CUDA_CALL(cudaGetDevice(&deviceId)); //get deviceid from cuda
+
+  for (vtkm::UInt32 g = 0; g < 12; g++)
   {
-    cudaEvent_t start, stop;
-    VTKM_CUDA_CALL(cudaEventCreate(&start));
-    VTKM_CUDA_CALL(cudaEventCreate(&stop));
+    int grids = gridIndexTable[g] * getNumSMs(deviceId);
+    for (vtkm::UInt32 b = 0; b < 12; b++)
+    {
+      int blocks = blockIndexTable[b];
 
-    VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
-    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d, 0, cudaStreamPerThread>>>(functor,
-                                                                                        ranges);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
+      cudaEvent_t start, stop;
+      VTKM_CUDA_CALL(cudaEventCreate(&start));
+      VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
-    VTKM_CUDA_CALL(cudaEventSynchronize(stop));
-    float elapsedTimeMilliseconds;
-    VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
+      TaskStrided1DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(task, numInstances);
 
-    VTKM_CUDA_CALL(cudaEventDestroy(start));
-    VTKM_CUDA_CALL(cudaEventDestroy(stop));
+      VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
 
-    // std::cout << "Schedule3DIndexKernel size: " << size << std::endl;
-    // std::cout << "GridSize of: " << currentGridSize
-    //           << " BlockSize of: " << currentBlockSize  << " required: " << elapsedTimeMilliseconds << std::endl;
+      VTKM_CUDA_CALL(cudaEventSynchronize(stop));
+      float elapsedTimeMilliseconds;
+      VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
+
+      VTKM_CUDA_CALL(cudaEventDestroy(start));
+      VTKM_CUDA_CALL(cudaEventDestroy(stop));
+
+      results.emplace_back(elapsedTimeMilliseconds, grids, blocks);
+    }
   }
 
-  std::cout << "dynamic 3d block size performance " << ti.name() << std::endl;
+  std::sort(results.begin(), results.end());
+  for (auto&& i : results)
   {
-
-    // int grids, blocks;
-    // float occupancy;
-    // BlockSizeGuesser<Functor>(size, grids, blocks, occupancy);
-
-    // cudaEvent_t start, stop;
-    // VTKM_CUDA_CALL(cudaEventCreate(&start));
-    // VTKM_CUDA_CALL(cudaEventCreate(&stop));
-
-
-    // VTKM_CUDA_CALL(cudaEventRecord(start, 0));
-    // Schedule3DIndexKernel2<Functor><<<grids, blocks>>>(functor, vtkm::Id(0), size);
-    // VTKM_CUDA_CALL(cudaEventRecord(stop, 0));
-
-    // VTKM_CUDA_CALL(cudaEventSynchronize(stop));
-    // float elapsedTimeMilliseconds;
-    // VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
-
-    // VTKM_CUDA_CALL(cudaEventDestroy(start));
-    // VTKM_CUDA_CALL(cudaEventDestroy(stop));
-
-    // std::cout << "Schedule3DIndexKernel2 size: " << size << std::endl;
-    // std::cout << "GridSize of: " << grids
-    //           << " BlockSize of: " << blocks  << " required: " << elapsedTimeMilliseconds << std::endl;
+    std::cout << i << std::endl;
   }
-  std::cout << std::endl;
 }
 
-template <class Functor>
-static void parameter_sweep_3d_schedule(Functor functor, const vtkm::Id3& rangeMax)
+template <typename TaskT>
+static void parameter_sweep_3d_schedule(const TaskT& task, const vtkm::Id3& rangeMax)
 {
   const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
                     static_cast<vtkm::UInt32>(rangeMax[1]),
                     static_cast<vtkm::UInt32>(rangeMax[2]));
-  std::vector<PerfRecord> results;
-  vtkm::UInt32 indexTable[16] = { 1, 2, 4, 8, 12, 16, 20, 24, 28, 30, 32, 64, 128, 256, 512, 1024 };
+  std::vector<PerfRecord3d> results;
 
-  for (vtkm::UInt32 i = 0; i < 16; i++)
+  constexpr vtkm::UInt32 gridIndexTable[12] = { 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 };
+  constexpr vtkm::UInt32 blockIndexTable[16] = { 1,  2,  4,  8,  12,  16,  20,  24,
+                                                 28, 30, 32, 64, 128, 256, 512, 1024 };
+
+  int deviceId;
+  for (vtkm::UInt32 g = 0; g < 12; g++)
   {
-    for (vtkm::UInt32 j = 0; j < 16; j++)
+    int grids = gridIndexTable[g] * getNumSMs(deviceId);
+    for (vtkm::UInt32 i = 0; i < 16; i++)
     {
-      for (vtkm::UInt32 k = 0; k < 16; k++)
+      for (vtkm::UInt32 j = 0; j < 16; j++)
       {
-        cudaEvent_t start, stop;
-        VTKM_CUDA_CALL(cudaEventCreate(&start));
-        VTKM_CUDA_CALL(cudaEventCreate(&stop));
-
-        dim3 blockSize3d(indexTable[i], indexTable[j], indexTable[k]);
-        dim3 gridSize3d;
-
-        if ((blockSize3d.x * blockSize3d.y * blockSize3d.z) >= 1024 ||
-            (blockSize3d.x * blockSize3d.y * blockSize3d.z) <= 4 || blockSize3d.z >= 64)
+        for (vtkm::UInt32 k = 0; k < 16; k++)
         {
-          //cuda can't handle more than 1024 threads per block
-          //so don't try if we compute higher than that
+          cudaEvent_t start, stop;
+          VTKM_CUDA_CALL(cudaEventCreate(&start));
+          VTKM_CUDA_CALL(cudaEventCreate(&stop));
 
-          //also don't try stupidly low numbers
+          dim3 blocks(blockIndexTable[i], blockIndexTable[j], blockIndexTable[k]);
 
-          //cuda can't handle more than 64 threads in the z direction
-          continue;
+          if ((blocks.x * blocks.y * blocks.z) >= 1024 || (blocks.x * blocks.y * blocks.z) <= 4 ||
+              blocks.z >= 64)
+          {
+            //cuda can't handle more than 1024 threads per block
+            //so don't try if we compute higher than that
+
+            //also don't try stupidly low numbers
+
+            //cuda can't handle more than 64 threads in the z direction
+            continue;
+          }
+
+          VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
+          TaskStrided3DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(task, ranges);
+          VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
+
+          VTKM_CUDA_CALL(cudaEventSynchronize(stop));
+          float elapsedTimeMilliseconds;
+          VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
+
+          VTKM_CUDA_CALL(cudaEventDestroy(start));
+          VTKM_CUDA_CALL(cudaEventDestroy(stop));
+
+          results.emplace_back(elapsedTimeMilliseconds, grids, blocks);
         }
-
-        compute_block_size(ranges, blockSize3d, gridSize3d);
-        VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
-        Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d, 0, cudaStreamPerThread>>>(functor,
-                                                                                            ranges);
-        VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
-
-        VTKM_CUDA_CALL(cudaEventSynchronize(stop));
-        float elapsedTimeMilliseconds;
-        VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
-
-        VTKM_CUDA_CALL(cudaEventDestroy(start));
-        VTKM_CUDA_CALL(cudaEventDestroy(stop));
-
-        PerfRecord record(elapsedTimeMilliseconds, blockSize3d);
-        results.push_back(record);
       }
     }
   }
 
   std::sort(results.begin(), results.end());
-  const vtkm::Int64 size = static_cast<vtkm::Int64>(results.size());
-  for (vtkm::Int64 i = 1; i <= size; i++)
+  for (auto&& i : results)
   {
-    vtkm::UInt64 index = static_cast<vtkm::UInt64>(size - i);
-    vtkm::UInt32 x = results[index].blockSize.x;
-    vtkm::UInt32 y = results[index].blockSize.y;
-    vtkm::UInt32 z = results[index].blockSize.z;
-    float t = results[index].elapsedTime;
-
-    std::cout << "BlockSize of: " << x << "," << y << "," << z << " required: " << t << std::endl;
-  }
-
-  std::cout << "fixed 3d block size performance " << std::endl;
-  {
-    cudaEvent_t start, stop;
-    VTKM_CUDA_CALL(cudaEventCreate(&start));
-    VTKM_CUDA_CALL(cudaEventCreate(&stop));
-
-    dim3 blockSize3d(64, 2, 1);
-    dim3 gridSize3d;
-
-    compute_block_size(ranges, blockSize3d, gridSize3d);
-    VTKM_CUDA_CALL(cudaEventRecord(start, cudaStreamPerThread));
-    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d, 0, cudaStreamPerThread>>>(functor,
-                                                                                        ranges);
-    VTKM_CUDA_CALL(cudaEventRecord(stop, cudaStreamPerThread));
-
-    VTKM_CUDA_CALL(cudaEventSynchronize(stop));
-    float elapsedTimeMilliseconds;
-    VTKM_CUDA_CALL(cudaEventElapsedTime(&elapsedTimeMilliseconds, start, stop));
-
-    VTKM_CUDA_CALL(cudaEventDestroy(start));
-    VTKM_CUDA_CALL(cudaEventDestroy(stop));
-
-    std::cout << "BlockSize of: " << blockSize3d.x << "," << blockSize3d.y << "," << blockSize3d.z
-              << " required: " << elapsedTimeMilliseconds << std::endl;
-    std::cout << "GridSize of: " << gridSize3d.x << "," << gridSize3d.y << "," << gridSize3d.z
-              << " required: " << elapsedTimeMilliseconds << std::endl;
+    std::cout << i << std::endl;
   }
 }
 }

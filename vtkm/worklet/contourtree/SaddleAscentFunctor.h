@@ -80,7 +80,6 @@
 #ifndef vtkm_worklet_contourtree_saddle_ascent_functor_h
 #define vtkm_worklet_contourtree_saddle_ascent_functor_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 #include <vtkm/worklet/contourtree/Types.h>
 
@@ -104,7 +103,7 @@ public:
     WholeArrayInOut<IdType> edgeFar,   // (input) high ends of edges
     FieldOut<IdType> newOutdegree);    // (output) new updegree of vertex
   typedef _7 ExecutionSignature(_1, _2, _3, _4, _5, _6);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   // Constructor
   VTKM_EXEC_CONT

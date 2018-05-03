@@ -61,7 +61,6 @@
 #ifndef vtkm_worklet_cosmotools_compute_potential_mxn_h
 #define vtkm_worklet_cosmotools_compute_potential_mxn_h
 
-#include <vtkm/exec/ExecutionWholeArray.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
 namespace vtkm
@@ -87,7 +86,7 @@ public:
                                 WholeArrayIn<TagType> zLoc,   // (input) z location in domain
                                 FieldOut<TagType> potential); // (output) bin ID
   typedef _6 ExecutionSignature(_1, _2, _3, _4, _5);
-  typedef _1 InputDomain;
+  using InputDomain = _1;
 
   vtkm::Id nParticles; // Number of particles in halo
   T mass;              // Particle mass
