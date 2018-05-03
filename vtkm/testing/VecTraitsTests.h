@@ -26,6 +26,16 @@
 
 #include <vtkm/testing/Testing.h>
 
+//GCC 5 and 6 when running the test code have false positive warnings
+//about uninitialized vtkm::VecC<> when filled by VecTraits<T>::CopyInto.
+//The testing code already verifies that CopyInto works by verifying the
+//results, so we are going to suppress `-Wmaybe-uninitialized` for this
+//file
+#if (defined(VTKM_GCC) && __GNUC__ > 4 && __GNUC__ < 7)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif // gcc  5 or 6
+
 namespace vtkm
 {
 namespace testing
@@ -204,5 +214,9 @@ inline void TestScalarComponentsTag()
 }
 }
 } // namespace vtkm::testing
+
+#if (defined(VTKM_GCC) && __GNUC__ > 4 && __GNUC__ < 7)
+#pragma GCC diagnostic pop
+#endif // gcc  5 or 6
 
 #endif //vtkm_testing_VecTraitsTest_h

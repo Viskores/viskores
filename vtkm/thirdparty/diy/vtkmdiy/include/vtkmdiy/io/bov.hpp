@@ -155,7 +155,7 @@ write(const DiscreteBounds& bounds, const T* buffer, const DiscreteBounds& core,
   }
 
   MPI_Datatype fileblk, subbuffer;
-  MPI_Type_create_subarray(dim, (int*) &shape_[0],       &subsizes[0], (int*) &bounds.min[0],   MPI_ORDER_C, T_type, &fileblk);
+  MPI_Type_create_subarray(dim, (int*) &shape_[0],       &subsizes[0], (int*) &core.min[0],     MPI_ORDER_C, T_type, &fileblk);
   MPI_Type_create_subarray(dim, (int*) &buffer_shape[0], &subsizes[0], (int*) &buffer_start[0], MPI_ORDER_C, T_type, &subbuffer);
   MPI_Type_commit(&fileblk);
   MPI_Type_commit(&subbuffer);

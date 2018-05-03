@@ -49,7 +49,7 @@ class MultiBlock;
 
 /// \brief Assigner for `MultiBlock` blocks.
 ///
-/// `AssignerMultiBlock` is a `diy::Assigner` implementation that uses
+/// `AssignerMultiBlock` is a `diy::StaticAssigner` implementation that uses
 /// `MultiBlock`'s block distribution to build global-id/rank associations
 /// needed for several `diy` operations.
 /// It uses a contiguous assignment strategy to map blocks to global ids i.e.
@@ -59,7 +59,7 @@ class MultiBlock;
 /// essential it gets created on all ranks irrespective of whether the rank has
 /// any blocks.
 ///
-class VTKM_CONT_EXPORT AssignerMultiBlock : public diy::Assigner
+class VTKM_CONT_EXPORT AssignerMultiBlock : public diy::StaticAssigner
 {
 public:
   /// Initialize the assigner using a multiblock dataset.

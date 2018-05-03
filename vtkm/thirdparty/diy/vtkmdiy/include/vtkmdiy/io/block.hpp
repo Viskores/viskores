@@ -175,7 +175,7 @@ namespace io
     void
     read_blocks(const std::string&           infilename,     //!< input file name
                 const mpi::communicator&     comm,           //!< communicator
-                Assigner&                    assigner,       //!< assigner object
+                StaticAssigner&              assigner,       //!< assigner object
                 Master&                      master,         //!< master object
                 MemoryBuffer&                extra,          //!< user-defined metadata in file header
                 Master::LoadBlock            load = 0)       //!< load block function in case different than or unefined in the master
@@ -246,7 +246,7 @@ namespace io
   void
   read_blocks(const std::string&           infilename,
               const mpi::communicator&     comm,
-              Assigner&                    assigner,
+              StaticAssigner&              assigner,
               Master&                      master,
               Master::LoadBlock            load = 0)
   {
@@ -323,7 +323,7 @@ namespace split
   void
   read_blocks(const std::string&           infilename,  //!< input file name
               const mpi::communicator&     comm,        //!< communicator
-              Assigner&                    assigner,    //!< assigner object
+              StaticAssigner&              assigner,    //!< assigner object
               Master&                      master,      //!< master object
               MemoryBuffer&                extra,       //!< user-defined metadata in file header
               Master::LoadBlock            load = 0)    //!< block load function in case different than or undefined in master
@@ -378,7 +378,7 @@ namespace split
   void
   read_blocks(const std::string&           infilename,
               const mpi::communicator&     comm,
-              Assigner&                    assigner,
+              StaticAssigner&              assigner,
               Master&                      master,
               Master::LoadBlock            load = 0)
   {
