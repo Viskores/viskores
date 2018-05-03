@@ -798,6 +798,8 @@ public:
     : Superclass(src)
   {
   }
+
+  inline VTKM_EXEC_CONT void CopyInto(Vec<T, Size>& dest) const { dest = *this; }
 };
 
 //-----------------------------------------------------------------------------
