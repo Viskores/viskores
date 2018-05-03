@@ -70,7 +70,7 @@ private:
                      "Unexpected scalar field range.");
   }
 
-  template <typename T, vtkm::Id NumberOfComponents>
+  template <typename T, vtkm::IdComponent NumberOfComponents>
   static void TestVecField()
   {
     const vtkm::Id nvals = 11;

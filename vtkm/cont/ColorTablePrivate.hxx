@@ -132,7 +132,7 @@ inline bool rangeAlmostEqual(const vtkm::Range& r)
   // needs to be a memcpy to avoid strict aliasing issues, doing a count
   // of 2*sizeof(T) to couple both values at the same time
   std::memcpy(irange, &r.Min, sizeof(vtkm::Int64));
-  std::memcpy(irange, &r.Max, sizeof(vtkm::Int64));
+  std::memcpy(irange + 1, &r.Max, sizeof(vtkm::Int64));
   // determine the absolute delta between these two numbers.
   const vtkm::Int64 delta = std::abs(irange[1] - irange[0]);
   // If the numbers are not nearly equal, we don't touch them. This avoids running into

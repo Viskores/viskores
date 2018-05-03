@@ -49,6 +49,19 @@ struct CopyWorklet : public vtkm::worklet::WorkletMapField
   }
 };
 
+template <typename T, typename S, typename DeviceAdapter>
+inline void TestVirtualAccess(const vtkm::cont::ArrayHandle<T, S>& in,
+                              vtkm::cont::ArrayHandle<T>& out,
+                              DeviceAdapter)
+{
+  vtkm::worklet::DispatcherMapField<CopyWorklet, DeviceAdapter>().Invoke(
+    vtkm::cont::ArrayHandleVirtualCoordinates(in), vtkm::cont::ArrayHandleVirtualCoordinates(out));
+
+  VTKM_TEST_ASSERT(test_equal_portals(in.GetPortalConstControl(), out.GetPortalConstControl()),
+                   "Input and output portals don't match");
+}
+
+
 } // anonymous namespace
 
 template <typename DeviceAdapter>
@@ -60,17 +73,7 @@ private:
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                             vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
 
-  template <typename T, typename InStorageTag, typename OutStorageTag>
-  static void TestVirtualAccess(const vtkm::cont::ArrayHandle<T, InStorageTag>& in,
-                                vtkm::cont::ArrayHandle<T, OutStorageTag>& out)
-  {
-    vtkm::worklet::DispatcherMapField<CopyWorklet, DeviceAdapter>().Invoke(
-      vtkm::cont::ArrayHandleVirtualCoordinates(in),
-      vtkm::cont::ArrayHandleVirtualCoordinates(out));
 
-    VTKM_TEST_ASSERT(test_equal_portals(in.GetPortalConstControl(), out.GetPortalConstControl()),
-                     "Input and output portals don't match");
-  }
 
   static void TestAll()
   {
@@ -86,10 +89,11 @@ private:
     {
       a1.GetPortalControl().Set(i, TestValue(i, PointType()));
     }
-    TestVirtualAccess(a1, out);
+    TestVirtualAccess(a1, out, DeviceAdapter{});
 
     std::cout << "Testing ArrayHandleUniformPointCoordinates as input\n";
-    TestVirtualAccess(vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(4, 4, 4)), out);
+    auto t = vtkm::cont::ArrayHandleUniformPointCoordinates(vtkm::Id3(4, 4, 4));
+    TestVirtualAccess(t, out, DeviceAdapter{});
 
     std::cout << "Testing ArrayHandleCartesianProduct as input\n";
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> c1, c2, c3;
@@ -103,7 +107,8 @@ private:
       c2.GetPortalControl().Set(i, p[1]);
       c3.GetPortalControl().Set(i, p[2]);
     }
-    TestVirtualAccess(vtkm::cont::make_ArrayHandleCartesianProduct(c1, c2, c3), out);
+    TestVirtualAccess(
+      vtkm::cont::make_ArrayHandleCartesianProduct(c1, c2, c3), out, DeviceAdapter{});
   }
 
 public:
