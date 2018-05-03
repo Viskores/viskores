@@ -49,13 +49,13 @@ public:
                     vtkm::Float64 sx,
                     vtkm::Float64 xy)
     : dimX(dx)
-    , dimY(dy)
     , amp(a)
     , x0(x)
     , y0(y)
     , sigmaX(sx)
     , sigmaY(xy)
   {
+    (void)dy;
     sigmaX2 = 2 * sigmaX * sigmaX;
     sigmaY2 = 2 * sigmaY * sigmaY;
   }
@@ -83,7 +83,7 @@ public:
   }
 
 private:                              // see wikipedia page
-  const vtkm::Id dimX, dimY;          // 2D extent
+  const vtkm::Id dimX;                // 2D extent
   const vtkm::Float64 amp;            // amplitude
   const vtkm::Float64 x0, y0;         // center
   const vtkm::Float64 sigmaX, sigmaY; // spread

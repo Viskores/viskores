@@ -101,8 +101,6 @@ public:
            const InputPortalType& connectivityArray,
            OutputPortalType& componentsOut) const
   {
-    using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-
     bool allStar = false;
     vtkm::cont::ArrayHandle<vtkm::Id> components;
     vtkm::cont::ArrayHandle<bool> isStar;

@@ -95,6 +95,30 @@ namespace detail
     }
   };
 
+  // issend
+  template< class T, class is_mpi_datatype_ = typename is_mpi_datatype<T>::type >
+  struct issend;
+
+  template<class T>
+  struct issend<T, true_type>
+  {
+    request operator()(MPI_Comm comm, int dest, int tag, const T& x) const
+    {
+#ifndef DIY_NO_MPI
+      request r;
+      typedef       mpi_datatype<T>     Datatype;
+      MPI_Issend((void*) Datatype::address(x),
+                Datatype::count(x),
+                Datatype::datatype(),
+                dest, tag, comm, &r.r);
+      return r;
+#else
+      (void) comm; (void) dest; (void) tag; (void) x;
+      DIY_UNSUPPORTED_MPI_CALL(MPI_Issend);
+#endif
+    }
+  };
+
   // irecv
   template< class T, class is_mpi_datatype_ = typename is_mpi_datatype<T>::type >
   struct irecv;
