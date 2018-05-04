@@ -94,11 +94,12 @@ if(VTKm_ENABLE_GL_CONTEXT OR
 endif()
 
 #-----------------------------------------------------------------------------
-if(TARGET vtkm_rendering_gl_context)
-  return()
+if(VTKm_ENABLE_RENDERING)
+  if(TARGET vtkm_rendering_gl_context)
+    return()
+  endif()
+  add_library(vtkm_rendering_gl_context INTERFACE)
 endif()
-
-add_library(vtkm_rendering_gl_context INTERFACE)
 
 #-----------------------------------------------------------------------------
 if(VTKm_ENABLE_GL_CONTEXT)
