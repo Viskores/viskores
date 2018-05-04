@@ -166,8 +166,8 @@ public:
 
     // Worklet to set the bin number for each data value
     SetHistogramBin<FieldType> binWorklet(numberOfBins, fieldMinValue, fieldDelta);
-    vtkm::worklet::DispatcherMapField<SetHistogramBin<FieldType>> setHistogramBinDispatcher(
-      binWorklet);
+    vtkm::worklet::DispatcherMapField<SetHistogramBin<FieldType>, DeviceAdapter>
+      setHistogramBinDispatcher(binWorklet);
     setHistogramBinDispatcher.Invoke(fieldArray, binIndex);
 
     // Sort the resulting bin array for counting

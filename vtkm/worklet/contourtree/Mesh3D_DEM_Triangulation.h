@@ -178,8 +178,8 @@ void Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetStarts(
   // For each vertex set the next vertex in the chain
   vtkm::cont::ArrayHandleIndex vertexIndexArray(nVertices);
   Mesh3D_DEM_VertexStarter<T> vertexStarter(nRows, nCols, nSlices, ascending);
-  vtkm::worklet::DispatcherMapField<Mesh3D_DEM_VertexStarter<T>> vertexStarterDispatcher(
-    vertexStarter);
+  vtkm::worklet::DispatcherMapField<Mesh3D_DEM_VertexStarter<T>, DeviceAdapter>
+    vertexStarterDispatcher(vertexStarter);
 
   vertexStarterDispatcher.Invoke(vertexIndexArray,   // input
                                  values,             // input (whole array)
@@ -209,7 +209,7 @@ void Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
     ascending,
     neighbourOffsets3D.PrepareForInput(DeviceAdapter()),
     linkComponentCaseTable3D.PrepareForInput(DeviceAdapter()));
-  vtkm::worklet::DispatcherMapField<Mesh3D_DEM_VertexOutdegreeStarter<DeviceAdapter>>
+  vtkm::worklet::DispatcherMapField<Mesh3D_DEM_VertexOutdegreeStarter<DeviceAdapter>, DeviceAdapter>
     vertexOutdegreeStarterDispatcher(vertexOutdegreeStarter);
 
   vertexOutdegreeStarterDispatcher.Invoke(vertexIndexArray,    // input
@@ -269,7 +269,7 @@ void Mesh3D_DEM_Triangulation<T, StorageType, DeviceAdapter>::SetSaddleStarts(
     ascending, // input
     neighbourOffsets3D.PrepareForInput(DeviceAdapter()),
     linkComponentCaseTable3D.PrepareForInput(DeviceAdapter()));
-  vtkm::worklet::DispatcherMapField<Mesh3D_DEM_SaddleStarter<DeviceAdapter>>
+  vtkm::worklet::DispatcherMapField<Mesh3D_DEM_SaddleStarter<DeviceAdapter>, DeviceAdapter>
     saddleStarterDispatcher(saddleStarter);
 
   vtkm::cont::ArrayHandleZip<vtkm::cont::ArrayHandle<vtkm::Id>, vtkm::cont::ArrayHandle<vtkm::Id>>

@@ -469,7 +469,7 @@ void MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& origina
   input_keys.ReleaseResources();
 
   {
-    vtkm::worklet::DispatcherReduceByKey<MergeDuplicateValues> dispatcher;
+    vtkm::worklet::DispatcherReduceByKey<MergeDuplicateValues, DeviceAdapterTag> dispatcher;
     vtkm::cont::ArrayHandle<vtkm::Id> writeCells;
     vtkm::cont::ArrayHandle<vtkm::FloatDefault> writeWeights;
     dispatcher.Invoke(keys, weights, cellids, writeWeights, writeCells);
@@ -483,7 +483,7 @@ void MergeDuplicates(const vtkm::cont::ArrayHandle<KeyType, KeyStorage>& origina
     uniqueKeys, original_keys, connectivity, marchingcubes::MultiContourLess());
 
   //update the edge ids
-  vtkm::worklet::DispatcherMapField<CopyEdgeIds> edgeDispatcher;
+  vtkm::worklet::DispatcherMapField<CopyEdgeIds, DeviceAdapterTag> edgeDispatcher;
   edgeDispatcher.Invoke(uniqueKeys, edgeIds);
 }
 
@@ -667,8 +667,8 @@ struct GenerateNormalsDeduced
   vtkm::cont::ArrayHandle<vtkm::Id2>* edges;
   vtkm::cont::ArrayHandle<vtkm::FloatDefault>* weights;
 
-  template <typename CoordinateSystem>
-  void operator()(const CoordinateSystem& coordinates) const
+  template <typename CoordinateSystem, typename DeviceAdapterTag>
+  void operator()(const CoordinateSystem& coordinates, DeviceAdapterTag) const
   {
     // To save memory, the normals computation is done in two passes. In the first
     // pass the gradient at the first vertex of each edge is computed and stored in
@@ -677,13 +677,13 @@ struct GenerateNormalsDeduced
     // The final normal is interpolated from the two gradient values and stored
     // in the normals array.
     //
-    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1> dispatcherNormalsPass1(
-      NormalsWorkletPass1::MakeScatter(*edges));
+    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass1, DeviceAdapterTag>
+      dispatcherNormalsPass1(NormalsWorkletPass1::MakeScatter(*edges));
     dispatcherNormalsPass1.Invoke(
       *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *normals);
 
-    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2> dispatcherNormalsPass2(
-      NormalsWorkletPass2::MakeScatter(*edges));
+    vtkm::worklet::DispatcherMapTopology<NormalsWorkletPass2, DeviceAdapterTag>
+      dispatcherNormalsPass2(NormalsWorkletPass2::MakeScatter(*edges));
     dispatcherNormalsPass2.Invoke(
       *cellset, *cellset, coordinates, marchingcubes::make_ScalarField(*field), *weights, *normals);
   }
@@ -693,13 +693,15 @@ template <typename NormalCType,
           typename InputFieldType,
           typename InputStorageType,
           typename CellSet,
-          typename CoordinateSystem>
+          typename CoordinateSystem,
+          typename DeviceAdapterTag>
 void GenerateNormals(vtkm::cont::ArrayHandle<vtkm::Vec<NormalCType, 3>>& normals,
                      const vtkm::cont::ArrayHandle<InputFieldType, InputStorageType>& field,
                      const CellSet& cellset,
                      const CoordinateSystem& coordinates,
                      vtkm::cont::ArrayHandle<vtkm::Id2>& edges,
-                     vtkm::cont::ArrayHandle<vtkm::FloatDefault>& weights)
+                     vtkm::cont::ArrayHandle<vtkm::FloatDefault>& weights,
+                     DeviceAdapterTag tag)
 {
   GenerateNormalsDeduced<NormalCType, InputFieldType, InputStorageType, CellSet> functor;
   functor.normals = &normals;
@@ -709,7 +711,7 @@ void GenerateNormals(vtkm::cont::ArrayHandle<vtkm::Vec<NormalCType, 3>>& normals
   functor.weights = &weights;
 
 
-  vtkm::cont::CastAndCall(coordinates, functor);
+  vtkm::cont::CastAndCall(coordinates, functor, tag);
 }
 }
 
@@ -932,10 +934,10 @@ private:
     bool withNormals,
     const DeviceAdapter&)
   {
-    using vtkm::worklet::marchingcubes::MapPointField;
+    using vtkm::worklet::marchingcubes::ClassifyCell;
     using vtkm::worklet::marchingcubes::EdgeWeightGenerate;
     using vtkm::worklet::marchingcubes::EdgeWeightGenerateMetaData;
-    using vtkm::worklet::marchingcubes::ClassifyCell;
+    using vtkm::worklet::marchingcubes::MapPointField;
 
     // Setup the Dispatcher Typedefs
     using ClassifyDispatcher =
@@ -1050,7 +1052,8 @@ private:
                                      cells,
                                      coordinateSystem,
                                      this->InterpolationEdgeIds,
-                                     this->InterpolationWeights);
+                                     this->InterpolationWeights,
+                                     DeviceAdapter());
     }
 
     return outputCells;
