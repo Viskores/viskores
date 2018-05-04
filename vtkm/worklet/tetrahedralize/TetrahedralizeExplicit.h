@@ -129,14 +129,13 @@ public:
 
     // Determine the number of output cells each input cell will generate
     vtkm::worklet::DispatcherMapField<TetrahedraPerCell, DeviceAdapter> tetPerCellDispatcher;
-    tetPerCellDispatcher.Invoke(inShapes, tables.PrepareForInput(DeviceAdapter()), outCellsPerCell);
+    tetPerCellDispatcher.Invoke(inShapes, tables.PrepareForInput(), outCellsPerCell);
 
     // Build new cells
     vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell, DeviceAdapter>
       tetrahedralizeDispatcher(TetrahedralizeCell::MakeScatter(outCellsPerCell));
-    tetrahedralizeDispatcher.Invoke(cellSet,
-                                    tables.PrepareForInput(DeviceAdapter()),
-                                    vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
+    tetrahedralizeDispatcher.Invoke(
+      cellSet, tables.PrepareForInput(), vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
 
     // Add cells to output cellset
     outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagTetra::Id, 4, outConnectivity);

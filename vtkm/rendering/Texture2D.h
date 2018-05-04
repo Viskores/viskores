@@ -25,7 +25,7 @@
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 
 namespace vtkm
 {
@@ -50,7 +50,7 @@ class Texture2D
 public:
   using TextureDataHandle = typename vtkm::cont::ArrayHandle<vtkm::UInt8>;
   using ColorType = vtkm::Vec<vtkm::Float32, NumComponents>;
-  template <typename DeviceTag>
+
   class Texture2DSampler;
 
 #define UV_BOUNDS_CHECK(u, v, NoneType)                                                            \
@@ -95,35 +95,34 @@ public:
   VTKM_CONT
   void SetWrapMode(TextureWrapMode wrapMode) { this->WrapMode = wrapMode; }
 
-  template <typename DeviceTag>
-  VTKM_CONT Texture2DSampler<DeviceTag> GetExecObject() const
+  VTKM_CONT Texture2DSampler GetExecObjectFactory() const
   {
-    return Texture2DSampler<DeviceTag>(Width, Height, Data, FilterMode, WrapMode);
+    return Texture2DSampler(Width, Height, Data, FilterMode, WrapMode);
   }
 
-  template <typename DeviceTag>
-  class Texture2DSampler : public vtkm::exec::ExecutionObjectBase
+  template <typename Device>
+  class Texture2DSamplerExecutionObject
   {
   public:
     using TextureExecPortal =
-      typename TextureDataHandle::template ExecutionTypes<DeviceTag>::PortalConst;
+      typename TextureDataHandle::template ExecutionTypes<Device>::PortalConst;
 
     VTKM_CONT
-    Texture2DSampler()
+    Texture2DSamplerExecutionObject()
       : Width(0)
       , Height(0)
     {
     }
 
     VTKM_CONT
-    Texture2DSampler(vtkm::Id width,
-                     vtkm::Id height,
-                     const TextureDataHandle& data,
-                     TextureFilterMode filterMode,
-                     TextureWrapMode wrapMode)
+    Texture2DSamplerExecutionObject(vtkm::Id width,
+                                    vtkm::Id height,
+                                    const TextureDataHandle& data,
+                                    TextureFilterMode filterMode,
+                                    TextureWrapMode wrapMode)
       : Width(width)
       , Height(height)
-      , Data(data.PrepareForInput(DeviceTag()))
+      , Data(data.PrepareForInput(Device()))
       , FilterMode(filterMode)
       , WrapMode(wrapMode)
     {
@@ -208,6 +207,45 @@ public:
     vtkm::Id Width;
     vtkm::Id Height;
     TextureExecPortal Data;
+    TextureFilterMode FilterMode;
+    TextureWrapMode WrapMode;
+  };
+
+  class Texture2DSampler : public vtkm::cont::ExecutionObjectFactoryBase
+  {
+  public:
+    VTKM_CONT
+    Texture2DSampler()
+      : Width(0)
+      , Height(0)
+    {
+    }
+
+    VTKM_CONT
+    Texture2DSampler(vtkm::Id width,
+                     vtkm::Id height,
+                     const TextureDataHandle& data,
+                     TextureFilterMode filterMode,
+                     TextureWrapMode wrapMode)
+      : Width(width)
+      , Height(height)
+      , Data(data)
+      , FilterMode(filterMode)
+      , WrapMode(wrapMode)
+    {
+    }
+
+    template <typename Device>
+    VTKM_CONT Texture2DSamplerExecutionObject<Device> PrepareForExecution(Device) const
+    {
+      return Texture2DSamplerExecutionObject<Device>(
+        this->Width, this->Height, this->Data, this->FilterMode, this->WrapMode);
+    }
+
+  private:
+    vtkm::Id Width;
+    vtkm::Id Height;
+    TextureDataHandle Data;
     TextureFilterMode FilterMode;
     TextureWrapMode WrapMode;
   }; // class Texture2DSampler

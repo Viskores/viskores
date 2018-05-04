@@ -26,7 +26,7 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
@@ -116,17 +116,19 @@ private:
   {
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using ParticleType = vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag>;
+    using ParticleExecutionObjectFactoryType =
+      vtkm::worklet::particleadvection::Particles<FieldType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
     //Create and invoke the particle advection.
     vtkm::cont::ArrayHandleIndex idxArray(numSeeds);
-    ParticleType particles(seedArray, stepsTaken, statusArray, maxSteps);
+    ParticleExecutionObjectFactoryType particlesExecutionObjectFacotry(
+      seedArray, stepsTaken, statusArray, maxSteps);
 
     //Invoke particle advection worklet
     ParticleAdvectWorkletType particleWorklet(integrator);
     ParticleWorkletDispatchType particleWorkletDispatch(particleWorklet);
-    particleWorkletDispatch.Invoke(idxArray, particles);
+    particleWorkletDispatch.Invoke(idxArray, particlesExecutionObjectFacotry);
   }
 
   IntegratorType integrator;
@@ -185,8 +187,7 @@ private:
   {
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
-    using StreamlineType =
-      vtkm::worklet::particleadvection::StateRecordingParticles<FieldType, DeviceAdapterTag>;
+    using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles<FieldType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
 

@@ -24,7 +24,7 @@
 
 #include <vtkm/cont/arg/TypeCheck.h>
 
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 
 #include <type_traits>
 
@@ -36,7 +36,7 @@ namespace arg
 {
 
 /// The ExecObject type check passes for any object that inherits from \c
-/// ExecutionObjectBase. This is supposed to signify that the object can be
+/// ExecutionObjectFactoryBase. This is supposed to signify that the object can be
 /// used in the execution environment although there is no way to verify that.
 ///
 struct TypeCheckTagExecObject
@@ -46,7 +46,8 @@ struct TypeCheckTagExecObject
 template <typename Type>
 struct TypeCheck<TypeCheckTagExecObject, Type>
 {
-  static constexpr bool value = std::is_base_of<vtkm::exec::ExecutionObjectBase, Type>::value;
+  static constexpr bool value =
+    std::is_base_of<vtkm::cont::ExecutionObjectFactoryBase, Type>::value;
 };
 }
 }

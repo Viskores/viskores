@@ -131,15 +131,13 @@ public:
 
     // Determine the number of output cells each input cell will generate
     vtkm::worklet::DispatcherMapField<TrianglesPerCell, DeviceAdapter> triPerCellDispatcher;
-    triPerCellDispatcher.Invoke(
-      inShapes, inNumIndices, tables.PrepareForInput(DeviceAdapter()), outCellsPerCell);
+    triPerCellDispatcher.Invoke(inShapes, inNumIndices, tables.PrepareForInput(), outCellsPerCell);
 
     // Build new cells
     vtkm::worklet::DispatcherMapTopology<TriangulateCell, DeviceAdapter> triangulateDispatcher(
       TriangulateCell::MakeScatter(outCellsPerCell));
-    triangulateDispatcher.Invoke(cellSet,
-                                 tables.PrepareForInput(DeviceAdapter()),
-                                 vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
+    triangulateDispatcher.Invoke(
+      cellSet, tables.PrepareForInput(), vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
 
     // Add cells to output cellset
     outCellSet.Fill(
