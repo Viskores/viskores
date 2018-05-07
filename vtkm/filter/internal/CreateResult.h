@@ -34,13 +34,15 @@ namespace internal
 //@{
 /// These are utility functions defined to use in filters when creating an
 /// output dataset to return from `DoExecute` methods. The various overloads
-/// provides different ways of creating the output dataset (copying the input)
-/// and optionally adding additional field(s).
+/// provides different ways of creating the output dataset (copying the input
+/// without any of the fields) and optionally adding additional field(s).
 
 /// Use this for DataSet filters (not Field filters).
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& dataSet)
 {
-  return dataSet;
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(dataSet);
+  return clone;
 }
 
 /// Use this if the field has already been added to the data set.
@@ -61,7 +63,8 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(
 inline VTKM_CONT vtkm::cont::DataSet CreateResult(const vtkm::cont::DataSet& inDataSet,
                                                   const vtkm::cont::Field& field)
 {
-  vtkm::cont::DataSet clone(inDataSet);
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
   clone.AddField(field);
   VTKM_ASSERT(field.GetName() != "");
   VTKM_ASSERT(clone.HasField(field.GetName(), field.GetAssociation()));
@@ -86,7 +89,8 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(
   VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_ANY);
   VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_LOGICAL_DIM);
 
-  vtkm::cont::DataSet clone(inDataSet);
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
   if ((fieldAssociation == vtkm::cont::Field::ASSOC_WHOLE_MESH) ||
       (fieldAssociation == vtkm::cont::Field::ASSOC_POINTS))
   {
@@ -122,7 +126,8 @@ inline VTKM_CONT vtkm::cont::DataSet CreateResult(
   VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_ANY);
   VTKM_ASSERT(fieldAssociation != vtkm::cont::Field::ASSOC_LOGICAL_DIM);
 
-  vtkm::cont::DataSet clone(inDataSet);
+  vtkm::cont::DataSet clone;
+  clone.CopyStructure(inDataSet);
   if ((fieldAssociation == vtkm::cont::Field::ASSOC_WHOLE_MESH) ||
       (fieldAssociation == vtkm::cont::Field::ASSOC_POINTS))
   {

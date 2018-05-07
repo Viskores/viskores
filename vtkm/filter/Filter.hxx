@@ -137,12 +137,21 @@ void CallMapFieldOntoOutputInternal(std::true_type,
 //--------------------------------------------------------------------------------
 template <typename Derived, typename DerivedPolicy>
 void CallMapFieldOntoOutputInternal(std::false_type,
-                                    Derived*,
-                                    const vtkm::cont::DataSet&,
-                                    vtkm::cont::DataSet&,
+                                    Derived* self,
+                                    const vtkm::cont::DataSet& input,
+                                    vtkm::cont::DataSet& output,
                                     const vtkm::filter::PolicyBase<DerivedPolicy>&)
 {
-  // do nothing.
+  // no MapFieldOntoOutput method is present. In that case, we simply copy the
+  // requested input fields to the output.
+  for (vtkm::IdComponent cc = 0; cc < input.GetNumberOfFields(); ++cc)
+  {
+    auto field = input.GetField(cc);
+    if (self->GetFieldsToPass().IsFieldSelected(field))
+    {
+      output.AddField(field);
+    }
+  }
 }
 
 //--------------------------------------------------------------------------------

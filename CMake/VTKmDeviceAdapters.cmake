@@ -21,7 +21,13 @@
 if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
   find_package(TBB REQUIRED)
 
-  add_library(vtkm::tbb UNKNOWN IMPORTED)
+  # Workaround a bug in older versions of cmake prevents linking with UNKOWN IMPORTED libraries
+  # refer to CMake issue #17245
+  if (CMAKE_VERSION VERSION_LESS 3.10)
+    add_library(vtkm::tbb SHARED IMPORTED GLOBAL)
+  else()
+    add_library(vtkm::tbb UNKNOWN IMPORTED GLOBAL)
+  endif()
 
   set_target_properties(vtkm::tbb PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${TBB_INCLUDE_DIRS}")
@@ -52,7 +58,13 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     list(APPEND CMAKE_CUDA_IMPLICIT_INCLUDE_DIRECTORIES "${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES}")
   endif()
 
-  add_library(vtkm::cuda UNKNOWN IMPORTED)
+  # Workaround a bug in older versions of cmake prevents linking with UNKOWN IMPORTED libraries
+  # refer to CMake issue #17245
+  if (CMAKE_VERSION VERSION_LESS 3.10)
+    add_library(vtkm::cuda STATIC IMPORTED GLOBAL)
+  else()
+    add_library(vtkm::cuda UNKNOWN IMPORTED GLOBAL)
+  endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_VERSION VERSION_LESS 3.11)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")

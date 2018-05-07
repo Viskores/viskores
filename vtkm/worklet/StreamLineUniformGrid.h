@@ -170,9 +170,7 @@ public:
     typedef void ExecutionSignature(_1, _2, _3, _4, _5, VisitIndex);
     using InputDomain = _1;
 
-    using ScatterType = vtkm::worklet::ScatterUniform;
-    VTKM_CONT
-    ScatterType GetScatter() const { return ScatterType(2); }
+    using ScatterType = vtkm::worklet::ScatterUniform<2>;
 
     FieldPortalConstType field;
     const vtkm::Id3 vdims;
@@ -398,7 +396,8 @@ public:
     // Worklet to make the streamlines
     MakeStreamLines makeStreamLines(
       timeStep, streamMode, maxSteps, vdims, fieldArray.PrepareForInput(DeviceAdapter()));
-    using MakeStreamLinesDispatcher = typename vtkm::worklet::DispatcherMapField<MakeStreamLines>;
+    using MakeStreamLinesDispatcher =
+      typename vtkm::worklet::DispatcherMapField<MakeStreamLines, DeviceAdapter>;
     MakeStreamLinesDispatcher makeStreamLinesDispatcher(makeStreamLines);
     makeStreamLinesDispatcher.Invoke(
       seedIdArray, seedPosArray, numIndices, validPoint, streamArray);

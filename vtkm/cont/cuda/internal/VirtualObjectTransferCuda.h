@@ -35,6 +35,11 @@ namespace internal
 namespace detail
 {
 
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#endif
+
 template <typename VirtualDerivedType>
 __global__ void ConstructVirtualObjectKernel(VirtualDerivedType* deviceObject,
                                              const VirtualDerivedType* targetObject)
@@ -55,6 +60,10 @@ __global__ void DeleteVirtualObjectKernel(VirtualDerivedType* deviceObject)
 {
   deviceObject->~VirtualDerivedType();
 }
+
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif
 
 } // detail
 

@@ -37,8 +37,8 @@ if(TARGET vtkm::tbb)
 endif()
 
 if(TARGET vtkm::cuda)
-  vtkm_compile_as_cuda(cudaSource RedistributePoints.cxx RedistributePoints.h)
-  add_executable(RedistributePoints_CUDA ${cudaSource})
+  vtkm_compile_as_cuda(cudaSource RedistributePoints.cxx)
+  add_executable(RedistributePoints_CUDA ${cudaSource} RedistributePoints.h)
 
   target_compile_definitions(RedistributePoints_CUDA PRIVATE
                              "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")

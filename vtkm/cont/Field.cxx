@@ -52,6 +52,11 @@ void Field::PrintSummary(std::ostream& out) const
 }
 
 VTKM_CONT
+Field::~Field()
+{
+}
+
+VTKM_CONT
 const vtkm::cont::ArrayHandle<vtkm::Range>& Field::GetRange() const
 {
   return this->GetRange(VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());

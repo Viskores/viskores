@@ -46,29 +46,5 @@ vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeCompute(const vtkm::cont::MultiBl
   return vtkm::cont::detail::FieldRangeComputeImpl(
     multiblock, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
 }
-
-//-----------------------------------------------------------------------------
-namespace detail
-{
-VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> MergeRanges(const vtkm::cont::ArrayHandle<vtkm::Range>& a,
-                                                 const vtkm::cont::ArrayHandle<vtkm::Range>& b)
-{
-  const auto num_vals_a = a.GetNumberOfValues();
-  const auto num_vals_b = b.GetNumberOfValues();
-  if (num_vals_b == 0)
-  {
-    return a;
-  }
-  if (num_vals_a == 0)
-  {
-    return b;
-  }
-
-  vtkm::cont::ArrayHandle<vtkm::Range> result;
-  vtkm::cont::Algorithm::Transform(a, b, result, vtkm::Add());
-  return result;
-}
-} // namespace detail
 }
 } // namespace vtkm::cont

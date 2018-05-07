@@ -89,13 +89,11 @@ public:
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
 
     template <typename CountArrayType>
-    VTKM_CONT TriangulateCell(const CountArrayType& countArray)
-      : Scatter(countArray, DeviceAdapter())
+    VTKM_CONT static ScatterType MakeScatter(const CountArrayType& countArray)
     {
+      return ScatterType(countArray, DeviceAdapter());
     }
 
     // Each cell produces triangles and write result at the offset
@@ -112,9 +110,6 @@ public:
       connectivityOut[1] = connectivityIn[triIndices[1]];
       connectivityOut[2] = connectivityIn[triIndices[2]];
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   template <typename CellSetType>
@@ -136,16 +131,13 @@ public:
 
     // Determine the number of output cells each input cell will generate
     vtkm::worklet::DispatcherMapField<TrianglesPerCell, DeviceAdapter> triPerCellDispatcher;
-    triPerCellDispatcher.Invoke(
-      inShapes, inNumIndices, tables.PrepareForInput(DeviceAdapter()), outCellsPerCell);
+    triPerCellDispatcher.Invoke(inShapes, inNumIndices, tables.PrepareForInput(), outCellsPerCell);
 
     // Build new cells
-    TriangulateCell triangulateWorklet(outCellsPerCell);
     vtkm::worklet::DispatcherMapTopology<TriangulateCell, DeviceAdapter> triangulateDispatcher(
-      triangulateWorklet);
-    triangulateDispatcher.Invoke(cellSet,
-                                 tables.PrepareForInput(DeviceAdapter()),
-                                 vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
+      TriangulateCell::MakeScatter(outCellsPerCell));
+    triangulateDispatcher.Invoke(
+      cellSet, tables.PrepareForInput(), vtkm::cont::make_ArrayHandleGroupVec<3>(outConnectivity));
 
     // Add cells to output cellset
     outCellSet.Fill(

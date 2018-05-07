@@ -21,6 +21,8 @@
 #ifndef vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
 #define vtk_m_cont_cuda_internal_DeviceAdapterAlgorithmThrust_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/TypeTraits.h>
 #include <vtkm/Types.h>
 #include <vtkm/UnaryPredicates.h>
@@ -34,15 +36,16 @@
 #include <vtkm/cont/cuda/internal/MakeThrustIterator.h>
 #include <vtkm/cont/cuda/internal/ThrustExceptionHandler.h>
 
+#include <vtkm/exec/cuda/internal/TaskStrided.h>
 #include <vtkm/exec/cuda/internal/WrappedOperators.h>
 #include <vtkm/exec/internal/ErrorMessageBuffer.h>
-#include <vtkm/exec/internal/TaskSingular.h>
 
 #include <vtkm/cont/internal/DeviceAdapterAlgorithmGeneral.h>
 
-// #define ANALYZE_VTKM_SCHEDULER_1D
-// #define ANALYZE_VTKM_SCHEDULER_3D
-#if defined(ANALYZE_VTKM_SCHEDULER_1D) || defined(ANALYZE_VTKM_SCHEDULER_3D)
+
+// #define PARAMETER_SWEEP_VTKM_SCHEDULER_1D
+// #define PARAMETER_SWEEP_VTKM_SCHEDULER_3D
+#if defined(PARAMETER_SWEEP_VTKM_SCHEDULER_1D) || defined(PARAMETER_SWEEP_VTKM_SCHEDULER_3D)
 #include <vtkm/cont/cuda/internal/TaskTuner.h>
 #endif
 
@@ -62,7 +65,6 @@ VTKM_THIRDPARTY_PRE_INCLUDE
 #include <vtkm/exec/cuda/internal/ExecutionPolicy.h>
 VTKM_THIRDPARTY_POST_INCLUDE
 
-#include <atomic>
 
 namespace vtkm
 {
@@ -77,93 +79,39 @@ namespace cuda
 namespace internal
 {
 
-static __global__ void DetermineProperXGridSize(vtkm::UInt32 desired_size,
-                                                vtkm::UInt32* actual_size)
-{
-  //used only to see if we can launch kernels with a x grid size that
-  //matches the max of the graphics card, or are we having to fall back
-  //to SM_2 grid sizes
-  if (blockIdx.x != 0)
-  {
-    return;
-  }
-#if __CUDA_ARCH__ <= 200
-  const vtkm::UInt32 maxXGridSizeForSM2 = 65535;
-  *actual_size = maxXGridSizeForSM2;
-#else
-  *actual_size = desired_size;
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
+
+template <typename TaskType>
+__global__ void TaskStrided1DLaunch(TaskType task, vtkm::Id size)
+{
+  //see https://devblogs.nvidia.com/cuda-pro-tip-write-flexible-kernels-grid-stride-loops/
+  //for why our inc is grid-stride
+  const vtkm::Id start = blockIdx.x * blockDim.x + threadIdx.x;
+  const vtkm::Id inc = blockDim.x * gridDim.x;
+  task(start, size, inc);
 }
 
-template <class FunctorType>
-__global__ void Schedule1DIndexKernel(FunctorType functor,
-                                      vtkm::Id numberOfKernelsInvoked,
-                                      vtkm::Id length)
+template <typename TaskType>
+__global__ void TaskStrided3DLaunch(TaskType task, dim3 size)
 {
-  //Note a cuda launch can only handle at most 2B iterations of a kernel
-  //because it holds all of the indexes inside UInt32, so for use to
-  //handle datasets larger than 2B, we need to execute multiple kernels
-  const vtkm::Id index =
-    numberOfKernelsInvoked + static_cast<vtkm::Id>(blockDim.x * blockIdx.x + threadIdx.x);
-  if (index < length)
-  {
-    functor(index);
-  }
-}
-
-template <class FunctorType>
-__global__ void Schedule3DIndexKernel(FunctorType functor, dim3 size)
-{
-  const vtkm::Id3 index(blockIdx.x * blockDim.x + threadIdx.x,
-                        blockIdx.y * blockDim.y + threadIdx.y,
-                        blockIdx.z * blockDim.z + threadIdx.z);
-  if (index[0] >= size.x || index[1] >= size.y || index[2] >= size.z)
-  {
-    return;
-  }
-  functor(index);
-}
-
-#if defined(ANALYZE_VTKM_SCHEDULER_1D) || defined(ANALYZE_VTKM_SCHEDULER_3D)
-
-// Currently we are getting compile failures with vtkm::worklet::wavelets::InverseTransformOdd
-// for an unknown reason
-template <class FunctorType>
-__global__ void Schedule1DIndexKernel2(FunctorType functor,
-                                       vtkm::Id numberOfKernelsInvoked,
-                                       vtkm::Id length)
-{
-  vtkm::Id index = static_cast<vtkm::Id>(blockIdx.x * blockDim.x + threadIdx.x);
-  const vtkm::Id inc = static_cast<vtkm::Id>(blockDim.x * gridDim.x);
-  for (; index < length; index += inc)
-  {
-    functor(index);
-  }
-}
-
-template <class FunctorType>
-__global__ void Schedule3DIndexKernel2(FunctorType functor, dim3 size)
-{
+  //This is the 3D version of executing in a grid-stride manner
   const dim3 start(blockIdx.x * blockDim.x + threadIdx.x,
                    blockIdx.y * blockDim.y + threadIdx.y,
                    blockIdx.z * blockDim.z + threadIdx.z);
   const dim3 inc(blockDim.x * gridDim.x, blockDim.y * gridDim.y, blockDim.z * gridDim.z);
 
-  for (uint k = start.z; k < size.z; k += inc.z)
+  for (vtkm::Id k = start.z; k < size.z; k += inc.z)
   {
-    for (uint j = start.y; j < size.y; j += inc.y)
+    for (vtkm::Id j = start.y; j < size.y; j += inc.y)
     {
-      vtkm::Id3 index(start.x, j, k);
-      for (vtkm::Id i = start.x; i < size.x; i += inc.x)
-      {
-        index[0] = i;
-        functor(index);
-      }
+      task(start.x, size.x, inc.x, j, k);
     }
   }
 }
 
-#endif
 
 template <typename T, typename BinaryOperationType>
 __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_op)
@@ -171,15 +119,9 @@ __global__ void SumExclusiveScan(T a, T b, T result, BinaryOperationType binary_
   result = binary_op(a, b);
 }
 
-inline void compute_block_size(dim3 rangeMax, dim3 blockSize3d, dim3& gridSize3d)
-{
-  gridSize3d.x = (rangeMax.x % blockSize3d.x != 0) ? (rangeMax.x / blockSize3d.x + 1)
-                                                   : (rangeMax.x / blockSize3d.x);
-  gridSize3d.y = (rangeMax.y % blockSize3d.y != 0) ? (rangeMax.y / blockSize3d.y + 1)
-                                                   : (rangeMax.y / blockSize3d.y);
-  gridSize3d.z = (rangeMax.z % blockSize3d.z != 0) ? (rangeMax.z / blockSize3d.z + 1)
-                                                   : (rangeMax.z / blockSize3d.z);
-}
+#if (defined(VTKM_GCC) || defined(VTKM_CLANG))
+#pragma GCC diagnostic pop
+#endif
 
 /// This class can be subclassed to implement the DeviceAdapterAlgorithm for a
 /// device that uses thrust as its implementation. The subclass should pass in
@@ -1133,89 +1075,24 @@ public:
                              ::thrust::equal_to<T>(),
                              binary_functor);
   }
-// Because of some funny code conversions in nvcc, kernels for devices have to
-// be public.
-#ifndef VTKM_CUDA
-private:
-#endif
   // we use cuda pinned memory to reduce the amount of synchronization
   // and mem copies between the host and device.
-  VTKM_CONT
-  static char* GetPinnedErrorArray(vtkm::Id& arraySize, char** hostPointer)
-  {
-    const vtkm::Id ERROR_ARRAY_SIZE = 1024;
-    static bool errorArrayInit = false;
-    static char* hostPtr = nullptr;
-    static char* devicePtr = nullptr;
-    if (!errorArrayInit)
-    {
-      VTKM_CUDA_CALL(cudaMallocHost((void**)&hostPtr, ERROR_ARRAY_SIZE, cudaHostAllocMapped));
-      VTKM_CUDA_CALL(cudaHostGetDevicePointer(&devicePtr, hostPtr, 0));
-      errorArrayInit = true;
-    }
-    //set the size of the array
-    arraySize = ERROR_ARRAY_SIZE;
+  VTKM_CONT_EXPORT
+  static char* GetPinnedErrorArray(vtkm::Id& arraySize, char** hostPointer);
 
-    //specify the host pointer to the memory
-    *hostPointer = hostPtr;
-    (void)hostPointer;
-    return devicePtr;
-  }
+  VTKM_CONT_EXPORT
+  static char* SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
 
-  // we query cuda for the max blocks per grid for 1D scheduling
-  // and cache the values in static variables
-  VTKM_CONT
-  static vtkm::Vec<vtkm::UInt32, 3> GetMaxGridOfThreadBlocks()
-  {
-    static std::atomic<bool> gridQueryInit(false);
-    static vtkm::Vec<vtkm::UInt32, 3> maxGridSize;
-    // NOTE: The following code may still be executed by multiple threads
-    // but it should not cause any correctness issues.
-    if (!gridQueryInit)
-    {
-      int currDevice;
-      VTKM_CUDA_CALL(cudaGetDevice(&currDevice)); //get deviceid from cuda
+  VTKM_CONT_EXPORT
+  static void GetGridsAndBlocks(int& grid, int& blocks, vtkm::Id size);
 
-      cudaDeviceProp properties;
-      VTKM_CUDA_CALL(cudaGetDeviceProperties(&properties, currDevice));
-      maxGridSize[0] = static_cast<vtkm::UInt32>(properties.maxGridSize[0]);
-      maxGridSize[1] = static_cast<vtkm::UInt32>(properties.maxGridSize[1]);
-      maxGridSize[2] = static_cast<vtkm::UInt32>(properties.maxGridSize[2]);
-
-      //Note: While in practice SM_3+ devices can schedule up to (2^31-1) grids
-      //in the X direction, it is dependent on the code being compiled for SM3+.
-      //If not, it falls back to SM_2 limitation of 65535 being the largest grid
-      //size.
-      //Now since SM architecture is only available inside kernels we have to
-      //invoke one to see what the actual limit is for our device.  So that is
-      //what we are going to do next, and than we will store that result
-
-      vtkm::UInt32* dev_actual_size;
-      VTKM_CUDA_CALL(cudaMalloc((void**)&dev_actual_size, sizeof(vtkm::UInt32)));
-      DetermineProperXGridSize<<<1, 1, 0, cudaStreamPerThread>>>(maxGridSize[0], dev_actual_size);
-      VTKM_CUDA_CALL(cudaMemcpyAsync(&maxGridSize[0],
-                                     dev_actual_size,
-                                     sizeof(vtkm::UInt32),
-                                     cudaMemcpyDeviceToHost,
-                                     cudaStreamPerThread));
-      VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
-      gridQueryInit = true;
-      VTKM_CUDA_CALL(cudaFree(dev_actual_size));
-    }
-    return maxGridSize;
-  }
+  VTKM_CONT_EXPORT
+  static void GetGridsAndBlocks(int& grid, dim3& blocks, const dim3& size);
 
 public:
-  template <class TaskType, typename RangeType>
-  VTKM_CONT static void ScheduleTask(TaskType task, RangeType size)
-  { //for now defer to the schedule api, we need to do a significant
-    //amount of build infrastructure work to implement type erasure tasks
-    //for cuda
-    Schedule(task, size);
-  }
-
-  template <class Functor>
-  VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
+  template <typename WType, typename IType>
+  static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided1D<WType, IType>& functor,
+                           vtkm::Id numInstances)
   {
     VTKM_ASSERT(numInstances >= 0);
     if (numInstances < 1)
@@ -1223,45 +1100,12 @@ public:
       // No instances means nothing to run. Just return.
       return;
     }
+    char* hostErrorPtr = SetupErrorBuffer(functor);
 
-    //since the memory is pinned we can access it safely on the host
-    //without a memcpy
-    vtkm::Id errorArraySize = 0;
-    char* hostErrorPtr = nullptr;
-    char* deviceErrorPtr = GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
+    int grids, blocks;
+    GetGridsAndBlocks(grids, blocks, numInstances);
 
-    //clear the first character which means that we don't contain an error
-    hostErrorPtr[0] = '\0';
-
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(deviceErrorPtr, errorArraySize);
-
-    functor.SetErrorMessageBuffer(errorMessage);
-
-    const vtkm::Id blockSizeAsId = 128;
-    const vtkm::UInt32 blockSize = 128;
-    const vtkm::UInt32 maxblocksPerLaunch = GetMaxGridOfThreadBlocks()[0];
-    const vtkm::UInt32 totalBlocks =
-      static_cast<vtkm::UInt32>((numInstances + blockSizeAsId - 1) / blockSizeAsId);
-
-    //Note a cuda launch can only handle at most 2B iterations of a kernel
-    //because it holds all of the indexes inside UInt32, so for use to
-    //handle datasets larger than 2B, we need to execute multiple kernels
-    if (totalBlocks < maxblocksPerLaunch)
-    {
-      Schedule1DIndexKernel<Functor><<<totalBlocks, blockSize, 0, cudaStreamPerThread>>>(
-        functor, vtkm::Id(0), numInstances);
-    }
-    else
-    {
-      const vtkm::Id numberOfKernelsToRun =
-        blockSizeAsId * static_cast<vtkm::Id>(maxblocksPerLaunch);
-      for (vtkm::Id numberOfKernelsInvoked = 0; numberOfKernelsInvoked < numInstances;
-           numberOfKernelsInvoked += numberOfKernelsToRun)
-      {
-        Schedule1DIndexKernel<Functor><<<maxblocksPerLaunch, blockSize, 0, cudaStreamPerThread>>>(
-          functor, numberOfKernelsInvoked, numInstances);
-      }
-    }
+    TaskStrided1DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor, numInstances);
 
     //sync so that we can check the results of the call.
     //In the future I want move this before the schedule call, and throwing
@@ -1275,13 +1119,14 @@ public:
       throw vtkm::cont::ErrorExecution(hostErrorPtr);
     }
 
-#ifdef ANALYZE_VTKM_SCHEDULER_1D
-    compare_1d_dynamic_block_picker(functor, numInstances, totalBlocks, blockSize);
+#ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_1D
+    parameter_sweep_1d_schedule(functor, numInstances);
 #endif
   }
 
-  template <class Functor>
-  VTKM_CONT static void Schedule(Functor functor, const vtkm::Id3& rangeMax)
+  template <typename WType, typename IType>
+  static void ScheduleTask(vtkm::exec::cuda::internal::TaskStrided3D<WType, IType>& functor,
+                           vtkm::Id3 rangeMax)
   {
     VTKM_ASSERT((rangeMax[0] >= 0) && (rangeMax[1] >= 0) && (rangeMax[2] >= 0));
     if ((rangeMax[0] < 1) || (rangeMax[1] < 1) || (rangeMax[2] < 1))
@@ -1289,46 +1134,17 @@ public:
       // No instances means nothing to run. Just return.
       return;
     }
-
-    //since the memory is pinned we can access it safely on the host
-    //without a memcpy
-    vtkm::Id errorArraySize = 0;
-    char* hostErrorPtr = nullptr;
-    char* deviceErrorPtr = GetPinnedErrorArray(errorArraySize, &hostErrorPtr);
-
-    //clear the first character which means that we don't contain an error
-    hostErrorPtr[0] = '\0';
-
-    vtkm::exec::internal::ErrorMessageBuffer errorMessage(deviceErrorPtr, errorArraySize);
-
-    functor.SetErrorMessageBuffer(errorMessage);
+    char* hostErrorPtr = SetupErrorBuffer(functor);
 
     const dim3 ranges(static_cast<vtkm::UInt32>(rangeMax[0]),
                       static_cast<vtkm::UInt32>(rangeMax[1]),
                       static_cast<vtkm::UInt32>(rangeMax[2]));
 
-    //currently we presume that 3d scheduling access patterns prefer accessing
-    //memory in the X direction. Also should be good for thin in the Z axis
-    //algorithms.
-    dim3 blockSize3d(64, 2, 1);
-    //In general we need more information as this doesn't work well when
-    //executing on the points, and need to fetch all cells used, as the z
-    //width is not fat enough
+    int grids;
+    dim3 blocks;
+    GetGridsAndBlocks(grids, blocks, ranges);
 
-    //handle the simple use case of 'bad' datasets which are thin in X
-    //but larger in the other directions, allowing us decent performance with
-    //that use case.
-    if (rangeMax[0] <= 128 && (rangeMax[0] < rangeMax[1] || rangeMax[0] < rangeMax[2]))
-    {
-      blockSize3d = dim3(16, 4, 4);
-    }
-
-
-    dim3 gridSize3d;
-    compute_block_size(ranges, blockSize3d, gridSize3d);
-
-    Schedule3DIndexKernel<Functor><<<gridSize3d, blockSize3d, 0, cudaStreamPerThread>>>(functor,
-                                                                                        ranges);
+    TaskStrided3DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor, ranges);
 
     //sync so that we can check the results of the call.
     //In the future I want move this before the schedule call, and throwing
@@ -1342,21 +1158,23 @@ public:
       throw vtkm::cont::ErrorExecution(hostErrorPtr);
     }
 
-#ifdef ANALYZE_VTKM_SCHEDULER_1D
-    compare_1d_dynamic_block_picker(functor,
-                                    rangeMax[0] * rangeMax[1] * rangeMax[2],
-                                    gridSize3d.x * gridSize3d.y * gridSize3d.z,
-                                    blockSize3d.x * blockSize3d.y * blockSize3d.z);
-#endif
-
-#ifdef ANALYZE_VTKM_SCHEDULER_3D
-    //requires the errormessage buffer be set
-    compare_3d_dynamic_block_picker(functor, rangeMax, gridSize3d, blockSize3d);
-#endif
-
 #ifdef PARAMETER_SWEEP_VTKM_SCHEDULER_3D
     parameter_sweep_3d_schedule(functor, rangeMax);
 #endif
+  }
+
+  template <class Functor>
+  VTKM_CONT static void Schedule(Functor functor, vtkm::Id numInstances)
+  {
+    vtkm::exec::cuda::internal::TaskStrided1D<Functor, vtkm::internal::NullType> kernel(functor);
+    ScheduleTask(kernel, numInstances);
+  }
+
+  template <class Functor>
+  VTKM_CONT static void Schedule(Functor functor, const vtkm::Id3& rangeMax)
+  {
+    vtkm::exec::cuda::internal::TaskStrided3D<Functor, vtkm::internal::NullType> kernel(functor);
+    ScheduleTask(kernel, rangeMax);
   }
 
   template <typename T, class Storage>

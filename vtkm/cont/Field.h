@@ -181,6 +181,9 @@ public:
   }
 
   VTKM_CONT
+  virtual ~Field();
+
+  VTKM_CONT
   Field& operator=(const vtkm::cont::Field& src) = default;
 
   VTKM_CONT

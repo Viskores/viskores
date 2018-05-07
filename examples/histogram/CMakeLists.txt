@@ -38,8 +38,8 @@ if (VTKm_ENABLE_MPI)
   endif()
 
   if(TARGET vtkm::cuda)
-    vtkm_compile_as_cuda(cudaSource Histogram.cxx HistogramMPI.h HistogramMPI.hxx)
-    add_executable(Histogram_CUDA ${cudaSource})
+    vtkm_compile_as_cuda(cudaSource Histogram.cxx)
+    add_executable(Histogram_CUDA ${cudaSource} HistogramMPI.h HistogramMPI.hxx)
 
     target_compile_definitions(Histogram_CUDA PRIVATE
                                "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")

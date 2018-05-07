@@ -96,12 +96,6 @@ public:
   /// All worklets must define their scatter operation.
   using ScatterType = vtkm::worklet::ScatterIdentity;
 
-  /// In addition to defining the scatter type, the worklet must produce the
-  /// scatter. The default vtkm::worklet::ScatterIdentity  has no state,
-  /// so just return an instance.
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(); }
-
   /// All neighborhood worklets must define their boundary type operation.
   /// The boundary type determines how loading on boundaries will work.
   using BoundaryType = vtkm::worklet::BoundaryClamp;

@@ -74,3 +74,17 @@ static const int MPI_MODE_UNIQUE_OPEN     =  32;
 static const int MPI_MODE_EXCL            =  64;
 static const int MPI_MODE_APPEND          = 128;
 static const int MPI_MODE_SEQUENTIAL      = 256;
+
+/* define window type */
+using MPI_Win = int;
+
+/* window fence assertions */
+static const int MPI_MODE_NOSTORE       = 1;
+static const int MPI_MODE_NOPUT         = 2;
+static const int MPI_MODE_NOPRECEDE     = 4;
+static const int MPI_MODE_NOSUCCEED     = 8;
+static const int MPI_MODE_NOCHECK       = 16;
+
+/* window lock types */
+static const int MPI_LOCK_SHARED        = 1;
+static const int MPI_LOCK_EXCLUSIVE     = 2;

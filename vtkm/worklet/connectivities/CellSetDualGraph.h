@@ -49,12 +49,6 @@ struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
   using InputDomain = _1;
 
   using ScatterType = vtkm::worklet::ScatterCounting;
-  VTKM_CONT ScatterType GetScatter() const { return this->Scatter; }
-
-  VTKM_CONT EdgeExtract(const ScatterType& scatter)
-    : Scatter(scatter)
-  {
-  }
 
   template <typename CellShapeTag,
             typename CellIndexType,
@@ -71,9 +65,6 @@ struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
     edgeIndices = vtkm::exec::CellEdgeCanonicalId(
       pointIndices.GetNumberOfComponents(), visitIndex, cellShape, pointIndices, *this);
   }
-
-private:
-  ScatterType Scatter;
 };
 
 struct CellToCellConnectivity : public vtkm::worklet::WorkletMapField

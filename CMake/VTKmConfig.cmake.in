@@ -92,7 +92,4 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${VTKm_CMAKE_MODULE_PATH})
 
 # This includes a host of functions used by VTK-m CMake.
 include(VTKmWrappers)
-
-if(VTKm_ENABLE_RENDERING)
-  include(VTKmRenderingContexts)
-endif()
+include(VTKmRenderingContexts)

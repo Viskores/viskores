@@ -182,25 +182,30 @@ public:
 
     switch (localId)
     {
-      case 2:
-        globalId += 1;
-      case 3:
-        globalId += this->Dimension;
-      case 1:
-        globalId += 1;
       case 0:
         break;
-      case 6:
+      case 1:
         globalId += 1;
-      case 7:
-        globalId += this->Dimension;
-      case 5:
-        globalId += 1;
+        break;
+      case 2:
+        globalId += this->Dimension + 2;
+        break;
+      case 3:
+        globalId += this->Dimension + 1;
+        break;
       case 4:
         globalId += this->DimPlus1Squared;
         break;
+      case 5:
+        globalId += this->DimPlus1Squared + 1;
+        break;
+      case 6:
+        globalId += this->Dimension + this->DimPlus1Squared + 2;
+        break;
+      case 7:
+        globalId += this->Dimension + this->DimPlus1Squared + 1;
+        break;
     }
-
     return globalId;
   }
 

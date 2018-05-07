@@ -78,6 +78,7 @@ set(headers
   ErrorFilterExecution.h
   ErrorExecution.h
   ErrorInternal.h
+  ExecutionObjectFactoryBase.h
   Field.h
   FieldRangeCompute.h
   FieldRangeGlobalCompute.h

@@ -22,7 +22,7 @@
 
 #include <vtkm/exec/arg/testing/ThreadIndicesTesting.h>
 
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectFactoryBase.h>
 
 #include <vtkm/testing/Testing.h>
 
@@ -31,7 +31,7 @@
 namespace
 {
 
-struct TestExecutionObject : public vtkm::exec::ExecutionObjectBase
+struct TestExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
 {
   TestExecutionObject()
     : Number(static_cast<vtkm::Int32>(0xDEADDEAD))

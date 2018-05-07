@@ -18,6 +18,10 @@
 ##  this software.
 ##============================================================================
 
+#unconditionally include rendering contexts so that the helper functions
+#are around even if rendering isn't enabled
+include(VTKmRenderingContexts)
+
 if(NOT VTKm_ENABLE_RENDERING)
   return()
 endif()
@@ -190,7 +194,6 @@ if(UNIX AND NOT APPLE)
 endif()
 
 #-----------------------------------------------------------------------------
-include(VTKmRenderingContexts)
 target_link_libraries(vtkm_rendering PUBLIC vtkm_rendering_gl_context)
 
 if(NOT VTKm_INSTALL_ONLY_LIBRARIES)

@@ -60,10 +60,10 @@ public:
   }
 
   VTKM_EXEC_CONT
-  vtkm::IdComponent GetNumberOfComponents() const { return this->NumComponents; }
+  inline vtkm::IdComponent GetNumberOfComponents() const { return this->NumComponents; }
 
   template <vtkm::IdComponent DestSize>
-  VTKM_EXEC_CONT void CopyInto(vtkm::Vec<ComponentType, DestSize>& dest) const
+  VTKM_EXEC_CONT inline void CopyInto(vtkm::Vec<ComponentType, DestSize>& dest) const
   {
     vtkm::IdComponent numComponents = vtkm::Min(DestSize, this->NumComponents);
     for (vtkm::IdComponent index = 0; index < numComponents; index++)
@@ -73,10 +73,13 @@ public:
   }
 
   VTKM_EXEC_CONT
-  const ComponentType& operator[](vtkm::IdComponent index) const { return this->Data[index]; }
+  inline const ComponentType& operator[](vtkm::IdComponent index) const
+  {
+    return this->Data[index];
+  }
 
   VTKM_EXEC_CONT
-  ComponentType& operator[](vtkm::IdComponent index) { return this->Data[index]; }
+  inline ComponentType& operator[](vtkm::IdComponent index) { return this->Data[index]; }
 
   VTKM_EXEC_CONT
   void Append(ComponentType value)

@@ -191,12 +191,6 @@ public:
   /// identity scatter (1-to-1 input to output).
   using ScatterType = vtkm::worklet::ScatterIdentity;
 
-  /// In addition to defining the scatter type, the worklet must produce the
-  /// scatter. The default ScatterIdentity has no state, so just return an
-  /// instance.
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(); }
-
   /// \brief A type list containing the type vtkm::Id.
   ///
   /// This is a convenience type to use as template arguments to \c

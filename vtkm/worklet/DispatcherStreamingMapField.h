@@ -173,11 +173,25 @@ class DispatcherStreamingMapField
     vtkm::worklet::internal::DispatcherBase<DispatcherStreamingMapField<WorkletType, Device>,
                                             WorkletType,
                                             vtkm::worklet::WorkletMapField>;
+  using ScatterType = typename Superclass::ScatterType;
 
 public:
+  // If you get a compile error here about there being no appropriate constructor for ScatterType,
+  // then that probably means that the worklet you are trying to execute has defined a custom
+  // ScatterType and that you need to create one (because there is no default way to construct
+  // the scatter). By convention, worklets that define a custom scatter type usually provide a
+  // static method named MakeScatter that constructs a scatter object.
   VTKM_CONT
-  DispatcherStreamingMapField(const WorkletType& worklet = WorkletType())
-    : Superclass(worklet)
+  DispatcherStreamingMapField(const WorkletType& worklet = WorkletType(),
+                              const ScatterType& scatter = ScatterType())
+    : Superclass(worklet, scatter)
+    , NumberOfBlocks(1)
+  {
+  }
+
+  VTKM_CONT
+  DispatcherStreamingMapField(const ScatterType& scatter)
+    : Superclass(WorkletType(), scatter)
     , NumberOfBlocks(1)
   {
   }
@@ -194,7 +208,7 @@ public:
     this->InvokeTransportParameters(invocation,
                                     numInstances,
                                     globalIndexOffset,
-                                    this->Worklet.GetScatter().GetOutputRange(numInstances),
+                                    this->Scatter.GetOutputRange(numInstances),
                                     device);
   }
 
@@ -275,10 +289,9 @@ private:
       TransportFunctorType(invocation.GetInputDomain(), inputRange, outputRange));
 
     // Get the arrays used for scattering input to output.
-    typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
-      this->Worklet.GetScatter().GetOutputToInputMap(inputRange);
-    typename WorkletType::ScatterType::VisitArrayType visitArray =
-      this->Worklet.GetScatter().GetVisitArray(inputRange);
+    typename ScatterType::OutputToInputMapType outputToInputMap =
+      this->Scatter.GetOutputToInputMap(inputRange);
+    typename ScatterType::VisitArrayType visitArray = this->Scatter.GetVisitArray(inputRange);
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.

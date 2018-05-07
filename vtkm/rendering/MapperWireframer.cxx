@@ -177,12 +177,10 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
 
   VTKM_CONT
   template <typename CountArrayType, typename DeviceTag>
-  EdgesExtracter(const CountArrayType& counts, DeviceTag device)
-    : Scatter(counts, device)
+  static ScatterType MakeScatter(const CountArrayType& counts, DeviceTag device)
   {
+    return ScatterType(counts, device);
   }
-
-  VTKM_CONT ScatterType GetScatter() const { return this->Scatter; }
 
   template <typename CellShapeTag, typename PointIndexVecType, typename EdgeIndexVecType>
   VTKM_EXEC void operator()(CellShapeTag shape,
@@ -209,9 +207,6 @@ struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
     edgeIndices[0] = p1 < p2 ? p1 : p2;
     edgeIndices[1] = p1 < p2 ? p2 : p1;
   }
-
-private:
-  ScatterType Scatter;
 }; // struct EdgesExtracter
 
 #if defined(VTKM_MSVC)
@@ -236,9 +231,8 @@ struct ExtractUniqueEdges
 
     vtkm::cont::ArrayHandle<vtkm::IdComponent> counts;
     vtkm::worklet::DispatcherMapTopology<EdgesCounter, DeviceTag>().Invoke(CellSet, counts);
-    EdgesExtracter extractWorklet(counts, DeviceTag());
     vtkm::worklet::DispatcherMapTopology<EdgesExtracter, DeviceTag> extractDispatcher(
-      extractWorklet);
+      EdgesExtracter::MakeScatter(counts, DeviceTag()));
     extractDispatcher.Invoke(CellSet, EdgeIndices);
     vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Sort<vtkm::Id2>(EdgeIndices);
     vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>::template Unique<vtkm::Id2>(EdgeIndices);

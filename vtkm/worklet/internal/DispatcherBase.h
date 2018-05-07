@@ -500,6 +500,8 @@ private:
 
 
 public:
+  using ScatterType = typename WorkletType::ScatterType;
+
   template <typename... Args>
   VTKM_CONT void Invoke(Args&&... args) const
   {
@@ -508,8 +510,9 @@ public:
 
 protected:
   VTKM_CONT
-  DispatcherBase(const WorkletType& worklet)
+  DispatcherBase(const WorkletType& worklet, const ScatterType& scatter)
     : Worklet(worklet)
+    , Scatter(scatter)
   {
   }
 
@@ -519,7 +522,7 @@ protected:
                              DeviceAdapter device) const
   {
     this->InvokeTransportParameters(
-      invocation, numInstances, this->Worklet.GetScatter().GetOutputRange(numInstances), device);
+      invocation, numInstances, this->Scatter.GetOutputRange(numInstances), device);
   }
 
   template <typename Invocation, typename DeviceAdapter>
@@ -536,10 +539,11 @@ protected:
                              DeviceAdapter device) const
   {
     this->InvokeTransportParameters(
-      invocation, dimensions, this->Worklet.GetScatter().GetOutputRange(dimensions), device);
+      invocation, dimensions, this->Scatter.GetOutputRange(dimensions), device);
   }
 
   WorkletType Worklet;
+  ScatterType Scatter;
 
 private:
   // Dispatchers cannot be copied
@@ -579,9 +583,9 @@ private:
 
     // Get the arrays used for scattering input to output.
     typename WorkletType::ScatterType::OutputToInputMapType outputToInputMap =
-      this->Worklet.GetScatter().GetOutputToInputMap(inputRange);
+      this->Scatter.GetOutputToInputMap(inputRange);
     typename WorkletType::ScatterType::VisitArrayType visitArray =
-      this->Worklet.GetScatter().GetVisitArray(inputRange);
+      this->Scatter.GetVisitArray(inputRange);
 
     // Replace the parameters in the invocation with the execution object and
     // pass to next step of Invoke. Also add the scatter information.

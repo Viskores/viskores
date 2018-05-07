@@ -152,9 +152,6 @@ struct ScatterIdentityNeighbor : public vtkm::worklet::WorkletPointNeighborhood5
 
 
   using ScatterType = vtkm::worklet::ScatterIdentity;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(); }
 };
 
 struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood5x5x5
@@ -194,10 +191,7 @@ struct ScatterUniformNeighbor : public vtkm::worklet::WorkletPointNeighborhood5x
   }
 
 
-  using ScatterType = vtkm::worklet::ScatterUniform;
-
-  VTKM_CONT
-  ScatterType GetScatter() const { return ScatterType(3); }
+  using ScatterType = vtkm::worklet::ScatterUniform<3>;
 };
 }
 

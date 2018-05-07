@@ -86,13 +86,11 @@ public:
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
-    VTKM_CONT
-    ScatterType GetScatter() const { return this->Scatter; }
 
     template <typename CellArrayType>
-    VTKM_CONT TetrahedralizeCell(const CellArrayType& cellArray)
-      : Scatter(cellArray, DeviceAdapter())
+    VTKM_CONT static ScatterType MakeScatter(const CellArrayType& cellArray)
     {
+      return ScatterType(cellArray, DeviceAdapter());
     }
 
     // Each cell produces tetrahedra and write result at the offset
@@ -110,9 +108,6 @@ public:
       connectivityOut[2] = connectivityIn[tetIndices[2]];
       connectivityOut[3] = connectivityIn[tetIndices[3]];
     }
-
-  private:
-    ScatterType Scatter;
   };
 
   template <typename CellSetType>
@@ -134,15 +129,13 @@ public:
 
     // Determine the number of output cells each input cell will generate
     vtkm::worklet::DispatcherMapField<TetrahedraPerCell, DeviceAdapter> tetPerCellDispatcher;
-    tetPerCellDispatcher.Invoke(inShapes, tables.PrepareForInput(DeviceAdapter()), outCellsPerCell);
+    tetPerCellDispatcher.Invoke(inShapes, tables.PrepareForInput(), outCellsPerCell);
 
     // Build new cells
-    TetrahedralizeCell tetrahedralizeWorklet(outCellsPerCell);
     vtkm::worklet::DispatcherMapTopology<TetrahedralizeCell, DeviceAdapter>
-      tetrahedralizeDispatcher(tetrahedralizeWorklet);
-    tetrahedralizeDispatcher.Invoke(cellSet,
-                                    tables.PrepareForInput(DeviceAdapter()),
-                                    vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
+      tetrahedralizeDispatcher(TetrahedralizeCell::MakeScatter(outCellsPerCell));
+    tetrahedralizeDispatcher.Invoke(
+      cellSet, tables.PrepareForInput(), vtkm::cont::make_ArrayHandleGroupVec<4>(outConnectivity));
 
     // Add cells to output cellset
     outCellSet.Fill(cellSet.GetNumberOfPoints(), vtkm::CellShapeTagTetra::Id, 4, outConnectivity);

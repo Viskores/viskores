@@ -36,6 +36,12 @@ void DataSet::Clear()
   this->CellSets.clear();
 }
 
+void DataSet::CopyStructure(const vtkm::cont::DataSet& source)
+{
+  this->CoordSystems = source.CoordSystems;
+  this->CellSets = source.CellSets;
+}
+
 const vtkm::cont::Field& DataSet::GetField(vtkm::Id index) const
 {
   VTKM_ASSERT((index >= 0) && (index < this->GetNumberOfFields()));
