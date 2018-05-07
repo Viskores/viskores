@@ -62,7 +62,6 @@ struct ParticleAdvectionResult
   {
   }
 
-
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> positions;
   vtkm::cont::ArrayHandle<vtkm::Id> status;
   vtkm::cont::ArrayHandle<vtkm::Id> stepsTaken;
@@ -82,7 +81,7 @@ public:
     const IntegratorType& it,
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
     const vtkm::Id& nSteps,
-    const DeviceAdapter&)
+    DeviceAdapter tag)
   {
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
 
@@ -92,14 +91,14 @@ public:
     //Allocate status and steps arrays.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> init(0, numSeeds);
     stepsTaken.Allocate(numSeeds);
-    vtkm::cont::ArrayCopy(init, stepsTaken, DeviceAdapter());
+    vtkm::cont::ArrayCopy(init, stepsTaken, tag);
 
     //Allocate memory to store the time for temporal integration.
     vtkm::cont::ArrayHandleConstant<FieldType> time(0, numSeeds);
     timeArray.Allocate(numSeeds);
-    vtkm::cont::ArrayCopy(time, timeArray, DeviceAdapter());
+    vtkm::cont::ArrayCopy(time, timeArray, tag);
 
-    return Run(it, pts, stepsTaken, timeArray, nSteps, DeviceAdapter());
+    return Run(it, pts, stepsTaken, timeArray, nSteps, tag);
   }
 
   template <typename IntegratorType,
@@ -111,7 +110,7 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
     vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
     const vtkm::Id& nSteps,
-    const DeviceAdapter&)
+    DeviceAdapter tag)
   {
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
 
@@ -119,9 +118,9 @@ public:
     //Allocate memory to store the time for temporal integration.
     vtkm::cont::ArrayHandleConstant<FieldType> time(0, numSeeds);
     timeArray.Allocate(numSeeds);
-    vtkm::cont::ArrayCopy(time, timeArray, DeviceAdapter());
+    vtkm::cont::ArrayCopy(time, timeArray, tag);
 
-    return Run(it, pts, inputSteps, timeArray, nSteps, DeviceAdapter());
+    return Run(it, pts, inputSteps, timeArray, nSteps, tag);
   }
 
   template <typename IntegratorType,
@@ -134,12 +133,9 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
     vtkm::cont::ArrayHandle<FieldType>& inputTime,
     const vtkm::Id& nSteps,
-    const DeviceAdapter&)
+    DeviceAdapter tag)
   {
-    vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType,
-                                                               FieldType,
-                                                               DeviceAdapter>
-      worklet;
+    vtkm::worklet::particleadvection::ParticleAdvectionWorklet<IntegratorType, FieldType> worklet;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(pts.GetNumberOfValues());
 
@@ -147,9 +143,9 @@ public:
     //Allocate status arrays.
     vtkm::cont::ArrayHandleConstant<vtkm::Id> statusOK(static_cast<vtkm::Id>(1), numSeeds);
     status.Allocate(numSeeds);
-    vtkm::cont::ArrayCopy(statusOK, status, DeviceAdapter());
+    vtkm::cont::ArrayCopy(statusOK, status, tag);
 
-    worklet.Run(it, pts, nSteps, status, inputSteps, inputTime);
+    worklet.Run(it, pts, nSteps, status, inputSteps, inputTime, tag);
     //Create output.
     ParticleAdvectionResult<FieldType> res(pts, status, inputSteps, inputTime);
     return res;
@@ -213,7 +209,7 @@ public:
     const IntegratorType& it,
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& seedArray,
     const vtkm::Id& nSteps,
-    const DeviceAdapter&)
+    DeviceAdapter tag)
   {
     using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
@@ -236,7 +232,7 @@ public:
     timeArray.Allocate(numSeeds);
     DeviceAlgorithm::Copy(time, timeArray);
 
-    return Run(it, seedArray, steps, timeArray, nSteps, DeviceAdapter());
+    return Run(it, seedArray, steps, timeArray, nSteps, tag);
   }
 
   template <typename IntegratorType,
@@ -248,7 +244,7 @@ public:
     const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& seedArray,
     vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
     const vtkm::Id& nSteps,
-    const DeviceAdapter&)
+    DeviceAdapter tag)
   {
     using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
@@ -266,7 +262,7 @@ public:
     timeArray.Allocate(numSeeds);
     DeviceAlgorithm::Copy(time, timeArray);
 
-    return Run(it, seedArray, inputSteps, timeArray, nSteps, DeviceAdapter());
+    return Run(it, seedArray, inputSteps, timeArray, nSteps, tag);
   }
 
   template <typename IntegratorType,
@@ -279,11 +275,10 @@ public:
     vtkm::cont::ArrayHandle<vtkm::Id>& inputSteps,
     vtkm::cont::ArrayHandle<FieldType>& inputTime,
     const vtkm::Id& nSteps,
-    const DeviceAdapter&)
+    DeviceAdapter tag)
   {
     using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
-    vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType, FieldType, DeviceAdapter>
-      worklet;
+    vtkm::worklet::particleadvection::StreamlineWorklet<IntegratorType, FieldType> worklet;
 
     vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage> positions;
     vtkm::cont::CellSetExplicit<> polyLines;
@@ -295,7 +290,7 @@ public:
     status.Allocate(numSeeds);
     DeviceAlgorithm::Copy(statusOK, status);
 
-    worklet.Run(it, seedArray, nSteps, positions, polyLines, status, inputSteps, inputTime);
+    worklet.Run(it, seedArray, nSteps, positions, polyLines, status, inputSteps, inputTime, tag);
 
     StreamlineResult<FieldType> res(positions, polyLines, status, inputSteps, inputTime);
     return res;

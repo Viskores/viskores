@@ -38,7 +38,7 @@ namespace worklet
 namespace particleadvection
 {
 
-template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag>
+template <typename IntegratorType, typename FieldType>
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
@@ -107,42 +107,40 @@ public:
 };
 
 
-template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag>
+template <typename IntegratorType, typename FieldType>
 class ParticleAdvectionWorklet
 {
 public:
-  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
-  using ParticleAdvectWorkletType =
-    vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType,
-                                                            FieldType,
-                                                            DeviceAdapterTag>;
-
   VTKM_EXEC_CONT ParticleAdvectionWorklet() {}
 
-  template <typename PointStorage, typename FieldStorage>
+  template <typename PointStorage, typename FieldStorage, typename DeviceAdapterTag>
   void Run(const IntegratorType& it,
            const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
            const vtkm::Id& nSteps,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken,
-           vtkm::cont::ArrayHandle<FieldType, FieldStorage>& timeArray)
+           vtkm::cont::ArrayHandle<FieldType, FieldStorage>& timeArray,
+           DeviceAdapterTag tag)
   {
     integrator = it;
     seedArray = pts;
     maxSteps = nSteps;
-    run(statusArray, stepsTaken, timeArray);
+    run(statusArray, stepsTaken, timeArray, tag);
   }
 
   ~ParticleAdvectionWorklet() {}
 
 private:
-  template <typename FieldStorage>
+  template <typename FieldStorage, typename DeviceAdapterTag>
   void run(vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken,
-           vtkm::cont::ArrayHandle<FieldType, FieldStorage>& timeArray)
+           vtkm::cont::ArrayHandle<FieldType, FieldStorage>& timeArray,
+           DeviceAdapterTag)
   {
+    using ParticleAdvectWorkletType =
+      vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType, FieldType>;
     using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType, DeviceAdapterTag>;
     using ParticleType = vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
@@ -177,22 +175,13 @@ public:
 };
 };
 
-template <typename IntegratorType, typename FieldType, typename DeviceAdapterTag>
+template <typename IntegratorType, typename FieldType>
 class StreamlineWorklet
 {
 public:
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
-  using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
-  using FieldPortalConstType =
-    typename FieldHandle::template ExecutionTypes<DeviceAdapterTag>::PortalConst;
-  using ParticleAdvectWorkletType =
-    vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType,
-                                                            FieldType,
-                                                            DeviceAdapterTag>;
-
   VTKM_EXEC_CONT StreamlineWorklet() {}
 
-  template <typename PointStorage, typename FieldStorage>
+  template <typename PointStorage, typename FieldStorage, typename DeviceAdapterTag>
   void Run(const IntegratorType& it,
            const vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, PointStorage>& pts,
            const vtkm::Id& nSteps,
@@ -200,12 +189,13 @@ public:
            vtkm::cont::CellSetExplicit<>& polyLines,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& statusArray,
            vtkm::cont::ArrayHandle<vtkm::Id, FieldStorage>& stepsTaken,
-           vtkm::cont::ArrayHandle<FieldType, FieldStorage>& timeArray)
+           vtkm::cont::ArrayHandle<FieldType, FieldStorage>& timeArray,
+           DeviceAdapterTag tag)
   {
     integrator = it;
     seedArray = pts;
     maxSteps = nSteps;
-    run(positions, polyLines, statusArray, stepsTaken, timeArray);
+    run(positions, polyLines, statusArray, stepsTaken, timeArray, tag);
   }
 
   ~StreamlineWorklet() {}
@@ -220,14 +210,20 @@ public:
   };
 
 private:
+  template <typename DeviceAdapterTag>
   void run(vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>& positions,
            vtkm::cont::CellSetExplicit<>& polyLines,
            vtkm::cont::ArrayHandle<vtkm::Id>& status,
            vtkm::cont::ArrayHandle<vtkm::Id>& stepsTaken,
-           vtkm::cont::ArrayHandle<FieldType>& timeArray)
+           vtkm::cont::ArrayHandle<FieldType>& timeArray,
+           DeviceAdapterTag)
   {
+
+    using DeviceAlgorithm = typename vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapterTag>;
+    using ParticleAdvectWorkletType =
+      vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType, FieldType>;
     using ParticleWorkletDispatchType =
-      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType>;
+      typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType, DeviceAdapterTag>;
     using StreamlineType =
       vtkm::worklet::particleadvection::StateRecordingParticles<FieldType, DeviceAdapterTag>;
 
