@@ -556,7 +556,8 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
 
   using T = typename FieldVecType::ComponentType;
 
-  return vtkm::Vec<T, 3>((field[1] - field[0]) / wCoords.GetSpacing()[0], T(0), T(0));
+  return vtkm::Vec<T, 3>(
+    static_cast<T>((field[1] - field[0]) / wCoords.GetSpacing()[0]), T(0), T(0));
 }
 
 //-----------------------------------------------------------------------------
@@ -857,7 +858,9 @@ VTKM_EXEC vtkm::Vec<typename FieldVecType::ComponentType, 3> CellDerivative(
   sum = sum + field[2] * VecT(pc[1], pc[0]);
   sum = sum + field[3] * VecT(-pc[1], rc[0]);
 
-  return vtkm::Vec<T, 3>(sum[0] / wCoords.GetSpacing()[0], sum[1] / wCoords.GetSpacing()[1], T(0));
+  return vtkm::Vec<T, 3>(static_cast<T>(sum[0] / wCoords.GetSpacing()[0]),
+                         static_cast<T>(sum[1] / wCoords.GetSpacing()[1]),
+                         T(0));
 }
 
 //-----------------------------------------------------------------------------
