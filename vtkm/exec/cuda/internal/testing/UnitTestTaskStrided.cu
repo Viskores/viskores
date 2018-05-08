@@ -32,6 +32,20 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
+#if defined(VTKM_MSVC)
+#pragma warning(push)
+#pragma warning(disable : 4068) //unknown pragma
+#endif
+
+#if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)
+// Disable warning "declared but never referenced"
+// This file produces several false-positive warnings
+// Eg: TestExecObject::TestExecObject, MyOutputToInputMapPortal::Get,
+//     TestWorkletProxy::operator()
+#pragma push
+#pragma diag_suppress 177
+#endif
+
 namespace
 {
 
@@ -359,3 +373,11 @@ int UnitTestTaskStrided(int, char* [])
 {
   return vtkm::cont::testing::Testing::Run(TestTaskStrided<vtkm::cont::DeviceAdapterTagCuda>);
 }
+
+#if defined(__NVCC__) && defined(__CUDACC_VER_MAJOR__)
+#pragma pop
+#endif
+
+#if defined(VTKM_MSVC)
+#pragma warning(pop)
+#endif
