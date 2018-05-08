@@ -61,9 +61,10 @@ struct LinearField
   template <typename T>
   FieldType GetValue(vtkm::Vec<T, 3> coordinates) const
   {
-    return ((coordinates[0] * this->Gradient[0] + coordinates[1] * this->Gradient[1] +
-             coordinates[2] * this->Gradient[2]) +
-            this->OriginValue);
+    return static_cast<FieldType>((coordinates[0] * this->Gradient[0] +
+                                   coordinates[1] * this->Gradient[1] +
+                                   coordinates[2] * this->Gradient[2]) +
+                                  this->OriginValue);
   }
 };
 
