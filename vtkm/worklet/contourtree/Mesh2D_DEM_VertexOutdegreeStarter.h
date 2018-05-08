@@ -192,7 +192,7 @@ public:
     // and set the initial inverse index to a flag
     isCritical = (outDegree != 1) ? 1 : 0;
   }
-}; // Mesh2D_DEM_VertexStarter
+}; // Mesh2D_DEM_VertexOutdegreeStarter
 
 } // namespace contourtree
 } // namespace worklet
