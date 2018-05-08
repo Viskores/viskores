@@ -23,7 +23,7 @@ set(unit_tests
   UnitTestCellAverage.cxx
   UnitTestCellDeepCopy.cxx
   UnitTestCellGradient.cxx
-  UnitTestCellSetConnectivity.cpp
+  UnitTestCellSetConnectivity.cxx
   UnitTestCellSetDualGraph.cxx
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
@@ -37,7 +37,7 @@ set(unit_tests
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestInnerJoin.cxx
-  UnitTestImageConnectivity.cpp
+  UnitTestImageConnectivity.cxx
   UnitTestKdTreeBuildNNS.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx

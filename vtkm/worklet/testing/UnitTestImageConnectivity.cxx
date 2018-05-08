@@ -32,36 +32,36 @@ class TestImageConnectivity
 public:
   using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
 
-  void operator()() const {
+  void operator()() const
+  {
     // example image from Connected Component Labeling in CUDA by OndˇrejˇŚtava,
     // Bedˇrich Beneˇ
-    std::vector<vtkm::UInt8> pixels(8*4, 0);
+    std::vector<vtkm::UInt8> pixels(8 * 4, 0);
     pixels[3] = pixels[4] = pixels[10] = pixels[11] = 1;
     pixels[1] = pixels[9] = pixels[16] = pixels[17] = pixels[24] = pixels[25] = 1;
-    pixels[7] = pixels[15] = pixels[21] = pixels[23] =
-    pixels[28] = pixels[29] = pixels[30] = pixels[31] = 1;
+    pixels[7] = pixels[15] = pixels[21] = pixels[23] = pixels[28] = pixels[29] = pixels[30] =
+      pixels[31] = 1;
 
     vtkm::cont::DataSetBuilderUniform builder;
     vtkm::cont::DataSet data = builder.Create(vtkm::Id3(8, 4, 1));
 
-    auto colorField = vtkm::cont::make_Field("color",
-      vtkm::cont::Field::ASSOC_POINTS, pixels);
+    auto colorField = vtkm::cont::make_Field("color", vtkm::cont::Field::ASSOC_POINTS, pixels);
     data.AddField(colorField);
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;
-    vtkm::worklet::connectivity::ImageConnectivity().Run(data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(),
-      colorField.GetData(), component, DeviceAdapter());
+    vtkm::worklet::connectivity::ImageConnectivity().Run(
+      data.GetCellSet(0).Cast<vtkm::cont::CellSetStructured<2>>(),
+      colorField.GetData(),
+      component,
+      DeviceAdapter());
 
-    std::vector<vtkm::Id> componentExpected = {
-      0, 1, 2, 1, 1, 3, 3, 4,
-      0, 1, 1, 1, 3, 3, 3, 4,
-      1, 1, 3, 3, 3, 4, 3, 4,
-      1, 1, 3, 3, 4, 4, 4, 4
-    };
+    std::vector<vtkm::Id> componentExpected = { 0, 1, 2, 1, 1, 3, 3, 4, 0, 1, 1, 1, 3, 3, 3, 4,
+                                                1, 1, 3, 3, 3, 4, 3, 4, 1, 1, 3, 3, 4, 4, 4, 4 };
 
-    for (vtkm::Id index = 0; index < component.GetNumberOfValues(); index++) {
+    for (vtkm::Id index = 0; index < component.GetNumberOfValues(); index++)
+    {
       VTKM_TEST_ASSERT(component.GetPortalConstControl().Get(index) == componentExpected[index],
-      "Components has unexpected value.");
+                       "Components has unexpected value.");
     }
   }
 };
