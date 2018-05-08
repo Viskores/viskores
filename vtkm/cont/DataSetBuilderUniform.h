@@ -128,7 +128,7 @@ private:
                                            std::string coordNm,
                                            std::string cellNm)
   {
-    vtkm::Id dims[3];
+    vtkm::Id dims[3] = { 1, 1, 1 };
     int ndims = 0;
     for (int i = 0; i < 3; ++i)
     {
