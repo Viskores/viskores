@@ -455,7 +455,7 @@ void Camera::SetHeight(const vtkm::Int32& height)
   if (Height != height)
   {
     this->Height = height;
-    this->SetFieldOfView(this->FovX);
+    this->SetFieldOfView(this->FovY);
   }
 }
 
@@ -475,7 +475,7 @@ void Camera::SetWidth(const vtkm::Int32& width)
   if (this->Width != width)
   {
     this->Width = width;
-    this->SetFieldOfView(this->FovX);
+    this->SetFieldOfView(this->FovY);
   }
 }
 
@@ -529,8 +529,8 @@ void Camera::SetFieldOfView(const vtkm::Float32& degrees)
     throw vtkm::cont::ErrorBadValue("Camera feild of view must be less than 180.");
   }
 
-  vtkm::Float32 newFOVY = (vtkm::Float32(this->Height) / vtkm::Float32(this->Width)) * degrees;
-  vtkm::Float32 newFOVX = degrees;
+  vtkm::Float32 newFOVY = degrees;
+  vtkm::Float32 newFOVX = (vtkm::Float32(this->Width) / vtkm::Float32(this->Height)) * degrees;
   if (newFOVX != this->FovX)
   {
     this->IsViewDirty = true;
@@ -541,13 +541,13 @@ void Camera::SetFieldOfView(const vtkm::Float32& degrees)
   }
   this->FovX = newFOVX;
   this->FovY = newFOVY;
-  this->CameraView.SetFieldOfView(this->FovX);
+  this->CameraView.SetFieldOfView(this->FovY);
 }
 
 VTKM_CONT
 vtkm::Float32 Camera::GetFieldOfView() const
 {
-  return this->FovX;
+  return this->FovY;
 }
 
 VTKM_CONT
