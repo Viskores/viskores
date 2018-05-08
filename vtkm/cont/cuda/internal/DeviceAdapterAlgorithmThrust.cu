@@ -32,11 +32,17 @@ namespace cuda
 namespace internal
 {
 
-VTKM_CONT_EXPORT int getNumSMs(int dId)
+VTKM_CONT_EXPORT vtkm::UInt32 getNumSMs(int dId)
 {
+  std::size_t index = 0;
+  if (dId > 0)
+  {
+    index = static_cast<size_t>(dId);
+  }
+
   //check
   static bool lookupBuilt = false;
-  static std::vector<int> numSMs;
+  static std::vector<vtkm::UInt32> numSMs;
 
   if (!lookupBuilt)
   {
@@ -53,11 +59,11 @@ VTKM_CONT_EXPORT int getNumSMs(int dId)
     { //get the number of sm's per deviceId
       VTKM_CUDA_CALL(
         cudaDeviceGetAttribute(&numberOfSMs, cudaDevAttrMultiProcessorCount, deviceId));
-      numSMs.push_back(numberOfSMs);
+      numSMs.push_back(static_cast<vtkm::UInt32>(numberOfSMs));
     }
     lookupBuilt = true;
   }
-  return numSMs[dId];
+  return numSMs[index];
 }
 
 // we use cuda pinned memory to reduce the amount of synchronization
@@ -107,8 +113,8 @@ char* DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::SetupError
 
 template <>
 void DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(
-  int& grids,
-  int& blocks,
+  vtkm::UInt32& grids,
+  vtkm::UInt32& blocks,
   vtkm::Id size)
 {
   (void)size;
@@ -120,7 +126,7 @@ void DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAnd
 
 template <>
 void DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(
-  int& grids,
+  vtkm::UInt32& grids,
   dim3& blocks,
   const dim3& size)
 {
