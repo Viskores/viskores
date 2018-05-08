@@ -173,7 +173,8 @@ public:
   /// \param coords An ArrayHandle of x, y, z coordinates of input points.
   /// \param device Tag for selecting device adapter
   template <typename DeviceAdapter>
-  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords, DeviceAdapter)
+  void Build(const vtkm::cont::ArrayHandle<vtkm::Vec<T, 3>>& coords,
+             DeviceAdapter vtkmNotUsed(device))
   {
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     // generate unique id for each input point

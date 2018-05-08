@@ -21,4 +21,16 @@
 list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   ".*warning: ignoring loop annotation.*"
   ".*warning: Included by graph for.*not generated, too many nodes. Consider increasing DOT_GRAPH_MAX_NODES."
+
+  # disable doxygen warning about potential recursion.
+  ".*warning: Detected potential recursive class relation between class vtkm::exec::internal::ArrayPortalTransform"
+
+  # disable doxygen warning about not generating graph
+  ".*warning: Included by graph for"
+
+  # disable doxygen warnings from CONTRIBUTING.md, CodingConventions.md.
+  # these files are really intended for Gitlab, hence we don't want to use
+  # doxygen tags in them.
+  "CONTRIBUTING.md.*warning"
+  "CodingConventions.md.*warning"
 )
