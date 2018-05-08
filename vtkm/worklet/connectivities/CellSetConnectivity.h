@@ -25,6 +25,13 @@
 #include <vtkm/worklet/connectivities/CellSetDualGraph.h>
 #include <vtkm/worklet/connectivities/GraphConnectivity.h>
 
+namespace vtkm
+{
+namespace worklet
+{
+namespace connectivity
+{
+
 class CellSetConnectivity
 {
 public:
@@ -45,4 +52,8 @@ public:
       numIndicesArray, indexOffsetArray, connectivityArray, componentArray);
   }
 };
+}
+}
+} // vtkm::worklet::connectivity
+
 #endif // vtk_m_worklet_connectivity_CellSetConnectivity_h

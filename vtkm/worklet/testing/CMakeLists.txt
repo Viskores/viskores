@@ -37,6 +37,7 @@ set(unit_tests
   UnitTestFieldHistogram.cxx
   UnitTestFieldStatistics.cxx
   UnitTestInnerJoin.cxx
+  UnitTestImageConnectivity.cpp
   UnitTestKdTreeBuildNNS.cxx
   UnitTestKeys.cxx
   UnitTestMagnitude.cxx

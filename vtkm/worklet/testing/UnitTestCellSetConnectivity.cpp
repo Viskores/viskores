@@ -140,7 +140,7 @@ public:
 
     auto cellSet = outputData.GetCellSet().Cast<vtkm::cont::CellSetSingleType<>>();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
-    CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
+    vtkm::worklet::connectivity::CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
 
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     Algorithm::Sort(componentArray);
@@ -155,7 +155,7 @@ public:
 
     auto cellSet = dataSet.GetCellSet().Cast<vtkm::cont::CellSetExplicit<>>();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
-    CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
+    vtkm::worklet::connectivity::CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
 
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     Algorithm::Sort(componentArray);
@@ -170,7 +170,7 @@ public:
 
     auto cellSet = dataSet.GetCellSet();
     vtkm::cont::ArrayHandle<vtkm::Id> componentArray;
-    CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
+    vtkm::worklet::connectivity::CellSetConnectivity().Run(cellSet, componentArray, DeviceAdapter());
 
     using Algorithm = vtkm::cont::DeviceAdapterAlgorithm<DeviceAdapter>;
     Algorithm::Sort(componentArray);

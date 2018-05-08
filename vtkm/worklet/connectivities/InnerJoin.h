@@ -29,6 +29,12 @@
 #include <vtkm/worklet/ScatterCounting.h>
 #include <vtkm/worklet/WorkletMapField.h>
 
+namespace vtkm
+{
+namespace worklet
+{
+namespace connectivity
+{
 template <typename DeviceAdapter>
 class InnerJoin
 {
@@ -93,4 +99,8 @@ public:
     mergeDisp.Invoke(key1, value1, lbs, value2, keyOut, value1Out, value2Out);
   }
 };
+}
+}
+} // vtkm::worklet::connectivity
+
 #endif //vtk_m_worklet_connectivity_InnerJoin_h
