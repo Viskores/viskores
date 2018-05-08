@@ -79,8 +79,10 @@
 // always greater than j ( or vice-versa ) and optimizes those call sites.
 // But when it does these optimizations is presumes that i and j will not
 // overflow and emits a Wstrict-overflow warning
+#ifdef VTKM_GCC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
 
 #include <vtkm/worklet/contourtree/ChainGraph.h>
 #include <vtkm/worklet/contourtree/ContourTree.h>
