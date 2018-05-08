@@ -58,9 +58,10 @@ public:
     std::vector<vtkm::Id> componentExpected = { 0, 1, 2, 1, 1, 3, 3, 4, 0, 1, 1, 1, 3, 3, 3, 4,
                                                 1, 1, 3, 3, 3, 4, 3, 4, 1, 1, 3, 3, 4, 4, 4, 4 };
 
-    for (vtkm::Id index = 0; index < component.GetNumberOfValues(); index++)
+    std::size_t i = 0;
+    for (vtkm::Id index = 0; index < component.GetNumberOfValues(); index++, i++)
     {
-      VTKM_TEST_ASSERT(component.GetPortalConstControl().Get(index) == componentExpected[index],
+      VTKM_TEST_ASSERT(component.GetPortalConstControl().Get(index) == componentExpected[i],
                        "Components has unexpected value.");
     }
   }
