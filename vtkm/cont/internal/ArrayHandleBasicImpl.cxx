@@ -258,6 +258,10 @@ bool ArrayHandleImpl::PrepareForDevice(DeviceAdapterId devId, vtkm::UInt64 sizeO
   VTKM_ASSERT(!this->ExecutionArrayValid);
   switch (devId)
   {
+    case VTKM_DEVICE_ADAPTER_ERROR:
+      throw vtkm::cont::ErrorBadValue("device should not be VTKM_DEVICE_ADAPTER_ERROR");
+      break;
+
 #ifdef VTKM_ENABLE_TBB
     case VTKM_DEVICE_ADAPTER_TBB:
       this->ExecutionInterface =
@@ -274,6 +278,9 @@ bool ArrayHandleImpl::PrepareForDevice(DeviceAdapterId devId, vtkm::UInt64 sizeO
         new ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>(*this->ControlArray);
       break;
 #endif
+
+    case VTKM_DEVICE_ADAPTER_SERIAL:
+      VTKM_FALLTHROUGH;
     default:
       this->ExecutionInterface =
         new ExecutionArrayInterfaceBasic<DeviceAdapterTagSerial>(*this->ControlArray);
