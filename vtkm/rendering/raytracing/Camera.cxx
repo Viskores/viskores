@@ -455,7 +455,7 @@ void Camera::SetHeight(const vtkm::Int32& height)
   if (Height != height)
   {
     this->Height = height;
-    this->SetFieldOfView(this->FovX);
+    this->SetFieldOfView(this->FovY);
   }
 }
 
@@ -475,7 +475,7 @@ void Camera::SetWidth(const vtkm::Int32& width)
   if (this->Width != width)
   {
     this->Width = width;
-    this->SetFieldOfView(this->FovX);
+    this->SetFieldOfView(this->FovY);
   }
 }
 
@@ -529,8 +529,32 @@ void Camera::SetFieldOfView(const vtkm::Float32& degrees)
     throw vtkm::cont::ErrorBadValue("Camera feild of view must be less than 180.");
   }
 
-  vtkm::Float32 newFOVY = (vtkm::Float32(this->Height) / vtkm::Float32(this->Width)) * degrees;
-  vtkm::Float32 newFOVX = degrees;
+  vtkm::Float32 newFOVY = degrees;
+  vtkm::Float32 newFOVX;
+
+  if (this->Width != this->Height)
+  {
+    vtkm::Float32 fovyRad = (newFOVY * static_cast<vtkm::Float32>(vtkm::Pi())) / 180.0f;
+
+    // Use the tan function to find the distance from the center of the image to the top (or
+    // bottom). (Actually, we are finding the ratio of this distance to the near plane distance,
+    // but since we scale everything by the near plane distance, we can use this ratio as a scaled
+    // proxy of the distances we need.)
+    vtkm::Float32 verticalDistance = vtkm::Tan(0.5f * fovyRad);
+
+    // Scale the vertical distance by the aspect ratio to get the horizontal distance.
+    vtkm::Float32 aspectRatio = vtkm::Float32(this->Width) / vtkm::Float32(this->Height);
+    vtkm::Float32 horizontalDistance = aspectRatio * verticalDistance;
+
+    // Now use the arctan function to get the proper field of view in the x direction.
+    vtkm::Float32 fovxRad = 2.0f * vtkm::ATan(horizontalDistance);
+    newFOVX = 180.0f * (fovxRad / static_cast<vtkm::Float32>(vtkm::Pi()));
+  }
+  else
+  {
+    newFOVX = newFOVY;
+  }
+
   if (newFOVX != this->FovX)
   {
     this->IsViewDirty = true;
@@ -541,13 +565,13 @@ void Camera::SetFieldOfView(const vtkm::Float32& degrees)
   }
   this->FovX = newFOVX;
   this->FovY = newFOVY;
-  this->CameraView.SetFieldOfView(this->FovX);
+  this->CameraView.SetFieldOfView(this->FovY);
 }
 
 VTKM_CONT
 vtkm::Float32 Camera::GetFieldOfView() const
 {
-  return this->FovX;
+  return this->FovY;
 }
 
 VTKM_CONT
