@@ -39,10 +39,10 @@ struct ExtractComponentTests
   using ExtractArray = vtkm::cont::ArrayHandleExtractComponent<InputArray>;
   using ReferenceComponentArray = vtkm::cont::ArrayHandleCounting<ValueType>;
   using ReferenceCompositeArray =
-    typename vtkm::cont::ArrayHandleCompositeVectorType<ReferenceComponentArray,
-                                                        ReferenceComponentArray,
-                                                        ReferenceComponentArray,
-                                                        ReferenceComponentArray>::type;
+    typename vtkm::cont::ArrayHandleCompositeVector<ReferenceComponentArray,
+                                                    ReferenceComponentArray,
+                                                    ReferenceComponentArray,
+                                                    ReferenceComponentArray>;
 
   using DeviceTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
@@ -59,7 +59,7 @@ struct ExtractComponentTests
     ReferenceComponentArray c3 = vtkm::cont::make_ArrayHandleCounting<ValueType>(4, 4, numValues);
     ReferenceComponentArray c4 = vtkm::cont::make_ArrayHandleCounting<ValueType>(1, 3, numValues);
 
-    this->RefComposite = vtkm::cont::make_ArrayHandleCompositeVector(c1, 0, c2, 0, c3, 0, c4, 0);
+    this->RefComposite = vtkm::cont::make_ArrayHandleCompositeVector(c1, c2, c3, c4);
   }
 
   InputArray BuildInputArray() const

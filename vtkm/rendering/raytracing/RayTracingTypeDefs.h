@@ -122,14 +122,14 @@ struct ScalarRenderingTypes : vtkm::ListTagBase<ScalarF, ScalarD>
 namespace detail
 {
 
-typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float32>>::type
+typedef vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float32>>
   ArrayHandleCompositeVectorFloat32_3Default;
 
-typedef vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                                   vtkm::cont::ArrayHandle<vtkm::Float64>>::type
+typedef vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                               vtkm::cont::ArrayHandle<vtkm::Float64>>
   ArrayHandleCompositeVectorFloat64_3Default;
 
 struct StructuredStorageListTagCoordinateSystem

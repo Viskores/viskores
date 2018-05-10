@@ -54,25 +54,28 @@ protected:
 public:
   // composite vectors to hold array handles
   typename //tell the compiler we have a dependent type
-    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>>::type
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>>
       Intersection;
 
   typename //tell the compiler we have a dependent type
-    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>>::type Normal;
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>>
+      Normal;
 
   typename //tell the compiler we have a dependent type
-    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>>::type Origin;
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>>
+      Origin;
 
   typename //tell the compiler we have a dependent type
-    vtkm::cont::ArrayHandleCompositeVectorType<vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>,
-                                               vtkm::cont::ArrayHandle<Precision>>::type Dir;
+    vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>,
+                                           vtkm::cont::ArrayHandle<Precision>>
+      Dir;
 
   vtkm::cont::ArrayHandle<Precision> IntersectionX; //ray Intersection
   vtkm::cont::ArrayHandle<Precision> IntersectionY;
@@ -113,21 +116,11 @@ public:
   {
     IntersectionDataEnabled = false;
     NumRays = 0;
-    vtkm::IdComponent inComp[3];
-    inComp[0] = 0;
-    inComp[1] = 1;
-    inComp[2] = 2;
-    Intersection = vtkm::cont::make_ArrayHandleCompositeVector(
-      IntersectionX, inComp[0], IntersectionY, inComp[1], IntersectionZ, inComp[2]);
-
-    Normal = vtkm::cont::make_ArrayHandleCompositeVector(
-      NormalX, inComp[0], NormalY, inComp[1], NormalZ, inComp[2]);
-
-    Origin = vtkm::cont::make_ArrayHandleCompositeVector(
-      OriginX, inComp[0], OriginY, inComp[1], OriginZ, inComp[2]);
-
-    Dir = vtkm::cont::make_ArrayHandleCompositeVector(
-      DirX, inComp[0], DirY, inComp[1], DirZ, inComp[2]);
+    Intersection =
+      vtkm::cont::make_ArrayHandleCompositeVector(IntersectionX, IntersectionY, IntersectionZ);
+    Normal = vtkm::cont::make_ArrayHandleCompositeVector(NormalX, NormalY, NormalZ);
+    Origin = vtkm::cont::make_ArrayHandleCompositeVector(OriginX, OriginY, OriginZ);
+    Dir = vtkm::cont::make_ArrayHandleCompositeVector(DirX, DirY, DirZ);
 
     ChannelBuffer<Precision> buffer;
     buffer.Resize(NumRays);

@@ -43,11 +43,10 @@ struct SwizzleTests
   using SwizzleArrayType = vtkm::cont::ArrayHandleSwizzle<SwizzleInputArrayType, OutSize>;
 
   using ReferenceComponentArrayType = vtkm::cont::ArrayHandleCounting<ValueType>;
-  using ReferenceArrayType =
-    typename vtkm::cont::ArrayHandleCompositeVectorType<ReferenceComponentArrayType,
-                                                        ReferenceComponentArrayType,
-                                                        ReferenceComponentArrayType,
-                                                        ReferenceComponentArrayType>::type;
+  using ReferenceArrayType = vtkm::cont::ArrayHandleCompositeVector<ReferenceComponentArrayType,
+                                                                    ReferenceComponentArrayType,
+                                                                    ReferenceComponentArrayType,
+                                                                    ReferenceComponentArrayType>;
 
   template <vtkm::IdComponent Size>
   using MapType = vtkm::Vec<vtkm::IdComponent, Size>;
@@ -71,7 +70,7 @@ struct SwizzleTests
     ReferenceComponentArrayType c4 =
       vtkm::cont::make_ArrayHandleCounting<ValueType>(1, 3, numValues);
 
-    this->RefArray = vtkm::cont::make_ArrayHandleCompositeVector(c1, 0, c2, 0, c3, 0, c4, 0);
+    this->RefArray = vtkm::cont::make_ArrayHandleCompositeVector(c1, c2, c3, c4);
   }
 
   SwizzleInputArrayType BuildSwizzleInputArray() const

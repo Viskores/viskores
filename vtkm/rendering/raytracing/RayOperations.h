@@ -208,25 +208,14 @@ public:
     vtkm::worklet::DispatcherMapField<Mask<vtkm::UInt8>, Device>(Mask<vtkm::UInt8>(statusUInt8))
       .Invoke(rays.Status, masks);
 
-    //
-    // Make empty composite vectors so we don't use up extra storage
-    //
-    vtkm::IdComponent inComp[3];
-    inComp[0] = 0;
-    inComp[1] = 1;
-    inComp[2] = 2;
-
     vtkm::cont::ArrayHandle<T> emptyHandle;
 
+    rays.Normal =
+      vtkm::cont::make_ArrayHandleCompositeVector(emptyHandle, emptyHandle, emptyHandle);
+    rays.Origin =
+      vtkm::cont::make_ArrayHandleCompositeVector(emptyHandle, emptyHandle, emptyHandle);
+    rays.Dir = vtkm::cont::make_ArrayHandleCompositeVector(emptyHandle, emptyHandle, emptyHandle);
 
-    rays.Normal = vtkm::cont::make_ArrayHandleCompositeVector(
-      emptyHandle, inComp[0], emptyHandle, inComp[1], emptyHandle, inComp[2]);
-
-    rays.Origin = vtkm::cont::make_ArrayHandleCompositeVector(
-      emptyHandle, inComp[0], emptyHandle, inComp[1], emptyHandle, inComp[2]);
-
-    rays.Dir = vtkm::cont::make_ArrayHandleCompositeVector(
-      emptyHandle, inComp[0], emptyHandle, inComp[1], emptyHandle, inComp[2]);
     const vtkm::Int32 numFloatArrays = 18;
     vtkm::cont::ArrayHandle<T>* floatArrayPointers[numFloatArrays];
     floatArrayPointers[0] = &rays.OriginX;
@@ -264,14 +253,11 @@ public:
     //
     // restore the composite vectors
     //
-    rays.Normal = vtkm::cont::make_ArrayHandleCompositeVector(
-      rays.NormalX, inComp[0], rays.NormalY, inComp[1], rays.NormalZ, inComp[2]);
-
-    rays.Origin = vtkm::cont::make_ArrayHandleCompositeVector(
-      rays.OriginX, inComp[0], rays.OriginY, inComp[1], rays.OriginZ, inComp[2]);
-
-    rays.Dir = vtkm::cont::make_ArrayHandleCompositeVector(
-      rays.DirX, inComp[0], rays.DirY, inComp[1], rays.DirZ, inComp[2]);
+    rays.Normal =
+      vtkm::cont::make_ArrayHandleCompositeVector(rays.NormalX, rays.NormalY, rays.NormalZ);
+    rays.Origin =
+      vtkm::cont::make_ArrayHandleCompositeVector(rays.OriginX, rays.OriginY, rays.OriginZ);
+    rays.Dir = vtkm::cont::make_ArrayHandleCompositeVector(rays.DirX, rays.DirY, rays.DirZ);
 
     vtkm::cont::ArrayHandle<vtkm::Id> compactedHits;
     vtkm::cont::DeviceAdapterAlgorithm<Device>::CopyIf(rays.HitIdx, masks, compactedHits);

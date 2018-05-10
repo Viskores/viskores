@@ -354,7 +354,7 @@ void TryCastToArrayHandle()
   CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleCast(array, vtkm::FloatDefault()));
 
   std::cout << "  Composite vector array handle." << std::endl;
-  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleCompositeVector(array, 0, array, 0));
+  CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleCompositeVector(array, array));
 
   std::cout << "  Constant array handle." << std::endl;
   CheckCastToArrayHandle(vtkm::cont::make_ArrayHandleConstant(5, ARRAY_SIZE));
