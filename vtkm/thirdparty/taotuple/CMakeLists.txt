@@ -24,6 +24,8 @@ add_library(vtkm_taotuple INTERFACE)
 vtkm_get_kit_name(kit_name kit_dir)
 
 set(headers
+  vtkmtaotuple/include/SimpleTuple.h
+  vtkmtaotuple/include/Tuple.h
   vtkmtaotuple/include/tao/seq/concatenate.hpp
   vtkmtaotuple/include/tao/seq/config.hpp
   vtkmtaotuple/include/tao/seq/exclusive_scan.hpp
