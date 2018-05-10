@@ -22,235 +22,136 @@
 #ifndef vtk_m_cont_ArrayHandleSwizzle_h
 #define vtk_m_cont_ArrayHandleSwizzle_h
 
+#include <vtkm/StaticAssert.h>
+#include <vtkm/Types.h>
 #include <vtkm/VecTraits.h>
-#include <vtkm/cont/ArrayHandle.h>
 
-#include <array>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ErrorBadValue.h>
+
+#include <sstream>
 
 namespace vtkm
 {
 namespace cont
 {
-namespace internal
+
+template <typename InVecType, vtkm::IdComponent OutVecSize>
+struct ResizeVectorType
 {
-
-// If TestValue appears more than once in ComponentMap, IsUnique will be false,
-// but true if TestValue is unique.
-template <vtkm::IdComponent TestValue, vtkm::IdComponent... ComponentMap>
-struct ComponentIsUnique;
-
-// Terminal case:
-template <vtkm::IdComponent TestValue, vtkm::IdComponent Head>
-struct ComponentIsUnique<TestValue, Head>
-{
-  static const bool IsUnique = TestValue != Head;
-};
-
-// Recursive case:
-template <vtkm::IdComponent TestValue, vtkm::IdComponent Head, vtkm::IdComponent... Tail>
-struct ComponentIsUnique<TestValue, Head, Tail...>
-{
-  using Next = ComponentIsUnique<TestValue, Tail...>;
-  static const bool IsUnique = TestValue != Head && Next::IsUnique;
-};
-
-// Validate the component map.
-// All elements must be (1) unique, (2) >= 0, and (3) < InputSize
-template <vtkm::IdComponent InputSize, vtkm::IdComponent... ComponentMap>
-struct ValidateComponentMap;
-
-// Terminal impl:
-template <vtkm::IdComponent InputSize, vtkm::IdComponent Head>
-struct ValidateComponentMap<InputSize, Head>
-{
-  static constexpr bool Valid = Head >= 0 && Head < InputSize;
-};
-
-// Recursive impl:
-template <vtkm::IdComponent InputSize, vtkm::IdComponent Head, vtkm::IdComponent... Tail>
-struct ValidateComponentMap<InputSize, Head, Tail...>
-{
-  using Next = ValidateComponentMap<InputSize, Tail...>;
-  static constexpr bool IsUnique = ComponentIsUnique<Head, Tail...>::IsUnique;
-  static constexpr bool Valid = Head >= 0 && Head < InputSize && IsUnique && Next::Valid;
-};
-
-} // end namespace internal
-
-/// This class collects metadata for an ArrayHandleSwizzle.
-template <typename InputValueType, vtkm::IdComponent... ComponentMap>
-struct ArrayHandleSwizzleTraits
-{
-  /// The number of elements in the ComponentMap.
-  static constexpr vtkm::IdComponent COUNT =
-    static_cast<vtkm::IdComponent>(sizeof...(ComponentMap));
-  VTKM_STATIC_ASSERT_MSG(COUNT > 0, "Invalid ComponentMap: Cannot swizzle zero components.");
-
-  /// A std::array containing the ComponentMap for runtime querying.
-  using RuntimeComponentMapType = std::array<vtkm::IdComponent, COUNT>;
-  static constexpr RuntimeComponentMapType GenerateRuntimeComponentMap()
-  {
-    return RuntimeComponentMapType{ { ComponentMap... } };
-  }
-
-  /// The ValueType of the ArrayHandleSwizzle's internal ArrayHandle.
-  using InputType = InputValueType;
-
-  /// The VecTraits for InputType.
-  using InputTraits = VecTraits<InputType>;
-
-  using Validator = internal::ValidateComponentMap<InputTraits::NUM_COMPONENTS, ComponentMap...>;
-  VTKM_STATIC_ASSERT_MSG(Validator::Valid,
-                         "Invalid ComponentMap: Ids in ComponentMap must be unique, positive, and "
-                         "less than the number of input components.");
-
-  /// The ComponentType of the ArrayHandleSwizzle.
-  using ComponentType = typename InputTraits::ComponentType;
-
-  /// The ValueType of the ArrayHandleSwizzle.
-  using OutputType = vtkm::Vec<ComponentType, COUNT>;
-
-  // The VecTraits for OutputType.
-  using OutputTraits = VecTraits<OutputType>;
-
-  /// If true, we use all components in the input vector. If false, we'll need
-  /// to make sure to preserve existing values on write.
-  static constexpr bool ALL_COMPS_USED = InputTraits::NUM_COMPONENTS == COUNT;
-
 private:
-  template <vtkm::IdComponent OutputIndex, vtkm::IdComponent... Map>
-  struct GetImpl;
-
-  // Terminal case:
-  template <vtkm::IdComponent OutputIndex, vtkm::IdComponent Head>
-  struct GetImpl<OutputIndex, Head>
-  {
-    constexpr vtkm::IdComponent operator()() const { return OutputIndex == 0 ? Head : -1; }
-  };
-
-  // Recursive case:
-  template <vtkm::IdComponent OutputIndex, vtkm::IdComponent Head, vtkm::IdComponent... Tail>
-  struct GetImpl<OutputIndex, Head, Tail...>
-  {
-    using Next = GetImpl<OutputIndex - 1, Tail...>;
-
-    constexpr vtkm::IdComponent operator()() const { return OutputIndex == 0 ? Head : Next()(); }
-  };
+  using ComponentType = typename vtkm::VecTraits<InVecType>::ComponentType;
 
 public:
-  /// Get the component from ComponentMap at the specified index as a
-  /// compile-time constant:
-  template <vtkm::IdComponent OutputIndex>
-  static constexpr vtkm::IdComponent Get()
-  {
-    return GetImpl<OutputIndex, ComponentMap...>()();
-  }
+  using Type = vtkm::Vec<ComponentType, OutVecSize>;
+};
 
-private:
-  template <vtkm::IdComponent OutputIndex, vtkm::IdComponent... Map>
-  struct SwizzleImpl;
-
-  // Terminal case:
-  template <vtkm::IdComponent OutputIndex, vtkm::IdComponent Head>
-  struct SwizzleImpl<OutputIndex, Head>
-  {
-    static constexpr vtkm::IdComponent InputIndex = Head;
-
-    void operator()(const InputType& in, OutputType& out) const
-    {
-      OutputTraits::SetComponent(out, OutputIndex, InputTraits::GetComponent(in, InputIndex));
-    }
-  };
-
-  // Recursive case:
-  template <vtkm::IdComponent OutputIndex, vtkm::IdComponent Head, vtkm::IdComponent... Tail>
-  struct SwizzleImpl<OutputIndex, Head, Tail...>
-  {
-    using Next = SwizzleImpl<OutputIndex + 1, Tail...>;
-    static constexpr vtkm::IdComponent InputIndex = Head;
-
-    void operator()(const InputType& in, OutputType& out) const
-    {
-      OutputTraits::SetComponent(out, OutputIndex, InputTraits::GetComponent(in, InputIndex));
-      Next()(in, out);
-    }
-  };
-
-public:
-  /// Swizzle the input type into the output type.
-  static void Swizzle(const InputType& in, OutputType& out)
-  {
-    SwizzleImpl<0, ComponentMap...>()(in, out);
-  }
-
-  // UnSwizzle output type --> input type
-private:
-  template <vtkm::IdComponent OutputIndex, vtkm::IdComponent... Map>
-  struct UnSwizzleImpl;
-
-  // Terminal case:
-  template <vtkm::IdComponent OutputIndex, vtkm::IdComponent Head>
-  struct UnSwizzleImpl<OutputIndex, Head>
-  {
-    static constexpr vtkm::IdComponent InputIndex = Head;
-
-    void operator()(const OutputType& out, InputType& in) const
-    {
-      InputTraits::SetComponent(in, InputIndex, OutputTraits::GetComponent(out, OutputIndex));
-    }
-  };
-
-  // Recursive case:
-  template <vtkm::IdComponent OutputIndex, vtkm::IdComponent Head, vtkm::IdComponent... Tail>
-  struct UnSwizzleImpl<OutputIndex, Head, Tail...>
-  {
-    using Next = UnSwizzleImpl<OutputIndex + 1, Tail...>;
-    static constexpr vtkm::IdComponent InputIndex = Head;
-
-    void operator()(const OutputType& out, InputType& in) const
-    {
-      InputTraits::SetComponent(in, InputIndex, OutputTraits::GetComponent(out, OutputIndex));
-      Next()(out, in);
-    }
-  };
-
-  // Entry point:
-public:
-  /// Unswizzle the output type back into the input type.
-  /// @warning If the entire vector is not used, there may be uninitialized
-  /// data in the resulting InputType vector. See ALL_COMPS_USED flag.
-  static void UnSwizzle(const OutputType& out, InputType& in)
-  {
-    UnSwizzleImpl<0, ComponentMap...>()(out, in);
-  }
+template <typename ArrayHandleType, vtkm::IdComponent OutVecSize>
+class StorageTagSwizzle
+{
 };
 
 namespace internal
 {
 
-template <typename PortalType, vtkm::IdComponent... ComponentMap>
+template <typename ArrayHandleType, vtkm::IdComponent OutputSize>
+struct ArrayHandleSwizzleTraits;
+
+template <typename V, vtkm::IdComponent C, typename S, vtkm::IdComponent OutSize>
+struct ArrayHandleSwizzleTraits<vtkm::cont::ArrayHandle<vtkm::Vec<V, C>, S>, OutSize>
+{
+  using ComponentType = V;
+  static constexpr vtkm::IdComponent InVecSize = C;
+  static constexpr vtkm::IdComponent OutVecSize = OutSize;
+
+  VTKM_STATIC_ASSERT(OutVecSize <= InVecSize);
+  static constexpr bool AllCompsUsed = (InVecSize == OutVecSize);
+
+  using InValueType = vtkm::Vec<ComponentType, InVecSize>;
+  using OutValueType = vtkm::Vec<ComponentType, OutVecSize>;
+
+  using InStorageTag = S;
+  using InArrayHandleType = vtkm::cont::ArrayHandle<InValueType, InStorageTag>;
+
+  using OutStorageTag = vtkm::cont::StorageTagSwizzle<InArrayHandleType, OutVecSize>;
+  using OutArrayHandleType = vtkm::cont::ArrayHandle<OutValueType, OutStorageTag>;
+
+  using InStorageType = vtkm::cont::internal::Storage<InValueType, InStorageTag>;
+  using OutStorageType = vtkm::cont::internal::Storage<OutValueType, OutStorageTag>;
+
+  using MapType = vtkm::Vec<vtkm::IdComponent, OutVecSize>;
+
+  VTKM_CONT
+  static void ValidateMap(const MapType& map)
+  {
+    for (vtkm::IdComponent i = 0; i < OutVecSize; ++i)
+    {
+      if (map[i] < 0 || map[i] >= InVecSize)
+      {
+        std::ostringstream error;
+        error << "Invalid swizzle map: Element " << i << " (" << map[i]
+              << ") outside valid range [0, " << InVecSize << ").";
+        throw vtkm::cont::ErrorBadValue(error.str());
+      }
+      for (vtkm::IdComponent j = i + 1; j < OutVecSize; ++j)
+      {
+        if (map[i] == map[j])
+        {
+          std::ostringstream error;
+          error << "Invalid swizzle map: Repeated element (" << map[i] << ")"
+                << " at indices " << i << " and " << j << ".";
+          throw vtkm::cont::ErrorBadValue(error.str());
+        }
+      }
+    }
+  }
+
+  VTKM_EXEC_CONT
+  static void Swizzle(const InValueType& in, OutValueType& out, const MapType& map)
+  {
+    for (vtkm::IdComponent i = 0; i < OutSize; ++i)
+    {
+      out[i] = in[map[i]];
+    }
+  }
+
+  VTKM_EXEC_CONT
+  static void UnSwizzle(const OutValueType& out, InValueType& in, const MapType& map)
+  {
+    for (vtkm::IdComponent i = 0; i < OutSize; ++i)
+    {
+      in[map[i]] = out[i];
+    }
+  }
+};
+
+template <typename PortalType, typename ArrayHandleType, vtkm::IdComponent OutSize>
 class VTKM_ALWAYS_EXPORT ArrayPortalSwizzle
 {
-  using Traits = ArrayHandleSwizzleTraits<typename PortalType::ValueType, ComponentMap...>;
+  using Traits = internal::ArrayHandleSwizzleTraits<ArrayHandleType, OutSize>;
 
 public:
-  using ValueType = typename Traits::OutputType;
+  using MapType = typename Traits::MapType;
+  using ValueType = typename Traits::OutValueType;
 
   VTKM_EXEC_CONT
   ArrayPortalSwizzle()
     : Portal()
+    , Map()
   {
   }
 
   VTKM_EXEC_CONT
-  ArrayPortalSwizzle(const PortalType& portal)
+  ArrayPortalSwizzle(const PortalType& portal, const MapType& map)
     : Portal(portal)
+    , Map(map)
   {
   }
 
   // Copy constructor
-  VTKM_EXEC_CONT ArrayPortalSwizzle(const ArrayPortalSwizzle<PortalType, ComponentMap...>& src)
+  VTKM_EXEC_CONT ArrayPortalSwizzle(const ArrayPortalSwizzle& src)
     : Portal(src.GetPortal())
+    , Map(src.GetMap())
   {
   }
 
@@ -260,70 +161,52 @@ public:
   VTKM_EXEC_CONT
   ValueType Get(vtkm::Id index) const
   {
-    typename Traits::OutputType result;
-    Traits::Swizzle(this->Portal.Get(index), result);
+    ValueType result;
+    Traits::Swizzle(this->Portal.Get(index), result, this->Map);
     return result;
   }
 
   VTKM_EXEC_CONT
   void Set(vtkm::Id index, const ValueType& value) const
   {
-    SetImpl<!Traits::ALL_COMPS_USED>(this->Portal)(index, value);
+    if (Traits::AllCompsUsed)
+    { // No need to prefetch the value, all values overwritten
+      typename Traits::InValueType tmp;
+      Traits::UnSwizzle(value, tmp, this->Map);
+      this->Portal.Set(index, tmp);
+    }
+    else
+    { // Not all values used -- need to initialize the vector
+      typename Traits::InValueType tmp = this->Portal.Get(index);
+      Traits::UnSwizzle(value, tmp, this->Map);
+      this->Portal.Set(index, tmp);
+    }
   }
 
-private:
-  // If NeedsRead is true, we need to initialize the InputType vector we write
-  // with the current values at @a index to avoid overwriting unused components.
-  template <bool NeedsRead>
-  struct SetImpl
-  {
-    const PortalType& Portal;
-
-    SetImpl(const PortalType& portal)
-      : Portal(portal)
-    {
-    }
-
-    void operator()(const vtkm::Id& index, const ValueType& value)
-    {
-      typename Traits::InputType in;
-      if (NeedsRead)
-      {
-        in = this->Portal.Get(index);
-      }
-      Traits::UnSwizzle(value, in);
-      this->Portal.Set(index, in);
-    }
-  };
-
-public:
   VTKM_EXEC_CONT
   const PortalType& GetPortal() const { return this->Portal; }
 
+  VTKM_EXEC_CONT
+  const MapType& GetMap() const { return this->Map; }
+
 private:
   PortalType Portal;
-}; // class ArrayPortalSwizzle
-
-} // namespace internal
-
-template <typename ArrayHandleType, vtkm::IdComponent... ComponentMap>
-class StorageTagSwizzle
-{
+  MapType Map;
 };
 
-namespace internal
+template <typename ArrayHandleType, vtkm::IdComponent OutSize>
+class Storage<typename ResizeVectorType<typename ArrayHandleType::ValueType, OutSize>::Type,
+              vtkm::cont::StorageTagSwizzle<ArrayHandleType, OutSize>>
 {
+  using Traits = internal::ArrayHandleSwizzleTraits<ArrayHandleType, OutSize>;
 
-template <typename ArrayHandleType, vtkm::IdComponent... ComponentMap>
-class Storage<typename ArrayHandleSwizzleTraits<typename ArrayHandleType::ValueType,
-                                                ComponentMap...>::OutputType,
-              StorageTagSwizzle<ArrayHandleType, ComponentMap...>>
-{
 public:
-  using PortalType = ArrayPortalSwizzle<typename ArrayHandleType::PortalControl, ComponentMap...>;
+  using PortalType =
+    ArrayPortalSwizzle<typename ArrayHandleType::PortalControl, ArrayHandleType, OutSize>;
   using PortalConstType =
-    ArrayPortalSwizzle<typename ArrayHandleType::PortalConstControl, ComponentMap...>;
-  using ValueType = typename PortalType::ValueType;
+    ArrayPortalSwizzle<typename ArrayHandleType::PortalConstControl, ArrayHandleType, OutSize>;
+  using MapType = typename Traits::MapType;
+  using ValueType = typename Traits::OutValueType;
 
   VTKM_CONT
   Storage()
@@ -332,24 +215,26 @@ public:
   }
 
   VTKM_CONT
-  Storage(const ArrayHandleType& array)
+  Storage(const ArrayHandleType& array, const MapType& map)
     : Array(array)
+    , Map(map)
     , Valid(true)
   {
+    Traits::ValidateMap(this->Map);
   }
 
   VTKM_CONT
   PortalConstType GetPortalConst() const
   {
     VTKM_ASSERT(this->Valid);
-    return PortalConstType(this->Array.GetPortalConstControl());
+    return PortalConstType(this->Array.GetPortalConstControl(), this->Map);
   }
 
   VTKM_CONT
   PortalType GetPortal()
   {
     VTKM_ASSERT(this->Valid);
-    return PortalType(this->Array.GetPortalControl());
+    return PortalType(this->Array.GetPortalControl(), this->Map);
   }
 
   VTKM_CONT
@@ -387,39 +272,43 @@ public:
     return this->Array;
   }
 
+  VTKM_CONT
+  const MapType& GetMap() const
+  {
+    VTKM_ASSERT(this->Valid);
+    return this->Map;
+  }
+
 private:
   ArrayHandleType Array;
+  MapType Map;
   bool Valid;
-}; // class Storage
+};
 
-template <typename ArrayHandleType, vtkm::IdComponent... ComponentMap, typename Device>
-class ArrayTransfer<typename ArrayHandleSwizzleTraits<typename ArrayHandleType::ValueType,
-                                                      ComponentMap...>::OutputType,
-                    StorageTagSwizzle<ArrayHandleType, ComponentMap...>,
-                    Device>
+template <typename ArrayHandleType, vtkm::IdComponent OutSize, typename DeviceTag>
+class ArrayTransfer<typename ResizeVectorType<typename ArrayHandleType::ValueType, OutSize>::Type,
+                    vtkm::cont::StorageTagSwizzle<ArrayHandleType, OutSize>,
+                    DeviceTag>
 {
-  using ArrayExecutionTypes = typename ArrayHandleType::template ExecutionTypes<Device>;
-  using StorageTag = StorageTagSwizzle<ArrayHandleType, ComponentMap...>;
+  using InExecTypes = typename ArrayHandleType::template ExecutionTypes<DeviceTag>;
+  using Traits = ArrayHandleSwizzleTraits<ArrayHandleType, OutSize>;
+  using StorageType = typename Traits::OutStorageType;
+  using MapType = typename Traits::MapType;
+
+  template <typename InPortalT>
+  using OutExecType = ArrayPortalSwizzle<InPortalT, ArrayHandleType, OutSize>;
 
 public:
-  using SwizzleTraits =
-    ArrayHandleSwizzleTraits<typename ArrayHandleType::ValueType, ComponentMap...>;
-  using ValueType = typename SwizzleTraits::OutputType;
-
-private:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
+  using ValueType = typename Traits::OutValueType;
   using PortalControl = typename StorageType::PortalType;
   using PortalConstControl = typename StorageType::PortalConstType;
-
-  using PortalExecution = ArrayPortalSwizzle<typename ArrayExecutionTypes::Portal, ComponentMap...>;
-  using PortalConstExecution =
-    ArrayPortalSwizzle<typename ArrayExecutionTypes::PortalConst, ComponentMap...>;
+  using PortalExecution = OutExecType<typename InExecTypes::Portal>;
+  using PortalConstExecution = OutExecType<typename InExecTypes::PortalConst>;
 
   VTKM_CONT
   ArrayTransfer(StorageType* storage)
     : Array(storage->GetArray())
+    , Map(storage->GetMap())
   {
   }
 
@@ -429,19 +318,19 @@ public:
   VTKM_CONT
   PortalConstExecution PrepareForInput(bool vtkmNotUsed(updateData))
   {
-    return PortalConstExecution(this->Array.PrepareForInput(Device()));
+    return PortalConstExecution(this->Array.PrepareForInput(DeviceTag()), this->Map);
   }
 
   VTKM_CONT
   PortalExecution PrepareForInPlace(bool vtkmNotUsed(updateData))
   {
-    return PortalExecution(this->Array.PrepareForInPlace(Device()));
+    return PortalExecution(this->Array.PrepareForInPlace(DeviceTag()), this->Map);
   }
 
   VTKM_CONT
   PortalExecution PrepareForOutput(vtkm::Id numberOfValues)
   {
-    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, Device()));
+    return PortalExecution(this->Array.PrepareForOutput(numberOfValues, DeviceTag()), this->Map);
   }
 
   VTKM_CONT
@@ -458,64 +347,44 @@ public:
   VTKM_CONT
   void ReleaseResources() { this->Array.ReleaseResourcesExecution(); }
 
+
 private:
   ArrayHandleType Array;
+  MapType Map;
 };
-}
-}
-} // namespace vtkm::cont::internal
 
-namespace vtkm
-{
-namespace cont
-{
+} // end namespace internal
 
-/// \brief A fancy ArrayHandle that rearranges and/or removes components of an
-/// ArrayHandle with a vtkm::Vec ValueType.
-///
-/// ArrayHandleSwizzle is a specialization of ArrayHandle. It takes an
-/// input ArrayHandle with a vtkm::Vec ValueType and a compile-time component
-/// map and uses this information to create a new array consisting of the
-/// specified components of the input ArrayHandle in the specified order. So for
-/// a given index i, ArrayHandleSwizzle looks up the i-th vtkm::Vec in
-/// the index array and reads or writes to the specified components, leaving all
-/// other components unmodified. This is done on the fly rather than creating a
-/// copy of the array.
-template <typename ArrayHandleType, vtkm::IdComponent... ComponentMap>
-class ArrayHandleSwizzle : public vtkm::cont::ArrayHandle<
-                             typename ArrayHandleSwizzleTraits<typename ArrayHandleType::ValueType,
-                                                               ComponentMap...>::OutputType,
-                             StorageTagSwizzle<ArrayHandleType, ComponentMap...>>
+template <typename ArrayHandleType, vtkm::IdComponent OutSize>
+class ArrayHandleSwizzle
+  : public ArrayHandle<
+      typename ResizeVectorType<typename ArrayHandleType::ValueType, OutSize>::Type,
+      vtkm::cont::StorageTagSwizzle<ArrayHandleType, OutSize>>
 {
 public:
+  using SwizzleTraits = internal::ArrayHandleSwizzleTraits<ArrayHandleType, OutSize>;
+  using StorageType = typename SwizzleTraits::OutStorageType;
+  using MapType = typename SwizzleTraits::MapType;
+
   VTKM_ARRAY_HANDLE_SUBCLASS(
     ArrayHandleSwizzle,
-    (ArrayHandleSwizzle<ArrayHandleType, ComponentMap...>),
-    (vtkm::cont::ArrayHandle<typename ArrayHandleSwizzleTraits<typename ArrayHandleType::ValueType,
-                                                               ComponentMap...>::OutputType,
-                             StorageTagSwizzle<ArrayHandleType, ComponentMap...>>));
+    (ArrayHandleSwizzle<ArrayHandleType, OutSize>),
+    (ArrayHandle<typename ResizeVectorType<typename ArrayHandleType::ValueType, OutSize>::Type,
+                 vtkm::cont::StorageTagSwizzle<ArrayHandleType, OutSize>>));
 
-  using SwizzleTraits =
-    ArrayHandleSwizzleTraits<typename ArrayHandleType::ValueType, ComponentMap...>;
-
-protected:
-  using StorageType = vtkm::cont::internal::Storage<ValueType, StorageTag>;
-
-public:
   VTKM_CONT
-  ArrayHandleSwizzle(const ArrayHandleType& array)
-    : Superclass(StorageType(array))
+  ArrayHandleSwizzle(const ArrayHandleType& array, const MapType& map)
+    : Superclass(StorageType(array, map))
   {
   }
 };
 
-/// make_ArrayHandleSwizzle is convenience function to generate an
-/// ArrayHandleSwizzle.
-template <vtkm::IdComponent... ComponentMap, typename ArrayHandleType>
-VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, ComponentMap...> make_ArrayHandleSwizzle(
-  const ArrayHandleType& array)
+template <typename ArrayHandleType, vtkm::IdComponent OutSize>
+VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, OutSize> make_ArrayHandleSwizzle(
+  const ArrayHandleType& array,
+  const vtkm::Vec<vtkm::IdComponent, OutSize>& map)
 {
-  return ArrayHandleSwizzle<ArrayHandleType, ComponentMap...>(array);
+  return ArrayHandleSwizzle<ArrayHandleType, OutSize>(array, map);
 }
 }
 } // namespace vtkm::cont
