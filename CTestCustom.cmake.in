@@ -33,4 +33,10 @@ list(APPEND CTEST_CUSTOM_WARNING_EXCEPTION
   # doxygen tags in them.
   "CONTRIBUTING.md.*warning"
   "CodingConventions.md.*warning"
+
+  # disable PTX warning about recursive functions. These look like they can't be silenced
+  # without disabling all PTX warnings, show hide them on the dashboard.
+  # We explicitly only suppress specific worklets so we can see when new recursive
+  # worklets are added
+  "ptxas warning : Stack size for entry function.*NearestNeighborSearch3DWorklet.*"
 )
