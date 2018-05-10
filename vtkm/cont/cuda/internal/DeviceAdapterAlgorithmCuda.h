@@ -31,28 +31,13 @@
 // Here are the actual implementation of the algorithms.
 #include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmThrust.h>
 
+// Here are the implementations of device adapter specific classes
+#include <vtkm/cont/cuda/internal/DeviceAdapterRuntimeDetectorCuda.h>
+#include <vtkm/cont/cuda/internal/DeviceAdapterTimerImplementationCuda.h>
+
 #include <vtkm/exec/cuda/internal/TaskStrided.h>
 
 #include <cuda.h>
-
-namespace vtkm
-{
-namespace cont
-{
-namespace cuda
-{
-namespace internal
-{
-
-static __global__ void DetermineIfValidCudaDevice()
-{
-  //used only to see if we can launch kernels. It is possible to have a
-  //CUDA capable device, but still fail to have CUDA support.
-}
-}
-}
-}
-}
 
 namespace vtkm
 {
@@ -69,129 +54,6 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
   {
     VTKM_CUDA_CALL(cudaStreamSynchronize(cudaStreamPerThread));
   }
-};
-
-/// CUDA contains its own high resolution timer.
-///
-template <>
-class DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>
-{
-public:
-  VTKM_CONT DeviceAdapterTimerImplementation()
-  {
-    VTKM_CUDA_CALL(cudaEventCreate(&this->StartEvent));
-    VTKM_CUDA_CALL(cudaEventCreate(&this->EndEvent));
-    this->Reset();
-  }
-  VTKM_CONT ~DeviceAdapterTimerImplementation()
-  {
-    // These aren't wrapped in VTKM_CUDA_CALL because we can't throw errors
-    // from destructors. We're relying on cudaGetLastError in the
-    // VTKM_CUDA_CHECK_ASYNCHRONOUS_ERROR catching any issues from these calls
-    // later.
-    cudaEventDestroy(this->StartEvent);
-    cudaEventDestroy(this->EndEvent);
-  }
-
-  VTKM_CONT void Reset()
-  {
-    VTKM_CUDA_CALL(cudaEventRecord(this->StartEvent, cudaStreamPerThread));
-    VTKM_CUDA_CALL(cudaEventSynchronize(this->StartEvent));
-  }
-
-  VTKM_CONT vtkm::Float64 GetElapsedTime()
-  {
-    VTKM_CUDA_CALL(cudaEventRecord(this->EndEvent, cudaStreamPerThread));
-    VTKM_CUDA_CALL(cudaEventSynchronize(this->EndEvent));
-    float elapsedTimeMilliseconds;
-    VTKM_CUDA_CALL(
-      cudaEventElapsedTime(&elapsedTimeMilliseconds, this->StartEvent, this->EndEvent));
-    return static_cast<vtkm::Float64>(0.001f * elapsedTimeMilliseconds);
-  }
-
-private:
-  // Copying CUDA events is problematic.
-  DeviceAdapterTimerImplementation(
-    const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>&) = delete;
-  void operator=(const DeviceAdapterTimerImplementation<vtkm::cont::DeviceAdapterTagCuda>&) =
-    delete;
-
-  cudaEvent_t StartEvent;
-  cudaEvent_t EndEvent;
-};
-
-/// \brief Class providing a CUDA runtime support detector.
-///
-/// The class provide the actual implementation used by
-/// vtkm::cont::RuntimeDeviceInformation for the CUDA backend.
-///
-/// We will verify at runtime that the machine has at least one CUDA
-/// capable device, and said device is from the 'fermi' (SM_20) generation
-/// or newer.
-///
-template <>
-class DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>
-{
-public:
-  VTKM_CONT DeviceAdapterRuntimeDetector()
-    : NumberOfDevices(0)
-    , HighestArchSupported(0)
-  {
-    static bool deviceQueryInit = false;
-    static int numDevices = 0;
-    static int archVersion = 0;
-
-    if (!deviceQueryInit)
-    {
-      deviceQueryInit = true;
-
-      //first query for the number of devices
-      VTKM_CUDA_CALL(cudaGetDeviceCount(&numDevices));
-
-      for (vtkm::Int32 i = 0; i < numDevices; i++)
-      {
-        cudaDeviceProp prop;
-        VTKM_CUDA_CALL(cudaGetDeviceProperties(&prop, i));
-        const vtkm::Int32 arch = (prop.major * 10) + prop.minor;
-        archVersion = vtkm::Max(arch, archVersion);
-      }
-
-      //Make sure we can actually launch a kernel. This could fail for any
-      //of the following reasons:
-      //
-      // 1. cudaErrorInsufficientDriver, caused by out of data drives
-      // 2. cudaErrorDevicesUnavailable, caused by another process locking the
-      //    device or somebody disabling cuda support on the device
-      // 3. cudaErrorNoKernelImageForDevice we built for a compute version
-      //    greater than the device we are running on
-      // Most likely others that I don't even know about
-      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice<<<1, 1, 0, cudaStreamPerThread>>>();
-      if (cudaSuccess != cudaGetLastError())
-      {
-        numDevices = 0;
-        archVersion = 0;
-      }
-    }
-
-    this->NumberOfDevices = numDevices;
-    this->HighestArchSupported = archVersion;
-  }
-
-  /// Returns true if the given device adapter is supported on the current
-  /// machine.
-  ///
-  /// Only returns true if we have at-least one CUDA capable device of SM_20 or
-  /// greater ( fermi ).
-  ///
-  VTKM_CONT bool Exists() const
-  {
-    //
-    return this->NumberOfDevices > 0 && this->HighestArchSupported >= 20;
-  }
-
-private:
-  vtkm::Int32 NumberOfDevices;
-  vtkm::Int32 HighestArchSupported;
 };
 
 /// CUDA contains its own atomic operations
