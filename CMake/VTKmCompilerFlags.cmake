@@ -53,8 +53,12 @@ add_library(vtkm_compiler_flags INTERFACE)
 # The flags are intended only for VTK-m itself and are not needed by consumers.
 # We will export vtkm_vectorization_flags in general so consumer can enable
 # vectorization if they so desire
+if (VTKm_ENABLE_DEVELOPER_FLAGS)
+  target_link_libraries(vtkm_compiler_flags
+    INTERFACE $<BUILD_INTERFACE:vtkm_developer_flags>)
+endif()
 target_link_libraries(vtkm_compiler_flags
-  INTERFACE $<BUILD_INTERFACE:vtkm_developer_flags vtkm_vectorization_flags>)
+  INTERFACE $<BUILD_INTERFACE:vtkm_vectorization_flags>)
 
 
 # setup that we need C++11 support
