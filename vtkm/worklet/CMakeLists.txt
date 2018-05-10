@@ -22,6 +22,7 @@ set(headers
   AverageByKey.h
   CellAverage.h
   CellDeepCopy.h
+  CellMeasure.h
   Clip.h
   ContourTreeUniform.h
   CosmoTools.h
