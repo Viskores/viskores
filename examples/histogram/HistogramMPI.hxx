@@ -84,12 +84,12 @@ public:
     // now reduce across ranks using MPI.
 
     // converting to std::vector
-    std::vector<vtkm::Id> send_buf(numBins);
+    std::vector<vtkm::Id> send_buf(static_cast<std::size_t>(numBins));
     std::copy(vtkm::cont::ArrayPortalToIteratorBegin(local.GetPortalConstControl()),
               vtkm::cont::ArrayPortalToIteratorEnd(local.GetPortalConstControl()),
               send_buf.begin());
 
-    std::vector<vtkm::Id> recv_buf(numBins);
+    std::vector<vtkm::Id> recv_buf(static_cast<std::size_t>(numBins));
     MPI_Reduce(&send_buf[0],
                &recv_buf[0],
                static_cast<int>(numBins),

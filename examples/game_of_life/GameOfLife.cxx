@@ -94,10 +94,10 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood3x3x3
     // Any live cell with two or three live neighbors lives on to the next generation.
     // Any live cell with more than three live neighbors dies, as if by overcrowding.
     // Any dead cell with exactly three live neighbors becomes a live cell, as if by reproduction.
-    vtkm::UInt8 current = prevstate.Get(0, 0, 0);
-    vtkm::UInt8 count = prevstate.Get(-1, -1, 0) + prevstate.Get(-1, 0, 0) +
-      prevstate.Get(-1, 1, 0) + prevstate.Get(0, -1, 0) + prevstate.Get(0, 1, 0) +
-      prevstate.Get(1, -1, 0) + prevstate.Get(1, 0, 0) + prevstate.Get(1, 1, 0);
+    auto current = prevstate.Get(0, 0, 0);
+    auto count = prevstate.Get(-1, -1, 0) + prevstate.Get(-1, 0, 0) + prevstate.Get(-1, 1, 0) +
+      prevstate.Get(0, -1, 0) + prevstate.Get(0, 1, 0) + prevstate.Get(1, -1, 0) +
+      prevstate.Get(1, 0, 0) + prevstate.Get(1, 1, 0);
 
     if (current == 1 && (count == 2 || count == 3))
     {
@@ -113,8 +113,8 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood3x3x3
     }
 
     color[0] = 0;
-    color[1] = state * (100 + (count * 32));
-    color[2] = (state && !current) ? (100 + (count * 32)) : 0;
+    color[1] = static_cast<vtkm::UInt8>(state * (100 + (count * 32)));
+    color[2] = (state && !current) ? static_cast<vtkm::UInt8>(100 + (count * 32)) : 0;
     color[3] = 255; //alpha channel
   }
 };
