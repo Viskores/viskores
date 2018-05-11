@@ -22,10 +22,15 @@
 #   - Support for target_sources
 #   - Support for usage requirements
 #
-# If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX or
-# CMake 3.10 on windows.
+# If you want CUDA support, you will need to have CMake 3.9 on Linux/OSX.
+# We require CMake 3.11 on windows as the $<COMPILE_LANGUAGE:> generator
+# expression is not supported on older versions.
 cmake_minimum_required(VERSION 3.3)
 project (VTKm)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+endif()
 
 # Update module path
 set(VTKm_CMAKE_MODULE_PATH ${VTKm_SOURCE_DIR}/CMake)

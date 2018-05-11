@@ -70,14 +70,9 @@ endif()
 
 # Enable large object support so we can have 2^32 addressable sections
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-  if(CMAKE_VERSION VERSION_LESS 3.11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=\"/bigobj\"")
-  else()
-    target_compile_options(vtkm_compiler_flags INTERFACE $<COMPILE_LANGUAGE:CXX>:/bigobj>)
-    if(TARGET vtkm::cuda)
-      target_compile_options(vtkm_compiler_flags INTERFACE $<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/bigobj">)
-    endif()
+  target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CXX>:/bigobj>)
+  if(TARGET vtkm::cuda)
+    target_compile_options(vtkm_compiler_flags INTERFACE $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler="/bigobj">)
   endif()
 endif()
 
