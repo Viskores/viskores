@@ -414,9 +414,8 @@ function(vtkm_unit_tests)
   set_property(TARGET ${test_prog} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${VTKm_EXECUTABLE_OUTPUT_PATH})
 
   target_link_libraries(${test_prog} PRIVATE vtkm_cont ${VTKm_UT_LIBRARIES})
-
-  if(VTKm_UT_NO_TESTS)
-    return()
+  if(backend)
+    target_compile_definitions(${test_prog} PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_${backend}")
   endif()
 
   #determine the timeout for all the tests based on the backend. CUDA tests

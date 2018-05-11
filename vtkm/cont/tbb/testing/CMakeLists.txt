@@ -33,4 +33,4 @@ set(unit_tests
   UnitTestTBBVirtualObjectHandle.cxx
   )
 
-vtkm_unit_tests(SOURCES ${unit_tests} BACKEND TBB)
+vtkm_unit_tests(SOURCES ${unit_tests})
