@@ -18,9 +18,9 @@
 //  this software.
 //============================================================================
 
-#ifdef VTKM_DEVICE_ADAPTER
-#undef VTKM_DEVICE_ADAPTER
-#endif
+// Make sure that the tested code is using the device adapter specified. This
+// is important in the long run so we don't, for example, use the CUDA device
+// for a part of an operation where the TBB device was specified.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
 #include <vtkm/cont/cuda/DeviceAdapterCuda.h>
@@ -30,6 +30,8 @@
 
 int UnitTestCudaDataSetSingleType(int, char* [])
 {
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
   int result =
     vtkm::cont::testing::TestingDataSetSingleType<vtkm::cont::DeviceAdapterTagCuda>::Run();
   return vtkm::cont::cuda::internal::Testing::CheckCudaBeforeExit(result);

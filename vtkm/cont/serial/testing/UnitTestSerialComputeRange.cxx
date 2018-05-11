@@ -29,5 +29,6 @@
 
 int UnitTestSerialComputeRange(int, char* [])
 {
+  //TestingComputeRange forces the device
   return vtkm::cont::testing::TestingComputeRange<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

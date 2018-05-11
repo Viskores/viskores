@@ -23,11 +23,13 @@
 // for a part of an operation where the TBB device was specified.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
 
+#include <vtkm/cont/RuntimeDeviceTracker.h>
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
-
 #include <vtkm/cont/testing/TestingDeviceAdapter.h>
 
 int UnitTestSerialDeviceAdapter(int, char* [])
 {
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::TestingDeviceAdapter<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

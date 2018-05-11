@@ -29,5 +29,7 @@
 
 int UnitTestTBBColorTable(int, char* [])
 {
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagTBB{});
   return vtkm::cont::testing::TestingColorTable<vtkm::cont::DeviceAdapterTagTBB>::Run();
 }
