@@ -183,7 +183,8 @@ public:
 
     // bin points into cells and give each of them the cell id.
     BinPointsWorklet cellIdWorklet(Min, Max, Dims);
-    vtkm::worklet::DispatcherMapField<BinPointsWorklet> dispatchCellId(cellIdWorklet);
+    vtkm::worklet::DispatcherMapField<BinPointsWorklet, DeviceAdapter> dispatchCellId(
+      cellIdWorklet);
     dispatchCellId.Invoke(coords, CellIds);
 
     // Group points of the same cell together by sorting them according to the cell ids
