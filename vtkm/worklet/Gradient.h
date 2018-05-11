@@ -120,7 +120,7 @@ private:
 } //namespace gradient
 
 template <typename T>
-struct GradientOutputFields : public vtkm::cont::ExecutionObjectFactoryBase
+struct GradientOutputFields : public vtkm::cont::ExecutionObjectBase
 {
 
   using ValueType = T;

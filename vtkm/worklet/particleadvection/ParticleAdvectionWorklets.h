@@ -26,7 +26,7 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/cont/ExecutionObjectFactoryBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/particleadvection/Particles.h>

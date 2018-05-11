@@ -25,7 +25,7 @@ class ParticleExecutionObjectType;
 
 #include <vtkm/Types.h>
 #include <vtkm/cont/DeviceAdapter.h>
-#include <vtkm/cont/ExecutionObjectFactoryBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 namespace vtkm
 {
@@ -205,7 +205,7 @@ protected:
 };
 
 template <typename T>
-class Particles : public vtkm::cont::ExecutionObjectFactoryBase
+class Particles : public vtkm::cont::ExecutionObjectBase
 {
 private:
   using ItemType = T;

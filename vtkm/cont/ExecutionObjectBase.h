@@ -17,23 +17,23 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ExecutionObjectFactoryBase_h
-#define vtk_m_cont_ExecutionObjectFactoryBase_h
+#ifndef vtk_m_cont_ExecutionObjectBase_h
+#define vtk_m_cont_ExecutionObjectBase_h
 #include <vtkm/Types.h>
 namespace vtkm
 {
 namespace cont
 {
-/// Base \c ExecutionObjectFactoryBase for execution objects to inherit from so that
+/// Base \c ExecutionObjectBase for execution objects to inherit from so that
 /// you can use an arbitrary object as a parameter in an execution environment
 /// function. Any method you want to use on the execution side must have the
 /// VTKM_EXEC modifier.
 /// \tparam Device
 
-class ExecutionObjectFactoryBase
+class ExecutionObjectBase
 {
 };
 }
 } // namespace vtkm::cont
 
-#endif //vtk_m_cont_ExecutionObjectFactoryBase_h
+#endif //vtk_m_cont_ExecutionObjectBase_h

@@ -20,7 +20,7 @@
 #ifndef vtk_m_exec_internal_ReduceByKeyLookup_h
 #define vtk_m_exec_internal_ReduceByKeyLookup_h
 
-#include <vtkm/cont/ExecutionObjectFactoryBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/StaticAssert.h>
 #include <vtkm/Types.h>
@@ -41,7 +41,7 @@ namespace internal
 /// state.
 ///
 template <typename KeyPortalType, typename IdPortalType, typename IdComponentPortalType>
-struct ReduceByKeyLookup : vtkm::cont::ExecutionObjectFactoryBase
+struct ReduceByKeyLookup : vtkm::cont::ExecutionObjectBase
 {
   using KeyType = typename KeyPortalType::ValueType;
 

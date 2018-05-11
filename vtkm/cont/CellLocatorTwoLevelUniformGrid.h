@@ -610,7 +610,7 @@ public:
     ArrayPortalConst<vtkm::Id> CellIds;
   };
 
-  struct TwoLevelUniformGridExecutionObjectFactory : public vtkm::cont::ExecutionObjectFactoryBase
+  struct TwoLevelUniformGridExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
   {
     template <typename DeviceAdapter>
     VTKM_CONT TwoLevelUniformGridExecution<DeviceAdapter> PrepareForExecution(
