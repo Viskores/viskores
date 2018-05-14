@@ -66,13 +66,9 @@ if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
     add_library(vtkm::cuda UNKNOWN IMPORTED GLOBAL)
   endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND CMAKE_VERSION VERSION_LESS 3.11)
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
-else()
   set_target_properties(vtkm::cuda PROPERTIES
     INTERFACE_COMPILE_OPTIONS $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
   )
-  endif()
 
   # We can't have this location/lib empty, so we provide a location that is
   # valid and will have no effect on compilation
@@ -115,6 +111,8 @@ else()
   # for all major virtual architectures, guaranteeing that the code will run
   # anywhere.
   #
+  # The option 'none' is provided so that when being built as part of another
+  # project, its own custom flags can be used.
   #
   # 1 - native
   #   - Uses system introspection to determine compile flags
@@ -135,21 +133,19 @@ else()
   #   - Uses: --generate-code=arch=compute_50,code=sm_50
   #   - Uses: --generate-code=arch=compute_60,code=sm_60
   #   - Uses: --generate-code=arch=compute_70,code=sm_70
+  # 8 - none
   #
 
   #specify the property
   set(VTKm_CUDA_Architecture "native" CACHE STRING "Which GPU Architecture(s) to compile for")
-  set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta all)
+  set_property(CACHE VTKm_CUDA_Architecture PROPERTY STRINGS native fermi kepler maxwell pascal volta all none)
 
   #detect what the propery is set too
   if(VTKm_CUDA_Architecture STREQUAL "native")
 
     if(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT)
       #Use the cached value
-      # replace any semicolons with an empty space as CMAKE_CUDA_FLAGS is
-      # a string not a list and this could be cached from when it was a list
-      string(REPLACE ";" " " run_output "${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT}")
-      set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${run_output}")
+      set(arch_flags ${VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT})
     else()
 
       #run execute_process to do auto_detection
@@ -174,11 +170,7 @@ else()
         string(FIND "${run_output}" "--generate-code" position)
         string(SUBSTRING "${run_output}" ${position} -1 run_output)
 
-        # replace any semicolons with an empty space as CMAKE_CUDA_FLAGS is
-        # a string not a list
-        string(REPLACE ";" " " run_output "${run_output}")
-        set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${run_output}")
-
+        set(arch_flags ${run_output})
         set(VTKM_CUDA_NATIVE_EXE_PROCESS_RAN_OUTPUT ${run_output} CACHE INTERNAL
                 "device type(s) for cuda[native]")
       else()
@@ -190,22 +182,27 @@ else()
   #since when we are native we can fail, and fall back to "kepler" these have
   #to happen after, and separately of the native check
   if(VTKm_CUDA_Architecture STREQUAL "fermi")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_20,code=sm_20")
+    set(arch_flags --generate-code=arch=compute_20,code=sm_20)
   elseif(VTKm_CUDA_Architecture STREQUAL "kepler")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_30,code=sm_30")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_35,code=sm_35")
+    set(arch_flags --generate-code=arch=compute_30,code=sm_30
+                   --generate-code=arch=compute_35,code=sm_35)
   elseif(VTKm_CUDA_Architecture STREQUAL "maxwell")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_50,code=sm_50")
+    set(arch_flags --generate-code=arch=compute_50,code=sm_50)
   elseif(VTKm_CUDA_Architecture STREQUAL "pascal")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_60,code=sm_60")
+    set(arch_flags --generate-code=arch=compute_60,code=sm_60)
   elseif(VTKm_CUDA_Architecture STREQUAL "volta")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_70,code=sm_70")
+    set(arch_flags --generate-code=arch=compute_70,code=sm_70)
   elseif(VTKm_CUDA_Architecture STREQUAL "all")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_30,code=sm_30")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_35,code=sm_35")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_50,code=sm_50")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_60,code=sm_60")
-    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --generate-code=arch=compute_70,code=sm_70")
+    set(arch_flags --generate-code=arch=compute_30,code=sm_30
+                   --generate-code=arch=compute_35,code=sm_35
+                   --generate-code=arch=compute_50,code=sm_50
+                   --generate-code=arch=compute_60,code=sm_60
+                   --generate-code=arch=compute_70,code=sm_70)
   endif()
+
+  string(REPLACE ";" " " arch_flags "${arch_flags}")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${arch_flags}")
+
+  set_target_properties(vtkm::cuda PROPERTIES VTKm_CUDA_Architecture_Flags "${arch_flags}")
 
 endif()
