@@ -21,6 +21,7 @@
 set(headers
   ArrayManagerExecutionTBB.h
   DeviceAdapterAlgorithmTBB.h
+  DeviceAdapterRuntimeDetectorTBB.h
   DeviceAdapterTagTBB.h
   ExecutionArrayInterfaceBasicTBB.h
   FunctorsTBB.h
@@ -40,6 +41,11 @@ vtkm_declare_headers(ParallelSortTBB.hxx
                      TESTABLE OFF)
 
 vtkm_declare_headers(${headers} TESTABLE ${VTKm_ENABLE_TBB})
+
+#These sources need to always be built
+target_sources(vtkm_cont PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorTBB.cxx
+  )
 
 #-----------------------------------------------------------------------------
 if (NOT VTKm_ENABLE_TBB)

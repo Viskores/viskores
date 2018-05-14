@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_cuda_internal_DeviceAdapterRuntimeDetectorCuda_h
-#define vtk_m_cont_cuda_internal_DeviceAdapterRuntimeDetectorCuda_h
+#ifndef vtk_m_cont_cuda_internal_DeviceAdapterTimerImplementationCuda_h
+#define vtk_m_cont_cuda_internal_DeviceAdapterTimerImplementationCuda_h
 
 #include <vtkm/cont/vtkm_cont_export.h>
 
