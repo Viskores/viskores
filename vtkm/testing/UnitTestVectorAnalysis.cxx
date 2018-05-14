@@ -134,8 +134,8 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
 
   std::cout << "  Orthogonality" << std::endl;
   // The cross product result should be perpendicular to input vectors.
-  VTKM_TEST_ASSERT(test_equal(vtkm::dot(cross, x), T(0.0)), "Cross product not perpendicular.");
-  VTKM_TEST_ASSERT(test_equal(vtkm::dot(cross, y), T(0.0)), "Cross product not perpendicular.");
+  VTKM_TEST_ASSERT(test_equal(vtkm::Dot(cross, x), T(0.0)), "Cross product not perpendicular.");
+  VTKM_TEST_ASSERT(test_equal(vtkm::Dot(cross, y), T(0.0)), "Cross product not perpendicular.");
 
   std::cout << "  Length" << std::endl;
   // The length of cross product should be the lengths of the input vectors
@@ -144,7 +144,7 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
 
   // The dot product is likewise the lengths of the input vectors times the
   // cos of the angle between them.
-  T cosAngle = vtkm::dot(x, y) * vtkm::RMagnitude(x) * vtkm::RMagnitude(y);
+  T cosAngle = vtkm::Dot(x, y) * vtkm::RMagnitude(x) * vtkm::RMagnitude(y);
 
   // Test that these are the actual sin and cos of the same angle with a
   // basic trigonometric identity.
@@ -154,7 +154,7 @@ void TestCross(const vtkm::Vec<T, 3>& x, const vtkm::Vec<T, 3>& y)
   std::cout << "  Triangle normal" << std::endl;
   // Test finding the normal to a triangle (similar to cross product).
   Vec3 normal = vtkm::TriangleNormal(x, y, Vec3(0, 0, 0));
-  VTKM_TEST_ASSERT(test_equal(vtkm::dot(normal, x - y), T(0.0)),
+  VTKM_TEST_ASSERT(test_equal(vtkm::Dot(normal, x - y), T(0.0)),
                    "Triangle normal is not really normal.");
 }
 

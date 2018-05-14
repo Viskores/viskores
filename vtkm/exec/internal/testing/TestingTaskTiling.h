@@ -225,7 +225,7 @@ struct TestWorkletProxy : vtkm::exec::FunctorBase
     const InputDomainType&,
     const G& globalThreadIndexOffset) const
   {
-    const vtkm::Id index = vtkm::dot(threadIndex, vtkm::Id3(1, 8, 64));
+    const vtkm::Id index = vtkm::Dot(threadIndex, vtkm::Id3(1, 8, 64));
     return vtkm::exec::arg::ThreadIndicesBasic(
       index, outToIn.Get(index), visit.Get(index), globalThreadIndexOffset);
   }
@@ -265,7 +265,7 @@ struct TestWorkletErrorProxy : vtkm::exec::FunctorBase
     const InputDomainType&,
     const G& globalThreadIndexOffset) const
   {
-    const vtkm::Id index = vtkm::dot(threadIndex, vtkm::Id3(1, 8, 64));
+    const vtkm::Id index = vtkm::Dot(threadIndex, vtkm::Id3(1, 8, 64));
     return vtkm::exec::arg::ThreadIndicesBasic(
       index, outToIn.Get(index), visit.Get(index), globalThreadIndexOffset);
   }

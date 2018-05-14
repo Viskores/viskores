@@ -33,7 +33,7 @@ namespace
 template <typename T>
 VTKM_EXEC_CONT vtkm::Vec<T, 3> Normalize(vtkm::Vec<T, 3> v)
 {
-  T magnitude = static_cast<T>(sqrt(vtkm::dot(v, v)));
+  T magnitude = static_cast<T>(sqrt(vtkm::Dot(v, v)));
   T zero = static_cast<T>(0.0);
   T one = static_cast<T>(1.0);
   if (magnitude == zero)

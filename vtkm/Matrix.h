@@ -195,7 +195,7 @@ VTKM_EXEC_CONT vtkm::Vec<T, NumRow> MatrixMultiply(
   vtkm::Vec<T, NumRow> product;
   for (vtkm::IdComponent rowIndex = 0; rowIndex < NumRow; rowIndex++)
   {
-    product[rowIndex] = vtkm::dot(vtkm::MatrixGetRow(leftFactor, rowIndex), rightFactor);
+    product[rowIndex] = vtkm::Dot(vtkm::MatrixGetRow(leftFactor, rowIndex), rightFactor);
   }
   return product;
 }
@@ -210,7 +210,7 @@ VTKM_EXEC_CONT vtkm::Vec<T, NumCol> MatrixMultiply(
   vtkm::Vec<T, NumCol> product;
   for (vtkm::IdComponent colIndex = 0; colIndex < NumCol; colIndex++)
   {
-    product[colIndex] = vtkm::dot(leftFactor, vtkm::MatrixGetColumn(rightFactor, colIndex));
+    product[colIndex] = vtkm::Dot(leftFactor, vtkm::MatrixGetColumn(rightFactor, colIndex));
   }
   return product;
 }

@@ -122,7 +122,7 @@ public:
       vtkm::Normalize(normal);
 
       //flip the normal if its pointing the wrong way
-      if (vtkm::dot(normal, rayDir) > 0.f)
+      if (vtkm::Dot(normal, rayDir) > 0.f)
         normal = -normal;
       normalX = normal[0];
       normalY = normal[1];
@@ -338,15 +338,15 @@ public:
       vtkm::Normalize(lightDir);
       vtkm::Normalize(viewDir);
       //Diffuse lighting
-      Precision cosTheta = vtkm::dot(normal, lightDir);
+      Precision cosTheta = vtkm::Dot(normal, lightDir);
       //clamp tp [0,1]
       const Precision zero = 0.f;
       const Precision one = 1.f;
       cosTheta = vtkm::Min(vtkm::Max(cosTheta, zero), one);
       //Specular lighting
-      vtkm::Vec<Precision, 3> reflect = 2.f * vtkm::dot(lightDir, normal) * normal - lightDir;
+      vtkm::Vec<Precision, 3> reflect = 2.f * vtkm::Dot(lightDir, normal) * normal - lightDir;
       vtkm::Normalize(reflect);
-      Precision cosPhi = vtkm::dot(reflect, viewDir);
+      Precision cosPhi = vtkm::Dot(reflect, viewDir);
       Precision specularConstant =
         Precision(pow(vtkm::Max(cosPhi, zero), (Precision)SpecularExponent));
       vtkm::Int32 colorIdx = vtkm::Int32(scalar * Precision(ColorMapSize - 1));

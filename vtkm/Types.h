@@ -1226,24 +1226,24 @@ static inline VTKM_EXEC_CONT typename DotType<T>::type vec_dot(const vtkm::Vec<T
 }
 
 template <typename T>
-static inline VTKM_EXEC_CONT auto dot(const T& a, const T& b) -> decltype(detail::vec_dot(a, b))
+static inline VTKM_EXEC_CONT auto Dot(const T& a, const T& b) -> decltype(detail::vec_dot(a, b))
 {
   return detail::vec_dot(a, b);
 }
 template <typename T>
-static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 2>& a,
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type Dot(const vtkm::Vec<T, 2>& a,
                                                                    const vtkm::Vec<T, 2>& b)
 {
   return (a[0] * b[0]) + (a[1] * b[1]);
 }
 template <typename T>
-static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 3>& a,
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type Dot(const vtkm::Vec<T, 3>& a,
                                                                    const vtkm::Vec<T, 3>& b)
 {
   return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]);
 }
 template <typename T>
-static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 4>& a,
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type Dot(const vtkm::Vec<T, 4>& a,
                                                                    const vtkm::Vec<T, 4>& b)
 {
   return (a[0] * b[0]) + (a[1] * b[1]) + (a[2] * b[2]) + (a[3] * b[3]);
@@ -1251,7 +1251,11 @@ static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::V
 // Integer types of a width less than an integer get implicitly casted to
 // an integer when doing a multiplication.
 #define VTK_M_SCALAR_DOT(stype)                                                                    \
-  static inline VTKM_EXEC_CONT detail::DotType<stype>::type dot(stype a, stype b) { return a * b; }
+  static inline VTKM_EXEC_CONT detail::DotType<stype>::type dot(stype a, stype b)                  \
+  {                                                                                                \
+    return a * b;                                                                                  \
+  } /* LEGACY */                                                                                   \
+  static inline VTKM_EXEC_CONT detail::DotType<stype>::type Dot(stype a, stype b) { return a * b; }
 VTK_M_SCALAR_DOT(vtkm::Int8)
 VTK_M_SCALAR_DOT(vtkm::UInt8)
 VTK_M_SCALAR_DOT(vtkm::Int16)
@@ -1262,6 +1266,32 @@ VTK_M_SCALAR_DOT(vtkm::Int64)
 VTK_M_SCALAR_DOT(vtkm::UInt64)
 VTK_M_SCALAR_DOT(vtkm::Float32)
 VTK_M_SCALAR_DOT(vtkm::Float64)
+
+// v============ LEGACY =============v
+template <typename T>
+static inline VTKM_EXEC_CONT auto dot(const T& a, const T& b) -> decltype(detail::vec_dot(a, b))
+{
+  return vtkm::Dot(a, b);
+}
+template <typename T>
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 2>& a,
+                                                                   const vtkm::Vec<T, 2>& b)
+{
+  return vtkm::Dot(a, b);
+}
+template <typename T>
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 3>& a,
+                                                                   const vtkm::Vec<T, 3>& b)
+{
+  return vtkm::Dot(a, b);
+}
+template <typename T>
+static inline VTKM_EXEC_CONT typename detail::DotType<T>::type dot(const vtkm::Vec<T, 4>& a,
+                                                                   const vtkm::Vec<T, 4>& b)
+{
+  return vtkm::Dot(a, b);
+}
+// ^============ LEGACY =============^
 
 template <typename T, vtkm::IdComponent Size>
 inline VTKM_EXEC_CONT T ReduceSum(const vtkm::Vec<T, Size>& a)

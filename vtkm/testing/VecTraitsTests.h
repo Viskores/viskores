@@ -148,7 +148,7 @@ static void TestVecTypeImpl(const typename std::remove_const<T>::type& inVector,
   VTKM_TEST_ASSERT(test_equal(vectorCopy, inVector), "CopyInto does not work.");
 
   {
-    auto expected = vtkm::dot(vectorCopy, vectorCopy);
+    auto expected = vtkm::Dot(vectorCopy, vectorCopy);
     decltype(expected) result = 0;
     for (vtkm::IdComponent i = 0; i < NUM_COMPONENTS; i++)
     {

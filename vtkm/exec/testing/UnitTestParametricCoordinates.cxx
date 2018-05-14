@@ -212,7 +212,7 @@ struct TestPCoordsFunctor
         numPoints, pointIndex, pcoords, CellShapeTag(), workletProxy);
       VTKM_TEST_ASSERT(!errorMessage.IsErrorRaised(), messageBuffer);
 
-      Vector3 wCoords = Vector3(pcoords[0], pcoords[1], pcoords[2] + vtkm::dot(pcoords, sheerVec));
+      Vector3 wCoords = Vector3(pcoords[0], pcoords[1], pcoords[2] + vtkm::Dot(pcoords, sheerVec));
       pointWCoords.Append(wCoords);
     }
 

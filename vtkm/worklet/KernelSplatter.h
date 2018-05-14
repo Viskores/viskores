@@ -340,7 +340,7 @@ struct KernelSplatterFilterUniformGrid
       PointType dist = vtkm::make_Vec((splatPoint[0] - voxel[0]) * spacing_[0],
                                       (splatPoint[1] - voxel[1]) * spacing_[0],
                                       (splatPoint[2] - voxel[2]) * spacing_[0]);
-      vtkm::Float64 dist2 = vtkm::dot(dist, dist);
+      vtkm::Float64 dist2 = vtkm::Dot(dist, dist);
 
       // Compute splat value using the kernel distance_squared function
       splatValue = scale * kernel.w2(kernel_H, dist2);

@@ -86,7 +86,7 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
   //
   // First, we define an implicit plane as:
   //
-  // dot((p - wcoords), planeNormal) = 0
+  // Dot((p - wcoords), planeNormal) = 0
   //
   // where planeNormal is the normal to the plane (easily computed from the
   // triangle), and p is any point in the plane. Next, we define the parametric
@@ -103,7 +103,7 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
   // definition of p(d) into p for the plane equation. With some basic algebra
   // you get:
   //
-  // d = dot((wcoords - p0), planeNormal)/dot((p1-p0), planeNormal)
+  // d = Dot((wcoords - p0), planeNormal)/Dot((p1-p0), planeNormal)
   //
   // From here, the u coordinate is simply d. The v coordinate follows
   // similarly.
@@ -122,7 +122,7 @@ VTKM_EXEC typename WorldCoordVector::ComponentType ReverseInterpolateTriangle(
     Vector3 p2 = pointWCoords[2 - dimension];
     Vector3 planeNormal = vtkm::Cross(triangleNormal, p2 - p0);
 
-    T d = vtkm::dot(wcoords - p0, planeNormal) / vtkm::dot(p1 - p0, planeNormal);
+    T d = vtkm::Dot(wcoords - p0, planeNormal) / vtkm::Dot(p1 - p0, planeNormal);
 
     pcoords[dimension] = d;
   }

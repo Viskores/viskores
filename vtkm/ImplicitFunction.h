@@ -388,8 +388,8 @@ public:
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const override
   {
     Vector x2c = point - this->Center;
-    FloatDefault proj = vtkm::dot(this->Axis, x2c);
-    return vtkm::dot(x2c, x2c) - (proj * proj) - (this->Radius * this->Radius);
+    FloatDefault proj = vtkm::Dot(this->Axis, x2c);
+    return vtkm::Dot(x2c, x2c) - (proj * proj) - (this->Radius * this->Radius);
   }
 
   VTKM_EXEC_CONT Vector Gradient(const Vector& point) const override
@@ -487,7 +487,7 @@ public:
     {
       const Vector& p = this->Points[index];
       const Vector& n = this->Normals[index];
-      const Scalar val = vtkm::dot(point - p, n);
+      const Scalar val = vtkm::Dot(point - p, n);
       maxVal = vtkm::Max(maxVal, val);
     }
     return maxVal;
@@ -501,7 +501,7 @@ public:
     {
       const Vector& p = this->Points[index];
       const Vector& n = this->Normals[index];
-      Scalar val = vtkm::dot(point - p, n);
+      Scalar val = vtkm::Dot(point - p, n);
       if (val > maxVal)
       {
         maxVal = val;
@@ -556,7 +556,7 @@ public:
 
   VTKM_EXEC_CONT Scalar Value(const Vector& point) const override
   {
-    return vtkm::dot(point - this->Origin, this->Normal);
+    return vtkm::Dot(point - this->Origin, this->Normal);
   }
 
   VTKM_EXEC_CONT Vector Gradient(const Vector&) const override { return this->Normal; }

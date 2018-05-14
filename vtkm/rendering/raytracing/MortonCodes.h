@@ -279,7 +279,7 @@ public:
                   vtkm::UInt32& mortonCode) const
   {
     vtkm::Vec<vtkm::Float32, 3> direction(xmax - xmin, ymax - ymin, zmax - zmin);
-    vtkm::Float32 halfDistance = sqrtf(vtkm::dot(direction, direction)) * 0.5f;
+    vtkm::Float32 halfDistance = sqrtf(vtkm::Dot(direction, direction)) * 0.5f;
     vtkm::Normalize(direction);
     vtkm::Float32 centroidx = xmin + halfDistance * direction[0] - MinCoordinate[0];
     vtkm::Float32 centroidy = ymin + halfDistance * direction[1] - MinCoordinate[1];
