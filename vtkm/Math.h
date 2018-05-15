@@ -55,34 +55,34 @@ namespace vtkm
 //-----------------------------------------------------------------------------
 /// Returns the constant 2 times Pi.
 ///
-static inline VTKM_EXEC_CONT vtkm::Float64 TwoPi()
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 TwoPi()
 {
   return 6.28318530717958647692528676655900576;
 }
 
 /// Returns the constant Pi.
 ///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi()
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi()
 {
   return 3.14159265358979323846264338327950288;
 }
 
 /// Returns the constant Pi halves.
 ///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi_2()
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_2()
 {
   return 1.57079632679489661923132169163975144;
 }
 /// Returns the constant Pi thirds.
 ///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi_3()
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_3()
 {
   return 1.04719755119659774615421446109316762;
 }
 
 /// Returns the constant Pi fourths.
 ///
-static inline VTKM_EXEC_CONT vtkm::Float64 Pi_4()
+static constexpr inline VTKM_EXEC_CONT vtkm::Float64 Pi_4()
 {
   return 0.78539816339744830961566084581987572;
 }
