@@ -26,7 +26,7 @@
 #include <vtkm/cont/ArrayHandleCast.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/CellSetExplicit.h>
-#include <vtkm/exec/ExecutionObjectBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/worklet/DispatcherMapField.h>
 #include <vtkm/worklet/particleadvection/Particles.h>
@@ -141,7 +141,7 @@ private:
       vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType, FieldType>;
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType, DeviceAdapterTag>;
-    using ParticleType = vtkm::worklet::particleadvection::Particles<FieldType, DeviceAdapterTag>;
+    using ParticleType = vtkm::worklet::particleadvection::Particles<FieldType>;
 
     vtkm::Id numSeeds = static_cast<vtkm::Id>(seedArray.GetNumberOfValues());
     //Create and invoke the particle advection.
@@ -224,8 +224,7 @@ private:
       vtkm::worklet::particleadvection::ParticleAdvectWorklet<IntegratorType, FieldType>;
     using ParticleWorkletDispatchType =
       typename vtkm::worklet::DispatcherMapField<ParticleAdvectWorkletType, DeviceAdapterTag>;
-    using StreamlineType =
-      vtkm::worklet::particleadvection::StateRecordingParticles<FieldType, DeviceAdapterTag>;
+    using StreamlineType = vtkm::worklet::particleadvection::StateRecordingParticles<FieldType>;
 
     vtkm::cont::ArrayHandle<vtkm::Id> initialStepsTaken;
     DeviceAlgorithm::Copy(stepsTaken, initialStepsTaken);

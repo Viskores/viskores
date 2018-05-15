@@ -385,16 +385,15 @@ private:
   vtkm::Vec<FieldType, 3> scale;
 };
 
-template <typename PortalType, typename FieldType, typename DeviceAdapterTag>
+template <typename PortalType,
+          typename FieldType,
+          typename DeviceAdapterTag typename StorageTag = VTKM_DEFAULT_STORAGE_TAG>
 class RectilinearGridEvaluate
 {
-  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
+  using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, StorageTag>;
 
 public:
   VTKM_CONT RectilinearGridEvaluate() = default;
-
-  VTKM_CONT
-  RectilinearGridEvaluate() {}
 
   VTKM_CONT
   RectilinearGridEvaluate(const vtkm::cont::CoordinateSystem& coords,
