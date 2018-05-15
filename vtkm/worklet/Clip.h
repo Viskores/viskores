@@ -149,7 +149,7 @@ private:
   IdPortal IndexOffsets;
 };
 
-class ExecutionConnectivityExplicit : vtkm::cont::ExecutionObjectFactoryBase
+class ExecutionConnectivityExplicit : vtkm::cont::ExecutionObjectBase
 {
 public:
   VTKM_CONT

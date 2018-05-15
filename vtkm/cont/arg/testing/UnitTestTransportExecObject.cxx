@@ -24,7 +24,7 @@
 
 #include <vtkm/cont/serial/DeviceAdapterSerial.h>
 
-#include <vtkm/cont/ExecutionObjectFactoryBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/cont/testing/Testing.h>
 
@@ -39,7 +39,7 @@ struct ExecutionObject
   vtkm::Int32 Number;
 };
 
-struct TestExecutionObject : public vtkm::cont::ExecutionObjectFactoryBase
+struct TestExecutionObject : public vtkm::cont::ExecutionObjectBase
 {
   vtkm::Int32 Number;
 

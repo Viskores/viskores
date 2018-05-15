@@ -129,7 +129,10 @@ public:
   typedef _2 ExecutionSignature(_1, WorkIndex);
 
   VTKM_EXEC
-  vtkm::Float32 operator()(vtkm::Int64 x, vtkm::Id& index) const { return (vtkm::Sin(1.0 * x)); }
+  vtkm::Float32 operator()(vtkm::Int64 x, vtkm::Id&) const
+  {
+    return (vtkm::Sin(static_cast<vtkm::Float32>(x)));
+  }
 };
 }
 }

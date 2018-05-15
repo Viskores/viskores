@@ -23,15 +23,28 @@ cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 project(MultiBackend CXX)
 
 #Find the VTK-m package
-find_package(VTKm REQUIRED QUIET)
+find_package(VTKm REQUIRED)
+find_package(Threads REQUIRED QUIET)
+
+set(headers
+  IOGenerator.h
+  MultiDeviceGradient.h
+  TaskQueue.h
+  )
+
+set(device_srcs
+  MultiDeviceGradient.cxx
+  )
 
 set(srcs
-    MultiBackend.cxx)
+  IOGenerator.cxx
+  MultiBackend.cxx
+  )
 
 if(TARGET vtkm::cuda)
-  vtkm_compile_as_cuda(cuda_srcs ${srcs})
-  set(srcs ${cuda_srcs})
+  vtkm_compile_as_cuda(cuda_srcs ${device_srcs})
+  set(device_srcs ${cuda_srcs})
 endif()
 
-add_executable(MultiBackend ${srcs})
-target_link_libraries(MultiBackend PRIVATE vtkm_cont)
+add_executable(MultiBackend ${device_srcs} ${srcs} ${headers})
+target_link_libraries(MultiBackend PRIVATE vtkm_cont Threads::Threads)

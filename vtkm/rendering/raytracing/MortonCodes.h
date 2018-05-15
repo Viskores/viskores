@@ -213,8 +213,7 @@ public:
       // the wonders of floating point math. This is bad. If we calculate in the same order
       // for all faces, then at worst, two different faces can enter the same bucket, which
       // we currently check for.
-      vtkm::Vec<vtkm::Id, 4> faceIndices;
-      faceIndices[3] = -1;
+      vtkm::Vec<vtkm::Id, 4> faceIndices(-1);
       //Number of indices this face has
       const vtkm::Int32 indiceCount = tables.ShapesFaceList(tableOffset + i, 0);
       for (vtkm::Int32 j = 1; j <= indiceCount; j++)

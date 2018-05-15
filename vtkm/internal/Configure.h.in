@@ -312,4 +312,23 @@
 
 #endif
 
+//----------------------------------------------------------------------------
+// Switch case fall-through policy.
+
+// Use "VTKM_FALLTHROUGH;" to annotate deliberate fall-through in switches,
+// use it analogously to "break;".  The trailing semi-colon is required.
+#if !defined(VTKM_FALLTHROUGH) && defined(__has_cpp_attribute)
+# if __cplusplus >= 201703L && __has_cpp_attribute(fallthrough)
+#  define VTKM_FALLTHROUGH [[fallthrough]]
+# elif __cplusplus >= 201103L && __has_cpp_attribute(gnu::fallthrough)
+#  define VTKM_FALLTHROUGH [[gnu::fallthrough]]
+# elif __cplusplus >= 201103L && __has_cpp_attribute(clang::fallthrough)
+#  define VTKM_FALLTHROUGH [[clang::fallthrough]]
+# endif
+#endif
+
+#ifndef VTKM_FALLTHROUGH
+# define VTKM_FALLTHROUGH ((void)0)
+#endif
+
 #endif //vtkm_internal_Configure_h

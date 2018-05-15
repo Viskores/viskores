@@ -17,39 +17,14 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_arg_TypeCheckTagExecObject_h
-#define vtk_m_cont_arg_TypeCheckTagExecObject_h
+#ifndef vtk_m_examples_multibackend_IOWorker_h
+#define vtk_m_examples_multibackend_IOWorker_h
 
-#include <vtkm/internal/ExportMacros.h>
+#include "TaskQueue.h"
+#include <vtkm/cont/DataSet.h>
+#include <vtkm/cont/MultiBlock.h>
 
-#include <vtkm/cont/arg/TypeCheck.h>
+vtkm::cont::DataSet make_test3DImageData(int xdim, int ydim, int zdim);
+void io_generator(TaskQueue<vtkm::cont::MultiBlock>& queue, std::size_t numberOfTasks);
 
-#include <vtkm/cont/ExecutionObjectBase.h>
-
-#include <type_traits>
-
-namespace vtkm
-{
-namespace cont
-{
-namespace arg
-{
-
-/// The ExecObject type check passes for any object that inherits from \c
-/// ExecutionObjectBase. This is supposed to signify that the object can be
-/// used in the execution environment although there is no way to verify that.
-///
-struct TypeCheckTagExecObject
-{
-};
-
-template <typename Type>
-struct TypeCheck<TypeCheckTagExecObject, Type>
-{
-  static constexpr bool value = std::is_base_of<vtkm::cont::ExecutionObjectBase, Type>::value;
-};
-}
-}
-} // namespace vtkm::cont::arg
-
-#endif //vtk_m_cont_arg_TypeCheckTagExecObject_h
+#endif

@@ -17,23 +17,12 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_ExecutionObjectFactoryBase_h
-#define vtk_m_cont_ExecutionObjectFactoryBase_h
-#include <vtkm/Types.h>
-namespace vtkm
-{
-namespace cont
-{
-/// Base \c ExecutionObjectFactoryBase for execution objects to inherit from so that
-/// you can use an arbitrary object as a parameter in an execution environment
-/// function. Any method you want to use on the execution side must have the
-/// VTKM_EXEC modifier.
-/// \tparam Device
 
-class ExecutionObjectFactoryBase
-{
-};
-}
-} // namespace vtkm::cont
+#define vtk_m_examples_multibackend_MultiDeviceGradient_cxx
 
-#endif //vtk_m_cont_ExecutionObjectFactoryBase_h
+#include "MultiDeviceGradient.h"
+#include "MultiDeviceGradient.hxx"
+
+template vtkm::cont::MultiBlock MultiDeviceGradient::PrepareForExecution<
+  vtkm::filter::PolicyDefault>(const vtkm::cont::MultiBlock&,
+                               const vtkm::filter::PolicyBase<vtkm::filter::PolicyDefault>&);

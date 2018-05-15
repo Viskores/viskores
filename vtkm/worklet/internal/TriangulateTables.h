@@ -23,7 +23,7 @@
 #include <vtkm/CellShape.h>
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/ExecutionObjectFactoryBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/StorageBasic.h>
@@ -147,7 +147,7 @@ private:
   PortalType Indices;
 };
 
-class TriangulateTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectFactoryBase
+class TriangulateTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
 {
 public:
   template <typename Device>
@@ -344,7 +344,7 @@ private:
   PortalType Indices;
 };
 
-class TetrahedralizeTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectFactoryBase
+class TetrahedralizeTablesExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
 {
 public:
   template <typename Device>

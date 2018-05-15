@@ -26,7 +26,7 @@
 #include <vtkm/cont/arg/TransportTagArrayOut.h>
 #include <vtkm/cont/arg/TransportTagExecObject.h>
 
-#include <vtkm/cont/ExecutionObjectFactoryBase.h>
+#include <vtkm/cont/ExecutionObjectBase.h>
 #include <vtkm/exec/arg/FetchTagArrayDirectOut.h>
 
 #include <vtkm/worklet/gradient/Divergence.h>
@@ -39,7 +39,7 @@ namespace exec
 {
 
 template <typename T, typename DeviceAdapter>
-struct GradientScalarOutput : public vtkm::cont::ExecutionObjectFactoryBase
+struct GradientScalarOutput : public vtkm::cont::ExecutionObjectBase
 {
   using ValueType = vtkm::Vec<T, 3>;
   using BaseTType = typename vtkm::BaseComponent<T>::Type;
@@ -77,7 +77,7 @@ struct GradientScalarOutput : public vtkm::cont::ExecutionObjectFactoryBase
 };
 
 template <typename T, typename DeviceAdapter>
-struct GradientVecOutput : public vtkm::cont::ExecutionObjectFactoryBase
+struct GradientVecOutput : public vtkm::cont::ExecutionObjectBase
 {
   using ValueType = vtkm::Vec<T, 3>;
   using BaseTType = typename vtkm::BaseComponent<T>::Type;

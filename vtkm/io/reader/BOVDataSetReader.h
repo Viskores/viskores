@@ -75,7 +75,7 @@ private:
     if (stream.fail())
       throw vtkm::io::ErrorIO("Failed to open file: " + this->FileName);
 
-    DataFormat dataFormat;
+    DataFormat dataFormat = ByteData;
     std::string bovFile, line, token, options, variableName;
     vtkm::Id numComponents = 1;
     vtkm::Id3 dim;

@@ -41,7 +41,7 @@ namespace cuda
 namespace internal
 {
 
-int getNumSMs(int dId);
+vtkm::UInt32 getNumSMs(int dId);
 
 template <typename TaskType>
 __global__ void TaskStrided1DLaunch(TaskType task, vtkm::Id);
@@ -110,10 +110,10 @@ static void parameter_sweep_1d_schedule(const TaskT& task, const vtkm::Id& numIn
 
   for (vtkm::UInt32 g = 0; g < 12; g++)
   {
-    int grids = gridIndexTable[g] * getNumSMs(deviceId);
+    vtkm::UInt32 grids = gridIndexTable[g] * getNumSMs(deviceId);
     for (vtkm::UInt32 b = 0; b < 12; b++)
     {
-      int blocks = blockIndexTable[b];
+      vtkm::UInt32 blocks = blockIndexTable[b];
 
       cudaEvent_t start, stop;
       VTKM_CUDA_CALL(cudaEventCreate(&start));
@@ -156,7 +156,7 @@ static void parameter_sweep_3d_schedule(const TaskT& task, const vtkm::Id3& rang
   int deviceId;
   for (vtkm::UInt32 g = 0; g < 12; g++)
   {
-    int grids = gridIndexTable[g] * getNumSMs(deviceId);
+    vtkm::UInt32 grids = gridIndexTable[g] * getNumSMs(deviceId);
     for (vtkm::UInt32 i = 0; i < 16; i++)
     {
       for (vtkm::UInt32 j = 0; j < 16; j++)

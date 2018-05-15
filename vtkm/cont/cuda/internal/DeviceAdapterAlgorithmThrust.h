@@ -1084,10 +1084,10 @@ public:
   static char* SetupErrorBuffer(vtkm::exec::cuda::internal::TaskStrided& functor);
 
   VTKM_CONT_EXPORT
-  static void GetGridsAndBlocks(int& grid, int& blocks, vtkm::Id size);
+  static void GetGridsAndBlocks(vtkm::UInt32& grid, vtkm::UInt32& blocks, vtkm::Id size);
 
   VTKM_CONT_EXPORT
-  static void GetGridsAndBlocks(int& grid, dim3& blocks, const dim3& size);
+  static void GetGridsAndBlocks(vtkm::UInt32& grid, dim3& blocks, const dim3& size);
 
 public:
   template <typename WType, typename IType>
@@ -1102,7 +1102,7 @@ public:
     }
     char* hostErrorPtr = SetupErrorBuffer(functor);
 
-    int grids, blocks;
+    vtkm::UInt32 grids, blocks;
     GetGridsAndBlocks(grids, blocks, numInstances);
 
     TaskStrided1DLaunch<<<grids, blocks, 0, cudaStreamPerThread>>>(functor, numInstances);
@@ -1140,7 +1140,7 @@ public:
                       static_cast<vtkm::UInt32>(rangeMax[1]),
                       static_cast<vtkm::UInt32>(rangeMax[2]));
 
-    int grids;
+    vtkm::UInt32 grids;
     dim3 blocks;
     GetGridsAndBlocks(grids, blocks, ranges);
 
