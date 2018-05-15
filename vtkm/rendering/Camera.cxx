@@ -40,7 +40,7 @@ vtkm::Matrix<vtkm::Float32, 4, 4> Camera::Camera3DStruct::CreateProjectionMatrix
   vtkm::MatrixIdentity(matrix);
 
   vtkm::Float32 AspectRatio = vtkm::Float32(width) / vtkm::Float32(height);
-  vtkm::Float32 fovRad = (this->FieldOfView * 3.1415926f) / 180.f;
+  vtkm::Float32 fovRad = this->FieldOfView * vtkm::Pi_180f();
   fovRad = vtkm::Tan(fovRad * 0.5f);
   vtkm::Float32 size = nearPlane * fovRad;
   vtkm::Float32 left = -size * AspectRatio;

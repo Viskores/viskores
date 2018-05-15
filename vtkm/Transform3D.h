@@ -156,7 +156,7 @@ template <typename T>
 VTKM_EXEC_CONT vtkm::Matrix<T, 4, 4> Transform3DRotate(T angleDegrees,
                                                        const vtkm::Vec<T, 3>& axisOfRotation)
 {
-  T angleRadians = static_cast<T>(vtkm::Pi() / 180) * angleDegrees;
+  T angleRadians = vtkm::Pi_180<T>() * angleDegrees;
   const vtkm::Vec<T, 3> normAxis = vtkm::Normal(axisOfRotation);
   T sinAngle = vtkm::Sin(angleRadians);
   T cosAngle = vtkm::Cos(angleRadians);

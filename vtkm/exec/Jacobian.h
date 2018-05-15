@@ -212,7 +212,7 @@ void JacobianFor2DCell(const WorldCoordType &wCoords,
 {
   const vtkm::IdComponent numPoints = wCoords.GetNumberOfComponents();
   vtkm::Vec<JacobianType,2> pc(pcoords[0], pcoords[1]);
-  JacobianType deltaAngle = static_cast<JacobianType>(2*vtkm::Pi()/numPoints);
+  JacobianType deltaAngle = 2*vtkm::Pi<JacobianType>()/numPoints;
 
   jacobian = vtkm::Matrix<JacobianType,2,2>(0);
   for (vtkm::IdComponent pointIndex = 0; pointIndex < numPoints; pointIndex++)

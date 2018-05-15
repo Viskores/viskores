@@ -87,7 +87,7 @@ void TextAnnotationBillboard::Render(const vtkm::rendering::Camera& camera,
     viewportMatrix = vtkm::Transform3DScale(2.f / xs, 2.f / ys, 1.f);
   }
 
-  MatrixType rotateMatrix = vtkm::Transform3DRotateZ(this->Angle * 3.14159265f / 180.f);
+  MatrixType rotateMatrix = vtkm::Transform3DRotateZ(this->Angle * vtkm::Pi_180f());
 
   vtkm::Matrix<vtkm::Float32, 4, 4> fullTransformMatrix = vtkm::MatrixMultiply(
     translateMatrix,
