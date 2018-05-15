@@ -24,14 +24,16 @@
 
 #include <vtkm/Types.h>
 
-#include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/cuda/internal/DeviceAdapterTagCuda.h>
-
 
 namespace vtkm
 {
 namespace cont
 {
+
+template <class DeviceAdapterTag>
+class DeviceAdapterRuntimeDetector;
+
 
 /// \brief Class providing a CUDA runtime support detector.
 ///

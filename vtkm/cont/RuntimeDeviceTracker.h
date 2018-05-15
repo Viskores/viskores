@@ -20,10 +20,14 @@
 #ifndef vtk_m_cont_RuntimeDeviceTracker_h
 #define vtk_m_cont_RuntimeDeviceTracker_h
 
+#include <vtkm/cont/vtkm_cont_export.h>
+
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/ErrorBadAllocation.h>
 #include <vtkm/cont/ErrorBadDevice.h>
 #include <vtkm/cont/RuntimeDeviceInformation.h>
+
+#include <memory>
 
 namespace vtkm
 {

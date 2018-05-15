@@ -68,6 +68,15 @@ public:
   VTKM_CONT static void Synchronize() { Algorithm::Synchronize(); }
 };
 
+template <>
+class DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagTestAlgorithmGeneral>
+{
+public:
+  /// Returns true as the General Algorithm Device can always be used.
+  VTKM_CONT bool Exists() const { return true; }
+};
+
+
 namespace internal
 {
 

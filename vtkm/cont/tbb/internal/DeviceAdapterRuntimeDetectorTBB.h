@@ -17,42 +17,31 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_internal_DeviceAdapterError_h
-#define vtk_m_cont_internal_DeviceAdapterError_h
+#ifndef vtk_m_cont_tbb_internal_DeviceAdapterRuntimeDetector_h
+#define vtk_m_cont_tbb_internal_DeviceAdapterRuntimeDetector_h
 
-#include <vtkm/cont/internal/DeviceAdapterTag.h>
-
-/// This is an invalid DeviceAdapter. The point of this class is to include the
-/// header file to make this invalid class the default DeviceAdapter. From that
-/// point, you have to specify an appropriate DeviceAdapter or else get a
-/// compile error.
-///
-VTKM_INVALID_DEVICE_ADAPTER(Error, VTKM_DEVICE_ADAPTER_ERROR);
+#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
+#include <vtkm/cont/vtkm_cont_export.h>
 
 namespace vtkm
 {
 namespace cont
 {
 
-/// \brief Class providing a Error runtime support detector.
-///
-/// The class provide the actual implementation used by
-/// vtkm::cont::RuntimeDeviceInformation for the Error backend.
-///
-/// We will always state that the current machine doesn't support
-/// the error backend.
-///
 template <class DeviceAdapterTag>
 class DeviceAdapterRuntimeDetector;
 
+/// Determine if this machine supports Serial backend
+///
 template <>
-class DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagError>
+class VTKM_CONT_EXPORT DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagTBB>
 {
 public:
-  /// Returns false as the Error Device can never be run on.
-  VTKM_CONT bool Exists() const { return false; }
+  /// Returns true if the given device adapter is supported on the current
+  /// machine.
+  VTKM_CONT bool Exists() const;
 };
 }
 }
 
-#endif //vtk_m_cont_internal_DeviceAdapterError_h
+#endif

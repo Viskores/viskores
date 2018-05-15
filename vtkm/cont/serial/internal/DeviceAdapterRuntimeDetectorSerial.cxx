@@ -17,16 +17,16 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_serial_DeviceAdapterSerial_h
-#define vtk_m_cont_serial_DeviceAdapterSerial_h
-
-// Keep headers in this order.
-// clang-format off
-#include <vtkm/cont/serial/internal/DeviceAdapterTagSerial.h>
 #include <vtkm/cont/serial/internal/DeviceAdapterRuntimeDetectorSerial.h>
-#include <vtkm/cont/serial/internal/ArrayManagerExecutionSerial.h>
-#include <vtkm/cont/serial/internal/DeviceAdapterAlgorithmSerial.h>
-#include <vtkm/cont/serial/internal/VirtualObjectTransferSerial.h>
-// clang-format on
 
-#endif //vtk_m_cont_serial_DeviceAdapterSerial_h
+namespace vtkm
+{
+namespace cont
+{
+VTKM_CONT bool DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagSerial>::Exists() const
+{
+  using DeviceAdapterTraits = vtkm::cont::DeviceAdapterTraits<vtkm::cont::DeviceAdapterTagSerial>;
+  return DeviceAdapterTraits::Valid;
+}
+}
+}
