@@ -17,7 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_worklet_particleadvection_temporalgridevaluators_h
+#ifndef vtk_m_worklet_particleadvection_TemporalGridEvaluators_h
 #define vtk_m_worklet_particleadvection_TemporalGridEvaluators_h
 
 #include <vtkm/Types.h>
@@ -332,4 +332,4 @@ private:
 } //namespace vtkm
 
 
-#endif //vtk_m_worklet_particleadvection_temporalgridevaluators_h
+#endif //vtk_m_worklet_particleadvection_TemporalGridEvaluators_h
