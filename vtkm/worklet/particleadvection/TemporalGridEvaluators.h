@@ -331,5 +331,4 @@ private:
 } //namespace worklet
 } //namespace vtkm
 
-
 #endif //vtk_m_worklet_particleadvection_TemporalGridEvaluators_h
