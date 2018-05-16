@@ -197,7 +197,8 @@ public:
     FieldType var2 = time + var1;
     FieldType var3 = time + stepLength;
 
-    vtkm::Vec<FieldType, 3> k1, k2, k3, k4;
+    vtkm::Vec<FieldType, 3> k1 = vtkm::TypeTraits<vtkm::Vec<FieldType, 3>>::ZeroInitialization();
+    vtkm::Vec<FieldType, 3> k2 = k1, k3 = k1, k4 = k1;
 
     bool status1 = this->Evaluator.Evaluate(inpos, time, k1);
     bool status2 = this->Evaluator.Evaluate(inpos + var1 * k1, var2, k2);

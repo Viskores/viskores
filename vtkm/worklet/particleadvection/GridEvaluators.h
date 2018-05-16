@@ -387,7 +387,8 @@ private:
 
 template <typename PortalType,
           typename FieldType,
-          typename DeviceAdapterTag typename StorageTag = VTKM_DEFAULT_STORAGE_TAG>
+          typename DeviceAdapterTag,
+          typename StorageTag = VTKM_DEFAULT_STORAGE_TAG>
 class RectilinearGridEvaluate
 {
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>, StorageTag>;
