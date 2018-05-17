@@ -466,7 +466,7 @@ void TestParticleWorklets()
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
         seeds.Allocate(nSeeds);
         for (vtkm::Id k = 0; k < nSeeds; k++)
-          seeds.GetPortalControl().Set(k, pts[k]);
+          seeds.GetPortalControl().Set(k, pts[static_cast<size_t>(k)]);
 
         if (j == 0)
           res = particleAdvection.Run(rk4, seeds, maxSteps, DeviceAdapter());
@@ -497,7 +497,7 @@ void TestParticleWorklets()
         vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
         seeds.Allocate(nSeeds);
         for (vtkm::Id k = 0; k < nSeeds; k++)
-          seeds.GetPortalControl().Set(k, pts[k]);
+          seeds.GetPortalControl().Set(k, pts[static_cast<size_t>(k)]);
 
         if (j == 0)
           res = streamline.Run(rk4, seeds, maxSteps, DeviceAdapter());
@@ -520,7 +520,10 @@ void TestParticleWorklets()
         {
           vtkm::Id numPoints = static_cast<vtkm::Id>(res.polyLines.GetNumberOfPointsInCell(k));
           vtkm::Id numSteps = res.stepsTaken.GetPortalConstControl().Get(k);
-          //VTKM_TEST_ASSERT(numPoints == numSteps, "Invalid number of points in streamline.");
+          if (j != 1)
+          {
+            VTKM_TEST_ASSERT(numPoints == numSteps, "Invalid number of points in streamline.");
+          }
           VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(k) <= maxSteps,
                            "Too many steps taken in streamline");
         }
