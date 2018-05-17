@@ -76,7 +76,7 @@ template <typename T>
 VTKM_EXEC_CONT typename detail::FloatingPointReturnType<T>::Type MagnitudeSquared(const T& x)
 {
   using U = typename detail::FloatingPointReturnType<T>::Type;
-  return static_cast<U>(vtkm::dot(x, x));
+  return static_cast<U>(vtkm::Dot(x, x));
 }
 
 // ----------------------------------------------------------------------------

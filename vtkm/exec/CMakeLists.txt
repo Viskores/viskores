@@ -25,6 +25,7 @@ set(headers
   CellFace.h
   CellInside.h
   CellInterpolate.h
+  CellMeasure.h
   ColorTable.h
   ConnectivityExplicit.h
   ConnectivityPermuted.h

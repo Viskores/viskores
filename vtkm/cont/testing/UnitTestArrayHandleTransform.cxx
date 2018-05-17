@@ -40,9 +40,9 @@ const vtkm::Id ARRAY_SIZE = 10;
 struct MySquare
 {
   template <typename U>
-  VTKM_EXEC auto operator()(U u) const -> decltype(vtkm::dot(u, u))
+  VTKM_EXEC auto operator()(U u) const -> decltype(vtkm::Dot(u, u))
   {
-    return vtkm::dot(u, u);
+    return vtkm::Dot(u, u);
   }
 };
 

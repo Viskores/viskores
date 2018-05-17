@@ -85,8 +85,7 @@ template <>
 class FilterTraits<SurfaceNormals>
 {
 public:
-  using InputFieldTypeList =
-    vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 3>, vtkm::Vec<vtkm::Float64, 3>>;
+  using InputFieldTypeList = vtkm::TypeListTagFieldVec3;
 };
 }
 } // vtkm::filter

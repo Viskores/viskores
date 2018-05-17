@@ -47,9 +47,9 @@ VTKM_EXEC_CONT vtkm::Vec<T, 3> Transform3DPoint(const vtkm::Matrix<T, 4, 4>& mat
                                                 const vtkm::Vec<T, 3>& point)
 {
   vtkm::Vec<T, 4> homogeneousPoint(point[0], point[1], point[2], T(1));
-  return vtkm::Vec<T, 3>(vtkm::dot(vtkm::MatrixGetRow(matrix, 0), homogeneousPoint),
-                         vtkm::dot(vtkm::MatrixGetRow(matrix, 1), homogeneousPoint),
-                         vtkm::dot(vtkm::MatrixGetRow(matrix, 2), homogeneousPoint));
+  return vtkm::Vec<T, 3>(vtkm::Dot(vtkm::MatrixGetRow(matrix, 0), homogeneousPoint),
+                         vtkm::Dot(vtkm::MatrixGetRow(matrix, 1), homogeneousPoint),
+                         vtkm::Dot(vtkm::MatrixGetRow(matrix, 2), homogeneousPoint));
 }
 
 /// \brief Transform a 3D point by a transformation matrix with perspective.
@@ -66,10 +66,10 @@ VTKM_EXEC_CONT vtkm::Vec<T, 3> Transform3DPointPerspective(const vtkm::Matrix<T,
                                                            const vtkm::Vec<T, 3>& point)
 {
   vtkm::Vec<T, 4> homogeneousPoint(point[0], point[1], point[2], T(1));
-  T inverseW = 1 / vtkm::dot(vtkm::MatrixGetRow(matrix, 3), homogeneousPoint);
-  return vtkm::Vec<T, 3>(vtkm::dot(vtkm::MatrixGetRow(matrix, 0), homogeneousPoint) * inverseW,
-                         vtkm::dot(vtkm::MatrixGetRow(matrix, 1), homogeneousPoint) * inverseW,
-                         vtkm::dot(vtkm::MatrixGetRow(matrix, 2), homogeneousPoint) * inverseW);
+  T inverseW = 1 / vtkm::Dot(vtkm::MatrixGetRow(matrix, 3), homogeneousPoint);
+  return vtkm::Vec<T, 3>(vtkm::Dot(vtkm::MatrixGetRow(matrix, 0), homogeneousPoint) * inverseW,
+                         vtkm::Dot(vtkm::MatrixGetRow(matrix, 1), homogeneousPoint) * inverseW,
+                         vtkm::Dot(vtkm::MatrixGetRow(matrix, 2), homogeneousPoint) * inverseW);
 }
 
 /// \brief Transform a 3D vector by a transformation matrix.

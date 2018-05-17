@@ -294,7 +294,7 @@ private:
 
   //     vtkm::FloatDefault magnitudeValue = GLReturneMags[pointIndex];
   //     vtkm::FloatDefault magnitudeExpected =
-  //         sqrt(vtkm::dot(pointCoordinateExpected, pointCoordinateExpected));
+  //         sqrt(vtkm::Dot(pointCoordinateExpected, pointCoordinateExpected));
   //     VTKM_TEST_ASSERT(test_equal(magnitudeValue, magnitudeExpected),
   //                     "Got bad magnitude from OpenGL buffer.");
   //     }

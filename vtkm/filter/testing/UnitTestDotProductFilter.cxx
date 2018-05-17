@@ -108,7 +108,7 @@ void CheckResult(const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>
     vtkm::Vec<vtkm::FloatDefault, 3> v2 = v2Portal.Get(j);
     vtkm::FloatDefault res = outPortal.Get(j);
 
-    VTKM_TEST_ASSERT(test_equal(vtkm::dot(v1, v2), res), "Wrong result for dot product");
+    VTKM_TEST_ASSERT(test_equal(vtkm::Dot(v1, v2), res), "Wrong result for dot product");
   }
 }
 

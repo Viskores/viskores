@@ -121,7 +121,7 @@ public:
     ray_dir = nlook + delta_x * ((2.f * vtkm::Float32(i) - vtkm::Float32(w)) / 2.0f) +
       delta_y * ((2.f * vtkm::Float32(j) - vtkm::Float32(h)) / 2.0f);
 
-    vtkm::Float32 dot = vtkm::dot(ray_dir, ray_dir);
+    vtkm::Float32 dot = vtkm::Dot(ray_dir, ray_dir);
     vtkm::Float32 sq_mag = vtkm::Sqrt(dot);
 
     ray_dir[0] = ray_dir[0] / sq_mag;
@@ -338,7 +338,7 @@ public:
       if (ray_dir[d] == 0.f)
         ray_dir[d] += 0.0000001f;
     }
-    Precision dot = vtkm::dot(ray_dir, ray_dir);
+    Precision dot = vtkm::Dot(ray_dir, ray_dir);
     Precision sq_mag = vtkm::Sqrt(dot);
 
     rayDirX = ray_dir[0] / sq_mag;
@@ -1064,7 +1064,7 @@ void Camera::CreateDebugRayImp(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<Precision>& 
   ray_dir = nlook + delta_x * ((2.f * Precision(i) - Precision(this->Width)) / 2.0f) +
     delta_y * ((2.f * Precision(j) - Precision(this->Height)) / 2.0f);
 
-  Precision dot = vtkm::dot(ray_dir, ray_dir);
+  Precision dot = vtkm::Dot(ray_dir, ray_dir);
   Precision sq_mag = vtkm::Sqrt(dot);
 
   ray_dir[0] = ray_dir[0] / sq_mag;

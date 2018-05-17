@@ -65,7 +65,7 @@ struct ValueSquared
   template <typename U>
   VTKM_EXEC_CONT ValueType operator()(U u) const
   {
-    return vtkm::dot(u, u);
+    return vtkm::Dot(u, u);
   }
 };
 

@@ -25,6 +25,7 @@ set(unit_tests
   UnitTestCellGradient.cxx
   UnitTestCellSetConnectivity.cxx
   UnitTestCellSetDualGraph.cxx
+  UnitTestCellMeasure.cxx
   UnitTestClipping.cxx
   UnitTestContourTreeUniform.cxx
   UnitTestCosmoTools.cxx

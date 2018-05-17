@@ -40,7 +40,7 @@ public:
                             const vtkm::Vec<T, Size>& v2,
                             T& outValue) const
   {
-    outValue = vtkm::dot(v1, v2);
+    outValue = vtkm::Dot(v1, v2);
   }
 };
 }

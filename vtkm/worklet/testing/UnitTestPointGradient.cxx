@@ -190,7 +190,7 @@ void TestPointGradientUniform3DWithVectorField2()
 
     //compute QCriterion
     vtkm::Float64 qcriterion =
-      ((vtkm::dot(ev, ev) / 2.0f) - (vtkm::dot(ed, ed) + (vtkm::dot(es, es) / 2.0f))) / 2.0f;
+      ((vtkm::Dot(ev, ev) / 2.0f) - (vtkm::Dot(ed, ed) + (vtkm::Dot(es, es) / 2.0f))) / 2.0f;
 
     vtkm::Float64 q = extraOutput.QCriterion.GetPortalConstControl().Get(i);
 

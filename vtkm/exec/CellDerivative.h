@@ -635,19 +635,19 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TriangleDerivative(const vtkm::Vec<ValueType, 
   // gradient g and scalar value s_origin, can be found with this set of 4
   // equations and 4 unknowns.
   //
-  // dot(p0, g) + s_origin = s0
-  // dot(p1, g) + s_origin = s1
-  // dot(p2, g) + s_origin = s2
-  // dot(n, g)             = 0
+  // Dot(p0, g) + s_origin = s0
+  // Dot(p1, g) + s_origin = s1
+  // Dot(p2, g) + s_origin = s2
+  // Dot(n, g)             = 0
   //
   // Where the p's are point coordinates and n is the normal vector. But we
   // don't really care about s_origin. We just want to find the gradient g.
   // With some simple elimination we, we can get rid of s_origin and be left
   // with 3 equations and 3 unknowns.
   //
-  // dot(p1-p0, g) = s1 - s0
-  // dot(p2-p0, g) = s2 - s0
-  // dot(n, g)     = 0
+  // Dot(p1-p0, g) = s1 - s0
+  // Dot(p2-p0, g) = s2 - s0
+  // Dot(n, g)     = 0
   //
   // We'll solve this by putting this in matrix form Ax = b where the rows of A
   // are the differences in points and normal, b has the scalar differences,
@@ -937,19 +937,19 @@ VTKM_EXEC vtkm::Vec<ValueType, 3> TetraDerivative(const vtkm::Vec<ValueType, 4>&
   // gradient g and scalar value s_origin, can be found with this set of 4
   // equations and 4 unknowns.
   //
-  // dot(p0, g) + s_origin = s0
-  // dot(p1, g) + s_origin = s1
-  // dot(p2, g) + s_origin = s2
-  // dot(p3, g) + s_origin = s3
+  // Dot(p0, g) + s_origin = s0
+  // Dot(p1, g) + s_origin = s1
+  // Dot(p2, g) + s_origin = s2
+  // Dot(p3, g) + s_origin = s3
   //
   // Where the p's are point coordinates. But we don't really care about
   // s_origin. We just want to find the gradient g. With some simple
   // elimination we, we can get rid of s_origin and be left with 3 equations
   // and 3 unknowns.
   //
-  // dot(p1-p0, g) = s1 - s0
-  // dot(p2-p0, g) = s2 - s0
-  // dot(p3-p0, g) = s3 - s0
+  // Dot(p1-p0, g) = s1 - s0
+  // Dot(p2-p0, g) = s2 - s0
+  // Dot(p3-p0, g) = s3 - s0
   //
   // We'll solve this by putting this in matrix form Ax = b where the rows of A
   // are the differences in points and normal, b has the scalar differences,

@@ -145,7 +145,7 @@ struct MatrixTest
     {
       vtkm::Vec<T, NUM_COLS> leftVector = vtkm::MatrixGetRow(leftFactor, row);
       vtkm::Vec<T, NUM_COLS> rightVector = vtkm::MatrixGetColumn(rightFactor, col);
-      VTKM_TEST_ASSERT(test_equal(product(row, col), vtkm::dot(leftVector, rightVector)),
+      VTKM_TEST_ASSERT(test_equal(product(row, col), vtkm::Dot(leftVector, rightVector)),
                        "Matrix multiple wrong.");
     }
 
