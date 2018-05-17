@@ -19,24 +19,23 @@
 ##  this software.
 ##
 ##=============================================================================
-#add the directory that contains the VTK-m config file to the cmake
-#path so that our examples can find VTK-m
-set(CMAKE_PREFIX_PATH ${VTKm_BINARY_DIR}/${VTKm_INSTALL_CONFIG_DIR})
 
-add_subdirectory(clipping)
-add_subdirectory(contour_tree)
-add_subdirectory(cosmotools)
-add_subdirectory(demo)
-add_subdirectory(dynamic_dispatcher)
-add_subdirectory(game_of_life)
-add_subdirectory(hello_world)
-add_subdirectory(histogram)
-add_subdirectory(isosurface)
-add_subdirectory(multi_backend)
-add_subdirectory(particle_advection)
-add_subdirectory(temporaladvection)
-add_subdirectory(redistribute_points)
-add_subdirectory(rendering)
-add_subdirectory(streamline)
-add_subdirectory(tetrahedra)
-add_subdirectory(unified_memory)
+#Find the VTK-m package
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
+project(ParticleAdvection CXX)
+
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET)
+
+add_executable(exeserial ParticleAdvection.cxx)
+target_link_libraries(exeserial PRIVATE vtkm_cont)
+
+if(TARGET vtkm::tbb)
+  add_executable(exetbb ParticleAdvectionTBB.cxx)
+  target_link_libraries(exetbb PRIVATE vtkm_cont)
+endif()
+
+if(TARGET vtkm::cuda)
+  add_executable(execuda ParticleAdvection.cu)
+  target_link_libraries(execuda PRIVATE vtkm_cont)
+endif()

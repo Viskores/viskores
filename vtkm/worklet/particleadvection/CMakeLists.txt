@@ -23,6 +23,7 @@ set(headers
   Integrators.h
   Particles.h
   ParticleAdvectionWorklets.h
+  TemporalGridEvaluators.h
   )
 
 #-----------------------------------------------------------------------------

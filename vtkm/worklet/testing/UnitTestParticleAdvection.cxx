@@ -243,7 +243,8 @@ public:
                   vtkm::worklet::particleadvection::ParticleStatus& status,
                   vtkm::Vec<FieldType, 3>& pointOut) const
   {
-    status = integrator.Step(pointIn, pointOut);
+    FieldType time = 0;
+    status = integrator.Step(pointIn, time, pointOut);
   }
 
 private:
@@ -415,7 +416,7 @@ void TestParticleWorklets()
   using FieldHandle = vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>>;
   using FieldPortalConstType = FieldHandle::template ExecutionTypes<DeviceAdapter>::PortalConst;
 
-  FieldType stepSize = 0.05f;
+  FieldType stepSize = 0.01f;
 
   vtkm::cont::DataSetBuilderUniform dataSetBuilder;
 
@@ -451,35 +452,78 @@ void TestParticleWorklets()
     pts.push_back(vtkm::Vec<FieldType, 3>(2, 2, 2));
     pts.push_back(vtkm::Vec<FieldType, 3>(3, 3, 3));
 
-    vtkm::Id maxSteps = 100;
-    vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
-    seeds = vtkm::cont::make_ArrayHandle(pts);
+    vtkm::Id maxSteps = 1000;
+    vtkm::Id nSeeds = static_cast<vtkm::Id>(pts.size());
+    std::vector<vtkm::Id> stepsTaken = { 10, 20, 600 };
 
     if (i == 0)
     {
-      vtkm::worklet::ParticleAdvection particleAdvection;
-      vtkm::worklet::ParticleAdvectionResult<FieldType> res;
-      res = particleAdvection.Run(rk4, seeds, maxSteps, DeviceAdapter());
-      VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
-                       "Number of output particles does not match input.");
+      for (int j = 0; j < 2; j++)
+      {
+        vtkm::worklet::ParticleAdvection particleAdvection;
+        vtkm::worklet::ParticleAdvectionResult<FieldType> res;
+
+        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
+        seeds.Allocate(nSeeds);
+        for (vtkm::Id k = 0; k < nSeeds; k++)
+          seeds.GetPortalControl().Set(k, pts[k]);
+
+        if (j == 0)
+          res = particleAdvection.Run(rk4, seeds, maxSteps, DeviceAdapter());
+        else if (j == 1)
+        {
+          vtkm::cont::ArrayHandle<vtkm::Id> stepsTakenArrayHandle =
+            vtkm::cont::make_ArrayHandle(stepsTaken);
+          res = particleAdvection.Run(rk4, seeds, stepsTakenArrayHandle, maxSteps, DeviceAdapter());
+        }
+
+        VTKM_TEST_ASSERT(res.positions.GetNumberOfValues() == seeds.GetNumberOfValues(),
+                         "Number of output particles does not match input.");
+        std::cout << "Test: " << i << " " << j << std::endl;
+        vtkm::cont::printSummary_ArrayHandle(res.stepsTaken, std::cout);
+
+        for (vtkm::Id k = 0; k < nSeeds; k++)
+          VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(k) <= maxSteps,
+                           "Too many steps taken in particle advection");
+      }
     }
     else if (i == 1)
     {
-      vtkm::worklet::Streamline streamline;
-      vtkm::worklet::StreamlineResult<FieldType> res;
-      res = streamline.Run(rk4, seeds, maxSteps, DeviceAdapter());
-
-      //Make sure we have the right number of streamlines.
-      VTKM_TEST_ASSERT(res.polyLines.GetNumberOfCells() == seeds.GetNumberOfValues(),
-                       "Number of output streamlines does not match input.");
-
-      //Make sure we have the right number of samples in each streamline.
-      vtkm::Id nSeeds = static_cast<vtkm::Id>(pts.size());
-      for (vtkm::Id j = 0; j < nSeeds; j++)
+      for (int j = 0; j < 2; j++)
       {
-        vtkm::Id numPoints = static_cast<vtkm::Id>(res.polyLines.GetNumberOfPointsInCell(j));
-        vtkm::Id numSteps = res.stepsTaken.GetPortalConstControl().Get(j);
-        VTKM_TEST_ASSERT(numPoints == numSteps, "Invalid number of points in streamline.");
+        vtkm::worklet::Streamline streamline;
+        vtkm::worklet::StreamlineResult<FieldType> res;
+
+        vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> seeds;
+        seeds.Allocate(nSeeds);
+        for (vtkm::Id k = 0; k < nSeeds; k++)
+          seeds.GetPortalControl().Set(k, pts[k]);
+
+        if (j == 0)
+          res = streamline.Run(rk4, seeds, maxSteps, DeviceAdapter());
+        else if (j == 1)
+        {
+          vtkm::cont::ArrayHandle<vtkm::Id> stepsTakenArrayHandle =
+            vtkm::cont::make_ArrayHandle(stepsTaken);
+          res = streamline.Run(rk4, seeds, stepsTakenArrayHandle, maxSteps, DeviceAdapter());
+        }
+
+        //Make sure we have the right number of streamlines.
+        VTKM_TEST_ASSERT(res.polyLines.GetNumberOfCells() == seeds.GetNumberOfValues(),
+                         "Number of output streamlines does not match input.");
+
+        std::cout << "Test: " << i << " " << j << std::endl;
+        vtkm::cont::printSummary_ArrayHandle(res.stepsTaken, std::cout);
+        //Make sure we have the right number of samples in each streamline.
+        nSeeds = static_cast<vtkm::Id>(pts.size());
+        for (vtkm::Id k = 0; k < nSeeds; k++)
+        {
+          vtkm::Id numPoints = static_cast<vtkm::Id>(res.polyLines.GetNumberOfPointsInCell(k));
+          vtkm::Id numSteps = res.stepsTaken.GetPortalConstControl().Get(k);
+          //VTKM_TEST_ASSERT(numPoints == numSteps, "Invalid number of points in streamline.");
+          VTKM_TEST_ASSERT(res.stepsTaken.GetPortalConstControl().Get(k) <= maxSteps,
+                           "Too many steps taken in streamline");
+        }
       }
     }
   }
