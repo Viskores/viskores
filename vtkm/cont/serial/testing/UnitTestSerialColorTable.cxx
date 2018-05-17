@@ -29,5 +29,6 @@
 
 int UnitTestSerialColorTable(int, char* [])
 {
+  //TestingColorTable forces the device
   return vtkm::cont::testing::TestingColorTable<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }

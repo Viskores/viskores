@@ -148,7 +148,7 @@ vtkm::cont::DataSet MakeTestDataSet(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dims,
   return out;
 }
 
-template <vtkm::IdComponent DIMENSIONS>
+template <vtkm::IdComponent DIMENSIONS, typename DeviceAdapter>
 void GenerateRandomInput(const vtkm::cont::DataSet& ds,
                          vtkm::Id count,
                          vtkm::cont::ArrayHandle<vtkm::Id>& cellIds,
@@ -181,7 +181,7 @@ void GenerateRandomInput(const vtkm::cont::DataSet& ds,
     pcoords.GetPortalControl().Set(i, pc);
   }
 
-  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates> dispatcher(
+  vtkm::worklet::DispatcherMapTopology<ParametricToWorldCoordinates, DeviceAdapter> dispatcher(
     ParametricToWorldCoordinates::MakeScatter(cellIds));
   dispatcher.Invoke(ds.GetCellSet(), ds.GetCoordinateSystem().GetData(), pcoords, wcoords);
 }
@@ -206,7 +206,8 @@ void TestCellLocator(const vtkm::Vec<vtkm::Id, DIMENSIONS>& dim,
   vtkm::cont::ArrayHandle<vtkm::Id> expCellIds;
   vtkm::cont::ArrayHandle<PointType> expPCoords;
   vtkm::cont::ArrayHandle<PointType> points;
-  GenerateRandomInput<DIMENSIONS>(ds, numberOfPoints, expCellIds, expPCoords, points);
+  GenerateRandomInput<DIMENSIONS, DeviceAdapter>(
+    ds, numberOfPoints, expCellIds, expPCoords, points);
 
   std::cout << "Finding cells for " << numberOfPoints << " points\n";
   vtkm::cont::ArrayHandle<vtkm::Id> cellIds;

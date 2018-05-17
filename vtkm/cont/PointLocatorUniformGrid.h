@@ -160,7 +160,7 @@ public:
 
       nnId = neareast;
       nnDis = vtkm::Sqrt(min_distance);
-    };
+    }
 
   private:
     vtkm::Vec<T, 3> Min;
@@ -183,7 +183,8 @@ public:
 
     // bin points into cells and give each of them the cell id.
     BinPointsWorklet cellIdWorklet(Min, Max, Dims);
-    vtkm::worklet::DispatcherMapField<BinPointsWorklet> dispatchCellId(cellIdWorklet);
+    vtkm::worklet::DispatcherMapField<BinPointsWorklet, DeviceAdapter> dispatchCellId(
+      cellIdWorklet);
     dispatchCellId.Invoke(coords, CellIds);
 
     // Group points of the same cell together by sorting them according to the cell ids
@@ -193,7 +194,7 @@ public:
     vtkm::cont::ArrayHandleCounting<vtkm::Id> cell_ids_counting(0, 1, Dims[0] * Dims[1] * Dims[2]);
     Algorithm::UpperBounds(CellIds, cell_ids_counting, CellUpper);
     Algorithm::LowerBounds(CellIds, cell_ids_counting, CellLower);
-  };
+  }
 
   /// \brief Nearest neighbor search using a Uniform Grid
   ///
@@ -220,7 +221,7 @@ public:
       uniformGridSearch);
     searchDispatcher.Invoke(
       queryPoints, coords, PointIds, CellLower, CellUpper, nearestNeighborIds, distances);
-  };
+  }
 
 private:
   vtkm::Vec<T, 3> Min;

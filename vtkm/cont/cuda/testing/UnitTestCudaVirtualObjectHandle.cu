@@ -17,6 +17,11 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
+// Make sure that the tested code is using the device adapter specified. This
+// is important in the long run so we don't, for example, use the CUDA device
+// for a part of an operation where the TBB device was specified.
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_ERROR
+
 #include <vtkm/cont/testing/TestingVirtualObjectHandle.h>
 
 namespace
@@ -24,10 +29,16 @@ namespace
 
 void TestVirtualObjectHandle()
 {
-  using DeviceAdapterList =
-    vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial, vtkm::cont::DeviceAdapterTagCuda>;
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
 
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagCuda{});
+  using DeviceAdapterList = vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagCuda>;
   vtkm::cont::testing::TestingVirtualObjectHandle<DeviceAdapterList>::Run();
+
+  tracker.Reset();
+  using DeviceAdapterList2 =
+    vtkm::ListTagBase<vtkm::cont::DeviceAdapterTagSerial, vtkm::cont::DeviceAdapterTagCuda>;
+  vtkm::cont::testing::TestingVirtualObjectHandle<DeviceAdapterList2>::Run();
 }
 
 } // anonymous namespace

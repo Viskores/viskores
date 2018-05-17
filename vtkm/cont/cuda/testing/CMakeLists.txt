@@ -31,7 +31,7 @@ set(unit_tests
   UnitTestCudaImplicitFunction.cu
   UnitTestCudaMath.cu
   UnitTestCudaShareUserProvidedManagedMemory.cu
-  UnitTestCudaPointLocatorUniformGrid.cxx
+  UnitTestCudaPointLocatorUniformGrid.cu
   UnitTestCudaVirtualObjectHandle.cu
   )
 vtkm_unit_tests(SOURCES ${unit_tests})

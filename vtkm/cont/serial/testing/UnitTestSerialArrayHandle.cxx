@@ -28,5 +28,7 @@
 
 int UnitTestSerialArrayHandle(int, char* [])
 {
+  auto tracker = vtkm::cont::GetGlobalRuntimeDeviceTracker();
+  tracker.ForceDevice(vtkm::cont::DeviceAdapterTagSerial{});
   return vtkm::cont::testing::TestingArrayHandles<vtkm::cont::DeviceAdapterTagSerial>::Run();
 }
