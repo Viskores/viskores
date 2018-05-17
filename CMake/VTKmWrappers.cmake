@@ -146,7 +146,7 @@ int ${headername}_${headerextension}_testbuild_symbol;"
     set_property(TARGET TestBuild_${name} PROPERTY ARCHIVE_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
     set_property(TARGET TestBuild_${name} PROPERTY LIBRARY_OUTPUT_DIRECTORY ${VTKm_LIBRARY_OUTPUT_PATH}/testbuilds)
 
-    target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags)
+    target_link_libraries(TestBuild_${name} PRIVATE vtkm_compiler_flags vtkm_taotuple)
 
     if(TARGET vtkm::tbb)
       #make sure that we have the tbb include paths when tbb is enabled.

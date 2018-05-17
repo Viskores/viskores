@@ -154,21 +154,13 @@ private:
     template <typename ValueType>
     VTKM_CONT void operator()(const ValueType vtkmNotUsed(v)) const
     {
-      //hard-coded to make a vtkm::Vec<ValueType,3> composite vector
-      //for each ValueType.
-
-      using CompositeHandleType = typename vtkm::cont::ArrayHandleCompositeVectorType<
-        vtkm::cont::ArrayHandle<ValueType>,
-        vtkm::cont::ArrayHandle<ValueType>,
-        vtkm::cont::ArrayHandle<ValueType>>::type;
-
       const ValueType value = TestValue(13, ValueType());
       std::vector<ValueType> compositeData(ARRAY_SIZE, value);
       vtkm::cont::ArrayHandle<ValueType> compositeInput =
         vtkm::cont::make_ArrayHandle(compositeData);
 
-      CompositeHandleType composite = vtkm::cont::make_ArrayHandleCompositeVector(
-        compositeInput, 0, compositeInput, 1, compositeInput, 2);
+      auto composite =
+        vtkm::cont::make_ArrayHandleCompositeVector(compositeInput, compositeInput, compositeInput);
 
       vtkm::cont::printSummary_ArrayHandle(composite, std::cout);
       std::cout << std::endl;

@@ -39,15 +39,17 @@ struct SwizzleTests
 {
   using SwizzleInputArrayType = vtkm::cont::ArrayHandle<vtkm::Vec<ValueType, 4>>;
 
-  template <vtkm::IdComponent... ComponentMap>
-  using SwizzleArrayType = vtkm::cont::ArrayHandleSwizzle<SwizzleInputArrayType, ComponentMap...>;
+  template <vtkm::IdComponent OutSize>
+  using SwizzleArrayType = vtkm::cont::ArrayHandleSwizzle<SwizzleInputArrayType, OutSize>;
 
   using ReferenceComponentArrayType = vtkm::cont::ArrayHandleCounting<ValueType>;
-  using ReferenceArrayType =
-    typename vtkm::cont::ArrayHandleCompositeVectorType<ReferenceComponentArrayType,
-                                                        ReferenceComponentArrayType,
-                                                        ReferenceComponentArrayType,
-                                                        ReferenceComponentArrayType>::type;
+  using ReferenceArrayType = vtkm::cont::ArrayHandleCompositeVector<ReferenceComponentArrayType,
+                                                                    ReferenceComponentArrayType,
+                                                                    ReferenceComponentArrayType,
+                                                                    ReferenceComponentArrayType>;
+
+  template <vtkm::IdComponent Size>
+  using MapType = vtkm::Vec<vtkm::IdComponent, Size>;
 
   using DeviceTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
@@ -68,7 +70,7 @@ struct SwizzleTests
     ReferenceComponentArrayType c4 =
       vtkm::cont::make_ArrayHandleCounting<ValueType>(1, 3, numValues);
 
-    this->RefArray = vtkm::cont::make_ArrayHandleCompositeVector(c1, 0, c2, 0, c3, 0, c4, 0);
+    this->RefArray = vtkm::cont::make_ArrayHandleCompositeVector(c1, c2, c3, c4);
   }
 
   SwizzleInputArrayType BuildSwizzleInputArray() const
@@ -78,62 +80,57 @@ struct SwizzleTests
     return result;
   }
 
-  template <vtkm::IdComponent... ComponentMap>
-  void SanityCheck() const
+  template <vtkm::IdComponent OutSize>
+  void SanityCheck(const MapType<OutSize>& map) const
   {
-    using Swizzle = SwizzleArrayType<ComponentMap...>;
+    using Swizzle = SwizzleArrayType<OutSize>;
     using Traits = typename Swizzle::SwizzleTraits;
 
-    VTKM_TEST_ASSERT(Traits::COUNT == vtkm::VecTraits<typename Swizzle::ValueType>::NUM_COMPONENTS,
-                     "Traits::COUNT invalid.");
+    VTKM_TEST_ASSERT(Traits::OutVecSize ==
+                       vtkm::VecTraits<typename Swizzle::ValueType>::NUM_COMPONENTS,
+                     "Traits::OutVecSize invalid.");
     VTKM_TEST_ASSERT(
       VTKM_PASS_COMMAS(std::is_same<typename Traits::ComponentType, ValueType>::value),
       "Traits::ComponentType invalid.");
     VTKM_TEST_ASSERT(
       VTKM_PASS_COMMAS(
-        std::is_same<
-          typename Traits::OutputType,
-          vtkm::Vec<ValueType, static_cast<vtkm::IdComponent>(sizeof...(ComponentMap))>>::value),
-      "Traits::OutputType invalid.");
+        std::is_same<typename Traits::OutValueType, vtkm::Vec<ValueType, OutSize>>::value),
+      "Traits::OutValueType invalid.");
 
     SwizzleInputArrayType input = this->BuildSwizzleInputArray();
-    SwizzleArrayType<ComponentMap...> swizzle =
-      vtkm::cont::make_ArrayHandleSwizzle<ComponentMap...>(input);
+    auto swizzle = vtkm::cont::make_ArrayHandleSwizzle(input, map);
 
     VTKM_TEST_ASSERT(input.GetNumberOfValues() == swizzle.GetNumberOfValues(),
                      "Number of values in copied Swizzle array does not match input.");
   }
 
-  template <vtkm::IdComponent... ComponentMap>
-  void ReadTest() const
+  template <vtkm::IdComponent OutSize>
+  void ReadTest(const MapType<OutSize>& map) const
   {
-    using Traits = typename SwizzleArrayType<ComponentMap...>::SwizzleTraits;
+    using Traits = typename SwizzleArrayType<OutSize>::SwizzleTraits;
 
     // Test that the expected values are read from an Swizzle array.
     SwizzleInputArrayType input = this->BuildSwizzleInputArray();
-    SwizzleArrayType<ComponentMap...> swizzle =
-      vtkm::cont::make_ArrayHandleSwizzle<ComponentMap...>(input);
+    auto swizzle = vtkm::cont::make_ArrayHandleSwizzle(input, map);
 
     // Test reading the data back in the control env:
-    this->ValidateReadTest<ComponentMap...>(swizzle);
+    this->ValidateReadTest(swizzle, map);
 
-    // Copy the extract array in the execution environment to test reading:
-    vtkm::cont::ArrayHandle<typename Traits::OutputType> execCopy;
+    // Copy the extracted array in the execution environment to test reading:
+    vtkm::cont::ArrayHandle<typename Traits::OutValueType> execCopy;
     Algo::Copy(swizzle, execCopy);
-    this->ValidateReadTest<ComponentMap...>(execCopy);
+    this->ValidateReadTest(execCopy, map);
   }
 
-  template <vtkm::IdComponent... ComponentMap, typename ArrayHandleType>
-  void ValidateReadTest(ArrayHandleType testArray) const
+  template <typename ArrayHandleType, vtkm::IdComponent OutSize>
+  void ValidateReadTest(ArrayHandleType testArray, const MapType<OutSize>& map) const
   {
-    using Traits = typename SwizzleArrayType<ComponentMap...>::SwizzleTraits;
-    using MapType = typename Traits::RuntimeComponentMapType;
-    const MapType map = Traits::GenerateRuntimeComponentMap();
-
+    using Traits = typename SwizzleArrayType<OutSize>::SwizzleTraits;
     using ReferenceVectorType = typename ReferenceArrayType::ValueType;
-    using SwizzleVectorType = typename Traits::OutputType;
+    using SwizzleVectorType = typename Traits::OutValueType;
 
-    VTKM_TEST_ASSERT(map.size() == vtkm::VecTraits<SwizzleVectorType>::NUM_COMPONENTS,
+    VTKM_TEST_ASSERT(map.GetNumberOfComponents() ==
+                       vtkm::VecTraits<SwizzleVectorType>::NUM_COMPONENTS,
                      "Unexpected runtime component map size.");
     VTKM_TEST_ASSERT(testArray.GetNumberOfValues() == this->RefArray.GetNumberOfValues(),
                      "Number of values incorrect in Read test.");
@@ -147,9 +144,9 @@ struct SwizzleTests
       ReferenceVectorType refVec = refPortal.Get(i);
 
       // Manually swizzle the reference vector using the runtime map information:
-      for (size_t j = 0; j < map.size(); ++j)
+      for (vtkm::IdComponent j = 0; j < map.GetNumberOfComponents(); ++j)
       {
-        refVecSwizzle[static_cast<vtkm::IdComponent>(j)] = refVec[map[j]];
+        refVecSwizzle[j] = refVec[map[j]];
       }
 
       VTKM_TEST_ASSERT(test_equal(refVecSwizzle, testPortal.Get(i), 0.),
@@ -173,16 +170,15 @@ struct SwizzleTests
     void operator()(vtkm::Id index) const { this->Portal.Set(index, this->Portal.Get(index) * 2.); }
   };
 
-  template <vtkm::IdComponent... ComponentMap>
-  void WriteTest() const
+  template <vtkm::IdComponent OutSize>
+  void WriteTest(const MapType<OutSize>& map) const
   {
     // Control test:
     {
       SwizzleInputArrayType input = this->BuildSwizzleInputArray();
-      SwizzleArrayType<ComponentMap...> swizzle =
-        vtkm::cont::make_ArrayHandleSwizzle<ComponentMap...>(input);
+      auto swizzle = vtkm::cont::make_ArrayHandleSwizzle(input, map);
 
-      WriteTestFunctor<typename SwizzleArrayType<ComponentMap...>::PortalControl> functor(
+      WriteTestFunctor<typename SwizzleArrayType<OutSize>::PortalControl> functor(
         swizzle.GetPortalControl());
 
       for (vtkm::Id i = 0; i < swizzle.GetNumberOfValues(); ++i)
@@ -190,33 +186,27 @@ struct SwizzleTests
         functor(i);
       }
 
-      this->ValidateWriteTestArray<ComponentMap...>(input);
+      this->ValidateWriteTestArray(input, map);
     }
 
     // Exec test:
     {
       SwizzleInputArrayType input = this->BuildSwizzleInputArray();
-      SwizzleArrayType<ComponentMap...> swizzle =
-        vtkm::cont::make_ArrayHandleSwizzle<ComponentMap...>(input);
+      auto swizzle = vtkm::cont::make_ArrayHandleSwizzle(input, map);
 
-      using Portal =
-        typename SwizzleArrayType<ComponentMap...>::template ExecutionTypes<DeviceTag>::Portal;
+      using Portal = typename SwizzleArrayType<OutSize>::template ExecutionTypes<DeviceTag>::Portal;
 
       WriteTestFunctor<Portal> functor(swizzle.PrepareForInPlace(DeviceTag()));
 
       Algo::Schedule(functor, swizzle.GetNumberOfValues());
-      this->ValidateWriteTestArray<ComponentMap...>(input);
+      this->ValidateWriteTestArray(input, map);
     }
   }
 
   // Check that the swizzled components are twice the reference value.
-  template <vtkm::IdComponent... ComponentMap>
-  void ValidateWriteTestArray(SwizzleInputArrayType testArray) const
+  template <vtkm::IdComponent OutSize>
+  void ValidateWriteTestArray(SwizzleInputArrayType testArray, const MapType<OutSize>& map) const
   {
-    using Traits = typename SwizzleArrayType<ComponentMap...>::SwizzleTraits;
-    using MapType = typename Traits::RuntimeComponentMapType;
-    const MapType map = Traits::GenerateRuntimeComponentMap();
-
     auto refPortal = this->RefArray.GetPortalConstControl();
     auto portal = testArray.GetPortalConstControl();
 
@@ -230,7 +220,7 @@ struct SwizzleTests
 
       // Double all of the components that appear in the map to replicate the
       // test result:
-      for (size_t j = 0; j < map.size(); ++j)
+      for (vtkm::IdComponent j = 0; j < map.GetNumberOfComponents(); ++j)
       {
         refValue[map[j]] *= 2;
       }
@@ -239,96 +229,78 @@ struct SwizzleTests
     }
   }
 
-  template <vtkm::IdComponent... ComponentMap>
-  void TestSwizzle() const
+  template <vtkm::IdComponent OutSize>
+  void TestSwizzle(const MapType<OutSize>& map) const
   {
-    this->SanityCheck<ComponentMap...>();
-    this->ReadTest<ComponentMap...>();
-    this->WriteTest<ComponentMap...>();
+    this->SanityCheck(map);
+    this->ReadTest(map);
+    this->WriteTest(map);
   }
 
   void operator()()
   {
     this->ConstructReferenceArray();
 
-// Enable for full test. We normally test a reduced set of component maps
-// to keep compile times/sizes down:
-#if 0
-    this->TestSwizzle<0, 1>();
-    this->TestSwizzle<0, 2>();
-    this->TestSwizzle<0, 3>();
-    this->TestSwizzle<1, 0>();
-    this->TestSwizzle<1, 2>();
-    this->TestSwizzle<1, 3>();
-    this->TestSwizzle<2, 0>();
-    this->TestSwizzle<2, 1>();
-    this->TestSwizzle<2, 3>();
-    this->TestSwizzle<3, 0>();
-    this->TestSwizzle<3, 1>();
-    this->TestSwizzle<3, 2>();
-    this->TestSwizzle<0, 1, 2>();
-    this->TestSwizzle<0, 1, 3>();
-    this->TestSwizzle<0, 2, 1>();
-    this->TestSwizzle<0, 2, 3>();
-    this->TestSwizzle<0, 3, 1>();
-    this->TestSwizzle<0, 3, 2>();
-    this->TestSwizzle<1, 0, 2>();
-    this->TestSwizzle<1, 0, 3>();
-    this->TestSwizzle<1, 2, 0>();
-    this->TestSwizzle<1, 2, 3>();
-    this->TestSwizzle<1, 3, 0>();
-    this->TestSwizzle<1, 3, 2>();
-    this->TestSwizzle<2, 0, 1>();
-    this->TestSwizzle<2, 0, 3>();
-    this->TestSwizzle<2, 1, 0>();
-    this->TestSwizzle<2, 1, 3>();
-    this->TestSwizzle<2, 3, 0>();
-    this->TestSwizzle<2, 3, 1>();
-    this->TestSwizzle<3, 0, 1>();
-    this->TestSwizzle<3, 0, 2>();
-    this->TestSwizzle<3, 1, 0>();
-    this->TestSwizzle<3, 1, 2>();
-    this->TestSwizzle<3, 2, 0>();
-    this->TestSwizzle<3, 2, 1>();
-    this->TestSwizzle<0, 1, 2, 3>();
-    this->TestSwizzle<0, 1, 3, 2>();
-    this->TestSwizzle<0, 2, 1, 3>();
-    this->TestSwizzle<0, 2, 3, 1>();
-    this->TestSwizzle<0, 3, 1, 2>();
-    this->TestSwizzle<0, 3, 2, 1>();
-    this->TestSwizzle<1, 0, 2, 3>();
-    this->TestSwizzle<1, 0, 3, 2>();
-    this->TestSwizzle<1, 2, 0, 3>();
-    this->TestSwizzle<1, 2, 3, 0>();
-    this->TestSwizzle<1, 3, 0, 2>();
-    this->TestSwizzle<1, 3, 2, 0>();
-    this->TestSwizzle<2, 0, 1, 3>();
-    this->TestSwizzle<2, 0, 3, 1>();
-    this->TestSwizzle<2, 1, 0, 3>();
-    this->TestSwizzle<2, 1, 3, 0>();
-    this->TestSwizzle<2, 3, 0, 1>();
-    this->TestSwizzle<2, 3, 1, 0>();
-    this->TestSwizzle<3, 0, 1, 2>();
-    this->TestSwizzle<3, 0, 2, 1>();
-    this->TestSwizzle<3, 1, 0, 2>();
-    this->TestSwizzle<3, 1, 2, 0>();
-    this->TestSwizzle<3, 2, 0, 1>();
-    this->TestSwizzle<3, 2, 1, 0>();
-#else
-    this->TestSwizzle<0, 1>();
-    this->TestSwizzle<1, 0>();
-    this->TestSwizzle<2, 3>();
-    this->TestSwizzle<3, 2>();
-    this->TestSwizzle<0, 1, 2>();
-    this->TestSwizzle<0, 3, 1>();
-    this->TestSwizzle<2, 0, 3>();
-    this->TestSwizzle<3, 2, 1>();
-    this->TestSwizzle<0, 1, 2, 3>();
-    this->TestSwizzle<1, 3, 2, 0>();
-    this->TestSwizzle<2, 0, 1, 3>();
-    this->TestSwizzle<3, 1, 0, 2>();
-    this->TestSwizzle<3, 2, 1, 0>();
-#endif
+    this->TestSwizzle(vtkm::make_Vec(0, 1));
+    this->TestSwizzle(vtkm::make_Vec(0, 2));
+    this->TestSwizzle(vtkm::make_Vec(0, 3));
+    this->TestSwizzle(vtkm::make_Vec(1, 0));
+    this->TestSwizzle(vtkm::make_Vec(1, 2));
+    this->TestSwizzle(vtkm::make_Vec(1, 3));
+    this->TestSwizzle(vtkm::make_Vec(2, 0));
+    this->TestSwizzle(vtkm::make_Vec(2, 1));
+    this->TestSwizzle(vtkm::make_Vec(2, 3));
+    this->TestSwizzle(vtkm::make_Vec(3, 0));
+    this->TestSwizzle(vtkm::make_Vec(3, 1));
+    this->TestSwizzle(vtkm::make_Vec(3, 2));
+    this->TestSwizzle(vtkm::make_Vec(0, 1, 2));
+    this->TestSwizzle(vtkm::make_Vec(0, 1, 3));
+    this->TestSwizzle(vtkm::make_Vec(0, 2, 1));
+    this->TestSwizzle(vtkm::make_Vec(0, 2, 3));
+    this->TestSwizzle(vtkm::make_Vec(0, 3, 1));
+    this->TestSwizzle(vtkm::make_Vec(0, 3, 2));
+    this->TestSwizzle(vtkm::make_Vec(1, 0, 2));
+    this->TestSwizzle(vtkm::make_Vec(1, 0, 3));
+    this->TestSwizzle(vtkm::make_Vec(1, 2, 0));
+    this->TestSwizzle(vtkm::make_Vec(1, 2, 3));
+    this->TestSwizzle(vtkm::make_Vec(1, 3, 0));
+    this->TestSwizzle(vtkm::make_Vec(1, 3, 2));
+    this->TestSwizzle(vtkm::make_Vec(2, 0, 1));
+    this->TestSwizzle(vtkm::make_Vec(2, 0, 3));
+    this->TestSwizzle(vtkm::make_Vec(2, 1, 0));
+    this->TestSwizzle(vtkm::make_Vec(2, 1, 3));
+    this->TestSwizzle(vtkm::make_Vec(2, 3, 0));
+    this->TestSwizzle(vtkm::make_Vec(2, 3, 1));
+    this->TestSwizzle(vtkm::make_Vec(3, 0, 1));
+    this->TestSwizzle(vtkm::make_Vec(3, 0, 2));
+    this->TestSwizzle(vtkm::make_Vec(3, 1, 0));
+    this->TestSwizzle(vtkm::make_Vec(3, 1, 2));
+    this->TestSwizzle(vtkm::make_Vec(3, 2, 0));
+    this->TestSwizzle(vtkm::make_Vec(3, 2, 1));
+    this->TestSwizzle(vtkm::make_Vec(0, 1, 2, 3));
+    this->TestSwizzle(vtkm::make_Vec(0, 1, 3, 2));
+    this->TestSwizzle(vtkm::make_Vec(0, 2, 1, 3));
+    this->TestSwizzle(vtkm::make_Vec(0, 2, 3, 1));
+    this->TestSwizzle(vtkm::make_Vec(0, 3, 1, 2));
+    this->TestSwizzle(vtkm::make_Vec(0, 3, 2, 1));
+    this->TestSwizzle(vtkm::make_Vec(1, 0, 2, 3));
+    this->TestSwizzle(vtkm::make_Vec(1, 0, 3, 2));
+    this->TestSwizzle(vtkm::make_Vec(1, 2, 0, 3));
+    this->TestSwizzle(vtkm::make_Vec(1, 2, 3, 0));
+    this->TestSwizzle(vtkm::make_Vec(1, 3, 0, 2));
+    this->TestSwizzle(vtkm::make_Vec(1, 3, 2, 0));
+    this->TestSwizzle(vtkm::make_Vec(2, 0, 1, 3));
+    this->TestSwizzle(vtkm::make_Vec(2, 0, 3, 1));
+    this->TestSwizzle(vtkm::make_Vec(2, 1, 0, 3));
+    this->TestSwizzle(vtkm::make_Vec(2, 1, 3, 0));
+    this->TestSwizzle(vtkm::make_Vec(2, 3, 0, 1));
+    this->TestSwizzle(vtkm::make_Vec(2, 3, 1, 0));
+    this->TestSwizzle(vtkm::make_Vec(3, 0, 1, 2));
+    this->TestSwizzle(vtkm::make_Vec(3, 0, 2, 1));
+    this->TestSwizzle(vtkm::make_Vec(3, 1, 0, 2));
+    this->TestSwizzle(vtkm::make_Vec(3, 1, 2, 0));
+    this->TestSwizzle(vtkm::make_Vec(3, 2, 0, 1));
+    this->TestSwizzle(vtkm::make_Vec(3, 2, 1, 0));
   }
 };
 
@@ -347,38 +319,44 @@ void TestArrayHandleSwizzle()
   vtkm::testing::Testing::TryTypes(ArgToTemplateType(), TestTypes());
 }
 
-template <vtkm::IdComponent InputSize, vtkm::IdComponent... ComponentMap>
-using Validator = vtkm::cont::internal::ValidateComponentMap<InputSize, ComponentMap...>;
-
 void TestComponentMapValidator()
 {
-  using RepeatComps = Validator<5, 0, 3, 2, 3, 1, 4>;
-  VTKM_TEST_ASSERT(!RepeatComps::Valid, "Repeat components allowed.");
+  vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> dummy;
 
-  using NegativeComps = Validator<5, 0, 4, -3, 1, 2>;
-  VTKM_TEST_ASSERT(!NegativeComps::Valid, "Negative components allowed.");
+  // Repeat components:
+  bool error = false;
+  try
+  {
+    vtkm::cont::make_ArrayHandleSwizzle(dummy, vtkm::make_Vec(0, 1, 2, 1));
+    error = true;
+  }
+  catch (vtkm::cont::ErrorBadValue& e)
+  {
+    std::cout << "Caught expected exception 1: " << e.what() << "\n";
+  }
+  VTKM_TEST_ASSERT(!error, "Repeat components allowed.");
 
-  using OutOfBoundsComps = Validator<5, 0, 2, 3, 5>;
-  VTKM_TEST_ASSERT(!OutOfBoundsComps::Valid, "Out-of-bounds components allowed.");
-}
+  try
+  {
+    vtkm::cont::make_ArrayHandleSwizzle(dummy, vtkm::make_Vec(0, 1, 2, -1));
+    error = true;
+  }
+  catch (vtkm::cont::ErrorBadValue& e)
+  {
+    std::cout << "Caught expected exception 2: " << e.what() << "\n";
+  }
+  VTKM_TEST_ASSERT(!error, "Negative components allowed.");
 
-void TestRuntimeComponentMapGenerator()
-{
-  // Dummy input vector type. Only concerned with the component map:
-  using Dummy = vtkm::Vec<char, 7>;
-
-  using Traits = vtkm::cont::ArrayHandleSwizzleTraits<Dummy, 3, 2, 4, 1, 6, 0>;
-  using MapType = Traits::RuntimeComponentMapType;
-
-  const MapType map = Traits::GenerateRuntimeComponentMap();
-
-  VTKM_TEST_ASSERT(map.size() == 6, "Invalid map size.");
-  VTKM_TEST_ASSERT(map[0] == 3, "Invalid map entry.");
-  VTKM_TEST_ASSERT(map[1] == 2, "Invalid map entry.");
-  VTKM_TEST_ASSERT(map[2] == 4, "Invalid map entry.");
-  VTKM_TEST_ASSERT(map[3] == 1, "Invalid map entry.");
-  VTKM_TEST_ASSERT(map[4] == 6, "Invalid map entry.");
-  VTKM_TEST_ASSERT(map[5] == 0, "Invalid map entry.");
+  try
+  {
+    vtkm::cont::make_ArrayHandleSwizzle(dummy, vtkm::make_Vec(0, 1, 2, 5));
+    error = true;
+  }
+  catch (vtkm::cont::ErrorBadValue& e)
+  {
+    std::cout << "Caught expected exception 3: " << e.what() << "\n";
+  }
+  VTKM_TEST_ASSERT(!error, "Invalid component allowed.");
 }
 
 } // end anon namespace
@@ -388,7 +366,6 @@ int UnitTestArrayHandleSwizzle(int, char* [])
   try
   {
     TestComponentMapValidator();
-    TestRuntimeComponentMapGenerator();
   }
   catch (vtkm::cont::Error& e)
   {

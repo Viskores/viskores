@@ -220,7 +220,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
 
   vtkm::cont::DataSet dataSet;
   dataSet.AddCoordinateSystem(
-    vtkm::cont::CoordinateSystem(coordsNm, make_ArrayHandleCompositeVector(X, 0, Y, 0, Z, 0)));
+    vtkm::cont::CoordinateSystem(coordsNm, make_ArrayHandleCompositeVector(X, Y, Z)));
   vtkm::Id nPts = X.GetNumberOfValues();
   vtkm::cont::CellSetExplicit<> cellSet(cellNm);
 

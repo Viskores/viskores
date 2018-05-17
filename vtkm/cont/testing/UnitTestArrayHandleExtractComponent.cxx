@@ -36,14 +36,13 @@ template <typename ValueType>
 struct ExtractComponentTests
 {
   using InputArray = vtkm::cont::ArrayHandle<vtkm::Vec<ValueType, 4>>;
-  template <vtkm::IdComponent Component>
-  using ExtractArray = vtkm::cont::ArrayHandleExtractComponent<InputArray, Component>;
+  using ExtractArray = vtkm::cont::ArrayHandleExtractComponent<InputArray>;
   using ReferenceComponentArray = vtkm::cont::ArrayHandleCounting<ValueType>;
   using ReferenceCompositeArray =
-    typename vtkm::cont::ArrayHandleCompositeVectorType<ReferenceComponentArray,
-                                                        ReferenceComponentArray,
-                                                        ReferenceComponentArray,
-                                                        ReferenceComponentArray>::type;
+    typename vtkm::cont::ArrayHandleCompositeVector<ReferenceComponentArray,
+                                                    ReferenceComponentArray,
+                                                    ReferenceComponentArray,
+                                                    ReferenceComponentArray>;
 
   using DeviceTag = VTKM_DEFAULT_DEVICE_ADAPTER_TAG;
   using Algo = vtkm::cont::DeviceAdapterAlgorithm<DeviceTag>;
@@ -60,7 +59,7 @@ struct ExtractComponentTests
     ReferenceComponentArray c3 = vtkm::cont::make_ArrayHandleCounting<ValueType>(4, 4, numValues);
     ReferenceComponentArray c4 = vtkm::cont::make_ArrayHandleCounting<ValueType>(1, 3, numValues);
 
-    this->RefComposite = vtkm::cont::make_ArrayHandleCompositeVector(c1, 0, c2, 0, c3, 0, c4, 0);
+    this->RefComposite = vtkm::cont::make_ArrayHandleCompositeVector(c1, c2, c3, c4);
   }
 
   InputArray BuildInputArray() const
@@ -70,36 +69,32 @@ struct ExtractComponentTests
     return result;
   }
 
-  template <vtkm::IdComponent Component>
-  void SanityCheck() const
+  void SanityCheck(vtkm::IdComponent component) const
   {
     InputArray composite = this->BuildInputArray();
-    ExtractArray<Component> extract =
-      vtkm::cont::make_ArrayHandleExtractComponent<Component>(composite);
+    ExtractArray extract(composite, component);
 
     VTKM_TEST_ASSERT(composite.GetNumberOfValues() == extract.GetNumberOfValues(),
                      "Number of values in copied ExtractComponent array does not match input.");
   }
 
-  template <vtkm::IdComponent Component>
-  void ReadTestComponentExtraction() const
+  void ReadTestComponentExtraction(vtkm::IdComponent component) const
   {
     // Test that the expected values are read from an ExtractComponent array.
     InputArray composite = this->BuildInputArray();
-    ExtractArray<Component> extract =
-      vtkm::cont::make_ArrayHandleExtractComponent<Component>(composite);
+    ExtractArray extract(composite, component);
 
     // Test reading the data back in the control env:
-    this->ValidateReadTestArray<Component>(extract);
+    this->ValidateReadTestArray(extract, component);
 
     // Copy the extract array in the execution environment to test reading:
     vtkm::cont::ArrayHandle<ValueType> execCopy;
     Algo::Copy(extract, execCopy);
-    this->ValidateReadTestArray<Component>(execCopy);
+    this->ValidateReadTestArray(execCopy, component);
   }
 
-  template <vtkm::IdComponent Component, typename ArrayHandleType>
-  void ValidateReadTestArray(ArrayHandleType testArray) const
+  template <typename ArrayHandleType>
+  void ValidateReadTestArray(ArrayHandleType testArray, vtkm::IdComponent component) const
   {
     using RefVectorType = typename ReferenceCompositeArray::ValueType;
     using Traits = vtkm::VecTraits<RefVectorType>;
@@ -113,13 +108,13 @@ struct ExtractComponentTests
     for (vtkm::Id i = 0; i < testPortal.GetNumberOfValues(); ++i)
     {
       VTKM_TEST_ASSERT(
-        test_equal(testPortal.Get(i), Traits::GetComponent(refPortal.Get(i), Component), 0.),
+        test_equal(testPortal.Get(i), Traits::GetComponent(refPortal.Get(i), component), 0.),
         "Value mismatch in read test.");
     }
   }
 
   // Doubles the specified component (reading from RefVectorType).
-  template <typename PortalType, typename RefPortalType, vtkm::IdComponent Component>
+  template <typename PortalType, typename RefPortalType>
   struct WriteTestFunctor : vtkm::exec::FunctorBase
   {
     using RefVectorType = typename RefPortalType::ValueType;
@@ -127,63 +122,64 @@ struct ExtractComponentTests
 
     PortalType Portal;
     RefPortalType RefPortal;
+    vtkm::IdComponent Component;
 
     VTKM_CONT
-    WriteTestFunctor(const PortalType& portal, const RefPortalType& ref)
+    WriteTestFunctor(const PortalType& portal,
+                     const RefPortalType& ref,
+                     vtkm::IdComponent component)
       : Portal(portal)
       , RefPortal(ref)
+      , Component(component)
     {
     }
 
     VTKM_EXEC_CONT
     void operator()(vtkm::Id index) const
     {
-      this->Portal.Set(index, Traits::GetComponent(this->RefPortal.Get(index), Component) * 2);
+      this->Portal.Set(index,
+                       Traits::GetComponent(this->RefPortal.Get(index), this->Component) * 2);
     }
   };
 
-  template <vtkm::IdComponent Component>
-  void WriteTestComponentExtraction() const
+  void WriteTestComponentExtraction(vtkm::IdComponent component) const
   {
     // Control test:
     {
       InputArray composite = this->BuildInputArray();
-      ExtractArray<Component> extract =
-        vtkm::cont::make_ArrayHandleExtractComponent<Component>(composite);
+      ExtractArray extract(composite, component);
 
-      WriteTestFunctor<typename ExtractArray<Component>::PortalControl,
-                       typename ReferenceCompositeArray::PortalConstControl,
-                       Component>
-        functor(extract.GetPortalControl(), this->RefComposite.GetPortalConstControl());
+      WriteTestFunctor<typename ExtractArray::PortalControl,
+                       typename ReferenceCompositeArray::PortalConstControl>
+        functor(extract.GetPortalControl(), this->RefComposite.GetPortalConstControl(), component);
 
       for (vtkm::Id i = 0; i < extract.GetNumberOfValues(); ++i)
       {
         functor(i);
       }
 
-      this->ValidateWriteTestArray<Component>(composite);
+      this->ValidateWriteTestArray(composite, component);
     }
 
     // Exec test:
     {
       InputArray composite = this->BuildInputArray();
-      ExtractArray<Component> extract =
-        vtkm::cont::make_ArrayHandleExtractComponent<Component>(composite);
+      ExtractArray extract(composite, component);
 
-      using Portal = typename ExtractArray<Component>::template ExecutionTypes<DeviceTag>::Portal;
+      using Portal = typename ExtractArray::template ExecutionTypes<DeviceTag>::Portal;
       using RefPortal =
         typename ReferenceCompositeArray::template ExecutionTypes<DeviceTag>::PortalConst;
 
-      WriteTestFunctor<Portal, RefPortal, Component> functor(
-        extract.PrepareForInPlace(DeviceTag()), this->RefComposite.PrepareForInput(DeviceTag()));
+      WriteTestFunctor<Portal, RefPortal> functor(extract.PrepareForInPlace(DeviceTag()),
+                                                  this->RefComposite.PrepareForInput(DeviceTag()),
+                                                  component);
 
       Algo::Schedule(functor, extract.GetNumberOfValues());
-      this->ValidateWriteTestArray<Component>(composite);
+      this->ValidateWriteTestArray(composite, component);
     }
   }
 
-  template <vtkm::IdComponent Component>
-  void ValidateWriteTestArray(InputArray testArray) const
+  void ValidateWriteTestArray(InputArray testArray, vtkm::IdComponent component) const
   {
     using VectorType = typename ReferenceCompositeArray::ValueType;
     using Traits = vtkm::VecTraits<VectorType>;
@@ -199,28 +195,27 @@ struct ExtractComponentTests
     {
       auto value = portal.Get(i);
       auto refValue = refPortal.Get(i);
-      Traits::SetComponent(refValue, Component, Traits::GetComponent(refValue, Component) * 2);
+      Traits::SetComponent(refValue, component, Traits::GetComponent(refValue, component) * 2);
 
       VTKM_TEST_ASSERT(test_equal(refValue, value, 0.), "Value mismatch in write test.");
     }
   }
 
-  template <vtkm::IdComponent Component>
-  void TestComponent() const
+  void TestComponent(vtkm::IdComponent component) const
   {
-    this->SanityCheck<Component>();
-    this->ReadTestComponentExtraction<Component>();
-    this->WriteTestComponentExtraction<Component>();
+    this->SanityCheck(component);
+    this->ReadTestComponentExtraction(component);
+    this->WriteTestComponentExtraction(component);
   }
 
   void operator()()
   {
     this->ConstructReferenceArray();
 
-    this->TestComponent<0>();
-    this->TestComponent<1>();
-    this->TestComponent<2>();
-    this->TestComponent<3>();
+    this->TestComponent(0);
+    this->TestComponent(1);
+    this->TestComponent(2);
+    this->TestComponent(3);
   }
 };
 

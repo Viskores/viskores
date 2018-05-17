@@ -68,6 +68,7 @@ vtkm_declare_headers(${headers})
 #-----------------------------------------------------------------------------
 #first add all the components vtkm that are shared between control and exec
 add_subdirectory(thirdparty/diy)
+add_subdirectory(thirdparty/taotuple)
 add_subdirectory(testing)
 add_subdirectory(internal)
 

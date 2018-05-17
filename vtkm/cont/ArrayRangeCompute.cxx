@@ -111,12 +111,11 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 // Special implementation for composite vectors.
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<
-    vtkm::Vec<vtkm::Float32, 3>,
-    typename vtkm::cont::ArrayHandleCompositeVector<
-      vtkm::Vec<vtkm::Float32, 3>(vtkm::cont::ArrayHandle<vtkm::Float32>,
+  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 3>,
+                                typename vtkm::cont::ArrayHandleCompositeVector<
                                   vtkm::cont::ArrayHandle<vtkm::Float32>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float32>)>::StorageTag>& input,
+                                  vtkm::cont::ArrayHandle<vtkm::Float32>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float32>>::StorageTag>& input,
   vtkm::cont::RuntimeDeviceTracker tracker)
 {
   return detail::ArrayRangeComputeImpl(input, tracker);
@@ -124,12 +123,11 @@ vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
 
 VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> ArrayRangeCompute(
-  const vtkm::cont::ArrayHandle<
-    vtkm::Vec<vtkm::Float64, 3>,
-    typename vtkm::cont::ArrayHandleCompositeVector<
-      vtkm::Vec<vtkm::Float64, 3>(vtkm::cont::ArrayHandle<vtkm::Float64>,
+  const vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float64, 3>,
+                                typename vtkm::cont::ArrayHandleCompositeVector<
                                   vtkm::cont::ArrayHandle<vtkm::Float64>,
-                                  vtkm::cont::ArrayHandle<vtkm::Float64>)>::StorageTag>& input,
+                                  vtkm::cont::ArrayHandle<vtkm::Float64>,
+                                  vtkm::cont::ArrayHandle<vtkm::Float64>>::StorageTag>& input,
   vtkm::cont::RuntimeDeviceTracker tracker)
 {
   return detail::ArrayRangeComputeImpl(input, tracker);

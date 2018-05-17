@@ -84,11 +84,9 @@ void CosmoTools<T, StorageType, DeviceAdapter>::HaloFinder(
 {
   // Package locations for worklets
   using CompositeLocationType =
-    typename vtkm::cont::ArrayHandleCompositeVectorType<LocationType,
-                                                        LocationType,
-                                                        LocationType>::type;
+    typename vtkm::cont::ArrayHandleCompositeVector<LocationType, LocationType, LocationType>;
   CompositeLocationType location;
-  location = make_ArrayHandleCompositeVector(xLoc, 0, yLoc, 0, zLoc, 0);
+  location = make_ArrayHandleCompositeVector(xLoc, yLoc, zLoc);
 
   vtkm::cont::ArrayHandle<vtkm::Id> leftNeighbor;  // lower particle id to check for linking length
   vtkm::cont::ArrayHandle<vtkm::Id> rightNeighbor; // upper particle id to check for linking length

@@ -163,7 +163,7 @@ endif()
 target_link_libraries(vtkm_cont PUBLIC vtkm_compiler_flags ${backends})
 if(TARGET vtkm_diy)
   # This will become a required dependency eventually.
-  target_link_libraries(vtkm_cont PUBLIC vtkm_diy)
+  target_link_libraries(vtkm_cont PUBLIC vtkm_diy vtkm_taotuple)
 endif()
 
 #-----------------------------------------------------------------------------
