@@ -34,7 +34,7 @@ void TestCellMeasureUniform3D()
   vtkm::cont::testing::MakeTestDataSet testDataSet;
   vtkm::cont::DataSet dataSet = testDataSet.Make3DUniformDataSet0();
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> result;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<vtkm::Volume>> dispatcher;
   dispatcher.Invoke(dataSet.GetCellSet(), dataSet.GetCoordinateSystem(), result);
@@ -55,7 +55,7 @@ void TestCellMeasureWorklet(vtkm::cont::DataSet& dataset,
 {
   std::cout << "Testing CellMeasures Filter on " << msg << "\n";
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> result;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> result;
 
   vtkm::worklet::DispatcherMapTopology<vtkm::worklet::CellMeasure<IntegrationType>> dispatcher;
   dispatcher.Invoke(dataset.GetCellSet(), dataset.GetCoordinateSystem(), result);
