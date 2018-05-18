@@ -34,7 +34,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Configure.h.in
 target_include_directories(vtkm_diy INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
-  $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}>)
+  $<INSTALL_INTERFACE:${VTKm_INSTALL_INCLUDE_DIR}/vtkm/thirdparty/diy>)
 
 if(VTKm_ENABLE_MPI)
   set(arg)
