@@ -98,9 +98,6 @@ class tuple_impl<Idx, HeadT, TailTs...> : public tuple_impl<Idx + 1, TailTs...>,
                                           private tuple_leaf<Idx, HeadT>
 {
 public:
-  template <std::size_t, typename...>
-  friend class tuple_impl;
-
   using Tail = tuple_impl<Idx + 1, TailTs...>;
   using Leaf = tuple_leaf<Idx, HeadT>;
   using Head = HeadT;
@@ -129,7 +126,7 @@ public:
   {
   }
 
-  TAOCPP_ANNOTATION constexpr tuple_impl(const tuple_impl&) = default;
+  constexpr tuple_impl(const tuple_impl&) = default;
 
   TAOCPP_ANNOTATION constexpr tuple_impl(tuple_impl&& o)
     : Tail(std::move(GetTail(o)))
@@ -210,9 +207,6 @@ template <std::size_t Idx, typename HeadT>
 class tuple_impl<Idx, HeadT> : private tuple_leaf<Idx, HeadT>
 {
 public:
-  template <std::size_t, typename...>
-  friend class tuple_impl;
-
   using Leaf = tuple_leaf<Idx, HeadT>;
   using Head = HeadT;
   static const std::size_t Index = Idx;
@@ -352,9 +346,9 @@ public:
   {
   }
 
-  TAOCPP_ANNOTATION constexpr tuple(const tuple&) = default;
+  constexpr tuple(const tuple&) = default;
 
-  TAOCPP_ANNOTATION constexpr tuple(tuple&& o) = default;
+  constexpr tuple(tuple&& o) = default;
 
   template <typename... OTs>
   TAOCPP_ANNOTATION constexpr tuple(const tuple<OTs...>& o)
