@@ -150,6 +150,15 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(
                                  static_cast<std::size_t>(numBytes),
                                  cudaMemcpyHostToDevice,
                                  cudaStreamPerThread));
+  if (CudaAllocator::IsManagedPointer(executionPtr))
+  {
+    //If we are moving memory from unmanaged host memory
+    //to managed host memory we have the possibility that
+    //the memcpy will not finish before the first usage is finished
+    //to work around this bug we explicitly synchronize for this
+    //one use case
+    cudaStreamSynchronize(cudaStreamPerThread);
+  }
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const void* executionPtr,
