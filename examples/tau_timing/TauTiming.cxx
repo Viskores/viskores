@@ -149,7 +149,7 @@ vtkm::cont::DataSet CreateTestDataSet(vtkm::Id3 dims)
   tangleFieldDispatcher.Invoke(vertexCountImplicitArray, scalarVar);
 
   dataSet.AddField(
-    vtkm::cont::Field(std::string("scalar"), vtkm::cont::Field::ASSOC_POINTS, scalarVar));
+    vtkm::cont::Field(std::string("scalar"), vtkm::cont::Field::Association::POINTS, scalarVar));
 
   return dataSet;
 }
@@ -456,7 +456,7 @@ int main(int argc, char** argv)
     vtkm::cont::DataSet ds;
     vtkm::cont::ArrayHandleUniformPointCoordinates coordinates(vdims);
     ds.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
-    ds.AddField(vtkm::cont::Field("vec", vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+    ds.AddField(vtkm::cont::Field("vec", vtkm::cont::Field::Association::POINTS, fieldArray));
 
     vtkm::cont::CellSetStructured<3> inCellSet("cells");
     inCellSet.SetPointDimensions(vtkm::make_Vec(vdims[0], vdims[1], vdims[2]));

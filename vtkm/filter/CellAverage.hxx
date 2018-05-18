@@ -68,7 +68,7 @@ inline VTKM_CONT vtkm::cont::DataSet CellAverage::DoExecute(
   }
 
   return internal::CreateResult(
-    input, outArray, outputName, vtkm::cont::Field::ASSOC_CELL_SET, cellSet.GetName());
+    input, outArray, outputName, vtkm::cont::Field::Association::CELL_SET, cellSet.GetName());
 }
 }
 } // namespace vtkm::filter

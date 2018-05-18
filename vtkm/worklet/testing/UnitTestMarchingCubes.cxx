@@ -118,9 +118,10 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   cellSet.SetPointDimensions(vdims);
   dataSet.AddCellSet(cellSet);
 
-  dataSet.AddField(vtkm::cont::Field("nodevar", vtkm::cont::Field::ASSOC_POINTS, pointFieldArray));
   dataSet.AddField(
-    vtkm::cont::Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellFieldArray));
+    vtkm::cont::Field("nodevar", vtkm::cont::Field::Association::POINTS, pointFieldArray));
+  dataSet.AddField(vtkm::cont::Field(
+    "cellvar", vtkm::cont::Field::Association::CELL_SET, "cells", cellFieldArray));
 
   return dataSet;
 }
@@ -266,10 +267,10 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
   //Set point scalar
   dataSet.AddField(vtkm::cont::Field("distanceToOrigin",
-                                     vtkm::cont::Field::ASSOC_POINTS,
+                                     vtkm::cont::Field::Association::POINTS,
                                      vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
   dataSet.AddField(vtkm::cont::Field("distanceToOther",
-                                     vtkm::cont::Field::ASSOC_POINTS,
+                                     vtkm::cont::Field::Association::POINTS,
                                      vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
   CellSet cellSet("cells");
@@ -277,8 +278,8 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
   dataSet.AddCellSet(cellSet);
 
-  dataSet.AddField(
-    vtkm::cont::Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellFieldArray));
+  dataSet.AddField(vtkm::cont::Field(
+    "cellvar", vtkm::cont::Field::Association::CELL_SET, "cells", cellFieldArray));
 
   return dataSet;
 }

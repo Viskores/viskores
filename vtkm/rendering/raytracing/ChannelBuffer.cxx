@@ -405,7 +405,7 @@ struct NormalizeFunctor
   template <typename Device>
   bool operator()(Device vtkmNotUsed(device))
   {
-    vtkm::cont::Field asField("name meaningless", vtkm::cont::Field::ASSOC_POINTS, Input);
+    vtkm::cont::Field asField("name meaningless", vtkm::cont::Field::Association::POINTS, Input);
     vtkm::Range range;
     asField.GetRange(&range);
     Precision minScalar = static_cast<Precision>(range.Min);

@@ -127,7 +127,7 @@ public:
   vtkm::cont::CellSetPermutation<CellSetType> Run(
     const CellSetType& cellSet,
     const vtkm::cont::ArrayHandle<ValueType, StorageType>& field,
-    const vtkm::cont::Field::AssociationEnum fieldType,
+    const vtkm::cont::Field::Association fieldType,
     const UnaryPredicate& predicate,
     DeviceAdapter)
   {
@@ -136,7 +136,7 @@ public:
     vtkm::cont::ArrayHandle<bool> passFlags;
     switch (fieldType)
     {
-      case vtkm::cont::Field::ASSOC_POINTS:
+      case vtkm::cont::Field::Association::POINTS:
       {
         using ThresholdWorklet = ThresholdByPointField<UnaryPredicate>;
 
@@ -145,7 +145,7 @@ public:
         dispatcher.Invoke(cellSet, field, passFlags);
         break;
       }
-      case vtkm::cont::Field::ASSOC_CELL_SET:
+      case vtkm::cont::Field::Association::CELL_SET:
       {
         using ThresholdWorklet = ThresholdByCellField<UnaryPredicate>;
 
@@ -173,13 +173,13 @@ public:
     vtkm::cont::DynamicCellSet& Output;
     vtkm::worklet::Threshold& Worklet;
     const FieldArrayType& Field;
-    const vtkm::cont::Field::AssociationEnum FieldType;
+    const vtkm::cont::Field::Association FieldType;
     const UnaryPredicate& Predicate;
 
     CallWorklet(vtkm::cont::DynamicCellSet& output,
                 vtkm::worklet::Threshold& worklet,
                 const FieldArrayType& field,
-                const vtkm::cont::Field::AssociationEnum fieldType,
+                const vtkm::cont::Field::Association fieldType,
                 const UnaryPredicate& predicate)
       : Output(output)
       , Worklet(worklet)
@@ -204,7 +204,7 @@ public:
             typename Device>
   vtkm::cont::DynamicCellSet Run(const vtkm::cont::DynamicCellSetBase<CellSetList>& cellSet,
                                  const vtkm::cont::ArrayHandle<ValueType, StorageType>& field,
-                                 const vtkm::cont::Field::AssociationEnum fieldType,
+                                 const vtkm::cont::Field::Association fieldType,
                                  const UnaryPredicate& predicate,
                                  Device)
   {

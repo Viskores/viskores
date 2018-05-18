@@ -82,7 +82,7 @@ void AddField(vtkm::cont::DataSet& dataset,
               const T& max,
               vtkm::Id numVals,
               const std::string& name,
-              vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_POINTS)
+              vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::POINTS)
 {
   auto ah = CreateArrayHandle(min, max, numVals);
   dataset.AddField(vtkm::cont::Field(name, assoc, ah));

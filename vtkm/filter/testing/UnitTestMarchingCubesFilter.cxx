@@ -109,7 +109,7 @@ vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   dataSet.AddCoordinateSystem(vtkm::cont::CoordinateSystem("coordinates", coordinates));
 
   dataSet.AddField(
-    vtkm::cont::Field(std::string("nodevar"), vtkm::cont::Field::ASSOC_POINTS, fieldArray));
+    vtkm::cont::Field(std::string("nodevar"), vtkm::cont::Field::Association::POINTS, fieldArray));
 
   static constexpr vtkm::IdComponent ndim = 3;
   vtkm::cont::CellSetStructured<ndim> cellSet("cells");
@@ -282,10 +282,10 @@ inline vtkm::cont::DataSet MakeRadiantDataSet::Make3DRadiantDataSet(vtkm::IdComp
 
   //Set point scalar
   dataSet.AddField(vtkm::cont::Field("distanceToOrigin",
-                                     vtkm::cont::Field::ASSOC_POINTS,
+                                     vtkm::cont::Field::Association::POINTS,
                                      vtkm::cont::DynamicArrayHandle(distanceToOrigin)));
   dataSet.AddField(vtkm::cont::Field("distanceToOther",
-                                     vtkm::cont::Field::ASSOC_POINTS,
+                                     vtkm::cont::Field::Association::POINTS,
                                      vtkm::cont::DynamicArrayHandle(distanceToOther)));
 
   CellSet cellSet("cells");

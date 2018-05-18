@@ -119,11 +119,11 @@ int main(int argc, char* argv[])
     bool isCellField;
     switch (inField.GetAssociation())
     {
-      case vtkm::cont::Field::ASSOC_POINTS:
+      case vtkm::cont::Field::Association::POINTS:
         isCellField = false;
         break;
 
-      case vtkm::cont::Field::ASSOC_CELL_SET:
+      case vtkm::cont::Field::Association::CELL_SET:
         isCellField = true;
         break;
 

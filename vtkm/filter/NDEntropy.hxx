@@ -58,7 +58,7 @@ inline VTKM_CONT vtkm::cont::DataSet NDEntropy::DoExecute(
   vtkm::Float64 entropy = ndEntropy.Run(device);
   vtkm::cont::DataSet outputData;
   outputData.AddField(vtkm::cont::make_Field(
-    "Entropy", vtkm::cont::Field::ASSOC_POINTS, &entropy, 1, vtkm::CopyFlag::On));
+    "Entropy", vtkm::cont::Field::Association::POINTS, &entropy, 1, vtkm::CopyFlag::On));
   return outputData;
 }
 

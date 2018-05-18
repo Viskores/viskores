@@ -44,7 +44,7 @@ inline VTKM_CONT FilterDataSetWithField<Derived>::FilterDataSetWithField()
   , CellSetIndex(0)
   , CoordinateSystemIndex(0)
   , ActiveFieldName()
-  , ActiveFieldAssociation(vtkm::cont::Field::ASSOC_ANY)
+  , ActiveFieldAssociation(vtkm::cont::Field::Association::ANY)
   , UseCoordinateSystemAsField(false)
 {
 }

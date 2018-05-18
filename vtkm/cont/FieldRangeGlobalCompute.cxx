@@ -41,10 +41,9 @@ namespace cont
 
 //-----------------------------------------------------------------------------
 VTKM_CONT
-vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
-  const vtkm::cont::DataSet& dataset,
-  const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc)
+vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(const vtkm::cont::DataSet& dataset,
+                                                             const std::string& name,
+                                                             vtkm::cont::Field::Association assoc)
 {
   return detail::FieldRangeGlobalComputeImpl(
     dataset, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());
@@ -55,7 +54,7 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::MultiBlock& multiblock,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc)
+  vtkm::cont::Field::Association assoc)
 {
   return detail::FieldRangeGlobalComputeImpl(
     multiblock, name, assoc, VTKM_DEFAULT_TYPE_LIST_TAG(), VTKM_DEFAULT_STORAGE_LIST_TAG());

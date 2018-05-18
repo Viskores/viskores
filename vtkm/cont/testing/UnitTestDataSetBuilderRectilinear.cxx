@@ -52,16 +52,16 @@ void ValidateDataSet(const vtkm::cont::DataSet& ds,
   // test various field-getting methods and associations
   try
   {
-    ds.GetField("cellvar", vtkm::cont::Field::ASSOC_CELL_SET);
+    ds.GetField("cellvar", vtkm::cont::Field::Association::CELL_SET);
   }
   catch (...)
   {
-    VTKM_TEST_FAIL("Failed to get field 'cellvar' with ASSOC_CELL_SET.");
+    VTKM_TEST_FAIL("Failed to get field 'cellvar' with Association::CELL_SET.");
   }
 
   try
   {
-    ds.GetField("pointvar", vtkm::cont::Field::ASSOC_POINTS);
+    ds.GetField("pointvar", vtkm::cont::Field::Association::POINTS);
   }
   catch (...)
   {

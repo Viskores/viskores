@@ -43,13 +43,13 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY);
+  vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
 template <typename TypeList, typename StorageList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc,
+  vtkm::cont::Field::Association assoc,
   TypeList,
   StorageList)
 {
@@ -63,7 +63,7 @@ template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc,
+  vtkm::cont::Field::Association assoc,
   TypeList)
 {
   VTKM_IS_LIST_TAG(TypeList);
@@ -84,13 +84,13 @@ VTKM_CONT
 vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::MultiBlock& multiblock,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc = vtkm::cont::Field::ASSOC_ANY);
+  vtkm::cont::Field::Association assoc = vtkm::cont::Field::Association::ANY);
 
 template <typename TypeList, typename StorageList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::MultiBlock& multiblock,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc,
+  vtkm::cont::Field::Association assoc,
   TypeList,
   StorageList)
 {
@@ -104,7 +104,7 @@ template <typename TypeList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalCompute(
   const vtkm::cont::MultiBlock& multiblock,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc,
+  vtkm::cont::Field::Association assoc,
   TypeList)
 {
   VTKM_IS_LIST_TAG(TypeList);

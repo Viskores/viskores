@@ -84,7 +84,7 @@ inline VTKM_CONT vtkm::cont::DataSet ExternalFaces::DoExecute(
   for (vtkm::Id fieldIdx = 0; fieldIdx < numFields && !hasCellFields; ++fieldIdx)
   {
     auto f = input.GetField(fieldIdx);
-    if (f.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET)
+    if (f.GetAssociation() == vtkm::cont::Field::Association::CELL_SET)
     {
       hasCellFields = true;
     }

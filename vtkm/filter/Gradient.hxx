@@ -30,10 +30,11 @@ template <typename HandleType>
 inline void add_field(vtkm::cont::DataSet& result,
                       const HandleType& handle,
                       const std::string name,
-                      vtkm::cont::Field::AssociationEnum assoc,
+                      vtkm::cont::Field::Association assoc,
                       const std::string& cellsetname)
 {
-  if ((assoc == vtkm::cont::Field::ASSOC_WHOLE_MESH) || (assoc == vtkm::cont::Field::ASSOC_POINTS))
+  if ((assoc == vtkm::cont::Field::Association::WHOLE_MESH) ||
+      (assoc == vtkm::cont::Field::Association::POINTS))
   {
     vtkm::cont::Field field(name, assoc, handle);
     result.AddField(field);
@@ -132,9 +133,9 @@ inline vtkm::cont::DataSet Gradient::DoExecute(
   constexpr bool isVector = std::is_same<typename vtkm::VecTraits<T>::HasMultipleComponents,
                                          vtkm::VecTraitsTagMultipleComponents>::value;
 
-  vtkm::cont::Field::AssociationEnum fieldAssociation(this->ComputePointGradient
-                                                        ? vtkm::cont::Field::ASSOC_POINTS
-                                                        : vtkm::cont::Field::ASSOC_CELL_SET);
+  vtkm::cont::Field::Association fieldAssociation(this->ComputePointGradient
+                                                    ? vtkm::cont::Field::Association::POINTS
+                                                    : vtkm::cont::Field::Association::CELL_SET);
   vtkm::cont::DataSet result =
     internal::CreateResult(input, outArray, outputName, fieldAssociation, cells.GetName());
 

@@ -51,7 +51,7 @@ struct CrossProductFunctor
 inline VTKM_CONT CrossProduct::CrossProduct()
   : vtkm::filter::FilterField<CrossProduct>()
   , SecondaryFieldName()
-  , SecondaryFieldAssociation(vtkm::cont::Field::ASSOC_ANY)
+  , SecondaryFieldAssociation(vtkm::cont::Field::Association::ANY)
   , UseCoordinateSystemAsSecondaryField(false)
   , SecondaryCoordinateSystemIndex(0)
 {

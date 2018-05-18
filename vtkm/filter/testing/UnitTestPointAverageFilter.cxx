@@ -37,9 +37,12 @@ void TestPointAverageUniform3D()
   pointAverage.SetActiveField("cellvar");
   auto result = pointAverage.Execute(dataSet);
 
-  VTKM_TEST_ASSERT(result.HasField("avgvals", vtkm::cont::Field::ASSOC_POINTS), "Field missing.");
+  VTKM_TEST_ASSERT(result.HasField("avgvals", vtkm::cont::Field::Association::POINTS),
+                   "Field missing.");
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  result.GetField("avgvals", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(resultArrayHandle);
+  result.GetField("avgvals", vtkm::cont::Field::Association::POINTS)
+    .GetData()
+    .CopyTo(resultArrayHandle);
   vtkm::Float32 expected[18] = { 100.1f, 100.15f, 100.2f, 100.1f, 100.15f, 100.2f,
                                  100.2f, 100.25f, 100.3f, 100.2f, 100.25f, 100.3f,
                                  100.3f, 100.35f, 100.4f, 100.3f, 100.35f, 100.4f };
@@ -62,8 +65,9 @@ void TestPointAverageRegular3D()
   auto result = pointAverage.Execute(dataSet);
 
   // If no name is given, should have the same name as the input.
-  VTKM_TEST_ASSERT(result.HasField("cellvar", vtkm::cont::Field::ASSOC_POINTS), "Field missing.");
-  vtkm::cont::Field Result = result.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS);
+  VTKM_TEST_ASSERT(result.HasField("cellvar", vtkm::cont::Field::Association::POINTS),
+                   "Field missing.");
+  vtkm::cont::Field Result = result.GetField("cellvar", vtkm::cont::Field::Association::POINTS);
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
   Result.GetData().CopyTo(resultArrayHandle);
 
@@ -88,9 +92,12 @@ void TestPointAverageExplicit1()
   auto result = pointAverage.Execute(dataSet);
 
   // If no name is given, should have the same name as the input.
-  VTKM_TEST_ASSERT(result.HasField("cellvar", vtkm::cont::Field::ASSOC_POINTS), "Field missing.");
+  VTKM_TEST_ASSERT(result.HasField("cellvar", vtkm::cont::Field::Association::POINTS),
+                   "Field missing.");
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  result.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(resultArrayHandle);
+  result.GetField("cellvar", vtkm::cont::Field::Association::POINTS)
+    .GetData()
+    .CopyTo(resultArrayHandle);
   vtkm::Float32 expected[5] = { 100.1f, 100.15f, 100.15f, 100.2f, 100.2f };
   for (int i = 0; i < 5; ++i)
   {
@@ -111,9 +118,12 @@ void TestPointAverageExplicit2()
   auto result = pointAverage.Execute(dataSet);
 
   // If no name is given, should have the same name as the input.
-  VTKM_TEST_ASSERT(result.HasField("cellvar", vtkm::cont::Field::ASSOC_POINTS), "Field missing.");
+  VTKM_TEST_ASSERT(result.HasField("cellvar", vtkm::cont::Field::Association::POINTS),
+                   "Field missing.");
   vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
-  result.GetField("cellvar", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(resultArrayHandle);
+  result.GetField("cellvar", vtkm::cont::Field::Association::POINTS)
+    .GetData()
+    .CopyTo(resultArrayHandle);
   vtkm::Float32 expected[11] = { 100.1f, 105.05f, 105.05f, 100.1f, 115.3f, 115.2f,
                                  115.2f, 115.3f,  115.1f,  130.5f, 125.35f };
   for (int i = 0; i < 11; ++i)

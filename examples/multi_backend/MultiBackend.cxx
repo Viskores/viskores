@@ -97,7 +97,7 @@ void multiblock_processing(TaskQueue<vtkm::cont::MultiBlock>& queue)
       // block.PrintSummary(std::cout);
       try
       {
-        const auto& field = block.GetField("Gradients", vtkm::cont::Field::ASSOC_POINTS);
+        const auto& field = block.GetField("Gradients", vtkm::cont::Field::Association::POINTS);
         (void)field;
       }
       catch (vtkm::cont::ErrorBadValue)

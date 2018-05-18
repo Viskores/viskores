@@ -64,14 +64,14 @@ template <typename TypeList, typename StorageList>
 VTKM_CONT CoordinateSystem::CoordinateSystem(
   std::string name,
   const vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& data)
-  : Superclass(name, ASSOC_POINTS, detail::MakeArrayHandleVirtualCoordinates(data))
+  : Superclass(name, Association::POINTS, detail::MakeArrayHandleVirtualCoordinates(data))
 {
 }
 
 template <typename T, typename Storage>
 VTKM_CONT CoordinateSystem::CoordinateSystem(std::string name,
                                              const vtkm::cont::ArrayHandle<T, Storage>& data)
-  : Superclass(name, ASSOC_POINTS, vtkm::cont::ArrayHandleVirtualCoordinates(data))
+  : Superclass(name, Association::POINTS, vtkm::cont::ArrayHandleVirtualCoordinates(data))
 {
 }
 

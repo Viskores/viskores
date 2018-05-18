@@ -36,7 +36,7 @@ template <typename TypeList, typename StorageList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalComputeImpl(
   const vtkm::cont::DataSet& dataset,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc,
+  vtkm::cont::Field::Association assoc,
   TypeList,
   StorageList)
 {
@@ -48,7 +48,7 @@ template <typename TypeList, typename StorageList>
 VTKM_CONT vtkm::cont::ArrayHandle<vtkm::Range> FieldRangeGlobalComputeImpl(
   const vtkm::cont::MultiBlock& multiblock,
   const std::string& name,
-  vtkm::cont::Field::AssociationEnum assoc,
+  vtkm::cont::Field::Association assoc,
   TypeList,
   StorageList)
 {
