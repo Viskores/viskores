@@ -34,5 +34,7 @@ install(TARGETS vtkm_taotuple
   EXPORT ${VTKm_EXPORT_NAME})
 
 ## Install headers
-install(DIRECTORY vtkmtaotuple
-  DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
+if(NOT VTKm_INSTALL_ONLY_LIBRARIES)
+  install(DIRECTORY vtkmtaotuple
+    DESTINATION ${VTKm_INSTALL_INCLUDE_DIR}/${kit_dir}/)
+endif()
