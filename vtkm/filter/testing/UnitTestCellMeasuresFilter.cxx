@@ -55,7 +55,7 @@ void TestCellMeasuresFilter(vtkm::cont::DataSet& dataset,
   VTKM_TEST_ASSERT(temp.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
                    "Output field could not be found or was improper.");
 
-  vtkm::cont::ArrayHandle<vtkm::Float32> resultArrayHandle;
+  vtkm::cont::ArrayHandle<vtkm::FloatDefault> resultArrayHandle;
   temp.CopyTo(resultArrayHandle);
   VTKM_TEST_ASSERT(resultArrayHandle.GetNumberOfValues() == static_cast<vtkm::Id>(expected.size()),
                    "Wrong number of entries in the output dataset");

@@ -60,10 +60,10 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
   }
   else
   {
-    arcLength = Magnitude(pts[1] - pts[0]);
+    arcLength = static_cast<OutType>(Magnitude(pts[1] - pts[0]));
     for (int ii = 2; ii < numPts; ++ii)
     {
-      arcLength += Magnitude(pts[ii] - pts[ii - 1]);
+      arcLength += static_cast<OutType>(Magnitude(pts[ii] - pts[ii - 1]));
     }
   }
   return arcLength;
@@ -84,7 +84,7 @@ VTKM_EXEC OutType CellMeasure(const vtkm::IdComponent& numPts,
   }
   typename PointCoordVecType::ComponentType v1 = pts[1] - pts[0];
   typename PointCoordVecType::ComponentType v2 = pts[2] - pts[0];
-  OutType area = OutType(0.5) * Magnitude(Cross(v1, v2));
+  OutType area = OutType(0.5) * static_cast<OutType>(Magnitude(Cross(v1, v2)));
   return area;
 }
 
