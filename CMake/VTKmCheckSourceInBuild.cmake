@@ -41,6 +41,7 @@ set(EXCEPTIONS
   )
 
 set(DIRECTORY_EXCEPTIONS
+  ${VTKm_SOURCE_DIR}/vtkm/thirdparty/taotuple/vtkmtaotuple
   ${VTKm_SOURCE_DIR}/vtkm/thirdparty/diy/vtkmdiy
   )
 
