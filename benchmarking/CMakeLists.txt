@@ -22,10 +22,12 @@ function(add_benchmark name files)
 
   add_executable(${name}_SERIAL ${files})
   list(APPEND benchmarks ${name}_SERIAL)
+  target_compile_definitions(${name}_SERIAL PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_SERIAL")
 
   if (TARGET vtkm::tbb)
     add_executable(${name}_TBB ${files})
     list(APPEND benchmarks ${name}_TBB)
+    target_compile_definitions(${name}_TBB PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_TBB")
   endif()
 
   if (TARGET vtkm::cuda)
@@ -37,6 +39,7 @@ function(add_benchmark name files)
 
     add_executable(${name}_CUDA ${CMAKE_CURRENT_BINARY_DIR}/${fname}.cu)
     list(APPEND benchmarks ${name}_CUDA)
+    target_compile_definitions(${name}_CUDA PRIVATE "VTKM_DEVICE_ADAPTER=VTKM_DEVICE_ADAPTER_CUDA")
   endif()
 
   foreach(benchmark ${benchmarks})
