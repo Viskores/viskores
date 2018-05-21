@@ -272,10 +272,9 @@ VTKM_EXEC typename FieldVecType::ComponentType CellInterpolate(
   ParametricCoordType angle = vtkm::ATan2(pcoords[1] - 0.5f, pcoords[0] - 0.5f);
   if (angle < 0)
   {
-    angle += static_cast<ParametricCoordType>(2 * vtkm::Pi());
+    angle += 2 * vtkm::Pi<ParametricCoordType>();
   }
-  const ParametricCoordType deltaAngle =
-    static_cast<ParametricCoordType>(2 * vtkm::Pi() / numPoints);
+  const ParametricCoordType deltaAngle = 2 * vtkm::Pi<ParametricCoordType>() / numPoints;
   vtkm::IdComponent firstPointIndex =
     static_cast<vtkm::IdComponent>(vtkm::Floor(angle / deltaAngle));
   vtkm::IdComponent secondPointIndex = firstPointIndex + 1;

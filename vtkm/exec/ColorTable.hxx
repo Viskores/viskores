@@ -286,8 +286,8 @@ inline vtkm::Vec<float, 3> MshToLab(const vtkm::Vec<float, 3>& msh)
 VTKM_EXEC
 inline float DivergingAngleDiff(float a1, float a2)
 {
-  constexpr float f_pi = 3.141592653589793f;
-  constexpr float f_two_pi = 6.28318530717958647692528676655900576f;
+  constexpr float f_pi = vtkm::Pif();
+  constexpr float f_two_pi = vtkm::TwoPif();
   float adiff = a1 - a2;
   if (adiff < 0.0f)
     adiff = -adiff;
@@ -315,7 +315,7 @@ inline float DivergingAdjustHue(const vtkm::Vec<float, 3>& msh, float unsatM)
     float hueSpin =
       (msh[1] * vtkm::Sqrt(unsatM * unsatM - msh[0] * msh[0]) / (msh[0] * vtkm::Sin(msh[1])));
 
-    constexpr float one_third_pi = 0.33f * 3.141592653589793f;
+    constexpr float one_third_pi = vtkm::Pi_3f();
     // Spin hue away from 0 except in purple hues.
     if (msh[2] > -one_third_pi)
     {
@@ -609,7 +609,7 @@ vtkm::Vec<float, 3> ColorTableDiverging::MapThroughColorSpace(const vtkm::Vec<fl
   detail::LabToMsh(lab2, msh2);
   // If the endpoints are distinct saturated colors, then place white in between
   // them.
-  constexpr float one_third_pi = 0.33f * 3.141592653589793f;
+  constexpr float one_third_pi = vtkm::Pi_3f();
   if ((msh1[1] > 0.05f) && (msh2[1] > 0.05f) &&
       (detail::DivergingAngleDiff(msh1[2], msh2[2]) > one_third_pi))
   {

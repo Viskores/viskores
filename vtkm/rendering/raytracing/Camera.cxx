@@ -76,8 +76,8 @@ public:
     , Origin(origin)
     , BoundingBox(boundingBox)
   {
-    vtkm::Float32 thx = tanf((fovX * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
-    vtkm::Float32 thy = tanf((fovY * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
+    vtkm::Float32 thx = tanf((fovX * vtkm::Pi_180f()) * .5f);
+    vtkm::Float32 thy = tanf((fovY * vtkm::Pi_180f()) * .5f);
     vtkm::Vec<vtkm::Float32, 3> ru = vtkm::Cross(look, up);
     vtkm::Normalize(ru);
 
@@ -290,8 +290,8 @@ public:
     , Miny(miny)
     , SubsetWidth(subsetWidth)
   {
-    vtkm::Float32 thx = tanf((fovX * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
-    vtkm::Float32 thy = tanf((fovY * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
+    vtkm::Float32 thx = tanf((fovX * vtkm::Pi_180f()) * .5f);
+    vtkm::Float32 thy = tanf((fovY * vtkm::Pi_180f()) * .5f);
     vtkm::Vec<vtkm::Float32, 3> ru = vtkm::Cross(look, up);
     vtkm::Normalize(ru);
 
@@ -534,7 +534,7 @@ void Camera::SetFieldOfView(const vtkm::Float32& degrees)
 
   if (this->Width != this->Height)
   {
-    vtkm::Float32 fovyRad = (newFOVY * static_cast<vtkm::Float32>(vtkm::Pi())) / 180.0f;
+    vtkm::Float32 fovyRad = newFOVY * vtkm::Pi_180f();
 
     // Use the tan function to find the distance from the center of the image to the top (or
     // bottom). (Actually, we are finding the ratio of this distance to the near plane distance,
@@ -548,7 +548,7 @@ void Camera::SetFieldOfView(const vtkm::Float32& degrees)
 
     // Now use the arctan function to get the proper field of view in the x direction.
     vtkm::Float32 fovxRad = 2.0f * vtkm::ATan(horizontalDistance);
-    newFOVX = 180.0f * (fovxRad / static_cast<vtkm::Float32>(vtkm::Pi()));
+    newFOVX = fovxRad / vtkm::Pi_180f();
   }
   else
   {
@@ -1034,8 +1034,8 @@ void Camera::CreateDebugRayImp(vtkm::Vec<vtkm::Int32, 2> pixel, Ray<Precision>& 
   rays.MinDistance.GetPortalControl().Set(0, 0.f);
   rays.HitIdx.GetPortalControl().Set(0, -2);
 
-  vtkm::Float32 thx = tanf((this->FovX * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
-  vtkm::Float32 thy = tanf((this->FovY * vtkm::Float32(vtkm::Pi()) / 180.f) * .5f);
+  vtkm::Float32 thx = tanf((this->FovX * vtkm::Pi_180f()) * .5f);
+  vtkm::Float32 thy = tanf((this->FovY * vtkm::Pi_180f()) * .5f);
   vtkm::Vec<vtkm::Float32, 3> ru = vtkm::Cross(this->Look, this->Up);
   vtkm::Normalize(ru);
 

@@ -140,6 +140,9 @@ struct ScalarFieldTests : public vtkm::exec::FunctorBase
   {
     //    std::cout << "Testing Pi" << std::endl;
     VTKM_MATH_ASSERT(test_equal(vtkm::Pi(), 3.14159265), "Pi not correct.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Pif(), 3.14159265f), "Pif not correct.");
+    VTKM_MATH_ASSERT(test_equal(vtkm::Pi<vtkm::Float64>(), 3.14159265),
+                     "Pi template function not correct.");
   }
 
   VTKM_EXEC
