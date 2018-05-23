@@ -61,7 +61,8 @@ inline VTKM_CONT vtkm::cont::DataSet CellMeasures<IntegrationType>::DoExecute(
     // Default name is name of input.
     outputName = "measure";
   }
-  result = internal::CreateResult(input, outArray, outputName, vtkm::cont::Field::ASSOC_CELL_SET);
+  result =
+    internal::CreateResult(input, outArray, outputName, vtkm::cont::Field::Association::CELL_SET);
 
   return result;
 }

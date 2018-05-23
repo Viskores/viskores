@@ -238,11 +238,12 @@ public:
                      const vtkm::cont::Field& scalarField,
                      const vtkm::Range& scalarRange)
   {
-    bool isSupportedField = (scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS ||
-                             scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_CELL_SET);
+    bool isSupportedField =
+      (scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS ||
+       scalarField.GetAssociation() == vtkm::cont::Field::Association::CELL_SET);
     if (!isSupportedField)
       throw vtkm::cont::ErrorBadValue("Field not accociated with cell set or points");
-    bool isAssocPoints = scalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    bool isAssocPoints = scalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
 
     vtkm::worklet::DispatcherMapField<CalculateNormals, Device>(CalculateNormals(bvh.LeafNodes))
       .Invoke(rays.HitIdx, rays.Dir, rays.NormalX, rays.NormalY, rays.NormalZ, coordsHandle);

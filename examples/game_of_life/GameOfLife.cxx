@@ -150,7 +150,7 @@ public:
     const vtkm::cont::DynamicCellSet& cells = input.GetCellSet(this->GetActiveCellSetIndex());
 
     //get the previous state of the game
-    input.GetField("state", vtkm::cont::Field::ASSOC_POINTS).GetData().CopyTo(prevstate);
+    input.GetField("state", vtkm::cont::Field::Association::POINTS).GetData().CopyTo(prevstate);
 
     //Update the game state
     DispatcherType().Invoke(vtkm::filter::ApplyPolicy(cells, policy), prevstate, state, colors);
@@ -160,10 +160,10 @@ public:
     output.AddCellSet(input.GetCellSet(this->GetActiveCellSetIndex()));
     output.AddCoordinateSystem(input.GetCoordinateSystem(this->GetActiveCoordinateSystemIndex()));
 
-    vtkm::cont::Field colorField("colors", vtkm::cont::Field::ASSOC_POINTS, colors);
+    vtkm::cont::Field colorField("colors", vtkm::cont::Field::Association::POINTS, colors);
     output.AddField(colorField);
 
-    vtkm::cont::Field stateField("state", vtkm::cont::Field::ASSOC_POINTS, state);
+    vtkm::cont::Field stateField("state", vtkm::cont::Field::Association::POINTS, state);
     output.AddField(stateField);
 
     return output;
@@ -240,7 +240,8 @@ struct RenderGameOfLife
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     vtkm::Int32 arraySize = (vtkm::Int32)data.GetCoordinateSystem().GetData().GetNumberOfValues();
 
-    UploadData task(&this->ColorState, data.GetField("colors", vtkm::cont::Field::ASSOC_POINTS));
+    UploadData task(&this->ColorState,
+                    data.GetField("colors", vtkm::cont::Field::Association::POINTS));
     vtkm::cont::TryExecute(task, DevicesToTry());
 
     vtkm::Float32 mvp[16] = { 1.f, 0.f, 0.f, 0.f, 0.f, 1.f, 0.f, 0.f,
@@ -367,7 +368,8 @@ int main(int argc, char** argv)
   vtkm::cont::DataSetBuilderUniform builder;
   vtkm::cont::DataSet data = builder.Create(vtkm::Id2(x, y));
 
-  auto stateField = vtkm::cont::make_Field("state", vtkm::cont::Field::ASSOC_POINTS, input_state);
+  auto stateField =
+    vtkm::cont::make_Field("state", vtkm::cont::Field::Association::POINTS, input_state);
   data.AddField(stateField);
 
   GameOfLife filter;

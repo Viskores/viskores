@@ -385,7 +385,7 @@ protected:
       return;
     }
 
-    vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY;
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY;
     std::size_t size;
 
     std::string tag;
@@ -394,11 +394,11 @@ protected:
     {
       if (tag == "POINT_DATA")
       {
-        association = vtkm::cont::Field::ASSOC_POINTS;
+        association = vtkm::cont::Field::Association::POINTS;
       }
       else if (tag == "CELL_DATA")
       {
-        association = vtkm::cont::Field::ASSOC_CELL_SET;
+        association = vtkm::cont::Field::Association::CELL_SET;
       }
       else
       {
@@ -450,10 +450,10 @@ protected:
         {
           switch (association)
           {
-            case vtkm::cont::Field::ASSOC_POINTS:
+            case vtkm::cont::Field::Association::POINTS:
               this->DataSet.AddField(vtkm::cont::Field(name, association, data));
               break;
-            case vtkm::cont::Field::ASSOC_CELL_SET:
+            case vtkm::cont::Field::Association::CELL_SET:
               vtkm::cont::CastAndCall(data, PermuteCellData(this->CellsPermutation, data));
               this->DataSet.AddField(vtkm::cont::Field(name, association, "cells", data));
               break;

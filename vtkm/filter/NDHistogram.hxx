@@ -80,9 +80,10 @@ inline VTKM_CONT vtkm::cont::DataSet NDHistogram::DoExecute(
   for (size_t i = 0; i < binIds.size(); i++)
   {
     outputData.AddField(
-      vtkm::cont::Field(FieldNames[i], vtkm::cont::Field::ASSOC_POINTS, binIds[i]));
+      vtkm::cont::Field(FieldNames[i], vtkm::cont::Field::Association::POINTS, binIds[i]));
   }
-  outputData.AddField(vtkm::cont::Field("Frequency", vtkm::cont::Field::ASSOC_POINTS, freqs));
+  outputData.AddField(
+    vtkm::cont::Field("Frequency", vtkm::cont::Field::Association::POINTS, freqs));
 
   return outputData;
 }

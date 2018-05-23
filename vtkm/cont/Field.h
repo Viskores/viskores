@@ -64,113 +64,113 @@ private:
 class VTKM_CONT_EXPORT Field
 {
 public:
-  enum AssociationEnum
+  enum struct Association
   {
-    ASSOC_ANY,
-    ASSOC_WHOLE_MESH,
-    ASSOC_POINTS,
-    ASSOC_CELL_SET,
-    ASSOC_LOGICAL_DIM
+    ANY,
+    WHOLE_MESH,
+    POINTS,
+    CELL_SET,
+    LOGICAL_DIM
   };
 
   /// constructors for points / whole mesh
   VTKM_CONT
-  Field(std::string name, AssociationEnum association, const vtkm::cont::DynamicArrayHandle& data)
+  Field(std::string name, Association association, const vtkm::cont::DynamicArrayHandle& data)
     : Name(name)
-    , Association(association)
+    , FieldAssociation(association)
     , AssocCellSetName()
     , AssocLogicalDim(-1)
     , Data(data)
     , Range()
     , ModifiedFlag(true)
   {
-    VTKM_ASSERT(this->Association == ASSOC_WHOLE_MESH || this->Association == ASSOC_POINTS);
+    VTKM_ASSERT(this->FieldAssociation == Association::WHOLE_MESH ||
+                this->FieldAssociation == Association::POINTS);
   }
 
   template <typename T, typename Storage>
-  VTKM_CONT Field(std::string name,
-                  AssociationEnum association,
-                  const ArrayHandle<T, Storage>& data)
+  VTKM_CONT Field(std::string name, Association association, const ArrayHandle<T, Storage>& data)
     : Name(name)
-    , Association(association)
+    , FieldAssociation(association)
     , AssocCellSetName()
     , AssocLogicalDim(-1)
     , Data(data)
     , Range()
     , ModifiedFlag(true)
   {
-    VTKM_ASSERT((this->Association == ASSOC_WHOLE_MESH) || (this->Association == ASSOC_POINTS));
+    VTKM_ASSERT((this->FieldAssociation == Association::WHOLE_MESH) ||
+                (this->FieldAssociation == Association::POINTS));
   }
 
   /// constructors for cell set associations
   VTKM_CONT
   Field(std::string name,
-        AssociationEnum association,
+        Association association,
         const std::string& cellSetName,
         const vtkm::cont::DynamicArrayHandle& data)
     : Name(name)
-    , Association(association)
+    , FieldAssociation(association)
     , AssocCellSetName(cellSetName)
     , AssocLogicalDim(-1)
     , Data(data)
     , Range()
     , ModifiedFlag(true)
   {
-    VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
+    VTKM_ASSERT(this->FieldAssociation == Association::CELL_SET);
   }
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
-                  AssociationEnum association,
+                  Association association,
                   const std::string& cellSetName,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
     : Name(name)
-    , Association(association)
+    , FieldAssociation(association)
     , AssocCellSetName(cellSetName)
     , AssocLogicalDim(-1)
     , Data(data)
     , Range()
     , ModifiedFlag(true)
   {
-    VTKM_ASSERT(this->Association == ASSOC_CELL_SET);
+    VTKM_ASSERT(this->FieldAssociation == Association::CELL_SET);
   }
 
   /// constructors for logical dimension associations
   VTKM_CONT
   Field(std::string name,
-        AssociationEnum association,
+        Association association,
         vtkm::IdComponent logicalDim,
         const vtkm::cont::DynamicArrayHandle& data)
     : Name(name)
-    , Association(association)
+    , FieldAssociation(association)
     , AssocCellSetName()
     , AssocLogicalDim(logicalDim)
     , Data(data)
     , Range()
     , ModifiedFlag(true)
   {
-    VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
+    VTKM_ASSERT(this->FieldAssociation == Association::LOGICAL_DIM);
   }
 
   template <typename T, typename Storage>
   VTKM_CONT Field(std::string name,
-                  AssociationEnum association,
+                  Association association,
                   vtkm::IdComponent logicalDim,
                   const vtkm::cont::ArrayHandle<T, Storage>& data)
     : Name(name)
-    , Association(association)
+    , FieldAssociation(association)
     , AssocLogicalDim(logicalDim)
     , Data(data)
     , Range()
     , ModifiedFlag(true)
   {
-    VTKM_ASSERT(this->Association == ASSOC_LOGICAL_DIM);
+    VTKM_ASSERT(this->FieldAssociation == Association::LOGICAL_DIM);
   }
 
   VTKM_CONT
   Field()
     : Name()
-    , Association(ASSOC_ANY)
+    , FieldAssociation(Association::ANY)
     , AssocCellSetName()
     , AssocLogicalDim()
     , Data()
@@ -190,7 +190,7 @@ public:
   const std::string& GetName() const { return this->Name; }
 
   VTKM_CONT
-  AssociationEnum GetAssociation() const { return this->Association; }
+  Association GetAssociation() const { return this->FieldAssociation; }
 
   VTKM_CONT
   std::string GetAssocCellSet() const { return this->AssocCellSetName; }
@@ -279,7 +279,7 @@ public:
 private:
   std::string Name; ///< name of field
 
-  AssociationEnum Association;
+  Association FieldAssociation;
   std::string AssocCellSetName;      ///< only populate if assoc is cells
   vtkm::IdComponent AssocLogicalDim; ///< only populate if assoc is logical dim
 
@@ -314,7 +314,7 @@ void CastAndCall(const vtkm::cont::Field& field, Functor&& f, Args&&... args)
 /// Convenience functions to build fields from C style arrays and std::vector
 template <typename T>
 vtkm::cont::Field make_Field(std::string name,
-                             Field::AssociationEnum association,
+                             Field::Association association,
                              const T* data,
                              vtkm::Id size,
                              vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
@@ -324,7 +324,7 @@ vtkm::cont::Field make_Field(std::string name,
 
 template <typename T>
 vtkm::cont::Field make_Field(std::string name,
-                             Field::AssociationEnum association,
+                             Field::Association association,
                              const std::vector<T>& data,
                              vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
 {
@@ -333,7 +333,7 @@ vtkm::cont::Field make_Field(std::string name,
 
 template <typename T>
 vtkm::cont::Field make_Field(std::string name,
-                             Field::AssociationEnum association,
+                             Field::Association association,
                              const std::string& cellSetName,
                              const T* data,
                              vtkm::Id size,
@@ -345,7 +345,7 @@ vtkm::cont::Field make_Field(std::string name,
 
 template <typename T>
 vtkm::cont::Field make_Field(std::string name,
-                             Field::AssociationEnum association,
+                             Field::Association association,
                              const std::string& cellSetName,
                              const std::vector<T>& data,
                              vtkm::CopyFlag copy = vtkm::CopyFlag::Off)
@@ -356,7 +356,7 @@ vtkm::cont::Field make_Field(std::string name,
 
 template <typename T>
 vtkm::cont::Field make_Field(std::string name,
-                             Field::AssociationEnum association,
+                             Field::Association association,
                              vtkm::IdComponent logicalDim,
                              const T* data,
                              vtkm::Id size,
@@ -368,7 +368,7 @@ vtkm::cont::Field make_Field(std::string name,
 
 template <typename T>
 vtkm::cont::Field make_Field(std::string name,
-                             Field::AssociationEnum association,
+                             Field::Association association,
                              vtkm::IdComponent logicalDim,
                              const std::vector<T>& data,
                              vtkm::CopyFlag copy = vtkm::CopyFlag::Off)

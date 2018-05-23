@@ -45,7 +45,8 @@ public:
     vtkm::cont::DataSetBuilderUniform builder;
     vtkm::cont::DataSet data = builder.Create(vtkm::Id3(8, 4, 1));
 
-    auto colorField = vtkm::cont::make_Field("color", vtkm::cont::Field::ASSOC_POINTS, pixels);
+    auto colorField =
+      vtkm::cont::make_Field("color", vtkm::cont::Field::Association::POINTS, pixels);
     data.AddField(colorField);
 
     vtkm::cont::ArrayHandle<vtkm::Id> component;

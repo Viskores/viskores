@@ -62,15 +62,16 @@ public:
   /// Choose the field to operate on. Note, if
   /// `this->UseCoordinateSystemAsField` is true, then the active field is not used.
   VTKM_CONT
-  void SetActiveField(const std::string& name,
-                      vtkm::cont::Field::AssociationEnum association = vtkm::cont::Field::ASSOC_ANY)
+  void SetActiveField(
+    const std::string& name,
+    vtkm::cont::Field::Association association = vtkm::cont::Field::Association::ANY)
   {
     this->ActiveFieldName = name;
     this->ActiveFieldAssociation = association;
   }
 
   VTKM_CONT const std::string& GetActiveFieldName() const { return this->ActiveFieldName; }
-  VTKM_CONT vtkm::cont::Field::AssociationEnum GetActiveFieldAssociation() const
+  VTKM_CONT vtkm::cont::Field::Association GetActiveFieldAssociation() const
   {
     return this->ActiveFieldAssociation;
   }
@@ -86,11 +87,11 @@ public:
   //@}
 
   //From the field we can extract the association component
-  // ASSOC_ANY -> unable to map
-  // ASSOC_WHOLE_MESH -> (I think this is points)
-  // ASSOC_POINTS -> map using point mapping
-  // ASSOC_CELL_SET -> how do we map this?
-  // ASSOC_LOGICAL_DIM -> unable to map?
+  // Association::ANY -> unable to map
+  // Association::WHOLE_MESH -> (I think this is points)
+  // Association::POINTS -> map using point mapping
+  // Association::CELL_SET -> how do we map this?
+  // Association::LOGICAL_DIM -> unable to map?
   template <typename DerivedPolicy>
   VTKM_CONT bool MapFieldOntoOutput(vtkm::cont::DataSet& result,
                                     const vtkm::cont::Field& field,
@@ -119,7 +120,7 @@ private:
   vtkm::Id CellSetIndex;
   vtkm::Id CoordinateSystemIndex;
   std::string ActiveFieldName;
-  vtkm::cont::Field::AssociationEnum ActiveFieldAssociation;
+  vtkm::cont::Field::Association ActiveFieldAssociation;
   bool UseCoordinateSystemAsField;
 
   friend class vtkm::filter::Filter<Derived>;

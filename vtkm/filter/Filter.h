@@ -226,7 +226,7 @@ public:
   VTKM_CONT
   void SetFieldsToPass(
     const std::string& fieldname,
-    vtkm::cont::Field::AssociationEnum association,
+    vtkm::cont::Field::Association association,
     vtkm::filter::FieldSelection::ModeEnum mode = vtkm::filter::FieldSelection::MODE_SELECT)
   {
     this->SetFieldsToPass({ fieldname, association }, mode);

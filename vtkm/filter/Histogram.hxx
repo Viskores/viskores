@@ -222,7 +222,7 @@ inline VTKM_CONT vtkm::cont::DataSet Histogram::DoExecute(
   this->BinDelta = static_cast<vtkm::Float64>(delta);
   vtkm::cont::DataSet output;
   vtkm::cont::Field rfield(
-    this->GetOutputFieldName(), vtkm::cont::Field::ASSOC_WHOLE_MESH, binArray);
+    this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, binArray);
   output.AddField(rfield);
   return output;
 }
@@ -264,7 +264,7 @@ inline VTKM_CONT void Histogram::PostExecute(const vtkm::cont::MultiBlock&,
 
   vtkm::cont::DataSet output;
   vtkm::cont::Field rfield(
-    this->GetOutputFieldName(), vtkm::cont::Field::ASSOC_WHOLE_MESH, helper.ReduceAll());
+    this->GetOutputFieldName(), vtkm::cont::Field::Association::WHOLE_MESH, helper.ReduceAll());
   output.AddField(rfield);
 
   result = vtkm::cont::MultiBlock(output);

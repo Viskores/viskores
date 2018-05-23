@@ -50,9 +50,9 @@ VTKM_CONT inline vtkm::cont::DataSet Probe::DoExecute(
   auto hcf = this->Worklet.GetHiddenCellsField(
     vtkm::filter::ApplyPolicy(output.GetCellSet(), policy), device);
 
-  output.AddField(vtkm::cont::Field("HIDDEN", vtkm::cont::Field::ASSOC_POINTS, hpf));
+  output.AddField(vtkm::cont::Field("HIDDEN", vtkm::cont::Field::Association::POINTS, hpf));
   output.AddField(vtkm::cont::Field(
-    "HIDDEN", vtkm::cont::Field::ASSOC_CELL_SET, output.GetCellSet().GetName(), hcf));
+    "HIDDEN", vtkm::cont::Field::Association::CELL_SET, output.GetCellSet().GetName(), hcf));
 
   return output;
 }

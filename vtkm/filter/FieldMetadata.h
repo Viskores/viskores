@@ -35,7 +35,7 @@ public:
   VTKM_CONT
   FieldMetadata()
     : Name()
-    , Association(vtkm::cont::Field::ASSOC_ANY)
+    , Association(vtkm::cont::Field::Association::ANY)
     , CellSetName()
   {
   }
@@ -57,16 +57,16 @@ public:
   }
 
   VTKM_CONT
-  bool IsPointField() const { return this->Association == vtkm::cont::Field::ASSOC_POINTS; }
+  bool IsPointField() const { return this->Association == vtkm::cont::Field::Association::POINTS; }
 
   VTKM_CONT
-  bool IsCellField() const { return this->Association == vtkm::cont::Field::ASSOC_CELL_SET; }
+  bool IsCellField() const { return this->Association == vtkm::cont::Field::Association::CELL_SET; }
 
   VTKM_CONT
   const std::string& GetName() const { return this->Name; }
 
   VTKM_CONT
-  vtkm::cont::Field::AssociationEnum GetAssociation() const { return this->Association; }
+  vtkm::cont::Field::Association GetAssociation() const { return this->Association; }
 
   VTKM_CONT
   const std::string& GetCellSetName() const { return this->CellSetName; }
@@ -102,7 +102,7 @@ public:
 
 private:
   std::string Name; ///< name of field
-  vtkm::cont::Field::AssociationEnum Association;
+  vtkm::cont::Field::Association Association;
   std::string CellSetName; ///< only populate if assoc is cells
 };
 }

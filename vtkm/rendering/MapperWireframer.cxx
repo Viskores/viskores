@@ -328,7 +328,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
   if (is1D)
   {
 
-    bool isSupportedField = inScalarField.GetAssociation() == vtkm::cont::Field::ASSOC_POINTS;
+    bool isSupportedField =
+      inScalarField.GetAssociation() == vtkm::cont::Field::Association::POINTS;
     if (!isSupportedField)
     {
       throw vtkm::cont::ErrorBadValue(
@@ -348,8 +349,8 @@ void MapperWireframer::RenderCells(const vtkm::cont::DynamicCellSet& inCellSet,
                            this->LogarithmX);
 
     actualCoords = vtkm::cont::CoordinateSystem("coords", newCoords);
-    actualField =
-      vtkm::cont::Field(inScalarField.GetName(), vtkm::cont::Field::ASSOC_POINTS, newScalars);
+    actualField = vtkm::cont::Field(
+      inScalarField.GetName(), vtkm::cont::Field::Association::POINTS, newScalars);
 
     vtkm::Id numCells = cellSet.GetNumberOfCells();
     vtkm::cont::ArrayHandle<vtkm::Id> conn;

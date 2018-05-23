@@ -32,19 +32,19 @@ void Field::PrintSummary(std::ostream& out) const
   out << " assoc= ";
   switch (this->GetAssociation())
   {
-    case ASSOC_ANY:
+    case Association::ANY:
       out << "Any ";
       break;
-    case ASSOC_WHOLE_MESH:
+    case Association::WHOLE_MESH:
       out << "Mesh ";
       break;
-    case ASSOC_POINTS:
+    case Association::POINTS:
       out << "Points ";
       break;
-    case ASSOC_CELL_SET:
+    case Association::CELL_SET:
       out << "Cells ";
       break;
-    case ASSOC_LOGICAL_DIM:
+    case Association::LOGICAL_DIM:
       out << "LogicalDim ";
       break;
   }

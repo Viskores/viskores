@@ -226,7 +226,7 @@ private:
     {
       const vtkm::cont::Field field = dataSet.GetField(f);
 
-      if (field.GetAssociation() != vtkm::cont::Field::ASSOC_POINTS)
+      if (field.GetAssociation() != vtkm::cont::Field::Association::POINTS)
       {
         continue;
       }
@@ -263,7 +263,7 @@ private:
     {
       const vtkm::cont::Field field = dataSet.GetField(f);
 
-      if (field.GetAssociation() != vtkm::cont::Field::ASSOC_CELL_SET)
+      if (field.GetAssociation() != vtkm::cont::Field::Association::CELL_SET)
       {
         continue;
       }

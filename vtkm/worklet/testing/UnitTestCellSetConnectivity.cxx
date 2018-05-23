@@ -114,9 +114,10 @@ static vtkm::cont::DataSet MakeIsosurfaceTestDataSet(vtkm::Id3 dims)
   cellSet.SetPointDimensions(vdims);
   dataSet.AddCellSet(cellSet);
 
-  dataSet.AddField(vtkm::cont::Field("nodevar", vtkm::cont::Field::ASSOC_POINTS, pointFieldArray));
   dataSet.AddField(
-    vtkm::cont::Field("cellvar", vtkm::cont::Field::ASSOC_CELL_SET, "cells", cellFieldArray));
+    vtkm::cont::Field("nodevar", vtkm::cont::Field::Association::POINTS, pointFieldArray));
+  dataSet.AddField(vtkm::cont::Field(
+    "cellvar", vtkm::cont::Field::Association::CELL_SET, "cells", cellFieldArray));
 
   return dataSet;
 }

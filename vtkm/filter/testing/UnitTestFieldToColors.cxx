@@ -48,9 +48,9 @@ void TestFieldToColors()
   ftc.SetOutputFieldName("colors");
 
   auto rgbaResult = ftc.Execute(ds);
-  VTKM_TEST_ASSERT(rgbaResult.HasField("colors", vtkm::cont::Field::ASSOC_POINTS),
+  VTKM_TEST_ASSERT(rgbaResult.HasField("colors", vtkm::cont::Field::Association::POINTS),
                    "Field missing.");
-  vtkm::cont::Field Result = rgbaResult.GetField("colors", vtkm::cont::Field::ASSOC_POINTS);
+  vtkm::cont::Field Result = rgbaResult.GetField("colors", vtkm::cont::Field::Association::POINTS);
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 4>> resultRGBAHandle;
   Result.GetData().CopyTo(resultRGBAHandle);
 
@@ -70,8 +70,9 @@ void TestFieldToColors()
   //Now verify that we can switching our output mode
   ftc.SetOutputToRGB();
   auto rgbResult = ftc.Execute(ds);
-  VTKM_TEST_ASSERT(rgbResult.HasField("colors", vtkm::cont::Field::ASSOC_POINTS), "Field missing.");
-  Result = rgbResult.GetField("colors", vtkm::cont::Field::ASSOC_POINTS);
+  VTKM_TEST_ASSERT(rgbResult.HasField("colors", vtkm::cont::Field::Association::POINTS),
+                   "Field missing.");
+  Result = rgbResult.GetField("colors", vtkm::cont::Field::Association::POINTS);
   vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::UInt8, 3>> resultRGBHandle;
   Result.GetData().CopyTo(resultRGBHandle);
 

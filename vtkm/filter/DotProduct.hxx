@@ -52,7 +52,7 @@ struct DotProductFunctor
 inline VTKM_CONT DotProduct::DotProduct()
   : vtkm::filter::FilterField<DotProduct>()
   , SecondaryFieldName()
-  , SecondaryFieldAssociation(vtkm::cont::Field::ASSOC_ANY)
+  , SecondaryFieldAssociation(vtkm::cont::Field::Association::ANY)
   , UseCoordinateSystemAsSecondaryField(false)
   , SecondaryCoordinateSystemIndex(0)
 {
