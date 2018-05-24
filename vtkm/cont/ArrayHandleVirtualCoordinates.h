@@ -181,6 +181,7 @@ public:
   VTKM_CONT virtual void Allocate(vtkm::Id numberOfValues) = 0;
   VTKM_CONT virtual void Shrink(vtkm::Id numberOfValues) = 0;
   VTKM_CONT virtual void ReleaseResources() = 0;
+  VTKM_CONT virtual void ReleaseResourcesExecution() = 0;
 
   VTKM_CONT virtual PortalConst PrepareForInput(vtkm::cont::DeviceAdapterId deviceId) = 0;
   VTKM_CONT virtual Portal PrepareForOutput(vtkm::Id numberOfValues,
@@ -240,6 +241,8 @@ public:
   VTKM_CONT void Shrink(vtkm::Id numberOfValues) override { this->Array.Shrink(numberOfValues); }
 
   VTKM_CONT void ReleaseResources() override { this->Array.ReleaseResources(); }
+
+  VTKM_CONT void ReleaseResourcesExecution() override { this->Array.ReleaseResourcesExecution(); }
 
   VTKM_CONT PortalConst PrepareForInput(vtkm::cont::DeviceAdapterId deviceId) override
   {
@@ -406,8 +409,10 @@ public:
   VTKM_CONT
   void Shrink(vtkm::Id numberOfValues) { this->Array->Shrink(numberOfValues); }
 
+  // ArrayTransfer should only be capable of releasing resources in the execution
+  // environment
   VTKM_CONT
-  void ReleaseResources() { this->Array->ReleaseResources(); }
+  void ReleaseResources() { this->Array->ReleaseResourcesExecution(); }
 
 private:
   CoordinatesArrayHandleBase* Array;

@@ -81,7 +81,15 @@ public:
   VTKM_CONT
   vtkm::Bounds GetBounds() const;
 
-  virtual void PrintSummary(std::ostream& out) const;
+  virtual void PrintSummary(std::ostream& out) const override;
+
+  /// Releases any resources being used in the execution environment (that are
+  /// not being shared by the control environment).
+  VTKM_CONT void ReleaseResourcesExecution() override
+  {
+    this->Superclass::ReleaseResourcesExecution();
+    this->GetData().ReleaseResourcesExecution();
+  }
 };
 
 template <typename Functor, typename... Args>
