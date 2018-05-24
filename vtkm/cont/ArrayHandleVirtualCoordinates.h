@@ -522,6 +522,7 @@ void CastAndCall(const typename vtkm::cont::ArrayHandleVirtualCoordinates::Super
 
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/ArrayHandleCartesianProduct.h>
+#include <vtkm/cont/ArrayHandleCompositeVector.h>
 #include <vtkm/cont/ArrayHandleConstant.h>
 #include <vtkm/cont/ArrayHandleCounting.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
@@ -550,6 +551,10 @@ using CudaPortalsRectilinearCoords = CudaPortalTypes<
   vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                           vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
                                           vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>;
+using CudaPortalsCompositeCoords = CudaPortalTypes<
+  vtkm::cont::ArrayHandleCompositeVector<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                         vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                         vtkm::cont::ArrayHandle<vtkm::FloatDefault>>>;
 }
 }
 } // vtkm::cont::internal
@@ -573,6 +578,11 @@ VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(
     vtkm::cont::internal::CudaPortalsRectilinearCoords::PortalConst>);
 VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::cont::internal::CoordinatesPortal<
                                      vtkm::cont::internal::CudaPortalsRectilinearCoords::Portal>);
+VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(
+  vtkm::cont::internal::CoordinatesPortalConst<
+    vtkm::cont::internal::CudaPortalsCompositeCoords::PortalConst>);
+VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::cont::internal::CoordinatesPortal<
+                                     vtkm::cont::internal::CudaPortalsCompositeCoords::Portal>);
 
 #endif // VTKM_CUDA
 
