@@ -898,18 +898,16 @@ void LinearBVH::ConstructOnDevice(Device device)
   logger->CloseLogEntry(time);
 }
 
-// explicitly export to workaround an intel compiler bug
-#if defined(VTKM_ICC)
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagSerial>(
-  vtkm::cont::DeviceAdapterTagSerial);
+// explicitly export
+template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<
+  vtkm::cont::DeviceAdapterTagSerial>(vtkm::cont::DeviceAdapterTagSerial);
 #ifdef VTKM_ENABLE_TBB
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
+template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
   vtkm::cont::DeviceAdapterTagTBB);
 #endif
 #ifdef VTKM_ENABLE_CUDA
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(
+template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(
   vtkm::cont::DeviceAdapterTagCuda);
-#endif
 #endif
 
 VTKM_CONT
