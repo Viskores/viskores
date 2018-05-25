@@ -79,17 +79,17 @@ public:
   {
   };
 
-  typedef void ControlSignature(
-    FieldIn<IdType> index,                // (input) particle Id
-    WholeArrayIn<IdType> binId,           // (input) bin id for this particle
-    WholeArrayIn<IdType> partId,          // (input) first particle in halo
-    WholeArrayIn<TagType> xLoc,           // (input) x location in domain
-    WholeArrayIn<TagType> yLoc,           // (input) y location in domain
-    WholeArrayIn<TagType> zLoc,           // (input) z location in domain
-    WholeArrayIn<IdType> firstParticleId, // (input) first particle in halo
-    WholeArrayIn<IdType> lastParticleId,  // (input) last particle in halo
-    FieldOut<TagType> potential);         // (output) bin ID
-  typedef _9 ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+  using ControlSignature =
+    void(FieldIn<IdType> index,                // (input) particle Id
+         WholeArrayIn<IdType> binId,           // (input) bin id for this particle
+         WholeArrayIn<IdType> partId,          // (input) first particle in halo
+         WholeArrayIn<TagType> xLoc,           // (input) x location in domain
+         WholeArrayIn<TagType> yLoc,           // (input) y location in domain
+         WholeArrayIn<TagType> zLoc,           // (input) z location in domain
+         WholeArrayIn<IdType> firstParticleId, // (input) first particle in halo
+         WholeArrayIn<IdType> lastParticleId,  // (input) last particle in halo
+         FieldOut<TagType> potential);         // (output) bin ID
+  using ExecutionSignature = _9(_1, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
 
   vtkm::Id xNum, yNum, zNum;

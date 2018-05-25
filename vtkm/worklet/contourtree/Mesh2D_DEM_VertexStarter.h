@@ -103,11 +103,11 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<IdType> vertex,       // (input) index of vertex
+  using ControlSignature = void(FieldIn<IdType> vertex,       // (input) index of vertex
                                 WholeArrayIn<TagType> values, // (input) values within mesh
                                 FieldOut<IdType> chain,       // (output) modify the chains
                                 FieldOut<IdType> linkMask);   // (output) modify the mask
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   vtkm::Id nRows; // (input) number of rows in 2D

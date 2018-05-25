@@ -106,9 +106,9 @@ public:
     return rcp((fabs(f) < 1e-8f) ? 1e-8f : f);
   }
 
-  typedef void ControlSignature(FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut<>, FieldOut<>);
 
-  typedef void ExecutionSignature(WorkIndex, _1, _2);
+  using ExecutionSignature = void(WorkIndex, _1, _2);
   VTKM_EXEC
   void operator()(const vtkm::Id idx, vtkm::Int32& hit, vtkm::Float32& distance) const
   {
@@ -216,15 +216,10 @@ public:
     vtkm::Normalize(nlook);
   }
 
-  typedef void ControlSignature(FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>);
+  using ControlSignature =
+    void(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
 
-  typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4, _5, _6, _7);
   template <typename Precision>
   VTKM_EXEC void operator()(vtkm::Id idx,
                             Precision& rayDirX,
@@ -313,9 +308,9 @@ public:
     vtkm::Normalize(nlook);
   }
 
-  typedef void ControlSignature(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
+  using ControlSignature = void(FieldOut<>, FieldOut<>, FieldOut<>, FieldOut<>);
 
-  typedef void ExecutionSignature(WorkIndex, _1, _2, _3, _4);
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3, _4);
   template <typename Precision>
   VTKM_EXEC void operator()(vtkm::Id idx,
                             Precision& rayDirX,

@@ -48,8 +48,8 @@ namespace triangulate
 class TriangulateCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
-  typedef void ExecutionSignature(PointIndices, _2, VisitIndex);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell<> connectivityOut);
+  using ExecutionSignature = void(PointIndices, _2, VisitIndex);
   using InputDomain = _1;
 
   using ScatterType = vtkm::worklet::ScatterUniform<2>;

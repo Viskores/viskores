@@ -42,8 +42,8 @@ template <typename IntegratorType, typename FieldType>
 class ParticleAdvectWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> idx, ExecObject ic);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> idx, ExecObject ic);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   template <typename IntegralCurveType>
@@ -166,8 +166,8 @@ class Subtract : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   Subtract() {}
-  typedef void ControlSignature(FieldOut<>, FieldIn<>, FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldOut<>, FieldIn<>, FieldIn<>);
+  using ExecutionSignature = void(_1, _2, _3);
   VTKM_EXEC void operator()(vtkm::Id& res, const vtkm::Id& x, const vtkm::Id& y) const
   {
     res = x - y;

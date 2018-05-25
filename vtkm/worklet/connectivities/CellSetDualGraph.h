@@ -38,9 +38,9 @@ namespace detail
 {
 struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn, FieldOutCell<> numEdgesInCell);
+  using ControlSignature = void(CellSetIn, FieldOutCell<> numEdgesInCell);
 
-  typedef _2 ExecutionSignature(CellShape, PointCount);
+  using ExecutionSignature = _2(CellShape, PointCount);
 
   using InputDomain = _1;
 
@@ -53,9 +53,9 @@ struct EdgeCount : public vtkm::worklet::WorkletMapPointToCell
 
 struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn, FieldOutCell<> cellIndices, FieldOutCell<> edgeIndices);
+  using ControlSignature = void(CellSetIn, FieldOutCell<> cellIndices, FieldOutCell<> edgeIndices);
 
-  typedef void ExecutionSignature(CellShape, InputIndex, PointIndices, VisitIndex, _2, _3);
+  using ExecutionSignature = void(CellShape, InputIndex, PointIndices, VisitIndex, _2, _3);
 
   using InputDomain = _1;
 
@@ -80,12 +80,12 @@ struct EdgeExtract : public vtkm::worklet::WorkletMapPointToCell
 
 struct CellToCellConnectivity : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> index,
+  using ControlSignature = void(FieldIn<> index,
                                 WholeArrayIn<> cells,
                                 WholeArrayOut<> from,
                                 WholeArrayOut<> to);
 
-  typedef void ExecutionSignature(_1, InputIndex, _2, _3, _4);
+  using ExecutionSignature = void(_1, InputIndex, _2, _3, _4);
 
   using InputDomain = _1;
 

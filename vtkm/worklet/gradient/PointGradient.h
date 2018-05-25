@@ -43,13 +43,13 @@ struct PointGradientInType : vtkm::ListTagBase<T>
 template <typename T>
 struct PointGradient : public vtkm::worklet::WorkletMapCellToPoint
 {
-  typedef void ControlSignature(CellSetIn,
+  using ControlSignature = void(CellSetIn,
                                 WholeCellSetIn<Point, Cell>,
                                 WholeArrayIn<Vec3> pointCoordinates,
                                 WholeArrayIn<PointGradientInType<T>> inputField,
                                 GradientOutputs outputFields);
 
-  typedef void ExecutionSignature(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
+  using ExecutionSignature = void(CellCount, CellIndices, WorkIndex, _2, _3, _4, _5);
   using InputDomain = _1;
 
   template <typename FromIndexType,

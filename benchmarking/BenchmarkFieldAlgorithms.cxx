@@ -65,12 +65,9 @@ class BlackScholes : public vtkm::worklet::WorkletMapField
   T Volatility;
 
 public:
-  typedef void ControlSignature(FieldIn<Scalar>,
-                                FieldIn<Scalar>,
-                                FieldIn<Scalar>,
-                                FieldOut<Scalar>,
-                                FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+  using ControlSignature =
+    void(FieldIn<Scalar>, FieldIn<Scalar>, FieldIn<Scalar>, FieldOut<Scalar>, FieldOut<Scalar>);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
   BlackScholes(T risk, T volatility)
     : Riskfree(risk)
@@ -131,8 +128,8 @@ public:
 class Mag : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
   VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& vec, U& result) const
@@ -144,8 +141,8 @@ public:
 class Square : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Scalar>, FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<Scalar>, FieldOut<Scalar>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
   VTKM_EXEC void operator()(T input, U& output) const
@@ -157,8 +154,8 @@ public:
 class Sin : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Scalar>, FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<Scalar>, FieldOut<Scalar>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
   VTKM_EXEC void operator()(T input, U& output) const
@@ -170,8 +167,8 @@ public:
 class Cos : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Scalar>, FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<Scalar>, FieldOut<Scalar>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename U>
   VTKM_EXEC void operator()(T input, U& output) const
@@ -183,8 +180,8 @@ public:
 class FusedMath : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename T>
   VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& vec, T& result) const
@@ -203,8 +200,8 @@ public:
 class GenerateEdges : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset, WholeArrayOut<> edgeIds);
-  typedef void ExecutionSignature(PointIndices, ThreadIndices, _2);
+  using ControlSignature = void(CellSetIn cellset, WholeArrayOut<> edgeIds);
+  using ExecutionSignature = void(PointIndices, ThreadIndices, _2);
   using InputDomain = _1;
 
   template <typename ConnectivityInVec, typename ThreadIndicesType, typename IdPairTableType>
@@ -229,11 +226,11 @@ public:
 class InterpolateField : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Id2Type> interpolation_ids,
+  using ControlSignature = void(FieldIn<Id2Type> interpolation_ids,
                                 FieldIn<Scalar> interpolation_weights,
                                 WholeArrayIn<> inputField,
                                 FieldOut<> output);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   template <typename WeightType, typename T, typename S, typename D>
@@ -262,8 +259,8 @@ template <typename ImplicitFunction>
 class EvaluateImplicitFunction : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ExecutionSignature = void(_1, _2);
 
   EvaluateImplicitFunction(const ImplicitFunction* function)
     : Function(function)
@@ -284,8 +281,8 @@ template <typename T1, typename T2>
 class Evaluate2ImplicitFunctions : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ExecutionSignature = void(_1, _2);
 
   Evaluate2ImplicitFunctions(const T1* f1, const T2* f2)
     : Function1(f1)

@@ -488,7 +488,7 @@ void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Va
     }
   };
 
-  typedef RunTask<PlainType, UnsignedType, Encoder, Base, std::function<void(size_t)>> RunTaskType;
+  using RunTaskType = RunTask<PlainType, UnsignedType, Encoder, Base, std::function<void(size_t)>>;
 
   RunTaskType& root =
     *new (::tbb::task::allocate_root()) RunTaskType(0, 1, lambda, num_elems_, num_threads_);
@@ -563,7 +563,7 @@ void ParallelRadixSortInternal<PlainType, CompareType, UnsignedType, Encoder, Va
     }
   };
 
-  typedef RunTask<PlainType, UnsignedType, Encoder, Base, std::function<void(size_t)>> RunTaskType;
+  using RunTaskType = RunTask<PlainType, UnsignedType, Encoder, Base, std::function<void(size_t)>>;
 
   RunTaskType& root =
     *new (::tbb::task::allocate_root()) RunTaskType(0, 1, lambda, num_elems_, num_threads_);

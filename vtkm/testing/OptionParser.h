@@ -295,7 +295,7 @@ enum ArgStatus
  * @li @c Arg::Optional @copybrief Arg::Optional
  *
  */
-typedef ArgStatus (*CheckArg)(const Option& option, bool msg);
+using CheckArg = ArgStatus (*)(const Option& option, bool msg);
 
 /**
  * @brief Describes an option, its help text (usage) and how it should be parsed.

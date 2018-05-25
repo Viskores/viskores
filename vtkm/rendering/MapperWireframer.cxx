@@ -47,9 +47,9 @@ public:
   VTKM_CONT
   CreateConnectivity() {}
 
-  typedef void ControlSignature(FieldIn<>, WholeArrayOut<>);
+  using ControlSignature = void(FieldIn<>, WholeArrayOut<>);
 
-  typedef void ExecutionSignature(_1, _2);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename ConnPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& i, ConnPortalType& connPortal) const
@@ -88,12 +88,12 @@ public:
   {
   }
 
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 FieldIn<vtkm::TypeListTagScalarAll>,
                                 FieldOut<>,
                                 FieldOut<>);
 
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   template <typename ScalarType>
   VTKM_EXEC void operator()(const vtkm::Vec<vtkm::Float32, 3>& inCoord,
                             const ScalarType& scalar,
@@ -149,8 +149,8 @@ struct ConvertFunctor
 #endif
 struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn cellSet, FieldOutCell<> numEdges);
-  typedef _2 ExecutionSignature(CellShape shape, PointCount numPoints);
+  using ControlSignature = void(CellSetIn cellSet, FieldOutCell<> numEdges);
+  using ExecutionSignature = _2(CellShape shape, PointCount numPoints);
   using InputDomain = _1;
 
   template <typename CellShapeTag>
@@ -170,8 +170,8 @@ struct EdgesCounter : public vtkm::worklet::WorkletMapPointToCell
 
 struct EdgesExtracter : public vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn cellSet, FieldOutCell<> edgeIndices);
-  typedef void ExecutionSignature(CellShape, PointIndices, VisitIndex, _2);
+  using ControlSignature = void(CellSetIn cellSet, FieldOutCell<> edgeIndices);
+  using ExecutionSignature = void(CellShape, PointIndices, VisitIndex, _2);
   using InputDomain = _1;
   using ScatterType = vtkm::worklet::ScatterCounting;
 

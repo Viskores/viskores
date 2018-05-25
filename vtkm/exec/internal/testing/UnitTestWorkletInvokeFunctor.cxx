@@ -142,13 +142,13 @@ struct Fetch<TestFetchTagOutput,
 namespace
 {
 
-typedef void TestControlSignature(TestControlSignatureTagInput, TestControlSignatureTagOutput);
+using TestControlSignature = void(TestControlSignatureTagInput, TestControlSignatureTagOutput);
 using TestControlInterface = vtkm::internal::FunctionInterface<TestControlSignature>;
 
-typedef void TestExecutionSignature1(vtkm::exec::arg::BasicArg<1>, vtkm::exec::arg::BasicArg<2>);
+using TestExecutionSignature1 = void(vtkm::exec::arg::BasicArg<1>, vtkm::exec::arg::BasicArg<2>);
 using TestExecutionInterface1 = vtkm::internal::FunctionInterface<TestExecutionSignature1>;
 
-typedef vtkm::exec::arg::BasicArg<2> TestExecutionSignature2(vtkm::exec::arg::BasicArg<1>);
+using TestExecutionSignature2 = vtkm::exec::arg::BasicArg<2>(vtkm::exec::arg::BasicArg<1>);
 using TestExecutionInterface2 = vtkm::internal::FunctionInterface<TestExecutionSignature2>;
 
 // Not a full worklet, but provides operators that we expect in a worklet.

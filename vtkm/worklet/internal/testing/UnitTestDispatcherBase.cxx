@@ -232,8 +232,8 @@ public:
 class TestWorklet : public TestWorkletBase
 {
 public:
-  typedef void ControlSignature(TestIn, ExecObject, TestOut);
-  typedef _3 ExecutionSignature(_1, _2, WorkIndex);
+  using ControlSignature = void(TestIn, ExecObject, TestOut);
+  using ExecutionSignature = _3(_1, _2, WorkIndex);
 
   template <typename ExecObjectType>
   VTKM_EXEC vtkm::Id operator()(vtkm::Id value, ExecObjectType execObject, vtkm::Id index) const
@@ -250,8 +250,8 @@ public:
 class TestErrorWorklet : public TestWorkletBase
 {
 public:
-  typedef void ControlSignature(TestIn, ExecObject, TestOut);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(TestIn, ExecObject, TestOut);
+  using ExecutionSignature = void(_1, _2, _3);
 
   template <typename ExecObjectType>
   VTKM_EXEC void operator()(vtkm::Id, ExecObjectType, vtkm::Id) const

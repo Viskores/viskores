@@ -26,8 +26,8 @@
 class PointerJumping : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> index, WholeArrayInOut<IdType> comp);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> index, WholeArrayInOut<IdType> comp);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   template <typename InOutPortalType>
@@ -44,8 +44,8 @@ public:
 class IsStar : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> index, WholeArrayIn<IdType> comp, FieldOut<>);
-  typedef _3 ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> index, WholeArrayIn<IdType> comp, FieldOut<>);
+  using ExecutionSignature = _3(_1, _2);
   using InputDomain = _1;
 
   template <typename InOutPortalType>

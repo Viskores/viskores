@@ -37,8 +37,8 @@ namespace wavelets
 class GaussianWorklet2D : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldInOut<>);
-  typedef void ExecutionSignature(_1, WorkIndex);
+  using ControlSignature = void(FieldInOut<>);
+  using ExecutionSignature = void(_1, WorkIndex);
 
   VTKM_EXEC
   GaussianWorklet2D(vtkm::Id dx,
@@ -94,8 +94,8 @@ template <typename T>
 class GaussianWorklet3D : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldInOut<>);
-  typedef void ExecutionSignature(_1, WorkIndex);
+  using ControlSignature = void(FieldInOut<>);
+  using ExecutionSignature = void(_1, WorkIndex);
 
   VTKM_EXEC
   GaussianWorklet3D(vtkm::Id dx, vtkm::Id dy, vtkm::Id dz)

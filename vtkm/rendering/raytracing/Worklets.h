@@ -40,8 +40,8 @@ public:
     : Value(value)
   {
   }
-  typedef void ControlSignature(FieldOut<>);
-  typedef void ExecutionSignature(_1);
+  using ControlSignature = void(FieldOut<>);
+  using ExecutionSignature = void(_1);
   VTKM_EXEC
   void operator()(T& outValue) const { outValue = Value; }
 }; //class MemSet
@@ -57,8 +57,8 @@ public:
     : Offset(offset)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2);
 
   VTKM_EXEC inline void operator()(const FloatType& inValue, FloatType& outValue) const
   {
@@ -79,8 +79,8 @@ public:
     , MaskValue(mask)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldInOut<>, FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn<>, FieldInOut<>, FieldIn<>);
+  using ExecutionSignature = void(_1, _2, _3);
 
   template <typename MaskType>
   VTKM_EXEC inline void operator()(const FloatType& inValue,
@@ -103,8 +103,8 @@ public:
     : Value(value)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename O>
   VTKM_EXEC void operator()(const T& inValue, O& outValue) const
@@ -127,8 +127,8 @@ public:
     : Values(values)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename O>
   VTKM_EXEC void operator()(const T& inValue, O& outValue) const

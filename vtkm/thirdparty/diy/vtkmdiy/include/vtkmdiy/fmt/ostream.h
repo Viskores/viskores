@@ -20,8 +20,8 @@ namespace internal {
 template <class Char>
 class FormatBuf : public std::basic_streambuf<Char> {
  private:
-  typedef typename std::basic_streambuf<Char>::int_type int_type;
-  typedef typename std::basic_streambuf<Char>::traits_type traits_type;
+  using int_type = typename std::basic_streambuf<Char>::int_type;
+  using traits_type = typename std::basic_streambuf<Char>::traits_type;
 
   Buffer<Char> &buffer_;
 
@@ -81,7 +81,7 @@ void format_arg(BasicFormatter<Char, ArgFormatter_> &f,
   output << value;
 
   BasicStringRef<Char> str(&buffer[0], buffer.size());
-  typedef internal::MakeArg< BasicFormatter<Char> > MakeArg;
+  using MakeArg = internal::MakeArg< BasicFormatter<Char> >;
   format_str = f.format(format_str, MakeArg(str));
 }
 

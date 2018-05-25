@@ -123,8 +123,8 @@ private:
 public:
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>, FieldOut<>);
-    typedef _2 ExecutionSignature(_1);
+    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ExecutionSignature = _2(_1);
 
     template <class ValueType>
     VTKM_EXEC ValueType operator()(const ValueType& inValue) const
@@ -135,8 +135,8 @@ public:
 
   struct InplaceFunctorPair : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldInOut<>);
-    typedef void ExecutionSignature(_1);
+    using ControlSignature = void(FieldInOut<>);
+    using ExecutionSignature = void(_1);
 
     template <typename T>
     VTKM_EXEC void operator()(vtkm::Pair<T, T>& value) const
@@ -604,8 +604,8 @@ private:
   // worklets.
   struct GroupVariableInputWorklet : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>);
-    typedef void ExecutionSignature(_1, WorkIndex);
+    using ControlSignature = void(FieldIn<>);
+    using ExecutionSignature = void(_1, WorkIndex);
 
     template <typename InputType>
     VTKM_EXEC void operator()(const InputType& input, vtkm::Id workIndex) const
@@ -659,8 +659,8 @@ private:
   // worklets.
   struct GroupVariableOutputWorklet : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>, FieldOut<>);
-    typedef void ExecutionSignature(_2, WorkIndex);
+    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ExecutionSignature = void(_2, WorkIndex);
 
     template <typename OutputType>
     VTKM_EXEC void operator()(OutputType& output, vtkm::Id workIndex) const

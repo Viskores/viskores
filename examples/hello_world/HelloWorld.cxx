@@ -144,8 +144,8 @@ struct HelloVTKMInterop
     {
     }
 
-    typedef void ControlSignature(FieldIn<>, FieldOut<>, FieldOut<>);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn<>, FieldOut<>, FieldOut<>);
+    using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_EXEC
     void operator()(const vtkm::Vec<T, 3>& input,

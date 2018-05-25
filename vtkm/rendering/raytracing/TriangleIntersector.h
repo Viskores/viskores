@@ -705,12 +705,12 @@ template <typename Device, typename LeafIntesectorType>
 class TriangleIntersector
 {
 public:
-  typedef typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 4>> Float4ArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 2>> Int2Handle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> Int4Handle;
-  typedef typename Float4ArrayHandle::ExecutionTypes<Device>::PortalConst Float4ArrayPortal;
-  typedef typename Int2Handle::ExecutionTypes<Device>::PortalConst Int2ArrayPortal;
-  typedef typename Int4Handle::ExecutionTypes<Device>::PortalConst Int4ArrayPortal;
+  using Float4ArrayHandle = typename vtkm::cont::ArrayHandle<Vec<vtkm::Float32, 4>>;
+  using Int2Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 2>>;
+  using Int4Handle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
+  using Float4ArrayPortal = typename Float4ArrayHandle::ExecutionTypes<Device>::PortalConst;
+  using Int2ArrayPortal = typename Int2Handle::ExecutionTypes<Device>::PortalConst;
+  using Int4ArrayPortal = typename Int4Handle::ExecutionTypes<Device>::PortalConst;
 
   class Intersector : public vtkm::worklet::WorkletMapField
   {
@@ -742,7 +742,7 @@ public:
       , Leafs(bvh.LeafNodes.PrepareForInput(Device()))
     {
     }
-    typedef void ControlSignature(FieldIn<>,
+    using ControlSignature = void(FieldIn<>,
                                   FieldIn<>,
                                   FieldOut<>,
                                   FieldIn<>,
@@ -751,7 +751,7 @@ public:
                                   FieldOut<>,
                                   FieldOut<>,
                                   WholeArrayIn<Vec3RenderingTypes>);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
 
 
     template <typename PointPortalType, typename Precision>
@@ -899,14 +899,14 @@ public:
       , Leafs(bvh.LeafNodes.PrepareForInput(Device()))
     {
     }
-    typedef void ControlSignature(FieldIn<>,
+    using ControlSignature = void(FieldIn<>,
                                   FieldOut<>,
                                   WholeArrayIn<Vec3RenderingTypes>,
                                   FieldOut<>,
                                   FieldIn<>,
                                   FieldIn<>,
                                   FieldIn<>);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
     template <typename PointPortalType>
     VTKM_EXEC void operator()(const vtkm::Vec<Precision, 3>& rayDir,
                               vtkm::Id& hitIndex,
@@ -1031,8 +1031,8 @@ public:
       : Leafs(bvh.LeafNodes.PrepareForInput(Device()))
     {
     }
-    typedef void ControlSignature(FieldInOut<>);
-    typedef void ExecutionSignature(_1);
+    using ControlSignature = void(FieldInOut<>);
+    using ExecutionSignature = void(_1);
     VTKM_EXEC
     void operator()(vtkm::Id& hitIndex) const
     {

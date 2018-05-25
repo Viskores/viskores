@@ -155,7 +155,7 @@ template <>
 class FilterTraits<CrossProduct>
 { //currently the CrossProduct filter only works on vector data.
 public:
-  typedef TypeListTagVecCommon InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagVecCommon;
 };
 }
 } // namespace vtkm::filter

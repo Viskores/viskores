@@ -101,17 +101,17 @@ public:
   {
   };
 
-  typedef void ControlSignature(
-    FieldIn<IdType> vertex,             // (input) index into active vertices
-    FieldIn<PairType> outDegFirstEdge,  // (input) out degree/first edge of vertex
-    FieldIn<IdType> valueIndex,         // (input) index into regular graph
-    WholeArrayIn<IdType> linkMask,      // (input) neighbors of vertex
-    WholeArrayIn<IdType> arcArray,      // (input) chain extrema per vertex
-    WholeArrayIn<IdType> inverseIndex,  // (input) permutation of index
-    WholeArrayOut<IdType> edgeNear,     // (output) low end of edges
-    WholeArrayOut<IdType> edgeFar,      // (output) high end of edges
-    WholeArrayOut<IdType> activeEdges); // (output) active edge list
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+  using ControlSignature =
+    void(FieldIn<IdType> vertex,             // (input) index into active vertices
+         FieldIn<PairType> outDegFirstEdge,  // (input) out degree/first edge of vertex
+         FieldIn<IdType> valueIndex,         // (input) index into regular graph
+         WholeArrayIn<IdType> linkMask,      // (input) neighbors of vertex
+         WholeArrayIn<IdType> arcArray,      // (input) chain extrema per vertex
+         WholeArrayIn<IdType> inverseIndex,  // (input) permutation of index
+         WholeArrayOut<IdType> edgeNear,     // (output) low end of edges
+         WholeArrayOut<IdType> edgeFar,      // (output) high end of edges
+         WholeArrayOut<IdType> activeEdges); // (output) active edge list
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 
   vtkm::Id nRows; // (input) number of rows in 2D

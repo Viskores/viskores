@@ -49,8 +49,8 @@ namespace tetrahedralize
 class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset, FieldOutCell<> connectivityOut);
-  typedef void ExecutionSignature(PointIndices, _2, ThreadIndices);
+  using ControlSignature = void(CellSetIn cellset, FieldOutCell<> connectivityOut);
+  using ExecutionSignature = void(PointIndices, _2, ThreadIndices);
   using InputDomain = _1;
 
   using ScatterType = vtkm::worklet::ScatterUniform<5>;

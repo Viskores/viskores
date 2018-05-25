@@ -51,12 +51,12 @@ static constexpr vtkm::Id NUM_UNIQUE = ARRAY_SIZE / GROUP_SIZE;
 
 struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn keys,
+  using ControlSignature = void(KeysIn keys,
                                 ValuesIn<> keyMirror,
                                 ValuesIn<> indexValues,
                                 ValuesInOut<> valuesToModify,
                                 ValuesOut<> writeKey);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex, ValueCount);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, WorkIndex, ValueCount);
   using InputDomain = _1;
 
   template <typename T,
@@ -98,11 +98,11 @@ struct CheckKeyValuesWorklet : vtkm::worklet::WorkletReduceByKey
 
 struct CheckReducedValuesWorklet : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn,
+  using ControlSignature = void(KeysIn,
                                 ReducedValuesOut<> extractKeys,
                                 ReducedValuesIn<> indexReference,
                                 ReducedValuesInOut<> copyKeyPair);
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
 
   template <typename T>
   VTKM_EXEC void operator()(const T& key,

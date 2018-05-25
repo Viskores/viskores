@@ -45,14 +45,14 @@ public:
   {
   }
 
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 WholeArrayInOut<>,
                                 FieldIn<>,
                                 FieldIn<>,
                                 FieldIn<>,
                                 WholeArrayOut<vtkm::ListTagBase<vtkm::Float32>>,
                                 WholeArrayOut<vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 4>>>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
   template <typename Precision,
             typename ColorPortalType,
             typename DepthBufferPortalType,

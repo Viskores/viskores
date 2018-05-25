@@ -60,10 +60,10 @@ public:
   class Worklet : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<Vec3> points,
                                   FieldOutCell<Vec3> normals);
-    typedef void ExecutionSignature(CellShape, _2, _3);
+    using ExecutionSignature = void(CellShape, _2, _3);
 
     using InputDomain = _1;
 
@@ -176,10 +176,10 @@ public:
   class Worklet : public vtkm::worklet::WorkletMapCellToPoint
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInCell<Vec3> faceNormals,
                                   FieldOutPoint<Vec3> pointNormals);
-    typedef void ExecutionSignature(CellCount, _2, _3);
+    using ExecutionSignature = void(CellCount, _2, _3);
 
     using InputDomain = _1;
 

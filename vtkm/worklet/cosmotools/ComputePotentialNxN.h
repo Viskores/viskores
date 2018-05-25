@@ -79,12 +79,12 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<IdType> partId,       // (input) particle Id
+  using ControlSignature = void(FieldIn<IdType> partId,       // (input) particle Id
                                 WholeArrayIn<TagType> xLoc,   // (input) x location in domain
                                 WholeArrayIn<TagType> yLoc,   // (input) y location in domain
                                 WholeArrayIn<TagType> zLoc,   // (input) z location in domain
                                 FieldOut<TagType> potential); // (output) bin ID
-  typedef _5 ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = _5(_1, _2, _3, _4);
   using InputDomain = _1;
 
   vtkm::Id nParticles; // Number of particles in halo

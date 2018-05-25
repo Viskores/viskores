@@ -31,13 +31,9 @@
 
 struct ExampleFieldWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  using ControlSignature =
+    void(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>, FieldOut<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
   template <typename T, typename U, typename V>
   VTKM_EXEC void operator()(const vtkm::Vec<T, 3>& vec,

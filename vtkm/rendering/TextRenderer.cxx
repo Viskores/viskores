@@ -38,12 +38,9 @@ struct RenderBitmapFont : public vtkm::worklet::WorkletMapField
   using DepthBufferType = vtkm::rendering::Canvas::DepthBufferType;
   using FontTextureType = vtkm::rendering::Canvas::FontTextureType;
 
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                ExecObject,
-                                WholeArrayInOut<>,
-                                WholeArrayInOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+  using ControlSignature =
+    void(FieldIn<>, FieldIn<>, ExecObject, WholeArrayInOut<>, WholeArrayInOut<>);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
   VTKM_CONT

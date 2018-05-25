@@ -56,9 +56,9 @@ enum ExtensionDirection
 class ExtensionWorklet3D : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension
                                 WholeArrayIn<ScalarAll>); // signal
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -846,11 +846,11 @@ template <typename DeviceTag>
 class ForwardTransform3DLeftRight : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,   // left extension
+  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left extension
                                 WholeArrayIn<ScalarAll>,   // signal
                                 WholeArrayIn<ScalarAll>,   // right extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _4;
 
   ForwardTransform3DLeftRight(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
@@ -1000,11 +1000,11 @@ template <typename DeviceTag>
 class ForwardTransform3DTopDown : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,   // left extension
+  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left extension
                                 WholeArrayIn<ScalarAll>,   // signal
                                 WholeArrayIn<ScalarAll>,   // right extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _4;
 
   ForwardTransform3DTopDown(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
@@ -1154,11 +1154,11 @@ template <typename DeviceTag>
 class ForwardTransform3DFrontBack : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,   // left extension
+  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left extension
                                 WholeArrayIn<ScalarAll>,   // signal
                                 WholeArrayIn<ScalarAll>,   // right extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _4;
 
   ForwardTransform3DFrontBack(const vtkm::cont::ArrayHandle<vtkm::Float64>& loFilter,
@@ -1321,13 +1321,13 @@ template <typename DeviceTag>
 class InverseTransform3DLeftRight : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>, // ext1
+  using ControlSignature = void(WholeArrayIn<ScalarAll>, // ext1
                                 WholeArrayIn<ScalarAll>, // ext2
                                 WholeArrayIn<ScalarAll>, // ext3
                                 WholeArrayIn<ScalarAll>, // ext4
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coefficients
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
   using InputDomain = _6;
 
   // Constructor
@@ -1553,13 +1553,13 @@ template <typename DeviceTag>
 class InverseTransform3DTopDown : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>, // ext1
+  using ControlSignature = void(WholeArrayIn<ScalarAll>, // ext1
                                 WholeArrayIn<ScalarAll>, // ext2
                                 WholeArrayIn<ScalarAll>, // ext3
                                 WholeArrayIn<ScalarAll>, // ext4
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coefficients
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
   using InputDomain = _6;
 
   // Constructor
@@ -1785,13 +1785,13 @@ template <typename DeviceTag>
 class InverseTransform3DFrontBack : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>, // ext1
+  using ControlSignature = void(WholeArrayIn<ScalarAll>, // ext1
                                 WholeArrayIn<ScalarAll>, // ext2
                                 WholeArrayIn<ScalarAll>, // ext3
                                 WholeArrayIn<ScalarAll>, // ext4
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coefficients
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
   using InputDomain = _6;
 
   // Constructor
@@ -2256,9 +2256,9 @@ private:
 class ExtensionWorklet2D : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -2401,11 +2401,11 @@ template <typename DeviceTag>
 class ForwardTransform2D : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,   // left/top extension
+  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // left/top extension
                                 WholeArrayIn<ScalarAll>,   // sigIn
                                 WholeArrayIn<ScalarAll>,   // right/bottom extension
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   using InputDomain = _4;
 
   // Constructor
@@ -2588,13 +2588,13 @@ template <typename DeviceTag>
 class InverseTransform2D : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>, // ext1
+  using ControlSignature = void(WholeArrayIn<ScalarAll>, // ext1
                                 WholeArrayIn<ScalarAll>, // ext2
                                 WholeArrayIn<ScalarAll>, // ext3
                                 WholeArrayIn<ScalarAll>, // ext4
                                 WholeArrayIn<ScalarAll>, // cA+cD (signal)
                                 FieldOut<ScalarAll>);    // outptu coeffs
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
   using InputDomain = _6;
 
   // Constructor
@@ -2896,9 +2896,9 @@ template <typename DeviceTag>
 class ForwardTransform : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,   // sigIn
+  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // sigIn
                                 WholeArrayOut<ScalarAll>); // cA followed by cD
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -2979,10 +2979,10 @@ template <typename DeviceTag>
 class InverseTransformOdd : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,   // Input: coeffs,
+  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // Input: coeffs,
                                                            // cA followed by cD
                                 WholeArrayOut<ScalarAll>); // output
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3068,10 +3068,10 @@ template <typename DeviceTag>
 class InverseTransformEven : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>,   // Input: coeffs,
+  using ControlSignature = void(WholeArrayIn<ScalarAll>,   // Input: coeffs,
                                                            // cA followed by cD
                                 WholeArrayOut<ScalarAll>); // output
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3159,8 +3159,8 @@ private:
 class ThresholdWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldInOut<ScalarAll>); // Thresholding in-place
-  typedef void ExecutionSignature(_1);
+  using ControlSignature = void(FieldInOut<ScalarAll>); // Thresholding in-place
+  using ExecutionSignature = void(_1);
   using InputDomain = _1;
 
   // Constructor
@@ -3188,8 +3188,8 @@ private:
 class SquaredDeviation : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
+  using ExecutionSignature = _2(_1);
   using InputDomain = _1;
 
   // Constructor
@@ -3214,8 +3214,8 @@ private:
 class Differencer : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<ScalarAll>, FieldIn<ScalarAll>, FieldOut<ScalarAll>);
-  typedef _3 ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<ScalarAll>, FieldIn<ScalarAll>, FieldOut<ScalarAll>);
+  using ExecutionSignature = _3(_1, _2);
   using InputDomain = _1;
 
   template <typename ValueType1, typename ValueType2>
@@ -3228,8 +3228,8 @@ public:
 class SquareWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn<ScalarAll>, FieldOut<ScalarAll>);
+  using ExecutionSignature = _2(_1);
   using InputDomain = _1;
 
   template <typename ValueType>
@@ -3242,8 +3242,8 @@ public:
 class CopyWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<ScalarAll>, WholeArrayOut<ScalarAll>);
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ControlSignature = void(WholeArrayIn<ScalarAll>, WholeArrayOut<ScalarAll>);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3266,9 +3266,9 @@ private:
 class LeftSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3294,9 +3294,9 @@ private:
 class LeftSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3322,9 +3322,9 @@ private:
 class LeftASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3350,9 +3350,9 @@ private:
 class LeftASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3378,9 +3378,9 @@ private:
 class RightSYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3406,9 +3406,9 @@ private:
 class RightSYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3434,9 +3434,9 @@ private:
 class RightASYMHExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3462,9 +3462,9 @@ private:
 class RightASYMWExtentionWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayOut<ScalarAll>, // extension part
+  using ControlSignature = void(WholeArrayOut<ScalarAll>, // extension part
                                 WholeArrayIn<ScalarAll>); // signal part
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   using InputDomain = _1;
 
   // Constructor
@@ -3490,8 +3490,8 @@ private:
 class AssignZeroWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayInOut<ScalarAll>);
-  typedef void ExecutionSignature(_1, WorkIndex);
+  using ControlSignature = void(WholeArrayInOut<ScalarAll>);
+  using ExecutionSignature = void(_1, WorkIndex);
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3518,8 +3518,8 @@ private:
 class AssignZero2DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayInOut<ScalarAll>);
-  typedef void ExecutionSignature(_1, WorkIndex);
+  using ControlSignature = void(WholeArrayInOut<ScalarAll>);
+  using ExecutionSignature = void(_1, WorkIndex);
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3566,8 +3566,8 @@ private:
 class AssignZero3DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayInOut<ScalarAll>);
-  typedef void ExecutionSignature(_1, WorkIndex);
+  using ControlSignature = void(WholeArrayInOut<ScalarAll>);
+  using ExecutionSignature = void(_1, WorkIndex);
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3625,9 +3625,9 @@ private:
 class RectangleCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<ScalarAll>,        // Input, small rectangle
+  using ControlSignature = void(FieldIn<ScalarAll>,        // Input, small rectangle
                                 WholeArrayOut<ScalarAll>); // Output, big rectangle
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
 
   // Constructor
   VTKM_EXEC_CONT
@@ -3679,9 +3679,9 @@ private:
 class CubeCopyTo : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<ScalarAll>,        // Input, small cube
+  using ControlSignature = void(FieldIn<ScalarAll>,        // Input, small cube
                                 WholeArrayOut<ScalarAll>); // Output, big cube
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
 
   // Constructor
   VTKM_EXEC_CONT

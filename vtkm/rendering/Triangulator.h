@@ -43,10 +43,10 @@ template <typename Device>
 class Triangulator
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Id> IdArrayHandle;
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>> Vec4ArrayHandle;
-  typedef typename Vec4ArrayHandle::ExecutionTypes<Device>::Portal Vec4ArrayPortalType;
-  typedef typename IdArrayHandle::ExecutionTypes<Device>::PortalConst IdPortalConstType;
+  using IdArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Id>;
+  using Vec4ArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>;
+  using Vec4ArrayPortalType = typename Vec4ArrayHandle::ExecutionTypes<Device>::Portal;
+  using IdPortalConstType = typename IdArrayHandle::ExecutionTypes<Device>::PortalConst;
 
 public:
   template <class T>
@@ -60,8 +60,8 @@ public:
       : Value(value)
     {
     }
-    typedef void ControlSignature(FieldOut<>);
-    typedef void ExecutionSignature(_1);
+    using ControlSignature = void(FieldOut<>);
+    using ExecutionSignature = void(_1);
     VTKM_EXEC
     void operator()(T& outValue) const { outValue = Value; }
   }; //class MemSet
@@ -71,8 +71,8 @@ public:
   public:
     VTKM_CONT
     CountTriangles() {}
-    typedef void ControlSignature(CellSetIn cellset, FieldOut<>);
-    typedef void ExecutionSignature(CellShape, _2);
+    using ControlSignature = void(CellSetIn cellset, FieldOut<>);
+    using ExecutionSignature = void(CellShape, _2);
 
     VTKM_EXEC
     void operator()(vtkm::CellShapeTagGeneric shapeType, vtkm::Id& triangles) const
@@ -113,9 +113,9 @@ public:
     Vec4ArrayPortalType OutputIndices;
 
   public:
-    typedef void ControlSignature(CellSetIn cellset, FieldInTo<>);
-    typedef void ExecutionSignature(FromIndices, _2);
-    //typedef _1 InputDomain;
+    using ControlSignature = void(CellSetIn cellset, FieldInTo<>);
+    using ExecutionSignature = void(FromIndices, _2);
+    //using InputDomain = _1;
     VTKM_CONT
     TrianglulateStructured(vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Id, 4>>& outputIndices)
     {
@@ -222,8 +222,8 @@ public:
   public:
     VTKM_CONT
     IndicesSort() {}
-    typedef void ControlSignature(FieldInOut<>);
-    typedef void ExecutionSignature(_1);
+    using ControlSignature = void(FieldInOut<>);
+    using ExecutionSignature = void(_1);
     VTKM_EXEC
     void operator()(vtkm::Vec<vtkm::Id, 4>& triangleIndices) const
     {
@@ -276,9 +276,9 @@ public:
     VTKM_CONT
     UniqueTriangles() {}
 
-    typedef void ControlSignature(WholeArrayIn<vtkm::ListTagBase<vtkm::Vec<vtkm::Id, 4>>>,
+    using ControlSignature = void(WholeArrayIn<vtkm::ListTagBase<vtkm::Vec<vtkm::Id, 4>>>,
                                   WholeArrayOut<vtkm::ListTagBase<vtkm::UInt8>>);
-    typedef void ExecutionSignature(_1, _2, WorkIndex);
+    using ExecutionSignature = void(_1, _2, WorkIndex);
 
     VTKM_EXEC
     bool IsTwin(const vtkm::Vec<vtkm::Id, 4>& a, const vtkm::Vec<vtkm::Id, 4>& b) const
@@ -314,8 +314,8 @@ public:
     {
       this->OutputIndices = outputIndices.PrepareForOutput(size, Device());
     }
-    typedef void ControlSignature(CellSetIn cellset, FieldInCell<>);
-    typedef void ExecutionSignature(_2, CellShape, PointIndices, WorkIndex);
+    using ControlSignature = void(CellSetIn cellset, FieldInCell<>);
+    using ExecutionSignature = void(_2, CellShape, PointIndices, WorkIndex);
 
     template <typename VecType>
     VTKM_EXEC void operator()(const vtkm::Id& triangleOffset,

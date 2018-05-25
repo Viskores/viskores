@@ -32,8 +32,8 @@ namespace worklet
 class Normal : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<VecAll>, FieldOut<VecAll>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<VecAll>, FieldOut<VecAll>);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename T, typename T2>
   VTKM_EXEC void operator()(const T& inValue, T2& outValue) const
@@ -45,8 +45,8 @@ public:
 class Normalize : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldInOut<VecAll>);
-  typedef void ExecutionSignature(_1);
+  using ControlSignature = void(FieldInOut<VecAll>);
+  using ExecutionSignature = void(_1);
 
   template <typename T>
   VTKM_EXEC void operator()(T& value) const

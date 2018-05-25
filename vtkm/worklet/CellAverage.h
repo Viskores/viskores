@@ -34,10 +34,10 @@ namespace worklet
 class CellAverage : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset,
+  using ControlSignature = void(CellSetIn cellset,
                                 FieldInPoint<> inPoints,
                                 FieldOutCell<> outCells);
-  typedef void ExecutionSignature(PointCount, _2, _3);
+  using ExecutionSignature = void(PointCount, _2, _3);
   using InputDomain = _1;
 
   template <typename PointValueVecType, typename OutType>

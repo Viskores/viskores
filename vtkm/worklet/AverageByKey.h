@@ -43,8 +43,8 @@ struct AverageByKey
 {
   struct AverageWorklet : public vtkm::worklet::WorkletReduceByKey
   {
-    typedef void ControlSignature(KeysIn keys, ValuesIn<> valuesIn, ReducedValuesOut<> averages);
-    typedef _3 ExecutionSignature(_2);
+    using ControlSignature = void(KeysIn keys, ValuesIn<> valuesIn, ReducedValuesOut<> averages);
+    using ExecutionSignature = _3(_2);
     using InputDomain = _1;
 
     template <typename ValuesVecType>
@@ -103,8 +103,8 @@ struct AverageByKey
 
   struct DivideWorklet : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+    using ExecutionSignature = void(_1, _2, _3);
 
     template <class ValueType>
     VTKM_EXEC void operator()(const ValueType& v, const vtkm::Id& count, ValueType& vout) const

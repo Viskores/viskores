@@ -73,10 +73,10 @@ template <typename IntegrationTypeList>
 class CellMeasure : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset,
+  using ControlSignature = void(CellSetIn cellset,
                                 FieldInPoint<Vec3> pointCoords,
                                 FieldOutCell<Scalar> volumesOut);
-  typedef void ExecutionSignature(CellShape, PointCount, _2, _3);
+  using ExecutionSignature = void(CellShape, PointCount, _2, _3);
   using InputDomain = _1;
 
   template <typename CellShape, typename PointCoordVecType, typename OutType>

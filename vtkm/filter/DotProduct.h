@@ -155,7 +155,7 @@ template <>
 class FilterTraits<DotProduct>
 { //currently the DotProduct filter only works on vector data.
 public:
-  typedef TypeListTagVecCommon InputFieldTypeList;
+  using InputFieldTypeList = TypeListTagVecCommon;
 };
 }
 } // namespace vtkm::filter

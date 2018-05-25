@@ -93,14 +93,14 @@ namespace contourtree
 class SaddleAscentTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    FieldIn<IdType> vertexID,          // (input) active vertex
-    FieldIn<IdType> newOutdegree,      // (input) updated updegree
-    FieldIn<IdType> newFirstEdge,      // (input) updated first edge of vertex
-    WholeArrayIn<IdType> activeEdges,  // (input) active edges
-    WholeArrayIn<IdType> firstEdge,    // (input) first edges
-    WholeArrayOut<IdType> edgeSorter); // (output) edge sorter
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  using ControlSignature =
+    void(FieldIn<IdType> vertexID,          // (input) active vertex
+         FieldIn<IdType> newOutdegree,      // (input) updated updegree
+         FieldIn<IdType> newFirstEdge,      // (input) updated first edge of vertex
+         WholeArrayIn<IdType> activeEdges,  // (input) active edges
+         WholeArrayIn<IdType> firstEdge,    // (input) first edges
+         WholeArrayOut<IdType> edgeSorter); // (output) edge sorter
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
   // Constructor

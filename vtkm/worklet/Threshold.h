@@ -54,11 +54,11 @@ public:
   class ThresholdByPointField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<ScalarAll> scalars,
                                   FieldOutCell<BoolType> passFlags);
 
-    typedef _3 ExecutionSignature(_2, PointCount);
+    using ExecutionSignature = _3(_2, PointCount);
 
     VTKM_CONT
     ThresholdByPointField()
@@ -91,11 +91,11 @@ public:
   class ThresholdByCellField : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInTo<ScalarAll> scalars,
                                   FieldOut<BoolType> passFlags);
 
-    typedef _3 ExecutionSignature(_2);
+    using ExecutionSignature = _3(_2);
 
     VTKM_CONT
     ThresholdByCellField()

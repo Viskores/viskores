@@ -145,8 +145,8 @@ public:
   struct ClearArrayMapKernel //: public vtkm::exec::WorkletMapField
   {
 
-    // typedef void ControlSignature(Field(Out));
-    // typedef void ExecutionSignature(_1);
+    // using ControlSignature = void(Field(Out));
+    // using ExecutionSignature = void(_1);
 
     template <typename T>
     VTKM_EXEC void operator()(T& value) const

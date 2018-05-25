@@ -76,7 +76,7 @@ template <typename T>
 class GraftParticles : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
+  using ControlSignature = void(
     FieldIn<IdType> index,             // (input) index into particles
     FieldIn<IdType> partId,            // (input) particle id sorted by bin
     FieldIn<IdType> binId,             // (input) bin id sorted by bin
@@ -86,7 +86,7 @@ public:
     WholeArrayIn<IdType> firstParticleId,  // (input) first particle index vector
     WholeArrayIn<IdType> lastParticleId,   // (input) last particle index vector
     WholeArrayOut<IdType> haloId);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9);
   using InputDomain = _1;
 
   vtkm::Id xNum, yNum, zNum;

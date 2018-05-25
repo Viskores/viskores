@@ -60,10 +60,10 @@ static void displayCall()
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::ColorTable colorTable("inferno");
 
-  typedef vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG> M;
-  typedef vtkm::rendering::CanvasGL C;
-  typedef vtkm::rendering::View3D V3;
-  typedef vtkm::rendering::View2D V2;
+  using M = vtkm::rendering::MapperGL<VTKM_DEFAULT_DEVICE_ADAPTER_TAG>;
+  using C = vtkm::rendering::CanvasGL;
+  using V3 = vtkm::rendering::View3D;
+  using V2 = vtkm::rendering::View2D;
 
   if (which == 0)
     vtkm::rendering::testing::Render<M, C, V3>(

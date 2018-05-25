@@ -101,11 +101,11 @@ vtkm::cont::DataSet Make2DExplicitDataSet()
 
 void RenderTests()
 {
-  typedef vtkm::rendering::MapperWireframer M;
-  typedef vtkm::rendering::CanvasRayTracer C;
-  typedef vtkm::rendering::View3D V3;
-  typedef vtkm::rendering::View2D V2;
-  typedef vtkm::rendering::View1D V1;
+  using M = vtkm::rendering::MapperWireframer;
+  using C = vtkm::rendering::CanvasRayTracer;
+  using V3 = vtkm::rendering::View3D;
+  using V2 = vtkm::rendering::View2D;
+  using V1 = vtkm::rendering::View1D;
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::ColorTable colorTable("samsel fire");

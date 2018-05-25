@@ -54,11 +54,11 @@ VTKM_EXEC_CONT vtkm::Id NNSVerify3D(CoordiVecT qc, CoordiPortalT coordiPortal, C
 class NearestNeighborSearchBruteForce3DWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<> qcIn,
+  using ControlSignature = void(FieldIn<> qcIn,
                                 WholeArrayIn<> treeCoordiIn,
                                 FieldOut<> nnIdOut,
                                 FieldOut<> nnDisOut);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
   VTKM_CONT
   NearestNeighborSearchBruteForce3DWorklet() {}

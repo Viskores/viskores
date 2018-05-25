@@ -50,8 +50,8 @@ public:
     : NumChannels(numChannels)
   {
   }
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, FieldIn<>, WholeArrayOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, WorkIndex);
+  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, FieldIn<>, WholeArrayOut<>);
+  using ExecutionSignature = void(_1, _2, _3, _4, WorkIndex);
   template <typename InBufferPortalType, typename OutBufferPortalType>
   VTKM_EXEC void operator()(const vtkm::UInt8& mask,
                             const InBufferPortalType& inBuffer,
@@ -85,8 +85,8 @@ public:
     : NumChannels(numChannels)
   {
   }
-  typedef void ControlSignature(FieldOut<>, WholeArrayIn<>);
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ControlSignature = void(FieldOut<>, WholeArrayIn<>);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename ValueType, typename PortalType>
   VTKM_EXEC void operator()(ValueType& outValue,
                             const PortalType& source,

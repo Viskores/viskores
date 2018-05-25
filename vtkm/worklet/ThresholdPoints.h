@@ -43,10 +43,10 @@ public:
   class ThresholdPointField : public vtkm::worklet::WorkletMapCellToPoint
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<ScalarAll> scalars,
                                   FieldOutPoint<BoolType> passFlags);
-    typedef _3 ExecutionSignature(_2);
+    using ExecutionSignature = _3(_2);
 
     VTKM_CONT
     ThresholdPointField()

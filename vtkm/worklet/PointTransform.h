@@ -35,8 +35,8 @@ template <typename T>
 class PointTransform : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Vec3>);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Vec3>);
+  using ExecutionSignature = _2(_1);
 
   VTKM_CONT
   PointTransform() {}

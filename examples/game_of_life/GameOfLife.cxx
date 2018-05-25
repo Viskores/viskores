@@ -78,12 +78,12 @@ struct UpdateLifeState : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 {
   using CountingHandle = vtkm::cont::ArrayHandleCounting<vtkm::Id>;
 
-  typedef void ControlSignature(CellSetIn,
+  using ControlSignature = void(CellSetIn,
                                 FieldInNeighborhood<> prevstate,
                                 FieldOut<> state,
                                 FieldOut<> color);
 
-  typedef void ExecutionSignature(_2, _3, _4);
+  using ExecutionSignature = void(_2, _3, _4);
 
   template <typename NeighIn>
   VTKM_EXEC void operator()(const NeighIn& prevstate,

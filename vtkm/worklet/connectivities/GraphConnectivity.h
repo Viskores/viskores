@@ -38,13 +38,13 @@ namespace detail
 class Graft : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> index,
+  using ControlSignature = void(FieldIn<IdType> index,
                                 FieldIn<IdType> start,
                                 FieldIn<IdType> degree,
                                 WholeArrayIn<IdType> ids,
                                 WholeArrayInOut<IdType> comp);
 
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
 
   using InputDomain = _1;
 
