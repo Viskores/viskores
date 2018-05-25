@@ -20,7 +20,6 @@
 
 set(headers
   ArrayManagerExecutionCuda.h
-  ArrayManagerExecutionThrustDevice.h
   CudaAllocator.h
   DeviceAdapterAlgorithmCuda.h
   DeviceAdapterAlgorithmThrust.h
