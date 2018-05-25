@@ -56,66 +56,6 @@ struct DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>
   }
 };
 
-/// CUDA contains its own atomic operations
-///
-template <typename T>
-class DeviceAdapterAtomicArrayImplementation<T, vtkm::cont::DeviceAdapterTagCuda>
-{
-public:
-  VTKM_CONT
-  DeviceAdapterAtomicArrayImplementation(
-    vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> handle)
-    : Portal(handle.PrepareForInPlace(vtkm::cont::DeviceAdapterTagCuda()))
-  {
-  }
-
-  inline __device__ T Add(vtkm::Id index, const T& value) const
-  {
-    T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
-    return vtkmAtomicAdd(lockedValue, value);
-  }
-
-  inline __device__ T CompareAndSwap(vtkm::Id index,
-                                     const vtkm::Int64& newValue,
-                                     const vtkm::Int64& oldValue) const
-  {
-    T* lockedValue = ::thrust::raw_pointer_cast(this->Portal.GetIteratorBegin() + index);
-    return vtkmCompareAndSwap(lockedValue, newValue, oldValue);
-  }
-
-private:
-  using PortalType =
-    typename vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>::template ExecutionTypes<
-      vtkm::cont::DeviceAdapterTagCuda>::Portal;
-  PortalType Portal;
-
-  inline __device__ vtkm::Int64 vtkmAtomicAdd(vtkm::Int64* address, const vtkm::Int64& value) const
-  {
-    return atomicAdd((unsigned long long*)address, (unsigned long long)value);
-  }
-
-  inline __device__ vtkm::Int32 vtkmAtomicAdd(vtkm::Int32* address, const vtkm::Int32& value) const
-  {
-    return atomicAdd(address, value);
-  }
-
-  inline __device__ vtkm::Int32 vtkmCompareAndSwap(vtkm::Int32* address,
-                                                   const vtkm::Int32& newValue,
-                                                   const vtkm::Int32& oldValue) const
-  {
-    return atomicCAS(address, oldValue, newValue);
-  }
-
-  inline __device__ vtkm::Int64 vtkmCompareAndSwap(vtkm::Int64* address,
-                                                   const vtkm::Int64& newValue,
-                                                   const vtkm::Int64& oldValue) const
-  {
-    return atomicCAS((unsigned long long int*)address,
-                     (unsigned long long int)oldValue,
-                     (unsigned long long int)newValue);
-  }
-};
-
 template <>
 class DeviceTaskTypes<vtkm::cont::DeviceAdapterTagCuda>
 {
