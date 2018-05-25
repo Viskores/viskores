@@ -18,7 +18,7 @@
 //  this software.
 //============================================================================
 
-#include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmThrust.h>
+#include <vtkm/cont/cuda/internal/DeviceAdapterAlgorithmCuda.h>
 
 #include <atomic>
 #include <mutex>
@@ -65,11 +65,12 @@ VTKM_CONT_EXPORT vtkm::UInt32 getNumSMs(int dId)
   }
   return numSMs[index];
 }
+}
+} // end namespace cuda::internal
 
 // we use cuda pinned memory to reduce the amount of synchronization
 // and mem copies between the host and device.
-template <>
-char* DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::GetPinnedErrorArray(
+char* DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetPinnedErrorArray(
   vtkm::Id& arraySize,
   char** hostPointer)
 {
@@ -92,8 +93,7 @@ char* DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::GetPinnedE
   return devicePtr;
 }
 
-template <>
-char* DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::SetupErrorBuffer(
+char* DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::SetupErrorBuffer(
   vtkm::exec::cuda::internal::TaskStrided& functor)
 {
   //since the memory is pinned we can access it safely on the host
@@ -111,8 +111,7 @@ char* DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::SetupError
   return hostErrorPtr;
 }
 
-template <>
-void DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(
+void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(
   vtkm::UInt32& grids,
   vtkm::UInt32& blocks,
   vtkm::Id size)
@@ -120,19 +119,18 @@ void DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAnd
   (void)size;
   int deviceId;
   VTKM_CUDA_CALL(cudaGetDevice(&deviceId)); //get deviceid from cuda
-  grids = 32 * getNumSMs(deviceId);
+  grids = 32 * cuda::internal::getNumSMs(deviceId);
   blocks = 128;
 }
 
-template <>
-void DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(
+void DeviceAdapterAlgorithm<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAndBlocks(
   vtkm::UInt32& grids,
   dim3& blocks,
   const dim3& size)
 {
   int deviceId;
   VTKM_CUDA_CALL(cudaGetDevice(&deviceId)); //get deviceid from cuda
-  grids = 32 * getNumSMs(deviceId);
+  grids = 32 * cuda::internal::getNumSMs(deviceId);
 
   if (size.x == 0)
   { //grids that have no x dimension
@@ -154,6 +152,4 @@ void DeviceAdapterAlgorithmThrust<vtkm::cont::DeviceAdapterTagCuda>::GetGridsAnd
   }
 }
 }
-}
-}
-}
+} // end namespace vtkm::cont
