@@ -20,10 +20,9 @@
 
 set(headers
   ArrayManagerExecutionCuda.h
-  ArrayManagerExecutionThrustDevice.h
   CudaAllocator.h
   DeviceAdapterAlgorithmCuda.h
-  DeviceAdapterAlgorithmThrust.h
+  DeviceAdapterAtomicArrayImplementationCuda.h
   DeviceAdapterRuntimeDetectorCuda.h
   DeviceAdapterTagCuda.h
   DeviceAdapterTimerImplementationCuda.h
@@ -49,7 +48,7 @@ endif()
 target_sources(vtkm_cont PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/ArrayManagerExecutionCuda.cu
   ${CMAKE_CURRENT_SOURCE_DIR}/CudaAllocator.cu
-  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmThrust.cu
+  ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterAlgorithmCuda.cu
   ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterRuntimeDetectorCuda.cu
   ${CMAKE_CURRENT_SOURCE_DIR}/DeviceAdapterTimerImplementationCuda.cu
   ${CMAKE_CURRENT_SOURCE_DIR}/ExecutionArrayInterfaceBasicCuda.cu

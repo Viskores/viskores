@@ -30,6 +30,7 @@ set(headers
   ArrayTransfer.h
   ConnectivityExplicitInternals.h
   DeviceAdapterAlgorithmGeneral.h
+  DeviceAdapterAtomicArrayImplementation.h
   DeviceAdapterDefaultSelection.h
   DeviceAdapterError.h
   DeviceAdapterListHelpers.h
