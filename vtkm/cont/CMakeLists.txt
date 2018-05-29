@@ -114,6 +114,9 @@ set(sources
   BoundsGlobalCompute.cxx
   CellSet.cxx
   CellSetStructured.cxx
+  DataSetBuilderExplicit.cxx
+  DataSetBuilderRectilinear.cxx
+  DataSetBuilderUniform.cxx
   DynamicArrayHandle.cxx
   EnvironmentTracker.cxx
   Field.cxx
