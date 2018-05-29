@@ -46,6 +46,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <ctime>
+#include <random>
 #include <utility>
 #include <vector>
 
@@ -599,10 +601,16 @@ private:
       std::cout << "Checking results." << std::endl;
       manager.RetrieveOutputData(&storage);
 
-      for (vtkm::Id index = 0; index < size; index += 100)
+      //Rather than testing for correctness every value of a large array,
+      // we randomly test a subset of that array.
+      std::default_random_engine generator(static_cast<unsigned int>(std::time(nullptr)));
+      std::uniform_int_distribution<vtkm::Id> distribution(0, size - 1);
+      vtkm::Id numberOfSamples = size / 100;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        vtkm::Id value = storage.GetPortalConst().Get(index);
-        VTKM_TEST_ASSERT(value == index + OFFSET, "Got bad value for scheduled kernels.");
+        vtkm::Id randomIndex = distribution(generator);
+        vtkm::Id value = storage.GetPortalConst().Get(randomIndex);
+        VTKM_TEST_ASSERT(value == randomIndex + OFFSET, "Got bad value for scheduled kernels.");
       }
     } //release memory
 
@@ -1839,6 +1847,7 @@ private:
 #define COPY_ARRAY_SIZE 10000
 
     std::vector<T> testData(COPY_ARRAY_SIZE);
+    std::default_random_engine generator(static_cast<unsigned int>(std::time(nullptr)));
 
     vtkm::Id index = 0;
     for (std::size_t i = 0; i < COPY_ARRAY_SIZE; ++i, ++index)
@@ -1855,12 +1864,16 @@ private:
       Algorithm::Copy(input, temp);
       VTKM_TEST_ASSERT(temp.GetNumberOfValues() == COPY_ARRAY_SIZE, "Copy Needs to Resize Array");
 
-      typename std::vector<T>::const_iterator c = testData.begin();
       const auto& portal = temp.GetPortalConstControl();
-      for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
+
+      std::uniform_int_distribution<vtkm::Id> distribution(0, COPY_ARRAY_SIZE - 1);
+      vtkm::Id numberOfSamples = COPY_ARRAY_SIZE / 50;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        T value = portal.Get(i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (Copy)");
+        vtkm::Id randomIndex = distribution(generator);
+        T value = portal.Get(randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (Copy)");
       }
     }
 
@@ -1918,11 +1931,14 @@ private:
       VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE - 100),
                        "CopySubRange needs to shorten input range");
 
-      typename std::vector<T>::const_iterator c = testData.begin() + 100;
-      for (vtkm::Id i = 0; i < (COPY_ARRAY_SIZE - 100); i += 100, c += 100)
+      std::uniform_int_distribution<vtkm::Id> distribution(0, COPY_ARRAY_SIZE - 100 - 1);
+      vtkm::Id numberOfSamples = (COPY_ARRAY_SIZE - 100) / 100;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        T value = output.GetPortalConstControl().Get(i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 2)");
+        vtkm::Id randomIndex = distribution(generator);
+        T value = output.GetPortalConstControl().Get(randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex) + 100],
+                         "Got bad value (CopySubRange 2)");
       }
     }
 
@@ -1935,13 +1951,17 @@ private:
       VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE * 2),
                        "CopySubRange needs to not resize array");
 
-      typename std::vector<T>::const_iterator c = testData.begin();
-      for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
+      std::uniform_int_distribution<vtkm::Id> distribution(0, COPY_ARRAY_SIZE - 1);
+      vtkm::Id numberOfSamples = COPY_ARRAY_SIZE / 50;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        T value = output.GetPortalConstControl().Get(i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 5)");
-        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 5)");
+        vtkm::Id randomIndex = distribution(generator);
+        T value = output.GetPortalConstControl().Get(randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (CopySubRange 5)");
+        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (CopySubRange 5)");
       }
     }
 
@@ -1954,13 +1974,17 @@ private:
       Algorithm::CopySubRange(input, 0, COPY_ARRAY_SIZE, output, COPY_ARRAY_SIZE);
       VTKM_TEST_ASSERT(output.GetNumberOfValues() == (COPY_ARRAY_SIZE * 2),
                        "CopySubRange needs too resize Array");
-      typename std::vector<T>::const_iterator c = testData.begin();
-      for (vtkm::Id i = 0; i < COPY_ARRAY_SIZE; i += 50, c += 50)
+      std::uniform_int_distribution<vtkm::Id> distribution(0, COPY_ARRAY_SIZE - 1);
+      vtkm::Id numberOfSamples = COPY_ARRAY_SIZE / 50;
+      for (vtkm::Id i = 0; i < numberOfSamples; ++i)
       {
-        T value = output.GetPortalConstControl().Get(i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 6)");
-        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + i);
-        VTKM_TEST_ASSERT(value == *c, "Got bad value (CopySubRange 6)");
+        vtkm::Id randomIndex = distribution(generator);
+        T value = output.GetPortalConstControl().Get(randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (CopySubRange 6)");
+        value = output.GetPortalConstControl().Get(COPY_ARRAY_SIZE + randomIndex);
+        VTKM_TEST_ASSERT(value == testData[static_cast<size_t>(randomIndex)],
+                         "Got bad value (CopySubRange 6)");
       }
     }
 
