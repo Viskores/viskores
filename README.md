@@ -65,6 +65,7 @@ VTK-m Requires:
   + [CMake](http://www.cmake.org/download/)
       + CMake 3.3+ (for any build)
       + CMake 3.9+ (for CUDA build)
+      + CMake 3.11+ (for Visual Studio generator)
 
 Optional dependencies are:
 
@@ -90,6 +91,21 @@ Optional dependencies are:
   + Headless Rendering
       + [OS Mesa](https://www.mesa3d.org/osmesa.html)
       + EGL Driver
+
+VTK-m has been tested on the following configurations:
+  + On Linux 
+      + GCC 4.8.5, 5.4.0, 6.4.0, Clang 3.8.0
+      + CMake 3.9.2, 3.9.3, 3.10.3
+      + CUDA 8.0.61, 9.1.85
+      + TBB 4.4 U2, 2017 U7
+  + On Windows
+      + Visual Studio 2015, 2017
+      + CMake 3.3, 3.11.1
+      + CUDA 9.1.85
+      + TBB 2017 U3, 2018 U2
+  + On MacOS
+      + AppleClang 6.0
+      + TBB 2017 U6
 
 
 ## Building ##
@@ -124,14 +140,17 @@ Marching Cubes algorithm on it, and render the results to an image:
 
 ```cpp
 vtkm::io::reader::VTKDataSetReader reader("path/to/vtk_image_file");
-inputData = reader.ReadDataSet();
+vtkm::cont::DataSet inputData = reader.ReadDataSet();
+std::string fieldName = "scalars";
 
-vtkm::Float64 isovalue = 100.0f;
-std::string fieldName = "pointvar";
+vtkm::Range range;
+inputData.GetPointField(fieldName).GetRange(&range);
+vtkm::Float64 isovalue = range.Center();
 
 // Create an isosurface filter
 vtkm::filter::MarchingCubes filter;
 filter.SetIsoValue(0, isovalue);
+filter.SetActiveField(fieldName);
 vtkm::cont::DataSet outputData = filter.Execute(inputData);
 
 // compute the bounds and extends of the input data
