@@ -168,8 +168,8 @@ struct KernelSplatterFilterUniformGrid
   //-----------------------------------------------------------------------
   struct zero_voxel : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>, FieldOut<>);
-    typedef void ExecutionSignature(_1, WorkIndex, _2);
+    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ExecutionSignature = void(_1, WorkIndex, _2);
     //
     VTKM_CONT
     zero_voxel() {}
@@ -198,7 +198,7 @@ struct KernelSplatterFilterUniformGrid
     Kernel kernel_;
 
   public:
-    typedef void ControlSignature(FieldIn<>,
+    using ControlSignature = void(FieldIn<>,
                                   FieldIn<>,
                                   FieldIn<>,
                                   FieldIn<>,
@@ -206,7 +206,7 @@ struct KernelSplatterFilterUniformGrid
                                   FieldOut<>,
                                   FieldOut<>,
                                   FieldOut<>);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
     GetFootprint(const vtkm::Vec<vtkm::Float64, 3>& o,
@@ -264,8 +264,8 @@ struct KernelSplatterFilterUniformGrid
   class ComputeLocalNeighborId : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
-    typedef void ExecutionSignature(_1, _2, WorkIndex, _3);
+    using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+    using ExecutionSignature = void(_1, _2, WorkIndex, _3);
 
     VTKM_CONT
     ComputeLocalNeighborId() {}
@@ -296,7 +296,7 @@ struct KernelSplatterFilterUniformGrid
     Kernel kernel;
 
   public:
-    typedef void ControlSignature(FieldIn<>,
+    using ControlSignature = void(FieldIn<>,
                                   FieldIn<>,
                                   FieldIn<>,
                                   FieldIn<>,
@@ -304,7 +304,7 @@ struct KernelSplatterFilterUniformGrid
                                   FieldIn<>,
                                   FieldOut<>,
                                   FieldOut<>);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
     GetSplatValue(const vtkm::Vec<vtkm::Float64, 3>& orig,
@@ -361,8 +361,8 @@ struct KernelSplatterFilterUniformGrid
   class UpdateVoxelSplats : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, WholeArrayOut<Scalar>);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn<>, FieldIn<>, WholeArrayOut<Scalar>);
+    using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
     UpdateVoxelSplats() {}

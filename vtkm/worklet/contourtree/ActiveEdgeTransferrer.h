@@ -98,16 +98,16 @@ template <typename DeviceAdapter>
 class ActiveEdgeTransferrer : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    FieldIn<IdType> vertexID,              // (input) active vertex ID
-    FieldIn<IdType> newPosition,           // (input) new position of edge in array
-    FieldIn<IdType> newOutdegree,          // (input) the new updegree computed
-    WholeArrayInOut<IdType> firstEdge,     // (i/o) first edge of each active vertex
-    WholeArrayInOut<IdType> outdegree,     // (i/o) existing vertex updegrees
-    WholeArrayInOut<IdType> chainExtremum, // (i/o) chain extremum for vertices
-    WholeArrayInOut<IdType> edgeFar,       // (i/o) high end of each edge
-    WholeArrayOut<IdType> newActiveEdges); // (output) new active edge list
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+  using ControlSignature =
+    void(FieldIn<IdType> vertexID,              // (input) active vertex ID
+         FieldIn<IdType> newPosition,           // (input) new position of edge in array
+         FieldIn<IdType> newOutdegree,          // (input) the new updegree computed
+         WholeArrayInOut<IdType> firstEdge,     // (i/o) first edge of each active vertex
+         WholeArrayInOut<IdType> outdegree,     // (i/o) existing vertex updegrees
+         WholeArrayInOut<IdType> chainExtremum, // (i/o) chain extremum for vertices
+         WholeArrayInOut<IdType> edgeFar,       // (i/o) high end of each edge
+         WholeArrayOut<IdType> newActiveEdges); // (output) new active edge list
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
   using InputDomain = _1;
 
   // Passed in constructor because of argument limit on operator

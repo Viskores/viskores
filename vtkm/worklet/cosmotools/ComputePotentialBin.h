@@ -79,14 +79,14 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<IdType> binId,         // (input) bin Id
+  using ControlSignature = void(FieldIn<IdType> binId,         // (input) bin Id
                                 WholeArrayIn<IdType> binCount, // (input) particles per bin
                                 WholeArrayIn<IdType> binX,     // (input) x index in bin
                                 WholeArrayIn<IdType> binY,     // (input) y index in bin
                                 WholeArrayIn<IdType> binZ,     // (input) z index in bin
                                 FieldInOut<TagType> bestPot,   // (output) best potential estimate
                                 FieldInOut<TagType> worstPot); // (output) worst potential estimate
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
   using InputDomain = _1;
 
   vtkm::Id nBins; // Number of bins

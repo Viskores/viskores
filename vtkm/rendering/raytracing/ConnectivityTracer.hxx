@@ -145,8 +145,8 @@ public:
     : Offset(offset)
   {
   }
-  typedef void ControlSignature(FieldIn<>, FieldInOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, FieldInOut<>);
+  using ExecutionSignature = void(_1, _2);
 
   VTKM_EXEC inline void operator()(const vtkm::UInt8& status, FloatType& distance) const
   {
@@ -169,7 +169,7 @@ public:
   {
   }
 
-  typedef void ControlSignature(FieldInOut<>,
+  using ControlSignature = void(FieldInOut<>,
                                 WholeArrayIn<>,
                                 FieldIn<>,
                                 FieldInOut<>,
@@ -177,7 +177,7 @@ public:
                                 FieldInOut<>,
                                 FieldInOut<>,
                                 FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8);
 
   template <typename PointPortalType>
   VTKM_EXEC inline void operator()(vtkm::Id& currentCell,
@@ -266,8 +266,8 @@ template <vtkm::Int32 CellType, typename FloatType, typename Device, typename Me
 class RayBumper : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<FloatType> FloatTypeHandle;
-  typedef typename FloatTypeHandle::template ExecutionTypes<Device>::Portal FloatTypePortal;
+  using FloatTypeHandle = typename vtkm::cont::ArrayHandle<FloatType>;
+  using FloatTypePortal = typename FloatTypeHandle::template ExecutionTypes<Device>::Portal;
   FloatTypePortal DirectionsX;
   FloatTypePortal DirectionsY;
   FloatTypePortal DirectionsZ;
@@ -290,14 +290,14 @@ public:
   }
 
 
-  typedef void ControlSignature(FieldInOut<>,
+  using ControlSignature = void(FieldInOut<>,
                                 WholeArrayIn<>,
                                 FieldInOut<>,
                                 FieldInOut<>,
                                 FieldInOut<>,
                                 FieldInOut<>,
                                 FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex, _6, _7);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, WorkIndex, _6, _7);
 
   template <typename PointPortalType>
   VTKM_EXEC inline void operator()(vtkm::Id& currentCell,
@@ -405,12 +405,12 @@ public:
   VTKM_CONT
   AddPathLengths() {}
 
-  typedef void ControlSignature(FieldIn<RayStatusType>,            // ray status
+  using ControlSignature = void(FieldIn<RayStatusType>,            // ray status
                                 FieldIn<ScalarRenderingTypes>,     // cell enter distance
                                 FieldIn<ScalarRenderingTypes>,     // cell exit distance
                                 FieldInOut<ScalarRenderingTypes>); // ray absorption data
 
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
 
   VTKM_EXEC inline void operator()(const vtkm::UInt8& rayStatus,
                                    const FloatType& enterDistance,
@@ -445,7 +445,7 @@ public:
   {
   }
 
-  typedef void ControlSignature(FieldIn<RayStatusType>,                // ray status
+  using ControlSignature = void(FieldIn<RayStatusType>,                // ray status
                                 FieldIn<ScalarRenderingTypes>,         // cell enter distance
                                 FieldIn<ScalarRenderingTypes>,         // cell exit distance
                                 FieldInOut<ScalarRenderingTypes>,      // current distance
@@ -453,7 +453,7 @@ public:
                                 WholeArrayInOut<ScalarRenderingTypes>, // ray absorption data
                                 FieldIn<IdType>);                      // current cell
 
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, WorkIndex);
 
   template <typename CellDataPortalType, typename RayDataPortalType>
   VTKM_EXEC inline void operator()(const vtkm::UInt8& rayStatus,
@@ -507,7 +507,7 @@ public:
   {
   }
 
-  typedef void ControlSignature(FieldIn<>,                          // ray status
+  using ControlSignature = void(FieldIn<>,                          // ray status
                                 FieldIn<>,                          // cell enter distance
                                 FieldIn<>,                          // cell exit distance
                                 FieldInOut<>,                       // current distance
@@ -517,7 +517,7 @@ public:
                                 WholeArrayInOut<>,                  // ray emission data
                                 FieldIn<>);                         // current cell
 
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, _9, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, _9, WorkIndex);
 
   template <typename CellAbsPortalType, typename CellEmisPortalType, typename RayDataPortalType>
   VTKM_EXEC inline void operator()(const vtkm::UInt8& rayStatus,
@@ -604,8 +604,8 @@ public:
     , BGColor(bgcolor)
   {
   }
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, WholeArrayIn<>);
+  using ExecutionSignature = void(_1, _2);
 
 
   VTKM_EXEC inline bool IsBGColor(const vtkm::Vec<vtkm::Float32, 4> color) const
@@ -673,10 +673,10 @@ template <vtkm::Int32 CellType, typename FloatType, typename Device, typename Me
 class SampleCellAssocCells : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorHandle;
-  typedef typename vtkm::cont::ArrayHandle<FloatType> ColorBuffer;
-  typedef typename ColorHandle::ExecutionTypes<Device>::PortalConst ColorConstPortal;
-  typedef typename ColorBuffer::template ExecutionTypes<Device>::Portal ColorPortal;
+  using ColorHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using ColorBuffer = typename vtkm::cont::ArrayHandle<FloatType>;
+  using ColorConstPortal = typename ColorHandle::ExecutionTypes<Device>::PortalConst;
+  using ColorPortal = typename ColorBuffer::template ExecutionTypes<Device>::Portal;
 
   CellSampler<CellType> Sampler;
   FloatType SampleDistance;
@@ -706,13 +706,13 @@ public:
   }
 
 
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 WholeArrayIn<ScalarRenderingTypes>,
                                 FieldIn<>,
                                 FieldIn<>,
                                 FieldInOut<>,
                                 FieldInOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, WorkIndex);
 
   template <typename ScalarPortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& currentCell,
@@ -791,10 +791,10 @@ template <vtkm::Int32 CellType, typename FloatType, typename Device, typename Me
 class SampleCellAssocPoints : public vtkm::worklet::WorkletMapField
 {
 private:
-  typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorHandle;
-  typedef typename vtkm::cont::ArrayHandle<FloatType> ColorBuffer;
-  typedef typename ColorHandle::ExecutionTypes<Device>::PortalConst ColorConstPortal;
-  typedef typename ColorBuffer::template ExecutionTypes<Device>::Portal ColorPortal;
+  using ColorHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+  using ColorBuffer = typename vtkm::cont::ArrayHandle<FloatType>;
+  using ColorConstPortal = typename ColorHandle::ExecutionTypes<Device>::PortalConst;
+  using ColorPortal = typename ColorBuffer::template ExecutionTypes<Device>::Portal;
 
   CellSampler<CellType> Sampler;
   FloatType SampleDistance;
@@ -824,7 +824,7 @@ public:
   }
 
 
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 WholeArrayIn<Vec3>,
                                 WholeArrayIn<ScalarRenderingTypes>,
                                 FieldIn<>,
@@ -833,7 +833,7 @@ public:
                                 FieldIn<>,
                                 FieldInOut<>,
                                 FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7, _8, WorkIndex, _9);
 
   template <typename PointPortalType, typename ScalarPortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& currentCell,

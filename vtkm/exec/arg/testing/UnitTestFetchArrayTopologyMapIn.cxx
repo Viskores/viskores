@@ -105,12 +105,11 @@ struct FetchArrayTopologyMapInTests
     std::cout << "Trying ArrayTopologyMapIn fetch on parameter " << ParamIndex << " with type "
               << vtkm::testing::TypeName<T>::Name() << std::endl;
 
-    typedef vtkm::internal::FunctionInterface<void(vtkm::internal::NullType,
-                                                   vtkm::internal::NullType,
-                                                   vtkm::internal::NullType,
-                                                   vtkm::internal::NullType,
-                                                   vtkm::internal::NullType)>
-      BaseFunctionInterface;
+    using BaseFunctionInterface = vtkm::internal::FunctionInterface<void(vtkm::internal::NullType,
+                                                                         vtkm::internal::NullType,
+                                                                         vtkm::internal::NullType,
+                                                                         vtkm::internal::NullType,
+                                                                         vtkm::internal::NullType)>;
 
     vtkm::internal::ConnectivityStructuredInternals<3> connectivityInternals;
     connectivityInternals.SetPointDimensions(vtkm::Id3(2, 2, 2));
@@ -181,12 +180,11 @@ void TryStructuredPointCoordinates(
                                            NumDimensions>& connectivity,
   const vtkm::internal::ArrayPortalUniformPointCoordinates& coordinates)
 {
-  typedef vtkm::internal::FunctionInterface<void(vtkm::internal::NullType,
-                                                 vtkm::internal::NullType,
-                                                 vtkm::internal::NullType,
-                                                 vtkm::internal::NullType,
-                                                 vtkm::internal::NullType)>
-    BaseFunctionInterface;
+  using BaseFunctionInterface = vtkm::internal::FunctionInterface<void(vtkm::internal::NullType,
+                                                                       vtkm::internal::NullType,
+                                                                       vtkm::internal::NullType,
+                                                                       vtkm::internal::NullType,
+                                                                       vtkm::internal::NullType)>;
 
   // Try with topology in argument 1 and point coordinates in argument 2
   TryStructuredPointCoordinatesInvocation<NumDimensions, 2>(vtkm::internal::make_Invocation<1>(

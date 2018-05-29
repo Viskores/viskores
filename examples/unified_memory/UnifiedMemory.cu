@@ -39,8 +39,8 @@ namespace
 class TangleField : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<IdType> vertexId, FieldOut<Scalar> v);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   const vtkm::Id xdim, ydim, zdim;
@@ -126,8 +126,8 @@ namespace worklet
 class SineWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef _2 ExecutionSignature(_1, WorkIndex);
+  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ExecutionSignature = _2(_1, WorkIndex);
 
   VTKM_EXEC
   vtkm::Float32 operator()(vtkm::Int64 x, vtkm::Id&) const

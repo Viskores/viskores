@@ -36,10 +36,10 @@ namespace
 class Worklet : public vtkm::worklet::WorkletMapCellToPoint
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset,
+  using ControlSignature = void(CellSetIn cellset,
                                 FieldOutPoint<IdType> outPointId,
                                 FieldOutPoint<IdComponentType> outVisit);
-  typedef void ExecutionSignature(InputIndex, VisitIndex, _2, _3);
+  using ExecutionSignature = void(InputIndex, VisitIndex, _2, _3);
   using InputDomain = _1;
 
   using ScatterType = vtkm::worklet::ScatterPermutation<>;

@@ -41,12 +41,12 @@ template <typename T>
 struct StructuredPointGradient : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 {
 
-  typedef void ControlSignature(CellSetIn,
+  using ControlSignature = void(CellSetIn,
                                 FieldInNeighborhood<Vec3> points,
                                 FieldInNeighborhood<StructuredPointGradientInType<T>>,
                                 GradientOutputs outputFields);
 
-  typedef void ExecutionSignature(OnBoundary, _2, _3, _4);
+  using ExecutionSignature = void(OnBoundary, _2, _3, _4);
 
   using InputDomain = _1;
 

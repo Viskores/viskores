@@ -51,8 +51,8 @@ public:
   ///
   struct GeneratePointMask : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<> pointIndices, WholeArrayInOut<> pointMask);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<> pointIndices, WholeArrayInOut<> pointMask);
+    using ExecutionSignature = void(_1, _2);
 
     template <typename PointMaskPortalType>
     VTKM_EXEC void operator()(vtkm::Id pointIndex, const PointMaskPortalType& pointMask) const
@@ -68,10 +68,10 @@ public:
   ///
   struct TransformPointIndices : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<IdType> pointIndex,
+    using ControlSignature = void(FieldIn<IdType> pointIndex,
                                   WholeArrayIn<IdType> indexMap,
                                   FieldOut<IdType> mappedPoints);
-    typedef _3 ExecutionSignature(_1, _2);
+    using ExecutionSignature = _3(_1, _2);
 
     template <typename IndexMapPortalType>
     VTKM_EXEC vtkm::Id operator()(vtkm::Id pointIndex, const IndexMapPortalType& indexPortal) const

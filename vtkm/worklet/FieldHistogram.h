@@ -67,8 +67,8 @@ public:
   class SetHistogramBin : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> value, FieldOut<> binIndex);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<> value, FieldOut<> binIndex);
+    using ExecutionSignature = void(_1, _2);
     using InputDomain = _1;
 
     vtkm::Id numberOfBins;
@@ -98,10 +98,10 @@ public:
   class AdjacentDifference : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> inputIndex,
+    using ControlSignature = void(FieldIn<IdType> inputIndex,
                                   WholeArrayIn<IdType> counts,
                                   FieldOut<IdType> outputCount);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ExecutionSignature = void(_1, _2, _3);
     using InputDomain = _1;
 
     template <typename WholeArrayType>

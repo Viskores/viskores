@@ -47,8 +47,8 @@ namespace implicit_function_detail
 class EvaluateImplicitFunction : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Vec3>, FieldOut<Scalar>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<Vec3>, FieldOut<Scalar>);
+  using ExecutionSignature = void(_1, _2);
 
   EvaluateImplicitFunction(const vtkm::ImplicitFunction* function)
     : Function(function)

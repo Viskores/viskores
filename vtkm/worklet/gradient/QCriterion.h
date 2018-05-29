@@ -37,8 +37,8 @@ struct QCriterionTypes : vtkm::ListTagBase<vtkm::Vec<vtkm::Vec<vtkm::Float32, 3>
 
 struct QCriterion : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<QCriterionTypes> input, FieldOut<Scalar> output);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<QCriterionTypes> input, FieldOut<Scalar> output);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   template <typename InputType, typename OutputType>

@@ -58,10 +58,10 @@ struct ExternalFaces
   class NumExternalFacesPerStructuredCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn inCellSet,
+    using ControlSignature = void(CellSetIn inCellSet,
                                   FieldOut<> numFacesInCell,
                                   FieldInPoint<Vec3> pointCoordinates);
-    typedef _2 ExecutionSignature(CellShape, _3);
+    using ExecutionSignature = _2(CellShape, _3);
     using InputDomain = _1;
 
     VTKM_CONT
@@ -130,13 +130,13 @@ struct ExternalFaces
   class BuildConnectivityStructured : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn inCellSet,
+    using ControlSignature = void(CellSetIn inCellSet,
                                   WholeCellSetIn<> inputCell,
                                   FieldOut<> faceShapes,
                                   FieldOut<> facePointCount,
                                   FieldOut<> faceConnectivity,
                                   FieldInPoint<Vec3> pointCoordinates);
-    typedef void ExecutionSignature(CellShape, VisitIndex, InputIndex, _2, _3, _4, _5, _6);
+    using ExecutionSignature = void(CellShape, VisitIndex, InputIndex, _2, _3, _4, _5, _6);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -321,8 +321,8 @@ struct ExternalFaces
   class NumFacesPerCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> numFacesInCell);
-    typedef _2 ExecutionSignature(CellShape);
+    using ControlSignature = void(CellSetIn inCellSet, FieldOut<> numFacesInCell);
+    using ExecutionSignature = _2(CellShape);
     using InputDomain = _1;
 
     template <typename CellShapeTag>
@@ -336,11 +336,11 @@ struct ExternalFaces
   class FaceHash : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldOut<> faceHashes,
                                   FieldOut<> originCells,
                                   FieldOut<> originFaces);
-    typedef void ExecutionSignature(_2, _3, _4, CellShape, FromIndices, InputIndex, VisitIndex);
+    using ExecutionSignature = void(_2, _3, _4, CellShape, FromIndices, InputIndex, VisitIndex);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -368,12 +368,12 @@ struct ExternalFaces
   class FaceCounts : public vtkm::worklet::WorkletReduceByKey
   {
   public:
-    typedef void ControlSignature(KeysIn keys,
+    using ControlSignature = void(KeysIn keys,
                                   WholeCellSetIn<> inputCells,
                                   ValuesIn<> originCells,
                                   ValuesIn<> originFaces,
                                   ReducedValuesOut<> numOutputCells);
-    typedef _5 ExecutionSignature(_2, _3, _4);
+    using ExecutionSignature = _5(_2, _3, _4);
     using InputDomain = _1;
 
     template <typename CellSetType, typename OriginCellsType, typename OriginFacesType>
@@ -485,12 +485,12 @@ public:
   class NumPointsPerFace : public vtkm::worklet::WorkletReduceByKey
   {
   public:
-    typedef void ControlSignature(KeysIn keys,
+    using ControlSignature = void(KeysIn keys,
                                   WholeCellSetIn<> inputCells,
                                   ValuesIn<> originCells,
                                   ValuesIn<> originFaces,
                                   ReducedValuesOut<> numPointsInFace);
-    typedef _5 ExecutionSignature(_2, _3, _4, VisitIndex);
+    using ExecutionSignature = _5(_2, _3, _4, VisitIndex);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -520,14 +520,14 @@ public:
   class BuildConnectivity : public vtkm::worklet::WorkletReduceByKey
   {
   public:
-    typedef void ControlSignature(KeysIn keys,
+    using ControlSignature = void(KeysIn keys,
                                   WholeCellSetIn<> inputCells,
                                   ValuesIn<> originCells,
                                   ValuesIn<> originFaces,
                                   ReducedValuesOut<> shapesOut,
                                   ReducedValuesOut<> connectivityOut,
                                   ReducedValuesOut<> cellIdMapOut);
-    typedef void ExecutionSignature(_2, _3, _4, VisitIndex, _5, _6, _7);
+    using ExecutionSignature = void(_2, _3, _4, VisitIndex, _5, _6, _7);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;
@@ -571,8 +571,8 @@ public:
   class IsPolyDataCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> isPolyDataCell);
-    typedef _2 ExecutionSignature(CellShape);
+    using ControlSignature = void(CellSetIn inCellSet, FieldOut<> isPolyDataCell);
+    using ExecutionSignature = _2(CellShape);
     using InputDomain = _1;
 
     template <typename CellShapeTag>
@@ -587,8 +587,8 @@ public:
   public:
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    typedef void ControlSignature(CellSetIn inCellSet, FieldOut<> numPoints);
-    typedef _2 ExecutionSignature(PointCount);
+    using ControlSignature = void(CellSetIn inCellSet, FieldOut<> numPoints);
+    using ExecutionSignature = _2(PointCount);
     using InputDomain = _1;
 
     VTKM_EXEC vtkm::Id operator()(vtkm::Id count) const { return count; }
@@ -599,11 +599,11 @@ public:
   public:
     using ScatterType = vtkm::worklet::ScatterCounting;
 
-    typedef void ControlSignature(CellSetIn inputTopology,
+    using ControlSignature = void(CellSetIn inputTopology,
                                   FieldOut<> shapes,
                                   FieldOut<> pointIndices,
                                   FieldOut<> cellIdMapOut);
-    typedef void ExecutionSignature(CellShape, PointIndices, InputIndex, _2, _3, _4);
+    using ExecutionSignature = void(CellShape, PointIndices, InputIndex, _2, _3, _4);
 
     template <typename CellShape, typename InPointIndexType, typename OutPointIndexType>
     VTKM_EXEC void operator()(const CellShape& inShape,

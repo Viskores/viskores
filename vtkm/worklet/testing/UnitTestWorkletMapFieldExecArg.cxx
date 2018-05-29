@@ -32,11 +32,11 @@ struct TestExecObjectWorklet
   class Worklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType>,
+    using ControlSignature = void(FieldIn<IdType>,
                                   WholeArrayIn<vtkm::ListTagBase<T>>,
                                   WholeArrayOut<vtkm::ListTagBase<T>>,
                                   FieldOut<vtkm::ListTagBase<T>>);
-    typedef void ExecutionSignature(_1, _2, _3, _4);
+    using ExecutionSignature = void(_1, _2, _3, _4);
 
     template <typename InPortalType, typename OutPortalType>
     VTKM_EXEC void operator()(const vtkm::Id& index,

@@ -40,8 +40,8 @@ struct TransferFunction : public vtkm::worklet::WorkletMapField
   {
   }
 
-  typedef void ControlSignature(FieldIn<> in, FieldOut<> color);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<> in, FieldOut<> color);
+  using ExecutionSignature = void(_1, _2);
 
   template <typename T>
   VTKM_EXEC void operator()(const T& in, vtkm::Vec<vtkm::UInt8, 3>& output) const

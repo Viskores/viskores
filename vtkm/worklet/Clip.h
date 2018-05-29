@@ -231,11 +231,11 @@ public:
     using ClipTablesPortal = internal::ClipTables::DevicePortal<DeviceAdapter>;
 
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<ScalarAll> scalars,
                                   FieldOutCell<IdType> clipTableIdxs,
                                   FieldOutCell<TypeClipStats> stats);
-    typedef void ExecutionSignature(_2, CellShape, PointCount, _3, _4);
+    using ExecutionSignature = void(_2, CellShape, PointCount, _3, _4);
 
     VTKM_CONT
     ComputeStats(vtkm::Float64 value, const ClipTablesPortal& clipTables, bool invert)
@@ -307,7 +307,7 @@ public:
     {
     };
 
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<ScalarAll> scalars,
                                   FieldInCell<IdType> clipTableIdxs,
                                   FieldInCell<TypeClipStats> cellSetIdxs,
@@ -315,7 +315,7 @@ public:
                                   WholeArrayInOut<EdgeInterp> interpolation,
                                   WholeArrayInOut<IdType> newPointsConnectivityReverseMap,
                                   WholeArrayOut<IdType> cellMapOutputToInput);
-    typedef void ExecutionSignature(CellShape, InputIndex, _2, FromIndices, _3, _4, _5, _6, _7, _8);
+    using ExecutionSignature = void(CellShape, InputIndex, _2, FromIndices, _3, _4, _5, _6, _7, _8);
 
     VTKM_CONT
     GenerateCellSet(vtkm::Float64 value, const ClipTablesPortal clipTables)

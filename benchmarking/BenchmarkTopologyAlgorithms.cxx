@@ -55,10 +55,10 @@ enum BenchmarkName
 class AveragePointToCell : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(FieldInPoint<> inPoints,
+  using ControlSignature = void(FieldInPoint<> inPoints,
                                 CellSetIn cellset,
                                 FieldOutCell<> outCells);
-  typedef void ExecutionSignature(_1, PointCount, _3);
+  using ExecutionSignature = void(_1, PointCount, _3);
   using InputDomain = _2;
 
   template <typename PointValueVecType, typename OutType>
@@ -79,8 +79,8 @@ public:
 class AverageCellToPoint : public vtkm::worklet::WorkletMapCellToPoint
 {
 public:
-  typedef void ControlSignature(FieldInCell<> inCells, CellSetIn topology, FieldOut<> outPoints);
-  typedef void ExecutionSignature(_1, _3, CellCount);
+  using ControlSignature = void(FieldInCell<> inCells, CellSetIn topology, FieldOut<> outPoints);
+  using ExecutionSignature = void(_1, _3, CellCount);
   using InputDomain = _2;
 
   template <typename CellVecType, typename OutType>
@@ -106,10 +106,10 @@ template <typename T>
 class Classification : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(FieldInPoint<> inNodes,
+  using ControlSignature = void(FieldInPoint<> inNodes,
                                 CellSetIn cellset,
                                 FieldOutCell<IdComponentType> outCaseId);
-  typedef void ExecutionSignature(_1, _3);
+  using ExecutionSignature = void(_1, _3);
   using InputDomain = _2;
 
   T IsoValue;

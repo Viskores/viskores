@@ -50,7 +50,7 @@ template<typename Transform,
          typename R>
 struct FunctionInterfaceStaticTransformType<R(), Transform>
 {
-  typedef R(type)(
+  using type = R(
         );
 };
 
@@ -59,7 +59,7 @@ template<typename Transform,
          typename P1>
 struct FunctionInterfaceStaticTransformType<R(P1), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type
         );
 };
@@ -70,7 +70,7 @@ template<typename Transform,
          typename P2>
 struct FunctionInterfaceStaticTransformType<R(P1,P2), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type
         );
@@ -83,7 +83,7 @@ template<typename Transform,
          typename P3>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type
@@ -98,7 +98,7 @@ template<typename Transform,
          typename P4>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -115,7 +115,7 @@ template<typename Transform,
          typename P5>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -134,7 +134,7 @@ template<typename Transform,
          typename P6>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -155,7 +155,7 @@ template<typename Transform,
          typename P7>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -178,7 +178,7 @@ template<typename Transform,
          typename P8>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -203,7 +203,7 @@ template<typename Transform,
          typename P9>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -230,7 +230,7 @@ template<typename Transform,
          typename P10>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -259,7 +259,7 @@ template<typename Transform,
          typename P11>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -290,7 +290,7 @@ template<typename Transform,
          typename P12>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -323,7 +323,7 @@ template<typename Transform,
          typename P13>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -358,7 +358,7 @@ template<typename Transform,
          typename P14>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -395,7 +395,7 @@ template<typename Transform,
          typename P15>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -434,7 +434,7 @@ template<typename Transform,
          typename P16>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15,P16), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -475,7 +475,7 @@ template<typename Transform,
          typename P17>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15,P16,P17), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -518,7 +518,7 @@ template<typename Transform,
          typename P18>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15,P16,P17,P18), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -563,7 +563,7 @@ template<typename Transform,
          typename P19>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15,P16,P17,P18,P19), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,
@@ -610,7 +610,7 @@ template<typename Transform,
          typename P20>
 struct FunctionInterfaceStaticTransformType<R(P1,P2,P3,P4,P5,P6,P7,P8,P9,P10,P11,P12,P13,P14,P15,P16,P17,P18,P19,P20), Transform>
 {
-  typedef R(type)(
+  using type = R(
         typename Transform::template ReturnType<P1,1>::type,
         typename Transform::template ReturnType<P2,2>::type,
         typename Transform::template ReturnType<P3,3>::type,

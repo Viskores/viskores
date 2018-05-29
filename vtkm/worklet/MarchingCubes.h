@@ -116,12 +116,12 @@ public:
   {
   };
 
-  typedef void ControlSignature(WholeArrayIn<ClassifyCellTagType> isoValues,
+  using ControlSignature = void(WholeArrayIn<ClassifyCellTagType> isoValues,
                                 FieldInPoint<ClassifyCellTagType> fieldIn,
                                 CellSetIn cellset,
                                 FieldOutCell<IdComponentType> outNumTriangles,
                                 WholeArrayIn<IdComponentType> numTrianglesTable);
-  typedef void ExecutionSignature(CellShape, _1, _2, _4, _5);
+  using ExecutionSignature = void(CellShape, _1, _2, _4, _5);
   using InputDomain = _3;
 
   template <typename IsoValuesType, typename FieldInType, typename NumTrianglesTablePortalType>
@@ -243,8 +243,8 @@ public:
     WholeArrayIn<ClassifyCellTagType> isoValues,
     FieldInPoint<ClassifyCellTagType> fieldIn // Input point field defining the contour
     );
-  typedef void
-    ExecutionSignature(CellShape, _2, _3, InputIndex, WorkIndex, VisitIndex, FromIndices);
+  using ExecutionSignature =
+    void(CellShape, _2, _3, InputIndex, WorkIndex, VisitIndex, FromIndices);
 
   using InputDomain = _1;
 
@@ -362,11 +362,11 @@ private:
 class MapPointField : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<Id2Type> interpolation_ids,
+  using ControlSignature = void(FieldIn<Id2Type> interpolation_ids,
                                 FieldIn<Scalar> interpolation_weights,
                                 WholeArrayIn<> inputField,
                                 FieldOut<> output);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   VTKM_CONT
@@ -411,12 +411,12 @@ struct MultiContourLess
 // ---------------------------------------------------------------------------
 struct MergeDuplicateValues : vtkm::worklet::WorkletReduceByKey
 {
-  typedef void ControlSignature(KeysIn keys,
+  using ControlSignature = void(KeysIn keys,
                                 ValuesIn<> valuesIn1,
                                 ValuesIn<> valuesIn2,
                                 ReducedValuesOut<> valueOut1,
                                 ReducedValuesOut<> valueOut2);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
   template <typename T,
@@ -438,8 +438,8 @@ struct MergeDuplicateValues : vtkm::worklet::WorkletReduceByKey
 // ---------------------------------------------------------------------------
 struct CopyEdgeIds : vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2);
   using InputDomain = _1;
 
   VTKM_EXEC
@@ -501,13 +501,13 @@ private:
     vtkm::cont::ArrayHandleTransform<vtkm::cont::ArrayHandle<vtkm::Id2>, EdgeVertex<0>>;
 
 public:
-  typedef void ControlSignature(CellSetIn,
+  using ControlSignature = void(CellSetIn,
                                 WholeCellSetIn<Point, Cell>,
                                 WholeArrayIn<Vec3> pointCoordinates,
                                 WholeArrayIn<Scalar> inputField,
                                 FieldOutPoint<Vec3> normals);
 
-  typedef void ExecutionSignature(CellCount, CellIndices, InputIndex, _2, _3, _4, _5);
+  using ExecutionSignature = void(CellCount, CellIndices, InputIndex, _2, _3, _4, _5);
 
   using InputDomain = _1;
   using ScatterType = vtkm::worklet::ScatterPermutation<typename PointIdsArray::StorageTag>;
@@ -580,8 +580,8 @@ public:
                                 WholeArrayIn<Scalar> weights,
                                 FieldInOutPoint<Vec3> normals);
 
-  typedef void
-    ExecutionSignature(CellCount, CellIndices, InputIndex, _2, _3, _4, WorkIndex, _5, _6);
+  using ExecutionSignature =
+    void(CellCount, CellIndices, InputIndex, _2, _3, _4, WorkIndex, _5, _6);
 
   using InputDomain = _1;
   using ScatterType = vtkm::worklet::ScatterPermutation<typename PointIdsArray::StorageTag>;

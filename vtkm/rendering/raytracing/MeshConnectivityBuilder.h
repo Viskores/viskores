@@ -56,8 +56,8 @@ class CountFaces : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CountFaces() {}
-  typedef void ControlSignature(WholeArrayIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, WorkIndex);
+  using ControlSignature = void(WholeArrayIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2, WorkIndex);
   template <typename ShapePortalType>
   VTKM_EXEC inline void operator()(const ShapePortalType& shapes,
                                    vtkm::Id& faces,
@@ -93,13 +93,13 @@ class MortonNeighbor : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   MortonNeighbor() {}
-  typedef void ControlSignature(WholeArrayIn<>,
+  using ControlSignature = void(WholeArrayIn<>,
                                 WholeArrayInOut<Id3Type>,
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
                                 WholeArrayIn<>,
                                 WholeArrayOut<>);
-  typedef void ExecutionSignature(_1, _2, WorkIndex, _3, _4, _5, _6);
+  using ExecutionSignature = void(_1, _2, WorkIndex, _3, _4, _5, _6);
 
   VTKM_EXEC
   inline vtkm::Int32 GetShapeOffset(const vtkm::UInt8& shapeType) const
@@ -266,13 +266,9 @@ class ExternalTriangles : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   ExternalTriangles() {}
-  typedef void ControlSignature(FieldIn<>,
-                                WholeArrayIn<>,
-                                WholeArrayIn<>,
-                                WholeArrayIn<>,
-                                WholeArrayOut<>,
-                                FieldIn<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  using ControlSignature =
+    void(FieldIn<>, WholeArrayIn<>, WholeArrayIn<>, WholeArrayIn<>, WholeArrayOut<>, FieldIn<>);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   template <typename ShapePortalType,
             typename InIndicesPortalType,
             typename OutIndicesPortalType,
@@ -333,8 +329,8 @@ public:
 class WriteFaceConn : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, WholeArrayOut<IdType>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, WholeArrayOut<IdType>);
+  using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_CONT
   WriteFaceConn() {}
@@ -355,10 +351,9 @@ public:
 class StructuredExternalTriangles : public vtkm::worklet::WorkletMapField
 {
 protected:
-  typedef vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
-                                             vtkm::TopologyElementTagCell,
-                                             3>
-    ConnType;
+  using ConnType = vtkm::exec::ConnectivityStructured<vtkm::TopologyElementTagPoint,
+                                                      vtkm::TopologyElementTagCell,
+                                                      3>;
   ConnType Connectivity;
   vtkm::Id Segments[7];
   vtkm::Id3 CellDims;
@@ -386,8 +381,8 @@ public:
     Segments[5] = Segments[4] + cellDims[1] * cellDims[0];
     Segments[6] = Segments[5] + cellDims[1] * cellDims[0];
   }
-  typedef void ControlSignature(FieldIn<>, WholeArrayOut<>);
-  typedef void ExecutionSignature(_1, _2);
+  using ControlSignature = void(FieldIn<>, WholeArrayOut<>);
+  using ExecutionSignature = void(_1, _2);
   template <typename TrianglePortalType>
   VTKM_EXEC inline void operator()(const vtkm::Id& index, TrianglePortalType& triangles) const
   {
@@ -492,8 +487,8 @@ class CountExternalTriangles : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   CountExternalTriangles() {}
-  typedef void ControlSignature(FieldIn<>, WholeArrayIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn<>, WholeArrayIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2, _3);
   template <typename ShapePortalType>
   VTKM_EXEC inline void operator()(const vtkm::Vec<vtkm::Id, 3>& faceIdPair,
                                    const ShapePortalType& shapes,

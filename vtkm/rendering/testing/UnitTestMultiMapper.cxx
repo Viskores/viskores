@@ -39,11 +39,11 @@ namespace
 
 void RenderTests()
 {
-  typedef vtkm::rendering::MapperVolume M1;
-  typedef vtkm::rendering::MapperConnectivity M2;
-  typedef vtkm::rendering::MapperRayTracer R;
-  typedef vtkm::rendering::CanvasRayTracer C;
-  typedef vtkm::rendering::View3D V3;
+  using M1 = vtkm::rendering::MapperVolume;
+  using M2 = vtkm::rendering::MapperConnectivity;
+  using R = vtkm::rendering::MapperRayTracer;
+  using C = vtkm::rendering::CanvasRayTracer;
+  using V3 = vtkm::rendering::View3D;
 
   vtkm::cont::testing::MakeTestDataSet maker;
   vtkm::cont::ColorTable colorTable("inferno");

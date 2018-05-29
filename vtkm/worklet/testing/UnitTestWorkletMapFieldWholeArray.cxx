@@ -29,8 +29,8 @@
 class TestWholeArrayWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(WholeArrayIn<>, WholeArrayInOut<>, WholeArrayOut<>);
-  typedef void ExecutionSignature(WorkIndex, _1, _2, _3);
+  using ControlSignature = void(WholeArrayIn<>, WholeArrayInOut<>, WholeArrayOut<>);
+  using ExecutionSignature = void(WorkIndex, _1, _2, _3);
 
   template <typename InPortalType, typename InOutPortalType, typename OutPortalType>
   VTKM_EXEC void operator()(const vtkm::Id& index,
@@ -59,8 +59,8 @@ public:
 class TestAtomicArrayWorklet : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<>, AtomicArrayInOut<>);
-  typedef void ExecutionSignature(WorkIndex, _2);
+  using ControlSignature = void(FieldIn<>, AtomicArrayInOut<>);
+  using ExecutionSignature = void(WorkIndex, _2);
   using InputDomain = _1;
 
   template <typename AtomicArrayType>

@@ -80,11 +80,11 @@ namespace contourtree
 class DegreeDelta : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(
-    FieldIn<IdType> sortID,           // (input) index into sorted vertices [1..N]
-    WholeArrayIn<IdType> sortVector,  // (input) sorted vector of vertices
-    WholeArrayOut<IdType> candidate); // (output) candidate
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature =
+    void(FieldIn<IdType> sortID,           // (input) index into sorted vertices [1..N]
+         WholeArrayIn<IdType> sortVector,  // (input) sorted vector of vertices
+         WholeArrayOut<IdType> candidate); // (output) candidate
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
   vtkm::Id nCandidates;

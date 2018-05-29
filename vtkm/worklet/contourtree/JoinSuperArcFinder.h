@@ -113,11 +113,11 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<IdType> vertex,           // (input) index into sorted edges
+  using ControlSignature = void(FieldIn<IdType> vertex,           // (input) index into sorted edges
                                 WholeArrayIn<TagType> values,     // (input) data values
                                 WholeArrayInOut<IdType> saddles,  // (in out) saddles
                                 WholeArrayInOut<IdType> extrema); // (in out) maxima
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   bool isJoinTree;

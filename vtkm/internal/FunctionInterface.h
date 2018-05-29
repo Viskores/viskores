@@ -776,7 +776,7 @@ public:
 
     static constexpr std::size_t newArity = NextInterfaceType::ARITY;
     static constexpr std::size_t oldArity = detail::FunctionSigInfo<OriginalFunction>::Arity;
-    typedef std::integral_constant<bool, (newArity < oldArity)> ShouldDoNextTransformType;
+    using ShouldDoNextTransformType = std::integral_constant<bool, (newArity < oldArity)>;
 
     NextInterfaceType nextInterface = this->NewInterface.Append(newParameter);
 

@@ -40,8 +40,8 @@ struct ShiftScaleToRGBA : public vtkm::worklet::WorkletMapField
   const vtkm::Float32 Scale;
   const vtkm::Float32 Alpha;
 
-  typedef void ControlSignature(FieldIn<> in, FieldOut<> out);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn<> in, FieldOut<> out);
+  using ExecutionSignature = _2(_1);
 
   ShiftScaleToRGBA(vtkm::Float32 shift, vtkm::Float32 scale, vtkm::Float32 alpha)
     : WorkletMapField()

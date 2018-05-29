@@ -90,8 +90,8 @@ struct TestingArrayHandles
 
   struct PassThrough : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<>, FieldOut<>);
-    typedef _2 ExecutionSignature(_1);
+    using ControlSignature = void(FieldIn<>, FieldOut<>);
+    using ExecutionSignature = _2(_1);
 
     template <class ValueType>
     VTKM_EXEC ValueType operator()(const ValueType& inValue) const

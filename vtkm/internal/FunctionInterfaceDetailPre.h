@@ -669,7 +669,7 @@ struct AppendType;
 template <template <typename...> class L, typename T, typename NT, typename... U>
 struct AppendType<L<T, U...>, NT>
 {
-  typedef T type(U..., NT);
+  using type = T(U..., NT);
 };
 
 template <typename Collection>
@@ -677,7 +677,7 @@ struct AsSigType;
 template <template <typename...> class L, typename T, typename... U>
 struct AsSigType<L<T, U...>>
 {
-  typedef T type(U...);
+  using type = T(U...);
 };
 
 template <typename Components, vtkm::IdComponent ParameterIndex, typename NewType>

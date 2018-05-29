@@ -49,8 +49,8 @@ public:
   class ComputeFlag : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> rank, FieldIn<> pointCountInSeg, FieldOut<> flag);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn<> rank, FieldIn<> pointCountInSeg, FieldOut<> flag);
+    using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
     ComputeFlag() {}
@@ -68,8 +68,8 @@ public:
   class InverseArray : public vtkm::worklet::WorkletMapField
   { //only for 0/1 array
   public:
-    typedef void ControlSignature(FieldIn<> in, FieldOut<> out);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<> in, FieldOut<> out);
+    using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
     InverseArray() {}
@@ -87,13 +87,9 @@ public:
   class SegmentedSplitTransform : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> B,
-                                  FieldIn<> D,
-                                  FieldIn<> F,
-                                  FieldIn<> G,
-                                  FieldIn<> H,
-                                  FieldOut<> I);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+    using ControlSignature =
+      void(FieldIn<> B, FieldIn<> D, FieldIn<> F, FieldIn<> G, FieldIn<> H, FieldOut<> I);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
 
     VTKM_CONT
     SegmentedSplitTransform() {}
@@ -116,8 +112,8 @@ public:
   class ScatterArray : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> in, FieldIn<> index, WholeArrayOut<> out);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn<> in, FieldIn<> index, WholeArrayOut<> out);
+    using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
     ScatterArray() {}
@@ -134,8 +130,8 @@ public:
   class NewSegmentId : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> inSegmentId, FieldIn<> flag, FieldOut<> outSegmentId);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn<> inSegmentId, FieldIn<> flag, FieldOut<> outSegmentId);
+    using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
     NewSegmentId() {}
@@ -153,11 +149,11 @@ public:
   class SaveSplitPointId : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> pointId,
+    using ControlSignature = void(FieldIn<> pointId,
                                   FieldIn<> flag,
                                   FieldIn<> oldSplitPointId,
                                   FieldOut<> newSplitPointId);
-    typedef void ExecutionSignature(_1, _2, _3, _4);
+    using ExecutionSignature = void(_1, _2, _3, _4);
 
     VTKM_CONT
     SaveSplitPointId() {}
@@ -178,8 +174,8 @@ public:
   class FindSplitPointId : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> pointId, FieldIn<> rank, FieldOut<> splitIdInsegment);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn<> pointId, FieldIn<> rank, FieldOut<> splitIdInsegment);
+    using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
     FindSplitPointId() {}
@@ -197,8 +193,8 @@ public:
   class ArrayAdd : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> inArray0, FieldIn<> inArray1, FieldOut<> outArray);
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ControlSignature = void(FieldIn<> inArray0, FieldIn<> inArray1, FieldOut<> outArray);
+    using ExecutionSignature = void(_1, _2, _3);
 
     VTKM_CONT
     ArrayAdd() {}
@@ -213,11 +209,11 @@ public:
   class SeprateVec3AryHandle : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> inVec3,
+    using ControlSignature = void(FieldIn<> inVec3,
                                   FieldOut<> out0,
                                   FieldOut<> out1,
                                   FieldOut<> out2);
-    typedef void ExecutionSignature(_1, _2, _3, _4);
+    using ExecutionSignature = void(_1, _2, _3, _4);
 
     VTKM_CONT
     SeprateVec3AryHandle() {}

@@ -49,14 +49,9 @@ class IntersectionPoint : public vtkm::worklet::WorkletMapField
 public:
   VTKM_CONT
   IntersectionPoint() {}
-  typedef void ControlSignature(FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldIn<>,
-                                FieldOut<>,
-                                FieldOut<>,
-                                FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+  using ControlSignature =
+    void(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>, FieldOut<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
   template <typename Precision>
   VTKM_EXEC inline void operator()(const vtkm::Id& hitIndex,
                                    const Precision& distance,
@@ -84,8 +79,8 @@ public:
   class CalculateNormals : public vtkm::worklet::WorkletMapField
   {
   private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> Vec4IntArrayHandle;
-    typedef typename Vec4IntArrayHandle::ExecutionTypes<Device>::PortalConst IndicesArrayPortal;
+    using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
+    using IndicesArrayPortal = typename Vec4IntArrayHandle::ExecutionTypes<Device>::PortalConst;
 
     IndicesArrayPortal IndicesPortal;
 
@@ -95,13 +90,13 @@ public:
       : IndicesPortal(indices.PrepareForInput(Device()))
     {
     }
-    typedef void ControlSignature(FieldIn<>,
+    using ControlSignature = void(FieldIn<>,
                                   FieldIn<>,
                                   FieldOut<>,
                                   FieldOut<>,
                                   FieldOut<>,
                                   WholeArrayIn<Vec3RenderingTypes>);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
     template <typename Precision, typename PointPortalType>
     VTKM_EXEC inline void operator()(const vtkm::Id& hitIndex,
                                      const vtkm::Vec<Precision, 3>& rayDir,
@@ -134,8 +129,8 @@ public:
   class LerpScalar : public vtkm::worklet::WorkletMapField
   {
   private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> Vec4IntArrayHandle;
-    typedef typename Vec4IntArrayHandle::ExecutionTypes<Device>::PortalConst IndicesArrayPortal;
+    using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
+    using IndicesArrayPortal = typename Vec4IntArrayHandle::ExecutionTypes<Device>::PortalConst;
 
     IndicesArrayPortal IndicesPortal;
     Precision MinScalar;
@@ -156,12 +151,9 @@ public:
       else
         invDeltaScalar = 1.f / minScalar;
     }
-    typedef void ControlSignature(FieldIn<>,
-                                  FieldIn<>,
-                                  FieldIn<>,
-                                  FieldOut<>,
-                                  WholeArrayIn<ScalarRenderingTypes>);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+    using ControlSignature =
+      void(FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>, WholeArrayIn<ScalarRenderingTypes>);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5);
     template <typename ScalarPortalType>
     VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
                               const Precision& u,
@@ -188,8 +180,8 @@ public:
   class NodalScalar : public vtkm::worklet::WorkletMapField
   {
   private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>> Vec4IntArrayHandle;
-    typedef typename Vec4IntArrayHandle::ExecutionTypes<Device>::PortalConst IndicesArrayPortal;
+    using Vec4IntArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Int32, 4>>;
+    using IndicesArrayPortal = typename Vec4IntArrayHandle::ExecutionTypes<Device>::PortalConst;
 
     IndicesArrayPortal IndicesPortal;
     Precision MinScalar;
@@ -211,9 +203,9 @@ public:
         invDeltaScalar = 1.f / minScalar;
     }
 
-    typedef void ControlSignature(FieldIn<>, FieldOut<>, WholeArrayIn<ScalarRenderingTypes>);
+    using ControlSignature = void(FieldIn<>, FieldOut<>, WholeArrayIn<ScalarRenderingTypes>);
 
-    typedef void ExecutionSignature(_1, _2, _3);
+    using ExecutionSignature = void(_1, _2, _3);
     template <typename ScalarPortalType>
     VTKM_EXEC void operator()(const vtkm::Id& hitIndex,
                               Precision& scalar,
@@ -273,8 +265,8 @@ public:
   class MapScalarToColor : public vtkm::worklet::WorkletMapField
   {
   private:
-    typedef typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>> ColorArrayHandle;
-    typedef typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst ColorArrayPortal;
+    using ColorArrayHandle = typename vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::Float32, 4>>;
+    using ColorArrayPortal = typename ColorArrayHandle::ExecutionTypes<Device>::PortalConst;
 
     ColorArrayPortal ColorMap;
     vtkm::Int32 ColorMapSize;
@@ -311,8 +303,8 @@ public:
       LightSpecular[2] = .7f;
       SpecularExponent = 20.f;
     }
-    typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, WholeArrayInOut<>);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, WorkIndex);
+    using ControlSignature = void(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, WholeArrayInOut<>);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, WorkIndex);
     template <typename ColorPortalType, typename Precision>
     VTKM_EXEC void operator()(const vtkm::Id& hitIdx,
                               const Precision& scalar,

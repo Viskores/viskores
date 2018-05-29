@@ -149,13 +149,10 @@ public:
   {
   }
 
-  typedef void ControlSignature(CellSetIn cellset,
-                                WholeArrayIn<>,
-                                FieldInTo<>,
-                                WholeArrayOut<>,
-                                WholeArrayOut<>);
+  using ControlSignature =
+    void(CellSetIn cellset, WholeArrayIn<>, FieldInTo<>, WholeArrayOut<>, WholeArrayOut<>);
 
-  typedef void ExecutionSignature(CellShape, FromIndices, WorkIndex, _2, _3, _4, _5);
+  using ExecutionSignature = void(CellShape, FromIndices, WorkIndex, _2, _3, _4, _5);
 
   template <typename CellShape,
             typename CellNodeVecType,
@@ -264,9 +261,9 @@ public:
   {
   }
 
-  typedef void
-    ControlSignature(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+  using ControlSignature =
+    void(FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
   typedef _7 InputDomain;
 
   VTKM_EXEC

@@ -112,11 +112,11 @@ TestScatterArrays MakeScatterArraysZero()
 
 struct TestScatterCountingWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<> inputIndices,
+  using ControlSignature = void(FieldIn<> inputIndices,
                                 FieldOut<> copyIndices,
                                 FieldOut<> recordVisit,
                                 FieldOut<> recordWorkId);
-  typedef void ExecutionSignature(_1, _2, _3, _4, VisitIndex, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, _4, VisitIndex, WorkIndex);
 
   using ScatterType = vtkm::worklet::ScatterCounting;
 

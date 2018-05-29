@@ -55,8 +55,8 @@ public:
   class TetrahedraPerCell : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> shapes, ExecObject tables, FieldOut<> tetrahedronCount);
-    typedef _3 ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<> shapes, ExecObject tables, FieldOut<> tetrahedronCount);
+    using ExecutionSignature = _3(_1, _2);
     using InputDomain = _1;
 
     VTKM_CONT
@@ -79,10 +79,10 @@ public:
   class TetrahedralizeCell : public vtkm::worklet::WorkletMapPointToCell
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   ExecObject tables,
                                   FieldOutCell<> connectivityOut);
-    typedef void ExecutionSignature(CellShape, PointIndices, _2, _3, VisitIndex);
+    using ExecutionSignature = void(CellShape, PointIndices, _2, _3, VisitIndex);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterCounting;

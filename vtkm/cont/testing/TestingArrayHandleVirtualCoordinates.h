@@ -39,8 +39,8 @@ namespace
 
 struct CopyWorklet : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<FieldCommon> in, FieldOut<FieldCommon> out);
-  typedef _2 ExecutionSignature(_1);
+  using ControlSignature = void(FieldIn<FieldCommon> in, FieldOut<FieldCommon> out);
+  using ExecutionSignature = _2(_1);
 
   template <typename T>
   VTKM_EXEC T operator()(const T& in) const

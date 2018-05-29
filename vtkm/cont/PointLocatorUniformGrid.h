@@ -46,9 +46,9 @@ public:
   class BinPointsWorklet : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> coord, FieldOut<> label);
+    using ControlSignature = void(FieldIn<> coord, FieldOut<> label);
 
-    typedef void ExecutionSignature(_1, _2);
+    using ExecutionSignature = void(_1, _2);
 
     VTKM_CONT
     BinPointsWorklet(vtkm::Vec<T, 3> _min, vtkm::Vec<T, 3> _max, vtkm::Vec<vtkm::Id, 3> _dims)
@@ -74,7 +74,7 @@ public:
   class UniformGridSearch : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<> query,
+    using ControlSignature = void(FieldIn<> query,
                                   WholeArrayIn<> coordIn,
                                   WholeArrayIn<IdType> pointId,
                                   WholeArrayIn<IdType> cellLower,
@@ -82,7 +82,7 @@ public:
                                   FieldOut<IdType> neighborId,
                                   FieldOut<> distance);
 
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6, _7);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, _6, _7);
 
     VTKM_CONT
     UniformGridSearch(const vtkm::Vec<T, 3>& _min,

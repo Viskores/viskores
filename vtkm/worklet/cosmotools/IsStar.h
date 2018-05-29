@@ -75,11 +75,11 @@ namespace cosmotools
 class IsStar : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> index,
+  using ControlSignature = void(FieldIn<IdType> index,
                                 WholeArrayInOut<IdType> haloIdCurrent,
                                 WholeArrayInOut<IdType> haloIdLast,
                                 WholeArrayInOut<> rootedStar);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   // Constructor

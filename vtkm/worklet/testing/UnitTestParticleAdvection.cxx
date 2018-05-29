@@ -177,9 +177,9 @@ public:
   TestEvaluatorWorklet(Evaluator e)
     : evaluator(e){};
 
-  typedef void ControlSignature(FieldIn<> inputPoint, FieldOut<> validity, FieldOut<> outputPoint);
+  using ControlSignature = void(FieldIn<> inputPoint, FieldOut<> validity, FieldOut<> outputPoint);
 
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_EXEC
   void operator()(vtkm::Vec<FieldType, 3>& pointIn,
@@ -234,9 +234,9 @@ public:
   TestIntegratorWorklet(Integrator i)
     : integrator(i){};
 
-  typedef void ControlSignature(FieldIn<> inputPoint, FieldOut<> validity, FieldOut<> outputPoint);
+  using ControlSignature = void(FieldIn<> inputPoint, FieldOut<> validity, FieldOut<> outputPoint);
 
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_EXEC
   void operator()(vtkm::Vec<FieldType, 3>& pointIn,

@@ -162,12 +162,12 @@ public:
   class MakeStreamLines : public vtkm::worklet::WorkletMapField
   {
   public:
-    typedef void ControlSignature(FieldIn<IdType> seedId,
+    using ControlSignature = void(FieldIn<IdType> seedId,
                                   FieldIn<> position,
                                   WholeArrayOut<IdComponentType> numIndices,
                                   WholeArrayOut<IdComponentType> validPoint,
                                   WholeArrayOut<Vec3> streamLines);
-    typedef void ExecutionSignature(_1, _2, _3, _4, _5, VisitIndex);
+    using ExecutionSignature = void(_1, _2, _3, _4, _5, VisitIndex);
     using InputDomain = _1;
 
     using ScatterType = vtkm::worklet::ScatterUniform<2>;

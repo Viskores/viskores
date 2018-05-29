@@ -96,12 +96,12 @@ namespace contourtree
 class JoinArcConnector : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<IdType> vertex, // (input) index into sorted edges
+  using ControlSignature = void(FieldIn<IdType> vertex, // (input) index into sorted edges
                                 WholeArrayIn<IdType> vertexSorter, // (input) sorting indices
                                 WholeArrayIn<IdType> extrema,      // (input) maxima
                                 WholeArrayIn<IdType> saddles,      // (input) saddles
                                 WholeArrayOut<IdType> mergeArcs);  // (output) target for write back
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5);
   using InputDomain = _1;
 
   // Constructor

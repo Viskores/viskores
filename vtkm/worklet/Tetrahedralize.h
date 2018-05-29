@@ -36,8 +36,8 @@ public:
   //
   struct DistributeCellData : public vtkm::worklet::WorkletMapField
   {
-    typedef void ControlSignature(FieldIn<> inIndices, FieldOut<> outIndices);
-    typedef void ExecutionSignature(_1, _2);
+    using ControlSignature = void(FieldIn<> inIndices, FieldOut<> outIndices);
+    using ExecutionSignature = void(_1, _2);
 
     using ScatterType = vtkm::worklet::ScatterCounting;
 

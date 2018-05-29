@@ -135,8 +135,8 @@ union PackedValue {
 
 struct CopyIntoFrameBuffer : public vtkm::worklet::WorkletMapField
 {
-  typedef void ControlSignature(FieldIn<>, FieldIn<>, FieldOut<>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn<>, FieldIn<>, FieldOut<>);
+  using ExecutionSignature = void(_1, _2, _3);
 
   VTKM_CONT
   CopyIntoFrameBuffer() {}
@@ -159,8 +159,8 @@ class EdgePlotter : public vtkm::worklet::WorkletMapField
 public:
   using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArray<vtkm::Int64, DeviceTag>;
 
-  typedef void ControlSignature(FieldIn<Id2Type>, WholeArrayIn<Vec3>, WholeArrayIn<Scalar>);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn<Id2Type>, WholeArrayIn<Vec3>, WholeArrayIn<Scalar>);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
   VTKM_CONT
@@ -395,10 +395,10 @@ public:
   VTKM_CONT
   BufferConverter() {}
 
-  typedef void ControlSignature(FieldIn<>,
+  using ControlSignature = void(FieldIn<>,
                                 WholeArrayOut<vtkm::ListTagBase<vtkm::Float32>>,
                                 WholeArrayOut<vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 4>>>);
-  typedef void ExecutionSignature(_1, _2, _3, WorkIndex);
+  using ExecutionSignature = void(_1, _2, _3, WorkIndex);
 
   template <typename DepthBufferPortalType, typename ColorBufferPortalType>
   VTKM_EXEC void operator()(const vtkm::Int64& packedValue,

@@ -47,11 +47,11 @@ std::default_random_engine RandomGenerator;
 class ParametricToWorldCoordinates : public vtkm::worklet::WorkletMapPointToCell
 {
 public:
-  typedef void ControlSignature(CellSetIn cellset,
+  using ControlSignature = void(CellSetIn cellset,
                                 FieldInPoint<Vec3> coords,
                                 FieldInOutCell<Vec3> pcs,
                                 FieldOutCell<Vec3> wcs);
-  typedef void ExecutionSignature(CellShape, _2, _3, _4);
+  using ExecutionSignature = void(CellShape, _2, _3, _4);
 
   using ScatterType = vtkm::worklet::ScatterPermutation<>;
 

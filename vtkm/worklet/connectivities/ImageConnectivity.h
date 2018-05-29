@@ -46,12 +46,12 @@ template <>
 class ImageGraft<2> : public vtkm::worklet::WorkletPointNeighborhood3x3x3
 {
 public:
-  typedef void ControlSignature(CellSetIn,
+  using ControlSignature = void(CellSetIn,
                                 FieldInNeighborhood<> comp,
                                 FieldInNeighborhood<> color,
                                 FieldOut<> newComp);
 
-  typedef _4 ExecutionSignature(_2, _3);
+  using ExecutionSignature = _4(_2, _3);
 
   template <typename Comp, typename NeighborColor>
   VTKM_EXEC vtkm::Id operator()(const Comp& comp, const NeighborColor& color) const

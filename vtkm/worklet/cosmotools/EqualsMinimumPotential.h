@@ -79,11 +79,11 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<IdType> partId,            // (input) particle Id
+  using ControlSignature = void(FieldIn<IdType> partId,            // (input) particle Id
                                 FieldIn<TagType> potential1,       // (input) particle potential
                                 FieldIn<TagType> potential2,       // (input) minimum potential
                                 FieldOut<IdType> minParticleIndx); // (output) particle Id of min
-  typedef _4 ExecutionSignature(_1, _2, _3);
+  using ExecutionSignature = _4(_1, _2, _3);
   using InputDomain = _1;
 
   // Constructor

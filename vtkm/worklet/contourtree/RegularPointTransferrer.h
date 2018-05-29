@@ -104,13 +104,13 @@ public:
   {
   };
 
-  typedef void ControlSignature(FieldIn<IdType> vertexID,           // (input) vertex ID
+  using ControlSignature = void(FieldIn<IdType> vertexID,           // (input) vertex ID
                                 WholeArrayIn<IdType> chainExtremum, // (input) chain extremum
                                 WholeArrayIn<TagType> values,       // (input) values array
                                 WholeArrayIn<IdType> valueIndex,  // (input) index into value array
                                 WholeArrayInOut<IdType> prunesTo, // (i/o) where vertex is pruned to
                                 WholeArrayOut<IdType> outdegree); // (output) updegree of vertex
-  typedef void ExecutionSignature(_1, _2, _3, _4, _5, _6);
+  using ExecutionSignature = void(_1, _2, _3, _4, _5, _6);
   using InputDomain = _1;
 
   bool isJoinGraph;

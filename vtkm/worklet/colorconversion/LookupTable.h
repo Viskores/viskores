@@ -72,10 +72,10 @@ struct LookupTable : public vtkm::worklet::WorkletMapField
     this->NumberOfSamples = colorTableSamples.NumberOfSamples;
   }
 
-  typedef void ControlSignature(FieldIn<> in,
+  using ControlSignature = void(FieldIn<> in,
                                 WholeArrayIn<LookupTableTypes> lookup,
                                 FieldOut<> color);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ExecutionSignature = void(_1, _2, _3);
 
   template <typename T, typename WholeFieldIn, typename U, int N>
   VTKM_EXEC void operator()(const T& in,

@@ -45,10 +45,10 @@ public:
   class ExtractPointsByVOI : public vtkm::worklet::WorkletMapCellToPoint
   {
   public:
-    typedef void ControlSignature(CellSetIn cellset,
+    using ControlSignature = void(CellSetIn cellset,
                                   FieldInPoint<Vec3> coordinates,
                                   FieldOutPoint<BoolType> passFlags);
-    typedef _3 ExecutionSignature(_2);
+    using ExecutionSignature = _3(_2);
 
     VTKM_CONT
     ExtractPointsByVOI(const vtkm::ImplicitFunction* function, bool extractInside)

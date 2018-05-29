@@ -36,9 +36,9 @@ namespace raytracing
 class VolumeRendererStructured
 {
 public:
-  typedef vtkm::cont::ArrayHandle<vtkm::FloatDefault> DefaultHandle;
-  typedef vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>
-    CartesianArrayHandle;
+  using DefaultHandle = vtkm::cont::ArrayHandle<vtkm::FloatDefault>;
+  using CartesianArrayHandle =
+    vtkm::cont::ArrayHandleCartesianProduct<DefaultHandle, DefaultHandle, DefaultHandle>;
 
   VTKM_CONT
   VolumeRendererStructured();

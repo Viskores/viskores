@@ -42,12 +42,12 @@ struct CellGradientInType : vtkm::ListTagBase<T>
 template <typename T>
 struct CellGradient : vtkm::worklet::WorkletMapPointToCell
 {
-  typedef void ControlSignature(CellSetIn,
+  using ControlSignature = void(CellSetIn,
                                 FieldInPoint<Vec3> pointCoordinates,
                                 FieldInPoint<CellGradientInType<T>> inputField,
                                 GradientOutputs outputFields);
 
-  typedef void ExecutionSignature(CellShape, PointCount, _2, _3, _4);
+  using ExecutionSignature = void(CellShape, PointCount, _2, _3, _4);
   using InputDomain = _1;
 
   template <typename CellTagType,

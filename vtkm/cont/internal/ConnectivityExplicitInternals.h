@@ -176,11 +176,11 @@ struct ConnectivityExplicitInternals
 class ExpandIndices : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<> cellIndex,
+  using ControlSignature = void(FieldIn<> cellIndex,
                                 FieldIn<> offset,
                                 FieldIn<> numIndices,
                                 WholeArrayOut<> cellIndices);
-  typedef void ExecutionSignature(_1, _2, _3, _4);
+  using ExecutionSignature = void(_1, _2, _3, _4);
   using InputDomain = _1;
 
   VTKM_CONT
@@ -204,8 +204,8 @@ public:
 class ScatterValues : public vtkm::worklet::WorkletMapField
 {
 public:
-  typedef void ControlSignature(FieldIn<> index, FieldIn<> value, WholeArrayOut<> output);
-  typedef void ExecutionSignature(_1, _2, _3);
+  using ControlSignature = void(FieldIn<> index, FieldIn<> value, WholeArrayOut<> output);
+  using ExecutionSignature = void(_1, _2, _3);
   using InputDomain = _1;
 
   template <typename T, typename PortalType>

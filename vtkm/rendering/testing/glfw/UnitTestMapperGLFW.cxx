@@ -62,11 +62,11 @@ void RenderTests()
 {
   std::cout << "Press any key to cycle through datasets. ESC to quit." << std::endl;
 
-  typedef vtkm::rendering::MapperGL MapperType;
-  typedef vtkm::rendering::CanvasGL CanvasType;
-  typedef vtkm::rendering::View3D View3DType;
-  typedef vtkm::rendering::View2D View2DType;
-  typedef vtkm::rendering::View1D View1DType;
+  using MapperType = vtkm::rendering::MapperGL;
+  using CanvasType = vtkm::rendering::CanvasGL;
+  using View3DType = vtkm::rendering::View3D;
+  using View2DType = vtkm::rendering::View2D;
+  using View1DType = vtkm::rendering::View1D;
 
   vtkm::cont::DataSetFieldAdd dsf;
   vtkm::cont::testing::MakeTestDataSet maker;
