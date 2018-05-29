@@ -412,7 +412,7 @@ public:
   }
 
   VTKM_CONT
-  void WriteDataSet(vtkm::cont::DataSet dataSet, const std::string& cellSetName)
+  void WriteDataSet(vtkm::cont::DataSet dataSet, const std::string& cellSetName) const
   {
     this->WriteDataSet(dataSet, dataSet.GetCellSetIndex(cellSetName));
   }
