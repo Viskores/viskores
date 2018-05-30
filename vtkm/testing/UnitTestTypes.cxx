@@ -453,6 +453,12 @@ void TypeTest(const vtkm::Vec<Scalar, 2>&)
   Vector b(1, 2);
   Scalar s = 5;
 
+  VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4)), "make_Vec creates different object.");
+  VTKM_TEST_ASSERT(a == vtkm::make_Vec<2>({ Scalar(2), Scalar(4) }),
+                   "make_Vec creates different object.");
+  VTKM_TEST_ASSERT((a == vtkm::Vec<Scalar, 2>{ Scalar(2), Scalar(4) }),
+                   "Construct with initializer list creates different object.");
+
   Vector plus = a + b;
   VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vec(3, 6)), "Vectors do not add correctly.");
 
@@ -513,6 +519,13 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
   Vector a(2, 4, 6);
   Vector b(1, 2, 3);
   Scalar s = 5;
+
+  VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4), Scalar(6)),
+                   "make_Vec creates different object.");
+  VTKM_TEST_ASSERT(a == vtkm::make_Vec<3>({ Scalar(2), Scalar(4), Scalar(6) }),
+                   "make_Vec creates different object.");
+  VTKM_TEST_ASSERT((a == vtkm::Vec<Scalar, 3>{ Scalar(2), Scalar(4), Scalar(6) }),
+                   "Construct with initializer list creates different object.");
 
   Vector plus = a + b;
   VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vec(3, 6, 9)), "Vectors do not add correctly.");
@@ -575,6 +588,13 @@ void TypeTest(const vtkm::Vec<Scalar, 4>&)
   Vector a(2, 4, 6, 8);
   Vector b(1, 2, 3, 4);
   Scalar s = 5;
+
+  VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4), Scalar(6), Scalar(8)),
+                   "make_Vec creates different object.");
+  VTKM_TEST_ASSERT(a == vtkm::make_Vec<4>({ Scalar(2), Scalar(4), Scalar(6), Scalar(8) }),
+                   "make_Vec creates different object.");
+  VTKM_TEST_ASSERT((a == vtkm::Vec<Scalar, 4>{ Scalar(2), Scalar(4), Scalar(6), Scalar(8) }),
+                   "Construct with initializer list creates different object.");
 
   Vector plus = a + b;
   VTKM_TEST_ASSERT(test_equal(plus, vtkm::make_Vec(3, 6, 9, 12)), "Vectors do not add correctly.");

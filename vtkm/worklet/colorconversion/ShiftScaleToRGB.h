@@ -49,7 +49,7 @@ struct ShiftScaleToRGB : public vtkm::worklet::WorkletMapField
   { //vtkScalarsToColorsLuminanceToRGB
     vtkm::Float32 l = (static_cast<vtkm::Float32>(in) + this->Shift) * this->Scale;
     colorconversion::Clamp(l);
-    return vtkm::Vec<vtkm::UInt8, 3>{ static_cast<vtkm::UInt8>(l + 0.5f) };
+    return vtkm::Vec<vtkm::UInt8, 3>(static_cast<vtkm::UInt8>(l + 0.5f));
   }
 
   template <typename T>

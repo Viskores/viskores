@@ -625,6 +625,19 @@ protected:
     }
   }
 
+  VTKM_EXEC_CONT
+  VecBase(std::initializer_list<ComponentType> values)
+  {
+    VTKM_ASSERT((values.size() == NUM_COMPONENTS) &&
+                "Vec object initialized wrong number of components.");
+    ComponentType* dest = this->Components;
+    for (auto src = values.begin(); src != values.end(); ++src)
+    {
+      *dest = *src;
+      ++dest;
+    }
+  }
+
 #if (!(defined(VTKM_CUDA) && (__CUDACC_VER_MAJOR__ < 8)))
 #if (defined(VTKM_GCC) || defined(VTKM_CLANG))
 #pragma GCC diagnostic push
@@ -792,6 +805,10 @@ public:
     : Superclass(value)
   {
   }
+  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
+    : Superclass(values)
+  {
+  }
 
   template <typename OtherType>
   VTKM_EXEC_CONT explicit Vec(const Vec<OtherType, Size>& src)
@@ -851,6 +868,10 @@ public:
     : Superclass(value)
   {
   }
+  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
+    : Superclass(values)
+  {
+  }
 
   template <typename OtherType>
   VTKM_EXEC_CONT Vec(const Vec<OtherType, 1>& src)
@@ -871,6 +892,10 @@ public:
   Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
+  {
+  }
+  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
+    : Superclass(values)
   {
   }
 
@@ -900,6 +925,10 @@ public:
   Vec() = default;
   VTKM_EXEC_CONT explicit Vec(const T& value)
     : Superclass(value)
+  {
+  }
+  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
+    : Superclass(values)
   {
   }
 
@@ -933,6 +962,10 @@ public:
     : Superclass(value)
   {
   }
+  VTKM_EXEC_CONT Vec(std::initializer_list<T> values)
+    : Superclass(values)
+  {
+  }
 
   template <typename OtherType>
   VTKM_EXEC_CONT Vec(const Vec<OtherType, 4>& src)
@@ -950,28 +983,22 @@ public:
   }
 };
 
-/// Initializes and returns a Vec of length 2.
+/// Initializes and returns a Vec initialized by the given intializer_list. Due to limitations in
+/// C++11, you also have to specify the length of the Vec.
 ///
-template <typename T>
-VTKM_EXEC_CONT vtkm::Vec<T, 2> make_Vec(const T& x, const T& y)
+template <vtkm::IdComponent Size, typename T>
+VTKM_EXEC_CONT vtkm::Vec<T, Size> make_Vec(std::initializer_list<T> values)
 {
-  return vtkm::Vec<T, 2>(x, y);
+  return vtkm::Vec<T, Size>(values);
 }
 
-/// Initializes and returns a Vec of length 3.
+/// Initializes and returns a Vec containing all the arguments. The arguments should all be the
+/// same type or compile issues will occur.
 ///
-template <typename T>
-VTKM_EXEC_CONT vtkm::Vec<T, 3> make_Vec(const T& x, const T& y, const T& z)
+template <typename T, typename... Ts>
+VTKM_EXEC_CONT vtkm::Vec<T, sizeof...(Ts) + 1> make_Vec(const T& value0, const Ts&... values)
 {
-  return vtkm::Vec<T, 3>(x, y, z);
-}
-
-/// Initializes and returns a Vec of length 4.
-///
-template <typename T>
-VTKM_EXEC_CONT vtkm::Vec<T, 4> make_Vec(const T& x, const T& y, const T& z, const T& w)
-{
-  return vtkm::Vec<T, 4>(x, y, z, w);
+  return vtkm::Vec<T, sizeof...(Ts) + 1>({ value0, values... });
 }
 
 /// \brief A Vec-like representation for short arrays.
