@@ -202,7 +202,7 @@ template <typename Device>
 class UniformLocator
 {
 protected:
-  using UniformArrayHandle = typename vtkm::cont::ArrayHandleUniformPointCoordinates;
+  using UniformArrayHandle = vtkm::cont::ArrayHandleUniformPointCoordinates;
   using UniformConstPortal = typename UniformArrayHandle::ExecutionTypes<Device>::PortalConst;
 
   vtkm::Id3 PointDimensions;
