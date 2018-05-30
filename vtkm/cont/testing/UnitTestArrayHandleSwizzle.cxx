@@ -327,7 +327,7 @@ void TestComponentMapValidator()
   bool error = false;
   try
   {
-    vtkm::cont::make_ArrayHandleSwizzle(dummy, vtkm::make_Vec(0, 1, 2, 1));
+    vtkm::cont::make_ArrayHandleSwizzle(dummy, 0, 1, 2, 1);
     error = true;
   }
   catch (vtkm::cont::ErrorBadValue& e)
@@ -338,7 +338,7 @@ void TestComponentMapValidator()
 
   try
   {
-    vtkm::cont::make_ArrayHandleSwizzle(dummy, vtkm::make_Vec(0, 1, 2, -1));
+    vtkm::cont::make_ArrayHandleSwizzle(dummy, 0, 1, 2, -1);
     error = true;
   }
   catch (vtkm::cont::ErrorBadValue& e)
@@ -349,7 +349,7 @@ void TestComponentMapValidator()
 
   try
   {
-    vtkm::cont::make_ArrayHandleSwizzle(dummy, vtkm::make_Vec(0, 1, 2, 5));
+    vtkm::cont::make_ArrayHandleSwizzle(dummy, 0, 1, 2, 5);
     error = true;
   }
   catch (vtkm::cont::ErrorBadValue& e)

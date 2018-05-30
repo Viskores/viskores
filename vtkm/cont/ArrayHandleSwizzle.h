@@ -386,6 +386,15 @@ VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, OutSize> make_ArrayHandleSwizzle(
 {
   return ArrayHandleSwizzle<ArrayHandleType, OutSize>(array, map);
 }
+
+template <typename ArrayHandleType, typename... SwizzleIndexTypes>
+VTKM_CONT ArrayHandleSwizzle<ArrayHandleType, sizeof...(SwizzleIndexTypes) + 1>
+make_ArrayHandleSwizzle(const ArrayHandleType& array,
+                        vtkm::IdComponent swizzleIndex0,
+                        SwizzleIndexTypes... swizzleIndices)
+{
+  return make_ArrayHandleSwizzle(array, vtkm::make_Vec(swizzleIndex0, swizzleIndices...));
+}
 }
 } // namespace vtkm::cont
 
