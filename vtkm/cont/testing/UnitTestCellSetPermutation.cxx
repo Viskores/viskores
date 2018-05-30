@@ -151,6 +151,12 @@ vtkm::cont::CellSetPermutation<CellSetType, vtkm::cont::ArrayHandleCounting<vtkm
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == expected[static_cast<std::size_t>(i)],
                      "incorrect result");
   }
+  std::cout << "Testing resource releasing in CellSetPermutation:\n";
+  cs.ReleaseResourcesExecution();
+  VTKM_TEST_ASSERT(cs.GetNumberOfCells() == cellset.GetNumberOfCells() / 2,
+                   "release execution resources should not change the number of cells");
+  VTKM_TEST_ASSERT(cs.GetNumberOfPoints() == cellset.GetNumberOfPoints(),
+                   "release execution resources should not change the number of points");
 
   return cs;
 }

@@ -63,6 +63,9 @@ public:
 
   virtual vtkm::Id GetNumberOfEdges() const { return -1; }
 
+  // Since the entire topology is defined by by three integers, nothing to do here.
+  virtual void ReleaseResourcesExecution() override {}
+
   void SetPointDimensions(SchedulingRangeType dimensions)
   {
     this->Structure.SetPointDimensions(dimensions);

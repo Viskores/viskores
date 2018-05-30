@@ -153,6 +153,12 @@ void TestCellSetExplicit()
   {
     VTKM_TEST_ASSERT(result.GetPortalConstControl().Get(i) == expected2[i], "incorrect result");
   }
+  std::cout << "Testing resource releasing in CellSetExplicit:\n";
+  cellset.ReleaseResourcesExecution();
+  VTKM_TEST_ASSERT(cellset.GetNumberOfCells() == ArrayLength(g_numIndices) / 2,
+                   "release execution resources should not change the number of cells");
+  VTKM_TEST_ASSERT(cellset.GetNumberOfPoints() == ArrayLength(expected2),
+                   "release execution resources should not change the number of points");
 }
 
 } // anonymous namespace
