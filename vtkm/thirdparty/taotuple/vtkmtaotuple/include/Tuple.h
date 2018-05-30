@@ -24,6 +24,10 @@
 // work on MSVC2015. For this compiler, fallback to a simpler implementation.
 #if _MSC_VER == 1900
 #define TAOCPP_USE_SIMPLE_TUPLE
+// There is a bug in apple clang 9.0 that prevents tao-tuple from compiling:
+#elif defined(__apple_build_version__) && defined(__clang__) && __clang_major__ == 9 &&            \
+  clang_minor == 0
+#define TAOCPP_USE_SIMPLE_TUPLE
 #endif
 
 #ifdef TAOCPP_USE_SIMPLE_TUPLE
