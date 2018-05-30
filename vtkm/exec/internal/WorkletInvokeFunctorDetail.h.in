@@ -225,13 +225,13 @@ VTKM_EXEC void DoWorkletInvokeFunctor(
                                    VisitArrayType>& invocation,
   const ThreadIndicesType& threadIndices)
 {
-  typedef vtkm::internal::Invocation<ParameterInterface,
-                                     ControlInterface,
-                                     vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
-                                     InputDomainIndex,
-                                     OutputToInputMapType,
-                                     VisitArrayType>
-    Invocation;
+  using Invocation =
+    vtkm::internal::Invocation<ParameterInterface,
+                               ControlInterface,
+                               vtkm::internal::FunctionInterface<$signature(num_params, return_type='void')>,
+                               InputDomainIndex,
+                               OutputToInputMapType,
+                               VisitArrayType>;
 $for(param_index in range(1, num_params+1))\
 
   using FetchInfo$(param_index) = InvocationToFetch<ThreadIndicesType, Invocation, $(param_index)>;
