@@ -88,6 +88,13 @@ inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagTBB>(vtkm::cont::
 }
 
 template <>
+inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagOpenMP>(
+  vtkm::cont::DeviceAdapterTagOpenMP)
+{
+  return "openmp";
+}
+
+template <>
 inline std::string GetDeviceString<vtkm::cont::DeviceAdapterTagCuda>(
   vtkm::cont::DeviceAdapterTagCuda)
 {

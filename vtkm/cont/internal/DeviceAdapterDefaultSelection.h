@@ -36,7 +36,9 @@
 // Unfortunately, VTKM_ENABLE_TBB does not guarantee that TBB is (or isn't)
 // available, but there is no way to check for sure in a header library.
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_TBB
-#else // !VTKM_CUDA && !VTKM_ENABLE_TBB
+#elif defined(VTKM_ENABLE_OPENMP)
+#define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_OPENMP
+#else // !VTKM_CUDA && !VTKM_ENABLE_TBB && !VTKM_ENABLE_OPENMP
 #define VTKM_DEVICE_ADAPTER VTKM_DEVICE_ADAPTER_SERIAL
 #endif // !VTKM_CUDA && !VTKM_ENABLE_TBB
 #endif // VTKM_DEVICE_ADAPTER
@@ -67,6 +69,14 @@
 #include <vtkm/cont/tbb/internal/DeviceAdapterAlgorithmTBB.h>
 #include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
 #define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagTBB
+
+// OpenMP:
+#elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_OPENMP
+
+#include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
+#include <vtkm/cont/openmp/internal/DeviceAdapterAlgorithmOpenMP.h>
+#include <vtkm/cont/openmp/internal/DeviceAdapterTagOpenMP.h>
+#define VTKM_DEFAULT_DEVICE_ADAPTER_TAG ::vtkm::cont::DeviceAdapterTagOpenMP
 
 // Error:
 #elif VTKM_DEVICE_ADAPTER == VTKM_DEVICE_ADAPTER_ERROR

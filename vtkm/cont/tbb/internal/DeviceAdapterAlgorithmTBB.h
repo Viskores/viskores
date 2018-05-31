@@ -251,21 +251,21 @@ public:
   {
     //this is required to get sort to work with zip handles
     std::less<T> lessOp;
-    vtkm::cont::tbb::internal::parallel_sort(values, lessOp);
+    vtkm::cont::tbb::sort::parallel_sort(values, lessOp);
   }
 
   template <typename T, class Container, class BinaryCompare>
   VTKM_CONT static void Sort(vtkm::cont::ArrayHandle<T, Container>& values,
                              BinaryCompare binary_compare)
   {
-    vtkm::cont::tbb::internal::parallel_sort(values, binary_compare);
+    vtkm::cont::tbb::sort::parallel_sort(values, binary_compare);
   }
 
   template <typename T, typename U, class StorageT, class StorageU>
   VTKM_CONT static void SortByKey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                                   vtkm::cont::ArrayHandle<U, StorageU>& values)
   {
-    vtkm::cont::tbb::internal::parallel_sort_bykey(keys, values, std::less<T>());
+    vtkm::cont::tbb::sort::parallel_sort_bykey(keys, values, std::less<T>());
   }
 
   template <typename T, typename U, class StorageT, class StorageU, class BinaryCompare>
@@ -273,7 +273,7 @@ public:
                                   vtkm::cont::ArrayHandle<U, StorageU>& values,
                                   BinaryCompare binary_compare)
   {
-    vtkm::cont::tbb::internal::parallel_sort_bykey(keys, values, binary_compare);
+    vtkm::cont::tbb::sort::parallel_sort_bykey(keys, values, binary_compare);
   }
 
   template <typename T, class Storage>

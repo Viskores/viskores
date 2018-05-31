@@ -6,9 +6,9 @@
 //  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
 //  PURPOSE.  See the above copyright notice for more information.
 //
-//  Copyright 2017 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
-//  Copyright 2017 UT-Battelle, LLC.
-//  Copyright 2017 Los Alamos National Security.
+//  Copyright 2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS).
+//  Copyright 2018 UT-Battelle, LLC.
+//  Copyright 2018 Los Alamos National Security.
 //
 //  Under the terms of Contract DE-NA0003525 with NTESS,
 //  the U.S. Government retains certain rights in this software.
@@ -18,32 +18,26 @@
 //  this software.
 //============================================================================
 
-#ifndef vtk_m_cont_tbb_internal_ParallelSort_h
-#define vtk_m_cont_tbb_internal_ParallelSort_h
+#include <vtkm/cont/openmp/internal/ArrayManagerExecutionOpenMP.h>
+#include <vtkm/cont/openmp/internal/FunctorsOpenMP.h>
+#include <vtkm/cont/openmp/internal/ParallelQuickSortOpenMP.h>
+#include <vtkm/cont/openmp/internal/ParallelRadixSortOpenMP.h>
 
 #include <vtkm/BinaryPredicates.h>
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleIndex.h>
 #include <vtkm/cont/ArrayHandleZip.h>
-#include <vtkm/cont/internal/ParallelRadixSortInterface.h>
 
-#include <vtkm/cont/tbb/internal/ArrayManagerExecutionTBB.h>
-#include <vtkm/cont/tbb/internal/DeviceAdapterTagTBB.h>
-#include <vtkm/cont/tbb/internal/FunctorsTBB.h>
-#include <vtkm/cont/tbb/internal/ParallelSortTBB.hxx>
-
-#include <type_traits>
+#include <omp.h>
 
 namespace vtkm
 {
 namespace cont
 {
-namespace tbb
+namespace openmp
 {
 namespace sort
 {
-
-// Declare the compiled radix sort specializations:
-VTKM_DECLARE_RADIX_SORT()
 
 // Forward declare entry points (See stack overflow discussion 7255281 --
 // templated overloads of template functions are not specialization, and will
@@ -61,13 +55,15 @@ void parallel_sort(HandleType& values,
                    BinaryCompare binary_compare,
                    vtkm::cont::internal::radix::PSortTag)
 {
-  auto arrayPortal = values.PrepareForInPlace(vtkm::cont::DeviceAdapterTagTBB());
+  auto portal = values.PrepareForInPlace(DeviceAdapterTagOpenMP());
+  auto iter = vtkm::cont::ArrayPortalToIteratorBegin(portal);
+  vtkm::Id2 range(0, values.GetNumberOfValues());
 
-  using IteratorsType = vtkm::cont::ArrayPortalToIterators<decltype(arrayPortal)>;
-  IteratorsType iterators(arrayPortal);
+  using IterType = typename std::decay<decltype(iter)>::type;
+  using Sorter = quick::QuickSorter<IterType, BinaryCompare>;
 
-  internal::WrappedBinaryOperator<bool, BinaryCompare> wrappedCompare(binary_compare);
-  ::tbb::parallel_sort(iterators.GetBegin(), iterators.GetEnd(), wrappedCompare);
+  Sorter sorter(iter, binary_compare);
+  sorter.Execute(range);
 }
 
 // Radix sort values:
@@ -76,30 +72,28 @@ void parallel_sort(vtkm::cont::ArrayHandle<T, StorageT>& values,
                    BinaryCompare binary_compare,
                    vtkm::cont::internal::radix::RadixSortTag)
 {
-  using namespace vtkm::cont::internal::radix;
-  auto c = get_std_compare(binary_compare, T{});
-  parallel_radix_sort(
+  auto c = vtkm::cont::internal::radix::get_std_compare(binary_compare, T{});
+  radix::parallel_radix_sort(
     values.GetStorage().GetArray(), static_cast<std::size_t>(values.GetNumberOfValues()), c);
 }
 
-// Value sort -- static switch between quicksort and radix sort
+// Value sort -- static switch between quicksort & radix sort
 template <typename T, typename Container, class BinaryCompare>
 void parallel_sort(vtkm::cont::ArrayHandle<T, Container>& values, BinaryCompare binary_compare)
 {
   using namespace vtkm::cont::internal::radix;
   using SortAlgorithmTag = typename sort_tag_type<T, Container, BinaryCompare>::type;
+
   parallel_sort(values, binary_compare, SortAlgorithmTag{});
 }
 
-
-// Quicksort by key
+// Quicksort by key:
 template <typename T, typename StorageT, typename U, typename StorageU, class BinaryCompare>
 void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                          vtkm::cont::ArrayHandle<U, StorageU>& values,
                          BinaryCompare binary_compare,
                          vtkm::cont::internal::radix::PSortTag)
 {
-  using namespace vtkm::cont::internal::radix;
   using KeyType = vtkm::cont::ArrayHandle<T, StorageT>;
   constexpr bool larger_than_64bits = sizeof(U) > sizeof(vtkm::Int64);
   if (larger_than_64bits)
@@ -115,28 +109,43 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
     ValueType valuesScattered;
     const vtkm::Id size = values.GetNumberOfValues();
 
+    // Generate an in-memory index array:
     {
       auto handle = ArrayHandleIndex(keys.GetNumberOfValues());
-      auto inputPortal = handle.PrepareForInput(DeviceAdapterTagTBB());
+      auto inputPortal = handle.PrepareForInput(DeviceAdapterTagOpenMP());
       auto outputPortal =
-        indexArray.PrepareForOutput(keys.GetNumberOfValues(), DeviceAdapterTagTBB());
-      tbb::CopyPortals(inputPortal, outputPortal, 0, 0, keys.GetNumberOfValues());
+        indexArray.PrepareForOutput(keys.GetNumberOfValues(), DeviceAdapterTagOpenMP());
+      openmp::CopyHelper(inputPortal, outputPortal, 0, 0, keys.GetNumberOfValues());
     }
 
+    // Sort the keys and indicies:
     ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, indexArray);
     parallel_sort(zipHandle,
                   vtkm::cont::internal::KeyCompare<T, vtkm::Id, BinaryCompare>(binary_compare),
-                  PSortTag());
+                  vtkm::cont::internal::radix::PSortTag());
 
-    tbb::ScatterPortal(values.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-                       indexArray.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-                       valuesScattered.PrepareForOutput(size, vtkm::cont::DeviceAdapterTagTBB()));
-
+    // Permute the values to their sorted locations:
     {
-      auto inputPortal = valuesScattered.PrepareForInput(DeviceAdapterTagTBB());
+      auto valuesInPortal = values.PrepareForInput(DeviceAdapterTagOpenMP());
+      auto indexPortal = indexArray.PrepareForInput(DeviceAdapterTagOpenMP());
+      auto valuesOutPortal = valuesScattered.PrepareForOutput(size, DeviceAdapterTagOpenMP());
+
+      VTKM_OPENMP_DIRECTIVE(parallel for
+                            default(none)
+                            firstprivate(valuesInPortal, indexPortal, valuesOutPortal)
+                            schedule(static))
+      for (vtkm::Id i = 0; i < size; ++i)
+      {
+        valuesOutPortal.Set(i, valuesInPortal.Get(indexPortal.Get(i)));
+      }
+    }
+
+    // Copy the values back into the input array:
+    {
+      auto inputPortal = valuesScattered.PrepareForInput(DeviceAdapterTagOpenMP());
       auto outputPortal =
-        values.PrepareForOutput(valuesScattered.GetNumberOfValues(), DeviceAdapterTagTBB());
-      tbb::CopyPortals(inputPortal, outputPortal, 0, 0, valuesScattered.GetNumberOfValues());
+        values.PrepareForOutput(valuesScattered.GetNumberOfValues(), DeviceAdapterTagOpenMP());
+      openmp::CopyHelper(inputPortal, outputPortal, 0, 0, size);
     }
   }
   else
@@ -145,12 +154,13 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
     using ZipHandleType = vtkm::cont::ArrayHandleZip<KeyType, ValueType>;
 
     ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, values);
-    parallel_sort(
-      zipHandle, vtkm::cont::internal::KeyCompare<T, U, BinaryCompare>(binary_compare), PSortTag{});
+    parallel_sort(zipHandle,
+                  vtkm::cont::internal::KeyCompare<T, U, BinaryCompare>(binary_compare),
+                  vtkm::cont::internal::radix::PSortTag{});
   }
 }
 
-// Radix sort by key -- Specialize for vtkm::Id values:
+// Radix sort by key:
 template <typename T, typename StorageT, typename StorageU, class BinaryCompare>
 void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                          vtkm::cont::ArrayHandle<vtkm::Id, StorageU>& values,
@@ -159,13 +169,11 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
 {
   using namespace vtkm::cont::internal::radix;
   auto c = get_std_compare(binary_compare, T{});
-  parallel_radix_sort_key_values(keys.GetStorage().GetArray(),
-                                 values.GetStorage().GetArray(),
-                                 static_cast<std::size_t>(keys.GetNumberOfValues()),
-                                 c);
+  radix::parallel_radix_sort_key_values(keys.GetStorage().GetArray(),
+                                        values.GetStorage().GetArray(),
+                                        static_cast<std::size_t>(keys.GetNumberOfValues()),
+                                        c);
 }
-
-// Radix sort by key -- Generic impl:
 template <typename T, typename StorageT, typename U, typename StorageU, class BinaryCompare>
 void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
                          vtkm::cont::ArrayHandle<U, StorageU>& values,
@@ -183,13 +191,14 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
 
   {
     auto handle = ArrayHandleIndex(keys.GetNumberOfValues());
-    auto inputPortal = handle.PrepareForInput(DeviceAdapterTagTBB());
+    auto inputPortal = handle.PrepareForInput(DeviceAdapterTagOpenMP());
     auto outputPortal =
-      indexArray.PrepareForOutput(keys.GetNumberOfValues(), DeviceAdapterTagTBB());
-    tbb::CopyPortals(inputPortal, outputPortal, 0, 0, keys.GetNumberOfValues());
+      indexArray.PrepareForOutput(keys.GetNumberOfValues(), DeviceAdapterTagOpenMP());
+    openmp::CopyHelper(inputPortal, outputPortal, 0, 0, keys.GetNumberOfValues());
   }
 
-  if (static_cast<vtkm::Id>(sizeof(T)) * keys.GetNumberOfValues() > 400000)
+  const vtkm::Id valuesBytes = static_cast<vtkm::Id>(sizeof(T)) * keys.GetNumberOfValues();
+  if (valuesBytes > static_cast<vtkm::Id>(vtkm::cont::internal::radix::MIN_BYTES_FOR_PARALLEL))
   {
     parallel_sort_bykey(keys, indexArray, binary_compare);
   }
@@ -198,18 +207,30 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
     ZipHandleType zipHandle = vtkm::cont::make_ArrayHandleZip(keys, indexArray);
     parallel_sort(zipHandle,
                   vtkm::cont::internal::KeyCompare<T, vtkm::Id, BinaryCompare>(binary_compare),
-                  vtkm::cont::internal::radix::PSortTag{});
+                  vtkm::cont::internal::radix::PSortTag());
   }
 
-  tbb::ScatterPortal(values.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-                     indexArray.PrepareForInput(vtkm::cont::DeviceAdapterTagTBB()),
-                     valuesScattered.PrepareForOutput(size, vtkm::cont::DeviceAdapterTagTBB()));
+  // Permute the values to their sorted locations:
+  {
+    auto valuesInPortal = values.PrepareForInput(DeviceAdapterTagOpenMP());
+    auto indexPortal = indexArray.PrepareForInput(DeviceAdapterTagOpenMP());
+    auto valuesOutPortal = valuesScattered.PrepareForOutput(size, DeviceAdapterTagOpenMP());
+
+    VTKM_OPENMP_DIRECTIVE(parallel for
+                          default(none)
+                          firstprivate(valuesInPortal, indexPortal, valuesOutPortal)
+                          schedule(static))
+    for (vtkm::Id i = 0; i < size; ++i)
+    {
+      valuesOutPortal.Set(i, valuesInPortal.Get(indexPortal.Get(i)));
+    }
+  }
 
   {
-    auto inputPortal = valuesScattered.PrepareForInput(DeviceAdapterTagTBB());
+    auto inputPortal = valuesScattered.PrepareForInput(DeviceAdapterTagOpenMP());
     auto outputPortal =
-      values.PrepareForOutput(valuesScattered.GetNumberOfValues(), DeviceAdapterTagTBB());
-    tbb::CopyPortals(inputPortal, outputPortal, 0, 0, valuesScattered.GetNumberOfValues());
+      values.PrepareForOutput(valuesScattered.GetNumberOfValues(), DeviceAdapterTagOpenMP());
+    openmp::CopyHelper(inputPortal, outputPortal, 0, 0, valuesScattered.GetNumberOfValues());
   }
 }
 
@@ -227,6 +248,4 @@ void parallel_sort_bykey(vtkm::cont::ArrayHandle<T, StorageT>& keys,
 }
 }
 }
-} // end namespace vtkm::cont::tbb::sort
-
-#endif // vtk_m_cont_tbb_internal_ParallelSort_h
+} // end namespace vtkm::cont::openmp::sort

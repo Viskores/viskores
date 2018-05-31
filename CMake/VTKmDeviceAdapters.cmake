@@ -47,6 +47,19 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
     endif()
 endif()
 
+if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
+  find_package(OpenMP 4.5 REQUIRED COMPONENTS CXX QUIET)
+
+  add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
+  if(OpenMP_CXX_FLAGS)
+    set_target_properties(vtkm::openmp PROPERTIES
+      INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:${OpenMP_CXX_FLAGS}>")
+  endif()
+  if(OpenMP_CXX_LIBRARIES)
+    set_target_properties(vtkm::openmp PROPERTIES
+      INTERFACE_LINK_LIBRARIES "${OpenMP_CXX_LIBRARIES}")
+  endif()
+endif()
 
 if(VTKm_ENABLE_CUDA AND NOT TARGET vtkm::cuda)
   cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
