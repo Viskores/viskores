@@ -65,7 +65,11 @@ DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>::DeviceAdapterRun
     deviceQueryInit = true;
 
     //first query for the number of devices
-    VTKM_CUDA_CALL(cudaGetDeviceCount(&numDevices));
+    auto res = cudaGetDeviceCount(&numDevices);
+    if (res != cudaSuccess)
+    {
+      numDevices = 0;
+    }
 
     for (vtkm::Int32 i = 0; i < numDevices; i++)
     {
@@ -84,12 +88,15 @@ DeviceAdapterRuntimeDetector<vtkm::cont::DeviceAdapterTagCuda>::DeviceAdapterRun
     // 3. cudaErrorNoKernelImageForDevice we built for a compute version
     //    greater than the device we are running on
     // Most likely others that I don't even know about
-    vtkm::cont::cuda::internal::DetermineIfValidCudaDevice<<<1, 1, 0, cudaStreamPerThread>>>();
-    cudaStreamSynchronize(cudaStreamPerThread);
-    if (cudaSuccess != cudaGetLastError())
+    if (numDevices > 0)
     {
-      numDevices = 0;
-      archVersion = 0;
+      vtkm::cont::cuda::internal::DetermineIfValidCudaDevice<<<1, 1, 0, cudaStreamPerThread>>>();
+      cudaStreamSynchronize(cudaStreamPerThread);
+      if (cudaSuccess != cudaGetLastError())
+      {
+        numDevices = 0;
+        archVersion = 0;
+      }
     }
   }
 
