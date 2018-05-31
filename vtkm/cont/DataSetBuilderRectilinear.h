@@ -31,7 +31,7 @@ namespace vtkm
 namespace cont
 {
 
-class DataSetBuilderRectilinear
+class VTKM_CONT_EXPORT DataSetBuilderRectilinear
 {
   template <typename T, typename U>
   VTKM_CONT static void CopyInto(const std::vector<T>& input, vtkm::cont::ArrayHandle<U>& output)
@@ -55,7 +55,7 @@ class DataSetBuilderRectilinear
 
 public:
   VTKM_CONT
-  DataSetBuilderRectilinear() {}
+  DataSetBuilderRectilinear();
 
   //1D grids.
   template <typename T>
