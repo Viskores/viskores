@@ -49,6 +49,20 @@ struct CopyWorklet : public vtkm::worklet::WorkletMapField
   }
 };
 
+// A dummy worklet
+struct DoubleWorklet : public vtkm::worklet::WorkletMapField
+{
+  typedef void ControlSignature(FieldIn<FieldCommon> in);
+  typedef void ExecutionSignature(_1);
+  using InputDomain = _1;
+
+  template <typename T>
+  VTKM_EXEC void operator()(T& in) const
+  {
+    in = in * 2;
+  }
+};
+
 template <typename T, typename S, typename DeviceAdapter>
 inline void TestVirtualAccess(const vtkm::cont::ArrayHandle<T, S>& in,
                               vtkm::cont::ArrayHandle<T>& out,
@@ -109,6 +123,23 @@ private:
     }
     TestVirtualAccess(
       vtkm::cont::make_ArrayHandleCartesianProduct(c1, c2, c3), out, DeviceAdapter{});
+
+    std::cout << "Testing resources releasing on ArrayHandleVirtualCoordinates\n";
+    vtkm::cont::ArrayHandleVirtualCoordinates virtualC =
+      vtkm::cont::ArrayHandleVirtualCoordinates(a1);
+    vtkm::worklet::DispatcherMapField<DoubleWorklet, DeviceAdapter>().Invoke(a1);
+    virtualC.ReleaseResourcesExecution();
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == length,
+                     "ReleaseResourcesExecution"
+                     " should not change the number of values on the Arrayhandle");
+    VTKM_TEST_ASSERT(
+      virtualC.GetNumberOfValues() == length,
+      "ReleaseResources"
+      " should set the number of values on the ArrayHandleVirtualCoordinates to be 0");
+    virtualC.ReleaseResources();
+    VTKM_TEST_ASSERT(a1.GetNumberOfValues() == 0,
+                     "ReleaseResources"
+                     " should set the number of values on the Arrayhandle to be 0");
   }
 
 public:
