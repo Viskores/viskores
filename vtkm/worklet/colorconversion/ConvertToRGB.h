@@ -57,7 +57,7 @@ struct ConvertToRGB : public vtkm::worklet::WorkletMapField
                                colorconversion::ColorToUChar(in[2]));
   }
 
-  vtkm::Vec<vtkm::UInt8, 3> operator()(const vtkm::Vec<vtkm::UInt8, 3>& in) const
+  VTKM_EXEC vtkm::Vec<vtkm::UInt8, 3> operator()(const vtkm::Vec<vtkm::UInt8, 3>& in) const
   { //vtkScalarsToColorsRGBToRGB
     return in;
   }
