@@ -40,6 +40,7 @@ template <typename FieldEvaluateType,
 class Integrator
 {
 protected:
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   Integrator()
     : StepLength(0)
@@ -173,6 +174,7 @@ template <typename FieldEvaluateType, typename FieldType>
 class RK4Integrator : public Integrator<FieldEvaluateType, FieldType, RK4Integrator>
 {
 public:
+  VTKM_SUPPRESS_EXEC_WARNINGS
   VTKM_EXEC_CONT
   RK4Integrator()
     : Integrator<FieldEvaluateType, FieldType, vtkm::worklet::particleadvection::RK4Integrator>()
