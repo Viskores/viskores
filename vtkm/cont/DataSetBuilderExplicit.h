@@ -313,7 +313,7 @@ inline VTKM_CONT vtkm::cont::DataSet DataSetBuilderExplicit::BuildDataSet(
   return dataSet;
 }
 
-class DataSetBuilderExplicitIterative
+class VTKM_CONT_EXPORT DataSetBuilderExplicitIterative
 {
 public:
   VTKM_CONT
