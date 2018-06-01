@@ -150,15 +150,6 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyFromControl(
                                  static_cast<std::size_t>(numBytes),
                                  cudaMemcpyHostToDevice,
                                  cudaStreamPerThread));
-  if (CudaAllocator::IsManagedPointer(executionPtr))
-  {
-    //If we are moving memory from unmanaged host memory
-    //to managed host memory we have the possibility that
-    //the memcpy will not finish before the first usage is finished
-    //to work around this bug we explicitly synchronize for this
-    //one use case
-    cudaStreamSynchronize(cudaStreamPerThread);
-  }
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const void* executionPtr,
@@ -179,14 +170,21 @@ void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::CopyToControl(const voi
 
     // If it is managed, just return and let CUDA handle the migration for us.
     CudaAllocator::PrepareForControl(controlPtr, numBytes);
-    return;
+  }
+  else
+  {
+    VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
+                                   executionPtr,
+                                   static_cast<std::size_t>(numBytes),
+                                   cudaMemcpyDeviceToHost,
+                                   cudaStreamPerThread));
   }
 
-  VTKM_CUDA_CALL(cudaMemcpyAsync(controlPtr,
-                                 executionPtr,
-                                 static_cast<std::size_t>(numBytes),
-                                 cudaMemcpyDeviceToHost,
-                                 cudaStreamPerThread));
+  //In all cases we have possibly multiple async calls queued up in
+  //our stream. We need to block on the copy back to control since
+  //we don't wanting it accessing memory that hasn't finished
+  //being used by the GPU
+  cudaStreamSynchronize(cudaStreamPerThread);
 }
 
 void ExecutionArrayInterfaceBasic<DeviceAdapterTagCuda>::UsingForRead(
