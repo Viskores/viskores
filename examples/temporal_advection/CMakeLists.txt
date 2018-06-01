@@ -22,20 +22,20 @@
 
 #Find the VTK-m package
 cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
-project(ParticleAdvection CXX)
+project(TemporalAdvection CXX)
 
 #Find the VTK-m package
 find_package(VTKm REQUIRED QUIET)
 
-add_executable(exeserial ParticleAdvection.cxx)
-target_link_libraries(exeserial PRIVATE vtkm_cont)
+add_executable(Temporal_Advection_SERIAL TemporalAdvection.cxx)
+target_link_libraries(Temporal_Advection_SERIAL PRIVATE vtkm_cont)
 
 if(TARGET vtkm::tbb)
-  add_executable(exetbb ParticleAdvectionTBB.cxx)
-  target_link_libraries(exetbb PRIVATE vtkm_cont)
+  add_executable(Temporal_Advection_TBB TemporalAdvectionTBB.cxx)
+  target_link_libraries(Temporal_Advection_TBB PRIVATE vtkm_cont)
 endif()
 
 if(TARGET vtkm::cuda)
-  add_executable(execuda ParticleAdvection.cu)
-  target_link_libraries(execuda PRIVATE vtkm_cont)
+  add_executable(Temporal_Advection_CUDA TemporalAdvection.cu)
+  target_link_libraries(Temporal_Advection_CUDA PRIVATE vtkm_cont)
 endif()

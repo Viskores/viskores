@@ -38,11 +38,11 @@
 // The way to verify if the code produces correct streamlines
 // is to do a visual test by using VisIt/ParaView to visualize
 // the file written by this method.
-int renderAndWriteDataSet(vtkm::cont::DataSet& dataset)
+int renderAndWriteDataSet(const vtkm::cont::DataSet& dataset)
 {
   std::cout << "Trying to render the dataset" << std::endl;
   vtkm::io::writer::VTKDataSetWriter writer("pathlines.vtk");
-  writer.WriteDataSet(dataset, static_cast<vtkm::Id>(0));
+  writer.WriteDataSet(dataset);
   return 0;
 }
 
@@ -62,7 +62,6 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
   // as VTKm evolves.
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray1;
   vtkm::cont::ArrayHandle<vtkm::Vec<FieldType, 3>> fieldArray2;
-  vtkm::Id numValues;
 
   vtkm::io::reader::BOVDataSetReader reader1("slice1.bov");
   vtkm::cont::DataSet ds1 = reader1.ReadDataSet();
@@ -94,7 +93,7 @@ void RunTest(vtkm::Id numSteps, vtkm::Float32 stepSize, vtkm::Id advectType)
   // This example does not work on scale, works on basic 11 particles
   // so the results are more tractible
   std::vector<vtkm::Vec<FieldType, 3>> seeds;
-  vtkm::Id x = 0, y = 5, z = 0;
+  FieldType x = 0, y = 5, z = 0;
   for (int i = 0; i <= 11; i++)
   {
     vtkm::Vec<FieldType, 3> point;
@@ -138,7 +137,7 @@ int main(int argc, char** argv)
   }
 
   numSteps = atoi(argv[1]);
-  stepSize = atof(argv[2]);
+  stepSize = static_cast<vtkm::Float32>(atof(argv[2]));
   advectionType = atoi(argv[3]);
 
   RunTest(numSteps, stepSize, advectionType);
