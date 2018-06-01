@@ -197,11 +197,7 @@ class CellInterpolationHelper : public vtkm::cont::ExecutionObjectBase
 public:
   using HandleType = vtkm::cont::VirtualObjectHandle<vtkm::exec::CellInterpolationHelper>;
 
-  virtual VTKM_EXEC_CONT ~CellInterpolationHelper() noexcept
-  {
-    // This must not be defaulted, since defaulted virtual destructors are
-    // troublesome with CUDA __host__ __device__ markup.
-  }
+  virtual ~CellInterpolationHelper() = default;
 
   template <typename DeviceAdapter>
   VTKM_CONT const vtkm::exec::CellInterpolationHelper* PrepareForExecution(

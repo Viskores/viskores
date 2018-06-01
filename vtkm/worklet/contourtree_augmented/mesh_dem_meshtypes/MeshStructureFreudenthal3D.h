@@ -109,7 +109,6 @@ public:
   }
 
   // Main constructore used in the code
-  VTKM_EXEC_CONT
   MeshStructureFreudenthal3D(
     vtkm::Id nrows,
     vtkm::Id ncols,
@@ -131,6 +130,7 @@ public:
     linkComponentCaseTablePortal = linkComponentCaseTableIn.PrepareForInput(DeviceAdapter());
   }
 
+  VTKM_EXEC
   constexpr vtkm::Id GetMaxNumberOfNeighbours() const { return m3d_freudenthal::N_INCIDENT_EDGES; }
 
 

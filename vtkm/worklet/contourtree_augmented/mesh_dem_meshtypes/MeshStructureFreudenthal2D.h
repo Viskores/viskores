@@ -99,7 +99,6 @@ public:
   }
 
   // Main constructor used in the code
-  VTKM_EXEC_CONT
   MeshStructureFreudenthal2D(
     vtkm::Id nrows,
     vtkm::Id ncols,
@@ -143,9 +142,7 @@ public:
         return vertex - this->nCols;
       //break; // row - 1, col
       default:
-        std::
-          abort(); // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
-        //default: std::cerr << "Internal error (invalid neighbour requested)"; std::abort();
+        abort(); // TODO How to generate a meaningful error message from a device (in particular when using CUDA?)
     }
   } // GetNeighbourIndex
 
