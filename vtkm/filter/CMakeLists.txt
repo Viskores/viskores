@@ -63,6 +63,7 @@ set(headers
   Triangulate.h
   VectorMagnitude.h
   VertexClustering.h
+  WarpVector.h
 )
 
 set(header_template_sources
@@ -105,6 +106,7 @@ set(header_template_sources
   Triangulate.hxx
   VectorMagnitude.hxx
   VertexClustering.hxx
+  WarpVector.hxx
 )
 
 vtkm_declare_headers(${headers}
