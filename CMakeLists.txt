@@ -166,7 +166,16 @@ endif()
 #-----------------------------------------------------------------------------
 if (VTKm_ENABLE_TESTING)
   enable_testing()
-  include(CTest)
+  # Only include CTest if it has not been included by a superproject. The
+  # variable DEFAULT_CTEST_CONFIGURATION_TYPE is a non-cached variable set by
+  # CTest.cmake, so we'll use that to determine if it's already included.
+  if(NOT DEFINED DEFAULT_CTEST_CONFIGURATION_TYPE)
+    include(CTest)
+    # Mark this as advanced to avoid confusion, since we actually rely on
+    # VTKm_ENABLE_TESTING.
+    mark_as_advanced(BUILD_TESTING)
+  endif()
+
   configure_file(${VTKm_SOURCE_DIR}/CTestCustom.cmake.in
     ${VTKm_BINARY_DIR}/CTestCustom.cmake @ONLY)
 
