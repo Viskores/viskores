@@ -370,6 +370,7 @@ inline void deduce(Trampoline&& trampoline, ContParams&& sig, Args&&... args)
 #pragma diag_suppress 2828
 #pragma diag_suppress 2864
 #pragma diag_suppress 2867
+#pragma diag_suppress 2885
 #endif
 
 #endif
