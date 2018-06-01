@@ -167,9 +167,7 @@ namespace tao
         // TODO: Add check for rvalue to lvalue reference
       }
 
-      TAOCPP_ANNOTATION
       tuple_value( const tuple_value& ) = default;
-      TAOCPP_ANNOTATION
       tuple_value( tuple_value&& ) = default;
 
       template< typename U >
@@ -261,9 +259,7 @@ namespace tao
         : T( std::forward< U >( v ), a )
       {}
 
-      TAOCPP_ANNOTATION
       tuple_value( const tuple_value& ) = default;
-      TAOCPP_ANNOTATION
       tuple_value( tuple_value&& ) = default;
 
       template< typename U >
@@ -305,7 +301,6 @@ namespace tao
     struct tuple_base< seq::index_sequence< Is... >, Ts... >
       : tuple_value< Is, Ts >...
     {
-      TAOCPP_ANNOTATION
       constexpr tuple_base() = default;
 
       template< typename... Us >
@@ -322,9 +317,7 @@ namespace tao
         : tuple_value< Is, Ts >( uses_alloc_ctor_t< Ts, A, Us >(), a, std::forward< Us >( us ) )...
       {}
 
-      TAOCPP_ANNOTATION
       tuple_base( const tuple_base& ) = default;
-      TAOCPP_ANNOTATION
       tuple_base( tuple_base&& ) = default;
 
       TAOCPP_ANNOTATION
@@ -443,9 +436,7 @@ namespace tao
       : base( std::forward< Us >( us )... )
     {}
 
-    TAOCPP_ANNOTATION
     tuple( const tuple& ) = default;
-    TAOCPP_ANNOTATION
     tuple( tuple&& ) = default;
 
     template< typename... Us,
