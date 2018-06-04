@@ -46,6 +46,7 @@ set(headers
   RangeId.h
   RangeId3.h
   StaticAssert.h
+  Swap.h
   TopologyElementTag.h
   Transform3D.h
   TypeListTag.h
