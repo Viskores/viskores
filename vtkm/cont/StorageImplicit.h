@@ -70,6 +70,7 @@ public:
   VTKM_CONT
   Storage(const PortalConstType& portal = PortalConstType())
     : Portal(portal)
+    , NumberOfValues(portal.GetNumberOfValues())
   {
   }
 
@@ -79,22 +80,25 @@ public:
   VTKM_CONT
   PortalConstType GetPortalConst() const { return this->Portal; }
   VTKM_CONT
-  vtkm::Id GetNumberOfValues() const { return this->Portal.GetNumberOfValues(); }
+  vtkm::Id GetNumberOfValues() const { return this->NumberOfValues; }
   VTKM_CONT
-  void Allocate(vtkm::Id vtkmNotUsed(numberOfValues))
+  void Allocate(vtkm::Id numberOfValues)
   {
-    throw vtkm::cont::ErrorBadValue("Implicit arrays are read-only.");
+    VTKM_ASSERT(numberOfValues <= this->Portal.GetNumberOfValues());
+    this->NumberOfValues = numberOfValues;
   }
   VTKM_CONT
-  void Shrink(vtkm::Id vtkmNotUsed(numberOfValues))
+  void Shrink(vtkm::Id numberOfValues)
   {
-    throw vtkm::cont::ErrorBadValue("Implicit arrays are read-only.");
+    VTKM_ASSERT(numberOfValues <= this->Portal.GetNumberOfValues());
+    this->NumberOfValues = numberOfValues;
   }
   VTKM_CONT
   void ReleaseResources() {}
 
 private:
   PortalConstType Portal;
+  vtkm::Id NumberOfValues;
 };
 
 template <typename T, class ArrayPortalType, class DeviceAdapterTag>
