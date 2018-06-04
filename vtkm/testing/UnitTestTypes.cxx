@@ -449,8 +449,8 @@ void TypeTest(const vtkm::Vec<Scalar, 2>&)
 
   GeneralVecTypeTest(Vector());
 
-  Vector a(2, 4);
-  Vector b(1, 2);
+  Vector a{ 2, 4 };
+  Vector b = { 1, 2 };
   Scalar s = 5;
 
   VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4)), "make_Vec creates different object.");
@@ -516,8 +516,8 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
 
   GeneralVecTypeTest(Vector());
 
-  Vector a(2, 4, 6);
-  Vector b(1, 2, 3);
+  Vector a = { 2, 4, 6 };
+  Vector b{ 1, 2, 3 };
   Scalar s = 5;
 
   VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4), Scalar(6)),
@@ -585,8 +585,8 @@ void TypeTest(const vtkm::Vec<Scalar, 4>&)
 
   GeneralVecTypeTest(Vector());
 
-  Vector a(2, 4, 6, 8);
-  Vector b(1, 2, 3, 4);
+  Vector a{ 2, 4, 6, 8 };
+  Vector b = { 1, 2, 3, 4 };
   Scalar s = 5;
 
   VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4), Scalar(6), Scalar(8)),
@@ -705,6 +705,62 @@ void TypeTest(Scalar)
   }
 }
 
+template <typename Scalar>
+void TypeTest(vtkm::Vec<vtkm::Vec<Scalar, 2>, 3>)
+{
+  using Vector = vtkm::Vec<vtkm::Vec<Scalar, 2>, 3>;
+
+  {
+    Vector vec = { { 0, 1 }, { 2, 3 }, { 4, 5 } };
+    std::cout << "Initialize completely " << vec << std::endl;
+    VTKM_TEST_ASSERT(test_equal(vec[0][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[0][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][0], 2), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][1], 3), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][0], 4), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][1], 5), "Vec of vec initializer list wrong.");
+  }
+
+  {
+    Vector vec = { vtkm::make_Vec(Scalar(0), Scalar(1)) };
+    std::cout << "Initialize inner " << vec << std::endl;
+    VTKM_TEST_ASSERT(test_equal(vec[0][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[0][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][1], 1), "Vec of vec initializer list wrong.");
+  }
+
+  {
+    Vector vec = { { 0, 1 } };
+    std::cout << "Initialize inner " << vec << std::endl;
+    VTKM_TEST_ASSERT(test_equal(vec[0][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[0][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][1], 1), "Vec of vec initializer list wrong.");
+  }
+
+  {
+    Vector vec = { { 0 }, { 1 }, { 2 } };
+    std::cout << "Initialize outer " << vec << std::endl;
+    VTKM_TEST_ASSERT(test_equal(vec[0][0], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[0][1], 0), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][0], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[1][1], 1), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][0], 2), "Vec of vec initializer list wrong.");
+    VTKM_TEST_ASSERT(test_equal(vec[2][1], 2), "Vec of vec initializer list wrong.");
+  }
+
+  {
+    // Both of these constructors are disallowed.
+    //Vector vec1 = { 0, 1, 2 };
+    //Vector vec2 = { 0, 1 };
+  }
+}
+
 struct TypeTestFunctor
 {
   template <typename T>
@@ -719,7 +775,9 @@ struct TypesToTest : vtkm::ListTagJoin<vtkm::testing::Testing::TypeListTagExempl
                                                          vtkm::Vec<vtkm::Id, 4>,
                                                          vtkm::Vec<unsigned char, 4>,
                                                          vtkm::Vec<vtkm::Id, 1>,
-                                                         vtkm::Vec<vtkm::Float64, 1>>>
+                                                         vtkm::Vec<vtkm::Float64, 1>,
+                                                         vtkm::Vec<vtkm::Id2, 3>,
+                                                         vtkm::Vec<vtkm::Vec<vtkm::Float32, 2>, 3>>>
 {
 };
 

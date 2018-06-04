@@ -628,13 +628,25 @@ protected:
   VTKM_EXEC_CONT
   VecBase(std::initializer_list<ComponentType> values)
   {
-    VTKM_ASSERT((values.size() == NUM_COMPONENTS) &&
-                "Vec object initialized wrong number of components.");
     ComponentType* dest = this->Components;
-    for (auto src = values.begin(); src != values.end(); ++src)
+    auto src = values.begin();
+    if (values.size() == 1)
     {
-      *dest = *src;
-      ++dest;
+      for (vtkm::IdComponent i = 0; i < Size; ++i)
+      {
+        this->Components[i] = *src;
+        ++dest;
+      }
+    }
+    else
+    {
+      VTKM_ASSERT((values.size() == NUM_COMPONENTS) &&
+                  "Vec object initialized wrong number of components.");
+      for (; src != values.end(); ++src)
+      {
+        *dest = *src;
+        ++dest;
+      }
     }
   }
 

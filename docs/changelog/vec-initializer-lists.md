@@ -17,7 +17,13 @@ vtkm::Vec<vtkm::Float64, 3> vec3(1.1, 2.2, 3.3); // Old style that still works b
                                                  // probably should be deprecated.
 ```
 
-The nice thing about the initializer list implementation is that it works for any
+Nested initializer lists work to initialize `Vec`s of `Vec`s.
+
+``` cpp
+vtkm::Vec<vtkm::Vec<vtkm::Float64, 2>, 3> vec{ {1.1, 2.2}, {3.3, 4.4}, {5.5, 6.6} };
+```
+
+The nice thing about the `std::initializer_list` implementation is that it works for any
 size `Vec`. That keeps us from jumping through hoops for larger `Vec`s.
 
 ``` cpp
@@ -25,6 +31,23 @@ vtkm::Vec<vtkm::Float64, 5> vec1{1.1, 2.2, 3.3, 4.4, 5.5}; // Works fine.
 
 vtkm::Vec<vtkm::Float64, 5> vec2(1.1, 2.2, 3.3, 4.4, 5.5); // ERROR! This constructor
                                                            // not implemented!
+```
+
+If a `vtkm::Vec` is initialized with a list of size one, then that one value is
+replicated for all components.
+
+``` cpp
+vtkm::Vec<vtkm::Float64, 3> vec{1.1};  // vec gets [ 1.1, 1.1, 1.1 ]
+```
+
+This "scalar" initialization also works for `Vec`s of `Vec`s.
+
+``` cpp
+vtkm::Vec<vtkm::Vec<vtkm::Float64, 2>, 3> vec1{ { 1.1, 2.2 } };
+// vec1 is [[1.1, 2.2], [1.1, 2.2], [1.1, 2.2]]
+
+vtkm::Vec<vtkm::Vec<vtkm::Float64, 2>, 3> vec2{ { 3.3}, { 4.4 }, { 5.5 } };
+// vec2 is [[3.3, 3.3], [4.4, 4.4], [5.5, 5.5]]
 ```
 
 `vtkm::make_Vec` is also updated to support an arbitrary number initial values.
@@ -40,7 +63,7 @@ This is super convenient when dealing with variadic function arguments.
 template <typename... Ts>
 void ExampleVariadicFunction(const Ts&... params)
 {
-  auto vec = vtkm::make_Vec(params);
+  auto vec = vtkm::make_Vec(params...);
 ```
 
 Of course, this assumes that the type of all the parameters is the same. If not, you
@@ -68,19 +91,4 @@ correct for that. (Of course, asserts are not compiled in release builds.)
 // This will compile, but it's results are undefined when it is run.
 // In debug builds, it will fail an assert.
 vtkm::Vec<vtkm::Float64, 3> vec{1.1, 1.2};
-```
-
-There is a distinction between the initializer list constructors and all other types
-of constructors. Specifically, the initializer list constructor sets each component
-to each value in the initializer list (much like initializing an array). In
-particular, there is a considerable difference between the initializer list
-constructor and the constructor taking one value that fills up the array. Don't use
-the wrong one.
-
-``` cpp
-// This creates a vector filled with [3.14, 3.14, 3.14]
-vtkm::Vec<vtkm::Float64, 3> vec1(3.14);
-
-// The result of this is underfined. In debug builds, it will fail an assert.
-vtkm::Vec<vtkm::Float64, 3> vec1{3.14};
 ```
