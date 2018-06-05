@@ -17,7 +17,7 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#include <vtkm/cont/CellLocator.h>
+#include <vtkm/cont/CellLocatorHelper.h>
 #include <vtkm/cont/DataSetBuilderUniform.h>
 #include <vtkm/cont/testing/Testing.h>
 
@@ -33,7 +33,7 @@ void TestCellLocator()
   auto ds =
     vtkm::cont::DataSetBuilderUniform::Create(vtkm::Id3(SIZE), PointType(0.0f), PointType(1.0f));
 
-  vtkm::cont::CellLocator locator;
+  vtkm::cont::CellLocatorHelper locator;
   locator.SetCellSet(ds.GetCellSet());
   locator.SetCoordinates(ds.GetCoordinateSystem());
   locator.Build(device);

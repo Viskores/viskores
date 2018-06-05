@@ -17,8 +17,8 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_cont_CellLocator_h
-#define vtk_m_cont_CellLocator_h
+#ifndef vtk_m_cont_CellLocatorHelper_h
+#define vtk_m_cont_CellLocatorHelper_h
 
 #include <vtkm/cont/CellLocatorTwoLevelUniformGrid.h>
 #include <vtkm/exec/ParametricCoordinates.h>
@@ -28,7 +28,7 @@ namespace vtkm
 namespace cont
 {
 
-class CellLocator
+class CellLocatorHelper
 {
 private:
   using StructuredCellSetList = vtkm::ListTagBase<vtkm::cont::CellSetStructured<1>,
@@ -155,4 +155,4 @@ private:
 }
 } // vtkm::cont
 
-#endif // vtk_m_cont_CellLocator_h
+#endif // vtk_m_cont_CellLocatorHelper_h

@@ -48,7 +48,7 @@ set(headers
   AssignerMultiBlock.h
   BoundsCompute.h
   BoundsGlobalCompute.h
-  CellLocator.h
+  CellLocatorHelper.h
   CellLocatorTwoLevelUniformGrid.h
   CellSet.h
   CellSetExplicit.h
