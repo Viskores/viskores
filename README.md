@@ -1,211 +1,44 @@
-# VTK-m #
+# The Art of C++ / Tuple
 
-VTK-m is a toolkit of scientific visualization algorithms for emerging
-processor architectures. VTK-m supports the fine-grained concurrency for
-data analysis and visualization algorithms required to drive extreme scale
-computing by providing abstract models for data and execution that can be
-applied to a variety of algorithms across many different processor
-architectures.
+[![Release](https://img.shields.io/github/release/taocpp/tuple.svg)](https://github.com/taocpp/tuple/releases/latest)
+[![License](https://img.shields.io/github/license/taocpp/tuple.svg)](#license)
+[![TravisCI](https://travis-ci.org/taocpp/tuple.svg)](https://travis-ci.org/taocpp/tuple)
+[![Issues](https://img.shields.io/github/issues/taocpp/tuple.svg)](https://github.com/taocpp/tuple/issues)
 
-You can find out more about the design of VTK-m on the [VTK-m Wiki].
+The Art of C++ / Tuple is a C++11 header-only reference implementation of
+[`std::tuple`](http://en.cppreference.com/w/cpp/utility/tuple).
 
+## Rationale
 
-## Learning Resources ##
+Why another implementation of `std::tuple`? To provide a proof-of-concept that,
+when avoiding recursion, code can benefit in significant ways. I prepared a talk
+about it, including some benchmarks.
 
-  + A high-level overview is given in the IEEE Vis talk "[VTK-m:
-    Accelerating the Visualization Toolkit for Massively Threaded
-    Architectures][VTK-m Overview]."
+[Download presentation](https://github.com/taocpp/tuple/blob/master/Variadic%20Templates.pdf)
 
-  + The [VTK-m Users Guide] provides extensive documentation. It is broken
-    into multiple parts for learning and references at multiple different
-    levels.
-      + "Part 1: Getting Started" provides the introductory instruction for
-        building VTK-m and using its high-level features.
-      + "Part 2: Using VTK-m" covers the core fundamental components of
-        VTK-m including data model, worklets, and filters.
-      + "Part 3: Developing with VTK-m" covers how to develop new worklets
-        and filters.
-      + "Part 4: Advanced Development" covers topics such as new worklet
-        types and custom device adapters.
+TL;DR: GCC 5 on Linux with libstdc++'s `std::tuple` requires 19.6s and an instantiation
+depth of at least 3.719 to compile an
+[example](https://github.com/taocpp/tuple/blob/master/src/test/tuple/tuple_benchmark.cpp)
+generating a tuple with 265 elements via `std::tuple_cat`.
+`tao::tuple` requires 1.2s and an instantiation depth of 26 on the same system.
 
-  + Community discussion takes place on the [VTK-m users email list].
+Apple LLVM 7.0 (~Clang 3.7) with libc++'s `std::tuple` requires 70s and an instantiation
+depth of 514 to compile the example. `tao::tuple` requires 1.7s and an instantiation depth
+of 15 on the same system.
 
-  + Doxygen-generated nightly reference documentation is available
-    [online][VTK-m Doxygen].
+## Compatibility
 
+* Requires C++11 or newer.
+* Tested with GCC 4.8+ and Clang 3.4+.
 
-## Contributing ##
+## License
 
-There are many ways to contribute to [VTK-m], with varying levels of
-effort.
+The Art of C++ is certified [Open Source](http://www.opensource.org/docs/definition.html) software. It may be used for any purpose, including commercial purposes, at absolutely no cost. It is distributed under the terms of the [MIT license](http://www.opensource.org/licenses/mit-license.html) reproduced here.
 
-  + Ask a question on the [VTK-m users email list].
-
-  + Submit new or add to discussions of a feature requests or bugs on the
-    [VTK-m Issue Tracker].
-
-  + Submit a Pull Request to improve [VTK-m]
-      + See [CONTRIBUTING.md] for detailed instructions on how to create a
-        Pull Request.
-      + See the [VTK-m Coding Conventions] that must be followed for
-        contributed code.
-
-  + Submit an Issue or Pull Request for the [VTK-m Users Guide]
-
-
-## Dependencies ##
-
-VTK-m Requires:
-
-  + C++11 Compiler. VTK-m has been confirmed to work with the following
-      + GCC 4.8+
-      + Clang 3.3+
-      + XCode 5.0+
-      + MSVC 2015+
-  + [CMake](http://www.cmake.org/download/)
-      + CMake 3.3+ (for any build)
-      + CMake 3.9+ (for CUDA build)
-      + CMake 3.11+ (for Visual Studio generator)
-
-Optional dependencies are:
-
-  + CUDA Device Adapter
-      + [Cuda Toolkit 7+](https://developer.nvidia.com/cuda-toolkit)
-  + TBB Device Adapter
-      + [TBB](https://www.threadingbuildingblocks.org/)
-  + OpenMP Device Adapter
-      + Requires a compiler that supports OpenMP >= 4.5.
-  + OpenGL Rendering
-      + The rendering module contains multiple rendering implementations
-        including standalone rendering code. The rendering module also
-        includes (optionally built) OpenGL rendering classes.
-      + The OpenGL rendering classes require that you have a extension
-        binding library and one rendering library. A windowing library is
-        not needed except for some optional tests.
-  + Extension Binding
-      + [GLEW](http://glew.sourceforge.net/)
-  + On Screen Rendering
-      + OpenGL Driver
-      + Mesa Driver
-  + On Screen Rendering Tests
-      + [GLFW](http://www.glfw.org/)
-      + [GLUT](http://freeglut.sourceforge.net/)
-  + Headless Rendering
-      + [OS Mesa](https://www.mesa3d.org/osmesa.html)
-      + EGL Driver
-
-VTK-m has been tested on the following configurations:
-  + On Linux 
-      + GCC 4.8.5, 5.4.0, 6.4.0, Clang 3.8.0
-      + CMake 3.9.2, 3.9.3, 3.10.3
-      + CUDA 8.0.61, 9.1.85
-      + TBB 4.4 U2, 2017 U7
-  + On Windows
-      + Visual Studio 2015, 2017
-      + CMake 3.3, 3.11.1
-      + CUDA 9.1.85
-      + TBB 2017 U3, 2018 U2
-  + On MacOS
-      + AppleClang 6.0
-      + TBB 2017 U6
-
-
-## Building ##
-
-VTK-m supports all majors platforms (Windows, Linux, OSX), and uses CMake
-to generate all the build rules for the project. The VTK-m source code is
-available from the [VTK-m download page] or by directly cloning the [VTK-m
-git repository].
-
-```
-$ git clone https://gitlab.kitware.com/vtk/vtk-m.git
-$ mkdir vtkm-build
-$ cd vtkm-build
-$ cmake-gui ../vtk-m
-$ make -j<N>
-$ make test
-```
-
-A more detailed description of building VTK-m is available in the [VTK-m
-Users Guide].
-
-
-## Example##
-
-The VTK-m source distribution includes a number of examples. The goal of the
-VTK-m examples is to illustrate specific VTK-m concepts in a consistent and 
-simple format. However, these examples only cover a small part of the
-capabilities of VTK-m.
-
-Below is a simple example of using VTK-m to load a VTK image file, run the
-Marching Cubes algorithm on it, and render the results to an image:
-
-```cpp
-vtkm::io::reader::VTKDataSetReader reader("path/to/vtk_image_file");
-vtkm::cont::DataSet inputData = reader.ReadDataSet();
-std::string fieldName = "scalars";
-
-vtkm::Range range;
-inputData.GetPointField(fieldName).GetRange(&range);
-vtkm::Float64 isovalue = range.Center();
-
-// Create an isosurface filter
-vtkm::filter::MarchingCubes filter;
-filter.SetIsoValue(0, isovalue);
-filter.SetActiveField(fieldName);
-vtkm::cont::DataSet outputData = filter.Execute(inputData);
-
-// compute the bounds and extends of the input data
-vtkm::Bounds coordsBounds = inputData.GetCoordinateSystem().GetBounds();
-vtkm::Vec<vtkm::Float64,3> totalExtent( coordsBounds.X.Length(),
-                                        coordsBounds.Y.Length(),
-                                        coordsBounds.Z.Length() );
-vtkm::Float64 mag = vtkm::Magnitude(totalExtent);
-vtkm::Normalize(totalExtent);
-
-// setup a camera and point it to towards the center of the input data
-vtkm::rendering::Camera camera;
-camera.ResetToBounds(coordsBounds);
-
-camera.SetLookAt(totalExtent*(mag * .5f));
-camera.SetViewUp(vtkm::make_Vec(0.f, 1.f, 0.f));
-camera.SetClippingRange(1.f, 100.f);
-camera.SetFieldOfView(60.f);
-camera.SetPosition(totalExtent*(mag * 2.f));
-vtkm::cont::ColorTable colorTable("inferno");
-
-// Create a mapper, canvas and view that will be used to render the scene
-vtkm::rendering::Scene scene;
-vtkm::rendering::MapperRayTracer mapper;
-vtkm::rendering::CanvasRayTracer canvas(512, 512);
-vtkm::rendering::Color bg(0.2f, 0.2f, 0.2f, 1.0f);
-
-// Render an image of the output isosurface
-scene.AddActor(vtkm::rendering::Actor(outputData.GetCellSet(),
-                                      outputData.GetCoordinateSystem(),
-                                      outputData.GetField(fieldName),
-                                      colorTable));
-vtkm::rendering::View3D view(scene, mapper, canvas, camera, bg);
-view.Initialize();
-view.Paint();
-view.SaveAs("demo_output.pnm");
-```
-
-
-## License ##
-
-VTK-m is distributed under the OSI-approved BSD 3-clause License.
-See [LICENSE.txt](LICENSE.txt) for details.
-
-
-[VTK-m]:                    https://gitlab.kitware.com/vtk/vtk-m/
-[VTK-m Coding Conventions]: docs/CodingConventions.md
-[VTK-m Doxygen]:            http://m.vtk.org/documentation/
-[VTK-m download page]:      http://m.vtk.org/index.php/VTK-m_Releases
-[VTK-m git repository]:     https://gitlab.kitware.com/vtk/vtk-m/
-[VTK-m Issue Tracker]:      https://gitlab.kitware.com/vtk/vtk-m/issues
-[VTK-m Overview]:           http://m.vtk.org/images/2/29/VTKmVis2016.pptx 
-[VTK-m Users Guide]:        http://m.vtk.org/images/c/c8/VTKmUsersGuide.pdf
-[VTK-m users email list]:   http://vtk.org/mailman/listinfo/vtkm
-[VTK-m Wiki]:               http://m.vtk.org/
-[CONTRIBUTING.md]:          CONTRIBUTING.md
+> Copyright (c) 2015 Daniel Frey
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
