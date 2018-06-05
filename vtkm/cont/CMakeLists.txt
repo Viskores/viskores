@@ -46,8 +46,12 @@ set(headers
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
   AssignerMultiBlock.h
+  BoundingIntervalHierarchyNode.h
+  BoundingIntervalHierarchyExec.h
+  BoundingIntervalHierarchy.h
   BoundsCompute.h
   BoundsGlobalCompute.h
+  CellLocator.h
   CellLocatorHelper.h
   CellLocatorTwoLevelUniformGrid.h
   CellSet.h
@@ -84,6 +88,7 @@ set(headers
   FieldRangeGlobalCompute.h
   ImplicitFunctionHandle.h
   MultiBlock.h
+  PointLocator.h
   PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
