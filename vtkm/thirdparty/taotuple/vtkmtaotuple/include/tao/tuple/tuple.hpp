@@ -33,6 +33,20 @@
 #endif // __CUDACC__
 #endif // TAOCPP_ANNOTATION
 
+// Ignore "calling a __host__ function from a __host__ _device__ function is not
+// allowed" warnings
+#ifndef TAOCPP_SUPPRESS_NVCC_HD_WARN
+#ifdef __CUDACC__
+#if __CUDAVER__ >= 75000
+#define TAOCPP_SUPPRESS_NVCC_HD_WARN #pragma nv_exec_check_disable
+#else
+#define TAOCPP_SUPPRESS_NVCC_HD_WARN #pragma hd_warning_disable
+#endif
+#else
+#define TAOCPP_SUPPRESS_NVCC_HD_WARN
+#endif //__CUDACC__
+
+#endif // TAOCPP_SUPPRESS_NVCC_HD_WARN
 namespace tao
 {
   template< typename... Ts >
@@ -409,6 +423,7 @@ namespace tao
     // 20.4.2.1 Construction [tuple.cnstr]
 
     // TODO: Move this templated condition to base?
+    TAOCPP_SUPPRESS_NVCC_HD_WARN
     template< typename dummy = void,
               typename = impl::enable_if_t< seq::is_all< impl::dependent_type< std::is_default_constructible< Ts >, dummy >::value... >::value > >
     TAOCPP_ANNOTATION
