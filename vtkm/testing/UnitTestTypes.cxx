@@ -443,6 +443,19 @@ void TypeTest(const vtkm::Vec<ComponentType, Size>&)
 }
 
 template <typename Scalar>
+void TypeTest(const vtkm::Vec<Scalar, 1>&)
+{
+  using Vector = vtkm::Vec<Scalar, 1>;
+  std::cout << "Checking constexpr construction for Vec1." << std::endl;
+
+  constexpr Vector constExprVec1(Scalar(1));
+  constexpr Vector constExprVec2 = { Scalar(1) };
+  constexpr Vector madeVec = vtkm::make_Vec(Scalar(1));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec1 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec), "constexpr Vec1 failed equality test.");
+}
+
+template <typename Scalar>
 void TypeTest(const vtkm::Vec<Scalar, 2>&)
 {
   using Vector = vtkm::Vec<Scalar, 2>;
@@ -454,8 +467,6 @@ void TypeTest(const vtkm::Vec<Scalar, 2>&)
   Scalar s = 5;
 
   VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4)), "make_Vec creates different object.");
-  VTKM_TEST_ASSERT(a == vtkm::make_Vec<2>({ Scalar(2), Scalar(4) }),
-                   "make_Vec creates different object.");
   VTKM_TEST_ASSERT((a == vtkm::Vec<Scalar, 2>{ Scalar(2), Scalar(4) }),
                    "Construct with initializer list creates different object.");
 
@@ -507,6 +518,18 @@ void TypeTest(const vtkm::Vec<Scalar, 2>&)
 
   VTKM_TEST_ASSERT((c != a), "operator != wrong");
   VTKM_TEST_ASSERT((a != c), "operator != wrong");
+
+  std::cout << "Checking constexpr construction for Vec2." << std::endl;
+  constexpr Vector constExprVec1(Scalar(1), Scalar(2));
+  constexpr Vector constExprVec2 = { Scalar(1), Scalar(2) };
+  constexpr Vector madeVec = vtkm::make_Vec(Scalar(1), Scalar(2));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec2 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec), "constexpr Vec2 failed equality test.");
+
+  // Check fill constructor.
+  Vector fillVec1 = { Scalar(8) };
+  Vector fillVec2(Scalar(8), Scalar(8));
+  VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec2 failed equality test.");
 }
 
 template <typename Scalar>
@@ -521,8 +544,6 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
   Scalar s = 5;
 
   VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4), Scalar(6)),
-                   "make_Vec creates different object.");
-  VTKM_TEST_ASSERT(a == vtkm::make_Vec<3>({ Scalar(2), Scalar(4), Scalar(6) }),
                    "make_Vec creates different object.");
   VTKM_TEST_ASSERT((a == vtkm::Vec<Scalar, 3>{ Scalar(2), Scalar(4), Scalar(6) }),
                    "Construct with initializer list creates different object.");
@@ -576,6 +597,18 @@ void TypeTest(const vtkm::Vec<Scalar, 3>&)
 
   VTKM_TEST_ASSERT((c != a), "operator != wrong");
   VTKM_TEST_ASSERT((a != c), "operator != wrong");
+
+  std::cout << "Checking constexpr construction for Vec3." << std::endl;
+  constexpr Vector constExprVec1(Scalar(1), Scalar(2), Scalar(3));
+  constexpr Vector constExprVec2 = { Scalar(1), Scalar(2), Scalar(3) };
+  constexpr Vector madeVec = vtkm::make_Vec(Scalar(1), Scalar(2), Scalar(3));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec3 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec), "constexpr Vec3 failed equality test.");
+
+  // Check fill constructor.
+  Vector fillVec1 = { Scalar(8) };
+  Vector fillVec2(Scalar(8), Scalar(8), Scalar(8));
+  VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec3 failed equality test.");
 }
 
 template <typename Scalar>
@@ -590,8 +623,6 @@ void TypeTest(const vtkm::Vec<Scalar, 4>&)
   Scalar s = 5;
 
   VTKM_TEST_ASSERT(a == vtkm::make_Vec(Scalar(2), Scalar(4), Scalar(6), Scalar(8)),
-                   "make_Vec creates different object.");
-  VTKM_TEST_ASSERT(a == vtkm::make_Vec<4>({ Scalar(2), Scalar(4), Scalar(6), Scalar(8) }),
                    "make_Vec creates different object.");
   VTKM_TEST_ASSERT((a == vtkm::Vec<Scalar, 4>{ Scalar(2), Scalar(4), Scalar(6), Scalar(8) }),
                    "Construct with initializer list creates different object.");
@@ -645,6 +676,41 @@ void TypeTest(const vtkm::Vec<Scalar, 4>&)
 
   VTKM_TEST_ASSERT((c != a), "operator != wrong");
   VTKM_TEST_ASSERT((a != c), "operator != wrong");
+
+  std::cout << "Checking constexpr construction for Vec4." << std::endl;
+  constexpr Vector constExprVec1(Scalar(1), Scalar(2), Scalar(3), Scalar(4));
+  constexpr Vector constExprVec2 = { Scalar(1), Scalar(2), Scalar(3), Scalar(4) };
+  constexpr Vector madeVec = vtkm::make_Vec(Scalar(1), Scalar(2), Scalar(3), Scalar(4));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec4 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec), "constexpr Vec4 failed equality test.");
+
+  // Check fill constructor.
+  Vector fillVec1 = { Scalar(8) };
+  Vector fillVec2(Scalar(8), Scalar(8), Scalar(8), Scalar(8));
+  VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec4 failed equality test.");
+
+  Scalar values[4] = { Scalar(1), Scalar(1), Scalar(1), Scalar(1) };
+  Vector lvalVec1 = vtkm::make_Vec(values[0], values[1], values[2], values[3]);
+  Vector lvalVec2 = Vector(values[0], values[1], values[2], values[3]);
+  VTKM_TEST_ASSERT(test_equal(lvalVec1, lvalVec2), "lvalue ctor Vec4 failed equality test.");
+}
+
+template <typename Scalar>
+void TypeTest(const vtkm::Vec<Scalar, 6>&)
+{
+  using Vector = vtkm::Vec<Scalar, 6>;
+  std::cout << "Checking constexpr construction for Vec6." << std::endl;
+  constexpr Vector constExprVec1(Scalar(1), Scalar(2), Scalar(3), Scalar(4), Scalar(5), Scalar(6));
+  Vector braceVec = { Scalar(1), Scalar(2), Scalar(3), Scalar(4), Scalar(5), Scalar(6) };
+  constexpr Vector madeVec =
+    vtkm::make_Vec(Scalar(1), Scalar(2), Scalar(3), Scalar(4), Scalar(5), Scalar(6));
+  VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec), "constexpr Vec6 failed equality test.");
+  VTKM_TEST_ASSERT(test_equal(braceVec, madeVec), "constexpr Vec6 failed equality test.");
+
+  // Check fill constructor.
+  Vector fillVec1 = { Scalar(8) };
+  Vector fillVec2 = Vector(Scalar(8), Scalar(8), Scalar(8), Scalar(8), Scalar(8), Scalar(8));
+  VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec6 failed equality test.");
 }
 
 template <typename Scalar>
@@ -759,6 +825,40 @@ void TypeTest(vtkm::Vec<vtkm::Vec<Scalar, 2>, 3>)
     //Vector vec1 = { 0, 1, 2 };
     //Vector vec2 = { 0, 1 };
   }
+
+  {
+    std::cout << "Checking constexpr construction for Vec3<Vec2>." << std::endl;
+    constexpr Vector constExprVec1(
+      vtkm::Vec<Scalar, 2>(1, 2), vtkm::Vec<Scalar, 2>(1, 2), vtkm::Vec<Scalar, 2>(1, 2));
+    constexpr Vector constExprVec2 = { { 1, 2 }, { 1, 2 }, { 1, 2 } };
+    constexpr Vector madeVec = vtkm::make_Vec(vtkm::make_Vec(Scalar(1), Scalar(2)),
+                                              vtkm::make_Vec(Scalar(1), Scalar(2)),
+                                              vtkm::make_Vec(Scalar(1), Scalar(2)));
+
+    VTKM_TEST_ASSERT(test_equal(constExprVec1, madeVec),
+                     "constexpr Vec3<Vec2> failed equality test.");
+    VTKM_TEST_ASSERT(test_equal(constExprVec2, madeVec),
+                     "constexpr Vec3<Vec2> failed equality test.");
+
+    // Check fill constructor.
+    Vector fillVec1 = { { Scalar(1), Scalar(2) } };
+    Vector fillVec2(
+      vtkm::Vec<Scalar, 2>(1, 2), vtkm::Vec<Scalar, 2>(1, 2), vtkm::Vec<Scalar, 2>(1, 2));
+    VTKM_TEST_ASSERT(test_equal(fillVec1, fillVec2), "fill ctor Vec3ofVec2 failed equality test.");
+  }
+}
+
+template <typename Scalar>
+void TypeTest(vtkm::Vec<vtkm::Vec<Scalar, 2>, 5>)
+{
+  using Vector = vtkm::Vec<vtkm::Vec<Scalar, 2>, 5>;
+  Vector braceVec = { { 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 }, { 5, 5 } };
+  constexpr Vector constExprVec = vtkm::make_Vec(vtkm::make_Vec(Scalar(1), Scalar(1)),
+                                                 vtkm::make_Vec(Scalar(2), Scalar(2)),
+                                                 vtkm::make_Vec(Scalar(3), Scalar(3)),
+                                                 vtkm::make_Vec(Scalar(4), Scalar(4)),
+                                                 vtkm::make_Vec(Scalar(5), Scalar(5)));
+  VTKM_TEST_ASSERT(test_equal(constExprVec, braceVec), "Vec5<Vec2> failed equality test.");
 }
 
 struct TypeTestFunctor
@@ -775,9 +875,11 @@ struct TypesToTest : vtkm::ListTagJoin<vtkm::testing::Testing::TypeListTagExempl
                                                          vtkm::Vec<vtkm::Id, 4>,
                                                          vtkm::Vec<unsigned char, 4>,
                                                          vtkm::Vec<vtkm::Id, 1>,
+                                                         vtkm::Vec<vtkm::Id, 2>,
                                                          vtkm::Vec<vtkm::Float64, 1>,
                                                          vtkm::Vec<vtkm::Id2, 3>,
-                                                         vtkm::Vec<vtkm::Vec<vtkm::Float32, 2>, 3>>>
+                                                         vtkm::Vec<vtkm::Vec<vtkm::Float32, 2>, 3>,
+                                                         vtkm::Vec<vtkm::Vec<vtkm::Float32, 2>, 5>>>
 {
 };
 

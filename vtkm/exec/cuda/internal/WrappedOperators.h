@@ -111,19 +111,25 @@ struct WrappedBinaryOperator
   template <typename U>
   VTKM_EXEC T operator()(const T& x, const PortalValue<U>& y) const
   {
-    return m_f(x, (T)y);
+    // to support proper implicit conversion, and avoid overload
+    // ambiguities.
+    T conv_y = y;
+    return m_f(x, conv_y);
   }
 
   template <typename U>
   VTKM_EXEC T operator()(const PortalValue<U>& x, const T& y) const
   {
-    return m_f((T)x, y);
+    T conv_x = x;
+    return m_f(conv_x, y);
   }
 
   template <typename U, typename V>
   VTKM_EXEC T operator()(const PortalValue<U>& x, const PortalValue<V>& y) const
   {
-    return m_f((T)x, (T)y);
+    T conv_x = x;
+    T conv_y = y;
+    return m_f(conv_x, conv_y);
   }
 
   VTKM_EXEC T operator()(const T* const x, const T& y) const { return m_f(*x, y); }
