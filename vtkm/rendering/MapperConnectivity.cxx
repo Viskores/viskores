@@ -89,7 +89,6 @@ void MapperConnectivity::RenderCells(const vtkm::cont::DynamicCellSet& cellset,
     vtkm::Float64 y2 = bounds.Y.Length() * bounds.Y.Length();
     vtkm::Float64 z2 = bounds.Z.Length() * bounds.Z.Length();
     vtkm::Float64 length = vtkm::Sqrt(x2 + y2 + z2);
-    ;
     constexpr vtkm::Float64 defaultSamples = 200.;
     SampleDistance = static_cast<vtkm::Float32>(length / defaultSamples);
   }
