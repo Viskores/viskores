@@ -48,7 +48,7 @@ if(VTKm_ENABLE_TBB AND NOT TARGET vtkm::tbb)
 endif()
 
 if(VTKm_ENABLE_OPENMP AND NOT TARGET vtkm::openmp)
-  find_package(OpenMP 4.5 REQUIRED COMPONENTS CXX QUIET)
+  find_package(OpenMP 4.0 REQUIRED COMPONENTS CXX QUIET)
 
   add_library(vtkm::openmp INTERFACE IMPORTED GLOBAL)
   if(OpenMP_CXX_FLAGS)
