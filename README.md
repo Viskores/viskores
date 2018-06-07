@@ -74,7 +74,7 @@ Optional dependencies are:
   + TBB Device Adapter
       + [TBB](https://www.threadingbuildingblocks.org/)
   + OpenMP Device Adapter
-      + Requires a compiler that supports OpenMP >= 4.5.
+      + Requires a compiler that supports OpenMP >= 4.0.
   + OpenGL Rendering
       + The rendering module contains multiple rendering implementations
         including standalone rendering code. The rendering module also
