@@ -46,6 +46,7 @@ set(headers
   ArrayHandleConcatenate.h
   ArrayRangeCompute.h
   AssignerMultiBlock.h
+  AtomicArray.h
   BoundingIntervalHierarchyNode.h
   BoundingIntervalHierarchy.h
   BoundsCompute.h

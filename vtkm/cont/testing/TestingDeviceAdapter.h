@@ -42,7 +42,7 @@
 
 #include <vtkm/cont/testing/Testing.h>
 
-#include <vtkm/exec/AtomicArray.h>
+#include <vtkm/cont/AtomicArray.h>
 
 #include <algorithm>
 #include <cmath>
@@ -270,7 +270,7 @@ public:
   struct AtomicKernel
   {
     VTKM_CONT
-    AtomicKernel(const vtkm::exec::AtomicArray<T>& array)
+    AtomicKernel(const vtkm::cont::AtomicArray<T>& array)
       : AArray(array.PrepareForExecution(DeviceAdapterTag()))
     {
     }
@@ -290,7 +290,7 @@ public:
   struct AtomicCASKernel
   {
     VTKM_CONT
-    AtomicCASKernel(const vtkm::exec::AtomicArray<T>& array)
+    AtomicCASKernel(const vtkm::cont::AtomicArray<T>& array)
       : AArray(array.PrepareForExecution(DeviceAdapterTag()))
     {
     }
@@ -2094,7 +2094,7 @@ private:
       vtkm::cont::ArrayHandle<vtkm::Int32> atomicElement =
         vtkm::cont::make_ArrayHandle(singleElement);
 
-      vtkm::exec::AtomicArray<vtkm::Int32> atomic(atomicElement);
+      vtkm::cont::AtomicArray<vtkm::Int32> atomic(atomicElement);
       Algorithm::Schedule(AtomicKernel<vtkm::Int32>(atomic), SHORT_ARRAY_SIZE);
       vtkm::Int32 expected = vtkm::Int32(atomicCount);
       vtkm::Int32 actual = atomicElement.GetPortalControl().Get(0);
@@ -2108,7 +2108,7 @@ private:
       vtkm::cont::ArrayHandle<vtkm::Int64> atomicElement =
         vtkm::cont::make_ArrayHandle(singleElement);
 
-      vtkm::exec::AtomicArray<vtkm::Int64> atomic(atomicElement);
+      vtkm::cont::AtomicArray<vtkm::Int64> atomic(atomicElement);
       Algorithm::Schedule(AtomicKernel<vtkm::Int64>(atomic), SHORT_ARRAY_SIZE);
       vtkm::Int64 expected = vtkm::Int64(atomicCount);
       vtkm::Int64 actual = atomicElement.GetPortalControl().Get(0);
@@ -2122,7 +2122,7 @@ private:
       vtkm::cont::ArrayHandle<vtkm::Int32> atomicElement =
         vtkm::cont::make_ArrayHandle(singleElement);
 
-      vtkm::exec::AtomicArray<vtkm::Int32> atomic(atomicElement);
+      vtkm::cont::AtomicArray<vtkm::Int32> atomic(atomicElement);
       Algorithm::Schedule(AtomicCASKernel<vtkm::Int32>(atomic), SHORT_ARRAY_SIZE);
       vtkm::Int32 expected = vtkm::Int32(atomicCount);
       vtkm::Int32 actual = atomicElement.GetPortalControl().Get(0);
@@ -2136,7 +2136,7 @@ private:
       vtkm::cont::ArrayHandle<vtkm::Int64> atomicElement =
         vtkm::cont::make_ArrayHandle(singleElement);
 
-      vtkm::exec::AtomicArray<vtkm::Int64> atomic(atomicElement);
+      vtkm::cont::AtomicArray<vtkm::Int64> atomic(atomicElement);
       Algorithm::Schedule(AtomicCASKernel<vtkm::Int64>(atomic), SHORT_ARRAY_SIZE);
       vtkm::Int64 expected = vtkm::Int64(atomicCount);
       vtkm::Int64 actual = atomicElement.GetPortalControl().Get(0);

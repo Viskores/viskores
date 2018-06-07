@@ -196,7 +196,7 @@ void TryArrayOutTransport(Device)
 {
   vtkm::testing::Testing::TryTypes(TryWholeArrayType<Device>(), vtkm::TypeListTagCommon());
   vtkm::testing::Testing::TryTypes(TryAtomicArrayType<Device>(),
-                                   vtkm::exec::AtomicArrayTypeListTag());
+                                   vtkm::cont::AtomicArrayTypeListTag());
 }
 
 void TestWholeArrayTransport()

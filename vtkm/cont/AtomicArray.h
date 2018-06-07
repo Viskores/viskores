@@ -17,17 +17,18 @@
 //  Laboratory (LANL), the U.S. Government retains certain rights in
 //  this software.
 //============================================================================
-#ifndef vtk_m_exec_AtomicArray_h
-#define vtk_m_exec_AtomicArray_h
+#ifndef vtk_m_cont_AtomicArray_h
+#define vtk_m_cont_AtomicArray_h
 
 #include <vtkm/ListTag.h>
 #include <vtkm/cont/ArrayHandle.h>
 #include <vtkm/cont/DeviceAdapter.h>
 #include <vtkm/cont/ExecutionObjectBase.h>
+#include <vtkm/exec/AtomicArrayExecutionObject.h>
 
 namespace vtkm
 {
-namespace exec
+namespace cont
 {
 
 /// \brief A type list containing types that can be used with an AtomicArray.
@@ -36,46 +37,6 @@ struct AtomicArrayTypeListTag : vtkm::ListTagBase<vtkm::Int32, vtkm::Int64>
 {
 };
 
-template <typename T, typename Device>
-class AtomicArrayExecutionObject
-{
-public:
-  using ValueType = T;
-
-  VTKM_CONT
-  AtomicArrayExecutionObject()
-    : AtomicImplementation((vtkm::cont::ArrayHandle<T>()))
-  {
-  }
-
-  template <typename StorageType>
-  VTKM_CONT AtomicArrayExecutionObject(vtkm::cont::ArrayHandle<T, StorageType> handle)
-    : AtomicImplementation(handle)
-  {
-  }
-
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  T Add(vtkm::Id index, const T& value) const
-  {
-    return this->AtomicImplementation.Add(index, value);
-  }
-
-  //
-  // Compare and Swap is an atomic exchange operation. If the value at
-  // the index is equal to oldValue, then newValue is written to the index.
-  // The operation was successful if return value is equal to oldValue
-  //
-  VTKM_SUPPRESS_EXEC_WARNINGS
-  VTKM_EXEC
-  T CompareAndSwap(vtkm::Id index, const T& newValue, const T& oldValue) const
-  {
-    return this->AtomicImplementation.CompareAndSwap(index, newValue, oldValue);
-  }
-
-private:
-  vtkm::cont::DeviceAdapterAtomicArrayImplementation<T, Device> AtomicImplementation;
-};
 
 /// A class that can be used to atomically operate on an array of values safely
 /// across multiple instances of the same worklet. This is useful when you have
@@ -98,16 +59,16 @@ public:
   using ValueType = T;
 
   template <typename Device>
-  VTKM_CONT AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device) const
+  VTKM_CONT vtkm::exec::AtomicArrayExecutionObject<T, Device> PrepareForExecution(Device) const
   {
-    AtomicArrayExecutionObject<T, Device> execObject;
+    vtkm::exec::AtomicArrayExecutionObject<T, Device> execObject;
     if (isHandle)
     {
-      execObject = AtomicArrayExecutionObject<T, Device>(this->Handle);
+      execObject = vtkm::exec::AtomicArrayExecutionObject<T, Device>(this->Handle);
     }
     else
     {
-      execObject = AtomicArrayExecutionObject<T, Device>();
+      execObject = vtkm::exec::AtomicArrayExecutionObject<T, Device>();
     }
     return execObject;
   }
@@ -131,4 +92,4 @@ private:
 }
 } // namespace vtkm::exec
 
-#endif //vtk_m_exec_AtomicArray_h
+#endif //vtk_m_cont_AtomicArray_h

@@ -19,8 +19,8 @@
 ##============================================================================
 
 set(headers
-  AtomicArray.h
   BoundingIntervalHierarchyExec.h
+  AtomicArrayExecutionObject.h
   CellDerivative.h
   CellEdge.h
   CellFace.h

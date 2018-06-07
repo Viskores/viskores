@@ -27,7 +27,7 @@
 
 #include <vtkm/cont/arg/Transport.h>
 
-#include <vtkm/exec/AtomicArray.h>
+#include <vtkm/cont/AtomicArray.h>
 
 namespace vtkm
 {
@@ -54,7 +54,7 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
                  Device>
 {
   using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T, Device>;
-  using ExecType = vtkm::exec::AtomicArray<T>;
+  using ExecType = vtkm::cont::AtomicArray<T>;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> array,
