@@ -297,7 +297,7 @@ private:
   vtkm::Int32 LeafCount;
   //Int8Handle Counters;
   //Int8ArrayPortal CountersPortal;
-  vtkm::exec::AtomicArray<vtkm::Int32, Device> Counters;
+  vtkm::exec::AtomicArrayExecutionObject<vtkm::Int32, Device> Counters;
 
 public:
   VTKM_CONT
@@ -306,12 +306,12 @@ public:
                  IdArrayHandle& rightChildren,
                  vtkm::Int32 leafCount,
                  Float4ArrayHandle flatBVH,
-                 const vtkm::exec::AtomicArray<vtkm::Int32, Device>& counters)
+                 const vtkm::exec::AtomicArray<vtkm::Int32>& counters)
     : Parents(parents.PrepareForInput(Device()))
     , LeftChildren(leftChildren.PrepareForInput(Device()))
     , RightChildren(rightChildren.PrepareForInput(Device()))
     , LeafCount(leafCount)
-    , Counters(counters)
+    , Counters(counters.PrepareForExecution(Device()))
 
   {
     this->FlatBVH = flatBVH.PrepareForOutput((LeafCount - 1) * 4, Device());
@@ -774,7 +774,7 @@ VTKM_CONT void LinearBVHBuilder::RunOnDevice(LinearBVH& linearBVH, Device device
   vtkm::Int32 zero = 0;
   vtkm::worklet::DispatcherMapField<MemSet<vtkm::Int32>, Device>(MemSet<vtkm::Int32>(zero))
     .Invoke(counters);
-  vtkm::exec::AtomicArray<vtkm::Int32, Device> atomicCounters(counters);
+  vtkm::exec::AtomicArray<vtkm::Int32> atomicCounters(counters);
 
 
   vtkm::worklet::DispatcherMapField<PropagateAABBs<Device>, Device>(
@@ -904,10 +904,6 @@ template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<
 #ifdef VTKM_ENABLE_TBB
 template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagTBB>(
   vtkm::cont::DeviceAdapterTagTBB);
-#endif
-#ifdef VTKM_ENABLE_OPENMP
-template VTKM_CONT_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagOpenMP>(
-  vtkm::cont::DeviceAdapterTagOpenMP);
 #endif
 #ifdef VTKM_ENABLE_CUDA
 template VTKM_RENDERING_EXPORT void LinearBVH::ConstructOnDevice<vtkm::cont::DeviceAdapterTagCuda>(

@@ -53,7 +53,8 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
                  vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic>,
                  Device>
 {
-  using ExecObjectType = vtkm::exec::AtomicArray<T, Device>;
+  using ExecObjectType = vtkm::exec::AtomicArrayExecutionObject<T, Device>;
+  using ExecType = vtkm::exec::AtomicArray<T>;
 
   template <typename InputDomainType>
   VTKM_CONT ExecObjectType operator()(vtkm::cont::ArrayHandle<T, vtkm::cont::StorageTagBasic> array,
@@ -64,8 +65,8 @@ struct Transport<vtkm::cont::arg::TransportTagAtomicArray,
     // Note: we ignore the size of the domain because the randomly accessed
     // array might not have the same size depending on how the user is using
     // the array.
-
-    return ExecObjectType(array);
+    ExecType obj = ExecType(array);
+    return obj.PrepareForExecution(Device());
   }
 };
 }

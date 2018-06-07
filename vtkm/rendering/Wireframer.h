@@ -23,7 +23,6 @@
 
 #include <vtkm/Assert.h>
 #include <vtkm/Math.h>
-#include <vtkm/Swap.h>
 #include <vtkm/Types.h>
 #include <vtkm/VectorAnalysis.h>
 #include <vtkm/cont/ArrayHandle.h>
@@ -158,7 +157,9 @@ template <typename DeviceTag>
 class EdgePlotter : public vtkm::worklet::WorkletMapField
 {
 public:
-  using AtomicPackedFrameBufferHandle = vtkm::exec::AtomicArray<vtkm::Int64, DeviceTag>;
+  using AtomicPackedFrameBufferHandle =
+    vtkm::exec::AtomicArrayExecutionObject<vtkm::Int64, DeviceTag>;
+  using AtomicPackedFrameBuffer = vtkm::exec::AtomicArray<vtkm::Int64>;
 
   using ControlSignature = void(FieldIn<Id2Type>, WholeArrayIn<Vec3>, WholeArrayIn<Scalar>);
   using ExecutionSignature = void(_1, _2, _3);
@@ -175,7 +176,7 @@ public:
               bool assocPoints,
               const vtkm::Range& fieldRange,
               const ColorMapHandle& colorMap,
-              const AtomicPackedFrameBufferHandle& frameBuffer,
+              const AtomicPackedFrameBuffer& frameBuffer,
               const vtkm::Range& clippingRange)
     : WorldToProjection(worldToProjection)
     , Width(width)
@@ -187,7 +188,7 @@ public:
     , AssocPoints(assocPoints)
     , ColorMap(colorMap.PrepareForInput(DeviceTag()))
     , ColorMapSize(vtkm::Float32(colorMap.GetNumberOfValues() - 1))
-    , FrameBuffer(frameBuffer)
+    , FrameBuffer(frameBuffer.PrepareForExecution(DeviceTag()))
     , FieldMin(vtkm::Float32(fieldRange.Min))
   {
     InverseFieldDelta = 1.0f / vtkm::Float32(fieldRange.Length());
@@ -220,16 +221,16 @@ public:
     bool transposed = vtkm::Abs(y2 - y1) > vtkm::Abs(x2 - x1);
     if (transposed)
     {
-      vtkm::Swap(x1, y1);
-      vtkm::Swap(x2, y2);
+      std::swap(x1, y1);
+      std::swap(x2, y2);
     }
 
     // Ensure we are always going from left to right
     if (x1 > x2)
     {
-      vtkm::Swap(x1, x2);
-      vtkm::Swap(y1, y2);
-      vtkm::Swap(z1, z2);
+      std::swap(x1, x2);
+      std::swap(y1, y2);
+      std::swap(z1, z2);
     }
 
     vtkm::Float32 dx = x2 - x1;
