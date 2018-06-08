@@ -39,6 +39,7 @@ set(headers
   PointLocator.h
   PointLocatorUniformGrid.h
   TaskBase.h
+  TwoLevelUniformGridExecutionObject.h
   )
 
 set(header_impls

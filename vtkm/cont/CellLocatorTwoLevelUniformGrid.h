@@ -26,6 +26,7 @@
 #include <vtkm/cont/CoordinateSystem.h>
 #include <vtkm/cont/DeviceAdapterAlgorithm.h>
 #include <vtkm/cont/DynamicCellSet.h>
+#include <vtkm/exec/TwoLevelUniformGridExecutionObject.h>
 
 #include <vtkm/exec/CellInside.h>
 #include <vtkm/exec/ParametricCoordinates.h>
@@ -121,13 +122,6 @@ private:
     FloatVec3 Max;
   };
 
-  struct Grid
-  {
-    DimVec3 Dimensions;
-    FloatVec3 Origin;
-    FloatVec3 BinSize;
-  };
-
   VTKM_EXEC_CONT static DimVec3 ComputeGridDimension(vtkm::Id numberOfCells,
                                                      const FloatVec3& size,
                                                      vtkm::FloatDefault density)
@@ -157,7 +151,9 @@ private:
     return idx[0] + (dim[0] * (idx[1] + (dim[1] * idx[2])));
   }
 
-  VTKM_EXEC static Grid ComputeLeafGrid(const DimVec3& idx, const DimVec3& dim, const Grid& l1Grid)
+  VTKM_EXEC static vtkm::exec::Grid ComputeLeafGrid(const DimVec3& idx,
+                                                    const DimVec3& dim,
+                                                    const vtkm::exec::Grid& l1Grid)
   {
     return { dim,
              l1Grid.Origin + (static_cast<FloatVec3>(idx) * l1Grid.BinSize),
@@ -180,7 +176,8 @@ private:
     return { FloatVec3(minp), FloatVec3(maxp) };
   }
 
-  VTKM_EXEC static BinsBBox ComputeIntersectingBins(const Bounds cellBounds, const Grid& grid)
+  VTKM_EXEC static BinsBBox ComputeIntersectingBins(const Bounds cellBounds,
+                                                    const vtkm::exec::Grid& grid)
   {
     auto minb = static_cast<DimVec3>((cellBounds.Min - grid.Origin) / grid.BinSize);
     auto maxb = static_cast<DimVec3>((cellBounds.Max - grid.Origin) / grid.BinSize);
@@ -287,7 +284,7 @@ public:
                                   FieldOutCell<IdType> bincount);
     using ExecutionSignature = void(_2, _3);
 
-    CountBinsL1(const Grid& grid)
+    CountBinsL1(const vtkm::exec::Grid& grid)
       : L1Grid(grid)
     {
     }
@@ -301,7 +298,7 @@ public:
     }
 
   private:
-    Grid L1Grid;
+    vtkm::exec::Grid L1Grid;
   };
 
   class FindBinsL1 : public vtkm::worklet::WorkletMapPointToCell
@@ -313,7 +310,7 @@ public:
                                   WholeArrayOut<IdType> binIds);
     using ExecutionSignature = void(_2, _3, _4);
 
-    FindBinsL1(const Grid& grid)
+    FindBinsL1(const vtkm::exec::Grid& grid)
       : L1Grid(grid)
     {
     }
@@ -334,7 +331,7 @@ public:
     }
 
   private:
-    Grid L1Grid;
+    vtkm::exec::Grid L1Grid;
   };
 
   class GenerateBinsL1 : public vtkm::worklet::WorkletMapField
@@ -375,7 +372,7 @@ public:
                                   FieldOutCell<IdType> bincount);
     using ExecutionSignature = void(_2, _3, _4);
 
-    CountBinsL2(const Grid& grid)
+    CountBinsL2(const vtkm::exec::Grid& grid)
       : L1Grid(grid)
     {
     }
@@ -391,14 +388,15 @@ public:
       numBins = 0;
       for (BBoxIterator i(binsBBox, this->L1Grid.Dimensions); !i.Done(); i.Next())
       {
-        Grid leaf = ComputeLeafGrid(i.GetIdx(), binDimensions.Get(i.GetFlatIdx()), this->L1Grid);
+        vtkm::exec::Grid leaf =
+          ComputeLeafGrid(i.GetIdx(), binDimensions.Get(i.GetFlatIdx()), this->L1Grid);
         auto binsBBoxL2 = ComputeIntersectingBins(cellBounds, leaf);
         numBins += GetNumberOfBins(binsBBoxL2);
       }
     }
 
   private:
-    Grid L1Grid;
+    vtkm::exec::Grid L1Grid;
   };
 
   class FindBinsL2 : public vtkm::worklet::WorkletMapPointToCell
@@ -413,7 +411,7 @@ public:
                                   WholeArrayOut<IdType> cellIds);
     using ExecutionSignature = void(InputIndex, _2, _3, _4, _5, _6, _7);
 
-    FindBinsL2(const Grid& grid)
+    FindBinsL2(const vtkm::exec::Grid& grid)
       : L1Grid(grid)
     {
     }
@@ -436,7 +434,8 @@ public:
 
       for (BBoxIterator i(binsBBox, this->L1Grid.Dimensions); !i.Done(); i.Next())
       {
-        Grid leaf = ComputeLeafGrid(i.GetIdx(), binDimensions.Get(i.GetFlatIdx()), this->L1Grid);
+        vtkm::exec::Grid leaf =
+          ComputeLeafGrid(i.GetIdx(), binDimensions.Get(i.GetFlatIdx()), this->L1Grid);
         auto binsBBoxL2 = ComputeIntersectingBins(cellBounds, leaf);
         vtkm::Id leafStart = binStarts.Get(i.GetFlatIdx());
 
@@ -450,7 +449,7 @@ public:
     }
 
   private:
-    Grid L1Grid;
+    vtkm::exec::Grid L1Grid;
   };
 
   class GenerateBinsL2 : public vtkm::worklet::WorkletMapField
@@ -491,7 +490,7 @@ public:
 
     auto cellset = this->CellSet.ResetCellSetList(cellSetTypes);
     const auto& coords = this->Coordinates;
-    TwoLevelUniformGridExecutionObjectFactory ls;
+    TwoLevelUniformGrid ls;
 
     // 1: Compute the top level grid
     auto bounds = this->Coordinates.GetBounds();
@@ -593,30 +592,13 @@ public:
     std::swap(this->LookupStructure, ls);
   }
 
-  template <typename Device>
-  struct TwoLevelUniformGridExecution
-  {
-    template <typename T>
-    using ArrayPortalConst =
-      typename vtkm::cont::ArrayHandle<T>::template ExecutionTypes<Device>::PortalConst;
-
-    Grid TopLevel;
-
-    ArrayPortalConst<DimVec3> LeafDimensions;
-    ArrayPortalConst<vtkm::Id> LeafStartIndex;
-
-    ArrayPortalConst<vtkm::Id> CellStartIndex;
-    ArrayPortalConst<vtkm::Id> CellCount;
-    ArrayPortalConst<vtkm::Id> CellIds;
-  };
-
-  struct TwoLevelUniformGridExecutionObjectFactory : public vtkm::cont::ExecutionObjectBase
+  struct TwoLevelUniformGrid : public vtkm::cont::ExecutionObjectBase
   {
     template <typename DeviceAdapter>
-    VTKM_CONT TwoLevelUniformGridExecution<DeviceAdapter> PrepareForExecution(
+    VTKM_CONT vtkm::exec::TwoLevelUniformGridExecutionObject<DeviceAdapter> PrepareForExecution(
       DeviceAdapter device) const
     {
-      TwoLevelUniformGridExecution<DeviceAdapter> deviceObject;
+      vtkm::exec::TwoLevelUniformGridExecutionObject<DeviceAdapter> deviceObject;
       deviceObject.TopLevel = this->TopLevel;
       deviceObject.LeafDimensions = this->LeafDimensions.PrepareForInput(device);
       deviceObject.LeafStartIndex = this->LeafStartIndex.PrepareForInput(device);
@@ -626,7 +608,7 @@ public:
       return deviceObject;
     }
 
-    Grid TopLevel;
+    vtkm::exec::Grid TopLevel;
 
     vtkm::cont::ArrayHandle<DimVec3> LeafDimensions;
     vtkm::cont::ArrayHandle<vtkm::Id> LeafStartIndex;
@@ -665,7 +647,7 @@ public:
                   static_cast<FloatDefault>(point[1]),
                   static_cast<FloatDefault>(point[2]));
 
-      const Grid& topLevelGrid = lookupStruct.TopLevel;
+      const vtkm::exec::Grid& topLevelGrid = lookupStruct.TopLevel;
 
       DimVec3 binId3 = static_cast<DimVec3>((p - topLevelGrid.Origin) / topLevelGrid.BinSize);
       if (binId3[0] >= 0 && binId3[0] < topLevelGrid.Dimensions[0] && binId3[1] >= 0 &&
@@ -739,7 +721,7 @@ private:
 
   vtkm::cont::DynamicCellSet CellSet;
   vtkm::cont::CoordinateSystem Coordinates;
-  TwoLevelUniformGridExecutionObjectFactory LookupStructure;
+  TwoLevelUniformGrid LookupStructure;
 };
 }
 }
