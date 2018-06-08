@@ -94,12 +94,14 @@ set(headers
   PointLocatorUniformGrid.h
   RuntimeDeviceInformation.h
   RuntimeDeviceTracker.h
+  Serialization.h
   Storage.h
   StorageBasic.h
   StorageImplicit.h
   StorageListTag.h
   Timer.h
   TryExecute.h
+  TypeString.h
   VirtualObjectHandle.h
   )
 
@@ -161,7 +163,6 @@ vtkm_library( NAME vtkm_cont
             )
 add_subdirectory(internal)
 add_subdirectory(arg)
-add_subdirectory(diy)
 add_subdirectory(serial)
 add_subdirectory(tbb)
 add_subdirectory(openmp)

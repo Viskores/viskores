@@ -21,6 +21,7 @@
 #define vtk_m_cont_ArrayHandleVirtualCoordinates_h
 
 #include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/ArrayHandleCartesianProduct.h>
 #include <vtkm/cont/ArrayHandleUniformPointCoordinates.h>
 #include <vtkm/cont/TryExecute.h>
 #include <vtkm/cont/VirtualObjectHandle.h>
@@ -607,5 +608,106 @@ VTKM_EXPLICITLY_INSTANTIATE_TRANSFER(vtkm::cont::internal::CoordinatesPortal<
                                      vtkm::cont::internal::CudaPortalsCompositeCoords::Portal>);
 
 #endif // VTKM_CUDA
+
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <>
+struct TypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
+{
+  static VTKM_CONT const std::string Get() { return "AH_VirtualCoordinates"; }
+};
+
+template <>
+struct TypeString<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>,
+                                          vtkm::cont::internal::StorageTagVirtualCoordinates>>
+  : TypeString<vtkm::cont::ArrayHandleVirtualCoordinates>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <>
+struct Serialization<vtkm::cont::ArrayHandleVirtualCoordinates>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleVirtualCoordinates;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+  using BasicCoordsType = vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>>;
+  using RectilinearCoordsArrayType =
+    vtkm::cont::ArrayHandleCartesianProduct<vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>,
+                                            vtkm::cont::ArrayHandle<vtkm::FloatDefault>>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    const auto& virtArray = static_cast<const vtkm::cont::ArrayHandleVirtualCoordinates&>(obj);
+    if (virtArray.IsType<vtkm::cont::ArrayHandleUniformPointCoordinates>())
+    {
+      auto array = virtArray.Cast<vtkm::cont::ArrayHandleUniformPointCoordinates>();
+      diy::save(bb, vtkm::cont::TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>::Get());
+      diy::save(bb, array);
+    }
+    else if (virtArray.IsType<RectilinearCoordsArrayType>())
+    {
+      auto array = virtArray.Cast<RectilinearCoordsArrayType>();
+      diy::save(bb, vtkm::cont::TypeString<RectilinearCoordsArrayType>::Get());
+      diy::save(bb, array);
+    }
+    else
+    {
+      diy::save(bb, vtkm::cont::TypeString<BasicCoordsType>::Get());
+      vtkm::cont::internal::ArrayHandleDefaultSerialization(bb, virtArray);
+    }
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    std::string typeString;
+    diy::load(bb, typeString);
+
+    if (typeString == vtkm::cont::TypeString<vtkm::cont::ArrayHandleUniformPointCoordinates>::Get())
+    {
+      vtkm::cont::ArrayHandleUniformPointCoordinates array;
+      diy::load(bb, array);
+      obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
+    }
+    else if (typeString == vtkm::cont::TypeString<RectilinearCoordsArrayType>::Get())
+    {
+      RectilinearCoordsArrayType array;
+      diy::load(bb, array);
+      obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
+    }
+    else if (typeString == vtkm::cont::TypeString<BasicCoordsType>::Get())
+    {
+      BasicCoordsType array;
+      diy::load(bb, array);
+      obj = vtkm::cont::ArrayHandleVirtualCoordinates(array);
+    }
+    else
+    {
+      throw vtkm::cont::ErrorBadType(
+        "Error deserializing ArrayHandleVirtualCoordinates. TypeString: " + typeString);
+    }
+  }
+};
+
+template <>
+struct Serialization<vtkm::cont::ArrayHandle<vtkm::Vec<vtkm::FloatDefault, 3>,
+                                             vtkm::cont::internal::StorageTagVirtualCoordinates>>
+  : Serialization<vtkm::cont::ArrayHandleVirtualCoordinates>
+{
+};
+
+} // diy
 
 #endif // vtk_m_cont_ArrayHandleVirtualCoordinates_h

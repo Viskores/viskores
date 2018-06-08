@@ -22,7 +22,7 @@
 #include <vtkm/cont/Algorithm.h>
 #include <vtkm/cont/AssignerMultiBlock.h>
 #include <vtkm/cont/BoundsGlobalCompute.h>
-#include <vtkm/cont/diy/Serialization.h>
+#include <vtkm/cont/Serialization.h>
 #include <vtkm/filter/ExtractPoints.h>
 #include <vtkm/filter/Filter.h>
 

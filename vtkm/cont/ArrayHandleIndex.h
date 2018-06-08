@@ -61,4 +61,45 @@ public:
 }
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+
+namespace vtkm
+{
+namespace cont
+{
+
+template <>
+struct TypeString<vtkm::cont::detail::IndexFunctor>
+{
+  static VTKM_CONT const std::string Get() { return "AH_IndexFunctor"; }
+};
+
+template <>
+struct TypeString<vtkm::cont::ArrayHandleIndex>
+  : TypeString<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::IndexFunctor>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <>
+struct Serialization<vtkm::cont::detail::IndexFunctor>
+{
+  static VTKM_CONT void save(BinaryBuffer&, const vtkm::cont::detail::IndexFunctor&) {}
+
+  static VTKM_CONT void load(BinaryBuffer&, vtkm::cont::detail::IndexFunctor&) {}
+};
+
+template <>
+struct Serialization<vtkm::cont::ArrayHandleIndex>
+  : Serialization<vtkm::cont::ArrayHandleImplicit<vtkm::cont::detail::IndexFunctor>>
+{
+};
+
+} // diy
+
 #endif //vtk_m_cont_ArrayHandleIndex_h

@@ -345,4 +345,49 @@ void ArrayHandle<T, S>::SyncControlArray() const
   }
 }
 }
+} // vtkm::cont
+
+namespace vtkm
+{
+namespace cont
+{
+namespace internal
+{
+
+template <typename T, typename S>
+inline void VTKM_CONT ArrayHandleDefaultSerialization(diy::BinaryBuffer& bb,
+                                                      const vtkm::cont::ArrayHandle<T, S>& obj)
+{
+  vtkm::Id count = obj.GetNumberOfValues();
+  diy::save(bb, count);
+
+  auto portal = obj.GetPortalConstControl();
+  for (vtkm::Id i = 0; i < count; ++i)
+  {
+    diy::save(bb, portal.Get(i));
+  }
 }
+}
+}
+} // vtkm::cont::internal
+
+namespace diy
+{
+
+template <typename T>
+VTKM_CONT void Serialization<vtkm::cont::ArrayHandle<T>>::load(BinaryBuffer& bb,
+                                                               vtkm::cont::ArrayHandle<T>& obj)
+{
+  vtkm::Id count = 0;
+  diy::load(bb, count);
+
+  obj.Allocate(count);
+  auto portal = obj.GetPortalControl();
+  for (vtkm::Id i = 0; i < count; ++i)
+  {
+    T val{};
+    diy::load(bb, val);
+    portal.Set(i, val);
+  }
+}
+} // diy

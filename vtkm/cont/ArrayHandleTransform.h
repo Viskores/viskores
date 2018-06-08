@@ -737,4 +737,109 @@ make_ArrayHandleTransform(HandleType handle, FunctorType functor, InverseFunctor
 
 } // namespace vtkm::cont
 
+//=============================================================================
+// Specializations of serialization related classes
+namespace vtkm
+{
+namespace cont
+{
+
+template <typename AH, typename Functor, typename InvFunctor>
+struct TypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name = "AH_Transform<" + TypeString<AH>::Get() + "," +
+      TypeString<Functor>::Get() + "," + TypeString<InvFunctor>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH, typename Functor>
+struct TypeString<vtkm::cont::ArrayHandleTransform<AH, Functor>>
+{
+  static VTKM_CONT const std::string& Get()
+  {
+    static std::string name =
+      "AH_Transform<" + TypeString<AH>::Get() + "," + TypeString<Functor>::Get() + ">";
+    return name;
+  }
+};
+
+template <typename AH, typename Functor, typename InvFunctor>
+struct TypeString<vtkm::cont::ArrayHandle<
+  typename vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>::ValueType,
+  vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>>>
+  : TypeString<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+{
+};
+}
+} // vtkm::cont
+
+namespace diy
+{
+
+template <typename AH, typename Functor>
+struct Serialization<vtkm::cont::ArrayHandleTransform<AH, Functor>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleTransform<AH, Functor>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    diy::save(bb, storage.GetArray());
+    diy::save(bb, storage.GetFunctor());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH array;
+    diy::load(bb, array);
+    Functor functor;
+    diy::load(bb, functor);
+    obj = vtkm::cont::make_ArrayHandleTransform(array, functor);
+  }
+};
+
+template <typename AH, typename Functor, typename InvFunctor>
+struct Serialization<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+{
+private:
+  using Type = vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>;
+  using BaseType = vtkm::cont::ArrayHandle<typename Type::ValueType, typename Type::StorageTag>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const BaseType& obj)
+  {
+    auto storage = obj.GetStorage();
+    diy::save(bb, storage.GetArray());
+    diy::save(bb, storage.GetFunctor());
+    diy::save(bb, storage.GetInverseFunctor());
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, BaseType& obj)
+  {
+    AH array;
+    diy::load(bb, array);
+    Functor functor;
+    diy::load(bb, functor);
+    InvFunctor invFunctor;
+    diy::load(bb, invFunctor);
+    obj = vtkm::cont::make_ArrayHandleTransform(array, functor, invFunctor);
+  }
+};
+
+template <typename AH, typename Functor, typename InvFunctor>
+struct Serialization<vtkm::cont::ArrayHandle<
+  typename vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>::ValueType,
+  vtkm::cont::internal::StorageTagTransform<AH, Functor, InvFunctor>>>
+  : Serialization<vtkm::cont::ArrayHandleTransform<AH, Functor, InvFunctor>>
+{
+};
+
+} // diy
+
 #endif //vtk_m_cont_ArrayHandleTransform_h

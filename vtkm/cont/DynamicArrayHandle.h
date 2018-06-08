@@ -491,4 +491,84 @@ struct DynamicTransformTraits<vtkm::cont::DynamicArrayHandleBase<TypeList, Stora
 
 } // namespace vtkm::cont
 
+
+//=============================================================================
+// Specializations of serialization related classes
+namespace diy
+{
+
+namespace internal
+{
+
+struct DynamicArrayHandleSerializeFunctor
+{
+  template <typename ArrayHandleType>
+  void operator()(const ArrayHandleType& ah, BinaryBuffer& bb) const
+  {
+    diy::save(bb, vtkm::cont::TypeString<ArrayHandleType>::Get());
+    diy::save(bb, ah);
+  }
+};
+
+template <typename TypeList, typename StorageList>
+struct DynamicArrayHandleDeserializeFunctor
+{
+  template <typename T, typename S>
+  void operator()(brigand::list<T, S>,
+                  vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>& dh,
+                  const std::string& typeString,
+                  bool& success,
+                  BinaryBuffer& bb) const
+  {
+    using ArrayHandleType = vtkm::cont::ArrayHandle<T, S>;
+
+    if (!success && (typeString == vtkm::cont::TypeString<ArrayHandleType>::Get()))
+    {
+      ArrayHandleType ah;
+      diy::load(bb, ah);
+      dh = vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>(ah);
+      success = true;
+    }
+  }
+};
+
+} // internal
+
+template <typename TypeList, typename StorageList>
+struct Serialization<vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>>
+{
+private:
+  using Type = vtkm::cont::DynamicArrayHandleBase<TypeList, StorageList>;
+
+public:
+  static VTKM_CONT void save(BinaryBuffer& bb, const Type& obj)
+  {
+    obj.CastAndCall(internal::DynamicArrayHandleSerializeFunctor{}, bb);
+  }
+
+  static VTKM_CONT void load(BinaryBuffer& bb, Type& obj)
+  {
+    using CrossProduct = vtkm::cont::ListTagDynamicTypes<TypeList, StorageList>;
+
+    std::string typeString;
+    diy::load(bb, typeString);
+
+    bool success = false;
+    vtkm::ListForEach(internal::DynamicArrayHandleDeserializeFunctor<TypeList, StorageList>{},
+                      CrossProduct{},
+                      obj,
+                      typeString,
+                      success,
+                      bb);
+
+    if (!success)
+    {
+      throw vtkm::cont::ErrorBadType(
+        "Error deserializing DynamicArrayHandle. Message TypeString: " + typeString);
+    }
+  }
+};
+
+} // diy
+
 #endif //vtk_m_cont_DynamicArrayHandle_h
