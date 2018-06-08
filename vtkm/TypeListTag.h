@@ -92,6 +92,19 @@ struct TypeListTagFieldVec4
 {
 };
 
+/// A list containing common types for floating-point vectors. Specifically contains
+/// floating point vectors of size 2, 3, and 4 with floating point components.
+/// Scalars are not included.
+///
+struct TypeListTagFloatVec : vtkm::ListTagBase<vtkm::Vec<vtkm::Float32, 2>,
+                                               vtkm::Vec<vtkm::Float64, 2>,
+                                               vtkm::Vec<vtkm::Float32, 3>,
+                                               vtkm::Vec<vtkm::Float64, 3>,
+                                               vtkm::Vec<vtkm::Float32, 4>,
+                                               vtkm::Vec<vtkm::Float64, 4>>
+{
+};
+
 /// A list containing common types for values in fields. Specifically contains
 /// floating point scalars and vectors of size 2, 3, and 4 with floating point
 /// components.

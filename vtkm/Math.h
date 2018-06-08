@@ -1815,6 +1815,18 @@ static inline VTKM_EXEC_CONT T Min(const T& x, const T& y)
   return detail::Min(x, y, typename vtkm::TypeTraits<T>::DimensionalityTag());
 }
 
+/// Clamp \p x to the given range.
+///
+
+inline VTKM_EXEC_CONT vtkm::Float32 Clamp(vtkm::Float32 x, vtkm::Float32 lo, vtkm::Float32 hi)
+{
+  return x > lo ? (x < hi ? x : hi) : lo;
+}
+
+inline VTKM_EXEC_CONT vtkm::Float64 Clamp(vtkm::Float64 x, vtkm::Float64 lo, vtkm::Float64 hi)
+{
+  return x > lo ? (x < hi ? x : hi) : lo;
+}
 //-----------------------------------------------------------------------------
 
 //#ifdef VTKM_CUDA
