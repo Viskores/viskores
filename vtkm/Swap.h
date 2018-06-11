@@ -23,7 +23,11 @@
 
 #include <vtkm/internal/ExportMacros.h>
 
+#ifdef __CUDACC__
+#include <thrust/swap.h>
+#else
 #include <algorithm>
+#endif
 
 namespace vtkm
 {
@@ -33,9 +37,8 @@ namespace vtkm
 template <typename T>
 VTKM_EXEC_CONT void Swap(T& a, T& b)
 {
-  T tmp = a;
-  a = b;
-  b = tmp;
+  using namespace thrust;
+  swap(a, b);
 }
 #else
 template <typename T>
